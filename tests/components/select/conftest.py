@@ -19,5 +19,6 @@ def mock_select_entities() -> list[MockSelectEntity]:
             name="select 2",
             unique_id="unique_select_2",
             options=["option 1", "option 2", "option 3"],
+            current_option=None,
         ),
     ]
