@@ -210,10 +210,14 @@ async def test_preset_none_in_preset_modes(
     ],
 )
 async def test_preset_modes_deprecation_guard(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, parameter: str
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    parameter: str,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test the configuration for invalid legacy parameters."""
-    # assert f"[{parameter}] is an invalid option for [mqtt]. Check: mqtt->mqtt->climate->0->{parameter}"
+    assert await mqtt_mock_entry()
+    assert f"extra keys not allowed @ data['{parameter}']" in caplog.text
 
 
 @pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
