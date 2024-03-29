@@ -717,114 +717,6 @@ jobs:
           path: pytest_buckets.txt
           overwrite: true
 
-  pytest-partial:
-    runs-on: ubuntu-22.04
-    if: |
-      (github.event_name != 'push' || github.event.repository.full_name == 'home-assistant/core')
-      && github.event.inputs.lint-only != 'true'
-      && github.event.inputs.pylint-only != 'true'
-      && github.event.inputs.mypy-only != 'true'
-      && needs.info.outputs.tests_glob
-    needs:
-      - info
-      - base
-      - gen-requirements-all
-      - hassfest
-      - lint-other
-      - lint-ruff
-      - mypy
-    strategy:
-      fail-fast: false
-      matrix:
-        group: ${{ fromJson(needs.info.outputs.test_groups) }}
-        python-version: ${{ fromJson(needs.info.outputs.python_versions) }}
-    name: >-
-      Run tests Python ${{ matrix.python-version }} (${{ matrix.group }})
-    steps:
-      - name: Install additional OS dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get -y install \
-            bluez \
-            ffmpeg
-      - name: Check out code from GitHub
-        uses: actions/checkout@v4.1.2
-      - name: Set up Python ${{ matrix.python-version }}
-        id: python
-        uses: actions/setup-python@v5.1.0
-        with:
-          python-version: ${{ matrix.python-version }}
-          check-latest: true
-      - name: Restore full Python ${{ matrix.python-version }} virtual environment
-        id: cache-venv
-        uses: actions/cache/restore@v4.0.2
-        with:
-          path: venv
-          fail-on-cache-miss: true
-          key: ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
-            needs.info.outputs.python_cache_key }}
-      - name: Register Python problem matcher
-        run: |
-          echo "::add-matcher::.github/workflows/matchers/python.json"
-      - name: Register pytest slow test problem matcher
-        run: |
-          echo "::add-matcher::.github/workflows/matchers/pytest-slow.json"
-      - name: Compile English translations
-        run: |
-          . venv/bin/activate
-          python3 -m script.translations develop --all
-      - name: Run pytest
-        timeout-minutes: 10
-        id: pytest-partial
-        shell: bash
-        env:
-          PYTHONDONTWRITEBYTECODE: 1
-        run: |
-          . venv/bin/activate
-          python --version
-          set -o pipefail
-
-          if [[ ! -f "tests/components/${{ matrix.group }}/__init__.py" ]]; then
-            echo "::error:: missing file tests/components/${{ matrix.group }}/__init__.py"
-            exit 1
-          fi
-
-          cov_params=()
-          if [[ "${{ needs.info.outputs.skip_coverage }}" != "true" ]]; then
-            cov_params+=(--cov="homeassistant.components.${{ matrix.group }}")
-            cov_params+=(--cov-report=xml)
-            cov_params+=(--cov-report=term-missing)
-          fi
-
-          python3 -b -X dev -m pytest \
-            -qq \
-            --timeout=9 \
-            -n auto \
-            ${cov_params[@]} \
-            -o console_output_style=count \
-            --durations=0 \
-            --durations-min=1 \
-            -p no:sugar \
-            tests/components/${{ matrix.group }} \
-              2>&1 | tee pytest-${{ matrix.python-version }}-${{ matrix.group }}.txt
-      - name: Upload pytest output
-        if: success() || failure() && steps.pytest-partial.conclusion == 'failure'
-        uses: actions/upload-artifact@v4.3.1
-        with:
-          name: pytest-${{ github.run_number }}-${{ matrix.python-version }}-${{ matrix.group }}
-          path: pytest-*.txt
-          overwrite: true
-      - name: Upload coverage artifact
-        if: needs.info.outputs.skip_coverage != 'true'
-        uses: actions/upload-artifact@v4.3.1
-        with:
-          name: coverage-${{ matrix.python-version }}-${{ matrix.group }}
-          path: coverage.xml
-          overwrite: true
-      - name: Check dirty
-        run: |
-          ./script/check_dirty
-
   pytest-full:
     runs-on: ubuntu-22.04
     if: |
@@ -1177,13 +1069,15 @@ jobs:
         run: |
           ./script/check_dirty
 
-  coverage-partial:
-    name: Upload test coverage to Codecov (partial suite)
+  coverage-full:
+    name: Upload test coverage to Codecov (full suite)
     if: needs.info.outputs.skip_coverage != 'true'
     runs-on: ubuntu-22.04
     needs:
       - info
-      - pytest-partial
+      - pytest-full
+      - pytest-postgres
+      - pytest-mariadb
     timeout-minutes: 10
     steps:
       - name: Check out code from GitHub
@@ -1214,15 +1108,121 @@ jobs:
           attempt_limit: 5
           attempt_delay: 30000
 
-  coverage-full:
-    name: Upload test coverage to Codecov (full suite)
+  pytest-partial:
+    runs-on: ubuntu-22.04
+    if: |
+      (github.event_name != 'push' || github.event.repository.full_name == 'home-assistant/core')
+      && github.event.inputs.lint-only != 'true'
+      && github.event.inputs.pylint-only != 'true'
+      && github.event.inputs.mypy-only != 'true'
+      && needs.info.outputs.tests_glob
+    needs:
+      - info
+      - base
+      - gen-requirements-all
+      - hassfest
+      - lint-other
+      - lint-ruff
+      - mypy
+    strategy:
+      fail-fast: false
+      matrix:
+        group: ${{ fromJson(needs.info.outputs.test_groups) }}
+        python-version: ${{ fromJson(needs.info.outputs.python_versions) }}
+    name: >-
+      Run tests Python ${{ matrix.python-version }} (${{ matrix.group }})
+    steps:
+      - name: Install additional OS dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get -y install \
+            bluez \
+            ffmpeg
+      - name: Check out code from GitHub
+        uses: actions/checkout@v4.1.2
+      - name: Set up Python ${{ matrix.python-version }}
+        id: python
+        uses: actions/setup-python@v5.1.0
+        with:
+          python-version: ${{ matrix.python-version }}
+          check-latest: true
+      - name: Restore full Python ${{ matrix.python-version }} virtual environment
+        id: cache-venv
+        uses: actions/cache/restore@v4.0.2
+        with:
+          path: venv
+          fail-on-cache-miss: true
+          key: ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
+            needs.info.outputs.python_cache_key }}
+      - name: Register Python problem matcher
+        run: |
+          echo "::add-matcher::.github/workflows/matchers/python.json"
+      - name: Register pytest slow test problem matcher
+        run: |
+          echo "::add-matcher::.github/workflows/matchers/pytest-slow.json"
+      - name: Compile English translations
+        run: |
+          . venv/bin/activate
+          python3 -m script.translations develop --all
+      - name: Run pytest
+        timeout-minutes: 10
+        id: pytest-partial
+        shell: bash
+        env:
+          PYTHONDONTWRITEBYTECODE: 1
+        run: |
+          . venv/bin/activate
+          python --version
+          set -o pipefail
+
+          if [[ ! -f "tests/components/${{ matrix.group }}/__init__.py" ]]; then
+            echo "::error:: missing file tests/components/${{ matrix.group }}/__init__.py"
+            exit 1
+          fi
+
+          cov_params=()
+          if [[ "${{ needs.info.outputs.skip_coverage }}" != "true" ]]; then
+            cov_params+=(--cov="homeassistant.components.${{ matrix.group }}")
+            cov_params+=(--cov-report=xml)
+            cov_params+=(--cov-report=term-missing)
+          fi
+
+          python3 -b -X dev -m pytest \
+            -qq \
+            --timeout=9 \
+            -n auto \
+            ${cov_params[@]} \
+            -o console_output_style=count \
+            --durations=0 \
+            --durations-min=1 \
+            -p no:sugar \
+            tests/components/${{ matrix.group }} \
+              2>&1 | tee pytest-${{ matrix.python-version }}-${{ matrix.group }}.txt
+      - name: Upload pytest output
+        if: success() || failure() && steps.pytest-partial.conclusion == 'failure'
+        uses: actions/upload-artifact@v4.3.1
+        with:
+          name: pytest-${{ github.run_number }}-${{ matrix.python-version }}-${{ matrix.group }}
+          path: pytest-*.txt
+          overwrite: true
+      - name: Upload coverage artifact
+        if: needs.info.outputs.skip_coverage != 'true'
+        uses: actions/upload-artifact@v4.3.1
+        with:
+          name: coverage-${{ matrix.python-version }}-${{ matrix.group }}
+          path: coverage.xml
+          overwrite: true
+      - name: Check dirty
+        run: |
+          ./script/check_dirty
+
+  coverage-partial:
+    name: Upload test coverage to Codecov (partial suite)
     if: needs.info.outputs.skip_coverage != 'true'
     runs-on: ubuntu-22.04
     needs:
       - info
-      - pytest-full
-      - pytest-postgres
-      - pytest-mariadb
+      - pytest-partial
     timeout-minutes: 10
     steps:
       - name: Check out code from GitHub
