@@ -143,7 +143,7 @@ raise Exception('boom')
     hass.async_add_executor_job(execute, hass, "test.py", source, {})
     await hass.async_block_till_done()
 
-    assert "Error executing script: boom" in caplog.text
+    assert "Error executing script" in caplog.text
 
 
 async def test_execute_runtime_error_with_response(hass: HomeAssistant) -> None:

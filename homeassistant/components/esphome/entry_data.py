@@ -353,11 +353,11 @@ class RuntimeEntryData:
         if subscription := self.state_subscriptions.get(subscription_key):
             try:
                 subscription()
-            except Exception as ex:  # pylint: disable=broad-except
+            except Exception:  # pylint: disable=broad-except
                 # If we allow this exception to raise it will
                 # make it all the way to data_received in aioesphomeapi
                 # which will cause the connection to be closed.
-                _LOGGER.exception("Error while calling subscription: %s", ex)
+                _LOGGER.exception("Error while calling subscription")
 
     @callback
     def async_update_device_state(self) -> None:
