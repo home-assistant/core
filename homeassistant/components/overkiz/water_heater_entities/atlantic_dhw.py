@@ -14,6 +14,7 @@ from homeassistant.components.water_heater import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 
+from .. import OverkizDataUpdateCoordinator
 from ..entity import OverkizEntity
 
 OVERKIZ_TO_OPERATION_MODE: dict[str, str] = {
@@ -37,20 +38,18 @@ class AtlanticDomesticHotWaterProductionMBLComponent(OverkizEntity, WaterHeaterE
     )
     _attr_operation_list = [*OVERKIZ_TO_OPERATION_MODE.keys()]
 
-    @property
-    def max_temp(self) -> float:
-        """Return the maximum temperature."""
-        return cast(
+    def __init__(
+        self, device_url: str, coordinator: OverkizDataUpdateCoordinator
+    ) -> None:
+        """Init method."""
+        super().__init__(device_url, coordinator)
+        self._attr_max_temp = cast(
             float,
             self.executor.select_state(
                 OverkizState.CORE_MAXIMAL_TEMPERATURE_MANUAL_MODE
             ),
         )
-
-    @property
-    def min_temp(self) -> float:
-        """Return the minimum temperature."""
-        return cast(
+        self._attr_min_temp = cast(
             float,
             self.executor.select_state(
                 OverkizState.CORE_MINIMAL_TEMPERATURE_MANUAL_MODE
