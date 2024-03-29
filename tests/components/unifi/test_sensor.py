@@ -1020,9 +1020,7 @@ async def test_wlan_password(
     assert ent_reg_entry.entity_category is EntityCategory.DIAGNOSTIC
 
     # Enable entity
-    entity_registry.async_update_entity(
-        entity_id=sensor_password, disabled_by=None
-    )
+    entity_registry.async_update_entity(entity_id=sensor_password, disabled_by=None)
     await hass.async_block_till_done()
 
     async_fire_time_changed(
