@@ -1,4 +1,5 @@
 """Tests for Overkiz config flow."""
+
 from __future__ import annotations
 
 from ipaddress import ip_address
@@ -95,9 +96,12 @@ async def test_form_cloud(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> N
     assert result3["type"] == "form"
     assert result3["step_id"] == "cloud"
 
-    with patch("pyoverkiz.client.OverkizClient.login", return_value=True), patch(
-        "pyoverkiz.client.OverkizClient.get_gateways",
-        return_value=MOCK_GATEWAY_RESPONSE,
+    with (
+        patch("pyoverkiz.client.OverkizClient.login", return_value=True),
+        patch(
+            "pyoverkiz.client.OverkizClient.get_gateways",
+            return_value=MOCK_GATEWAY_RESPONSE,
+        ),
     ):
         await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -127,9 +131,12 @@ async def test_form_only_cloud_supported(
     assert result2["type"] == "form"
     assert result2["step_id"] == "cloud"
 
-    with patch("pyoverkiz.client.OverkizClient.login", return_value=True), patch(
-        "pyoverkiz.client.OverkizClient.get_gateways",
-        return_value=MOCK_GATEWAY_RESPONSE,
+    with (
+        patch("pyoverkiz.client.OverkizClient.login", return_value=True),
+        patch(
+            "pyoverkiz.client.OverkizClient.get_gateways",
+            return_value=MOCK_GATEWAY_RESPONSE,
+        ),
     ):
         await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -417,9 +424,12 @@ async def test_cloud_abort_on_duplicate_entry(
     assert result3["type"] == "form"
     assert result3["step_id"] == "cloud"
 
-    with patch("pyoverkiz.client.OverkizClient.login", return_value=True), patch(
-        "pyoverkiz.client.OverkizClient.get_gateways",
-        return_value=MOCK_GATEWAY_RESPONSE,
+    with (
+        patch("pyoverkiz.client.OverkizClient.login", return_value=True),
+        patch(
+            "pyoverkiz.client.OverkizClient.get_gateways",
+            return_value=MOCK_GATEWAY_RESPONSE,
+        ),
     ):
         result4 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -524,9 +534,12 @@ async def test_cloud_allow_multiple_unique_entries(
     assert result3["type"] == "form"
     assert result3["step_id"] == "cloud"
 
-    with patch("pyoverkiz.client.OverkizClient.login", return_value=True), patch(
-        "pyoverkiz.client.OverkizClient.get_gateways",
-        return_value=MOCK_GATEWAY_RESPONSE,
+    with (
+        patch("pyoverkiz.client.OverkizClient.login", return_value=True),
+        patch(
+            "pyoverkiz.client.OverkizClient.get_gateways",
+            return_value=MOCK_GATEWAY_RESPONSE,
+        ),
     ):
         result4 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -572,9 +585,12 @@ async def test_cloud_reauth_success(hass: HomeAssistant) -> None:
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "cloud"
 
-    with patch("pyoverkiz.client.OverkizClient.login", return_value=True), patch(
-        "pyoverkiz.client.OverkizClient.get_gateways",
-        return_value=MOCK_GATEWAY_RESPONSE,
+    with (
+        patch("pyoverkiz.client.OverkizClient.login", return_value=True),
+        patch(
+            "pyoverkiz.client.OverkizClient.get_gateways",
+            return_value=MOCK_GATEWAY_RESPONSE,
+        ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -619,9 +635,12 @@ async def test_cloud_reauth_wrong_account(hass: HomeAssistant) -> None:
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "cloud"
 
-    with patch("pyoverkiz.client.OverkizClient.login", return_value=True), patch(
-        "pyoverkiz.client.OverkizClient.get_gateways",
-        return_value=MOCK_GATEWAY2_RESPONSE,
+    with (
+        patch("pyoverkiz.client.OverkizClient.login", return_value=True),
+        patch(
+            "pyoverkiz.client.OverkizClient.get_gateways",
+            return_value=MOCK_GATEWAY2_RESPONSE,
+        ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -757,7 +776,7 @@ async def test_dhcp_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
         data=dhcp.DhcpServiceInfo(
             hostname="gateway-1234-5678-9123",
             ip="192.168.1.4",
-            macaddress="F8811A000000",
+            macaddress="f8811a000000",
         ),
         context={"source": config_entries.SOURCE_DHCP},
     )
@@ -778,8 +797,9 @@ async def test_dhcp_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
         {"api_type": "cloud"},
     )
 
-    with patch("pyoverkiz.client.OverkizClient.login", return_value=True), patch(
-        "pyoverkiz.client.OverkizClient.get_gateways", return_value=None
+    with (
+        patch("pyoverkiz.client.OverkizClient.login", return_value=True),
+        patch("pyoverkiz.client.OverkizClient.get_gateways", return_value=None),
     ):
         result4 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -815,7 +835,7 @@ async def test_dhcp_flow_already_configured(hass: HomeAssistant) -> None:
         data=dhcp.DhcpServiceInfo(
             hostname="gateway-1234-5678-9123",
             ip="192.168.1.4",
-            macaddress="F8811A000000",
+            macaddress="f8811a000000",
         ),
         context={"source": config_entries.SOURCE_DHCP},
     )
@@ -851,9 +871,12 @@ async def test_zeroconf_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -
     assert result3["type"] == "form"
     assert result3["step_id"] == "cloud"
 
-    with patch("pyoverkiz.client.OverkizClient.login", return_value=True), patch(
-        "pyoverkiz.client.OverkizClient.get_gateways",
-        return_value=MOCK_GATEWAY_RESPONSE,
+    with (
+        patch("pyoverkiz.client.OverkizClient.login", return_value=True),
+        patch(
+            "pyoverkiz.client.OverkizClient.get_gateways",
+            return_value=MOCK_GATEWAY_RESPONSE,
+        ),
     ):
         result4 = await hass.config_entries.flow.async_configure(
             result["flow_id"],

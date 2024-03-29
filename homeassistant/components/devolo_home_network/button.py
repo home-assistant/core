@@ -1,4 +1,5 @@
 """Platform for button integration."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
@@ -22,30 +23,22 @@ from .const import DOMAIN, IDENTIFY, PAIRING, RESTART, START_WPS
 from .entity import DevoloEntity
 
 
-@dataclass(frozen=True)
-class DevoloButtonRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class DevoloButtonEntityDescription(ButtonEntityDescription):
+    """Describes devolo button entity."""
 
     press_func: Callable[[Device], Awaitable[bool]]
-
-
-@dataclass(frozen=True)
-class DevoloButtonEntityDescription(
-    ButtonEntityDescription, DevoloButtonRequiredKeysMixin
-):
-    """Describes devolo button entity."""
 
 
 BUTTON_TYPES: dict[str, DevoloButtonEntityDescription] = {
     IDENTIFY: DevoloButtonEntityDescription(
         key=IDENTIFY,
         entity_category=EntityCategory.DIAGNOSTIC,
-        icon="mdi:led-on",
+        device_class=ButtonDeviceClass.IDENTIFY,
         press_func=lambda device: device.plcnet.async_identify_device_start(),  # type: ignore[union-attr]
     ),
     PAIRING: DevoloButtonEntityDescription(
         key=PAIRING,
-        icon="mdi:plus-network-outline",
         press_func=lambda device: device.plcnet.async_pair_device(),  # type: ignore[union-attr]
     ),
     RESTART: DevoloButtonEntityDescription(
@@ -56,7 +49,6 @@ BUTTON_TYPES: dict[str, DevoloButtonEntityDescription] = {
     ),
     START_WPS: DevoloButtonEntityDescription(
         key=START_WPS,
-        icon="mdi:wifi-plus",
         press_func=lambda device: device.device.async_start_wps(),  # type: ignore[union-attr]
     ),
 }
@@ -125,9 +117,13 @@ class DevoloButtonEntity(DevoloEntity, ButtonEntity):
         except DevicePasswordProtected as ex:
             self.entry.async_start_reauth(self.hass)
             raise HomeAssistantError(
-                f"Device {self.entry.title} require re-authenticatication to set or change the password"
+                translation_domain=DOMAIN,
+                translation_key="password_protected",
+                translation_placeholders={"title": self.entry.title},
             ) from ex
         except DeviceUnavailable as ex:
             raise HomeAssistantError(
-                f"Device {self.entry.title} did not respond"
+                translation_domain=DOMAIN,
+                translation_key="no_response",
+                translation_placeholders={"title": self.entry.title},
             ) from ex

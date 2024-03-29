@@ -1,4 +1,5 @@
 """Philips TV binary sensors."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -29,13 +30,11 @@ DESCRIPTIONS = (
     PhilipsTVBinarySensorEntityDescription(
         key="recording_ongoing",
         translation_key="recording_ongoing",
-        icon="mdi:record-rec",
         recording_value="RECORDING_ONGOING",
     ),
     PhilipsTVBinarySensorEntityDescription(
         key="recording_new",
         translation_key="recording_new",
-        icon="mdi:new-box",
         recording_value="RECORDING_NEW",
     ),
 )
@@ -65,10 +64,7 @@ def _check_for_recording_entry(api: PhilipsTV, entry: str, value: str) -> bool:
     """Return True if at least one specified value is available within entry of list."""
     if api.recordings_list is None:
         return False
-    for rec in api.recordings_list["recordings"]:
-        if rec.get(entry) == value:
-            return True
-    return False
+    return any(rec.get(entry) == value for rec in api.recordings_list["recordings"])
 
 
 class PhilipsTVBinarySensorEntityRecordingType(PhilipsJsEntity, BinarySensorEntity):

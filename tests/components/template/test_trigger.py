@@ -1,4 +1,5 @@
 """The tests for the Template automation."""
+
 from datetime import timedelta
 from unittest import mock
 

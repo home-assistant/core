@@ -1,4 +1,5 @@
 """Test the Times of the Day config flow."""
+
 from unittest.mock import patch
 
 import pytest
@@ -11,7 +12,7 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 
-@pytest.mark.parametrize("platform", ("sensor",))
+@pytest.mark.parametrize("platform", ["sensor"])
 async def test_config_flow(hass: HomeAssistant, platform) -> None:
     """Test the config flow."""
     result = await hass.config_entries.flow.async_init(

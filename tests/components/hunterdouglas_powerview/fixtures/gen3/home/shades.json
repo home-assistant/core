@@ -1,0 +1,340 @@
+[
+  {
+    "id": 413,
+    "type": 6,
+    "name": "RmFtaWx5IExlZnQ=",
+    "ptName": "Family Left",
+    "motion": null,
+    "capabilities": 0,
+    "powerType": 2,
+    "batteryStatus": 3,
+    "roomId": 217,
+    "firmware": {
+      "revision": 3,
+      "subRevision": 0,
+      "build": 309
+    },
+    "positions": {
+      "primary": 0,
+      "secondary": 0,
+      "tilt": 0,
+      "velocity": 0
+    },
+    "signalStrength": -71,
+    "bleName": "R23:FC42",
+    "shadeGroupIds": [],
+    "shade_api_class": "ShadeBottomUp"
+  },
+  {
+    "id": 22,
+    "type": 44,
+    "name": "RmFtaWx5IENlbnRyZQ==",
+    "ptName": "Family Centre",
+    "motion": null,
+    "capabilities": 0,
+    "powerType": 2,
+    "batteryStatus": 3,
+    "roomId": 217,
+    "firmware": {
+      "revision": 3,
+      "subRevision": 0,
+      "build": 309
+    },
+    "positions": {
+      "primary": 0,
+      "secondary": 0,
+      "tilt": 0,
+      "velocity": 0
+    },
+    "signalStrength": -74,
+    "bleName": "R23:BD25",
+    "shadeGroupIds": [],
+    "shade_api_class": "ShadeBottomUpTiltOnClosed180"
+  },
+  {
+    "id": 6539,
+    "type": 18,
+    "name": "RmFtaWx5IFJpZ2h0",
+    "ptName": "Family Right",
+    "motion": null,
+    "capabilities": 1,
+    "powerType": 2,
+    "batteryStatus": 3,
+    "roomId": 217,
+    "firmware": {
+      "revision": 3,
+      "subRevision": 0,
+      "build": 309
+    },
+    "positions": {
+      "primary": 0,
+      "secondary": 0,
+      "tilt": 0,
+      "velocity": 0
+    },
+    "signalStrength": -74,
+    "bleName": "R23:BD25",
+    "shadeGroupIds": [],
+    "shade_api_class": "ShadeBottomUpTiltOnClosed90"
+  },
+  {
+    "id": 10,
+    "type": 51,
+    "name": "QmVkIDI=",
+    "ptName": "Bed 2",
+    "motion": null,
+    "capabilities": 2,
+    "powerType": 2,
+    "batteryStatus": 3,
+    "roomId": 236,
+    "firmware": {
+      "revision": 3,
+      "subRevision": 0,
+      "build": 309
+    },
+    "positions": {
+      "primary": 1,
+      "secondary": 0,
+      "tilt": 0,
+      "velocity": 0
+    },
+    "signalStrength": -66,
+    "bleName": "R23:CE7A",
+    "shadeGroupIds": [],
+    "shade_api_class": "ShadeBottomUpTiltAnywhere"
+  },
+  {
+    "id": 46,
+    "type": 71,
+    "name": "QmVkIDM=",
+    "ptName": "Bed 3",
+    "motion": null,
+    "capabilities": 3,
+    "powerType": 2,
+    "batteryStatus": 3,
+    "roomId": 252,
+    "firmware": {
+      "revision": 3,
+      "subRevision": 0,
+      "build": 309
+    },
+    "positions": {
+      "primary": 1,
+      "secondary": 0,
+      "tilt": 0,
+      "velocity": 0
+    },
+    "signalStrength": -72,
+    "bleName": "R23:77EC",
+    "shadeGroupIds": [],
+    "shade_api_class": "ShadeVertical"
+  },
+  {
+    "id": 173,
+    "type": 56,
+    "name": "QmVkIDQ=",
+    "ptName": "Bed 4",
+    "motion": null,
+    "capabilities": 4,
+    "powerType": 2,
+    "batteryStatus": 3,
+    "roomId": 277,
+    "firmware": {
+      "revision": 3,
+      "subRevision": 0,
+      "build": 309
+    },
+    "positions": {
+      "primary": 1,
+      "secondary": 0,
+      "tilt": 0,
+      "velocity": 0
+    },
+    "signalStrength": -83,
+    "bleName": "R23:20CC",
+    "shadeGroupIds": [],
+    "shade_api_class": "ShadeVerticalTiltAnywhere"
+  },
+  {
+    "id": 110,
+    "type": 66,
+    "name": "TG91bmdlIFJvb20gTGVmdA==",
+    "ptName": "Lounge Room Left",
+    "motion": null,
+    "capabilities": 5,
+    "powerType": 2,
+    "batteryStatus": 3,
+    "roomId": 291,
+    "firmware": {
+      "revision": 3,
+      "subRevision": 0,
+      "build": 309
+    },
+    "positions": {
+      "primary": 1,
+      "secondary": 0,
+      "tilt": 0,
+      "velocity": 0
+    },
+    "signalStrength": -71,
+    "bleName": "R23:9A5B",
+    "shadeGroupIds": [],
+    "shade_api_class": "ShadeTiltOnly"
+  },
+  {
+    "id": 51,
+    "type": 7,
+    "name": "TG91bmdlIFJvb20gUmlnaHQ=",
+    "ptName": "Lounge Room Right",
+    "motion": null,
+    "capabilities": 6,
+    "powerType": 2,
+    "batteryStatus": 3,
+    "roomId": 252,
+    "firmware": {
+      "revision": 3,
+      "subRevision": 0,
+      "build": 309
+    },
+    "positions": {
+      "primary": 1,
+      "secondary": 0,
+      "tilt": 0,
+      "velocity": 0
+    },
+    "signalStrength": -74,
+    "bleName": "R23:1043",
+    "shadeGroupIds": [],
+    "shade_api_class": "ShadeTopDown"
+  },
+  {
+    "id": 118,
+    "type": 8,
+    "name": "TWFzdGVyIExlZnQ=",
+    "ptName": "Master Left",
+    "motion": null,
+    "capabilities": 7,
+    "powerType": 2,
+    "batteryStatus": 3,
+    "roomId": 298,
+    "firmware": {
+      "revision": 3,
+      "subRevision": 0,
+      "build": 309
+    },
+    "positions": {
+      "primary": 1,
+      "secondary": 0,
+      "tilt": 0,
+      "velocity": 0
+    },
+    "signalStrength": -80,
+    "bleName": "R23:E2CD",
+    "shadeGroupIds": [],
+    "shade_api_class": "ShadeTopDownBottomUp"
+  },
+  {
+    "id": 13,
+    "type": 79,
+    "name": "TWFzdGVyIFJpZ2h0",
+    "ptName": "Master Right",
+    "motion": null,
+    "capabilities": 8,
+    "powerType": 2,
+    "batteryStatus": 2,
+    "roomId": 236,
+    "firmware": {
+      "revision": 3,
+      "subRevision": 0,
+      "build": 309
+    },
+    "positions": {
+      "primary": 1,
+      "secondary": 0,
+      "tilt": 0,
+      "velocity": 0
+    },
+    "signalStrength": -60,
+    "bleName": "R23:AFDD",
+    "shadeGroupIds": [],
+    "shade_api_class": "ShadeDualOverlapped"
+  },
+  {
+    "id": 180,
+    "type": 38,
+    "name": "S2l0Y2hlbiBSb2xsZXI=",
+    "ptName": "Kitchen Roller",
+    "motion": null,
+    "capabilities": 9,
+    "powerType": 2,
+    "batteryStatus": 3,
+    "roomId": 311,
+    "firmware": {
+      "revision": 3,
+      "subRevision": 0,
+      "build": 359
+    },
+    "positions": {
+      "primary": 0,
+      "secondary": 0,
+      "tilt": 0,
+      "velocity": 0
+    },
+    "signalStrength": -74,
+    "bleName": "R23:B07F",
+    "shadeGroupIds": [],
+    "shade_api_class": "ShadeDualOverlappedTilt90"
+  },
+  {
+    "id": 192,
+    "type": 999,
+    "name": "U3R1ZHkgRHVldHRl",
+    "ptName": "Study Duette",
+    "motion": null,
+    "capabilities": 10,
+    "powerType": 2,
+    "batteryStatus": 3,
+    "roomId": 327,
+    "firmware": {
+      "revision": 3,
+      "subRevision": 0,
+      "build": 359
+    },
+    "positions": {
+      "primary": 0,
+      "secondary": 0,
+      "tilt": 0,
+      "velocity": 0
+    },
+    "signalStrength": -66,
+    "bleName": "R23:E63C",
+    "shadeGroupIds": [],
+    "shade_api_class": "ShadeDualOverlappedTilt180"
+  },
+  {
+    "batteryStatus": null,
+    "bleName": "AUR:881C",
+    "capabilities": 11,
+    "firmware": {
+      "build": 400,
+      "revision": 3,
+      "subRevision": 0
+    },
+    "id": 109,
+    "motion": null,
+    "name": "Q2VudGVy",
+    "positions": {
+      "light": null,
+      "primary": null,
+      "secondary": null,
+      "tilt": null,
+      "velocity": null
+    },
+    "powerType": 12,
+    "ptName": "Center",
+    "roomId": 9,
+    "shadeGroupIds": [],
+    "type": 95,
+    "shade_api_class": "ShadeDualOverlappedIlluminated"
+  }
+]

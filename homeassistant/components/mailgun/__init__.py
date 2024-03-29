@@ -1,4 +1,5 @@
 """Support for Mailgun."""
+
 import hashlib
 import hmac
 import json

@@ -1,4 +1,5 @@
 """Platform for Kostal Plenticore sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -33,19 +34,12 @@ from .helper import PlenticoreDataFormatter, ProcessDataUpdateCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
-class PlenticoreRequiredKeysMixin:
-    """A class that describes required properties for plenticore sensor entities."""
+@dataclass(frozen=True, kw_only=True)
+class PlenticoreSensorEntityDescription(SensorEntityDescription):
+    """A class that describes plenticore sensor entities."""
 
     module_id: str
     formatter: str
-
-
-@dataclass(frozen=True)
-class PlenticoreSensorEntityDescription(
-    SensorEntityDescription, PlenticoreRequiredKeysMixin
-):
-    """A class that describes plenticore sensor entities."""
 
 
 SENSOR_PROCESS_DATA = [

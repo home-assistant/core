@@ -1,4 +1,5 @@
 """Constants for the Season integration."""
+
 from typing import Final
 
 from homeassistant.const import Platform

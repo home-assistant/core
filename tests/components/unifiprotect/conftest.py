@@ -19,6 +19,7 @@ from pyunifiprotect.data import (
     Bootstrap,
     Camera,
     Chime,
+    CloudAccount,
     Doorlock,
     Light,
     Liveview,
@@ -119,6 +120,7 @@ def mock_ufp_client(bootstrap: Bootstrap):
     client.base_url = "https://127.0.0.1"
     client.connection_host = IPv4Address("127.0.0.1")
     client.get_nvr = AsyncMock(return_value=nvr)
+    client.get_bootstrap = AsyncMock(return_value=bootstrap)
     client.update = AsyncMock(return_value=bootstrap)
     client.async_disconnect_ws = AsyncMock()
     return client
@@ -130,9 +132,12 @@ def mock_entry(
 ):
     """Mock ProtectApiClient for testing."""
 
-    with _patch_discovery(no_device=True), patch(
-        "homeassistant.components.unifiprotect.utils.ProtectApiClient"
-    ) as mock_api:
+    with (
+        _patch_discovery(no_device=True),
+        patch(
+            "homeassistant.components.unifiprotect.utils.ProtectApiClient"
+        ) as mock_api,
+    ):
         ufp_config_entry.add_to_hass(hass)
 
         mock_api.return_value = ufp_client
@@ -345,3 +350,19 @@ def chime():
 def fixed_now_fixture():
     """Return datetime object that will be consistent throughout test."""
     return dt_util.utcnow()
+
+
+@pytest.fixture(name="cloud_account")
+def cloud_account() -> CloudAccount:
+    """Return UI Cloud Account."""
+
+    return CloudAccount(
+        id="42",
+        first_name="Test",
+        last_name="User",
+        email="test@example.com",
+        user_id="42",
+        name="Test User",
+        location=None,
+        profile_img=None,
+    )

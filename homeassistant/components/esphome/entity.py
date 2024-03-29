@@ -1,12 +1,14 @@
 """Support for esphome entities."""
+
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable, Coroutine
 import functools
 import math
-from typing import TYPE_CHECKING, Any, Generic, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Concatenate, Generic, ParamSpec, TypeVar, cast
 
 from aioesphomeapi import (
+    APIConnectionError,
     EntityCategory as EsphomeEntityCategory,
     EntityInfo,
     EntityState,
@@ -17,11 +19,11 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -32,6 +34,7 @@ from .entry_data import RuntimeEntryData
 from .enum_mapper import EsphomeEnumMapper
 
 _R = TypeVar("_R")
+_P = ParamSpec("_P")
 _InfoT = TypeVar("_InfoT", bound=EntityInfo)
 _EntityT = TypeVar("_EntityT", bound="EsphomeEntity[Any,Any]")
 _StateT = TypeVar("_StateT", bound=EntityState)
@@ -65,10 +68,8 @@ def async_static_info_updated(
         device_info = entry_data.device_info
         if TYPE_CHECKING:
             assert device_info is not None
-        hass.async_create_task(
-            entry_data.async_remove_entities(
-                hass, current_infos.values(), device_info.mac_address
-            )
+        entry_data.async_remove_entities(
+            hass, current_infos.values(), device_info.mac_address
         )
 
     # Then update the actual info
@@ -142,17 +143,37 @@ def esphome_state_property(
     return _wrapper
 
 
+def convert_api_error_ha_error(
+    func: Callable[Concatenate[_EntityT, _P], Awaitable[None]],
+) -> Callable[Concatenate[_EntityT, _P], Coroutine[Any, Any, None]]:
+    """Decorate ESPHome command calls that send commands/make changes to the device.
+
+    A decorator that wraps the passed in function, catches APIConnectionError errors,
+    and raises a HomeAssistant error instead.
+    """
+
+    async def handler(self: _EntityT, *args: _P.args, **kwargs: _P.kwargs) -> None:
+        try:
+            return await func(self, *args, **kwargs)
+        except APIConnectionError as error:
+            raise HomeAssistantError(
+                f"Error communicating with device: {error}"
+            ) from error
+
+    return handler
+
+
 ICON_SCHEMA = vol.Schema(cv.icon)
 
 
-ENTITY_CATEGORIES: EsphomeEnumMapper[
-    EsphomeEntityCategory, EntityCategory | None
-] = EsphomeEnumMapper(
-    {
-        EsphomeEntityCategory.NONE: None,
-        EsphomeEntityCategory.CONFIG: EntityCategory.CONFIG,
-        EsphomeEntityCategory.DIAGNOSTIC: EntityCategory.DIAGNOSTIC,
-    }
+ENTITY_CATEGORIES: EsphomeEnumMapper[EsphomeEntityCategory, EntityCategory | None] = (
+    EsphomeEnumMapper(
+        {
+            EsphomeEntityCategory.NONE: None,
+            EsphomeEntityCategory.CONFIG: EntityCategory.CONFIG,
+            EsphomeEntityCategory.DIAGNOSTIC: EntityCategory.DIAGNOSTIC,
+        }
+    )
 )
 
 
@@ -206,31 +227,19 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         entry_data = self._entry_data
-        hass = self.hass
-        key = self._key
-        static_info = self._static_info
-
         self.async_on_remove(
-            entry_data.async_register_key_static_info_remove_callback(
-                static_info,
-                functools.partial(self.async_remove, force_remove=True),
-            )
-        )
-        self.async_on_remove(
-            async_dispatcher_connect(
-                hass,
-                entry_data.signal_device_updated,
+            entry_data.async_subscribe_device_updated(
                 self._on_device_update,
             )
         )
         self.async_on_remove(
             entry_data.async_subscribe_state_update(
-                self._state_type, key, self._on_state_update
+                self._state_type, self._key, self._on_state_update
             )
         )
         self.async_on_remove(
             entry_data.async_register_key_static_info_updated_callback(
-                static_info, self._on_static_info_update
+                self._static_info, self._on_static_info_update
             )
         )
         self._update_state_from_entry_data()

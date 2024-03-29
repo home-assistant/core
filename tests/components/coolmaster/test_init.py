@@ -1,4 +1,5 @@
 """The test for the Coolmaster integration."""
+
 from homeassistant.components.coolmaster.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant

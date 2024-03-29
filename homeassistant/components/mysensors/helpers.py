@@ -1,4 +1,5 @@
 """Helper functions for mysensors package."""
+
 from __future__ import annotations
 
 from collections import defaultdict

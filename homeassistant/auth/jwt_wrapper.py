@@ -4,6 +4,7 @@ Since we decode the same tokens over and over again
 we can cache the result of the decode of valid tokens
 to speed up the process.
 """
+
 from __future__ import annotations
 
 from datetime import timedelta

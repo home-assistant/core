@@ -1,4 +1,5 @@
 """Tests for the Crownstone integration."""
+
 from __future__ import annotations
 
 from collections.abc import Generator

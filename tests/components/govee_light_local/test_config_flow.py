@@ -1,4 +1,5 @@
 """Test Govee light local config flow."""
+
 from unittest.mock import AsyncMock, patch
 
 from govee_local_api import GoveeDevice
@@ -17,9 +18,15 @@ async def test_creating_entry_has_no_devices(
 
     mock_govee_api.devices = []
 
-    with patch(
-        "homeassistant.components.govee_light_local.config_flow.GoveeController",
-        return_value=mock_govee_api,
+    with (
+        patch(
+            "homeassistant.components.govee_light_local.config_flow.GoveeController",
+            return_value=mock_govee_api,
+        ),
+        patch(
+            "homeassistant.components.govee_light_local.config_flow.DISCOVERY_TIMEOUT",
+            0,
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}

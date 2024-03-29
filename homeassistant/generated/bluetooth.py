@@ -282,6 +282,22 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
         "local_name": "mib*",
     },
     {
+        "domain": "lamarzocco",
+        "local_name": "MICRA_*",
+    },
+    {
+        "domain": "lamarzocco",
+        "local_name": "MINI_*",
+    },
+    {
+        "domain": "lamarzocco",
+        "local_name": "GS3_*",
+    },
+    {
+        "domain": "lamarzocco",
+        "local_name": "GS3AV_*",
+    },
+    {
         "domain": "ld2410_ble",
         "local_name": "HLK-LD2410B_*",
     },
@@ -426,6 +442,11 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
         ],
         "manufacturer_id": 89,
         "service_uuid": "0000fee5-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "connectable": True,
+        "domain": "motionblinds_ble",
+        "local_name": "MOTION_*",
     },
     {
         "domain": "oralb",
@@ -616,6 +637,11 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
         "connectable": False,
         "domain": "thermopro",
         "local_name": "TP96*",
+    },
+    {
+        "connectable": False,
+        "domain": "thermopro",
+        "local_name": "TP97*",
     },
     {
         "domain": "tilt_ble",

@@ -1,4 +1,5 @@
 """Test Dremel 3D Printer config flow."""
+
 from unittest.mock import patch
 
 from requests.exceptions import ConnectTimeout

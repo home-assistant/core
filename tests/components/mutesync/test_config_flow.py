@@ -1,4 +1,5 @@
 """Test the mütesync config flow."""
+
 from unittest.mock import patch
 
 import aiohttp
@@ -18,13 +19,16 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["type"] == "form"
     assert result["errors"] is None
 
-    with patch(
-        "mutesync.authenticate",
-        return_value="bla",
-    ), patch(
-        "homeassistant.components.mutesync.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "mutesync.authenticate",
+            return_value="bla",
+        ),
+        patch(
+            "homeassistant.components.mutesync.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {

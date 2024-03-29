@@ -1,4 +1,5 @@
 """Support for getting statistical data from a Pi-hole system."""
+
 from __future__ import annotations
 
 from hole import Hole
@@ -19,55 +20,46 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="ads_blocked_today",
         translation_key="ads_blocked_today",
         native_unit_of_measurement="ads",
-        icon="mdi:close-octagon-outline",
     ),
     SensorEntityDescription(
         key="ads_percentage_today",
         translation_key="ads_percentage_today",
         native_unit_of_measurement=PERCENTAGE,
-        icon="mdi:close-octagon-outline",
     ),
     SensorEntityDescription(
         key="clients_ever_seen",
         translation_key="clients_ever_seen",
         native_unit_of_measurement="clients",
-        icon="mdi:account-outline",
     ),
     SensorEntityDescription(
         key="dns_queries_today",
         translation_key="dns_queries_today",
         native_unit_of_measurement="queries",
-        icon="mdi:comment-question-outline",
     ),
     SensorEntityDescription(
         key="domains_being_blocked",
         translation_key="domains_being_blocked",
         native_unit_of_measurement="domains",
-        icon="mdi:block-helper",
     ),
     SensorEntityDescription(
         key="queries_cached",
         translation_key="queries_cached",
         native_unit_of_measurement="queries",
-        icon="mdi:comment-question-outline",
     ),
     SensorEntityDescription(
         key="queries_forwarded",
         translation_key="queries_forwarded",
         native_unit_of_measurement="queries",
-        icon="mdi:comment-question-outline",
     ),
     SensorEntityDescription(
         key="unique_clients",
         translation_key="unique_clients",
         native_unit_of_measurement="clients",
-        icon="mdi:account-outline",
     ),
     SensorEntityDescription(
         key="unique_domains",
         translation_key="unique_domains",
         native_unit_of_measurement="domains",
-        icon="mdi:domain",
     ),
 )
 
