@@ -4,8 +4,8 @@ from typing import Any
 
 from homeassistant import config_entries
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_MAC
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.util import slugify
 
@@ -23,7 +23,7 @@ class EQ3ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
 
         errors: dict[str, str] = {}
@@ -53,7 +53,7 @@ class EQ3ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle bluetooth discovery."""
 
         self.mac_address = format_mac(discovery_info.address)
@@ -67,7 +67,7 @@ class EQ3ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle flow start."""
 
         if user_input is None:
