@@ -4,9 +4,6 @@
 config
 docs
 
-# asdf
-.tool-versions
-
 # Development
 .devcontainer
 .vscode
