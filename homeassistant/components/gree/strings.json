@@ -27,6 +27,11 @@
       "health_mode": {
         "name": "Health mode"
       }
+    },
+    "binary_sensor": {
+      "water_full": {
+        "name": "Water Tank Full"
+      }
     }
   }
 }
