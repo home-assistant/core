@@ -38,7 +38,7 @@ on:
       python_cache_key:
         value: ${{ jobs.info.outputs.python_cache_key }}
 
-        env:
+env:
   CACHE_VERSION: 5
   UV_CACHE_VERSION: 1
   MYPY_CACHE_VERSION: 8
