@@ -339,6 +339,19 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         value_fn=async_device_state_value_fn,
         options=list(DEVICE_STATES.values()),
     ),
+    UnifiSensorEntityDescription[Wlans, Wlan](
+        key="WLAN Password",
+        name_fn=lambda wlan: "Password",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        api_handler_fn=lambda api: api.wlans,
+        available_fn=async_wlan_available_fn,
+        device_info_fn=async_wlan_device_info_fn,
+        object_fn=lambda api, obj_id: api.wlans[obj_id],
+        should_poll=True,
+        unique_id_fn=lambda hub, obj_id: f"password-{obj_id}",
+        value_fn=lambda hub, obj: obj.x_passphrase,
+    ),
 )
 
 
