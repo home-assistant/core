@@ -109,16 +109,6 @@ class MetricsTestHelper:
             assert full_metric_string in body
         else:
             assert full_metric_string not in body
-        # assert (
-        #     f"{metric_name}{{"
-        #     f'area="{area or ""}",'
-        #     # f'device_class="{device_class}",'
-        #     f'domain="{domain}",'
-        #     f'entity="{domain}.{object_id}",'
-        #     f'friendly_name="{friendly_name}",'
-        #     f'object_id="{object_id}"'
-        #     f"}} {metric_value}" in body
-        # )
 
     @classmethod
     def _perform_sensor_metric_assert(
@@ -169,16 +159,6 @@ class MetricsTestHelper:
             f'object_id="{object_id}"'
             f"}} {metric_value}" in body
         )
-        # cls._perform_metric_assert(
-        #     metric_name,
-        #     metric_value,
-        #     "climate",
-        #     friendly_name,
-        #     device_class,
-        #     object_id,
-        #     body,
-        #     area=area,
-        # )
 
     @classmethod
     def _perform_cover_metric_assert(
@@ -208,28 +188,6 @@ class MetricsTestHelper:
         )
 
     @classmethod
-    def _perform_switch_metric_assert(
-        cls,
-        metric_name,
-        metric_value,
-        friendly_name,
-        device_class,
-        object_id,
-        body,
-        area=None,
-    ):
-        cls._perform_metric_assert(
-            metric_name,
-            metric_value,
-            "switch",
-            friendly_name,
-            device_class,
-            object_id,
-            body,
-            area=area,
-        )
-
-    @classmethod
     def _perform_humidifier_metric_assert(
         cls,
         metric_name,
@@ -253,50 +211,6 @@ class MetricsTestHelper:
             f'{mode_label_line}'
             f'object_id="{object_id}"'
             f"}} {metric_value}" in body
-        )
-
-    @classmethod
-    def _perform_number_metric_assert(
-        cls,
-        metric_name,
-        metric_value,
-        friendly_name,
-        device_class,
-        object_id,
-        body,
-        area=None,
-    ):
-        cls._perform_metric_assert(
-            metric_name,
-            metric_value,
-            "number",
-            friendly_name,
-            device_class,
-            object_id,
-            body,
-            area=area,
-        )
-
-    @classmethod
-    def _perform_input_number_metric_assert(
-        cls,
-        metric_name,
-        metric_value,
-        friendly_name,
-        device_class,
-        object_id,
-        body,
-        area=None,
-    ):
-        cls._perform_metric_assert(
-            metric_name,
-            metric_value,
-            "input_number",
-            friendly_name,
-            device_class,
-            object_id,
-            body,
-            area=area,
         )
 
     @classmethod
@@ -543,18 +457,20 @@ async def test_input_number(
 ) -> None:
     """Test prometheus metrics for input_number."""
     body = await generate_latest_metrics(client)
+    domain = "input_number"
 
-    MetricsTestHelper._perform_input_number_metric_assert(
-        "input_number_state", "5.2", "Threshold", "", "threshold", body
+    MetricsTestHelper._perform_metric_assert(
+        "input_number_state", "5.2", domain, "Threshold", "", "threshold", body
     )
 
-    MetricsTestHelper._perform_input_number_metric_assert(
-        "input_number_state", "60.0", "None", "", "brightness", body
+    MetricsTestHelper._perform_metric_assert(
+        "input_number_state", "60.0", domain, "None", "", "brightness", body
     )
 
-    MetricsTestHelper._perform_input_number_metric_assert(
+    MetricsTestHelper._perform_metric_assert(
         "input_number_state_celsius",
         "22.7",
+        domain,
         "Target temperature",
         "",
         "target_temperature",
@@ -568,18 +484,20 @@ async def test_number(
 ) -> None:
     """Test prometheus metrics for number."""
     body = await generate_latest_metrics(client)
+    domain = "number"
 
-    MetricsTestHelper._perform_number_metric_assert(
-        "number_state", "5.2", "Threshold", "", "threshold", body
+    MetricsTestHelper._perform_metric_assert(
+        "number_state", "5.2", domain, "Threshold", "", "threshold", body
     )
 
-    MetricsTestHelper._perform_number_metric_assert(
-        "number_state", "60.0", "None", "", "brightness", body
+    MetricsTestHelper._perform_metric_assert(
+        "number_state", "60.0", domain, "None", "", "brightness", body
     )
 
-    MetricsTestHelper._perform_number_metric_assert(
+    MetricsTestHelper._perform_metric_assert(
         "number_state_celsius",
         "22.7",
+        domain,
         "Target temperature",
         "",
         "target_temperature",
@@ -669,21 +587,22 @@ async def test_attributes(
 ) -> None:
     """Test prometheus metrics for entity attributes."""
     body = await generate_latest_metrics(client)
+    domain = "switch"
 
-    MetricsTestHelper._perform_switch_metric_assert(
-        "switch_state", "1.0", "Boolean", "", "boolean", body
+    MetricsTestHelper._perform_metric_assert(
+        "switch_state", "1.0", domain, "Boolean", "", "boolean", body
     )
 
-    MetricsTestHelper._perform_switch_metric_assert(
-        "switch_attr_boolean", "1.0", "Boolean", "", "boolean", body
+    MetricsTestHelper._perform_metric_assert(
+        "switch_attr_boolean", "1.0", domain, "Boolean", "", "boolean", body
     )
 
-    MetricsTestHelper._perform_switch_metric_assert(
-        "switch_state", "0.0", "Number", "", "number", body
+    MetricsTestHelper._perform_metric_assert(
+        "switch_state", "0.0", domain, "Number", "", "number", body
     )
 
-    MetricsTestHelper._perform_switch_metric_assert(
-        "switch_attr_number", "10.2", "Number", "", "number", body
+    MetricsTestHelper._perform_metric_assert(
+        "switch_attr_number", "10.2", domain, "Number", "", "number", body
     )
 
 
