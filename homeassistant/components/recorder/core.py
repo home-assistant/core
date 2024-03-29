@@ -898,8 +898,8 @@ class Recorder(threading.Thread):
         _LOGGER.debug("Processing task: %s", task)
         try:
             self._process_one_task_or_event_or_recover(task)
-        except Exception as err:  # pylint: disable=broad-except
-            _LOGGER.exception("Error while processing event %s: %s", task, err)
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Error while processing event %s", task)
 
     def _process_one_task_or_event_or_recover(self, task: RecorderTask | Event) -> None:
         """Process a task or event, reconnect, or recover a malformed database."""
@@ -921,11 +921,9 @@ class Recorder(threading.Thread):
         except exc.DatabaseError as err:
             if self._handle_database_error(err):
                 return
-            _LOGGER.exception(
-                "Unhandled database error while processing task %s: %s", task, err
-            )
-        except SQLAlchemyError as err:
-            _LOGGER.exception("SQLAlchemyError error processing task %s: %s", task, err)
+            _LOGGER.exception("Unhandled database error while processing task %s", task)
+        except SQLAlchemyError:
+            _LOGGER.exception("SQLAlchemyError error processing task %s", task)
 
         # Reset the session if an SQLAlchemyError (including DatabaseError)
         # happens to rollback and recover
@@ -941,10 +939,9 @@ class Recorder(threading.Thread):
                 return migration.initialize_database(self.get_session)
             except UnsupportedDialect:
                 break
-            except Exception as err:  # pylint: disable=broad-except
+            except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception(
-                    "Error during connection setup: %s (retrying in %s seconds)",
-                    err,
+                    "Error during connection setup: (retrying in %s seconds)",
                     self.db_retry_wait,
                 )
             tries += 1
@@ -1262,10 +1259,8 @@ class Recorder(threading.Thread):
         try:
             self.event_session.rollback()
             self.event_session.close()
-        except SQLAlchemyError as err:
-            _LOGGER.exception(
-                "Error while rolling back and closing the event session: %s", err
-            )
+        except SQLAlchemyError:
+            _LOGGER.exception("Error while rolling back and closing the event session")
 
     def _reopen_event_session(self) -> None:
         """Rollback the event session and reopen it after a failure."""
@@ -1473,8 +1468,8 @@ class Recorder(threading.Thread):
             self.recorder_runs_manager.end(self.event_session)
         try:
             self._commit_event_session_or_retry()
-        except Exception as err:  # pylint: disable=broad-except
-            _LOGGER.exception("Error saving the event session during shutdown: %s", err)
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Error saving the event session during shutdown")
 
         self.event_session.close()
         self.recorder_runs_manager.clear()
