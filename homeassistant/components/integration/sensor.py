@@ -452,14 +452,15 @@ class IntegrationSensor(RestoreSensor):
             source_state = self.hass.states.get(self._sensor_source_id)
             self._schedule_max_sub_interval_exceeded_if_state_is_numeric(source_state)
             self.async_on_remove(self._cancel_max_sub_interval_exceeded_callback)
+            handle_state_change = self._integrate_on_state_change_and_max_sub_interval
+        else:
+            handle_state_change = self._integrate_on_state_change_callback
 
         self.async_on_remove(
             async_track_state_change_event(
                 self.hass,
                 [self._sensor_source_id],
-                self._integrate_on_state_change_and_max_sub_interval
-                if self._max_sub_interval is not None
-                else self._integrate_on_state_change_callback,
+                handle_state_change,
             )
         )
 
