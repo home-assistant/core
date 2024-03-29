@@ -1101,10 +1101,8 @@ class HomeAssistant:
                 _LOGGER.exception(
                     "Task %s could not be canceled during final shutdown stage", task
                 )
-            except Exception as exc:  # pylint: disable=broad-except
-                _LOGGER.exception(
-                    "Task %s error during final shutdown stage: %s", task, exc
-                )
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Task %s error during final shutdown stage", task)
 
         # Prevent run_callback_threadsafe from scheduling any additional
         # callbacks in the event loop as callbacks created on the futures
