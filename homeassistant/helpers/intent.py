@@ -344,7 +344,7 @@ def async_match_states(
         floor = _find_floor(floor_name, floors)
         if floor is None:
             _LOGGER.warning("Floor not found: %s", floor_name)
-            return []
+            return
 
     if floor is not None:
         filter_areas = [
@@ -356,7 +356,7 @@ def async_match_states(
         area = _find_area(area_name, areas)
         if area is None:
             _LOGGER.warning("Area not found: %s", area_name)
-            return []
+            return
 
     if area is not None:
         filter_areas = [area]
