@@ -11,7 +11,7 @@ from greeclimate.device import Device
 
 from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
-    BinarySensorEntityDescription
+    BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -23,11 +23,13 @@ from .entity import GreeEntity
 
 _LOGGER = logging.getLogger(__name__)
 
+
 @dataclass(kw_only=True, frozen=True)
 class GreeBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describes a Gree binary sensor entity."""
 
     get_value_fn: Callable[[Device], bool]
+
 
 GREE_BINARY_SENSORS: tuple[GreeBinarySensorEntityDescription, ...] = (
     GreeBinarySensorEntityDescription(
@@ -36,6 +38,7 @@ GREE_BINARY_SENSORS: tuple[GreeBinarySensorEntityDescription, ...] = (
         get_value_fn=lambda d: d.water_full,
     ),
 )
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -47,7 +50,7 @@ async def async_setup_entry(
     @callback
     def init_device(coordinator):
         """Register the device."""
-        
+
         async_add_entities(
             GreeBinarySensor(coordinator=coordinator, description=description)
             for description in GREE_BINARY_SENSORS
@@ -66,7 +69,9 @@ class GreeBinarySensor(GreeEntity, BinarySensorEntity):
 
     entity_description: GreeBinarySensorEntityDescription
 
-    def __init__(self, coordinator, description: GreeBinarySensorEntityDescription) -> None:
+    def __init__(
+        self, coordinator, description: GreeBinarySensorEntityDescription
+    ) -> None:
         """Initialize the Gree device."""
         self.entity_description = description
 
