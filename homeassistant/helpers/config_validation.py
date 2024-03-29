@@ -1648,7 +1648,7 @@ TRIGGER_BASE_SCHEMA = vol.Schema(
         vol.Required(CONF_PLATFORM): str,
         vol.Optional(CONF_ID): str,
         vol.Optional(CONF_VARIABLES): SCRIPT_VARIABLES_SCHEMA,
-        vol.Optional(CONF_ENABLED): boolean,
+        vol.Optional(CONF_ENABLED): vol.Any(boolean, template_complex),
     }
 )
 
