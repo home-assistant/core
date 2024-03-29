@@ -181,6 +181,32 @@ class MetricsTestHelper:
         # )
 
     @classmethod
+    def _perform_cover_metric_assert(
+        cls,
+        metric_name,
+        metric_value,
+        friendly_name,
+        device_class,
+        object_id,
+        body,
+        area=None,
+        state=None,
+    ):
+        domain = "cover"
+        state_label_line = f',state="{state}"' if state else ""
+        assert (
+            f"{metric_name}{{"
+            f'area="{area or ""}",'
+            # f'device_class="{device_class}",'
+            f'domain="{domain}",'
+            f'entity="{domain}.{object_id}",'
+            f'friendly_name="{friendly_name}",'
+            f'object_id="{object_id}"'
+            f'{state_label_line}'
+            f"}} {metric_value}" in body
+        )
+
+    @classmethod
     def _perform_switch_metric_assert(
         cls,
         metric_name,
@@ -750,73 +776,125 @@ async def test_cover(
 
     open_covers = ["cover_open", "cover_position", "cover_tilt_position"]
     for testcover in data:
-        open_metric = (
-            f"cover_state{{"
-            'area="",'
-            'device_class="temperature",'
-            f'domain="cover",'
-            f'entity="{cover_entities[testcover].entity_id}",'
-            f'friendly_name="{cover_entities[testcover].original_name}",'
-            f'state="open"}} {1.0 if cover_entities[testcover].unique_id in open_covers else 0.0}'
+        MetricsTestHelper._perform_cover_metric_assert(
+            "cover_state",
+            f"{1.0 if cover_entities[testcover].unique_id in open_covers else 0.0}",
+            f"{cover_entities[testcover].original_name}",
+            "",
+            f"{cover_entities[testcover].entity_id}",
+            body,
+            state="open",
         )
-        assert open_metric in body
+        # open_metric = (
+        #     f"cover_state{{"
+        #     'area="",'
+        #     'device_class="temperature",'
+        #     f'domain="cover",'
+        #     f'entity="{cover_entities[testcover].entity_id}",'
+        #     f'friendly_name="{cover_entities[testcover].original_name}",'
+        #     f'state="open"}} {1.0 if cover_entities[testcover].unique_id in open_covers else 0.0}'
+        # )
+        # assert open_metric in body
 
-        closed_metric = (
-            f'cover_state{{'
-            'area="",'
-            'device_class="temperature",'
-            f'domain="cover",'
-            f'entity="{cover_entities[testcover].entity_id}",'
-            f'friendly_name="{cover_entities[testcover].original_name}",'
-            f'state="closed"}} {1.0 if cover_entities[testcover].unique_id == "cover_closed" else 0.0}'
+        MetricsTestHelper._perform_cover_metric_assert(
+            "cover_state",
+            1.0 if cover_entities[testcover].unique_id == "cover_closed" else 0.0,
+            cover_entities[testcover].original_name,
+            "",
+            cover_entities[testcover].entity_id,
+            body,
+            state="closed",
         )
-        assert closed_metric in body
+        # closed_metric = (
+        #     f'cover_state{{'
+        #     'area="",'
+        #     'device_class="temperature",'
+        #     f'domain="cover",'
+        #     f'entity="{cover_entities[testcover].entity_id}",'
+        #     f'friendly_name="{cover_entities[testcover].original_name}",'
+        #     f'state="closed"}} {1.0 if cover_entities[testcover].unique_id == "cover_closed" else 0.0}'
+        # )
+        # assert closed_metric in body
 
-        opening_metric = (
-            f'cover_state{{'
-            'area="",'
-            'device_class="temperature",'
-            f'domain="cover",'
-            f'entity="{cover_entities[testcover].entity_id}",'
-            f'friendly_name="{cover_entities[testcover].original_name}",'
-            f'state="opening"}} {1.0 if cover_entities[testcover].unique_id == "cover_opening" else 0.0}'
+        MetricsTestHelper._perform_cover_metric_assert(
+            "cover_state",
+            1.0 if cover_entities[testcover].unique_id == "cover_opening" else 0.0,
+            cover_entities[testcover].original_name,
+            "",
+            cover_entities[testcover].entity_id,
+            body,
+            state="opening",
         )
-        assert opening_metric in body
+        # opening_metric = (
+        #     f'cover_state{{'
+        #     'area="",'
+        #     'device_class="temperature",'
+        #     f'domain="cover",'
+        #     f'entity="{cover_entities[testcover].entity_id}",'
+        #     f'friendly_name="{cover_entities[testcover].original_name}",'
+        #     f'state="opening"}} {1.0 if cover_entities[testcover].unique_id == "cover_opening" else 0.0}'
+        # )
+        # assert opening_metric in body
 
-        closing_metric = (
-            f'cover_state{{'
-            'area="",'
-            'device_class="temperature",'
-            f'domain="cover",'
-            f'entity="{cover_entities[testcover].entity_id}",'
-            f'friendly_name="{cover_entities[testcover].original_name}",'
-            f'state="closing"}} {1.0 if cover_entities[testcover].unique_id == "cover_closing" else 0.0}'
+        MetricsTestHelper._perform_cover_metric_assert(
+            "cover_state",
+            1.0 if cover_entities[testcover].unique_id == "cover_closing" else 0.0,
+            cover_entities[testcover].original_name,
+            "",
+            cover_entities[testcover].entity_id,
+            body,
+            state="closing",
         )
-        assert closing_metric in body
+        # closing_metric = (
+        #     f'cover_state{{'
+        #     'area="",'
+        #     'device_class="temperature",'
+        #     f'domain="cover",'
+        #     f'entity="{cover_entities[testcover].entity_id}",'
+        #     f'friendly_name="{cover_entities[testcover].original_name}",'
+        #     f'state="closing"}} {1.0 if cover_entities[testcover].unique_id == "cover_closing" else 0.0}'
+        # )
+        # assert closing_metric in body
 
         if testcover == "cover_position":
-            position_metric = (
-                f"cover_position{{"
-                'area="",'
-                'device_class="temperature",'
-                f'domain="cover",'
-                f'entity="{cover_entities[testcover].entity_id}",'
-                f'friendly_name="{cover_entities[testcover].original_name}"'
-                f"}} 50.0"
+            MetricsTestHelper._perform_cover_metric_assert(
+                "cover_position",
+                "50.0",
+                cover_entities[testcover].original_name,
+                "",
+                cover_entities[testcover].entity_id,
+                body,
             )
-            assert position_metric in body
+            # position_metric = (
+            #     f"cover_position{{"
+            #     'area="",'
+            #     'device_class="temperature",'
+            #     f'domain="cover",'
+            #     f'entity="{cover_entities[testcover].entity_id}",'
+            #     f'friendly_name="{cover_entities[testcover].original_name}"'
+            #     f"}} 50.0"
+            # )
+            # assert position_metric in body
 
         if testcover == "cover_tilt_position":
-            tilt_position_metric = (
-                f"cover_tilt_position{{"
-                'area="",'
-                'device_class="temperature",'
-                f'domain="cover",'
-                f'entity="{cover_entities[testcover].entity_id}",'
-                f'friendly_name="{cover_entities[testcover].original_name}"'
-                f"}} 50.0"
+            MetricsTestHelper._perform_cover_metric_assert(
+                "cover_tilt_position",
+                "50.0",
+                cover_entities[testcover].original_name,
+                "",
+                cover_entities[testcover].entity_id,
+                body,
             )
-            assert tilt_position_metric in body
+            # tilt_position_metric = (
+            #     f"cover_tilt_position{{"
+            #     'area="",'
+            #     'device_class="temperature",'
+            #     f'domain="cover",'
+            #     f'entity="{cover_entities[testcover].entity_id}",'
+            #     f'friendly_name="{cover_entities[testcover].original_name}"'
+            #     f"}} 50.0"
+            # )
+            # assert tilt_position_metric in body
 
 
 @pytest.mark.parametrize("namespace", [""])
