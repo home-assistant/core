@@ -17,7 +17,7 @@ from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from ..entity import OverkizEntity
 
 OVERKIZ_TO_OPERATION_MODE: dict[str, str] = {
-    STATE_PERFORMANCE: OverkizCommandParam.PERFORMANCE
+    STATE_PERFORMANCE: STATE_PERFORMANCE,
     STATE_ECO: OverkizCommandParam.MANUAL_ECO_ACTIVE,
     OverkizCommandParam.MANUAL: OverkizCommandParam.MANUAL_ECO_INACTIVE,
 }
@@ -26,7 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class AtlanticDomesticHotWaterProductionMBLComponent(OverkizEntity, WaterHeaterEntity):
-    """Representation of AtlanticDomesticHotWaterProductionMBLComponent (modbuslink)"""
+    """Representation of AtlanticDomesticHotWaterProductionMBLComponent (modbuslink)."""
 
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_supported_features = (
@@ -79,7 +79,7 @@ class AtlanticDomesticHotWaterProductionMBLComponent(OverkizEntity, WaterHeaterE
         """Set new temperature."""
         temperature = kwargs[ATTR_TEMPERATURE]
         await self.executor.async_execute_command(
-            OverkizCommand.SetTargetDHWTemperature, temperature
+            OverkizCommand.SET_TARGET_DHW_TEMPERATURE, temperature
         )
 
     @property
@@ -116,12 +116,15 @@ class AtlanticDomesticHotWaterProductionMBLComponent(OverkizEntity, WaterHeaterE
         """Return current operation."""
         if self.is_boost_mode_on:
             return STATE_PERFORMANCE
-        elif self.is_eco_mode_on:
+
+        if self.is_eco_mode_on:
             return STATE_ECO
-        elif self.is_away_mode_on:
+
+        if self.is_away_mode_on:
             return STATE_OFF
-        elif (mode := self.dhw_mode) == OverkizCommandParam.MANUAL_ECO_INACTIVE:
-            return STATE_MANUAL
+
+        if self.dhw_mode == OverkizCommandParam.MANUAL_ECO_INACTIVE:
+            return OverkizCommandParam.MANUAL
 
         return STATE_OFF
 
