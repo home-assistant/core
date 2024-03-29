@@ -104,6 +104,16 @@ def tts_mutagen_mock_fixture():
     yield from tts_mutagen_mock_fixture_helper()
 
 
+@pytest.fixture(name="mock_conversation_agent")
+def mock_conversation_agent_fixture(hass: HomeAssistant):
+    """Mock a conversation agent."""
+    from tests.components.conversation.common import (
+        mock_conversation_agent_fixture_helper,
+    )
+
+    yield from mock_conversation_agent_fixture_helper(hass)
+
+
 @pytest.fixture(scope="session", autouse=True)
 def prevent_ffmpeg_subprocess() -> Generator[None, None, None]:
     """Prevent ffmpeg from creating a subprocess."""
