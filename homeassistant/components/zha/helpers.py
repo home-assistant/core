@@ -87,7 +87,7 @@ class ZHADeviceProxy(EventBase):
     def device_info(self) -> dict[str, Any]:
         """Return a device description for device."""
         ieee = str(self.device.ieee)
-        time_struct = time.localtime(self.last_seen)
+        time_struct = time.localtime(self.device.last_seen)
         update_time = time.strftime("%Y-%m-%dT%H:%M:%S", time_struct)
         return {
             ATTR_IEEE: ieee,
