@@ -211,29 +211,23 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
     def _get_current_preset_mode(self) -> str:
         """Return the current preset mode."""
 
-        if self._thermostat.status is None:
+        if (status := self._thermostat.status) is None:
             return PRESET_NONE
-        if self._thermostat.status.is_window_open:
+        if status.is_window_open:
             return Preset.WINDOW_OPEN
-        if self._thermostat.status.is_boost:
+        if status.is_boost:
             return Preset.BOOST
-        if self._thermostat.status.is_low_battery:
+        if status.is_low_battery:
             return Preset.LOW_BATTERY
-        if self._thermostat.status.is_away:
+        if status.is_away:
             return Preset.AWAY
-        if self._thermostat.status.operation_mode is OperationMode.ON:
+        if status.operation_mode is OperationMode.ON:
             return Preset.OPEN
-        if self._thermostat.status.presets is None:
+        if status.presets is None:
             return PRESET_NONE
-        if (
-            self._thermostat.status.target_temperature
-            == self._thermostat.status.presets.eco_temperature
-        ):
+        if status.target_temperature == status.presets.eco_temperature:
             return Preset.ECO
-        if (
-            self._thermostat.status.target_temperature
-            == self._thermostat.status.presets.comfort_temperature
-        ):
+        if status.target_temperature == status.presets.comfort_temperature:
             return Preset.COMFORT
 
         return PRESET_NONE
