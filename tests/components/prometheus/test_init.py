@@ -89,6 +89,31 @@ class MetricsTestHelper:
         return f'device_class="{device_class or ""}",'
 
     @classmethod
+    def _get_metric_string(
+        cls,
+        metric_name,
+        domain,
+        friendly_name,
+        object_id,
+        metric_value=None,
+        area=None,
+        device_class=None,
+    ):
+        device_class_label_line = cls._get_device_class_label_line(device_class)
+        final_metric_value = f" {metric_value}" if metric_value else ""
+        full_metric_string = (
+            f"{metric_name}{{"
+            f'area="{area or ""}",'
+            f"{device_class_label_line}"
+            f'domain="{domain}",'
+            f'entity="{domain}.{object_id}",'
+            f'friendly_name="{friendly_name}",'
+            f'object_id="{object_id}"'
+            f"}}{final_metric_value}"
+        )
+        return full_metric_string
+
+    @classmethod
     def _perform_metric_assert(
         cls,
         metric_name,
@@ -101,16 +126,14 @@ class MetricsTestHelper:
         device_class=None,
         positive_comparison=True,
     ):
-        device_class_label_line = cls._get_device_class_label_line(device_class)
-        full_metric_string = (
-            f"{metric_name}{{"
-            f'area="{area or ""}",'
-            f"{device_class_label_line}"
-            f'domain="{domain}",'
-            f'entity="{domain}.{object_id}",'
-            f'friendly_name="{friendly_name}",'
-            f'object_id="{object_id}"'
-            f"}} {metric_value}"
+        full_metric_string = cls._get_metric_string(
+            metric_name,
+            domain,
+            friendly_name,
+            object_id,
+            area=area,
+            device_class=device_class,
+            metric_value=metric_value,
         )
         if positive_comparison:
             assert full_metric_string in body
@@ -1211,25 +1234,14 @@ async def test_disabling_entity(
         device_class=SensorDeviceClass.TEMPERATURE,
     )
 
-    # FIXME: redo this assertion
-    # MetricsTestHelper._perform_metric_assert(
-    #     "state_change_created",
-    #     "15.6",
-    #     "sensor",
-    #     "Outside Temperature",
-    #     "",
-    #     "outside_temperature",
-    #     body,
-    # )
-    # assert any(
-    #     "state_change_created{"
-    #     'area="",'
-    #     'device_class="temperature",'
-    #     'domain="sensor",'
-    #     'entity="sensor.outside_temperature",'
-    #     'friendly_name="Outside Temperature"}' in metric
-    #     for metric in body
-    # )
+    state_change_metric_string = MetricsTestHelper._get_metric_string(
+        "state_change_created",
+        "sensor",
+        "Outside Temperature",
+        "outside_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+    )
+    assert any(state_change_metric_string for metric in body)
 
     MetricsTestHelper._perform_metric_assert(
         "sensor_humidity_percent",
