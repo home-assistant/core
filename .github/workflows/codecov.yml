@@ -65,7 +65,7 @@ jobs:
       # Note: the steps below require GH actions permission to write to the repository
       # (Settings > Actions > General > Workflow)
       - name: Create branch and add ${{ steps.detect.outputs.changes }} files
-        if: steps.detect.outputs.changes
+        if: ${{ steps.detect.outputs.changes }}
         run: |
           git checkout -B ${{ env.BRANCH_NAME }}
           git config --local user.email ${{ env.USER_EMAIL }}
@@ -76,7 +76,7 @@ jobs:
           git push --force --set-upstream origin ${{ env.BRANCH_NAME }}
       - name: Check if PR already exists
         id: check-pr
-        if: steps.detect.outputs.changes
+        if: ${{ steps.detect.outputs.changes }}
         run: |
           prs=$(gh pr list \
               --head ${{ env.BRANCH_NAME }} \
@@ -87,7 +87,7 @@ jobs:
               echo "skip=true" >> "$GITHUB_OUTPUT"
           fi
       - name: Create pull request
-        if: steps.detect.outputs.changes && !steps.check-pr.outputs.skip
+        if: ${{ steps.detect.outputs.changes }} && !${{ steps.check-pr.outputs.skip == 'true'}}
         # This step skips if the PR already exists, and correctly leaves
         # the existing PR pointing the to branch we just made.
         run: |
