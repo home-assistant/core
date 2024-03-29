@@ -37,9 +37,11 @@ from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from tests.common import (
+    MockToggleEntity,
     assert_setup_component,
     async_fire_time_changed,
     mock_restore_cache,
+    setup_test_component_platform,
 )
 
 ENTITY = "humidifier.test"
@@ -127,12 +129,11 @@ async def test_humidifier_input_boolean(hass: HomeAssistant, setup_comp_1) -> No
 
 
 async def test_humidifier_switch(
-    hass: HomeAssistant, setup_comp_1, enable_custom_integrations: None
+    hass: HomeAssistant, setup_comp_1, mock_toggle_entities: list[MockToggleEntity]
 ) -> None:
     """Test humidifier switching test switch."""
-    platform = getattr(hass.components, "test.switch")
-    platform.init()
-    switch_1 = platform.ENTITIES[1]
+    setup_test_component_platform(hass, switch.DOMAIN, mock_toggle_entities)
+    switch_1 = mock_toggle_entities[1]
     assert await async_setup_component(
         hass, switch.DOMAIN, {"switch": {"platform": "test"}}
     )

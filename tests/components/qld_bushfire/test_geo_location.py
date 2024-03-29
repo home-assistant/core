@@ -199,10 +199,13 @@ async def test_setup_with_custom_location(hass: HomeAssistant) -> None:
         "1234", "Title 1", 20.5, (38.1, -3.1), category="Category 1"
     )
 
-    with patch(
-        "georss_qld_bushfire_alert_client.feed_manager.QldBushfireAlertFeed",
-        wraps=QldBushfireAlertFeed,
-    ) as mock_feed, patch("georss_client.feed.GeoRssFeed.update") as mock_feed_update:
+    with (
+        patch(
+            "georss_qld_bushfire_alert_client.feed_manager.QldBushfireAlertFeed",
+            wraps=QldBushfireAlertFeed,
+        ) as mock_feed,
+        patch("georss_client.feed.GeoRssFeed.update") as mock_feed_update,
+    ):
         mock_feed_update.return_value = "OK", [mock_entry_1]
 
         with assert_setup_component(1, geo_location.DOMAIN):

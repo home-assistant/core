@@ -258,8 +258,9 @@ async def test_setup_config_ssl(
     config = {"influxdb": config_base.copy()}
     config["influxdb"].update(config_ext)
 
-    with patch("os.access", return_value=True), patch(
-        "os.path.isfile", return_value=True
+    with (
+        patch("os.access", return_value=True),
+        patch("os.path.isfile", return_value=True),
     ):
         assert await async_setup_component(hass, influxdb.DOMAIN, config)
         await hass.async_block_till_done()

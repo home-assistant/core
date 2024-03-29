@@ -72,9 +72,9 @@ class HomeAssistantError(Exception):
             assert self.translation_domain is not None
 
         if "async_get_exception_message" not in _function_cache:
-            _function_cache[
-                "async_get_exception_message"
-            ] = import_async_get_exception_message()
+            _function_cache["async_get_exception_message"] = (
+                import_async_get_exception_message()
+            )
 
         self._message = _function_cache["async_get_exception_message"](
             self.translation_domain, self.translation_key, self.translation_placeholders

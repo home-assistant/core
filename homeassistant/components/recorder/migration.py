@@ -183,8 +183,8 @@ def get_schema_version(session_maker: Callable[[], Session]) -> int | None:
     try:
         with session_scope(session=session_maker(), read_only=True) as session:
             return _get_schema_version(session)
-    except Exception as err:  # pylint: disable=broad-except
-        _LOGGER.exception("Error when determining DB schema version: %s", err)
+    except Exception:  # pylint: disable=broad-except
+        _LOGGER.exception("Error when determining DB schema version")
         return None
 
 
@@ -878,9 +878,10 @@ def _apply_update(  # noqa: C901
         if engine.dialect.name == SupportedDialect.MYSQL:
             # Ensure the row format is dynamic or the index
             # unique will be too large
-            with contextlib.suppress(SQLAlchemyError), session_scope(
-                session=session_maker()
-            ) as session:
+            with (
+                contextlib.suppress(SQLAlchemyError),
+                session_scope(session=session_maker()) as session,
+            ):
                 connection = session.connection()
                 # This is safe to run multiple times and fast
                 # since the table is small.
@@ -1080,6 +1081,12 @@ def _apply_update(  # noqa: C901
         _migrate_statistics_columns_to_timestamp_removing_duplicates(
             hass, instance, session_maker, engine
         )
+    elif new_version == 43:
+        _add_columns(
+            session_maker,
+            "states",
+            [f"last_reported_ts {_column_types.timestamp_type}"],
+        )
     else:
         raise ValueError(f"No schema migration defined for version {new_version}")
 
@@ -1132,9 +1139,10 @@ def _correct_table_character_set_and_collation(
         "computers. Please be patient!",
         table,
     )
-    with contextlib.suppress(SQLAlchemyError), session_scope(
-        session=session_maker()
-    ) as session:
+    with (
+        contextlib.suppress(SQLAlchemyError),
+        session_scope(session=session_maker()) as session,
+    ):
         connection = session.connection()
         connection.execute(
             # Using LOCK=EXCLUSIVE to prevent the database from corrupting
@@ -1579,9 +1587,9 @@ def migrate_event_type_ids(instance: Recorder) -> bool:
                     assert (
                         db_event_type.event_type is not None
                     ), "event_type should never be None"
-                    event_type_to_id[
-                        db_event_type.event_type
-                    ] = db_event_type.event_type_id
+                    event_type_to_id[db_event_type.event_type] = (
+                        db_event_type.event_type_id
+                    )
                     event_type_manager.clear_non_existent(db_event_type.event_type)
 
             session.execute(
@@ -1652,9 +1660,9 @@ def migrate_entity_ids(instance: Recorder) -> bool:
                     assert (
                         db_states_metadata.entity_id is not None
                     ), "entity_id should never be None"
-                    entity_id_to_metadata_id[
-                        db_states_metadata.entity_id
-                    ] = db_states_metadata.metadata_id
+                    entity_id_to_metadata_id[db_states_metadata.entity_id] = (
+                        db_states_metadata.metadata_id
+                    )
 
             session.execute(
                 update(States),
@@ -1778,8 +1786,8 @@ def initialize_database(session_maker: Callable[[], Session]) -> bool:
         with session_scope(session=session_maker()) as session:
             return _initialize_database(session)
 
-    except Exception as err:  # pylint: disable=broad-except
-        _LOGGER.exception("Error when initialise database: %s", err)
+    except Exception:  # pylint: disable=broad-except
+        _LOGGER.exception("Error when initialise database")
         return False
 
 

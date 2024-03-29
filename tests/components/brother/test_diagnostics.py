@@ -25,11 +25,13 @@ async def test_entry_diagnostics(
     entry = await init_integration(hass, skip_setup=True)
 
     test_time = datetime(2019, 11, 11, 9, 10, 32, tzinfo=UTC)
-    with patch("brother.Brother.initialize"), patch(
-        "brother.datetime", now=Mock(return_value=test_time)
-    ), patch(
-        "brother.Brother._get_data",
-        return_value=json.loads(load_fixture("printer_data.json", "brother")),
+    with (
+        patch("brother.Brother.initialize"),
+        patch("brother.datetime", now=Mock(return_value=test_time)),
+        patch(
+            "brother.Brother._get_data",
+            return_value=json.loads(load_fixture("printer_data.json", "brother")),
+        ),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
