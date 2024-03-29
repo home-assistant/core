@@ -77,6 +77,8 @@ class ZHADeviceProxy(EventBase):
             identifiers={(DOMAIN, str(device.ieee))},
             connections={(dr.CONNECTION_ZIGBEE, str(device.ieee))},
         )
+        assert self.ha_device_info is not None
+        self.device_id: str = self.ha_device_info.id
 
         self._unsubs: list[Callable[[], None]] = []
         self._unsubs.append(self.device.on_all_events(self._handle_event_protocol))
@@ -84,26 +86,26 @@ class ZHADeviceProxy(EventBase):
     @property
     def device_info(self) -> dict[str, Any]:
         """Return a device description for device."""
-        ieee = str(self.ieee)
+        ieee = str(self.device.ieee)
         time_struct = time.localtime(self.last_seen)
         update_time = time.strftime("%Y-%m-%dT%H:%M:%S", time_struct)
         return {
             ATTR_IEEE: ieee,
-            ATTR_NWK: self.nwk,
-            ATTR_MANUFACTURER: self.manufacturer,
-            ATTR_MODEL: self.model,
-            ATTR_NAME: self.name or ieee,
-            ATTR_QUIRK_APPLIED: self.quirk_applied,
-            ATTR_QUIRK_CLASS: self.quirk_class,
-            ATTR_QUIRK_ID: self.quirk_id,
-            ATTR_MANUFACTURER_CODE: self.manufacturer_code,
-            ATTR_POWER_SOURCE: self.power_source,
-            ATTR_LQI: self.lqi,
-            ATTR_RSSI: self.rssi,
+            ATTR_NWK: self.device.nwk,
+            ATTR_MANUFACTURER: self.device.manufacturer,
+            ATTR_MODEL: self.device.model,
+            ATTR_NAME: self.device.name or ieee,
+            ATTR_QUIRK_APPLIED: self.device.quirk_applied,
+            ATTR_QUIRK_CLASS: self.device.quirk_class,
+            ATTR_QUIRK_ID: self.device.quirk_id,
+            ATTR_MANUFACTURER_CODE: self.device.manufacturer_code,
+            ATTR_POWER_SOURCE: self.device.power_source,
+            ATTR_LQI: self.device.lqi,
+            ATTR_RSSI: self.device.rssi,
             ATTR_LAST_SEEN: update_time,
-            ATTR_AVAILABLE: self.available,
-            ATTR_DEVICE_TYPE: self.device_type,
-            ATTR_SIGNATURE: self.zigbee_signature,
+            ATTR_AVAILABLE: self.device.available,
+            ATTR_DEVICE_TYPE: self.device.device_type,
+            ATTR_SIGNATURE: self.device.zigbee_signature,
         }
 
     @property
@@ -111,16 +113,16 @@ class ZHADeviceProxy(EventBase):
         """Get ZHA device information."""
         device_info: dict[str, Any] = {}
         device_info.update(self.device_info)
-        device_info[ATTR_ACTIVE_COORDINATOR] = self.is_active_coordinator
+        device_info[ATTR_ACTIVE_COORDINATOR] = self.device.is_active_coordinator
         device_info["entities"] = [
             {
                 "entity_id": entity_ref.reference_id,
                 ATTR_NAME: entity_ref.device_info[ATTR_NAME],
             }
-            for entity_ref in self.gateway.device_registry[self.ieee]
+            for entity_ref in self.gateway_proxy.device_registry[self.device.ieee]
         ]
 
-        topology = self.gateway.application_controller.topology
+        topology = self.gateway_proxy.gateway.application_controller.topology
         device_info[ATTR_NEIGHBORS] = [
             {
                 "device_type": neighbor.device_type.name,
@@ -150,7 +152,9 @@ class ZHADeviceProxy(EventBase):
 
         # Return endpoint device type Names
         names: list[dict[str, str]] = []
-        for endpoint in (ep for epid, ep in self.device.endpoints.items() if epid):
+        for endpoint in (
+            ep for epid, ep in self.device.device.endpoints.items() if epid
+        ):
             profile = PROFILES.get(endpoint.profile_id)
             if profile and endpoint.device_type is not None:
                 # DeviceType provides undefined enums
