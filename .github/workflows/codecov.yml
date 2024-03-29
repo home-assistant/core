@@ -15,9 +15,9 @@ env:
   USER_EMAIL: "41898282+github-actions[bot]@users.noreply.github.com"
   USER_NAME: "github-actions[bot]"
   PR_BODY: |
-    *This is an automatically generated pull request created by* `/.github/workflows/codecov.yml`
+    *This is an automatically generated pull request created by /.github/workflows/codecov.yml*
 
-    Hi! When analysing `.coveragerc`, I found that some files were omitted from pytest coverage checks that didn't need to be.
+    Hi! When analysing '.coveragerc', I found that some files were omitted from pytest coverage checks that didn't need to be.
 
     This usually happens when those files already have a high or 100% coverage.
 
