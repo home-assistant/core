@@ -146,6 +146,9 @@ class ViCareFan(ViCareEntity, FanEntity):
     def set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan, as a percentage."""
 
+        if percentage == 0:
+            _LOGGER.error("Ventilation device cannot be turned off")
+
         if self._attributes["active_vicare_mode"] is not VentilationMode.PERMANENT:
             self.set_preset_mode(VentilationMode.PERMANENT)
 
