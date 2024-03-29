@@ -50,12 +50,14 @@ from homeassistant.helpers.event import (
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.start import async_at_start
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
-from homeassistant.util import dt as dt_util
+from homeassistant.util import dt as dt_util, slugify
 from homeassistant.util.enum import try_parse_enum
 
 from . import DOMAIN, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
+
+ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
 # Stats for attributes only
 STAT_AGE_COVERAGE_RATIO = "age_coverage_ratio"
@@ -319,6 +321,7 @@ class StatisticsSensor(SensorEntity):
         self.states: deque[float | bool] = deque(maxlen=self._samples_max_buffer_size)
         self.ages: deque[datetime] = deque(maxlen=self._samples_max_buffer_size)
         self.attributes: dict[str, StateType] = {}
+        self.entity_id: str = ENTITY_ID_FORMAT.format(slugify(name))
 
         self._state_characteristic_fn: Callable[[], StateType | datetime] = (
             self._callable_characteristic_fn(self._state_characteristic)
