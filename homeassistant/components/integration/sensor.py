@@ -272,12 +272,10 @@ async def async_setup_entry(
         # Before we had support for optional selectors, "none" was used for selecting nothing
         unit_prefix = None
 
-    max_age_seconds = config_entry.options.get(CONF_MAX_AGE, None)
-    max_age = (
-        timedelta(seconds=max_age_seconds)
-        if max_age_seconds is not None and max_age_seconds != 0
-        else None
-    )
+    if max_age_duration_dict := config_entry.options.get(CONF_MAX_AGE, None):
+        max_age = cv.time_period(max_age_duration_dict)
+    else:
+        max_age = None
 
     round_digits = config_entry.options.get(CONF_ROUND_DIGITS)
     if round_digits:
@@ -355,7 +353,9 @@ class IntegrationSensor(RestoreSensor):
         self._source_entity: str = source_entity
         self._last_valid_state: Decimal | None = None
         self._attr_device_info = device_info
-        self._max_age: timedelta | None = max_age
+        self._max_age: timedelta | None = (
+            max_age if max_age is not None and max_age.total_seconds() > 0 else None
+        )
         self._max_age_exceeded_callback: CALLBACK_TYPE = lambda *args: None
         self._last_integration_time: datetime = datetime.now(tz=UTC)
         self._last_integration_trigger = _IntegrationTrigger.StateChange

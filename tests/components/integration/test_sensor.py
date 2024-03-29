@@ -752,7 +752,7 @@ async def test_device_id(
     assert integration_entity.device_id == source_entity.device_id
 
 
-def _integral_sensor_config(max_age: int | None = 60):
+def _integral_sensor_config(max_age: dict[str, int] | None = {"minutes": 1}):
     sensor = {
         "platform": "integration",
         "name": "integration",
@@ -764,7 +764,9 @@ def _integral_sensor_config(max_age: int | None = 60):
     return {"sensor": sensor}
 
 
-async def _setup_integral_sensor(hass: HomeAssistant, max_age: int | None = 60) -> None:
+async def _setup_integral_sensor(
+    hass: HomeAssistant, max_age: dict[str, int] | None = {"minutes": 1}
+) -> None:
     await async_setup_component(
         hass, "sensor", _integral_sensor_config(max_age=max_age)
     )
