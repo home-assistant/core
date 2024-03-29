@@ -32,10 +32,8 @@ async def test_binary_sensor(
         entity_registry, config_entry.entry_id
     )
     assert entity_entries
-    assert entity_entries == snapshot
-
-    # Test if all entities still have same state
     for entity_entry in entity_entries:
+        assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
         assert hass.states.get(entity_entry.entity_id) == snapshot(
             name=f"{entity_entry.entity_id}-state"
         )

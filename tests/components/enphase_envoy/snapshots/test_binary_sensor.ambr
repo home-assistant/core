@@ -1,131 +1,36 @@
 # serializer version: 1
-# name: test_binary_sensor
-  list([
-    EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
-      'area_id': None,
-      'capabilities': None,
-      'config_entry_id': <ANY>,
-      'device_class': None,
-      'device_id': <ANY>,
-      'disabled_by': None,
-      'domain': 'binary_sensor',
-      'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-      'entity_id': 'binary_sensor.encharge_123456_communicating',
-      'has_entity_name': True,
-      'hidden_by': None,
-      'icon': None,
-      'id': <ANY>,
-      'labels': set({
-      }),
-      'name': None,
-      'options': dict({
-      }),
-      'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
-      'original_icon': None,
-      'original_name': 'Communicating',
-      'platform': 'enphase_envoy',
-      'previous_unique_id': None,
-      'supported_features': 0,
-      'translation_key': 'communicating',
-      'unique_id': '123456_communicating',
-      'unit_of_measurement': None,
+# name: test_binary_sensor[binary_sensor.encharge_123456_communicating-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
     }),
-    EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
-      'area_id': None,
-      'capabilities': None,
-      'config_entry_id': <ANY>,
-      'device_class': None,
-      'device_id': <ANY>,
-      'disabled_by': None,
-      'domain': 'binary_sensor',
-      'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-      'entity_id': 'binary_sensor.encharge_123456_dc_switch',
-      'has_entity_name': True,
-      'hidden_by': None,
-      'icon': None,
-      'id': <ANY>,
-      'labels': set({
-      }),
-      'name': None,
-      'options': dict({
-      }),
-      'original_device_class': None,
-      'original_icon': None,
-      'original_name': 'DC switch',
-      'platform': 'enphase_envoy',
-      'previous_unique_id': None,
-      'supported_features': 0,
-      'translation_key': 'dc_switch',
-      'unique_id': '123456_dc_switch',
-      'unit_of_measurement': None,
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.encharge_123456_communicating',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
     }),
-    EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
-      'area_id': None,
-      'capabilities': None,
-      'config_entry_id': <ANY>,
-      'device_class': None,
-      'device_id': <ANY>,
-      'disabled_by': None,
-      'domain': 'binary_sensor',
-      'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-      'entity_id': 'binary_sensor.enpower_654321_communicating',
-      'has_entity_name': True,
-      'hidden_by': None,
-      'icon': None,
-      'id': <ANY>,
-      'labels': set({
-      }),
-      'name': None,
-      'options': dict({
-      }),
-      'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
-      'original_icon': None,
-      'original_name': 'Communicating',
-      'platform': 'enphase_envoy',
-      'previous_unique_id': None,
-      'supported_features': 0,
-      'translation_key': 'communicating',
-      'unique_id': '654321_communicating',
-      'unit_of_measurement': None,
+    'name': None,
+    'options': dict({
     }),
-    EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
-      'area_id': None,
-      'capabilities': None,
-      'config_entry_id': <ANY>,
-      'device_class': None,
-      'device_id': <ANY>,
-      'disabled_by': None,
-      'domain': 'binary_sensor',
-      'entity_category': None,
-      'entity_id': 'binary_sensor.enpower_654321_grid_status',
-      'has_entity_name': True,
-      'hidden_by': None,
-      'icon': None,
-      'id': <ANY>,
-      'labels': set({
-      }),
-      'name': None,
-      'options': dict({
-      }),
-      'original_device_class': None,
-      'original_icon': 'mdi:transmission-tower',
-      'original_name': 'Grid status',
-      'platform': 'enphase_envoy',
-      'previous_unique_id': None,
-      'supported_features': 0,
-      'translation_key': 'grid_status',
-      'unique_id': '654321_mains_oper_state',
-      'unit_of_measurement': None,
-    }),
-  ])
+    'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
+    'original_icon': None,
+    'original_name': 'Communicating',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'communicating',
+    'unique_id': '123456_communicating',
+    'unit_of_measurement': None,
+  })
 # ---
 # name: test_binary_sensor[binary_sensor.encharge_123456_communicating-state]
   StateSnapshot({
@@ -141,6 +46,39 @@
     'state': 'on',
   })
 # ---
+# name: test_binary_sensor[binary_sensor.encharge_123456_dc_switch-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.encharge_123456_dc_switch',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'DC switch',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'dc_switch',
+    'unique_id': '123456_dc_switch',
+    'unit_of_measurement': None,
+  })
+# ---
 # name: test_binary_sensor[binary_sensor.encharge_123456_dc_switch-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -152,6 +90,39 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
+  })
+# ---
+# name: test_binary_sensor[binary_sensor.enpower_654321_communicating-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.enpower_654321_communicating',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
+    'original_icon': None,
+    'original_name': 'Communicating',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'communicating',
+    'unique_id': '654321_communicating',
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_binary_sensor[binary_sensor.enpower_654321_communicating-state]
@@ -166,6 +137,39 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
+  })
+# ---
+# name: test_binary_sensor[binary_sensor.enpower_654321_grid_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.enpower_654321_grid_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:transmission-tower',
+    'original_name': 'Grid status',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'grid_status',
+    'unique_id': '654321_mains_oper_state',
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_binary_sensor[binary_sensor.enpower_654321_grid_status-state]
