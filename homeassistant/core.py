@@ -790,10 +790,7 @@ class HomeAssistant:
 
         The future returned from this method must be awaited in the event loop.
         """
-        task = self.loop.run_in_executor(self.import_executor, target, *args)
-        self._tasks.add(task)
-        task.add_done_callback(self._tasks.remove)
-        return task
+        return self.loop.run_in_executor(self.import_executor, target, *args)
 
     @overload
     @callback
