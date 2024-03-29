@@ -28,6 +28,7 @@ import zigpy.util
 import zigpy.zcl
 from zigpy.zcl.foundation import CommandSchema
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_DEVICE_ID, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, device_registry as dr
@@ -40,10 +41,13 @@ _LOGGER = logging.getLogger(__name__)
 class ZHAGatewayProxy(EventBase):
     """Proxy class to interact with the ZHA gateway."""
 
-    def __init__(self, hass: HomeAssistant, gateway: Gateway) -> None:
+    def __init__(
+        self, hass: HomeAssistant, config_entry: ConfigEntry, gateway: Gateway
+    ) -> None:
         """Initialize the gateway proxy."""
         super().__init__()
         self.hass = hass
+        self.config_entry = config_entry
         self.gateway: Gateway = gateway
         self.device_proxies: dict[str, ZHADeviceProxy] = {}
         self._unsubs: list[Callable[[], None]] = []
