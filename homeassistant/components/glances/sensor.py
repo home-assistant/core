@@ -303,9 +303,7 @@ class GlancesSensor(CoordinatorEntity[GlancesDataUpdateCoordinator], SensorEntit
     def _update_native_value(self) -> None:
         """Update sensor native value from coordinator data."""
         data = self.coordinator.data[self.entity_description.type]
-        if isinstance(data.get(self._sensor_label), dict):
-            self._attr_native_value = data[self._sensor_label][
-                self.entity_description.key
-            ]
-        else:
-            self._attr_native_value = data[self.entity_description.key]
+        if dict_val := data.get(self._sensor_label):
+            self._attr_native_value = dict_val.get(self.entity_description.key)
+        elif single_val := data.get(self.entity_description.key):
+            self._attr_native_value = single_val

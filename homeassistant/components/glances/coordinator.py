@@ -1,6 +1,6 @@
 """Coordinator for Glances integration."""
 
-from datetime import datetime
+from datetime import timedelta
 import logging
 from typing import Any
 
@@ -13,7 +13,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.dt import parse_duration, utcnow
 
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, MIN_UPTIME_VARIATION
+from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,22 +46,13 @@ class GlancesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             raise UpdateFailed from err
         # Update computed values
         if data:
-            uptime = self._convert_uptime(data.get("uptime"))
-            data.update({"computed": {"uptime": uptime}})
-        return data or {}
-
-    def _convert_uptime(self, uptime_str: str | None) -> datetime | None:
-        """Convert Glances uptime (duration) to datetime."""
-        uptime = None
-        if uptime_str:
-            up_duration = parse_duration(uptime_str)
-            if up_duration:
-                uptime = utcnow() - up_duration
-        if uptime and self.data:
-            previous_uptime = self.data["computed"]["uptime"]
-            if (
-                isinstance(previous_uptime, datetime)
-                and uptime - previous_uptime < MIN_UPTIME_VARIATION
+            up_duration = parse_duration(data.get("uptime"))
+            data.update({"computed": {"uptime_duration": up_duration}})
+            # Update uptime if previous value is None or previous uptime is bigger than
+            # new uptime (i.e. server restarted)
+            if isinstance(up_duration, timedelta) and (
+                self.data is None
+                or self.data["computed"]["uptime_duration"] > up_duration
             ):
-                uptime = previous_uptime
-        return uptime
+                data["computed"]["uptime"] = utcnow() - up_duration
+        return data or {}
