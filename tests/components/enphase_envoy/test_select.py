@@ -1,13 +1,12 @@
 """Test Enphase Envoy diagnostics."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 from pyenphase.models.dry_contacts import DryContactAction, DryContactMode
 from pyenphase.models.tariff import EnvoyStorageMode
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.enphase_envoy import DOMAIN
 from homeassistant.components.enphase_envoy.const import Platform
 from homeassistant.components.enphase_envoy.select import (
     ACTION_OPTIONS,
@@ -23,38 +22,19 @@ from homeassistant.components.enphase_envoy.select import (
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.setup import async_setup_component
 
-from tests.common import ConfigType, MockConfigEntry
-
-
-@pytest.fixture(name="setup_enphase_envoy_select")
-async def setup_enphase_envoy_select_fixture(
-    hass: HomeAssistant, config: ConfigType, mock_envoy: AsyncMock
-):
-    """Define a fixture to set up Enphase Envoy with select platform only."""
-    with (
-        patch(
-            "homeassistant.components.enphase_envoy.Envoy",
-            return_value=mock_envoy,
-        ),
-        patch(
-            "homeassistant.components.enphase_envoy.PLATFORMS",
-            [Platform.SELECT],
-        ),
-    ):
-        assert await async_setup_component(hass, DOMAIN, config)
-        await hass.async_block_till_done()
-        yield
+from tests.common import MockConfigEntry
+from tests.components.enphase_envoy import setup_with_selected_platforms
 
 
 async def test_select(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
-    setup_enphase_envoy_select: AsyncMock,
+    mock_envoy: AsyncMock,
 ) -> None:
     """Test enphase_envoy select entities."""
+    await setup_with_selected_platforms(hass, config_entry, [Platform.SELECT])
 
     # these entities states should be created from test data
     assert len(hass.states.async_all()) == 13
@@ -138,7 +118,6 @@ async def test_select(
 async def test_select_relay_actions(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    setup_enphase_envoy_select: AsyncMock,
     mock_envoy: AsyncMock,
     mock_update_dry_contact: AsyncMock,
     entity_id: str,
@@ -147,6 +126,7 @@ async def test_select_relay_actions(
     initial_value: str,
 ) -> None:
     """Test enphase_envoy select relay entities actions."""
+    await setup_with_selected_platforms(hass, config_entry, [Platform.SELECT])
 
     # verify initial value
     switch_state = hass.states.get(entity_id)
@@ -196,7 +176,6 @@ async def test_select_relay_actions(
 async def test_select_relay_modes(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    setup_enphase_envoy_select: AsyncMock,
     mock_envoy: AsyncMock,
     mock_update_dry_contact: AsyncMock,
     entity_id: str,
@@ -205,6 +184,7 @@ async def test_select_relay_modes(
     initial_value: str,
 ) -> None:
     """Test enphase_envoy select relay entities modes."""
+    await setup_with_selected_platforms(hass, config_entry, [Platform.SELECT])
 
     # verify initial value
     switch_state = hass.states.get(entity_id)
@@ -240,13 +220,13 @@ async def test_select_relay_modes(
 async def test_select_storage_modes(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    setup_enphase_envoy_select: AsyncMock,
     mock_envoy: AsyncMock,
     mock_set_storage_mode: AsyncMock,
     entity_id: str,
     initial_value: str,
 ) -> None:
     """Test enphase_envoy select entities storage modes."""
+    await setup_with_selected_platforms(hass, config_entry, [Platform.SELECT])
 
     # verify initial value
     switch_state = hass.states.get(entity_id)

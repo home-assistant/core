@@ -1,46 +1,25 @@
 """Test Enphase Envoy binary sensors."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
-import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.enphase_envoy import DOMAIN
 from homeassistant.components.enphase_envoy.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.setup import async_setup_component
 
-from tests.common import ConfigType, MockConfigEntry
-
-
-@pytest.fixture(name="setup_enphase_envoy_binary_sensor")
-async def setup_enphase_envoy_binary_sensor_fixture(
-    hass: HomeAssistant, config: ConfigType, mock_envoy: AsyncMock
-):
-    """Define a fixture to set up Enphase Envoy with binary sensor platform only."""
-    with (
-        patch(
-            "homeassistant.components.enphase_envoy.Envoy",
-            return_value=mock_envoy,
-        ),
-        patch(
-            "homeassistant.components.enphase_envoy.PLATFORMS",
-            [Platform.BINARY_SENSOR],
-        ),
-    ):
-        assert await async_setup_component(hass, DOMAIN, config)
-        await hass.async_block_till_done()
-        yield
+from tests.common import MockConfigEntry
+from tests.components.enphase_envoy import setup_with_selected_platforms
 
 
 async def test_binary_sensor(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
-    setup_enphase_envoy_binary_sensor,
+    mock_envoy: AsyncMock,
 ) -> None:
     """Test enphase_envoy binary_sensor entities."""
+    await setup_with_selected_platforms(hass, config_entry, [Platform.BINARY_SENSOR])
 
     # number entities states should be created from test data
     assert len(hass.states.async_all()) == 4

@@ -1,11 +1,15 @@
 """Test Enphase Envoy diagnostics."""
 
+from unittest.mock import AsyncMock
+
 from syrupy import SnapshotAssertion
 
+from homeassistant.components.enphase_envoy.const import PLATFORMS as ENVOY_PLATFORMS
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.components.enphase_envoy import setup_with_selected_platforms
 from tests.typing import ClientSessionGenerator
 
 # Fields to exclude from snapshot as they change each run
@@ -28,10 +32,12 @@ async def test_entry_diagnostics(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     hass_client: ClientSessionGenerator,
-    setup_enphase_envoy,
+    mock_envoy: AsyncMock,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test config entry diagnostics."""
+    await setup_with_selected_platforms(hass, config_entry, ENVOY_PLATFORMS)
+
     assert await get_diagnostics_for_config_entry(
         hass, hass_client, config_entry
     ) == snapshot(exclude=limit_diagnostic_attrs)
