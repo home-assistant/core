@@ -16,8 +16,6 @@ from homeassistant.components.homeassistant_yellow import hardware as yellow_har
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-DEFAULT_ZHA_ZEROCONF_PORT = 6638
-
 
 class SerialPortMissing(Exception):
     """Serial port is currently missing."""
@@ -135,11 +133,13 @@ class NetworkSerialPort:
     manufacturer: str | None = None
 
     @classmethod
-    def from_zeroconf(cls, service_info: zeroconf.ZeroconfServiceInfo) -> Self:
+    def from_zeroconf(
+        cls, service_info: zeroconf.ZeroconfServiceInfo, *, default_port: int
+    ) -> Self:
         """Create a network serial port from a Zeroconf service."""
         return cls(
             host=service_info.ip_address,
-            port=service_info.port or DEFAULT_ZHA_ZEROCONF_PORT,
+            port=service_info.port or default_port,
             product=service_info.name,
             manufacturer=service_info.properties.get("manufacturer", None),
         )

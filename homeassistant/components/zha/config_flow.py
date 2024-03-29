@@ -549,7 +549,9 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
 
-        port = NetworkSerialPort.from_zeroconf(discovery_info)
+        port = NetworkSerialPort.from_zeroconf(
+            discovery_info, default_port=DEFAULT_ZHA_ZEROCONF_PORT
+        )
 
         # Fix incorrect port for older TubesZB devices
         if "tube" in discovery_info.hostname and port.port == ESPHOME_API_PORT:
@@ -673,9 +675,6 @@ class ZhaOptionsFlowHandler(BaseZhaFlow, OptionsFlow):
         """Implement the base flow's final step, to update the config."""
 
         assert self._radio_mgr.radio_type is not None
-
-        if self._radio_mgr.current_settings is None:
-            await self._radio_mgr.async_load_network_settings()
 
         # Avoid creating both `.options` and `.data` by directly writing `data` here
         self.hass.config_entries.async_update_entry(
