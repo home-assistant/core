@@ -1799,6 +1799,9 @@ pyedimax==0.2.1
 # homeassistant.components.efergy
 pyefergy==22.1.1
 
+# homeassistant.components.energenie_power_sockets
+pyegps==0.2.5
+
 # homeassistant.components.enphase_envoy
 pyenphase==1.20.1
 

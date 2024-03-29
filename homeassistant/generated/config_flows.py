@@ -144,6 +144,7 @@ FLOWS = {
         "elvia",
         "emonitor",
         "emulated_roku",
+        "energenie_power_sockets",
         "energyzero",
         "enocean",
         "enphase_envoy",
