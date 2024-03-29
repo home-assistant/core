@@ -487,7 +487,7 @@ asterisk_mbox==0.5.0
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
 # homeassistant.components.yeelight
-async-upnp-client==0.38.2
+async-upnp-client==0.38.3
 
 # homeassistant.components.keyboard_remote
 asyncinotify==4.0.2
@@ -1081,7 +1081,7 @@ hole==0.8.0
 holidays==0.45
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240328.0
+home-assistant-frontend==20240329.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.3.27
