@@ -1265,8 +1265,9 @@ async def test_onboarding_auto_formation_new_hardware(
 ) -> None:
     """Test auto network formation with new hardware during onboarding."""
 
+    network_info = await mock_app.load_network_info()
     mock_app.load_network_info = AsyncMock(
-        side_effect=[NetworkNotFormed(), mock_app.load_network_info()]
+        side_effect=[NetworkNotFormed(), network_info]
     )
     mock_app.get_device = MagicMock(return_value=MagicMock(spec=zigpy.device.Device))
     discovery_info = usb.UsbServiceInfo(

@@ -46,7 +46,7 @@ def disable_platform_only():
 
 
 @pytest.fixture
-def config_entry_v1(hass):
+def config_entry_v1(hass: HomeAssistant) -> MockConfigEntry:
     """Config entry version 1 fixture."""
     return MockConfigEntry(
         domain=DOMAIN,
@@ -56,9 +56,14 @@ def config_entry_v1(hass):
 
 
 @pytest.mark.parametrize("config", [{}, {DOMAIN: {}}])
-@patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
+@patch(
+    "homeassistant.components.zha.async_setup_entry", new=AsyncMock(return_value=True)
+)
 async def test_migration_from_v1_no_baudrate(
-    hass: HomeAssistant, config_entry_v1, config
+    config: dict,
+    hass: HomeAssistant,
+    config_entry_v1: MockConfigEntry,
+    mock_zigpy_connect,
 ) -> None:
     """Test migration of config entry from v1."""
     config_entry_v1.add_to_hass(hass)
@@ -86,9 +91,11 @@ async def test_migration_from_v1_no_baudrate(
     assert config_entry_v1.version == 5
 
 
-@patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
+@patch(
+    "homeassistant.components.zha.async_setup_entry", new=AsyncMock(return_value=True)
+)
 async def test_migration_from_v1_with_baudrate(
-    hass: HomeAssistant, config_entry_v1
+    hass: HomeAssistant, config_entry_v1: MockConfigEntry, mock_zigpy_connect
 ) -> None:
     """Test migration of config entry from v1 with baudrate in config."""
     config_entry_v1.add_to_hass(hass)
@@ -120,9 +127,11 @@ async def test_migration_from_v1_with_baudrate(
     assert config_entry_v1.version == 5
 
 
-@patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
+@patch(
+    "homeassistant.components.zha.async_setup_entry", new=AsyncMock(return_value=True)
+)
 async def test_migration_from_v1_wrong_baudrate(
-    hass: HomeAssistant, config_entry_v1
+    hass: HomeAssistant, config_entry_v1: MockConfigEntry, mock_zigpy_connect
 ) -> None:
     """Test migration of config entry from v1 with wrong baudrate."""
     config_entry_v1.add_to_hass(hass)
@@ -165,7 +174,9 @@ async def test_migration_from_v1_wrong_baudrate(
         {CONF_RADIO_TYPE: "ezsp", CONF_USB_PATH: "str"},
     ],
 )
-async def test_config_depreciation(hass: HomeAssistant, zha_config) -> None:
+async def test_config_depreciation(
+    hass: HomeAssistant, zha_config: dict, mock_zigpy_connect
+) -> None:
     """Test config option depreciation."""
 
     with patch(
@@ -191,11 +202,12 @@ async def test_config_depreciation(hass: HomeAssistant, zha_config) -> None:
         ("socket://[1.2.3.4]:5678 ", "socket://1.2.3.4:5678"),
     ],
 )
-@patch("homeassistant.components.zha.setup_quirks", Mock(return_value=True))
+@patch("homeassistant.components.zha.setup_quirks", new=Mock(return_value=True))
 @patch(
-    "homeassistant.components.zha.websocket_api.async_load_api", Mock(return_value=True)
+    "homeassistant.components.zha.websocket_api.async_load_api",
+    new=Mock(return_value=True),
 )
-async def test_setup_with_v3_cleaning_uri(
+async def test_setup_with_cleaning_uri(
     hass: HomeAssistant,
     path: str,
     cleaned_path: str,
@@ -237,11 +249,13 @@ async def test_setup_with_v3_cleaning_uri(
         ("znp", None, None, 115200, None),
         ("znp", None, "software", 115200, "software"),
         ("znp", 57600, "software", 57600, "software"),
-        ("deconz", None, None, 38400, None),
+        ("deconz", None, None, 57600, None),
         ("deconz", 115200, None, 115200, None),
     ],
 )
-@patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
+@patch(
+    "homeassistant.components.zha.async_setup_entry", new=AsyncMock(return_value=True)
+)
 async def test_migration_baudrate_and_flow_control(
     radio_type: str,
     old_baudrate: int,
@@ -250,6 +264,7 @@ async def test_migration_baudrate_and_flow_control(
     new_flow_control: typing.Literal["hardware", "software", None],
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
+    mock_zigpy_connect,
 ) -> None:
     """Test baudrate and flow control migration."""
 
@@ -331,12 +346,15 @@ async def test_migration_baudrate_and_flow_control(
         ),
     ],
 )
-@patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
+@patch(
+    "homeassistant.components.zha.async_setup_entry", new=AsyncMock(return_value=True)
+)
 async def test_migration_unique_id(
     device: str,
     port: UsbSerialPort | NetworkSerialPort,
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
+    mock_zigpy_connect,
 ) -> None:
     """Test unique ID regeneration."""
 
@@ -365,8 +383,7 @@ async def test_migration_unique_id(
 
     assert config_entry.version == 5
     assert config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH] == port.path
-    assert config_entry.unique_id != "not_a_good_unique_id"
-    assert config_entry.unique_id == "foo"
+    assert config_entry.unique_id == "channel=15,epid=00:15:8d:00:02:32:4f:32"
 
 
 @patch(
