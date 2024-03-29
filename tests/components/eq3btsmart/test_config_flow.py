@@ -33,7 +33,7 @@ async def test_user_flow(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == slugify(MAC)
     assert result["data"] == {}
     assert result["context"]["unique_id"] == MAC
@@ -57,7 +57,7 @@ async def test_user_flow_invalid_mac(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["errors"] == {CONF_MAC: "invalid_mac_address"}
         assert len(mock_setup_entry.mock_calls) == 0
 
@@ -67,7 +67,7 @@ async def test_user_flow_invalid_mac(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == slugify(MAC)
         assert result["data"] == {}
         assert result["context"]["unique_id"] == MAC
@@ -95,7 +95,7 @@ async def test_bluetooth_flow(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == slugify(MAC)
     assert result["data"] == {}
     assert result["context"]["unique_id"] == MAC
@@ -130,6 +130,6 @@ async def test_duplicate_entry(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert mock_setup_entry.call_count == 0
