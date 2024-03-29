@@ -18,6 +18,7 @@
     "zigpy_xbee",
     "zigpy_zigate",
     "zigpy_znp",
+    "zha",
     "universal_silabs_flasher"
   ],
   "requirements": [
