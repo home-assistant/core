@@ -135,7 +135,7 @@ class ZHADeviceProxy(EventBase):
                 "depth": str(neighbor.depth),
                 "lqi": str(neighbor.lqi),
             }
-            for neighbor in topology.neighbors[self.ieee]
+            for neighbor in topology.neighbors[self.device.ieee]
         ]
 
         device_info[ATTR_ROUTES] = [
@@ -147,7 +147,7 @@ class ZHADeviceProxy(EventBase):
                 "route_record_required": bool(route.RouteRecordRequired),
                 "next_hop": str(route.NextHop),
             }
-            for route in topology.routes[self.ieee]
+            for route in topology.routes[self.device.ieee]
         ]
 
         # Return endpoint device type Names
