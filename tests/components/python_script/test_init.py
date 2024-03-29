@@ -517,7 +517,7 @@ time.sleep(5)
 
     with patch("homeassistant.components.python_script.time.sleep"):
         hass.async_add_executor_job(execute, hass, "test.py", source, {})
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     assert caplog.text.count("time.sleep") == 1
 
@@ -686,5 +686,5 @@ async def test_prohibited_augmented_assignment_operations(
 ) -> None:
     """Test that prohibited augmented assignment operations raise an error."""
     hass.async_add_executor_job(execute, hass, "aug_assign_prohibited.py", case, {})
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert error in caplog.text
