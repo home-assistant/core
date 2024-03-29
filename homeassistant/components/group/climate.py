@@ -239,15 +239,15 @@ class ClimateGroup(GroupEntity, ClimateEntity):
         self._attr_max_temp = reduce_attribute(states, ATTR_MAX_TEMP, reduce=min)
         # End temperature settings
 
-        # Build util that will help with the computation of intersection of modes
+        # Build util that will help with the computation of union of modes
         # across all the entity states.
-        def intersect_modes(modes: list[list[Any]]) -> list[Any]:
-            return list(set().union(*modes).intersection(*modes))
+        def merge_modes(modes: list[list[Any]]) -> list[Any]:
+            return list(set().union(*modes))
 
         # available HVAC modes
         all_hvac_modes = list(find_state_attributes(states, ATTR_HVAC_MODES))
         if all_hvac_modes:
-            self._attr_hvac_modes = intersect_modes(all_hvac_modes)
+            self._attr_hvac_modes = merge_modes(all_hvac_modes)
 
         current_hvac_modes = [
             x.state
@@ -283,7 +283,7 @@ class ClimateGroup(GroupEntity, ClimateEntity):
         # available swing modes
         all_swing_modes = list(find_state_attributes(states, ATTR_SWING_MODES))
         if all_swing_modes:
-            self._attr_swing_modes = intersect_modes(all_swing_modes)
+            self._attr_swing_modes = merge_modes(all_swing_modes)
 
         # Report the most common swing_mode.
         self._attr_swing_mode = most_frequent_attribute(states, ATTR_SWING_MODE)
@@ -291,7 +291,7 @@ class ClimateGroup(GroupEntity, ClimateEntity):
         # available fan modes
         all_fan_modes = list(find_state_attributes(states, ATTR_FAN_MODES))
         if all_fan_modes:
-            self._attr_fan_modes = intersect_modes(all_fan_modes)
+            self._attr_fan_modes = merge_modes(all_fan_modes)
 
         # Report the most common fan_mode.
         self._attr_fan_mode = most_frequent_attribute(states, ATTR_FAN_MODE)
@@ -299,7 +299,7 @@ class ClimateGroup(GroupEntity, ClimateEntity):
         # available preset modes
         all_preset_modes = list(find_state_attributes(states, ATTR_PRESET_MODES))
         if all_preset_modes:
-            self._attr_preset_modes = intersect_modes(all_preset_modes)
+            self._attr_preset_modes = merge_modes(all_preset_modes)
 
         # Report the most common fan_mode.
         self._attr_preset_mode = most_frequent_attribute(states, ATTR_PRESET_MODE)
