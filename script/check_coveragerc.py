@@ -36,8 +36,6 @@ def main():
         pytest.main(
             [
                 "-qq",
-                "-n",
-                "auto",
                 "--timeout=9",
                 "--durations=10",
                 "--dist=loadfile",
