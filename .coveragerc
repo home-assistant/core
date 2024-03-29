@@ -1724,10 +1724,7 @@ omit =
     homeassistant/components/zeversolar/coordinator.py
     homeassistant/components/zeversolar/entity.py
     homeassistant/components/zeversolar/sensor.py
-    homeassistant/components/zha/core/cluster_handlers/*
-    homeassistant/components/zha/core/device.py
-    homeassistant/components/zha/core/gateway.py
-    homeassistant/components/zha/core/helpers.py
+    homeassistant/components/zha/websocket_api.py
     homeassistant/components/zha/light.py
     homeassistant/components/zha/websocket_api.py
     homeassistant/components/zhong_hong/climate.py
