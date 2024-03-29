@@ -115,17 +115,15 @@ class AtlanticDomesticHotWaterProductionMBLComponent(OverkizEntity, WaterHeaterE
     def current_operation(self) -> str:
         """Return current operation."""
         if self.is_boost_mode_on:
-            output = STATE_PERFORMANCE
+            return STATE_PERFORMANCE
         elif self.is_eco_mode_on:
-            output = STATE_ECO
+            return STATE_ECO
         elif self.is_away_mode_on:
-            output = STATE_OFF
+            return STATE_OFF
         elif (mode := self.dhw_mode) == OverkizCommandParam.MANUAL_ECO_INACTIVE:
-            output = OverkizCommandParam.MANUAL
-        else:
-            output = mode
+            return STATE_MANUAL
 
-        return output
+        return STATE_OFF
 
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set new operation mode."""
