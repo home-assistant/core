@@ -87,7 +87,7 @@ jobs:
               echo "skip=true" >> "$GITHUB_OUTPUT"
           fi
       - name: Create pull request
-        if: ${{ steps.detect.outputs.changes }} && !${{ steps.check-pr.outputs.skip == 'true'}}
+        if: steps.detect.outputs.changes && steps.check-pr.outputs.skip != 'true'
         # This step skips if the PR already exists, and correctly leaves
         # the existing PR pointing the to branch we just made.
         run: |
