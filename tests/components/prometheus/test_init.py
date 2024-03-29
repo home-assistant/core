@@ -83,22 +83,27 @@ class MetricsTestHelper:
     """Helps with formatting prometheus metrics and future-proof label changes."""
 
     @classmethod
+    def _get_device_class_label_line(cls, device_class):
+        return f'device_class="{device_class}",' if device_class else ""
+
+    @classmethod
     def _perform_metric_assert(
         cls,
         metric_name,
         metric_value,
         domain,
         friendly_name,
-        device_class,
         object_id,
         body,
         area=None,
+        device_class=None,
         positive_comparison=True,
     ):
+        device_class_label_line = cls.get_device_class_label_line(device_class)
         full_metric_string = (
             f"{metric_name}{{"
             f'area="{area or ""}",'
-            # f'device_class="{device_class}",'
+            f"{device_class_label_line}"
             f'domain="{domain}",'
             f'entity="{domain}.{object_id}",'
             f'friendly_name="{friendly_name}",'
@@ -116,10 +121,10 @@ class MetricsTestHelper:
         metric_name,
         metric_value,
         friendly_name,
-        device_class,
         object_id,
         body,
         area=None,
+        device_class=None,
         positive_comparison=True,
     ):
         cls._perform_metric_assert(
@@ -127,10 +132,10 @@ class MetricsTestHelper:
             metric_value,
             "sensor",
             friendly_name,
-            device_class,
             object_id,
             body,
             area=area,
+            device_class=device_class,
             positive_comparison=positive_comparison,
         )
 
@@ -140,19 +145,20 @@ class MetricsTestHelper:
         metric_name,
         metric_value,
         friendly_name,
-        device_class,
         object_id,
         body,
         area=None,
+        device_class=None,
         action=None,
     ):
         domain = "climate"
+        device_class_label_line = cls.get_device_class_label_line(device_class)
         action_label_line = f'action="{action}",' if action else ""
         assert (
             f"{metric_name}{{"
             f'{action_label_line}'
             f'area="{area or ""}",'
-            # f'device_class="{device_class}",'
+            f"{device_class_label_line}"
             f'domain="{domain}",'
             f'entity="{domain}.{object_id}",'
             f'friendly_name="{friendly_name}",'
@@ -167,18 +173,19 @@ class MetricsTestHelper:
         metric_value,
         entity_id,
         friendly_name,
-        device_class,
         body,
         area=None,
+        device_class=None,
         state=None,
     ):
         domain = "cover"
+        device_class_label_line = cls.get_device_class_label_line(device_class)
         object_id = entity_id.replace(f"{domain}.", "")
         state_label_line = f',state="{state}"' if state else ""
         assert (
             f"{metric_name}{{"
             f'area="{area or ""}",'
-            # f'device_class="{device_class}",'
+            f"{device_class_label_line}"
             f'domain="{domain}",'
             f'entity="{entity_id}",'
             f'friendly_name="{friendly_name}",'
@@ -193,48 +200,25 @@ class MetricsTestHelper:
         metric_name,
         metric_value,
         friendly_name,
-        device_class,
         object_id,
         body,
         area=None,
+        device_class=None,
         mode=None,
     ):
         domain = "humidifier"
+        device_class_label_line = cls.get_device_class_label_line(device_class)
         mode_label_line = f'mode="{mode}",' if mode else ""
         assert (
             f"{metric_name}{{"
             f'area="{area or ""}",'
-            # f'device_class="{device_class}",'
+            f"{device_class_label_line}"
             f'domain="{domain}",'
             f'entity="{domain}.{object_id}",'
             f'friendly_name="{friendly_name}",'
             f'{mode_label_line}'
             f'object_id="{object_id}"'
             f"}} {metric_value}" in body
-        )
-
-    @classmethod
-    def _perform_temperature_metric_assert(
-        cls, metric_value, friendly_name, object_id, body, area=None
-    ):
-        cls._perform_sensor_metric_assert(
-            "homeassistant_sensor_temperature_celsius",
-            metric_value,
-            friendly_name,
-            "temperature",
-            object_id,
-            body,
-            area=area,
-        )
-
-    @classmethod
-    def _perform_default_temperature_metric_assert(cls, metric_value, body, area=None):
-        cls._perform_temperature_metric_assert(
-            metric_value,
-            "Outside Temperature",
-            "outside_temperature",
-            body,
-            area=area,
         )
 
 
@@ -302,7 +286,13 @@ async def test_setup_enumeration(
 
     client = await hass_client()
     body = await generate_latest_metrics(client)
-    MetricsTestHelper._perform_default_temperature_metric_assert(state, body)
+    MetricsTestHelper._perform_sensor_metric_assert(
+        "homeassistant_sensor_temperature_celsius",
+        "12.3",
+        "Outside Temperature",
+        "outside_temperature",
+        body,
+    )
 
 
 @pytest.mark.parametrize("namespace", [""])
@@ -319,14 +309,13 @@ async def test_view_empty_namespace(
     )
 
     MetricsTestHelper._perform_sensor_metric_assert(
-        "entity_available", "1.0", "Radio Energy", "temperature", "radio_energy", body
+        "entity_available", "1.0", "Radio Energy", "radio_energy", body
     )
 
     MetricsTestHelper._perform_sensor_metric_assert(
         "last_updated_time_seconds",
         "86400.0",
         "Radio Energy",
-        "temperature",
         "radio_energy",
         body,
     )
@@ -345,7 +334,13 @@ async def test_view_default_namespace(
         "Objects collected during gc" in body
     )
 
-    MetricsTestHelper._perform_default_temperature_metric_assert("15.6", body)
+    MetricsTestHelper._perform_sensor_metric_assert(
+        "homeassistant_sensor_temperature_celsius",
+        "15.6",
+        "Outside Temperature",
+        "outside_temperature",
+        body,
+    )
 
 
 @pytest.mark.parametrize("namespace", [""])
@@ -356,27 +351,25 @@ async def test_sensor_unit(
     body = await generate_latest_metrics(client)
 
     MetricsTestHelper._perform_sensor_metric_assert(
-        "sensor_unit_kwh", "74.0", "Television Energy", "", "television_energy", body
+        "sensor_unit_kwh", "74.0", "Television Energy", "television_energy", body
     )
 
     MetricsTestHelper._perform_sensor_metric_assert(
         "sensor_unit_sek_per_kwh",
         "0.123",
         "Electricity price",
-        "",
         "electricity_price",
         body,
     )
 
     MetricsTestHelper._perform_sensor_metric_assert(
-        "sensor_unit_u0xb0", "25.0", "Wind Direction", "", "wind_direction", body
+        "sensor_unit_u0xb0", "25.0", "Wind Direction", "wind_direction", body
     )
 
     MetricsTestHelper._perform_sensor_metric_assert(
         "sensor_unit_u0xb5g_per_mu0xb3",
         "3.7069",
         "SPS30 PM <1µm Weight concentration",
-        "",
         "sps30_pm_1um_weight_concentration",
         body,
     )
@@ -390,18 +383,17 @@ async def test_sensor_without_unit(
     body = await generate_latest_metrics(client)
 
     MetricsTestHelper._perform_sensor_metric_assert(
-        "sensor_state", "0.002", "Trend Gradient", "", "trend_gradient", body
+        "sensor_state", "0.002", "Trend Gradient", "trend_gradient", body
     )
 
     MetricsTestHelper._perform_sensor_metric_assert(
-        "sensor_state", "0", "Text", "", "text", body, positive_comparison=False
+        "sensor_state", "0", "Text", "text", body, positive_comparison=False
     )
 
     MetricsTestHelper._perform_sensor_metric_assert(
         "sensor_unit_text",
         "0",
         "Text Unit",
-        "",
         "text_unit",
         body,
         positive_comparison=False,
@@ -416,14 +408,13 @@ async def test_sensor_device_class(
     body = await generate_latest_metrics(client)
 
     MetricsTestHelper._perform_sensor_metric_assert(
-        "sensor_temperature_celsius", "10.0", "Fahrenheit", "", "fahrenheit", body
+        "sensor_temperature_celsius", "10.0", "Fahrenheit", "fahrenheit", body
     )
 
     MetricsTestHelper._perform_sensor_metric_assert(
         "sensor_temperature_celsius",
         "15.6",
         "Outside Temperature",
-        "",
         "outside_temperature",
         body,
     )
@@ -432,20 +423,18 @@ async def test_sensor_device_class(
         "sensor_humidity_percent",
         "54.0",
         "Outside Humidity",
-        "",
         "outside_humidity",
         body,
     )
 
     MetricsTestHelper._perform_sensor_metric_assert(
-        "sensor_power_kwh", "14.0", "Radio Energy", "", "radio_energy", body
+        "sensor_power_kwh", "14.0", "Radio Energy", "radio_energy", body
     )
 
     MetricsTestHelper._perform_sensor_metric_assert(
         "sensor_timestamp_seconds",
         "1.691445808136036e+09",
         "Timestamp",
-        "",
         "timestamp",
         body,
     )
@@ -460,11 +449,11 @@ async def test_input_number(
     domain = "input_number"
 
     MetricsTestHelper._perform_metric_assert(
-        "input_number_state", "5.2", domain, "Threshold", "", "threshold", body
+        "input_number_state", "5.2", domain, "Threshold", "threshold", body
     )
 
     MetricsTestHelper._perform_metric_assert(
-        "input_number_state", "60.0", domain, "None", "", "brightness", body
+        "input_number_state", "60.0", domain, "None", "brightness", body
     )
 
     MetricsTestHelper._perform_metric_assert(
@@ -472,7 +461,6 @@ async def test_input_number(
         "22.7",
         domain,
         "Target temperature",
-        "",
         "target_temperature",
         body,
     )
@@ -487,11 +475,11 @@ async def test_number(
     domain = "number"
 
     MetricsTestHelper._perform_metric_assert(
-        "number_state", "5.2", domain, "Threshold", "", "threshold", body
+        "number_state", "5.2", domain, "Threshold", "threshold", body
     )
 
     MetricsTestHelper._perform_metric_assert(
-        "number_state", "60.0", domain, "None", "", "brightness", body
+        "number_state", "60.0", domain, "None", "brightness", body
     )
 
     MetricsTestHelper._perform_metric_assert(
@@ -499,7 +487,6 @@ async def test_number(
         "22.7",
         domain,
         "Target temperature",
-        "",
         "target_temperature",
         body,
     )
@@ -516,7 +503,6 @@ async def test_battery(
         "battery_level_percent",
         "12.0",
         "Outside Temperature",
-        "",
         "outside_temperature",
         body,
     )
@@ -531,23 +517,23 @@ async def test_climate(
     body = await generate_latest_metrics(client)
 
     MetricsTestHelper._perform_climate_metric_assert(
-        "climate_current_temperature_celsius", "25.0", "HeatPump", "", "heatpump", body
+        "climate_current_temperature_celsius", "25.0", "HeatPump", "heatpump", body
     )
 
     MetricsTestHelper._perform_climate_metric_assert(
-        "climate_target_temperature_celsius", "20.0", "HeatPump", "", "heatpump", body
+        "climate_target_temperature_celsius", "20.0", "HeatPump", "heatpump", body
     )
 
     MetricsTestHelper._perform_climate_metric_assert(
-        "climate_target_temperature_low_celsius", "21.0", "Ecobee", "", "ecobee", body
+        "climate_target_temperature_low_celsius", "21.0", "Ecobee", "ecobee", body
     )
 
     MetricsTestHelper._perform_climate_metric_assert(
-        "climate_target_temperature_high_celsius", "24.0", "Ecobee", "", "ecobee", body
+        "climate_target_temperature_high_celsius", "24.0", "Ecobee", "ecobee", body
     )
 
     MetricsTestHelper._perform_climate_metric_assert(
-        "climate_target_temperature_celsius", "0.0", "Fritz!DECT", "", "fritzdect", body
+        "climate_target_temperature_celsius", "0.0", "Fritz!DECT", "fritzdect", body
     )
 
 
@@ -563,20 +549,19 @@ async def test_humidifier(
         "humidifier_target_humidity_percent",
         "68.0",
         "Humidifier",
-        "",
         "humidifier",
         body,
     )
 
     MetricsTestHelper._perform_humidifier_metric_assert(
-        "humidifier_state", "1.0", "Dehumidifier", "", "dehumidifier", body
+        "humidifier_state", "1.0", "Dehumidifier", "dehumidifier", body
     )
 
     MetricsTestHelper._perform_humidifier_metric_assert(
-        "humidifier_mode", "1.0", "Hygrostat", "", "hygrostat", body, mode="home"
+        "humidifier_mode", "1.0", "Hygrostat", "hygrostat", body, mode="home"
     )
     MetricsTestHelper._perform_humidifier_metric_assert(
-        "humidifier_mode", "0.0", "Hygrostat", "", "hygrostat", body, mode="eco"
+        "humidifier_mode", "0.0", "Hygrostat", "hygrostat", body, mode="eco"
     )
 
 
@@ -590,19 +575,19 @@ async def test_attributes(
     domain = "switch"
 
     MetricsTestHelper._perform_metric_assert(
-        "switch_state", "1.0", domain, "Boolean", "", "boolean", body
+        "switch_state", "1.0", domain, "Boolean", "boolean", body
     )
 
     MetricsTestHelper._perform_metric_assert(
-        "switch_attr_boolean", "1.0", domain, "Boolean", "", "boolean", body
+        "switch_attr_boolean", "1.0", domain, "Boolean", "boolean", body
     )
 
     MetricsTestHelper._perform_metric_assert(
-        "switch_state", "0.0", domain, "Number", "", "number", body
+        "switch_state", "0.0", domain, "Number", "number", body
     )
 
     MetricsTestHelper._perform_metric_assert(
-        "switch_attr_number", "10.2", domain, "Number", "", "number", body
+        "switch_attr_number", "10.2", domain, "Number", "number", body
     )
 
 
@@ -615,11 +600,11 @@ async def test_binary_sensor(
 
     domain = "binary_sensor"
     MetricsTestHelper._perform_metric_assert(
-        "binary_sensor_state", "1.0", domain, "Door", "", "door", body
+        "binary_sensor_state", "1.0", domain, "Door", "door", body
     )
 
     MetricsTestHelper._perform_metric_assert(
-        "binary_sensor_state", "0.0", domain, "Window", "", "window", body
+        "binary_sensor_state", "0.0", domain, "Window", "window", body
     )
 
 
@@ -632,11 +617,11 @@ async def test_input_boolean(
 
     domain = "input_boolean"
     MetricsTestHelper._perform_metric_assert(
-        "input_boolean_state", "1.0", domain, "Test", "", "test", body
+        "input_boolean_state", "1.0", domain, "Test", "test", body
     )
 
     MetricsTestHelper._perform_metric_assert(
-        "input_boolean_state", "0.0", domain, "Helper", "", "helper", body
+        "input_boolean_state", "0.0", domain, "Helper", "helper", body
     )
 
 
@@ -649,23 +634,23 @@ async def test_light(
 
     domain = "light"
     MetricsTestHelper._perform_metric_assert(
-        "light_brightness_percent", "100.0", domain, "Desk", "", "desk", body
+        "light_brightness_percent", "100.0", domain, "Desk", "desk", body
     )
 
     MetricsTestHelper._perform_metric_assert(
-        "light_brightness_percent", "0.0", domain, "Wall", "", "wall", body
+        "light_brightness_percent", "0.0", domain, "Wall", "wall", body
     )
 
     MetricsTestHelper._perform_metric_assert(
-        "light_brightness_percent", "100.0", domain, "TV", "", "tv", body
+        "light_brightness_percent", "100.0", domain, "TV", "tv", body
     )
 
     MetricsTestHelper._perform_metric_assert(
-        "light_brightness_percent", "70.58823529411765", domain, "PC", "", "pc", body
+        "light_brightness_percent", "70.58823529411765", domain, "PC", "pc", body
     )
 
     MetricsTestHelper._perform_metric_assert(
-        "light_brightness_percent", "100.0", domain, "Hallway", "", "hallway", body
+        "light_brightness_percent", "100.0", domain, "Hallway", "hallway", body
     )
 
 
@@ -678,11 +663,11 @@ async def test_lock(
 
     domain = "lock"
     MetricsTestHelper._perform_metric_assert(
-        "lock_state", "1.0", domain, "Front Door", "", "front_door", body
+        "lock_state", "1.0", domain, "Front Door", "front_door", body
     )
 
     MetricsTestHelper._perform_metric_assert(
-        "lock_state", "0.0", domain, "Kitchen Door", "", "kitchen_door", body
+        "lock_state", "0.0", domain, "Kitchen Door", "kitchen_door", body
     )
 
 
@@ -701,7 +686,6 @@ async def test_cover(
             1.0 if cover_entities[testcover].unique_id in open_covers else 0.0,
             cover_entities[testcover].entity_id,
             cover_entities[testcover].original_name,
-            "",
             body,
             state="open",
         )
@@ -711,7 +695,6 @@ async def test_cover(
             1.0 if cover_entities[testcover].unique_id == "cover_closed" else 0.0,
             cover_entities[testcover].entity_id,
             cover_entities[testcover].original_name,
-            "",
             body,
             state="closed",
         )
@@ -721,7 +704,6 @@ async def test_cover(
             1.0 if cover_entities[testcover].unique_id == "cover_opening" else 0.0,
             cover_entities[testcover].entity_id,
             cover_entities[testcover].original_name,
-            "",
             body,
             state="opening",
         )
@@ -731,7 +713,6 @@ async def test_cover(
             1.0 if cover_entities[testcover].unique_id == "cover_closing" else 0.0,
             cover_entities[testcover].entity_id,
             cover_entities[testcover].original_name,
-            "",
             body,
             state="closing",
         )
@@ -742,7 +723,6 @@ async def test_cover(
                 "50.0",
                 cover_entities[testcover].entity_id,
                 cover_entities[testcover].original_name,
-                "",
                 body,
             )
 
@@ -752,7 +732,6 @@ async def test_cover(
                 "50.0",
                 cover_entities[testcover].entity_id,
                 cover_entities[testcover].original_name,
-                "",
                 body,
             )
 
@@ -766,10 +745,10 @@ async def test_device_tracker(
 
     domain = "device_tracker"
     MetricsTestHelper._perform_metric_assert(
-        "device_tracker_state", "1.0", domain, "Phone", "", "phone", body
+        "device_tracker_state", "1.0", domain, "Phone", "phone", body
     )
     MetricsTestHelper._perform_metric_assert(
-        "device_tracker_state", "0.0", domain, "Watch", "", "watch", body
+        "device_tracker_state", "0.0", domain, "Watch", "watch", body
     )
 
 
@@ -782,7 +761,7 @@ async def test_counter(
 
     domain = "counter"
     MetricsTestHelper._perform_metric_assert(
-        "counter_value", "2.0", domain, "None", "", "counter", body
+        "counter_value", "2.0", domain, "None", "counter", body
     )
 
 
@@ -795,10 +774,10 @@ async def test_update(
 
     domain = "update"
     MetricsTestHelper._perform_metric_assert(
-        "update_state", "1.0", domain, "Firmware", "", "firmware", body
+        "update_state", "1.0", domain, "Firmware", "firmware", body
     )
     MetricsTestHelper._perform_metric_assert(
-        "update_state", "0.0", domain, "Addon", "", "addon", body
+        "update_state", "0.0", domain, "Addon", "addon", body
     )
 
 
@@ -819,7 +798,6 @@ async def test_renaming_entity_name(
         "15.6",
         "sensor",
         "Outside Temperature",
-        "",
         "outside_temperature",
         body,
     )
@@ -829,7 +807,6 @@ async def test_renaming_entity_name(
         "1.0",
         "sensor",
         "Outside Temperature",
-        "",
         "outside_temperature",
         body,
     )
@@ -839,7 +816,6 @@ async def test_renaming_entity_name(
         "54.0",
         "sensor",
         "Outside Humidity",
-        "",
         "outside_humidity",
         body,
     )
@@ -849,17 +825,16 @@ async def test_renaming_entity_name(
         "1.0",
         "sensor",
         "Outside Humidity",
-        "",
         "outside_humidity",
         body,
     )
 
     MetricsTestHelper._perform_climate_metric_assert(
-        "climate_action", "1.0", "HeatPump", "", "heatpump", body, action="heating"
+        "climate_action", "1.0", "HeatPump", "heatpump", body, action="heating"
     )
 
     MetricsTestHelper._perform_climate_metric_assert(
-        "climate_action", "0.0", "HeatPump", "", "heatpump", body, action="cooling"
+        "climate_action", "0.0", "HeatPump", "heatpump", body, action="cooling"
     )
 
     assert "sensor.outside_temperature" in entity_registry.entities
@@ -903,7 +878,6 @@ async def test_renaming_entity_name(
         "15.6",
         "sensor",
         "Outside Temperature Renamed",
-        "",
         "outside_temperature",
         body,
     )
@@ -913,7 +887,6 @@ async def test_renaming_entity_name(
         "1.0",
         "sensor",
         "Outside Temperature Renamed",
-        "",
         "outside_temperature",
         body,
     )
@@ -922,7 +895,6 @@ async def test_renaming_entity_name(
         "climate_action",
         "1.0",
         "HeatPump Renamed",
-        "",
         "heatpump",
         body,
         action="heating",
@@ -932,7 +904,6 @@ async def test_renaming_entity_name(
         "climate_action",
         "0.0",
         "HeatPump Renamed",
-        "",
         "heatpump",
         body,
         action="cooling",
@@ -944,7 +915,6 @@ async def test_renaming_entity_name(
         "54.0",
         "sensor",
         "Outside Humidity",
-        "",
         "outside_humidity",
         body,
     )
@@ -954,7 +924,6 @@ async def test_renaming_entity_name(
         "1.0",
         "sensor",
         "Outside Humidity",
-        "",
         "outside_humidity",
         body,
     )
@@ -977,7 +946,6 @@ async def test_renaming_entity_id(
         "15.6",
         "sensor",
         "Outside Temperature",
-        "",
         "outside_temperature",
         body,
     )
@@ -987,7 +955,6 @@ async def test_renaming_entity_id(
         "1.0",
         "sensor",
         "Outside Temperature",
-        "",
         "outside_temperature",
         body,
     )
@@ -997,7 +964,6 @@ async def test_renaming_entity_id(
         "54.0",
         "sensor",
         "Outside Humidity",
-        "",
         "outside_humidity",
         body,
     )
@@ -1007,7 +973,6 @@ async def test_renaming_entity_id(
         "1.0",
         "sensor",
         "Outside Humidity",
-        "",
         "outside_humidity",
         body,
     )
@@ -1035,7 +1000,6 @@ async def test_renaming_entity_id(
         "15.6",
         "sensor",
         "Outside Temperature",
-        "",
         "outside_temperature_renamed",
         body,
     )
@@ -1045,7 +1009,6 @@ async def test_renaming_entity_id(
         "1.0",
         "sensor",
         "Outside Temperature",
-        "",
         "outside_temperature_renamed",
         body,
     )
@@ -1056,7 +1019,6 @@ async def test_renaming_entity_id(
         "54.0",
         "sensor",
         "Outside Humidity",
-        "",
         "outside_humidity",
         body,
     )
@@ -1066,7 +1028,6 @@ async def test_renaming_entity_id(
         "1.0",
         "sensor",
         "Outside Humidity",
-        "",
         "outside_humidity",
         body,
     )
@@ -1089,7 +1050,6 @@ async def test_deleting_entity(
         "15.6",
         "sensor",
         "Outside Temperature",
-        "",
         "outside_temperature",
         body,
     )
@@ -1099,7 +1059,6 @@ async def test_deleting_entity(
         "1.0",
         "sensor",
         "Outside Temperature",
-        "",
         "outside_temperature",
         body,
     )
@@ -1109,7 +1068,6 @@ async def test_deleting_entity(
         "54.0",
         "sensor",
         "Outside Humidity",
-        "",
         "outside_humidity",
         body,
     )
@@ -1119,17 +1077,16 @@ async def test_deleting_entity(
         "1.0",
         "sensor",
         "Outside Humidity",
-        "",
         "outside_humidity",
         body,
     )
 
     MetricsTestHelper._perform_climate_metric_assert(
-        "climate_action", "1.0", "HeatPump", "", "heatpump", body, action="heating"
+        "climate_action", "1.0", "HeatPump", "heatpump", body, action="heating"
     )
 
     MetricsTestHelper._perform_climate_metric_assert(
-        "climate_action", "0.0", "HeatPump", "", "heatpump", body, action="cooling"
+        "climate_action", "0.0", "HeatPump", "heatpump", body, action="cooling"
     )
 
     assert "sensor.outside_temperature" in entity_registry.entities
@@ -1153,7 +1110,6 @@ async def test_deleting_entity(
         "54.0",
         "sensor",
         "Outside Humidity",
-        "",
         "outside_humidity",
         body,
     )
@@ -1163,7 +1119,6 @@ async def test_deleting_entity(
         "1.0",
         "sensor",
         "Outside Humidity",
-        "",
         "outside_humidity",
         body,
     )
@@ -1188,7 +1143,6 @@ async def test_disabling_entity(
         "15.6",
         "sensor",
         "Outside Temperature",
-        "",
         "outside_temperature",
         body,
     )
@@ -1198,7 +1152,6 @@ async def test_disabling_entity(
         "1.0",
         "sensor",
         "Outside Temperature",
-        "",
         "outside_temperature",
         body,
     )
@@ -1228,7 +1181,6 @@ async def test_disabling_entity(
         "54.0",
         "sensor",
         "Outside Humidity",
-        "",
         "outside_humidity",
         body,
     )
@@ -1238,17 +1190,16 @@ async def test_disabling_entity(
         "1.0",
         "sensor",
         "Outside Humidity",
-        "",
         "outside_humidity",
         body,
     )
 
     MetricsTestHelper._perform_climate_metric_assert(
-        "climate_action", "1.0", "HeatPump", "", "heatpump", body, action="heating"
+        "climate_action", "1.0", "HeatPump", "heatpump", body, action="heating"
     )
 
     MetricsTestHelper._perform_climate_metric_assert(
-        "climate_action", "0.0", "HeatPump", "", "heatpump", body, action="cooling"
+        "climate_action", "0.0", "HeatPump", "heatpump", body, action="cooling"
     )
 
     assert "sensor.outside_temperature" in entity_registry.entities
@@ -1278,7 +1229,6 @@ async def test_disabling_entity(
         "54.0",
         "sensor",
         "Outside Humidity",
-        "",
         "outside_humidity",
         body,
     )
@@ -1288,7 +1238,6 @@ async def test_disabling_entity(
         "1.0",
         "sensor",
         "Outside Humidity",
-        "",
         "outside_humidity",
         body,
     )
