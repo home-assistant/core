@@ -4,15 +4,14 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import Any
 
-import lektricowifi
+from lektricowifi import Device, DeviceConnectionError
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.zeroconf import ZeroconfServiceInfo
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_FRIENDLY_NAME, CONF_HOST
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -40,7 +39,7 @@ class LektricoFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         if user_input is None:
             return self._async_show_setup_form()
@@ -53,12 +52,14 @@ class LektricoFlowHandler(ConfigFlow, domain=DOMAIN):
             await self._get_lektrico_serial_number_and_treat_unique_id(
                 raise_on_progress=True
             )
-        except lektricowifi.DeviceConnectionError:
-            return self._async_show_setup_form({"base": "cannot_connect"})
+        except DeviceConnectionError:
+            return self._async_show_setup_form(
+                {"base": "cannot_connect"}, {CONF_HOST: "cannot_connect"}
+            )
 
         return self._async_create_entry()
 
-    async def async_step_config(self) -> FlowResult:
+    async def async_step_config(self) -> ConfigFlowResult:
         """Confirm the setup."""
 
         return self.async_show_form(
@@ -77,7 +78,7 @@ class LektricoFlowHandler(ConfigFlow, domain=DOMAIN):
         self,
         user_input: dict[str, Any] | None = None,
         errors: dict[str, str] | None = None,
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Show the setup form to the user."""
         if user_input is None:
             user_input = {}
@@ -97,7 +98,7 @@ class LektricoFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
     @callback
-    def _async_create_entry(self) -> FlowResult:
+    def _async_create_entry(self) -> ConfigFlowResult:
         return self.async_create_entry(
             title=f"{self._friendly_name}_{str(self._serial_number)}",
             data={CONF_HOST: self._host, CONF_FRIENDLY_NAME: self._friendly_name},
@@ -105,7 +106,7 @@ class LektricoFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
         self._host = discovery_info.host  # 192.168.100.11
         _id = discovery_info.properties.get("id")  # 1p7k_500006
@@ -119,9 +120,9 @@ class LektricoFlowHandler(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="missing_underline_in_id")
         self._serial_number = _id[_index + 1 :]
         if _id.startswith("m2w_81"):
-            self._friendly_name = lektricowifi.Device.TYPE_EM
+            self._friendly_name = Device.TYPE_EM
         elif _id.startswith("m2w_83"):
-            self._friendly_name = lektricowifi.Device.TYPE_3EM
+            self._friendly_name = Device.TYPE_3EM
         else:
             self._friendly_name = _id[:_index]  # it's the type
 
@@ -144,7 +145,7 @@ class LektricoFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> None:
         """Get device's serial number from a Lektrico device."""
         session = async_get_clientsession(self.hass)
-        device = lektricowifi.Device(
+        device = Device(
             _host=self._host,
             session=session,
         )
@@ -164,7 +165,7 @@ class LektricoFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_confirm(
         self, user_input: dict[str, str] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Allow the user to confirm adding the device."""
 
         if user_input is not None:
@@ -186,7 +187,7 @@ class LektricoOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage the Lektrico device options."""
         errors: dict[str, str] = {}
         options = dict(self.config_entry.options)
