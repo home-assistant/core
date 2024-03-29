@@ -15,6 +15,7 @@ from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
     entity_registry as er,
+    floor_registry as fr,
     intent,
 )
 from homeassistant.setup import async_setup_component
@@ -34,11 +35,18 @@ async def test_async_match_states(
     hass: HomeAssistant,
     area_registry: ar.AreaRegistry,
     entity_registry: er.EntityRegistry,
+    floor_registry: fr.FloorRegistry,
 ) -> None:
     """Test async_match_state helper."""
     area_kitchen = area_registry.async_get_or_create("kitchen")
-    area_registry.async_update(area_kitchen.id, aliases={"food room"})
+    area_kitchen = area_registry.async_update(area_kitchen.id, aliases={"food room"})
     area_bedroom = area_registry.async_get_or_create("bedroom")
+
+    # Kitchen is on the first floor
+    floor_1 = floor_registry.async_create("first floor")
+    area_kitchen = area_registry.async_update(
+        area_kitchen.id, floor_id=floor_1.floor_id
+    )
 
     state1 = State(
         "light.kitchen", "on", attributes={ATTR_FRIENDLY_NAME: "kitchen light"}
@@ -110,6 +118,13 @@ async def test_async_match_states(
             states=[state1, state2],
         )
     ) == [state2]
+
+    # Floor
+    assert list(
+        intent.async_match_states(
+            hass, floor_name="first floor", states=[state1, state2]
+        )
+    ) == [state1]
 
 
 async def test_match_device_area(
