@@ -7,6 +7,7 @@ import argparse
 from dataclasses import dataclass, field
 from math import ceil
 from pathlib import Path
+import random
 import subprocess
 import sys
 from typing import Final
@@ -30,6 +31,7 @@ class Bucket:
 
     def get_paths_line(self) -> str:
         """Return paths."""
+        random.shuffle(self._paths)
         return " ".join(self._paths) + "\n"
 
 
@@ -59,7 +61,7 @@ class BucketHolder:
         )
         for tests in sorted_tests:
             print(f"{tests.total_tests:>{digits}} tests in {tests.path}")
-            if tests.added_to_backet:
+            if tests.added_to_bucket:
                 # Already added to bucket
                 continue
 
@@ -70,7 +72,7 @@ class BucketHolder:
                 smallest_bucket.add(tests)
 
         # verify that all tests are added to a bucket
-        if not test_folder.added_to_backet:
+        if not test_folder.added_to_bucket:
             raise ValueError("Not all tests are added to a bucket")
 
     def create_ouput_file(self) -> None:
@@ -87,13 +89,13 @@ class TestFile:
 
     total_tests: int
     path: Path
-    added_to_backet: bool = field(default=False, init=False)
+    added_to_bucket: bool = field(default=False, init=False)
 
     def add_to_bucket(self) -> None:
         """Add test file to bucket."""
-        if self.added_to_backet:
+        if self.added_to_bucket:
             raise ValueError("Already added to bucket")
-        self.added_to_backet = True
+        self.added_to_bucket = True
 
     def __gt__(self, other: TestFile) -> bool:
         """Return if greater than."""
@@ -114,13 +116,13 @@ class TestFolder:
         return sum([test.total_tests for test in self.children.values()])
 
     @property
-    def added_to_backet(self) -> bool:
+    def added_to_bucket(self) -> bool:
         """Return if added to bucket."""
-        return all(test.added_to_backet for test in self.children.values())
+        return all(test.added_to_bucket for test in self.children.values())
 
     def add_to_bucket(self) -> None:
         """Add test file to bucket."""
-        if self.added_to_backet:
+        if self.added_to_bucket:
             raise ValueError("Already added to bucket")
         for child in self.children.values():
             child.add_to_bucket()
