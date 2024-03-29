@@ -22,4 +22,4 @@ class MockSelectEntity(MockEntity, SelectEntity):
 
     def select_option(self, option: str) -> None:
         """Change the selected option."""
-        self._attr_current_option = option
+        self._values["current_option"] = option
