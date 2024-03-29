@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-import random
+import secrets
 import string
 from typing import Any
 
@@ -64,8 +64,8 @@ async def async_power_cycle_port_control_fn(
 
 def generate_password(length=18):
     """Generate password."""
-    characters = string.ascii_letters + string.digits + string.punctuation
-    password = "".join(random.choice(characters) for _ in range(length))
+    alphabet = string.ascii_letters + string.digits
+    password = "".join(secrets.choice(alphabet) for i in range(length))
     return password
 
 
