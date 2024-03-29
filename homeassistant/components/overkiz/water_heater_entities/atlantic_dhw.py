@@ -107,11 +107,6 @@ class AtlanticDomesticHotWaterProductionMBLComponent(OverkizEntity, WaterHeaterE
         )
 
     @property
-    def dhw_mode(self) -> str:
-        """Return DWH mode."""
-        return cast(str, self.executor.select_state(OverkizState.MODBUSLINK_DHW_MODE))
-
-    @property
     def current_operation(self) -> str:
         """Return current operation."""
         if self.is_boost_mode_on:
@@ -123,7 +118,10 @@ class AtlanticDomesticHotWaterProductionMBLComponent(OverkizEntity, WaterHeaterE
         if self.is_away_mode_on:
             return STATE_OFF
 
-        if self.dhw_mode == OverkizCommandParam.MANUAL_ECO_INACTIVE:
+        if (
+            cast(str, self.executor.select_state(OverkizState.MODBUSLINK_DHW_MODE))
+            == OverkizCommandParam.MANUAL_ECO_INACTIVE
+        ):
             return OverkizCommandParam.MANUAL
 
         return STATE_OFF
