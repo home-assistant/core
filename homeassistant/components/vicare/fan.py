@@ -165,11 +165,6 @@ class ViCareFan(ViCareEntity, FanEntity):
     def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., auto, smart, interval, favorite."""
 
-        if "active_vicare_mode" not in self._attributes:
-            return None
-        if self._attributes["active_vicare_mode"] == VentilationMode.PERMANENT:
-            return None
-
         return self._attributes["active_vicare_mode"]
 
     @property
