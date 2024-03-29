@@ -929,11 +929,12 @@ async def websocket_get_bindable_devices(
     zha_gateway_proxy = get_zha_gateway_proxy(hass)
     source_ieee: EUI64 = msg[ATTR_IEEE]
     source_device = zha_gateway_proxy.device_proxies.get(source_ieee)
+    assert source_device is not None
 
     devices = [
         device.zha_device_info
         for device in zha_gateway_proxy.device_proxies.values()
-        if async_is_bindable_target(source_device, device)
+        if async_is_bindable_target(source_device.device, device.device)
     ]
 
     _LOGGER.debug(
