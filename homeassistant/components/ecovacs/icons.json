@@ -22,6 +22,11 @@
         "default": "mdi:broom"
       }
     },
+    "event": {
+      "last_job": {
+        "default": "mdi:history"
+      }
+    },
     "number": {
       "clean_count": {
         "default": "mdi:counter"

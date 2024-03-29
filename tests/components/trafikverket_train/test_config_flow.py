@@ -37,14 +37,18 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.trafikverket_train.config_flow.TrafikverketTrain.async_get_train_station",
-    ), patch(
-        "homeassistant.components.trafikverket_train.config_flow.TrafikverketTrain.async_get_train_stop",
-    ), patch(
-        "homeassistant.components.trafikverket_train.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.trafikverket_train.config_flow.TrafikverketTrain.async_get_train_station",
+        ),
+        patch(
+            "homeassistant.components.trafikverket_train.config_flow.TrafikverketTrain.async_get_train_stop",
+        ),
+        patch(
+            "homeassistant.components.trafikverket_train.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -97,13 +101,17 @@ async def test_form_entry_already_exist(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.trafikverket_train.config_flow.TrafikverketTrain.async_get_train_station",
-    ), patch(
-        "homeassistant.components.trafikverket_train.config_flow.TrafikverketTrain.async_get_train_stop",
-    ), patch(
-        "homeassistant.components.trafikverket_train.async_setup_entry",
-        return_value=True,
+    with (
+        patch(
+            "homeassistant.components.trafikverket_train.config_flow.TrafikverketTrain.async_get_train_station",
+        ),
+        patch(
+            "homeassistant.components.trafikverket_train.config_flow.TrafikverketTrain.async_get_train_stop",
+        ),
+        patch(
+            "homeassistant.components.trafikverket_train.async_setup_entry",
+            return_value=True,
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -153,11 +161,14 @@ async def test_flow_fails(
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == config_entries.SOURCE_USER
 
-    with patch(
-        "homeassistant.components.trafikverket_train.config_flow.TrafikverketTrain.async_get_train_station",
-        side_effect=side_effect(),
-    ), patch(
-        "homeassistant.components.trafikverket_train.config_flow.TrafikverketTrain.async_get_train_stop",
+    with (
+        patch(
+            "homeassistant.components.trafikverket_train.config_flow.TrafikverketTrain.async_get_train_station",
+            side_effect=side_effect(),
+        ),
+        patch(
+            "homeassistant.components.trafikverket_train.config_flow.TrafikverketTrain.async_get_train_stop",
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -195,13 +206,17 @@ async def test_flow_fails_departures(
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == config_entries.SOURCE_USER
 
-    with patch(
-        "homeassistant.components.trafikverket_train.config_flow.TrafikverketTrain.async_get_train_station",
-    ), patch(
-        "homeassistant.components.trafikverket_train.config_flow.TrafikverketTrain.async_get_next_train_stops",
-        side_effect=side_effect(),
-    ), patch(
-        "homeassistant.components.trafikverket_train.config_flow.TrafikverketTrain.async_get_train_stop",
+    with (
+        patch(
+            "homeassistant.components.trafikverket_train.config_flow.TrafikverketTrain.async_get_train_station",
+        ),
+        patch(
+            "homeassistant.components.trafikverket_train.config_flow.TrafikverketTrain.async_get_next_train_stops",
+            side_effect=side_effect(),
+        ),
+        patch(
+            "homeassistant.components.trafikverket_train.config_flow.TrafikverketTrain.async_get_train_stop",
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -244,13 +259,17 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.trafikverket_train.config_flow.TrafikverketTrain.async_get_train_station",
-    ), patch(
-        "homeassistant.components.trafikverket_train.config_flow.TrafikverketTrain.async_get_train_stop",
-    ), patch(
-        "homeassistant.components.trafikverket_train.async_setup_entry",
-        return_value=True,
+    with (
+        patch(
+            "homeassistant.components.trafikverket_train.config_flow.TrafikverketTrain.async_get_train_station",
+        ),
+        patch(
+            "homeassistant.components.trafikverket_train.config_flow.TrafikverketTrain.async_get_train_stop",
+        ),
+        patch(
+            "homeassistant.components.trafikverket_train.async_setup_entry",
+            return_value=True,
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -319,11 +338,14 @@ async def test_reauth_flow_error(
         data=entry.data,
     )
 
-    with patch(
-        "homeassistant.components.trafikverket_train.config_flow.TrafikverketTrain.async_get_train_station",
-        side_effect=side_effect(),
-    ), patch(
-        "homeassistant.components.trafikverket_train.config_flow.TrafikverketTrain.async_get_train_stop",
+    with (
+        patch(
+            "homeassistant.components.trafikverket_train.config_flow.TrafikverketTrain.async_get_train_station",
+            side_effect=side_effect(),
+        ),
+        patch(
+            "homeassistant.components.trafikverket_train.config_flow.TrafikverketTrain.async_get_train_stop",
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -335,13 +357,17 @@ async def test_reauth_flow_error(
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {"base": p_error}
 
-    with patch(
-        "homeassistant.components.trafikverket_train.config_flow.TrafikverketTrain.async_get_train_station",
-    ), patch(
-        "homeassistant.components.trafikverket_train.config_flow.TrafikverketTrain.async_get_train_stop",
-    ), patch(
-        "homeassistant.components.trafikverket_train.async_setup_entry",
-        return_value=True,
+    with (
+        patch(
+            "homeassistant.components.trafikverket_train.config_flow.TrafikverketTrain.async_get_train_station",
+        ),
+        patch(
+            "homeassistant.components.trafikverket_train.config_flow.TrafikverketTrain.async_get_train_stop",
+        ),
+        patch(
+            "homeassistant.components.trafikverket_train.async_setup_entry",
+            return_value=True,
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -402,11 +428,14 @@ async def test_reauth_flow_error_departures(
         data=entry.data,
     )
 
-    with patch(
-        "homeassistant.components.trafikverket_train.config_flow.TrafikverketTrain.async_get_train_station",
-    ), patch(
-        "homeassistant.components.trafikverket_train.config_flow.TrafikverketTrain.async_get_train_stop",
-        side_effect=side_effect(),
+    with (
+        patch(
+            "homeassistant.components.trafikverket_train.config_flow.TrafikverketTrain.async_get_train_station",
+        ),
+        patch(
+            "homeassistant.components.trafikverket_train.config_flow.TrafikverketTrain.async_get_train_stop",
+            side_effect=side_effect(),
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -418,13 +447,17 @@ async def test_reauth_flow_error_departures(
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {"base": p_error}
 
-    with patch(
-        "homeassistant.components.trafikverket_train.config_flow.TrafikverketTrain.async_get_train_station",
-    ), patch(
-        "homeassistant.components.trafikverket_train.config_flow.TrafikverketTrain.async_get_train_stop",
-    ), patch(
-        "homeassistant.components.trafikverket_train.async_setup_entry",
-        return_value=True,
+    with (
+        patch(
+            "homeassistant.components.trafikverket_train.config_flow.TrafikverketTrain.async_get_train_station",
+        ),
+        patch(
+            "homeassistant.components.trafikverket_train.config_flow.TrafikverketTrain.async_get_train_stop",
+        ),
+        patch(
+            "homeassistant.components.trafikverket_train.async_setup_entry",
+            return_value=True,
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -464,14 +497,18 @@ async def test_options_flow(
     )
     entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.trafikverket_train.TrafikverketTrain.async_get_train_station",
-    ), patch(
-        "homeassistant.components.trafikverket_train.coordinator.TrafikverketTrain.async_get_next_train_stops",
-        return_value=get_trains,
-    ), patch(
-        "homeassistant.components.trafikverket_train.coordinator.TrafikverketTrain.async_get_train_stop",
-        return_value=get_train_stop,
+    with (
+        patch(
+            "homeassistant.components.trafikverket_train.TrafikverketTrain.async_get_train_station",
+        ),
+        patch(
+            "homeassistant.components.trafikverket_train.coordinator.TrafikverketTrain.async_get_next_train_stops",
+            return_value=get_trains,
+        ),
+        patch(
+            "homeassistant.components.trafikverket_train.coordinator.TrafikverketTrain.async_get_train_stop",
+            return_value=get_train_stop,
+        ),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
