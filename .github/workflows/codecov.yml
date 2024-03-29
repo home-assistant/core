@@ -1,0 +1,97 @@
+name: Prune Codecov .coveragerc
+on: # yamllint disable-line rule:truthy
+  push:
+    paths:
+      - .github/workflows/*
+      - script/check_coveragerc.py
+  schedule:
+    # Every Monday at 4am UTC
+    - cron: 0 4 * * 1
+
+env:
+  GH_TOKEN: ${{ github.token }}
+  BRANCH_NAME: "prune_coveragerc_1"
+  USER_EMAIL: "41898282+github-actions[bot]@users.noreply.github.com"
+  USER_NAME: "github-actions[bot]"
+  PR_BODY: |
+    *This is an automatically generated pull request created by* `/.github/workflows/codecov.yml`
+
+    Hi! When analysing `.coveragerc`, I found that some files were omitted from pytest coverage checks that didn't need to be.
+
+    This usually happens when those files already have a high or 100% coverage.
+
+    I created a branch to remove these entries. Please review and merge the branch if you agree.
+
+    Next time this workflow runs, it will automatically update the branch under the same PR, or recreate the branch or PR if they have been deleted.
+
+jobs:
+  base:
+    uses: ./.github/workflows/ci.yml
+
+  prune-coveragerc-check:
+    runs-on: ubuntu-22.04
+    needs: [base]
+    outputs:
+      changes: ${{ steps.detect.outputs.changes }}
+    steps:
+      - name: Check out code from GitHub
+        uses: actions/checkout@v4.1.2
+      - name: Set up Python ${{ needs.base.outputs.default_python_version }}
+        id: python
+        uses: actions/setup-python@v5.0.0
+        with:
+          python-version: ${{ needs.base.outputs.default_python_version }}
+          check-latest: true
+      - name: Restore full Python ${{ needs.base.outputs.default_python_version }} virtual environment
+        id: cache-venv
+        uses: actions/cache/restore@v4.0.2
+        with:
+          path: venv
+          fail-on-cache-miss: true
+          key: ${{ runner.os }}-${{ needs.base.outputs.default_python_version }}-${{ needs.base.outputs.python_cache_key }}
+      - name: Run pytest followed by coveragerc prune
+        run: |
+          . venv/bin/activate
+          python3 -m script.check_coveragerc
+      - name: Detect if anything was pruned
+        id: detect
+        run: |
+          change_count=$(git diff --numstat | wc -l)
+          echo "$change_count files changed"
+          echo "changes=$change_count" >> $GITHUB_OUTPUT
+
+      # Note: the steps below require GH actions permission to write to the repository
+      # (Settings > Actions > General > Workflow)
+      - name: Create branch and add ${{ steps.detect.outputs.changes }} files
+        if: ${{ steps.detect.outputs.changes }}
+        run: |
+          pwd
+          ls -la
+          git checkout -B ${{ env.BRANCH_NAME }}
+          git config --local user.email ${{ env.USER_EMAIL }}
+          git config --local user.name ${{ env.USER_NAME }}
+          git fetch origin dev
+          git add .coveragerc
+          git commit -m "Remove unnecessary .coveragerc entries"
+          git push --force --set-upstream origin ${{ env.BRANCH_NAME }}
+      - name: Check if PR already exists
+        id: check-pr
+        run: |
+          prs=$(gh pr list \
+              --head ${{ env.BRANCH_NAME }} \
+              --base dev \
+              --json title \
+              --jq 'length')
+          if ((prs > 0)); then
+              echo "skip=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Create pull request
+        if: "!steps.check-pr.outputs.skip"
+        # This step skips if the PR already exists, and correctly leaves
+        # the existing PR pointing the to branch we just made.
+        run: |
+          gh pr create \
+            --head ${{ env.BRANCH_NAME }} \
+            --base dev \
+            --title "Remove unnecessary .coveragerc entries" \
+            --body "${{ env.PR_BODY }}"
