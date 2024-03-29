@@ -20,7 +20,11 @@ DONT_IGNORE = (
     "scene.py",
 )
 
-PREFIX = """[run]
+PREFIX = """# Sorted by hassfest.
+#
+# To sort, run python3 -m script.hassfest -p coverage
+
+[run]
 source = homeassistant
 omit =
     homeassistant/__main__.py

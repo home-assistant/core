@@ -1,3 +1,7 @@
+# Sorted by hassfest.
+#
+# To sort, run python3 -m script.hassfest -p coverage
+
 [run]
 source = homeassistant
 omit =
