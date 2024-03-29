@@ -26,7 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class AtlanticDomesticHotWaterProductionMBLComponent(OverkizEntity, WaterHeaterEntity):
-    """Representation of Atlantic Water Heater."""
+    """Representation of AtlanticDomesticHotWaterProductionMBLComponent (modbuslink)"""
 
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_supported_features = (
