@@ -25,7 +25,7 @@ OVERKIZ_TO_OPERATION_MODE: dict[str, str] = {
 _LOGGER = logging.getLogger(__name__)
 
 
-class AtlanticDHW(OverkizEntity, WaterHeaterEntity):
+class AtlanticDomesticHotWaterProductionMBLComponent(OverkizEntity, WaterHeaterEntity):
     """Representation of Atlantic Water Heater."""
 
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
