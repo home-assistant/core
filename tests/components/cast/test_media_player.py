@@ -137,8 +137,8 @@ async def async_setup_cast_internal_discovery(hass, config=None):
         return_value=browser,
     ) as cast_browser:
         add_entities = await async_setup_cast(hass, config)
-        await hass.async_block_till_done()
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         assert browser.start_discovery.call_count == 1
 
