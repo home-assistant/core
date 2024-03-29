@@ -4,11 +4,12 @@
 from __future__ import annotations
 
 import argparse
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from math import ceil
-import os
+from pathlib import Path
 import subprocess
 import sys
+from typing import Final
 
 
 class Bucket:
@@ -24,7 +25,7 @@ class Bucket:
     def add(self, part: TestFolder | TestFile) -> None:
         """Add tests to bucket."""
         self.total_tests += part.total_tests
-        self._paths.append(part.path)
+        self._paths.append(str(part.path))
 
     def get_paths_line(self) -> str:
         """Return paths."""
@@ -79,7 +80,7 @@ class BucketHolder:
 class TestFile:
     """Class represents a single test file and the number of tests it has."""
 
-    path: str
+    path: Path
     total_tests: int
 
     def __gt__(self, other: TestFile) -> bool:
@@ -87,12 +88,13 @@ class TestFile:
         return self.total_tests > other.total_tests
 
 
-@dataclass
 class TestFolder:
     """Class to hold a folder with test files and folders."""
 
-    path: str
-    children: dict[str, TestFolder | TestFile] = field(default_factory=dict)
+    def __init__(self, path: Path) -> None:
+        """Initialize test folder."""
+        self.path: Final = path
+        self.children: dict[Path, TestFolder | TestFile] = {}
 
     @property
     def total_tests(self) -> int:
@@ -103,22 +105,26 @@ class TestFolder:
         """Return representation."""
         return f"TestFolder(total={self.total_tests}, children={len(self.children)})"
 
+    def add_test_file(self, file: TestFile) -> None:
+        """Add test file to folder."""
+        path = file.path
+        relative_path = path.relative_to(self.path)
+        if not relative_path.parts:
+            raise ValueError("Path is not a child of this folder")
 
-def insert_at_correct_position(
-    test_holder: TestFolder, test_path: str, total_tests: int
-) -> None:
-    """Insert test at correct position."""
-    current_path = test_holder
-    for part in test_path.split("/")[1:]:
-        if part.endswith(".py"):
-            current_path.children[part] = TestFile(test_path, total_tests)
-        else:
-            current_path = current_path.children.setdefault(
-                part, TestFolder(os.path.join(current_path.path, part))
-            )
+        if len(relative_path.parts) == 1:
+            self.children[path] = file
+            return
+
+        child_path = self.path / relative_path.parts[0]
+        if (child := self.children.get(child_path)) is None:
+            self.children[child_path] = child = TestFolder(child_path)
+        elif not isinstance(child, TestFolder):
+            raise ValueError("Child is not a folder")
+        child.add_test_file(file)
 
 
-def collect_tests(path: str) -> tuple[TestFolder, TestFile]:
+def collect_tests(path: Path) -> tuple[TestFolder, TestFile]:
     """Collect all tests."""
     result = subprocess.run(
         ["pytest", "--collect-only", "-qq", "-p", "no:warnings", path],
@@ -133,22 +139,20 @@ def collect_tests(path: str) -> tuple[TestFolder, TestFile]:
         print(result.stdout)
         sys.exit(1)
 
-    folder = TestFolder(path.split("/")[0])
-    insert_at_correct_position(folder, path, 0)
-    file_with_most_tests = TestFile("", 0)
+    folder = TestFolder(path)
+    file_with_most_tests = TestFile(Path(), 0)
 
     for line in result.stdout.splitlines():
         if not line.strip():
             continue
-        path, _, total_tests = line.partition(": ")
+        file_path, _, total_tests = line.partition(": ")
         if not path or not total_tests:
             print(f"Unexpected line: {line}")
             sys.exit(1)
 
-        total_tests = int(total_tests)
-        file_with_most_tests = max(file_with_most_tests, TestFile(path, total_tests))
-
-        insert_at_correct_position(folder, path, total_tests)
+        file = TestFile(Path(file_path), int(total_tests))
+        file_with_most_tests = max(file_with_most_tests, file)
+        folder.add_test_file(file)
 
     return (folder, file_with_most_tests)
 
@@ -170,11 +174,16 @@ def main() -> None:
         help="Number of buckets to split tests into",
         type=check_greater_0,
     )
+    parser.add_argument(
+        "path",
+        help="Path to the test files to split into buckets",
+        type=Path,
+    )
 
     arguments = parser.parse_args()
 
     print("Collecting tests...")
-    (tests, file_with_most_tests) = collect_tests("tests")
+    (tests, file_with_most_tests) = collect_tests(arguments.path)
     print(
         f"Maximum tests in a single file are {file_with_most_tests.total_tests} tests (in {file_with_most_tests.path})"
     )
