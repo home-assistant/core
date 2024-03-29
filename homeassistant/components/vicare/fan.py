@@ -118,6 +118,12 @@ class ViCareFan(ViCareEntity, FanEntity):
             _LOGGER.error("Invalid data from Vicare server: %s", invalid_data_exception)
 
     @property
+    def is_on(self) -> bool | None:
+        """Return true if the entity is on."""
+        # Viessmann ventilation unit cannot be turned off
+        return True
+
+    @property
     def speed_count(self) -> int:
         """Return the number of speeds the fan supports."""
         return len(ORDERED_NAMED_FAN_SPEEDS)
