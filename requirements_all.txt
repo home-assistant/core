@@ -1799,6 +1799,9 @@ pyedimax==0.2.1
 # homeassistant.components.efergy
 pyefergy==22.1.1
 
+# homeassistant.components.energenie_power_sockets
+pyegps==0.2.5
+
 # homeassistant.components.enphase_envoy
 pyenphase==1.20.1
 
@@ -2448,7 +2451,7 @@ rfk101py==0.0.1
 rflink==0.0.66
 
 # homeassistant.components.ring
-ring-doorbell[listen]==0.8.7
+ring-doorbell[listen]==0.8.8
 
 # homeassistant.components.fleetgo
 ritassist==0.9.2
