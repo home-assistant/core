@@ -18,12 +18,12 @@ class Bucket:
         self,
     ):
         """Initialize bucket."""
-        self.tests = 0
+        self.total_tests = 0
         self._paths: list[str] = []
 
     def add(self, part: TestFolder | TestFile) -> None:
         """Add tests to bucket."""
-        self.tests += part.total_tests
+        self.total_tests += part.total_tests
         self._paths.append(part.path)
 
     def get_paths_line(self) -> str:
@@ -45,7 +45,8 @@ class BucketHolder:
     def split_tests(self, tests: TestFolder | TestFile) -> None:
         """Split tests into buckets."""
         if (
-            self._current_bucket.tests + tests.total_tests < self._tests_per_bucket
+            self._current_bucket.total_tests + tests.total_tests
+            < self._tests_per_bucket
         ) or self._last_bucket:
             self._current_bucket.add(tests)
             return
@@ -64,19 +65,19 @@ class BucketHolder:
             self._buckets.append(self._current_bucket)
 
         # Add test to new bucket
-        self.split_tests(tests)
+        self._current_bucket.add(tests)
 
     def create_ouput_file(self) -> None:
         """Create output file."""
         with open("pytest_buckets.txt", "w") as file:
             for bucket in self._buckets:
-                print(f"Bucket has {bucket.tests} tests")
+                print(f"Bucket has {bucket.total_tests} tests")
                 file.write(bucket.get_paths_line())
 
 
 @dataclass
 class TestFile:
-    """This class represents a single test file and its tests."""
+    """Class represents a single test file and the number of tests it has."""
 
     path: str
     total_tests: int
