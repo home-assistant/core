@@ -80,6 +80,7 @@ async def async_setup_entry(
 class ViCareFan(ViCareEntity, FanEntity):
     """Representation of the ViCare ventilation device."""
 
+    _attr_speed_count = len(ORDERED_NAMED_FAN_SPEEDS)
     _attr_supported_features = FanEntityFeature.SET_SPEED | FanEntityFeature.PRESET_MODE
     _attributes: dict[str, Any] = {
         "active_vicare_mode": None,
@@ -122,11 +123,6 @@ class ViCareFan(ViCareEntity, FanEntity):
         """Return true if the entity is on."""
         # Viessmann ventilation unit cannot be turned off
         return True
-
-    @property
-    def speed_count(self) -> int:
-        """Return the number of speeds the fan supports."""
-        return len(ORDERED_NAMED_FAN_SPEEDS)
 
     @property
     def percentage(self) -> int | None:
