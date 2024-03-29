@@ -12,7 +12,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
-from tests.components.enphase_envoy import setup_with_selected_platforms
+from tests.components.enphase_envoy import (
+    setup_with_selected_platforms,
+    validate_entity_count,
+)
 
 
 async def test_number(
@@ -20,12 +23,13 @@ async def test_number(
     config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
     mock_envoy: AsyncMock,
+    test_parameters,
 ) -> None:
     """Test enphase_envoy number entities."""
     await setup_with_selected_platforms(hass, config_entry, [Platform.NUMBER])
 
     # number entities states should be created from test data
-    assert len(hass.states.async_all()) == 7
+    assert await validate_entity_count(hass, test_parameters, Platform.NUMBER)
 
     entity_registry = er.async_get(hass)
     assert entity_registry

@@ -16,3 +16,13 @@ async def setup_with_selected_platforms(
     with patch("homeassistant.components.enphase_envoy.PLATFORMS", platforms):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
+
+
+async def validate_entity_count(
+    hass: HomeAssistant, test_parameters, platform: Platform
+) -> bool:
+    """Check entity count agaianst expected count."""
+    result: bool = (
+        len(hass.states.async_all()) == test_parameters["initial_entities"][platform]
+    )
+    return result

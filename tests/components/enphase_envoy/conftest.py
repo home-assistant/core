@@ -40,7 +40,7 @@ from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNA
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 @pytest.fixture(name="config_entry")
@@ -625,3 +625,9 @@ def set_storage_mode_fixture():
 def set_reserve_soc_fixture():
     """Define a update_dry_contact fixture."""
     return AsyncMock(return_value="[]")
+
+
+@pytest.fixture(name="test_parameters")
+def get_test_parameters():
+    """Load test parameters."""
+    return load_json_object_fixture("test_parameters.json", DOMAIN)
