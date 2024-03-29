@@ -1,4 +1,6 @@
 """Message routing coordinators for handling NASweb push notifications."""
+from __future__ import annotations
+
 import asyncio
 from datetime import timedelta
 import logging
@@ -14,7 +16,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import STATUS_UPDATE_MAX_TIME_INTERVAL
-from .relay_switch import RelaySwitch
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,7 +27,7 @@ class NotificationCoordinator:
         """Initialize coordinator."""
         self._coordinators: dict[str, NASwebCoordinator] = {}
 
-    def add_coordinator(self, serial: str, coordinator: "NASwebCoordinator") -> None:
+    def add_coordinator(self, serial: str, coordinator: NASwebCoordinator) -> None:
         """Add NASwebCoordinator to possible notification targets."""
         self._coordinators[serial] = coordinator
         _LOGGER.debug("Added NASwebCoordinator for NASweb[%s]", serial)
@@ -119,15 +120,18 @@ class NASwebCoordinator(DataUpdateCoordinator):
             self._add_switch_entities(new_outputs)
         self.async_set_updated_data(self.data)
 
-    def _add_switch_entities(self, switches: list[RelaySwitch]) -> None:
+    def _add_switch_entities(self, switches: list[NASwebOutput]) -> None:
         if self.async_add_switch_callback is not None:
+            # pylint: disable=import-outside-toplevel
+            from .switch import RelaySwitch
+
             new_switch_entities: list[RelaySwitch] = []
-            for zone in switches:
-                if not isinstance(zone, NASwebOutput):
+            for nasweb_output in switches:
+                if not isinstance(nasweb_output, NASwebOutput):
                     _LOGGER.error("Cannot create RelaySwitch without NASwebOutput")
                     continue
-                new_zone = RelaySwitch(self, zone)
-                new_switch_entities.append(new_zone)
+                relay_switch = RelaySwitch(self, nasweb_output)
+                new_switch_entities.append(relay_switch)
             self._hass.async_add_executor_job(
                 self.async_add_switch_callback, new_switch_entities
             )
