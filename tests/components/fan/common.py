@@ -162,4 +162,3 @@ class MockFan(MockEntity, FanEntity):
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set preset mode."""
         self._attr_preset_mode = preset_mode
-        self.async_write_ha_state()
