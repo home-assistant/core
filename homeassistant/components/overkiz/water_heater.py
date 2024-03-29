@@ -24,6 +24,7 @@ async def async_setup_entry(
     """Set up the Overkiz DHW from a config entry."""
     data: HomeAssistantOverkizData = hass.data[DOMAIN][entry.entry_id]
     entities: list[OverkizEntity] = []
+    
     for device in data.platforms[Platform.WATER_HEATER]:
         if device.controllable_name in CONTROLLABLE_NAME_TO_WATER_HEATER_ENTITY:
             entities.append(
