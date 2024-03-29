@@ -8,6 +8,7 @@
     'context': <ANY>,
     'entity_id': 'switch.mockedusbdevice_socket_0',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
@@ -54,6 +55,7 @@
     'context': <ANY>,
     'entity_id': 'switch.mockedusbdevice_socket_1',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
@@ -100,6 +102,7 @@
     'context': <ANY>,
     'entity_id': 'switch.mockedusbdevice_socket_2',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
@@ -146,6 +149,7 @@
     'context': <ANY>,
     'entity_id': 'switch.mockedusbdevice_socket_3',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
