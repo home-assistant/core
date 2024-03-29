@@ -2,7 +2,7 @@
 
 from pyoverkiz.enums.ui import UIWidget
 
-from .atlantic_dhw import AtlanticDHW
+from .atlantic_dhw import AtlanticDomesticHotWaterProductionMBLComponent
 from .atlantic_pass_apc_dhw import AtlanticPassAPCDHW
 from .domestic_hot_water_production import DomesticHotWaterProduction
 from .hitachi_dhw import HitachiDHW
@@ -14,5 +14,5 @@ WIDGET_TO_WATER_HEATER_ENTITY = {
 }
 
 CONTROLLABLE_NAME_TO_WATER_HEATER_ENTITY = {
-    "modbuslink:AtlanticDomesticHotWaterProductionMBLComponent": AtlanticDHW,
+    "modbuslink:AtlanticDomesticHotWaterProductionMBLComponent": AtlanticDomesticHotWaterProductionMBLComponent,
 }
