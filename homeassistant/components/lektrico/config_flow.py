@@ -1,4 +1,5 @@
 """Config flow for Lektrico Charging Station."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -58,20 +59,6 @@ class LektricoFlowHandler(ConfigFlow, domain=DOMAIN):
             )
 
         return self._async_create_entry()
-
-    async def async_step_config(self) -> ConfigFlowResult:
-        """Confirm the setup."""
-
-        return self.async_show_form(
-            step_id="config",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_FRIENDLY_NAME): str,
-                    vol.Required(CONF_HOST): str,
-                }
-            ),
-            errors={},
-        )
 
     @callback
     def _async_show_setup_form(

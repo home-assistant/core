@@ -1,4 +1,5 @@
 """Coordinator for the Lektrico Charging Station integration."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -29,12 +30,11 @@ class LektricoDeviceDataUpdateCoordinator(DataUpdateCoordinator):
             host,
             session=session,
         )
-        self.friendly_name = friendly_name.replace(" ", "_")
-        self._name = friendly_name
-        self._update_fail_count = 0
-        self._info = None
         super().__init__(
-            hass, LOGGER, name=f"{DOMAIN}-{self._name}", update_interval=SCAN_INTERVAL
+            hass,
+            LOGGER,
+            name=f"{DOMAIN}-{friendly_name}",
+            update_interval=SCAN_INTERVAL,
         )
         self.serial_number: int
         self.board_revision: str
