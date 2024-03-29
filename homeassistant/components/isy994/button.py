@@ -38,7 +38,15 @@ async def async_setup_entry(
         ISYNodeQueryButtonEntity
         | ISYNodeBeepButtonEntity
         | ISYNetworkResourceButtonEntity
-    ] = []
+    ] = [
+        ISYNetworkResourceButtonEntity(
+            node=node,
+            name=node.name,
+            unique_id=isy_data.uid_base(node),
+            device_info=device_info[CONF_NETWORK],
+        )
+        for node in isy_data.net_resources
+    ]
 
     for node in isy_data.root_nodes[Platform.BUTTON]:
         entities.append(
@@ -60,16 +68,6 @@ async def async_setup_entry(
                     device_info=device_info[node.address],
                 )
             )
-
-    for node in isy_data.net_resources:
-        entities.append(
-            ISYNetworkResourceButtonEntity(
-                node=node,
-                name=node.name,
-                unique_id=isy_data.uid_base(node),
-                device_info=device_info[CONF_NETWORK],
-            )
-        )
 
     # Add entity to query full system
     entities.append(

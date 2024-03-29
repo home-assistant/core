@@ -109,18 +109,18 @@ async def build_item_response(
         content_types = sorted(
             {app.content_type for app in apps.result if app.content_type in TYPE_MAP}
         )
-        for c_type in content_types:
-            children.append(
-                BrowseMedia(
-                    media_class=MediaClass.DIRECTORY,
-                    media_content_id=c_type,
-                    media_content_type=TYPE_MAP[c_type].type,
-                    title=f"{c_type}s",
-                    can_play=False,
-                    can_expand=True,
-                    children_media_class=TYPE_MAP[c_type].cls,
-                )
+        children.extend(
+            BrowseMedia(
+                media_class=MediaClass.DIRECTORY,
+                media_content_id=c_type,
+                media_content_type=TYPE_MAP[c_type].type,
+                title=f"{c_type}s",
+                can_play=False,
+                can_expand=True,
+                children_media_class=TYPE_MAP[c_type].cls,
             )
+            for c_type in content_types
+        )
 
         return library_info
 

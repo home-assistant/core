@@ -43,7 +43,11 @@ from homeassistant.helpers.http import (
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
-from homeassistant.setup import async_start_setup, async_when_setup_or_start
+from homeassistant.setup import (
+    SetupPhases,
+    async_start_setup,
+    async_when_setup_or_start,
+)
 from homeassistant.util import dt as dt_util, ssl as ssl_util
 from homeassistant.util.async_ import create_eager_task
 from homeassistant.util.json import json_loads
@@ -218,7 +222,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def start_server(*_: Any) -> None:
         """Start the server."""
-        with async_start_setup(hass, ["http"]):
+        with async_start_setup(hass, integration="http", phase=SetupPhases.SETUP):
             hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_server)
             # We already checked it's not None.
             assert conf is not None

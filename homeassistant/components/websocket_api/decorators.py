@@ -63,7 +63,7 @@ def require_admin(func: const.WebSocketCommandHandler) -> const.WebSocketCommand
         user = connection.user
 
         if user is None or not user.is_admin:
-            raise Unauthorized()
+            raise Unauthorized
 
         func(hass, connection, msg)
 

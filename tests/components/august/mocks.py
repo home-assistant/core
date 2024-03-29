@@ -76,8 +76,9 @@ async def _mock_setup_august(
         options={},
     )
     entry.add_to_hass(hass)
-    with patch("homeassistant.components.august.async_create_pubnub"), patch(
-        "homeassistant.components.august.AugustPubNub", return_value=pubnub_mock
+    with (
+        patch("homeassistant.components.august.async_create_pubnub"),
+        patch("homeassistant.components.august.AugustPubNub", return_value=pubnub_mock),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -98,7 +99,7 @@ async def _create_august_with_devices(
     return entry
 
 
-async def _create_august_api_with_devices(  # noqa: C901
+async def _create_august_api_with_devices(
     hass,
     devices,
     api_call_side_effects=None,
@@ -136,10 +137,7 @@ async def _create_august_api_with_devices(  # noqa: C901
         raise ValueError
 
     def _get_base_devices(device_type):
-        base_devices = []
-        for device in device_data[device_type]:
-            base_devices.append(device["base"])
-        return base_devices
+        return [device["base"] for device in device_data[device_type]]
 
     def get_lock_detail_side_effect(access_token, device_id):
         return _get_device_detail("locks", device_id)

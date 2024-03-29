@@ -46,8 +46,7 @@ async def test_setup(hass: HomeAssistant, requests_mock: requests_mock.Mocker) -
             for entity in new_entities:
                 entity.update()
 
-        for entity in new_entities:
-            entities.append(entity)
+        entities.extend(new_entities)
 
     uri = re.compile(RESOURCE + "*")
     requests_mock.get(uri, text=load_fixture("wsdot/wsdot.json"))
