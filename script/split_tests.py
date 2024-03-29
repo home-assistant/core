@@ -44,20 +44,11 @@ class BucketHolder:
         self._bucket_count = bucket_count
         self._buckets: list[Bucket] = [Bucket() for _ in range(bucket_count)]
 
-    def _flatten(self, tests: TestFolder) -> list[TestFolder | TestFile]:
-        result: list[TestFolder | TestFile] = [tests]
-        for child in tests.children.values():
-            if isinstance(child, TestFolder):
-                result.extend(self._flatten(child))
-            else:
-                result.append(child)
-        return result
-
     def split_tests(self, test_folder: TestFolder) -> None:
         """Split tests into buckets."""
         digits = len(str(test_folder.total_tests))
         sorted_tests = sorted(
-            self._flatten(test_folder), reverse=True, key=lambda x: x.total_tests
+            test_folder.get_all_flatten(), reverse=True, key=lambda x: x.total_tests
         )
         for tests in sorted_tests:
             print(f"{tests.total_tests:>{digits}} tests in {tests.path}")
@@ -150,6 +141,16 @@ class TestFolder:
         elif not isinstance(child, TestFolder):
             raise ValueError("Child is not a folder")
         child.add_test_file(file)
+
+    def get_all_flatten(self) -> list[TestFolder | TestFile]:
+        """Return self and all children as flatten list."""
+        result: list[TestFolder | TestFile] = [self]
+        for child in self.children.values():
+            if isinstance(child, TestFolder):
+                result.extend(child.get_all_flatten())
+            else:
+                result.append(child)
+        return result
 
 
 def collect_tests(path: Path) -> TestFolder:
