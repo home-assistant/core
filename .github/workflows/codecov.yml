@@ -26,7 +26,7 @@ env:
 
 jobs:
   base:
-    uses: ./.github/workflows/ci.yml
+    uses: ./.github/workflows/ci.yaml
 
   prune-coveragerc-check:
     runs-on: ubuntu-22.04
