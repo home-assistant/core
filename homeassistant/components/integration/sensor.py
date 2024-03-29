@@ -50,7 +50,7 @@ from homeassistant.helpers.event import async_call_later, async_track_state_chan
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
-    CONF_MAX_AGE,
+    CONF_MAX_SUB_INTERVAL,
     CONF_ROUND_DIGITS,
     CONF_SOURCE_SENSOR,
     CONF_UNIT_OF_MEASUREMENT,
@@ -92,7 +92,7 @@ PLATFORM_SCHEMA = vol.All(
             vol.Optional(CONF_UNIT_PREFIX): vol.In(UNIT_PREFIXES),
             vol.Optional(CONF_UNIT_TIME, default=UnitOfTime.HOURS): vol.In(UNIT_TIME),
             vol.Remove(CONF_UNIT_OF_MEASUREMENT): cv.string,
-            vol.Optional(CONF_MAX_AGE): cv.time_period,
+            vol.Optional(CONF_MAX_SUB_INTERVAL): cv.time_period,
             vol.Optional(CONF_METHOD, default=METHOD_TRAPEZOIDAL): vol.In(
                 INTEGRATION_METHODS
             ),
@@ -272,10 +272,10 @@ async def async_setup_entry(
         # Before we had support for optional selectors, "none" was used for selecting nothing
         unit_prefix = None
 
-    if max_age_duration_dict := config_entry.options.get(CONF_MAX_AGE, None):
-        max_age = cv.time_period(max_age_duration_dict)
+    if max_sub_interval_dict := config_entry.options.get(CONF_MAX_SUB_INTERVAL, None):
+        max_sub_interval = cv.time_period(max_sub_interval_dict)
     else:
-        max_age = None
+        max_sub_interval = None
 
     round_digits = config_entry.options.get(CONF_ROUND_DIGITS)
     if round_digits:
@@ -290,7 +290,7 @@ async def async_setup_entry(
         unit_prefix=unit_prefix,
         unit_time=config_entry.options[CONF_UNIT_TIME],
         device_info=device_info,
-        max_age=max_age,
+        max_sub_interval=max_sub_interval,
     )
 
     async_add_entities([integral])
@@ -311,7 +311,7 @@ async def async_setup_platform(
         unique_id=config.get(CONF_UNIQUE_ID),
         unit_prefix=config.get(CONF_UNIT_PREFIX),
         unit_time=config[CONF_UNIT_TIME],
-        max_age=config.get(CONF_MAX_AGE),
+        max_sub_interval=config.get(CONF_MAX_SUB_INTERVAL),
     )
 
     async_add_entities([integral])
@@ -333,7 +333,7 @@ class IntegrationSensor(RestoreSensor):
         unique_id: str | None,
         unit_prefix: str | None,
         unit_time: UnitOfTime,
-        max_age: timedelta | None,
+        max_sub_interval: timedelta | None,
         device_info: DeviceInfo | None = None,
     ) -> None:
         """Initialize the integration sensor."""
@@ -353,10 +353,12 @@ class IntegrationSensor(RestoreSensor):
         self._source_entity: str = source_entity
         self._last_valid_state: Decimal | None = None
         self._attr_device_info = device_info
-        self._max_age: timedelta | None = (
-            max_age if max_age is not None and max_age.total_seconds() > 0 else None
+        self._max_sub_interval: timedelta | None = (
+            max_sub_interval
+            if max_sub_interval is not None and max_sub_interval.total_seconds() > 0
+            else None
         )
-        self._max_age_exceeded_callback: CALLBACK_TYPE = lambda *args: None
+        self._max_sub_interval_exceeded_callback: CALLBACK_TYPE = lambda *args: None
         self._last_integration_time: datetime = datetime.now(tz=UTC)
         self._last_integration_trigger = _IntegrationTrigger.StateChange
         self._attr_suggested_display_precision = round_digits or 2
@@ -446,26 +448,26 @@ class IntegrationSensor(RestoreSensor):
             self._attr_device_class = state.attributes.get(ATTR_DEVICE_CLASS)
             self._unit_of_measurement = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
-        if self._max_age is not None:
+        if self._max_sub_interval is not None:
             source_state = self.hass.states.get(self._sensor_source_id)
-            self._schedule_max_age_exceeded_if_state_is_numeric(source_state)
-            self.async_on_remove(self._cancel_max_age_exceeded_callback)
+            self._schedule_max_sub_interval_exceeded_if_state_is_numeric(source_state)
+            self.async_on_remove(self._cancel_max_sub_interval_exceeded_callback)
 
         self.async_on_remove(
             async_track_state_change_event(
                 self.hass,
                 [self._sensor_source_id],
-                self._integrate_on_state_change_and_max_age
-                if self._max_age is not None
+                self._integrate_on_state_change_and_max_sub_interval
+                if self._max_sub_interval is not None
                 else self._integrate_on_state_change_callback,
             )
         )
 
     @callback
-    def _integrate_on_state_change_and_max_age(
+    def _integrate_on_state_change_and_max_sub_interval(
         self, event: Event[EventStateChangedData]
     ) -> None:
-        self._cancel_max_age_exceeded_callback()
+        self._cancel_max_sub_interval_exceeded_callback()
         old_state = event.data["old_state"]
         new_state = event.data["new_state"]
         try:
@@ -473,8 +475,8 @@ class IntegrationSensor(RestoreSensor):
             self._last_integration_trigger = _IntegrationTrigger.StateChange
             self._last_integration_time = datetime.now(tz=UTC)
         finally:
-            # if max_age exceeds, by construction there was no state change, the source is assumed constant new_state over max_age
-            self._schedule_max_age_exceeded_if_state_is_numeric(new_state)
+            # if max_sub_interval exceeds, by construction there was no state change, the source is assumed constant new_state over max_sub_interval
+            self._schedule_max_sub_interval_exceeded_if_state_is_numeric(new_state)
 
     @callback
     def _integrate_on_state_change_callback(
@@ -514,13 +516,13 @@ class IntegrationSensor(RestoreSensor):
         self._update_integral(area)
         self.async_write_ha_state()
 
-    def _create_on_max_age_exceeded_callback(
+    def _create_on_max_sub_interval_exceeded_callback(
         self,
         source_state: State,
         source_state_dec: Decimal,
     ) -> Callable[[datetime], None]:
         @callback
-        def _integrate_on_max_age_exceeded_callback(now: datetime) -> None:
+        def _integrate_on_max_sub_interval_exceeded_callback(now: datetime) -> None:
             elapsed_seconds = Decimal(
                 (now - self._last_integration_time).total_seconds()
             )
@@ -534,28 +536,28 @@ class IntegrationSensor(RestoreSensor):
             self._last_integration_time = datetime.now(tz=UTC)
             self._last_integration_trigger = _IntegrationTrigger.TimeElapsed
 
-            self._schedule_max_age_exceeded_if_state_is_numeric(source_state)
+            self._schedule_max_sub_interval_exceeded_if_state_is_numeric(source_state)
 
-        return _integrate_on_max_age_exceeded_callback
+        return _integrate_on_max_sub_interval_exceeded_callback
 
-    def _schedule_max_age_exceeded_if_state_is_numeric(
+    def _schedule_max_sub_interval_exceeded_if_state_is_numeric(
         self, source_state: State | None
     ) -> None:
         if (
-            self._max_age is not None
+            self._max_sub_interval is not None
             and source_state is not None
             and (source_state_dec := _decimal_state(source_state.state))
         ):
-            self._max_age_exceeded_callback = async_call_later(
+            self._max_sub_interval_exceeded_callback = async_call_later(
                 self.hass,
-                self._max_age,
-                self._create_on_max_age_exceeded_callback(
+                self._max_sub_interval,
+                self._create_on_max_sub_interval_exceeded_callback(
                     source_state, source_state_dec
                 ),
             )
 
-    def _cancel_max_age_exceeded_callback(self) -> None:
-        return self._max_age_exceeded_callback()
+    def _cancel_max_sub_interval_exceeded_callback(self) -> None:
+        return self._max_sub_interval_exceeded_callback()
 
     @property
     def native_value(self) -> Decimal | None:

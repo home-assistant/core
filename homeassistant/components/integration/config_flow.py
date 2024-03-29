@@ -26,7 +26,7 @@ from homeassistant.helpers.schema_config_entry_flow import (
 )
 
 from .const import (
-    CONF_MAX_AGE,
+    CONF_MAX_SUB_INTERVAL,
     CONF_ROUND_DIGITS,
     CONF_SOURCE_SENSOR,
     CONF_UNIT_PREFIX,
@@ -101,7 +101,7 @@ async def _get_options_dict(handler: SchemaCommonFlowHandler | None) -> dict:
                 min=0, max=6, mode=selector.NumberSelectorMode.BOX
             ),
         ),
-        vol.Optional(CONF_MAX_AGE): selector.DurationSelector(),
+        vol.Optional(CONF_MAX_SUB_INTERVAL): selector.DurationSelector(),
     }
 
 
