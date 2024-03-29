@@ -58,16 +58,20 @@ async def test_ip_address_with_only_default_interface(
     hass: HomeAssistant, mock_block_device: Mock, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test more local ip addresses with only the default interface.."""
-    with patch(
-        "homeassistant.components.network.async_only_default_interface_enabled",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.network.async_get_enabled_source_ips",
-        return_value=[IPv4Address("192.168.1.10"), IPv4Address("10.10.10.10")],
-    ), patch(
-        "homeassistant.components.shelly.utils.COAP",
-        autospec=COAP,
-    ) as mock_coap_init:
+    with (
+        patch(
+            "homeassistant.components.network.async_only_default_interface_enabled",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.network.async_get_enabled_source_ips",
+            return_value=[IPv4Address("192.168.1.10"), IPv4Address("10.10.10.10")],
+        ),
+        patch(
+            "homeassistant.components.shelly.utils.COAP",
+            autospec=COAP,
+        ) as mock_coap_init,
+    ):
         assert await async_setup_component(hass, DOMAIN, {DOMAIN: {"coap_port": 7632}})
         await hass.async_block_till_done()
 
@@ -83,16 +87,20 @@ async def test_ip_address_without_only_default_interface(
     hass: HomeAssistant, mock_block_device: Mock, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test more local ip addresses without only the default interface.."""
-    with patch(
-        "homeassistant.components.network.async_only_default_interface_enabled",
-        return_value=False,
-    ), patch(
-        "homeassistant.components.network.async_get_enabled_source_ips",
-        return_value=[IPv4Address("192.168.1.10"), IPv4Address("10.10.10.10")],
-    ), patch(
-        "homeassistant.components.shelly.utils.COAP",
-        autospec=COAP,
-    ) as mock_coap_init:
+    with (
+        patch(
+            "homeassistant.components.network.async_only_default_interface_enabled",
+            return_value=False,
+        ),
+        patch(
+            "homeassistant.components.network.async_get_enabled_source_ips",
+            return_value=[IPv4Address("192.168.1.10"), IPv4Address("10.10.10.10")],
+        ),
+        patch(
+            "homeassistant.components.shelly.utils.COAP",
+            autospec=COAP,
+        ) as mock_coap_init,
+    ):
         assert await async_setup_component(hass, DOMAIN, {DOMAIN: {"coap_port": 7632}})
         await hass.async_block_till_done()
 

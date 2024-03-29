@@ -264,6 +264,7 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int | None]):
                 "sender": message.sender,
                 "subject": message.subject,
                 "headers": message.headers,
+                "uid": last_message_uid,
             }
             if self.custom_event_template is not None:
                 try:

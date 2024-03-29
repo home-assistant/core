@@ -28,12 +28,15 @@ async def test_user_step_success(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.ld2410_ble.config_flow.LD2410BLE.initialise",
-    ), patch(
-        "homeassistant.components.ld2410_ble.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.ld2410_ble.config_flow.LD2410BLE.initialise",
+        ),
+        patch(
+            "homeassistant.components.ld2410_ble.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -114,12 +117,15 @@ async def test_user_step_cannot_connect(hass: HomeAssistant) -> None:
     assert result2["step_id"] == "user"
     assert result2["errors"] == {"base": "cannot_connect"}
 
-    with patch(
-        "homeassistant.components.ld2410_ble.config_flow.LD2410BLE.initialise",
-    ), patch(
-        "homeassistant.components.ld2410_ble.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.ld2410_ble.config_flow.LD2410BLE.initialise",
+        ),
+        patch(
+            "homeassistant.components.ld2410_ble.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
             {
@@ -166,12 +172,15 @@ async def test_user_step_unknown_exception(hass: HomeAssistant) -> None:
     assert result2["step_id"] == "user"
     assert result2["errors"] == {"base": "unknown"}
 
-    with patch(
-        "homeassistant.components.ld2410_ble.config_flow.LD2410BLE.initialise",
-    ), patch(
-        "homeassistant.components.ld2410_ble.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.ld2410_ble.config_flow.LD2410BLE.initialise",
+        ),
+        patch(
+            "homeassistant.components.ld2410_ble.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
             {
@@ -200,12 +209,15 @@ async def test_bluetooth_step_success(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.ld2410_ble.config_flow.LD2410BLE.initialise",
-    ), patch(
-        "homeassistant.components.ld2410_ble.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.ld2410_ble.config_flow.LD2410BLE.initialise",
+        ),
+        patch(
+            "homeassistant.components.ld2410_ble.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {

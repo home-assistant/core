@@ -1521,9 +1521,12 @@ async def test_multicast_set_value(
     diff_network_node = MagicMock()
     diff_network_node.client.driver.controller.home_id.return_value = "diff_home_id"
 
-    with pytest.raises(vol.MultipleInvalid), patch(
-        "homeassistant.components.zwave_js.helpers.async_get_node_from_device_id",
-        side_effect=(climate_danfoss_lc_13, diff_network_node),
+    with (
+        pytest.raises(vol.MultipleInvalid),
+        patch(
+            "homeassistant.components.zwave_js.helpers.async_get_node_from_device_id",
+            side_effect=(climate_danfoss_lc_13, diff_network_node),
+        ),
     ):
         await hass.services.async_call(
             DOMAIN,
