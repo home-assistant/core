@@ -49,6 +49,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 DEFAULT_CONFIG_ENTRY_ID = "1"
 DEFAULT_HOST = "1.2.3.4"
 DEFAULT_SITE = "site_id"
+DEFAULT_WLAN_ID = "012345678910111213141516"
 
 CONTROLLER_HOST = {
     "hostname": "controller_host",
@@ -111,6 +112,7 @@ def mock_default_unifi_requests(
     port_forward_response=None,
     system_information_response=None,
     wlans_response=None,
+    wlan_id=None,
 ):
     """Mock default UniFi requests responses."""
     aioclient_mock.get(f"https://{host}:1234", status=302)  # Check UniFi OS
@@ -167,6 +169,11 @@ def mock_default_unifi_requests(
         json={"data": wlans_response or [], "meta": {"rc": "ok"}},
         headers={"content-type": CONTENT_TYPE_JSON},
     )
+    aioclient_mock.put(
+        f"https://{host}:1234/api/s/{site_id}/rest/wlanconf/{wlan_id}",
+        json={"data": "password changed successfully", "meta": {"rc": "ok"}},
+        headers={"content-type": CONTENT_TYPE_JSON},
+    )
     aioclient_mock.get(
         f"https://{host}:1234/v2/api/site/{site_id}/trafficroutes",
         json=[{}],
@@ -197,6 +204,7 @@ async def setup_unifi_integration(
     known_wireless_clients=None,
     unique_id="1",
     config_entry_id=DEFAULT_CONFIG_ENTRY_ID,
+    wlan_id=DEFAULT_WLAN_ID,
 ):
     """Create the UniFi Network instance."""
     assert await async_setup_component(hass, UNIFI_DOMAIN, {})
@@ -230,6 +238,7 @@ async def setup_unifi_integration(
             port_forward_response=port_forward_response,
             system_information_response=system_information_response,
             wlans_response=wlans_response,
+            wlan_id=wlan_id,
         )
 
     await hass.config_entries.async_setup(config_entry.entry_id)
