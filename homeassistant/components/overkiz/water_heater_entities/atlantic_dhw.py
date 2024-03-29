@@ -17,7 +17,7 @@ from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from ..entity import OverkizEntity
 
 OVERKIZ_TO_OPERATION_MODE: dict[str, str] = {
-    STATE_PERFORMANCE: STATE_PERFORMANCE,
+    STATE_PERFORMANCE: OverkizCommandParam.PERFORMANCE
     STATE_ECO: OverkizCommandParam.MANUAL_ECO_ACTIVE,
     OverkizCommandParam.MANUAL: OverkizCommandParam.MANUAL_ECO_INACTIVE,
 }
