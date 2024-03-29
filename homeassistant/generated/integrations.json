@@ -3815,7 +3815,8 @@
       "name": "Mullvad VPN",
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "cloud_polling"
+      "iot_class": "cloud_polling",
+      "single_config_entry": true
     },
     "mutesync": {
       "name": "mutesync",
