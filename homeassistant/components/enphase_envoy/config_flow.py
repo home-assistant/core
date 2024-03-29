@@ -91,7 +91,7 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by zeroconf discovery."""
         current_hosts = self._async_current_hosts()
         _LOGGER.debug(
-            "Zero config ip %s processing %s, current hosts: %s",
+            "Zeroconf ip %s processing %s, current hosts: %s",
             discovery_info.ip_address.version,
             discovery_info.host,
             current_hosts,
@@ -104,7 +104,7 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
         self.ip_address = discovery_info.host
         self._abort_if_unique_id_configured({CONF_HOST: self.ip_address})
         _LOGGER.debug(
-            "Zero config ip %s , fw %s, no existing entry with serial %s",
+            "Zeroconf ip %s , fw %s, no existing entry with serial %s",
             self.ip_address,
             self.protovers,
             serial,
@@ -116,14 +116,14 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
                 and entry.data[CONF_HOST] == self.ip_address
             ):
                 _LOGGER.debug(
-                    "Zero config update envoy with this ip and blank serial in unique_id",
+                    "Zeroconf update envoy with this ip and blank serial in unique_id",
                 )
                 title = f"{ENVOY} {serial}" if entry.title == ENVOY else ENVOY
                 return self.async_update_reload_and_abort(
                     entry, title=title, unique_id=serial, reason="already_configured"
                 )
 
-        _LOGGER.debug("Zero config ip %s to step user", self.ip_address)
+        _LOGGER.debug("Zeroconf ip %s to step user", self.ip_address)
         return await self.async_step_user()
 
     async def async_step_reauth(
