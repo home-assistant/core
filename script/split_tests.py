@@ -135,7 +135,7 @@ def collect_tests(path: str) -> tuple[TestFolder, TestFile]:
 
     folder = TestFolder(path.split("/")[0])
     insert_at_correct_position(folder, path, 0)
-    max_tests_in_file = TestFile("", 0)
+    file_with_most_tests = TestFile("", 0)
 
     for line in result.stdout.splitlines():
         if not line.strip():
@@ -146,11 +146,11 @@ def collect_tests(path: str) -> tuple[TestFolder, TestFile]:
             sys.exit(1)
 
         total_tests = int(total_tests)
-        max_tests_in_file = max(max_tests_in_file, TestFile(path, total_tests))
+        file_with_most_tests = max(file_with_most_tests, TestFile(path, total_tests))
 
         insert_at_correct_position(folder, path, total_tests)
 
-    return (folder, max_tests_in_file)
+    return (folder, file_with_most_tests)
 
 
 def main() -> None:
@@ -174,18 +174,18 @@ def main() -> None:
     arguments = parser.parse_args()
 
     print("Collecting tests...")
-    (tests, max_tests_in_file) = collect_tests("tests")
+    (tests, file_with_most_tests) = collect_tests("tests")
     print(
-        f"Maximum tests in a single file are {max_tests_in_file.total_tests} tests (in {max_tests_in_file.path})"
+        f"Maximum tests in a single file are {file_with_most_tests.total_tests} tests (in {file_with_most_tests.path})"
     )
     print(f"Total tests: {tests.total_tests}")
 
     tests_per_bucket = ceil(tests.total_tests / arguments.bucket_count)
     print(f"Estimated tests per bucket: {tests_per_bucket}")
 
-    if max_tests_in_file.total_tests > tests_per_bucket:
+    if file_with_most_tests.total_tests > tests_per_bucket:
         raise ValueError(
-            f"There are more tests in a single file ({max_tests_in_file}) than tests per bucket ({tests_per_bucket})"
+            f"There are more tests in a single file ({file_with_most_tests}) than tests per bucket ({tests_per_bucket})"
         )
 
     bucket_holder = BucketHolder(tests_per_bucket, arguments.bucket_count)
