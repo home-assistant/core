@@ -788,8 +788,12 @@ class HomeAssistant:
     ) -> asyncio.Future[_T]:
         """Add an import executor job from within the event loop."""
         task = self.loop.run_in_executor(self.import_executor, target, *args)
-        self._tasks.add(task)
-        task.add_done_callback(self._tasks.remove)
+
+        tracked = asyncio.current_task() in self._tasks
+        task_bucket = self._tasks if tracked else self._background_tasks
+        task_bucket.add(task)
+        task.add_done_callback(task_bucket.remove)
+
         return task
 
     @overload
