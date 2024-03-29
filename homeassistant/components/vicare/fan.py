@@ -41,7 +41,7 @@ ORDERED_NAMED_FAN_SPEEDS = [
 ]
 
 PRESET_MODES = [
-    # VentilationMode.PERMANENT # represents on via level
+    VentilationMode.PERMANENT,  # represents on via level
     VentilationMode.VENTILATION,  # by schedule
     VentilationMode.SENSOR_DRIVEN,  # by sensor
     VentilationMode.SENSOR_OVERRIDE,  # by schedule & sensor
