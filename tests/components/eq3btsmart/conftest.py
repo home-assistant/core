@@ -1,6 +1,5 @@
 """Fixtures for eq3btsmart tests."""
 
-
 from bleak.backends.scanner import AdvertisementData
 import pytest
 

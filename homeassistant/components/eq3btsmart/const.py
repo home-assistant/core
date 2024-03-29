@@ -1,4 +1,5 @@
 """Constants for EQ3 Bluetooth Smart Radiator Valves."""
+
 from enum import Enum
 
 from eq3btsmart.const import OperationMode
