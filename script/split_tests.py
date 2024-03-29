@@ -43,30 +43,49 @@ class BucketHolder:
         self._buckets: list[Bucket] = [self._current_bucket]
         self._last_bucket = False
 
-    def split_tests(self, tests: TestFolder | TestFile) -> None:
-        """Split tests into buckets."""
+    def _split_tests(self, tests: TestFolder | TestFile) -> bool:
+        """Split tests into buckets.
+
+        Returns True if the tests were added to the current bucket, False otherwise.
+        """
         if (
             self._current_bucket.total_tests + tests.total_tests
             < self._tests_per_bucket
         ) or self._last_bucket:
             self._current_bucket.add(tests)
-            return
+            return True
 
         if isinstance(tests, TestFolder):
+            previuos_added = False
             for test in tests.children.values():
-                self.split_tests(test)
-            return
+                if self._split_tests(test):
+                    previuos_added = True
+                elif previuos_added:
+                    # Create new bucket
+                    if len(self._buckets) == self._bucket_count:
+                        # Last bucket, add all tests to it
+                        self._last_bucket = True
+                    else:
+                        self._current_bucket = Bucket()
+                        self._buckets.append(self._current_bucket)
+                    if not self._split_tests(test):
+                        # Should never happen
+                        raise ValueError(
+                            f"Failed to add test to bucket: {test}, {self._current_bucket}"
+                        )
+                    previuos_added = True
+                else:
+                    # Neither this test nor the previous one fit into the bucket
+                    return False
 
-        # Create new bucket
-        if len(self._buckets) == self._bucket_count:
-            # Last bucket, add all tests to it
-            self._last_bucket = True
-        else:
-            self._current_bucket = Bucket()
-            self._buckets.append(self._current_bucket)
+            return previuos_added
 
-        # Add test to new bucket
-        self._current_bucket.add(tests)
+        return False
+
+    def split_tests(self, tests: TestFolder | TestFile) -> None:
+        """Split tests into buckets."""
+        if not self._split_tests(tests):
+            raise ValueError(f"Failed to add tests to buckets: {tests}")
 
     def create_ouput_file(self) -> None:
         """Create output file."""
