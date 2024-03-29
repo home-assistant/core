@@ -48,7 +48,6 @@ async def test_battery_attributes(
     hass: HomeAssistant, async_autosetup_sonos, soco, entity_registry: er.EntityRegistry
 ) -> None:
     """Test sonos device with battery state."""
-    await hass.async_block_till_done(wait_background_tasks=True)
     battery = entity_registry.entities["sensor.zone_a_battery"]
     battery_state = hass.states.get(battery.entity_id)
     assert battery_state.state == "100"
@@ -197,7 +196,6 @@ async def test_microphone_binary_sensor(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test microphone binary sensor."""
-    await hass.async_block_till_done(wait_background_tasks=True)
     assert "binary_sensor.zone_a_microphone" in entity_registry.entities
 
     mic_binary_sensor = entity_registry.entities["binary_sensor.zone_a_microphone"]
@@ -221,7 +219,6 @@ async def test_favorites_sensor(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test Sonos favorites sensor."""
-    await hass.async_block_till_done(wait_background_tasks=True)
     favorites = entity_registry.entities["sensor.sonos_favorites"]
     assert hass.states.get(favorites.entity_id) is None
 
