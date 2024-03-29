@@ -155,21 +155,10 @@ class MockFan(MockEntity, FanEntity):
     """Mock Fan class."""
 
     @property
-    def preset_mode(self) -> str | None:
-        """Return preset mode."""
-        return self._handle("preset_mode")
-
-    @property
     def preset_modes(self) -> list[str] | None:
         """Return preset mode."""
         return self._handle("preset_modes")
 
-    @property
-    def supported_features(self):
-        """Return the class of this fan."""
-        return self._handle("supported_features")
-
-    async def async_set_preset_mode(self, preset_mode: str) -> None:
+    def set_preset_mode(self, preset_mode: str) -> None:
         """Set preset mode."""
         self._attr_preset_mode = preset_mode
-        self.async_write_ha_state()
