@@ -1,7 +1,7 @@
 """Test the Bond config flow."""
+
 from __future__ import annotations
 
-import asyncio
 from http import HTTPStatus
 from ipaddress import ip_address
 from typing import Any
@@ -38,11 +38,15 @@ async def test_user_form(hass: HomeAssistant) -> None:
     assert result["type"] == "form"
     assert result["errors"] == {}
 
-    with patch_bond_version(
-        return_value={"bondid": "ZXXX12345"}
-    ), patch_bond_device_ids(
-        return_value=["f6776c11", "f6776c12"]
-    ), patch_bond_bridge(), patch_bond_device_properties(), patch_bond_device(), patch_bond_device_state(), _patch_async_setup_entry() as mock_setup_entry:
+    with (
+        patch_bond_version(return_value={"bondid": "ZXXX12345"}),
+        patch_bond_device_ids(return_value=["f6776c11", "f6776c12"]),
+        patch_bond_bridge(),
+        patch_bond_device_properties(),
+        patch_bond_device(),
+        patch_bond_device_state(),
+        _patch_async_setup_entry() as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_HOST: "some host", CONF_ACCESS_TOKEN: "test-token"},
@@ -67,17 +71,19 @@ async def test_user_form_with_non_bridge(hass: HomeAssistant) -> None:
     assert result["type"] == "form"
     assert result["errors"] == {}
 
-    with patch_bond_version(
-        return_value={"bondid": "KXXX12345"}
-    ), patch_bond_device_ids(
-        return_value=["f6776c11"]
-    ), patch_bond_device_properties(), patch_bond_device(
-        return_value={
-            "name": "New Fan",
-        }
-    ), patch_bond_bridge(
-        return_value={}
-    ), patch_bond_device_state(), _patch_async_setup_entry() as mock_setup_entry:
+    with (
+        patch_bond_version(return_value={"bondid": "KXXX12345"}),
+        patch_bond_device_ids(return_value=["f6776c11"]),
+        patch_bond_device_properties(),
+        patch_bond_device(
+            return_value={
+                "name": "New Fan",
+            }
+        ),
+        patch_bond_bridge(return_value={}),
+        patch_bond_device_state(),
+        _patch_async_setup_entry() as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_HOST: "some host", CONF_ACCESS_TOKEN: "test-token"},
@@ -99,10 +105,12 @@ async def test_user_form_invalid_auth(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch_bond_version(
-        return_value={"bond_id": "ZXXX12345"}
-    ), patch_bond_bridge(), patch_bond_device_ids(
-        side_effect=ClientResponseError(Mock(), Mock(), status=401),
+    with (
+        patch_bond_version(return_value={"bond_id": "ZXXX12345"}),
+        patch_bond_bridge(),
+        patch_bond_device_ids(
+            side_effect=ClientResponseError(Mock(), Mock(), status=401),
+        ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -119,9 +127,11 @@ async def test_user_form_cannot_connect(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch_bond_version(
-        side_effect=ClientConnectionError()
-    ), patch_bond_bridge(), patch_bond_device_ids():
+    with (
+        patch_bond_version(side_effect=ClientConnectionError()),
+        patch_bond_bridge(),
+        patch_bond_device_ids(),
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_HOST: "some host", CONF_ACCESS_TOKEN: "test-token"},
@@ -137,9 +147,11 @@ async def test_user_form_old_firmware(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch_bond_version(
-        return_value={"no_bond_id": "present"}
-    ), patch_bond_bridge(), patch_bond_device_ids():
+    with (
+        patch_bond_version(return_value={"no_bond_id": "present"}),
+        patch_bond_bridge(),
+        patch_bond_device_ids(),
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_HOST: "some host", CONF_ACCESS_TOKEN: "test-token"},
@@ -181,9 +193,12 @@ async def test_user_form_one_entry_per_device_allowed(hass: HomeAssistant) -> No
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch_bond_version(
-        return_value={"bondid": "already-registered-bond-id"}
-    ), patch_bond_bridge(), patch_bond_device_ids(), _patch_async_setup_entry() as mock_setup_entry:
+    with (
+        patch_bond_version(return_value={"bondid": "already-registered-bond-id"}),
+        patch_bond_bridge(),
+        patch_bond_device_ids(),
+        _patch_async_setup_entry() as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_HOST: "some host", CONF_ACCESS_TOKEN: "test-token"},
@@ -216,9 +231,12 @@ async def test_zeroconf_form(hass: HomeAssistant) -> None:
         assert result["type"] == "form"
         assert result["errors"] == {}
 
-    with patch_bond_version(
-        return_value={"bondid": "ZXXX12345"}
-    ), patch_bond_bridge(), patch_bond_device_ids(), _patch_async_setup_entry() as mock_setup_entry:
+    with (
+        patch_bond_version(return_value={"bondid": "ZXXX12345"}),
+        patch_bond_bridge(),
+        patch_bond_device_ids(),
+        _patch_async_setup_entry() as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_ACCESS_TOKEN: "test-token"},
@@ -255,7 +273,12 @@ async def test_zeroconf_form_token_unavailable(hass: HomeAssistant) -> None:
     assert result["type"] == "form"
     assert result["errors"] == {}
 
-    with patch_bond_version(), patch_bond_bridge(), patch_bond_device_ids(), _patch_async_setup_entry() as mock_setup_entry:
+    with (
+        patch_bond_version(),
+        patch_bond_bridge(),
+        patch_bond_device_ids(),
+        _patch_async_setup_entry() as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_ACCESS_TOKEN: "test-token"},
@@ -274,7 +297,7 @@ async def test_zeroconf_form_token_unavailable(hass: HomeAssistant) -> None:
 async def test_zeroconf_form_token_times_out(hass: HomeAssistant) -> None:
     """Test we get the discovery form and we handle the token request timeout."""
 
-    with patch_bond_version(), patch_bond_token(side_effect=asyncio.TimeoutError):
+    with patch_bond_version(), patch_bond_token(side_effect=TimeoutError):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_ZEROCONF},
@@ -292,7 +315,12 @@ async def test_zeroconf_form_token_times_out(hass: HomeAssistant) -> None:
     assert result["type"] == "form"
     assert result["errors"] == {}
 
-    with patch_bond_version(), patch_bond_bridge(), patch_bond_device_ids(), _patch_async_setup_entry() as mock_setup_entry:
+    with (
+        patch_bond_version(),
+        patch_bond_bridge(),
+        patch_bond_device_ids(),
+        _patch_async_setup_entry() as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_ACCESS_TOKEN: "test-token"},
@@ -311,11 +339,12 @@ async def test_zeroconf_form_token_times_out(hass: HomeAssistant) -> None:
 async def test_zeroconf_form_with_token_available(hass: HomeAssistant) -> None:
     """Test we get the discovery form when we can get the token."""
 
-    with patch_bond_version(return_value={"bondid": "ZXXX12345"}), patch_bond_token(
-        return_value={"token": "discovered-token"}
-    ), patch_bond_bridge(
-        return_value={"name": "discovered-name"}
-    ), patch_bond_device_ids():
+    with (
+        patch_bond_version(return_value={"bondid": "ZXXX12345"}),
+        patch_bond_token(return_value={"token": "discovered-token"}),
+        patch_bond_bridge(return_value={"name": "discovered-name"}),
+        patch_bond_device_ids(),
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_ZEROCONF},
@@ -354,9 +383,12 @@ async def test_zeroconf_form_with_token_available_name_unavailable(
 ) -> None:
     """Test we get the discovery form when we can get the token but the name is unavailable."""
 
-    with patch_bond_version(
-        side_effect=ClientResponseError(Mock(), (), status=HTTPStatus.BAD_REQUEST)
-    ), patch_bond_token(return_value={"token": "discovered-token"}):
+    with (
+        patch_bond_version(
+            side_effect=ClientResponseError(Mock(), (), status=HTTPStatus.BAD_REQUEST)
+        ),
+        patch_bond_token(return_value={"token": "discovered-token"}),
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_ZEROCONF},
@@ -482,8 +514,9 @@ async def test_zeroconf_already_configured_refresh_token(hass: HomeAssistant) ->
         await hass.config_entries.async_setup(entry.entry_id)
     assert entry.state is ConfigEntryState.SETUP_ERROR
 
-    with _patch_async_setup_entry() as mock_setup_entry, patch_bond_token(
-        return_value={"token": "discovered-token"}
+    with (
+        _patch_async_setup_entry() as mock_setup_entry,
+        patch_bond_token(return_value={"token": "discovered-token"}),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -520,8 +553,9 @@ async def test_zeroconf_already_configured_no_reload_same_host(
     )
     entry.add_to_hass(hass)
 
-    with _patch_async_setup_entry() as mock_setup_entry, patch_bond_token(
-        return_value={"token": "correct-token"}
+    with (
+        _patch_async_setup_entry() as mock_setup_entry,
+        patch_bond_token(return_value={"token": "correct-token"}),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -576,9 +610,10 @@ async def _help_test_form_unexpected_error(
             DOMAIN, context={"source": source}, data=initial_input
         )
 
-    with patch_bond_version(
-        return_value={"bond_id": "ZXXX12345"}
-    ), patch_bond_device_ids(side_effect=error):
+    with (
+        patch_bond_version(return_value={"bond_id": "ZXXX12345"}),
+        patch_bond_device_ids(side_effect=error),
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input
         )

@@ -1,4 +1,5 @@
 """Tests for Met Éireann config flow."""
+
 from unittest.mock import patch
 
 import pytest

@@ -1,4 +1,5 @@
 """Provide an authentication layer for Home Assistant."""
+
 from __future__ import annotations
 
 import asyncio
@@ -19,13 +20,13 @@ from homeassistant.core import (
     HomeAssistant,
     callback,
 )
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util import dt as dt_util
 
 from . import auth_store, jwt_wrapper, models
 from .const import ACCESS_TOKEN_EXPIRATION, GROUP_ID_ADMIN, REFRESH_TOKEN_EXPIRATION
 from .mfa_modules import MultiFactorAuthModule, auth_mfa_module_from_config
+from .models import AuthFlowResult
 from .providers import AuthProvider, LoginFlow, auth_provider_from_config
 
 EVENT_USER_ADDED = "user_added"
@@ -88,8 +89,12 @@ async def auth_manager_from_config(
     return manager
 
 
-class AuthManagerFlowManager(data_entry_flow.FlowManager):
+class AuthManagerFlowManager(
+    data_entry_flow.FlowManager[AuthFlowResult, tuple[str, str]]
+):
     """Manage authentication flows."""
+
+    _flow_result = AuthFlowResult
 
     def __init__(self, hass: HomeAssistant, auth_manager: AuthManager) -> None:
         """Init auth manager flows."""
@@ -98,11 +103,11 @@ class AuthManagerFlowManager(data_entry_flow.FlowManager):
 
     async def async_create_flow(
         self,
-        handler_key: str,
+        handler_key: tuple[str, str],
         *,
         context: dict[str, Any] | None = None,
         data: dict[str, Any] | None = None,
-    ) -> data_entry_flow.FlowHandler:
+    ) -> LoginFlow:
         """Create a login flow."""
         auth_provider = self.auth_manager.get_auth_provider(*handler_key)
         if not auth_provider:
@@ -110,8 +115,10 @@ class AuthManagerFlowManager(data_entry_flow.FlowManager):
         return await auth_provider.async_login_flow(context)
 
     async def async_finish_flow(
-        self, flow: data_entry_flow.FlowHandler, result: FlowResult
-    ) -> FlowResult:
+        self,
+        flow: data_entry_flow.FlowHandler[AuthFlowResult, tuple[str, str]],
+        result: AuthFlowResult,
+    ) -> AuthFlowResult:
         """Return a user as result of login flow."""
         flow = cast(LoginFlow, flow)
 

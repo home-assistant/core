@@ -1,4 +1,5 @@
 """The tests for the Mikrotik device tracker platform."""
+
 from __future__ import annotations
 
 from datetime import timedelta

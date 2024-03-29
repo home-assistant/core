@@ -1,4 +1,5 @@
 """Text entities for UniFi Protect."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -61,7 +62,8 @@ async def async_setup_entry(
     """Set up sensors for UniFi Protect integration."""
     data: ProtectData = hass.data[DOMAIN][entry.entry_id]
 
-    async def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
+    @callback
+    def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
         entities = async_all_device_entities(
             data,
             ProtectDeviceText,

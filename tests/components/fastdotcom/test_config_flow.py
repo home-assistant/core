@@ -1,4 +1,5 @@
 """Test for the Fast.com config flow."""
+
 from unittest.mock import patch
 
 import pytest

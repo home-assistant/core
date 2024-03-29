@@ -1,4 +1,5 @@
 """Test Fully Kiosk Browser services."""
+
 from unittest.mock import MagicMock
 
 import pytest
@@ -163,11 +164,11 @@ async def test_service_called_with_non_fkb_target_devices(
     """Services raise exception when no valid devices provided."""
     other_domain = "NotFullyKiosk"
     other_config_id = "555"
-    await hass.config_entries.async_add(
-        MockConfigEntry(
-            title="Not Fully Kiosk", domain=other_domain, entry_id=other_config_id
-        )
+    other_mock_config_entry = MockConfigEntry(
+        title="Not Fully Kiosk", domain=other_domain, entry_id=other_config_id
     )
+    other_mock_config_entry.add_to_hass(hass)
+
     device_entry = device_registry.async_get_or_create(
         config_entry_id=other_config_id,
         identifiers={

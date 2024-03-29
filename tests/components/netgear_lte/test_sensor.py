@@ -1,4 +1,5 @@
 """The tests for Netgear LTE sensor platform."""
+
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.netgear_lte.const import DOMAIN

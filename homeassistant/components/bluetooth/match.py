@@ -1,4 +1,5 @@
 """The bluetooth integration matchers."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -90,6 +91,8 @@ def seen_all_fields(
 class IntegrationMatcher:
     """Integration matcher for the bluetooth integration."""
 
+    __slots__ = ("_integration_matchers", "_matched", "_matched_connectable", "_index")
+
     def __init__(self, integration_matchers: list[BluetoothMatcher]) -> None:
         """Initialize the matcher."""
         self._integration_matchers = integration_matchers
@@ -158,6 +161,16 @@ class BluetoothMatcherIndexBase(Generic[_T]):
     This is optimized for cases when no service infos will be matched in
     any bucket and we can quickly reject the service info as not matching.
     """
+
+    __slots__ = (
+        "local_name",
+        "service_uuid",
+        "service_data_uuid",
+        "manufacturer_id",
+        "service_uuid_set",
+        "service_data_uuid_set",
+        "manufacturer_id_set",
+    )
 
     def __init__(self) -> None:
         """Initialize the matcher index."""
@@ -236,39 +249,47 @@ class BluetoothMatcherIndexBase(Generic[_T]):
 
     def match(self, service_info: BluetoothServiceInfoBleak) -> list[_T]:
         """Check for a match."""
-        matches = []
+        matches: list[_T] = []
         if (name := service_info.name) and (
             local_name_matchers := self.local_name.get(
                 name[:LOCAL_NAME_MIN_MATCH_LENGTH]
             )
         ):
-            for matcher in local_name_matchers:
-                if ble_device_matches(matcher, service_info):
-                    matches.append(matcher)
+            matches.extend(
+                matcher
+                for matcher in local_name_matchers
+                if ble_device_matches(matcher, service_info)
+            )
 
         if self.service_data_uuid_set and service_info.service_data:
-            for service_data_uuid in self.service_data_uuid_set.intersection(
-                service_info.service_data
-            ):
-                for matcher in self.service_data_uuid[service_data_uuid]:
-                    if ble_device_matches(matcher, service_info):
-                        matches.append(matcher)
+            matches.extend(
+                matcher
+                for service_data_uuid in self.service_data_uuid_set.intersection(
+                    service_info.service_data
+                )
+                for matcher in self.service_data_uuid[service_data_uuid]
+                if ble_device_matches(matcher, service_info)
+            )
 
         if self.manufacturer_id_set and service_info.manufacturer_data:
-            for manufacturer_id in self.manufacturer_id_set.intersection(
-                service_info.manufacturer_data
-            ):
-                for matcher in self.manufacturer_id[manufacturer_id]:
-                    if ble_device_matches(matcher, service_info):
-                        matches.append(matcher)
+            matches.extend(
+                matcher
+                for manufacturer_id in self.manufacturer_id_set.intersection(
+                    service_info.manufacturer_data
+                )
+                for matcher in self.manufacturer_id[manufacturer_id]
+                if ble_device_matches(matcher, service_info)
+            )
 
         if self.service_uuid_set and service_info.service_uuids:
-            for service_uuid in self.service_uuid_set.intersection(
-                service_info.service_uuids
-            ):
-                for matcher in self.service_uuid[service_uuid]:
-                    if ble_device_matches(matcher, service_info):
-                        matches.append(matcher)
+            matches.extend(
+                matcher
+                for service_uuid in self.service_uuid_set.intersection(
+                    service_info.service_uuids
+                )
+                for matcher in self.service_uuid[service_uuid]
+                if ble_device_matches(matcher, service_info)
+            )
 
         return matches
 
@@ -284,6 +305,8 @@ class BluetoothCallbackMatcherIndex(
 
     Supports matching on addresses.
     """
+
+    __slots__ = ("address", "connectable")
 
     def __init__(self) -> None:
         """Initialize the matcher index."""

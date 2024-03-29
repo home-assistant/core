@@ -1,4 +1,5 @@
 """Support for w800rf32 binary sensors."""
+
 from __future__ import annotations
 
 import logging

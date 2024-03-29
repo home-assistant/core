@@ -1,4 +1,5 @@
 """Support for powerwall sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -113,12 +114,6 @@ POWERWALL_INSTANT_SENSORS = (
 )
 
 
-def _get_battery_charge(battery_data: BatteryResponse) -> float:
-    """Get the current value in %."""
-    ratio = float(battery_data.energy_remaining) / float(battery_data.capacity)
-    return round(100 * ratio, 1)
-
-
 BATTERY_INSTANT_SENSORS: list[PowerwallSensorEntityDescription] = [
     PowerwallSensorEntityDescription[BatteryResponse, int](
         key="battery_capacity",
@@ -201,16 +196,6 @@ BATTERY_INSTANT_SENSORS: list[PowerwallSensorEntityDescription] = [
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         suggested_display_precision=1,
         value_fn=lambda battery_data: battery_data.energy_remaining,
-    ),
-    PowerwallSensorEntityDescription[BatteryResponse, float](
-        key="charge",
-        translation_key="charge",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        state_class=SensorStateClass.MEASUREMENT,
-        device_class=SensorDeviceClass.BATTERY,
-        native_unit_of_measurement=PERCENTAGE,
-        suggested_display_precision=0,
-        value_fn=_get_battery_charge,
     ),
     PowerwallSensorEntityDescription[BatteryResponse, str](
         key="grid_state",

@@ -1,4 +1,5 @@
 """Provide functionality to keep track of devices."""
+
 from __future__ import annotations
 
 from functools import partial
@@ -13,6 +14,7 @@ from homeassistant.helpers.deprecation import (
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
+from . import group as group_pre_import  # noqa: F401
 from .config_entry import (  # noqa: F401
     ScannerEntity,
     TrackerEntity,
@@ -67,16 +69,7 @@ def is_on(hass: HomeAssistant, entity_id: str) -> bool:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the device tracker."""
-
-    # We need to add the component here break the deadlock
-    # when setting up integrations from config entries as
-    # they would otherwise wait for the device tracker to be
-    # setup and thus the config entries would not be able to
-    # setup their platforms.
-    hass.config.components.add(DOMAIN)
-
-    await async_setup_legacy_integration(hass, config)
-
+    async_setup_legacy_integration(hass, config)
     return True
 
 

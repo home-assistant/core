@@ -1,4 +1,5 @@
 """Test the Trusted Networks auth provider."""
+
 from ipaddress import ip_address, ip_network
 from unittest.mock import Mock, patch
 

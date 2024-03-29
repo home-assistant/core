@@ -1,4 +1,5 @@
 """Water quality coordinator for Tami4Edge."""
+
 from dataclasses import dataclass
 from datetime import date, timedelta
 import logging

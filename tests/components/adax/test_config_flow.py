@@ -1,4 +1,5 @@
 """Test the Adax config flow."""
+
 from unittest.mock import patch
 
 import adax_local
@@ -41,13 +42,16 @@ async def test_form(hass: HomeAssistant) -> None:
     )
     assert result2["type"] == FlowResultType.FORM
 
-    with patch(
-        "adax.get_adax_token",
-        return_value="test_token",
-    ), patch(
-        "homeassistant.components.adax.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "adax.get_adax_token",
+            return_value="test_token",
+        ),
+        patch(
+            "homeassistant.components.adax.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
             TEST_DATA,
@@ -148,12 +152,16 @@ async def test_local_create_entry(hass: HomeAssistant) -> None:
         WIFI_PSWD: "pswd",
     }
 
-    with patch(
-        "homeassistant.components.adax.async_setup_entry",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.adax.config_flow.adax_local.AdaxConfig", autospec=True
-    ) as mock_client_class:
+    with (
+        patch(
+            "homeassistant.components.adax.async_setup_entry",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.adax.config_flow.adax_local.AdaxConfig",
+            autospec=True,
+        ) as mock_client_class,
+    ):
         client = mock_client_class.return_value
         client.configure_device.return_value = True
         client.device_ip = "192.168.1.4"

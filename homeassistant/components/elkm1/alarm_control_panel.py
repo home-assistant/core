@@ -1,4 +1,5 @@
 """Each ElkM1 area will be created as a separate alarm_control_panel."""
+
 from __future__ import annotations
 
 from typing import Any

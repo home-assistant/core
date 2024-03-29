@@ -1,4 +1,5 @@
 """Support for ValveHeatingTemperatureInterface."""
+
 from __future__ import annotations
 
 from typing import Any, cast
@@ -51,13 +52,11 @@ class ValveHeatingTemperatureInterface(OverkizEntity, ClimateEntity):
     _attr_hvac_modes = [HVACMode.HEAT]
     _attr_preset_modes = [*PRESET_MODE_TO_OVERKIZ]
     _attr_supported_features = (
-        ClimateEntityFeature.PRESET_MODE
-        | ClimateEntityFeature.TARGET_TEMPERATURE
-        | ClimateEntityFeature.TURN_OFF
-        | ClimateEntityFeature.TURN_ON
+        ClimateEntityFeature.PRESET_MODE | ClimateEntityFeature.TARGET_TEMPERATURE
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_translation_key = DOMAIN
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self, device_url: str, coordinator: OverkizDataUpdateCoordinator
@@ -92,7 +91,9 @@ class ValveHeatingTemperatureInterface(OverkizEntity, ClimateEntity):
     @property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
-        if temperature := self.temperature_device.states[OverkizState.CORE_TEMPERATURE]:
+        if self.temperature_device is not None and (
+            temperature := self.temperature_device.states[OverkizState.CORE_TEMPERATURE]
+        ):
             return temperature.value_as_float
 
         return None

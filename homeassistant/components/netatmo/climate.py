@@ -1,4 +1,5 @@
 """Support for Netatmo Smart thermostats."""
+
 from __future__ import annotations
 
 import logging
@@ -190,6 +191,7 @@ class NetatmoThermostat(NetatmoBaseEntity, ClimateEntity):
     _attr_supported_features = SUPPORT_FLAGS
     _attr_target_temperature_step = PRECISION_HALVES
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, netatmo_device: NetatmoRoom) -> None:
         """Initialize the sensor."""
@@ -265,9 +267,9 @@ class NetatmoThermostat(NetatmoBaseEntity, ClimateEntity):
                 "name",
                 None,
             )
-            self._attr_extra_state_attributes[
-                ATTR_SELECTED_SCHEDULE
-            ] = self._selected_schedule
+            self._attr_extra_state_attributes[ATTR_SELECTED_SCHEDULE] = (
+                self._selected_schedule
+            )
             self.async_write_ha_state()
             self.data_handler.async_force_update(self._signal_name)
             return
@@ -428,14 +430,14 @@ class NetatmoThermostat(NetatmoBaseEntity, ClimateEntity):
         self._selected_schedule = getattr(
             self._room.home.get_selected_schedule(), "name", None
         )
-        self._attr_extra_state_attributes[
-            ATTR_SELECTED_SCHEDULE
-        ] = self._selected_schedule
+        self._attr_extra_state_attributes[ATTR_SELECTED_SCHEDULE] = (
+            self._selected_schedule
+        )
 
         if self._model == NA_VALVE:
-            self._attr_extra_state_attributes[
-                ATTR_HEATING_POWER_REQUEST
-            ] = self._room.heating_power_request
+            self._attr_extra_state_attributes[ATTR_HEATING_POWER_REQUEST] = (
+                self._room.heating_power_request
+            )
         else:
             for module in self._room.modules.values():
                 if hasattr(module, "boiler_status"):

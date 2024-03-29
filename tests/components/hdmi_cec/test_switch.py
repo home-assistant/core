@@ -1,4 +1,5 @@
 """Tests for the HDMI-CEC switch platform."""
+
 from pycec.const import POWER_OFF, POWER_ON, STATUS_PLAY, STATUS_STILL, STATUS_STOP
 from pycec.network import PhysicalAddress
 import pytest

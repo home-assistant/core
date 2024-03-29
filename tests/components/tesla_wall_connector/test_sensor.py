@@ -1,4 +1,5 @@
 """Tests for sensors."""
+
 from homeassistant.core import HomeAssistant
 
 from .conftest import (
@@ -47,7 +48,7 @@ async def test_sensors(hass: HomeAssistant) -> None:
             "sensor.tesla_wall_connector_phase_c_voltage", "232.1", "230"
         ),
         EntityAndExpectedValues(
-            "sensor.tesla_wall_connector_session_energy", "1234.56", "112.2"
+            "sensor.tesla_wall_connector_session_energy", "1.23456", "0.1122"
         ),
     ]
 

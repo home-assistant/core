@@ -122,6 +122,7 @@ This is an endpoint for OAuth2 Authorization callbacks used by integrations
 that link accounts with other cloud providers using LocalOAuth2Implementation
 as part of a config flow.
 """
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -143,6 +144,7 @@ from homeassistant.auth.models import (
     User,
 )
 from homeassistant.components import websocket_api
+from homeassistant.components.http import KEY_HASS
 from homeassistant.components.http.auth import (
     async_sign_path,
     async_user_not_allowed_do_auth,
@@ -209,7 +211,7 @@ class RevokeTokenView(HomeAssistantView):
 
     async def post(self, request: web.Request) -> web.Response:
         """Revoke a token."""
-        hass: HomeAssistant = request.app["hass"]
+        hass = request.app[KEY_HASS]
         data = cast(MultiDictProxy[str], await request.post())
 
         # OAuth 2.0 Token Revocation [RFC7009]
@@ -243,7 +245,7 @@ class TokenView(HomeAssistantView):
     @log_invalid_auth
     async def post(self, request: web.Request) -> web.Response:
         """Grant a token."""
-        hass: HomeAssistant = request.app["hass"]
+        hass = request.app[KEY_HASS]
         data = cast(MultiDictProxy[str], await request.post())
 
         grant_type = data.get("grant_type")
@@ -415,7 +417,7 @@ class LinkUserView(HomeAssistantView):
     @RequestDataValidator(vol.Schema({"code": str, "client_id": str}))
     async def post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
         """Link a user."""
-        hass: HomeAssistant = request.app["hass"]
+        hass = request.app[KEY_HASS]
         user: User = request["hass_user"]
 
         credentials = self._retrieve_credentials(data["client_id"], data["code"])
@@ -578,6 +580,7 @@ def websocket_refresh_tokens(
     connection.send_result(msg["id"], tokens)
 
 
+@callback
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "auth/delete_refresh_token",
@@ -585,8 +588,7 @@ def websocket_refresh_tokens(
     }
 )
 @websocket_api.ws_require_user()
-@websocket_api.async_response
-async def websocket_delete_refresh_token(
+def websocket_delete_refresh_token(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle a delete refresh token request."""
@@ -601,6 +603,7 @@ async def websocket_delete_refresh_token(
     connection.send_result(msg["id"], {})
 
 
+@callback
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "auth/delete_all_refresh_tokens",
@@ -609,8 +612,7 @@ async def websocket_delete_refresh_token(
     }
 )
 @websocket_api.ws_require_user()
-@websocket_api.async_response
-async def websocket_delete_all_refresh_tokens(
+def websocket_delete_all_refresh_tokens(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle delete all refresh tokens request."""

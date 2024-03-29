@@ -1,5 +1,5 @@
 """Test the Smart Meter Texas config flow."""
-import asyncio
+
 from unittest.mock import patch
 
 from aiohttp import ClientError
@@ -28,10 +28,13 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["type"] == "form"
     assert result["errors"] == {}
 
-    with patch("smart_meter_texas.Client.authenticate", return_value=True), patch(
-        "homeassistant.components.smart_meter_texas.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch("smart_meter_texas.Client.authenticate", return_value=True),
+        patch(
+            "homeassistant.components.smart_meter_texas.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], TEST_LOGIN
         )
@@ -63,7 +66,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "side_effect", [asyncio.TimeoutError, ClientError, SmartMeterTexasAPIError]
+    "side_effect", [TimeoutError, ClientError, SmartMeterTexasAPIError]
 )
 async def test_form_cannot_connect(hass: HomeAssistant, side_effect) -> None:
     """Test we handle cannot connect error."""

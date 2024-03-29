@@ -1,6 +1,5 @@
 """Test the Powerwall config flow."""
 
-import asyncio
 from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
@@ -42,13 +41,16 @@ async def test_form_source_user(hass: HomeAssistant) -> None:
 
     mock_powerwall = await _mock_powerwall_site_name(hass, "MySite")
 
-    with patch(
-        "homeassistant.components.powerwall.config_flow.Powerwall",
-        return_value=mock_powerwall,
-    ), patch(
-        "homeassistant.components.powerwall.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.powerwall.config_flow.Powerwall",
+            return_value=mock_powerwall,
+        ),
+        patch(
+            "homeassistant.components.powerwall.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             VALID_CONFIG,
@@ -61,7 +63,7 @@ async def test_form_source_user(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-@pytest.mark.parametrize("exc", (PowerwallUnreachableError, asyncio.TimeoutError))
+@pytest.mark.parametrize("exc", [PowerwallUnreachableError, TimeoutError])
 async def test_form_cannot_connect(hass: HomeAssistant, exc: Exception) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
@@ -160,7 +162,7 @@ async def test_already_configured(hass: HomeAssistant) -> None:
         context={"source": config_entries.SOURCE_DHCP},
         data=dhcp.DhcpServiceInfo(
             ip="1.1.1.1",
-            macaddress="AA:BB:CC:DD:EE:FF",
+            macaddress="aabbcceeddff",
             hostname="any",
         ),
     )
@@ -187,20 +189,23 @@ async def test_already_configured_with_ignored(hass: HomeAssistant) -> None:
             context={"source": config_entries.SOURCE_DHCP},
             data=dhcp.DhcpServiceInfo(
                 ip="1.1.1.1",
-                macaddress="AA:BB:CC:DD:EE:FF",
+                macaddress="aabbcceeddff",
                 hostname="00GGX",
             ),
         )
     assert result["type"] == "form"
     assert result["errors"] is None
 
-    with patch(
-        "homeassistant.components.powerwall.config_flow.Powerwall",
-        return_value=mock_powerwall,
-    ), patch(
-        "homeassistant.components.powerwall.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.powerwall.config_flow.Powerwall",
+            return_value=mock_powerwall,
+        ),
+        patch(
+            "homeassistant.components.powerwall.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {},
@@ -226,20 +231,23 @@ async def test_dhcp_discovery_manual_configure(hass: HomeAssistant) -> None:
             context={"source": config_entries.SOURCE_DHCP},
             data=dhcp.DhcpServiceInfo(
                 ip="1.1.1.1",
-                macaddress="AA:BB:CC:DD:EE:FF",
+                macaddress="aabbcceeddff",
                 hostname="any",
             ),
         )
     assert result["type"] == "form"
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.powerwall.config_flow.Powerwall",
-        return_value=mock_powerwall,
-    ), patch(
-        "homeassistant.components.powerwall.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.powerwall.config_flow.Powerwall",
+            return_value=mock_powerwall,
+        ),
+        patch(
+            "homeassistant.components.powerwall.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             VALID_CONFIG,
@@ -265,20 +273,23 @@ async def test_dhcp_discovery_auto_configure(hass: HomeAssistant) -> None:
             context={"source": config_entries.SOURCE_DHCP},
             data=dhcp.DhcpServiceInfo(
                 ip="1.1.1.1",
-                macaddress="AA:BB:CC:DD:EE:FF",
+                macaddress="aabbcceeddff",
                 hostname="00GGX",
             ),
         )
     assert result["type"] == "form"
     assert result["errors"] is None
 
-    with patch(
-        "homeassistant.components.powerwall.config_flow.Powerwall",
-        return_value=mock_powerwall,
-    ), patch(
-        "homeassistant.components.powerwall.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.powerwall.config_flow.Powerwall",
+            return_value=mock_powerwall,
+        ),
+        patch(
+            "homeassistant.components.powerwall.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {},
@@ -306,7 +317,7 @@ async def test_dhcp_discovery_cannot_connect(hass: HomeAssistant) -> None:
             context={"source": config_entries.SOURCE_DHCP},
             data=dhcp.DhcpServiceInfo(
                 ip="1.1.1.1",
-                macaddress="AA:BB:CC:DD:EE:FF",
+                macaddress="aabbcceeddff",
                 hostname="00GGX",
             ),
         )
@@ -334,13 +345,16 @@ async def test_form_reauth(hass: HomeAssistant) -> None:
 
     mock_powerwall = await _mock_powerwall_site_name(hass, "My site")
 
-    with patch(
-        "homeassistant.components.powerwall.config_flow.Powerwall",
-        return_value=mock_powerwall,
-    ), patch(
-        "homeassistant.components.powerwall.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.powerwall.config_flow.Powerwall",
+            return_value=mock_powerwall,
+        ),
+        patch(
+            "homeassistant.components.powerwall.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -365,19 +379,22 @@ async def test_dhcp_discovery_update_ip_address(hass: HomeAssistant) -> None:
     mock_powerwall = MagicMock(login=MagicMock(side_effect=PowerwallUnreachableError))
     mock_powerwall.__aenter__.return_value = mock_powerwall
 
-    with patch(
-        "homeassistant.components.powerwall.config_flow.Powerwall",
-        return_value=mock_powerwall,
-    ), patch(
-        "homeassistant.components.powerwall.async_setup_entry",
-        return_value=True,
+    with (
+        patch(
+            "homeassistant.components.powerwall.config_flow.Powerwall",
+            return_value=mock_powerwall,
+        ),
+        patch(
+            "homeassistant.components.powerwall.async_setup_entry",
+            return_value=True,
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
             data=dhcp.DhcpServiceInfo(
                 ip="1.1.1.1",
-                macaddress="AA:BB:CC:DD:EE:FF",
+                macaddress="aabbcceeddff",
                 hostname=MOCK_GATEWAY_DIN.lower(),
             ),
         )
@@ -399,19 +416,22 @@ async def test_dhcp_discovery_does_not_update_ip_when_auth_fails(
     entry.add_to_hass(hass)
     mock_powerwall = MagicMock(login=MagicMock(side_effect=AccessDeniedError("any")))
 
-    with patch(
-        "homeassistant.components.powerwall.config_flow.Powerwall",
-        return_value=mock_powerwall,
-    ), patch(
-        "homeassistant.components.powerwall.async_setup_entry",
-        return_value=True,
+    with (
+        patch(
+            "homeassistant.components.powerwall.config_flow.Powerwall",
+            return_value=mock_powerwall,
+        ),
+        patch(
+            "homeassistant.components.powerwall.async_setup_entry",
+            return_value=True,
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
             data=dhcp.DhcpServiceInfo(
                 ip="1.1.1.1",
-                macaddress="AA:BB:CC:DD:EE:FF",
+                macaddress="aabbcceeddff",
                 hostname=MOCK_GATEWAY_DIN.lower(),
             ),
         )
@@ -433,19 +453,22 @@ async def test_dhcp_discovery_does_not_update_ip_when_auth_successful(
     entry.add_to_hass(hass)
     mock_powerwall = MagicMock(login=MagicMock(return_value=True))
 
-    with patch(
-        "homeassistant.components.powerwall.config_flow.Powerwall",
-        return_value=mock_powerwall,
-    ), patch(
-        "homeassistant.components.powerwall.async_setup_entry",
-        return_value=True,
+    with (
+        patch(
+            "homeassistant.components.powerwall.config_flow.Powerwall",
+            return_value=mock_powerwall,
+        ),
+        patch(
+            "homeassistant.components.powerwall.async_setup_entry",
+            return_value=True,
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
             data=dhcp.DhcpServiceInfo(
                 ip="1.1.1.1",
-                macaddress="AA:BB:CC:DD:EE:FF",
+                macaddress="aabbcceeddff",
                 hostname=MOCK_GATEWAY_DIN.lower(),
             ),
         )
@@ -465,19 +488,22 @@ async def test_dhcp_discovery_updates_unique_id(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
     mock_powerwall = await _mock_powerwall_site_name(hass, "Some site")
 
-    with patch(
-        "homeassistant.components.powerwall.config_flow.Powerwall",
-        return_value=mock_powerwall,
-    ), patch(
-        "homeassistant.components.powerwall.async_setup_entry",
-        return_value=True,
+    with (
+        patch(
+            "homeassistant.components.powerwall.config_flow.Powerwall",
+            return_value=mock_powerwall,
+        ),
+        patch(
+            "homeassistant.components.powerwall.async_setup_entry",
+            return_value=True,
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
             data=dhcp.DhcpServiceInfo(
                 ip="1.2.3.4",
-                macaddress="AA:BB:CC:DD:EE:FF",
+                macaddress="aabbcceeddff",
                 hostname=MOCK_GATEWAY_DIN.lower(),
             ),
         )
@@ -498,22 +524,25 @@ async def test_dhcp_discovery_updates_unique_id_when_entry_is_failed(
         unique_id="1.2.3.4",
     )
     entry.add_to_hass(hass)
-    entry.state = config_entries.ConfigEntryState.SETUP_ERROR
+    entry.mock_state(hass, config_entries.ConfigEntryState.SETUP_ERROR)
     mock_powerwall = await _mock_powerwall_site_name(hass, "Some site")
 
-    with patch(
-        "homeassistant.components.powerwall.config_flow.Powerwall",
-        return_value=mock_powerwall,
-    ), patch(
-        "homeassistant.components.powerwall.async_setup_entry",
-        return_value=True,
+    with (
+        patch(
+            "homeassistant.components.powerwall.config_flow.Powerwall",
+            return_value=mock_powerwall,
+        ),
+        patch(
+            "homeassistant.components.powerwall.async_setup_entry",
+            return_value=True,
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
             data=dhcp.DhcpServiceInfo(
                 ip="1.2.3.4",
-                macaddress="AA:BB:CC:DD:EE:FF",
+                macaddress="aabbcceeddff",
                 hostname=MOCK_GATEWAY_DIN.lower(),
             ),
         )
@@ -536,11 +565,14 @@ async def test_discovered_wifi_does_not_update_ip_if_is_still_online(
     entry.add_to_hass(hass)
     mock_powerwall = await _mock_powerwall_with_fixtures(hass)
 
-    with patch(
-        "homeassistant.components.powerwall.config_flow.Powerwall",
-        return_value=mock_powerwall,
-    ), patch(
-        "homeassistant.components.powerwall.Powerwall", return_value=mock_powerwall
+    with (
+        patch(
+            "homeassistant.components.powerwall.config_flow.Powerwall",
+            return_value=mock_powerwall,
+        ),
+        patch(
+            "homeassistant.components.powerwall.Powerwall", return_value=mock_powerwall
+        ),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -549,7 +581,7 @@ async def test_discovered_wifi_does_not_update_ip_if_is_still_online(
             context={"source": config_entries.SOURCE_DHCP},
             data=dhcp.DhcpServiceInfo(
                 ip="1.2.3.5",
-                macaddress="AA:BB:CC:DD:EE:FF",
+                macaddress="aabbcceeddff",
                 hostname=MOCK_GATEWAY_DIN.lower(),
             ),
         )
@@ -573,11 +605,14 @@ async def test_discovered_wifi_does_not_update_ip_online_but_access_denied(
     mock_powerwall_no_access = await _mock_powerwall_with_fixtures(hass)
     mock_powerwall_no_access.login.side_effect = AccessDeniedError("any")
 
-    with patch(
-        "homeassistant.components.powerwall.config_flow.Powerwall",
-        return_value=mock_powerwall_no_access,
-    ), patch(
-        "homeassistant.components.powerwall.Powerwall", return_value=mock_powerwall
+    with (
+        patch(
+            "homeassistant.components.powerwall.config_flow.Powerwall",
+            return_value=mock_powerwall_no_access,
+        ),
+        patch(
+            "homeassistant.components.powerwall.Powerwall", return_value=mock_powerwall
+        ),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -586,7 +621,7 @@ async def test_discovered_wifi_does_not_update_ip_online_but_access_denied(
         # the discovery flow to probe to see if its online
         # which will result in an access denied error, which
         # means its still online and we should not update the ip
-        mock_powerwall.get_meters.side_effect = asyncio.TimeoutError
+        mock_powerwall.get_meters.side_effect = TimeoutError
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=60))
         await hass.async_block_till_done()
 
@@ -595,7 +630,7 @@ async def test_discovered_wifi_does_not_update_ip_online_but_access_denied(
             context={"source": config_entries.SOURCE_DHCP},
             data=dhcp.DhcpServiceInfo(
                 ip="1.2.3.5",
-                macaddress="AA:BB:CC:DD:EE:FF",
+                macaddress="aabbcceeddff",
                 hostname=MOCK_GATEWAY_DIN.lower(),
             ),
         )

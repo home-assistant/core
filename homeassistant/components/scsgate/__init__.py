@@ -1,4 +1,5 @@
 """Support for SCSGate components."""
+
 import logging
 from threading import Lock
 

@@ -1,4 +1,5 @@
 """Tests for the diagnostics data provided by the VeSync integration."""
+
 from unittest.mock import patch
 
 from pyvesync.helpers import Helpers
@@ -92,10 +93,13 @@ async def test_async_get_device_diagnostics__single_fan(
         matcher=path_type(
             {
                 "home_assistant.entities.0.state.last_changed": (str,),
+                "home_assistant.entities.0.state.last_reported": (str,),
                 "home_assistant.entities.0.state.last_updated": (str,),
                 "home_assistant.entities.1.state.last_changed": (str,),
+                "home_assistant.entities.1.state.last_reported": (str,),
                 "home_assistant.entities.1.state.last_updated": (str,),
                 "home_assistant.entities.2.state.last_changed": (str,),
+                "home_assistant.entities.2.state.last_reported": (str,),
                 "home_assistant.entities.2.state.last_updated": (str,),
             }
         )

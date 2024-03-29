@@ -1,4 +1,5 @@
 """Support for device tracking of Huawei LTE routers."""
+
 from __future__ import annotations
 
 import logging
@@ -70,11 +71,10 @@ async def async_setup_entry(
     track_wired_clients = router.config_entry.options.get(
         CONF_TRACK_WIRED_CLIENTS, DEFAULT_TRACK_WIRED_CLIENTS
     )
-    for entity in registry.entities.values():
-        if (
-            entity.domain == DEVICE_TRACKER_DOMAIN
-            and entity.config_entry_id == config_entry.entry_id
-        ):
+    for entity in registry.entities.get_entries_for_config_entry_id(
+        config_entry.entry_id
+    ):
+        if entity.domain == DEVICE_TRACKER_DOMAIN:
             mac = entity.unique_id.partition("-")[2]
             # Do not add known wired clients if not tracking them (any more)
             skip = False

@@ -1,4 +1,5 @@
 """Test the NuHeat config flow."""
+
 from http import HTTPStatus
 from unittest.mock import MagicMock, patch
 
@@ -23,15 +24,19 @@ async def test_form_user(hass: HomeAssistant) -> None:
 
     mock_thermostat = _get_mock_thermostat_run()
 
-    with patch(
-        "homeassistant.components.nuheat.config_flow.nuheat.NuHeat.authenticate",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.nuheat.config_flow.nuheat.NuHeat.get_thermostat",
-        return_value=mock_thermostat,
-    ), patch(
-        "homeassistant.components.nuheat.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.nuheat.config_flow.nuheat.NuHeat.authenticate",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.nuheat.config_flow.nuheat.NuHeat.get_thermostat",
+            return_value=mock_thermostat,
+        ),
+        patch(
+            "homeassistant.components.nuheat.async_setup_entry", return_value=True
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -102,12 +107,15 @@ async def test_form_invalid_thermostat(hass: HomeAssistant) -> None:
     response_mock = MagicMock()
     type(response_mock).status_code = HTTPStatus.INTERNAL_SERVER_ERROR
 
-    with patch(
-        "homeassistant.components.nuheat.config_flow.nuheat.NuHeat.authenticate",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.nuheat.config_flow.nuheat.NuHeat.get_thermostat",
-        side_effect=requests.HTTPError(response=response_mock),
+    with (
+        patch(
+            "homeassistant.components.nuheat.config_flow.nuheat.NuHeat.authenticate",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.nuheat.config_flow.nuheat.NuHeat.get_thermostat",
+            side_effect=requests.HTTPError(response=response_mock),
+        ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],

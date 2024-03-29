@@ -1,4 +1,5 @@
 """Test BMW sensors."""
+
 from freezegun import freeze_time
 import pytest
 import respx

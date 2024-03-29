@@ -1,4 +1,5 @@
 """Test the Brunt config flow."""
+
 from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp import ClientResponseError

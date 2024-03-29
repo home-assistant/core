@@ -11,6 +11,10 @@
           "state": {
             "reverse": "mdi:rotate-left"
           }
+        },
+        "preset_mode": {
+          "default": "mdi:circle-medium",
+          "state": {}
         }
       }
     }
@@ -19,6 +23,7 @@
     "decrease_speed": "mdi:fan-minus",
     "increase_speed": "mdi:fan-plus",
     "oscillate": "mdi:arrow-oscillating",
+    "set_direction": "mdi:rotate-3d-variant",
     "set_percentage": "mdi:fan",
     "set_preset_mode": "mdi:fan-auto",
     "toggle": "mdi:fan",

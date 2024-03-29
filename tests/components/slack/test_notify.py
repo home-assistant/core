@@ -1,4 +1,5 @@
 """Test slack notifications."""
+
 from __future__ import annotations
 
 from unittest.mock import AsyncMock, Mock
