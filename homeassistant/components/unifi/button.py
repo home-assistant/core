@@ -65,7 +65,7 @@ async def async_power_cycle_port_control_fn(
 def generate_password(length=18):
     """Generate password."""
     alphabet = string.ascii_letters + string.digits
-    password = "".join(secrets.choice(alphabet) for i in range(length))
+    password = "".join(secrets.choice(alphabet) for _ in range(length))
     return password
 
 
