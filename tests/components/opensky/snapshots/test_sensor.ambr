@@ -33,9 +33,12 @@
 # ---
 # name: test_sensor_updating
   list([
+    <Event opensky_exit[L]: callsign=DLH459, altitude=0, sensor=OpenSky, longitude=None, latitude=None, icao24=None>,
   ])
 # ---
 # name: test_sensor_updating.1
   list([
+    <Event opensky_exit[L]: callsign=DLH459, altitude=0, sensor=OpenSky, longitude=None, latitude=None, icao24=None>,
+    <Event opensky_entry[L]: callsign=DLH459, altitude=12496.8, sensor=OpenSky, longitude=5.4445, latitude=52.2991, icao24=3c6708>,
   ])
 # ---
