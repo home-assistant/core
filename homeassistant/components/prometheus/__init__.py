@@ -298,7 +298,7 @@ class PrometheusMetrics:
             "domain",
             "area",
             "object_id",
-            "device_class",
+            # "device_class",
         ]
         if extra_labels is not None:
             labels.extend(extra_labels)
@@ -362,7 +362,7 @@ class PrometheusMetrics:
             "friendly_name": state.attributes.get(ATTR_FRIENDLY_NAME),
             "area": state.attributes.get(ATTR_AREA_ID) or "",
             "object_id": state.object_id,
-            "device_class": state.attributes.get(ATTR_DEVICE_CLASS) or "",
+            # "device_class": state.attributes.get(ATTR_DEVICE_CLASS) or "",
         }
 
     def _battery(self, state: State) -> None:
