@@ -7,6 +7,7 @@
     'context': <ANY>,
     'entity_id': 'switch.test_router_port_4_internet_connected',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
@@ -19,6 +20,7 @@
     'context': <ANY>,
     'entity_id': 'switch.test_router_port_4_internet_connected',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
@@ -44,6 +46,20 @@
     'context': <ANY>,
     'entity_id': 'switch.test_router_port_4_internet_connected',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_gateway_port_poe_switch
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Router Port 5 PoE',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.test_router_port_5_poe',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
@@ -56,6 +72,7 @@
     'context': <ANY>,
     'entity_id': 'switch.test_poe_switch_port_1_poe',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
@@ -101,6 +118,7 @@
     'context': <ANY>,
     'entity_id': 'switch.test_poe_switch_port_6_poe',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
@@ -146,6 +164,7 @@
     'context': <ANY>,
     'entity_id': 'switch.test_poe_switch_port_7_poe',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
@@ -191,6 +210,7 @@
     'context': <ANY>,
     'entity_id': 'switch.test_poe_switch_port_8_poe',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
@@ -236,6 +256,7 @@
     'context': <ANY>,
     'entity_id': 'switch.test_poe_switch_port_2_renamed_port_poe',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
@@ -281,6 +302,7 @@
     'context': <ANY>,
     'entity_id': 'switch.test_poe_switch_port_3_poe',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
@@ -326,6 +348,7 @@
     'context': <ANY>,
     'entity_id': 'switch.test_poe_switch_port_4_poe',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
@@ -371,6 +394,7 @@
     'context': <ANY>,
     'entity_id': 'switch.test_poe_switch_port_5_poe',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })

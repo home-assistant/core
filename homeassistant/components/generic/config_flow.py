@@ -183,14 +183,27 @@ async def async_test_still(
     except (
         TimeoutError,
         RequestError,
-        HTTPStatusError,
         TimeoutException,
     ) as err:
         _LOGGER.error("Error getting camera image from %s: %s", url, type(err).__name__)
         return {CONF_STILL_IMAGE_URL: "unable_still_load"}, None
+    except HTTPStatusError as err:
+        _LOGGER.error(
+            "Error getting camera image from %s: %s %s",
+            url,
+            type(err).__name__,
+            err.response.text,
+        )
+        if err.response.status_code in [401, 403]:
+            return {CONF_STILL_IMAGE_URL: "unable_still_load_auth"}, None
+        if err.response.status_code in [404]:
+            return {CONF_STILL_IMAGE_URL: "unable_still_load_not_found"}, None
+        if err.response.status_code in [500, 503]:
+            return {CONF_STILL_IMAGE_URL: "unable_still_load_server_error"}, None
+        return {CONF_STILL_IMAGE_URL: "unable_still_load"}, None
 
     if not image:
-        return {CONF_STILL_IMAGE_URL: "unable_still_load"}, None
+        return {CONF_STILL_IMAGE_URL: "unable_still_load_no_image"}, None
     fmt = get_image_type(image)
     _LOGGER.debug(
         "Still image at '%s' detected format: %s",
@@ -278,7 +291,7 @@ async def async_test_stream(
             return {CONF_STREAM_SOURCE: "stream_no_route_to_host"}
         if err.errno == EIO:  # input/output error
             return {CONF_STREAM_SOURCE: "stream_io_error"}
-        raise err
+        raise
     return {}
 
 

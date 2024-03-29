@@ -1,4 +1,5 @@
 """Tests for the Lutron Homeworks Series 4 and 8 integration."""
+
 from unittest.mock import ANY, MagicMock
 
 from pyhomeworks.pyhomeworks import HW_BUTTON_PRESSED, HW_BUTTON_RELEASED

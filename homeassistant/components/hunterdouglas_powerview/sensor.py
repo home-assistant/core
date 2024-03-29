@@ -62,7 +62,7 @@ SENSORS: Final = [
         native_unit_fn=lambda shade: PERCENTAGE,
         native_value_fn=lambda shade: shade.get_battery_strength(),
         create_entity_fn=lambda shade: shade.is_battery_powered(),
-        update_fn=lambda shade: shade.refresh_battery(),
+        update_fn=lambda shade: shade.refresh_battery(suppress_timeout=True),
     ),
     PowerviewSensorDescription(
         key="signal",
@@ -72,7 +72,7 @@ SENSORS: Final = [
         native_unit_fn=get_signal_native_unit,
         native_value_fn=lambda shade: shade.get_signal_strength(),
         create_entity_fn=lambda shade: shade.has_signal_strength(),
-        update_fn=lambda shade: shade.refresh(),
+        update_fn=lambda shade: shade.refresh(suppress_timeout=True),
         entity_registry_enabled_default=False,
     ),
 ]

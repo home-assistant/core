@@ -23,7 +23,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .deconz_device import DeconzDevice
-from .hub import DeconzHub, get_gateway_from_config_entry
+from .hub import DeconzHub
 
 T = TypeVar("T", Presence, PydeconzSensorBase)
 
@@ -73,13 +73,13 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the deCONZ number entity."""
-    gateway = get_gateway_from_config_entry(hass, config_entry)
-    gateway.entities[DOMAIN] = set()
+    hub = DeconzHub.get_hub(hass, config_entry)
+    hub.entities[DOMAIN] = set()
 
     @callback
     def async_add_sensor(_: EventType, sensor_id: str) -> None:
         """Add sensor from deCONZ."""
-        sensor = gateway.api.sensors.presence[sensor_id]
+        sensor = hub.api.sensors.presence[sensor_id]
 
         for description in ENTITY_DESCRIPTIONS:
             if (
@@ -87,11 +87,11 @@ async def async_setup_entry(
                 or description.value_fn(sensor) is None
             ):
                 continue
-            async_add_entities([DeconzNumber(sensor, gateway, description)])
+            async_add_entities([DeconzNumber(sensor, hub, description)])
 
-    gateway.register_platform_add_device_callback(
+    hub.register_platform_add_device_callback(
         async_add_sensor,
-        gateway.api.sensors.presence,
+        hub.api.sensors.presence,
         always_ignore_clip_sensors=True,
     )
 
@@ -105,7 +105,7 @@ class DeconzNumber(DeconzDevice[SensorResources], NumberEntity):
     def __init__(
         self,
         device: SensorResources,
-        gateway: DeconzHub,
+        hub: DeconzHub,
         description: DeconzNumberDescription,
     ) -> None:
         """Initialize deCONZ number entity."""
@@ -113,7 +113,7 @@ class DeconzNumber(DeconzDevice[SensorResources], NumberEntity):
         self.unique_id_suffix = description.key
         self._name_suffix = description.name_suffix
         self._update_key = description.update_key
-        super().__init__(device, gateway)
+        super().__init__(device, hub)
 
     @property
     def native_value(self) -> float | None:
@@ -123,7 +123,7 @@ class DeconzNumber(DeconzDevice[SensorResources], NumberEntity):
     async def async_set_native_value(self, value: float) -> None:
         """Set sensor config."""
         await self.entity_description.set_fn(
-            self.gateway.api,
+            self.hub.api,
             self._device.resource_id,
             int(value),
         )

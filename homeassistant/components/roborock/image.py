@@ -105,7 +105,6 @@ class RoborockMap(RoborockCoordinatedEntity, ImageEntity):
         parsed_map = self.parser.parse(map_bytes)
         if parsed_map.image is None:
             raise HomeAssistantError(
-                "Something went wrong creating the map",
                 translation_domain=DOMAIN,
                 translation_key="map_failure",
             )
