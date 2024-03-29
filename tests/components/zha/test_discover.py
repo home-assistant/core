@@ -1001,7 +1001,7 @@ async def test_quirks_v2_metadata_errors(
             # if the device was created we remove it
             # so we don't pollute the rest of the tests
             zigpy.quirks._DEVICE_REGISTRY.remove(zigpy_device)
-        except ValueError as e:
+        except ValueError:
             # if the device was not created we remove it
             # so we don't pollute the rest of the tests
             zigpy.quirks._DEVICE_REGISTRY._registry_v2.pop(
@@ -1010,7 +1010,7 @@ async def test_quirks_v2_metadata_errors(
                     "TRADFRI remote control4",
                 )
             )
-            raise e
+            raise
 
 
 class BadDeviceClass(enum.Enum):
