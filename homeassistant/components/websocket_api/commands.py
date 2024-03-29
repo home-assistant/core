@@ -289,7 +289,7 @@ async def handle_call_service(
             translation_placeholders=err.translation_placeholders,
         )
     except HomeAssistantError as err:
-        connection.logger.exception(err)
+        connection.logger.exception("Unexpected exception")
         connection.send_error(
             msg["id"],
             const.ERR_HOME_ASSISTANT_ERROR,
@@ -299,7 +299,7 @@ async def handle_call_service(
             translation_placeholders=err.translation_placeholders,
         )
     except Exception as err:  # pylint: disable=broad-except
-        connection.logger.exception(err)
+        connection.logger.exception("Unexpected exception")
         connection.send_error(msg["id"], const.ERR_UNKNOWN_ERROR, str(err))
 
 
