@@ -131,9 +131,12 @@ async def test_user_setup_already_configured(hass: HomeAssistant) -> None:
 
 async def test_user_no_devices(hass: HomeAssistant) -> None:
     """Test the user initiated form with valid mac."""
-    with patch_microbot_api(), patch(
-        "homeassistant.components.keymitt_ble.config_flow.async_discovered_service_info",
-        return_value=[],
+    with (
+        patch_microbot_api(),
+        patch(
+            "homeassistant.components.keymitt_ble.config_flow.async_discovered_service_info",
+            return_value=[],
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
@@ -145,9 +148,12 @@ async def test_user_no_devices(hass: HomeAssistant) -> None:
 async def test_no_link(hass: HomeAssistant) -> None:
     """Test the user initiated form with invalid response."""
 
-    with patch_microbot_api(), patch(
-        "homeassistant.components.keymitt_ble.config_flow.async_discovered_service_info",
-        return_value=[SERVICE_INFO],
+    with (
+        patch_microbot_api(),
+        patch(
+            "homeassistant.components.keymitt_ble.config_flow.async_discovered_service_info",
+            return_value=[SERVICE_INFO],
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
@@ -164,10 +170,13 @@ async def test_no_link(hass: HomeAssistant) -> None:
 
     assert result2["type"] == FlowResultType.FORM
     assert result2["step_id"] == "link"
-    with patch(
-        "homeassistant.components.keymitt_ble.config_flow.MicroBotApiClient",
-        MockMicroBotApiClientFail,
-    ), patch_async_setup_entry() as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.keymitt_ble.config_flow.MicroBotApiClient",
+            MockMicroBotApiClientFail,
+        ),
+        patch_async_setup_entry() as mock_setup_entry,
+    ):
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
             USER_INPUT,

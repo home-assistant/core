@@ -17,6 +17,7 @@ from homeassistant.components.fan import (
     SERVICE_SET_DIRECTION,
     SERVICE_SET_PERCENTAGE,
     SERVICE_SET_PRESET_MODE,
+    FanEntity,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -24,6 +25,8 @@ from homeassistant.const import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
+
+from tests.common import MockEntity
 
 
 async def async_turn_on(
@@ -146,3 +149,27 @@ async def async_set_direction(
 
     await hass.services.async_call(DOMAIN, SERVICE_SET_DIRECTION, data, blocking=True)
     await hass.async_block_till_done()
+
+
+class MockFan(MockEntity, FanEntity):
+    """Mock Fan class."""
+
+    @property
+    def preset_mode(self) -> str | None:
+        """Return preset mode."""
+        return self._handle("preset_mode")
+
+    @property
+    def preset_modes(self) -> list[str] | None:
+        """Return preset mode."""
+        return self._handle("preset_modes")
+
+    @property
+    def supported_features(self):
+        """Return the class of this fan."""
+        return self._handle("supported_features")
+
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
+        """Set preset mode."""
+        self._attr_preset_mode = preset_mode
+        self.async_write_ha_state()

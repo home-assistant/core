@@ -168,11 +168,6 @@ class MockWeatherMockForecast(MockWeather):
             }
         ]
 
-    @property
-    def forecast(self) -> list[Forecast] | None:
-        """Return the forecast."""
-        return self.forecast_list
-
     async def async_forecast_daily(self) -> list[Forecast] | None:
         """Return the forecast_daily."""
         return self.forecast_list

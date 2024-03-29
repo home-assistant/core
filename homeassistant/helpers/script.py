@@ -81,10 +81,11 @@ from homeassistant.core import (
 from homeassistant.util import slugify
 from homeassistant.util.async_ import create_eager_task
 from homeassistant.util.dt import utcnow
+from homeassistant.util.signal_type import SignalType, SignalTypeFormat
 
 from . import condition, config_validation as cv, service, template
 from .condition import ConditionCheckerType, trace_condition_function
-from .dispatcher import SignalType, async_dispatcher_connect, async_dispatcher_send
+from .dispatcher import async_dispatcher_connect, async_dispatcher_send
 from .event import async_call_later, async_track_template
 from .script_variables import ScriptVariables
 from .trace import (
@@ -155,7 +156,9 @@ _SHUTDOWN_MAX_WAIT = 60
 ACTION_TRACE_NODE_MAX_LEN = 20  # Max length of a trace node for repeated actions
 
 SCRIPT_BREAKPOINT_HIT = SignalType[str, str, str]("script_breakpoint_hit")
-SCRIPT_DEBUG_CONTINUE_STOP = "script_debug_continue_stop_{}_{}"
+SCRIPT_DEBUG_CONTINUE_STOP: SignalTypeFormat[Literal["continue", "stop"]] = (
+    SignalTypeFormat("script_debug_continue_stop_{}_{}")
+)
 SCRIPT_DEBUG_CONTINUE_ALL = "script_debug_continue_all"
 
 script_stack_cv: ContextVar[list[int] | None] = ContextVar("script_stack", default=None)
@@ -216,7 +219,9 @@ async def trace_action(
             done = hass.loop.create_future()
 
             @callback
-            def async_continue_stop(command=None):
+            def async_continue_stop(
+                command: Literal["continue", "stop"] | None = None,
+            ) -> None:
                 if command == "stop":
                     _set_result_unless_done(stop)
                 _set_result_unless_done(done)
@@ -235,16 +240,16 @@ async def trace_action(
         yield trace_element
     except _AbortScript as ex:
         trace_element.set_error(ex.__cause__ or ex)
-        raise ex
-    except _ConditionFail as ex:
+        raise
+    except _ConditionFail:
         # Clear errors which may have been set when evaluating the condition
         trace_element.set_error(None)
-        raise ex
-    except _StopScript as ex:
-        raise ex
+        raise
+    except _StopScript:
+        raise
     except Exception as ex:
         trace_element.set_error(ex)
-        raise ex
+        raise
     finally:
         trace_stack_pop(trace_stack_cv)
 
@@ -464,7 +469,7 @@ class _ScriptRun:
             if not self._script.top_level:
                 # We already consumed the response, do not pass it on
                 err.response = None
-                raise err
+                raise
         except Exception:
             script_execution_set("error")
             raise
@@ -610,6 +615,11 @@ class _ScriptRun:
 
         delay = delay_delta.total_seconds()
         self._changed()
+        if not delay:
+            # Handle an empty delay
+            trace_set_result(delay=delay, done=True)
+            return
+
         trace_set_result(delay=delay, done=False)
         futures, timeout_handle, timeout_future = self._async_futures_with_timeout(
             delay

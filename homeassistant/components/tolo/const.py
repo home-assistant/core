@@ -1,4 +1,5 @@
 """Constants for the tolo integration."""
+
 from enum import Enum
 
 from tololib import AromaTherapySlot as ToloAromaTherapySlot, LampMode as ToloLampMode

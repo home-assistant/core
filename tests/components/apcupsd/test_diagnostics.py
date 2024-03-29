@@ -1,4 +1,5 @@
 """Test APCUPSd diagnostics reporting abilities."""
+
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.core import HomeAssistant
