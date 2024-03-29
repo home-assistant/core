@@ -1,4 +1,4 @@
-"""Configure tests for egps."""
+"""Configure tests for Energenie-Power-Sockets."""
 
 from collections.abc import Generator
 from typing import Final
@@ -7,7 +7,10 @@ from unittest.mock import MagicMock, patch
 from pyegps.fakes.powerstrip import FakePowerStrip
 import pytest
 
-from homeassistant.components.egps.const import CONF_DEVICE_API_ID, DOMAIN
+from homeassistant.components.energenie_power_sockets.const import (
+    CONF_DEVICE_API_ID,
+    DOMAIN,
+)
 from homeassistant.const import CONF_NAME
 
 from tests.common import MockConfigEntry
@@ -58,8 +61,11 @@ def get_pyegps_device_mock() -> MagicMock:
 def patch_get_device(pyegps_device_mock: MagicMock) -> Generator[MagicMock, None, None]:
     """Fixture to patch the `get_device` api method."""
     with (
-        patch("homeassistant.components.egps.get_device") as m1,
-        patch("homeassistant.components.egps.config_flow.get_device", new=m1) as mock,
+        patch("homeassistant.components.energenie_power_sockets.get_device") as m1,
+        patch(
+            "homeassistant.components.energenie_power_sockets.config_flow.get_device",
+            new=m1,
+        ) as mock,
     ):
         mock.return_value = pyegps_device_mock
         yield mock
@@ -71,7 +77,7 @@ def patch_search_devices(
 ) -> Generator[MagicMock, None, None]:
     """Fixture to patch the `search_for_devices` api method."""
     with patch(
-        "homeassistant.components.egps.config_flow.search_for_devices",
+        "homeassistant.components.energenie_power_sockets.config_flow.search_for_devices",
         return_value=[pyegps_device_mock],
     ) as mock:
         yield mock

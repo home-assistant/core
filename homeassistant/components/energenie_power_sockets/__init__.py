@@ -1,4 +1,4 @@
-"""Energenie Power-Strip (EGPS) integration."""
+"""Energenie Power-Sockets (EGPS) integration."""
 
 from pyegps import PowerStripUSB, get_device
 from pyegps.exceptions import MissingLibrary, UsbError
@@ -14,7 +14,7 @@ PLATFORMS = [Platform.SWITCH]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up Energenie Powerstrip."""
+    """Set up Energenie Power Sockets."""
     try:
         powerstrip: PowerStripUSB | None = get_device(entry.data[CONF_DEVICE_API_ID])
 
@@ -23,7 +23,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     if powerstrip is None:
         raise ConfigEntryNotReady(
-            "Can't access Energenie Power Strip, will retry later."
+            "Can't access Energenie Power Sockets, will retry later."
         )
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = powerstrip

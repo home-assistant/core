@@ -1,4 +1,4 @@
-"""Switch implementation for EGPS Platform."""
+"""Switch implementation for Energenie-Power-Sockets Platform."""
 
 from typing import Any
 

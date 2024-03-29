@@ -1,13 +1,12 @@
 """Test the switch functionality."""
 
-from collections.abc import Generator
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 from pyegps.exceptions import EgpsException
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.egps.const import DOMAIN
+from homeassistant.components.energenie_power_sockets.const import DOMAIN
 from homeassistant.components.homeassistant import (
     DOMAIN as HOME_ASSISTANT_DOMAIN,
     SERVICE_UPDATE_ENTITY,
@@ -24,15 +23,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
-
-
-@pytest.fixture(name="mock_get_device")
-def patch_get_device(pyegps_device_mock: MagicMock) -> Generator[MagicMock, None, None]:
-    """Fixture to patch the `get_device` api method."""
-    with patch(
-        "homeassistant.components.egps.get_device", return_value=pyegps_device_mock
-    ) as mock:
-        yield mock
 
 
 async def _test_switch_on_off(

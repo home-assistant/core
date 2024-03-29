@@ -161,12 +161,12 @@ homeassistant.components.easyenergy.*
 homeassistant.components.ecovacs.*
 homeassistant.components.ecowitt.*
 homeassistant.components.efergy.*
-homeassistant.components.egps.*
 homeassistant.components.electrasmart.*
 homeassistant.components.electric_kiwi.*
 homeassistant.components.elgato.*
 homeassistant.components.elkm1.*
 homeassistant.components.emulated_hue.*
+homeassistant.components.energenie_power_sockets.*
 homeassistant.components.energy.*
 homeassistant.components.energyzero.*
 homeassistant.components.enigma2.*

@@ -1,9 +1,9 @@
 {
-  "title": "Energenie Power Strip Integration.",
+  "title": "Energenie Power Sockets Integration.",
   "config": {
     "step": {
       "user": {
-        "title": "Searching for EGPS Devices.",
+        "title": "Searching for Energenie-Power-Sockets Devices.",
         "description": "Choose a discovered device.",
         "data": {
           "device": "[%key:common::config_flow::data::device%]"

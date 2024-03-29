@@ -1,10 +1,13 @@
-"""Tests for egps config flow."""
+"""Tests for Energenie-Power-Sockets config flow."""
 
 from unittest.mock import MagicMock
 
 from pyegps.exceptions import UsbError
 
-from homeassistant.components.egps.const import CONF_DEVICE_API_ID, DOMAIN
+from homeassistant.components.energenie_power_sockets.const import (
+    CONF_DEVICE_API_ID,
+    DOMAIN,
+)
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType

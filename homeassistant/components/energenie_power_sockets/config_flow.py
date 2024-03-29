@@ -1,4 +1,4 @@
-"""ConfigFlow for EGPS devices."""
+"""ConfigFlow for Energenie-Power-Sockets devices."""
 
 from typing import Any
 
@@ -12,7 +12,7 @@ from .const import CONF_DEVICE_API_ID, DOMAIN, LOGGER
 
 
 class EGPSConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle the config flow for EGPM devices."""
+    """Handle the config flow for EGPS devices."""
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None

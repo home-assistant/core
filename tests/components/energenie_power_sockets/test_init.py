@@ -1,10 +1,10 @@
-"""Tests for setting up egps integration."""
+"""Tests for setting up Energenie-Power-Sockets integration."""
 
 from unittest.mock import MagicMock
 
 from pyegps.exceptions import UsbError
 
-from homeassistant.components.egps.const import DOMAIN
+from homeassistant.components.energenie_power_sockets.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
