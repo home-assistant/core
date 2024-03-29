@@ -5,16 +5,18 @@ from __future__ import annotations
 import dataclasses
 import ipaddress
 import pathlib
-from typing import cast
+from typing import Self, cast
 
 import serial.tools.list_ports
 
-from homeassistant.components import usb
+from homeassistant.components import usb, zeroconf
 from homeassistant.components.hassio import AddonError, AddonState
 from homeassistant.components.homeassistant_hardware import silabs_multiprotocol_addon
 from homeassistant.components.homeassistant_yellow import hardware as yellow_hardware
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+
+DEFAULT_ZHA_ZEROCONF_PORT = 6638
 
 
 class SerialPortMissing(Exception):
@@ -82,8 +84,13 @@ class UsbSerialPort:
         return str(self.device)
 
     @property
-    def unique_id(self) -> str:
+    def unique_id(self) -> str | None:
         """Unique ID of the serial port."""
+
+        # Without a serial number, the port cannot be considered unique
+        if self.serial_number is None:
+            return None
+
         return (
             f"UsbSerialPort:{self.vid}:{self.pid}_{self.serial_number}"
             f"_{self.manufacturer}_{self.product}"
@@ -127,6 +134,16 @@ class NetworkSerialPort:
     product: str | None = None
     manufacturer: str | None = None
 
+    @classmethod
+    def from_zeroconf(cls, service_info: zeroconf.ZeroconfServiceInfo) -> Self:
+        """Create a network serial port from a Zeroconf service."""
+        return cls(
+            host=service_info.ip_address,
+            port=service_info.port or DEFAULT_ZHA_ZEROCONF_PORT,
+            product=service_info.name,
+            manufacturer=service_info.properties.get("manufacturer", None),
+        )
+
     @property
     def path(self) -> str:
         """Path to the serial port, usable by PySerial."""
@@ -135,10 +152,6 @@ class NetworkSerialPort:
     @property
     def unique_id(self) -> str | None:
         """Unique ID of the serial port, if available."""
-        # Network serial ports pointing to raw IP addresses have no unique ID
-        if isinstance(self.host, (ipaddress.IPv4Address, ipaddress.IPv6Address)):
-            return None
-
         return f"NetworkSerialPort:{self.host}:{self.port}"
 
     def display_name(self, *, hide_device: bool = True) -> str:
@@ -283,7 +296,7 @@ async def async_serial_port_from_path(
     """Identify which serial port a specific path points to."""
     # Try to parse a network serial port first
     if path.startswith("socket://"):
-        host, network_port = path.replace("socket://", "", 1).rsplit(":", 1)
+        host, network_port = path.removeprefix("socket://").rsplit(":", 1)
 
         try:
             ip = ipaddress.ip_address(host)

@@ -150,9 +150,14 @@ def usb_serial_port(
     )
 
 
-@patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
-@patch(f"zigpy_znp.{PROBE_FUNCTION_PATH}", AsyncMock(return_value=True))
-async def test_zeroconf_discovery_znp(hass: HomeAssistant) -> None:
+@patch(
+    "homeassistant.components.zha.async_setup_entry", new=AsyncMock(return_value=True)
+)
+@patch(f"zigpy_znp.{PROBE_FUNCTION_PATH}", new=AsyncMock(return_value=True))
+@patch(
+    "zigpy.application.ControllerApplication.probe", new=AsyncMock(return_value=True)
+)
+async def test_zeroconf_discovery_znp(mock_app, hass: HomeAssistant) -> None:
     """Test zeroconf flow -- radio detected."""
     service_info = zeroconf.ZeroconfServiceInfo(
         ip_address=ip_address("192.168.1.200"),
@@ -200,9 +205,14 @@ async def test_zeroconf_discovery_znp(hass: HomeAssistant) -> None:
     }
 
 
-@patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
-@patch(f"zigpy_zigate.{PROBE_FUNCTION_PATH}")
-async def test_zigate_via_zeroconf(setup_entry_mock, hass: HomeAssistant) -> None:
+@patch(
+    "homeassistant.components.zha.async_setup_entry", new=AsyncMock(return_value=True)
+)
+@patch(f"zigpy_zigate.{PROBE_FUNCTION_PATH}", new=AsyncMock(return_value=True))
+@patch(
+    "zigpy.application.ControllerApplication.probe", new=AsyncMock(return_value=True)
+)
+async def test_zigate_via_zeroconf(mock_app, hass: HomeAssistant) -> None:
     """Test zeroconf flow -- zigate radio detected."""
     service_info = zeroconf.ZeroconfServiceInfo(
         ip_address=ip_address("192.168.1.200"),
@@ -313,7 +323,7 @@ async def test_discovery_via_zeroconf_ip_change_ignored(hass: HomeAssistant) -> 
     """Test zeroconf flow that was ignored gets updated."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id="tube_zb_gw_cc2652p2_poe",
+        unique_id="NetworkSerialPort:192.168.1.22:6638",
         source=config_entries.SOURCE_IGNORE,
     )
     entry.add_to_hass(hass)
@@ -333,9 +343,6 @@ async def test_discovery_via_zeroconf_ip_change_ignored(hass: HomeAssistant) -> 
 
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    assert entry.data[CONF_DEVICE] == {
-        CONF_DEVICE_PATH: "socket://192.168.1.22:6638",
-    }
 
 
 async def test_discovery_confirm_final_abort_if_entries(hass: HomeAssistant) -> None:
@@ -697,7 +704,7 @@ async def test_discovery_via_usb_deconz_ignored(hass: HomeAssistant) -> None:
 
 
 @patch(f"zigpy_znp.{PROBE_FUNCTION_PATH}", AsyncMock(return_value=True))
-async def test_discovery_via_usb_zha_ignored_updates(hass: HomeAssistant) -> None:
+async def test_discovery_via_usb_zha_ignored(hass: HomeAssistant) -> None:
     """Test usb flow that was ignored gets updated."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -737,9 +744,6 @@ async def test_discovery_via_usb_zha_ignored_updates(hass: HomeAssistant) -> Non
 
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    assert entry.data[CONF_DEVICE] == {
-        CONF_DEVICE_PATH: "/dev/serial/by-id/ZIGBEE",
-    }
 
 
 @patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
@@ -1236,9 +1240,12 @@ async def test_formation_strategy_form_initial_network(
     pick_radio, mock_app, hass: HomeAssistant
 ) -> None:
     """Test forming a new network, with no previous settings on the radio."""
-    mock_app.load_network_info = AsyncMock(side_effect=NetworkNotFormed())
 
-    result, port = await pick_radio(RadioType.ezsp)
+    with patch.object(
+        mock_app, "load_network_info", AsyncMock(side_effect=NetworkNotFormed())
+    ):
+        result, port = await pick_radio(RadioType.ezsp)
+
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={"next_step_id": config_flow.FORMATION_FORM_INITIAL_NETWORK},
@@ -1257,7 +1264,10 @@ async def test_onboarding_auto_formation_new_hardware(
     mock_app, hass: HomeAssistant
 ) -> None:
     """Test auto network formation with new hardware during onboarding."""
-    mock_app.load_network_info = AsyncMock(side_effect=NetworkNotFormed())
+
+    mock_app.load_network_info = AsyncMock(
+        side_effect=[NetworkNotFormed(), mock_app.load_network_info()]
+    )
     mock_app.get_device = MagicMock(return_value=MagicMock(spec=zigpy.device.Device))
     discovery_info = usb.UsbServiceInfo(
         device="/dev/ttyZIGBEE",

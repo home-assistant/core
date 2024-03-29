@@ -301,19 +301,32 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         data = {**config_entry.data}
         path = data[CONF_DEVICE][CONF_DEVICE_PATH]
 
+        # 38400 in migration version=4 was a mistake, it should have been 57600
+        if (
+            data[CONF_RADIO_TYPE] == "deconz"
+            and data[CONF_DEVICE][CONF_BAUDRATE] == 38400
+        ):
+            data[CONF_DEVICE][CONF_BAUDRATE] = 57600
+
+        # Use an explicit port in all `socket://` paths
         if path.startswith("socket://"):
             parsed = urllib.parse.urlparse(path)
             path = (
                 f"socket://{parsed.hostname}:{parsed.port or DEFAULT_ZHA_ZEROCONF_PORT}"
             )
 
+        # Find the unique serial port for the device, if one exists
         port = await async_serial_port_from_path(hass, path)
         data[CONF_DEVICE][CONF_DEVICE_PATH] = port.path
 
+        # Migrate to a unique ID derived from network settings
+        radio_mgr = ZhaRadioManager.from_config_entry(hass, config_entry)
+        await radio_mgr.async_load_network_settings()
+
         hass.config_entries.async_update_entry(
             config_entry,
+            unique_id=radio_mgr.get_unique_id(),
             data=data,
-            unique_id=port.unique_id,
             version=5,
         )
 

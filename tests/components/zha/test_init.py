@@ -1,6 +1,7 @@
 """Tests for ZHA integration init."""
 
 import asyncio
+import ipaddress
 import pathlib
 import typing
 from unittest.mock import AsyncMock, Mock, patch
@@ -18,7 +19,7 @@ from homeassistant.components.zha.core.const import (
     DOMAIN,
 )
 from homeassistant.components.zha.core.helpers import get_zha_data
-from homeassistant.components.zha.serial_port import UsbSerialPort
+from homeassistant.components.zha.serial_port import NetworkSerialPort, UsbSerialPort
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     MAJOR_VERSION,
@@ -287,6 +288,85 @@ async def test_migration_baudrate_and_flow_control(
     assert config_entry.version == 5
     assert config_entry.data[CONF_DEVICE][CONF_BAUDRATE] == new_baudrate
     assert config_entry.data[CONF_DEVICE][CONF_FLOW_CONTROL] == new_flow_control
+
+
+@pytest.mark.parametrize(
+    ("device", "port"),
+    [
+        # Device without a symlink is left alone
+        (
+            "/dev/ttyUSB0",
+            UsbSerialPort(
+                device=pathlib.PurePosixPath("/dev/ttyUSB0"),
+                resolved_device=pathlib.PurePosixPath("/dev/ttyUSB0"),
+                vid="AAAA",
+                pid="BBBB",
+                serial_number="1234",
+                product="zigbee radio",
+                manufacturer="test",
+            ),
+        ),
+        # Device with a symlink is upgraded
+        (
+            "/dev/ttyUSB0",
+            UsbSerialPort(
+                device=pathlib.PurePosixPath("/dev/serial/by-id/ZIGBEE"),
+                resolved_device=pathlib.PurePosixPath("/dev/ttyUSB0"),
+                vid="AAAA",
+                pid="BBBB",
+                serial_number="1234",
+                product="zigbee radio",
+                manufacturer="test",
+            ),
+        ),
+        # Network coordinator is given a port
+        (
+            "socket://1.2.3.4",
+            NetworkSerialPort(
+                host=ipaddress.ip_address("1.2.3.4"),
+                port=6638,
+                product="zigbee radio",
+                manufacturer="manufacturer",
+            ),
+        ),
+    ],
+)
+@patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
+async def test_migration_unique_id(
+    device: str,
+    port: UsbSerialPort | NetworkSerialPort,
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test unique ID regeneration."""
+
+    config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        config_entry,
+        unique_id="not_a_good_unique_id",
+        data={
+            **config_entry.data,
+            CONF_RADIO_TYPE: "ezsp",
+            CONF_DEVICE: {
+                CONF_BAUDRATE: 115200,
+                CONF_FLOW_CONTROL: "hardware",
+                CONF_DEVICE_PATH: device,
+            },
+        },
+        version=4,
+    )
+
+    with patch(
+        "homeassistant.components.zha.serial_port.async_list_serial_ports",
+        return_value=[port],
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.version == 5
+    assert config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH] == port.path
+    assert config_entry.unique_id != "not_a_good_unique_id"
+    assert config_entry.unique_id == "foo"
 
 
 @patch(

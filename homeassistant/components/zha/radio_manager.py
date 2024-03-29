@@ -157,6 +157,15 @@ class ZhaRadioManager:
 
         return mgr
 
+    def get_unique_id(self) -> str:
+        """Return a unique ID derived from the current network settings."""
+        assert self.current_settings is not None
+
+        return (
+            f"channel={self.current_settings.network_info.channel},"
+            f"epid={self.current_settings.network_info.extended_pan_id}"
+        )
+
     @contextlib.asynccontextmanager
     async def connect_zigpy_app(self) -> ControllerApplication:
         """Connect to the radio with the current config and then clean up."""

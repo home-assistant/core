@@ -44,6 +44,7 @@ from .radio_manager import (
     ZhaRadioManager,
 )
 from .serial_port import (
+    NetworkSerialPort,
     UsbSerialPort,
     async_list_zha_serial_ports,
     async_serial_port_from_path,
@@ -120,18 +121,7 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
 
     async def _async_create_radio_entry(self) -> ConfigFlowResult:
         """Create a config entry with the current flow state."""
-        assert self._title is not None
-        assert self._radio_mgr.radio_type is not None
-        assert self._radio_mgr.device_path is not None
-        assert self._radio_mgr.device_settings is not None
-
-        return self.async_create_entry(
-            title=self._title,
-            data={
-                CONF_DEVICE: DEVICE_SCHEMA(self._radio_mgr.device_settings),
-                CONF_RADIO_TYPE: self._radio_mgr.radio_type.name,
-            },
-        )
+        raise NotImplementedError
 
     async def async_step_choose_serial_port(
         self, user_input: dict[str, Any] | None = None
@@ -449,28 +439,6 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
 
     VERSION = 5
 
-    async def _set_unique_id_or_update_path(
-        self, unique_id: str | None, device_path: str
-    ) -> None:
-        """Set the flow's unique ID and update the device path in an ignored flow."""
-        current_entry = await self.async_set_unique_id(unique_id)
-
-        if not current_entry or unique_id is None:
-            return
-
-        if current_entry.source != SOURCE_IGNORE:
-            self._abort_if_unique_id_configured()
-        else:
-            # Only update the current entry if it is an ignored discovery
-            self._abort_if_unique_id_configured(
-                updates={
-                    CONF_DEVICE: {
-                        **current_entry.data.get(CONF_DEVICE, {}),
-                        CONF_DEVICE_PATH: device_path,
-                    },
-                }
-            )
-
     @staticmethod
     @callback
     def async_get_options_flow(
@@ -478,6 +446,27 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
     ) -> OptionsFlow:
         """Create the options flow."""
         return ZhaOptionsFlowHandler(config_entry)
+
+    async def _async_create_radio_entry(self) -> ConfigFlowResult:
+        """Create a config entry with the current flow state."""
+        assert self._title is not None
+        assert self._radio_mgr.radio_type is not None
+        assert self._radio_mgr.device_path is not None
+        assert self._radio_mgr.device_settings is not None
+
+        if self._radio_mgr.current_settings is None:
+            await self._radio_mgr.async_load_network_settings()
+
+        await self.async_set_unique_id(self._radio_mgr.get_unique_id())
+        self._abort_if_unique_id_configured()
+
+        return self.async_create_entry(
+            title=self._title,
+            data={
+                CONF_DEVICE: DEVICE_SCHEMA(self._radio_mgr.device_settings),
+                CONF_RADIO_TYPE: self._radio_mgr.radio_type.name,
+            },
+        )
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -537,7 +526,8 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
             await async_serial_port_from_path(self.hass, discovery_info.device),
         )
 
-        await self._set_unique_id_or_update_path(port.unique_id, port.path)
+        await self.async_set_unique_id(port.unique_id)
+        self._abort_if_unique_id_configured()
 
         # If they already have a discovery for deconz we ignore the usb discovery as
         # they probably want to use it there instead
@@ -548,15 +538,8 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
             if entry.source != SOURCE_IGNORE:
                 return self.async_abort(reason="not_zha_device")
 
+        self._title = port.product or port.display_name(hide_device=True)
         self._radio_mgr.device_path = port.path
-        self._title = port.product or usb.human_readable_device_name(
-            port.path,
-            port.serial_number,
-            port.manufacturer,
-            port.product,
-            port.vid,
-            port.pid,
-        )
         self.context["title_placeholders"] = {CONF_NAME: self._title}
 
         return await self.async_step_confirm()
@@ -566,31 +549,27 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
 
-        # Hostname is format: livingroom.local.
-        local_name = discovery_info.hostname[:-1]
-        port = discovery_info.port or DEFAULT_ZHA_ZEROCONF_PORT
+        port = NetworkSerialPort.from_zeroconf(discovery_info)
 
         # Fix incorrect port for older TubesZB devices
-        if "tube" in local_name and port == ESPHOME_API_PORT:
-            port = DEFAULT_ZHA_ZEROCONF_PORT
+        if "tube" in discovery_info.hostname and port.port == ESPHOME_API_PORT:
+            port.port = DEFAULT_ZHA_ZEROCONF_PORT
 
         if "radio_type" in discovery_info.properties:
-            self._radio_mgr.radio_type = self._radio_mgr.parse_radio_type(
+            self._radio_mgr.radio_type = ZhaRadioManager.parse_radio_type(
                 discovery_info.properties["radio_type"]
             )
-        elif "efr32" in local_name:
+        elif "efr32" in discovery_info.hostname:
             self._radio_mgr.radio_type = RadioType.ezsp
         else:
             self._radio_mgr.radio_type = RadioType.znp
 
-        node_name = local_name.removesuffix(".local")
-        device_path = f"socket://{discovery_info.host}:{port}"
+        await self.async_set_unique_id(port.unique_id)
+        self._abort_if_unique_id_configured()
 
-        await self._set_unique_id_or_update_path(node_name, device_path)
-
-        self.context["title_placeholders"] = {CONF_NAME: node_name}
-        self._title = device_path
-        self._radio_mgr.device_path = device_path
+        self._title = discovery_info.name
+        self._radio_mgr.device_path = port.path
+        self.context["title_placeholders"] = {CONF_NAME: self._title}
 
         return await self.async_step_confirm()
 
@@ -604,19 +583,20 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="invalid_hardware_data")
 
         name = discovery_data["name"]
-        radio_type = self._radio_mgr.parse_radio_type(discovery_data["radio_type"])
+        radio_type = ZhaRadioManager.parse_radio_type(discovery_data["radio_type"])
         device_settings = discovery_data["port"]
         device_path = device_settings[CONF_DEVICE_PATH]
 
         port = await async_serial_port_from_path(self.hass, device_path)
 
-        await self._set_unique_id_or_update_path(port.unique_id, port.path)
+        await self.async_set_unique_id(port.unique_id)
+        self._abort_if_unique_id_configured()
 
         self._title = name
         self._radio_mgr.radio_type = radio_type
         self._radio_mgr.device_path = device_path
         self._radio_mgr.device_settings = device_settings
-        self.context["title_placeholders"] = {CONF_NAME: name}
+        self.context["title_placeholders"] = {CONF_NAME: self._title}
 
         return await self.async_step_confirm()
 
@@ -689,21 +669,20 @@ class ZhaOptionsFlowHandler(BaseZhaFlow, OptionsFlow):
 
         return self.async_show_form(step_id="instruct_unplug")
 
-    async def _async_create_radio_entry(self):
-        """Re-implementation of the base flow's final step to update the config."""
-        device_settings = self._radio_mgr.device_settings.copy()
-        device_settings[CONF_DEVICE_PATH] = await self.hass.async_add_executor_job(
-            usb.get_serial_by_id, self._radio_mgr.device_path
-        )
+    async def _async_create_radio_entry(self) -> ConfigFlowResult:
+        """Implement the base flow's final step, to update the config."""
 
-        port = await async_serial_port_from_path(self.hass, self._radio_mgr.device_path)
+        assert self._radio_mgr.radio_type is not None
+
+        if self._radio_mgr.current_settings is None:
+            await self._radio_mgr.async_load_network_settings()
 
         # Avoid creating both `.options` and `.data` by directly writing `data` here
         self.hass.config_entries.async_update_entry(
             entry=self.config_entry,
-            unique_id=port.unique_id,
+            unique_id=self._radio_mgr.get_unique_id(),
             data={
-                CONF_DEVICE: device_settings,
+                CONF_DEVICE: self._radio_mgr.device_settings,
                 CONF_RADIO_TYPE: self._radio_mgr.radio_type.name,
             },
             options=self.config_entry.options,
