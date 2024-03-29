@@ -1,6 +1,5 @@
 """Support for Atlantic Pass APC DHW."""
 
-import logging
 from typing import Any, cast
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
@@ -22,8 +21,6 @@ OVERKIZ_TO_OPERATION_MODE: dict[str, str] = {
     STATE_ECO: OverkizCommandParam.MANUAL_ECO_ACTIVE,
     OverkizCommandParam.MANUAL: OverkizCommandParam.MANUAL_ECO_INACTIVE,
 }
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class AtlanticDomesticHotWaterProductionMBLComponent(OverkizEntity, WaterHeaterEntity):
