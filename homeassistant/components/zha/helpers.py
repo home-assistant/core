@@ -153,6 +153,14 @@ def get_zha_gateway(hass: HomeAssistant) -> Gateway:
     return gateway_proxy.gateway
 
 
+def get_config_entry(hass: HomeAssistant) -> ConfigEntry:
+    """Get the ZHA gateway object."""
+    if (gateway_proxy := get_zha_data(hass).gateway_proxy) is None:
+        raise ValueError("No gateway object exists to retrieve the config entry from.")
+
+    return gateway_proxy.config_entry
+
+
 def get_zha_gateway_proxy(hass: HomeAssistant) -> ZHAGatewayProxy:
     """Get the ZHA gateway object."""
     if (gateway_proxy := get_zha_data(hass).gateway_proxy) is None:

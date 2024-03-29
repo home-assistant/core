@@ -77,6 +77,7 @@ from zigpy.zcl.clusters.security import IasAce
 import zigpy.zdo.types as zdo_types
 
 from homeassistant.components import websocket_api
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_COMMAND, ATTR_ID, ATTR_NAME
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import entity_registry as er
@@ -94,6 +95,7 @@ from .const import EZSP_OVERWRITE_EUI64
 from .helpers import (
     async_cluster_exists,
     cluster_command_schema_to_vol_schema,
+    get_config_entry,
     get_zha_gateway,
 )
 
@@ -1109,7 +1111,7 @@ async def websocket_get_configuration(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Get ZHA configuration."""
-    zha_gateway = get_zha_gateway(hass)
+    config_entry: ConfigEntry = get_config_entry(hass)
     import voluptuous_serialize  # pylint: disable=import-outside-toplevel
 
     def custom_serializer(schema: Any) -> Any:
@@ -1132,9 +1134,9 @@ async def websocket_get_configuration(
         data["schemas"][section] = voluptuous_serialize.convert(
             schema, custom_serializer=custom_serializer
         )
-        data["data"][section] = zha_gateway.config_entry.options.get(
-            CUSTOM_CONFIGURATION, {}
-        ).get(section, {})
+        data["data"][section] = config_entry.options.get(CUSTOM_CONFIGURATION, {}).get(
+            section, {}
+        )
 
         # send default values for unconfigured options
         for entry in data["schemas"][section]:
@@ -1156,8 +1158,8 @@ async def websocket_update_zha_configuration(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Update the ZHA configuration."""
-    zha_gateway = get_zha_gateway(hass)
-    options = zha_gateway.config_entry.options
+    config_entry: ConfigEntry = get_config_entry(hass)
+    options = config_entry.options
     data_to_save = {**options, CUSTOM_CONFIGURATION: msg["data"]}
 
     for section, schema in ZHA_CONFIG_SCHEMAS.items():
@@ -1188,10 +1190,8 @@ async def websocket_update_zha_configuration(
         data_to_save,
     )
 
-    hass.config_entries.async_update_entry(
-        zha_gateway.config_entry, options=data_to_save
-    )
-    status = await hass.config_entries.async_reload(zha_gateway.config_entry.entry_id)
+    hass.config_entries.async_update_entry(config_entry, options=data_to_save)
+    status = await hass.config_entries.async_reload(config_entry.entry_id)
     connection.send_result(msg[ID], status)
 
 
@@ -1204,10 +1204,11 @@ async def websocket_get_network_settings(
     """Get ZHA network settings."""
     backup = async_get_active_network_settings(hass)
     zha_gateway = get_zha_gateway(hass)
+    config_entry: ConfigEntry = get_config_entry(hass)
     connection.send_result(
         msg[ID],
         {
-            "radio_type": async_get_radio_type(hass, zha_gateway.config_entry).name,
+            "radio_type": async_get_radio_type(hass, config_entry).name,
             "device": zha_gateway.application_controller.config[CONF_DEVICE],
             "settings": backup.as_dict(),
         },
