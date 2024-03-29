@@ -99,7 +99,7 @@ class MetricsTestHelper:
         device_class=None,
         positive_comparison=True,
     ):
-        device_class_label_line = cls.get_device_class_label_line(device_class)
+        device_class_label_line = cls._get_device_class_label_line(device_class)
         full_metric_string = (
             f"{metric_name}{{"
             f'area="{area or ""}",'
@@ -152,7 +152,7 @@ class MetricsTestHelper:
         action=None,
     ):
         domain = "climate"
-        device_class_label_line = cls.get_device_class_label_line(device_class)
+        device_class_label_line = cls._get_device_class_label_line(device_class)
         action_label_line = f'action="{action}",' if action else ""
         assert (
             f"{metric_name}{{"
@@ -179,7 +179,7 @@ class MetricsTestHelper:
         state=None,
     ):
         domain = "cover"
-        device_class_label_line = cls.get_device_class_label_line(device_class)
+        device_class_label_line = cls._get_device_class_label_line(device_class)
         object_id = entity_id.replace(f"{domain}.", "")
         state_label_line = f',state="{state}"' if state else ""
         assert (
@@ -207,7 +207,7 @@ class MetricsTestHelper:
         mode=None,
     ):
         domain = "humidifier"
-        device_class_label_line = cls.get_device_class_label_line(device_class)
+        device_class_label_line = cls._get_device_class_label_line(device_class)
         mode_label_line = f'mode="{mode}",' if mode else ""
         assert (
             f"{metric_name}{{"
