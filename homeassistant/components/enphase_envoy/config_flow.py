@@ -91,7 +91,7 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by zeroconf discovery."""
         current_hosts = self._async_current_hosts()
         _LOGGER.debug(
-            "Zero config ip%s processing %s, current hosts: %s",
+            "Zero config ip %s processing %s, current hosts: %s",
             discovery_info.ip_address.version,
             discovery_info.host,
             current_hosts,
