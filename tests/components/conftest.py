@@ -10,6 +10,7 @@ from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockToggleEntity
+from tests.components.conversation import MockAgent
 
 if TYPE_CHECKING:
     from tests.components.device_tracker.common import MockScanner
@@ -102,6 +103,16 @@ def tts_mutagen_mock_fixture():
     from tests.components.tts.common import tts_mutagen_mock_fixture_helper
 
     yield from tts_mutagen_mock_fixture_helper()
+
+
+@pytest.fixture(name="mock_conversation_agent")
+def mock_conversation_agent_fixture(hass: HomeAssistant) -> MockAgent:
+    """Mock a conversation agent."""
+    from tests.components.conversation.common import (
+        mock_conversation_agent_fixture_helper,
+    )
+
+    return mock_conversation_agent_fixture_helper(hass)
 
 
 @pytest.fixture(scope="session", autouse=True)
