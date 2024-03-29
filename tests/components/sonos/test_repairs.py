@@ -31,7 +31,7 @@ async def test_subscription_repair_issues(
 
     # Ensure an issue is registered on subscription failure
     async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert issue_registry.async_get_issue(DOMAIN, SUB_FAIL_ISSUE_ID)
 
     # Ensure the issue still exists after reload

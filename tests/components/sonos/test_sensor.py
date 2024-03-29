@@ -161,7 +161,7 @@ async def test_audio_input_sensor(
     type(soco).soundbar_audio_input_format = no_input_mock
 
     async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     no_input_mock.assert_called_once()
     audio_input_state = hass.states.get(audio_input_sensor.entity_id)
@@ -175,7 +175,7 @@ async def test_audio_input_sensor(
     type(soco).soundbar_audio_input_format = unpolled_mock
 
     async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     unpolled_mock.assert_not_called()
     audio_input_state = hass.states.get(audio_input_sensor.entity_id)
@@ -232,7 +232,7 @@ async def test_favorites_sensor(
         hass,
         dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
     )
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     # Trigger subscription callback for speaker discovery
     await fire_zgs_event()
