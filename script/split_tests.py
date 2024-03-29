@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 import argparse
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from math import ceil
 from pathlib import Path
 import subprocess
@@ -24,6 +24,7 @@ class Bucket:
 
     def add(self, part: TestFolder | TestFile) -> None:
         """Add tests to bucket."""
+        part.add_to_bucket()
         self.total_tests += part.total_tests
         self._paths.append(str(part.path))
 
@@ -41,7 +42,7 @@ class BucketHolder:
         self._bucket_count = bucket_count
         self._buckets: list[Bucket] = [Bucket() for _ in range(bucket_count)]
 
-    def split_tests(self, tests: TestFolder | TestFile) -> None:
+    def _split_tests(self, tests: TestFolder | TestFile) -> None:
         """Split tests into buckets."""
         smallest_bucket = min(self._buckets, key=lambda x: x.total_tests)
         if (
@@ -54,7 +55,36 @@ class BucketHolder:
             for test in sorted(
                 tests.children.values(), reverse=True, key=lambda x: x.total_tests
             ):
-                self.split_tests(test)
+                self._split_tests(test)
+
+    def _flatten(self, tests: TestFolder) -> list[TestFolder | TestFile]:
+        result: list[TestFolder | TestFile] = [tests]
+        for child in tests.children.values():
+            if isinstance(child, TestFolder):
+                result.extend(self._flatten(child))
+            else:
+                result.append(child)
+        return result
+
+    def split_tests(self, test_folder: TestFolder) -> None:
+        """Split tests into buckets."""
+        sorted_tests = sorted(
+            self._flatten(test_folder), reverse=True, key=lambda x: x.total_tests
+        )
+        for tests in sorted_tests:
+            if tests.added_to_backet:
+                # Already added to bucket
+                continue
+
+            smallest_bucket = min(self._buckets, key=lambda x: x.total_tests)
+            if (
+                smallest_bucket.total_tests + tests.total_tests < self._tests_per_bucket
+            ) or isinstance(tests, TestFile):
+                smallest_bucket.add(tests)
+
+        # verify that all tests are added to a bucket
+        if not test_folder.added_to_backet:
+            raise ValueError("Not all tests are added to a bucket")
 
     def create_ouput_file(self) -> None:
         """Create output file."""
@@ -70,6 +100,13 @@ class TestFile:
 
     total_tests: int
     path: Path
+    added_to_backet: bool = field(default=False, init=False)
+
+    def add_to_bucket(self) -> None:
+        """Add test file to bucket."""
+        if self.added_to_backet:
+            raise ValueError("Already added to bucket")
+        self.added_to_backet = True
 
     def __gt__(self, other: TestFile) -> bool:
         """Return if greater than."""
@@ -88,6 +125,18 @@ class TestFolder:
     def total_tests(self) -> int:
         """Return total tests."""
         return sum([test.total_tests for test in self.children.values()])
+
+    @property
+    def added_to_backet(self) -> bool:
+        """Return if added to bucket."""
+        return all(test.added_to_backet for test in self.children.values())
+
+    def add_to_bucket(self) -> None:
+        """Add test file to bucket."""
+        if self.added_to_backet:
+            raise ValueError("Already added to bucket")
+        for child in self.children.values():
+            child.add_to_bucket()
 
     def __repr__(self) -> str:
         """Return representation."""
