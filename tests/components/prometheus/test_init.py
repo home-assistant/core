@@ -776,12 +776,16 @@ async def test_cover(
 
     open_covers = ["cover_open", "cover_position", "cover_tilt_position"]
     for testcover in data:
+        # print(testcover)
         MetricsTestHelper._perform_cover_metric_assert(
             "cover_state",
-            f"{1.0 if cover_entities[testcover].unique_id in open_covers else 0.0}",
-            f"{cover_entities[testcover].original_name}",
+            1.0 if cover_entities[testcover].unique_id in open_covers else 0.0,
+            # f"{1.0 if cover_entities[testcover].unique_id in open_covers else 0.0}",
+            # f"{cover_entities[testcover].original_name}",
+            cover_entities[testcover].original_name,
             "",
-            f"{cover_entities[testcover].entity_id}",
+            # f"{cover_entities[testcover].unique_id}",
+            cover_entities[testcover].unique_id,
             body,
             state="open",
         )
