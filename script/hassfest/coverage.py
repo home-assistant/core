@@ -28,6 +28,7 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
     not_found: list[str] = []
     checking = False
 
+    previous_line = ""
     with coverage_path.open("rt") as fp:
         for line in fp:
             line = line.strip()
@@ -71,6 +72,13 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
                     "has tests and should not use wildcard in .coveragerc file",
                 )
 
+            # Ensure sorted
+            if line < previous_line:
+                integration.add_error(
+                    "coverage",
+                    f"{line} is unsorted in .coveragerc file",
+                )
+
             for check in DONT_IGNORE:
                 if path.parts[-1] not in {"*", check}:
                     continue
@@ -80,6 +88,9 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
                         "coverage",
                         f"{check} must not be ignored by the .coveragerc file",
                     )
+
+            # Reset previous_line for sorting
+            previous_line = line
 
     if not_found:
         raise RuntimeError(
