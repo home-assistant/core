@@ -79,7 +79,7 @@ class AtlanticDomesticHotWaterProductionMBLComponent(OverkizEntity, WaterHeaterE
         """Set new temperature."""
         temperature = kwargs[ATTR_TEMPERATURE]
         await self.executor.async_execute_command(
-            "setTargetDHWTemperature", temperature
+            OverkizCommand.SetTargetDHWTemperature, temperature
         )
 
     @property
