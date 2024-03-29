@@ -19,9 +19,9 @@ class Bucket:
     ):
         """Initialize bucket."""
         self.tests = 0
-        self._paths = []
+        self._paths: list[str] = []
 
-    def add(self, part: TestFolder | TestFile):
+    def add(self, part: TestFolder | TestFile) -> None:
         """Add tests to bucket."""
         self.tests += part.total_tests
         self._paths.append(part.path)
@@ -76,19 +76,19 @@ class BucketHolder:
 
 @dataclass
 class TestFile:
-    """Class to hold number of tests."""
+    """This class represents a single test file and its tests."""
 
     path: str
     total_tests: int
 
-    def __gt__(self, other):
+    def __gt__(self, other: TestFile) -> bool:
         """Return if greater than."""
         return self.total_tests > other.total_tests
 
 
 @dataclass
 class TestFolder:
-    """Class to hold test information."""
+    """Class to hold a folder with test files and folders."""
 
     path: str
     children: dict[str, TestFolder | TestFile] = field(default_factory=dict)
@@ -98,7 +98,7 @@ class TestFolder:
         """Return total tests."""
         return sum([test.total_tests for test in self.children.values()])
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Return representation."""
         return f"TestFolder(total={self.total_tests}, children={len(self.children)})"
 
@@ -139,13 +139,12 @@ def collect_tests(path: str) -> tuple[TestFolder, TestFile]:
     for line in result.stdout.splitlines():
         if not line.strip():
             continue
-        parts = [x.strip() for x in line.split(":")]
-        if len(parts) != 2:
+        path, _, total_tests = line.partition(": ")
+        if not path or not total_tests:
             print(f"Unexpected line: {line}")
             sys.exit(1)
 
-        path = parts[0]
-        total_tests = int(parts[1])
+        total_tests = int(total_tests)
         max_tests_in_file = max(max_tests_in_file, TestFile(path, total_tests))
 
         insert_at_correct_position(folder, path, total_tests)
