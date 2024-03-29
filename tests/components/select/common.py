@@ -8,8 +8,6 @@ from tests.common import MockEntity
 class MockSelectEntity(MockEntity, SelectEntity):
     """Mock Select class."""
 
-    _attr_current_option = None
-
     @property
     def current_option(self):
         """Return the current option of this select."""
