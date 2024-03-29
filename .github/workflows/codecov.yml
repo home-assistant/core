@@ -7,6 +7,7 @@ on: # yamllint disable-line rule:truthy
   schedule:
     # Every Monday at 4am UTC
     - cron: 0 4 * * 1
+  workflow_dispatch:
 
 env:
   GH_TOKEN: ${{ github.token }}
