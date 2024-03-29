@@ -39,59 +39,28 @@ class BucketHolder:
         """Initialize bucket holder."""
         self._tests_per_bucket = tests_per_bucket
         self._bucket_count = bucket_count
-        self._current_bucket = Bucket()
-        self._buckets: list[Bucket] = [self._current_bucket]
-        self._last_bucket = False
-
-    def _split_tests(self, tests: TestFolder | TestFile) -> bool:
-        """Split tests into buckets.
-
-        Returns True if the tests were added to the current bucket, False otherwise.
-        """
-        if (
-            self._current_bucket.total_tests + tests.total_tests
-            < self._tests_per_bucket
-        ) or self._last_bucket:
-            self._current_bucket.add(tests)
-            return True
-
-        if isinstance(tests, TestFolder):
-            previuos_added = False
-            for test in tests.children.values():
-                if self._split_tests(test):
-                    previuos_added = True
-                elif previuos_added:
-                    # Create new bucket
-                    if len(self._buckets) == self._bucket_count:
-                        # Last bucket, add all tests to it
-                        self._last_bucket = True
-                    else:
-                        self._current_bucket = Bucket()
-                        self._buckets.append(self._current_bucket)
-                    if not self._split_tests(test):
-                        # Should never happen
-                        raise ValueError(
-                            f"Failed to add test to bucket: {test}, {self._current_bucket}"
-                        )
-                    previuos_added = True
-                else:
-                    # Neither this test nor the previous one fit into the bucket
-                    return False
-
-            return previuos_added
-
-        return False
+        self._buckets: list[Bucket] = [Bucket() for _ in range(bucket_count)]
 
     def split_tests(self, tests: TestFolder | TestFile) -> None:
         """Split tests into buckets."""
-        if not self._split_tests(tests):
-            raise ValueError(f"Failed to add tests to buckets: {tests}")
+        smallest_bucket = min(self._buckets, key=lambda x: x.total_tests)
+        if (
+            smallest_bucket.total_tests + tests.total_tests < self._tests_per_bucket
+        ) or isinstance(tests, TestFile):
+            smallest_bucket.add(tests)
+            return
+
+        if isinstance(tests, TestFolder):
+            for test in sorted(
+                tests.children.values(), reverse=True, key=lambda x: x.total_tests
+            ):
+                self.split_tests(test)
 
     def create_ouput_file(self) -> None:
         """Create output file."""
         with open("pytest_buckets.txt", "w") as file:
-            for bucket in self._buckets:
-                print(f"Bucket has {bucket.total_tests} tests")
+            for idx, bucket in enumerate(self._buckets):
+                print(f"Bucket {idx+1} has {bucket.total_tests} tests")
                 file.write(bucket.get_paths_line())
 
 
@@ -99,8 +68,8 @@ class BucketHolder:
 class TestFile:
     """Class represents a single test file and the number of tests it has."""
 
-    path: Path
     total_tests: int
+    path: Path
 
     def __gt__(self, other: TestFile) -> bool:
         """Return if greater than."""
@@ -122,7 +91,9 @@ class TestFolder:
 
     def __repr__(self) -> str:
         """Return representation."""
-        return f"TestFolder(total={self.total_tests}, children={len(self.children)})"
+        return (
+            f"TestFolder(total_tests={self.total_tests}, children={len(self.children)})"
+        )
 
     def add_test_file(self, file: TestFile) -> None:
         """Add test file to folder."""
@@ -159,7 +130,7 @@ def collect_tests(path: Path) -> tuple[TestFolder, TestFile]:
         sys.exit(1)
 
     folder = TestFolder(path)
-    file_with_most_tests = TestFile(Path(), 0)
+    file_with_most_tests = TestFile(0, Path())
 
     for line in result.stdout.splitlines():
         if not line.strip():
@@ -169,7 +140,7 @@ def collect_tests(path: Path) -> tuple[TestFolder, TestFile]:
             print(f"Unexpected line: {line}")
             sys.exit(1)
 
-        file = TestFile(Path(file_path), int(total_tests))
+        file = TestFile(int(total_tests), Path(file_path))
         file_with_most_tests = max(file_with_most_tests, file)
         folder.add_test_file(file)
 
@@ -210,11 +181,6 @@ def main() -> None:
 
     tests_per_bucket = ceil(tests.total_tests / arguments.bucket_count)
     print(f"Estimated tests per bucket: {tests_per_bucket}")
-
-    if file_with_most_tests.total_tests > tests_per_bucket:
-        raise ValueError(
-            f"There are more tests in a single file ({file_with_most_tests}) than tests per bucket ({tests_per_bucket})"
-        )
 
     bucket_holder = BucketHolder(tests_per_bucket, arguments.bucket_count)
     bucket_holder.split_tests(tests)
