@@ -247,9 +247,6 @@ class Remote:
         """Handle errors from func, set available and reconnect if needed."""
         try:
             result = await self._hass.async_add_executor_job(func, *args)
-            self.state = STATE_ON
-            self.available = True
-            return result
         except EncryptionRequired:
             _LOGGER.error(
                 "The connection couldn't be encrypted. Please reconfigure your TV"
@@ -269,3 +266,7 @@ class Remote:
             _LOGGER.exception("An unknown error occurred")
             self.state = STATE_OFF
             self.available = self._on_action is not None
+        else:
+            self.state = STATE_ON
+            self.available = True
+            return result

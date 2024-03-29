@@ -188,13 +188,14 @@ class HassIOView(HomeAssistantView):
             async for data, _ in client.content.iter_chunks():
                 await response.write(data)
 
-            return response
-
         except aiohttp.ClientError as err:
             _LOGGER.error("Client error on api %s request %s", path, err)
 
         except TimeoutError:
             _LOGGER.error("Client timeout error on API request %s", path)
+
+        else:
+            return response
 
         raise HTTPBadGateway
 

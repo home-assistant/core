@@ -341,9 +341,10 @@ def _execute_or_collect_error(
     with session_scope(session=session_maker()) as session:
         try:
             session.connection().execute(text(query))
-            return True
         except SQLAlchemyError as err:
             errors.append(str(err))
+        else:
+            return True
     return False
 
 
@@ -439,11 +440,12 @@ def _add_columns(
                     )
                 )
             )
-            return
         except (InternalError, OperationalError, ProgrammingError):
             # Some engines support adding all columns at once,
             # this error is when they don't
             _LOGGER.info("Unable to use quick column add. Adding 1 by 1")
+        else:
+            return
 
     for column_def in columns_def:
         with session_scope(session=session_maker()) as session:
@@ -510,9 +512,10 @@ def _modify_columns(
                     )
                 )
             )
-            return
         except (InternalError, OperationalError):
             _LOGGER.info("Unable to use quick column modify. Modifying 1 by 1")
+        else:
+            return
 
     for column_def in columns_def:
         with session_scope(session=session_maker()) as session:

@@ -88,11 +88,12 @@ def mock_client(
             val = mock_read_char_raw[uuid]
             if isinstance(val, Exception):
                 raise val
-            return val
         except KeyError:
             if default is SENTINEL:
                 raise CharacteristicNotFound from KeyError
             return default
+        else:
+            return val
 
     def _all_char():
         return set(mock_read_char_raw.keys())

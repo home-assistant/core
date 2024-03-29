@@ -30,8 +30,8 @@ def dpt_subclass_validator(dpt_base_class: type[DPTBase]) -> Callable[[Any], str
     return dpt_value_validator
 
 
-numeric_type_validator = dpt_subclass_validator(DPTNumeric)  # type: ignore[type-abstract]
-sensor_type_validator = dpt_subclass_validator(DPTBase)  # type: ignore[type-abstract]
+numeric_type_validator = dpt_subclass_validator(DPTNumeric)
+sensor_type_validator = dpt_subclass_validator(DPTBase)
 string_type_validator = dpt_subclass_validator(DPTString)
 
 
@@ -40,11 +40,11 @@ def ga_validator(value: Any) -> str | int:
     if isinstance(value, (str, int)):
         try:
             parse_device_group_address(value)
-            return value
         except CouldNotParseAddress as exc:
             raise vol.Invalid(
                 f"'{value}' is not a valid KNX group address: {exc.message}"
             ) from exc
+        return value
     raise vol.Invalid(
         f"'{value}' is not a valid KNX group address: Invalid type '{type(value).__name__}'"
     )

@@ -364,8 +364,6 @@ class EntityPlatform:
                 await asyncio.gather(*pending)
 
             hass.config.components.add(full_name)
-            self._setup_complete = True
-            return True
         except PlatformNotReady as ex:
             tries += 1
             wait_time = min(tries, 6) * PLATFORM_NOT_READY_BASE_WAIT_TIME
@@ -417,6 +415,9 @@ class EntityPlatform:
                 self.domain,
             )
             return False
+        else:
+            self._setup_complete = True
+            return True
         finally:
             warn_task.cancel()
 

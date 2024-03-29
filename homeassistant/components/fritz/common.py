@@ -789,7 +789,6 @@ class AvmWrapper(FritzBoxTools):  # pylint: disable=hass-enforce-coordinator-mod
                     **kwargs,
                 )
             )
-            return result
         except FritzSecurityError:
             _LOGGER.exception(
                 "Authorization Error: Please check the provided credentials and"
@@ -806,6 +805,8 @@ class AvmWrapper(FritzBoxTools):  # pylint: disable=hass-enforce-coordinator-mod
                 "Connection Error: Please check the device is properly configured"
                 " for remote login"
             )
+        else:
+            return result
         return {}
 
     async def async_get_upnp_configuration(self) -> dict[str, Any]:
