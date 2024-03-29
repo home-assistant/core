@@ -78,7 +78,7 @@ hass.states.set('test.entity', data.get('name', 'not set'))
     """
 
     hass.async_add_executor_job(execute, hass, "test.py", source, {"name": "paulus"})
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.is_state("test.entity", "paulus")
 
@@ -96,7 +96,7 @@ print("This triggers warning.")
     """
 
     hass.async_add_executor_job(execute, hass, "test.py", source, {})
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert "Don't use print() inside scripts." in caplog.text
 
@@ -111,7 +111,7 @@ logger.info('Logging from inside script')
     """
 
     hass.async_add_executor_job(execute, hass, "test.py", source, {})
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert "Logging from inside script" in caplog.text
 
@@ -126,7 +126,7 @@ this is not valid Python
     """
 
     hass.async_add_executor_job(execute, hass, "test.py", source, {})
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert "Error loading script test.py" in caplog.text
 
@@ -141,7 +141,7 @@ raise Exception('boom')
     """
 
     await hass.async_add_executor_job(execute, hass, "test.py", source, {})
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert "Error executing script" in caplog.text
 

@@ -30,7 +30,7 @@ async def test_fallback_to_polling(
         ),
     ):
         async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     assert not speaker._subscriptions
     assert speaker.subscriptions_failed
@@ -46,6 +46,7 @@ async def test_subscription_creation_fails(
         side_effect=ConnectionError("Took too long"),
     ):
         await async_setup_sonos()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     speaker = list(hass.data[DATA_SONOS].discovered.values())[0]
     assert not speaker._subscriptions

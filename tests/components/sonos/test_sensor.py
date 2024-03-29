@@ -26,6 +26,7 @@ async def test_entity_registry_unsupported(
     soco.get_battery_info.side_effect = NotSupportedException
 
     await async_setup_sonos()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert "media_player.zone_a" in entity_registry.entities
     assert "sensor.zone_a_battery" not in entity_registry.entities
@@ -36,6 +37,8 @@ async def test_entity_registry_supported(
     hass: HomeAssistant, async_autosetup_sonos, soco, entity_registry: er.EntityRegistry
 ) -> None:
     """Test sonos device with battery registered in the device registry."""
+    await hass.async_block_till_done(wait_background_tasks=True)
+
     assert "media_player.zone_a" in entity_registry.entities
     assert "sensor.zone_a_battery" in entity_registry.entities
     assert "binary_sensor.zone_a_charging" in entity_registry.entities
@@ -45,6 +48,7 @@ async def test_battery_attributes(
     hass: HomeAssistant, async_autosetup_sonos, soco, entity_registry: er.EntityRegistry
 ) -> None:
     """Test sonos device with battery state."""
+    await hass.async_block_till_done(wait_background_tasks=True)
     battery = entity_registry.entities["sensor.zone_a_battery"]
     battery_state = hass.states.get(battery.entity_id)
     assert battery_state.state == "100"
@@ -69,6 +73,7 @@ async def test_battery_on_s1(
     soco.get_battery_info.return_value = {}
 
     await async_setup_sonos()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     subscription = soco.deviceProperties.subscribe.return_value
     sub_callback = subscription.callback
@@ -78,7 +83,7 @@ async def test_battery_on_s1(
 
     # Update the speaker with a callback event
     sub_callback(device_properties_event)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     battery = entity_registry.entities["sensor.zone_a_battery"]
     battery_state = hass.states.get(battery.entity_id)
@@ -101,6 +106,7 @@ async def test_device_payload_without_battery(
     soco.get_battery_info.return_value = None
 
     await async_setup_sonos()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     subscription = soco.deviceProperties.subscribe.return_value
     sub_callback = subscription.callback
@@ -109,7 +115,7 @@ async def test_device_payload_without_battery(
     device_properties_event.variables["more_info"] = bad_payload
 
     sub_callback(device_properties_event)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert bad_payload in caplog.text
 
@@ -125,6 +131,7 @@ async def test_device_payload_without_battery_and_ignored_keys(
     soco.get_battery_info.return_value = None
 
     await async_setup_sonos()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     subscription = soco.deviceProperties.subscribe.return_value
     sub_callback = subscription.callback
@@ -133,7 +140,7 @@ async def test_device_payload_without_battery_and_ignored_keys(
     device_properties_event.variables["more_info"] = ignored_payload
 
     sub_callback(device_properties_event)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert ignored_payload not in caplog.text
 
@@ -150,7 +157,7 @@ async def test_audio_input_sensor(
     subscription = soco.avTransport.subscribe.return_value
     sub_callback = subscription.callback
     sub_callback(tv_event)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     audio_input_sensor = entity_registry.entities["sensor.zone_a_audio_input_format"]
     audio_input_state = hass.states.get(audio_input_sensor.entity_id)
@@ -169,7 +176,7 @@ async def test_audio_input_sensor(
 
     # Ensure state is not polled when source is not TV and state is already "No input"
     sub_callback(no_media_event)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     unpolled_mock = PropertyMock(return_value="Will not be polled")
     type(soco).soundbar_audio_input_format = unpolled_mock
@@ -190,6 +197,7 @@ async def test_microphone_binary_sensor(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test microphone binary sensor."""
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert "binary_sensor.zone_a_microphone" in entity_registry.entities
 
     mic_binary_sensor = entity_registry.entities["binary_sensor.zone_a_microphone"]
@@ -199,7 +207,7 @@ async def test_microphone_binary_sensor(
     # Update the speaker with a callback event
     subscription = soco.deviceProperties.subscribe.return_value
     subscription.callback(device_properties_event)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     mic_binary_sensor_state = hass.states.get(mic_binary_sensor.entity_id)
     assert mic_binary_sensor_state.state == STATE_ON
@@ -213,6 +221,7 @@ async def test_favorites_sensor(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test Sonos favorites sensor."""
+    await hass.async_block_till_done(wait_background_tasks=True)
     favorites = entity_registry.entities["sensor.sonos_favorites"]
     assert hass.states.get(favorites.entity_id) is None
 
@@ -225,7 +234,7 @@ async def test_favorites_sensor(
     empty_event = SonosMockEvent(soco, service, {})
     subscription = service.subscribe.return_value
     subscription.callback(event=empty_event)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     # Reload the integration to enable the sensor
     async_fire_time_changed(
@@ -245,4 +254,4 @@ async def test_favorites_sensor(
         return_value=True,
     ):
         subscription.callback(event=favorites_updated_event)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)

@@ -13,6 +13,7 @@ async def test_device_registry(
     hass: HomeAssistant, device_registry: DeviceRegistry, async_autosetup_sonos, soco
 ) -> None:
     """Test sonos device registered in the device registry."""
+    await hass.async_block_till_done(wait_background_tasks=True)
     reg_device = device_registry.async_get_device(
         identifiers={("sonos", "RINCON_test")}
     )
