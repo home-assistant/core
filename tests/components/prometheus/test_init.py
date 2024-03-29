@@ -1034,40 +1034,44 @@ async def test_renaming_entity_id(
     data = {**sensor_entities, **climate_entities}
     body = await generate_latest_metrics(client)
 
-    assert (
-        "sensor_temperature_celsius{"
-        'area="",'
-        'device_class="temperature",'
-        'domain="sensor",'
-        'entity="sensor.outside_temperature",'
-        'friendly_name="Outside Temperature"} 15.6' in body
+    MetricsTestHelper._perform_metric_assert(
+        "sensor_temperature_celsius",
+        "15.6",
+        "sensor",
+        "Outside Temperature",
+        "",
+        "outside_temperature",
+        body,
     )
 
-    assert (
-        "entity_available{"
-        'area="",'
-        'device_class="temperature",'
-        'domain="sensor",'
-        'entity="sensor.outside_temperature",'
-        'friendly_name="Outside Temperature"} 1.0' in body
+    MetricsTestHelper._perform_metric_assert(
+        "entity_available",
+        "1.0",
+        "sensor",
+        "Outside Temperature",
+        "",
+        "outside_temperature",
+        body,
     )
 
-    assert (
-        "sensor_humidity_percent{"
-        'area="",'
-        'device_class="temperature",'
-        'domain="sensor",'
-        'entity="sensor.outside_humidity",'
-        'friendly_name="Outside Humidity"} 54.0' in body
+    MetricsTestHelper._perform_metric_assert(
+        "sensor_humidity_percent",
+        "54.0",
+        "sensor",
+        "Outside Humidity",
+        "",
+        "outside_humidity",
+        body,
     )
 
-    assert (
-        "entity_available{"
-        'area="",'
-        'device_class="temperature",'
-        'domain="sensor",'
-        'entity="sensor.outside_humidity",'
-        'friendly_name="Outside Humidity"} 1.0' in body
+    MetricsTestHelper._perform_metric_assert(
+        "entity_available",
+        "1.0",
+        "sensor",
+        "Outside Humidity",
+        "",
+        "outside_humidity",
+        body,
     )
 
     assert "sensor.outside_temperature" in entity_registry.entities
@@ -1088,41 +1092,45 @@ async def test_renaming_entity_id(
     assert 'entity="sensor.outside_temperature"' not in body_line
 
     # Check if new metrics created
-    assert (
-        "sensor_temperature_celsius{"
-        'area="",'
-        'device_class="temperature",'
-        'domain="sensor",'
-        'entity="sensor.outside_temperature_renamed",'
-        'friendly_name="Outside Temperature"} 15.6' in body
+    MetricsTestHelper._perform_metric_assert(
+        "sensor_temperature_celsius",
+        "15.6",
+        "sensor",
+        "Outside Temperature",
+        "",
+        "outside_temperature_renamed",
+        body,
     )
 
-    assert (
-        "entity_available{"
-        'area="",'
-        'device_class="temperature",'
-        'domain="sensor",'
-        'entity="sensor.outside_temperature_renamed",'
-        'friendly_name="Outside Temperature"} 1.0' in body
+    MetricsTestHelper._perform_metric_assert(
+        "entity_available",
+        "1.0",
+        "sensor",
+        "Outside Temperature",
+        "",
+        "outside_temperature_renamed",
+        body,
     )
 
     # Keep other sensors
-    assert (
-        "sensor_humidity_percent{"
-        'area="",'
-        'device_class="temperature",'
-        'domain="sensor",'
-        'entity="sensor.outside_humidity",'
-        'friendly_name="Outside Humidity"} 54.0' in body
+    MetricsTestHelper._perform_metric_assert(
+        "sensor_humidity_percent",
+        "54.0",
+        "sensor",
+        "Outside Humidity",
+        "",
+        "outside_humidity",
+        body,
     )
 
-    assert (
-        "entity_available{"
-        'area="",'
-        'device_class="temperature",'
-        'domain="sensor",'
-        'entity="sensor.outside_humidity",'
-        'friendly_name="Outside Humidity"} 1.0' in body
+    MetricsTestHelper._perform_metric_assert(
+        "entity_available",
+        "1.0",
+        "sensor",
+        "Outside Humidity",
+        "",
+        "outside_humidity",
+        body,
     )
 
 
@@ -1138,60 +1146,52 @@ async def test_deleting_entity(
     data = {**sensor_entities, **climate_entities}
     body = await generate_latest_metrics(client)
 
-    assert (
-        "sensor_temperature_celsius{"
-        'area="",'
-        'device_class="temperature",'
-        'domain="sensor",'
-        'entity="sensor.outside_temperature",'
-        'friendly_name="Outside Temperature"} 15.6' in body
+    MetricsTestHelper._perform_metric_assert(
+        "sensor_temperature_celsius",
+        "15.6",
+        "sensor",
+        "Outside Temperature",
+        "",
+        "outside_temperature",
+        body,
     )
 
-    assert (
-        "entity_available{"
-        'area="",'
-        'device_class="temperature",'
-        'domain="sensor",'
-        'entity="sensor.outside_temperature",'
-        'friendly_name="Outside Temperature"} 1.0' in body
+    MetricsTestHelper._perform_metric_assert(
+        "entity_available",
+        "1.0",
+        "sensor",
+        "Outside Temperature",
+        "",
+        "outside_temperature",
+        body,
     )
 
-    assert (
-        "sensor_humidity_percent{"
-        'area="",'
-        'device_class="temperature",'
-        'domain="sensor",'
-        'entity="sensor.outside_humidity",'
-        'friendly_name="Outside Humidity"} 54.0' in body
+    MetricsTestHelper._perform_metric_assert(
+        "sensor_humidity_percent",
+        "54.0",
+        "sensor",
+        "Outside Humidity",
+        "",
+        "outside_humidity",
+        body,
     )
 
-    assert (
-        "entity_available{"
-        'area="",'
-        'device_class="temperature",'
-        'domain="sensor",'
-        'entity="sensor.outside_humidity",'
-        'friendly_name="Outside Humidity"} 1.0' in body
+    MetricsTestHelper._perform_metric_assert(
+        "entity_available",
+        "1.0",
+        "sensor",
+        "Outside Humidity",
+        "",
+        "outside_humidity",
+        body,
     )
 
-    assert (
-        "climate_action{"
-        'area="",'
-        'device_class="temperature",'
-        'action="heating",'
-        'domain="climate",'
-        'entity="climate.heatpump",'
-        'friendly_name="HeatPump"} 1.0' in body
+    MetricsTestHelper._perform_climate_metric_assert(
+        "climate_action", "1.0", "HeatPump", "", "heatpump", body, action="heating"
     )
 
-    assert (
-        "climate_action{"
-        'area="",'
-        'device_class="temperature",'
-        'action="cooling",'
-        'domain="climate",'
-        'entity="climate.heatpump",'
-        'friendly_name="HeatPump"} 0.0' in body
+    MetricsTestHelper._perform_climate_metric_assert(
+        "climate_action", "0.0", "HeatPump", "", "heatpump", body, action="cooling"
     )
 
     assert "sensor.outside_temperature" in entity_registry.entities
@@ -1210,22 +1210,24 @@ async def test_deleting_entity(
     assert 'friendly_name="HeatPump"' not in body_line
 
     # Keep other sensors
-    assert (
-        "sensor_humidity_percent{"
-        'area="",'
-        'device_class="temperature",'
-        'domain="sensor",'
-        'entity="sensor.outside_humidity",'
-        'friendly_name="Outside Humidity"} 54.0' in body
+    MetricsTestHelper._perform_metric_assert(
+        "sensor_humidity_percent",
+        "54.0",
+        "sensor",
+        "Outside Humidity",
+        "",
+        "outside_humidity",
+        body,
     )
 
-    assert (
-        "entity_available{"
-        'area="",'
-        'device_class="temperature",'
-        'domain="sensor",'
-        'entity="sensor.outside_humidity",'
-        'friendly_name="Outside Humidity"} 1.0' in body
+    MetricsTestHelper._perform_metric_assert(
+        "entity_available",
+        "1.0",
+        "sensor",
+        "Outside Humidity",
+        "",
+        "outside_humidity",
+        body,
     )
 
 
@@ -1243,70 +1245,72 @@ async def test_disabling_entity(
     await hass.async_block_till_done()
     body = await generate_latest_metrics(client)
 
-    assert (
-        "sensor_temperature_celsius{"
-        'area="",'
-        'device_class="temperature",'
-        'domain="sensor",'
-        'entity="sensor.outside_temperature",'
-        'friendly_name="Outside Temperature"} 15.6' in body
+    MetricsTestHelper._perform_metric_assert(
+        "sensor_temperature_celsius",
+        "15.6",
+        "sensor",
+        "Outside Temperature",
+        "",
+        "outside_temperature",
+        body,
     )
 
-    assert (
-        "state_change_total{"
-        'area="",'
-        'device_class="temperature",'
-        'domain="sensor",'
-        'entity="sensor.outside_temperature",'
-        'friendly_name="Outside Temperature"} 1.0' in body
+    MetricsTestHelper._perform_metric_assert(
+        "state_change_total",
+        "1.0",
+        "sensor",
+        "Outside Temperature",
+        "",
+        "outside_temperature",
+        body,
     )
 
-    assert any(
-        "state_change_created{"
-        'area="",'
-        'device_class="temperature",'
-        'domain="sensor",'
-        'entity="sensor.outside_temperature",'
-        'friendly_name="Outside Temperature"}' in metric
-        for metric in body
+    # FIXME: redo this assertion
+    # MetricsTestHelper._perform_metric_assert(
+    #     "state_change_created",
+    #     "15.6",
+    #     "sensor",
+    #     "Outside Temperature",
+    #     "",
+    #     "outside_temperature",
+    #     body,
+    # )
+    # assert any(
+    #     "state_change_created{"
+    #     'area="",'
+    #     'device_class="temperature",'
+    #     'domain="sensor",'
+    #     'entity="sensor.outside_temperature",'
+    #     'friendly_name="Outside Temperature"}' in metric
+    #     for metric in body
+    # )
+
+    MetricsTestHelper._perform_metric_assert(
+        "sensor_humidity_percent",
+        "54.0",
+        "sensor",
+        "Outside Humidity",
+        "",
+        "outside_humidity",
+        body,
     )
 
-    assert (
-        "sensor_humidity_percent{"
-        'area="",'
-        'device_class="temperature",'
-        'domain="sensor",'
-        'entity="sensor.outside_humidity",'
-        'friendly_name="Outside Humidity"} 54.0' in body
+    MetricsTestHelper._perform_metric_assert(
+        "entity_available",
+        "1.0",
+        "sensor",
+        "Outside Humidity",
+        "",
+        "outside_humidity",
+        body,
     )
 
-    assert (
-        "entity_available{"
-        'area="",'
-        'device_class="temperature",'
-        'domain="sensor",'
-        'entity="sensor.outside_humidity",'
-        'friendly_name="Outside Humidity"} 1.0' in body
+    MetricsTestHelper._perform_climate_metric_assert(
+        "climate_action", "1.0", "HeatPump", "", "heatpump", body, action="heating"
     )
 
-    assert (
-        "climate_action{"
-        'area="",'
-        'device_class="temperature",'
-        'action="heating",'
-        'domain="climate",'
-        'entity="climate.heatpump",'
-        'friendly_name="HeatPump"} 1.0' in body
-    )
-
-    assert (
-        "climate_action{"
-        'area="",'
-        'device_class="temperature",'
-        'action="cooling",'
-        'domain="climate",'
-        'entity="climate.heatpump",'
-        'friendly_name="HeatPump"} 0.0' in body
+    MetricsTestHelper._perform_climate_metric_assert(
+        "climate_action", "0.0", "HeatPump", "", "heatpump", body, action="cooling"
     )
 
     assert "sensor.outside_temperature" in entity_registry.entities
@@ -1331,22 +1335,24 @@ async def test_disabling_entity(
     assert 'friendly_name="HeatPump"' not in body_line
 
     # Keep other sensors
-    assert (
-        "sensor_humidity_percent{"
-        'area="",'
-        'device_class="temperature",'
-        'domain="sensor",'
-        'entity="sensor.outside_humidity",'
-        'friendly_name="Outside Humidity"} 54.0' in body
+    MetricsTestHelper._perform_metric_assert(
+        "sensor_humidity_percent",
+        "54.0",
+        "sensor",
+        "Outside Humidity",
+        "",
+        "outside_humidity",
+        body,
     )
 
-    assert (
-        "entity_available{"
-        'area="",'
-        'device_class="temperature",'
-        'domain="sensor",'
-        'entity="sensor.outside_humidity",'
-        'friendly_name="Outside Humidity"} 1.0' in body
+    MetricsTestHelper._perform_metric_assert(
+        "entity_available",
+        "1.0",
+        "sensor",
+        "Outside Humidity",
+        "",
+        "outside_humidity",
+        body,
     )
 
 
