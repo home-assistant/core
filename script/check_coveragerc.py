@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Remove lines from .coveragerc if they are at 100% coverage.
+"""Remove lines from .coveragerc if they are >THRESHOLD% coverage.
 
 Runs the full test suite and works out if any lines in .coveragerc
 don't need to be there.
