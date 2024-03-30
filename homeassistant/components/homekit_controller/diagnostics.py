@@ -52,6 +52,7 @@ def _async_get_diagnostics_for_device(
     data["manfacturer"] = device.manufacturer
     data["sw_version"] = device.sw_version
     data["hw_version"] = device.hw_version
+    data["serial_number"] = device.serial_number
 
     entities = data["entities"] = []
 
