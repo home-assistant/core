@@ -36,6 +36,7 @@ from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_LOW,
 )
 from homeassistant.components.humidifier import ATTR_AVAILABLE_MODES
+from homeassistant.components.prometheus import PrometheusMetrics
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
@@ -116,6 +117,25 @@ async def generate_latest_metrics(client):
     assert len(body) > 3
 
     return body
+
+
+@pytest.mark.parametrize("namespace", [""])
+async def test_metrics_labels_list(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    entity_registry: er.EntityRegistry,
+    namespace: str,
+) -> None:
+    """Test that the common labels list is as expected."""
+    expected_list = [
+        "entity",
+        "friendly_name",
+        "domain",
+        "area",
+        "object_id",
+        "device_class",
+    ]
+    assert expected_list == PrometheusMetrics._get_label_keys()
 
 
 @pytest.mark.parametrize("namespace", [""])

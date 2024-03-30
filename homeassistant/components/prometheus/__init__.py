@@ -288,8 +288,8 @@ class PrometheusMetrics:
             except (ValueError, TypeError):
                 pass
 
+    @staticmethod
     def _get_label_keys(
-        self,
         extra_labels: list[str] | None = None,
     ) -> list[str]:
         labels = [
