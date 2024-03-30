@@ -38,11 +38,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant, State, callback
-<<<<<<< HEAD
-from homeassistant.exceptions import HomeAssistantError
-=======
-from homeassistant.exceptions import TemplateError
->>>>>>> a123fe0006 (Add value templates for sensor group)
+from homeassistant.exceptions import HomeAssistantError, TemplateError
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity import (
     get_capability,
@@ -50,15 +46,12 @@ from homeassistant.helpers.entity import (
     get_unit_of_measurement,
 )
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-<<<<<<< HEAD
 from homeassistant.helpers.issue_registry import (
     IssueSeverity,
     async_create_issue,
     async_delete_issue,
 )
-=======
 from homeassistant.helpers.template import Template
->>>>>>> a123fe0006 (Add value templates for sensor group)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 
 from .const import CONF_IGNORE_NON_NUMERIC, DOMAIN as GROUP_DOMAIN
@@ -369,13 +362,9 @@ class SensorGroup(GroupEntity, SensorEntity):
             self._attr_name = f"{DEFAULT_NAME} {sensor_type}".capitalize()
         self._attr_extra_state_attributes = {ATTR_ENTITY_ID: entity_ids}
         self._attr_unique_id = unique_id
-<<<<<<< HEAD
         self._ignore_non_numeric = ignore_non_numeric
         self.mode = all if ignore_non_numeric is False else any
-=======
-        self.mode = all if mode is False else any
         self.value_template = value_template
->>>>>>> a123fe0006 (Add value templates for sensor group)
         self._state_calc: Callable[
             [SensorGroup, list[tuple[str, float, State]]],
             tuple[dict[str, str | None], float | None],

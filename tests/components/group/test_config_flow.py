@@ -138,24 +138,19 @@ async def test_config_flow(
 
 
 @pytest.mark.parametrize(
-<<<<<<< HEAD
-    ("hide_members", "hidden_by"), [(False, None), (True, "integration")]
-=======
-    ("group_type", "member_state", "member_attributes", "extra_input", "error"),
-    (("sensor", "20.0", {}, {"type": "template"}, "missing_value_template"),),
+    ("group_type", "member_state", "error"),
+    [("sensor", "20.0", "missing_value_template")],
 )
-async def test_config_flow_errors(
+async def test_missing_value_template(
     hass: HomeAssistant,
     group_type,
     member_state,
-    member_attributes,
-    extra_input,
     error,
 ) -> None:
     """Test errors in the config flow."""
     members = [f"{group_type}.one", f"{group_type}.two"]
     for member in members:
-        hass.states.async_set(member, member_state, member_attributes)
+        hass.states.async_set(member, member_state, {})
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -178,7 +173,7 @@ async def test_config_flow_errors(
             {
                 "name": "Living Room",
                 "entities": members,
-                **extra_input,
+                "type": "template",
             },
         )
         await hass.async_block_till_done()
@@ -188,8 +183,7 @@ async def test_config_flow_errors(
 
 
 @pytest.mark.parametrize(
-    ("hide_members", "hidden_by"), ((False, None), (True, "integration"))
->>>>>>> a123fe0006 (Add value templates for sensor group)
+    ("hide_members", "hidden_by"), [(False, None), (True, "integration")]
 )
 @pytest.mark.parametrize(
     ("group_type", "extra_input"),
