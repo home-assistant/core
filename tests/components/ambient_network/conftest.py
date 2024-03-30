@@ -52,12 +52,15 @@ def mock_open_api() -> OpenAPI:
 @pytest.fixture(name="aioambient")
 async def mock_aioambient(open_api: OpenAPI):
     """Mock aioambient library."""
-    with patch(
-        "homeassistant.components.ambient_network.config_flow.OpenAPI",
-        return_value=open_api,
-    ), patch(
-        "homeassistant.components.ambient_network.OpenAPI",
-        return_value=open_api,
+    with (
+        patch(
+            "homeassistant.components.ambient_network.config_flow.OpenAPI",
+            return_value=open_api,
+        ),
+        patch(
+            "homeassistant.components.ambient_network.OpenAPI",
+            return_value=open_api,
+        ),
     ):
         yield
 
