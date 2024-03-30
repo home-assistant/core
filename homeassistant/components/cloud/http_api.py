@@ -135,12 +135,12 @@ def _handle_cloud_errors(
         """Handle exceptions that raise from the wrapped request handler."""
         try:
             result = await handler(view, request, *args, **kwargs)
-            return result
         except Exception as err:  # pylint: disable=broad-except
             status, msg = _process_cloud_exception(err, request.path)
             return view.json_message(
                 msg, status_code=status, message_code=err.__class__.__name__.lower()
             )
+        return result
 
     return error_handler
 

@@ -714,8 +714,7 @@ ignore = [
     # temporarily disabled
     "PT019",
     "TRY002",
-    "TRY301",
-    "TRY300"
+    "TRY301"
 ]
 
 [tool.ruff.lint.flake8-import-conventions.extend-aliases]
