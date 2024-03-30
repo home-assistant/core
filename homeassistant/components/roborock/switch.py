@@ -60,16 +60,18 @@ SWITCH_DESCRIPTIONS: list[RoborockSwitchDescription] = [
     ),
     RoborockSwitchDescription(
         cache_key=CacheableAttribute.dnd_timer,
-        update_value=lambda cache, value: cache.update_value(
-            [
-                cache.value.get("start_hour"),
-                cache.value.get("start_minute"),
-                cache.value.get("end_hour"),
-                cache.value.get("end_minute"),
-            ]
-        )
-        if value
-        else cache.close_value(),
+        update_value=lambda cache, value: (
+            cache.update_value(
+                [
+                    cache.value.get("start_hour"),
+                    cache.value.get("start_minute"),
+                    cache.value.get("end_hour"),
+                    cache.value.get("end_minute"),
+                ]
+            )
+            if value
+            else cache.close_value()
+        ),
         attribute="enabled",
         key="dnd_switch",
         translation_key="dnd_switch",
@@ -77,16 +79,18 @@ SWITCH_DESCRIPTIONS: list[RoborockSwitchDescription] = [
     ),
     RoborockSwitchDescription(
         cache_key=CacheableAttribute.valley_electricity_timer,
-        update_value=lambda cache, value: cache.update_value(
-            [
-                cache.value.get("start_hour"),
-                cache.value.get("start_minute"),
-                cache.value.get("end_hour"),
-                cache.value.get("end_minute"),
-            ]
-        )
-        if value
-        else cache.close_value(),
+        update_value=lambda cache, value: (
+            cache.update_value(
+                [
+                    cache.value.get("start_hour"),
+                    cache.value.get("start_minute"),
+                    cache.value.get("end_hour"),
+                    cache.value.get("end_minute"),
+                ]
+            )
+            if value
+            else cache.close_value()
+        ),
         attribute="enabled",
         key="off_peak_switch",
         translation_key="off_peak_switch",

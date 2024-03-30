@@ -419,10 +419,12 @@ class ISYBinarySensorHeartbeat(ISYNodeEntity, BinarySensorEntity, RestoreEntity)
     def __init__(
         self,
         node: Node,
-        parent_device: ISYInsteonBinarySensorEntity
-        | ISYBinarySensorEntity
-        | ISYBinarySensorHeartbeat
-        | ISYBinarySensorProgramEntity,
+        parent_device: (
+            ISYInsteonBinarySensorEntity
+            | ISYBinarySensorEntity
+            | ISYBinarySensorHeartbeat
+            | ISYBinarySensorProgramEntity
+        ),
         device_info: DeviceInfo | None = None,
     ) -> None:
         """Initialize the ISY binary sensor device.

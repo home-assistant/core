@@ -31,13 +31,16 @@ def get_instance_from_options(
         port=int(options[CONF_PORT]),
     )
 
-    return WebminInstance(
-        session=async_create_clientsession(
-            hass,
-            verify_ssl=options[CONF_VERIFY_SSL],
-            base_url=base_url,
-        )
-    ), base_url
+    return (
+        WebminInstance(
+            session=async_create_clientsession(
+                hass,
+                verify_ssl=options[CONF_VERIFY_SSL],
+                base_url=base_url,
+            )
+        ),
+        base_url,
+    )
 
 
 def get_sorted_mac_addresses(data: dict[str, Any]) -> list[str]:

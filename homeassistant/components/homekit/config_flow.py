@@ -188,10 +188,12 @@ async def _async_name_to_type_map(hass: HomeAssistant) -> dict[str, str]:
     """Create a mapping of types of devices/entities HomeKit can support."""
     integrations = await async_get_integrations(hass, SUPPORTED_DOMAINS)
     return {
-        domain: integration_or_exception.name
-        if (integration_or_exception := integrations[domain])
-        and not isinstance(integration_or_exception, Exception)
-        else domain
+        domain: (
+            integration_or_exception.name
+            if (integration_or_exception := integrations[domain])
+            and not isinstance(integration_or_exception, Exception)
+            else domain
+        )
         for domain in SUPPORTED_DOMAINS
     }
 

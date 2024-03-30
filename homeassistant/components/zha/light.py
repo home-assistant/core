@@ -949,9 +949,11 @@ class Light(BaseLight, ZhaEntity):
                     current_saturation = results.get("current_saturation")
                     if current_hue is not None and current_saturation is not None:
                         self._attr_hs_color = (
-                            int(current_hue * 360 / 65535)
-                            if self._color_cluster_handler.enhanced_hue_supported
-                            else int(current_hue * 360 / 254),
+                            (
+                                int(current_hue * 360 / 65535)
+                                if self._color_cluster_handler.enhanced_hue_supported
+                                else int(current_hue * 360 / 254)
+                            ),
                             int(current_saturation / 2.54),
                         )
                         self._attr_xy_color = None

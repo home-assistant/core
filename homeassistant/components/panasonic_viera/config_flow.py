@@ -87,15 +87,19 @@ class PanasonicVieraConfigFlow(ConfigFlow, domain=DOMAIN):
                 {
                     vol.Required(
                         CONF_HOST,
-                        default=self._data[CONF_HOST]
-                        if self._data[CONF_HOST] is not None
-                        else "",
+                        default=(
+                            self._data[CONF_HOST]
+                            if self._data[CONF_HOST] is not None
+                            else ""
+                        ),
                     ): str,
                     vol.Optional(
                         CONF_NAME,
-                        default=self._data[CONF_NAME]
-                        if self._data[CONF_NAME] is not None
-                        else DEFAULT_NAME,
+                        default=(
+                            self._data[CONF_NAME]
+                            if self._data[CONF_NAME] is not None
+                            else DEFAULT_NAME
+                        ),
                     ): str,
                 }
             ),

@@ -37,11 +37,13 @@ class XiaomiActiveBluetoothProcessorCoordinator(ActiveBluetoothProcessorCoordina
         needs_poll_method: Callable[[BluetoothServiceInfoBleak, float | None], bool],
         device_data: XiaomiBluetoothDeviceData,
         discovered_event_classes: set[str],
-        poll_method: Callable[
-            [BluetoothServiceInfoBleak],
-            Coroutine[Any, Any, Any],
-        ]
-        | None = None,
+        poll_method: (
+            Callable[
+                [BluetoothServiceInfoBleak],
+                Coroutine[Any, Any, Any],
+            ]
+            | None
+        ) = None,
         poll_debouncer: Debouncer[Coroutine[Any, Any, None]] | None = None,
         entry: ConfigEntry,
         connectable: bool = True,

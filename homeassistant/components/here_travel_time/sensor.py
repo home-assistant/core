@@ -115,8 +115,9 @@ class HERETravelTimeSensor(
         unique_id_prefix: str,
         name: str,
         sensor_description: SensorEntityDescription,
-        coordinator: HERERoutingDataUpdateCoordinator
-        | HERETransitDataUpdateCoordinator,
+        coordinator: (
+            HERERoutingDataUpdateCoordinator | HERETransitDataUpdateCoordinator
+        ),
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)

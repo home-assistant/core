@@ -1687,9 +1687,11 @@ class ConfigEntries:
                 # New in 0.104
                 unique_id=entry.get("unique_id"),
                 # New in 2021.3
-                disabled_by=ConfigEntryDisabler(entry["disabled_by"])
-                if entry.get("disabled_by")
-                else None,
+                disabled_by=(
+                    ConfigEntryDisabler(entry["disabled_by"])
+                    if entry.get("disabled_by")
+                    else None
+                ),
                 # New in 2021.6
                 pref_disable_new_entities=pref_disable_new_entities,
                 pref_disable_polling=entry.get("pref_disable_polling"),

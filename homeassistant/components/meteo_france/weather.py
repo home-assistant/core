@@ -188,9 +188,11 @@ class MeteoFranceWeather(
                         ATTR_FORECAST_NATIVE_TEMP: forecast["T"]["value"],
                         ATTR_FORECAST_NATIVE_PRECIPITATION: forecast["rain"].get("1h"),
                         ATTR_FORECAST_NATIVE_WIND_SPEED: forecast["wind"]["speed"],
-                        ATTR_FORECAST_WIND_BEARING: forecast["wind"]["direction"]
-                        if forecast["wind"]["direction"] != -1
-                        else None,
+                        ATTR_FORECAST_WIND_BEARING: (
+                            forecast["wind"]["direction"]
+                            if forecast["wind"]["direction"] != -1
+                            else None
+                        ),
                     }
                 )
         else:

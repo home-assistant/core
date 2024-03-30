@@ -65,8 +65,9 @@ def mock_responses(
     fixture_set: str = "symo",
     inverter_ids: list[str | int] = [1],
     night: bool = False,
-    override_data: dict[str, list[tuple[list[str], Any]]]
-    | None = None,  # {filename: [([list of nested keys], patch_value)]}
+    override_data: (
+        dict[str, list[tuple[list[str], Any]]] | None
+    ) = None,  # {filename: [([list of nested keys], patch_value)]}
 ) -> None:
     """Mock responses for Fronius devices."""
     aioclient_mock.clear_requests()

@@ -148,9 +148,9 @@ def cluster_command_schema_to_vol_schema(schema: CommandSchema) -> vol.Schema:
     """Convert a cluster command schema to a voluptuous schema."""
     return vol.Schema(
         {
-            vol.Optional(field.name)
-            if field.optional
-            else vol.Required(field.name): schema_type_to_vol(field.type)
+            (
+                vol.Optional(field.name) if field.optional else vol.Required(field.name)
+            ): schema_type_to_vol(field.type)
             for field in schema.fields
         }
     )
@@ -508,9 +508,11 @@ def validate_device_class(
 
 
 def validate_device_class(
-    device_class_enum: type[BinarySensorDeviceClass]
-    | type[SensorDeviceClass]
-    | type[NumberDeviceClass],
+    device_class_enum: (
+        type[BinarySensorDeviceClass]
+        | type[SensorDeviceClass]
+        | type[NumberDeviceClass]
+    ),
     metadata_value: enum.Enum,
     platform: str,
     logger: logging.Logger,

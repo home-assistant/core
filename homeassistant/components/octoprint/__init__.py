@@ -175,9 +175,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     connector = aiohttp.TCPConnector(
         force_close=True,
-        ssl=get_default_no_verify_context()
-        if not entry.data[CONF_VERIFY_SSL]
-        else get_default_context(),
+        ssl=(
+            get_default_no_verify_context()
+            if not entry.data[CONF_VERIFY_SSL]
+            else get_default_context()
+        ),
     )
     session = aiohttp.ClientSession(connector=connector)
 

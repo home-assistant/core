@@ -138,9 +138,11 @@ class RuckusAjaxApiPatchContext:
                 RuckusAjaxApi,
                 "get_system_info",
                 new=AsyncMock(
-                    return_value=DEFAULT_SYSTEM_INFO
-                    if self.system_info is None
-                    else self.system_info
+                    return_value=(
+                        DEFAULT_SYSTEM_INFO
+                        if self.system_info is None
+                        else self.system_info
+                    )
                 ),
             )
         )
@@ -149,9 +151,9 @@ class RuckusAjaxApiPatchContext:
                 RuckusAjaxApi,
                 "get_mesh_info",
                 new=AsyncMock(
-                    return_value=DEFAULT_MESH_INFO
-                    if self.mesh_info is None
-                    else self.mesh_info
+                    return_value=(
+                        DEFAULT_MESH_INFO if self.mesh_info is None else self.mesh_info
+                    )
                 ),
             )
         )
@@ -159,12 +161,16 @@ class RuckusAjaxApiPatchContext:
             patch.object(
                 RuckusAjaxApi,
                 "get_active_clients",
-                new=self.active_clients
-                if isinstance(self.active_clients, AsyncMock)
-                else AsyncMock(
-                    return_value=[TEST_CLIENT]
-                    if self.active_clients is None
-                    else self.active_clients
+                new=(
+                    self.active_clients
+                    if isinstance(self.active_clients, AsyncMock)
+                    else AsyncMock(
+                        return_value=(
+                            [TEST_CLIENT]
+                            if self.active_clients is None
+                            else self.active_clients
+                        )
+                    )
                 ),
             )
         )

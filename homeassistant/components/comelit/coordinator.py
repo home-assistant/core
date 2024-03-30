@@ -55,9 +55,9 @@ class ComelitBaseCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     def platform_device_info(
         self,
-        object_class: ComelitVedoZoneObject
-        | ComelitVedoAreaObject
-        | ComelitSerialBridgeObject,
+        object_class: (
+            ComelitVedoZoneObject | ComelitVedoAreaObject | ComelitSerialBridgeObject
+        ),
         object_type: str,
     ) -> dr.DeviceInfo:
         """Set platform device info."""

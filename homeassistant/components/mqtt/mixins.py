@@ -926,8 +926,9 @@ class MqttDiscoveryUpdate(Entity):
         self,
         hass: HomeAssistant,
         discovery_data: DiscoveryInfoType | None,
-        discovery_update: Callable[[MQTTDiscoveryPayload], Coroutine[Any, Any, None]]
-        | None = None,
+        discovery_update: (
+            Callable[[MQTTDiscoveryPayload], Coroutine[Any, Any, None]] | None
+        ) = None,
     ) -> None:
         """Initialize the discovery update mixin."""
         self._discovery_data = discovery_data

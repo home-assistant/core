@@ -78,9 +78,9 @@ class RoborockCoordinatedEntity(
         self,
         unique_id: str,
         coordinator: RoborockDataUpdateCoordinator,
-        listener_request: list[RoborockDataProtocol]
-        | RoborockDataProtocol
-        | None = None,
+        listener_request: (
+            list[RoborockDataProtocol] | RoborockDataProtocol | None
+        ) = None,
     ) -> None:
         """Initialize the coordinated Roborock Device."""
         RoborockEntity.__init__(

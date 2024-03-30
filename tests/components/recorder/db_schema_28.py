@@ -187,9 +187,11 @@ class Events(Base):  # type: ignore[misc,valid-type]
             return Event(
                 self.event_type,
                 json.loads(self.event_data) if self.event_data else {},
-                EventOrigin(self.origin)
-                if self.origin
-                else EVENT_ORIGIN_ORDER[self.origin_idx],
+                (
+                    EventOrigin(self.origin)
+                    if self.origin
+                    else EVENT_ORIGIN_ORDER[self.origin_idx]
+                ),
                 process_timestamp(self.time_fired),
                 context=context,
             )

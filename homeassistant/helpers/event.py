@@ -1235,9 +1235,11 @@ class TrackTemplateResultInfo:
             self._track_state_changes.async_update_listeners(
                 _render_infos_to_track_states(
                     [
-                        _suppress_domain_all_in_render_info(info)
-                        if self._rate_limit.async_has_timer(template)
-                        else info
+                        (
+                            _suppress_domain_all_in_render_info(info)
+                            if self._rate_limit.async_has_timer(template)
+                            else info
+                        )
                         for template, info in self._info.items()
                     ]
                 )
@@ -1403,8 +1405,10 @@ track_same_state = threaded_listener_factory(async_track_same_state)
 @bind_hass
 def async_track_point_in_time(
     hass: HomeAssistant,
-    action: HassJob[[datetime], Coroutine[Any, Any, None] | None]
-    | Callable[[datetime], Coroutine[Any, Any, None] | None],
+    action: (
+        HassJob[[datetime], Coroutine[Any, Any, None] | None]
+        | Callable[[datetime], Coroutine[Any, Any, None] | None]
+    ),
     point_in_time: datetime,
 ) -> CALLBACK_TYPE:
     """Add a listener that fires once at or after a specific point in time.
@@ -1477,8 +1481,10 @@ class _TrackPointUTCTime:
 @bind_hass
 def async_track_point_in_utc_time(
     hass: HomeAssistant,
-    action: HassJob[[datetime], Coroutine[Any, Any, None] | None]
-    | Callable[[datetime], Coroutine[Any, Any, None] | None],
+    action: (
+        HassJob[[datetime], Coroutine[Any, Any, None] | None]
+        | Callable[[datetime], Coroutine[Any, Any, None] | None]
+    ),
     point_in_time: datetime,
 ) -> CALLBACK_TYPE:
     """Add a listener that fires once at or after a specific point in time.
@@ -1512,8 +1518,10 @@ def _run_async_call_action(
 @bind_hass
 def async_call_at(
     hass: HomeAssistant,
-    action: HassJob[[datetime], Coroutine[Any, Any, None] | None]
-    | Callable[[datetime], Coroutine[Any, Any, None] | None],
+    action: (
+        HassJob[[datetime], Coroutine[Any, Any, None] | None]
+        | Callable[[datetime], Coroutine[Any, Any, None] | None]
+    ),
     loop_time: float,
 ) -> CALLBACK_TYPE:
     """Add a listener that fires at or after <loop_time>.
@@ -1533,8 +1541,10 @@ def async_call_at(
 def async_call_later(
     hass: HomeAssistant,
     delay: float | timedelta,
-    action: HassJob[[datetime], Coroutine[Any, Any, None] | None]
-    | Callable[[datetime], Coroutine[Any, Any, None] | None],
+    action: (
+        HassJob[[datetime], Coroutine[Any, Any, None] | None]
+        | Callable[[datetime], Coroutine[Any, Any, None] | None]
+    ),
 ) -> CALLBACK_TYPE:
     """Add a listener that fires at or after <delay>.
 

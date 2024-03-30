@@ -205,11 +205,13 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
         self._event = self.coordinator.data
         if self._supports_offset:
             self._attr_extra_state_attributes = {
-                "offset_reached": is_offset_reached(
-                    self._event.start_datetime_local, self.coordinator.offset
+                "offset_reached": (
+                    is_offset_reached(
+                        self._event.start_datetime_local, self.coordinator.offset
+                    )
+                    if self._event
+                    else False
                 )
-                if self._event
-                else False
             }
         super()._handle_coordinator_update()
 

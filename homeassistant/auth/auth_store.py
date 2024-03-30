@@ -541,14 +541,16 @@ class AuthStore:
                 ),
                 "token": refresh_token.token,
                 "jwt_key": refresh_token.jwt_key,
-                "last_used_at": refresh_token.last_used_at.isoformat()
-                if refresh_token.last_used_at
-                else None,
+                "last_used_at": (
+                    refresh_token.last_used_at.isoformat()
+                    if refresh_token.last_used_at
+                    else None
+                ),
                 "last_used_ip": refresh_token.last_used_ip,
                 "expire_at": refresh_token.expire_at,
-                "credential_id": refresh_token.credential.id
-                if refresh_token.credential
-                else None,
+                "credential_id": (
+                    refresh_token.credential.id if refresh_token.credential else None
+                ),
                 "version": refresh_token.version,
             }
             for user in self._users.values()

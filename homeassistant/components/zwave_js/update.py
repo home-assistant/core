@@ -55,9 +55,11 @@ class ZWaveNodeFirmwareUpdateExtraStoredData(ExtraStoredData):
     def as_dict(self) -> dict[str, Any]:
         """Return a dict representation of the extra data."""
         return {
-            ATTR_LATEST_VERSION_FIRMWARE: self.latest_version_firmware.to_dict()
-            if self.latest_version_firmware
-            else None
+            ATTR_LATEST_VERSION_FIRMWARE: (
+                self.latest_version_firmware.to_dict()
+                if self.latest_version_firmware
+                else None
+            )
         }
 
     @classmethod

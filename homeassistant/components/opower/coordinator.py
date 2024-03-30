@@ -181,9 +181,11 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
                 name=f"{name_prefix} consumption",
                 source=DOMAIN,
                 statistic_id=consumption_statistic_id,
-                unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR
-                if account.meter_type == MeterType.ELEC
-                else UnitOfVolume.CENTUM_CUBIC_FEET,
+                unit_of_measurement=(
+                    UnitOfEnergy.KILO_WATT_HOUR
+                    if account.meter_type == MeterType.ELEC
+                    else UnitOfVolume.CENTUM_CUBIC_FEET
+                ),
             )
 
             async_add_external_statistics(self.hass, cost_metadata, cost_statistics)

@@ -910,12 +910,16 @@ class DeviceRegistry(BaseRegistry):
                         tuple(conn)  # type: ignore[misc]
                         for conn in device["connections"]
                     },
-                    disabled_by=DeviceEntryDisabler(device["disabled_by"])
-                    if device["disabled_by"]
-                    else None,
-                    entry_type=DeviceEntryType(device["entry_type"])
-                    if device["entry_type"]
-                    else None,
+                    disabled_by=(
+                        DeviceEntryDisabler(device["disabled_by"])
+                        if device["disabled_by"]
+                        else None
+                    ),
+                    entry_type=(
+                        DeviceEntryType(device["entry_type"])
+                        if device["entry_type"]
+                        else None
+                    ),
                     hw_version=device["hw_version"],
                     id=device["id"],
                     identifiers={

@@ -48,9 +48,11 @@ async def async_setup_devices(bridge: "HueBridge"):
                 model=hue_resource.type.value.title(),
                 manufacturer=api.config.bridge_device.product_data.manufacturer_name,
                 via_device=(DOMAIN, api.config.bridge_device.id),
-                suggested_area=hue_resource.metadata.name
-                if hue_resource.type == ResourceTypes.ROOM
-                else None,
+                suggested_area=(
+                    hue_resource.metadata.name
+                    if hue_resource.type == ResourceTypes.ROOM
+                    else None
+                ),
             )
         # Register a Hue device resource as device in HA device registry.
         model = f"{hue_resource.product_data.product_name} ({hue_resource.product_data.model_id})"

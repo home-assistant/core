@@ -27,9 +27,9 @@ def _create_mocked_device(throw_exception=False, wired_mac=MAC, wireless_mac=Non
     mocked_device = MagicMock()
 
     type(mocked_device).get_supported_methods = AsyncMock(
-        side_effect=SongpalException("Unable to do POST request: ")
-        if throw_exception
-        else None
+        side_effect=(
+            SongpalException("Unable to do POST request: ") if throw_exception else None
+        )
     )
 
     interface_info = MagicMock()

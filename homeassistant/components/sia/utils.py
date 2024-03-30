@@ -58,18 +58,20 @@ def get_attr_from_sia_event(event: SIAEvent) -> dict[str, Any]:
         ATTR_CODE: event.code,
         ATTR_MESSAGE: event.message,
         ATTR_ID: event.id,
-        ATTR_TIMESTAMP: timestamp.isoformat()
-        if isinstance(timestamp, datetime)
-        else timestamp,
+        ATTR_TIMESTAMP: (
+            timestamp.isoformat() if isinstance(timestamp, datetime) else timestamp
+        ),
     }
 
 
 def get_event_data_from_sia_event(event: SIAEvent) -> dict[str, Any]:
     """Create a dict from the SIA Event for the HA Event."""
     return {
-        "message_type": event.message_type.value
-        if isinstance(event.message_type, MessageTypes)
-        else event.message_type,
+        "message_type": (
+            event.message_type.value
+            if isinstance(event.message_type, MessageTypes)
+            else event.message_type
+        ),
         "receiver": event.receiver,
         "line": event.line,
         "account": event.account,
@@ -81,31 +83,37 @@ def get_event_data_from_sia_event(event: SIAEvent) -> dict[str, Any]:
         "code": event.code,
         "message": event.message,
         "x_data": event.x_data,
-        "timestamp": event.timestamp.isoformat()
-        if isinstance(event.timestamp, datetime)
-        else event.timestamp,
+        "timestamp": (
+            event.timestamp.isoformat()
+            if isinstance(event.timestamp, datetime)
+            else event.timestamp
+        ),
         "event_qualifier": event.event_qualifier,
         "event_type": event.event_type,
         "partition": event.partition,
-        "extended_data": [
+        "extended_data": (
+            [
+                {
+                    "identifier": xd.identifier,
+                    "name": xd.name,
+                    "description": xd.description,
+                    "length": xd.length,
+                    "characters": xd.characters,
+                    "value": xd.value,
+                }
+                for xd in event.extended_data
+            ]
+            if event.extended_data is not None
+            else None
+        ),
+        "sia_code": (
             {
-                "identifier": xd.identifier,
-                "name": xd.name,
-                "description": xd.description,
-                "length": xd.length,
-                "characters": xd.characters,
-                "value": xd.value,
+                "code": event.sia_code.code,
+                "type": event.sia_code.type,
+                "description": event.sia_code.description,
+                "concerns": event.sia_code.concerns,
             }
-            for xd in event.extended_data
-        ]
-        if event.extended_data is not None
-        else None,
-        "sia_code": {
-            "code": event.sia_code.code,
-            "type": event.sia_code.type,
-            "description": event.sia_code.description,
-            "concerns": event.sia_code.concerns,
-        }
-        if event.sia_code is not None
-        else None,
+            if event.sia_code is not None
+            else None
+        ),
     }

@@ -162,9 +162,11 @@ class BringTodoListEntity(
                         spec=item.description,
                         uuid=item.uid,
                     ),
-                    BringItemOperation.ADD
-                    if item.status == TodoItemStatus.NEEDS_ACTION
-                    else BringItemOperation.COMPLETE,
+                    (
+                        BringItemOperation.ADD
+                        if item.status == TodoItemStatus.NEEDS_ACTION
+                        else BringItemOperation.COMPLETE
+                    ),
                 )
             except BringRequestException as e:
                 raise HomeAssistantError("Unable to update todo item for bring") from e
@@ -183,9 +185,11 @@ class BringTodoListEntity(
                             itemId=item.summary,
                             spec=item.description,
                             uuid=str(uuid.uuid4()),
-                            operation=BringItemOperation.ADD
-                            if item.status == TodoItemStatus.NEEDS_ACTION
-                            else BringItemOperation.COMPLETE,
+                            operation=(
+                                BringItemOperation.ADD
+                                if item.status == TodoItemStatus.NEEDS_ACTION
+                                else BringItemOperation.COMPLETE
+                            ),
                         ),
                     ],
                 )

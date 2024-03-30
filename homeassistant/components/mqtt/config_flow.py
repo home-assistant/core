@@ -489,9 +489,11 @@ async def async_get_broker_settings(
         certificate: str | None = (
             "auto"
             if user_input.get(SET_CA_CERT, "off") == "auto"
-            else config.get(CONF_CERTIFICATE)
-            if user_input.get(SET_CA_CERT, "off") == "custom"
-            else None
+            else (
+                config.get(CONF_CERTIFICATE)
+                if user_input.get(SET_CA_CERT, "off") == "custom"
+                else None
+            )
         )
         client_certificate: str | None = (
             config.get(CONF_CLIENT_CERT) if user_input.get(SET_CLIENT_CERT) else None

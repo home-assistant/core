@@ -1192,16 +1192,22 @@ class EntityRegistry(BaseRegistry):
                     config_entry_id=entity["config_entry_id"],
                     device_class=entity["device_class"],
                     device_id=entity["device_id"],
-                    disabled_by=RegistryEntryDisabler(entity["disabled_by"])
-                    if entity["disabled_by"]
-                    else None,
-                    entity_category=EntityCategory(entity["entity_category"])
-                    if entity["entity_category"]
-                    else None,
+                    disabled_by=(
+                        RegistryEntryDisabler(entity["disabled_by"])
+                        if entity["disabled_by"]
+                        else None
+                    ),
+                    entity_category=(
+                        EntityCategory(entity["entity_category"])
+                        if entity["entity_category"]
+                        else None
+                    ),
                     entity_id=entity["entity_id"],
-                    hidden_by=RegistryEntryHider(entity["hidden_by"])
-                    if entity["hidden_by"]
-                    else None,
+                    hidden_by=(
+                        RegistryEntryHider(entity["hidden_by"])
+                        if entity["hidden_by"]
+                        else None
+                    ),
                     icon=entity["icon"],
                     id=entity["id"],
                     has_entity_name=entity["has_entity_name"],
@@ -1408,8 +1414,9 @@ def _async_setup_cleanup(hass: HomeAssistant, registry: EntityRegistry) -> None:
 
     @callback
     def _removed_from_registry_filter(
-        event_data: lr.EventLabelRegistryUpdatedData
-        | cr.EventCategoryRegistryUpdatedData,
+        event_data: (
+            lr.EventLabelRegistryUpdatedData | cr.EventCategoryRegistryUpdatedData
+        ),
     ) -> bool:
         """Filter all except for the remove action from registry events."""
         return event_data["action"] == "remove"

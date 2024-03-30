@@ -20,15 +20,19 @@ class MockSTTPlatform(MockPlatform):
 
     def __init__(
         self,
-        async_get_engine: Callable[
-            [HomeAssistant, ConfigType, DiscoveryInfoType | None],
-            Coroutine[Any, Any, Provider | None],
-        ]
-        | None = None,
-        get_engine: Callable[
-            [HomeAssistant, ConfigType, DiscoveryInfoType | None], Provider | None
-        ]
-        | None = None,
+        async_get_engine: (
+            Callable[
+                [HomeAssistant, ConfigType, DiscoveryInfoType | None],
+                Coroutine[Any, Any, Provider | None],
+            ]
+            | None
+        ) = None,
+        get_engine: (
+            Callable[
+                [HomeAssistant, ConfigType, DiscoveryInfoType | None], Provider | None
+            ]
+            | None
+        ) = None,
     ) -> None:
         """Return the stt service."""
         super().__init__()
@@ -42,15 +46,17 @@ def mock_stt_platform(
     hass: HomeAssistant,
     tmp_path: Path,
     integration: str = "stt",
-    async_get_engine: Callable[
-        [HomeAssistant, ConfigType, DiscoveryInfoType | None],
-        Coroutine[Any, Any, Provider | None],
-    ]
-    | None = None,
-    get_engine: Callable[
-        [HomeAssistant, ConfigType, DiscoveryInfoType | None], Provider | None
-    ]
-    | None = None,
+    async_get_engine: (
+        Callable[
+            [HomeAssistant, ConfigType, DiscoveryInfoType | None],
+            Coroutine[Any, Any, Provider | None],
+        ]
+        | None
+    ) = None,
+    get_engine: (
+        Callable[[HomeAssistant, ConfigType, DiscoveryInfoType | None], Provider | None]
+        | None
+    ) = None,
 ):
     """Specialize the mock platform for stt."""
     loaded_platform = MockSTTPlatform(async_get_engine, get_engine)
@@ -63,11 +69,13 @@ def mock_stt_entity_platform(
     hass: HomeAssistant,
     tmp_path: Path,
     integration: str,
-    async_setup_entry: Callable[
-        [HomeAssistant, ConfigEntry, AddEntitiesCallback],
-        Coroutine[Any, Any, None],
-    ]
-    | None = None,
+    async_setup_entry: (
+        Callable[
+            [HomeAssistant, ConfigEntry, AddEntitiesCallback],
+            Coroutine[Any, Any, None],
+        ]
+        | None
+    ) = None,
 ) -> MockPlatform:
     """Specialize the mock platform for stt."""
     loaded_platform = MockPlatform(async_setup_entry=async_setup_entry)

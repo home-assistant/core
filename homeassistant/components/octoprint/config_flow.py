@@ -260,9 +260,11 @@ class OctoPrintConfigFlow(ConfigFlow, domain=DOMAIN):
 
         connector = aiohttp.TCPConnector(
             force_close=True,
-            ssl=get_default_no_verify_context()
-            if not verify_ssl
-            else get_default_context(),
+            ssl=(
+                get_default_no_verify_context()
+                if not verify_ssl
+                else get_default_context()
+            ),
         )
         session = aiohttp.ClientSession(connector=connector)
         self._sessions.append(session)

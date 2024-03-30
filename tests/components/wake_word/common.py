@@ -18,11 +18,13 @@ def mock_wake_word_entity_platform(
     hass: HomeAssistant,
     tmp_path: Path,
     integration: str,
-    async_setup_entry: Callable[
-        [HomeAssistant, ConfigEntry, AddEntitiesCallback],
-        Coroutine[Any, Any, None],
-    ]
-    | None = None,
+    async_setup_entry: (
+        Callable[
+            [HomeAssistant, ConfigEntry, AddEntitiesCallback],
+            Coroutine[Any, Any, None],
+        ]
+        | None
+    ) = None,
 ) -> MockPlatform:
     """Specialize the mock platform for stt."""
     loaded_platform = MockPlatform(async_setup_entry=async_setup_entry)

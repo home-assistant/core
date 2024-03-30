@@ -100,9 +100,9 @@ class SIAHub:
             SIAAccount(
                 account_id=a[CONF_ACCOUNT],
                 key=a.get(CONF_ENCRYPTION_KEY),
-                allowed_timeband=None
-                if a[CONF_IGNORE_TIMESTAMPS]
-                else DEFAULT_TIMEBAND,
+                allowed_timeband=(
+                    None if a[CONF_IGNORE_TIMESTAMPS] else DEFAULT_TIMEBAND
+                ),
             )
             for a in self._accounts
         ]

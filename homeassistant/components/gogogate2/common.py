@@ -59,10 +59,10 @@ class DeviceDataUpdateCoordinator(
         *,
         name: str,
         update_interval: timedelta,
-        update_method: Callable[
-            [], Awaitable[GogoGate2InfoResponse | ISmartGateInfoResponse]
-        ]
-        | None = None,
+        update_method: (
+            Callable[[], Awaitable[GogoGate2InfoResponse | ISmartGateInfoResponse]]
+            | None
+        ) = None,
         request_refresh_debouncer: Debouncer | None = None,
     ) -> None:
         """Initialize the data update coordinator."""

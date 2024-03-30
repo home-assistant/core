@@ -375,9 +375,11 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
         if self._fan_mode_register is not None:
             fan_mode = await self._async_read_register(
                 CALL_TYPE_REGISTER_HOLDING,
-                self._fan_mode_register
-                if isinstance(self._fan_mode_register, int)
-                else self._fan_mode_register[0],
+                (
+                    self._fan_mode_register
+                    if isinstance(self._fan_mode_register, int)
+                    else self._fan_mode_register[0]
+                ),
                 raw=True,
             )
 

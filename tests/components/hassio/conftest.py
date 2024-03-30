@@ -174,30 +174,32 @@ def all_setup_requests(
                 "version": "1.0.0",
                 "version_latest": "1.0.0",
                 "auto_update": True,
-                "addons": [
-                    {
-                        "name": "test",
-                        "slug": "test",
-                        "update_available": False,
-                        "version": "1.0.0",
-                        "version_latest": "1.0.0",
-                        "repository": "core",
-                        "state": "started",
-                        "icon": False,
-                    },
-                    {
-                        "name": "test2",
-                        "slug": "test2",
-                        "update_available": False,
-                        "version": "1.0.0",
-                        "version_latest": "1.0.0",
-                        "repository": "core",
-                        "state": "started",
-                        "icon": False,
-                    },
-                ]
-                if include_addons
-                else [],
+                "addons": (
+                    [
+                        {
+                            "name": "test",
+                            "slug": "test",
+                            "update_available": False,
+                            "version": "1.0.0",
+                            "version_latest": "1.0.0",
+                            "repository": "core",
+                            "state": "started",
+                            "icon": False,
+                        },
+                        {
+                            "name": "test2",
+                            "slug": "test2",
+                            "update_available": False,
+                            "version": "1.0.0",
+                            "version_latest": "1.0.0",
+                            "repository": "core",
+                            "state": "started",
+                            "icon": False,
+                        },
+                    ]
+                    if include_addons
+                    else []
+                ),
             },
         },
     )

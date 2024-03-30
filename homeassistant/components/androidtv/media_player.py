@@ -81,9 +81,11 @@ async def async_setup_entry(
     device_args = [aftv, entry, entry_data]
     async_add_entities(
         [
-            AndroidTVDevice(*device_args)
-            if device_class == DEVICE_ANDROIDTV
-            else FireTVDevice(*device_args)
+            (
+                AndroidTVDevice(*device_args)
+                if device_class == DEVICE_ANDROIDTV
+                else FireTVDevice(*device_args)
+            )
         ]
     )
 

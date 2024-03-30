@@ -140,8 +140,9 @@ def async_create_clientsession(
 def _async_create_clientsession(
     hass: HomeAssistant,
     verify_ssl: bool = True,
-    auto_cleanup_method: Callable[[HomeAssistant, aiohttp.ClientSession], None]
-    | None = None,
+    auto_cleanup_method: (
+        Callable[[HomeAssistant, aiohttp.ClientSession], None] | None
+    ) = None,
     family: int = 0,
     **kwargs: Any,
 ) -> aiohttp.ClientSession:

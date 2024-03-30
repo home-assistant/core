@@ -704,8 +704,9 @@ def _get_test_device(
     zigpy_device_mock,
     manufacturer: str,
     model: str,
-    augment_method: Callable[[QuirksV2RegistryEntry], QuirksV2RegistryEntry]
-    | None = None,
+    augment_method: (
+        Callable[[QuirksV2RegistryEntry], QuirksV2RegistryEntry] | None
+    ) = None,
 ):
     zigpy_device = zigpy_device_mock(
         {

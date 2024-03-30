@@ -189,16 +189,16 @@ class MqttSiren(MqttEntity, SirenEntity):
             config.get(CONF_COMMAND_OFF_TEMPLATE) or command_template
         )
         self._command_templates = {
-            CONF_COMMAND_TEMPLATE: MqttCommandTemplate(
-                command_template, entity=self
-            ).async_render
-            if command_template
-            else None,
-            CONF_COMMAND_OFF_TEMPLATE: MqttCommandTemplate(
-                command_off_template, entity=self
-            ).async_render
-            if command_off_template
-            else None,
+            CONF_COMMAND_TEMPLATE: (
+                MqttCommandTemplate(command_template, entity=self).async_render
+                if command_template
+                else None
+            ),
+            CONF_COMMAND_OFF_TEMPLATE: (
+                MqttCommandTemplate(command_off_template, entity=self).async_render
+                if command_off_template
+                else None
+            ),
         }
         self._value_template = MqttValueTemplate(
             config.get(CONF_STATE_VALUE_TEMPLATE),

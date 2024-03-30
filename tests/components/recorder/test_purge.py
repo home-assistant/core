@@ -61,9 +61,9 @@ def mock_use_sqlite(request):
     """Pytest fixture to switch purge method."""
     with patch(
         "homeassistant.components.recorder.core.Recorder.dialect_name",
-        return_value=SupportedDialect.SQLITE
-        if request.param
-        else SupportedDialect.MYSQL,
+        return_value=(
+            SupportedDialect.SQLITE if request.param else SupportedDialect.MYSQL
+        ),
     ):
         yield
 

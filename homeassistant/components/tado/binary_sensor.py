@@ -68,9 +68,9 @@ OVERLAY_ENTITY_DESCRIPTION = TadoBinarySensorEntityDescription(
     key="overlay",
     translation_key="overlay",
     state_fn=lambda data: data.overlay_active,
-    attributes_fn=lambda data: {"termination": data.overlay_termination_type}
-    if data.overlay_active
-    else {},
+    attributes_fn=lambda data: (
+        {"termination": data.overlay_termination_type} if data.overlay_active else {}
+    ),
     device_class=BinarySensorDeviceClass.POWER,
 )
 OPEN_WINDOW_ENTITY_DESCRIPTION = TadoBinarySensorEntityDescription(

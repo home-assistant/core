@@ -44,9 +44,9 @@ async def async_setup_entry(
 
     @callback
     def register_items(
-        controller: BehaviorInstanceController
-        | LightLevelController
-        | MotionController,
+        controller: (
+            BehaviorInstanceController | LightLevelController | MotionController
+        ),
         switch_class: type[
             HueBehaviorInstanceEnabledEntity
             | HueLightSensorEnabledEntity

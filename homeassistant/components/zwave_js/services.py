@@ -538,20 +538,22 @@ class ZWaveServices:
         # Configuration CC set API.
         results = await asyncio.gather(
             *(
-                async_set_config_parameter(
-                    node,
-                    new_value,
-                    property_or_property_name,
-                    property_key=property_key,
-                    endpoint=endpoint,
-                )
-                if value_size is None
-                else node.endpoints[endpoint].async_set_raw_config_parameter_value(
-                    new_value,
-                    property_or_property_name,
-                    property_key=property_key,
-                    value_size=value_size,
-                    value_format=value_format,
+                (
+                    async_set_config_parameter(
+                        node,
+                        new_value,
+                        property_or_property_name,
+                        property_key=property_key,
+                        endpoint=endpoint,
+                    )
+                    if value_size is None
+                    else node.endpoints[endpoint].async_set_raw_config_parameter_value(
+                        new_value,
+                        property_or_property_name,
+                        property_key=property_key,
+                        value_size=value_size,
+                        value_format=value_format,
+                    )
                 )
                 for node in nodes
             ),

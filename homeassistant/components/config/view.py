@@ -36,11 +36,13 @@ class BaseEditConfigView(HomeAssistantView, Generic[_DataT]):
         data_schema: Callable[[dict[str, Any]], Any],
         *,
         post_write_hook: Callable[[str, str], Coroutine[Any, Any, None]] | None = None,
-        data_validator: Callable[
-            [HomeAssistant, str, dict[str, Any]],
-            Coroutine[Any, Any, dict[str, Any] | None],
-        ]
-        | None = None,
+        data_validator: (
+            Callable[
+                [HomeAssistant, str, dict[str, Any]],
+                Coroutine[Any, Any, dict[str, Any] | None],
+            ]
+            | None
+        ) = None,
     ) -> None:
         """Initialize a config view."""
         self.url = f"/api/config/{component}/{config_type}/{{config_key}}"

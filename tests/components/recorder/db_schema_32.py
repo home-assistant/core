@@ -270,9 +270,11 @@ class Events(Base):  # type: ignore[misc,valid-type]
             return Event(
                 self.event_type or "",
                 json_loads(self.event_data) if self.event_data else {},
-                EventOrigin(self.origin)
-                if self.origin
-                else EVENT_ORIGIN_ORDER[self.origin_idx or 0],
+                (
+                    EventOrigin(self.origin)
+                    if self.origin
+                    else EVENT_ORIGIN_ORDER[self.origin_idx or 0]
+                ),
                 dt_util.utc_from_timestamp(self.time_fired_ts or 0),
                 context=context,
             )

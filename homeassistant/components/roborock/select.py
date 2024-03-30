@@ -42,9 +42,9 @@ SELECT_DESCRIPTIONS: list[RoborockSelectDescription] = [
         api_command=RoborockCommand.SET_WATER_BOX_CUSTOM_MODE,
         value_fn=lambda data: data.water_box_mode_name,
         entity_category=EntityCategory.CONFIG,
-        options_lambda=lambda data: data.water_box_mode.keys()
-        if data.water_box_mode is not None
-        else None,
+        options_lambda=lambda data: (
+            data.water_box_mode.keys() if data.water_box_mode is not None else None
+        ),
         parameter_lambda=lambda key, status: [status.get_mop_intensity_code(key)],
         protocol_listener=RoborockDataProtocol.WATER_BOX_MODE,
     ),
@@ -54,9 +54,9 @@ SELECT_DESCRIPTIONS: list[RoborockSelectDescription] = [
         api_command=RoborockCommand.SET_MOP_MODE,
         value_fn=lambda data: data.mop_mode_name,
         entity_category=EntityCategory.CONFIG,
-        options_lambda=lambda data: data.mop_mode.keys()
-        if data.mop_mode is not None
-        else None,
+        options_lambda=lambda data: (
+            data.mop_mode.keys() if data.mop_mode is not None else None
+        ),
         parameter_lambda=lambda key, status: [status.get_mop_mode_code(key)],
     ),
 ]

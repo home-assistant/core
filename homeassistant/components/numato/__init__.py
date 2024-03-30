@@ -188,9 +188,11 @@ class NumatoAPI:
                 "Device {} port {} already in use as {}.".format(
                     device_id,
                     port,
-                    "input"
-                    if self.ports_registered[(device_id, port)] == gpio.IN
-                    else "output",
+                    (
+                        "input"
+                        if self.ports_registered[(device_id, port)] == gpio.IN
+                        else "output"
+                    ),
                 )
             )
 

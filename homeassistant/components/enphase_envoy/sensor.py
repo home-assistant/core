@@ -943,8 +943,10 @@ class EnvoyEnchargeEntity(EnvoySensorBaseEntity):
     def __init__(
         self,
         coordinator: EnphaseUpdateCoordinator,
-        description: EnvoyEnchargeSensorEntityDescription
-        | EnvoyEnchargePowerSensorEntityDescription,
+        description: (
+            EnvoyEnchargeSensorEntityDescription
+            | EnvoyEnchargePowerSensorEntityDescription
+        ),
         serial_number: str,
     ) -> None:
         """Initialize Encharge entity."""

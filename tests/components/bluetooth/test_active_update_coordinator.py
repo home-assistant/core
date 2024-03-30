@@ -66,11 +66,13 @@ class MyCoordinator(ActiveBluetoothDataUpdateCoordinator[dict[str, Any]]):
         address: str,
         mode: BluetoothScanningMode,
         needs_poll_method: Callable[[BluetoothServiceInfoBleak, float | None], bool],
-        poll_method: Callable[
-            [BluetoothServiceInfoBleak],
-            Coroutine[Any, Any, _T],
-        ]
-        | None = None,
+        poll_method: (
+            Callable[
+                [BluetoothServiceInfoBleak],
+                Coroutine[Any, Any, _T],
+            ]
+            | None
+        ) = None,
         poll_debouncer: Debouncer[Coroutine[Any, Any, None]] | None = None,
         connectable: bool = True,
     ) -> None:

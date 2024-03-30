@@ -165,16 +165,16 @@ class VasttrafikDepartureSensor(SensorEntity):
                     stop_point = departure.get("stopPoint", {})
 
                     params = {
-                        ATTR_ACCESSIBILITY: "wheelChair"
-                        if line.get("isWheelchairAccessible")
-                        else None,
+                        ATTR_ACCESSIBILITY: (
+                            "wheelChair" if line.get("isWheelchairAccessible") else None
+                        ),
                         ATTR_DIRECTION: service_journey.get("direction"),
                         ATTR_LINE: line.get("shortName"),
                         ATTR_TRACK: stop_point.get("platform"),
                         ATTR_FROM: stop_point.get("name"),
-                        ATTR_TO: self._heading["station_name"]
-                        if self._heading
-                        else "ANY",
+                        ATTR_TO: (
+                            self._heading["station_name"] if self._heading else "ANY"
+                        ),
                         ATTR_DELAY: self._delay.seconds // 60 % 60,
                     }
 

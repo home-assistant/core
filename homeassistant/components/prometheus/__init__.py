@@ -316,12 +316,14 @@ class PrometheusMetrics:
     def _sanitize_metric_name(metric: str) -> str:
         return "".join(
             [
-                c
-                if c in string.ascii_letters
-                or c in string.digits
-                or c == "_"
-                or c == ":"
-                else f"u{hex(ord(c))}"
+                (
+                    c
+                    if c in string.ascii_letters
+                    or c in string.digits
+                    or c == "_"
+                    or c == ":"
+                    else f"u{hex(ord(c))}"
+                )
                 for c in metric
             ]
         )

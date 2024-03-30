@@ -89,9 +89,9 @@ class SubaruConfigFlow(ConfigFlow, domain=DOMAIN):
                     ): str,
                     vol.Required(
                         CONF_COUNTRY,
-                        default=user_input.get(CONF_COUNTRY)
-                        if user_input
-                        else COUNTRY_USA,
+                        default=(
+                            user_input.get(CONF_COUNTRY) if user_input else COUNTRY_USA
+                        ),
                     ): vol.In([COUNTRY_CAN, COUNTRY_USA]),
                 }
             ),

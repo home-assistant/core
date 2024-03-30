@@ -48,9 +48,11 @@ class OmadaFirmwareUpdateCoodinator(OmadaCoordinator[FirmwareUpdateStatus]):  # 
         updates = [
             FirmwareUpdateStatus(
                 device=d,
-                firmware=None
-                if not d.need_upgrade
-                else await self.omada_client.get_firmware_details(d),
+                firmware=(
+                    None
+                    if not d.need_upgrade
+                    else await self.omada_client.get_firmware_details(d)
+                ),
             )
             for d in devices
         ]

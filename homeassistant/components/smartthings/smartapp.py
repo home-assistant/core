@@ -269,9 +269,11 @@ async def setup_smartapp_endpoint(hass: HomeAssistant, fresh_install: bool):
     }
     _LOGGER.debug(
         "Setup endpoint for %s",
-        cloudhook_url
-        if cloudhook_url
-        else webhook.async_generate_url(hass, config[CONF_WEBHOOK_ID]),
+        (
+            cloudhook_url
+            if cloudhook_url
+            else webhook.async_generate_url(hass, config[CONF_WEBHOOK_ID])
+        ),
     )
 
 

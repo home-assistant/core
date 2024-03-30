@@ -28,7 +28,9 @@ async def async_get_config_entry_diagnostics(
             "data": async_redact_data(entry.data, TO_REDACT),
             "options": {**entry.options},
         },
-        "devices": [asdict(device_details) for device_details in onewire_hub.devices]
-        if onewire_hub.devices
-        else [],
+        "devices": (
+            [asdict(device_details) for device_details in onewire_hub.devices]
+            if onewire_hub.devices
+            else []
+        ),
     }

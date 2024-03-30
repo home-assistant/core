@@ -87,12 +87,16 @@ class Endpoint:
         return (
             self.id,
             {
-                ATTR_PROFILE_ID: f"0x{self._zigpy_endpoint.profile_id:04x}"
-                if self._zigpy_endpoint.profile_id is not None
-                else "",
-                ATTR_DEVICE_TYPE: f"0x{self._zigpy_endpoint.device_type:04x}"
-                if self._zigpy_endpoint.device_type is not None
-                else "",
+                ATTR_PROFILE_ID: (
+                    f"0x{self._zigpy_endpoint.profile_id:04x}"
+                    if self._zigpy_endpoint.profile_id is not None
+                    else ""
+                ),
+                ATTR_DEVICE_TYPE: (
+                    f"0x{self._zigpy_endpoint.device_type:04x}"
+                    if self._zigpy_endpoint.device_type is not None
+                    else ""
+                ),
                 ATTR_IN_CLUSTERS: [
                     f"0x{cluster_id:04x}"
                     for cluster_id in sorted(self._zigpy_endpoint.in_clusters)

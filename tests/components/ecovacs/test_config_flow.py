@@ -119,10 +119,12 @@ async def test_user_flow(
     mock_setup_entry: AsyncMock,
     mock_authenticator_authenticate: AsyncMock,
     mock_mqtt_client: Mock,
-    test_fn: Callable[[HomeAssistant, dict[str, Any]], Awaitable[dict[str, Any]]]
-    | Callable[
-        [HomeAssistant, dict[str, Any], dict[str, Any]], Awaitable[dict[str, Any]]
-    ],
+    test_fn: (
+        Callable[[HomeAssistant, dict[str, Any]], Awaitable[dict[str, Any]]]
+        | Callable[
+            [HomeAssistant, dict[str, Any], dict[str, Any]], Awaitable[dict[str, Any]]
+        ]
+    ),
     test_fn_args: dict[str, Any],
     entry_data: dict[str, Any],
 ) -> None:
@@ -198,10 +200,12 @@ async def test_user_flow_raise_error(
     reason_rest: str,
     side_effect_mqtt: Exception,
     errors_mqtt: Callable[[dict[str, Any]], str],
-    test_fn: Callable[[HomeAssistant, dict[str, Any]], Awaitable[dict[str, Any]]]
-    | Callable[
-        [HomeAssistant, dict[str, Any], dict[str, Any]], Awaitable[dict[str, Any]]
-    ],
+    test_fn: (
+        Callable[[HomeAssistant, dict[str, Any]], Awaitable[dict[str, Any]]]
+        | Callable[
+            [HomeAssistant, dict[str, Any], dict[str, Any]], Awaitable[dict[str, Any]]
+        ]
+    ),
     test_fn_args: dict[str, Any],
     entry_data: dict[str, Any],
 ) -> None:

@@ -79,11 +79,13 @@ class MockApiResponseKey(str, Enum):
 
 
 def mock_uptimerobot_api_response(
-    data: dict[str, Any]
-    | None
-    | list[UptimeRobotMonitor]
-    | UptimeRobotAccount
-    | UptimeRobotApiError = None,
+    data: (
+        dict[str, Any]
+        | None
+        | list[UptimeRobotMonitor]
+        | UptimeRobotAccount
+        | UptimeRobotApiError
+    ) = None,
     status: APIStatus = APIStatus.OK,
     key: MockApiResponseKey = MockApiResponseKey.MONITORS,
 ) -> UptimeRobotApiResponse:
@@ -91,13 +93,15 @@ def mock_uptimerobot_api_response(
     return UptimeRobotApiResponse.from_dict(
         {
             "stat": {"error": APIStatus.FAIL}.get(key, status),
-            key: data
-            if data is not None
-            else {
-                "account": MOCK_UPTIMEROBOT_ACCOUNT,
-                "error": MOCK_UPTIMEROBOT_ERROR,
-                "monitors": [MOCK_UPTIMEROBOT_MONITOR],
-            }.get(key, {}),
+            key: (
+                data
+                if data is not None
+                else {
+                    "account": MOCK_UPTIMEROBOT_ACCOUNT,
+                    "error": MOCK_UPTIMEROBOT_ERROR,
+                    "monitors": [MOCK_UPTIMEROBOT_MONITOR],
+                }.get(key, {})
+            ),
         }
     )
 

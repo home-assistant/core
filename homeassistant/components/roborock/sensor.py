@@ -150,18 +150,22 @@ SENSOR_DESCRIPTIONS = [
     RoborockSensorDescription(
         key="last_clean_start",
         translation_key="last_clean_start",
-        value_fn=lambda data: data.last_clean_record.begin_datetime
-        if data.last_clean_record is not None
-        else None,
+        value_fn=lambda data: (
+            data.last_clean_record.begin_datetime
+            if data.last_clean_record is not None
+            else None
+        ),
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
     RoborockSensorDescription(
         key="last_clean_end",
         translation_key="last_clean_end",
-        value_fn=lambda data: data.last_clean_record.end_datetime
-        if data.last_clean_record is not None
-        else None,
+        value_fn=lambda data: (
+            data.last_clean_record.end_datetime
+            if data.last_clean_record is not None
+            else None
+        ),
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.TIMESTAMP,
     ),

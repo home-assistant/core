@@ -598,9 +598,11 @@ class OptionsFlowHandler(OptionsFlow):
                     }
                 ),
                 description_placeholders={
-                    "zone": f"Zone {self.active_cfg}"
-                    if len(self.active_cfg) < 3
-                    else self.active_cfg.upper
+                    "zone": (
+                        f"Zone {self.active_cfg}"
+                        if len(self.active_cfg) < 3
+                        else self.active_cfg.upper
+                    )
                 },
                 errors=errors,
             )
@@ -631,9 +633,11 @@ class OptionsFlowHandler(OptionsFlow):
                         }
                     ),
                     description_placeholders={
-                        "zone": f"Zone {self.active_cfg}"
-                        if len(self.active_cfg) < 3
-                        else self.active_cfg.upper
+                        "zone": (
+                            f"Zone {self.active_cfg}"
+                            if len(self.active_cfg) < 3
+                            else self.active_cfg.upper
+                        )
                     },
                     errors=errors,
                 )
@@ -669,9 +673,11 @@ class OptionsFlowHandler(OptionsFlow):
                     }
                 ),
                 description_placeholders={
-                    "zone": f"Zone {self.active_cfg}"
-                    if len(self.active_cfg) < 3
-                    else self.active_cfg.upper()
+                    "zone": (
+                        f"Zone {self.active_cfg}"
+                        if len(self.active_cfg) < 3
+                        else self.active_cfg.upper()
+                    )
                 },
                 errors=errors,
             )
@@ -699,9 +705,11 @@ class OptionsFlowHandler(OptionsFlow):
                         }
                     ),
                     description_placeholders={
-                        "zone": f"Zone {self.active_cfg}"
-                        if len(self.active_cfg) < 3
-                        else self.active_cfg.upper()
+                        "zone": (
+                            f"Zone {self.active_cfg}"
+                            if len(self.active_cfg) < 3
+                            else self.active_cfg.upper()
+                        )
                     },
                     errors=errors,
                 )
@@ -754,16 +762,18 @@ class OptionsFlowHandler(OptionsFlow):
                         ): vol.All(vol.Coerce(int), vol.Range(min=-1)),
                         vol.Required(
                             CONF_MORE_STATES,
-                            default=CONF_YES
-                            if len(self.current_states) > 1
-                            else CONF_NO,
+                            default=(
+                                CONF_YES if len(self.current_states) > 1 else CONF_NO
+                            ),
                         ): vol.In([CONF_YES, CONF_NO]),
                     }
                 ),
                 description_placeholders={
-                    "zone": f"Zone {self.active_cfg}"
-                    if len(self.active_cfg) < 3
-                    else self.active_cfg.upper(),
+                    "zone": (
+                        f"Zone {self.active_cfg}"
+                        if len(self.active_cfg) < 3
+                        else self.active_cfg.upper()
+                    ),
                     "state": str(self.current_state),
                 },
                 errors=errors,
@@ -806,16 +816,20 @@ class OptionsFlowHandler(OptionsFlow):
                             ): vol.All(vol.Coerce(int), vol.Range(min=-1)),
                             vol.Required(
                                 CONF_MORE_STATES,
-                                default=CONF_YES
-                                if len(self.current_states) > 1
-                                else CONF_NO,
+                                default=(
+                                    CONF_YES
+                                    if len(self.current_states) > 1
+                                    else CONF_NO
+                                ),
                             ): vol.In([CONF_YES, CONF_NO]),
                         }
                     ),
                     description_placeholders={
-                        "zone": f"Zone {self.active_cfg}"
-                        if len(self.active_cfg) < 3
-                        else self.active_cfg.upper(),
+                        "zone": (
+                            f"Zone {self.active_cfg}"
+                            if len(self.active_cfg) < 3
+                            else self.active_cfg.upper()
+                        ),
                         "state": str(self.current_state),
                     },
                     errors=errors,

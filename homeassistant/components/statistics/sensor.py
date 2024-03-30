@@ -631,9 +631,11 @@ class StatisticsSensor(SensorEntity):
         """Return the function callable of one characteristic function."""
         function: Callable[[], StateType | datetime] = getattr(
             self,
-            f"_stat_binary_{characteristic}"
-            if self.is_binary
-            else f"_stat_{characteristic}",
+            (
+                f"_stat_binary_{characteristic}"
+                if self.is_binary
+                else f"_stat_{characteristic}"
+            ),
         )
         return function
 

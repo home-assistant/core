@@ -57,10 +57,9 @@ def object_analytics_supported_fn(hub: AxisHub, event: Event) -> bool:
 
 @callback
 def guard_suite_name_fn(
-    handler: FenceGuardHandler
-    | LoiteringGuardHandler
-    | MotionGuardHandler
-    | Vmd4Handler,
+    handler: (
+        FenceGuardHandler | LoiteringGuardHandler | MotionGuardHandler | Vmd4Handler
+    ),
     event: Event,
     event_type: str,
 ) -> str:

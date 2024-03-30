@@ -1434,9 +1434,11 @@ def mock_integration(
     """Mock an integration."""
     integration = loader.Integration(
         hass,
-        f"{loader.PACKAGE_BUILTIN}.{module.DOMAIN}"
-        if built_in
-        else f"{loader.PACKAGE_CUSTOM_COMPONENTS}.{module.DOMAIN}",
+        (
+            f"{loader.PACKAGE_BUILTIN}.{module.DOMAIN}"
+            if built_in
+            else f"{loader.PACKAGE_CUSTOM_COMPONENTS}.{module.DOMAIN}"
+        ),
         pathlib.Path(""),
         module.mock_manifest(),
         set(),

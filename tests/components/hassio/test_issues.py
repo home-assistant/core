@@ -55,12 +55,14 @@ def mock_resolution_info(
                 "unsupported": unsupported or [],
                 "unhealthy": unhealthy or [],
                 "suggestions": [],
-                "issues": [
-                    {k: v for k, v in issue.items() if k != "suggestions"}
-                    for issue in issues
-                ]
-                if issues
-                else [],
+                "issues": (
+                    [
+                        {k: v for k, v in issue.items() if k != "suggestions"}
+                        for issue in issues
+                    ]
+                    if issues
+                    else []
+                ),
                 "checks": [
                     {"enabled": True, "slug": "supervisor_trust"},
                     {"enabled": True, "slug": "free_space"},

@@ -681,9 +681,11 @@ async def async_setup_entry(
 
     resource_list = [
         *FITBIT_RESOURCES_LIST,
-        SLEEP_START_TIME_12HR
-        if fitbit_config.clock_format == "12H"
-        else SLEEP_START_TIME,
+        (
+            SLEEP_START_TIME_12HR
+            if fitbit_config.clock_format == "12H"
+            else SLEEP_START_TIME
+        ),
     ]
 
     entities = [

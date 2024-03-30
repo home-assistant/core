@@ -263,9 +263,11 @@ def create_browse_media_response(
             )
         )
     return BrowseMedia(
-        title=media_content.id_or_path
-        if media_content.type == MEDIA_TYPE_DIRECTORY
-        else media_content.title,
+        title=(
+            media_content.id_or_path
+            if media_content.type == MEDIA_TYPE_DIRECTORY
+            else media_content.title
+        ),
         media_class=MEDIA_TYPE_TO_MEDIA_CLASS[media_content.type],
         media_content_id="",
         media_content_type=media_content.type,

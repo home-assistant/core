@@ -174,26 +174,30 @@ async def test_cost_sensor_price_entity_total_increasing(
     energy_data["energy_sources"].append(
         {
             "type": "grid",
-            "flow_from": [
-                {
-                    "stat_energy_from": "sensor.energy_consumption",
-                    "stat_cost": None,
-                    "entity_energy_price": price_entity,
-                    "number_energy_price": fixed_price,
-                }
-            ]
-            if flow_type == "flow_from"
-            else [],
-            "flow_to": [
-                {
-                    "stat_energy_to": "sensor.energy_production",
-                    "stat_compensation": None,
-                    "entity_energy_price": price_entity,
-                    "number_energy_price": fixed_price,
-                }
-            ]
-            if flow_type == "flow_to"
-            else [],
+            "flow_from": (
+                [
+                    {
+                        "stat_energy_from": "sensor.energy_consumption",
+                        "stat_cost": None,
+                        "entity_energy_price": price_entity,
+                        "number_energy_price": fixed_price,
+                    }
+                ]
+                if flow_type == "flow_from"
+                else []
+            ),
+            "flow_to": (
+                [
+                    {
+                        "stat_energy_to": "sensor.energy_production",
+                        "stat_compensation": None,
+                        "entity_energy_price": price_entity,
+                        "number_energy_price": fixed_price,
+                    }
+                ]
+                if flow_type == "flow_to"
+                else []
+            ),
             "cost_adjustment_day": 0,
         }
     )
@@ -387,26 +391,30 @@ async def test_cost_sensor_price_entity_total(
     energy_data["energy_sources"].append(
         {
             "type": "grid",
-            "flow_from": [
-                {
-                    "stat_energy_from": "sensor.energy_consumption",
-                    "stat_cost": None,
-                    "entity_energy_price": price_entity,
-                    "number_energy_price": fixed_price,
-                }
-            ]
-            if flow_type == "flow_from"
-            else [],
-            "flow_to": [
-                {
-                    "stat_energy_to": "sensor.energy_production",
-                    "stat_compensation": None,
-                    "entity_energy_price": price_entity,
-                    "number_energy_price": fixed_price,
-                }
-            ]
-            if flow_type == "flow_to"
-            else [],
+            "flow_from": (
+                [
+                    {
+                        "stat_energy_from": "sensor.energy_consumption",
+                        "stat_cost": None,
+                        "entity_energy_price": price_entity,
+                        "number_energy_price": fixed_price,
+                    }
+                ]
+                if flow_type == "flow_from"
+                else []
+            ),
+            "flow_to": (
+                [
+                    {
+                        "stat_energy_to": "sensor.energy_production",
+                        "stat_compensation": None,
+                        "entity_energy_price": price_entity,
+                        "number_energy_price": fixed_price,
+                    }
+                ]
+                if flow_type == "flow_to"
+                else []
+            ),
             "cost_adjustment_day": 0,
         }
     )
@@ -602,26 +610,30 @@ async def test_cost_sensor_price_entity_total_no_reset(
     energy_data["energy_sources"].append(
         {
             "type": "grid",
-            "flow_from": [
-                {
-                    "stat_energy_from": "sensor.energy_consumption",
-                    "stat_cost": None,
-                    "entity_energy_price": price_entity,
-                    "number_energy_price": fixed_price,
-                }
-            ]
-            if flow_type == "flow_from"
-            else [],
-            "flow_to": [
-                {
-                    "stat_energy_to": "sensor.energy_production",
-                    "stat_compensation": None,
-                    "entity_energy_price": price_entity,
-                    "number_energy_price": fixed_price,
-                }
-            ]
-            if flow_type == "flow_to"
-            else [],
+            "flow_from": (
+                [
+                    {
+                        "stat_energy_from": "sensor.energy_consumption",
+                        "stat_cost": None,
+                        "entity_energy_price": price_entity,
+                        "number_energy_price": fixed_price,
+                    }
+                ]
+                if flow_type == "flow_from"
+                else []
+            ),
+            "flow_to": (
+                [
+                    {
+                        "stat_energy_to": "sensor.energy_production",
+                        "stat_compensation": None,
+                        "entity_energy_price": price_entity,
+                        "number_energy_price": fixed_price,
+                    }
+                ]
+                if flow_type == "flow_to"
+                else []
+            ),
             "cost_adjustment_day": 0,
         }
     )

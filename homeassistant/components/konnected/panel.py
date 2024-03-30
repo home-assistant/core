@@ -97,9 +97,9 @@ class AlarmPanel:
     def format_zone(self, zone, other_items=None):
         """Get zone or pin based dict based on the client type."""
         payload = {
-            self.api_version: zone
-            if self.api_version == CONF_ZONE
-            else ZONE_TO_PIN[zone]
+            self.api_version: (
+                zone if self.api_version == CONF_ZONE else ZONE_TO_PIN[zone]
+            )
         }
         payload.update(other_items or {})
         return payload

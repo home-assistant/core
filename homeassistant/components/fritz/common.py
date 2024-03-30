@@ -307,7 +307,9 @@ class FritzBoxTools(
                 self.data["entity_states"][
                     key
                 ] = await self.hass.async_add_executor_job(
-                    update_fn, self.fritz_status, self.data["entity_states"].get(key)
+                    update_fn,
+                    self.fritz_status,
+                    self.data["entity_states"].get(key),
                 )
         return unregister_entity_updates
 

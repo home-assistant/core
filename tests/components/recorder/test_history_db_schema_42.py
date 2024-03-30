@@ -63,13 +63,15 @@ async def _async_get_states(
             attr_cache = {}
             pre_31_schema = get_instance(hass).schema_version < 31
             return [
-                LegacyLazyStatePreSchema31(row, attr_cache, None)
-                if pre_31_schema
-                else LegacyLazyState(
-                    row,
-                    attr_cache,
-                    None,
-                    row.entity_id,
+                (
+                    LegacyLazyStatePreSchema31(row, attr_cache, None)
+                    if pre_31_schema
+                    else LegacyLazyState(
+                        row,
+                        attr_cache,
+                        None,
+                        row.entity_id,
+                    )
                 )
                 for row in legacy._get_rows_with_session(
                     hass,

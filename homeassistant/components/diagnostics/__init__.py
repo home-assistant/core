@@ -193,9 +193,11 @@ async def _async_get_json_file_response(
             "Failed to serialize to JSON: %s/%s%s. Bad data at %s",
             DiagnosticsType.CONFIG_ENTRY.value,
             d_id,
-            f"/{DiagnosticsSubType.DEVICE.value}/{sub_id}"
-            if sub_id is not None
-            else "",
+            (
+                f"/{DiagnosticsSubType.DEVICE.value}/{sub_id}"
+                if sub_id is not None
+                else ""
+            ),
             format_unserializable_data(find_paths_unserializable_data(data)),
         )
         return web.Response(status=HTTPStatus.INTERNAL_SERVER_ERROR)

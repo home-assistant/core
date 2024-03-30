@@ -421,9 +421,9 @@ async def websocket_list_languages(
     connection.send_result(
         msg["id"],
         {
-            "languages": sorted(pipeline_languages)
-            if pipeline_languages
-            else pipeline_languages
+            "languages": (
+                sorted(pipeline_languages) if pipeline_languages else pipeline_languages
+            )
         },
     )
 

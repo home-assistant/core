@@ -41,9 +41,9 @@ class KNXInterfaceDevice:
 
         self.device_registry.async_update_device(
             device_id=self.device.id,
-            model=str(self.gateway_descriptor.name)
-            if self.gateway_descriptor
-            else None,
+            model=(
+                str(self.gateway_descriptor.name) if self.gateway_descriptor else None
+            ),
         )
 
     async def connection_state_changed_cb(self, state: XknxConnectionState) -> None:

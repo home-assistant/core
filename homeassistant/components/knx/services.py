@@ -247,9 +247,11 @@ async def service_send_to_knx_bus(hass: HomeAssistant, call: ServiceCall) -> Non
     for address in attr_address:
         telegram = Telegram(
             destination_address=parse_device_group_address(address),
-            payload=GroupValueResponse(payload)
-            if attr_response
-            else GroupValueWrite(payload),
+            payload=(
+                GroupValueResponse(payload)
+                if attr_response
+                else GroupValueWrite(payload)
+            ),
             source_address=knx_module.xknx.current_address,
         )
         await knx_module.xknx.telegrams.put(telegram)

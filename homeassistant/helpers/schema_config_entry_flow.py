@@ -410,10 +410,12 @@ class SchemaOptionsFlowHandler(OptionsFlowWithConfigEntry):
         self,
         config_entry: ConfigEntry,
         options_flow: Mapping[str, SchemaFlowStep],
-        async_options_flow_finished: Callable[[HomeAssistant, Mapping[str, Any]], None]
-        | None = None,
-        async_setup_preview: Callable[[HomeAssistant], Coroutine[Any, Any, None]]
-        | None = None,
+        async_options_flow_finished: (
+            Callable[[HomeAssistant, Mapping[str, Any]], None] | None
+        ) = None,
+        async_setup_preview: (
+            Callable[[HomeAssistant], Coroutine[Any, Any, None]] | None
+        ) = None,
     ) -> None:
         """Initialize options flow.
 
