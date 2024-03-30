@@ -7,15 +7,13 @@ from collections.abc import Awaitable, Callable, Coroutine
 import concurrent.futures
 import logging
 import threading
-from typing import Any, ParamSpec, TypeVar, TypeVarTuple
+from typing import Any, TypeVar, TypeVarTuple
 
 _LOGGER = logging.getLogger(__name__)
 
 _SHUTDOWN_RUN_CALLBACK_THREADSAFE = "_shutdown_run_callback_threadsafe"
 
 _T = TypeVar("_T")
-_R = TypeVar("_R")
-_P = ParamSpec("_P")
 _Ts = TypeVarTuple("_Ts")
 
 
