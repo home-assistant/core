@@ -5,8 +5,7 @@ import logging
 import pytest
 import voluptuous as vol
 
-from homeassistant.components import conversation
-from homeassistant.components.conversation import default_agent
+from homeassistant.components.conversation import agent_manager, default_agent
 from homeassistant.components.conversation.agent import ConversationInput
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import trigger
@@ -516,7 +515,7 @@ async def test_trigger_with_device_id(hass: HomeAssistant) -> None:
         },
     )
 
-    agent = await conversation.get_agent_manager(hass).async_get_agent()
+    agent = await agent_manager.get_agent_manager(hass).async_get_agent()
     assert isinstance(agent, default_agent.DefaultAgent)
 
     result = await agent.async_process(
