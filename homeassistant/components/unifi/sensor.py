@@ -340,7 +340,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         options=list(DEVICE_STATES.values()),
     ),
     UnifiSensorEntityDescription[Wlans, Wlan](
-        key="WLAN Password",
+        key="WLAN password",
         name_fn=lambda wlan: "Password",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
