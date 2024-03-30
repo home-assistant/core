@@ -59,6 +59,7 @@ async def test_auth(
         """Capture credentials for tests."""
         nonlocal captured_creds
         captured_creds = creds
+        # GoogleNestSubscriber
 
     with patch(
         "google_nest_sdm.google_nest_subscriber.DefaultSubscriberFactory.async_new_subscriber",
@@ -126,6 +127,7 @@ async def test_auth_expired_token(
         """Capture credentials for tests."""
         nonlocal captured_creds
         captured_creds = creds
+        # GoogleNestSubscriber
 
     with patch(
         "google_nest_sdm.google_nest_subscriber.DefaultSubscriberFactory.async_new_subscriber",
