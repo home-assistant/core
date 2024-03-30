@@ -125,10 +125,8 @@ class AmbientNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(mac_address)
             self._abort_if_unique_id_configured()
             return self.async_create_entry(
-                title=get_station_name(self._stations.get(mac_address, {})),
-                data={
-                    CONF_MAC: mac_address,
-                },
+                title=get_station_name(self._stations[mac_address]),
+                data={CONF_MAC: mac_address},
             )
 
         options: list[SelectOptionDict] = [
@@ -136,19 +134,13 @@ class AmbientNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
                 label=get_station_name(station),
                 value=mac_address,
             )
-            for mac_address, station in sorted(
-                self._stations.items(),
-                key=lambda item: get_station_name(item[1]),
-            )
+            for mac_address, station in self._stations.items()
         ]
 
         schema: vol.Schema = vol.Schema(
             {
                 vol.Required(CONF_STATION): SelectSelector(
-                    SelectSelectorConfig(
-                        options=options,
-                        multiple=False,
-                    ),
+                    SelectSelectorConfig(options=options, multiple=False, sort=True),
                 )
             }
         )
