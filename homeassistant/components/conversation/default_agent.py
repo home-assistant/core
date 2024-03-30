@@ -34,6 +34,7 @@ from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
     entity_registry as er,
+    floor_registry as fr,
     intent,
     start,
     template,
@@ -163,7 +164,12 @@ class DefaultAgent(AbstractConversationAgent):
 
         self.hass.bus.async_listen(
             ar.EVENT_AREA_REGISTRY_UPDATED,
-            self._async_handle_area_registry_changed,
+            self._async_handle_area_floor_registry_changed,
+            run_immediately=True,
+        )
+        self.hass.bus.async_listen(
+            fr.EVENT_FLOOR_REGISTRY_UPDATED,
+            self._async_handle_area_floor_registry_changed,
             run_immediately=True,
         )
         self.hass.bus.async_listen(
@@ -696,10 +702,13 @@ class DefaultAgent(AbstractConversationAgent):
         return lang_intents
 
     @core.callback
-    def _async_handle_area_registry_changed(
-        self, event: core.Event[ar.EventAreaRegistryUpdatedData]
+    def _async_handle_area_floor_registry_changed(
+        self,
+        event: core.Event[
+            ar.EventAreaRegistryUpdatedData | fr.EventFloorRegistryUpdatedData
+        ],
     ) -> None:
-        """Clear area area cache when the area registry has changed."""
+        """Clear area/floor list cache when the area registry has changed."""
         self._slot_lists = None
 
     @core.callback
@@ -773,6 +782,8 @@ class DefaultAgent(AbstractConversationAgent):
             # Default name
             entity_names.append((state.name, state.name, context))
 
+        _LOGGER.debug("Exposed entities: %s", entity_names)
+
         # Expose all areas.
         #
         # We pass in area id here with the expectation that no two areas will
@@ -788,11 +799,25 @@ class DefaultAgent(AbstractConversationAgent):
 
                     area_names.append((alias, area.id))
 
-        _LOGGER.debug("Exposed entities: %s", entity_names)
+        # Expose all floors.
+        #
+        # We pass in floor id here with the expectation that no two floors will
+        # share the same name or alias.
+        floors = fr.async_get(self.hass)
+        floor_names = []
+        for floor in floors.async_list_floors():
+            floor_names.append((floor.name, floor.floor_id))
+            if floor.aliases:
+                for alias in floor.aliases:
+                    if not alias.strip():
+                        continue
+
+                    floor_names.append((alias, floor.floor_id))
 
         self._slot_lists = {
             "area": TextSlotList.from_tuples(area_names, allow_template=False),
             "name": TextSlotList.from_tuples(entity_names, allow_template=False),
+            "floor": TextSlotList.from_tuples(floor_names, allow_template=False),
         }
 
         return self._slot_lists
@@ -953,6 +978,10 @@ def _get_unmatched_response(result: RecognizeResult) -> tuple[ErrorKey, dict[str
         # area only
         return ErrorKey.NO_AREA, {"area": unmatched_area}
 
+    if unmatched_floor := unmatched_text.get("floor"):
+        # floor only
+        return ErrorKey.NO_FLOOR, {"floor": unmatched_floor}
+
     # Area may still have matched
     matched_area: str | None = None
     if matched_area_entity := result.entities.get("area"):
@@ -998,6 +1027,13 @@ def _get_no_states_matched_response(
             return ErrorKey.NO_DOMAIN_IN_AREA, {
                 "domain": domain,
                 "area": no_states_error.area,
+            }
+
+        if no_states_error.floor:
+            # domain in floor
+            return ErrorKey.NO_DOMAIN_IN_FLOOR, {
+                "domain": domain,
+                "floor": no_states_error.floor,
             }
 
         # domain only
