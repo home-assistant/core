@@ -1,4 +1,5 @@
 """Define tests for the Tile config flow."""
+
 from unittest.mock import AsyncMock, patch
 
 import pytest

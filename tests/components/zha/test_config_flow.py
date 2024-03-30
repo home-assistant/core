@@ -1,4 +1,5 @@
 """Tests for ZHA config flow."""
+
 import copy
 from datetime import timedelta
 from ipaddress import ip_address
@@ -54,12 +55,15 @@ def disable_platform_only():
 @pytest.fixture(autouse=True)
 def mock_multipan_platform():
     """Mock the multipan platform."""
-    with patch(
-        "homeassistant.components.zha.silabs_multiprotocol.async_get_channel",
-        return_value=None,
-    ), patch(
-        "homeassistant.components.zha.silabs_multiprotocol.async_using_multipan",
-        return_value=False,
+    with (
+        patch(
+            "homeassistant.components.zha.silabs_multiprotocol.async_get_channel",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.zha.silabs_multiprotocol.async_using_multipan",
+            return_value=False,
+        ),
     ):
         yield
 
@@ -295,45 +299,6 @@ async def test_efr32_via_zeroconf(hass: HomeAssistant) -> None:
 
 @patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
 @patch(f"zigpy_znp.{PROBE_FUNCTION_PATH}", AsyncMock(return_value=True))
-async def test_discovery_via_zeroconf_ip_change(hass: HomeAssistant) -> None:
-    """Test zeroconf flow -- radio detected."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="tube_zb_gw_cc2652p2_poe",
-        data={
-            CONF_DEVICE: {
-                CONF_DEVICE_PATH: "socket://192.168.1.5:6638",
-                CONF_BAUDRATE: 115200,
-                CONF_FLOW_CONTROL: None,
-            }
-        },
-    )
-    entry.add_to_hass(hass)
-
-    service_info = zeroconf.ZeroconfServiceInfo(
-        ip_address=ip_address("192.168.1.22"),
-        ip_addresses=[ip_address("192.168.1.22")],
-        hostname="tube_zb_gw_cc2652p2_poe.local.",
-        name="mock_name",
-        port=6053,
-        properties={"address": "tube_zb_gw_cc2652p2_poe.local"},
-        type="mock_type",
-    )
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=service_info
-    )
-
-    assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
-    assert entry.data[CONF_DEVICE] == {
-        CONF_DEVICE_PATH: "socket://192.168.1.22:6638",
-        CONF_BAUDRATE: 115200,
-        CONF_FLOW_CONTROL: None,
-    }
-
-
-@patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
-@patch(f"zigpy_znp.{PROBE_FUNCTION_PATH}", AsyncMock(return_value=True))
 async def test_discovery_via_zeroconf_ip_change_ignored(hass: HomeAssistant) -> None:
     """Test zeroconf flow that was ignored gets updated."""
     entry = MockConfigEntry(
@@ -547,8 +512,8 @@ async def test_discovery_via_usb_already_setup(hass: HomeAssistant) -> None:
 
 
 @patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
-async def test_discovery_via_usb_path_changes(hass: HomeAssistant) -> None:
-    """Test usb flow already setup and the path changes."""
+async def test_discovery_via_usb_path_does_not_change(hass: HomeAssistant) -> None:
+    """Test usb flow already set up and the path does not change."""
 
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -579,7 +544,7 @@ async def test_discovery_via_usb_path_changes(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert entry.data[CONF_DEVICE] == {
-        CONF_DEVICE_PATH: "/dev/ttyZIGBEE",
+        CONF_DEVICE_PATH: "/dev/ttyUSB1",
         CONF_BAUDRATE: 115200,
         CONF_FLOW_CONTROL: None,
     }
@@ -976,7 +941,7 @@ async def test_hardware(onboarded, hass: HomeAssistant) -> None:
         "homeassistant.components.onboarding.async_is_onboarded", return_value=onboarded
     ):
         result1 = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "hardware"}, data=data
+            DOMAIN, context={"source": config_entries.SOURCE_HARDWARE}, data=data
         )
 
     if onboarded:
@@ -1029,7 +994,7 @@ async def test_hardware_already_setup(hass: HomeAssistant) -> None:
         },
     }
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "hardware"}, data=data
+        DOMAIN, context={"source": config_entries.SOURCE_HARDWARE}, data=data
     )
 
     assert result["type"] == FlowResultType.ABORT
@@ -1037,13 +1002,13 @@ async def test_hardware_already_setup(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "data", (None, {}, {"radio_type": "best_radio"}, {"radio_type": "efr32"})
+    "data", [None, {}, {"radio_type": "best_radio"}, {"radio_type": "efr32"}]
 )
 async def test_hardware_invalid_data(hass: HomeAssistant, data) -> None:
     """Test onboarding flow -- invalid data."""
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "hardware"}, data=data
+        DOMAIN, context={"source": config_entries.SOURCE_HARDWARE}, data=data
     )
 
     assert result["type"] == FlowResultType.ABORT
@@ -1587,7 +1552,7 @@ async def test_options_flow_defaults(
     mock_async_unload.assert_called_once_with(entry.entry_id)
 
     # Unload it ourselves
-    entry.state = config_entries.ConfigEntryState.NOT_LOADED
+    entry.mock_state(hass, config_entries.ConfigEntryState.NOT_LOADED)
 
     # Reconfigure ZHA
     assert result1["step_id"] == "prompt_migrate_or_reconfigure"
@@ -1770,7 +1735,7 @@ async def test_options_flow_restarts_running_zha_if_cancelled(
             flow["flow_id"], user_input={}
         )
 
-    entry.state = config_entries.ConfigEntryState.NOT_LOADED
+    entry.mock_state(hass, config_entries.ConfigEntryState.NOT_LOADED)
 
     assert result1["step_id"] == "prompt_migrate_or_reconfigure"
     result2 = await hass.config_entries.options.async_configure(
@@ -1825,7 +1790,7 @@ async def test_options_flow_migration_reset_old_adapter(
             flow["flow_id"], user_input={}
         )
 
-    entry.state = config_entries.ConfigEntryState.NOT_LOADED
+    entry.mock_state(hass, config_entries.ConfigEntryState.NOT_LOADED)
 
     assert result1["step_id"] == "prompt_migrate_or_reconfigure"
     result2 = await hass.config_entries.options.async_configure(
@@ -1863,9 +1828,10 @@ async def test_config_flow_port_yellow_port_name(hass: HomeAssistant) -> None:
     port.manufacturer = None
     port.description = None
 
-    with patch(
-        "homeassistant.components.zha.config_flow.yellow_hardware.async_info"
-    ), patch("serial.tools.list_ports.comports", MagicMock(return_value=[port])):
+    with (
+        patch("homeassistant.components.zha.config_flow.yellow_hardware.async_info"),
+        patch("serial.tools.list_ports.comports", MagicMock(return_value=[port])),
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={CONF_SOURCE: SOURCE_USER},
@@ -1880,10 +1846,11 @@ async def test_config_flow_port_yellow_port_name(hass: HomeAssistant) -> None:
 async def test_config_flow_port_multiprotocol_port_name(hass: HomeAssistant) -> None:
     """Test config flow serial port name for multiprotocol add-on."""
 
-    with patch(
-        "homeassistant.components.hassio.addon_manager.AddonManager.async_get_addon_info"
-    ) as async_get_addon_info, patch(
-        "serial.tools.list_ports.comports", MagicMock(return_value=[])
+    with (
+        patch(
+            "homeassistant.components.hassio.addon_manager.AddonManager.async_get_addon_info"
+        ) as async_get_addon_info,
+        patch("serial.tools.list_ports.comports", MagicMock(return_value=[])),
     ):
         async_get_addon_info.return_value.state = AddonState.RUNNING
         async_get_addon_info.return_value.hostname = "core-silabs-multiprotocol"
@@ -1924,11 +1891,14 @@ async def test_probe_wrong_firmware_installed(hass: HomeAssistant) -> None:
 async def test_discovery_wrong_firmware_installed(hass: HomeAssistant) -> None:
     """Test auto-probing failing because the wrong firmware is installed."""
 
-    with patch(
-        "homeassistant.components.zha.radio_manager.ZhaRadioManager.detect_radio_type",
-        return_value=ProbeResult.WRONG_FIRMWARE_INSTALLED,
-    ), patch(
-        "homeassistant.components.onboarding.async_is_onboarded", return_value=False
+    with (
+        patch(
+            "homeassistant.components.zha.radio_manager.ZhaRadioManager.detect_radio_type",
+            return_value=ProbeResult.WRONG_FIRMWARE_INSTALLED,
+        ),
+        patch(
+            "homeassistant.components.onboarding.async_is_onboarded", return_value=False
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -1953,9 +1923,10 @@ async def test_migration_ti_cc_to_znp(
     old_type: str, new_type: str, hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
     """Test zigpy-cc to zigpy-znp config migration."""
-    config_entry.data = {**config_entry.data, CONF_RADIO_TYPE: old_type}
-    config_entry.version = 2
     config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        config_entry, data={**config_entry.data, CONF_RADIO_TYPE: old_type}, version=2
+    )
 
     with patch("homeassistant.components.zha.async_setup_entry", return_value=True):
         await hass.config_entries.async_setup(config_entry.entry_id)

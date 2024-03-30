@@ -1,4 +1,5 @@
 """OpenSky sensor tests."""
+
 from datetime import timedelta
 from unittest.mock import patch
 
@@ -72,7 +73,7 @@ async def test_sensor_updating(
     async def skip_time_and_check_events() -> None:
         freezer.tick(timedelta(minutes=15))
         async_fire_time_changed(hass)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         assert events == snapshot
 

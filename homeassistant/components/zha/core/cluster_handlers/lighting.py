@@ -1,4 +1,5 @@
 """Lighting cluster handlers module for Zigbee Home Automation."""
+
 from __future__ import annotations
 
 from zigpy.zcl.clusters.lighting import Ballast, Color

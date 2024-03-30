@@ -1,4 +1,5 @@
 """The Google Generative AI Conversation integration."""
+
 from __future__ import annotations
 
 from functools import partial
@@ -63,7 +64,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         for image_filename in image_filenames:
             if not hass.config.is_allowed_path(image_filename):
                 raise HomeAssistantError(
-                    f"Cannot read `{image_filename}`, no access to path; `allowlist_external_dirs` may need to be adjusted in `configuration.yaml`"
+                    f"Cannot read `{image_filename}`, no access to path; "
+                    "`allowlist_external_dirs` may need to be adjusted in "
+                    "`configuration.yaml`"
                 )
             if not Path(image_filename).exists():
                 raise HomeAssistantError(f"`{image_filename}` does not exist")

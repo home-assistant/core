@@ -1,7 +1,9 @@
 """Test init of ecovacs."""
+
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
+from deebot_client.capabilities import Capabilities
 from deebot_client.exceptions import DeebotError, InvalidAuthenticationError
 import pytest
 from syrupy import SnapshotAssertion
@@ -80,6 +82,7 @@ async def test_invalid_auth(
         ({}, 0),
         ({DOMAIN: IMPORT_DATA.copy()}, 1),
     ],
+    ids=["no_config", "import_config"],
 )
 async def test_async_setup_import(
     hass: HomeAssistant,
@@ -87,6 +90,7 @@ async def test_async_setup_import(
     config_entries_expected: int,
     mock_setup_entry: AsyncMock,
     mock_authenticator_authenticate: AsyncMock,
+    mock_mqtt_client: Mock,
 ) -> None:
     """Test async_setup config import."""
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
@@ -95,6 +99,7 @@ async def test_async_setup_import(
     assert len(hass.config_entries.async_entries(DOMAIN)) == config_entries_expected
     assert mock_setup_entry.call_count == config_entries_expected
     assert mock_authenticator_authenticate.call_count == config_entries_expected
+    assert mock_mqtt_client.verify_config.call_count == config_entries_expected
 
 
 async def test_devices_in_dr(
@@ -103,20 +108,21 @@ async def test_devices_in_dr(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test all devices are in the device registry."""
-    for device in controller.devices:
+    for device in controller.devices(Capabilities):
         assert (
             device_entry := device_registry.async_get_device(
-                identifiers={(DOMAIN, device.device_info.did)}
+                identifiers={(DOMAIN, device.device_info["did"])}
             )
         )
-        assert device_entry == snapshot(name=device.device_info.did)
+        assert device_entry == snapshot(name=device.device_info["did"])
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
 @pytest.mark.parametrize(
     ("device_fixture", "entities"),
     [
-        ("yna5x1", 17),
+        ("yna5x1", 26),
+        ("5xu9h3", 20),
     ],
 )
 async def test_all_entities_loaded(

@@ -1,4 +1,5 @@
 """Support for showing random states."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -53,6 +54,8 @@ async def async_setup_entry(
 
 class RandomBinarySensor(BinarySensorEntity):
     """Representation of a Random binary sensor."""
+
+    _attr_translation_key = "random"
 
     def __init__(self, config: Mapping[str, Any], entry_id: str | None = None) -> None:
         """Initialize the Random binary sensor."""

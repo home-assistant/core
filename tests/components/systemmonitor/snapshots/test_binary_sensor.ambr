@@ -1,0 +1,21 @@
+# serializer version: 1
+# name: test_binary_sensor[System Monitor Process pip - attributes]
+  ReadOnlyDict({
+    'device_class': 'running',
+    'friendly_name': 'System Monitor Process pip',
+    'icon': 'mdi:cpu-64-bit',
+  })
+# ---
+# name: test_binary_sensor[System Monitor Process pip - state]
+  'on'
+# ---
+# name: test_binary_sensor[System Monitor Process python3 - attributes]
+  ReadOnlyDict({
+    'device_class': 'running',
+    'friendly_name': 'System Monitor Process python3',
+    'icon': 'mdi:cpu-64-bit',
+  })
+# ---
+# name: test_binary_sensor[System Monitor Process python3 - state]
+  'on'
+# ---

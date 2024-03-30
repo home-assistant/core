@@ -1,4 +1,5 @@
 """Test the Radio Browser config flow."""
+
 from unittest.mock import AsyncMock
 
 from homeassistant.components.radio_browser.const import DOMAIN

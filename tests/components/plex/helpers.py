@@ -1,4 +1,5 @@
 """Helper methods for Plex tests."""
+
 from datetime import timedelta
 
 from plexwebsocket import SIGNAL_CONNECTION_STATE, STATE_CONNECTED

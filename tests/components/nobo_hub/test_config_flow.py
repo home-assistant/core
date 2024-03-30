@@ -1,4 +1,5 @@
 """Test the Nobø Ecohub config flow."""
+
 from unittest.mock import PropertyMock, patch
 
 from homeassistant import config_entries
@@ -30,17 +31,19 @@ async def test_configure_with_discover(hass: HomeAssistant) -> None:
     assert result2["errors"] == {}
     assert result2["step_id"] == "selected"
 
-    with patch(
-        "pynobo.nobo.async_connect_hub", return_value=True
-    ) as mock_connect, patch(
-        "pynobo.nobo.hub_info",
-        new_callable=PropertyMock,
-        create=True,
-        return_value={"name": "My Nobø Ecohub"},
-    ), patch(
-        "homeassistant.components.nobo_hub.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch("pynobo.nobo.async_connect_hub", return_value=True) as mock_connect,
+        patch(
+            "pynobo.nobo.hub_info",
+            new_callable=PropertyMock,
+            create=True,
+            return_value={"name": "My Nobø Ecohub"},
+        ),
+        patch(
+            "homeassistant.components.nobo_hub.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
             {
@@ -73,17 +76,19 @@ async def test_configure_manual(hass: HomeAssistant) -> None:
         assert result["errors"] == {}
         assert result["step_id"] == "manual"
 
-    with patch(
-        "pynobo.nobo.async_connect_hub", return_value=True
-    ) as mock_connect, patch(
-        "pynobo.nobo.hub_info",
-        new_callable=PropertyMock,
-        create=True,
-        return_value={"name": "My Nobø Ecohub"},
-    ), patch(
-        "homeassistant.components.nobo_hub.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch("pynobo.nobo.async_connect_hub", return_value=True) as mock_connect,
+        patch(
+            "pynobo.nobo.hub_info",
+            new_callable=PropertyMock,
+            create=True,
+            return_value={"name": "My Nobø Ecohub"},
+        ),
+        patch(
+            "homeassistant.components.nobo_hub.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -124,17 +129,19 @@ async def test_configure_user_selected_manual(hass: HomeAssistant) -> None:
     assert result2["errors"] == {}
     assert result2["step_id"] == "manual"
 
-    with patch(
-        "pynobo.nobo.async_connect_hub", return_value=True
-    ) as mock_connect, patch(
-        "pynobo.nobo.hub_info",
-        new_callable=PropertyMock,
-        create=True,
-        return_value={"name": "My Nobø Ecohub"},
-    ), patch(
-        "homeassistant.components.nobo_hub.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch("pynobo.nobo.async_connect_hub", return_value=True) as mock_connect,
+        patch(
+            "pynobo.nobo.hub_info",
+            new_callable=PropertyMock,
+            create=True,
+            return_value={"name": "My Nobø Ecohub"},
+        ),
+        patch(
+            "homeassistant.components.nobo_hub.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {

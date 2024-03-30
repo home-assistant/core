@@ -1,4 +1,5 @@
 """Demo fan platform that has a fake fan."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -90,6 +91,7 @@ class BaseDemoFan(FanEntity):
     """A demonstration fan component that uses legacy fan speeds."""
 
     _attr_should_poll = False
+    _attr_translation_key = "demo"
 
     def __init__(
         self,

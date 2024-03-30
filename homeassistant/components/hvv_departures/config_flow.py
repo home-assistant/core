@@ -1,4 +1,5 @@
 """Config flow for HVV integration."""
+
 from __future__ import annotations
 
 import logging
@@ -8,7 +9,7 @@ from pygti.auth import GTI_DEFAULT_HOST
 from pygti.exceptions import CannotConnect, InvalidAuth
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
 from homeassistant.const import CONF_HOST, CONF_OFFSET, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
@@ -38,7 +39,7 @@ SCHEMA_STEP_OPTIONS = vol.Schema(
 )
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class HVVDeparturesConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for HVV."""
 
     VERSION = 1
@@ -125,16 +126,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
+        config_entry: ConfigEntry,
     ) -> OptionsFlowHandler:
         """Get options flow."""
         return OptionsFlowHandler(config_entry)
 
 
-class OptionsFlowHandler(config_entries.OptionsFlow):
+class OptionsFlowHandler(OptionsFlow):
     """Options flow handler."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+    def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize HVV Departures options flow."""
         self.config_entry = config_entry
         self.options = dict(config_entry.options)

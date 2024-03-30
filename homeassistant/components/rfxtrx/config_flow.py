@@ -1,4 +1,5 @@
 """Config flow for RFXCOM RFXtrx integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -13,8 +14,12 @@ import serial
 import serial.tools.list_ports
 import voluptuous as vol
 
-from homeassistant import config_entries, data_entry_flow, exceptions
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import (
     CONF_COMMAND_OFF,
     CONF_COMMAND_ON,
@@ -26,6 +31,7 @@ from homeassistant.const import (
     CONF_TYPE,
 )
 from homeassistant.core import State, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -68,13 +74,13 @@ class DeviceData(TypedDict):
 
 
 def none_or_int(value: str | None, base: int) -> int | None:
-    """Check if strin is one otherwise convert to int."""
+    """Check if string is one otherwise convert to int."""
     if value is None:
         return None
     return int(value, base)
 
 
-class OptionsFlow(config_entries.OptionsFlow):
+class RfxtrxOptionsFlow(OptionsFlow):
     """Handle Rfxtrx options."""
 
     _device_registry: dr.DeviceRegistry
@@ -91,13 +97,13 @@ class OptionsFlow(config_entries.OptionsFlow):
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> ConfigFlowResult:
         """Manage the options."""
         return await self.async_step_prompt_options()
 
     async def async_step_prompt_options(
         self, user_input: dict[str, Any] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> ConfigFlowResult:
         """Prompt for options."""
         errors = {}
 
@@ -171,7 +177,7 @@ class OptionsFlow(config_entries.OptionsFlow):
 
     async def async_step_set_device_options(
         self, user_input: dict[str, Any] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> ConfigFlowResult:
         """Manage device options."""
         errors = {}
         assert self._selected_device_object
@@ -372,7 +378,7 @@ class OptionsFlow(config_entries.OptionsFlow):
             entity_registry.async_remove(entry.entity_id)
 
         # Wait for entities to finish cleanup
-        with suppress(asyncio.TimeoutError):
+        with suppress(TimeoutError):
             async with asyncio.timeout(10):
                 await wait_for_entities.wait()
         remove_track_state_changes()
@@ -407,7 +413,7 @@ class OptionsFlow(config_entries.OptionsFlow):
             )
 
         # Wait for entities to finish renaming
-        with suppress(asyncio.TimeoutError):
+        with suppress(TimeoutError):
             async with asyncio.timeout(10):
                 await wait_for_entities.wait()
         remove_track_state_changes()
@@ -489,14 +495,14 @@ class OptionsFlow(config_entries.OptionsFlow):
         )
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class RfxtrxConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for RFXCOM RFXtrx."""
 
     VERSION = 1
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> ConfigFlowResult:
         """Step when user initializes a integration."""
         await self.async_set_unique_id(DOMAIN)
         self._abort_if_unique_id_configured()
@@ -515,7 +521,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_setup_network(
         self, user_input: dict[str, Any] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> ConfigFlowResult:
         """Step when setting up network configuration."""
         errors: dict[str, str] = {}
 
@@ -542,7 +548,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_setup_serial(
         self, user_input: dict[str, Any] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> ConfigFlowResult:
         """Step when setting up serial configuration."""
         errors: dict[str, str] = {}
 
@@ -581,7 +587,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_setup_serial_manual_path(
         self, user_input: dict[str, Any] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> ConfigFlowResult:
         """Select path manually."""
         errors: dict[str, str] = {}
 
@@ -628,28 +634,20 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @callback
     def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
         """Get the options flow for this handler."""
-        return OptionsFlow(config_entry)
+        return RfxtrxOptionsFlow(config_entry)
 
 
 def _test_transport(host: str | None, port: int | None, device: str | None) -> bool:
     """Construct a rfx object based on config."""
     if port is not None:
-        try:
-            conn = rfxtrxmod.PyNetworkTransport((host, port))
-        except OSError:
-            return False
-
-        conn.close()
+        conn = rfxtrxmod.PyNetworkTransport((host, port))
     else:
-        try:
-            conn = rfxtrxmod.PySerialTransport(device)
-        except serial.SerialException:
-            return False
+        conn = rfxtrxmod.PySerialTransport(device)
 
-        if conn.serial is None:
-            return False
-
-        conn.close()
+    try:
+        conn.connect()
+    except (rfxtrxmod.RFXtrxTransportError, TimeoutError):
+        return False
 
     return True
 
@@ -666,5 +664,5 @@ def get_serial_by_id(dev_path: str) -> str:
     return dev_path
 
 
-class CannotConnect(exceptions.HomeAssistantError):
+class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""

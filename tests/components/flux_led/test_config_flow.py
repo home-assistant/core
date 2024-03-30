@@ -1,4 +1,5 @@
 """Define tests for the Flux LED/Magic Home config flow."""
+
 from __future__ import annotations
 
 from unittest.mock import patch
@@ -78,11 +79,12 @@ async def test_discovery(hass: HomeAssistant) -> None:
         assert result2["step_id"] == "pick_device"
         assert not result2["errors"]
 
-    with _patch_discovery(), _patch_wifibulb(), patch(
-        f"{MODULE}.async_setup", return_value=True
-    ) as mock_setup, patch(
-        f"{MODULE}.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
+    with (
+        _patch_discovery(),
+        _patch_wifibulb(),
+        patch(f"{MODULE}.async_setup", return_value=True) as mock_setup,
+        patch(f"{MODULE}.async_setup_entry", return_value=True) as mock_setup_entry,
+    ):
         result3 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_DEVICE: MAC_ADDRESS},
@@ -152,11 +154,12 @@ async def test_discovery_legacy(hass: HomeAssistant) -> None:
         assert result2["step_id"] == "pick_device"
         assert not result2["errors"]
 
-    with _patch_discovery(), _patch_wifibulb(), patch(
-        f"{MODULE}.async_setup", return_value=True
-    ) as mock_setup, patch(
-        f"{MODULE}.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
+    with (
+        _patch_discovery(),
+        _patch_wifibulb(),
+        patch(f"{MODULE}.async_setup", return_value=True) as mock_setup,
+        patch(f"{MODULE}.async_setup_entry", return_value=True) as mock_setup_entry,
+    ):
         result3 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_DEVICE: MAC_ADDRESS},
@@ -238,9 +241,11 @@ async def test_discovery_with_existing_device_present(hass: HomeAssistant) -> No
     assert result2["step_id"] == "pick_device"
     assert not result2["errors"]
 
-    with _patch_discovery(), _patch_wifibulb(), patch(
-        f"{MODULE}.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
+    with (
+        _patch_discovery(),
+        _patch_wifibulb(),
+        patch(f"{MODULE}.async_setup_entry", return_value=True) as mock_setup_entry,
+    ):
         result3 = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_DEVICE: MAC_ADDRESS}
         )
@@ -312,9 +317,12 @@ async def test_manual_working_discovery(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "cannot_connect"}
 
     # Success
-    with _patch_discovery(), _patch_wifibulb(), patch(
-        f"{MODULE}.async_setup", return_value=True
-    ), patch(f"{MODULE}.async_setup_entry", return_value=True):
+    with (
+        _patch_discovery(),
+        _patch_wifibulb(),
+        patch(f"{MODULE}.async_setup", return_value=True),
+        patch(f"{MODULE}.async_setup_entry", return_value=True),
+    ):
         result4 = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_HOST: IP_ADDRESS}
         )
@@ -356,9 +364,12 @@ async def test_manual_no_discovery_data(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
     assert not result["errors"]
 
-    with _patch_discovery(no_device=True), _patch_wifibulb(), patch(
-        f"{MODULE}.async_setup", return_value=True
-    ), patch(f"{MODULE}.async_setup_entry", return_value=True):
+    with (
+        _patch_discovery(no_device=True),
+        _patch_wifibulb(),
+        patch(f"{MODULE}.async_setup", return_value=True),
+        patch(f"{MODULE}.async_setup_entry", return_value=True),
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_HOST: IP_ADDRESS}
         )
@@ -402,7 +413,7 @@ async def test_discovered_by_discovery_and_dhcp(hass: HomeAssistant) -> None:
             data=dhcp.DhcpServiceInfo(
                 hostname="any",
                 ip=IP_ADDRESS,
-                macaddress="00:00:00:00:00:00",
+                macaddress="000000000000",
             ),
         )
         await hass.async_block_till_done()
@@ -424,11 +435,14 @@ async def test_discovered_by_discovery(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
 
-    with _patch_discovery(), _patch_wifibulb(), patch(
-        f"{MODULE}.async_setup", return_value=True
-    ) as mock_async_setup, patch(
-        f"{MODULE}.async_setup_entry", return_value=True
-    ) as mock_async_setup_entry:
+    with (
+        _patch_discovery(),
+        _patch_wifibulb(),
+        patch(f"{MODULE}.async_setup", return_value=True) as mock_async_setup,
+        patch(
+            f"{MODULE}.async_setup_entry", return_value=True
+        ) as mock_async_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         await hass.async_block_till_done()
 
@@ -460,11 +474,14 @@ async def test_discovered_by_dhcp_udp_responds(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
 
-    with _patch_discovery(), _patch_wifibulb(), patch(
-        f"{MODULE}.async_setup", return_value=True
-    ) as mock_async_setup, patch(
-        f"{MODULE}.async_setup_entry", return_value=True
-    ) as mock_async_setup_entry:
+    with (
+        _patch_discovery(),
+        _patch_wifibulb(),
+        patch(f"{MODULE}.async_setup", return_value=True) as mock_async_setup,
+        patch(
+            f"{MODULE}.async_setup_entry", return_value=True
+        ) as mock_async_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         await hass.async_block_till_done()
 
@@ -496,11 +513,14 @@ async def test_discovered_by_dhcp_no_udp_response(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
 
-    with _patch_discovery(no_device=True), _patch_wifibulb(), patch(
-        f"{MODULE}.async_setup", return_value=True
-    ) as mock_async_setup, patch(
-        f"{MODULE}.async_setup_entry", return_value=True
-    ) as mock_async_setup_entry:
+    with (
+        _patch_discovery(no_device=True),
+        _patch_wifibulb(),
+        patch(f"{MODULE}.async_setup", return_value=True) as mock_async_setup,
+        patch(
+            f"{MODULE}.async_setup_entry", return_value=True
+        ) as mock_async_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         await hass.async_block_till_done()
 
@@ -528,11 +548,14 @@ async def test_discovered_by_dhcp_partial_udp_response_fallback_tcp(
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
 
-    with _patch_discovery(device=FLUX_DISCOVERY_PARTIAL), _patch_wifibulb(), patch(
-        f"{MODULE}.async_setup", return_value=True
-    ) as mock_async_setup, patch(
-        f"{MODULE}.async_setup_entry", return_value=True
-    ) as mock_async_setup_entry:
+    with (
+        _patch_discovery(device=FLUX_DISCOVERY_PARTIAL),
+        _patch_wifibulb(),
+        patch(f"{MODULE}.async_setup", return_value=True) as mock_async_setup,
+        patch(
+            f"{MODULE}.async_setup_entry", return_value=True
+        ) as mock_async_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         await hass.async_block_till_done()
 

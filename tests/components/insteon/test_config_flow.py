@@ -1,4 +1,5 @@
 """Test the config flow for the Insteon integration."""
+
 from unittest.mock import patch
 
 import pytest
@@ -101,13 +102,17 @@ async def _init_form(hass, modem_type):
 
 async def _device_form(hass, flow_id, connection, user_input):
     """Test the PLM, Hub v1 or Hub v2 form."""
-    with patch(
-        PATCH_CONNECTION,
-        new=connection,
-    ), patch(PATCH_ASYNC_SETUP, return_value=True) as mock_setup, patch(
-        PATCH_ASYNC_SETUP_ENTRY,
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            PATCH_CONNECTION,
+            new=connection,
+        ),
+        patch(PATCH_ASYNC_SETUP, return_value=True) as mock_setup,
+        patch(
+            PATCH_ASYNC_SETUP_ENTRY,
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result = await hass.config_entries.flow.async_configure(flow_id, user_input)
         await hass.async_block_till_done()
     return result, mock_setup, mock_setup_entry
@@ -229,7 +234,7 @@ async def test_form_select_hub_v2(hass: HomeAssistant) -> None:
 
 async def test_form_discovery_dhcp(hass: HomeAssistant) -> None:
     """Test the discovery of the Hub via DHCP."""
-    discovery_info = dhcp.DhcpServiceInfo("1.2.3.4", "", "aa:bb:cc:dd:ee:ff")
+    discovery_info = dhcp.DhcpServiceInfo("1.2.3.4", "", "aabbccddeeff")
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=discovery_info
     )
@@ -310,10 +315,11 @@ async def _options_form(
     mock_devices = MockDevices(connected=True)
     await mock_devices.async_load()
     mock_devices.modem = mock_devices["AA.AA.AA"]
-    with patch(PATCH_CONNECTION, new=connection), patch(
-        PATCH_ASYNC_SETUP_ENTRY, return_value=True
-    ) as mock_setup_entry, patch(PATCH_DEVICES, mock_devices), patch(
-        PATCH_CONNECTION_CLOSE
+    with (
+        patch(PATCH_CONNECTION, new=connection),
+        patch(PATCH_ASYNC_SETUP_ENTRY, return_value=True) as mock_setup_entry,
+        patch(PATCH_DEVICES, mock_devices),
+        patch(PATCH_CONNECTION_CLOSE),
     ):
         result = await hass.config_entries.options.async_configure(flow_id, user_input)
         return result, mock_setup_entry

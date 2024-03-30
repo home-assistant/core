@@ -1,4 +1,5 @@
 """Tests for the legacy_api_password auth provider."""
+
 import pytest
 
 from homeassistant import auth, data_entry_flow

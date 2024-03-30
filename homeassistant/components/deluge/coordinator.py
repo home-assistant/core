@@ -1,8 +1,8 @@
 """Data update coordinator for the Deluge integration."""
+
 from __future__ import annotations
 
 from datetime import timedelta
-import socket
 from ssl import SSLError
 from typing import Any
 
@@ -52,7 +52,7 @@ class DelugeDataUpdateCoordinator(
             )
         except (
             ConnectionRefusedError,
-            socket.timeout,
+            TimeoutError,
             SSLError,
             FailedToReconnectException,
         ) as ex:
@@ -63,5 +63,5 @@ class DelugeDataUpdateCoordinator(
                     "Credentials for Deluge client are not valid"
                 ) from ex
             LOGGER.error("Unknown error connecting to Deluge: %s", ex)
-            raise ex
+            raise
         return data

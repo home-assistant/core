@@ -1,4 +1,5 @@
 """Config flow for Midea ccm15 AC Controller integration."""
+
 from __future__ import annotations
 
 import logging
@@ -7,9 +8,8 @@ from typing import Any
 from ccm15 import CCM15Device
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 
 from .const import DEFAULT_TIMEOUT, DOMAIN
@@ -24,14 +24,14 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class CCM15ConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Midea ccm15 AC Controller."""
 
     VERSION = 1
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:

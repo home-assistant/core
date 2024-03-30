@@ -1,4 +1,5 @@
 """Support for MQTT message handling."""
+
 from __future__ import annotations
 
 import asyncio
@@ -811,32 +812,38 @@ class MQTT:
         subscriptions: list[Subscription] = []
         if topic in self._simple_subscriptions:
             subscriptions.extend(self._simple_subscriptions[topic])
-        for subscription in self._wildcard_subscriptions:
-            if subscription.matcher(topic):
-                subscriptions.append(subscription)
+        subscriptions.extend(
+            subscription
+            for subscription in self._wildcard_subscriptions
+            if subscription.matcher(topic)
+        )
         return subscriptions
 
     @callback
     def _mqtt_handle_message(self, msg: mqtt.MQTTMessage) -> None:
+        topic = msg.topic
+        # msg.topic is a property that decodes the topic to a string
+        # every time it is accessed. Save the result to avoid
+        # decoding the same topic multiple times.
         _LOGGER.debug(
             "Received%s message on %s (qos=%s): %s",
             " retained" if msg.retain else "",
-            msg.topic,
+            topic,
             msg.qos,
             msg.payload[0:8192],
         )
         timestamp = dt_util.utcnow()
 
-        subscriptions = self._matching_subscriptions(msg.topic)
+        subscriptions = self._matching_subscriptions(topic)
 
         for subscription in subscriptions:
             if msg.retain:
                 retained_topics = self._retained_topics.setdefault(subscription, set())
                 # Skip if the subscription already received a retained message
-                if msg.topic in retained_topics:
+                if topic in retained_topics:
                     continue
                 # Remember the subscription had an initial retained message
-                self._retained_topics[subscription].add(msg.topic)
+                self._retained_topics[subscription].add(topic)
 
             payload: SubscribePayloadType = msg.payload
             if subscription.encoding is not None:
@@ -846,7 +853,7 @@ class MQTT:
                     _LOGGER.warning(
                         "Can't decode payload %s on %s with encoding %s (for %s)",
                         msg.payload[0:8192],
-                        msg.topic,
+                        topic,
                         subscription.encoding,
                         subscription.job,
                     )
@@ -854,7 +861,7 @@ class MQTT:
             self.hass.async_run_hass_job(
                 subscription.job,
                 ReceiveMessage(
-                    msg.topic,
+                    topic,
                     payload,
                     msg.qos,
                     msg.retain,
@@ -917,7 +924,7 @@ class MQTT:
         try:
             async with asyncio.timeout(TIMEOUT_ACK):
                 await self._pending_operations[mid].wait()
-        except asyncio.TimeoutError:
+        except TimeoutError:
             _LOGGER.warning(
                 "No ACK from MQTT server in %s seconds (mid: %s)", TIMEOUT_ACK, mid
             )

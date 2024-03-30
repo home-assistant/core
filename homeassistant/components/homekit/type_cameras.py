@@ -1,4 +1,5 @@
 """Class to hold all camera accessories."""
+
 import asyncio
 from datetime import timedelta
 import logging
@@ -11,17 +12,17 @@ from pyhap.camera import (
     Camera as PyhapCamera,
 )
 from pyhap.const import CATEGORY_CAMERA
+from pyhap.util import callback as pyhap_callback
 
 from homeassistant.components import camera
 from homeassistant.components.ffmpeg import get_ffmpeg_manager
 from homeassistant.const import STATE_ON
-from homeassistant.core import HomeAssistant, State, callback
+from homeassistant.core import Event, HomeAssistant, State, callback
 from homeassistant.helpers.event import (
     EventStateChangedData,
     async_track_state_change_event,
     async_track_time_interval,
 )
-from homeassistant.helpers.typing import EventType
 
 from .accessories import TYPES, HomeAccessory, HomeDriver
 from .const import (
@@ -251,7 +252,9 @@ class Camera(HomeAccessory, PyhapCamera):  # type: ignore[misc]
 
                 self._async_update_doorbell_state(state)
 
-    async def run(self) -> None:
+    @pyhap_callback  # type: ignore[misc]
+    @callback
+    def run(self) -> None:
         """Handle accessory driver started event.
 
         Run inside the Home Assistant event loop.
@@ -276,11 +279,11 @@ class Camera(HomeAccessory, PyhapCamera):  # type: ignore[misc]
                 )
             )
 
-        await super().run()
+        super().run()
 
     @callback
     def _async_update_motion_state_event(
-        self, event: EventType[EventStateChangedData]
+        self, event: Event[EventStateChangedData]
     ) -> None:
         """Handle state change event listener callback."""
         if not state_changed_event_is_same_state(event):
@@ -307,7 +310,7 @@ class Camera(HomeAccessory, PyhapCamera):  # type: ignore[misc]
 
     @callback
     def _async_update_doorbell_state_event(
-        self, event: EventType[EventStateChangedData]
+        self, event: Event[EventStateChangedData]
     ) -> None:
         """Handle state change event listener callback."""
         if not state_changed_event_is_same_state(event):
@@ -491,11 +494,12 @@ class Camera(HomeAccessory, PyhapCamera):  # type: ignore[misc]
             _LOGGER.info("[%s] %s stream", session_id, shutdown_method)
             try:
                 await getattr(stream, shutdown_method)()
-                return
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception(
                     "[%s] Failed to %s stream", session_id, shutdown_method
                 )
+            else:
+                return
 
     async def reconfigure_stream(
         self, session_info: dict[str, Any], stream_config: dict[str, Any]

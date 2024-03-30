@@ -1,12 +1,13 @@
 """Handler for Hass.io."""
+
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Coroutine
+from collections.abc import Callable, Coroutine
 from http import HTTPStatus
 import logging
 import os
-from typing import Any
+from typing import Any, ParamSpec
 
 import aiohttp
 from yarl import URL
@@ -21,7 +22,9 @@ from homeassistant.const import SERVER_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.loader import bind_hass
 
-from .const import ATTR_DISCOVERY, DOMAIN, X_HASS_SOURCE
+from .const import ATTR_DISCOVERY, ATTR_MESSAGE, ATTR_RESULT, DOMAIN, X_HASS_SOURCE
+
+_P = ParamSpec("_P")
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,10 +33,12 @@ class HassioAPIError(RuntimeError):
     """Return if a API trow a error."""
 
 
-def _api_bool(funct):
+def _api_bool(
+    funct: Callable[_P, Coroutine[Any, Any, dict[str, Any]]],
+) -> Callable[_P, Coroutine[Any, Any, bool]]:
     """Return a boolean."""
 
-    async def _wrapper(*argv, **kwargs):
+    async def _wrapper(*argv: _P.args, **kwargs: _P.kwargs) -> bool:
         """Wrap function."""
         try:
             data = await funct(*argv, **kwargs)
@@ -44,10 +49,12 @@ def _api_bool(funct):
     return _wrapper
 
 
-def api_data(funct):
+def api_data(
+    funct: Callable[_P, Coroutine[Any, Any, dict[str, Any]]],
+) -> Callable[_P, Coroutine[Any, Any, Any]]:
     """Return data of an api."""
 
-    async def _wrapper(*argv, **kwargs):
+    async def _wrapper(*argv: _P.args, **kwargs: _P.kwargs) -> Any:
         """Wrap function."""
         data = await funct(*argv, **kwargs)
         if data["result"] == "ok":
@@ -80,7 +87,7 @@ async def async_get_addon_store_info(hass: HomeAssistant, slug: str) -> dict:
 
 
 @bind_hass
-async def async_update_diagnostics(hass: HomeAssistant, diagnostics: bool) -> dict:
+async def async_update_diagnostics(hass: HomeAssistant, diagnostics: bool) -> bool:
     """Update Supervisor diagnostics toggle.
 
     The caller of the function should handle HassioAPIError.
@@ -255,11 +262,8 @@ async def async_update_core(
 
 @bind_hass
 @_api_bool
-async def async_apply_suggestion(hass: HomeAssistant, suggestion_uuid: str) -> bool:
-    """Apply a suggestion from supervisor's resolution center.
-
-    The caller of the function should handle HassioAPIError.
-    """
+async def async_apply_suggestion(hass: HomeAssistant, suggestion_uuid: str) -> dict:
+    """Apply a suggestion from supervisor's resolution center."""
     hassio: HassIO = hass.data[DOMAIN]
     command = f"/resolution/suggestion/{suggestion_uuid}"
     return await hassio.send_command(command, timeout=None)
@@ -459,7 +463,7 @@ class HassIO:
 
         This method returns a coroutine.
         """
-        return self.send_command("/refresh_updates", timeout=None)
+        return self.send_command("/refresh_updates", timeout=300)
 
     @api_data
     def retrieve_discovery_messages(self) -> Coroutine:
@@ -506,7 +510,6 @@ class HassIO:
         options = {
             "ssl": CONF_SSL_CERTIFICATE in http_config,
             "port": port,
-            "watchdog": True,
             "refresh_token": refresh_token.token,
         }
 
@@ -568,10 +571,10 @@ class HassIO:
         # such as ../../../../etc/passwd
         if url != str(joined_url):
             _LOGGER.error("Invalid request %s", command)
-            raise HassioAPIError()
+            raise HassioAPIError
 
         try:
-            request = await self.websession.request(
+            response = await self.websession.request(
                 method,
                 joined_url,
                 json=payload,
@@ -584,19 +587,28 @@ class HassIO:
                 timeout=aiohttp.ClientTimeout(total=timeout),
             )
 
-            if request.status not in (HTTPStatus.OK, HTTPStatus.BAD_REQUEST):
-                _LOGGER.error("%s return code %d", command, request.status)
-                raise HassioAPIError()
+            if response.status != HTTPStatus.OK:
+                error = await response.json(encoding="utf-8")
+                if error.get(ATTR_RESULT) == "error":
+                    raise HassioAPIError(error.get(ATTR_MESSAGE))
+
+                _LOGGER.error(
+                    "Request to %s method %s returned with code %d",
+                    command,
+                    method,
+                    response.status,
+                )
+                raise HassioAPIError
 
             if return_text:
-                return await request.text(encoding="utf-8")
+                return await response.text(encoding="utf-8")
 
-            return await request.json(encoding="utf-8")
+            return await response.json(encoding="utf-8")
 
-        except asyncio.TimeoutError:
+        except TimeoutError:
             _LOGGER.error("Timeout on %s request", command)
 
         except aiohttp.ClientError as err:
             _LOGGER.error("Client error on %s request %s", command, err)
 
-        raise HassioAPIError()
+        raise HassioAPIError

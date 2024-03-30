@@ -1,8 +1,10 @@
 """Provides tag scanning for MQTT."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
 import functools
+import logging
 
 import voluptuous as vol
 
@@ -25,9 +27,16 @@ from .mixins import (
     send_discovery_done,
     update_device,
 )
-from .models import MqttValueTemplate, ReceiveMessage, ReceivePayloadType
+from .models import (
+    MqttValueTemplate,
+    MqttValueTemplateException,
+    ReceiveMessage,
+    ReceivePayloadType,
+)
 from .subscription import EntitySubscription
 from .util import get_mqtt_data, valid_subscribe_topic
+
+_LOGGER = logging.getLogger(__name__)
 
 LOG_NAME = "Tag"
 
@@ -136,7 +145,11 @@ class MQTTTagScanner(MqttDiscoveryDeviceUpdate):
         """Subscribe to MQTT topics."""
 
         async def tag_scanned(msg: ReceiveMessage) -> None:
-            tag_id = str(self._value_template(msg.payload, "")).strip()
+            try:
+                tag_id = str(self._value_template(msg.payload, "")).strip()
+            except MqttValueTemplateException as exc:
+                _LOGGER.warning(exc)
+                return
             if not tag_id:  # No output from template, ignore
                 return
 

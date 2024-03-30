@@ -1,6 +1,5 @@
 """Diagnostics support for La Marzocco."""
 
-
 from __future__ import annotations
 
 from typing import Any

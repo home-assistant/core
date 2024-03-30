@@ -1,4 +1,5 @@
 """Tests for Islamic Prayer Times config flow."""
+
 from unittest.mock import patch
 
 from prayer_times_calculator import InvalidResponseError

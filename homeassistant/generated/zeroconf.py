@@ -248,6 +248,11 @@ ZEROCONF = {
             "domain": "volumio",
         },
     ],
+    "_aicu-http._tcp.local.": [
+        {
+            "domain": "romy",
+        },
+    ],
     "_airplay._tcp.local.": [
         {
             "domain": "apple_tv",
@@ -404,6 +409,11 @@ ZEROCONF = {
     "_elg._tcp.local.": [
         {
             "domain": "elgato",
+        },
+    ],
+    "_elmax-ssl._tcp.local.": [
+        {
+            "domain": "elmax",
         },
     ],
     "_enphase-envoy._tcp.local.": [
@@ -563,6 +573,11 @@ ZEROCONF = {
             },
         },
     ],
+    "_matter._tcp.local.": [
+        {
+            "domain": "matter",
+        },
+    ],
     "_mediaremotetv._tcp.local.": [
         {
             "domain": "apple_tv",
@@ -613,6 +628,11 @@ ZEROCONF = {
     "_plugwise._tcp.local.": [
         {
             "domain": "plugwise",
+        },
+    ],
+    "_powerview-g3._tcp.local.": [
+        {
+            "domain": "hunterdouglas_powerview",
         },
     ],
     "_powerview._tcp.local.": [

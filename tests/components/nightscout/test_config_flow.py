@@ -1,4 +1,5 @@
 """Test the Nightscout config flow."""
+
 from http import HTTPStatus
 from unittest.mock import patch
 
@@ -26,7 +27,11 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] == {}
 
-    with _patch_glucose_readings(), _patch_server_status(), _patch_async_setup_entry() as mock_setup_entry:
+    with (
+        _patch_glucose_readings(),
+        _patch_server_status(),
+        _patch_async_setup_entry() as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             CONFIG,
@@ -64,12 +69,15 @@ async def test_user_form_api_key_required(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "homeassistant.components.nightscout.NightscoutAPI.get_server_status",
-        return_value=SERVER_STATUS_STATUS_ONLY,
-    ), patch(
-        "homeassistant.components.nightscout.NightscoutAPI.get_sgvs",
-        side_effect=ClientResponseError(None, None, status=HTTPStatus.UNAUTHORIZED),
+    with (
+        patch(
+            "homeassistant.components.nightscout.NightscoutAPI.get_server_status",
+            return_value=SERVER_STATUS_STATUS_ONLY,
+        ),
+        patch(
+            "homeassistant.components.nightscout.NightscoutAPI.get_sgvs",
+            side_effect=ClientResponseError(None, None, status=HTTPStatus.UNAUTHORIZED),
+        ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -104,7 +112,8 @@ async def test_user_form_duplicate(hass: HomeAssistant) -> None:
     with _patch_glucose_readings(), _patch_server_status():
         unique_id = hash_from_url(CONFIG[CONF_URL])
         entry = MockConfigEntry(domain=DOMAIN, unique_id=unique_id)
-        await hass.config_entries.async_add(entry)
+        entry.add_to_hass(hass)
+
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},

@@ -1,5 +1,5 @@
 """Test the PrusaLink config flow."""
-import asyncio
+
 from unittest.mock import patch
 
 from homeassistant import config_entries
@@ -38,6 +38,34 @@ async def test_form(hass: HomeAssistant, mock_version_api) -> None:
         "username": "abcdefg",
         "password": "abcdefg",
     }
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_form_mk3(hass: HomeAssistant, mock_version_api) -> None:
+    """Test it works for MK2/MK3."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    mock_version_api["api"] = "0.9.0-legacy"
+    mock_version_api["server"] = "0.7.2"
+    mock_version_api["original"] = "PrusaLink I3MK3S"
+
+    with patch(
+        "homeassistant.components.prusalink.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "host": "http://1.1.1.1/",
+                "username": "abcdefg",
+                "password": "abcdefg",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -129,6 +157,31 @@ async def test_form_invalid_version_2(hass: HomeAssistant, mock_version_api) -> 
     assert result2["errors"] == {"base": "not_supported"}
 
 
+async def test_form_invalid_mk3_server_version(
+    hass: HomeAssistant, mock_version_api
+) -> None:
+    """Test we handle invalid version for MK2/MK3."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    mock_version_api["api"] = "0.7.2"
+    mock_version_api["server"] = "i am not a version"
+    mock_version_api["original"] = "PrusaLink I3MK3S"
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "host": "1.1.1.1",
+            "username": "abcdefg",
+            "password": "abcdefg",
+        },
+    )
+
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["errors"] == {"base": "not_supported"}
+
+
 async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
@@ -137,7 +190,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.prusalink.config_flow.PrusaLink.get_version",
-        side_effect=asyncio.TimeoutError,
+        side_effect=TimeoutError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],

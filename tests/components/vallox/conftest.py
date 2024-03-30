@@ -1,13 +1,9 @@
 """Common utilities for Vallox tests."""
 
-import random
-import string
-from typing import Any
-from unittest.mock import patch
-from uuid import UUID
+from unittest.mock import AsyncMock, patch
 
 import pytest
-from vallox_websocket_api.vallox import PROFILE
+from vallox_websocket_api import MetricData
 
 from homeassistant.components.vallox.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_NAME
@@ -31,83 +27,85 @@ def mock_entry(hass: HomeAssistant) -> MockConfigEntry:
     return vallox_mock_entry
 
 
-def patch_metrics(metrics: dict[str, Any]):
+@pytest.fixture
+def default_metrics():
+    """Return default Vallox metrics."""
+    return {
+        "A_CYC_MACHINE_MODEL": 3,
+        "A_CYC_APPL_SW_VERSION_1": 2,
+        "A_CYC_APPL_SW_VERSION_2": 0,
+        "A_CYC_APPL_SW_VERSION_3": 16,
+        "A_CYC_UUID0": 5,
+        "A_CYC_UUID1": 6,
+        "A_CYC_UUID2": 7,
+        "A_CYC_UUID3": 8,
+        "A_CYC_UUID4": 9,
+        "A_CYC_UUID5": 10,
+        "A_CYC_UUID6": 11,
+        "A_CYC_UUID7": 12,
+        "A_CYC_BOOST_TIMER": 30,
+        "A_CYC_FIREPLACE_TIMER": 30,
+        "A_CYC_EXTRA_TIMER": 30,
+        "A_CYC_MODE": 0,
+        "A_CYC_STATE": 0,
+        "A_CYC_FILTER_CHANGED_YEAR": 24,
+        "A_CYC_FILTER_CHANGED_MONTH": 2,
+        "A_CYC_FILTER_CHANGED_DAY": 16,
+        "A_CYC_FILTER_CHANGE_INTERVAL": 120,
+        "A_CYC_TOTAL_FAULT_COUNT": 0,
+        "A_CYC_FAULT_CODE": 0,
+        "A_CYC_FAULT_ACTIVITY": 0,
+        "A_CYC_FAULT_FIRST_DATE": 0,
+        "A_CYC_FAULT_LAST_DATE": 0,
+        "A_CYC_FAULT_SEVERITY": 0,
+        "A_CYC_FAULT_COUNT": 0,
+        "A_CYC_HOME_SPEED_SETTING": 30,
+        "A_CYC_AWAY_SPEED_SETTING": 10,
+        "A_CYC_BOOST_SPEED_SETTING": 80,
+    }
+
+
+@pytest.fixture(autouse=True)
+def fetch_metric_data_mock(default_metrics):
+    """Stub the Vallox fetch_metric_data method."""
+    with patch(
+        "homeassistant.components.vallox.Vallox.fetch_metric_data",
+        new_callable=AsyncMock,
+    ) as mock:
+        mock.return_value = MetricData(default_metrics)
+        yield mock
+
+
+@pytest.fixture
+def setup_fetch_metric_data_mock(fetch_metric_data_mock, default_metrics):
     """Patch the Vallox metrics response."""
-    return patch(
-        "homeassistant.components.vallox.Vallox.fetch_metrics",
-        return_value=metrics,
-    )
+
+    def _setup(metrics=None, metric_data_class=MetricData):
+        metrics = metrics or {}
+        fetch_metric_data_mock.return_value = metric_data_class(
+            {**default_metrics, **metrics}
+        )
+
+        return fetch_metric_data_mock
+
+    return _setup
 
 
-def patch_profile(profile: PROFILE):
-    """Patch the Vallox metrics response."""
-    return patch(
-        "homeassistant.components.vallox.Vallox.get_profile",
-        return_value=profile,
-    )
-
-
-def patch_profile_set():
+def patch_set_profile():
     """Patch the Vallox metrics set values."""
     return patch("homeassistant.components.vallox.Vallox.set_profile")
 
 
-def patch_metrics_set():
+def patch_set_fan_speed():
+    """Patch the Vallox metrics set values."""
+    return patch("homeassistant.components.vallox.Vallox.set_fan_speed")
+
+
+def patch_set_values():
     """Patch the Vallox metrics set values."""
     return patch("homeassistant.components.vallox.Vallox.set_values")
 
 
-@pytest.fixture(autouse=True)
-def patch_empty_metrics():
-    """Patch the Vallox profile response."""
-    with patch(
-        "homeassistant.components.vallox.Vallox.fetch_metrics",
-        return_value={},
-    ):
-        yield
-
-
-@pytest.fixture(autouse=True)
-def patch_default_profile():
-    """Patch the Vallox profile response."""
-    with patch(
-        "homeassistant.components.vallox.Vallox.get_profile",
-        return_value=PROFILE.HOME,
-    ):
-        yield
-
-
-@pytest.fixture(autouse=True)
-def patch_model():
-    """Patch the Vallox model response."""
-    with patch(
-        "homeassistant.components.vallox._api_get_model",
-        return_value="Vallox Testmodel",
-    ):
-        yield
-
-
-@pytest.fixture(autouse=True)
-def patch_sw_version():
-    """Patch the Vallox SW version response."""
-    with patch(
-        "homeassistant.components.vallox._api_get_sw_version",
-        return_value="0.1.2",
-    ):
-        yield
-
-
-@pytest.fixture(autouse=True)
-def patch_uuid():
-    """Patch the Vallox UUID response."""
-    with patch(
-        "homeassistant.components.vallox._api_get_uuid",
-        return_value=_random_uuid(),
-    ):
-        yield
-
-
-def _random_uuid():
-    """Generate a random UUID."""
-    uuid = "".join(random.choices(string.hexdigits, k=32))
-    return UUID(uuid)
+def patch_set_filter_change_date():
+    """Patch the Vallox metrics set filter change date."""
+    return patch("homeassistant.components.vallox.Vallox.set_filter_change_date")

@@ -1,4 +1,5 @@
 """YoLink Switch."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -46,8 +47,8 @@ DEVICE_TYPES: tuple[YoLinkSwitchEntityDescription, ...] = (
     ),
     YoLinkSwitchEntityDescription(
         key="manipulator_state",
+        translation_key="manipulator_state",
         name=None,
-        icon="mdi:pipe",
         exists_fn=lambda device: device.device_type == ATTR_DEVICE_MANIPULATOR,
     ),
     YoLinkSwitchEntityDescription(
@@ -113,16 +114,12 @@ async def async_setup_entry(
         for device_coordinator in device_coordinators.values()
         if device_coordinator.device.device_type in DEVICE_TYPE
     ]
-    entities = []
-    for switch_device_coordinator in switch_device_coordinators:
-        for description in DEVICE_TYPES:
-            if description.exists_fn(switch_device_coordinator.device):
-                entities.append(
-                    YoLinkSwitchEntity(
-                        config_entry, switch_device_coordinator, description
-                    )
-                )
-    async_add_entities(entities)
+    async_add_entities(
+        YoLinkSwitchEntity(config_entry, switch_device_coordinator, description)
+        for switch_device_coordinator in switch_device_coordinators
+        for description in DEVICE_TYPES
+        if description.exists_fn(switch_device_coordinator.device)
+    )
 
 
 class YoLinkSwitchEntity(YoLinkEntity, SwitchEntity):

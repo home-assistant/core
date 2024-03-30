@@ -1,4 +1,5 @@
 """The tests for Tasmota device triggers."""
+
 import copy
 import json
 from unittest.mock import Mock, patch

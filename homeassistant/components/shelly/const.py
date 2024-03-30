@@ -1,4 +1,5 @@
 """Constants for the Shelly integration."""
+
 from __future__ import annotations
 
 from enum import StrEnum
@@ -32,11 +33,13 @@ LOGGER: Logger = getLogger(__package__)
 
 DATA_CONFIG_ENTRY: Final = "config_entry"
 CONF_COAP_PORT: Final = "coap_port"
-DEFAULT_COAP_PORT: Final = 5683
 FIRMWARE_PATTERN: Final = re.compile(r"^(\d{8})")
 
-# max light transition time in milliseconds
-MAX_TRANSITION_TIME: Final = 5000
+# max BLOCK light transition time in milliseconds (min=0)
+BLOCK_MAX_TRANSITION_TIME_MS: Final = 5000
+
+# min RPC light transition time in seconds (max=10800, limited by light entity to 6553)
+RPC_MIN_TRANSITION_TIME_SEC = 0.5
 
 RGBW_MODELS: Final = (
     MODEL_BULB,
@@ -211,6 +214,8 @@ MAX_PUSH_UPDATE_FAILURES = 5
 PUSH_UPDATE_ISSUE_ID = "push_update_{unique}"
 
 NOT_CALIBRATED_ISSUE_ID = "not_calibrated_{unique}"
+
+FIRMWARE_UNSUPPORTED_ISSUE_ID = "firmware_unsupported_{unique}"
 
 GAS_VALVE_OPEN_STATES = ("opening", "opened")
 

@@ -1,4 +1,5 @@
 """Test UniFi Network config flow."""
+
 import socket
 from unittest.mock import patch
 
@@ -33,7 +34,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from .test_controller import setup_unifi_integration
+from .test_hub import setup_unifi_integration
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -75,14 +76,15 @@ DEVICES = [
 ]
 
 WLANS = [
-    {"_id": "1", "name": "SSID 1"},
+    {"_id": "1", "name": "SSID 1", "enabled": True},
     {
         "_id": "2",
         "name": "SSID 2",
         "name_combine_enabled": False,
         "name_combine_suffix": "_IOT",
+        "enabled": True,
     },
-    {"_id": "3", "name": "SSID 4", "name_combine_enabled": False},
+    {"_id": "3", "name": "SSID 4", "name_combine_enabled": False, "enabled": True},
 ]
 
 DPI_GROUPS = [
@@ -356,7 +358,7 @@ async def test_flow_fails_user_credentials_faulty(
     assert result["errors"] == {"base": "faulty_credentials"}
 
 
-async def test_flow_fails_controller_unavailable(
+async def test_flow_fails_hub_unavailable(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test config flow."""
@@ -388,10 +390,10 @@ async def test_flow_fails_controller_unavailable(
 async def test_reauth_flow_update_configuration(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """Verify reauth flow can update controller configuration."""
+    """Verify reauth flow can update hub configuration."""
     config_entry = await setup_unifi_integration(hass, aioclient_mock)
-    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
-    controller.available = False
+    hub = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+    hub.websocket.available = False
 
     result = await hass.config_entries.flow.async_init(
         UNIFI_DOMAIN,
@@ -541,12 +543,7 @@ async def test_simple_option_flow(
 ) -> None:
     """Test simple config flow options."""
     config_entry = await setup_unifi_integration(
-        hass,
-        aioclient_mock,
-        clients_response=CLIENTS,
-        wlans_response=WLANS,
-        dpigroup_response=DPI_GROUPS,
-        dpiapp_response=[],
+        hass, aioclient_mock, clients_response=CLIENTS
     )
 
     result = await hass.config_entries.options.async_init(

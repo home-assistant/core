@@ -1,4 +1,5 @@
 """Tests for SpeedTest config flow."""
+
 from unittest.mock import MagicMock
 
 from homeassistant import config_entries

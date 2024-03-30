@@ -1,4 +1,5 @@
 """Test the Starlink config flow."""
+
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.starlink.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER

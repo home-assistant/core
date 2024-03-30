@@ -1,4 +1,5 @@
 """The tests for hls streams."""
+
 import asyncio
 from collections import deque
 from http import HTTPStatus
@@ -95,10 +96,10 @@ def make_segment_with_parts(
     response = []
     if discontinuity:
         response.append("#EXT-X-DISCONTINUITY")
-    for i in range(num_parts):
-        response.append(
-            f'#EXT-X-PART:DURATION={TEST_PART_DURATION:.3f},URI="./segment/{segment}.{i}.m4s"{",INDEPENDENT=YES" if i%independent_period==0 else ""}'
-        )
+    response.extend(
+        f'#EXT-X-PART:DURATION={TEST_PART_DURATION:.3f},URI="./segment/{segment}.{i}.m4s"{",INDEPENDENT=YES" if i%independent_period==0 else ""}'
+        for i in range(num_parts)
+    )
     response.extend(
         [
             "#EXT-X-PROGRAM-DATE-TIME:"
@@ -396,7 +397,7 @@ async def test_ll_hls_playlist_bad_msn_part(
     """Test some playlist requests with invalid _HLS_msn/_HLS_part."""
 
     async def _handler_bad_request(request):
-        raise web.HTTPBadRequest()
+        raise web.HTTPBadRequest
 
     await async_setup_component(
         hass,

@@ -1,4 +1,5 @@
 """Test Goal Zero integration."""
+
 from datetime import timedelta
 from unittest.mock import patch
 
@@ -33,6 +34,26 @@ async def test_setup_config_and_unload(hass: HomeAssistant) -> None:
 
     assert entry.state is ConfigEntryState.NOT_LOADED
     assert not hass.data.get(DOMAIN)
+
+
+async def test_setup_config_entry_incorrectly_formatted_mac(
+    hass: HomeAssistant,
+) -> None:
+    """Test the mac address formatting is corrected."""
+    entry = create_entry(hass)
+    hass.config_entries.async_update_entry(entry, unique_id="AABBCCDDEEFF")
+    mocked_yeti = await create_mocked_yeti()
+    with patch("homeassistant.components.goalzero.Yeti", return_value=mocked_yeti):
+        await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert entry.state == ConfigEntryState.LOADED
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert entry.data == CONF_DATA
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.unique_id == "aa:bb:cc:dd:ee:ff"
 
 
 async def test_async_setup_entry_not_ready(hass: HomeAssistant) -> None:

@@ -1,4 +1,5 @@
 """Support for AVM FRITZ!Box classes."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, ValuesView
@@ -63,10 +64,7 @@ _LOGGER = logging.getLogger(__name__)
 
 def _is_tracked(mac: str, current_devices: ValuesView) -> bool:
     """Check if device is already tracked."""
-    for tracked in current_devices:
-        if mac in tracked:
-            return True
-    return False
+    return any(mac in tracked for tracked in current_devices)
 
 
 def device_filter_out_from_trackers(
@@ -291,7 +289,7 @@ class FritzBoxTools(
 
         self.has_call_deflections = "X_AVM-DE_OnTel1" in self.connection.services
 
-    def register_entity_updates(
+    async def async_register_entity_updates(
         self, key: str, update_fn: Callable[[FritzStatus, StateType], Any]
     ) -> Callable[[], None]:
         """Register an entity to be updated by coordinator."""
@@ -305,6 +303,12 @@ class FritzBoxTools(
         if key not in self._entity_update_functions:
             _LOGGER.debug("register entity %s for updates", key)
             self._entity_update_functions[key] = update_fn
+            if self.fritz_status:
+                self.data["entity_states"][
+                    key
+                ] = await self.hass.async_add_executor_job(
+                    update_fn, self.fritz_status, self.data["entity_states"].get(key)
+                )
         return unregister_entity_updates
 
     async def _async_update_data(self) -> UpdateCoordinatorDataType:
@@ -338,21 +342,21 @@ class FritzBoxTools(
     def unique_id(self) -> str:
         """Return unique id."""
         if not self._unique_id:
-            raise ClassSetupMissing()
+            raise ClassSetupMissing
         return self._unique_id
 
     @property
     def model(self) -> str:
         """Return device model."""
         if not self._model:
-            raise ClassSetupMissing()
+            raise ClassSetupMissing
         return self._model
 
     @property
     def current_firmware(self) -> str:
         """Return current SW version."""
         if not self._current_firmware:
-            raise ClassSetupMissing()
+            raise ClassSetupMissing
         return self._current_firmware
 
     @property
@@ -374,7 +378,7 @@ class FritzBoxTools(
     def mac(self) -> str:
         """Return device Mac address."""
         if not self._unique_id:
-            raise ClassSetupMissing()
+            raise ClassSetupMissing
         return dr.format_mac(self._unique_id)
 
     @property
@@ -785,24 +789,26 @@ class AvmWrapper(FritzBoxTools):  # pylint: disable=hass-enforce-coordinator-mod
                     **kwargs,
                 )
             )
-            return result
         except FritzSecurityError:
             _LOGGER.exception(
                 "Authorization Error: Please check the provided credentials and"
                 " verify that you can log into the web interface"
             )
+            return {}
         except FRITZ_EXCEPTIONS:
             _LOGGER.exception(
                 "Service/Action Error: cannot execute service %s with action %s",
                 service_name,
                 action_name,
             )
+            return {}
         except FritzConnectionException:
             _LOGGER.exception(
                 "Connection Error: Please check the device is properly configured"
                 " for remote login"
             )
-        return {}
+            return {}
+        return result
 
     async def async_get_upnp_configuration(self) -> dict[str, Any]:
         """Call X_AVM-DE_UPnP service."""
@@ -962,7 +968,7 @@ class FritzDeviceBase(update_coordinator.CoordinatorEntity[AvmWrapper]):
 
     async def async_process_update(self) -> None:
         """Update device."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_on_demand_update(self) -> None:
         """Update state."""
@@ -1121,15 +1127,19 @@ class FritzBoxBaseCoordinatorEntity(update_coordinator.CoordinatorEntity[AvmWrap
     ) -> None:
         """Init device info class."""
         super().__init__(avm_wrapper)
-        if description.value_fn is not None:
-            self.async_on_remove(
-                avm_wrapper.register_entity_updates(
-                    description.key, description.value_fn
-                )
-            )
         self.entity_description = description
         self._device_name = device_name
         self._attr_unique_id = f"{avm_wrapper.unique_id}-{description.key}"
+
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        await super().async_added_to_hass()
+        if self.entity_description.value_fn is not None:
+            self.async_on_remove(
+                await self.coordinator.async_register_entity_updates(
+                    self.entity_description.key, self.entity_description.value_fn
+                )
+            )
 
     @property
     def device_info(self) -> DeviceInfo:

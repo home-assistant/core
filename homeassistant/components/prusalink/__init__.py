@@ -1,4 +1,5 @@
 """The PrusaLink integration."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -22,8 +23,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import issue_registry as ir
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -43,7 +44,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryError("Please upgrade your printer's firmware.")
 
     api = PrusaLink(
-        async_get_clientsession(hass),
+        get_async_client(hass),
         entry.data[CONF_HOST],
         entry.data[CONF_USERNAME],
         entry.data[CONF_PASSWORD],
@@ -80,7 +81,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             password = config_entry.data[CONF_API_KEY]
 
             api = PrusaLink(
-                async_get_clientsession(hass),
+                get_async_client(hass),
                 config_entry.data[CONF_HOST],
                 username,
                 password,
@@ -113,9 +114,9 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             new_data[CONF_PASSWORD] = password
 
         ir.async_delete_issue(hass, DOMAIN, "firmware_5_1_required")
-        config_entry.minor_version = 2
-
-        hass.config_entries.async_update_entry(config_entry, data=new_data)
+        hass.config_entries.async_update_entry(
+            config_entry, data=new_data, minor_version=2
+        )
 
     return True
 
