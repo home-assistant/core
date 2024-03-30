@@ -543,7 +543,7 @@ fire_time_changed = threadsafe_callback_factory(async_fire_time_changed)
 def get_fixture_path(filename: str, integration: str | None = None) -> pathlib.Path:
     """Get path of fixture."""
     if integration is None and "/" in filename and not filename.startswith("helpers/"):
-        integration, filename = filename.split("/", 1)
+        raise ValueError
 
     if integration is None:
         return pathlib.Path(__file__).parent.joinpath("fixtures", filename)
