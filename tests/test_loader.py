@@ -1802,7 +1802,7 @@ async def test_hass_helpers_use_reported(
             return_value=integration_frame,
         ),
         patch(
-            "homeassistant.components.http.start_http_server_and_save_config",
+            "homeassistant.helpers.aiohttp_client.async_get_clientsession",
             return_value=None,
         ),
     ):
