@@ -39,6 +39,11 @@
       }
     }
   },
+  "exceptions": {
+    "invalid_controller_id": {
+      "message": "Invalid controller_id '{controller_id}', expected one of '{controller_ids}'"
+    }
+  },
   "options": {
     "error": {
       "duplicated_addr": "The specified address is already in use",

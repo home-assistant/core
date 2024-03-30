@@ -145,7 +145,12 @@ async def async_send_command(hass: HomeAssistant, data: Mapping[str, Any]) -> No
     homeworks_data = get_homeworks_data(data[CONF_CONTROLLER_ID])
     if not homeworks_data:
         raise ServiceValidationError(
-            f"Invalid controller_id {data[CONF_CONTROLLER_ID]}, expected one of {get_controller_ids()}"
+            translation_domain=DOMAIN,
+            translation_key="invalid_controller_id",
+            translation_placeholders={
+                "controller_id": data[CONF_CONTROLLER_ID],
+                "controller_ids": ",".join(get_controller_ids()),
+            },
         )
 
     await hass.async_add_executor_job(
