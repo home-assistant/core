@@ -8,7 +8,6 @@ from __future__ import annotations
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 import secrets
-import string
 from typing import Any
 
 import aiounifi
@@ -62,19 +61,13 @@ async def async_power_cycle_port_control_fn(
     await api.request(DevicePowerCyclePortRequest.create(mac, int(index)))
 
 
-def generate_password(length: int = 18) -> str:
-    """Generate password."""
-    alphabet = string.ascii_letters + string.digits
-    password = "".join(secrets.choice(alphabet) for _ in range(length))
-    return password
-
-
 async def async_change_password_control_fn(
     api: aiounifi.Controller, obj_id: str
 ) -> None:
     """Change WLAN Password."""
-    new_password = generate_password()
-    await api.request(WlanChangePasswordRequest.create(obj_id, new_password))
+    await api.request(
+        WlanChangePasswordRequest.create(obj_id, secrets.token_urlsafe(15))
+    )
 
 
 @dataclass(frozen=True, kw_only=True)
