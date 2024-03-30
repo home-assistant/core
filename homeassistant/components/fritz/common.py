@@ -794,20 +794,21 @@ class AvmWrapper(FritzBoxTools):  # pylint: disable=hass-enforce-coordinator-mod
                 "Authorization Error: Please check the provided credentials and"
                 " verify that you can log into the web interface"
             )
+            return {}
         except FRITZ_EXCEPTIONS:
             _LOGGER.exception(
                 "Service/Action Error: cannot execute service %s with action %s",
                 service_name,
                 action_name,
             )
+            return {}
         except FritzConnectionException:
             _LOGGER.exception(
                 "Connection Error: Please check the device is properly configured"
                 " for remote login"
             )
-        else:
-            return result
-        return {}
+            return {}
+        return result
 
     async def async_get_upnp_configuration(self) -> dict[str, Any]:
         """Call X_AVM-DE_UPnP service."""

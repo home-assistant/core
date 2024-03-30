@@ -108,6 +108,7 @@ class FritzBoxCallMonitorConfigFlow(ConfigFlow, domain=DOMAIN):
             fritz_connection = FritzConnection(
                 address=self._host, user=self._username, password=self._password
             )
+            info = fritz_connection.updatecheck
         except RequestsConnectionError:
             return ConnectResult.NO_DEVIES_FOUND
         except FritzSecurityError:
@@ -115,9 +116,7 @@ class FritzBoxCallMonitorConfigFlow(ConfigFlow, domain=DOMAIN):
         except FritzConnectionException:
             return ConnectResult.INVALID_AUTH
 
-        info = fritz_connection.updatecheck
         self._serial_number = info[FRITZ_ATTR_SERIAL_NUMBER]
-
         return ConnectResult.SUCCESS
 
     async def _get_name_of_phonebook(self, phonebook_id: int) -> str:

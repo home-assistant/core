@@ -92,8 +92,7 @@ def mock_client(
             if default is SENTINEL:
                 raise CharacteristicNotFound from KeyError
             return default
-        else:
-            return val
+        return val
 
     def _all_char():
         return set(mock_read_char_raw.keys())

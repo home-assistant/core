@@ -86,10 +86,11 @@ async def async_http_request(hass, uri):
         json_response = await req.json()
     except (TimeoutError, aiohttp.ClientError) as exc:
         _LOGGER.error("Cannot connect to ViaggiaTreno API endpoint: %s", exc)
+        return None
     except ValueError:
         _LOGGER.error("Received non-JSON data from ViaggiaTreno API endpoint")
-    else:
-        return json_response
+        return None
+    return json_response
 
 
 class ViaggiaTrenoSensor(SensorEntity):

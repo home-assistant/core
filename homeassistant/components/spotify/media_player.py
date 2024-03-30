@@ -109,9 +109,8 @@ def spotify_exception_handler(
             if exc.reason == "NO_ACTIVE_DEVICE":
                 raise HomeAssistantError("No active playback device found") from None
             raise HomeAssistantError(f"Spotify error: {exc.reason}") from exc
-        else:
-            self._attr_available = True
-            return result
+        self._attr_available = True
+        return result
 
     return wrapper
 

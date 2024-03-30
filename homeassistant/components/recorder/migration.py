@@ -343,9 +343,8 @@ def _execute_or_collect_error(
             session.connection().execute(text(query))
         except SQLAlchemyError as err:
             errors.append(str(err))
-        else:
-            return True
-    return False
+            return False
+        return True
 
 
 def _drop_index(

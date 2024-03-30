@@ -37,12 +37,12 @@ def is_supported(
         entity_description.value_getter(vicare_device)
     except PyViCareNotSupportedFeatureError:
         _LOGGER.debug("Feature not supported %s", name)
+        return False
     except AttributeError as error:
         _LOGGER.debug("Feature not supported %s: %s", name, error)
-    else:
-        _LOGGER.debug("Found entity %s", name)
-        return True
-    return False
+        return False
+    _LOGGER.debug("Found entity %s", name)
+    return True
 
 
 def get_burners(device: PyViCareDevice) -> list[PyViCareHeatingDeviceComponent]:

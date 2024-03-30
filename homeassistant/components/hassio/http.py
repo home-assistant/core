@@ -190,14 +190,11 @@ class HassIOView(HomeAssistantView):
 
         except aiohttp.ClientError as err:
             _LOGGER.error("Client error on api %s request %s", path, err)
-
-        except TimeoutError:
+            raise HTTPBadGateway from err
+        except TimeoutError as err:
             _LOGGER.error("Client timeout error on API request %s", path)
-
-        else:
-            return response
-
-        raise HTTPBadGateway
+            raise HTTPBadGateway from err
+        return response
 
     get = _handle
     post = _handle

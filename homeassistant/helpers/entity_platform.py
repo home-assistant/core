@@ -362,8 +362,6 @@ class EntityPlatform:
                 pending = self._tasks.copy()
                 self._tasks.clear()
                 await asyncio.gather(*pending)
-
-            hass.config.components.add(full_name)
         except PlatformNotReady as ex:
             tries += 1
             wait_time = min(tries, 6) * PLATFORM_NOT_READY_BASE_WAIT_TIME
@@ -416,6 +414,7 @@ class EntityPlatform:
             )
             return False
         else:
+            hass.config.components.add(full_name)
             self._setup_complete = True
             return True
         finally:

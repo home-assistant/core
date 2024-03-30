@@ -487,7 +487,7 @@ class SourceManager:
                         await asyncio.sleep(self.retry_delay)
                     else:
                         _LOGGER.error("Unable to update sources: %s", error)
-                        return
+                        return None
                 else:
                     return favorites, inputs
 

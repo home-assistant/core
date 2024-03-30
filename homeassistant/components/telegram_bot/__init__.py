@@ -691,8 +691,8 @@ class TelegramNotificationService:
             _LOGGER.error(
                 "%s: %s. Args: %s, kwargs: %s", msg_error, exc, args_msg, kwargs_msg
             )
-        else:
-            return out
+            return None
+        return out
 
     async def send_message(self, message="", target=None, **kwargs):
         """Send a message to one or multiple pre-allowed chat IDs."""

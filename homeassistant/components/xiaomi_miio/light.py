@@ -300,7 +300,6 @@ class XiaomiPhilipsAbstractLight(XiaomiMiioEntity, LightEntity):
             return False
 
         _LOGGER.debug("Response received from light: %s", result)
-
         return result == SUCCESS
 
     async def async_turn_on(self, **kwargs: Any) -> None:

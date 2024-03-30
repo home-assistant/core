@@ -485,9 +485,8 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):  # pylint: disable=has
             stats = await self.hassio.get_addon_stats(slug)
         except HassioAPIError as err:
             _LOGGER.warning("Could not fetch stats for %s: %s", slug, err)
-        else:
-            return (slug, stats)
-        return (slug, None)
+            return (slug, None)
+        return (slug, stats)
 
     async def _update_addon_changelog(self, slug: str) -> tuple[str, str | None]:
         """Return the changelog for an add-on."""
@@ -495,9 +494,8 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):  # pylint: disable=has
             changelog = await self.hassio.get_addon_changelog(slug)
         except HassioAPIError as err:
             _LOGGER.warning("Could not fetch changelog for %s: %s", slug, err)
-        else:
-            return (slug, changelog)
-        return (slug, None)
+            return (slug, None)
+        return (slug, changelog)
 
     async def _update_addon_info(self, slug: str) -> tuple[str, dict[str, Any] | None]:
         """Return the info for an add-on."""
@@ -505,9 +503,8 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):  # pylint: disable=has
             info = await self.hassio.get_addon_info(slug)
         except HassioAPIError as err:
             _LOGGER.warning("Could not fetch info for %s: %s", slug, err)
-        else:
-            return (slug, info)
-        return (slug, None)
+            return (slug, None)
+        return (slug, info)
 
     @callback
     def async_enable_container_updates(
