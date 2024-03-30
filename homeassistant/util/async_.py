@@ -7,6 +7,7 @@ from collections.abc import Awaitable, Callable, Coroutine
 import concurrent.futures
 from contextlib import suppress
 import functools
+import linecache
 import logging
 import sys
 import threading
@@ -177,10 +178,16 @@ def check_loop(
         module=integration_frame.module,
     )
 
+    offender_frame = get_current_frame(3)
+    offender_filename = offender_frame.f_code.co_filename
+    offender_lineno = offender_frame.f_lineno
+    offender_line = (
+        linecache.getline(offender_filename, offender_lineno) or "?"
+    ).strip()
     _LOGGER.warning(
         (
             "Detected blocking call to %s inside the event loop by %sintegration '%s' "
-            "at %s, line %s: %s, please %s"
+            "at %s, line %s: %s, (offender: %s, line %s: %s) please %s"
         ),
         func.__name__,
         "custom " if integration_frame.custom_integration else "",
@@ -188,6 +195,9 @@ def check_loop(
         integration_frame.relative_filename,
         integration_frame.line_number,
         integration_frame.line,
+        offender_filename,
+        offender_lineno,
+        offender_line,
         report_issue,
     )
 
@@ -196,7 +206,7 @@ def check_loop(
             "Blocking calls must be done in the executor or a separate thread;"
             f" {advise_msg or 'Use `await hass.async_add_executor_job()`'}; at"
             f" {integration_frame.relative_filename}, line {integration_frame.line_number}:"
-            f" {integration_frame.line}"
+            f" {integration_frame.line} (offender: {offender_filename}, line {offender_lineno}: {offender_line})"
         )
 
 
