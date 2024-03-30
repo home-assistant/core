@@ -26,6 +26,11 @@ _R = TypeVar("_R")
 _P = ParamSpec("_P")
 
 
+def _get_line_from_cache(filename: str, lineno: int) -> str:
+    """Get line from cache or read from file."""
+    return (linecache.getline(filename, lineno) or "?").strip()
+
+
 def check_loop(
     func: Callable[..., Any],
     check_allowed: Callable[[dict[str, Any]], bool] | None = None,
@@ -55,9 +60,7 @@ def check_loop(
     offender_frame = get_current_frame(2)
     offender_filename = offender_frame.f_code.co_filename
     offender_lineno = offender_frame.f_lineno
-    offender_line = (
-        linecache.getline(offender_filename, offender_lineno) or "?"
-    ).strip()
+    offender_line = _get_line_from_cache(offender_filename, offender_lineno)
 
     try:
         integration_frame = get_integration_frame()
@@ -96,7 +99,7 @@ def check_loop(
     _LOGGER.warning(
         (
             "Detected blocking call to %s inside the event loop by %sintegration '%s' "
-            "at %s, line %s: %s, (offender: %s, line %s: %s) please %s"
+            "at %s, line %s: %s (offender: %s, line %s: %s), please %s"
         ),
         func.__name__,
         "custom " if integration_frame.custom_integration else "",

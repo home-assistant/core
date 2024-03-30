@@ -30,6 +30,32 @@ async def test_check_loop_async_integration(caplog: pytest.LogCaptureFixture) ->
             return_value="self.light.is_on",
         ),
         patch(
+            "homeassistant.util.loop._get_line_from_cache",
+            return_value="mock_line",
+        ),
+        patch(
+            "homeassistant.util.loop.get_current_frame",
+            return_value=extract_stack_to_frame(
+                [
+                    Mock(
+                        filename="/home/paulus/homeassistant/core.py",
+                        lineno="23",
+                        line="do_something()",
+                    ),
+                    Mock(
+                        filename="/home/paulus/homeassistant/components/hue/light.py",
+                        lineno="23",
+                        line="self.light.is_on",
+                    ),
+                    Mock(
+                        filename="/home/paulus/aiohue/lights.py",
+                        lineno="2",
+                        line="something()",
+                    ),
+                ]
+            ),
+        ),
+        patch(
             "homeassistant.helpers.frame.get_current_frame",
             return_value=extract_stack_to_frame(
                 [
@@ -55,8 +81,9 @@ async def test_check_loop_async_integration(caplog: pytest.LogCaptureFixture) ->
         haloop.check_loop(banned_function)
     assert (
         "Detected blocking call to banned_function inside the event loop by integration"
-        " 'hue' at homeassistant/components/hue/light.py, line 23: self.light.is_on, "
-        "please create a bug report at https://github.com/home-assistant/core/issues?"
+        " 'hue' at homeassistant/components/hue/light.py, line 23: self.light.is_on "
+        "(offender: /home/paulus/aiohue/lights.py, line 2: mock_line), please create "
+        "a bug report at https://github.com/home-assistant/core/issues?"
         "q=is%3Aopen+is%3Aissue+label%3A%22integration%3A+hue%22" in caplog.text
     )
 
