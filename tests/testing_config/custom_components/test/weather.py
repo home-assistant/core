@@ -33,7 +33,7 @@ ENTITIES = []
 
 def init(empty=False):
     """Initialize the platform with entities."""
-    global ENTITIES
+    global ENTITIES  # noqa: PLW0603
     ENTITIES = [] if empty else [MockWeather()]
 
 
@@ -167,11 +167,6 @@ class MockWeatherMockForecast(MockWeather):
                 ATTR_FORECAST_HUMIDITY: self.humidity,
             }
         ]
-
-    @property
-    def forecast(self) -> list[Forecast] | None:
-        """Return the forecast."""
-        return self.forecast_list
 
     async def async_forecast_daily(self) -> list[Forecast] | None:
         """Return the forecast_daily."""

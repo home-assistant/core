@@ -94,8 +94,9 @@ def async_setup_sonos(hass, config_entry, fire_zgs_event):
     async def _wrapper():
         config_entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         await fire_zgs_event()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     return _wrapper
 
@@ -209,9 +210,11 @@ def soco_factory(
     factory = SoCoMockFactory(
         music_library, speaker_info, current_track_info_empty, battery_info, alarm_clock
     )
-    with patch("homeassistant.components.sonos.SoCo", new=factory.get_mock), patch(
-        "socket.gethostbyname", side_effect=patch_gethostbyname
-    ), patch("homeassistant.components.sonos.ZGS_SUBSCRIPTION_TIMEOUT", 0):
+    with (
+        patch("homeassistant.components.sonos.SoCo", new=factory.get_mock),
+        patch("socket.gethostbyname", side_effect=patch_gethostbyname),
+        patch("homeassistant.components.sonos.ZGS_SUBSCRIPTION_TIMEOUT", 0),
+    ):
         yield factory
 
 
@@ -224,14 +227,16 @@ def soco_fixture(soco_factory):
 @pytest.fixture(autouse=True)
 async def silent_ssdp_scanner(hass):
     """Start SSDP component and get Scanner, prevent actual SSDP traffic."""
-    with patch(
-        "homeassistant.components.ssdp.Scanner._async_start_ssdp_listeners"
-    ), patch("homeassistant.components.ssdp.Scanner._async_stop_ssdp_listeners"), patch(
-        "homeassistant.components.ssdp.Scanner.async_scan"
-    ), patch(
-        "homeassistant.components.ssdp.Server._async_start_upnp_servers",
-    ), patch(
-        "homeassistant.components.ssdp.Server._async_stop_upnp_servers",
+    with (
+        patch("homeassistant.components.ssdp.Scanner._async_start_ssdp_listeners"),
+        patch("homeassistant.components.ssdp.Scanner._async_stop_ssdp_listeners"),
+        patch("homeassistant.components.ssdp.Scanner.async_scan"),
+        patch(
+            "homeassistant.components.ssdp.Server._async_start_upnp_servers",
+        ),
+        patch(
+            "homeassistant.components.ssdp.Server._async_stop_upnp_servers",
+        ),
     ):
         yield
 

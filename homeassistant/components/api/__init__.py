@@ -413,7 +413,7 @@ class APIDomainServicesView(HomeAssistantView):
                 )
             )
         except (vol.Invalid, ServiceNotFound) as ex:
-            raise HTTPBadRequest() from ex
+            raise HTTPBadRequest from ex
         finally:
             cancel_listen()
 

@@ -638,31 +638,10 @@ class EntityRegistry(BaseRegistry):
             minor_version=STORAGE_VERSION_MINOR,
         )
         self.hass.bus.async_listen(
-            EVENT_DEVICE_REGISTRY_UPDATED, self.async_device_modified
+            EVENT_DEVICE_REGISTRY_UPDATED,
+            self.async_device_modified,
+            run_immediately=True,
         )
-
-    @callback
-    def async_get_device_class_lookup(
-        self, domain_device_classes: set[tuple[str, str | None]]
-    ) -> dict[str, dict[tuple[str, str | None], str]]:
-        """Return a lookup of entity ids for devices which have matching entities.
-
-        Entities must match a set of (domain, device_class) tuples.
-        The result is indexed by device_id, then by the matching (domain, device_class)
-        """
-        lookup: dict[str, dict[tuple[str, str | None], str]] = {}
-        for entity in self.entities.values():
-            if not entity.device_id:
-                continue
-            device_class = entity.device_class or entity.original_device_class
-            domain_device_class = (entity.domain, device_class)
-            if domain_device_class not in domain_device_classes:
-                continue
-            if entity.device_id not in lookup:
-                lookup[entity.device_id] = {domain_device_class: entity.entity_id}
-            else:
-                lookup[entity.device_id][domain_device_class] = entity.entity_id
-        return lookup
 
     @callback
     def async_is_registered(self, entity_id: str) -> bool:
@@ -1429,10 +1408,11 @@ def _async_setup_cleanup(hass: HomeAssistant, registry: EntityRegistry) -> None:
 
     @callback
     def _removed_from_registry_filter(
-        event: lr.EventLabelRegistryUpdated | cr.EventCategoryRegistryUpdated,
+        event_data: lr.EventLabelRegistryUpdatedData
+        | cr.EventCategoryRegistryUpdatedData,
     ) -> bool:
         """Filter all except for the remove action from registry events."""
-        return event.data["action"] == "remove"
+        return event_data["action"] == "remove"
 
     @callback
     def _handle_label_registry_update(event: lr.EventLabelRegistryUpdated) -> None:
@@ -1443,6 +1423,7 @@ def _async_setup_cleanup(hass: HomeAssistant, registry: EntityRegistry) -> None:
         event_type=lr.EVENT_LABEL_REGISTRY_UPDATED,
         event_filter=_removed_from_registry_filter,
         listener=_handle_label_registry_update,
+        run_immediately=True,
     )
 
     @callback
@@ -1456,6 +1437,7 @@ def _async_setup_cleanup(hass: HomeAssistant, registry: EntityRegistry) -> None:
         event_type=cr.EVENT_CATEGORY_REGISTRY_UPDATED,
         event_filter=_removed_from_registry_filter,
         listener=_handle_category_registry_update,
+        run_immediately=True,
     )
 
     @callback
@@ -1474,7 +1456,9 @@ def _async_setup_cleanup(hass: HomeAssistant, registry: EntityRegistry) -> None:
         """Cancel cleanup."""
         cancel()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _on_homeassistant_stop)
+    hass.bus.async_listen_once(
+        EVENT_HOMEASSISTANT_STOP, _on_homeassistant_stop, run_immediately=True
+    )
 
 
 @callback
@@ -1482,9 +1466,9 @@ def _async_setup_entity_restore(hass: HomeAssistant, registry: EntityRegistry) -
     """Set up the entity restore mechanism."""
 
     @callback
-    def cleanup_restored_states_filter(event: Event) -> bool:
+    def cleanup_restored_states_filter(event_data: Mapping[str, Any]) -> bool:
         """Clean up restored states filter."""
-        return bool(event.data["action"] == "remove")
+        return bool(event_data["action"] == "remove")
 
     @callback
     def cleanup_restored_states(event: Event) -> None:
@@ -1500,6 +1484,7 @@ def _async_setup_entity_restore(hass: HomeAssistant, registry: EntityRegistry) -
         EVENT_ENTITY_REGISTRY_UPDATED,
         cleanup_restored_states,
         event_filter=cleanup_restored_states_filter,
+        run_immediately=True,
     )
 
     if hass.is_running:
@@ -1516,7 +1501,9 @@ def _async_setup_entity_restore(hass: HomeAssistant, registry: EntityRegistry) -
 
             entry.write_unavailable_state(hass)
 
-    hass.bus.async_listen(EVENT_HOMEASSISTANT_START, _write_unavailable_states)
+    hass.bus.async_listen(
+        EVENT_HOMEASSISTANT_START, _write_unavailable_states, run_immediately=True
+    )
 
 
 async def async_migrate_entries(
