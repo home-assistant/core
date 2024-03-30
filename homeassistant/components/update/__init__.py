@@ -408,10 +408,10 @@ class UpdateEntity(
 
         try:
             newer = _version_is_newer(latest_version, installed_version)
-            return STATE_ON if newer else STATE_OFF
         except AwesomeVersionCompareException:
             # Can't compare versions, already tried exact match
             return STATE_ON
+        return STATE_ON if newer else STATE_OFF
 
     @final
     @property

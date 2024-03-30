@@ -398,8 +398,6 @@ class ImapPollingDataUpdateCoordinator(ImapDataUpdateCoordinator):
         """Update the number of unread emails."""
         try:
             messages = await self._async_fetch_number_of_messages()
-            self.auth_errors = 0
-            return messages
         except (
             AioImapException,
             UpdateFailed,
@@ -425,6 +423,9 @@ class ImapPollingDataUpdateCoordinator(ImapDataUpdateCoordinator):
                 self.config_entry.async_start_reauth(self.hass)
             self.async_set_update_error(ex)
             raise ConfigEntryAuthFailed from ex
+
+        self.auth_errors = 0
+        return messages
 
 
 class ImapPushDataUpdateCoordinator(ImapDataUpdateCoordinator):
