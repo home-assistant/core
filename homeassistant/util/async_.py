@@ -213,7 +213,8 @@ def check_loop(
             "Blocking calls must be done in the executor or a separate thread;"
             f" {advise_msg or 'Use `await hass.async_add_executor_job()`'}; at"
             f" {integration_frame.relative_filename}, line {integration_frame.line_number}:"
-            f" {integration_frame.line} (offender: {offender_filename}, line {offender_lineno}: {offender_line})"
+            f" {integration_frame.line} "
+            f"(offender: {offender_filename}, line {offender_lineno}: {offender_line})"
         )
 
 
