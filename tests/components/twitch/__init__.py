@@ -22,7 +22,7 @@ async def setup_integration(hass: HomeAssistant, config_entry: MockConfigEntry) 
 TwitchType = TypeVar("TwitchType", bound=TwitchObject)
 
 
-class TwitchIterObject:
+class TwitchIterObject(Generic[TwitchType]):
     """Twitch object iterator."""
 
     def __init__(self, fixture: str, target_type: type[TwitchType]) -> None:
