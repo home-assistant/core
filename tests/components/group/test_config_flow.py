@@ -483,6 +483,19 @@ async def test_options_flow_hides_members(
     assert entity_registry.async_get(f"{group_type}.three").hidden_by == hidden_by
 
 
+CLIMATE_ATTRS = [
+    {
+        "supported_features": 0,
+        "hvac_modes": ["off"],
+        "max_temp": None,
+        "min_temp": None,
+    },
+    {
+        "assumed_state": True,
+        "current_temperature": None,
+        "hvac_action": "off",
+    },
+]
 COVER_ATTRS = [{"supported_features": 0}, {}]
 EVENT_ATTRS = [{"event_types": []}, {"event_type": None}]
 FAN_ATTRS = [{"supported_features": 0}, {}]
@@ -505,6 +518,7 @@ SENSOR_ATTRS = [{"icon": "mdi:calculator"}, {"max_entity_id": "sensor.input_two"
     [
         ("binary_sensor", {"all": True}, ["on", "off"], "off", [{}, {}]),
         ("button", {}, ["", ""], "unknown", [{}, {}]),
+        ("climate", {}, ["heat", "off"], "heat", CLIMATE_ATTRS),
         ("cover", {}, ["open", "closed"], "open", COVER_ATTRS),
         ("event", {}, ["", ""], "unknown", EVENT_ATTRS),
         ("fan", {}, ["on", "off"], "on", FAN_ATTRS),
@@ -616,6 +630,7 @@ async def test_config_flow_preview(
     [
         ("binary_sensor", {"all": True}, {"all": False}, ["on", "off"], "on", [{}, {}]),
         ("button", {}, {}, ["", ""], "unknown", [{}, {}]),
+        ("climate", {}, {}, ["heat", "off"], "heat", CLIMATE_ATTRS),
         ("cover", {}, {}, ["open", "closed"], "open", COVER_ATTRS),
         ("event", {}, {}, ["", ""], "unknown", EVENT_ATTRS),
         ("fan", {}, {}, ["on", "off"], "on", FAN_ATTRS),

@@ -44,7 +44,6 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_ENTITIES,
     CONF_NAME,
-    CONF_TEMPERATURE_UNIT,
     CONF_UNIQUE_ID,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
@@ -72,16 +71,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_ENTITIES): cv.entities_domain(DOMAIN),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
-        vol.Optional(CONF_TEMPERATURE_UNIT): cv.temperature_unit,
     }
-)
-# edit the supported_flags
-SUPPORT_FLAGS = (
-    ClimateEntityFeature.TARGET_TEMPERATURE
-    | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
-    | ClimateEntityFeature.PRESET_MODE
-    | ClimateEntityFeature.SWING_MODE
-    | ClimateEntityFeature.FAN_MODE
 )
 
 
@@ -98,7 +88,7 @@ async def async_setup_platform(
                 config.get(CONF_UNIQUE_ID),
                 config[CONF_NAME],
                 config[CONF_ENTITIES],
-                config.get(CONF_TEMPERATURE_UNIT, hass.config.units.temperature_unit),
+                hass.config.units.temperature_unit,
             )
         ]
     )
@@ -121,11 +111,22 @@ async def async_setup_entry(
                 config_entry.entry_id,
                 config_entry.title,
                 entities,
-                config_entry.options.get(
-                    CONF_TEMPERATURE_UNIT, hass.config.units.temperature_unit
-                ),
+                hass.config.units.temperature_unit,
             )
         ]
+    )
+
+
+@callback
+def async_create_preview_climate(
+    hass: HomeAssistant, name: str, validated_config: dict[str, Any]
+) -> ClimateGroup:
+    """Create a preview sensor."""
+    return ClimateGroup(
+        None,
+        name,
+        validated_config[CONF_ENTITIES],
+        hass.config.units.temperature_unit,
     )
 
 
