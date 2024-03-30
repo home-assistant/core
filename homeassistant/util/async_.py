@@ -163,7 +163,8 @@ def check_loop(
         # Did not source from integration? Hard error.
         if not strict_core:
             _LOGGER.warning(
-                "Detected blocking call to %s with args %s (offender: %s, line %s: %s) inside the event loop",
+                "Detected blocking call to %s with args %s in %s, "
+                "line %s: %s inside the event loop",
                 func.__name__,
                 mapped_args.get("args"),
                 offender_filename,
