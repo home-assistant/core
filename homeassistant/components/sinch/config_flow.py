@@ -1,4 +1,5 @@
 """Config flow for sinch integration."""
+
 from __future__ import annotations
 
 import logging

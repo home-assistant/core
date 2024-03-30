@@ -1,4 +1,5 @@
 """Constants for the Sinch integration."""
+
 from typing import Final
 
 DEFAULT_SENDER: Final = "Home"
