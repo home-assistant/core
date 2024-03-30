@@ -1,7 +1,7 @@
 """Tests for the Twitch component."""
 
 from collections.abc import AsyncGenerator, AsyncIterator
-from typing import Any, TypeVar
+from typing import Any, Generic, TypeVar
 
 from twitchAPI.object.base import TwitchObject
 
