@@ -74,10 +74,11 @@ class DovadoData:
             if not self.state:
                 return False
             self.state.update(connected=self.state.get("modem status") == "CONNECTED")
-            _LOGGER.debug("Received: %s", self.state)
-            return True
         except OSError as error:
             _LOGGER.warning("Could not contact the router: %s", error)
+            return None
+        _LOGGER.debug("Received: %s", self.state)
+        return True
 
     @property
     def client(self):

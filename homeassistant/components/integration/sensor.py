@@ -145,9 +145,9 @@ class _Right(_IntegrationMethod):
 def _is_numeric_state(state: State) -> bool:
     try:
         float(state.state)
-        return True
     except (ValueError, TypeError):
         return False
+    return True
 
 
 _NAME_TO_INTEGRATION_METHOD: dict[str, type[_IntegrationMethod]] = {

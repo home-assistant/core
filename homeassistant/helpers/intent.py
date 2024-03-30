@@ -109,7 +109,6 @@ async def async_handle(
     try:
         _LOGGER.info("Triggering intent handler %s", handler)
         result = await handler.async_handle(intent)
-        return result
     except vol.Invalid as err:
         _LOGGER.warning("Received invalid slot info for %s: %s", intent_type, err)
         raise InvalidSlotInfo(f"Received invalid slot info for {intent_type}") from err
@@ -117,6 +116,7 @@ async def async_handle(
         raise  # bubble up intent related errors
     except Exception as err:
         raise IntentUnexpectedError(f"Error handling {intent_type}") from err
+    return result
 
 
 class IntentError(HomeAssistantError):

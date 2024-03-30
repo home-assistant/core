@@ -221,9 +221,9 @@ async def async_parse_field_detector(uid: str, msg) -> Event | None:
             None,
             payload.Data.SimpleItem[0].Value == "true",
         )
-        return evt
     except (AttributeError, KeyError):
         return None
+    return evt
 
 
 @PARSERS.register("tns1:RuleEngine/CellMotionDetector/Motion")
