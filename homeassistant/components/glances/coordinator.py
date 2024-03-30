@@ -1,6 +1,6 @@
 """Coordinator for Glances integration."""
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 from typing import Any
 
@@ -45,18 +45,15 @@ class GlancesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except exceptions.GlancesApiError as err:
             raise UpdateFailed from err
         # Update computed values
-        if data:
-            up_duration = parse_duration(data.get("uptime"))
-            uptime = None
-            if isinstance(up_duration, timedelta):
-                # Update uptime if previous value is None or previous uptime is bigger than
-                # new uptime (i.e. server restarted) else use previous value
-                if (
-                    self.data is None
-                    or self.data["computed"]["uptime_duration"] > up_duration
-                ):
-                    uptime = utcnow() - up_duration
-                elif self.data:
-                    uptime = self.data["computed"]["uptime"]
-            data["computed"] = {"uptime_duration": up_duration, "uptime": uptime}
+        uptime: datetime | None = self.data["computed"]["uptime"] if self.data else None
+        up_duration: timedelta | None = None
+        if up_duration := parse_duration(data.get("uptime")):
+            # Update uptime if previous value is None or previous uptime is bigger than
+            # new uptime (i.e. server restarted)
+            if (
+                self.data is None
+                or self.data["computed"]["uptime_duration"] > up_duration
+            ):
+                uptime = utcnow() - up_duration
+        data["computed"] = {"uptime_duration": up_duration, "uptime": uptime}
         return data or {}
