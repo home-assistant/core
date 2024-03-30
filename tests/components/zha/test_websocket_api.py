@@ -318,8 +318,8 @@ async def test_update_zha_config(
 
     await zha_client.send_json({ID: 6, TYPE: "zha/configuration"})
     msg = await zha_client.receive_json()
-    configuration = msg["result"]
-    assert configuration == configuration
+    test_configuration = msg["result"]
+    assert test_configuration == configuration
 
     await hass.config_entries.async_unload(config_entry.entry_id)
 
