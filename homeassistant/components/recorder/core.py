@@ -1179,7 +1179,6 @@ class Recorder(threading.Thread):
         while tries <= self.db_max_retries:
             try:
                 self._commit_event_session()
-                return
             except (exc.InternalError, exc.OperationalError) as err:
                 _LOGGER.error(
                     "%s: Error executing query: %s. (retrying in %s seconds)",
@@ -1192,6 +1191,8 @@ class Recorder(threading.Thread):
 
                 tries += 1
                 time.sleep(self.db_retry_wait)
+            else:
+                return
 
     def _commit_event_session(self) -> None:
         assert self.event_session is not None
