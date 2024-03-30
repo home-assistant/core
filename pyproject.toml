@@ -633,6 +633,7 @@ select = [
     "PIE", # flake8-pie
     "PL", # pylint
     "PT", # flake8-pytest-style
+    "RET", # flake8-return
     "RSE", # flake8-raise
     "RUF005", # Consider iterable unpacking instead of concatenation
     "RUF006", # Store a reference to the return value of asyncio.create_task
@@ -713,6 +714,10 @@ ignore = [
 
     # temporarily disabled
     "PT019",
+    "RET504",
+    "RET503",
+    "RET502",
+    "RET501",
     "TRY002",
     "TRY301"
 ]
