@@ -212,27 +212,27 @@ async def test_power_cycle_poe(
     )
 
 
-async def test_wlan_change_password(
+async def test_wlan_regenerate_password(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     aioclient_mock: AiohttpClientMocker,
     websocket_mock,
 ) -> None:
-    """Test WLAN change password button."""
+    """Test WLAN regenerate password button."""
 
     await setup_unifi_integration(hass, aioclient_mock, wlans_response=[WLAN])
     assert len(hass.states.async_entity_ids(BUTTON_DOMAIN)) == 0
 
-    button_change_password = "button.ssid_1_change_password"
+    button_regenerate_password = "button.ssid_1_regenerate_password"
 
-    ent_reg_entry = entity_registry.async_get(button_change_password)
-    assert ent_reg_entry.unique_id == "change_password-012345678910111213141516"
+    ent_reg_entry = entity_registry.async_get(button_regenerate_password)
+    assert ent_reg_entry.unique_id == "regenerate_password-012345678910111213141516"
     assert ent_reg_entry.disabled_by == RegistryEntryDisabler.INTEGRATION
     assert ent_reg_entry.entity_category is EntityCategory.CONFIG
 
     # Enable entity
     entity_registry.async_update_entity(
-        entity_id=button_change_password, disabled_by=None
+        entity_id=button_regenerate_password, disabled_by=None
     )
     await hass.async_block_till_done()
 
@@ -245,17 +245,17 @@ async def test_wlan_change_password(
     assert len(hass.states.async_entity_ids(BUTTON_DOMAIN)) == 1
 
     # Validate state object
-    button = hass.states.get(button_change_password)
+    button = hass.states.get(button_regenerate_password)
     assert button is not None
     assert button.attributes.get(ATTR_DEVICE_CLASS) == ButtonDeviceClass.UPDATE
 
     aioclient_mock.mock_calls.clear()
 
-    # Send WLAN change password command
+    # Send WLAN regenerate password command
     await hass.services.async_call(
         BUTTON_DOMAIN,
         "press",
-        {"entity_id": button_change_password},
+        {"entity_id": button_regenerate_password},
         blocking=True,
     )
     assert aioclient_mock.call_count == 1
@@ -265,8 +265,8 @@ async def test_wlan_change_password(
 
     # Controller disconnects
     await websocket_mock.disconnect()
-    assert hass.states.get(button_change_password).state == STATE_UNAVAILABLE
+    assert hass.states.get(button_regenerate_password).state == STATE_UNAVAILABLE
 
     # Controller reconnects
     await websocket_mock.reconnect()
-    assert hass.states.get(button_change_password).state != STATE_UNAVAILABLE
+    assert hass.states.get(button_regenerate_password).state != STATE_UNAVAILABLE
