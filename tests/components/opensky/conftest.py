@@ -103,4 +103,5 @@ async def opensky_client() -> Generator[AsyncMock, None, None]:
         client.get_states.return_value = StatesResponse.from_api(
             load_json_object_fixture("states.json", DOMAIN)
         )
+        client.is_authenticated = False
         yield client
