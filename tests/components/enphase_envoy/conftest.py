@@ -38,9 +38,10 @@ import pytest
 from homeassistant.components.enphase_envoy import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry, load_json_object_fixture
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="config_entry")
@@ -626,7 +627,7 @@ def set_reserve_soc_fixture():
     return AsyncMock(return_value="[]")
 
 
-@pytest.fixture(name="test_parameters")
-def get_test_parameters():
-    """Load test parameters."""
-    return load_json_object_fixture("test_parameters.json", DOMAIN)
+@pytest.fixture(name="entity_registry")
+def get_entity_registry(hass: HomeAssistant):
+    """Load entity registry."""
+    return er.async_get(hass)

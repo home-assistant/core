@@ -20,14 +20,13 @@ async def test_number(
     config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
     mock_envoy: AsyncMock,
+    entity_registry: AsyncMock,
 ) -> None:
     """Test enphase_envoy number entities."""
     await setup_with_selected_platforms(hass, config_entry, [Platform.NUMBER])
 
     # number entities states should be created from test data
     assert len(hass.states.async_all()) == 7
-
-    entity_registry = er.async_get(hass)
     assert entity_registry
 
     # compare registered entities against snapshot of prior run

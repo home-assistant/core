@@ -1,9 +1,0 @@
-{
-  "initial_entities": {
-    "binary_sensor": 4,
-    "number": 7,
-    "select": 13,
-    "sensor": 51,
-    "switch": 5
-  }
-}

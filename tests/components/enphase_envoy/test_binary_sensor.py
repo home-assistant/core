@@ -17,14 +17,13 @@ async def test_binary_sensor(
     config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
     mock_envoy: AsyncMock,
+    entity_registry: AsyncMock,
 ) -> None:
     """Test enphase_envoy binary_sensor entities."""
     await setup_with_selected_platforms(hass, config_entry, [Platform.BINARY_SENSOR])
 
     # number entities states should be created from test data
     assert len(hass.states.async_all()) == 4
-
-    entity_registry = er.async_get(hass)
     assert entity_registry
 
     # compare registered entities against snapshot of prior run
