@@ -325,8 +325,6 @@ def get_api(entry: dict[str, Any]) -> librouteros.Api:
             entry[CONF_PASSWORD],
             **kwargs,
         )
-        _LOGGER.debug("Connected to %s successfully", entry[CONF_HOST])
-        return api
     except (
         librouteros.exceptions.LibRouterosError,
         OSError,
@@ -336,3 +334,6 @@ def get_api(entry: dict[str, Any]) -> librouteros.Api:
         if "invalid user name or password" in str(api_error):
             raise LoginError from api_error
         raise CannotConnect from api_error
+
+    _LOGGER.debug("Connected to %s successfully", entry[CONF_HOST])
+    return api

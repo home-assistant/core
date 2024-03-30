@@ -31,9 +31,9 @@ def is_internal_request(hass: HomeAssistant) -> bool:
         get_url(
             hass, allow_external=False, allow_cloud=False, require_current_request=True
         )
-        return True
     except NoURLAvailableError:
         return False
+    return True
 
 
 @bind_hass
