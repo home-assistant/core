@@ -8,6 +8,7 @@ from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     CONF_HOST,
+    CONTENT_TYPE_JSON,
     STATE_UNAVAILABLE,
     EntityCategory,
 )
@@ -21,8 +22,9 @@ from .test_hub import setup_unifi_integration
 from tests.common import async_fire_time_changed
 from tests.test_util.aiohttp import AiohttpClientMocker
 
+WLAN_ID = "_id"
 WLAN = {
-    "_id": "012345678910111213141516",
+    WLAN_ID: "012345678910111213141516",
     "bc_filter_enabled": False,
     "bc_filter_list": [],
     "dtim_mode": "default",
@@ -220,7 +222,9 @@ async def test_wlan_regenerate_password(
 ) -> None:
     """Test WLAN regenerate password button."""
 
-    await setup_unifi_integration(hass, aioclient_mock, wlans_response=[WLAN])
+    config_entry = await setup_unifi_integration(
+        hass, aioclient_mock, wlans_response=[WLAN]
+    )
     assert len(hass.states.async_entity_ids(BUTTON_DOMAIN)) == 0
 
     button_regenerate_password = "button.ssid_1_regenerate_password"
@@ -249,7 +253,13 @@ async def test_wlan_regenerate_password(
     assert button is not None
     assert button.attributes.get(ATTR_DEVICE_CLASS) == ButtonDeviceClass.UPDATE
 
-    aioclient_mock.mock_calls.clear()
+    aioclient_mock.clear_requests()
+    aioclient_mock.put(
+        f"https://{config_entry.data[CONF_HOST]}:1234"
+        f"/api/s/{config_entry.data[CONF_SITE_ID]}/rest/wlanconf/{WLAN[WLAN_ID]}",
+        json={"data": "password changed successfully", "meta": {"rc": "ok"}},
+        headers={"content-type": CONTENT_TYPE_JSON},
+    )
 
     # Send WLAN regenerate password command
     await hass.services.async_call(
