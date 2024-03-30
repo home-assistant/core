@@ -1741,6 +1741,10 @@ omit =
     homeassistant/components/myuplink/entity.py
     homeassistant/components/myuplink/helpers.py
     homeassistant/components/myuplink/sensor.py
+    homeassistant/components/apsystemsapi_local/__init__.py
+    homeassistant/components/apsystemsapi_local/number.py
+    homeassistant/components/apsystemsapi_local/sensor.py
+    homeassistant/components/apsystemsapi_local/switch.py
 
 
 [report]
