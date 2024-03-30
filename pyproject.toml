@@ -304,6 +304,10 @@ disable = [
     "use-list-literal", # C405
     "useless-object-inheritance", # UP004
     "useless-return", # PLR1711
+    "no-else-break", # RET508
+    "no-else-continue", # RET507
+    "no-else-raise", # RET506
+    "no-else-return", # RET505
     # "no-self-use", # PLR6301  # Optional plugin, not enabled
 
     # Handled by mypy
