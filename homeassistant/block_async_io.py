@@ -2,6 +2,7 @@
 
 from http.client import HTTPConnection
 import importlib
+import sys
 import time
 
 from .util.async_ import protect_loop
@@ -21,6 +22,9 @@ def enable() -> None:
     # Prevent files being opened inside the event loop
     # builtins.open = protect_loop(builtins.open)
 
-    importlib.import_module = protect_loop(
-        importlib.import_module, strict_core=False, strict=False
-    )
+    if "unittest" not in sys.modules:
+        # unittest uses `importlib.import_module` to do mocking
+        # so we cannot protect it if we are running tests
+        importlib.import_module = protect_loop(
+            importlib.import_module, strict_core=False, strict=False
+        )
