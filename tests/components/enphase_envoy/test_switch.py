@@ -159,9 +159,9 @@ async def test_switch_grid_charge(
 @pytest.mark.parametrize(
     ("entity_id", "initial_value"),
     [
-        ("switch.envoy_1234", STATE_OFF),
-        ("switch.envoy_1234_2", STATE_ON),
-        ("switch.envoy_1234_3", STATE_OFF),
+        ("switch.nc1_fixture", STATE_OFF),
+        ("switch.nc2_fixture", STATE_ON),
+        ("switch.nc3_fixture", STATE_OFF),
     ],
 )
 async def test_switch_relay_operation(

@@ -747,7 +747,7 @@
           ]),
           'manufacturer': 'Enphase',
           'model': 'Dry contact relay',
-          'name': '',
+          'name': 'NC1 Fixture',
           'name_by_user': None,
           'serial_number': None,
           'suggested_area': None,
@@ -772,7 +772,7 @@
               'disabled_by': None,
               'domain': 'number',
               'entity_category': 'config',
-              'entity_id': 'number.envoy_<<envoyserial>>_cutoff_battery_level',
+              'entity_id': 'number.nc1_fixture_cutoff_battery_level',
               'has_entity_name': True,
               'hidden_by': None,
               'icon': None,
@@ -794,14 +794,14 @@
             'state': dict({
               'attributes': dict({
                 'device_class': 'battery',
-                'friendly_name': 'Cutoff battery level',
+                'friendly_name': 'NC1 Fixture Cutoff battery level',
                 'max': 100.0,
                 'min': 0.0,
                 'mode': 'auto',
                 'step': 1.0,
               }),
-              'entity_id': 'number.envoy_<<envoyserial>>_cutoff_battery_level',
-              'state': '30.0',
+              'entity_id': 'number.nc1_fixture_cutoff_battery_level',
+              'state': '25.0',
             }),
           }),
           dict({
@@ -822,7 +822,7 @@
               'disabled_by': None,
               'domain': 'number',
               'entity_category': 'config',
-              'entity_id': 'number.restore_battery_level',
+              'entity_id': 'number.nc1_fixture_restore_battery_level',
               'has_entity_name': True,
               'hidden_by': None,
               'icon': None,
@@ -844,13 +844,13 @@
             'state': dict({
               'attributes': dict({
                 'device_class': 'battery',
-                'friendly_name': 'Restore battery level',
+                'friendly_name': 'NC1 Fixture Restore battery level',
                 'max': 100.0,
                 'min': 0.0,
                 'mode': 'auto',
                 'step': 1.0,
               }),
-              'entity_id': 'number.restore_battery_level',
+              'entity_id': 'number.nc1_fixture_restore_battery_level',
               'state': '70.0',
             }),
           }),
@@ -872,7 +872,7 @@
               'disabled_by': None,
               'domain': 'select',
               'entity_category': None,
-              'entity_id': 'select.mode',
+              'entity_id': 'select.nc1_fixture_mode',
               'has_entity_name': True,
               'hidden_by': None,
               'icon': None,
@@ -893,14 +893,14 @@
             }),
             'state': dict({
               'attributes': dict({
-                'friendly_name': 'Mode',
+                'friendly_name': 'NC1 Fixture Mode',
                 'options': list([
                   'standard',
                   'battery',
                 ]),
               }),
-              'entity_id': 'select.mode',
-              'state': 'battery',
+              'entity_id': 'select.nc1_fixture_mode',
+              'state': 'standard',
             }),
           }),
           dict({
@@ -923,7 +923,7 @@
               'disabled_by': None,
               'domain': 'select',
               'entity_category': None,
-              'entity_id': 'select.grid_action',
+              'entity_id': 'select.nc1_fixture_grid_action',
               'has_entity_name': True,
               'hidden_by': None,
               'icon': None,
@@ -944,7 +944,7 @@
             }),
             'state': dict({
               'attributes': dict({
-                'friendly_name': 'Grid action',
+                'friendly_name': 'NC1 Fixture Grid action',
                 'options': list([
                   'powered',
                   'not_powered',
@@ -952,7 +952,7 @@
                   'none',
                 ]),
               }),
-              'entity_id': 'select.grid_action',
+              'entity_id': 'select.nc1_fixture_grid_action',
               'state': 'not_powered',
             }),
           }),
@@ -976,7 +976,7 @@
               'disabled_by': None,
               'domain': 'select',
               'entity_category': None,
-              'entity_id': 'select.microgrid_action',
+              'entity_id': 'select.nc1_fixture_microgrid_action',
               'has_entity_name': True,
               'hidden_by': None,
               'icon': None,
@@ -997,7 +997,7 @@
             }),
             'state': dict({
               'attributes': dict({
-                'friendly_name': 'Microgrid action',
+                'friendly_name': 'NC1 Fixture Microgrid action',
                 'options': list([
                   'powered',
                   'not_powered',
@@ -1005,8 +1005,8 @@
                   'none',
                 ]),
               }),
-              'entity_id': 'select.microgrid_action',
-              'state': 'schedule',
+              'entity_id': 'select.nc1_fixture_microgrid_action',
+              'state': 'not_powered',
             }),
           }),
           dict({
@@ -1029,7 +1029,7 @@
               'disabled_by': None,
               'domain': 'select',
               'entity_category': None,
-              'entity_id': 'select.generator_action',
+              'entity_id': 'select.nc1_fixture_generator_action',
               'has_entity_name': True,
               'hidden_by': None,
               'icon': None,
@@ -1050,7 +1050,7 @@
             }),
             'state': dict({
               'attributes': dict({
-                'friendly_name': 'Generator action',
+                'friendly_name': 'NC1 Fixture Generator action',
                 'options': list([
                   'powered',
                   'not_powered',
@@ -1058,8 +1058,8 @@
                   'none',
                 ]),
               }),
-              'entity_id': 'select.generator_action',
-              'state': 'powered',
+              'entity_id': 'select.nc1_fixture_generator_action',
+              'state': 'not_powered',
             }),
           }),
           dict({
@@ -1075,7 +1075,7 @@
               'disabled_by': None,
               'domain': 'switch',
               'entity_category': None,
-              'entity_id': 'switch.enphase_envoy_654321_relay_nc1_relay_status',
+              'entity_id': 'switch.nc1_fixture',
               'has_entity_name': True,
               'hidden_by': None,
               'icon': None,
@@ -1096,9 +1096,9 @@
             }),
             'state': dict({
               'attributes': dict({
-                'friendly_name': '',
+                'friendly_name': 'NC1 Fixture',
               }),
-              'entity_id': 'switch.enphase_envoy_654321_relay_nc1_relay_status',
+              'entity_id': 'switch.nc1_fixture',
               'state': 'off',
             }),
           }),
@@ -1127,7 +1127,7 @@
           ]),
           'manufacturer': 'Enphase',
           'model': 'Dry contact relay',
-          'name': '',
+          'name': 'NC2 Fixture',
           'name_by_user': None,
           'serial_number': None,
           'suggested_area': None,
@@ -1152,7 +1152,7 @@
               'disabled_by': None,
               'domain': 'number',
               'entity_category': 'config',
-              'entity_id': 'number.envoy_<<envoyserial>>_cutoff_battery_level_2',
+              'entity_id': 'number.nc2_fixture_cutoff_battery_level',
               'has_entity_name': True,
               'hidden_by': None,
               'icon': None,
@@ -1174,13 +1174,13 @@
             'state': dict({
               'attributes': dict({
                 'device_class': 'battery',
-                'friendly_name': 'Cutoff battery level',
+                'friendly_name': 'NC2 Fixture Cutoff battery level',
                 'max': 100.0,
                 'min': 0.0,
                 'mode': 'auto',
                 'step': 1.0,
               }),
-              'entity_id': 'number.envoy_<<envoyserial>>_cutoff_battery_level_2',
+              'entity_id': 'number.nc2_fixture_cutoff_battery_level',
               'state': '30.0',
             }),
           }),
@@ -1202,7 +1202,7 @@
               'disabled_by': None,
               'domain': 'number',
               'entity_category': 'config',
-              'entity_id': 'number.restore_battery_level_2',
+              'entity_id': 'number.nc2_fixture_restore_battery_level',
               'has_entity_name': True,
               'hidden_by': None,
               'icon': None,
@@ -1224,13 +1224,13 @@
             'state': dict({
               'attributes': dict({
                 'device_class': 'battery',
-                'friendly_name': 'Restore battery level',
+                'friendly_name': 'NC2 Fixture Restore battery level',
                 'max': 100.0,
                 'min': 0.0,
                 'mode': 'auto',
                 'step': 1.0,
               }),
-              'entity_id': 'number.restore_battery_level_2',
+              'entity_id': 'number.nc2_fixture_restore_battery_level',
               'state': '70.0',
             }),
           }),
@@ -1252,7 +1252,7 @@
               'disabled_by': None,
               'domain': 'select',
               'entity_category': None,
-              'entity_id': 'select.mode_2',
+              'entity_id': 'select.nc2_fixture_mode',
               'has_entity_name': True,
               'hidden_by': None,
               'icon': None,
@@ -1273,13 +1273,13 @@
             }),
             'state': dict({
               'attributes': dict({
-                'friendly_name': 'Mode',
+                'friendly_name': 'NC2 Fixture Mode',
                 'options': list([
                   'standard',
                   'battery',
                 ]),
               }),
-              'entity_id': 'select.mode_2',
+              'entity_id': 'select.nc2_fixture_mode',
               'state': 'standard',
             }),
           }),
@@ -1303,7 +1303,7 @@
               'disabled_by': None,
               'domain': 'select',
               'entity_category': None,
-              'entity_id': 'select.grid_action_2',
+              'entity_id': 'select.nc2_fixture_grid_action',
               'has_entity_name': True,
               'hidden_by': None,
               'icon': None,
@@ -1324,7 +1324,7 @@
             }),
             'state': dict({
               'attributes': dict({
-                'friendly_name': 'Grid action',
+                'friendly_name': 'NC2 Fixture Grid action',
                 'options': list([
                   'powered',
                   'not_powered',
@@ -1332,7 +1332,7 @@
                   'none',
                 ]),
               }),
-              'entity_id': 'select.grid_action_2',
+              'entity_id': 'select.nc2_fixture_grid_action',
               'state': 'powered',
             }),
           }),
@@ -1356,7 +1356,7 @@
               'disabled_by': None,
               'domain': 'select',
               'entity_category': None,
-              'entity_id': 'select.microgrid_action_2',
+              'entity_id': 'select.nc2_fixture_microgrid_action',
               'has_entity_name': True,
               'hidden_by': None,
               'icon': None,
@@ -1377,7 +1377,7 @@
             }),
             'state': dict({
               'attributes': dict({
-                'friendly_name': 'Microgrid action',
+                'friendly_name': 'NC2 Fixture Microgrid action',
                 'options': list([
                   'powered',
                   'not_powered',
@@ -1385,8 +1385,8 @@
                   'none',
                 ]),
               }),
-              'entity_id': 'select.microgrid_action_2',
-              'state': 'none',
+              'entity_id': 'select.nc2_fixture_microgrid_action',
+              'state': 'not_powered',
             }),
           }),
           dict({
@@ -1409,7 +1409,7 @@
               'disabled_by': None,
               'domain': 'select',
               'entity_category': None,
-              'entity_id': 'select.generator_action_2',
+              'entity_id': 'select.nc2_fixture_generator_action',
               'has_entity_name': True,
               'hidden_by': None,
               'icon': None,
@@ -1430,7 +1430,7 @@
             }),
             'state': dict({
               'attributes': dict({
-                'friendly_name': 'Generator action',
+                'friendly_name': 'NC2 Fixture Generator action',
                 'options': list([
                   'powered',
                   'not_powered',
@@ -1438,7 +1438,7 @@
                   'none',
                 ]),
               }),
-              'entity_id': 'select.generator_action_2',
+              'entity_id': 'select.nc2_fixture_generator_action',
               'state': 'not_powered',
             }),
           }),
@@ -1455,7 +1455,7 @@
               'disabled_by': None,
               'domain': 'switch',
               'entity_category': None,
-              'entity_id': 'switch.enphase_envoy_654321_relay_nc2_relay_status',
+              'entity_id': 'switch.nc2_fixture',
               'has_entity_name': True,
               'hidden_by': None,
               'icon': None,
@@ -1476,9 +1476,9 @@
             }),
             'state': dict({
               'attributes': dict({
-                'friendly_name': '',
+                'friendly_name': 'NC2 Fixture',
               }),
-              'entity_id': 'switch.enphase_envoy_654321_relay_nc2_relay_status',
+              'entity_id': 'switch.nc2_fixture',
               'state': 'on',
             }),
           }),
@@ -1507,7 +1507,7 @@
           ]),
           'manufacturer': 'Enphase',
           'model': 'Dry contact relay',
-          'name': '',
+          'name': 'NC3 Fixture',
           'name_by_user': None,
           'serial_number': None,
           'suggested_area': None,
@@ -1532,7 +1532,7 @@
               'disabled_by': None,
               'domain': 'number',
               'entity_category': 'config',
-              'entity_id': 'number.envoy_<<envoyserial>>_cutoff_battery_level_3',
+              'entity_id': 'number.nc3_fixture_cutoff_battery_level',
               'has_entity_name': True,
               'hidden_by': None,
               'icon': None,
@@ -1554,13 +1554,13 @@
             'state': dict({
               'attributes': dict({
                 'device_class': 'battery',
-                'friendly_name': 'Cutoff battery level',
+                'friendly_name': 'NC3 Fixture Cutoff battery level',
                 'max': 100.0,
                 'min': 0.0,
                 'mode': 'auto',
                 'step': 1.0,
               }),
-              'entity_id': 'number.envoy_<<envoyserial>>_cutoff_battery_level_3',
+              'entity_id': 'number.nc3_fixture_cutoff_battery_level',
               'state': '30.0',
             }),
           }),
@@ -1582,7 +1582,7 @@
               'disabled_by': None,
               'domain': 'number',
               'entity_category': 'config',
-              'entity_id': 'number.restore_battery_level_3',
+              'entity_id': 'number.nc3_fixture_restore_battery_level',
               'has_entity_name': True,
               'hidden_by': None,
               'icon': None,
@@ -1604,13 +1604,13 @@
             'state': dict({
               'attributes': dict({
                 'device_class': 'battery',
-                'friendly_name': 'Restore battery level',
+                'friendly_name': 'NC3 Fixture Restore battery level',
                 'max': 100.0,
                 'min': 0.0,
                 'mode': 'auto',
                 'step': 1.0,
               }),
-              'entity_id': 'number.restore_battery_level_3',
+              'entity_id': 'number.nc3_fixture_restore_battery_level',
               'state': '70.0',
             }),
           }),
@@ -1632,7 +1632,7 @@
               'disabled_by': None,
               'domain': 'select',
               'entity_category': None,
-              'entity_id': 'select.mode_3',
+              'entity_id': 'select.nc3_fixture_mode',
               'has_entity_name': True,
               'hidden_by': None,
               'icon': None,
@@ -1653,13 +1653,13 @@
             }),
             'state': dict({
               'attributes': dict({
-                'friendly_name': 'Mode',
+                'friendly_name': 'NC3 Fixture Mode',
                 'options': list([
                   'standard',
                   'battery',
                 ]),
               }),
-              'entity_id': 'select.mode_3',
+              'entity_id': 'select.nc3_fixture_mode',
               'state': 'standard',
             }),
           }),
@@ -1683,7 +1683,7 @@
               'disabled_by': None,
               'domain': 'select',
               'entity_category': None,
-              'entity_id': 'select.grid_action_3',
+              'entity_id': 'select.nc3_fixture_grid_action',
               'has_entity_name': True,
               'hidden_by': None,
               'icon': None,
@@ -1704,7 +1704,7 @@
             }),
             'state': dict({
               'attributes': dict({
-                'friendly_name': 'Grid action',
+                'friendly_name': 'NC3 Fixture Grid action',
                 'options': list([
                   'powered',
                   'not_powered',
@@ -1712,60 +1712,7 @@
                   'none',
                 ]),
               }),
-              'entity_id': 'select.grid_action_3',
-              'state': 'powered',
-            }),
-          }),
-          dict({
-            'entity': dict({
-              'aliases': list([
-              ]),
-              'area_id': None,
-              'capabilities': dict({
-                'options': list([
-                  'powered',
-                  'not_powered',
-                  'schedule',
-                  'none',
-                ]),
-              }),
-              'categories': dict({
-              }),
-              'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
-              'device_class': None,
-              'disabled_by': None,
-              'domain': 'select',
-              'entity_category': None,
-              'entity_id': 'select.microgrid_action_3',
-              'has_entity_name': True,
-              'hidden_by': None,
-              'icon': None,
-              'labels': list([
-              ]),
-              'name': None,
-              'options': dict({
-              }),
-              'original_device_class': None,
-              'original_icon': None,
-              'original_name': 'Microgrid action',
-              'platform': 'enphase_envoy',
-              'previous_unique_id': None,
-              'supported_features': 0,
-              'translation_key': 'relay_microgrid_action',
-              'unique_id': '654321_relay_NC3_microgrid_action',
-              'unit_of_measurement': None,
-            }),
-            'state': dict({
-              'attributes': dict({
-                'friendly_name': 'Microgrid action',
-                'options': list([
-                  'powered',
-                  'not_powered',
-                  'schedule',
-                  'none',
-                ]),
-              }),
-              'entity_id': 'select.microgrid_action_3',
+              'entity_id': 'select.nc3_fixture_grid_action',
               'state': 'not_powered',
             }),
           }),
@@ -1789,7 +1736,60 @@
               'disabled_by': None,
               'domain': 'select',
               'entity_category': None,
-              'entity_id': 'select.generator_action_3',
+              'entity_id': 'select.nc3_fixture_microgrid_action',
+              'has_entity_name': True,
+              'hidden_by': None,
+              'icon': None,
+              'labels': list([
+              ]),
+              'name': None,
+              'options': dict({
+              }),
+              'original_device_class': None,
+              'original_icon': None,
+              'original_name': 'Microgrid action',
+              'platform': 'enphase_envoy',
+              'previous_unique_id': None,
+              'supported_features': 0,
+              'translation_key': 'relay_microgrid_action',
+              'unique_id': '654321_relay_NC3_microgrid_action',
+              'unit_of_measurement': None,
+            }),
+            'state': dict({
+              'attributes': dict({
+                'friendly_name': 'NC3 Fixture Microgrid action',
+                'options': list([
+                  'powered',
+                  'not_powered',
+                  'schedule',
+                  'none',
+                ]),
+              }),
+              'entity_id': 'select.nc3_fixture_microgrid_action',
+              'state': 'powered',
+            }),
+          }),
+          dict({
+            'entity': dict({
+              'aliases': list([
+              ]),
+              'area_id': None,
+              'capabilities': dict({
+                'options': list([
+                  'powered',
+                  'not_powered',
+                  'schedule',
+                  'none',
+                ]),
+              }),
+              'categories': dict({
+              }),
+              'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'device_class': None,
+              'disabled_by': None,
+              'domain': 'select',
+              'entity_category': None,
+              'entity_id': 'select.nc3_fixture_generator_action',
               'has_entity_name': True,
               'hidden_by': None,
               'icon': None,
@@ -1810,7 +1810,7 @@
             }),
             'state': dict({
               'attributes': dict({
-                'friendly_name': 'Generator action',
+                'friendly_name': 'NC3 Fixture Generator action',
                 'options': list([
                   'powered',
                   'not_powered',
@@ -1818,8 +1818,8 @@
                   'none',
                 ]),
               }),
-              'entity_id': 'select.generator_action_3',
-              'state': 'none',
+              'entity_id': 'select.nc3_fixture_generator_action',
+              'state': 'powered',
             }),
           }),
           dict({
@@ -1835,7 +1835,7 @@
               'disabled_by': None,
               'domain': 'switch',
               'entity_category': None,
-              'entity_id': 'switch.enphase_envoy_654321_relay_nc3_relay_status',
+              'entity_id': 'switch.nc3_fixture',
               'has_entity_name': True,
               'hidden_by': None,
               'icon': None,
@@ -1856,9 +1856,9 @@
             }),
             'state': dict({
               'attributes': dict({
-                'friendly_name': '',
+                'friendly_name': 'NC3 Fixture',
               }),
-              'entity_id': 'switch.enphase_envoy_654321_relay_nc3_relay_status',
+              'entity_id': 'switch.nc3_fixture',
               'state': 'off',
             }),
           }),
@@ -6280,15 +6280,15 @@
       'dry_contact_settings': dict({
         'NC1': dict({
           '__type': "<class 'pyenphase.models.dry_contacts.EnvoyDryContactSettings'>",
-          'repr': "EnvoyDryContactSettings(id='NC1', black_start=None, essential_end_time=None, essential_start_time=None, generator_action=<DryContactAction.APPLY: 'apply'>, grid_action=<DryContactAction.SHED: 'shed'>, load_name='', manual_override=None, micro_grid_action=<DryContactAction.SCHEDULE: 'schedule'>, mode=<DryContactMode.STATE_OF_CHARGE: 'soc'>, override=False, priority=None, pv_serial_nb=[], soc_high=70.0, soc_low=30.0, type=<DryContactType.NONE: 'NONE'>)",
+          'repr': "EnvoyDryContactSettings(id='NC1', black_start=5.0, essential_end_time=32400.0, essential_start_time=57600.0, generator_action=<DryContactAction.SHED: 'shed'>, grid_action=<DryContactAction.SHED: 'shed'>, load_name='NC1 Fixture', manual_override=True, micro_grid_action=<DryContactAction.SHED: 'shed'>, mode=<DryContactMode.MANUAL: 'manual'>, override=True, priority=1.0, pv_serial_nb=[], soc_high=70.0, soc_low=25.0, type=<DryContactType.LOAD: 'LOAD'>)",
         }),
         'NC2': dict({
           '__type': "<class 'pyenphase.models.dry_contacts.EnvoyDryContactSettings'>",
-          'repr': "EnvoyDryContactSettings(id='NC2', black_start=None, essential_end_time=None, essential_start_time=None, generator_action=<DryContactAction.SHED: 'shed'>, grid_action=<DryContactAction.APPLY: 'apply'>, load_name='', manual_override=None, micro_grid_action=<DryContactAction.NONE: 'none'>, mode=<DryContactMode.MANUAL: 'manual'>, override=False, priority=None, pv_serial_nb=[], soc_high=70.0, soc_low=30.0, type=<DryContactType.NONE: 'NONE'>)",
+          'repr': "EnvoyDryContactSettings(id='NC2', black_start=5.0, essential_end_time=57600.0, essential_start_time=32400.0, generator_action=<DryContactAction.SHED: 'shed'>, grid_action=<DryContactAction.APPLY: 'apply'>, load_name='NC2 Fixture', manual_override=True, micro_grid_action=<DryContactAction.SHED: 'shed'>, mode=<DryContactMode.MANUAL: 'manual'>, override=True, priority=2.0, pv_serial_nb=[], soc_high=70.0, soc_low=30.0, type=<DryContactType.LOAD: 'LOAD'>)",
         }),
         'NC3': dict({
           '__type': "<class 'pyenphase.models.dry_contacts.EnvoyDryContactSettings'>",
-          'repr': "EnvoyDryContactSettings(id='NC3', black_start=None, essential_end_time=None, essential_start_time=None, generator_action=<DryContactAction.NONE: 'none'>, grid_action=<DryContactAction.APPLY: 'apply'>, load_name='', manual_override=None, micro_grid_action=<DryContactAction.SHED: 'shed'>, mode=<DryContactMode.MANUAL: 'manual'>, override=False, priority=None, pv_serial_nb=[], soc_high=70.0, soc_low=30.0, type=<DryContactType.NONE: 'NONE'>)",
+          'repr': "EnvoyDryContactSettings(id='NC3', black_start=5.0, essential_end_time=57600.0, essential_start_time=32400.0, generator_action=<DryContactAction.APPLY: 'apply'>, grid_action=<DryContactAction.SHED: 'shed'>, load_name='NC3 Fixture', manual_override=True, micro_grid_action=<DryContactAction.APPLY: 'apply'>, mode=<DryContactMode.MANUAL: 'manual'>, override=True, priority=3.0, pv_serial_nb=[], soc_high=70.0, soc_low=30.0, type=<DryContactType.NONE: 'NONE'>)",
         }),
       }),
       'dry_contact_status': dict({
