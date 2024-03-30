@@ -23,6 +23,25 @@ async def test_check_loop_async() -> None:
 
 async def test_check_loop_async_integration(caplog: pytest.LogCaptureFixture) -> None:
     """Test check_loop detects and raises when called from event loop from integration context."""
+    frames = extract_stack_to_frame(
+        [
+            Mock(
+                filename="/home/paulus/homeassistant/core.py",
+                lineno="23",
+                line="do_something()",
+            ),
+            Mock(
+                filename="/home/paulus/homeassistant/components/hue/light.py",
+                lineno="23",
+                line="self.light.is_on",
+            ),
+            Mock(
+                filename="/home/paulus/aiohue/lights.py",
+                lineno="2",
+                line="something()",
+            ),
+        ]
+    )
     with (
         pytest.raises(RuntimeError),
         patch(
@@ -35,47 +54,11 @@ async def test_check_loop_async_integration(caplog: pytest.LogCaptureFixture) ->
         ),
         patch(
             "homeassistant.util.loop.get_current_frame",
-            return_value=extract_stack_to_frame(
-                [
-                    Mock(
-                        filename="/home/paulus/homeassistant/core.py",
-                        lineno="23",
-                        line="do_something()",
-                    ),
-                    Mock(
-                        filename="/home/paulus/homeassistant/components/hue/light.py",
-                        lineno="23",
-                        line="self.light.is_on",
-                    ),
-                    Mock(
-                        filename="/home/paulus/aiohue/lights.py",
-                        lineno="2",
-                        line="something()",
-                    ),
-                ]
-            ),
+            return_value=frames,
         ),
         patch(
             "homeassistant.helpers.frame.get_current_frame",
-            return_value=extract_stack_to_frame(
-                [
-                    Mock(
-                        filename="/home/paulus/homeassistant/core.py",
-                        lineno="23",
-                        line="do_something()",
-                    ),
-                    Mock(
-                        filename="/home/paulus/homeassistant/components/hue/light.py",
-                        lineno="23",
-                        line="self.light.is_on",
-                    ),
-                    Mock(
-                        filename="/home/paulus/aiohue/lights.py",
-                        lineno="2",
-                        line="something()",
-                    ),
-                ]
-            ),
+            return_value=frames,
         ),
     ):
         haloop.check_loop(banned_function)
@@ -92,32 +75,41 @@ async def test_check_loop_async_integration_non_strict(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test check_loop detects when called from event loop from integration context."""
+    frames = extract_stack_to_frame(
+        [
+            Mock(
+                filename="/home/paulus/homeassistant/core.py",
+                lineno="23",
+                line="do_something()",
+            ),
+            Mock(
+                filename="/home/paulus/homeassistant/components/hue/light.py",
+                lineno="23",
+                line="self.light.is_on",
+            ),
+            Mock(
+                filename="/home/paulus/aiohue/lights.py",
+                lineno="2",
+                line="something()",
+            ),
+        ]
+    )
     with (
         patch(
             "homeassistant.helpers.frame.linecache.getline",
             return_value="self.light.is_on",
         ),
         patch(
+            "homeassistant.util.loop._get_line_from_cache",
+            return_value="mock_line",
+        ),
+        patch(
+            "homeassistant.util.loop.get_current_frame",
+            return_value=frames,
+        ),
+        patch(
             "homeassistant.helpers.frame.get_current_frame",
-            return_value=extract_stack_to_frame(
-                [
-                    Mock(
-                        filename="/home/paulus/homeassistant/core.py",
-                        lineno="23",
-                        line="do_something()",
-                    ),
-                    Mock(
-                        filename="/home/paulus/homeassistant/components/hue/light.py",
-                        lineno="23",
-                        line="self.light.is_on",
-                    ),
-                    Mock(
-                        filename="/home/paulus/aiohue/lights.py",
-                        lineno="2",
-                        line="something()",
-                    ),
-                ]
-            ),
+            return_value=frames,
         ),
     ):
         haloop.check_loop(banned_function, strict=False)

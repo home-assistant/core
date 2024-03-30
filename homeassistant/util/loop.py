@@ -81,7 +81,7 @@ def check_loop(
         if found_frame is None:
             raise RuntimeError(  # noqa: TRY200
                 f"Detected blocking call to {func.__name__} inside the event loop "
-                f"in {offender_filename}, line {offender_lineno}: {offender_line}."
+                f"in {offender_filename}, line {offender_lineno}: {offender_line}. "
                 f"{advise_msg or 'Use `await hass.async_add_executor_job()`'}; "
                 "This is causing stability issues. Please create a bug report at "
                 f"https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue"
