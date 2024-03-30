@@ -105,6 +105,14 @@ def check_loop(
     The default advisory message is 'Use `await hass.async_add_executor_job()'
     Set `advise_msg` to an alternate message if the solution differs.
     """
+    if (
+        func.__name__ == "import_module"
+        and (args := mapped_args.get("args"))
+        and args[0] in sys.modules
+    ):
+        # If the module is already imported, we can ignore it.
+        return
+
     try:
         get_running_loop()
         in_loop = True
@@ -112,14 +120,6 @@ def check_loop(
         in_loop = False
 
     if not in_loop:
-        return
-
-    if (
-        func.__name__ == "import_module"
-        and (args := mapped_args.get("args"))
-        and args[0] in sys.modules
-    ):
-        # If the module is already imported, we can ignore it.
         return
 
     # Import only after we know we are running in the event loop
