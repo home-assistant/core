@@ -1,0 +1,13 @@
+{
+  "domain": "govee_api",
+  "name": "GoveeLife Smart Thermo-Hygrometer",
+  "codeowners": ["@343max"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://www.home-assistant.io/integrations/govee_api",
+  "homekit": {},
+  "iot_class": "cloud_polling",
+  "requirements": [],
+  "ssdp": [],
+  "zeroconf": []
+}
