@@ -92,7 +92,7 @@ def mock_connection(aioclient_mock: AiohttpClientMocker) -> None:
 
 
 @pytest.fixture
-def twitch_mock() -> AsyncMock:
+def twitch_mock() -> Generator[AsyncMock, None, None]:
     """Return as fixture to inject other mocks."""
     with (
         patch(

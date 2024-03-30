@@ -25,21 +25,21 @@ TwitchType = TypeVar("TwitchType", bound=TwitchObject)
 class TwitchIterObject:
     """Twitch object iterator."""
 
-    def __init__(self, fixture: str, target_type: TwitchType) -> None:
+    def __init__(self, fixture: str, target_type: type[TwitchType]) -> None:
         """Initialize object."""
         self.raw_data = load_json_array_fixture(fixture, DOMAIN)
         self.data = [target_type(**item) for item in self.raw_data]
         self.total = len(self.raw_data)
         self.target_type = target_type
 
-    async def __aiter__(self) -> AsyncIterator:
+    async def __aiter__(self) -> AsyncIterator[TwitchType]:
         """Return async iterator."""
         async for item in get_generator_from_data(self.raw_data, self.target_type):
             yield item
 
 
 async def get_generator(
-    fixture: str, target_type: TwitchType
+    fixture: str, target_type: type[TwitchType]
 ) -> AsyncGenerator[TwitchType, None]:
     """Return async generator."""
     data = load_json_array_fixture(fixture, DOMAIN)
@@ -48,7 +48,7 @@ async def get_generator(
 
 
 async def get_generator_from_data(
-    items: list[dict[str, Any]], target_type: TwitchType
+    items: list[dict[str, Any]], target_type: type[TwitchType]
 ) -> AsyncGenerator[TwitchType, None]:
     """Return async generator."""
     for item in items:
