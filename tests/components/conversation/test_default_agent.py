@@ -587,6 +587,24 @@ async def test_error_no_domain_in_floor(
         == "Sorry, I am not aware of any light on the ground floor"
     )
 
+    # Add a new floor/area to trigger registry event handlers
+    floor_upstairs = floor_registry.async_create("upstairs")
+    area_bedroom = area_registry.async_get_or_create("bedroom_id")
+    area_bedroom = area_registry.async_update(
+        area_bedroom.id, name="bedroom", floor_id=floor_upstairs.floor_id
+    )
+
+    result = await conversation.async_converse(
+        hass, "turn on all lights upstairs", None, Context(), None
+    )
+
+    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.error_code == intent.IntentResponseErrorCode.NO_VALID_TARGETS
+    assert (
+        result.response.speech["plain"]["speech"]
+        == "Sorry, I am not aware of any light on the upstairs floor"
+    )
+
 
 async def test_error_no_device_class(hass: HomeAssistant, init_components) -> None:
     """Test error message when no entities of a device class exist."""
@@ -775,7 +793,7 @@ async def test_no_states_matched_default_error(
 
     with patch(
         "homeassistant.components.conversation.default_agent.intent.async_handle",
-        side_effect=intent.NoStatesMatchedError(None, None, None, None, None),
+        side_effect=intent.NoStatesMatchedError(),
     ):
         result = await conversation.async_converse(
             hass, "turn on lights in the kitchen", None, Context(), None

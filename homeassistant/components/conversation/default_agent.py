@@ -168,6 +168,11 @@ class DefaultAgent(AbstractConversationAgent):
             run_immediately=True,
         )
         self.hass.bus.async_listen(
+            fr.EVENT_FLOOR_REGISTRY_UPDATED,
+            self._async_handle_floor_registry_changed,
+            run_immediately=True,
+        )
+        self.hass.bus.async_listen(
             er.EVENT_ENTITY_REGISTRY_UPDATED,
             self._async_handle_entity_registry_changed,
             run_immediately=True,
@@ -700,7 +705,14 @@ class DefaultAgent(AbstractConversationAgent):
     def _async_handle_area_registry_changed(
         self, event: core.Event[ar.EventAreaRegistryUpdatedData]
     ) -> None:
-        """Clear area area cache when the area registry has changed."""
+        """Clear area list cache when the area registry has changed."""
+        self._slot_lists = None
+
+    @core.callback
+    def _async_handle_floor_registry_changed(
+        self, event: core.Event[fr.EventFloorRegistryUpdatedData]
+    ) -> None:
+        """Clear floor list cache when the floor registry has changed."""
         self._slot_lists = None
 
     @core.callback
@@ -793,7 +805,7 @@ class DefaultAgent(AbstractConversationAgent):
 
         # Expose all floors.
         #
-        # We pass in floor id here with the expectation that no two areas will
+        # We pass in floor id here with the expectation that no two floors will
         # share the same name or alias.
         floors = fr.async_get(self.hass)
         floor_names = []

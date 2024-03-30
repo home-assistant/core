@@ -150,11 +150,11 @@ class NoStatesMatchedError(IntentError):
 
     def __init__(
         self,
-        name: str | None,
-        area: str | None,
-        floor: str | None,
-        domains: set[str] | None,
-        device_classes: set[str] | None,
+        name: str | None = None,
+        area: str | None = None,
+        floor: str | None = None,
+        domains: set[str] | None = None,
+        device_classes: set[str] | None = None,
     ) -> None:
         """Initialize error."""
         super().__init__()
