@@ -6,7 +6,6 @@ from datetime import datetime
 import logging
 
 from aioautomower.model import MowerAttributes, MowerModes
-
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -139,7 +138,9 @@ SENSOR_TYPES: tuple[AutomowerSensorEntityDescription, ...] = (
         key="next_start_timestamp",
         translation_key="next_start_timestamp",
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda data: dt_util.as_local(data.planner.next_start_datetime),
+        value_fn=lambda data: None
+        if data.planner.next_start_datetime is None
+        else dt_util.as_local(data.planner.next_start_datetime),
     ),
 )
 
