@@ -30,7 +30,7 @@ def check_loop(
     func: Callable[..., Any],
     check_allowed: Callable[[dict[str, Any]], bool] | None = None,
     strict: bool = True,
-    strict_core: bool = False,
+    strict_core: bool = True,
     advise_msg: str | None = None,
     **mapped_args: Any,
 ) -> None:
