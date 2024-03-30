@@ -141,12 +141,6 @@ def async_device_outlet_supported_fn(hub: UnifiHub, obj_id: str) -> bool:
 
 
 @callback
-def async_get_password_supported_fn(hub: UnifiHub, obj_id: str) -> bool:
-    """Determine if a WLAN has password value."""
-    return hub.api.wlans[obj_id].x_passphrase is not None
-
-
-@callback
 def async_client_is_connected_fn(hub: UnifiHub, obj_id: str) -> bool:
     """Check if client was last seen recently."""
     client = hub.api.clients[obj_id]
@@ -347,14 +341,14 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
     ),
     UnifiSensorEntityDescription[Wlans, Wlan](
         key="WLAN password",
-        name_fn=lambda wlan: "Password",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         api_handler_fn=lambda api: api.wlans,
         available_fn=async_wlan_available_fn,
         device_info_fn=async_wlan_device_info_fn,
+        name_fn=lambda wlan: "Password",
         object_fn=lambda api, obj_id: api.wlans[obj_id],
-        supported_fn=async_get_password_supported_fn,
+        supported_fn=lambda hub, obj_id: hub.api.wlans[obj_id].x_passphrase is not None,
         unique_id_fn=lambda hub, obj_id: f"password-{obj_id}",
         value_fn=lambda hub, obj: obj.x_passphrase,
     ),
