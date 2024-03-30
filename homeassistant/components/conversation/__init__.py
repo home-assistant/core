@@ -23,7 +23,7 @@ from homeassistant.helpers import config_validation as cv, intent
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
-from .agent import AbstractConversationAgent
+from .agent import AbstractConversationAgent, ConversationInput, ConversationResult
 from .agent_manager import (
     AgentInfo,
     agent_id_validator,
@@ -41,6 +41,8 @@ __all__ = [
     "async_set_agent",
     "async_unset_agent",
     "async_setup",
+    "ConversationInput",
+    "ConversationResult",
 ]
 
 _LOGGER = logging.getLogger(__name__)
