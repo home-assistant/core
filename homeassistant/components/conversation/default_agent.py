@@ -164,12 +164,12 @@ class DefaultAgent(AbstractConversationAgent):
 
         self.hass.bus.async_listen(
             ar.EVENT_AREA_REGISTRY_UPDATED,
-            self._async_handle_area_registry_changed,
+            self._async_handle_area_floor_registry_changed,
             run_immediately=True,
         )
         self.hass.bus.async_listen(
             fr.EVENT_FLOOR_REGISTRY_UPDATED,
-            self._async_handle_floor_registry_changed,
+            self._async_handle_area_floor_registry_changed,
             run_immediately=True,
         )
         self.hass.bus.async_listen(
@@ -702,17 +702,13 @@ class DefaultAgent(AbstractConversationAgent):
         return lang_intents
 
     @core.callback
-    def _async_handle_area_registry_changed(
-        self, event: core.Event[ar.EventAreaRegistryUpdatedData]
+    def _async_handle_area_floor_registry_changed(
+        self,
+        event: core.Event[
+            ar.EventAreaRegistryUpdatedData | fr.EventFloorRegistryUpdatedData
+        ],
     ) -> None:
-        """Clear area list cache when the area registry has changed."""
-        self._slot_lists = None
-
-    @core.callback
-    def _async_handle_floor_registry_changed(
-        self, event: core.Event[fr.EventFloorRegistryUpdatedData]
-    ) -> None:
-        """Clear floor list cache when the floor registry has changed."""
+        """Clear area/floor list cache when the area registry has changed."""
         self._slot_lists = None
 
     @core.callback
