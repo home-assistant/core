@@ -14,15 +14,17 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
+
 class InverterNotAvailable(Exception):
     """Error used when Device is offline."""
-
 
 
 class ApSystemsDataCoordinator(DataUpdateCoordinator):
     """Coordinator used for all sensors."""
 
-    def __init__(self, hass: HomeAssistant, api: APsystemsEZ1M, interval: int = 10) -> None:
+    def __init__(
+        self, hass: HomeAssistant, api: APsystemsEZ1M, interval: int = 10
+    ) -> None:
         """Initialize my coordinator."""
         if interval is None:
             interval = 10

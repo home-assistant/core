@@ -98,7 +98,10 @@ class MaxPower(SwitchEntity):
         try:
             await self._api.set_device_power_status(0)
             self._attr_available = True
-        except (TimeoutError, (client_exceptions.ClientConnectionError, asyncio.TimeoutError)):
+        except (
+            TimeoutError,
+            (client_exceptions.ClientConnectionError, asyncio.TimeoutError),
+        ):
             self._attr_available = False
         await self.async_update()
 

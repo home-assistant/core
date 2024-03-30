@@ -142,10 +142,6 @@ class BaseSensor(CoordinatorEntity, SensorEntity):
             model="EZ1-M",
         )
 
-    #     @callback
-    # def _handle_coordinator_update(self):
-    #     raise NotImplementedError("Must be implemented by subclasses.")
-
 
 class BasePowerSensor(BaseSensor):
     """Base Power Sensor, not used directly."""
