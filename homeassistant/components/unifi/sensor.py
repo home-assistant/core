@@ -142,8 +142,8 @@ def async_device_outlet_supported_fn(hub: UnifiHub, obj_id: str) -> bool:
 
 @callback
 def async_get_password_supported_fn(hub: UnifiHub, obj_id: str) -> bool:
-    """Determine if a WLAN supports reading the password."""
-    return hasattr(hub.api.wlans[obj_id], "x_passphrase")
+    """Determine if a WLAN has password value."""
+    return hub.api.wlans[obj_id].x_passphrase is not None
 
 
 @callback
