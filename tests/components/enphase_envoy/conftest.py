@@ -546,7 +546,6 @@ async def mock_envoy_fixture(
 async def setup_enphase_envoy_fixture(hass, config, mock_envoy):
     """Define a fixture to set up Enphase Envoy."""
     assert await async_setup_component(hass, DOMAIN, config)
-    await hass.async_block_till_done()
 
 
 @pytest.fixture(name="mock_authenticate")
