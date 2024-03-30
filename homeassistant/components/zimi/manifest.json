@@ -1,7 +1,7 @@
 {
   "domain": "zimi",
   "name": "zimi",
-  "codeowners": ["@markhannon"],
+  "codeowners": ["@mhannon11"],
   "config_flow": true,
   "dependencies": [],
   "documentation": "https://www.home-assistant.io/integrations/zimi",
