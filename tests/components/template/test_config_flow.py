@@ -754,7 +754,7 @@ async def test_option_flow_preview(
     """Test the option flow preview."""
     client = await hass_ws_client(hass)
 
-    input_entities = input_entities = ["one", "two"]
+    input_entities = ["one", "two"]
 
     # Setup the config entry
     config_entry = MockConfigEntry(
