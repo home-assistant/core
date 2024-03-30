@@ -106,7 +106,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiButtonEntityDescription, ...] = (
         unique_id_fn=lambda hub, obj_id: f"power_cycle-{obj_id}",
     ),
     UnifiButtonEntityDescription[Wlans, Wlan](
-        key="WLAN Regenerate Password",
+        key="WLAN regenerate password",
         device_class=ButtonDeviceClass.UPDATE,
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
