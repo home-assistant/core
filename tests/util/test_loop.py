@@ -170,7 +170,7 @@ def test_check_loop_sync(caplog: pytest.LogCaptureFixture) -> None:
 def test_protect_loop_sync() -> None:
     """Test protect_loop calls check_loop."""
     func = Mock()
-    with patch("homeassistant.util.async_.check_loop") as mock_check_loop:
+    with patch("homeassistant.util.loop.check_loop") as mock_check_loop:
         haloop.protect_loop(func)(1, test=2)
     mock_check_loop.assert_called_once_with(func, strict=True)
     func.assert_called_once_with(1, test=2)
