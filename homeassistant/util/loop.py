@@ -8,7 +8,6 @@ from contextlib import suppress
 import functools
 import linecache
 import logging
-import sys
 from typing import Any, ParamSpec, TypeVar
 
 from homeassistant.core import HomeAssistant, async_get_hass
@@ -29,6 +28,7 @@ _P = ParamSpec("_P")
 
 def check_loop(
     func: Callable[..., Any],
+    check_allowed: Callable[[dict[str, Any]], bool] | None = None,
     strict: bool = True,
     strict_core: bool = False,
     advise_msg: str | None = None,
@@ -39,14 +39,6 @@ def check_loop(
     The default advisory message is 'Use `await hass.async_add_executor_job()'
     Set `advise_msg` to an alternate message if the solution differs.
     """
-    if (
-        func.__name__ == "import_module"
-        and (args := mapped_args.get("args"))
-        and args[0] in sys.modules
-    ):
-        # If the module is already imported, we can ignore it.
-        return
-
     try:
         get_running_loop()
         in_loop = True
@@ -56,22 +48,10 @@ def check_loop(
     if not in_loop:
         return
 
+    if check_allowed is not None and check_allowed(mapped_args):
+        return
+
     found_frame = None
-
-    if func.__name__ == "sleep":
-        #
-        # Avoid extracting the stack unless we need to since it
-        # will have to access the linecache which can do blocking
-        # I/O and we are trying to avoid blocking calls.
-        #
-        # frame[1] is us
-        # frame[2] is protected_loop_func
-        # frame[3] is the offender
-        with suppress(ValueError):
-            offender_frame = get_current_frame(3)
-            if offender_frame.f_code.co_filename.endswith("pydevd.py"):
-                return
-
     offender_frame = get_current_frame(2)
     offender_filename = offender_frame.f_code.co_filename
     offender_lineno = offender_frame.f_lineno
@@ -141,14 +121,22 @@ def check_loop(
 
 
 def protect_loop(
-    func: Callable[_P, _R], strict: bool = True, strict_core: bool = True
+    func: Callable[_P, _R],
+    strict: bool = True,
+    strict_core: bool = True,
+    check_allowed: Callable[[dict[str, Any]], bool] | None = None,
 ) -> Callable[_P, _R]:
     """Protect function from running in event loop."""
 
     @functools.wraps(func)
     def protected_loop_func(*args: _P.args, **kwargs: _P.kwargs) -> _R:
         check_loop(
-            func, strict=strict, strict_core=strict_core, args=args, kwargs=kwargs
+            func,
+            strict=strict,
+            strict_core=strict_core,
+            check_allowed=check_allowed,
+            args=args,
+            kwargs=kwargs,
         )
         return func(*args, **kwargs)
 
