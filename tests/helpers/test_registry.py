@@ -24,7 +24,6 @@ class SampleRegistry(BaseRegistry):
     def _data_to_save(self) -> None:
         """Return data of registry to save."""
         self.save_calls += 1
-        return None
 
 
 @pytest.mark.parametrize(

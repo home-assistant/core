@@ -7,6 +7,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from homeassistant import const
 from homeassistant.components import climate
 from homeassistant.components.climate import ClimateEntityFeature
 from homeassistant.components.ecobee.climate import (
@@ -14,7 +15,6 @@ from homeassistant.components.ecobee.climate import (
     PRESET_AWAY_INDEFINITELY,
     Thermostat,
 )
-import homeassistant.const as const
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, STATE_OFF
 from homeassistant.core import HomeAssistant
 

@@ -65,7 +65,6 @@ class ClientAsyncFakeFail:
     async def device(self, serial):
         """Mock the `ClientAsync.device` method when the device is not connected via ADB."""
         self._devices = []
-        return None
 
 
 class DeviceAsyncFake:

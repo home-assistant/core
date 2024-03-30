@@ -164,8 +164,7 @@ def test_get_significant_states_without_initial(hass_history) -> None:
     for entity_id in states:
         states[entity_id] = list(
             filter(
-                lambda s: s.last_changed != one
-                and s.last_changed != one_with_microsecond,
+                lambda s: s.last_changed not in (one, one_with_microsecond),
                 states[entity_id],
             )
         )

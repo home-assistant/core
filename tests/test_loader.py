@@ -1349,7 +1349,7 @@ async def test_async_get_component_concurrent_loads(
     modules_without_integration = {
         k: v
         for k, v in sys.modules.items()
-        if k != config_flow_module_name and k != integration.pkg_path
+        if k not in (config_flow_module_name, integration.pkg_path)
     }
     with (
         patch.dict(
@@ -1737,7 +1737,7 @@ async def test_async_get_platforms_concurrent_loads(
     modules_without_button = {
         k: v
         for k, v in sys.modules.items()
-        if k != button_module_name and k != integration.pkg_path
+        if k not in (button_module_name, integration.pkg_path)
     }
     with (
         patch.dict(
