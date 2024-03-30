@@ -588,6 +588,46 @@ async def test_async_get_hass_can_be_called(hass: HomeAssistant) -> None:
     my_job_create_task.join()
 
 
+async def test_async_add_executor_job_background(hass: HomeAssistant) -> None:
+    """Test running an executor job in the background."""
+    calls = []
+
+    def job():
+        time.sleep(0.01)
+        calls.append(1)
+
+    async def _async_add_executor_job():
+        await hass.async_add_executor_job(job)
+
+    task = hass.async_create_background_task(
+        _async_add_executor_job(), "background", eager_start=True
+    )
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert len(calls) == 1
+    await task
+
+
+async def test_async_add_executor_job(hass: HomeAssistant) -> None:
+    """Test running an executor job."""
+    calls = []
+
+    def job():
+        time.sleep(0.01)
+        calls.append(1)
+
+    async def _async_add_executor_job():
+        await hass.async_add_executor_job(job)
+
+    task = hass.async_create_task(
+        _async_add_executor_job(), "background", eager_start=True
+    )
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    await task
+
+
 async def test_stage_shutdown(hass: HomeAssistant) -> None:
     """Simulate a shutdown, test calling stuff."""
     test_stop = async_capture_events(hass, EVENT_HOMEASSISTANT_STOP)
