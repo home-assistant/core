@@ -307,3 +307,5 @@ class GlancesSensor(CoordinatorEntity[GlancesDataUpdateCoordinator], SensorEntit
             self._attr_native_value = dict_val.get(self.entity_description.key)
         elif self.entity_description.key in data:
             self._attr_native_value = data.get(self.entity_description.key)
+        else:
+            self._attr_native_value = None

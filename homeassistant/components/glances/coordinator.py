@@ -47,12 +47,16 @@ class GlancesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # Update computed values
         if data:
             up_duration = parse_duration(data.get("uptime"))
-            data.update({"computed": {"uptime_duration": up_duration}})
-            # Update uptime if previous value is None or previous uptime is bigger than
-            # new uptime (i.e. server restarted)
-            if isinstance(up_duration, timedelta) and (
-                self.data is None
-                or self.data["computed"]["uptime_duration"] > up_duration
-            ):
-                data["computed"]["uptime"] = utcnow() - up_duration
+            uptime = None
+            if isinstance(up_duration, timedelta):
+                # Update uptime if previous value is None or previous uptime is bigger than
+                # new uptime (i.e. server restarted) else use previous value
+                if (
+                    self.data is None
+                    or self.data["computed"]["uptime_duration"] > up_duration
+                ):
+                    uptime = utcnow() - up_duration
+                elif self.data:
+                    uptime = self.data["computed"]["uptime"]
+            data["computed"] = {"uptime_duration": up_duration, "uptime": uptime}
         return data or {}
