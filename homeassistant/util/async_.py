@@ -178,7 +178,7 @@ def check_loop(
         module=integration_frame.module,
     )
 
-    offender_frame = get_current_frame(3)
+    offender_frame = get_current_frame(2)
     offender_filename = offender_frame.f_code.co_filename
     offender_lineno = offender_frame.f_lineno
     offender_line = (
