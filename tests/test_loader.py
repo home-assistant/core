@@ -1785,9 +1785,6 @@ async def test_hass_helpers_use_reported(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture, mock_integration_frame: Mock
 ) -> None:
     """Test that use of hass.components is reported."""
-    mock_integration_frame.filename = (
-        "/home/paulus/homeassistant/custom_components/demo/light.py"
-    )
     integration_frame = frame.IntegrationFrame(
         custom_integration=True,
         _frame=mock_integration_frame,
@@ -1797,6 +1794,7 @@ async def test_hass_helpers_use_reported(
     )
 
     with (
+        patch.object(frame, "_REPORTED_INTEGRATIONS", new=set()),
         patch(
             "homeassistant.helpers.frame.get_integration_frame",
             return_value=integration_frame,
@@ -1809,6 +1807,6 @@ async def test_hass_helpers_use_reported(
         hass.helpers.aiohttp_client.async_get_clientsession()
 
         assert (
-            "Detected that custom integration 'test_integration_frame'"
+            "Detected that custom integration 'test_helper_frame'"
             " accesses hass.helpers.aiohttp_client. This is deprecated"
         ) in caplog.text
