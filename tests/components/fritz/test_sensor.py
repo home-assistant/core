@@ -134,7 +134,7 @@ async def test_sensor_update_fail(
 
     fc_class_mock().call_action_side_effect(FritzConnectionException)
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=300))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     sensors = hass.states.async_all(SENSOR_DOMAIN)
     for sensor in sensors:

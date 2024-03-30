@@ -166,7 +166,6 @@ async def async_setup_component(
         setup_future.set_result(result)
         if setup_done_future := setup_done_futures.pop(domain, None):
             setup_done_future.set_result(result)
-        return result
     except BaseException as err:
         futures = [setup_future]
         if setup_done_future := setup_done_futures.pop(domain, None):
@@ -185,6 +184,7 @@ async def async_setup_component(
                 # if there are no concurrent setup attempts
                 await future
         raise
+    return result
 
 
 async def _async_process_dependencies(

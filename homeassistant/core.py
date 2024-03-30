@@ -774,8 +774,11 @@ class HomeAssistant:
     ) -> asyncio.Future[_T]:
         """Add an executor job from within the event loop."""
         task = self.loop.run_in_executor(None, target, *args)
-        self._tasks.add(task)
-        task.add_done_callback(self._tasks.remove)
+
+        tracked = asyncio.current_task() in self._tasks
+        task_bucket = self._tasks if tracked else self._background_tasks
+        task_bucket.add(task)
+        task.add_done_callback(task_bucket.remove)
 
         return task
 
@@ -2688,9 +2691,10 @@ class Config:
         for allowed_path in self.allowlist_external_dirs:
             try:
                 thepath.relative_to(allowed_path)
-                return True
             except ValueError:
                 pass
+            else:
+                return True
 
         return False
 

@@ -687,11 +687,12 @@ class TelegramNotificationService:
                 _LOGGER.warning(
                     "Update last message: out_type:%s, out=%s", type(out), out
                 )
-            return out
         except TelegramError as exc:
             _LOGGER.error(
                 "%s: %s. Args: %s, kwargs: %s", msg_error, exc, args_msg, kwargs_msg
             )
+            return None
+        return out
 
     async def send_message(self, message="", target=None, **kwargs):
         """Send a message to one or multiple pre-allowed chat IDs."""
