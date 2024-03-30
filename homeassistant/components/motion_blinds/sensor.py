@@ -1,8 +1,13 @@
 """Support for Motionblinds sensors."""
+
 from motionblinds import DEVICE_TYPES_WIFI
 from motionblinds.motion_blinds import DEVICE_TYPE_TDBU
 
-from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
@@ -50,6 +55,7 @@ class MotionBatterySensor(MotionCoordinatorEntity, SensorEntity):
     _attr_device_class = SensorDeviceClass.BATTERY
     _attr_native_unit_of_measurement = PERCENTAGE
     _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(self, coordinator, blind):
         """Initialize the Motion Battery Sensor."""

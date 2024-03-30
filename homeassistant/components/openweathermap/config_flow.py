@@ -1,11 +1,12 @@
 """Config flow for OpenWeatherMap."""
+
 from __future__ import annotations
 
 from pyowm import OWM
 from pyowm.commons.exceptions import APIRequestError, UnauthorizedError
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_LANGUAGE,
@@ -28,7 +29,7 @@ from .const import (
 )
 
 
-class OpenWeatherMapConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class OpenWeatherMapConfigFlow(ConfigFlow, domain=DOMAIN):
     """Config flow for OpenWeatherMap."""
 
     VERSION = CONFIG_FLOW_VERSION
@@ -36,7 +37,7 @@ class OpenWeatherMapConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
+        config_entry: ConfigEntry,
     ) -> OpenWeatherMapOptionsFlow:
         """Get the options flow for this handler."""
         return OpenWeatherMapOptionsFlow(config_entry)
@@ -90,10 +91,10 @@ class OpenWeatherMapConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
 
-class OpenWeatherMapOptionsFlow(config_entries.OptionsFlow):
+class OpenWeatherMapOptionsFlow(OptionsFlow):
     """Handle options."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+    def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
         self.config_entry = config_entry
 

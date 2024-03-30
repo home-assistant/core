@@ -1,4 +1,5 @@
 """Test the local_todo config flow."""
+
 from unittest.mock import AsyncMock
 
 import pytest

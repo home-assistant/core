@@ -1,6 +1,10 @@
 {
   "config": {
     "step": {
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "The Husqvarna Automower integration needs to re-authenticate your account"
+      },
       "pick_implementation": {
         "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
       }
@@ -17,10 +21,75 @@
       "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]",
       "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
       "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "wrong_account": "You can only reauthenticate this entry with the same Husqvarna account."
     },
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "leaving_dock": {
+        "name": "Leaving dock"
+      },
+      "returning_to_dock": {
+        "name": "Returning to dock"
+      }
+    },
+    "select": {
+      "headlight_mode": {
+        "name": "Headlight mode",
+        "state": {
+          "always_on": "Always on",
+          "always_off": "Always off",
+          "evening_only": "Evening only",
+          "evening_and_night": "Evening and night"
+        }
+      }
+    },
+    "sensor": {
+      "number_of_charging_cycles": {
+        "name": "Number of charging cycles"
+      },
+      "number_of_collisions": {
+        "name": "Number of collisions"
+      },
+      "cutting_blade_usage_time": {
+        "name": "Cutting blade usage time"
+      },
+      "total_charging_time": {
+        "name": "Total charging time"
+      },
+      "total_cutting_time": {
+        "name": "Total cutting time"
+      },
+      "total_running_time": {
+        "name": "Total running time"
+      },
+      "total_searching_time": {
+        "name": "Total searching time"
+      },
+      "total_drive_distance": {
+        "name": "Total drive distance"
+      },
+      "next_start_timestamp": {
+        "name": "Next start"
+      },
+      "mode": {
+        "name": "Mode",
+        "state": {
+          "main_area": "Main area",
+          "secondary_area": "Secondary area",
+          "home": "Home",
+          "demo": "Demo"
+        }
+      }
+    },
+    "switch": {
+      "enable_schedule": {
+        "name": "Enable schedule"
+      }
     }
   }
 }

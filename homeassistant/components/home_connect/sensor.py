@@ -1,4 +1,5 @@
 """Provides a sensor for Home Connect."""
+
 from datetime import datetime, timedelta
 import logging
 from typing import cast

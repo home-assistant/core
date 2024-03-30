@@ -411,6 +411,11 @@ ZEROCONF = {
             "domain": "elgato",
         },
     ],
+    "_elmax-ssl._tcp.local.": [
+        {
+            "domain": "elmax",
+        },
+    ],
     "_enphase-envoy._tcp.local.": [
         {
             "domain": "enphase_envoy",
@@ -566,6 +571,11 @@ ZEROCONF = {
             "properties": {
                 "SYSTYPE": "ra2select*",
             },
+        },
+    ],
+    "_matter._tcp.local.": [
+        {
+            "domain": "matter",
         },
     ],
     "_mediaremotetv._tcp.local.": [

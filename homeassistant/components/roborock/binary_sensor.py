@@ -1,4 +1,5 @@
 """Support for Roborock sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -22,18 +23,11 @@ from .coordinator import RoborockDataUpdateCoordinator
 from .device import RoborockCoordinatedEntity
 
 
-@dataclass(frozen=True)
-class RoborockBinarySensorDescriptionMixin:
-    """A class that describes binary sensor entities."""
+@dataclass(frozen=True, kw_only=True)
+class RoborockBinarySensorDescription(BinarySensorEntityDescription):
+    """A class that describes Roborock binary sensors."""
 
     value_fn: Callable[[DeviceProp], bool | int | None]
-
-
-@dataclass(frozen=True)
-class RoborockBinarySensorDescription(
-    BinarySensorEntityDescription, RoborockBinarySensorDescriptionMixin
-):
-    """A class that describes Roborock binary sensors."""
 
 
 BINARY_SENSOR_DESCRIPTIONS = [

@@ -1,4 +1,5 @@
 """Support for Meteo-France raining forecast sensor."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -51,18 +52,11 @@ from .const import (
 _DataT = TypeVar("_DataT", bound=Rain | Forecast | CurrentPhenomenons)
 
 
-@dataclass(frozen=True)
-class MeteoFranceRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class MeteoFranceSensorEntityDescription(SensorEntityDescription):
+    """Describes Meteo-France sensor entity."""
 
     data_path: str
-
-
-@dataclass(frozen=True)
-class MeteoFranceSensorEntityDescription(
-    SensorEntityDescription, MeteoFranceRequiredKeysMixin
-):
-    """Describes Meteo-France sensor entity."""
 
 
 SENSOR_TYPES: tuple[MeteoFranceSensorEntityDescription, ...] = (

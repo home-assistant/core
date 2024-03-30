@@ -1,4 +1,5 @@
 """Coordinator to fetch data from the Picnic API."""
+
 import asyncio
 from contextlib import suppress
 import copy

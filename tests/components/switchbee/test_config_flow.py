@@ -1,4 +1,5 @@
 """Test the SwitchBee Smart Home config flow."""
+
 import json
 from unittest.mock import patch
 
@@ -31,15 +32,20 @@ async def test_form(hass: HomeAssistant, test_cucode_in_coordinator_data) -> Non
     assert result["type"] == "form"
     assert result["errors"] == {}
 
-    with patch(
-        "switchbee.api.polling.CentralUnitPolling.get_configuration",
-        return_value=coordinator_data,
-    ), patch(
-        "homeassistant.components.switchbee.async_setup_entry",
-        return_value=True,
-    ), patch(
-        "switchbee.api.polling.CentralUnitPolling.fetch_states", return_value=None
-    ), patch("switchbee.api.polling.CentralUnitPolling._login", return_value=None):
+    with (
+        patch(
+            "switchbee.api.polling.CentralUnitPolling.get_configuration",
+            return_value=coordinator_data,
+        ),
+        patch(
+            "homeassistant.components.switchbee.async_setup_entry",
+            return_value=True,
+        ),
+        patch(
+            "switchbee.api.polling.CentralUnitPolling.fetch_states", return_value=None
+        ),
+        patch("switchbee.api.polling.CentralUnitPolling._login", return_value=None),
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -148,16 +154,19 @@ async def test_form_entry_exists(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "switchbee.api.polling.CentralUnitPolling._login", return_value=None
-    ), patch(
-        "homeassistant.components.switchbee.async_setup_entry",
-        return_value=True,
-    ), patch(
-        "switchbee.api.polling.CentralUnitPolling.get_configuration",
-        return_value=coordinator_data,
-    ), patch(
-        "switchbee.api.polling.CentralUnitPolling.fetch_states", return_value=None
+    with (
+        patch("switchbee.api.polling.CentralUnitPolling._login", return_value=None),
+        patch(
+            "homeassistant.components.switchbee.async_setup_entry",
+            return_value=True,
+        ),
+        patch(
+            "switchbee.api.polling.CentralUnitPolling.get_configuration",
+            return_value=coordinator_data,
+        ),
+        patch(
+            "switchbee.api.polling.CentralUnitPolling.fetch_states", return_value=None
+        ),
     ):
         form_result = await hass.config_entries.flow.async_configure(
             result["flow_id"],

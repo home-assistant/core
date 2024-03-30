@@ -1,4 +1,5 @@
 """Tests for the local_ip config_flow."""
+
 from __future__ import annotations
 
 from homeassistant import data_entry_flow

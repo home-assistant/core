@@ -1,4 +1,5 @@
 """Support for the PRT Heatmiser themostats using the V3 protocol."""
+
 from __future__ import annotations
 
 import logging

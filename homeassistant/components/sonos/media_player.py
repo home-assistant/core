@@ -1,4 +1,5 @@
 """Support to interface with Sonos players."""
+
 from __future__ import annotations
 
 import datetime

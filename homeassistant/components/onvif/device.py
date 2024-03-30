@@ -1,4 +1,5 @@
 """ONVIF device abstraction."""
+
 from __future__ import annotations
 
 import asyncio
@@ -343,7 +344,7 @@ class ONVIFDevice:
                     mac = interface.Info.HwAddress
         except Fault as fault:
             if "not implemented" not in fault.message:
-                raise fault
+                raise
 
             LOGGER.debug(
                 "Couldn't get network interfaces from ONVIF device '%s'. Error: %s",

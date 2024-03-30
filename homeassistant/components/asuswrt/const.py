@@ -1,4 +1,5 @@
 """AsusWrt component constants."""
+
 DOMAIN = "asuswrt"
 
 CONF_DNSMASQ = "dnsmasq"

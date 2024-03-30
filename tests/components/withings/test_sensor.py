@@ -1,4 +1,5 @@
 """Tests for the Withings component."""
+
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 

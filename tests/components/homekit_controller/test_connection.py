@@ -14,7 +14,7 @@ from homeassistant.components.homekit_controller.const import (
 from homeassistant.components.thread import async_add_dataset, dataset_store
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .common import setup_accessories_from_file, setup_platform, setup_test_accessories
 
@@ -216,7 +216,9 @@ async def test_thread_provision_no_creds(hass: HomeAssistant) -> None:
         )
 
 
-async def test_thread_provision(hass: HomeAssistant) -> None:
+async def test_thread_provision(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test that a when a thread provision works the config entry is updated."""
     await async_add_dataset(
         hass,
@@ -256,6 +258,13 @@ async def test_thread_provision(hass: HomeAssistant) -> None:
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
+    assert hass.states.get(
+        "button.nanoleaf_strip_3b32_provision_preferred_thread_credentials"
+    )
+    assert entity_registry.async_get(
+        "button.nanoleaf_strip_3b32_provision_preferred_thread_credentials"
+    )
+
     await hass.services.async_call(
         "button",
         "press",
@@ -264,8 +273,16 @@ async def test_thread_provision(hass: HomeAssistant) -> None:
         },
         blocking=True,
     )
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert config_entry.data["Connection"] == "CoAP"
+
+    assert not hass.states.get(
+        "button.nanoleaf_strip_3b32_provision_preferred_thread_credentials"
+    )
+    assert not entity_registry.async_get(
+        "button.nanoleaf_strip_3b32_provision_preferred_thread_credentials"
+    )
 
 
 async def test_thread_provision_migration_failed(hass: HomeAssistant) -> None:

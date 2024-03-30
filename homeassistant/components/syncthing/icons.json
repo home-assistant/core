@@ -1,0 +1,16 @@
+{
+  "entity": {
+    "sensor": {
+      "syncthing": {
+        "default": "mdi:folder-alert",
+        "state": {
+          "unknown": "mdi:folder",
+          "idle": "mdi:folder",
+          "scanning": "mdi:folder-search",
+          "syncing": "mdi:folder-sync",
+          "paused": "mdi:folder-clock"
+        }
+      }
+    }
+  }
+}

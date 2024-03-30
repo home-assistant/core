@@ -1,4 +1,5 @@
 """Support for Motionblinds using their WLAN API."""
+
 from __future__ import annotations
 
 import logging
@@ -86,8 +87,8 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the Motionblind from a config entry."""
-    entities = []
+    """Set up the Motion Blind from a config entry."""
+    entities: list[MotionBaseDevice] = []
     motion_gateway = hass.data[DOMAIN][config_entry.entry_id][KEY_GATEWAY]
     coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
 
@@ -168,10 +169,9 @@ async def async_setup_entry(
     )
 
 
-class MotionPositionDevice(MotionCoordinatorEntity, CoverEntity):
+class MotionBaseDevice(MotionCoordinatorEntity, CoverEntity):
     """Representation of a Motionblinds Device."""
 
-    _attr_name = None
     _restore_tilt = False
 
     def __init__(self, coordinator, blind, device_class):
@@ -305,6 +305,12 @@ class MotionPositionDevice(MotionCoordinatorEntity, CoverEntity):
         await self.async_request_position_till_stop(delay=UPDATE_DELAY_STOP)
 
 
+class MotionPositionDevice(MotionBaseDevice):
+    """Representation of a Motion Blind Device."""
+
+    _attr_name = None
+
+
 class MotionTiltDevice(MotionPositionDevice):
     """Representation of a Motionblinds Device."""
 
@@ -394,13 +400,12 @@ class MotionTiltOnlyDevice(MotionTiltDevice):
                 )
 
 
-class MotionTDBUDevice(MotionPositionDevice):
+class MotionTDBUDevice(MotionBaseDevice):
     """Representation of a Motion Top Down Bottom Up blind Device."""
 
     def __init__(self, coordinator, blind, device_class, motor):
         """Initialize the blind."""
         super().__init__(coordinator, blind, device_class)
-        delattr(self, "_attr_name")
         self._motor = motor
         self._motor_key = motor[0]
         self._attr_translation_key = motor.lower()

@@ -1,4 +1,5 @@
 """Test configuration for the Vultr tests."""
+
 import json
 from unittest.mock import patch
 

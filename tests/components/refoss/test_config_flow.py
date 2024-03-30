@@ -1,4 +1,5 @@
 """Tests for the refoss Integration."""
+
 from unittest.mock import AsyncMock, patch
 
 from homeassistant import config_entries, data_entry_flow
@@ -13,15 +14,19 @@ async def test_creating_entry_sets_up(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
     """Test setting up refoss."""
-    with patch(
-        "homeassistant.components.refoss.util.Discovery",
-        return_value=FakeDiscovery(),
-    ), patch(
-        "homeassistant.components.refoss.bridge.async_build_base_device",
-        return_value=build_base_device_mock(),
-    ), patch(
-        "homeassistant.components.refoss.switch.isinstance",
-        return_value=True,
+    with (
+        patch(
+            "homeassistant.components.refoss.util.Discovery",
+            return_value=FakeDiscovery(),
+        ),
+        patch(
+            "homeassistant.components.refoss.bridge.async_build_base_device",
+            return_value=build_base_device_mock(),
+        ),
+        patch(
+            "homeassistant.components.refoss.switch.isinstance",
+            return_value=True,
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}

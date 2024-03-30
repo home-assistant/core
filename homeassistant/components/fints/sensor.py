@@ -1,4 +1,5 @@
 """Read the balance of your bank accounts via FinTS."""
+
 from __future__ import annotations
 
 from collections import namedtuple

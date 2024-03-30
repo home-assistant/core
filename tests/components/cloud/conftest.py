@@ -1,4 +1,5 @@
 """Fixtures for cloud tests."""
+
 from collections.abc import AsyncGenerator, Callable, Coroutine
 from typing import Any
 from unittest.mock import DEFAULT, MagicMock, PropertyMock, patch
@@ -235,8 +236,9 @@ def mock_cloud_login(hass, mock_cloud_setup):
 @pytest.fixture(name="mock_auth")
 def mock_auth_fixture():
     """Mock check token."""
-    with patch("hass_nabucasa.auth.CognitoAuth.async_check_token"), patch(
-        "hass_nabucasa.auth.CognitoAuth.async_renew_access_token"
+    with (
+        patch("hass_nabucasa.auth.CognitoAuth.async_check_token"),
+        patch("hass_nabucasa.auth.CognitoAuth.async_renew_access_token"),
     ):
         yield
 

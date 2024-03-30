@@ -1,4 +1,5 @@
 """Test the Sonarr config flow."""
+
 from unittest.mock import MagicMock, patch
 
 from aiopyarr import ArrAuthenticationException, ArrException

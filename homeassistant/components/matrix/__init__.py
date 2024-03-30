@@ -1,4 +1,5 @@
 """The Matrix bot component."""
+
 from __future__ import annotations
 
 import asyncio
@@ -431,18 +432,16 @@ class MatrixBot:
         self, target_rooms: Sequence[RoomAnyID], message_type: str, content: dict
     ) -> None:
         """Wrap _handle_room_send for multiple target_rooms."""
-        _tasks = []
-        for target_room in target_rooms:
-            _tasks.append(
-                self.hass.async_create_task(
-                    self._handle_room_send(
-                        target_room=target_room,
-                        message_type=message_type,
-                        content=content,
-                    )
+        await asyncio.wait(
+            self.hass.async_create_task(
+                self._handle_room_send(
+                    target_room=target_room,
+                    message_type=message_type,
+                    content=content,
                 )
             )
-        await asyncio.wait(_tasks)
+            for target_room in target_rooms
+        )
 
     async def _send_image(
         self, image_path: str, target_rooms: Sequence[RoomAnyID]

@@ -1,4 +1,5 @@
 """Support for Actiontec MI424WR (Verizon FIOS) routers."""
+
 from __future__ import annotations
 
 import logging

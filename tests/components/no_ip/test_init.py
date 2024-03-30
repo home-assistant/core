@@ -1,4 +1,5 @@
 """Test the NO-IP component."""
+
 from datetime import timedelta
 
 import pytest

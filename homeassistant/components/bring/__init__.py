@@ -1,4 +1,5 @@
 """The Bring! integration."""
+
 from __future__ import annotations
 
 import logging
@@ -35,7 +36,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         await bring.login()
-        await bring.loadLists()
+        await bring.load_lists()
     except BringRequestException as e:
         raise ConfigEntryNotReady(
             f"Timeout while connecting for email '{email}'"

@@ -1,4 +1,5 @@
 """Test the Switch config flow."""
+
 from typing import Any
 from unittest.mock import patch
 
@@ -25,7 +26,7 @@ from tests.typing import WebSocketGenerator
         "extra_options",
         "extra_attrs",
     ),
-    (
+    [
         (
             "binary_sensor",
             "{{ states('binary_sensor.one') == 'on' or states('binary_sensor.two') == 'on' }}",
@@ -46,7 +47,7 @@ from tests.typing import WebSocketGenerator
             {},
             {},
         ),
-    ),
+    ],
 )
 async def test_config_flow(
     hass: HomeAssistant,
@@ -141,7 +142,7 @@ def get_suggested(schema, key):
         "extra_options",
         "options_options",
     ),
-    (
+    [
         (
             "binary_sensor",
             "{{ states('binary_sensor.one') == 'on' or states('binary_sensor.two') == 'on' }}",
@@ -160,7 +161,7 @@ def get_suggested(schema, key):
             {},
             {},
         ),
-    ),
+    ],
 )
 async def test_options(
     hass: HomeAssistant,
@@ -260,7 +261,7 @@ async def test_options(
         "extra_attributes",
         "listeners",
     ),
-    (
+    [
         (
             "binary_sensor",
             "{{ states.binary_sensor.one.state == 'on' or states.binary_sensor.two.state == 'on' }}",
@@ -279,7 +280,7 @@ async def test_options(
             [{}, {}],
             [["one", "two"], ["one", "two"]],
         ),
-    ),
+    ],
 )
 async def test_config_flow_preview(
     hass: HomeAssistant,
@@ -643,13 +644,13 @@ async def test_config_flow_preview_template_error(
         "state_template",
         "extra_user_input",
     ),
-    (
+    [
         (
             "sensor",
             "{{ states('sensor.one') }}",
             {"unit_of_measurement": "°C"},
         ),
-    ),
+    ],
 )
 async def test_config_flow_preview_bad_state(
     hass: HomeAssistant,
@@ -753,7 +754,7 @@ async def test_option_flow_preview(
     """Test the option flow preview."""
     client = await hass_ws_client(hass)
 
-    input_entities = input_entities = ["one", "two"]
+    input_entities = ["one", "two"]
 
     # Setup the config entry
     config_entry = MockConfigEntry(
