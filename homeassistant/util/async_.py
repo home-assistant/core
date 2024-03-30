@@ -149,21 +149,33 @@ def check_loop(
             offender_frame = get_current_frame(3)
             if offender_frame.f_code.co_filename.endswith("pydevd.py"):
                 return
+
+    offender_frame = get_current_frame(2)
+    offender_filename = offender_frame.f_code.co_filename
+    offender_lineno = offender_frame.f_lineno
+    offender_line = (
+        linecache.getline(offender_filename, offender_lineno) or "?"
+    ).strip()
+
     try:
         integration_frame = get_integration_frame()
     except MissingIntegrationFrame:
         # Did not source from integration? Hard error.
         if not strict_core:
             _LOGGER.warning(
-                "Detected blocking call to %s with args %s inside the event loop",
+                "Detected blocking call to %s with args %s (offender: %s, line %s: %s) inside the event loop",
                 func.__name__,
-                mapped_args,
+                mapped_args.get("args"),
+                offender_filename,
+                offender_lineno,
+                offender_line,
             )
             return
 
         if found_frame is None:
             raise RuntimeError(  # noqa: TRY200
-                f"Detected blocking call to {func.__name__} inside the event loop. "
+                f"Detected blocking call to {func.__name__} inside the event loop "
+                f"in {offender_filename}, line {offender_lineno}: {offender_line}."
                 f"{advise_msg or 'Use `await hass.async_add_executor_job()`'}; "
                 "This is causing stability issues. Please create a bug report at "
                 f"https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue"
@@ -178,12 +190,6 @@ def check_loop(
         module=integration_frame.module,
     )
 
-    offender_frame = get_current_frame(2)
-    offender_filename = offender_frame.f_code.co_filename
-    offender_lineno = offender_frame.f_lineno
-    offender_line = (
-        linecache.getline(offender_filename, offender_lineno) or "?"
-    ).strip()
     _LOGGER.warning(
         (
             "Detected blocking call to %s inside the event loop by %sintegration '%s' "
