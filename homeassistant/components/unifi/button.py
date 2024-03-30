@@ -64,7 +64,7 @@ async def async_power_cycle_port_control_fn(
 async def async_regenerate_password_control_fn(
     api: aiounifi.Controller, obj_id: str
 ) -> None:
-    """Regenerate WLAN Password."""
+    """Regenerate WLAN password."""
     await api.request(
         WlanChangePasswordRequest.create(obj_id, secrets.token_urlsafe(15))
     )
