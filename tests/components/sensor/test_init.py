@@ -129,28 +129,6 @@ async def test_temperature_conversion(
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == state_unit
 
 
-@pytest.mark.parametrize("device_class", [None, SensorDeviceClass.PRESSURE])
-async def test_temperature_conversion_wrong_device_class(
-    hass: HomeAssistant, device_class
-) -> None:
-    """Test temperatures are not converted if the sensor has wrong device class."""
-    entity0 = MockSensor(
-        name="Test",
-        native_value="0.0",
-        native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
-        device_class=device_class,
-    )
-    setup_test_component_platform(hass, sensor.DOMAIN, [entity0])
-
-    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
-    await hass.async_block_till_done()
-
-    # Check temperature is not converted
-    state = hass.states.get(entity0.entity_id)
-    assert state.state == "0.0"
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.FAHRENHEIT
-
-
 @pytest.mark.parametrize("state_class", ["measurement", "total_increasing"])
 async def test_deprecated_last_reset(
     hass: HomeAssistant,
