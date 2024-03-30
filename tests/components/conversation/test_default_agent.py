@@ -17,6 +17,7 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity,
     entity_registry as er,
+    floor_registry as fr,
     intent,
 )
 from homeassistant.setup import async_setup_component
@@ -480,6 +481,20 @@ async def test_error_no_area(hass: HomeAssistant, init_components) -> None:
     )
 
 
+async def test_error_no_floor(hass: HomeAssistant, init_components) -> None:
+    """Test error message when floor is missing."""
+    result = await conversation.async_converse(
+        hass, "turn on all the lights on missing floor", None, Context(), None
+    )
+
+    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.error_code == intent.IntentResponseErrorCode.NO_VALID_TARGETS
+    assert (
+        result.response.speech["plain"]["speech"]
+        == "Sorry, I am not aware of any floor called missing"
+    )
+
+
 async def test_error_no_device_in_area(
     hass: HomeAssistant, init_components, area_registry: ar.AreaRegistry
 ) -> None:
@@ -546,6 +561,48 @@ async def test_error_no_domain_in_area(
     assert (
         result.response.speech["plain"]["speech"]
         == "Sorry, I am not aware of any light in the kitchen area"
+    )
+
+
+async def test_error_no_domain_in_floor(
+    hass: HomeAssistant,
+    init_components,
+    area_registry: ar.AreaRegistry,
+    floor_registry: fr.FloorRegistry,
+) -> None:
+    """Test error message when no devices/entities for a domain exist on a floor."""
+    floor_ground = floor_registry.async_create("ground")
+    area_kitchen = area_registry.async_get_or_create("kitchen_id")
+    area_kitchen = area_registry.async_update(
+        area_kitchen.id, name="kitchen", floor_id=floor_ground.floor_id
+    )
+    result = await conversation.async_converse(
+        hass, "turn on all lights on the ground floor", None, Context(), None
+    )
+
+    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.error_code == intent.IntentResponseErrorCode.NO_VALID_TARGETS
+    assert (
+        result.response.speech["plain"]["speech"]
+        == "Sorry, I am not aware of any light on the ground floor"
+    )
+
+    # Add a new floor/area to trigger registry event handlers
+    floor_upstairs = floor_registry.async_create("upstairs")
+    area_bedroom = area_registry.async_get_or_create("bedroom_id")
+    area_bedroom = area_registry.async_update(
+        area_bedroom.id, name="bedroom", floor_id=floor_upstairs.floor_id
+    )
+
+    result = await conversation.async_converse(
+        hass, "turn on all lights upstairs", None, Context(), None
+    )
+
+    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.error_code == intent.IntentResponseErrorCode.NO_VALID_TARGETS
+    assert (
+        result.response.speech["plain"]["speech"]
+        == "Sorry, I am not aware of any light on the upstairs floor"
     )
 
 
@@ -736,7 +793,7 @@ async def test_no_states_matched_default_error(
 
     with patch(
         "homeassistant.components.conversation.default_agent.intent.async_handle",
-        side_effect=intent.NoStatesMatchedError(None, None, None, None),
+        side_effect=intent.NoStatesMatchedError(),
     ):
         result = await conversation.async_converse(
             hass, "turn on lights in the kitchen", None, Context(), None
@@ -759,11 +816,16 @@ async def test_empty_aliases(
     area_registry: ar.AreaRegistry,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
+    floor_registry: fr.FloorRegistry,
 ) -> None:
     """Test that empty aliases are not added to slot lists."""
+    floor_1 = floor_registry.async_create("first floor", aliases={" "})
+
     area_kitchen = area_registry.async_get_or_create("kitchen_id")
     area_kitchen = area_registry.async_update(area_kitchen.id, name="kitchen")
-    area_kitchen = area_registry.async_update(area_kitchen.id, aliases={" "})
+    area_kitchen = area_registry.async_update(
+        area_kitchen.id, aliases={" "}, floor_id=floor_1
+    )
 
     entry = MockConfigEntry()
     entry.add_to_hass(hass)
@@ -799,7 +861,7 @@ async def test_empty_aliases(
         slot_lists = mock_recognize_all.call_args[0][2]
 
         # Slot lists should only contain non-empty text
-        assert slot_lists.keys() == {"area", "name"}
+        assert slot_lists.keys() == {"area", "name", "floor"}
         areas = slot_lists["area"]
         assert len(areas.values) == 1
         assert areas.values[0].value_out == area_kitchen.id
@@ -809,6 +871,11 @@ async def test_empty_aliases(
         assert len(names.values) == 1
         assert names.values[0].value_out == kitchen_light.name
         assert names.values[0].text_in.text == kitchen_light.name
+
+        floors = slot_lists["floor"]
+        assert len(floors.values) == 1
+        assert floors.values[0].value_out == floor_1.floor_id
+        assert floors.values[0].text_in.text == floor_1.name
 
 
 async def test_all_domains_loaded(hass: HomeAssistant, init_components) -> None:
