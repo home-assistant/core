@@ -4,7 +4,6 @@ import logging
 
 from aioautomower.exceptions import ApiException
 from aioautomower.model import HeadlightModes
-
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory

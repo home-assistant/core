@@ -7,7 +7,6 @@ import logging
 from aioautomower.exceptions import ApiException, HusqvarnaWSServerHandshakeError
 from aioautomower.model import MowerAttributes
 from aioautomower.session import AutomowerSession
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed

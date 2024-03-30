@@ -5,7 +5,6 @@ from dataclasses import dataclass
 import logging
 
 from aioautomower.model import MowerActivities, MowerAttributes
-
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
