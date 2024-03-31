@@ -1557,7 +1557,7 @@ class Helpers:
         report(
             (
                 f"accesses hass.helpers.{helper_name}."
-                " This is deprecated and will stop working in Home Assistant 2024.10, it"
+                " This is deprecated and will stop working in Home Assistant 2024.11, it"
                 f" should be updated to import functions used from {helper_name} directly"
             ),
             error_if_core=False,
