@@ -1776,7 +1776,7 @@ python-roborock==0.40.0
 python-smarttub==0.0.36
 
 # homeassistant.components.songpal
-python-songpal==0.16.1
+python-songpal==0.16.2
 
 # homeassistant.components.tado
 python-tado==0.17.4
