@@ -10,6 +10,8 @@ from typing import Any
 from .helpers.frame import get_current_frame
 from .util.loop import protect_loop
 
+_IN_TESTS = "unittest" in sys.modules
+
 
 def _check_import_call_allowed(mapped_args: dict[str, Any]) -> bool:
     # If the module is already imported, we can ignore it.
@@ -49,7 +51,7 @@ def enable() -> None:
     # Prevent files being opened inside the event loop
     # builtins.open = protect_loop(builtins.open)
 
-    if "unittest" not in sys.modules:
+    if not _IN_TESTS:
         # unittest uses `importlib.import_module` to do mocking
         # so we cannot protect it if we are running tests
         importlib.import_module = protect_loop(
