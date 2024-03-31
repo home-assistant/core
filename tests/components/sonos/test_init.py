@@ -51,7 +51,7 @@ async def test_creating_entry_sets_up_media_player(
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
 
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     assert len(mock_setup.mock_calls) == 1
 
