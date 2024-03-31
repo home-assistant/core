@@ -19,6 +19,14 @@ async def test_check_loop_async() -> None:
         haloop.check_loop(banned_function)
 
 
+async def test_check_loop_async_non_strict_core(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test non_strict_core check_loop detects from event loop without integration context."""
+    haloop.check_loop(banned_function, strict_core=False)
+    assert "Detected blocking call to banned_function" in caplog.text
+
+
 async def test_check_loop_async_integration(caplog: pytest.LogCaptureFixture) -> None:
     """Test check_loop detects and raises when called from event loop from integration context."""
     frames = extract_stack_to_frame(

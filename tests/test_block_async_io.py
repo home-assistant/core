@@ -65,6 +65,36 @@ async def test_protect_loop_sleep(caplog: pytest.LogCaptureFixture) -> None:
         time.sleep(0)
 
 
+async def test_protect_loop_sleep_get_current_frame_raises(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test time.sleep when get_current_frame raises ValueError."""
+    block_async_io.enable()
+    frames = extract_stack_to_frame(
+        [
+            Mock(
+                filename="/home/paulus/homeassistant/no_dev.py",
+                lineno="23",
+                line="do_something()",
+            ),
+        ]
+    )
+    with (
+        pytest.raises(
+            RuntimeError, match="Detected blocking call to sleep inside the event loop"
+        ),
+        patch(
+            "homeassistant.block_async_io.get_current_frame",
+            side_effect=ValueError,
+        ),
+        patch(
+            "homeassistant.helpers.frame.get_current_frame",
+            return_value=frames,
+        ),
+    ):
+        time.sleep(0)
+
+
 async def test_protect_loop_importlib_import_module_non_integration(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
