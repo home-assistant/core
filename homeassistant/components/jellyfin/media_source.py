@@ -96,10 +96,10 @@ class JellyfinSource(MediaSource):
             raise Unresolvable("Jellyfin not initialized")
 
         media_item = await self.hass.async_add_executor_job(
-            client.api.get_item, item.identifier
+            client.jellyfin.get_item, item.identifier
         )
 
-        stream_url = self._get_stream_url(api, media_item)
+        stream_url = self._get_stream_url(client, media_item)
         mime_type = _media_mime_type(media_item)
 
         # Media Sources without a mime type have been filtered out during library creation
@@ -118,7 +118,7 @@ class JellyfinSource(MediaSource):
             return await self._build_libraries(client)
 
         media_item = await self.hass.async_add_executor_job(
-            client.api.get_item, item.identifier
+            client.jellyfin.get_item, item.identifier
         )
 
         item_type = media_item["Type"]
@@ -159,7 +159,7 @@ class JellyfinSource(MediaSource):
 
     async def _get_libraries(self, client: JellyfinClient) -> list[dict[str, Any]]:
         """Return all supported libraries a user has access to."""
-        response = await self.hass.async_add_executor_job(client.api.get_media_folders)
+        response = await self.hass.async_add_executor_job(client.jellyfin.get_media_folders)
         libraries = response["Items"]
         result = []
         for library in libraries:
@@ -534,7 +534,7 @@ class JellyfinSource(MediaSource):
         if item_type in PLAYABLE_ITEM_TYPES:
             params["Fields"] = ITEM_KEY_MEDIA_SOURCES
 
-        result = await self.hass.async_add_executor_job(client.api.user_items, "", params)
+        result = await self.hass.async_add_executor_job(client.jellyfin.user_items, "", params)
         return result["Items"]  # type: ignore[no-any-return]
 
     def _get_thumbnail_url(self, client: JellyfinClient, media_item: dict[str, Any]) -> str | None:
@@ -545,7 +545,7 @@ class JellyfinSource(MediaSource):
             return None
 
         item_id = media_item[ITEM_KEY_ID]
-        return str(client.api.artwork(item_id, "Primary", MAX_IMAGE_WIDTH))
+        return str(client.jellyfin.artwork(item_id, "Primary", MAX_IMAGE_WIDTH))
 
     def _get_stream_url(self, client: JellyfinClient, media_item: dict[str, Any]) -> str:
         """Return the stream URL for a media item."""
@@ -553,9 +553,9 @@ class JellyfinSource(MediaSource):
         item_id = media_item[ITEM_KEY_ID]
 
         if media_type == MEDIA_TYPE_AUDIO:
-            return client.api.audio_url(item_id)  # type: ignore[no-any-return]
+            return client.jellyfin.audio_url(item_id)  # type: ignore[no-any-return]
         if media_type == MEDIA_TYPE_VIDEO:
-            return client.api.video_url(item_id)  # type: ignore[no-any-return]
+            return client.jellyfin.video_url(item_id)  # type: ignore[no-any-return]
 
         raise BrowseError(f"Unsupported media type {media_type}")
 
