@@ -1,6 +1,12 @@
 """Backport of aiohttp's AsyncResolver for Home Assistant.
 
 This is a backport of the AsyncResolver class from aiohttp 3.10.
+
+Before aiohttp 3.10, on system with IPv6 support, AsyncResolver would not fallback
+to providing A records when AAAA records were not available.
+
+Additionally, unlike the ThreadedResolver, AsyncResolver
+did not handle link-local addresses correctly.
 """
 
 from __future__ import annotations
