@@ -164,22 +164,39 @@ class DefaultAgent(AbstractConversationAgent):
 
         self.hass.bus.async_listen(
             ar.EVENT_AREA_REGISTRY_UPDATED,
-            self._async_handle_area_floor_registry_changed,
+            self._async_clear_slot_list,
             run_immediately=True,
         )
         self.hass.bus.async_listen(
             fr.EVENT_FLOOR_REGISTRY_UPDATED,
-            self._async_handle_area_floor_registry_changed,
+            self._async_clear_slot_list,
             run_immediately=True,
         )
+
+        @core.callback
+        def filter_entity_registry_changes(event_data: dict[str, Any]) -> bool:
+            """Filter entity registry changed events."""
+            return event_data["action"] == "update" and any(
+                field in event_data["changes"]
+                for field in _ENTITY_REGISTRY_UPDATE_FIELDS
+            )
+
         self.hass.bus.async_listen(
             er.EVENT_ENTITY_REGISTRY_UPDATED,
-            self._async_handle_entity_registry_changed,
+            self._async_clear_slot_list,
+            event_filter=filter_entity_registry_changes,
             run_immediately=True,
         )
+
+        @core.callback
+        def filter_state_changes(event_data: dict[str, Any]) -> bool:
+            """Filter state changed events."""
+            return not event_data["old_state"] or not event_data["new_state"]
+
         self.hass.bus.async_listen(
             EVENT_STATE_CHANGED,
-            self._async_handle_state_changed,
+            self._async_clear_slot_list,
+            event_filter=filter_state_changes,
             run_immediately=True,
         )
         async_listen_entity_updates(
@@ -702,33 +719,8 @@ class DefaultAgent(AbstractConversationAgent):
         return lang_intents
 
     @core.callback
-    def _async_handle_area_floor_registry_changed(
-        self,
-        event: core.Event[
-            ar.EventAreaRegistryUpdatedData | fr.EventFloorRegistryUpdatedData
-        ],
-    ) -> None:
-        """Clear area/floor list cache when the area registry has changed."""
-        self._slot_lists = None
-
-    @core.callback
-    def _async_handle_entity_registry_changed(
-        self, event: core.Event[er.EventEntityRegistryUpdatedData]
-    ) -> None:
-        """Clear names list cache when an entity registry entry has changed."""
-        if event.data["action"] != "update" or not any(
-            field in event.data["changes"] for field in _ENTITY_REGISTRY_UPDATE_FIELDS
-        ):
-            return
-        self._slot_lists = None
-
-    @core.callback
-    def _async_handle_state_changed(
-        self, event: core.Event[EventStateChangedData]
-    ) -> None:
-        """Clear names list cache when a state is added or removed from the state machine."""
-        if event.data["old_state"] and event.data["new_state"]:
-            return
+    def _async_clear_slot_list(self, event: core.Event[dict[str, Any]]) -> None:
+        """Clear slot lists when a registry has changed."""
         self._slot_lists = None
 
     @core.callback
