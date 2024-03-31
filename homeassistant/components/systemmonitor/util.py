@@ -57,7 +57,7 @@ def get_all_network_interfaces(hass: HomeAssistant) -> set[str]:
     """Return all network interfaces on system."""
     psutil_wrapper: ha_psutil = hass.data[DOMAIN]
     interfaces: set[str] = set()
-    for interface, _ in psutil_wrapper.psutil.net_if_addrs().items():
+    for interface in psutil_wrapper.psutil.net_if_addrs():
         if interface.startswith("veth"):
             # Don't load docker virtual network interfaces
             continue
@@ -77,13 +77,8 @@ def get_all_running_processes(hass: HomeAssistant) -> set[str]:
     return processes
 
 
-def read_cpu_temperature(
-    hass: HomeAssistant, temps: dict[str, list[shwtemp]] | None = None
-) -> float | None:
+def read_cpu_temperature(temps: dict[str, list[shwtemp]]) -> float | None:
     """Attempt to read CPU / processor temperature."""
-    if temps is None:
-        psutil_wrapper: ha_psutil = hass.data[DOMAIN]
-        temps = psutil_wrapper.psutil.sensors_temperatures()
     entry: shwtemp
 
     _LOGGER.debug("CPU Temperatures: %s", temps)

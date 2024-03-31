@@ -1,4 +1,5 @@
 """Support for EZVIZ select controls."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -20,18 +21,11 @@ from .entity import EzvizEntity
 PARALLEL_UPDATES = 1
 
 
-@dataclass(frozen=True)
-class EzvizSelectEntityDescriptionMixin:
-    """Mixin values for EZVIZ Select entities."""
+@dataclass(frozen=True, kw_only=True)
+class EzvizSelectEntityDescription(SelectEntityDescription):
+    """Describe a EZVIZ Select entity."""
 
     supported_switch: int
-
-
-@dataclass(frozen=True)
-class EzvizSelectEntityDescription(
-    SelectEntityDescription, EzvizSelectEntityDescriptionMixin
-):
-    """Describe a EZVIZ Select entity."""
 
 
 SELECT_TYPE = EzvizSelectEntityDescription(

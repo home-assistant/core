@@ -1,4 +1,5 @@
 """Test the SRP Energy config flow."""
+
 from unittest.mock import MagicMock, patch
 
 from homeassistant.components.srp_energy.const import CONF_IS_TOU, DOMAIN

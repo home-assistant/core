@@ -1,4 +1,5 @@
 """Support for the AccuWeather service."""
+
 from __future__ import annotations
 
 from typing import cast
@@ -145,9 +146,9 @@ class AccuWeatherEntity(
         """Return the UV index."""
         return cast(float, self.coordinator.data["UVIndex"])
 
-    @property
-    def forecast(self) -> list[Forecast] | None:
-        """Return the forecast array."""
+    @callback
+    def _async_forecast_daily(self) -> list[Forecast] | None:
+        """Return the daily forecast in native units."""
         if not self.coordinator.forecast:
             return None
         # remap keys from library to keys understood by the weather component
@@ -176,8 +177,3 @@ class AccuWeatherEntity(
             }
             for item in self.coordinator.data[ATTR_FORECAST]
         ]
-
-    @callback
-    def _async_forecast_daily(self) -> list[Forecast] | None:
-        """Return the daily forecast in native units."""
-        return self.forecast

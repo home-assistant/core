@@ -1,4 +1,5 @@
 """Config flow for Rituals Perfume Genie integration."""
+
 from __future__ import annotations
 
 import logging

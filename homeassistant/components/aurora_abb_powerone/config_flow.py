@@ -1,4 +1,5 @@
 """Config flow for Aurora ABB PowerOne integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -45,9 +46,9 @@ def validate_and_connect(
         ret[ATTR_MODEL] = f"{client.version()} ({client.pn()})"
         ret[ATTR_FIRMWARE] = client.firmware(1)
         _LOGGER.info("Returning device info=%s", ret)
-    except AuroraError as err:
+    except AuroraError:
         _LOGGER.warning("Could not connect to device=%s", comport)
-        raise err
+        raise
     finally:
         if client.serline.isOpen():
             client.close()

@@ -1,4 +1,5 @@
 """Test setting up and unloading PrusaLink."""
+
 from datetime import timedelta
 from unittest.mock import patch
 
@@ -43,18 +44,23 @@ async def test_failed_update(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     assert mock_config_entry.state == ConfigEntryState.LOADED
 
-    with patch(
-        "homeassistant.components.prusalink.PrusaLink.get_version",
-        side_effect=exception,
-    ), patch(
-        "homeassistant.components.prusalink.PrusaLink.get_status",
-        side_effect=exception,
-    ), patch(
-        "homeassistant.components.prusalink.PrusaLink.get_legacy_printer",
-        side_effect=exception,
-    ), patch(
-        "homeassistant.components.prusalink.PrusaLink.get_job",
-        side_effect=exception,
+    with (
+        patch(
+            "homeassistant.components.prusalink.PrusaLink.get_version",
+            side_effect=exception,
+        ),
+        patch(
+            "homeassistant.components.prusalink.PrusaLink.get_status",
+            side_effect=exception,
+        ),
+        patch(
+            "homeassistant.components.prusalink.PrusaLink.get_legacy_printer",
+            side_effect=exception,
+        ),
+        patch(
+            "homeassistant.components.prusalink.PrusaLink.get_job",
+            side_effect=exception,
+        ),
     ):
         async_fire_time_changed(hass, utcnow() + timedelta(seconds=30), fire_all=True)
         await hass.async_block_till_done()

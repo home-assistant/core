@@ -1,4 +1,5 @@
 """Provides device actions for Network UPS Tools (NUT)."""
+
 from __future__ import annotations
 
 import voluptuous as vol
@@ -57,7 +58,7 @@ async def async_call_action_from_config(
     device_id: str = config[CONF_DEVICE_ID]
     entry_id = _get_entry_id_from_device_id(hass, device_id)
     data: PyNUTData = hass.data[DOMAIN][entry_id][PYNUT_DATA]
-    await data.async_run_command(hass, command_name)
+    await data.async_run_command(command_name)
 
 
 def _get_device_action_name(command_name: str) -> str:

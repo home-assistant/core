@@ -1,4 +1,5 @@
 """Queries for the recorder."""
+
 from __future__ import annotations
 
 from collections.abc import Iterable
@@ -12,6 +13,7 @@ from .db_schema import (
     EventData,
     Events,
     EventTypes,
+    MigrationChanges,
     RecorderRuns,
     StateAttributes,
     States,
@@ -808,6 +810,13 @@ def find_states_context_ids_to_migrate(max_bind_vars: int) -> StatementLambdaEle
         )
         .filter(States.context_id_bin.is_(None))
         .limit(max_bind_vars)
+    )
+
+
+def get_migration_changes() -> StatementLambdaElement:
+    """Query the database for previous migration changes."""
+    return lambda_stmt(
+        lambda: select(MigrationChanges.migration_id, MigrationChanges.version)
     )
 
 

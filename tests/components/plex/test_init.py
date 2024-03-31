@@ -1,4 +1,5 @@
 """Tests for Plex setup."""
+
 import copy
 from datetime import timedelta
 from http import HTTPStatus
@@ -350,9 +351,13 @@ async def test_trigger_reauth(
 
     assert entry.state is ConfigEntryState.LOADED
 
-    with patch(
-        "plexapi.server.PlexServer.clients", side_effect=plexapi.exceptions.Unauthorized
-    ), patch("plexapi.server.PlexServer", side_effect=plexapi.exceptions.Unauthorized):
+    with (
+        patch(
+            "plexapi.server.PlexServer.clients",
+            side_effect=plexapi.exceptions.Unauthorized,
+        ),
+        patch("plexapi.server.PlexServer", side_effect=plexapi.exceptions.Unauthorized),
+    ):
         trigger_plex_update(mock_websocket)
         await wait_for_debouncer(hass)
 

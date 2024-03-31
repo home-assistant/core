@@ -1,4 +1,5 @@
 """Component to allow for providing device or service updates."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -373,7 +374,7 @@ class UpdateEntity(
         The backup parameter indicates a backup should be taken before
         installing the update.
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_release_notes(self) -> str | None:
         """Return full release notes.
@@ -389,7 +390,7 @@ class UpdateEntity(
         This is suitable for a long changelog that does not fit in the release_summary
         property. The returned string can contain markdown.
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @property
     @final
@@ -407,10 +408,10 @@ class UpdateEntity(
 
         try:
             newer = _version_is_newer(latest_version, installed_version)
-            return STATE_ON if newer else STATE_OFF
         except AwesomeVersionCompareException:
             # Can't compare versions, already tried exact match
             return STATE_ON
+        return STATE_ON if newer else STATE_OFF
 
     @final
     @property

@@ -1,6 +1,5 @@
 """The ecoforest coordinator."""
 
-
 import logging
 
 from pyecoforest.api import EcoforestApi
@@ -33,7 +32,8 @@ class EcoforestCoordinator(DataUpdateCoordinator[Device]):
         """Fetch all device and sensor data from api."""
         try:
             data = await self.api.get()
-            _LOGGER.debug("Ecoforest data: %s", data)
-            return data
         except EcoforestError as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
+
+        _LOGGER.debug("Ecoforest data: %s", data)
+        return data

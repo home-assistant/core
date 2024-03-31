@@ -1,4 +1,5 @@
 """Device for Zigbee Home Automation."""
+
 from __future__ import annotations
 
 import asyncio
@@ -788,15 +789,6 @@ class ZHADevice(LogMixin):
             response = await cluster.write_attributes(
                 {attribute: value}, manufacturer=manufacturer
             )
-            self.debug(
-                "set: %s for attr: %s to cluster: %s for ept: %s - res: %s",
-                value,
-                attribute,
-                cluster_id,
-                endpoint_id,
-                response,
-            )
-            return response
         except zigpy.exceptions.ZigbeeException as exc:
             raise HomeAssistantError(
                 f"Failed to set attribute: "
@@ -805,6 +797,16 @@ class ZHADevice(LogMixin):
                 f"{ATTR_CLUSTER_ID}: {cluster_id} "
                 f"{ATTR_ENDPOINT_ID}: {endpoint_id}"
             ) from exc
+
+        self.debug(
+            "set: %s for attr: %s to cluster: %s for ept: %s - res: %s",
+            value,
+            attribute,
+            cluster_id,
+            endpoint_id,
+            response,
+        )
+        return response
 
     async def issue_cluster_command(
         self,
@@ -1004,5 +1006,5 @@ class ZHADevice(LogMixin):
     def log(self, level: int, msg: str, *args: Any, **kwargs: Any) -> None:
         """Log a message."""
         msg = f"[%s](%s): {msg}"
-        args = (self.nwk, self.model) + args
+        args = (self.nwk, self.model, *args)
         _LOGGER.log(level, msg, *args, **kwargs)

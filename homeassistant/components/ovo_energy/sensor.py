@@ -1,4 +1,5 @@
 """Support for OVO Energy sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -6,7 +7,7 @@ import dataclasses
 from datetime import datetime, timedelta
 from typing import Final
 
-from ovoenergy import OVODailyUsage
+from ovoenergy.models import OVODailyUsage
 from ovoenergy.ovoenergy import OVOEnergy
 
 from homeassistant.components.sensor import (

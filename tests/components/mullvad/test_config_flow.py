@@ -1,4 +1,5 @@
 """Test the Mullvad config flow."""
+
 from unittest.mock import patch
 
 from mullvad_api import MullvadAPIError
@@ -20,12 +21,15 @@ async def test_form_user(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.FORM
     assert not result["errors"]
 
-    with patch(
-        "homeassistant.components.mullvad.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry, patch(
-        "homeassistant.components.mullvad.config_flow.MullvadAPI"
-    ) as mock_mullvad_api:
+    with (
+        patch(
+            "homeassistant.components.mullvad.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+        patch(
+            "homeassistant.components.mullvad.config_flow.MullvadAPI"
+        ) as mock_mullvad_api,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {},
@@ -47,7 +51,7 @@ async def test_form_user_only_once(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    assert result["reason"] == "single_instance_allowed"
 
 
 async def test_connection_error(hass: HomeAssistant) -> None:

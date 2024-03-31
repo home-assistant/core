@@ -1,4 +1,5 @@
 """Define tests for the Bravia TV config flow."""
+
 from unittest.mock import patch
 
 from pybravia import (
@@ -107,11 +108,14 @@ async def test_ssdp_discovery(hass: HomeAssistant) -> None:
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "confirm"
 
-    with patch("pybravia.BraviaClient.connect"), patch(
-        "pybravia.BraviaClient.pair"
-    ), patch("pybravia.BraviaClient.set_wol_mode"), patch(
-        "pybravia.BraviaClient.get_system_info",
-        return_value=BRAVIA_SYSTEM_INFO,
+    with (
+        patch("pybravia.BraviaClient.connect"),
+        patch("pybravia.BraviaClient.pair"),
+        patch("pybravia.BraviaClient.set_wol_mode"),
+        patch(
+            "pybravia.BraviaClient.get_system_info",
+            return_value=BRAVIA_SYSTEM_INFO,
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={}
@@ -200,10 +204,13 @@ async def test_user_invalid_host(hass: HomeAssistant) -> None:
 )
 async def test_pin_form_error(hass: HomeAssistant, side_effect, error_message) -> None:
     """Test that PIN form errors are correct."""
-    with patch(
-        "pybravia.BraviaClient.connect",
-        side_effect=side_effect,
-    ), patch("pybravia.BraviaClient.pair"):
+    with (
+        patch(
+            "pybravia.BraviaClient.connect",
+            side_effect=side_effect,
+        ),
+        patch("pybravia.BraviaClient.pair"),
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data={CONF_HOST: "bravia-host"}
         )
@@ -272,11 +279,14 @@ async def test_duplicate_error(hass: HomeAssistant) -> None:
     )
     config_entry.add_to_hass(hass)
 
-    with patch("pybravia.BraviaClient.connect"), patch(
-        "pybravia.BraviaClient.pair"
-    ), patch("pybravia.BraviaClient.set_wol_mode"), patch(
-        "pybravia.BraviaClient.get_system_info",
-        return_value=BRAVIA_SYSTEM_INFO,
+    with (
+        patch("pybravia.BraviaClient.connect"),
+        patch("pybravia.BraviaClient.pair"),
+        patch("pybravia.BraviaClient.set_wol_mode"),
+        patch(
+            "pybravia.BraviaClient.get_system_info",
+            return_value=BRAVIA_SYSTEM_INFO,
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data={CONF_HOST: "bravia-host"}
@@ -296,11 +306,14 @@ async def test_create_entry(hass: HomeAssistant) -> None:
     """Test that entry is added correctly with PIN auth."""
     uuid = await instance_id.async_get(hass)
 
-    with patch("pybravia.BraviaClient.connect"), patch(
-        "pybravia.BraviaClient.pair"
-    ), patch("pybravia.BraviaClient.set_wol_mode"), patch(
-        "pybravia.BraviaClient.get_system_info",
-        return_value=BRAVIA_SYSTEM_INFO,
+    with (
+        patch("pybravia.BraviaClient.connect"),
+        patch("pybravia.BraviaClient.pair"),
+        patch("pybravia.BraviaClient.set_wol_mode"),
+        patch(
+            "pybravia.BraviaClient.get_system_info",
+            return_value=BRAVIA_SYSTEM_INFO,
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data={CONF_HOST: "bravia-host"}
@@ -335,11 +348,13 @@ async def test_create_entry(hass: HomeAssistant) -> None:
 
 async def test_create_entry_psk(hass: HomeAssistant) -> None:
     """Test that entry is added correctly with PSK auth."""
-    with patch("pybravia.BraviaClient.connect"), patch(
-        "pybravia.BraviaClient.set_wol_mode"
-    ), patch(
-        "pybravia.BraviaClient.get_system_info",
-        return_value=BRAVIA_SYSTEM_INFO,
+    with (
+        patch("pybravia.BraviaClient.connect"),
+        patch("pybravia.BraviaClient.set_wol_mode"),
+        patch(
+            "pybravia.BraviaClient.get_system_info",
+            return_value=BRAVIA_SYSTEM_INFO,
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data={CONF_HOST: "bravia-host"}
@@ -391,15 +406,20 @@ async def test_reauth_successful(hass: HomeAssistant, use_psk, new_pin) -> None:
     )
     config_entry.add_to_hass(hass)
 
-    with patch("pybravia.BraviaClient.connect"), patch(
-        "pybravia.BraviaClient.get_power_status",
-        return_value="active",
-    ), patch(
-        "pybravia.BraviaClient.get_external_status",
-        return_value=BRAVIA_SOURCES,
-    ), patch(
-        "pybravia.BraviaClient.send_rest_req",
-        return_value={},
+    with (
+        patch("pybravia.BraviaClient.connect"),
+        patch(
+            "pybravia.BraviaClient.get_power_status",
+            return_value="active",
+        ),
+        patch(
+            "pybravia.BraviaClient.get_external_status",
+            return_value=BRAVIA_SOURCES,
+        ),
+        patch(
+            "pybravia.BraviaClient.send_rest_req",
+            return_value={},
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,

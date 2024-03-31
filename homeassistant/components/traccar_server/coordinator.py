@@ -1,8 +1,10 @@
 """Data update coordinator for Traccar Server."""
+
 from __future__ import annotations
 
 import asyncio
 from datetime import datetime
+from logging import DEBUG as LOG_LEVEL_DEBUG
 from typing import TYPE_CHECKING, Any, TypedDict
 
 from pytraccar import (
@@ -91,8 +93,18 @@ class TraccarServerCoordinator(DataUpdateCoordinator[TraccarServerCoordinatorDat
 
         self._geofences = geofences
 
+        if self.logger.isEnabledFor(LOG_LEVEL_DEBUG):
+            self.logger.debug("Received devices: %s", devices)
+            self.logger.debug("Received positions: %s", positions)
+
         for position in positions:
-            if (device := get_device(position["deviceId"], devices)) is None:
+            device_id = position["deviceId"]
+            if (device := get_device(device_id, devices)) is None:
+                self.logger.debug(
+                    "Device %s not found for position: %s",
+                    device_id,
+                    position["id"],
+                )
                 continue
 
             if (
@@ -101,9 +113,14 @@ class TraccarServerCoordinator(DataUpdateCoordinator[TraccarServerCoordinatorDat
                     device, position
                 )
             ) is None:
+                self.logger.debug(
+                    "Skipping position update %s for %s due to accuracy filter",
+                    position["id"],
+                    device_id,
+                )
                 continue
 
-            data[device["id"]] = {
+            data[device_id] = {
                 "device": device,
                 "geofence": get_first_geofence(
                     geofences,
@@ -121,8 +138,8 @@ class TraccarServerCoordinator(DataUpdateCoordinator[TraccarServerCoordinatorDat
         self._should_log_subscription_error = True
         update_devices = set()
         for device in data.get("devices") or []:
-            device_id = device["id"]
-            if device_id not in self.data:
+            if (device_id := device["id"]) not in self.data:
+                self.logger.debug("Device %s not found in data", device_id)
                 continue
 
             if (
@@ -138,8 +155,12 @@ class TraccarServerCoordinator(DataUpdateCoordinator[TraccarServerCoordinatorDat
             update_devices.add(device_id)
 
         for position in data.get("positions") or []:
-            device_id = position["deviceId"]
-            if device_id not in self.data:
+            if (device_id := position["deviceId"]) not in self.data:
+                self.logger.debug(
+                    "Device %s for position %s not found in data",
+                    device_id,
+                    position["id"],
+                )
                 continue
 
             if (
@@ -148,6 +169,11 @@ class TraccarServerCoordinator(DataUpdateCoordinator[TraccarServerCoordinatorDat
                     self.data[device_id]["device"], position
                 )
             ) is None:
+                self.logger.debug(
+                    "Skipping position update %s for %s due to accuracy filter",
+                    position["id"],
+                    device_id,
+                )
                 continue
 
             self.data[device_id]["position"] = position

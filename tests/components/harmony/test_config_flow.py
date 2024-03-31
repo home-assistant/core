@@ -1,4 +1,5 @@
 """Test the Logitech Harmony Hub config flow."""
+
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import aiohttp
@@ -31,13 +32,16 @@ async def test_user_form(hass: HomeAssistant) -> None:
     assert result["errors"] == {}
 
     harmonyapi = _get_mock_harmonyapi(connect=True)
-    with patch(
-        "homeassistant.components.harmony.util.HarmonyAPI",
-        return_value=harmonyapi,
-    ), patch(
-        "homeassistant.components.harmony.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.harmony.util.HarmonyAPI",
+            return_value=harmonyapi,
+        ),
+        patch(
+            "homeassistant.components.harmony.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {"host": "1.2.3.4", "name": "friend"},
@@ -83,13 +87,16 @@ async def test_form_ssdp(hass: HomeAssistant) -> None:
 
     harmonyapi = _get_mock_harmonyapi(connect=True)
 
-    with patch(
-        "homeassistant.components.harmony.util.HarmonyAPI",
-        return_value=harmonyapi,
-    ), patch(
-        "homeassistant.components.harmony.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.harmony.util.HarmonyAPI",
+            return_value=harmonyapi,
+        ),
+        patch(
+            "homeassistant.components.harmony.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {},

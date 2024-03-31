@@ -1,4 +1,5 @@
 """Config flow for AVM FRITZ!SmartHome."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -81,13 +82,13 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
             fritzbox.login()
             fritzbox.get_device_elements()
             fritzbox.logout()
-            return RESULT_SUCCESS
         except LoginError:
             return RESULT_INVALID_AUTH
         except HTTPError:
             return RESULT_NOT_SUPPORTED
         except OSError:
             return RESULT_NO_DEVICES_FOUND
+        return RESULT_SUCCESS
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None

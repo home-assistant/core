@@ -1,4 +1,5 @@
 """Thetests for the Modbus sensor component."""
+
 import pytest
 
 from homeassistant.components.binary_sensor import DOMAIN as SENSOR_DOMAIN

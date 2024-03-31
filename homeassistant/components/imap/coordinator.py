@@ -1,4 +1,5 @@
 """Coordinator for imag integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -263,6 +264,7 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int | None]):
                 "sender": message.sender,
                 "subject": message.subject,
                 "headers": message.headers,
+                "uid": last_message_uid,
             }
             if self.custom_event_template is not None:
                 try:
@@ -396,8 +398,6 @@ class ImapPollingDataUpdateCoordinator(ImapDataUpdateCoordinator):
         """Update the number of unread emails."""
         try:
             messages = await self._async_fetch_number_of_messages()
-            self.auth_errors = 0
-            return messages
         except (
             AioImapException,
             UpdateFailed,
@@ -405,7 +405,7 @@ class ImapPollingDataUpdateCoordinator(ImapDataUpdateCoordinator):
         ) as ex:
             await self._cleanup()
             self.async_set_update_error(ex)
-            raise UpdateFailed() from ex
+            raise UpdateFailed from ex
         except InvalidFolder as ex:
             _LOGGER.warning("Selected mailbox folder is invalid")
             await self._cleanup()
@@ -422,7 +422,10 @@ class ImapPollingDataUpdateCoordinator(ImapDataUpdateCoordinator):
                 )
                 self.config_entry.async_start_reauth(self.hass)
             self.async_set_update_error(ex)
-            raise ConfigEntryAuthFailed() from ex
+            raise ConfigEntryAuthFailed from ex
+
+        self.auth_errors = 0
+        return messages
 
 
 class ImapPushDataUpdateCoordinator(ImapDataUpdateCoordinator):

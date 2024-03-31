@@ -1,5 +1,8 @@
 """Sensor to indicate whether the current day is a workday."""
+
 from __future__ import annotations
+
+from functools import partial
 
 from holidays import HolidayBase, country_holidays
 
@@ -12,7 +15,7 @@ from homeassistant.helpers.issue_registry import IssueSeverity, async_create_iss
 from .const import CONF_PROVINCE, DOMAIN, PLATFORMS
 
 
-def _validate_country_and_province(
+async def _async_validate_country_and_province(
     hass: HomeAssistant, entry: ConfigEntry, country: str | None, province: str | None
 ) -> None:
     """Validate country and province."""
@@ -20,7 +23,7 @@ def _validate_country_and_province(
     if not country:
         return
     try:
-        country_holidays(country)
+        await hass.async_add_executor_job(country_holidays, country)
     except NotImplementedError as ex:
         async_create_issue(
             hass,
@@ -38,7 +41,9 @@ def _validate_country_and_province(
     if not province:
         return
     try:
-        country_holidays(country, subdiv=province)
+        await hass.async_add_executor_job(
+            partial(country_holidays, country, subdiv=province)
+        )
     except NotImplementedError as ex:
         async_create_issue(
             hass,
@@ -65,10 +70,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     country: str | None = entry.options.get(CONF_COUNTRY)
     province: str | None = entry.options.get(CONF_PROVINCE)
 
-    _validate_country_and_province(hass, entry, country, province)
+    await _async_validate_country_and_province(hass, entry, country, province)
 
     if country and CONF_LANGUAGE not in entry.options:
-        cls: HolidayBase = country_holidays(country, subdiv=province)
+        cls: HolidayBase = await hass.async_add_executor_job(
+            partial(country_holidays, country, subdiv=province)
+        )
         default_language = cls.default_language
         new_options = entry.options.copy()
         new_options[CONF_LANGUAGE] = default_language

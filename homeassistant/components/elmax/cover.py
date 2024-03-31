@@ -1,4 +1,5 @@
 """Elmax cover platform."""
+
 from __future__ import annotations
 
 import logging

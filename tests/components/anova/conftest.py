@@ -52,7 +52,7 @@ async def anova_api_wrong_login(
     api_mock = anova_api_mock()
 
     async def authenticate_side_effect():
-        raise InvalidLogin()
+        raise InvalidLogin
 
     api_mock.authenticate.side_effect = authenticate_side_effect
 

@@ -1,4 +1,5 @@
 """Config flow for Risco integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -102,9 +103,9 @@ async def validate_local_input(
         )
         try:
             await risco.connect()
-        except CannotConnectError as e:
+        except CannotConnectError:
             if comm_delay >= MAX_COMMUNICATION_DELAY:
-                raise e
+                raise
             comm_delay += 1
         else:
             break
@@ -205,8 +206,8 @@ class RiscoConfigFlow(ConfigFlow, domain=DOMAIN):
                     title=info["title"],
                     data={
                         **user_input,
-                        **{CONF_TYPE: TYPE_LOCAL},
-                        **{CONF_COMMUNICATION_DELAY: info["comm_delay"]},
+                        CONF_TYPE: TYPE_LOCAL,
+                        CONF_COMMUNICATION_DELAY: info["comm_delay"],
                     },
                 )
 

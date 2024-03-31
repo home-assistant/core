@@ -5,6 +5,7 @@ This module exists of the following parts:
  - OAuth2 implementation that works with local provided client ID/secret
 
 """
+
 from __future__ import annotations
 
 from abc import ABC, ABCMeta, abstractmethod
@@ -438,9 +439,9 @@ def async_add_implementation_provider(
 
     If no implementation found, return None.
     """
-    hass.data.setdefault(DATA_PROVIDERS, {})[
-        provider_domain
-    ] = async_provide_implementation
+    hass.data.setdefault(DATA_PROVIDERS, {})[provider_domain] = (
+        async_provide_implementation
+    )
 
 
 class OAuth2AuthorizeCallbackView(http.HomeAssistantView):
@@ -455,7 +456,7 @@ class OAuth2AuthorizeCallbackView(http.HomeAssistantView):
         if "state" not in request.query:
             return web.Response(text="Missing state parameter")
 
-        hass = request.app["hass"]
+        hass = request.app[http.KEY_HASS]
 
         state = _decode_jwt(hass, request.query["state"])
 

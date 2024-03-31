@@ -1,4 +1,5 @@
 """Test the EZVIZ config flow."""
+
 from unittest.mock import patch
 
 from pyezviz.exceptions import (

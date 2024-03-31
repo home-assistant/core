@@ -1,4 +1,5 @@
 """Test the HVV Departures config flow."""
+
 import json
 from unittest.mock import patch
 
@@ -30,18 +31,23 @@ FIXTURE_DEPARTURE_LIST = json.loads(load_fixture("hvv_departures/departure_list.
 async def test_user_flow(hass: HomeAssistant) -> None:
     """Test that config flow works."""
 
-    with patch(
-        "homeassistant.components.hvv_departures.hub.GTI.init",
-        return_value=FIXTURE_INIT,
-    ), patch(
-        "homeassistant.components.hvv_departures.hub.GTI.checkName",
-        return_value=FIXTURE_CHECK_NAME,
-    ), patch(
-        "homeassistant.components.hvv_departures.hub.GTI.stationInformation",
-        return_value=FIXTURE_STATION_INFORMATION,
-    ), patch(
-        "homeassistant.components.hvv_departures.async_setup_entry",
-        return_value=True,
+    with (
+        patch(
+            "homeassistant.components.hvv_departures.hub.GTI.init",
+            return_value=FIXTURE_INIT,
+        ),
+        patch(
+            "homeassistant.components.hvv_departures.hub.GTI.checkName",
+            return_value=FIXTURE_CHECK_NAME,
+        ),
+        patch(
+            "homeassistant.components.hvv_departures.hub.GTI.stationInformation",
+            return_value=FIXTURE_STATION_INFORMATION,
+        ),
+        patch(
+            "homeassistant.components.hvv_departures.async_setup_entry",
+            return_value=True,
+        ),
     ):
         # step: user
 
@@ -93,15 +99,19 @@ async def test_user_flow(hass: HomeAssistant) -> None:
 async def test_user_flow_no_results(hass: HomeAssistant) -> None:
     """Test that config flow works when there are no results."""
 
-    with patch(
-        "homeassistant.components.hvv_departures.hub.GTI.init",
-        return_value=FIXTURE_INIT,
-    ), patch(
-        "homeassistant.components.hvv_departures.hub.GTI.checkName",
-        return_value={"returnCode": "OK", "results": []},
-    ), patch(
-        "homeassistant.components.hvv_departures.async_setup_entry",
-        return_value=True,
+    with (
+        patch(
+            "homeassistant.components.hvv_departures.hub.GTI.init",
+            return_value=FIXTURE_INIT,
+        ),
+        patch(
+            "homeassistant.components.hvv_departures.hub.GTI.checkName",
+            return_value={"returnCode": "OK", "results": []},
+        ),
+        patch(
+            "homeassistant.components.hvv_departures.async_setup_entry",
+            return_value=True,
+        ),
     ):
         # step: user
 
@@ -178,12 +188,15 @@ async def test_user_flow_cannot_connect(hass: HomeAssistant) -> None:
 async def test_user_flow_station(hass: HomeAssistant) -> None:
     """Test that config flow handles empty data on step station."""
 
-    with patch(
-        "homeassistant.components.hvv_departures.hub.GTI.init",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.hvv_departures.hub.GTI.checkName",
-        return_value={"returnCode": "OK", "results": []},
+    with (
+        patch(
+            "homeassistant.components.hvv_departures.hub.GTI.init",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.hvv_departures.hub.GTI.checkName",
+            return_value={"returnCode": "OK", "results": []},
+        ),
     ):
         # step: user
 
@@ -211,12 +224,15 @@ async def test_user_flow_station(hass: HomeAssistant) -> None:
 async def test_user_flow_station_select(hass: HomeAssistant) -> None:
     """Test that config flow handles empty data on step station_select."""
 
-    with patch(
-        "homeassistant.components.hvv_departures.hub.GTI.init",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.hvv_departures.hub.GTI.checkName",
-        return_value=FIXTURE_CHECK_NAME,
+    with (
+        patch(
+            "homeassistant.components.hvv_departures.hub.GTI.init",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.hvv_departures.hub.GTI.checkName",
+            return_value=FIXTURE_CHECK_NAME,
+        ),
     ):
         result_user = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -257,12 +273,16 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     )
     config_entry.add_to_hass(hass)
 
-    with patch("homeassistant.components.hvv_departures.PLATFORMS", new=[]), patch(
-        "homeassistant.components.hvv_departures.hub.GTI.init",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.hvv_departures.hub.GTI.departureList",
-        return_value=FIXTURE_DEPARTURE_LIST,
+    with (
+        patch("homeassistant.components.hvv_departures.PLATFORMS", new=[]),
+        patch(
+            "homeassistant.components.hvv_departures.hub.GTI.init",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.hvv_departures.hub.GTI.departureList",
+            return_value=FIXTURE_DEPARTURE_LIST,
+        ),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -306,11 +326,15 @@ async def test_options_flow_invalid_auth(hass: HomeAssistant) -> None:
     )
     config_entry.add_to_hass(hass)
 
-    with patch("homeassistant.components.hvv_departures.PLATFORMS", new=[]), patch(
-        "homeassistant.components.hvv_departures.hub.GTI.init", return_value=True
-    ), patch(
-        "homeassistant.components.hvv_departures.hub.GTI.departureList",
-        return_value=FIXTURE_DEPARTURE_LIST,
+    with (
+        patch("homeassistant.components.hvv_departures.PLATFORMS", new=[]),
+        patch(
+            "homeassistant.components.hvv_departures.hub.GTI.init", return_value=True
+        ),
+        patch(
+            "homeassistant.components.hvv_departures.hub.GTI.departureList",
+            return_value=FIXTURE_DEPARTURE_LIST,
+        ),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -345,11 +369,15 @@ async def test_options_flow_cannot_connect(hass: HomeAssistant) -> None:
     )
     config_entry.add_to_hass(hass)
 
-    with patch("homeassistant.components.hvv_departures.PLATFORMS", new=[]), patch(
-        "homeassistant.components.hvv_departures.hub.GTI.init", return_value=True
-    ), patch(
-        "homeassistant.components.hvv_departures.hub.GTI.departureList",
-        return_value=FIXTURE_DEPARTURE_LIST,
+    with (
+        patch("homeassistant.components.hvv_departures.PLATFORMS", new=[]),
+        patch(
+            "homeassistant.components.hvv_departures.hub.GTI.init", return_value=True
+        ),
+        patch(
+            "homeassistant.components.hvv_departures.hub.GTI.departureList",
+            return_value=FIXTURE_DEPARTURE_LIST,
+        ),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()

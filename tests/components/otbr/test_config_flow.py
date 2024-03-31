@@ -1,4 +1,5 @@
 """Test the Open Thread Border Router config flow."""
+
 import asyncio
 from http import HTTPStatus
 from typing import Any
@@ -104,13 +105,16 @@ async def test_user_flow_router_not_setup(
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.otbr.config_flow.async_get_preferred_dataset",
-        return_value=None,
-    ), patch(
-        "homeassistant.components.otbr.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.otbr.config_flow.async_get_preferred_dataset",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.otbr.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -248,11 +252,12 @@ async def test_hassio_discovery_flow_yellow(
         "version": None,
     }
 
-    with patch(
-        "homeassistant.components.otbr.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry, patch(
-        "homeassistant.components.otbr.config_flow.yellow_hardware.async_info"
+    with (
+        patch(
+            "homeassistant.components.otbr.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+        patch("homeassistant.components.otbr.config_flow.yellow_hardware.async_info"),
     ):
         result = await hass.config_entries.flow.async_init(
             otbr.DOMAIN, context={"source": "hassio"}, data=HASSIO_DATA
@@ -275,8 +280,25 @@ async def test_hassio_discovery_flow_yellow(
     assert config_entry.unique_id == HASSIO_DATA.uuid
 
 
+@pytest.mark.parametrize(
+    ("device", "title"),
+    [
+        (
+            "/dev/serial/by-id/usb-Nabu_Casa_SkyConnect_v1.0_9e2adbd75b8beb119fe564a0f320645d-if00-port0",
+            "Home Assistant SkyConnect (Silicon Labs Multiprotocol)",
+        ),
+        (
+            "/dev/serial/by-id/usb-Nabu_Casa_Home_Assistant_Connect_ZBT-1_9e2adbd75b8beb119fe564a0f320645d-if00-port0",
+            "Home Assistant Connect ZBT-1 (Silicon Labs Multiprotocol)",
+        ),
+    ],
+)
 async def test_hassio_discovery_flow_sky_connect(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, addon_info
+    device: str,
+    title: str,
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    addon_info,
 ) -> None:
     """Test the hassio discovery flow."""
     url = "http://core-silabs-multiprotocol:8081"
@@ -285,12 +307,7 @@ async def test_hassio_discovery_flow_sky_connect(
     addon_info.return_value = {
         "available": True,
         "hostname": None,
-        "options": {
-            "device": (
-                "/dev/serial/by-id/usb-Nabu_Casa_SkyConnect_v1.0_"
-                "9e2adbd75b8beb119fe564a0f320645d-if00-port0"
-            )
-        },
+        "options": {"device": device},
         "state": None,
         "update_available": False,
         "version": None,
@@ -309,7 +326,7 @@ async def test_hassio_discovery_flow_sky_connect(
     }
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Home Assistant SkyConnect (Silicon Labs Multiprotocol)"
+    assert result["title"] == title
     assert result["data"] == expected_data
     assert result["options"] == {}
     assert len(mock_setup_entry.mock_calls) == 1
@@ -317,9 +334,7 @@ async def test_hassio_discovery_flow_sky_connect(
     config_entry = hass.config_entries.async_entries(otbr.DOMAIN)[0]
     assert config_entry.data == expected_data
     assert config_entry.options == {}
-    assert (
-        config_entry.title == "Home Assistant SkyConnect (Silicon Labs Multiprotocol)"
-    )
+    assert config_entry.title == title
     assert config_entry.unique_id == HASSIO_DATA.uuid
 
 
@@ -413,13 +428,16 @@ async def test_hassio_discovery_flow_router_not_setup(
     aioclient_mock.put(f"{url}/node/dataset/active", status=HTTPStatus.CREATED)
     aioclient_mock.put(f"{url}/node/state", status=HTTPStatus.OK)
 
-    with patch(
-        "homeassistant.components.otbr.config_flow.async_get_preferred_dataset",
-        return_value=None,
-    ), patch(
-        "homeassistant.components.otbr.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.otbr.config_flow.async_get_preferred_dataset",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.otbr.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result = await hass.config_entries.flow.async_init(
             otbr.DOMAIN, context={"source": "hassio"}, data=HASSIO_DATA
         )
@@ -467,13 +485,16 @@ async def test_hassio_discovery_flow_router_not_setup_has_preferred(
     aioclient_mock.put(f"{url}/node/dataset/active", status=HTTPStatus.CREATED)
     aioclient_mock.put(f"{url}/node/state", status=HTTPStatus.OK)
 
-    with patch(
-        "homeassistant.components.otbr.config_flow.async_get_preferred_dataset",
-        return_value=DATASET_CH15.hex(),
-    ), patch(
-        "homeassistant.components.otbr.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.otbr.config_flow.async_get_preferred_dataset",
+            return_value=DATASET_CH15.hex(),
+        ),
+        patch(
+            "homeassistant.components.otbr.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result = await hass.config_entries.flow.async_init(
             otbr.DOMAIN, context={"source": "hassio"}, data=HASSIO_DATA
         )
@@ -522,13 +543,16 @@ async def test_hassio_discovery_flow_router_not_setup_has_preferred_2(
 
     multiprotocol_addon_manager_mock.async_get_channel.return_value = 15
 
-    with patch(
-        "homeassistant.components.otbr.config_flow.async_get_preferred_dataset",
-        return_value=DATASET_CH16.hex(),
-    ), patch(
-        "homeassistant.components.otbr.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.otbr.config_flow.async_get_preferred_dataset",
+            return_value=DATASET_CH16.hex(),
+        ),
+        patch(
+            "homeassistant.components.otbr.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result = await hass.config_entries.flow.async_init(
             otbr.DOMAIN, context={"source": "hassio"}, data=HASSIO_DATA
         )

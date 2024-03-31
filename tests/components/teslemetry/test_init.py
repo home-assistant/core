@@ -5,7 +5,7 @@ from datetime import timedelta
 from freezegun.api import FrozenDateTimeFactory
 from tesla_fleet_api.exceptions import (
     InvalidToken,
-    PaymentRequired,
+    SubscriptionRequired,
     TeslaFleetError,
     VehicleOffline,
 )
@@ -42,7 +42,7 @@ async def test_auth_failure(hass: HomeAssistant, mock_products) -> None:
 async def test_subscription_failure(hass: HomeAssistant, mock_products) -> None:
     """Test init with an client response error."""
 
-    mock_products.side_effect = PaymentRequired
+    mock_products.side_effect = SubscriptionRequired
     entry = await setup_platform(hass)
     assert entry.state is ConfigEntryState.SETUP_ERROR
 

@@ -1,4 +1,5 @@
 """Support for System Bridge notification service."""
+
 from __future__ import annotations
 
 import logging

@@ -1,4 +1,5 @@
 """Support for tracking the proximity of a device."""
+
 from __future__ import annotations
 
 import logging

@@ -1,5 +1,7 @@
 """Tests for the Google Assistant traits."""
+
 from datetime import datetime, timedelta
+from typing import Any
 from unittest.mock import ANY, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -3304,11 +3306,11 @@ async def test_openclose_cover_valve_no_position(
 
 @pytest.mark.parametrize(
     "device_class",
-    (
+    [
         cover.CoverDeviceClass.DOOR,
         cover.CoverDeviceClass.GARAGE,
         cover.CoverDeviceClass.GATE,
-    ),
+    ],
 )
 async def test_openclose_cover_secure(hass: HomeAssistant, device_class) -> None:
     """Test OpenClose trait support for cover domain."""
@@ -3370,13 +3372,13 @@ async def test_openclose_cover_secure(hass: HomeAssistant, device_class) -> None
 
 @pytest.mark.parametrize(
     "device_class",
-    (
+    [
         binary_sensor.BinarySensorDeviceClass.DOOR,
         binary_sensor.BinarySensorDeviceClass.GARAGE_DOOR,
         binary_sensor.BinarySensorDeviceClass.LOCK,
         binary_sensor.BinarySensorDeviceClass.OPENING,
         binary_sensor.BinarySensorDeviceClass.WINDOW,
-    ),
+    ],
 )
 async def test_openclose_binary_sensor(hass: HomeAssistant, device_class) -> None:
     """Test OpenClose trait support for binary_sensor domain."""
@@ -3814,7 +3816,7 @@ async def test_transport_control(
 
 @pytest.mark.parametrize(
     "state",
-    (
+    [
         STATE_OFF,
         STATE_IDLE,
         STATE_PLAYING,
@@ -3823,7 +3825,7 @@ async def test_transport_control(
         STATE_STANDBY,
         STATE_UNAVAILABLE,
         STATE_UNKNOWN,
-    ),
+    ],
 )
 async def test_media_state(hass: HomeAssistant, state) -> None:
     """Test the MediaStateTrait."""
@@ -3925,16 +3927,15 @@ async def test_air_quality_description_for_aqi(hass: HomeAssistant) -> None:
         BASIC_CONFIG,
     )
 
-    assert trt._air_quality_description_for_aqi("0") == "healthy"
-    assert trt._air_quality_description_for_aqi("75") == "moderate"
+    assert trt._air_quality_description_for_aqi(0) == "healthy"
+    assert trt._air_quality_description_for_aqi(75) == "moderate"
     assert (
-        trt._air_quality_description_for_aqi("125") == "unhealthy for sensitive groups"
+        trt._air_quality_description_for_aqi(125.0) == "unhealthy for sensitive groups"
     )
-    assert trt._air_quality_description_for_aqi("175") == "unhealthy"
-    assert trt._air_quality_description_for_aqi("250") == "very unhealthy"
-    assert trt._air_quality_description_for_aqi("350") == "hazardous"
-    assert trt._air_quality_description_for_aqi("-1") == "unknown"
-    assert trt._air_quality_description_for_aqi("non-numeric") == "unknown"
+    assert trt._air_quality_description_for_aqi(175) == "unhealthy"
+    assert trt._air_quality_description_for_aqi(250) == "very unhealthy"
+    assert trt._air_quality_description_for_aqi(350) == "hazardous"
+    assert trt._air_quality_description_for_aqi(-1) == "unknown"
 
 
 async def test_null_device_class(hass: HomeAssistant) -> None:
@@ -3955,7 +3956,19 @@ async def test_null_device_class(hass: HomeAssistant) -> None:
     assert trt.query_attributes() == {}
 
 
-async def test_sensorstate(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("value", "published", "aqi"),
+    [
+        (100.0, 100.0, "moderate"),
+        (10.0, 10.0, "healthy"),
+        (0, 0.0, "healthy"),
+        ("", None, "unknown"),
+        ("unknown", None, "unknown"),
+    ],
+)
+async def test_sensorstate(
+    hass: HomeAssistant, value: Any, published: Any, aqi: Any
+) -> None:
     """Test SensorState trait support for sensor domain."""
     sensor_types = {
         sensor.SensorDeviceClass.AQI: ("AirQuality", "AQI"),
@@ -3977,7 +3990,7 @@ async def test_sensorstate(hass: HomeAssistant) -> None:
             hass,
             State(
                 "sensor.test",
-                100.0,
+                value,
                 {
                     "device_class": sensor_type,
                 },
@@ -4023,16 +4036,14 @@ async def test_sensorstate(hass: HomeAssistant) -> None:
                 "currentSensorStateData": [
                     {
                         "name": name,
-                        "currentSensorState": trt._air_quality_description_for_aqi(
-                            trt.state.state
-                        ),
-                        "rawValue": trt.state.state,
+                        "currentSensorState": aqi,
+                        "rawValue": published,
                     },
                 ]
             }
         else:
             assert trt.query_attributes() == {
-                "currentSensorStateData": [{"name": name, "rawValue": trt.state.state}]
+                "currentSensorStateData": [{"name": name, "rawValue": published}]
             }
 
     assert helpers.get_google_type(sensor.DOMAIN, None) is not None

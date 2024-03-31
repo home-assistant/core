@@ -1,4 +1,5 @@
 """Config flow for Flipr integration."""
+
 from __future__ import annotations
 
 import logging
@@ -43,9 +44,9 @@ class FliprConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_auth"
             except (Timeout, ConnectionError):
                 errors["base"] = "cannot_connect"
-            except Exception as exception:  # pylint: disable=broad-except
+            except Exception:  # pylint: disable=broad-except
                 errors["base"] = "unknown"
-                _LOGGER.exception(exception)
+                _LOGGER.exception("Unexpected exception")
 
             if not errors and not flipr_ids:
                 # No flipr_id found. Tell the user with an error message.

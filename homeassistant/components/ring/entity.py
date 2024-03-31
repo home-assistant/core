@@ -1,9 +1,12 @@
 """Base class for Ring entity."""
-from typing import TypeVar
 
-from ring_doorbell.generic import RingGeneric
+from collections.abc import Callable
+from typing import Any, Concatenate, ParamSpec, TypeVar
+
+from ring_doorbell import AuthenticationError, RingError, RingGeneric, RingTimeout
 
 from homeassistant.core import callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -18,6 +21,33 @@ _RingCoordinatorT = TypeVar(
     "_RingCoordinatorT",
     bound=(RingDataCoordinator | RingNotificationsCoordinator),
 )
+_T = TypeVar("_T", bound="RingEntity")
+_P = ParamSpec("_P")
+
+
+def exception_wrap(
+    func: Callable[Concatenate[_T, _P], Any],
+) -> Callable[Concatenate[_T, _P], Any]:
+    """Define a wrapper to catch exceptions and raise HomeAssistant errors."""
+
+    def _wrap(self: _T, *args: _P.args, **kwargs: _P.kwargs) -> None:
+        try:
+            return func(self, *args, **kwargs)
+        except AuthenticationError as err:
+            self.hass.loop.call_soon_threadsafe(
+                self.coordinator.config_entry.async_start_reauth, self.hass
+            )
+            raise HomeAssistantError(err) from err
+        except RingTimeout as err:
+            raise HomeAssistantError(
+                f"Timeout communicating with API {func}: {err}"
+            ) from err
+        except RingError as err:
+            raise HomeAssistantError(
+                f"Error communicating with API{func}: {err}"
+            ) from err
+
+    return _wrap
 
 
 class RingEntity(CoordinatorEntity[_RingCoordinatorT]):

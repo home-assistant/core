@@ -1,4 +1,5 @@
 """Config flow for Control4 integration."""
+
 from __future__ import annotations
 
 import logging
@@ -67,9 +68,9 @@ class Control4Validator:
             self.director_bearer_token = (
                 await account.getDirectorBearerToken(self.controller_unique_id)
             )["token"]
-            return True
         except (Unauthorized, NotFound):
             return False
+        return True
 
     async def connect_to_director(self) -> bool:
         """Test if we can connect to the local Control4 Director."""
@@ -81,10 +82,10 @@ class Control4Validator:
                 self.host, self.director_bearer_token, director_session
             )
             await director.getAllItemInfo()
-            return True
         except (Unauthorized, ClientError, TimeoutError):
             _LOGGER.error("Failed to connect to the Control4 controller")
             return False
+        return True
 
 
 class Control4ConfigFlow(ConfigFlow, domain=DOMAIN):

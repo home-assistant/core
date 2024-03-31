@@ -42,7 +42,6 @@ ENTITIES: tuple[TedeeSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.SECONDS,
         state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:timer-lock-open",
         value_fn=lambda lock: lock.duration_pullspring,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),

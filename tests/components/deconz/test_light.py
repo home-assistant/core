@@ -1,4 +1,5 @@
 """deCONZ light platform tests."""
+
 from unittest.mock import patch
 
 import pytest
@@ -1321,12 +1322,10 @@ async def test_non_color_light_reports_color(
     await mock_deconz_websocket(data=event_changed_light)
     await hass.async_block_till_done()
 
-    assert hass.states.get("light.group").attributes[ATTR_COLOR_MODE] == ColorMode.XY
-    # Bug is fixed if we reach this point
-    # device won't have neither color temp nor color
-    with pytest.raises(AssertionError):
-        assert hass.states.get("light.group").attributes.get(ATTR_COLOR_TEMP) is None
-        assert hass.states.get("light.group").attributes.get(ATTR_HS_COLOR) is None
+    group = hass.states.get("light.group")
+    assert group.attributes[ATTR_COLOR_MODE] == ColorMode.XY
+    assert group.attributes[ATTR_HS_COLOR] == (40.571, 41.176)
+    assert group.attributes.get(ATTR_COLOR_TEMP) is None
 
 
 async def test_verify_group_supported_features(
@@ -1380,10 +1379,147 @@ async def test_verify_group_supported_features(
 
     assert len(hass.states.async_all()) == 4
 
-    assert hass.states.get("light.group").state == STATE_ON
+    group_state = hass.states.get("light.group")
+    assert group_state.state == STATE_ON
+    assert group_state.attributes[ATTR_COLOR_MODE] == ColorMode.COLOR_TEMP
     assert (
-        hass.states.get("light.group").attributes[ATTR_SUPPORTED_FEATURES]
+        group_state.attributes[ATTR_SUPPORTED_FEATURES]
         == LightEntityFeature.TRANSITION
         | LightEntityFeature.FLASH
         | LightEntityFeature.EFFECT
     )
+
+
+async def test_verify_group_color_mode_fallback(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_deconz_websocket
+) -> None:
+    """Test that group supported features reflect what included lights support."""
+    data = {
+        "groups": {
+            "43": {
+                "action": {
+                    "alert": "none",
+                    "bri": 127,
+                    "colormode": "hs",
+                    "ct": 0,
+                    "effect": "none",
+                    "hue": 0,
+                    "on": True,
+                    "sat": 127,
+                    "scene": "4",
+                    "xy": [0, 0],
+                },
+                "devicemembership": [],
+                "etag": "4548e982c4cfff942f7af80958abb2a0",
+                "id": "43",
+                "lights": ["13"],
+                "name": "Opbergruimte",
+                "scenes": [
+                    {
+                        "id": "1",
+                        "lightcount": 1,
+                        "name": "Scene Normaal deCONZ",
+                        "transitiontime": 10,
+                    },
+                    {
+                        "id": "2",
+                        "lightcount": 1,
+                        "name": "Scene Fel deCONZ",
+                        "transitiontime": 10,
+                    },
+                    {
+                        "id": "3",
+                        "lightcount": 1,
+                        "name": "Scene Gedimd deCONZ",
+                        "transitiontime": 10,
+                    },
+                    {
+                        "id": "4",
+                        "lightcount": 1,
+                        "name": "Scene Uit deCONZ",
+                        "transitiontime": 10,
+                    },
+                ],
+                "state": {"all_on": False, "any_on": False},
+                "type": "LightGroup",
+            },
+        },
+        "lights": {
+            "13": {
+                "capabilities": {
+                    "alerts": [
+                        "none",
+                        "select",
+                        "lselect",
+                        "blink",
+                        "breathe",
+                        "okay",
+                        "channelchange",
+                        "finish",
+                        "stop",
+                    ],
+                    "bri": {"min_dim_level": 5},
+                },
+                "config": {
+                    "bri": {"execute_if_off": True, "startup": "previous"},
+                    "groups": ["43"],
+                    "on": {"startup": "previous"},
+                },
+                "etag": "ca0ed7763eca37f5e6b24f6d46f8a518",
+                "hascolor": False,
+                "lastannounced": None,
+                "lastseen": "2024-03-02T20:08Z",
+                "manufacturername": "Signify Netherlands B.V.",
+                "modelid": "LWA001",
+                "name": "Opbergruimte Lamp Plafond",
+                "productid": "Philips-LWA001-1-A19DLv5",
+                "productname": "Hue white lamp",
+                "state": {
+                    "alert": "none",
+                    "bri": 76,
+                    "effect": "none",
+                    "on": False,
+                    "reachable": True,
+                },
+                "swconfigid": "87169548",
+                "swversion": "1.104.2",
+                "type": "Dimmable light",
+                "uniqueid": "00:17:88:01:08:11:22:33-01",
+            },
+        },
+    }
+    with patch.dict(DECONZ_WEB_REQUEST, data):
+        await setup_deconz_integration(hass, aioclient_mock)
+
+    group_state = hass.states.get("light.opbergruimte")
+    assert group_state.state == STATE_OFF
+    assert group_state.attributes[ATTR_COLOR_MODE] is None
+
+    await mock_deconz_websocket(
+        data={
+            "e": "changed",
+            "id": "13",
+            "r": "lights",
+            "state": {
+                "alert": "none",
+                "bri": 76,
+                "effect": "none",
+                "on": True,
+                "reachable": True,
+            },
+            "t": "event",
+            "uniqueid": "00:17:88:01:08:11:22:33-01",
+        }
+    )
+    await mock_deconz_websocket(
+        data={
+            "e": "changed",
+            "id": "43",
+            "r": "groups",
+            "state": {"all_on": True, "any_on": True},
+            "t": "event",
+        }
+    )
+    group_state = hass.states.get("light.opbergruimte")
+    assert group_state.state == STATE_ON
+    assert group_state.attributes[ATTR_COLOR_MODE] is ColorMode.UNKNOWN

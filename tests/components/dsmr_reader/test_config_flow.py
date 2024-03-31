@@ -1,4 +1,5 @@
 """Tests for the config flow."""
+
 from homeassistant.components.dsmr_reader.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant

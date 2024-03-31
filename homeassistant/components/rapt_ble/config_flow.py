@@ -1,4 +1,5 @@
 """Config flow for rapt_ble."""
+
 from __future__ import annotations
 
 from typing import Any

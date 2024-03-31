@@ -1,4 +1,5 @@
 """The tests for the Prometheus exporter."""
+
 from dataclasses import dataclass
 import datetime
 from http import HTTPStatus

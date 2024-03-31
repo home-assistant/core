@@ -1,4 +1,5 @@
 """Config flow for Twitch."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -153,7 +154,7 @@ class OAuth2FlowHandler(
         await self.async_set_unique_id(user.id)
         try:
             self._abort_if_unique_id_configured()
-        except AbortFlow as err:
+        except AbortFlow:
             async_create_issue(
                 self.hass,
                 DOMAIN,
@@ -167,7 +168,7 @@ class OAuth2FlowHandler(
                     "integration_title": "Twitch",
                 },
             )
-            raise err
+            raise
         async_create_issue(
             self.hass,
             HOMEASSISTANT_DOMAIN,

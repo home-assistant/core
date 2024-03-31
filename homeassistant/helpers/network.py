@@ -1,11 +1,12 @@
 """Network helpers."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
 from contextlib import suppress
 from ipaddress import ip_address
-from typing import cast
 
+from hass_nabucasa import remote
 import yarl
 
 from homeassistant.components import http
@@ -30,9 +31,9 @@ def is_internal_request(hass: HomeAssistant) -> bool:
         get_url(
             hass, allow_external=False, allow_cloud=False, require_current_request=True
         )
-        return True
     except NoURLAvailableError:
         return False
+    return True
 
 
 @bind_hass
@@ -297,9 +298,16 @@ def _get_external_url(
 def _get_cloud_url(hass: HomeAssistant, require_current_request: bool = False) -> str:
     """Get external Home Assistant Cloud URL of this instance."""
     if "cloud" in hass.config.components:
+        # Local import to avoid circular dependencies
+        # pylint: disable-next=import-outside-toplevel
+        from homeassistant.components.cloud import (
+            CloudNotAvailable,
+            async_remote_ui_url,
+        )
+
         try:
-            cloud_url = yarl.URL(cast(str, hass.components.cloud.async_remote_ui_url()))
-        except hass.components.cloud.CloudNotAvailable as err:
+            cloud_url = yarl.URL(async_remote_ui_url(hass))
+        except CloudNotAvailable as err:
             raise NoURLAvailableError from err
 
         if not require_current_request or cloud_url.host == _get_request_host():
@@ -313,7 +321,5 @@ def is_cloud_connection(hass: HomeAssistant) -> bool:
 
     if "cloud" not in hass.config.components:
         return False
-
-    from hass_nabucasa import remote  # pylint: disable=import-outside-toplevel
 
     return remote.is_cloud_request.get()

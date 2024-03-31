@@ -1,4 +1,5 @@
 """Update platform for Sensibo integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -23,19 +24,12 @@ from .entity import SensiboDeviceBaseEntity
 PARALLEL_UPDATES = 0
 
 
-@dataclass(frozen=True)
-class DeviceBaseEntityDescriptionMixin:
-    """Mixin for required Sensibo base description keys."""
+@dataclass(frozen=True, kw_only=True)
+class SensiboDeviceUpdateEntityDescription(UpdateEntityDescription):
+    """Describes Sensibo Update entity."""
 
     value_version: Callable[[SensiboDevice], str | None]
     value_available: Callable[[SensiboDevice], str | None]
-
-
-@dataclass(frozen=True)
-class SensiboDeviceUpdateEntityDescription(
-    UpdateEntityDescription, DeviceBaseEntityDescriptionMixin
-):
-    """Describes Sensibo Update entity."""
 
 
 DEVICE_SENSOR_TYPES: tuple[SensiboDeviceUpdateEntityDescription, ...] = (

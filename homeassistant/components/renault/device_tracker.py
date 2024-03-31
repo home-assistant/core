@@ -1,4 +1,5 @@
 """Support for Renault device trackers."""
+
 from __future__ import annotations
 
 from renault_api.kamereon.models import KamereonVehicleLocationData

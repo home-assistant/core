@@ -1,4 +1,5 @@
 """Config flow for Electra Air Conditioner integration."""
+
 from __future__ import annotations
 
 import logging

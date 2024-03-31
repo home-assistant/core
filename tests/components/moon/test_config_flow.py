@@ -1,4 +1,5 @@
 """Tests for the Moon config flow."""
+
 from unittest.mock import MagicMock
 
 from homeassistant.components.moon.const import DOMAIN

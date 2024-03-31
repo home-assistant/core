@@ -1,4 +1,5 @@
 """Test the iRobot Roomba config flow."""
+
 from ipaddress import ip_address
 from unittest.mock import MagicMock, PropertyMock, patch
 
@@ -173,16 +174,20 @@ async def test_form_user_discovery_and_password_fetch(hass: HomeAssistant) -> No
     assert result2["errors"] is None
     assert result2["step_id"] == "link"
 
-    with patch(
-        "homeassistant.components.roomba.config_flow.RoombaFactory.create_roomba",
-        return_value=mocked_roomba,
-    ), patch(
-        "homeassistant.components.roomba.config_flow.RoombaPassword",
-        _mocked_getpassword,
-    ), patch(
-        "homeassistant.components.roomba.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.roomba.config_flow.RoombaFactory.create_roomba",
+            return_value=mocked_roomba,
+        ),
+        patch(
+            "homeassistant.components.roomba.config_flow.RoombaPassword",
+            _mocked_getpassword,
+        ),
+        patch(
+            "homeassistant.components.roomba.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
             {},
@@ -294,16 +299,20 @@ async def test_form_user_discovery_manual_and_auto_password_fetch(
     assert result3["type"] == data_entry_flow.FlowResultType.FORM
     assert result3["errors"] is None
 
-    with patch(
-        "homeassistant.components.roomba.config_flow.RoombaFactory.create_roomba",
-        return_value=mocked_roomba,
-    ), patch(
-        "homeassistant.components.roomba.config_flow.RoombaPassword",
-        _mocked_getpassword,
-    ), patch(
-        "homeassistant.components.roomba.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.roomba.config_flow.RoombaFactory.create_roomba",
+            return_value=mocked_roomba,
+        ),
+        patch(
+            "homeassistant.components.roomba.config_flow.RoombaPassword",
+            _mocked_getpassword,
+        ),
+        patch(
+            "homeassistant.components.roomba.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result4 = await hass.config_entries.flow.async_configure(
             result3["flow_id"],
             {},
@@ -427,16 +436,20 @@ async def test_form_user_discovery_no_devices_found_and_auto_password_fetch(
     assert result2["type"] == data_entry_flow.FlowResultType.FORM
     assert result2["errors"] is None
 
-    with patch(
-        "homeassistant.components.roomba.config_flow.RoombaFactory.create_roomba",
-        return_value=mocked_roomba,
-    ), patch(
-        "homeassistant.components.roomba.config_flow.RoombaPassword",
-        _mocked_getpassword,
-    ), patch(
-        "homeassistant.components.roomba.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.roomba.config_flow.RoombaFactory.create_roomba",
+            return_value=mocked_roomba,
+        ),
+        patch(
+            "homeassistant.components.roomba.config_flow.RoombaPassword",
+            _mocked_getpassword,
+        ),
+        patch(
+            "homeassistant.components.roomba.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
             {},
@@ -500,13 +513,16 @@ async def test_form_user_discovery_no_devices_found_and_password_fetch_fails(
         )
         await hass.async_block_till_done()
 
-    with patch(
-        "homeassistant.components.roomba.config_flow.RoombaFactory.create_roomba",
-        return_value=mocked_roomba,
-    ), patch(
-        "homeassistant.components.roomba.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.roomba.config_flow.RoombaFactory.create_roomba",
+            return_value=mocked_roomba,
+        ),
+        patch(
+            "homeassistant.components.roomba.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result4 = await hass.config_entries.flow.async_configure(
             result3["flow_id"],
             {CONF_PASSWORD: "password"},
@@ -571,13 +587,16 @@ async def test_form_user_discovery_not_devices_found_and_password_fetch_fails_an
         )
         await hass.async_block_till_done()
 
-    with patch(
-        "homeassistant.components.roomba.config_flow.RoombaFactory.create_roomba",
-        return_value=mocked_roomba,
-    ), patch(
-        "homeassistant.components.roomba.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.roomba.config_flow.RoombaFactory.create_roomba",
+            return_value=mocked_roomba,
+        ),
+        patch(
+            "homeassistant.components.roomba.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result4 = await hass.config_entries.flow.async_configure(
             result3["flow_id"],
             {CONF_PASSWORD: "password"},
@@ -630,13 +649,16 @@ async def test_form_user_discovery_and_password_fetch_gets_connection_refused(
         )
         await hass.async_block_till_done()
 
-    with patch(
-        "homeassistant.components.roomba.config_flow.RoombaFactory.create_roomba",
-        return_value=mocked_roomba,
-    ), patch(
-        "homeassistant.components.roomba.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.roomba.config_flow.RoombaFactory.create_roomba",
+            return_value=mocked_roomba,
+        ),
+        patch(
+            "homeassistant.components.roomba.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result4 = await hass.config_entries.flow.async_configure(
             result3["flow_id"],
             {CONF_PASSWORD: "password"},
@@ -684,16 +706,20 @@ async def test_dhcp_discovery_and_roomba_discovery_finds(
     assert result["step_id"] == "link"
     assert result["description_placeholders"] == {"name": "robot_name"}
 
-    with patch(
-        "homeassistant.components.roomba.config_flow.RoombaFactory.create_roomba",
-        return_value=mocked_roomba,
-    ), patch(
-        "homeassistant.components.roomba.config_flow.RoombaPassword",
-        _mocked_getpassword,
-    ), patch(
-        "homeassistant.components.roomba.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.roomba.config_flow.RoombaFactory.create_roomba",
+            return_value=mocked_roomba,
+        ),
+        patch(
+            "homeassistant.components.roomba.config_flow.RoombaPassword",
+            _mocked_getpassword,
+        ),
+        patch(
+            "homeassistant.components.roomba.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {},
@@ -758,16 +784,20 @@ async def test_dhcp_discovery_falls_back_to_manual(
     assert result3["type"] == data_entry_flow.FlowResultType.FORM
     assert result3["errors"] is None
 
-    with patch(
-        "homeassistant.components.roomba.config_flow.RoombaFactory.create_roomba",
-        return_value=mocked_roomba,
-    ), patch(
-        "homeassistant.components.roomba.config_flow.RoombaPassword",
-        _mocked_getpassword,
-    ), patch(
-        "homeassistant.components.roomba.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.roomba.config_flow.RoombaFactory.create_roomba",
+            return_value=mocked_roomba,
+        ),
+        patch(
+            "homeassistant.components.roomba.config_flow.RoombaPassword",
+            _mocked_getpassword,
+        ),
+        patch(
+            "homeassistant.components.roomba.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result4 = await hass.config_entries.flow.async_configure(
             result3["flow_id"],
             {},
@@ -824,16 +854,20 @@ async def test_dhcp_discovery_no_devices_falls_back_to_manual(
     assert result2["type"] == data_entry_flow.FlowResultType.FORM
     assert result2["errors"] is None
 
-    with patch(
-        "homeassistant.components.roomba.config_flow.RoombaFactory.create_roomba",
-        return_value=mocked_roomba,
-    ), patch(
-        "homeassistant.components.roomba.config_flow.RoombaPassword",
-        _mocked_getpassword,
-    ), patch(
-        "homeassistant.components.roomba.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.roomba.config_flow.RoombaFactory.create_roomba",
+            return_value=mocked_roomba,
+        ),
+        patch(
+            "homeassistant.components.roomba.config_flow.RoombaPassword",
+            _mocked_getpassword,
+        ),
+        patch(
+            "homeassistant.components.roomba.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
             {},

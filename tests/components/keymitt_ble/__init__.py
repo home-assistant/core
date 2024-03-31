@@ -1,4 +1,5 @@
 """Tests for the MicroBot integration."""
+
 from unittest.mock import patch
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak

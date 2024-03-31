@@ -1,4 +1,5 @@
 """Test ZHA select entities."""
+
 from unittest.mock import call, patch
 
 import pytest
@@ -434,7 +435,7 @@ async def test_on_off_select_attribute_report(
         "motion_sensitivity_disabled",
         AqaraMotionSensitivities,
         MotionSensitivityQuirk.OppleCluster.cluster_id,
-        translation_key="motion_sensitivity_translation_key",
+        translation_key="motion_sensitivity",
         initially_disabled=True,
     )
 )
@@ -490,9 +491,8 @@ async def test_on_off_select_attribute_report_v2(
     assert hass.states.get(entity_id).state == AqaraMotionSensitivities.Low.name
 
     entity_registry = er.async_get(hass)
-    # none in id because the translation key does not exist
-    entity_entry = entity_registry.async_get("select.fake_manufacturer_fake_model_none")
+    entity_entry = entity_registry.async_get(entity_id)
     assert entity_entry
     assert entity_entry.entity_category == EntityCategory.CONFIG
-    assert entity_entry.disabled is True
-    assert entity_entry.translation_key == "motion_sensitivity_translation_key"
+    assert entity_entry.disabled is False
+    assert entity_entry.translation_key == "motion_sensitivity"

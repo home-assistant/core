@@ -1,4 +1,5 @@
 """The Home Assistant SkyConnect integration."""
+
 from __future__ import annotations
 
 from homeassistant.components import usb
@@ -13,7 +14,7 @@ from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import discovery_flow
 
 from .const import DOMAIN
-from .util import get_usb_service_info
+from .util import get_hardware_variant, get_usb_service_info
 
 
 async def _async_usb_scan_done(hass: HomeAssistant, entry: ConfigEntry) -> None:
@@ -45,8 +46,9 @@ async def _async_usb_scan_done(hass: HomeAssistant, entry: ConfigEntry) -> None:
         )
         return
 
+    hw_variant = get_hardware_variant(entry)
     hw_discovery_data = {
-        "name": "SkyConnect Multiprotocol",
+        "name": f"{hw_variant.short_name} Multiprotocol",
         "port": {
             "path": get_zigbee_socket(),
         },
