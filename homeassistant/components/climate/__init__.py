@@ -708,14 +708,32 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             },
         )
 
-    def set_temperature(self, **kwargs: Any) -> None:
+    def set_temperature(
+        self,
+        temperature: float | None = None,
+        target_temp_high: float | None = None,
+        target_temp_low: float | None = None,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set new target temperature."""
         raise NotImplementedError
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_temperature(
+        self,
+        temperature: float | None = None,
+        target_temp_high: float | None = None,
+        target_temp_low: float | None = None,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set new target temperature."""
         await self.hass.async_add_executor_job(
-            ft.partial(self.set_temperature, **kwargs)
+            ft.partial(
+                self.set_temperature,
+                temperature=temperature,
+                target_temp_high=target_temp_high,
+                target_temp_low=target_temp_low,
+                hvac_mode=hvac_mode,
+            )
         )
 
     def set_humidity(self, humidity: int) -> None:
@@ -904,15 +922,29 @@ async def async_service_temperature_set(
 ) -> None:
     """Handle set temperature service."""
     hass = entity.hass
-    kwargs = {}
 
-    for value, temp in service_call.data.items():
-        if value in CONVERTIBLE_ATTRIBUTE:
-            kwargs[value] = TemperatureConverter.convert(
-                temp, hass.config.units.temperature_unit, entity.temperature_unit
-            )
-        else:
-            kwargs[value] = temp
+    convert_temp = ft.partial(
+        TemperatureConverter.convert,
+        from_unit=hass.config.units.temperature_unit,
+        to_unit=entity.temperature_unit,
+    )
+    kwargs = {
+        key: value
+        for key, value in service_call.data.items()
+        if key in (ATTR_HVAC_MODE,)
+    }
+    if entity.supported_features & ClimateEntityFeature.TARGET_TEMPERATURE:
+        kwargs |= {
+            key: convert_temp(value)
+            for key, value in service_call.data.items()
+            if key in (ATTR_TEMPERATURE,)
+        }
+    if entity.supported_features & ClimateEntityFeature.TARGET_TEMPERATURE_RANGE:
+        kwargs |= {
+            key: convert_temp(value)
+            for key, value in service_call.data.items()
+            if key in (ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW)
+        }
 
     await entity.async_set_temperature(**kwargs)
 
