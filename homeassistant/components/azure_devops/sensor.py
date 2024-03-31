@@ -43,12 +43,12 @@ async def async_setup_entry(
                 translation_key="latest_build",
                 translation_placeholders={"definition_name": build.definition.name},
                 attrs=lambda build: {
-                    "definition_id": build.definition.build_id
-                    if build.definition
-                    else None,
-                    "definition_name": build.definition.name
-                    if build.definition
-                    else None,
+                    "definition_id": (
+                        build.definition.build_id if build.definition else None
+                    ),
+                    "definition_name": (
+                        build.definition.name if build.definition else None
+                    ),
                     "id": build.build_id,
                     "reason": build.reason,
                     "result": build.result,
