@@ -171,12 +171,15 @@ def aioclient_mock(hass: HomeAssistant) -> Generator[AiohttpClientMocker, None, 
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, close_session)
         return session
 
-    with patch(
-        "homeassistant.components.rainbird.async_create_clientsession",
-        side_effect=create_session,
-    ), patch(
-        "homeassistant.components.rainbird.config_flow.async_create_clientsession",
-        side_effect=create_session,
+    with (
+        patch(
+            "homeassistant.components.rainbird.async_create_clientsession",
+            side_effect=create_session,
+        ),
+        patch(
+            "homeassistant.components.rainbird.config_flow.async_create_clientsession",
+            side_effect=create_session,
+        ),
     ):
         yield mocker
 
