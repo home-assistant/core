@@ -11,6 +11,7 @@ from jellyfin_apiclient_python.api import API, jellyfin_url
 from jellyfin_apiclient_python.client import JellyfinClient
 
 from homeassistant.components.media_player import BrowseError, MediaClass
+from homeassistant.components.media_source.error import Unresolvable
 from homeassistant.components.media_source.models import (
     BrowseMediaSource,
     MediaSource,
@@ -93,11 +94,11 @@ class JellyfinSource(MediaSource):
     @property
     def url(self) -> str:
         """Return the URL to Jellyfin."""
-        return jellyfin_url(self.client, "")
+        return jellyfin_url(self.client, "")  # type: ignore[no-any-return]
 
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         """Return a streamable URL and associated mime type."""
-        if self.client is None:
+        if self.api is None:
             raise Unresolvable("Jellyfin not initialized")
 
         media_item = await self.hass.async_add_executor_job(
@@ -114,7 +115,7 @@ class JellyfinSource(MediaSource):
 
     async def async_browse_media(self, item: MediaSourceItem) -> BrowseMediaSource:
         """Return a browsable Jellyfin media source."""
-        if self.client is None:
+        if self.api is None:
             raise BrowseError("Jellyfin not initialized")
 
         if not item.identifier:
