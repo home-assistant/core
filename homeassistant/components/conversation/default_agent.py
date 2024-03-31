@@ -147,6 +147,7 @@ class DefaultAgent(AbstractConversationAgent):
         # Sentences that will trigger a callback (skipping intent recognition)
         self._trigger_sentences: list[TriggerData] = []
         self._trigger_intents: Intents | None = None
+        self._unsub_clear_slot_list: list[Callable[[], None]] | None = None
 
     @property
     def supported_languages(self) -> list[str]:
@@ -162,29 +163,48 @@ class DefaultAgent(AbstractConversationAgent):
         if config_intents:
             self._config_intents = config_intents
 
-        self.hass.bus.async_listen(
-            ar.EVENT_AREA_REGISTRY_UPDATED,
-            self._async_handle_area_floor_registry_changed,
-            run_immediately=True,
+    @core.callback
+    def _filter_entity_registry_changes(self, event_data: dict[str, Any]) -> bool:
+        """Filter entity registry changed events."""
+        return event_data["action"] == "update" and any(
+            field in event_data["changes"] for field in _ENTITY_REGISTRY_UPDATE_FIELDS
         )
-        self.hass.bus.async_listen(
-            fr.EVENT_FLOOR_REGISTRY_UPDATED,
-            self._async_handle_area_floor_registry_changed,
-            run_immediately=True,
-        )
-        self.hass.bus.async_listen(
-            er.EVENT_ENTITY_REGISTRY_UPDATED,
-            self._async_handle_entity_registry_changed,
-            run_immediately=True,
-        )
-        self.hass.bus.async_listen(
-            EVENT_STATE_CHANGED,
-            self._async_handle_state_changed,
-            run_immediately=True,
-        )
-        async_listen_entity_updates(
-            self.hass, DOMAIN, self._async_exposed_entities_updated
-        )
+
+    @core.callback
+    def _filter_state_changes(self, event_data: dict[str, Any]) -> bool:
+        """Filter state changed events."""
+        return not event_data["old_state"] or not event_data["new_state"]
+
+    @core.callback
+    def _listen_clear_slot_list(self) -> None:
+        """Listen for changes that can invalidate slot list."""
+        assert self._unsub_clear_slot_list is None
+
+        self._unsub_clear_slot_list = [
+            self.hass.bus.async_listen(
+                ar.EVENT_AREA_REGISTRY_UPDATED,
+                self._async_clear_slot_list,
+                run_immediately=True,
+            ),
+            self.hass.bus.async_listen(
+                fr.EVENT_FLOOR_REGISTRY_UPDATED,
+                self._async_clear_slot_list,
+                run_immediately=True,
+            ),
+            self.hass.bus.async_listen(
+                er.EVENT_ENTITY_REGISTRY_UPDATED,
+                self._async_clear_slot_list,
+                event_filter=self._filter_entity_registry_changes,
+                run_immediately=True,
+            ),
+            self.hass.bus.async_listen(
+                EVENT_STATE_CHANGED,
+                self._async_clear_slot_list,
+                event_filter=self._filter_state_changes,
+                run_immediately=True,
+            ),
+            async_listen_entity_updates(self.hass, DOMAIN, self._async_clear_slot_list),
+        ]
 
     async def async_recognize(
         self, user_input: ConversationInput
@@ -543,6 +563,9 @@ class DefaultAgent(AbstractConversationAgent):
         if lang_intents is None:
             # No intents loaded
             _LOGGER.warning("No intents were loaded for language: %s", language)
+            return
+
+        self._make_slot_lists()
 
     async def async_get_or_load_intents(self, language: str) -> LanguageIntents | None:
         """Load all intents of a language with lock."""
@@ -702,40 +725,17 @@ class DefaultAgent(AbstractConversationAgent):
         return lang_intents
 
     @core.callback
-    def _async_handle_area_floor_registry_changed(
-        self,
-        event: core.Event[
-            ar.EventAreaRegistryUpdatedData | fr.EventFloorRegistryUpdatedData
-        ],
+    def _async_clear_slot_list(
+        self, event: core.Event[dict[str, Any]] | None = None
     ) -> None:
-        """Clear area/floor list cache when the area registry has changed."""
+        """Clear slot lists when a registry has changed."""
         self._slot_lists = None
+        assert self._unsub_clear_slot_list is not None
+        for unsub in self._unsub_clear_slot_list:
+            unsub()
+        self._unsub_clear_slot_list = None
 
     @core.callback
-    def _async_handle_entity_registry_changed(
-        self, event: core.Event[er.EventEntityRegistryUpdatedData]
-    ) -> None:
-        """Clear names list cache when an entity registry entry has changed."""
-        if event.data["action"] != "update" or not any(
-            field in event.data["changes"] for field in _ENTITY_REGISTRY_UPDATE_FIELDS
-        ):
-            return
-        self._slot_lists = None
-
-    @core.callback
-    def _async_handle_state_changed(
-        self, event: core.Event[EventStateChangedData]
-    ) -> None:
-        """Clear names list cache when a state is added or removed from the state machine."""
-        if event.data["old_state"] and event.data["new_state"]:
-            return
-        self._slot_lists = None
-
-    @core.callback
-    def _async_exposed_entities_updated(self) -> None:
-        """Handle updated preferences."""
-        self._slot_lists = None
-
     def _make_slot_lists(self) -> dict[str, SlotList]:
         """Create slot lists with areas and entity names/aliases."""
         if self._slot_lists is not None:
@@ -820,6 +820,7 @@ class DefaultAgent(AbstractConversationAgent):
             "floor": TextSlotList.from_tuples(floor_names, allow_template=False),
         }
 
+        self._listen_clear_slot_list()
         return self._slot_lists
 
     def _make_intent_context(
