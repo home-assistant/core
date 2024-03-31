@@ -1,4 +1,5 @@
 """Global fixtures for Roborock integration."""
+
 from unittest.mock import patch
 
 import pytest

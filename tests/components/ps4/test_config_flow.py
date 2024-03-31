@@ -1,4 +1,5 @@
 """Define tests for the PlayStation 4 config flow."""
+
 from unittest.mock import patch
 
 from pyps4_2ndscreen.errors import CredentialTimeout
@@ -126,8 +127,11 @@ async def test_full_flow_implementation(hass: HomeAssistant) -> None:
     assert result["step_id"] == "link"
 
     # User Input results in created entry.
-    with patch("pyps4_2ndscreen.Helper.link", return_value=(True, True)), patch(
-        "pyps4_2ndscreen.Helper.has_devices", return_value=[{"host-ip": MOCK_HOST}]
+    with (
+        patch("pyps4_2ndscreen.Helper.link", return_value=(True, True)),
+        patch(
+            "pyps4_2ndscreen.Helper.has_devices", return_value=[{"host-ip": MOCK_HOST}]
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=MOCK_CONFIG
@@ -168,9 +172,12 @@ async def test_multiple_flow_implementation(hass: HomeAssistant) -> None:
     assert result["step_id"] == "link"
 
     # User Input results in created entry.
-    with patch("pyps4_2ndscreen.Helper.link", return_value=(True, True)), patch(
-        "pyps4_2ndscreen.Helper.has_devices",
-        return_value=[{"host-ip": MOCK_HOST}, {"host-ip": MOCK_HOST_ADDITIONAL}],
+    with (
+        patch("pyps4_2ndscreen.Helper.link", return_value=(True, True)),
+        patch(
+            "pyps4_2ndscreen.Helper.has_devices",
+            return_value=[{"host-ip": MOCK_HOST}, {"host-ip": MOCK_HOST_ADDITIONAL}],
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=MOCK_CONFIG
@@ -190,9 +197,12 @@ async def test_multiple_flow_implementation(hass: HomeAssistant) -> None:
     # Test additional flow.
 
     # User Step Started, results in Step Mode:
-    with patch("pyps4_2ndscreen.Helper.port_bind", return_value=None), patch(
-        "pyps4_2ndscreen.Helper.has_devices",
-        return_value=[{"host-ip": MOCK_HOST}, {"host-ip": MOCK_HOST_ADDITIONAL}],
+    with (
+        patch("pyps4_2ndscreen.Helper.port_bind", return_value=None),
+        patch(
+            "pyps4_2ndscreen.Helper.has_devices",
+            return_value=[{"host-ip": MOCK_HOST}, {"host-ip": MOCK_HOST_ADDITIONAL}],
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -220,10 +230,13 @@ async def test_multiple_flow_implementation(hass: HomeAssistant) -> None:
     assert result["step_id"] == "link"
 
     # Step Link
-    with patch(
-        "pyps4_2ndscreen.Helper.has_devices",
-        return_value=[{"host-ip": MOCK_HOST}, {"host-ip": MOCK_HOST_ADDITIONAL}],
-    ), patch("pyps4_2ndscreen.Helper.link", return_value=(True, True)):
+    with (
+        patch(
+            "pyps4_2ndscreen.Helper.has_devices",
+            return_value=[{"host-ip": MOCK_HOST}, {"host-ip": MOCK_HOST_ADDITIONAL}],
+        ),
+        patch("pyps4_2ndscreen.Helper.link", return_value=(True, True)),
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=MOCK_CONFIG_ADDITIONAL
         )
@@ -340,11 +353,14 @@ async def test_0_pin(hass: HomeAssistant) -> None:
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "mode"
 
-    with patch(
-        "pyps4_2ndscreen.Helper.has_devices", return_value=[{"host-ip": MOCK_HOST}]
-    ), patch(
-        "homeassistant.components.ps4.config_flow.location.async_detect_location_info",
-        return_value=MOCK_LOCATION,
+    with (
+        patch(
+            "pyps4_2ndscreen.Helper.has_devices", return_value=[{"host-ip": MOCK_HOST}]
+        ),
+        patch(
+            "homeassistant.components.ps4.config_flow.location.async_detect_location_info",
+            return_value=MOCK_LOCATION,
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], MOCK_AUTO
@@ -354,10 +370,11 @@ async def test_0_pin(hass: HomeAssistant) -> None:
 
     mock_config = MOCK_CONFIG
     mock_config[CONF_CODE] = MOCK_CODE_LEAD_0
-    with patch(
-        "pyps4_2ndscreen.Helper.link", return_value=(True, True)
-    ) as mock_call, patch(
-        "pyps4_2ndscreen.Helper.has_devices", return_value=[{"host-ip": MOCK_HOST}]
+    with (
+        patch("pyps4_2ndscreen.Helper.link", return_value=(True, True)) as mock_call,
+        patch(
+            "pyps4_2ndscreen.Helper.has_devices", return_value=[{"host-ip": MOCK_HOST}]
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], mock_config

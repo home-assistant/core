@@ -1,4 +1,5 @@
 """The Roborock component."""
+
 from __future__ import annotations
 
 import asyncio
@@ -90,18 +91,10 @@ def build_setup_functions(
     home_data_rooms: list[HomeDataRoom],
 ) -> list[Coroutine[Any, Any, RoborockDataUpdateCoordinator | None]]:
     """Create a list of setup functions that can later be called asynchronously."""
-    setup_functions = []
-    for device in device_map.values():
-        setup_functions.append(
-            setup_device(
-                hass,
-                user_data,
-                device,
-                product_info[device.product_id],
-                home_data_rooms,
-            )
-        )
-    return setup_functions
+    return [
+        setup_device(hass, user_data, device, product_info[device.product_id], home_data_rooms)
+        for device in device_map.values()
+    ]
 
 
 async def setup_device(
@@ -127,7 +120,7 @@ async def setup_device(
         )
         _LOGGER.debug(err)
         await mqtt_client.async_release()
-        raise err
+        raise
     coordinator = RoborockDataUpdateCoordinator(
         hass, device, networking, product_info, mqtt_client, home_data_rooms
     )

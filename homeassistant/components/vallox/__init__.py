@@ -1,4 +1,5 @@
 """Support for Vallox ventilation units."""
+
 from __future__ import annotations
 
 import ipaddress
@@ -46,10 +47,11 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 PLATFORMS: list[str] = [
-    Platform.SENSOR,
-    Platform.FAN,
     Platform.BINARY_SENSOR,
+    Platform.DATE,
+    Platform.FAN,
     Platform.NUMBER,
+    Platform.SENSOR,
     Platform.SWITCH,
 ]
 
@@ -173,11 +175,10 @@ class ValloxServiceHandler:
 
         try:
             await self._client.set_fan_speed(Profile.HOME, fan_speed)
-            return True
-
         except ValloxApiException as err:
             _LOGGER.error("Error setting fan speed for Home profile: %s", err)
             return False
+        return True
 
     async def async_set_profile_fan_speed_away(
         self, fan_speed: int = DEFAULT_FAN_SPEED_AWAY
@@ -187,11 +188,10 @@ class ValloxServiceHandler:
 
         try:
             await self._client.set_fan_speed(Profile.AWAY, fan_speed)
-            return True
-
         except ValloxApiException as err:
             _LOGGER.error("Error setting fan speed for Away profile: %s", err)
             return False
+        return True
 
     async def async_set_profile_fan_speed_boost(
         self, fan_speed: int = DEFAULT_FAN_SPEED_BOOST
@@ -201,11 +201,10 @@ class ValloxServiceHandler:
 
         try:
             await self._client.set_fan_speed(Profile.BOOST, fan_speed)
-            return True
-
         except ValloxApiException as err:
             _LOGGER.error("Error setting fan speed for Boost profile: %s", err)
             return False
+        return True
 
     async def async_handle(self, call: ServiceCall) -> None:
         """Dispatch a service call."""

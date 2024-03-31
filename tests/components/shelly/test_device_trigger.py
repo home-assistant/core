@@ -1,4 +1,5 @@
 """The tests for Shelly device triggers."""
+
 from unittest.mock import Mock
 
 from aioshelly.const import MODEL_BUTTON1

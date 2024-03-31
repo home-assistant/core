@@ -1,4 +1,5 @@
 """Tests for the TotalConnect alarm control panel device."""
+
 from datetime import timedelta
 from unittest.mock import patch
 
@@ -547,30 +548,30 @@ async def test_other_update_failures(hass: HomeAssistant) -> None:
 
         # then an error: ServiceUnavailable --> UpdateFailed
         async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
         assert mock_request.call_count == 2
 
         # works again
         async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL * 2)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         assert hass.states.get(ENTITY_ID).state == STATE_ALARM_DISARMED
         assert mock_request.call_count == 3
 
         # then an error: TotalConnectError --> UpdateFailed
         async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL * 3)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
         assert mock_request.call_count == 4
 
         # works again
         async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL * 4)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         assert hass.states.get(ENTITY_ID).state == STATE_ALARM_DISARMED
         assert mock_request.call_count == 5
 
         # unknown TotalConnect status via ValueError
         async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL * 5)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
         assert mock_request.call_count == 6

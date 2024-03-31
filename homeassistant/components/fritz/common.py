@@ -1,4 +1,5 @@
 """Support for AVM FRITZ!Box classes."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, ValuesView
@@ -63,10 +64,7 @@ _LOGGER = logging.getLogger(__name__)
 
 def _is_tracked(mac: str, current_devices: ValuesView) -> bool:
     """Check if device is already tracked."""
-    for tracked in current_devices:
-        if mac in tracked:
-            return True
-    return False
+    return any(mac in tracked for tracked in current_devices)
 
 
 def device_filter_out_from_trackers(
@@ -344,21 +342,21 @@ class FritzBoxTools(
     def unique_id(self) -> str:
         """Return unique id."""
         if not self._unique_id:
-            raise ClassSetupMissing()
+            raise ClassSetupMissing
         return self._unique_id
 
     @property
     def model(self) -> str:
         """Return device model."""
         if not self._model:
-            raise ClassSetupMissing()
+            raise ClassSetupMissing
         return self._model
 
     @property
     def current_firmware(self) -> str:
         """Return current SW version."""
         if not self._current_firmware:
-            raise ClassSetupMissing()
+            raise ClassSetupMissing
         return self._current_firmware
 
     @property
@@ -380,7 +378,7 @@ class FritzBoxTools(
     def mac(self) -> str:
         """Return device Mac address."""
         if not self._unique_id:
-            raise ClassSetupMissing()
+            raise ClassSetupMissing
         return dr.format_mac(self._unique_id)
 
     @property
@@ -791,24 +789,26 @@ class AvmWrapper(FritzBoxTools):  # pylint: disable=hass-enforce-coordinator-mod
                     **kwargs,
                 )
             )
-            return result
         except FritzSecurityError:
             _LOGGER.exception(
                 "Authorization Error: Please check the provided credentials and"
                 " verify that you can log into the web interface"
             )
+            return {}
         except FRITZ_EXCEPTIONS:
             _LOGGER.exception(
                 "Service/Action Error: cannot execute service %s with action %s",
                 service_name,
                 action_name,
             )
+            return {}
         except FritzConnectionException:
             _LOGGER.exception(
                 "Connection Error: Please check the device is properly configured"
                 " for remote login"
             )
-        return {}
+            return {}
+        return result
 
     async def async_get_upnp_configuration(self) -> dict[str, Any]:
         """Call X_AVM-DE_UPnP service."""
@@ -968,7 +968,7 @@ class FritzDeviceBase(update_coordinator.CoordinatorEntity[AvmWrapper]):
 
     async def async_process_update(self) -> None:
         """Update device."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_on_demand_update(self) -> None:
         """Update state."""

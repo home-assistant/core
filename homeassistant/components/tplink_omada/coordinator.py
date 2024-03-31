@@ -1,4 +1,5 @@
 """Generic Omada API coordinator."""
+
 import asyncio
 from datetime import timedelta
 import logging

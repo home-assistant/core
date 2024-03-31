@@ -1,4 +1,5 @@
 """Test ZHA registries."""
+
 from __future__ import annotations
 
 import typing
@@ -394,14 +395,14 @@ def entity_registry():
 
 @pytest.mark.parametrize(
     ("manufacturer", "model", "quirk_id", "match_name"),
-    (
+    [
         ("random manufacturer", "random model", "random.class", "OnOff"),
         ("random manufacturer", MODEL, "random.class", "OnOffModel"),
         (MANUFACTURER, "random model", "random.class", "OnOffManufacturer"),
         ("random manufacturer", "random model", QUIRK_ID, "OnOffQuirk"),
         (MANUFACTURER, MODEL, "random.class", "OnOffModelManufacturer"),
         (MANUFACTURER, "some model", "random.class", "OnOffMultimodel"),
-    ),
+    ],
 )
 def test_weighted_match(
     cluster_handler,

@@ -1,4 +1,5 @@
 """Sensor platform support for yeelight."""
+
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorEntity

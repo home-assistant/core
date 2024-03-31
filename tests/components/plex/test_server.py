@@ -1,4 +1,5 @@
 """Tests for Plex server."""
+
 import copy
 from unittest.mock import patch
 

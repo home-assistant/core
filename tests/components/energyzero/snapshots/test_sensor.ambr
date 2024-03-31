@@ -466,6 +466,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.energyzero_today_energy_average_price',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.37',
   })
@@ -537,6 +538,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.energyzero_today_energy_current_hour_price',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.49',
   })
@@ -609,6 +611,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.energyzero_today_energy_highest_price_time',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2022-12-07T16:00:00+00:00',
   })
@@ -674,12 +677,12 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by EnergyZero',
       'friendly_name': 'Energy market price Hours priced equal or lower than current - today',
-      'icon': 'mdi:clock',
       'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.energyzero_today_energy_hours_priced_equal_or_lower',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '23',
   })
@@ -707,7 +710,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:clock',
+    'original_icon': None,
     'original_name': 'Hours priced equal or lower than current - today',
     'platform': 'energyzero',
     'previous_unique_id': None,
@@ -750,6 +753,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.energyzero_today_energy_max_price',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.55',
   })
@@ -821,6 +825,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.energyzero_today_gas_current_hour_price',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1.47',
   })

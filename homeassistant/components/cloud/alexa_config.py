@@ -1,4 +1,5 @@
 """Alexa configuration for Home Assistant Cloud."""
+
 from __future__ import annotations
 
 import asyncio
@@ -508,16 +509,13 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
         try:
             async with asyncio.timeout(10):
                 await asyncio.wait(tasks, return_when=asyncio.ALL_COMPLETED)
-
-            return True
-
         except TimeoutError:
             _LOGGER.warning("Timeout trying to sync entities to Alexa")
             return False
-
         except aiohttp.ClientError as err:
             _LOGGER.warning("Error trying to sync entities to Alexa: %s", err)
             return False
+        return True
 
     async def _handle_entity_registry_updated(self, event: Event) -> None:
         """Handle when entity registry updated."""

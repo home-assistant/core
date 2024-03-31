@@ -1,4 +1,5 @@
 """Util functions to help filter out similar results."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -13,22 +14,19 @@ _P = ParamSpec("_P")
 @overload
 def ignore_variance(
     func: Callable[_P, int], ignored_variance: int
-) -> Callable[_P, int]:
-    ...
+) -> Callable[_P, int]: ...
 
 
 @overload
 def ignore_variance(
     func: Callable[_P, float], ignored_variance: float
-) -> Callable[_P, float]:
-    ...
+) -> Callable[_P, float]: ...
 
 
 @overload
 def ignore_variance(
     func: Callable[_P, datetime], ignored_variance: timedelta
-) -> Callable[_P, datetime]:
-    ...
+) -> Callable[_P, datetime]: ...
 
 
 def ignore_variance(func: Callable[_P, _R], ignored_variance: Any) -> Callable[_P, _R]:

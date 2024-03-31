@@ -1,4 +1,5 @@
 """Component to allow running Python scripts."""
+
 import datetime
 import glob
 import logging
@@ -289,7 +290,7 @@ def execute(hass, filename, source, data=None, return_response=False):
             raise HomeAssistantError(
                 f"Error executing script ({type(err).__name__}): {err}"
             ) from err
-        logger.exception("Error executing script: %s", err)
+        logger.exception("Error executing script")
         return None
 
     return restricted_globals["output"]

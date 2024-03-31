@@ -1,4 +1,5 @@
 """The tests for the REST sensor platform."""
+
 from http import HTTPStatus
 import ssl
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -161,11 +162,11 @@ async def test_setup_encoding(hass: HomeAssistant) -> None:
 @respx.mock
 @pytest.mark.parametrize(
     ("ssl_cipher_list", "ssl_cipher_list_expected"),
-    (
+    [
         ("python_default", SSLCipherList.PYTHON_DEFAULT),
         ("intermediate", SSLCipherList.INTERMEDIATE),
         ("modern", SSLCipherList.MODERN),
-    ),
+    ],
 )
 async def test_setup_ssl_ciphers(
     hass: HomeAssistant, ssl_cipher_list: str, ssl_cipher_list_expected: SSLCipherList

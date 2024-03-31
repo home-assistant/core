@@ -1,4 +1,5 @@
 """Support for OpenTherm Gateway devices."""
+
 import asyncio
 from datetime import date, datetime
 import logging

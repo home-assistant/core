@@ -1,4 +1,5 @@
 """Fixtures for Weather platform tests."""
+
 from collections.abc import Generator
 
 import pytest

@@ -1,4 +1,5 @@
 """Support for control of ElkM1 sensors."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -161,7 +162,7 @@ class ElkKeypad(ElkSensor):
 class ElkPanel(ElkSensor):
     """Representation of an Elk-M1 Panel."""
 
-    _attr_icon = "mdi:home"
+    _attr_translation_key = "panel"
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _element: Panel
 
@@ -184,7 +185,7 @@ class ElkPanel(ElkSensor):
 class ElkSetting(ElkSensor):
     """Representation of an Elk-M1 Setting."""
 
-    _attr_icon = "mdi:numeric"
+    _attr_translation_key = "setting"
     _element: Setting
 
     def _element_changed(self, _: Element, changeset: Any) -> None:

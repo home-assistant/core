@@ -1,4 +1,5 @@
 """Test the Raspberry Pi config flow."""
+
 from unittest.mock import patch
 
 from homeassistant.components.raspberry_pi.const import DOMAIN

@@ -1,4 +1,5 @@
 """Support for control of Elk-M1 connected thermostats."""
+
 from __future__ import annotations
 
 from typing import Any

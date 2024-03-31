@@ -9,5 +9,6 @@
     ]),
     'timestamp': 0,
     'wake_word_id': 'Test Model',
+    'wake_word_phrase': 'Test Phrase',
   })
 # ---

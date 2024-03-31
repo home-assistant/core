@@ -1,4 +1,5 @@
 """Test the init file of IFTTT."""
+
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import ifttt
 from homeassistant.config import async_process_ha_core_config

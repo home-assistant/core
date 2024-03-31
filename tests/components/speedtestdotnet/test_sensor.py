@@ -1,4 +1,5 @@
 """Tests for SpeedTest sensors."""
+
 from unittest.mock import MagicMock
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN

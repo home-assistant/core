@@ -1,4 +1,5 @@
 """Number platform for Sensibo integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -24,19 +25,12 @@ from .entity import SensiboDeviceBaseEntity, async_handle_api_call
 PARALLEL_UPDATES = 0
 
 
-@dataclass(frozen=True)
-class SensiboEntityDescriptionMixin:
-    """Mixin values for Sensibo entities."""
+@dataclass(frozen=True, kw_only=True)
+class SensiboNumberEntityDescription(NumberEntityDescription):
+    """Class describing Sensibo Number entities."""
 
     remote_key: str
     value_fn: Callable[[SensiboDevice], float | None]
-
-
-@dataclass(frozen=True)
-class SensiboNumberEntityDescription(
-    NumberEntityDescription, SensiboEntityDescriptionMixin
-):
-    """Class describing Sensibo Number entities."""
 
 
 DEVICE_NUMBER_TYPES = (

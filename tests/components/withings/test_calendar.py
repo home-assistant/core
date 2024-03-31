@@ -1,4 +1,5 @@
 """Tests for the Withings calendar."""
+
 from datetime import date, timedelta
 from http import HTTPStatus
 from unittest.mock import AsyncMock
