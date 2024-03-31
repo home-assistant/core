@@ -23,7 +23,6 @@ from .conftest import FAKE_REFRESH_TOKEN, FAKE_TOKEN
 
 from tests.test_util.aiohttp import AiohttpClientMocker
 
-
 FAKE_UPDATED_TOKEN = "fake-updated-token"
 
 
