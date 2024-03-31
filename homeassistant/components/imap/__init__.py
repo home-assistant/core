@@ -17,6 +17,7 @@ from homeassistant.exceptions import (
     ConfigEntryNotReady,
     ServiceValidationError,
 )
+import homeassistant.helpers.config_validation as cv
 
 from .const import CONF_ENABLE_PUSH, DOMAIN
 from .coordinator import (
@@ -35,16 +36,16 @@ CONF_TARGET_FOLDER = "target_folder"
 
 _SERVICE_UID_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_ENTRY): str,
-        vol.Required(CONF_UID): str,
+        vol.Required(CONF_ENTRY): cv.string,
+        vol.Required(CONF_UID): cv.string,
     }
 )
 
 SERVICE_SEEN_SCHEMA = _SERVICE_UID_SCHEMA
 SERVICE_MOVE_SCHEMA = _SERVICE_UID_SCHEMA.extend(
     {
-        vol.Optional(CONF_SEEN): bool,
-        vol.Required(CONF_TARGET_FOLDER): str,
+        vol.Optional(CONF_SEEN): cv.boolean,
+        vol.Required(CONF_TARGET_FOLDER): cv.string,
     }
 )
 SERVICE_DELETE_SCHEMA = _SERVICE_UID_SCHEMA
