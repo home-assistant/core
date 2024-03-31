@@ -1,4 +1,5 @@
 """Diagnostics support for MQTT."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
@@ -94,36 +95,40 @@ def _async_device_as_dict(hass: HomeAssistant, device: DeviceEntry) -> dict[str,
         include_disabled_entities=True,
     )
 
-    for entity_entry in entities:
+    def _state_dict(entity_entry: er.RegistryEntry) -> dict[str, Any] | None:
         state = hass.states.get(entity_entry.entity_id)
-        state_dict = None
-        if state:
-            state_dict = dict(state.as_dict())
+        if not state:
+            return None
 
-            # The context doesn't provide useful information in this case.
-            state_dict.pop("context", None)
+        state_dict = dict(state.as_dict())
 
-            entity_domain = split_entity_id(state.entity_id)[0]
+        # The context doesn't provide useful information in this case.
+        state_dict.pop("context", None)
 
-            # Retract some sensitive state attributes
-            if entity_domain == device_tracker.DOMAIN:
-                state_dict["attributes"] = async_redact_data(
-                    state_dict["attributes"], REDACT_STATE_DEVICE_TRACKER
-                )
+        entity_domain = split_entity_id(state.entity_id)[0]
 
-        data["entities"].append(
-            {
-                "device_class": entity_entry.device_class,
-                "disabled_by": entity_entry.disabled_by,
-                "disabled": entity_entry.disabled,
-                "entity_category": entity_entry.entity_category,
-                "entity_id": entity_entry.entity_id,
-                "icon": entity_entry.icon,
-                "original_device_class": entity_entry.original_device_class,
-                "original_icon": entity_entry.original_icon,
-                "state": state_dict,
-                "unit_of_measurement": entity_entry.unit_of_measurement,
-            }
-        )
+        # Retract some sensitive state attributes
+        if entity_domain == device_tracker.DOMAIN:
+            state_dict["attributes"] = async_redact_data(
+                state_dict["attributes"], REDACT_STATE_DEVICE_TRACKER
+            )
+        return state_dict
+
+    data["entities"].extend(
+        {
+            "device_class": entity_entry.device_class,
+            "disabled_by": entity_entry.disabled_by,
+            "disabled": entity_entry.disabled,
+            "entity_category": entity_entry.entity_category,
+            "entity_id": entity_entry.entity_id,
+            "icon": entity_entry.icon,
+            "original_device_class": entity_entry.original_device_class,
+            "original_icon": entity_entry.original_icon,
+            "state": state_dict,
+            "unit_of_measurement": entity_entry.unit_of_measurement,
+        }
+        for entity_entry in entities
+        if (state_dict := _state_dict(entity_entry)) is not None
+    )
 
     return data

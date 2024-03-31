@@ -1,4 +1,5 @@
 """Test diagnostics of LaCrosse View."""
+
 from unittest.mock import patch
 
 from syrupy.assertion import SnapshotAssertion
@@ -24,8 +25,9 @@ async def test_entry_diagnostics(
     )
     config_entry.add_to_hass(hass)
 
-    with patch("lacrosse_view.LaCrosse.login", return_value=True), patch(
-        "lacrosse_view.LaCrosse.get_sensors", return_value=[TEST_SENSOR]
+    with (
+        patch("lacrosse_view.LaCrosse.login", return_value=True),
+        patch("lacrosse_view.LaCrosse.get_sensors", return_value=[TEST_SENSOR]),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()

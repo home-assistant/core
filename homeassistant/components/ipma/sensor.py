@@ -1,4 +1,5 @@
 """Support for IPMA sensors."""
+
 from __future__ import annotations
 
 import asyncio

@@ -1,4 +1,5 @@
 """Support for Apple TV media player."""
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -152,7 +153,9 @@ class AppleTvMediaPlayer(
         atv.audio.listener = self
 
         if atv.features.in_state(FeatureState.Available, FeatureName.AppList):
-            self.hass.create_task(self._update_app_list())
+            self.manager.config_entry.async_create_task(
+                self.hass, self._update_app_list(), eager_start=True
+            )
 
     async def _update_app_list(self) -> None:
         _LOGGER.debug("Updating app list")

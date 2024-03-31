@@ -1,4 +1,5 @@
 """Test Deluge config flow."""
+
 from unittest.mock import patch
 
 import pytest
@@ -17,8 +18,9 @@ from tests.common import MockConfigEntry
 @pytest.fixture(name="api")
 def mock_deluge_api():
     """Mock an api."""
-    with patch("deluge_client.client.DelugeRPCClient.connect"), patch(
-        "deluge_client.client.DelugeRPCClient._create_socket"
+    with (
+        patch("deluge_client.client.DelugeRPCClient.connect"),
+        patch("deluge_client.client.DelugeRPCClient._create_socket"),
     ):
         yield
 
@@ -26,19 +28,23 @@ def mock_deluge_api():
 @pytest.fixture(name="conn_error")
 def mock_api_connection_error():
     """Mock an api."""
-    with patch(
-        "deluge_client.client.DelugeRPCClient.connect",
-        side_effect=ConnectionRefusedError("111: Connection refused"),
-    ), patch("deluge_client.client.DelugeRPCClient._create_socket"):
+    with (
+        patch(
+            "deluge_client.client.DelugeRPCClient.connect",
+            side_effect=ConnectionRefusedError("111: Connection refused"),
+        ),
+        patch("deluge_client.client.DelugeRPCClient._create_socket"),
+    ):
         yield
 
 
 @pytest.fixture(name="unknown_error")
 def mock_api_unknown_error():
     """Mock an api."""
-    with patch(
-        "deluge_client.client.DelugeRPCClient.connect", side_effect=Exception
-    ), patch("deluge_client.client.DelugeRPCClient._create_socket"):
+    with (
+        patch("deluge_client.client.DelugeRPCClient.connect", side_effect=Exception),
+        patch("deluge_client.client.DelugeRPCClient._create_socket"),
+    ):
         yield
 
 

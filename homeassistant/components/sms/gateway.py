@@ -1,4 +1,5 @@
 """The sms gateway to interact with a GSM modem."""
+
 import logging
 
 import gammu
@@ -209,7 +210,7 @@ async def create_sms_gateway(config, hass):
             _LOGGER.error("Failed to initialize, error %s", exc)
             await gateway.terminate_async()
             return None
-        return gateway
     except gammu.GSMError as exc:
         _LOGGER.error("Failed to create async worker, error %s", exc)
         return None
+    return gateway

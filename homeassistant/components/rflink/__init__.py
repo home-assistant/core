@@ -1,4 +1,5 @@
 """Support for Rflink devices."""
+
 from __future__ import annotations
 
 import asyncio
@@ -376,7 +377,7 @@ class RflinkDevice(Entity):
 
     def _handle_event(self, event):
         """Platform specific event handler."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @property
     def name(self):

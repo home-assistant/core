@@ -1,4 +1,5 @@
 """Support for Roborock vacuum class."""
+
 from typing import Any
 
 from roborock.code_mappings import RoborockStateCode
@@ -121,7 +122,12 @@ class RoborockVacuum(RoborockCoordinatedEntity, StateVacuumEntity):
 
     async def async_start(self) -> None:
         """Start the vacuum."""
-        await self.send(RoborockCommand.APP_START)
+        if self._device_status.in_cleaning == 2:
+            await self.send(RoborockCommand.RESUME_ZONED_CLEAN)
+        elif self._device_status.in_cleaning == 3:
+            await self.send(RoborockCommand.RESUME_SEGMENT_CLEAN)
+        else:
+            await self.send(RoborockCommand.APP_START)
 
     async def async_pause(self) -> None:
         """Pause the vacuum."""

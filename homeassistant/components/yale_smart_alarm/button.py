@@ -1,4 +1,5 @@
 """Support for Yale Smart Alarm button."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -16,7 +17,6 @@ BUTTON_TYPES = (
     ButtonEntityDescription(
         key="panic",
         translation_key="panic",
-        icon="mdi:alarm-light",
     ),
 )
 

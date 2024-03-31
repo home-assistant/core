@@ -31,21 +31,27 @@ async def test_coordinator_client_connector_error(hass: HomeAssistant) -> None:
     )
     config_entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.airzone_cloud.AirzoneCloudApi.api_get_device_status",
-        side_effect=mock_get_device_status,
-    ) as mock_device_status, patch(
-        "homeassistant.components.airzone_cloud.AirzoneCloudApi.api_get_installation",
-        return_value=GET_INSTALLATION_MOCK,
-    ) as mock_installation, patch(
-        "homeassistant.components.airzone_cloud.AirzoneCloudApi.api_get_installations",
-        return_value=GET_INSTALLATIONS_MOCK,
-    ) as mock_installations, patch(
-        "homeassistant.components.airzone_cloud.AirzoneCloudApi.api_get_webserver",
-        side_effect=mock_get_webserver,
-    ) as mock_webserver, patch(
-        "homeassistant.components.airzone_cloud.AirzoneCloudApi.login",
-        return_value=None,
+    with (
+        patch(
+            "homeassistant.components.airzone_cloud.AirzoneCloudApi.api_get_device_status",
+            side_effect=mock_get_device_status,
+        ) as mock_device_status,
+        patch(
+            "homeassistant.components.airzone_cloud.AirzoneCloudApi.api_get_installation",
+            return_value=GET_INSTALLATION_MOCK,
+        ) as mock_installation,
+        patch(
+            "homeassistant.components.airzone_cloud.AirzoneCloudApi.api_get_installations",
+            return_value=GET_INSTALLATIONS_MOCK,
+        ) as mock_installations,
+        patch(
+            "homeassistant.components.airzone_cloud.AirzoneCloudApi.api_get_webserver",
+            side_effect=mock_get_webserver,
+        ) as mock_webserver,
+        patch(
+            "homeassistant.components.airzone_cloud.AirzoneCloudApi.login",
+            return_value=None,
+        ),
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -62,7 +68,7 @@ async def test_coordinator_client_connector_error(hass: HomeAssistant) -> None:
 
         mock_device_status.side_effect = AirzoneCloudError
         async_fire_time_changed(hass, utcnow() + SCAN_INTERVAL)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         mock_device_status.assert_called()
 

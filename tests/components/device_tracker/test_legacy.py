@@ -1,4 +1,5 @@
 """Tests for the legacy device tracker component."""
+
 from unittest.mock import mock_open, patch
 
 from homeassistant.components.device_tracker import legacy
@@ -29,8 +30,9 @@ def test_remove_device_from_config(hass: HomeAssistant):
     mopen = mock_open()
 
     files = {legacy.YAML_DEVICES: dump(yaml_devices)}
-    with patch_yaml_files(files, True), patch(
-        "homeassistant.components.device_tracker.legacy.open", mopen
+    with (
+        patch_yaml_files(files, True),
+        patch("homeassistant.components.device_tracker.legacy.open", mopen),
     ):
         legacy.remove_device_from_config(hass, "test")
 

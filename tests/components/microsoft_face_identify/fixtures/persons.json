@@ -1,0 +1,21 @@
+[
+  {
+    "personId": "25985303-c537-4467-b41d-bdb45cd95ca1",
+    "name": "Ryan",
+    "userData": "User-provided data attached to the person",
+    "persistedFaceIds": [
+      "015839fb-fbd9-4f79-ace9-7675fc2f1dd9",
+      "fce92aed-d578-4d2e-8114-068f8af4492e",
+      "b64d5e15-8257-4af2-b20a-5a750f8940e7"
+    ]
+  },
+  {
+    "personId": "2ae4935b-9659-44c3-977f-61fac20d0538",
+    "name": "David",
+    "userData": "User-provided data attached to the person",
+    "persistedFaceIds": [
+      "30ea1073-cc9e-4652-b1e3-d08fb7b95315",
+      "fbd2a038-dbff-452c-8e79-2ee81b1aa84e"
+    ]
+  }
+]

@@ -1,4 +1,5 @@
 """Support for ZoneMinder binary sensors."""
+
 from __future__ import annotations
 
 from zoneminder.zm import ZoneMinder

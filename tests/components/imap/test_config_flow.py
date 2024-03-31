@@ -1,4 +1,5 @@
 """Test the imap config flow."""
+
 import ssl
 from unittest.mock import AsyncMock, patch
 

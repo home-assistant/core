@@ -1,4 +1,5 @@
 """Config flow for Panasonic Viera TV integration."""
+
 from functools import partial
 import logging
 from urllib.error import URLError
@@ -6,7 +7,7 @@ from urllib.error import URLError
 from panasonic_viera import TV_TYPE_ENCRYPTED, RemoteControl, SOAPError
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PIN, CONF_PORT
 
 from .const import (
@@ -25,7 +26,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class PanasonicVieraConfigFlow(ConfigFlow, domain=DOMAIN):
     """Config flow for Panasonic Viera."""
 
     VERSION = 1
@@ -59,8 +60,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except (URLError, SOAPError, OSError) as err:
                 _LOGGER.error("Could not establish remote connection: %s", err)
                 errors["base"] = "cannot_connect"
-            except Exception as err:  # pylint: disable=broad-except
-                _LOGGER.exception("An unknown error occurred: %s", err)
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("An unknown error occurred")
                 return self.async_abort(reason="unknown")
 
             if "base" not in errors:
@@ -117,8 +118,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except (URLError, OSError) as err:
                 _LOGGER.error("The remote connection was lost: %s", err)
                 return self.async_abort(reason="cannot_connect")
-            except Exception as err:  # pylint: disable=broad-except
-                _LOGGER.exception("Unknown error: %s", err)
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Unknown error")
                 return self.async_abort(reason="unknown")
 
             if "base" not in errors:
@@ -141,8 +142,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except (URLError, SOAPError, OSError) as err:
             _LOGGER.error("The remote connection was lost: %s", err)
             return self.async_abort(reason="cannot_connect")
-        except Exception as err:  # pylint: disable=broad-except
-            _LOGGER.exception("Unknown error: %s", err)
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Unknown error")
             return self.async_abort(reason="unknown")
 
         return self.async_show_form(

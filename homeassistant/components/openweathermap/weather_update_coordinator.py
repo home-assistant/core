@@ -1,4 +1,5 @@
 """Weather data coordinator for the OpenWeatherMap (OWM) service."""
+
 import asyncio
 from datetime import timedelta
 import logging

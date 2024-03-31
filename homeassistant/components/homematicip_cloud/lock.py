@@ -1,4 +1,5 @@
 """Support for HomematicIP Cloud lock devices."""
+
 from __future__ import annotations
 
 import logging

@@ -1,4 +1,5 @@
 """Set up the demo environment that mimics interaction with devices."""
+
 from __future__ import annotations
 
 import asyncio

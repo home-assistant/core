@@ -1,4 +1,5 @@
 """Helpers to setup multi-factor auth module."""
+
 from __future__ import annotations
 
 import logging

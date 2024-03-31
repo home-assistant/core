@@ -1,4 +1,5 @@
 """Module for color_extractor (RGB extraction from images) component."""
+
 import asyncio
 import io
 import logging

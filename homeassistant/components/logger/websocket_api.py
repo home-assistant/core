@@ -1,4 +1,5 @@
 """Websocket API handlers for the logger integration."""
+
 from typing import Any
 
 import voluptuous as vol

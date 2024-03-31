@@ -1,4 +1,5 @@
 """Adds support for generic hygrostat units."""
+
 from __future__ import annotations
 
 import asyncio
@@ -84,9 +85,9 @@ async def async_setup_platform(
     name: str = config[CONF_NAME]
     switch_entity_id: str = config[CONF_HUMIDIFIER]
     sensor_entity_id: str = config[CONF_SENSOR]
-    min_humidity: int | None = config.get(CONF_MIN_HUMIDITY)
-    max_humidity: int | None = config.get(CONF_MAX_HUMIDITY)
-    target_humidity: int | None = config.get(CONF_TARGET_HUMIDITY)
+    min_humidity: float | None = config.get(CONF_MIN_HUMIDITY)
+    max_humidity: float | None = config.get(CONF_MAX_HUMIDITY)
+    target_humidity: float | None = config.get(CONF_TARGET_HUMIDITY)
     device_class: HumidifierDeviceClass | None = config.get(CONF_DEVICE_CLASS)
     min_cycle_duration: timedelta | None = config.get(CONF_MIN_DUR)
     sensor_stale_duration: timedelta | None = config.get(CONF_STALE_DURATION)
@@ -132,9 +133,9 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
         name: str,
         switch_entity_id: str,
         sensor_entity_id: str,
-        min_humidity: int | None,
-        max_humidity: int | None,
-        target_humidity: int | None,
+        min_humidity: float | None,
+        max_humidity: float | None,
+        target_humidity: float | None,
         device_class: HumidifierDeviceClass | None,
         min_cycle_duration: timedelta | None,
         dry_tolerance: float,
@@ -263,12 +264,12 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
         return self._state
 
     @property
-    def current_humidity(self) -> int | None:
+    def current_humidity(self) -> float | None:
         """Return the measured humidity."""
-        return int(self._cur_humidity) if self._cur_humidity is not None else None
+        return self._cur_humidity
 
     @property
-    def target_humidity(self) -> int | None:
+    def target_humidity(self) -> float | None:
         """Return the humidity we try to reach."""
         return self._target_humidity
 
@@ -325,7 +326,7 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
         self.async_write_ha_state()
 
     @property
-    def min_humidity(self) -> int:
+    def min_humidity(self) -> float:
         """Return the minimum humidity."""
         if self._min_humidity:
             return self._min_humidity
@@ -334,7 +335,7 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
         return super().min_humidity
 
     @property
-    def max_humidity(self) -> int:
+    def max_humidity(self) -> float:
         """Return the maximum humidity."""
         if self._max_humidity:
             return self._max_humidity

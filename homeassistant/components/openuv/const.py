@@ -1,4 +1,5 @@
 """Define constants for the OpenUV component."""
+
 import logging
 
 DOMAIN = "openuv"

@@ -1,4 +1,5 @@
 """Support for TP-Link LTE modems."""
+
 from __future__ import annotations
 
 import asyncio
