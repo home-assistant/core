@@ -925,7 +925,7 @@ def test_execute_stmt_lambda_element(
         start_time_ts = dt_util.utcnow().timestamp()
         stmt = lambda_stmt(
             lambda: _get_single_entity_start_time_stmt(
-                start_time_ts, metadata_id, False, False
+                start_time_ts, metadata_id, False, False, False
             )
         )
         rows = util.execute_stmt_lambda_element(session, stmt)

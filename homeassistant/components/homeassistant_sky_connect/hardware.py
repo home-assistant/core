@@ -6,9 +6,9 @@ from homeassistant.components.hardware.models import HardwareInfo, USBInfo
 from homeassistant.core import HomeAssistant, callback
 
 from .const import DOMAIN
+from .util import get_hardware_variant
 
 DOCUMENTATION_URL = "https://skyconnect.home-assistant.io/documentation/"
-DONGLE_NAME = "Home Assistant SkyConnect"
 
 
 @callback
@@ -27,7 +27,7 @@ def async_info(hass: HomeAssistant) -> list[HardwareInfo]:
                 manufacturer=entry.data["manufacturer"],
                 description=entry.data["description"],
             ),
-            name=DONGLE_NAME,
+            name=get_hardware_variant(entry).full_name,
             url=DOCUMENTATION_URL,
         )
         for entry in entries

@@ -11,9 +11,7 @@ from decimal import Decimal, InvalidOperation as DecimalInvalidOperation
 from functools import partial
 import logging
 from math import ceil, floor, isfinite, log10
-from typing import TYPE_CHECKING, Any, Final, Self, cast, final
-
-from typing_extensions import override
+from typing import TYPE_CHECKING, Any, Final, Self, cast, final, override
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (  # noqa: F401
