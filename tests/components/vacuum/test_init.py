@@ -121,7 +121,11 @@ async def test_send_command(hass: HomeAssistant, config_flow_fixture: None) -> N
             if command == "add_str":
                 self._strings.append(params["str"])
 
-    entity0 = await create_entity(hass, mock_vacuum=MockVacuumWithLocation, strings=strings)
+    entity0 = await create_entity(
+        hass,
+        mock_vacuum=MockVacuumWithLocation,
+        strings=strings,
+    )
 
     await hass.services.async_call(
         DOMAIN,
