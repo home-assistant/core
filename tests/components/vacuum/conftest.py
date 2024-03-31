@@ -1,4 +1,5 @@
 """Fixtures for Vacuum platform tests."""
+
 from collections.abc import Generator
 
 import pytest
