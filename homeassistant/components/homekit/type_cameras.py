@@ -494,11 +494,12 @@ class Camera(HomeAccessory, PyhapCamera):  # type: ignore[misc]
             _LOGGER.info("[%s] %s stream", session_id, shutdown_method)
             try:
                 await getattr(stream, shutdown_method)()
-                return
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception(
                     "[%s] Failed to %s stream", session_id, shutdown_method
                 )
+            else:
+                return
 
     async def reconfigure_stream(
         self, session_info: dict[str, Any], stream_config: dict[str, Any]

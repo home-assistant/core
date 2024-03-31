@@ -50,7 +50,7 @@ from typing_extensions import TypeVar
 import voluptuous as vol
 import yarl
 
-from . import block_async_io, util
+from . import util
 from .const import (
     ATTR_DOMAIN,
     ATTR_FRIENDLY_NAME,
@@ -130,7 +130,6 @@ STOP_STAGE_SHUTDOWN_TIMEOUT = 100
 FINAL_WRITE_STAGE_SHUTDOWN_TIMEOUT = 60
 CLOSE_STAGE_SHUTDOWN_TIMEOUT = 30
 
-block_async_io.enable()
 
 _T = TypeVar("_T")
 _R = TypeVar("_R")
@@ -392,6 +391,8 @@ class HomeAssistant:
         # pylint: disable-next=import-outside-toplevel
         from . import loader
 
+        # This is a dictionary that any component can store any data on.
+        self.data: dict[str, Any] = {}
         self.loop = asyncio.get_running_loop()
         self._tasks: set[asyncio.Future[Any]] = set()
         self._background_tasks: set[asyncio.Future[Any]] = set()
@@ -401,8 +402,6 @@ class HomeAssistant:
         self.config = Config(self, config_dir)
         self.components = loader.Components(self)
         self.helpers = loader.Helpers(self)
-        # This is a dictionary that any component can store any data on.
-        self.data: dict[str, Any] = {}
         self.state: CoreState = CoreState.not_running
         self.exit_code: int = 0
         # If not None, use to signal end-of-loop
@@ -563,8 +562,7 @@ class HomeAssistant:
         target: Callable[[*_Ts], Coroutine[Any, Any, _R]],
         *args: *_Ts,
         eager_start: bool = False,
-    ) -> asyncio.Future[_R] | None:
-        ...
+    ) -> asyncio.Future[_R] | None: ...
 
     @overload
     @callback
@@ -573,8 +571,7 @@ class HomeAssistant:
         target: Callable[[*_Ts], Coroutine[Any, Any, _R] | _R],
         *args: *_Ts,
         eager_start: bool = False,
-    ) -> asyncio.Future[_R] | None:
-        ...
+    ) -> asyncio.Future[_R] | None: ...
 
     @overload
     @callback
@@ -583,8 +580,7 @@ class HomeAssistant:
         target: Coroutine[Any, Any, _R],
         *args: Any,
         eager_start: bool = False,
-    ) -> asyncio.Future[_R] | None:
-        ...
+    ) -> asyncio.Future[_R] | None: ...
 
     @callback
     def async_add_job(
@@ -637,8 +633,7 @@ class HomeAssistant:
         *args: Any,
         eager_start: bool = False,
         background: bool = False,
-    ) -> asyncio.Future[_R] | None:
-        ...
+    ) -> asyncio.Future[_R] | None: ...
 
     @overload
     @callback
@@ -648,8 +643,7 @@ class HomeAssistant:
         *args: Any,
         eager_start: bool = False,
         background: bool = False,
-    ) -> asyncio.Future[_R] | None:
-        ...
+    ) -> asyncio.Future[_R] | None: ...
 
     @callback
     def async_add_hass_job(
@@ -779,8 +773,11 @@ class HomeAssistant:
     ) -> asyncio.Future[_T]:
         """Add an executor job from within the event loop."""
         task = self.loop.run_in_executor(None, target, *args)
-        self._tasks.add(task)
-        task.add_done_callback(self._tasks.remove)
+
+        tracked = asyncio.current_task() in self._tasks
+        task_bucket = self._tasks if tracked else self._background_tasks
+        task_bucket.add(task)
+        task.add_done_callback(task_bucket.remove)
 
         return task
 
@@ -788,11 +785,11 @@ class HomeAssistant:
     def async_add_import_executor_job(
         self, target: Callable[[*_Ts], _T], *args: *_Ts
     ) -> asyncio.Future[_T]:
-        """Add an import executor job from within the event loop."""
-        task = self.loop.run_in_executor(self.import_executor, target, *args)
-        self._tasks.add(task)
-        task.add_done_callback(self._tasks.remove)
-        return task
+        """Add an import executor job from within the event loop.
+
+        The future returned from this method must be awaited in the event loop.
+        """
+        return self.loop.run_in_executor(self.import_executor, target, *args)
 
     @overload
     @callback
@@ -801,8 +798,7 @@ class HomeAssistant:
         hassjob: HassJob[..., Coroutine[Any, Any, _R]],
         *args: Any,
         background: bool = False,
-    ) -> asyncio.Future[_R] | None:
-        ...
+    ) -> asyncio.Future[_R] | None: ...
 
     @overload
     @callback
@@ -811,8 +807,7 @@ class HomeAssistant:
         hassjob: HassJob[..., Coroutine[Any, Any, _R] | _R],
         *args: Any,
         background: bool = False,
-    ) -> asyncio.Future[_R] | None:
-        ...
+    ) -> asyncio.Future[_R] | None: ...
 
     @callback
     def async_run_hass_job(
@@ -848,22 +843,19 @@ class HomeAssistant:
     @callback
     def async_run_job(
         self, target: Callable[[*_Ts], Coroutine[Any, Any, _R]], *args: *_Ts
-    ) -> asyncio.Future[_R] | None:
-        ...
+    ) -> asyncio.Future[_R] | None: ...
 
     @overload
     @callback
     def async_run_job(
         self, target: Callable[[*_Ts], Coroutine[Any, Any, _R] | _R], *args: *_Ts
-    ) -> asyncio.Future[_R] | None:
-        ...
+    ) -> asyncio.Future[_R] | None: ...
 
     @overload
     @callback
     def async_run_job(
         self, target: Coroutine[Any, Any, _R], *args: Any
-    ) -> asyncio.Future[_R] | None:
-        ...
+    ) -> asyncio.Future[_R] | None: ...
 
     @callback
     def async_run_job(
@@ -956,15 +948,13 @@ class HomeAssistant:
     @callback
     def async_add_shutdown_job(
         self, hassjob: HassJob[..., Coroutine[Any, Any, Any]], *args: Any
-    ) -> CALLBACK_TYPE:
-        ...
+    ) -> CALLBACK_TYPE: ...
 
     @overload
     @callback
     def async_add_shutdown_job(
         self, hassjob: HassJob[..., Coroutine[Any, Any, Any] | Any], *args: Any
-    ) -> CALLBACK_TYPE:
-        ...
+    ) -> CALLBACK_TYPE: ...
 
     @callback
     def async_add_shutdown_job(
@@ -1113,10 +1103,8 @@ class HomeAssistant:
                 _LOGGER.exception(
                     "Task %s could not be canceled during final shutdown stage", task
                 )
-            except Exception as exc:  # pylint: disable=broad-except
-                _LOGGER.exception(
-                    "Task %s error during final shutdown stage: %s", task, exc
-                )
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Task %s error during final shutdown stage", task)
 
         # Prevent run_callback_threadsafe from scheduling any additional
         # callbacks in the event loop as callbacks created on the futures
@@ -1511,6 +1499,15 @@ class EventBus:
         """
         if event_filter is not None and not is_callback_check_partial(event_filter):
             raise HomeAssistantError(f"Event filter {event_filter} is not a callback")
+        if event_type == EVENT_STATE_REPORTED:
+            if not event_filter:
+                raise HomeAssistantError(
+                    f"Event filter is required for event {event_type}"
+                )
+            if not run_immediately:
+                raise HomeAssistantError(
+                    f"Run immediately must be set to True for event {event_type}"
+                )
         return self._async_listen_filterable_job(
             event_type,
             (
@@ -1779,9 +1776,9 @@ class State:
             COMPRESSED_STATE_LAST_CHANGED: self.last_changed_timestamp,
         }
         if self.last_changed != self.last_updated:
-            compressed_state[
-                COMPRESSED_STATE_LAST_UPDATED
-            ] = self.last_updated_timestamp
+            compressed_state[COMPRESSED_STATE_LAST_UPDATED] = (
+                self.last_updated_timestamp
+            )
         return compressed_state
 
     @cached_property
@@ -2593,7 +2590,7 @@ class Config:
         """Initialize a new config object."""
         self.hass = hass
 
-        self._store = self._ConfigStore(self.hass)
+        self._store = self._ConfigStore(self.hass, config_dir)
 
         self.latitude: float = 0
         self.longitude: float = 0
@@ -2693,9 +2690,10 @@ class Config:
         for allowed_path in self.allowlist_external_dirs:
             try:
                 thepath.relative_to(allowed_path)
-                return True
             except ValueError:
                 pass
+            else:
+                return True
 
         return False
 
@@ -2860,7 +2858,7 @@ class Config:
     class _ConfigStore(Store[dict[str, Any]]):
         """Class to help storing Config data."""
 
-        def __init__(self, hass: HomeAssistant) -> None:
+        def __init__(self, hass: HomeAssistant, config_dir: str) -> None:
             """Initialize storage class."""
             super().__init__(
                 hass,
@@ -2869,6 +2867,7 @@ class Config:
                 private=True,
                 atomic_writes=True,
                 minor_version=CORE_STORAGE_MINOR_VERSION,
+                config_dir=config_dir,
             )
             self._original_unit_system: str | None = None  # from old store 1.1
 

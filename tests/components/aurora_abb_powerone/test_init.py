@@ -17,18 +17,24 @@ from tests.common import MockConfigEntry
 async def test_unload_entry(hass: HomeAssistant) -> None:
     """Test unloading the aurora_abb_powerone entry."""
 
-    with patch("aurorapy.client.AuroraSerialClient.connect", return_value=None), patch(
-        "aurorapy.client.AuroraSerialClient.serial_number",
-        return_value="9876543",
-    ), patch(
-        "aurorapy.client.AuroraSerialClient.version",
-        return_value="9.8.7.6",
-    ), patch(
-        "aurorapy.client.AuroraSerialClient.pn",
-        return_value="A.B.C",
-    ), patch(
-        "aurorapy.client.AuroraSerialClient.firmware",
-        return_value="1.234",
+    with (
+        patch("aurorapy.client.AuroraSerialClient.connect", return_value=None),
+        patch(
+            "aurorapy.client.AuroraSerialClient.serial_number",
+            return_value="9876543",
+        ),
+        patch(
+            "aurorapy.client.AuroraSerialClient.version",
+            return_value="9.8.7.6",
+        ),
+        patch(
+            "aurorapy.client.AuroraSerialClient.pn",
+            return_value="A.B.C",
+        ),
+        patch(
+            "aurorapy.client.AuroraSerialClient.firmware",
+            return_value="1.234",
+        ),
     ):
         mock_entry = MockConfigEntry(
             domain=DOMAIN,

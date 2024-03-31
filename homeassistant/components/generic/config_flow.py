@@ -291,7 +291,7 @@ async def async_test_stream(
             return {CONF_STREAM_SOURCE: "stream_no_route_to_host"}
         if err.errno == EIO:  # input/output error
             return {CONF_STREAM_SOURCE: "stream_io_error"}
-        raise err
+        raise
     return {}
 
 

@@ -464,14 +464,12 @@ def _write_default_config(config_dir: str) -> bool:
         if not os.path.isfile(scene_yaml_path):
             with open(scene_yaml_path, "w", encoding="utf8"):
                 pass
-
-        return True
-
     except OSError:
         print(  # noqa: T201
             f"Unable to create default configuration file {config_path}"
         )
         return False
+    return True
 
 
 async def async_hass_config_yaml(hass: HomeAssistant) -> dict:
@@ -1112,9 +1110,9 @@ async def merge_packages_config(
                 continue
 
             try:
-                config_platform: ModuleType | None = (
-                    await integration.async_get_platform("config")
-                )
+                config_platform: (
+                    ModuleType | None
+                ) = await integration.async_get_platform("config")
                 # Test if config platform has a config validator
                 if not hasattr(config_platform, "async_validate_config"):
                     config_platform = None
