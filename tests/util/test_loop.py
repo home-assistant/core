@@ -124,6 +124,25 @@ async def test_check_loop_async_integration_non_strict(
 
 async def test_check_loop_async_custom(caplog: pytest.LogCaptureFixture) -> None:
     """Test check_loop detects when called from event loop with custom component context."""
+    frames = extract_stack_to_frame(
+        [
+            Mock(
+                filename="/home/paulus/homeassistant/core.py",
+                lineno="23",
+                line="do_something()",
+            ),
+            Mock(
+                filename="/home/paulus/config/custom_components/hue/light.py",
+                lineno="23",
+                line="self.light.is_on",
+            ),
+            Mock(
+                filename="/home/paulus/aiohue/lights.py",
+                lineno="2",
+                line="something()",
+            ),
+        ]
+    )
     with (
         pytest.raises(RuntimeError),
         patch(
@@ -131,33 +150,24 @@ async def test_check_loop_async_custom(caplog: pytest.LogCaptureFixture) -> None
             return_value="self.light.is_on",
         ),
         patch(
+            "homeassistant.util.loop._get_line_from_cache",
+            return_value="mock_line",
+        ),
+        patch(
+            "homeassistant.util.loop.get_current_frame",
+            return_value=frames,
+        ),
+        patch(
             "homeassistant.helpers.frame.get_current_frame",
-            return_value=extract_stack_to_frame(
-                [
-                    Mock(
-                        filename="/home/paulus/homeassistant/core.py",
-                        lineno="23",
-                        line="do_something()",
-                    ),
-                    Mock(
-                        filename="/home/paulus/config/custom_components/hue/light.py",
-                        lineno="23",
-                        line="self.light.is_on",
-                    ),
-                    Mock(
-                        filename="/home/paulus/aiohue/lights.py",
-                        lineno="2",
-                        line="something()",
-                    ),
-                ]
-            ),
+            return_value=frames,
         ),
     ):
         haloop.check_loop(banned_function)
     assert (
         "Detected blocking call to banned_function inside the event loop by custom "
         "integration 'hue' at custom_components/hue/light.py, line 23: self.light.is_on"
-        ", please create a bug report at https://github.com/home-assistant/core/issues?"
+        " (offender: /home/paulus/aiohue/lights.py, line 2: mock_line), "
+        "please create a bug report at https://github.com/home-assistant/core/issues?"
         "q=is%3Aopen+is%3Aissue+label%3A%22integration%3A+hue%22"
     ) in caplog.text
 
