@@ -60,6 +60,7 @@ async def async_get_media_source(hass: HomeAssistant) -> MediaSource:
 
     return JellyfinSource(hass, entry)
 
+
 class JellyfinSource(MediaSource):
     """Represents a Jellyfin server."""
 
