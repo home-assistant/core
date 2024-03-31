@@ -100,7 +100,9 @@ class ZHAEntity(LogMixin, entity.Entity):
             self.entity_data.device_proxy.device.ieee,
             self.entity_id,
             self.entity_data.device_proxy,
-            self.entity_data.entity.cluster_handlers,
+            self.entity_data.entity.cluster_handlers
+            if hasattr(self.entity_data.entity, "cluster_handlers")
+            else None,
             self.device_info,
             self.remove_future,
         )
