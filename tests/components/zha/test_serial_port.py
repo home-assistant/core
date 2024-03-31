@@ -3,15 +3,18 @@
 import ipaddress
 import pathlib
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
+import pytest
 from serial.tools.list_ports_common import ListPortInfo
 
 from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.components.zha.serial_port import (
     NetworkSerialPort,
+    SerialPortNotUnique,
     SystemSerialPort,
     UsbSerialPort,
+    async_find_unique_port,
     async_list_serial_ports,
 )
 from homeassistant.core import HomeAssistant
@@ -185,3 +188,35 @@ async def test_list_serial_ports(hass: HomeAssistant) -> None:
             product="Yellow Zigbee Module",
         ),
     ]
+
+
+@patch(
+    "homeassistant.components.zha.serial_port.async_list_serial_ports",
+    new=AsyncMock(
+        return_value=[
+            UsbSerialPort(
+                device=pathlib.Path("/dev/serial/by-id/symlink1"),
+                resolved_device=pathlib.Path("/dev/ttyUSB0"),
+                vid=0x10C4,
+                pid=0xEA60,
+                serial_number="d8d6a1d223edec1199274540ad51a8b2",
+                manufacturer="Nabu Casa",
+                product="SkyConnect v1.0",
+            ),
+            UsbSerialPort(
+                device=pathlib.Path("/dev/serial/by-id/symlink2"),
+                resolved_device=pathlib.Path("/dev/ttyUSB0"),
+                vid=0x10C4,
+                pid=0xEA60,
+                serial_number="d8d6a1d223edec1199274540ad51a8b2",
+                manufacturer="Nabu Casa",
+                product="SkyConnect v1.0",
+            ),
+        ]
+    ),
+)
+async def test_find_unique_port_non_unique(hass: HomeAssistant) -> None:
+    """Test serial port non-unique failure."""
+
+    with pytest.raises(SerialPortNotUnique):
+        await async_find_unique_port(hass, "/dev/ttyUSB0")

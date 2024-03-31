@@ -22,6 +22,10 @@ class SerialPortMissing(Exception):
     """Serial port is currently missing."""
 
 
+class SerialPortNotUnique(Exception):
+    """Serial port is not unique."""
+
+
 @dataclasses.dataclass
 class SystemSerialPort:
     """System serial port that is not associated with any USB device."""
@@ -180,11 +184,16 @@ class NetworkSerialPort:
 
 def get_serial_symlinks() -> dict[pathlib.Path, pathlib.Path]:
     """Return a mapping of /dev/tty... to /dev/serial/by-id/... symlinks."""
-    return {
-        path.resolve(): path
-        for path in pathlib.Path("/dev/serial/by-id/").iterdir()
-        if path.is_symlink()
-    }
+
+    try:
+        return {
+            path.resolve(): path
+            for path in pathlib.Path("/dev/serial/by-id/").iterdir()
+            if path.is_symlink()
+        }
+    except FileNotFoundError:
+        # Some installations may not have a `/dev/serial/by-id` directory
+        return {}
 
 
 async def async_list_serial_ports(
@@ -198,8 +207,8 @@ async def async_list_serial_ports(
     else:
         is_yellow = True
 
-    comports = await hass.async_add_executor_job(serial.tools.list_ports.comports)
     symlinks = await hass.async_add_executor_job(get_serial_symlinks)
+    comports = await hass.async_add_executor_job(serial.tools.list_ports.comports)
 
     ports: list[UsbSerialPort | SystemSerialPort] = []
 
@@ -273,7 +282,7 @@ async def async_list_zha_serial_ports(
 async def async_find_unique_port(
     hass: HomeAssistant, path: str
 ) -> SystemSerialPort | UsbSerialPort:
-    """Find a unique serial port based on a path."""
+    """Find a unique system or USB serial port based on a path."""
     ports = await async_list_serial_ports(hass)
     resolved_path = await hass.async_add_executor_job(pathlib.Path(path).resolve)
 
@@ -285,7 +294,7 @@ async def async_find_unique_port(
     ]
 
     if len(candidates) > 1:
-        raise ValueError(f"Serial port {path} is not unique: {candidates}")
+        raise SerialPortNotUnique(f"Serial port {path} is not unique: {candidates}")
 
     if not candidates:
         raise SerialPortMissing(f"Serial port {path} does not exist")
@@ -297,15 +306,15 @@ async def async_serial_port_from_path(
     hass: HomeAssistant, path: str
 ) -> SystemSerialPort | UsbSerialPort | NetworkSerialPort:
     """Identify which serial port a specific path points to."""
-    # Try to parse a network serial port first
-    if path.startswith("socket://"):
-        host, network_port = path.removeprefix("socket://").rsplit(":", 1)
+    if not path.startswith("socket://"):
+        return await async_find_unique_port(hass, path)
 
-        try:
-            ip = ipaddress.ip_address(host)
-        except ValueError:
-            return NetworkSerialPort(host=host, port=int(network_port))
+    # Network serial ports are always unique
+    host, network_port = path.removeprefix("socket://").rsplit(":", 1)
 
-        return NetworkSerialPort(host=ip, port=int(network_port))
+    try:
+        ip = ipaddress.ip_address(host)
+    except ValueError:
+        return NetworkSerialPort(host=host, port=int(network_port))
 
-    return await async_find_unique_port(hass, path)
+    return NetworkSerialPort(host=ip, port=int(network_port))
