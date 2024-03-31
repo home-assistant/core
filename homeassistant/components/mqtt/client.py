@@ -187,7 +187,7 @@ async def async_subscribe(
             translation_domain=DOMAIN,
             translation_placeholders={"topic": topic},
         ) from exc
-    async_remove = await mqtt_data.client.async_subscribe(
+    return await mqtt_data.client.async_subscribe(
         topic,
         catch_log_exception(
             msg_callback,
@@ -199,7 +199,6 @@ async def async_subscribe(
         qos,
         encoding,
     )
-    return async_remove
 
 
 @bind_hass

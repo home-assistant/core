@@ -46,8 +46,7 @@ def voice_assistant_udp_server(
             assert server is not None
             server.close()
 
-        server = VoiceAssistantUDPServer(hass, entry_data, Mock(), handle_finished)
-        return server
+        return VoiceAssistantUDPServer(hass, entry_data, Mock(), handle_finished)
 
     return _voice_assistant_udp_server
 

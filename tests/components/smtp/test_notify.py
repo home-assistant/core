@@ -72,7 +72,7 @@ async def test_reload_notify(hass: HomeAssistant) -> None:
 @pytest.fixture
 def message():
     """Return MockSMTP object with test data."""
-    mailer = MockSMTP(
+    return MockSMTP(
         "localhost",
         25,
         5,
@@ -85,7 +85,6 @@ def message():
         0,
         True,
     )
-    return mailer
 
 
 HTML = """

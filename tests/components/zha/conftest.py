@@ -422,12 +422,11 @@ def zha_device_mock(
         zigpy_device = zigpy_device_mock(
             endpoints, ieee, manufacturer, model, node_desc, patch_cluster=patch_cluster
         )
-        zha_device = zha_core_device.ZHADevice(
+        return zha_core_device.ZHADevice(
             hass,
             zigpy_device,
             ZHAGateway(hass, {}, config_entry),
         )
-        return zha_device
 
     return _zha_device
 

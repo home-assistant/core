@@ -718,7 +718,6 @@ ignore = [
 
     # temporarily disabled
     "PT019",
-    "RET504",
     "RET503",
     "RET502",
     "RET501",
