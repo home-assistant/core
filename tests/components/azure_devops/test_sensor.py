@@ -25,7 +25,7 @@ async def test_sensors(
     init_integration: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test a successful setup entry."""
+    """Test the sensor entities."""
     assert (state := hass.states.get(f"{BASE_SENSOR_NAME}_latest_build"))
     assert state.state == "1"
     assert state.attributes["definition_id"] == 1
