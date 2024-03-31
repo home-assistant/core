@@ -1,4 +1,5 @@
 """Support for Anova Coordinators."""
+
 import logging
 
 from anova_wifi import APCUpdate, APCWifiDevice

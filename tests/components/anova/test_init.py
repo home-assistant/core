@@ -1,6 +1,5 @@
 """Test init for Anova."""
 
-
 from anova_wifi import AnovaApi
 import pytest
 

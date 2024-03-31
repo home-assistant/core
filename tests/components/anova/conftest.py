@@ -1,4 +1,5 @@
 """Common fixtures for Anova."""
+
 from unittest.mock import patch
 
 from anova_wifi import AnovaApi, InvalidLogin
@@ -15,8 +16,11 @@ async def anova_api(
     """Mock the api for Anova."""
     api_mock = anova_api_mock()
 
-    with patch("homeassistant.components.anova.AnovaApi", return_value=api_mock), patch(
-        "homeassistant.components.anova.config_flow.AnovaApi", return_value=api_mock
+    with (
+        patch("homeassistant.components.anova.AnovaApi", return_value=api_mock),
+        patch(
+            "homeassistant.components.anova.config_flow.AnovaApi", return_value=api_mock
+        ),
     ):
         api = AnovaApi(
             None,
@@ -33,8 +37,11 @@ async def anova_api_no_devices(
     """Mock the api for Anova with no online devices."""
     api_mock = anova_api_mock(connect_messages=[], post_connect_messages=[])
 
-    with patch("homeassistant.components.anova.AnovaApi", return_value=api_mock), patch(
-        "homeassistant.components.anova.config_flow.AnovaApi", return_value=api_mock
+    with (
+        patch("homeassistant.components.anova.AnovaApi", return_value=api_mock),
+        patch(
+            "homeassistant.components.anova.config_flow.AnovaApi", return_value=api_mock
+        ),
     ):
         api = AnovaApi(
             None,
