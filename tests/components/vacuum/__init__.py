@@ -76,7 +76,6 @@ class MockVacuum(MockEntity, StateVacuumEntity):
 
 async def create_entity(
     hass: HomeAssistant,
-    manifest_extra: dict[str, Any] | None,
     mock_vacuum: MockVacuum = MockVacuum,
     **kwargs,
 ) -> MockVacuum:
@@ -108,7 +107,6 @@ async def create_entity(
         MockModule(
             "test",
             async_setup_entry=async_setup_entry_init,
-            partial_manifest=manifest_extra,
         ),
         built_in=False,
     )
