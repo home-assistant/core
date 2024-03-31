@@ -4,6 +4,7 @@ import logging
 
 from aioautomower.exceptions import ApiException
 from aioautomower.model import MowerActivities, MowerStates
+
 from homeassistant.components.lawn_mower import (
     LawnMowerActivity,
     LawnMowerEntity,

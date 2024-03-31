@@ -6,6 +6,7 @@ from datetime import datetime
 import logging
 
 from aioautomower.model import MowerAttributes, MowerModes
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
