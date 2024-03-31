@@ -453,6 +453,7 @@ async def test_stop_discovery_called_on_stop(
     """Test pychromecast.stop_discovery called on shutdown."""
     # start_discovery should be called with empty config
     await async_setup_cast(hass, {})
+    await hass.async_block_till_done()
     assert castbrowser_mock.return_value.start_discovery.call_count == 1
 
     # stop discovery should be called on shutdown
