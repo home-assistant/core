@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 from typing import TYPE_CHECKING
 
 from aioimaplib import IMAP4_SSL, AioImapException, Response
@@ -33,6 +34,8 @@ CONF_ENTRY = "entry"
 CONF_SEEN = "seen"
 CONF_UID = "uid"
 CONF_TARGET_FOLDER = "target_folder"
+
+_LOGGER = logging.getLogger(__name__)
 
 _SERVICE_UID_SCHEMA = vol.Schema(
     {
@@ -119,9 +122,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def async_seen(call: ServiceCall) -> None:
         """Process mark as seen service call."""
-        client = await async_get_imap_client(hass, call.data[CONF_ENTRY])
+        entry_id: str = call.data[CONF_ENTRY]
+        uid: str = call.data[CONF_UID]
+        _LOGGER.debug(
+            "Mark message %s as seen. Entry: %s",
+            uid,
+            entry_id,
+        )
+        client = await async_get_imap_client(hass, entry_id)
         try:
-            response = await client.store(call.data[CONF_UID], "+FLAGS (\\Seen)")
+            response = await client.store(uid, "+FLAGS (\\Seen)")
         except (TimeoutError, AioImapException) as exc:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
@@ -135,13 +145,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def async_move(call: ServiceCall) -> None:
         """Process move email service call."""
-        client = await async_get_imap_client(hass, call.data[CONF_ENTRY])
+        entry_id: str = call.data[CONF_ENTRY]
         uid: str = call.data[CONF_UID]
+        seen = bool(call.data.get(CONF_SEEN))
+        target_folder: str = call.data[CONF_TARGET_FOLDER]
+        _LOGGER.debug(
+            "Move message %s to folder %s. Mark as seen: %s. Entry: %s",
+            uid,
+            target_folder,
+            seen,
+            entry_id,
+        )
+        client = await async_get_imap_client(hass, entry_id)
         try:
-            if call.data.get(CONF_SEEN):
+            if seen:
                 response = await client.store(uid, "+FLAGS (\\Seen)")
                 raise_on_error(response, "seen_failed")
-            response = await client.copy(uid, call.data[CONF_TARGET_FOLDER])
+            response = await client.copy(uid, target_folder)
             raise_on_error(response, "copy_failed")
             response = await client.store(uid, "+FLAGS (\\Deleted)")
             raise_on_error(response, "delete_failed")
@@ -161,8 +181,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def async_delete(call: ServiceCall) -> None:
         """Process deleting email service call."""
-        client = await async_get_imap_client(hass, call.data[CONF_ENTRY])
+        entry_id: str = call.data[CONF_ENTRY]
         uid: str = call.data[CONF_UID]
+        _LOGGER.debug(
+            "Delete message %s. Entry: %s",
+            uid,
+            entry_id,
+        )
+        client = await async_get_imap_client(hass, entry_id)
         try:
             response = await client.store(uid, "+FLAGS (\\Deleted)")
             raise_on_error(response, "delete_failed")
