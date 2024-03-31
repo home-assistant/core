@@ -12,6 +12,7 @@ import time
 from typing import TYPE_CHECKING
 from unittest.mock import patch
 
+from google_nest_sdm.google_nest_subscriber import GoogleNestSubscriber
 import pytest
 
 from homeassistant.components.nest.const import API_URL, OAUTH2_TOKEN, SDM_SCOPES
@@ -23,8 +24,6 @@ from .conftest import FAKE_REFRESH_TOKEN, FAKE_TOKEN
 
 from tests.test_util.aiohttp import AiohttpClientMocker
 
-if TYPE_CHECKING:
-    from google_nest_sdm.google_nest_subscriber import GoogleNestSubscriber
 
 FAKE_UPDATED_TOKEN = "fake-updated-token"
 
