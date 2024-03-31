@@ -6,10 +6,11 @@ import dataclasses
 import ipaddress
 import pathlib
 from typing import Self, cast
+import urllib.parse
 
 import serial.tools.list_ports
 
-from homeassistant.components import usb, zeroconf
+from homeassistant.components import zeroconf
 from homeassistant.components.hassio import AddonError, AddonState
 from homeassistant.components.homeassistant_hardware import silabs_multiprotocol_addon
 from homeassistant.components.homeassistant_yellow import hardware as yellow_hardware
@@ -177,9 +178,18 @@ class NetworkSerialPort:
         return name
 
 
+def get_serial_symlinks() -> dict[pathlib.Path, pathlib.Path]:
+    """Return a mapping of /dev/tty... to /dev/serial/by-id/... symlinks."""
+    return {
+        path.resolve(): path
+        for path in pathlib.Path("/dev/serial/by-id/").iterdir()
+        if path.is_symlink()
+    }
+
+
 async def async_list_serial_ports(
     hass: HomeAssistant,
-) -> list[SystemSerialPort | UsbSerialPort | NetworkSerialPort]:
+) -> list[SystemSerialPort | UsbSerialPort]:
     """List all serial ports, including the Yellow radio."""
     try:
         yellow_hardware.async_info(hass)
@@ -189,28 +199,26 @@ async def async_list_serial_ports(
         is_yellow = True
 
     comports = await hass.async_add_executor_job(serial.tools.list_ports.comports)
-    ports: list[SystemSerialPort | UsbSerialPort | NetworkSerialPort] = []
+    symlinks = await hass.async_add_executor_job(get_serial_symlinks)
+
+    ports: list[UsbSerialPort | SystemSerialPort] = []
 
     for port in comports:
         if is_yellow and port.device == "/dev/ttyAMA1":
             ports.append(
                 SystemSerialPort(
-                    device=port.device,
+                    device=pathlib.Path(port.device),
                     manufacturer="Nabu Casa",
                     product="Yellow Zigbee Module",
                 )
             )
         elif port.vid is not None:
-            unique_path = await hass.async_add_executor_job(
-                usb.get_serial_by_id, port.device
-            )
-            resolved_path = await hass.async_add_executor_job(
-                pathlib.Path(port.device).resolve
-            )
+            resolved_path = pathlib.Path(port.device)
+            unique_path = symlinks[resolved_path]
 
             ports.append(
                 UsbSerialPort(
-                    device=pathlib.Path(unique_path),
+                    device=unique_path,
                     resolved_device=resolved_path,
                     vid=port.vid,
                     pid=port.pid,
@@ -230,7 +238,10 @@ async def async_list_zha_serial_ports(
 ) -> list[SystemSerialPort | UsbSerialPort | NetworkSerialPort]:
     """List all serial ports, including the Yellow radio and the multi-PAN addon."""
 
-    ports = await async_list_serial_ports(hass)
+    ports = cast(
+        list[SystemSerialPort | UsbSerialPort | NetworkSerialPort],
+        await async_list_serial_ports(hass),
+    )
 
     # Present the multi-PAN addon as a setup option, if it's available
     multipan_manager = await silabs_multiprotocol_addon.get_multiprotocol_addon_manager(
@@ -243,16 +254,14 @@ async def async_list_zha_serial_ports(
         addon_info = None
 
     if addon_info is not None and addon_info.state != AddonState.NOT_INSTALLED:
-        host, port = (
-            silabs_multiprotocol_addon.get_zigbee_socket()
-            .replace("socket://", "", 1)
-            .rsplit(":", 1)
-        )
+        parsed = urllib.parse.urlparse(silabs_multiprotocol_addon.get_zigbee_socket())
+        assert parsed.hostname is not None
+        assert parsed.port is not None
 
         ports.append(
             NetworkSerialPort(
-                host=host,
-                port=int(port),
+                host=parsed.hostname,
+                port=parsed.port,
                 product="Multiprotocol add-on",
                 manufacturer="Nabu Casa",
             )
@@ -268,18 +277,12 @@ async def async_find_unique_port(
     ports = await async_list_serial_ports(hass)
     resolved_path = await hass.async_add_executor_job(pathlib.Path(path).resolve)
 
-    candidates = cast(
-        list[SystemSerialPort | UsbSerialPort],
-        [
-            port
-            for port in ports
-            if port.path == path
-            or (
-                isinstance(port, UsbSerialPort)
-                and port.resolved_device == resolved_path
-            )
-        ],
-    )
+    candidates = [
+        port
+        for port in ports
+        if port.path == path
+        or (isinstance(port, UsbSerialPort) and port.resolved_device == resolved_path)
+    ]
 
     if len(candidates) > 1:
         raise ValueError(f"Serial port {path} is not unique: {candidates}")

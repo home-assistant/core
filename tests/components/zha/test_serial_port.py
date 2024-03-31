@@ -2,13 +2,19 @@
 
 import ipaddress
 import pathlib
+from typing import Any
+from unittest.mock import patch
+
+from serial.tools.list_ports_common import ListPortInfo
 
 from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.components.zha.serial_port import (
     NetworkSerialPort,
     SystemSerialPort,
     UsbSerialPort,
+    async_list_serial_ports,
 )
+from homeassistant.core import HomeAssistant
 
 
 def test_system_serial_port() -> None:
@@ -115,3 +121,67 @@ def test_network_serial_port_from_zeroconf() -> None:
         product="tube",
         manufacturer="tubeszb",
     )
+
+
+def make_pyserial_port(device: str, **kwargs: Any) -> ListPortInfo:
+    """Create a PySerial port."""
+    port = ListPortInfo(device, skip_link_detection=True)
+
+    for key, value in kwargs.items():
+        assert hasattr(port, key)
+        setattr(port, key, value)
+
+    return port
+
+
+async def test_list_serial_ports(hass: HomeAssistant) -> None:
+    """Test listing all serial ports."""
+
+    with (
+        patch(
+            "homeassistant.components.zha.serial_port.yellow_hardware.async_info",
+            side_effect=None,
+        ),
+        patch(
+            "homeassistant.components.zha.serial_port.get_serial_symlinks",
+            return_value={
+                pathlib.Path("/dev/ttyUSB0"): pathlib.Path(
+                    "/dev/serial/by-id/usb-Nabu_Casa_Home_Assistant_Connect_ZBT-1_d8d6a1d223edec1199274540ad51a8b2-if00-port0"
+                )
+            },
+        ),
+        patch(
+            "homeassistant.components.zha.serial_port.serial.tools.list_ports.comports",
+            return_value=[
+                make_pyserial_port(
+                    device="/dev/ttyUSB0",
+                    vid=0x10C4,
+                    pid=0xEA60,
+                    serial_number="d8d6a1d223edec1199274540ad51a8b2",
+                    manufacturer="Nabu Casa",
+                    product="SkyConnect v1.0",
+                ),
+                make_pyserial_port(device="/dev/ttyAMA1"),
+            ],
+        ),
+    ):
+        ports = await async_list_serial_ports(hass)
+
+    assert ports == [
+        UsbSerialPort(
+            device=pathlib.Path(
+                "/dev/serial/by-id/usb-Nabu_Casa_Home_Assistant_Connect_ZBT-1_d8d6a1d223edec1199274540ad51a8b2-if00-port0"
+            ),
+            resolved_device=pathlib.Path("/dev/ttyUSB0"),
+            vid=0x10C4,
+            pid=0xEA60,
+            serial_number="d8d6a1d223edec1199274540ad51a8b2",
+            manufacturer="Nabu Casa",
+            product="SkyConnect v1.0",
+        ),
+        SystemSerialPort(
+            device=pathlib.Path("/dev/ttyAMA1"),
+            manufacturer="Nabu Casa",
+            product="Yellow Zigbee Module",
+        ),
+    ]
