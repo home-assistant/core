@@ -84,6 +84,7 @@ homeassistant.components.api.*
 homeassistant.components.apple_tv.*
 homeassistant.components.apprise.*
 homeassistant.components.aprs.*
+homeassistant.components.apsystemsapi_local.*
 homeassistant.components.aqualogic.*
 homeassistant.components.aquostv.*
 homeassistant.components.aranet.*

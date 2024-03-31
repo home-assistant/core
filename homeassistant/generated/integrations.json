@@ -408,6 +408,12 @@
       "config_flow": false,
       "iot_class": "cloud_push"
     },
+    "apsystemsapi_local": {
+      "name": "APsystems Local API",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "aqualogic": {
       "name": "AquaLogic",
       "integration_type": "hub",
