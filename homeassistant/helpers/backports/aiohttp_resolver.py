@@ -57,7 +57,7 @@ class AsyncResolver(AbstractResolver):
             raise RuntimeError("Resolver requires aiodns library")
 
         self._loop = asyncio.get_running_loop()
-        self._resolver = aiodns.DNSResolver(*args, loop=self._loop, **kwargs)
+        self._resolver = aiodns.DNSResolver(*args, loop=self._loop, **kwargs)  # type: ignore[misc]
 
     async def resolve(  # type: ignore[override]
         self, host: str, port: int = 0, family: int = socket.AF_INET
@@ -68,7 +68,7 @@ class AsyncResolver(AbstractResolver):
                 host,
                 port=port,
                 type=socket.SOCK_STREAM,
-                family=family,
+                family=family,  # type: ignore[arg-type]
                 flags=socket.AI_ADDRCONFIG,
             )
         except aiodns.error.DNSError as exc:
@@ -84,7 +84,8 @@ class AsyncResolver(AbstractResolver):
                     # LL IPv6 is a VERY rare case. Strictly speaking, we should use
                     # getnameinfo() unconditionally, but performance makes sense.
                     result = await self._resolver.getnameinfo(
-                        address[0].decode("ascii"), *address[1:], _NUMERIC_SOCKET_FLAGS
+                        (address[0].decode("ascii"), *address[1:]),
+                        _NUMERIC_SOCKET_FLAGS,
                     )
                     resolved_host = result.node
                 else:
