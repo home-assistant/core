@@ -46,8 +46,8 @@ from homeassistant.helpers.event import (
 )
 from homeassistant.util.json import JsonObjectType, json_loads_object
 
-from .agent import AbstractConversationAgent, ConversationInput, ConversationResult
 from .const import DEFAULT_EXPOSED_ATTRIBUTES, DOMAIN
+from .models import AbstractConversationAgent, ConversationInput, ConversationResult
 
 _LOGGER = logging.getLogger(__name__)
 _DEFAULT_ERROR_TEXT = "Sorry, I couldn't understand that"
