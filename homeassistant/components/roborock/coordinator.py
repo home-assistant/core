@@ -134,6 +134,6 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
             iot_rooms = await self.api.get_room_mapping()
             if iot_rooms is not None:
                 for room in iot_rooms:
-                    self.maps[self.current_map].rooms[
-                        room.segment_id
-                    ] = self._home_data_rooms.get(room.iot_id, "Unknown")
+                    self.maps[self.current_map].rooms[room.segment_id] = (
+                        self._home_data_rooms.get(room.iot_id, "Unknown")
+                    )

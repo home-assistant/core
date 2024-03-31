@@ -92,7 +92,9 @@ def build_setup_functions(
 ) -> list[Coroutine[Any, Any, RoborockDataUpdateCoordinator | None]]:
     """Create a list of setup functions that can later be called asynchronously."""
     return [
-        setup_device(hass, user_data, device, product_info[device.product_id], home_data_rooms)
+        setup_device(
+            hass, user_data, device, product_info[device.product_id], home_data_rooms
+        )
         for device in device_map.values()
     ]
 

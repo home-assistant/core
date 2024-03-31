@@ -1,4 +1,5 @@
 """Support for Roborock vacuum class."""
+
 from dataclasses import asdict
 from typing import Any
 
