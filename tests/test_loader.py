@@ -1807,6 +1807,6 @@ async def test_hass_helpers_use_reported(
         hass.helpers.aiohttp_client.async_get_clientsession()
 
         assert (
-            "Detected that custom integration 'test_helper_frame'"
-            " accesses hass.helpers.aiohttp_client. This is deprecated"
+            "Detected that custom integration 'test_integration_frame' "
+            "accesses hass.helpers.aiohttp_client. This is deprecated"
         ) in caplog.text
