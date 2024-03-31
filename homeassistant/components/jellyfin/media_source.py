@@ -7,7 +7,7 @@ import mimetypes
 import os
 from typing import Any
 
-from jellyfin_apiclient_python.api import jellyfin_url
+from jellyfin_apiclient_python.api import API, jellyfin_url
 from jellyfin_apiclient_python.client import JellyfinClient
 
 from homeassistant.components.media_player import BrowseError, MediaClass
@@ -78,7 +78,7 @@ class JellyfinSource(MediaSource):
         if data := hass.data.get(DOMAIN):
             jellyfin_data: JellyfinData = data[entry.entry_id]
 
-            return jellyfin.jellyfin_client
+            return jellyfin_data.jellyfin_client
             
         return None
     
