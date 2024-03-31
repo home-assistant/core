@@ -13,7 +13,16 @@ from homeassistant.components.enphase_envoy.const import DOMAIN, PLATFORMS
 from homeassistant.core import HomeAssistant
 
 
-async def test_form(hass: HomeAssistant, config, setup_enphase_envoy) -> None:
+@pytest.mark.parametrize(
+    ("mock_envoy"),
+    [
+        pytest.param("envoy", id="envoy"),
+    ],
+    indirect=["mock_envoy"],
+)
+async def test_form(
+    hass: HomeAssistant, config, setup_enphase_envoy, mock_envoy
+) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -40,39 +49,15 @@ async def test_form(hass: HomeAssistant, config, setup_enphase_envoy) -> None:
     }
 
 
-@pytest.mark.parametrize("serial_number", [None])
+@pytest.mark.parametrize(
+    ("mock_envoy", "serial_number"),
+    [
+        pytest.param("envoy", None, id="envoy"),
+    ],
+    indirect=["mock_envoy"],
+)
 async def test_user_no_serial_number(
-    hass: HomeAssistant, config, setup_enphase_envoy
-) -> None:
-    """Test user setup without a serial number."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result["type"] == "form"
-    assert result["errors"] == {}
-
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            "host": "1.1.1.1",
-            "username": "test-username",
-            "password": "test-password",
-        },
-    )
-    await hass.async_block_till_done()
-    assert result2["type"] == "create_entry"
-    assert result2["title"] == "Envoy"
-    assert result2["data"] == {
-        "host": "1.1.1.1",
-        "name": "Envoy",
-        "username": "test-username",
-        "password": "test-password",
-    }
-
-
-@pytest.mark.parametrize("serial_number", [None])
-async def test_user_fetching_serial_fails(
-    hass: HomeAssistant, setup_enphase_envoy
+    hass: HomeAssistant, config, setup_enphase_envoy, mock_envoy
 ) -> None:
     """Test user setup without a serial number."""
     result = await hass.config_entries.flow.async_init(
@@ -101,12 +86,57 @@ async def test_user_fetching_serial_fails(
 
 
 @pytest.mark.parametrize(
+    ("mock_envoy", "serial_number"),
+    [
+        pytest.param("envoy", None, id="envoy"),
+    ],
+    indirect=["mock_envoy"],
+)
+async def test_user_fetching_serial_fails(
+    hass: HomeAssistant, setup_enphase_envoy, mock_envoy
+) -> None:
+    """Test user setup without a serial number."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == "form"
+    assert result["errors"] == {}
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "host": "1.1.1.1",
+            "username": "test-username",
+            "password": "test-password",
+        },
+    )
+    await hass.async_block_till_done()
+    assert result2["type"] == "create_entry"
+    assert result2["title"] == "Envoy"
+    assert result2["data"] == {
+        "host": "1.1.1.1",
+        "name": "Envoy",
+        "username": "test-username",
+        "password": "test-password",
+    }
+
+
+@pytest.mark.parametrize(
+    ("mock_envoy"),
+    [
+        pytest.param("envoy", id="envoy"),
+    ],
+    indirect=["mock_envoy"],
+)
+@pytest.mark.parametrize(
     "mock_authenticate",
     [
         AsyncMock(side_effect=EnvoyAuthenticationError("test")),
     ],
 )
-async def test_form_invalid_auth(hass: HomeAssistant, setup_enphase_envoy) -> None:
+async def test_form_invalid_auth(
+    hass: HomeAssistant, setup_enphase_envoy, mock_envoy
+) -> None:
     """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -125,10 +155,19 @@ async def test_form_invalid_auth(hass: HomeAssistant, setup_enphase_envoy) -> No
 
 
 @pytest.mark.parametrize(
+    ("mock_envoy"),
+    [
+        pytest.param("envoy", id="envoy"),
+    ],
+    indirect=["mock_envoy"],
+)
+@pytest.mark.parametrize(
     "mock_setup",
     [AsyncMock(side_effect=EnvoyError)],
 )
-async def test_form_cannot_connect(hass: HomeAssistant, setup_enphase_envoy) -> None:
+async def test_form_cannot_connect(
+    hass: HomeAssistant, setup_enphase_envoy, mock_envoy
+) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -147,10 +186,19 @@ async def test_form_cannot_connect(hass: HomeAssistant, setup_enphase_envoy) -> 
 
 
 @pytest.mark.parametrize(
+    ("mock_envoy"),
+    [
+        pytest.param("envoy", id="envoy"),
+    ],
+    indirect=["mock_envoy"],
+)
+@pytest.mark.parametrize(
     "mock_setup",
     [AsyncMock(side_effect=ValueError)],
 )
-async def test_form_unknown_error(hass: HomeAssistant, setup_enphase_envoy) -> None:
+async def test_form_unknown_error(
+    hass: HomeAssistant, setup_enphase_envoy, mock_envoy
+) -> None:
     """Test we handle unknown error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -176,8 +224,15 @@ def _get_schema_default(schema, key_name):
     raise KeyError(f"{key_name} not found in schema")
 
 
+@pytest.mark.parametrize(
+    ("mock_envoy"),
+    [
+        pytest.param("envoy", id="envoy"),
+    ],
+    indirect=["mock_envoy"],
+)
 async def test_zeroconf_pre_token_firmware(
-    hass: HomeAssistant, setup_enphase_envoy
+    hass: HomeAssistant, setup_enphase_envoy, mock_envoy
 ) -> None:
     """Test we can setup from zeroconf."""
     result = await hass.config_entries.flow.async_init(
@@ -218,8 +273,15 @@ async def test_zeroconf_pre_token_firmware(
     }
 
 
+@pytest.mark.parametrize(
+    ("mock_envoy"),
+    [
+        pytest.param("envoy", id="envoy"),
+    ],
+    indirect=["mock_envoy"],
+)
 async def test_zeroconf_token_firmware(
-    hass: HomeAssistant, setup_enphase_envoy
+    hass: HomeAssistant, setup_enphase_envoy, mock_envoy
 ) -> None:
     """Test we can setup from zeroconf."""
     result = await hass.config_entries.flow.async_init(
@@ -260,6 +322,13 @@ async def test_zeroconf_token_firmware(
 
 
 @pytest.mark.parametrize(
+    ("mock_envoy"),
+    [
+        pytest.param("envoy", id="envoy"),
+    ],
+    indirect=["mock_envoy"],
+)
+@pytest.mark.parametrize(
     "mock_authenticate",
     [
         AsyncMock(
@@ -272,7 +341,7 @@ async def test_zeroconf_token_firmware(
     ],
 )
 async def test_form_host_already_exists(
-    hass: HomeAssistant, config_entry, setup_enphase_envoy
+    hass: HomeAssistant, config_entry, setup_enphase_envoy, mock_envoy
 ) -> None:
     """Test changing credentials for existing host."""
     result = await hass.config_entries.flow.async_init(
@@ -322,8 +391,15 @@ async def test_form_host_already_exists(
     assert config_entry.data["password"] == "changed-password"
 
 
+@pytest.mark.parametrize(
+    ("mock_envoy"),
+    [
+        pytest.param("envoy", id="envoy"),
+    ],
+    indirect=["mock_envoy"],
+)
 async def test_zeroconf_serial_already_exists(
-    hass: HomeAssistant, config_entry, setup_enphase_envoy
+    hass: HomeAssistant, config_entry, setup_enphase_envoy, mock_envoy
 ) -> None:
     """Test serial number already exists from zeroconf."""
     result = await hass.config_entries.flow.async_init(
@@ -346,8 +422,15 @@ async def test_zeroconf_serial_already_exists(
     assert config_entry.data["host"] == "4.4.4.4"
 
 
+@pytest.mark.parametrize(
+    ("mock_envoy"),
+    [
+        pytest.param("envoy", id="envoy"),
+    ],
+    indirect=["mock_envoy"],
+)
 async def test_zeroconf_serial_already_exists_ignores_ipv6(
-    hass: HomeAssistant, config_entry, setup_enphase_envoy
+    hass: HomeAssistant, config_entry, setup_enphase_envoy, mock_envoy
 ) -> None:
     """Test serial number already exists from zeroconf but the discovery is ipv6."""
     result = await hass.config_entries.flow.async_init(
@@ -370,9 +453,16 @@ async def test_zeroconf_serial_already_exists_ignores_ipv6(
     assert config_entry.data["host"] == "1.1.1.1"
 
 
+@pytest.mark.parametrize(
+    ("mock_envoy"),
+    [
+        pytest.param("envoy", id="envoy"),
+    ],
+    indirect=["mock_envoy"],
+)
 @pytest.mark.parametrize("serial_number", [None])
 async def test_zeroconf_host_already_exists(
-    hass: HomeAssistant, config_entry, setup_enphase_envoy
+    hass: HomeAssistant, config_entry, setup_enphase_envoy, mock_envoy
 ) -> None:
     """Test hosts already exists from zeroconf."""
     result = await hass.config_entries.flow.async_init(
@@ -396,7 +486,16 @@ async def test_zeroconf_host_already_exists(
     assert config_entry.title == "Envoy 1234"
 
 
-async def test_reauth(hass: HomeAssistant, config_entry, setup_enphase_envoy) -> None:
+@pytest.mark.parametrize(
+    ("mock_envoy"),
+    [
+        pytest.param("envoy", id="envoy"),
+    ],
+    indirect=["mock_envoy"],
+)
+async def test_reauth(
+    hass: HomeAssistant, config_entry, setup_enphase_envoy, mock_envoy
+) -> None:
     """Test we reauth auth."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,

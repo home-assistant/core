@@ -27,18 +27,26 @@ from tests.common import MockConfigEntry
 from tests.components.enphase_envoy import setup_with_selected_platforms
 
 
+@pytest.mark.parametrize(
+    ("mock_envoy", "entity_count"),
+    [
+        pytest.param("envoy_metered_batt_relay", 13, id="envoy_metered_batt_relay"),
+    ],
+    indirect=["mock_envoy"],
+)
 async def test_select(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
     mock_envoy: AsyncMock,
     entity_registry: AsyncMock,
+    entity_count: int,
 ) -> None:
     """Test enphase_envoy select entities."""
     await setup_with_selected_platforms(hass, config_entry, [Platform.SELECT])
 
     # these entities states should be created from test data
-    assert len(hass.states.async_all()) == 13
+    assert len(hass.states.async_all()) == entity_count
     assert entity_registry
 
     # compare registered entities against snapshot of prior run
@@ -54,63 +62,104 @@ async def test_select(
 
 
 @pytest.mark.parametrize(
-    ("entity_id", "relay_id", "expected_action", "initial_value"),
+    ("mock_envoy", "entity_count"),
     [
-        (
+        pytest.param("envoy", 0, id="envoy"),
+    ],
+    indirect=["mock_envoy"],
+)
+async def test_no_select(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+    mock_envoy: AsyncMock,
+    entity_registry: AsyncMock,
+    entity_count: int,
+) -> None:
+    """Test enphase_envoy switch entities."""
+    await setup_with_selected_platforms(hass, config_entry, [Platform.SELECT])
+
+    # these entities states should be created enabled from test data
+    assert len(hass.states.async_all()) == entity_count
+
+
+@pytest.mark.parametrize(
+    ("mock_envoy", "entity_id", "relay_id", "expected_action", "initial_value"),
+    [
+        pytest.param(
+            "envoy_metered_batt_relay",
             "select.nc1_fixture_grid_action",
             "NC1",
             "grid_action",
             RELAY_ACTION_MAP[DryContactAction.SHED],
+            id="envoy_metered_batt_relay",
         ),
-        (
+        pytest.param(
+            "envoy_metered_batt_relay",
             "select.nc2_fixture_grid_action",
             "NC2",
             "grid_action",
             RELAY_ACTION_MAP[DryContactAction.APPLY],
+            id="envoy_metered_batt_relay",
         ),
-        (
+        pytest.param(
+            "envoy_metered_batt_relay",
             "select.nc3_fixture_grid_action",
             "NC3",
             "grid_action",
             RELAY_ACTION_MAP[DryContactAction.SHED],
+            id="envoy_metered_batt_relay",
         ),
-        (
+        pytest.param(
+            "envoy_metered_batt_relay",
             "select.nc1_fixture_microgrid_action",
             "NC1",
             "micro_grid_action",
             RELAY_ACTION_MAP[DryContactAction.SHED],
+            id="envoy_metered_batt_relay",
         ),
-        (
+        pytest.param(
+            "envoy_metered_batt_relay",
             "select.nc2_fixture_microgrid_action",
             "NC2",
             "micro_grid_action",
             RELAY_ACTION_MAP[DryContactAction.SHED],
+            id="envoy_metered_batt_relay",
         ),
-        (
+        pytest.param(
+            "envoy_metered_batt_relay",
             "select.nc3_fixture_microgrid_action",
             "NC3",
             "micro_grid_action",
             RELAY_ACTION_MAP[DryContactAction.APPLY],
+            id="envoy_metered_batt_relay",
         ),
-        (
+        pytest.param(
+            "envoy_metered_batt_relay",
             "select.nc1_fixture_generator_action",
             "NC1",
             "generator_action",
             RELAY_ACTION_MAP[DryContactAction.SHED],
+            id="envoy_metered_batt_relay",
         ),
-        (
+        pytest.param(
+            "envoy_metered_batt_relay",
             "select.nc2_fixture_generator_action",
             "NC2",
             "generator_action",
             RELAY_ACTION_MAP[DryContactAction.SHED],
+            id="envoy_metered_batt_relay",
         ),
-        (
+        pytest.param(
+            "envoy_metered_batt_relay",
             "select.nc3_fixture_generator_action",
             "NC3",
             "generator_action",
             RELAY_ACTION_MAP[DryContactAction.APPLY],
+            id="envoy_metered_batt_relay",
         ),
     ],
+    indirect=["mock_envoy"],
 )
 async def test_select_relay_actions(
     hass: HomeAssistant,
@@ -148,27 +197,34 @@ async def test_select_relay_actions(
 
 
 @pytest.mark.parametrize(
-    ("entity_id", "relay_id", "expected_mode", "initial_value"),
+    ("mock_envoy", "entity_id", "relay_id", "expected_mode", "initial_value"),
     [
-        (
+        pytest.param(
+            "envoy_metered_batt_relay",
             "select.nc1_fixture_mode",
             "NC1",
             "mode",
             RELAY_MODE_MAP[DryContactMode.MANUAL],
+            id="envoy_metered_batt_relay",
         ),
-        (
+        pytest.param(
+            "envoy_metered_batt_relay",
             "select.nc2_fixture_mode",
             "NC2",
             "mode",
             RELAY_MODE_MAP[DryContactMode.MANUAL],
+            id="envoy_metered_batt_relay",
         ),
-        (
+        pytest.param(
+            "envoy_metered_batt_relay",
             "select.nc3_fixture_mode",
             "NC3",
             "mode",
             RELAY_MODE_MAP[DryContactMode.MANUAL],
+            id="envoy_metered_batt_relay",
         ),
     ],
+    indirect=["mock_envoy"],
 )
 async def test_select_relay_modes(
     hass: HomeAssistant,
@@ -206,13 +262,16 @@ async def test_select_relay_modes(
 
 
 @pytest.mark.parametrize(
-    ("entity_id", "initial_value"),
+    ("mock_envoy", "entity_id", "initial_value"),
     [
-        (
+        pytest.param(
+            "envoy_metered_batt_relay",
             "select.enpower_654321_storage_mode",
             STORAGE_MODE_MAP[EnvoyStorageMode.SELF_CONSUMPTION],
+            id="envoy_metered_batt_relay",
         ),
     ],
+    indirect=["mock_envoy"],
 )
 async def test_select_storage_modes(
     hass: HomeAssistant,

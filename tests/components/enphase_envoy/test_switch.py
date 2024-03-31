@@ -21,18 +21,26 @@ from tests.common import MockConfigEntry
 from tests.components.enphase_envoy import setup_with_selected_platforms
 
 
+@pytest.mark.parametrize(
+    ("mock_envoy", "entity_count"),
+    [
+        pytest.param("envoy_metered_batt_relay", 5, id="envoy_metered_batt_relay"),
+    ],
+    indirect=["mock_envoy"],
+)
 async def test_switch(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
     mock_envoy: AsyncMock,
     entity_registry: AsyncMock,
+    entity_count: int,
 ) -> None:
     """Test enphase_envoy switch entities."""
     await setup_with_selected_platforms(hass, config_entry, [Platform.SWITCH])
 
     # these entities states should be created enabled from test data
-    assert len(hass.states.async_all()) == 5
+    assert len(hass.states.async_all()) == entity_count
     assert entity_registry
 
     # compare registered entities against snapshot of prior run
@@ -48,10 +56,38 @@ async def test_switch(
 
 
 @pytest.mark.parametrize(
-    ("entity_id", "initial_value"),
+    ("mock_envoy", "entity_count"),
     [
-        ("switch.enpower_654321_grid_enabled", STATE_ON),
+        pytest.param("envoy", 0, id="envoy"),
     ],
+    indirect=["mock_envoy"],
+)
+async def test_no_switch(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+    mock_envoy: AsyncMock,
+    entity_registry: AsyncMock,
+    entity_count: int,
+) -> None:
+    """Test enphase_envoy switch entities."""
+    await setup_with_selected_platforms(hass, config_entry, [Platform.SWITCH])
+
+    # these entities states should be created enabled from test data
+    assert len(hass.states.async_all()) == entity_count
+
+
+@pytest.mark.parametrize(
+    ("mock_envoy", "entity_id", "initial_value"),
+    [
+        pytest.param(
+            "envoy_metered_batt_relay",
+            "switch.enpower_654321_grid_enabled",
+            STATE_ON,
+            id="envoy_metered_batt_relay",
+        ),
+    ],
+    indirect=["mock_envoy"],
 )
 async def test_switch_grid_operation(
     hass: HomeAssistant,
@@ -98,10 +134,16 @@ async def test_switch_grid_operation(
 
 
 @pytest.mark.parametrize(
-    ("entity_id", "initial_value"),
+    ("mock_envoy", "entity_id", "initial_value"),
     [
-        ("switch.enpower_654321_charge_from_grid", STATE_ON),
+        pytest.param(
+            "envoy_metered_batt_relay",
+            "switch.enpower_654321_charge_from_grid",
+            STATE_ON,
+            id="envoy_metered_batt_relay",
+        ),
     ],
+    indirect=["mock_envoy"],
 )
 async def test_switch_grid_charge(
     hass: HomeAssistant,
@@ -152,12 +194,28 @@ async def test_switch_grid_charge(
 
 
 @pytest.mark.parametrize(
-    ("entity_id", "initial_value"),
+    ("mock_envoy", "entity_id", "initial_value"),
     [
-        ("switch.nc1_fixture", STATE_OFF),
-        ("switch.nc2_fixture", STATE_ON),
-        ("switch.nc3_fixture", STATE_OFF),
+        pytest.param(
+            "envoy_metered_batt_relay",
+            "switch.nc1_fixture",
+            STATE_OFF,
+            id="envoy_metered_batt_relay",
+        ),
+        pytest.param(
+            "envoy_metered_batt_relay",
+            "switch.nc2_fixture",
+            STATE_ON,
+            id="envoy_metered_batt_relay",
+        ),
+        pytest.param(
+            "envoy_metered_batt_relay",
+            "switch.nc3_fixture",
+            STATE_OFF,
+            id="envoy_metered_batt_relay",
+        ),
     ],
+    indirect=["mock_envoy"],
 )
 async def test_switch_relay_operation(
     hass: HomeAssistant,

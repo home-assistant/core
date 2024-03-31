@@ -15,18 +15,26 @@ from tests.common import MockConfigEntry
 from tests.components.enphase_envoy import setup_with_selected_platforms
 
 
+@pytest.mark.parametrize(
+    ("mock_envoy", "entity_count"),
+    [
+        pytest.param("envoy_metered_batt_relay", 7, id="envoy_metered_batt_relay"),
+    ],
+    indirect=["mock_envoy"],
+)
 async def test_number(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
     mock_envoy: AsyncMock,
     entity_registry: AsyncMock,
+    entity_count: int,
 ) -> None:
     """Test enphase_envoy number entities."""
     await setup_with_selected_platforms(hass, config_entry, [Platform.NUMBER])
 
     # number entities states should be created from test data
-    assert len(hass.states.async_all()) == 7
+    assert len(hass.states.async_all()) == entity_count
     assert entity_registry
 
     # compare registered entities against snapshot of prior run
@@ -42,10 +50,39 @@ async def test_number(
 
 
 @pytest.mark.parametrize(
-    ("entity_id", "initial_value", "expected_value"),
+    ("mock_envoy", "entity_count"),
     [
-        ("number.enpower_654321_reserve_battery_level", "15.0", 40),
+        pytest.param("envoy", 0, id="envoy"),
     ],
+    indirect=["mock_envoy"],
+)
+async def test_no_number(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+    mock_envoy: AsyncMock,
+    entity_registry: AsyncMock,
+    entity_count: int,
+) -> None:
+    """Test enphase_envoy switch entities."""
+    await setup_with_selected_platforms(hass, config_entry, [Platform.NUMBER])
+
+    # these entities states should be created enabled from test data
+    assert len(hass.states.async_all()) == entity_count
+
+
+@pytest.mark.parametrize(
+    ("mock_envoy", "entity_id", "initial_value", "expected_value"),
+    [
+        pytest.param(
+            "envoy_metered_batt_relay",
+            "number.enpower_654321_reserve_battery_level",
+            "15.0",
+            40,
+            id="envoy_metered_batt_relay",
+        ),
+    ],
+    indirect=["mock_envoy"],
 )
 async def test_number_operation(
     hass: HomeAssistant,

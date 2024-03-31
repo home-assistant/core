@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock
 
+import pytest
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.enphase_envoy.const import PLATFORMS as ENVOY_PLATFORMS
@@ -28,6 +29,13 @@ def limit_diagnostic_attrs(prop, path) -> bool:
     return prop in TO_EXCLUDE
 
 
+@pytest.mark.parametrize(
+    ("mock_envoy"),
+    [
+        pytest.param("envoy_metered_batt_relay", id="envoy_metered_batt_relay"),
+    ],
+    indirect=["mock_envoy"],
+)
 async def test_entry_diagnostics(
     hass: HomeAssistant,
     config_entry: ConfigEntry,

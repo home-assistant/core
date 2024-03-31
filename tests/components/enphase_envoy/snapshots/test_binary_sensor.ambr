@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_binary_sensor[binary_sensor.encharge_123456_communicating-entry]
+# name: test_binary_sensor[envoy_metered_batt_relay][binary_sensor.encharge_123456_communicating-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -32,7 +32,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[binary_sensor.encharge_123456_communicating-state]
+# name: test_binary_sensor[envoy_metered_batt_relay][binary_sensor.encharge_123456_communicating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'connectivity',
@@ -46,7 +46,7 @@
     'state': 'on',
   })
 # ---
-# name: test_binary_sensor[binary_sensor.encharge_123456_dc_switch-entry]
+# name: test_binary_sensor[envoy_metered_batt_relay][binary_sensor.encharge_123456_dc_switch-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -79,7 +79,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[binary_sensor.encharge_123456_dc_switch-state]
+# name: test_binary_sensor[envoy_metered_batt_relay][binary_sensor.encharge_123456_dc_switch-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Encharge 123456 DC switch',
@@ -92,7 +92,7 @@
     'state': 'on',
   })
 # ---
-# name: test_binary_sensor[binary_sensor.enpower_654321_communicating-entry]
+# name: test_binary_sensor[envoy_metered_batt_relay][binary_sensor.enpower_654321_communicating-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -125,7 +125,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[binary_sensor.enpower_654321_communicating-state]
+# name: test_binary_sensor[envoy_metered_batt_relay][binary_sensor.enpower_654321_communicating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'connectivity',
@@ -139,7 +139,7 @@
     'state': 'on',
   })
 # ---
-# name: test_binary_sensor[binary_sensor.enpower_654321_grid_status-entry]
+# name: test_binary_sensor[envoy_metered_batt_relay][binary_sensor.enpower_654321_grid_status-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -172,7 +172,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[binary_sensor.enpower_654321_grid_status-state]
+# name: test_binary_sensor[envoy_metered_batt_relay][binary_sensor.enpower_654321_grid_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Enpower 654321 Grid status',
