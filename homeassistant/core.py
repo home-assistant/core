@@ -19,6 +19,7 @@ from collections.abc import (
 )
 import concurrent.futures
 from contextlib import suppress
+import dataclasses
 from dataclasses import dataclass
 import datetime
 import enum
@@ -1148,51 +1149,25 @@ class HomeAssistant:
             _LOGGER.warning("Shutdown stage '%s': still running: %s", stage, task)
 
 
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class Context:
     """The context that triggered something."""
 
-    def __init__(
-        self,
-        user_id: str | None = None,
-        parent_id: str | None = None,
-        id: str | None = None,  # pylint: disable=redefined-builtin
-    ) -> None:
-        """Init the context."""
-        self.id = id or ulid_now()
-        self.user_id = user_id
-        self.parent_id = parent_id
-        self.origin_event: Event[Any] | None = None
-
-    def __eq__(self, other: Any) -> bool:
-        """Compare contexts."""
-        return bool(self.__class__ == other.__class__ and self.id == other.id)
-
-    @cached_property
-    def _as_dict(self) -> dict[str, str | None]:
-        """Return a dictionary representation of the context.
-
-        Callers should be careful to not mutate the returned dictionary
-        as it will mutate the cached version.
-        """
-        return {
-            "id": self.id,
-            "parent_id": self.parent_id,
-            "user_id": self.user_id,
-        }
+    id: str = dataclasses.field(default_factory=ulid_now)
+    user_id: str | None = dataclasses.field(default=None, compare=False)
+    parent_id: str | None = dataclasses.field(default=None, compare=False)
+    origin_event: Event[Any] | None = dataclasses.field(default=None, compare=False)
 
     def as_dict(self) -> ReadOnlyDict[str, str | None]:
         """Return a ReadOnlyDict representation of the context."""
-        return self._as_read_only_dict
-
-    @cached_property
-    def _as_read_only_dict(self) -> ReadOnlyDict[str, str | None]:
-        """Return a ReadOnlyDict representation of the context."""
-        return ReadOnlyDict(self._as_dict)
+        dict_ = dataclasses.asdict(self)
+        dict_.pop("origin_event")
+        return ReadOnlyDict(dict_)
 
     @cached_property
     def json_fragment(self) -> json_fragment:
         """Return a JSON fragment of the context."""
-        return json_fragment(json_bytes(self._as_dict))
+        return json_fragment(json_bytes(self.as_dict()))
 
 
 class EventOrigin(enum.Enum):
@@ -1222,11 +1197,9 @@ class Event(Generic[_DataT]):
         self.data: _DataT = data or {}  # type: ignore[assignment]
         self.origin = origin
         self.time_fired_timestamp = time_fired_timestamp or time.time()
-        if not context:
-            context = Context(id=ulid_at_time(self.time_fired_timestamp))
-        self.context = context
-        if not context.origin_event:
-            context.origin_event = self
+        self.context = context or Context(
+            id=ulid_at_time(self.time_fired_timestamp), origin_event=self
+        )
 
     @cached_property
     def time_fired(self) -> datetime.datetime:
@@ -1245,10 +1218,7 @@ class Event(Generic[_DataT]):
             "data": self.data,
             "origin": self.origin.value,
             "time_fired": self.time_fired.isoformat(),
-            # _as_dict is marked as protected
-            # to avoid callers outside of this module
-            # from misusing it by mistake.
-            "context": self.context._as_dict,  # pylint: disable=protected-access
+            "context": self.context.as_dict(),
         }
 
     def as_dict(self) -> ReadOnlyDict[str, Any]:
@@ -1713,7 +1683,7 @@ class State:
             # _as_dict is marked as protected
             # to avoid callers outside of this module
             # from misusing it by mistake.
-            "context": self.context._as_dict,  # pylint: disable=protected-access
+            "context": self.context.as_dict(),
         }
 
     def as_dict(
@@ -1765,10 +1735,7 @@ class State:
         if state_context.parent_id is None and state_context.user_id is None:
             context: dict[str, Any] | str = state_context.id
         else:
-            # _as_dict is marked as protected
-            # to avoid callers outside of this module
-            # from misusing it by mistake.
-            context = state_context._as_dict  # pylint: disable=protected-access
+            context = state_context.as_dict()
         compressed_state: CompressedState = {
             COMPRESSED_STATE_STATE: self.state,
             COMPRESSED_STATE_ATTRIBUTES: self.attributes,
@@ -1842,7 +1809,9 @@ class State:
         reference the previous one.
         """
         self.context = Context(
-            self.context.user_id, self.context.parent_id, self.context.id
+            user_id=self.context.user_id,
+            parent_id=self.context.parent_id,
+            id=self.context.id,
         )
 
     def __repr__(self) -> str:

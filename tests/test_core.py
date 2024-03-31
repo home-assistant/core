@@ -996,7 +996,7 @@ def test_state_as_dict_json() -> None:
         b'{"entity_id":"happy.happy","state":"on","attributes":{"pig":"dog"},'
         b'"last_changed":"1984-12-08T12:00:00","last_reported":"1984-12-08T12:00:00",'
         b'"last_updated":"1984-12-08T12:00:00",'
-        b'"context":{"id":"01H0D6K3RFJAYAV2093ZW30PCW","parent_id":null,"user_id":null}}'
+        b'"context":{"id":"01H0D6K3RFJAYAV2093ZW30PCW","user_id":null,"parent_id":null}}'
     )
     as_dict_json_1 = state.as_dict_json
     assert as_dict_json_1 == expected
@@ -2146,7 +2146,7 @@ def test_context() -> None:
     assert c.parent_id is None
     assert c.id is not None
 
-    c = ha.Context(23, 100)
+    c = ha.Context(user_id=23, parent_id=100)
     assert c.user_id == 23
     assert c.parent_id == 100
     assert c.id is not None
