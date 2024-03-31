@@ -7,7 +7,7 @@ import mimetypes
 import os
 from typing import Any
 
-from jellyfin_apiclient_python.api import API, jellyfin_url
+from jellyfin_apiclient_python.api import jellyfin_url
 from jellyfin_apiclient_python.client import JellyfinClient
 
 from homeassistant.components.media_player import BrowseError, MediaClass
@@ -484,7 +484,7 @@ class JellyfinSource(MediaSource):
 
         return result
 
-    async def _build_episodes(self, api: API, season_id: str) -> list[BrowseMediaSource]:
+    async def _build_episodes(self, client: JellyfinClient, season_id: str) -> list[BrowseMediaSource]:
         """Return all episode in the season."""
         episodes = await self._get_children(client, season_id, ITEM_TYPE_EPISODE)
         episodes = sorted(
