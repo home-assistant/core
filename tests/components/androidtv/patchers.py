@@ -1,8 +1,8 @@
 """Define patches used for androidtv tests."""
 
-from typing import TYPE_CHECKING
 from unittest.mock import patch
 
+from androidtv.adb_manager.adb_manager_async import DeviceAsync
 from androidtv.constants import CMD_DEVICE_PROPERTIES, CMD_MAC_ETH0, CMD_MAC_WLAN0
 
 from homeassistant.components.androidtv.const import (
@@ -10,9 +10,6 @@ from homeassistant.components.androidtv.const import (
     DEVICE_ANDROIDTV,
     DEVICE_FIRETV,
 )
-
-if TYPE_CHECKING:
-    from androidtv.adb_manager.adb_manager_async import DeviceAsync
 
 ADB_SERVER_HOST = "127.0.0.1"
 KEY_PYTHON = "python"
