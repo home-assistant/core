@@ -6,20 +6,12 @@ from aioazuredevops.core import DevOpsProject
 import aiohttp
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.azure_devops.const import (
-    CONF_ORG,
-    CONF_PAT,
-    CONF_PROJECT,
-    DOMAIN,
-)
+from homeassistant.components.azure_devops.const import CONF_ORG, CONF_PROJECT, DOMAIN
 from homeassistant.core import HomeAssistant
 
+from . import FIXTURE_REAUTH_INPUT, FIXTURE_USER_INPUT, UNIQUE_ID
+
 from tests.common import MockConfigEntry
-
-FIXTURE_REAUTH_INPUT = {CONF_PAT: "abc123"}
-FIXTURE_USER_INPUT = {CONF_ORG: "random", CONF_PROJECT: "project", CONF_PAT: "abc123"}
-
-UNIQUE_ID = "random_project"
 
 
 async def test_show_user_form(hass: HomeAssistant) -> None:
@@ -207,7 +199,9 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
         return_value=False,
     ):
         mock_config = MockConfigEntry(
-            domain=DOMAIN, unique_id=UNIQUE_ID, data=FIXTURE_USER_INPUT
+            domain=DOMAIN,
+            unique_id=UNIQUE_ID,
+            data=FIXTURE_USER_INPUT,
         )
         mock_config.add_to_hass(hass)
 
