@@ -48,7 +48,7 @@ SENSORS: dict[str, SensorEntityDescription] = {
     ),
     "pressure": SensorEntityDescription(
         key="pressure",
-        device_class=SensorDeviceClass.PRESSURE,
+        device_class=SensorDeviceClass.ATMOSPHERIC_PRESSURE,
         native_unit_of_measurement=UnitOfPressure.MBAR,
     ),
     "battery": SensorEntityDescription(

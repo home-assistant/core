@@ -34,18 +34,11 @@ SCAN_INTERVAL = timedelta(seconds=60)
 PARALLEL_UPDATES = 0
 
 
-@dataclass(frozen=True)
-class EzvizAlarmControlPanelEntityDescriptionMixin:
-    """Mixin values for EZVIZ Alarm control panel entities."""
+@dataclass(frozen=True, kw_only=True)
+class EzvizAlarmControlPanelEntityDescription(AlarmControlPanelEntityDescription):
+    """Describe an EZVIZ Alarm control panel entity."""
 
     ezviz_alarm_states: list
-
-
-@dataclass(frozen=True)
-class EzvizAlarmControlPanelEntityDescription(
-    AlarmControlPanelEntityDescription, EzvizAlarmControlPanelEntityDescriptionMixin
-):
-    """Describe an EZVIZ Alarm control panel entity."""
 
 
 ALARM_TYPE = EzvizAlarmControlPanelEntityDescription(

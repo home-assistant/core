@@ -43,19 +43,12 @@ ENDPOINT = "/api/v1/status"
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=1)
 
 
-@dataclass(frozen=True)
-class GoogleWifiRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class GoogleWifiSensorEntityDescription(SensorEntityDescription):
+    """Describes GoogleWifi sensor entity."""
 
     primary_key: str
     sensor_key: str
-
-
-@dataclass(frozen=True)
-class GoogleWifiSensorEntityDescription(
-    SensorEntityDescription, GoogleWifiRequiredKeysMixin
-):
-    """Describes GoogleWifi sensor entity."""
 
 
 SENSOR_TYPES: tuple[GoogleWifiSensorEntityDescription, ...] = (

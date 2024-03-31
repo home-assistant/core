@@ -25,16 +25,11 @@ from .const import DOMAIN
 from .coordinator import OpowerCoordinator
 
 
-@dataclass(frozen=True)
-class OpowerEntityDescriptionMixin:
-    """Mixin values for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class OpowerEntityDescription(SensorEntityDescription):
+    """Class describing Opower sensors entities."""
 
     value_fn: Callable[[Forecast], str | float]
-
-
-@dataclass(frozen=True)
-class OpowerEntityDescription(SensorEntityDescription, OpowerEntityDescriptionMixin):
-    """Class describing Opower sensors entities."""
 
 
 # suggested_display_precision=0 for all sensors since
@@ -192,16 +187,16 @@ async def async_setup_entry(
             and forecast.unit_of_measure in [UnitOfMeasure.THERM, UnitOfMeasure.CCF]
         ):
             sensors = GAS_SENSORS
-        for sensor in sensors:
-            entities.append(
-                OpowerSensor(
-                    coordinator,
-                    sensor,
-                    forecast.account.utility_account_id,
-                    device,
-                    device_id,
-                )
+        entities.extend(
+            OpowerSensor(
+                coordinator,
+                sensor,
+                forecast.account.utility_account_id,
+                device,
+                device_id,
             )
+            for sensor in sensors
+        )
 
     async_add_entities(entities)
 

@@ -33,6 +33,7 @@ from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 
+from . import group as group_pre_import  # noqa: F401
 from .const import (  # noqa: F401
     _DEPRECATED_FORMAT_NUMBER,
     _DEPRECATED_FORMAT_TEXT,
@@ -172,7 +173,7 @@ class AlarmControlPanelEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_A
 
     def alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
@@ -180,7 +181,7 @@ class AlarmControlPanelEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_A
 
     def alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
@@ -188,7 +189,7 @@ class AlarmControlPanelEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_A
 
     def alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
@@ -196,7 +197,7 @@ class AlarmControlPanelEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_A
 
     def alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm night command."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm night command."""
@@ -204,7 +205,7 @@ class AlarmControlPanelEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_A
 
     def alarm_arm_vacation(self, code: str | None = None) -> None:
         """Send arm vacation command."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_alarm_arm_vacation(self, code: str | None = None) -> None:
         """Send arm vacation command."""
@@ -212,7 +213,7 @@ class AlarmControlPanelEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_A
 
     def alarm_trigger(self, code: str | None = None) -> None:
         """Send alarm trigger command."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_alarm_trigger(self, code: str | None = None) -> None:
         """Send alarm trigger command."""
@@ -220,7 +221,7 @@ class AlarmControlPanelEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_A
 
     def alarm_arm_custom_bypass(self, code: str | None = None) -> None:
         """Send arm custom bypass command."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_alarm_arm_custom_bypass(self, code: str | None = None) -> None:
         """Send arm custom bypass command."""

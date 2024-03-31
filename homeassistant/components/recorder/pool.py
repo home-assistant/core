@@ -14,7 +14,7 @@ from sqlalchemy.pool import (
 )
 
 from homeassistant.helpers.frame import report
-from homeassistant.util.async_ import check_loop
+from homeassistant.util.loop import check_loop
 
 from .const import DB_WORKER_PREFIX
 

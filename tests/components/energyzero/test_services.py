@@ -1,5 +1,7 @@
 """Tests for the services provided by the EnergyZero integration."""
 
+import re
+
 import pytest
 from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
@@ -101,7 +103,7 @@ def config_entry_data(
                 "start": "incorrect date",
             },
             ServiceValidationError,
-            "Invalid datetime provided.",
+            "Invalid date provided. Got incorrect date",
         ),
         (
             {"config_entry": True},
@@ -110,7 +112,7 @@ def config_entry_data(
                 "end": "incorrect date",
             },
             ServiceValidationError,
-            "Invalid datetime provided.",
+            "Invalid date provided. Got incorrect date",
         ),
     ],
     indirect=["config_entry_data"],
@@ -125,7 +127,7 @@ async def test_service_validation(
 ) -> None:
     """Test the EnergyZero Service validation."""
 
-    with pytest.raises(error, match=error_message):
+    with pytest.raises(error) as exc:
         await hass.services.async_call(
             DOMAIN,
             service,
@@ -133,6 +135,7 @@ async def test_service_validation(
             blocking=True,
             return_response=True,
         )
+    assert re.match(error_message, str(exc.value))
 
 
 @pytest.mark.usefixtures("init_integration")

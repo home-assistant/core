@@ -44,6 +44,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.10_10_10_10_round_trip_time_average',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '4.8',
   })
@@ -93,6 +94,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.10_10_10_10_round_trip_time_maximum',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '10',
   })
@@ -148,6 +150,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.10_10_10_10_round_trip_time_minimum',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1',
   })

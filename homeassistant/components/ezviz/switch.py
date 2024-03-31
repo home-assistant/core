@@ -23,18 +23,11 @@ from .coordinator import EzvizDataUpdateCoordinator
 from .entity import EzvizEntity
 
 
-@dataclass(frozen=True)
-class EzvizSwitchEntityDescriptionMixin:
-    """Mixin values for EZVIZ Switch entities."""
+@dataclass(frozen=True, kw_only=True)
+class EzvizSwitchEntityDescription(SwitchEntityDescription):
+    """Describe a EZVIZ switch."""
 
     supported_ext: str | None
-
-
-@dataclass(frozen=True)
-class EzvizSwitchEntityDescription(
-    SwitchEntityDescription, EzvizSwitchEntityDescriptionMixin
-):
-    """Describe a EZVIZ switch."""
 
 
 SWITCH_TYPES: dict[int, EzvizSwitchEntityDescription] = {

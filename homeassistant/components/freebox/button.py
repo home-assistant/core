@@ -19,18 +19,11 @@ from .const import DOMAIN
 from .router import FreeboxRouter
 
 
-@dataclass(frozen=True)
-class FreeboxButtonRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class FreeboxButtonEntityDescription(ButtonEntityDescription):
+    """Class describing Freebox button entities."""
 
     async_press: Callable[[FreeboxRouter], Awaitable]
-
-
-@dataclass(frozen=True)
-class FreeboxButtonEntityDescription(
-    ButtonEntityDescription, FreeboxButtonRequiredKeysMixin
-):
-    """Class describing Freebox button entities."""
 
 
 BUTTON_DESCRIPTIONS: tuple[FreeboxButtonEntityDescription, ...] = (

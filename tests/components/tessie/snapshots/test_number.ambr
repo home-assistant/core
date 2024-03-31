@@ -51,6 +51,7 @@
     'context': <ANY>,
     'entity_id': 'number.test_charge_current',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '32',
   })
@@ -107,6 +108,7 @@
     'context': <ANY>,
     'entity_id': 'number.test_charge_limit',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '80',
   })
@@ -163,6 +165,7 @@
     'context': <ANY>,
     'entity_id': 'number.test_speed_limit',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '74.564543',
   })
