@@ -1033,7 +1033,7 @@ async def test_webhook_handle_conversation_process(
     webhook_client.server.app.router._frozen = False
 
     with patch(
-        "homeassistant.components.conversation.AgentManager.async_get_agent",
+        "homeassistant.components.conversation.agent_manager.AgentManager.async_get_agent",
         return_value=mock_conversation_agent,
     ):
         resp = await webhook_client.post(
