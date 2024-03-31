@@ -183,7 +183,14 @@ def test_protect_loop_sync() -> None:
     func = Mock()
     with patch("homeassistant.util.loop.check_loop") as mock_check_loop:
         haloop.protect_loop(func)(1, test=2)
-    mock_check_loop.assert_called_once_with(func, strict=True)
+    mock_check_loop.assert_called_once_with(
+        func,
+        strict=True,
+        args=(1,),
+        check_allowed=None,
+        kwargs={"test": 2},
+        strict_core=True,
+    )
     func.assert_called_once_with(1, test=2)
 
 
