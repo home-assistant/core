@@ -68,6 +68,37 @@ async def test_protect_loop_sleep(caplog: pytest.LogCaptureFixture) -> None:
 async def test_protect_loop_importlib_import_module_non_integration(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
+    """Test import_module in the loop for non-loaded module."""
+    frames = extract_stack_to_frame(
+        [
+            Mock(
+                filename="/home/paulus/homeassistant/no_dev.py",
+                lineno="23",
+                line="do_something()",
+            ),
+        ]
+    )
+    with (
+        pytest.raises(ImportError),
+        patch.object(block_async_io, "_IN_TESTS", False),
+        patch(
+            "homeassistant.block_async_io.get_current_frame",
+            return_value=frames,
+        ),
+        patch(
+            "homeassistant.helpers.frame.get_current_frame",
+            return_value=frames,
+        ),
+    ):
+        block_async_io.enable()
+        importlib.import_module("not_loaded_module")
+
+    assert "Detected blocking call to import_module" in caplog.text
+
+
+async def test_protect_loop_importlib_import_loaded_module_non_integration(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test import_module in the loop for a loaded module."""
     frames = extract_stack_to_frame(
         [
