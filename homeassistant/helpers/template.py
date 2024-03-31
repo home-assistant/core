@@ -9,6 +9,7 @@ import collections.abc
 from collections.abc import Callable, Generator, Iterable
 from contextlib import AbstractContextManager
 from contextvars import ContextVar
+import copy
 from datetime import date, datetime, time, timedelta
 from functools import cache, cached_property, lru_cache, partial, wraps
 import json
@@ -51,6 +52,7 @@ from homeassistant.const import (
 from homeassistant.core import (
     Context,
     HomeAssistant,
+    ServiceResponse,
     State,
     callback,
     split_entity_id,
@@ -2118,20 +2120,36 @@ def as_timedelta(value: str) -> timedelta | None:
     return dt_util.parse_duration(value)
 
 
-def merge_response(value: dict[str, dict[str, list]]) -> list[Any]:
+def merge_response(
+    value: ServiceResponse, sort_by: str | None = None, single_key: str | None = None
+) -> list[Any]:
     """Merge service responses into single list.
 
     Checks that the input is a correct service response:
-    dict[str, dict[str, list[Any]]].
     Returns empty list by default.
     """
-    response_items = []
+    response_items: list[Any] = []
     if isinstance(value, dict):
         for entity_response in value.values():
             if isinstance(entity_response, dict):
                 for type_response in entity_response.values():
                     if isinstance(type_response, list):
                         response_items.extend(type_response)
+                    else:
+                        response_items.append(type_response)
+
+    if sort_by and isinstance(response_items[0], dict):
+        if sort_by not in response_items[0]:
+            raise ValueError("Sort by key is incorrect")
+        response_items = sorted(response_items, key=lambda x: x[sort_by])
+
+    if single_key and isinstance(response_items[0], dict):
+        _dict_list = copy.deepcopy(response_items)
+        response_items.clear()
+        response_items = [
+            _dict[single_key] for _dict in _dict_list if single_key in _dict
+        ]
+
     return response_items
 
 

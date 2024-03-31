@@ -6291,14 +6291,257 @@ def test_template_output_exceeds_maximum_size(hass: HomeAssistant) -> None:
 
 
 async def test_merge_response(hass: HomeAssistant) -> None:
+    ("service_response", "expected"),
+    [
+        (
+            {
+                "calendar.sports": {
+                    "events": [
+                        {
+                            "start": "2024-02-27T17:00:00-06:00",
+                            "end": "2024-02-27T18:00:00-06:00",
+                            "summary": "Basketball vs. Rockets",
+                            "description": "",
+                        }
+                    ]
+                },
+                "calendar.local_furry_events": {"events": []},
+                "calendar.yap_house_schedules": {
+                    "events": [
+                        {
+                            "start": "2024-02-26T08:00:00-06:00",
+                            "end": "2024-02-26T09:00:00-06:00",
+                            "summary": "Dr. Appt",
+                            "description": "",
+                        },
+                        {
+                            "start": "2024-02-28T20:00:00-06:00",
+                            "end": "2024-02-28T21:00:00-06:00",
+                            "summary": "Bake a cake",
+                            "description": "something good",
+                        },
+                    ]
+                },
+            },
+            [
+                {
+                    "start": "2024-02-27T17:00:00-06:00",
+                    "end": "2024-02-27T18:00:00-06:00",
+                    "summary": "Basketball vs. Rockets",
+                    "description": "",
+                },
+                {
+                    "start": "2024-02-26T08:00:00-06:00",
+                    "end": "2024-02-26T09:00:00-06:00",
+                    "summary": "Dr. Appt",
+                    "description": "",
+                },
+                {
+                    "start": "2024-02-28T20:00:00-06:00",
+                    "end": "2024-02-28T21:00:00-06:00",
+                    "summary": "Bake a cake",
+                    "description": "something good",
+                },
+            ],
+        ),
+        (
+            {
+                "binary_sensor.workday": {"workday": True},
+                "binary_sensor.workday2": {"workday": False},
+            },
+            [True, False],
+        ),
+        (
+            {
+                "weather.smhi_home": {
+                    "forecast": [
+                        {
+                            "datetime": "2024-03-31T16:00:00",
+                            "condition": "cloudy",
+                            "wind_bearing": 79,
+                            "cloud_coverage": 100,
+                            "temperature": 10,
+                            "templow": 4,
+                            "pressure": 998,
+                            "wind_gust_speed": 21.6,
+                            "wind_speed": 11.88,
+                            "precipitation": 0.2,
+                            "humidity": 87,
+                        },
+                        {
+                            "datetime": "2024-04-01T12:00:00",
+                            "condition": "rainy",
+                            "wind_bearing": 17,
+                            "cloud_coverage": 100,
+                            "temperature": 6,
+                            "templow": 1,
+                            "pressure": 999,
+                            "wind_gust_speed": 20.52,
+                            "wind_speed": 8.64,
+                            "precipitation": 2.2,
+                            "humidity": 88,
+                        },
+                        {
+                            "datetime": "2024-04-02T12:00:00",
+                            "condition": "cloudy",
+                            "wind_bearing": 17,
+                            "cloud_coverage": 100,
+                            "temperature": 0,
+                            "templow": -3,
+                            "pressure": 1003,
+                            "wind_gust_speed": 57.24,
+                            "wind_speed": 30.6,
+                            "precipitation": 1.3,
+                            "humidity": 71,
+                        },
+                    ]
+                },
+                "weather.forecast_home": {
+                    "forecast": [
+                        {
+                            "condition": "cloudy",
+                            "precipitation_probability": 6.6,
+                            "datetime": "2024-03-31T10:00:00+00:00",
+                            "wind_bearing": 71.8,
+                            "temperature": 10.9,
+                            "templow": 6.5,
+                            "wind_gust_speed": 24.1,
+                            "wind_speed": 13.7,
+                            "precipitation": 0,
+                            "humidity": 71,
+                        },
+                        {
+                            "condition": "cloudy",
+                            "precipitation_probability": 8,
+                            "datetime": "2024-04-01T10:00:00+00:00",
+                            "wind_bearing": 350.6,
+                            "temperature": 10.2,
+                            "templow": 3.4,
+                            "wind_gust_speed": 38.2,
+                            "wind_speed": 21.6,
+                            "precipitation": 0,
+                            "humidity": 79,
+                        },
+                        {
+                            "condition": "snowy",
+                            "precipitation_probability": 67.4,
+                            "datetime": "2024-04-02T10:00:00+00:00",
+                            "wind_bearing": 24.5,
+                            "temperature": 3,
+                            "templow": 0,
+                            "wind_gust_speed": 64.8,
+                            "wind_speed": 37.4,
+                            "precipitation": 2.3,
+                            "humidity": 77,
+                        },
+                    ]
+                },
+            },
+            [
+                {
+                    "datetime": "2024-03-31T16:00:00",
+                    "condition": "cloudy",
+                    "wind_bearing": 79,
+                    "cloud_coverage": 100,
+                    "temperature": 10,
+                    "templow": 4,
+                    "pressure": 998,
+                    "wind_gust_speed": 21.6,
+                    "wind_speed": 11.88,
+                    "precipitation": 0.2,
+                    "humidity": 87,
+                },
+                {
+                    "datetime": "2024-04-01T12:00:00",
+                    "condition": "rainy",
+                    "wind_bearing": 17,
+                    "cloud_coverage": 100,
+                    "temperature": 6,
+                    "templow": 1,
+                    "pressure": 999,
+                    "wind_gust_speed": 20.52,
+                    "wind_speed": 8.64,
+                    "precipitation": 2.2,
+                    "humidity": 88,
+                },
+                {
+                    "datetime": "2024-04-02T12:00:00",
+                    "condition": "cloudy",
+                    "wind_bearing": 17,
+                    "cloud_coverage": 100,
+                    "temperature": 0,
+                    "templow": -3,
+                    "pressure": 1003,
+                    "wind_gust_speed": 57.24,
+                    "wind_speed": 30.6,
+                    "precipitation": 1.3,
+                    "humidity": 71,
+                },
+                {
+                    "condition": "cloudy",
+                    "precipitation_probability": 6.6,
+                    "datetime": "2024-03-31T10:00:00+00:00",
+                    "wind_bearing": 71.8,
+                    "temperature": 10.9,
+                    "templow": 6.5,
+                    "wind_gust_speed": 24.1,
+                    "wind_speed": 13.7,
+                    "precipitation": 0,
+                    "humidity": 71,
+                },
+                {
+                    "condition": "cloudy",
+                    "precipitation_probability": 8,
+                    "datetime": "2024-04-01T10:00:00+00:00",
+                    "wind_bearing": 350.6,
+                    "temperature": 10.2,
+                    "templow": 3.4,
+                    "wind_gust_speed": 38.2,
+                    "wind_speed": 21.6,
+                    "precipitation": 0,
+                    "humidity": 79,
+                },
+                {
+                    "condition": "snowy",
+                    "precipitation_probability": 67.4,
+                    "datetime": "2024-04-02T10:00:00+00:00",
+                    "wind_bearing": 24.5,
+                    "temperature": 3,
+                    "templow": 0,
+                    "wind_gust_speed": 64.8,
+                    "wind_speed": 37.4,
+                    "precipitation": 2.3,
+                    "humidity": 77,
+                },
+            ],
+        ),
+    ],
+)
+async def test_merge_response(
+    hass: HomeAssistant, service_response: dict, expected: list
+) -> None:
     """Test the merge_response function/filter."""
+
+    _template = "{{ merge_response(" + str(service_response) + ") }}"
+
+    tpl = template.Template(_template, hass)
+    assert tpl.async_render() == expected
+
+    _template2 = "{{ merge_response(" + str(service_response) + ") }}"
+
+    tpl = template.Template(_template, hass)
+    assert tpl.async_render() == expected
+
+
+async def test_merge_response_parameters(hass: HomeAssistant) -> None:
+    """Test the merge_response function/filter with sorting and single_key."""
 
     service_response = {
         "calendar.sports": {
             "events": [
                 {
-                    "start": "2024-02-26T17:00:00-06:00",
-                    "end": "2024-02-26T18:00:00-06:00",
+                    "start": "2024-02-27T17:00:00-06:00",
+                    "end": "2024-02-27T18:00:00-06:00",
                     "summary": "Basketball vs. Rockets",
                     "description": "",
                 }
@@ -6314,25 +6557,18 @@ async def test_merge_response(hass: HomeAssistant) -> None:
                     "description": "",
                 },
                 {
-                    "start": "2024-02-26T20:00:00-06:00",
-                    "end": "2024-02-26T21:00:00-06:00",
+                    "start": "2024-02-28T20:00:00-06:00",
+                    "end": "2024-02-28T21:00:00-06:00",
                     "summary": "Bake a cake",
                     "description": "something good",
                 },
             ]
         },
-        "calendar.personal": {"events": []},
     }
-    _template = "{{ merge_response(" + str(service_response) + ") }}"
+    _template = "{{ merge_response(" + str(service_response) + ",'start') }}"
 
     tpl = template.Template(_template, hass)
     assert tpl.async_render() == [
-        {
-            "start": "2024-02-26T17:00:00-06:00",
-            "end": "2024-02-26T18:00:00-06:00",
-            "summary": "Basketball vs. Rockets",
-            "description": "",
-        },
         {
             "start": "2024-02-26T08:00:00-06:00",
             "end": "2024-02-26T09:00:00-06:00",
@@ -6340,9 +6576,34 @@ async def test_merge_response(hass: HomeAssistant) -> None:
             "description": "",
         },
         {
-            "start": "2024-02-26T20:00:00-06:00",
-            "end": "2024-02-26T21:00:00-06:00",
+            "start": "2024-02-27T17:00:00-06:00",
+            "end": "2024-02-27T18:00:00-06:00",
+            "summary": "Basketball vs. Rockets",
+            "description": "",
+        },
+        {
+            "start": "2024-02-28T20:00:00-06:00",
+            "end": "2024-02-28T21:00:00-06:00",
             "summary": "Bake a cake",
             "description": "something good",
         },
     ]
+
+    _template = "{{ merge_response(" + str(service_response) + ",'start','summary') }}"
+    tpl = template.Template(_template, hass)
+    assert tpl.async_render() == ["Dr. Appt", "Basketball vs. Rockets", "Bake a cake"]
+
+    # Only fetch single keys which exists does not raise
+    _template = (
+        "{{ merge_response(" + str(service_response) + ",'start','not_existing') }}"
+    )
+    tpl = template.Template(_template, hass)
+    assert tpl.async_render() == []
+
+    # Sorting by non existing keys should raise
+    _template = (
+        "{{ merge_response(" + str(service_response) + ",'not_exist','summary') }}"
+    )
+    tpl = template.Template(_template, hass)
+    with pytest.raises(TemplateError):
+        tpl.async_render()
