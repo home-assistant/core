@@ -80,7 +80,7 @@ class JellyfinSource(MediaSource):
             jellyfin_data: JellyfinData = data[self.entry.entry_id]
 
             return jellyfin_data.jellyfin_client
-            
+
         return None
 
     @property
