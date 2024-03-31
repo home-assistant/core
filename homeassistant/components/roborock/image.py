@@ -76,6 +76,7 @@ class RoborockMap(RoborockCoordinatedEntity, ImageEntity, RestoreEntity):
         if create_map:
             self.cached_map = self._create_image(starting_map)
         else:
+            # Map was cached - so we can load it directly.
             self.cached_map = starting_map
         self._attr_entity_category = EntityCategory.DIAGNOSTIC
         self._roborock_storage = roborock_storage

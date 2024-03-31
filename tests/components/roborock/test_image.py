@@ -6,7 +6,11 @@ from http import HTTPStatus
 import io
 from unittest.mock import patch
 
+import pytest
+
+from homeassistant.components.roborock import DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -82,7 +86,7 @@ async def test_load_stored_image(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     setup_entry: MockConfigEntry,
-):
+) -> None:
     """Test that we correctly load an image from storage when it already exists."""
     img_byte_arr = io.BytesIO()
     MAP_DATA.image.data.save(img_byte_arr, format="PNG")
@@ -103,3 +107,46 @@ async def test_load_stored_image(
         assert resp.status == HTTPStatus.OK
         body = await resp.read()
         assert body == img_bytes
+
+
+async def test_fail_to_save_image(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_roborock_entry: MockConfigEntry,
+    bypass_api_fixture,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that we gracefully handle a oserror on saving an image."""
+    # Reload the config entry so that the map is saved in storage and entities exist.
+    with patch(
+        "homeassistant.components.roborock.roborock_storage.open", side_effect=OSError
+    ):
+        await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
+    # Ensure that map is still working properly.
+    assert hass.states.get("image.roborock_s7_maxv_upstairs") is not None
+    client = await hass_client()
+    resp = await client.get("/api/image_proxy/image.roborock_s7_maxv_upstairs")
+    # Test that we can get the image and it correctly serialized and unserialized.
+    assert resp.status == HTTPStatus.OK
+    assert "Unable to write map file" in caplog.text
+
+
+async def test_fail_to_load_image(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    setup_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that we gracefully handle failing to load an image.."""
+    with patch(
+        "homeassistant.components.roborock.image.RoborockMapDataParser.parse",
+    ) as parse_map, patch(
+        "homeassistant.components.roborock.roborock_storage.open", side_effect=OSError
+    ):
+        # Reload the config entry so that the map is saved in storage and entities exist.
+        await hass.config_entries.async_reload(setup_entry.entry_id)
+        await hass.async_block_till_done()
+        # Ensure that we never updated the map manually since we couldn't load it.
+        assert parse_map.call_count == 4
+    assert "Unable to read map file" in caplog.text

@@ -108,16 +108,19 @@ class RoborockStorage:
         """Remove all maps associated with a config entry."""
 
         def remove_map(filename: str) -> None:
-            if not os.path.exists(filename):
-                return None
             _LOGGER.debug("Removing map from disk store: %s", filename)
             os.remove(filename)
 
-        await asyncio.gather(
-            *(
-                self._hass.async_add_executor_job(
-                    remove_map, self._get_map_filename(file)
+        try:
+            await asyncio.gather(
+                *(
+                    self._hass.async_add_executor_job(
+                        remove_map, self._get_map_filename(file)
+                    )
+                    for file in os.listdir(
+                        self._hass.config.path(f"{MAP_PATH}/{entry_id}")
+                    )
                 )
-                for file in os.listdir(self._hass.config.path(f"{MAP_PATH}/{entry_id}"))
             )
-        )
+        except OSError as err:
+            _LOGGER.error("Unable to remove map files for: %s %s", entry_id, err)
