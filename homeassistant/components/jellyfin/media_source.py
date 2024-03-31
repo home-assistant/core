@@ -18,8 +18,8 @@ from homeassistant.components.media_source.models import (
     MediaSourceItem,
     PlayMedia,
 )
-from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 
 from .const import (
     COLLECTION_TYPE_MOVIES,
@@ -59,7 +59,6 @@ async def async_get_media_source(hass: HomeAssistant) -> MediaSource:
     entry = hass.config_entries.async_entries(DOMAIN)[0]
 
     return JellyfinSource(hass, entry)
-
 
 class JellyfinSource(MediaSource):
     """Represents a Jellyfin server."""
