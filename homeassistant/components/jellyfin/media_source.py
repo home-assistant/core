@@ -73,9 +73,9 @@ class JellyfinSource(MediaSource):
         self.entry = entry
 
     @property
-    def client() -> JellyfinClient | None:
+    def client(self) -> JellyfinClient | None:
         """Return the Jellyfin client."""
-        if data := hass.data.get(DOMAIN):
+        if data := self.hass.data.get(DOMAIN):
             jellyfin_data: JellyfinData = data[entry.entry_id]
 
             return jellyfin_data.jellyfin_client
@@ -83,7 +83,7 @@ class JellyfinSource(MediaSource):
         return None
     
     @property
-    def api() -> API | None:
+    def api(self) -> API | None:
         """Return the Jellyfin API."""
         if self.client is None:
             return None
@@ -91,12 +91,15 @@ class JellyfinSource(MediaSource):
         return self.client.api
 
     @property
-    def url() -> str:
+    def url(self) -> str:
         """Return the URL to Jellyfin."""
         return jellyfin_url(self.client, "")
 
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         """Return a streamable URL and associated mime type."""
+        if self.client is None:
+            raise Unresolvable("Jellyfin not initialized")
+
         media_item = await self.hass.async_add_executor_job(
             self.api.get_item, item.identifier
         )
