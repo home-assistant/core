@@ -35,11 +35,11 @@ async def validate_input(hass: HomeAssistant, data):
     auth = Auth(session, data[CONF_USERNAME], data[CONF_PASSWORD], data[CONF_COUNTRY])
     try:
         contracts = await Installation.list(auth)
-        return auth, contracts
     except ConnectionRefusedError:
         raise InvalidAuth from ConnectionRefusedError
     except ConnectionError:
         raise CannotConnect from ConnectionError
+    return auth, contracts
 
 
 class ProsegurConfigFlow(ConfigFlow, domain=DOMAIN):

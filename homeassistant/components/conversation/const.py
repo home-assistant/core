@@ -3,3 +3,4 @@
 DOMAIN = "conversation"
 DEFAULT_EXPOSED_ATTRIBUTES = {"device_class"}
 HOME_ASSISTANT_AGENT = "homeassistant"
+DATA_CONFIG = "conversation_config"
