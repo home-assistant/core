@@ -43,7 +43,7 @@ async def test_state_services(
 ) -> None:
     """Test get vacuum service that affect state."""
 
-    entity0 = await create_entity(hass, None)
+    entity0 = await create_entity(hass)
 
     await hass.services.async_call(
         DOMAIN,
@@ -59,7 +59,7 @@ async def test_state_services(
 async def test_fan_speed(hass: HomeAssistant, config_flow_fixture: None) -> None:
     """Test set vacuum fan speed."""
 
-    entity0 = await create_entity(hass, None)
+    entity0 = await create_entity(hass)
 
     await hass.services.async_call(
         DOMAIN,
@@ -87,7 +87,7 @@ async def test_locate(hass: HomeAssistant, config_flow_fixture: None) -> None:
         def locate(self, **kwargs: Any) -> None:
             self._calls.append("locate")
 
-    entity0 = await create_entity(hass, None, MockVacuumWithLocation, calls=calls)
+    entity0 = await create_entity(hass, mock_vacuum=MockVacuumWithLocation, calls=calls)
 
     await hass.services.async_call(
         DOMAIN,
@@ -121,7 +121,7 @@ async def test_send_command(hass: HomeAssistant, config_flow_fixture: None) -> N
             if command == "add_str":
                 self._strings.append(params["str"])
 
-    entity0 = await create_entity(hass, None, MockVacuumWithLocation, strings=strings)
+    entity0 = await create_entity(hass, mock_vacuum=MockVacuumWithLocation, strings=strings)
 
     await hass.services.async_call(
         DOMAIN,
