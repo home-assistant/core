@@ -146,10 +146,14 @@ async def test_fail_to_load_image(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test that we gracefully handle failing to load an image.."""
-    with patch(
-        "homeassistant.components.roborock.image.RoborockMapDataParser.parse",
-    ) as parse_map, patch(
-        "homeassistant.components.roborock.roborock_storage.open", side_effect=OSError
+    with (
+        patch(
+            "homeassistant.components.roborock.image.RoborockMapDataParser.parse",
+        ) as parse_map,
+        patch(
+            "homeassistant.components.roborock.roborock_storage.open",
+            side_effect=OSError,
+        ),
     ):
         # Reload the config entry so that the map is saved in storage and entities exist.
         await hass.config_entries.async_reload(setup_entry.entry_id)

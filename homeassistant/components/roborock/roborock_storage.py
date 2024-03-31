@@ -1,4 +1,5 @@
 """Roborock storage."""
+
 import asyncio
 import dataclasses
 import logging
