@@ -5,6 +5,7 @@ import logging
 from typing import Any
 
 from aioautomower.utils import structure_token
+
 from homeassistant.config_entries import ConfigEntry, ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
 from homeassistant.helpers import config_entry_oauth2_flow
