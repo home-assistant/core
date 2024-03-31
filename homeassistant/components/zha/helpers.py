@@ -1,22 +1,27 @@
 """Helper functions for the ZHA integration."""
 
+from __future__ import annotations
+
 import asyncio
 import collections
 from collections.abc import Callable
 import dataclasses
 import enum
 import logging
+import re
 import time
-from typing import Any, NamedTuple
+from typing import TYPE_CHECKING, Any, NamedTuple
 
 import voluptuous as vol
 from zha.application.const import (
     ATTR_DEVICE_IEEE,
+    ATTR_TYPE,
     ATTR_UNIQUE_ID,
     CLUSTER_TYPE_IN,
     CLUSTER_TYPE_OUT,
     DATA_ZHA,
     ZHA_EVENT,
+    ZHA_GW_MSG,
 )
 from zha.application.gateway import Gateway
 from zha.application.helpers import ZHAData
@@ -24,6 +29,7 @@ from zha.application.platforms import GroupEntity, PlatformEntity
 from zha.event import EventBase
 from zha.zigbee.cluster_handlers import ClusterHandler
 from zha.zigbee.device import Device, ZHAEvent
+from zha.zigbee.group import Group, GroupMember
 import zigpy.exceptions
 from zigpy.profiles import PROFILES
 import zigpy.types
@@ -32,10 +38,17 @@ import zigpy.util
 import zigpy.zcl
 from zigpy.zcl.foundation import CommandSchema
 
+from homeassistant import __path__ as HOMEASSISTANT_PATH
+from homeassistant.components.system_log import LogEntry
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_NAME, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import (
     ATTR_ACTIVE_COORDINATOR,
@@ -60,7 +73,103 @@ from .const import (
     DOMAIN,
 )
 
+if TYPE_CHECKING:
+    from logging import Filter, LogRecord
+
+    _LogFilterType = Filter | Callable[[LogRecord], bool]
+
 _LOGGER = logging.getLogger(__name__)
+
+DEBUG_COMP_BELLOWS = "bellows"
+DEBUG_COMP_ZHA = "homeassistant.components.zha"
+DEBUG_LIB_ZHA = "zha"
+DEBUG_COMP_ZIGPY = "zigpy"
+DEBUG_COMP_ZIGPY_ZNP = "zigpy_znp"
+DEBUG_COMP_ZIGPY_DECONZ = "zigpy_deconz"
+DEBUG_COMP_ZIGPY_XBEE = "zigpy_xbee"
+DEBUG_COMP_ZIGPY_ZIGATE = "zigpy_zigate"
+DEBUG_LEVEL_CURRENT = "current"
+DEBUG_LEVEL_ORIGINAL = "original"
+DEBUG_LEVELS = {
+    DEBUG_COMP_BELLOWS: logging.DEBUG,
+    DEBUG_COMP_ZHA: logging.DEBUG,
+    DEBUG_COMP_ZIGPY: logging.DEBUG,
+    DEBUG_COMP_ZIGPY_ZNP: logging.DEBUG,
+    DEBUG_COMP_ZIGPY_DECONZ: logging.DEBUG,
+    DEBUG_COMP_ZIGPY_XBEE: logging.DEBUG,
+    DEBUG_COMP_ZIGPY_ZIGATE: logging.DEBUG,
+    DEBUG_LIB_ZHA: logging.DEBUG,
+}
+DEBUG_RELAY_LOGGERS = [DEBUG_COMP_ZHA, DEBUG_COMP_ZIGPY, DEBUG_LIB_ZHA]
+ZHA_GW_MSG_LOG_ENTRY = "log_entry"
+ZHA_GW_MSG_LOG_OUTPUT = "log_output"
+
+
+class GroupEntityReference(NamedTuple):
+    """Reference to a group entity."""
+
+    name: str | None
+    original_name: str | None
+    entity_id: str
+
+
+class ZHAGroupProxy:
+    """Proxy class to interact with the ZHA group instances."""
+
+    def __init__(self, group: Group, gateway_proxy) -> None:
+        """Initialize the gateway proxy."""
+        self.group: Group = group
+        self.gateway_proxy: ZHAGatewayProxy = gateway_proxy
+
+    @property
+    def group_info(self) -> dict[str, Any]:
+        """Return a group description for group."""
+        return {
+            "name": self.group.name,
+            "group_id": self.group.group_id,
+            "members": [
+                {
+                    "endpoint_id": member.endpoint_id,
+                    "device": self.gateway_proxy.device_proxies[
+                        member.device.ieee
+                    ].zha_device_info,
+                    "entities": self.associated_entities(member),
+                }
+                for member in self.group.members
+            ],
+        }
+
+    def associated_entities(self, member: GroupMember) -> list[dict[str, Any]]:
+        """Return the list of entities that were derived from this endpoint."""
+        entity_registry = er.async_get(self.gateway_proxy.hass)
+        zha_device_registry: collections.defaultdict[EUI64, list[EntityReference]] = (
+            self.gateway_proxy.device_registry
+        )
+
+        entity_info = []
+
+        for entity_ref in zha_device_registry.get(member.device.ieee):  # type: ignore[union-attr]
+            # We have device entities now that don't leverage cluster handlers
+            if not entity_ref.cluster_handlers:
+                continue
+            entity = entity_registry.async_get(entity_ref.reference_id)
+            handler = list(entity_ref.cluster_handlers.values())[0]
+
+            if (
+                entity is None
+                or handler.cluster.endpoint.endpoint_id != member.endpoint_id
+            ):
+                continue
+
+            entity_info.append(
+                GroupEntityReference(
+                    name=entity.name,
+                    original_name=entity.original_name,
+                    entity_id=entity_ref.reference_id,
+                )._asdict()
+            )
+
+        return entity_info
 
 
 class ZHADeviceProxy(EventBase):
@@ -73,9 +182,12 @@ class ZHADeviceProxy(EventBase):
         self.gateway_proxy: ZHAGatewayProxy = gateway_proxy
 
         device_registry = dr.async_get(gateway_proxy.hass)
-        self.ha_device_info: dr.DeviceEntry | None = device_registry.async_get_device(
-            identifiers={(DOMAIN, str(device.ieee))},
-            connections={(dr.CONNECTION_ZIGBEE, str(device.ieee))},
+        self.ha_device_info: dr.DeviceEntry | None = (
+            device_registry.async_get_or_create(
+                config_entry_id=gateway_proxy.config_entry.entry_id,
+                identifiers={(DOMAIN, str(device.ieee))},
+                connections={(dr.CONNECTION_ZIGBEE, str(device.ieee))},
+            )
         )
         assert self.ha_device_info is not None
         self.device_id: str = self.ha_device_info.id
@@ -214,11 +326,18 @@ class ZHAGatewayProxy(EventBase):
         self.config_entry = config_entry
         self.gateway: Gateway = gateway
         self.device_proxies: dict[str, ZHADeviceProxy] = {}
+        self.group_proxies: dict[int, ZHAGroupProxy] = {}
         self._device_registry: collections.defaultdict[EUI64, list[EntityReference]] = (
             collections.defaultdict(list)
         )
+        self._log_levels: dict[str, dict[str, int]] = {
+            DEBUG_LEVEL_ORIGINAL: async_capture_log_levels(),
+            DEBUG_LEVEL_CURRENT: async_capture_log_levels(),
+        }
+        self.debug_enabled: bool = False
+        self._log_relay_handler: LogRelayHandler = LogRelayHandler(hass, self)
         self._unsubs: list[Callable[[], None]] = []
-        self._unsubs.append(self.gateway.on_all_events(self._handle_event_protocol))
+        self._unsubs.append(self.gateway.on_all_events(self._handle_gateway_event))
 
     @property
     def device_registry(self) -> collections.defaultdict[EUI64, list[EntityReference]]:
@@ -257,6 +376,8 @@ class ZHAGatewayProxy(EventBase):
                     EntityData(entity=entity, device_proxy=device_proxy)
                 )
         for group in self.gateway.groups.values():
+            group_proxy = ZHAGroupProxy(group, self)
+            self.group_proxies[group.group_id] = group_proxy
             for entity in group.group_entities.values():
                 platform = Platform(entity.PLATFORM)
                 ha_zha_data.platforms[platform].append(
@@ -270,11 +391,105 @@ class ZHAGatewayProxy(EventBase):
 
         await self.gateway.async_initialize_devices_and_entities()
 
+    def _handle_gateway_event(self, event) -> None:
+        """Handle a gateway event."""
+        self.hass.bus.async_fire(event.event, event)
+
+    @callback
+    def async_enable_debug_mode(self, filterer: _LogFilterType | None = None) -> None:
+        """Enable debug mode for ZHA."""
+        self._log_levels[DEBUG_LEVEL_ORIGINAL] = async_capture_log_levels()
+        async_set_logger_levels(DEBUG_LEVELS)
+        self._log_levels[DEBUG_LEVEL_CURRENT] = async_capture_log_levels()
+
+        if filterer:
+            self._log_relay_handler.addFilter(filterer)
+
+        for logger_name in DEBUG_RELAY_LOGGERS:
+            logging.getLogger(logger_name).addHandler(self._log_relay_handler)
+
+        self.debug_enabled = True
+
+    @callback
+    def async_disable_debug_mode(self, filterer: _LogFilterType | None = None) -> None:
+        """Disable debug mode for ZHA."""
+        async_set_logger_levels(self._log_levels[DEBUG_LEVEL_ORIGINAL])
+        self._log_levels[DEBUG_LEVEL_CURRENT] = async_capture_log_levels()
+        for logger_name in DEBUG_RELAY_LOGGERS:
+            logging.getLogger(logger_name).removeHandler(self._log_relay_handler)
+        if filterer:
+            self._log_relay_handler.removeFilter(filterer)
+        self.debug_enabled = False
+
     async def shutdown(self) -> None:
         """Shutdown the gateway proxy."""
         for unsub in self._unsubs:
             unsub()
         await self.gateway.shutdown()
+
+
+@callback
+def async_capture_log_levels() -> dict[str, int]:
+    """Capture current logger levels for ZHA."""
+    return {
+        DEBUG_COMP_BELLOWS: logging.getLogger(DEBUG_COMP_BELLOWS).getEffectiveLevel(),
+        DEBUG_COMP_ZHA: logging.getLogger(DEBUG_COMP_ZHA).getEffectiveLevel(),
+        DEBUG_COMP_ZIGPY: logging.getLogger(DEBUG_COMP_ZIGPY).getEffectiveLevel(),
+        DEBUG_COMP_ZIGPY_ZNP: logging.getLogger(
+            DEBUG_COMP_ZIGPY_ZNP
+        ).getEffectiveLevel(),
+        DEBUG_COMP_ZIGPY_DECONZ: logging.getLogger(
+            DEBUG_COMP_ZIGPY_DECONZ
+        ).getEffectiveLevel(),
+        DEBUG_COMP_ZIGPY_XBEE: logging.getLogger(
+            DEBUG_COMP_ZIGPY_XBEE
+        ).getEffectiveLevel(),
+        DEBUG_COMP_ZIGPY_ZIGATE: logging.getLogger(
+            DEBUG_COMP_ZIGPY_ZIGATE
+        ).getEffectiveLevel(),
+        DEBUG_LIB_ZHA: logging.getLogger(DEBUG_LIB_ZHA).getEffectiveLevel(),
+    }
+
+
+@callback
+def async_set_logger_levels(levels: dict[str, int]) -> None:
+    """Set logger levels for ZHA."""
+    logging.getLogger(DEBUG_COMP_BELLOWS).setLevel(levels[DEBUG_COMP_BELLOWS])
+    logging.getLogger(DEBUG_COMP_ZHA).setLevel(levels[DEBUG_COMP_ZHA])
+    logging.getLogger(DEBUG_COMP_ZIGPY).setLevel(levels[DEBUG_COMP_ZIGPY])
+    logging.getLogger(DEBUG_COMP_ZIGPY_ZNP).setLevel(levels[DEBUG_COMP_ZIGPY_ZNP])
+    logging.getLogger(DEBUG_COMP_ZIGPY_DECONZ).setLevel(levels[DEBUG_COMP_ZIGPY_DECONZ])
+    logging.getLogger(DEBUG_COMP_ZIGPY_XBEE).setLevel(levels[DEBUG_COMP_ZIGPY_XBEE])
+    logging.getLogger(DEBUG_COMP_ZIGPY_ZIGATE).setLevel(levels[DEBUG_COMP_ZIGPY_ZIGATE])
+    logging.getLogger(DEBUG_LIB_ZHA).setLevel(levels[DEBUG_LIB_ZHA])
+
+
+class LogRelayHandler(logging.Handler):
+    """Log handler for error messages."""
+
+    def __init__(self, hass: HomeAssistant, gateway: ZHAGatewayProxy) -> None:
+        """Initialize a new LogErrorHandler."""
+        super().__init__()
+        self.hass = hass
+        self.gateway = gateway
+        hass_path: str = HOMEASSISTANT_PATH[0]
+        config_dir = self.hass.config.config_dir
+        self.paths_re = re.compile(
+            r"(?:{})/(.*)".format(
+                "|".join([re.escape(x) for x in (hass_path, config_dir)])
+            )
+        )
+
+    def emit(self, record: LogRecord) -> None:
+        """Relay log message via dispatcher."""
+        entry = LogEntry(
+            record, self.paths_re, figure_out_source=record.levelno >= logging.WARNING
+        )
+        async_dispatcher_send(
+            self.hass,
+            ZHA_GW_MSG,
+            {ATTR_TYPE: ZHA_GW_MSG_LOG_OUTPUT, ZHA_GW_MSG_LOG_ENTRY: entry.to_dict()},
+        )
 
 
 @dataclasses.dataclass(kw_only=True, slots=True)

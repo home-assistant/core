@@ -484,8 +484,8 @@ async def websocket_get_groups(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Get ZHA groups."""
-    zha_gateway = get_zha_gateway(hass)
-    groups = [group.group_info for group in zha_gateway.groups.values()]
+    zha_gateway_proxy = get_zha_gateway_proxy(hass)
+    groups = [group.group_info for group in zha_gateway_proxy.group_proxies.values()]
     connection.send_result(msg[ID], groups)
 
 
