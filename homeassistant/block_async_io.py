@@ -29,9 +29,7 @@ def _check_sleep_call_allowed(mapped_args: dict[str, Any]) -> bool:
     # frame[2] is protected_loop_func
     # frame[3] is the offender
     with suppress(ValueError):
-        offender_frame = get_current_frame(4)
-        if offender_frame.f_code.co_filename.endswith("pydevd.py"):
-            return True
+        return get_current_frame(4).f_code.co_filename.endswith("pydevd.py")
     return False
 
 
