@@ -26,7 +26,7 @@ async def test_sensors(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test a successful setup entry."""
-    await hass.async_block_till_done()
+    assert entity_registry.async_is_registered(f"{BASE_SENSOR_NAME}_latest_build")
 
     assert (state := hass.states.get(f"{BASE_SENSOR_NAME}_latest_build"))
     assert state.state == "1"
