@@ -7,6 +7,7 @@ from hassil.recognize import Intent, IntentData, MatchEntity, RecognizeResult
 import pytest
 
 from homeassistant.components import conversation
+from homeassistant.components.conversation import agent_manager, default_agent
 from homeassistant.components.homeassistant.exposed_entities import (
     async_get_assistant_settings,
 )
@@ -151,7 +152,7 @@ async def test_conversation_agent(
     init_components,
 ) -> None:
     """Test DefaultAgent."""
-    agent = await conversation._get_agent_manager(hass).async_get_agent(
+    agent = await agent_manager.get_agent_manager(hass).async_get_agent(
         conversation.HOME_ASSISTANT_AGENT
     )
     with patch(
@@ -253,10 +254,10 @@ async def test_trigger_sentences(hass: HomeAssistant, init_components) -> None:
     trigger_sentences = ["It's party time", "It is time to party"]
     trigger_response = "Cowabunga!"
 
-    agent = await conversation._get_agent_manager(hass).async_get_agent(
+    agent = await agent_manager.get_agent_manager(hass).async_get_agent(
         conversation.HOME_ASSISTANT_AGENT
     )
-    assert isinstance(agent, conversation.DefaultAgent)
+    assert isinstance(agent, default_agent.DefaultAgent)
 
     callback = AsyncMock(return_value=trigger_response)
     unregister = agent.register_trigger(trigger_sentences, callback)
@@ -850,7 +851,7 @@ async def test_empty_aliases(
     )
 
     with patch(
-        "homeassistant.components.conversation.DefaultAgent._recognize",
+        "homeassistant.components.conversation.default_agent.DefaultAgent._recognize",
         return_value=None,
     ) as mock_recognize_all:
         await conversation.async_converse(

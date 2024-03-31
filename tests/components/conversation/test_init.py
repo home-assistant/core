@@ -9,6 +9,8 @@ from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
 
 from homeassistant.components import conversation
+from homeassistant.components.conversation import agent_manager, default_agent
+from homeassistant.components.conversation.models import ConversationInput
 from homeassistant.components.cover import SERVICE_OPEN_COVER
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.const import ATTR_FRIENDLY_NAME
@@ -750,8 +752,8 @@ async def test_ws_prepare(
     """Test the Websocket prepare conversation API."""
     assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(hass, "conversation", {})
-    agent = await conversation._get_agent_manager(hass).async_get_agent()
-    assert isinstance(agent, conversation.DefaultAgent)
+    agent = await agent_manager.get_agent_manager(hass).async_get_agent()
+    assert isinstance(agent, default_agent.DefaultAgent)
 
     # No intents should be loaded yet
     assert not agent._lang_intents.get(hass.config.language)
@@ -852,8 +854,8 @@ async def test_prepare_reload(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, "conversation", {})
 
     # Load intents
-    agent = await conversation._get_agent_manager(hass).async_get_agent()
-    assert isinstance(agent, conversation.DefaultAgent)
+    agent = await agent_manager.get_agent_manager(hass).async_get_agent()
+    assert isinstance(agent, default_agent.DefaultAgent)
     await agent.async_prepare(language)
 
     # Confirm intents are loaded
@@ -880,8 +882,8 @@ async def test_prepare_fail(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, "conversation", {})
 
     # Load intents
-    agent = await conversation._get_agent_manager(hass).async_get_agent()
-    assert isinstance(agent, conversation.DefaultAgent)
+    agent = await agent_manager.get_agent_manager(hass).async_get_agent()
+    assert isinstance(agent, default_agent.DefaultAgent)
     await agent.async_prepare("not-a-language")
 
     # Confirm no intents were loaded
@@ -917,11 +919,11 @@ async def test_non_default_response(hass: HomeAssistant, init_components) -> Non
     hass.states.async_set("cover.front_door", "closed")
     calls = async_mock_service(hass, "cover", SERVICE_OPEN_COVER)
 
-    agent = await conversation._get_agent_manager(hass).async_get_agent()
-    assert isinstance(agent, conversation.DefaultAgent)
+    agent = await agent_manager.get_agent_manager(hass).async_get_agent()
+    assert isinstance(agent, default_agent.DefaultAgent)
 
     result = await agent.async_process(
-        conversation.ConversationInput(
+        ConversationInput(
             text="open the front door",
             context=Context(),
             conversation_id=None,
