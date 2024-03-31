@@ -11,6 +11,7 @@ import aiodns
 from aiohttp.abc import AbstractResolver
 
 # This is a backport of https://github.com/aio-libs/aiohttp/pull/8270
+# This can be removed once aiohttp 3.10 is the minimum supported version.
 
 _NUMERIC_SOCKET_FLAGS = socket.AI_NUMERICHOST | socket.AI_NUMERICSERV
 _SUPPORTS_SCOPE_ID = sys.version_info >= (3, 9, 0)
