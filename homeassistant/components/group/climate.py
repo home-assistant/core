@@ -243,12 +243,11 @@ class ClimateGroup(GroupEntity, ClimateEntity):
         # Build util that will help with the computation of union of modes
         # across all the entity states.
         def merge_modes(modes: list[list[Any]]) -> list[Any]:
-            return list(set().union(*modes))
+            return sorted(set().union(*modes))
 
         # available HVAC modes
         all_hvac_modes = list(find_state_attributes(states, ATTR_HVAC_MODES))
-        if all_hvac_modes:
-            self._attr_hvac_modes = merge_modes(all_hvac_modes)
+        self._attr_hvac_modes = merge_modes(all_hvac_modes)
 
         current_hvac_modes = [
             x.state
@@ -283,29 +282,27 @@ class ClimateGroup(GroupEntity, ClimateEntity):
 
         # available swing modes
         all_swing_modes = list(find_state_attributes(states, ATTR_SWING_MODES))
-        if all_swing_modes:
-            self._attr_swing_modes = merge_modes(all_swing_modes)
+        self._attr_swing_modes = merge_modes(all_swing_modes)
 
         # Report the most common swing_mode.
         self._attr_swing_mode = most_frequent_attribute(states, ATTR_SWING_MODE)
 
         # available fan modes
         all_fan_modes = list(find_state_attributes(states, ATTR_FAN_MODES))
-        if all_fan_modes:
-            self._attr_fan_modes = merge_modes(all_fan_modes)
+        self._attr_fan_modes = merge_modes(all_fan_modes)
 
         # Report the most common fan_mode.
         self._attr_fan_mode = most_frequent_attribute(states, ATTR_FAN_MODE)
 
         # available preset modes
         all_preset_modes = list(find_state_attributes(states, ATTR_PRESET_MODES))
-        if all_preset_modes:
-            self._attr_preset_modes = merge_modes(all_preset_modes)
+        self._attr_preset_modes = merge_modes(all_preset_modes)
 
         # Report the most common fan_mode.
         self._attr_preset_mode = most_frequent_attribute(states, ATTR_PRESET_MODE)
 
         # Supported flags
+        self._attr_supported_features = ClimateEntityFeature(0)
         for support in find_state_attributes(states, ATTR_SUPPORTED_FEATURES):
             # Merge supported features by emulating support for every feature
             # we find.
@@ -313,11 +310,10 @@ class ClimateGroup(GroupEntity, ClimateEntity):
 
         # Bitwise-and the supported features with the Grouped climate's features
         # so that we don't break in the future when a new feature is added.
-        supported_features = ClimateEntityFeature(0)
-        for feature_flags, entity_set in self._features.items():
-            if entity_set:
-                supported_features |= feature_flags
-        self._attr_supported_features = supported_features
+        all_supported_features = ClimateEntityFeature(0)
+        for feature_flags in self._features:
+            all_supported_features |= feature_flags
+        self._attr_supported_features &= all_supported_features
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Forward the temperature command to all climate in the climate group."""

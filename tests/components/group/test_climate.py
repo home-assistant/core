@@ -60,7 +60,7 @@ async def test_default_state(hass: HomeAssistant) -> None:
     ]
     assert state.attributes.get(ATTR_SWING_MODES) is None
     assert state.attributes.get(ATTR_FAN_MODES) is None
-    assert state.attributes.get(ATTR_HVAC_MODES) == [HVACMode.OFF]
+    assert state.attributes.get(ATTR_HVAC_MODES) == []
 
     entity_registry = er.async_get(hass)
     entry = entity_registry.async_get("climate.bedroom_group")
@@ -182,9 +182,7 @@ async def test_supported_features(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     state = hass.states.get("climate.climate_group")
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == (
-        ClimateEntityFeature.TARGET_TEMPERATURE
-        | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
-        | ClimateEntityFeature.FAN_MODE
+        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
     )
 
     hass.states.async_set(
@@ -197,7 +195,6 @@ async def test_supported_features(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
     state = hass.states.get("climate.climate_group")
-    # test1: 0, test2: SWING_MODE
     assert (
         state.attributes[ATTR_SUPPORTED_FEATURES]
         == ClimateEntityFeature.TARGET_TEMPERATURE
@@ -216,12 +213,10 @@ async def test_supported_features(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
     state = hass.states.get("climate.climate_group")
-    # test1: PRESET_MODE | SWING_MODE, test2: SWING_MODE
     assert (
         state.attributes[ATTR_SUPPORTED_FEATURES]
         == ClimateEntityFeature.PRESET_MODE
         | ClimateEntityFeature.SWING_MODE
-        | ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
     )
 

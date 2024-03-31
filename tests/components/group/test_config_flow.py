@@ -486,7 +486,7 @@ async def test_options_flow_hides_members(
 CLIMATE_ATTRS = [
     {
         "supported_features": 0,
-        "hvac_modes": ["off"],
+        "hvac_modes": [],
         "max_temp": None,
         "min_temp": None,
     },
