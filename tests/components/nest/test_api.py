@@ -9,6 +9,7 @@ The tests below exercise both cases during integration setup.
 """
 
 import time
+from typing import TYPE_CHECKING
 from unittest.mock import patch
 
 import pytest
@@ -21,6 +22,9 @@ from .common import CLIENT_ID, CLIENT_SECRET, PROJECT_ID, PlatformSetup
 from .conftest import FAKE_REFRESH_TOKEN, FAKE_TOKEN
 
 from tests.test_util.aiohttp import AiohttpClientMocker
+
+if TYPE_CHECKING:
+    from google_nest_sdm.google_nest_subscriber import GoogleNestSubscriber
 
 FAKE_UPDATED_TOKEN = "fake-updated-token"
 
@@ -55,11 +59,11 @@ async def test_auth(
 
     async def async_new_subscriber(
         creds, subscription_name, event_loop, async_callback
-    ):
+    ) -> GoogleNestSubscriber | None:
         """Capture credentials for tests."""
         nonlocal captured_creds
         captured_creds = creds
-        # GoogleNestSubscriber
+        return None  # GoogleNestSubscriber
 
     with patch(
         "google_nest_sdm.google_nest_subscriber.DefaultSubscriberFactory.async_new_subscriber",
@@ -123,11 +127,11 @@ async def test_auth_expired_token(
 
     async def async_new_subscriber(
         creds, subscription_name, event_loop, async_callback
-    ):
+    ) -> GoogleNestSubscriber | None:
         """Capture credentials for tests."""
         nonlocal captured_creds
         captured_creds = creds
-        # GoogleNestSubscriber
+        return None  # GoogleNestSubscriber
 
     with patch(
         "google_nest_sdm.google_nest_subscriber.DefaultSubscriberFactory.async_new_subscriber",
