@@ -36,9 +36,6 @@ class ZHAEntity(LogMixin, entity.Entity):
         super().__init__()
         self.entity_data: EntityData = entity_data
         self._unsubs: list[Callable[[], None]] = []
-        self._unsubs.append(
-            entity_data.entity.on_all_events(self._handle_entity_events)
-        )
         if (
             hasattr(self.entity_data.entity, "_attr_translation_key")
             and self.entity_data.entity._attr_translation_key is not None
@@ -96,6 +93,9 @@ class ZHAEntity(LogMixin, entity.Entity):
     async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""
         self.remove_future = self.hass.loop.create_future()
+        self._unsubs.append(
+            self.entity_data.entity.on_all_events(self._handle_entity_events)
+        )
         self.entity_data.device_proxy.gateway_proxy.register_entity_reference(
             self.entity_data.device_proxy.device.ieee,
             self.entity_id,
