@@ -14,8 +14,8 @@ from homeassistant.helpers.script import ScriptRunResult
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import UNDEFINED, ConfigType
 
-from . import HOME_ASSISTANT_AGENT, _get_agent_manager
-from .const import DOMAIN
+from .agent_manager import get_agent_manager
+from .const import DOMAIN, HOME_ASSISTANT_AGENT
 from .default_agent import DefaultAgent
 
 
@@ -111,7 +111,7 @@ async def async_attach_trigger(
         # two trigger copies for who will provide a response.
         return None
 
-    default_agent = await _get_agent_manager(hass).async_get_agent(HOME_ASSISTANT_AGENT)
+    default_agent = await get_agent_manager(hass).async_get_agent(HOME_ASSISTANT_AGENT)
     assert isinstance(default_agent, DefaultAgent)
 
     return default_agent.register_trigger(sentences, call_action)

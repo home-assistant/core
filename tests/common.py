@@ -76,14 +76,13 @@ from homeassistant.helpers import (
     translation,
 )
 from homeassistant.helpers.dispatcher import (
-    SignalType,
     async_dispatcher_connect,
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.json import JSONEncoder, _orjson_default_encoder, json_dumps
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.setup import setup_component
 from homeassistant.util.async_ import run_callback_threadsafe
 import homeassistant.util.dt as dt_util
@@ -95,6 +94,7 @@ from homeassistant.util.json import (
     json_loads_array,
     json_loads_object,
 )
+from homeassistant.util.signal_type import SignalType
 from homeassistant.util.unit_system import METRIC_SYSTEM
 import homeassistant.util.uuid as uuid_util
 import homeassistant.util.yaml.loader as yaml_loader
@@ -1292,11 +1292,6 @@ class MockEntity(entity.Entity):
         return self._handle("should_poll")
 
     @property
-    def state(self) -> StateType:
-        """Return the state of the entity."""
-        return self._handle("state")
-
-    @property
     def supported_features(self) -> int | None:
         """Info about supported features."""
         return self._handle("supported_features")
@@ -1466,7 +1461,10 @@ def mock_integration(
 
 
 def mock_platform(
-    hass: HomeAssistant, platform_path: str, module: Mock | MockPlatform | None = None
+    hass: HomeAssistant,
+    platform_path: str,
+    module: Mock | MockPlatform | None = None,
+    built_in=True,
 ) -> None:
     """Mock a platform.
 
@@ -1477,7 +1475,7 @@ def mock_platform(
     module_cache = hass.data[loader.DATA_COMPONENTS]
 
     if domain not in integration_cache:
-        mock_integration(hass, MockModule(domain))
+        mock_integration(hass, MockModule(domain), built_in=built_in)
 
     integration_cache[domain]._top_level_files.add(f"{platform_name}.py")
     _LOGGER.info("Adding mock integration platform: %s", platform_path)
@@ -1670,6 +1668,7 @@ def setup_test_component_platform(
     domain: str,
     entities: Sequence[Entity],
     from_config_entry: bool = False,
+    built_in: bool = True,
 ) -> MockPlatform:
     """Mock a test component platform for tests."""
 
@@ -1700,9 +1699,5 @@ def setup_test_component_platform(
         platform.async_setup_entry = _async_setup_entry
         platform.async_setup_platform = None
 
-    mock_platform(
-        hass,
-        f"test.{domain}",
-        platform,
-    )
+    mock_platform(hass, f"test.{domain}", platform, built_in=built_in)
     return platform

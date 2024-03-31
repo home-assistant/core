@@ -362,6 +362,11 @@ omit =
     homeassistant/components/epson/__init__.py
     homeassistant/components/epson/media_player.py
     homeassistant/components/epsonworkforce/sensor.py
+    homeassistant/components/eq3btsmart/__init__.py
+    homeassistant/components/eq3btsmart/climate.py
+    homeassistant/components/eq3btsmart/const.py
+    homeassistant/components/eq3btsmart/entity.py
+    homeassistant/components/eq3btsmart/models.py
     homeassistant/components/escea/__init__.py
     homeassistant/components/escea/climate.py
     homeassistant/components/escea/discovery.py
@@ -807,8 +812,10 @@ omit =
     homeassistant/components/motion_blinds/entity.py
     homeassistant/components/motion_blinds/sensor.py
     homeassistant/components/motionblinds_ble/__init__.py
+    homeassistant/components/motionblinds_ble/button.py
     homeassistant/components/motionblinds_ble/cover.py
     homeassistant/components/motionblinds_ble/entity.py
+    homeassistant/components/motionblinds_ble/select.py
     homeassistant/components/motionmount/__init__.py
     homeassistant/components/motionmount/binary_sensor.py
     homeassistant/components/motionmount/entity.py
@@ -954,7 +961,9 @@ omit =
     homeassistant/components/openuv/binary_sensor.py
     homeassistant/components/openuv/coordinator.py
     homeassistant/components/openuv/sensor.py
+    homeassistant/components/openweathermap/__init__.py
     homeassistant/components/openweathermap/sensor.py
+    homeassistant/components/openweathermap/weather.py
     homeassistant/components/openweathermap/weather_update_coordinator.py
     homeassistant/components/opnsense/__init__.py
     homeassistant/components/opower/__init__.py
@@ -1153,8 +1162,6 @@ omit =
     homeassistant/components/roon/media_player.py
     homeassistant/components/roon/server.py
     homeassistant/components/route53/*
-    homeassistant/components/rova/__init__.py
-    homeassistant/components/rova/sensor.py
     homeassistant/components/rpi_camera/*
     homeassistant/components/rtorrent/sensor.py
     homeassistant/components/ruuvi_gateway/__init__.py

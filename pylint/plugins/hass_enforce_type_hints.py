@@ -1025,11 +1025,11 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 ),
                 TypeHintMatch(
                     function_name="current_humidity",
-                    return_type=["int", None],
+                    return_type=["float", None],
                 ),
                 TypeHintMatch(
                     function_name="target_humidity",
-                    return_type=["int", None],
+                    return_type=["float", None],
                 ),
                 TypeHintMatch(
                     function_name="hvac_mode",
@@ -1171,11 +1171,11 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 ),
                 TypeHintMatch(
                     function_name="min_humidity",
-                    return_type="int",
+                    return_type="float",
                 ),
                 TypeHintMatch(
                     function_name="max_humidity",
-                    return_type="int",
+                    return_type="float",
                 ),
             ],
         ),
@@ -1549,11 +1549,11 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 ),
                 TypeHintMatch(
                     function_name="min_humidity",
-                    return_type=["int"],
+                    return_type=["float"],
                 ),
                 TypeHintMatch(
                     function_name="max_humidity",
-                    return_type=["int"],
+                    return_type=["float"],
                 ),
                 TypeHintMatch(
                     function_name="mode",
@@ -1565,7 +1565,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 ),
                 TypeHintMatch(
                     function_name="target_humidity",
-                    return_type=["int", None],
+                    return_type=["float", None],
                 ),
                 TypeHintMatch(
                     function_name="set_humidity",
@@ -2963,6 +2963,15 @@ def _is_valid_type(
     if (
         expected_type == "float"
         and in_return
+        and isinstance(node, nodes.Name)
+        and node.name in ("float", "int")
+    ):
+        return True
+
+    # Special case for int in argument type
+    if (
+        expected_type == "int"
+        and not in_return
         and isinstance(node, nodes.Name)
         and node.name in ("float", "int")
     ):

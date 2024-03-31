@@ -278,7 +278,7 @@ async def test_known_hosts(hass: HomeAssistant, castbrowser_mock) -> None:
         result["flow_id"], {"known_hosts": "192.168.0.1, 192.168.0.2"}
     )
     assert result["type"] == "create_entry"
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     config_entry = hass.config_entries.async_entries("cast")[0]
 
     assert castbrowser_mock.return_value.start_discovery.call_count == 1
@@ -291,7 +291,7 @@ async def test_known_hosts(hass: HomeAssistant, castbrowser_mock) -> None:
         user_input={"known_hosts": "192.168.0.11, 192.168.0.12"},
     )
 
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     castbrowser_mock.return_value.start_discovery.assert_not_called()
     castbrowser_mock.assert_not_called()

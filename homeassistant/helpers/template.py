@@ -2559,9 +2559,9 @@ def make_logging_undefined(
         def _fail_with_undefined_error(self, *args, **kwargs):
             try:
                 return super()._fail_with_undefined_error(*args, **kwargs)
-            except self._undefined_exception as ex:
+            except self._undefined_exception:
                 _log_fn(logging.ERROR, self._undefined_message)
-                raise ex
+                raise
 
         def __str__(self) -> str:
             """Log undefined __str___."""
