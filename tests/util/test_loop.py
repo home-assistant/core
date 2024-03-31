@@ -115,7 +115,8 @@ async def test_check_loop_async_integration_non_strict(
         haloop.check_loop(banned_function, strict=False)
     assert (
         "Detected blocking call to banned_function inside the event loop by integration"
-        " 'hue' at homeassistant/components/hue/light.py, line 23: self.light.is_on, "
+        " 'hue' at homeassistant/components/hue/light.py, line 23: self.light.is_on "
+        "(offender: /home/paulus/aiohue/lights.py, line 2: mock_line), "
         "please create a bug report at https://github.com/home-assistant/core/issues?"
         "q=is%3Aopen+is%3Aissue+label%3A%22integration%3A+hue%22" in caplog.text
     )
