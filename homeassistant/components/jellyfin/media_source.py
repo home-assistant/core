@@ -76,7 +76,7 @@ class JellyfinSource(MediaSource):
     def client(self) -> JellyfinClient | None:
         """Return the Jellyfin client."""
         if data := self.hass.data.get(DOMAIN):
-            jellyfin_data: JellyfinData = data[entry.entry_id]
+            jellyfin_data: JellyfinData = data[self.entry.entry_id]
 
             return jellyfin_data.jellyfin_client
             
