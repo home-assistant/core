@@ -363,7 +363,7 @@ async def websocket_permit_devices(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Permit ZHA zigbee devices."""
-    zha_gateway = get_zha_gateway(hass)
+    zha_gateway_proxy = get_zha_gateway_proxy(hass)
     duration: int = msg[ATTR_DURATION]
     ieee: EUI64 | None = msg.get(ATTR_IEEE)
 
@@ -378,28 +378,30 @@ async def websocket_permit_devices(
     @callback
     def async_cleanup() -> None:
         """Remove signal listener and turn off debug mode."""
-        zha_gateway.async_disable_debug_mode()
+        zha_gateway_proxy.async_disable_debug_mode()
         remove_dispatcher_function()
 
     connection.subscriptions[msg["id"]] = async_cleanup
-    zha_gateway.async_enable_debug_mode()
+    zha_gateway_proxy.async_enable_debug_mode()
     src_ieee: EUI64
     link_key: KeyData
     if ATTR_SOURCE_IEEE in msg:
         src_ieee = msg[ATTR_SOURCE_IEEE]
         link_key = msg[ATTR_INSTALL_CODE]
         _LOGGER.debug("Allowing join for %s device with link key", src_ieee)
-        await zha_gateway.application_controller.permit_with_link_key(
+        await zha_gateway_proxy.gateway.application_controller.permit_with_link_key(
             time_s=duration, node=src_ieee, link_key=link_key
         )
     elif ATTR_QR_CODE in msg:
         src_ieee, link_key = msg[ATTR_QR_CODE]
         _LOGGER.debug("Allowing join for %s device with link key", src_ieee)
-        await zha_gateway.application_controller.permit_with_link_key(
+        await zha_gateway_proxy.gateway.application_controller.permit_with_link_key(
             time_s=duration, node=src_ieee, link_key=link_key
         )
     else:
-        await zha_gateway.application_controller.permit(time_s=duration, node=ieee)
+        await zha_gateway_proxy.gateway.application_controller.permit(
+            time_s=duration, node=ieee
+        )
     connection.send_result(msg[ID])
 
 
