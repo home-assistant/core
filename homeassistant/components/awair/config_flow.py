@@ -122,9 +122,9 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
         for flow in self._async_in_progress():
             if flow["context"]["source"] == SOURCE_ZEROCONF:
                 info = flow["context"]["title_placeholders"]
-                entries[
-                    flow["context"]["host"]
-                ] = f"{info['model']} ({info['device_id']})"
+                entries[flow["context"]["host"]] = (
+                    f"{info['model']} ({info['device_id']})"
+                )
         return entries
 
     async def async_step_local(
@@ -250,13 +250,12 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
         try:
             user = await awair.user()
             devices = await user.devices()
-            if not devices:
-                return (None, "no_devices_found")
-
-            return (user, None)
-
         except AuthError:
             return (None, "invalid_access_token")
         except AwairError as err:
             LOGGER.error("Unexpected API error: %s", err)
             return (None, "unknown")
+
+        if not devices:
+            return (None, "no_devices_found")
+        return (user, None)

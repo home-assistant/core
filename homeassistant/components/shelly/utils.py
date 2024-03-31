@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 from ipaddress import IPv4Address
+from types import MappingProxyType
 from typing import Any, cast
 
 from aiohttp.web import Request, WebSocketResponse
@@ -11,6 +12,7 @@ from aioshelly.block_device import COAP, Block, BlockDevice
 from aioshelly.const import (
     BLOCK_GENERATIONS,
     DEFAULT_COAP_PORT,
+    DEFAULT_HTTP_PORT,
     MODEL_1L,
     MODEL_DIMMER,
     MODEL_DIMMER_2,
@@ -24,7 +26,7 @@ from aioshelly.rpc_device import RpcDevice, WsServer
 from homeassistant.components import network
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import CONF_PORT, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import issue_registry as ir, singleton
 from homeassistant.helpers.device_registry import (
@@ -219,14 +221,17 @@ async def get_coap_context(hass: HomeAssistant) -> COAP:
 
     ipv4: list[IPv4Address] = []
     if not network.async_only_default_interface_enabled(adapters):
-        for address in await network.async_get_enabled_source_ips(hass):
-            if address.version == 4 and not (
+        ipv4.extend(
+            address
+            for address in await network.async_get_enabled_source_ips(hass)
+            if address.version == 4
+            and not (
                 address.is_link_local
                 or address.is_loopback
                 or address.is_multicast
                 or address.is_unspecified
-            ):
-                ipv4.append(address)
+            )
+        )
     LOGGER.debug("Network IPv4 addresses: %s", ipv4)
     if DOMAIN in hass.data:
         port = hass.data[DOMAIN].get(CONF_COAP_PORT, DEFAULT_COAP_PORT)
@@ -470,3 +475,28 @@ def is_rpc_wifi_stations_disabled(
         return False
 
     return True
+
+
+def get_http_port(data: MappingProxyType[str, Any]) -> int:
+    """Get port from config entry data."""
+    return cast(int, data.get(CONF_PORT, DEFAULT_HTTP_PORT))
+
+
+async def async_shutdown_device(device: BlockDevice | RpcDevice) -> None:
+    """Shutdown a Shelly device."""
+    if isinstance(device, RpcDevice):
+        await device.shutdown()
+    if isinstance(device, BlockDevice):
+        device.shutdown()
+
+
+@callback
+def async_remove_shelly_rpc_entities(
+    hass: HomeAssistant, domain: str, mac: str, keys: list[str]
+) -> None:
+    """Remove RPC based Shelly entity."""
+    entity_reg = er_async_get(hass)
+    for key in keys:
+        if entity_id := entity_reg.async_get_entity_id(domain, DOMAIN, f"{mac}-{key}"):
+            LOGGER.debug("Removing entity: %s", entity_id)
+            entity_reg.async_remove(entity_id)

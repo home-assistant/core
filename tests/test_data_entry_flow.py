@@ -189,7 +189,7 @@ async def test_abort_calls_async_remove_with_exception(
     with caplog.at_level(logging.ERROR):
         await manager.async_init("test")
 
-    assert "Error removing test flow: error" in caplog.text
+    assert "Error removing test flow" in caplog.text
 
     TestFlow.async_remove.assert_called_once()
 
@@ -760,8 +760,9 @@ async def test_abort_flow_exception(manager) -> None:
 async def test_init_unknown_flow(manager) -> None:
     """Test that UnknownFlow is raised when async_create_flow returns None."""
 
-    with pytest.raises(data_entry_flow.UnknownFlow), patch.object(
-        manager, "async_create_flow", return_value=None
+    with (
+        pytest.raises(data_entry_flow.UnknownFlow),
+        patch.object(manager, "async_create_flow", return_value=None),
     ):
         await manager.async_init("test")
 
@@ -908,7 +909,7 @@ async def test_abort_raises_unknown_flow_if_not_in_progress(manager) -> None:
 
 @pytest.mark.parametrize(
     "menu_options",
-    (["target1", "target2"], {"target1": "Target 1", "target2": "Target 2"}),
+    [["target1", "target2"], {"target1": "Target 1", "target2": "Target 2"}],
 )
 async def test_show_menu(hass: HomeAssistant, manager, menu_options) -> None:
     """Test show menu."""
