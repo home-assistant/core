@@ -91,7 +91,7 @@ class JellyfinSource(MediaSource):
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         """Return a streamable URL and associated mime type."""
         client = self.client
-        
+
         if client is None:
             raise Unresolvable("Jellyfin not initialized")
 
