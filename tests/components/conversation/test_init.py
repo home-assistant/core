@@ -10,7 +10,7 @@ import voluptuous as vol
 
 from homeassistant.components import conversation
 from homeassistant.components.conversation import agent_manager, default_agent
-from homeassistant.components.conversation.agent import ConversationInput
+from homeassistant.components.conversation.models import ConversationInput
 from homeassistant.components.cover import SERVICE_OPEN_COVER
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.const import ATTR_FRIENDLY_NAME

@@ -6,7 +6,7 @@ import pytest
 import voluptuous as vol
 
 from homeassistant.components.conversation import agent_manager, default_agent
-from homeassistant.components.conversation.agent import ConversationInput
+from homeassistant.components.conversation.models import ConversationInput
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import trigger
 from homeassistant.setup import async_setup_component

@@ -23,7 +23,6 @@ from homeassistant.helpers import config_validation as cv, intent
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
-from .agent import AbstractConversationAgent, ConversationInput, ConversationResult
 from .agent_manager import (
     AgentInfo,
     agent_id_validator,
@@ -32,6 +31,7 @@ from .agent_manager import (
 )
 from .const import DATA_CONFIG, HOME_ASSISTANT_AGENT
 from .http import async_setup as async_setup_conversation_http
+from .models import AbstractConversationAgent, ConversationInput, ConversationResult
 
 __all__ = [
     "DOMAIN",

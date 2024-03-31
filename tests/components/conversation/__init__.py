@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Literal
 
 from homeassistant.components import conversation
-from homeassistant.components.conversation.agent import (
+from homeassistant.components.conversation.models import (
     ConversationInput,
     ConversationResult,
 )

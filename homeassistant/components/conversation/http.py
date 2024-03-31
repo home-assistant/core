@@ -21,7 +21,6 @@ from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import config_validation as cv, intent
 from homeassistant.util import language as language_util
 
-from .agent import ConversationInput
 from .agent_manager import agent_id_validator, async_converse, get_agent_manager
 from .const import HOME_ASSISTANT_AGENT
 from .default_agent import (
@@ -30,6 +29,7 @@ from .default_agent import (
     DefaultAgent,
     SentenceTriggerResult,
 )
+from .models import ConversationInput
 
 
 @callback

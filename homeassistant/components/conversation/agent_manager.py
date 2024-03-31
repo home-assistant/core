@@ -12,9 +12,9 @@ import voluptuous as vol
 from homeassistant.core import Context, HomeAssistant, async_get_hass, callback
 from homeassistant.helpers import config_validation as cv, singleton
 
-from .agent import AbstractConversationAgent, ConversationInput, ConversationResult
 from .const import DATA_CONFIG, HOME_ASSISTANT_AGENT
 from .default_agent import DefaultAgent, async_setup as async_setup_default_agent
+from .models import AbstractConversationAgent, ConversationInput, ConversationResult
 
 _LOGGER = logging.getLogger(__name__)
 
