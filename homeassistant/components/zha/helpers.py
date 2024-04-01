@@ -39,6 +39,7 @@ from zha.application.const import (
 )
 from zha.application.gateway import (
     DeviceFullInitEvent,
+    DeviceInfo,
     DeviceJoinedEvent,
     DeviceLeftEvent,
     DeviceRemovedEvent,
@@ -422,7 +423,6 @@ class ZHAGatewayProxy(EventBase):
 
     def handle_device_joined(self, event: DeviceJoinedEvent) -> None:
         """Handle a device joined event."""
-        self._async_get_or_create_device_proxy(event.device_info)
         async_dispatcher_send(
             self.hass,
             ZHA_GW_MSG,
@@ -486,7 +486,7 @@ class ZHAGatewayProxy(EventBase):
 
     def handle_device_fully_initialized(self, event: DeviceFullInitEvent) -> None:
         """Handle a device fully initialized event."""
-        zha_device_proxy = self.device_proxies[event.device_info.ieee]
+        zha_device_proxy = self._async_get_or_create_device_proxy(event.device_info)
         device_info = zha_device_proxy.zha_device_info
         device_info[DEVICE_PAIRING_STATUS] = event.device_info.pairing_status.name
         if event.new_join:
@@ -595,8 +595,12 @@ class ZHAGatewayProxy(EventBase):
         await self.gateway.shutdown()
 
     @callback
-    def _async_get_or_create_device_proxy(self, zha_device: Device) -> ZHADeviceProxy:
+    def _async_get_or_create_device_proxy(
+        self, zha_device: Device | DeviceInfo
+    ) -> ZHADeviceProxy:
         """Get or create a ZHA device."""
+        if not isinstance(zha_device, Device):
+            zha_device = self.gateway.get_device(zha_device.ieee)
         if (zha_device_proxy := self.device_proxies.get(zha_device.ieee)) is None:
             zha_device_proxy = ZHADeviceProxy(zha_device, self)
             self.device_proxies[zha_device_proxy.device.ieee] = zha_device_proxy
