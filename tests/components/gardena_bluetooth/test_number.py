@@ -81,8 +81,8 @@ async def test_setup(
     [
         (
             Valve.manual_watering_time,
-            60,
-            60,
+            100,
+            100,
             "number.mock_title_manual_watering_time",
         ),
         (
