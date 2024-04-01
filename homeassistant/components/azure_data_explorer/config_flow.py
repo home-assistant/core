@@ -19,7 +19,7 @@ from .const import (
     CONF_APP_REG_ID,
     CONF_APP_REG_SECRET,
     CONF_AUTHORITY_ID,
-    CONF_SEND_INTERVAL,
+    # CONF_SEND_INTERVAL,
     CONF_USE_FREE,
     DEFAULT_OPTIONS,
     DOMAIN,
@@ -116,9 +116,9 @@ class ADXOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
             data_schema=vol.Schema(
                 {
                     vol.Required(
-                        CONF_SEND_INTERVAL,
-                        default=self.options.get(CONF_SEND_INTERVAL),
-                    ): int
+                        CONF_APP_REG_SECRET,
+                        default=self.options.get(CONF_APP_REG_SECRET),
+                    ): str
                 }
             ),
             last_step=True,

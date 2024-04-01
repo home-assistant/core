@@ -24,6 +24,7 @@ from homeassistant.util.dt import utcnow
 
 from .client import AzureDataExplorerClient
 from .const import (
+    CONF_APP_REG_SECRET,
     CONF_FILTER,
     CONF_SEND_INTERVAL,
     DATA_FILTER,
@@ -119,6 +120,7 @@ class AzureDataExplorer:
         self._client = AzureDataExplorerClient(entry.data)
 
         self._send_interval = entry.options[CONF_SEND_INTERVAL]
+        self._client_secret = entry.data[CONF_APP_REG_SECRET]
         self._max_delay = DEFAULT_MAX_DELAY
 
         self._shutdown = False
@@ -149,7 +151,7 @@ class AzureDataExplorer:
 
     def update_options(self, new_options: dict[str, Any]) -> None:
         """Update options."""
-        self._send_interval = new_options[CONF_SEND_INTERVAL]
+        self._client_secret = new_options[CONF_APP_REG_SECRET]
 
     async def test_connection(self) -> None:
         """Test the connection to the Azure Data Explorer service."""
