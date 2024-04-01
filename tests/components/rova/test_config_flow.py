@@ -49,10 +49,10 @@ async def test_user(hass: HomeAssistant, mock_rova: MagicMock) -> None:
     assert data[CONF_HOUSE_NUMBER_SUFFIX] == HOUSE_NUMBER_SUFFIX
 
 
-async def test_abort_if_not_rova_area(
+async def test_error_if_not_rova_area(
     hass: HomeAssistant, mock_rova: MagicMock
 ) -> None:
-    """Test we abort if rova does not collect at the given address."""
+    """Test we raise errors if rova does not collect at the given address."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )

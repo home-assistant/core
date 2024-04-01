@@ -222,15 +222,19 @@ async def test_get_translations_loads_config_flows(
     integration = Mock(file_path=pathlib.Path(__file__))
     integration.name = "Component 1"
 
-    with patch(
-        "homeassistant.helpers.translation.component_translation_path",
-        return_value="bla.json",
-    ), patch(
-        "homeassistant.helpers.translation._load_translations_files_by_language",
-        return_value={"en": {"component1": {"title": "world"}}},
-    ), patch(
-        "homeassistant.helpers.translation.async_get_integrations",
-        return_value={"component1": integration},
+    with (
+        patch(
+            "homeassistant.helpers.translation.component_translation_path",
+            return_value="bla.json",
+        ),
+        patch(
+            "homeassistant.helpers.translation._load_translations_files_by_language",
+            return_value={"en": {"component1": {"title": "world"}}},
+        ),
+        patch(
+            "homeassistant.helpers.translation.async_get_integrations",
+            return_value={"component1": integration},
+        ),
     ):
         translations = await translation.async_get_translations(
             hass, "en", "title", config_flow=True
@@ -251,15 +255,19 @@ async def test_get_translations_loads_config_flows(
     integration = Mock(file_path=pathlib.Path(__file__))
     integration.name = "Component 2"
 
-    with patch(
-        "homeassistant.helpers.translation.component_translation_path",
-        return_value="bla.json",
-    ), patch(
-        "homeassistant.helpers.translation._load_translations_files_by_language",
-        return_value={"en": {"component2": {"title": "world"}}},
-    ), patch(
-        "homeassistant.helpers.translation.async_get_integrations",
-        return_value={"component2": integration},
+    with (
+        patch(
+            "homeassistant.helpers.translation.component_translation_path",
+            return_value="bla.json",
+        ),
+        patch(
+            "homeassistant.helpers.translation._load_translations_files_by_language",
+            return_value={"en": {"component2": {"title": "world"}}},
+        ),
+        patch(
+            "homeassistant.helpers.translation.async_get_integrations",
+            return_value={"component2": integration},
+        ),
     ):
         translations = await translation.async_get_translations(
             hass, "en", "title", config_flow=True
@@ -301,15 +309,19 @@ async def test_get_translations_while_loading_components(hass: HomeAssistant) ->
 
         return {language: {"component1": {"title": "world"}} for language in files}
 
-    with patch(
-        "homeassistant.helpers.translation.component_translation_path",
-        return_value="bla.json",
-    ), patch(
-        "homeassistant.helpers.translation._load_translations_files_by_language",
-        mock_load_translation_files,
-    ), patch(
-        "homeassistant.helpers.translation.async_get_integrations",
-        return_value={"component1": integration},
+    with (
+        patch(
+            "homeassistant.helpers.translation.component_translation_path",
+            return_value="bla.json",
+        ),
+        patch(
+            "homeassistant.helpers.translation._load_translations_files_by_language",
+            mock_load_translation_files,
+        ),
+        patch(
+            "homeassistant.helpers.translation.async_get_integrations",
+            return_value={"component1": integration},
+        ),
     ):
         tasks = [
             translation.async_get_translations(hass, "en", "title") for _ in range(5)
@@ -842,15 +854,19 @@ async def test_get_translations_still_has_title_without_translations_files(
     integration = Mock(file_path=pathlib.Path(__file__))
     integration.name = "Component 1"
 
-    with patch(
-        "homeassistant.helpers.translation.component_translation_path",
-        return_value="bla.json",
-    ), patch(
-        "homeassistant.helpers.translation._load_translations_files_by_language",
-        return_value={},
-    ), patch(
-        "homeassistant.helpers.translation.async_get_integrations",
-        return_value={"component1": integration},
+    with (
+        patch(
+            "homeassistant.helpers.translation.component_translation_path",
+            return_value="bla.json",
+        ),
+        patch(
+            "homeassistant.helpers.translation._load_translations_files_by_language",
+            return_value={},
+        ),
+        patch(
+            "homeassistant.helpers.translation.async_get_integrations",
+            return_value={"component1": integration},
+        ),
     ):
         translations = await translation.async_get_translations(
             hass, "en", "title", config_flow=True

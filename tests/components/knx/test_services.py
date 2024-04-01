@@ -271,11 +271,13 @@ async def test_reload_service(
     """Test reload service."""
     await knx.setup_integration({})
 
-    with patch(
-        "homeassistant.components.knx.async_unload_entry", wraps=knx_async_unload_entry
-    ) as mock_unload_entry, patch(
-        "homeassistant.components.knx.async_setup_entry"
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.knx.async_unload_entry",
+            wraps=knx_async_unload_entry,
+        ) as mock_unload_entry,
+        patch("homeassistant.components.knx.async_setup_entry") as mock_setup_entry,
+    ):
         await hass.services.async_call(
             "knx",
             "reload",

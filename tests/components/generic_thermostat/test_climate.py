@@ -50,11 +50,13 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
 from tests.common import (
+    MockToggleEntity,
     assert_setup_component,
     async_fire_time_changed,
     async_mock_service,
     get_fixture_path,
     mock_restore_cache,
+    setup_test_component_platform,
 )
 from tests.components.climate import common
 
@@ -140,12 +142,11 @@ async def test_heater_input_boolean(hass: HomeAssistant, setup_comp_1) -> None:
 
 
 async def test_heater_switch(
-    hass: HomeAssistant, setup_comp_1, enable_custom_integrations: None
+    hass: HomeAssistant, setup_comp_1, mock_toggle_entities: list[MockToggleEntity]
 ) -> None:
     """Test heater switching test switch."""
-    platform = getattr(hass.components, "test.switch")
-    platform.init()
-    switch_1 = platform.ENTITIES[1]
+    setup_test_component_platform(hass, switch.DOMAIN, mock_toggle_entities)
+    switch_1 = mock_toggle_entities[1]
     assert await async_setup_component(
         hass, switch.DOMAIN, {"switch": {"platform": "test"}}
     )

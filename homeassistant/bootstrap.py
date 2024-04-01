@@ -23,7 +23,14 @@ import cryptography.hazmat.backends.openssl.backend  # noqa: F401
 import voluptuous as vol
 import yarl
 
-from . import config as conf_util, config_entries, core, loader, requirements
+from . import (
+    block_async_io,
+    config as conf_util,
+    config_entries,
+    core,
+    loader,
+    requirements,
+)
 
 # Pre-import frontend deps which have no requirements here to avoid
 # loading them at run time and blocking the event loop. We do this ahead
@@ -78,6 +85,7 @@ from .helpers import (
     translation,
 )
 from .helpers.dispatcher import async_dispatcher_send
+from .helpers.storage import get_internal_store_manager
 from .helpers.system_info import async_get_system_info
 from .helpers.typing import ConfigType
 from .setup import (
@@ -91,6 +99,11 @@ from .setup import (
 from .util.async_ import create_eager_task
 from .util.logging import async_activate_log_queue_handler
 from .util.package import async_get_user_site, is_virtual_env
+
+with contextlib.suppress(ImportError):
+    # Ensure anyio backend is imported to avoid it being imported in the event loop
+    from anyio._backends import _asyncio  # noqa: F401
+
 
 if TYPE_CHECKING:
     from .runner import RuntimeConfig
@@ -203,6 +216,27 @@ SETUP_ORDER = (
     ("debugger", DEBUGGER_INTEGRATIONS),
 )
 
+#
+# Storage keys we are likely to load during startup
+# in order of when we expect to load them.
+#
+# If they do not exist they will not be loaded
+#
+PRELOAD_STORAGE = [
+    "core.network",
+    "http.auth",
+    "image",
+    "lovelace_dashboards",
+    "lovelace_resources",
+    "core.uuid",
+    "lovelace.map",
+    "bluetooth.passive_update_processor",
+    "bluetooth.remote_scanners",
+    "assist_pipeline.pipelines",
+    "core.analytics",
+    "auth_module.totp",
+]
+
 
 async def async_setup_hass(
     runtime_config: RuntimeConfig,
@@ -233,6 +267,8 @@ async def async_setup_hass(
     _LOGGER.info("Config directory: %s", runtime_config.config_dir)
 
     loader.async_setup(hass)
+    block_async_io.enable()
+
     config_dict = None
     basic_setup_success = False
 
@@ -346,6 +382,7 @@ async def async_load_base_functionality(hass: core.HomeAssistant) -> None:
     entity.async_setup(hass)
     template.async_setup(hass)
     await asyncio.gather(
+        create_eager_task(get_internal_store_manager(hass).async_initialize()),
         create_eager_task(area_registry.async_load(hass)),
         create_eager_task(category_registry.async_load(hass)),
         create_eager_task(device_registry.async_load(hass)),
@@ -837,6 +874,17 @@ async def _async_resolve_domains_to_setup(
     hass.async_create_background_task(
         translation.async_load_integrations(hass, translations_to_load),
         "load translations",
+        eager_start=True,
+    )
+
+    # Preload storage for all integrations we are going to set up
+    # so we do not have to wait for it to be loaded when we need it
+    # in the setup process.
+    hass.async_create_background_task(
+        get_internal_store_manager(hass).async_preload(
+            [*PRELOAD_STORAGE, *domains_to_setup]
+        ),
+        "preload storage",
         eager_start=True,
     )
 

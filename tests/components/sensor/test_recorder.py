@@ -33,13 +33,14 @@ from homeassistant.components.recorder.statistics import (
     list_statistic_ids,
 )
 from homeassistant.components.recorder.util import get_instance, session_scope
-from homeassistant.components.sensor import ATTR_OPTIONS, SensorDeviceClass
+from homeassistant.components.sensor import ATTR_OPTIONS, DOMAIN, SensorDeviceClass
 from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant, State
 from homeassistant.setup import async_setup_component, setup_component
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
+from tests.common import setup_test_component_platform
 from tests.components.recorder.common import (
     assert_dict_of_states_equal_without_context_and_last_changed,
     assert_multiple_states_equal_without_context_and_last_changed,
@@ -49,6 +50,7 @@ from tests.components.recorder.common import (
     statistics_during_period,
     wait_recording_done,
 )
+from tests.components.sensor.common import MockSensor
 from tests.typing import WebSocketGenerator
 
 BATTERY_SENSOR_ATTRIBUTES = {
@@ -1363,11 +1365,9 @@ def test_compile_hourly_sum_statistics_negative_state(
     hass = hass_recorder()
     hass.data.pop(loader.DATA_CUSTOM_COMPONENTS)
 
-    platform = getattr(hass.components, "test.sensor")
-    platform.init(empty=True)
-    mocksensor = platform.MockSensor(name="custom_sensor")
+    mocksensor = MockSensor(name="custom_sensor")
     mocksensor._attr_should_poll = False
-    platform.ENTITIES["custom_sensor"] = mocksensor
+    setup_test_component_platform(hass, DOMAIN, [mocksensor], built_in=False)
 
     setup_component(hass, "homeassistant", {})
     setup_component(
@@ -5178,9 +5178,7 @@ async def test_exclude_attributes(
     recorder_mock: Recorder, hass: HomeAssistant, enable_custom_integrations: None
 ) -> None:
     """Test sensor attributes to be excluded."""
-    platform = getattr(hass.components, "test.sensor")
-    platform.init(empty=True)
-    platform.ENTITIES["0"] = platform.MockSensor(
+    entity0 = MockSensor(
         has_entity_name=True,
         unique_id="test",
         name="Test",
@@ -5188,6 +5186,7 @@ async def test_exclude_attributes(
         device_class=SensorDeviceClass.ENUM,
         options=["option1", "option2"],
     )
+    setup_test_component_platform(hass, DOMAIN, [entity0])
     assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()
     await async_wait_recording_done(hass)

@@ -1432,9 +1432,9 @@ async def test_override_restored_entities(
     component = EntityComponent(_LOGGER, DOMAIN, hass)
     await component.async_setup({})
 
-    await component.async_add_entities(
-        [MockEntity(unique_id="1234", state="on", entity_id="test_domain.world")], True
-    )
+    ent = MockEntity(unique_id="1234", entity_id="test_domain.world")
+    ent._attr_state = "on"
+    await component.async_add_entities([ent], True)
 
     state = hass.states.get("test_domain.world")
     assert state.state == "on"
@@ -1761,8 +1761,9 @@ async def test_setup_entry_with_entities_that_block_forever(
         hass, platform_name=config_entry.domain, platform=platform
     )
 
-    with patch.object(entity_platform, "SLOW_ADD_ENTITY_MAX_WAIT", 0.01), patch.object(
-        entity_platform, "SLOW_ADD_MIN_TIMEOUT", 0.01
+    with (
+        patch.object(entity_platform, "SLOW_ADD_ENTITY_MAX_WAIT", 0.01),
+        patch.object(entity_platform, "SLOW_ADD_MIN_TIMEOUT", 0.01),
     ):
         assert await platform.async_setup_entry(config_entry)
         await hass.async_block_till_done()

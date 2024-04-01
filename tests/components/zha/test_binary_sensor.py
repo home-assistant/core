@@ -4,9 +4,7 @@ from unittest.mock import patch
 
 import pytest
 import zigpy.profiles.zha
-import zigpy.zcl.clusters.general as general
-import zigpy.zcl.clusters.measurement as measurement
-import zigpy.zcl.clusters.security as security
+from zigpy.zcl.clusters import general, measurement, security
 
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
