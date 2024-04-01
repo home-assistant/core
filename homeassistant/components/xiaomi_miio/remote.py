@@ -225,9 +225,9 @@ class XiaomiMiioRemote(RemoteEntity):
         """Return False if device is unreachable, else True."""
         try:
             self.device.info()
-            return True
         except DeviceException:
             return False
+        return True
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""

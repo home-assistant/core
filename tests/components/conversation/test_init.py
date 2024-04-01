@@ -9,6 +9,8 @@ from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
 
 from homeassistant.components import conversation
+from homeassistant.components.conversation import agent_manager, default_agent
+from homeassistant.components.conversation.models import ConversationInput
 from homeassistant.components.cover import SERVICE_OPEN_COVER
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.const import ATTR_FRIENDLY_NAME
@@ -24,7 +26,13 @@ from homeassistant.setup import async_setup_component
 
 from . import expose_entity, expose_new
 
-from tests.common import MockConfigEntry, MockUser, async_mock_service
+from tests.common import (
+    MockConfigEntry,
+    MockUser,
+    async_mock_service,
+    setup_test_component_platform,
+)
+from tests.components.light.common import MockLight
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 AGENT_ID_OPTIONS = [None, conversation.HOME_ASSISTANT_AGENT]
@@ -88,7 +96,7 @@ async def test_http_processing_intent_target_ha_agent(
     init_components,
     hass_client: ClientSessionGenerator,
     hass_admin_user: MockUser,
-    mock_agent,
+    mock_conversation_agent,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -256,7 +264,6 @@ async def test_http_processing_intent_entity_renamed(
     hass_client: ClientSessionGenerator,
     hass_admin_user: MockUser,
     entity_registry: er.EntityRegistry,
-    enable_custom_integrations: None,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test processing intent via HTTP API with entities renamed later.
@@ -264,13 +271,11 @@ async def test_http_processing_intent_entity_renamed(
     We want to ensure that renaming an entity later busts the cache
     so that the new name is used.
     """
-    platform = getattr(hass.components, "test.light")
-    platform.init(empty=True)
-
-    entity = platform.MockLight("kitchen light", "on")
+    entity = MockLight("kitchen light", "on")
     entity._attr_unique_id = "1234"
     entity.entity_id = "light.kitchen"
-    platform.ENTITIES.append(entity)
+    setup_test_component_platform(hass, LIGHT_DOMAIN, [entity])
+
     assert await async_setup_component(
         hass,
         LIGHT_DOMAIN,
@@ -347,7 +352,6 @@ async def test_http_processing_intent_entity_exposed(
     hass_client: ClientSessionGenerator,
     hass_admin_user: MockUser,
     entity_registry: er.EntityRegistry,
-    enable_custom_integrations: None,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test processing intent via HTTP API with manual expose.
@@ -355,13 +359,11 @@ async def test_http_processing_intent_entity_exposed(
     We want to ensure that manually exposing an entity later busts the cache
     so that the new setting is used.
     """
-    platform = getattr(hass.components, "test.light")
-    platform.init(empty=True)
-
-    entity = platform.MockLight("kitchen light", "on")
+    entity = MockLight("kitchen light", "on")
     entity._attr_unique_id = "1234"
     entity.entity_id = "light.kitchen"
-    platform.ENTITIES.append(entity)
+    setup_test_component_platform(hass, LIGHT_DOMAIN, [entity])
+
     assert await async_setup_component(
         hass,
         LIGHT_DOMAIN,
@@ -452,20 +454,17 @@ async def test_http_processing_intent_conversion_not_expose_new(
     hass_client: ClientSessionGenerator,
     hass_admin_user: MockUser,
     entity_registry: er.EntityRegistry,
-    enable_custom_integrations: None,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test processing intent via HTTP API when not exposing new entities."""
     # Disable exposing new entities to the default agent
     expose_new(hass, False)
 
-    platform = getattr(hass.components, "test.light")
-    platform.init(empty=True)
-
-    entity = platform.MockLight("kitchen light", "on")
+    entity = MockLight("kitchen light", "on")
     entity._attr_unique_id = "1234"
     entity.entity_id = "light.kitchen"
-    platform.ENTITIES.append(entity)
+    setup_test_component_platform(hass, LIGHT_DOMAIN, [entity])
+
     assert await async_setup_component(
         hass,
         LIGHT_DOMAIN,
@@ -661,7 +660,7 @@ async def test_custom_agent(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     hass_admin_user: MockUser,
-    mock_agent,
+    mock_conversation_agent,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test a custom conversation agent."""
@@ -675,7 +674,7 @@ async def test_custom_agent(
         "text": "Test Text",
         "conversation_id": "test-conv-id",
         "language": "test-language",
-        "agent_id": mock_agent.agent_id,
+        "agent_id": mock_conversation_agent.agent_id,
     }
 
     resp = await client.post("/api/conversation/process", json=data)
@@ -686,14 +685,14 @@ async def test_custom_agent(
     assert data["response"]["speech"]["plain"]["speech"] == "Test response"
     assert data["conversation_id"] == "test-conv-id"
 
-    assert len(mock_agent.calls) == 1
-    assert mock_agent.calls[0].text == "Test Text"
-    assert mock_agent.calls[0].context.user_id == hass_admin_user.id
-    assert mock_agent.calls[0].conversation_id == "test-conv-id"
-    assert mock_agent.calls[0].language == "test-language"
+    assert len(mock_conversation_agent.calls) == 1
+    assert mock_conversation_agent.calls[0].text == "Test Text"
+    assert mock_conversation_agent.calls[0].context.user_id == hass_admin_user.id
+    assert mock_conversation_agent.calls[0].conversation_id == "test-conv-id"
+    assert mock_conversation_agent.calls[0].language == "test-language"
 
     conversation.async_unset_agent(
-        hass, hass.config_entries.async_get_entry(mock_agent.agent_id)
+        hass, hass.config_entries.async_get_entry(mock_conversation_agent.agent_id)
     )
 
 
@@ -753,8 +752,8 @@ async def test_ws_prepare(
     """Test the Websocket prepare conversation API."""
     assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(hass, "conversation", {})
-    agent = await conversation._get_agent_manager(hass).async_get_agent()
-    assert isinstance(agent, conversation.DefaultAgent)
+    agent = await agent_manager.get_agent_manager(hass).async_get_agent()
+    assert isinstance(agent, default_agent.DefaultAgent)
 
     # No intents should be loaded yet
     assert not agent._lang_intents.get(hass.config.language)
@@ -855,8 +854,8 @@ async def test_prepare_reload(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, "conversation", {})
 
     # Load intents
-    agent = await conversation._get_agent_manager(hass).async_get_agent()
-    assert isinstance(agent, conversation.DefaultAgent)
+    agent = await agent_manager.get_agent_manager(hass).async_get_agent()
+    assert isinstance(agent, default_agent.DefaultAgent)
     await agent.async_prepare(language)
 
     # Confirm intents are loaded
@@ -883,8 +882,8 @@ async def test_prepare_fail(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, "conversation", {})
 
     # Load intents
-    agent = await conversation._get_agent_manager(hass).async_get_agent()
-    assert isinstance(agent, conversation.DefaultAgent)
+    agent = await agent_manager.get_agent_manager(hass).async_get_agent()
+    assert isinstance(agent, default_agent.DefaultAgent)
     await agent.async_prepare("not-a-language")
 
     # Confirm no intents were loaded
@@ -920,11 +919,11 @@ async def test_non_default_response(hass: HomeAssistant, init_components) -> Non
     hass.states.async_set("cover.front_door", "closed")
     calls = async_mock_service(hass, "cover", SERVICE_OPEN_COVER)
 
-    agent = await conversation._get_agent_manager(hass).async_get_agent()
-    assert isinstance(agent, conversation.DefaultAgent)
+    agent = await agent_manager.get_agent_manager(hass).async_get_agent()
+    assert isinstance(agent, default_agent.DefaultAgent)
 
     result = await agent.async_process(
-        conversation.ConversationInput(
+        ConversationInput(
             text="open the front door",
             context=Context(),
             conversation_id=None,
@@ -1075,7 +1074,7 @@ async def test_agent_id_validator_invalid_agent(hass: HomeAssistant) -> None:
 async def test_get_agent_list(
     hass: HomeAssistant,
     init_components,
-    mock_agent,
+    mock_conversation_agent,
     mock_agent_support_all,
     hass_ws_client: WebSocketGenerator,
     snapshot: SnapshotAssertion,
@@ -1131,14 +1130,20 @@ async def test_get_agent_list(
 
 
 async def test_get_agent_info(
-    hass: HomeAssistant, init_components, mock_agent, snapshot: SnapshotAssertion
+    hass: HomeAssistant,
+    init_components,
+    mock_conversation_agent,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test get agent info."""
     agent_info = conversation.async_get_agent_info(hass)
     # Test it's the default
     assert conversation.async_get_agent_info(hass, "homeassistant") == agent_info
     assert conversation.async_get_agent_info(hass, "homeassistant") == snapshot
-    assert conversation.async_get_agent_info(hass, mock_agent.agent_id) == snapshot
+    assert (
+        conversation.async_get_agent_info(hass, mock_conversation_agent.agent_id)
+        == snapshot
+    )
     assert conversation.async_get_agent_info(hass, "not exist") is None
 
     # Test the name when config entry title is empty

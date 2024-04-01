@@ -72,6 +72,7 @@ from .const import (
     CONF_LINKED_BATTERY_SENSOR,
     CONF_LOW_BATTERY_THRESHOLD,
     DEFAULT_LOW_BATTERY_THRESHOLD,
+    EMPTY_MAC,
     EVENT_HOMEKIT_CHANGED,
     HK_CHARGING,
     HK_NOT_CHARGABLE,
@@ -83,6 +84,7 @@ from .const import (
     MAX_VERSION_LENGTH,
     SERV_ACCESSORY_INFO,
     SERV_BATTERY_SERVICE,
+    SIGNAL_RELOAD_ENTITIES,
     TYPE_FAUCET,
     TYPE_OUTLET,
     TYPE_SHOWER,
@@ -620,7 +622,7 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
         """Reload and recreate an accessory and update the c# value in the mDNS record."""
         async_dispatcher_send(
             self.hass,
-            f"homekit_reload_entities_{self.driver.entry_id}",
+            SIGNAL_RELOAD_ENTITIES.format(self.driver.entry_id),
             (self.entity_id,),
         )
 
@@ -683,7 +685,9 @@ class HomeDriver(AccessoryDriver):  # type: ignore[misc]
         **kwargs: Any,
     ) -> None:
         """Initialize a AccessoryDriver object."""
-        super().__init__(**kwargs)
+        # Always set an empty mac of pyhap will incur
+        # the cost of generating a new one for every driver
+        super().__init__(**kwargs, mac=EMPTY_MAC)
         self.hass = hass
         self.entry_id = entry_id
         self._bridge_name = bridge_name

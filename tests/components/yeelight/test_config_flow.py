@@ -89,11 +89,12 @@ async def test_discovery(hass: HomeAssistant) -> None:
         assert result2["step_id"] == "pick_device"
         assert not result2["errors"]
 
-    with _patch_discovery(), _patch_discovery_interval(), patch(
-        f"{MODULE}.async_setup", return_value=True
-    ) as mock_setup, patch(
-        f"{MODULE}.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
+    with (
+        _patch_discovery(),
+        _patch_discovery_interval(),
+        patch(f"{MODULE}.async_setup", return_value=True) as mock_setup,
+        patch(f"{MODULE}.async_setup_entry", return_value=True) as mock_setup_entry,
+    ):
         result3 = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_DEVICE: ID}
         )
@@ -128,8 +129,11 @@ async def test_discovery_with_existing_device_present(hass: HomeAssistant) -> No
     alternate_bulb.capabilities["id"] = "0x000000000099999"
     alternate_bulb.capabilities["location"] = "yeelight://4.4.4.4"
 
-    with _patch_discovery(), _patch_discovery_timeout(), _patch_discovery_interval(), patch(
-        f"{MODULE}.AsyncBulb", return_value=alternate_bulb
+    with (
+        _patch_discovery(),
+        _patch_discovery_timeout(),
+        _patch_discovery_interval(),
+        patch(f"{MODULE}.AsyncBulb", return_value=alternate_bulb),
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -166,8 +170,10 @@ async def test_discovery_with_existing_device_present(hass: HomeAssistant) -> No
     assert result2["step_id"] == "pick_device"
     assert not result2["errors"]
 
-    with _patch_discovery(), _patch_discovery_interval(), patch(
-        f"{MODULE}.AsyncBulb", return_value=_mocked_bulb()
+    with (
+        _patch_discovery(),
+        _patch_discovery_interval(),
+        patch(f"{MODULE}.AsyncBulb", return_value=_mocked_bulb()),
     ):
         result3 = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_DEVICE: ID}
@@ -202,9 +208,11 @@ async def test_discovery_no_device(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with _patch_discovery(
-        no_device=True
-    ), _patch_discovery_timeout(), _patch_discovery_interval():
+    with (
+        _patch_discovery(no_device=True),
+        _patch_discovery_timeout(),
+        _patch_discovery_interval(),
+    ):
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
     assert result2["type"] == "abort"
@@ -224,10 +232,11 @@ async def test_import(hass: HomeAssistant) -> None:
 
     # Cannot connect
     mocked_bulb = _mocked_bulb(cannot_connect=True)
-    with _patch_discovery(
-        no_device=True
-    ), _patch_discovery_timeout(), _patch_discovery_interval(), patch(
-        f"{MODULE_CONFIG_FLOW}.AsyncBulb", return_value=mocked_bulb
+    with (
+        _patch_discovery(no_device=True),
+        _patch_discovery_timeout(),
+        _patch_discovery_interval(),
+        patch(f"{MODULE_CONFIG_FLOW}.AsyncBulb", return_value=mocked_bulb),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=config
@@ -237,11 +246,12 @@ async def test_import(hass: HomeAssistant) -> None:
 
     # Success
     mocked_bulb = _mocked_bulb()
-    with _patch_discovery(), patch(
-        f"{MODULE_CONFIG_FLOW}.AsyncBulb", return_value=mocked_bulb
-    ), patch(f"{MODULE}.async_setup", return_value=True) as mock_setup, patch(
-        f"{MODULE}.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
+    with (
+        _patch_discovery(),
+        patch(f"{MODULE_CONFIG_FLOW}.AsyncBulb", return_value=mocked_bulb),
+        patch(f"{MODULE}.async_setup", return_value=True) as mock_setup,
+        patch(f"{MODULE}.async_setup_entry", return_value=True) as mock_setup_entry,
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=config
         )
@@ -261,8 +271,9 @@ async def test_import(hass: HomeAssistant) -> None:
 
     # Duplicate
     mocked_bulb = _mocked_bulb()
-    with _patch_discovery(), patch(
-        f"{MODULE_CONFIG_FLOW}.AsyncBulb", return_value=mocked_bulb
+    with (
+        _patch_discovery(),
+        patch(f"{MODULE_CONFIG_FLOW}.AsyncBulb", return_value=mocked_bulb),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=config
@@ -282,10 +293,11 @@ async def test_manual(hass: HomeAssistant) -> None:
 
     # Cannot connect (timeout)
     mocked_bulb = _mocked_bulb(cannot_connect=True)
-    with _patch_discovery(
-        no_device=True
-    ), _patch_discovery_timeout(), _patch_discovery_interval(), patch(
-        f"{MODULE_CONFIG_FLOW}.AsyncBulb", return_value=mocked_bulb
+    with (
+        _patch_discovery(no_device=True),
+        _patch_discovery_timeout(),
+        _patch_discovery_interval(),
+        patch(f"{MODULE_CONFIG_FLOW}.AsyncBulb", return_value=mocked_bulb),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_HOST: IP_ADDRESS}
@@ -295,10 +307,11 @@ async def test_manual(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "cannot_connect"}
 
     # Cannot connect (error)
-    with _patch_discovery(
-        no_device=True
-    ), _patch_discovery_timeout(), _patch_discovery_interval(), patch(
-        f"{MODULE_CONFIG_FLOW}.AsyncBulb", return_value=mocked_bulb
+    with (
+        _patch_discovery(no_device=True),
+        _patch_discovery_timeout(),
+        _patch_discovery_interval(),
+        patch(f"{MODULE_CONFIG_FLOW}.AsyncBulb", return_value=mocked_bulb),
     ):
         result3 = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_HOST: IP_ADDRESS}
@@ -307,10 +320,12 @@ async def test_manual(hass: HomeAssistant) -> None:
 
     # Success
     mocked_bulb = _mocked_bulb()
-    with _patch_discovery(), _patch_discovery_timeout(), patch(
-        f"{MODULE_CONFIG_FLOW}.AsyncBulb", return_value=mocked_bulb
-    ), patch(f"{MODULE}.async_setup", return_value=True), patch(
-        f"{MODULE}.async_setup_entry", return_value=True
+    with (
+        _patch_discovery(),
+        _patch_discovery_timeout(),
+        patch(f"{MODULE_CONFIG_FLOW}.AsyncBulb", return_value=mocked_bulb),
+        patch(f"{MODULE}.async_setup", return_value=True),
+        patch(f"{MODULE}.async_setup_entry", return_value=True),
     ):
         result4 = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_HOST: IP_ADDRESS}
@@ -329,10 +344,11 @@ async def test_manual(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     mocked_bulb = _mocked_bulb()
-    with _patch_discovery(
-        no_device=True
-    ), _patch_discovery_timeout(), _patch_discovery_interval(), patch(
-        f"{MODULE_CONFIG_FLOW}.AsyncBulb", return_value=mocked_bulb
+    with (
+        _patch_discovery(no_device=True),
+        _patch_discovery_timeout(),
+        _patch_discovery_interval(),
+        patch(f"{MODULE_CONFIG_FLOW}.AsyncBulb", return_value=mocked_bulb),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_HOST: IP_ADDRESS}
@@ -436,16 +452,19 @@ async def test_manual_no_capabilities(hass: HomeAssistant) -> None:
     assert not result["errors"]
 
     mocked_bulb = _mocked_bulb()
-    with _patch_discovery(
-        no_device=True
-    ), _patch_discovery_timeout(), _patch_discovery_interval(), patch(
-        f"{MODULE_CONFIG_FLOW}.AsyncBulb", return_value=mocked_bulb
-    ), patch(
-        f"{MODULE}.async_setup",
-        return_value=True,
-    ), patch(
-        f"{MODULE}.async_setup_entry",
-        return_value=True,
+    with (
+        _patch_discovery(no_device=True),
+        _patch_discovery_timeout(),
+        _patch_discovery_interval(),
+        patch(f"{MODULE_CONFIG_FLOW}.AsyncBulb", return_value=mocked_bulb),
+        patch(
+            f"{MODULE}.async_setup",
+            return_value=True,
+        ),
+        patch(
+            f"{MODULE}.async_setup_entry",
+            return_value=True,
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_HOST: IP_ADDRESS}
@@ -462,8 +481,10 @@ async def test_discovered_by_homekit_and_dhcp(hass: HomeAssistant) -> None:
     """Test we get the form with homekit and abort for dhcp source when we get both."""
 
     mocked_bulb = _mocked_bulb()
-    with _patch_discovery(), _patch_discovery_interval(), patch(
-        f"{MODULE_CONFIG_FLOW}.AsyncBulb", return_value=mocked_bulb
+    with (
+        _patch_discovery(),
+        _patch_discovery_interval(),
+        patch(f"{MODULE_CONFIG_FLOW}.AsyncBulb", return_value=mocked_bulb),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -482,8 +503,10 @@ async def test_discovered_by_homekit_and_dhcp(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
 
-    with _patch_discovery(), _patch_discovery_interval(), patch(
-        f"{MODULE_CONFIG_FLOW}.AsyncBulb", return_value=mocked_bulb
+    with (
+        _patch_discovery(),
+        _patch_discovery_interval(),
+        patch(f"{MODULE_CONFIG_FLOW}.AsyncBulb", return_value=mocked_bulb),
     ):
         result2 = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -496,8 +519,10 @@ async def test_discovered_by_homekit_and_dhcp(hass: HomeAssistant) -> None:
     assert result2["type"] == FlowResultType.ABORT
     assert result2["reason"] == "already_in_progress"
 
-    with _patch_discovery(), _patch_discovery_interval(), patch(
-        f"{MODULE_CONFIG_FLOW}.AsyncBulb", return_value=mocked_bulb
+    with (
+        _patch_discovery(),
+        _patch_discovery_interval(),
+        patch(f"{MODULE_CONFIG_FLOW}.AsyncBulb", return_value=mocked_bulb),
     ):
         result3 = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -510,10 +535,11 @@ async def test_discovered_by_homekit_and_dhcp(hass: HomeAssistant) -> None:
     assert result3["type"] == FlowResultType.ABORT
     assert result3["reason"] == "already_in_progress"
 
-    with _patch_discovery(
-        no_device=True
-    ), _patch_discovery_timeout(), _patch_discovery_interval(), patch(
-        f"{MODULE_CONFIG_FLOW}.AsyncBulb", side_effect=CannotConnect
+    with (
+        _patch_discovery(no_device=True),
+        _patch_discovery_timeout(),
+        _patch_discovery_interval(),
+        patch(f"{MODULE_CONFIG_FLOW}.AsyncBulb", side_effect=CannotConnect),
     ):
         result3 = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -554,8 +580,10 @@ async def test_discovered_by_dhcp_or_homekit(hass: HomeAssistant, source, data) 
     """Test we can setup when discovered from dhcp or homekit."""
 
     mocked_bulb = _mocked_bulb()
-    with _patch_discovery(), _patch_discovery_interval(), patch(
-        f"{MODULE_CONFIG_FLOW}.AsyncBulb", return_value=mocked_bulb
+    with (
+        _patch_discovery(),
+        _patch_discovery_interval(),
+        patch(f"{MODULE_CONFIG_FLOW}.AsyncBulb", return_value=mocked_bulb),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": source}, data=data
@@ -565,11 +593,14 @@ async def test_discovered_by_dhcp_or_homekit(hass: HomeAssistant, source, data) 
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
 
-    with _patch_discovery(), _patch_discovery_interval(), patch(
-        f"{MODULE}.async_setup", return_value=True
-    ) as mock_async_setup, patch(
-        f"{MODULE}.async_setup_entry", return_value=True
-    ) as mock_async_setup_entry:
+    with (
+        _patch_discovery(),
+        _patch_discovery_interval(),
+        patch(f"{MODULE}.async_setup", return_value=True) as mock_async_setup,
+        patch(
+            f"{MODULE}.async_setup_entry", return_value=True
+        ) as mock_async_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         await hass.async_block_till_done()
 
@@ -582,10 +613,11 @@ async def test_discovered_by_dhcp_or_homekit(hass: HomeAssistant, source, data) 
     assert mock_async_setup.called
     assert mock_async_setup_entry.called
 
-    with _patch_discovery(
-        no_device=True
-    ), _patch_discovery_timeout(), _patch_discovery_interval(), patch(
-        f"{MODULE_CONFIG_FLOW}.AsyncBulb", side_effect=CannotConnect
+    with (
+        _patch_discovery(no_device=True),
+        _patch_discovery_timeout(),
+        _patch_discovery_interval(),
+        patch(f"{MODULE_CONFIG_FLOW}.AsyncBulb", side_effect=CannotConnect),
     ):
         result3 = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": source}, data=data
@@ -624,10 +656,11 @@ async def test_discovered_by_dhcp_or_homekit_failed_to_get_id(
     """Test we abort if we cannot get the unique id when discovered from dhcp or homekit."""
 
     mocked_bulb = _mocked_bulb()
-    with _patch_discovery(
-        no_device=True
-    ), _patch_discovery_timeout(), _patch_discovery_interval(), patch(
-        f"{MODULE_CONFIG_FLOW}.AsyncBulb", return_value=mocked_bulb
+    with (
+        _patch_discovery(no_device=True),
+        _patch_discovery_timeout(),
+        _patch_discovery_interval(),
+        patch(f"{MODULE_CONFIG_FLOW}.AsyncBulb", return_value=mocked_bulb),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": source}, data=data
@@ -640,8 +673,10 @@ async def test_discovered_ssdp(hass: HomeAssistant) -> None:
     """Test we can setup when discovered from ssdp."""
 
     mocked_bulb = _mocked_bulb()
-    with _patch_discovery(), _patch_discovery_interval(), patch(
-        f"{MODULE_CONFIG_FLOW}.AsyncBulb", return_value=mocked_bulb
+    with (
+        _patch_discovery(),
+        _patch_discovery_interval(),
+        patch(f"{MODULE_CONFIG_FLOW}.AsyncBulb", return_value=mocked_bulb),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_SSDP}, data=SSDP_INFO
@@ -651,11 +686,14 @@ async def test_discovered_ssdp(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
 
-    with _patch_discovery(), _patch_discovery_interval(), patch(
-        f"{MODULE}.async_setup", return_value=True
-    ) as mock_async_setup, patch(
-        f"{MODULE}.async_setup_entry", return_value=True
-    ) as mock_async_setup_entry:
+    with (
+        _patch_discovery(),
+        _patch_discovery_interval(),
+        patch(f"{MODULE}.async_setup", return_value=True) as mock_async_setup,
+        patch(
+            f"{MODULE}.async_setup_entry", return_value=True
+        ) as mock_async_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         await hass.async_block_till_done()
 
@@ -669,8 +707,10 @@ async def test_discovered_ssdp(hass: HomeAssistant) -> None:
     assert mock_async_setup_entry.called
 
     mocked_bulb = _mocked_bulb()
-    with _patch_discovery(), _patch_discovery_interval(), patch(
-        f"{MODULE_CONFIG_FLOW}.AsyncBulb", return_value=mocked_bulb
+    with (
+        _patch_discovery(),
+        _patch_discovery_interval(),
+        patch(f"{MODULE_CONFIG_FLOW}.AsyncBulb", return_value=mocked_bulb),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_SSDP}, data=SSDP_INFO
@@ -685,8 +725,10 @@ async def test_discovered_zeroconf(hass: HomeAssistant) -> None:
     """Test we can setup when discovered from zeroconf."""
 
     mocked_bulb = _mocked_bulb()
-    with _patch_discovery(), _patch_discovery_interval(), patch(
-        f"{MODULE_CONFIG_FLOW}.AsyncBulb", return_value=mocked_bulb
+    with (
+        _patch_discovery(),
+        _patch_discovery_interval(),
+        patch(f"{MODULE_CONFIG_FLOW}.AsyncBulb", return_value=mocked_bulb),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -698,11 +740,14 @@ async def test_discovered_zeroconf(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
 
-    with _patch_discovery(), _patch_discovery_interval(), patch(
-        f"{MODULE}.async_setup", return_value=True
-    ) as mock_async_setup, patch(
-        f"{MODULE}.async_setup_entry", return_value=True
-    ) as mock_async_setup_entry:
+    with (
+        _patch_discovery(),
+        _patch_discovery_interval(),
+        patch(f"{MODULE}.async_setup", return_value=True) as mock_async_setup,
+        patch(
+            f"{MODULE}.async_setup_entry", return_value=True
+        ) as mock_async_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         await hass.async_block_till_done()
 
@@ -716,8 +761,10 @@ async def test_discovered_zeroconf(hass: HomeAssistant) -> None:
     assert mock_async_setup_entry.called
 
     mocked_bulb = _mocked_bulb()
-    with _patch_discovery(), _patch_discovery_interval(), patch(
-        f"{MODULE_CONFIG_FLOW}.AsyncBulb", return_value=mocked_bulb
+    with (
+        _patch_discovery(),
+        _patch_discovery_interval(),
+        patch(f"{MODULE_CONFIG_FLOW}.AsyncBulb", return_value=mocked_bulb),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -730,8 +777,10 @@ async def test_discovered_zeroconf(hass: HomeAssistant) -> None:
     assert result["reason"] == "already_configured"
 
     mocked_bulb = _mocked_bulb()
-    with _patch_discovery(), _patch_discovery_interval(), patch(
-        f"{MODULE_CONFIG_FLOW}.AsyncBulb", return_value=mocked_bulb
+    with (
+        _patch_discovery(),
+        _patch_discovery_interval(),
+        patch(f"{MODULE_CONFIG_FLOW}.AsyncBulb", return_value=mocked_bulb),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -752,8 +801,10 @@ async def test_discovery_updates_ip(hass: HomeAssistant) -> None:
     config_entry.add_to_hass(hass)
 
     mocked_bulb = _mocked_bulb()
-    with _patch_discovery(), _patch_discovery_interval(), patch(
-        f"{MODULE_CONFIG_FLOW}.AsyncBulb", return_value=mocked_bulb
+    with (
+        _patch_discovery(),
+        _patch_discovery_interval(),
+        patch(f"{MODULE_CONFIG_FLOW}.AsyncBulb", return_value=mocked_bulb),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -780,10 +831,11 @@ async def test_discovery_updates_ip_no_reload_setup_in_progress(
     config_entry.add_to_hass(hass)
 
     mocked_bulb = _mocked_bulb()
-    with patch(
-        f"{MODULE}.async_setup_entry", return_value=True
-    ) as mock_setup_entry, _patch_discovery(), _patch_discovery_interval(), patch(
-        f"{MODULE_CONFIG_FLOW}.AsyncBulb", return_value=mocked_bulb
+    with (
+        patch(f"{MODULE}.async_setup_entry", return_value=True) as mock_setup_entry,
+        _patch_discovery(),
+        _patch_discovery_interval(),
+        patch(f"{MODULE_CONFIG_FLOW}.AsyncBulb", return_value=mocked_bulb),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -804,8 +856,10 @@ async def test_discovery_adds_missing_ip_id_only(hass: HomeAssistant) -> None:
     config_entry.add_to_hass(hass)
 
     mocked_bulb = _mocked_bulb()
-    with _patch_discovery(), _patch_discovery_interval(), patch(
-        f"{MODULE_CONFIG_FLOW}.AsyncBulb", return_value=mocked_bulb
+    with (
+        _patch_discovery(),
+        _patch_discovery_interval(),
+        patch(f"{MODULE_CONFIG_FLOW}.AsyncBulb", return_value=mocked_bulb),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -845,13 +899,18 @@ async def test_discovery_adds_missing_ip_id_only(hass: HomeAssistant) -> None:
 async def test_discovered_during_onboarding(hass: HomeAssistant, source, data) -> None:
     """Test we create a config entry when discovered during onboarding."""
     mocked_bulb = _mocked_bulb()
-    with _patch_discovery(), _patch_discovery_interval(), patch(
-        f"{MODULE_CONFIG_FLOW}.AsyncBulb", return_value=mocked_bulb
-    ), patch(f"{MODULE}.async_setup", return_value=True) as mock_async_setup, patch(
-        f"{MODULE}.async_setup_entry", return_value=True
-    ) as mock_async_setup_entry, patch(
-        "homeassistant.components.onboarding.async_is_onboarded", return_value=False
-    ) as mock_is_onboarded:
+    with (
+        _patch_discovery(),
+        _patch_discovery_interval(),
+        patch(f"{MODULE_CONFIG_FLOW}.AsyncBulb", return_value=mocked_bulb),
+        patch(f"{MODULE}.async_setup", return_value=True) as mock_async_setup,
+        patch(
+            f"{MODULE}.async_setup_entry", return_value=True
+        ) as mock_async_setup_entry,
+        patch(
+            "homeassistant.components.onboarding.async_is_onboarded", return_value=False
+        ) as mock_is_onboarded,
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": source}, data=data
         )

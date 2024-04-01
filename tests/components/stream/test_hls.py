@@ -2,14 +2,13 @@
 
 from datetime import timedelta
 from http import HTTPStatus
-import logging
 from unittest.mock import patch
 from urllib.parse import urlparse
 
 import av
 import pytest
 
-from homeassistant.components.stream import create_stream
+from homeassistant.components.stream import Stream, create_stream
 from homeassistant.components.stream.const import (
     EXT_X_START_LL_HLS,
     EXT_X_START_NON_LL_HLS,
@@ -300,28 +299,24 @@ async def test_stream_retries(
     open_future1 = hass.loop.create_future()
     open_future2 = hass.loop.create_future()
     futures = [open_future2, open_future1]
-    cur_time = 0
 
-    def time_side_effect():
-        logging.info("time side effect")
-        nonlocal cur_time
-        if cur_time >= 80:
-            logging.info("changing return value")
+    original_set_state = Stream._set_state
+
+    def set_state_wrapper(self, state: bool) -> None:
+        if state is False:
             should_retry.return_value = False  # Thread should exit and be joinable.
-        cur_time += 40
-        return cur_time
+        original_set_state(self, state)
 
     def av_open_side_effect(*args, **kwargs):
         hass.loop.call_soon_threadsafe(futures.pop().set_result, None)
         raise av.error.InvalidDataError(-2, "error")
 
-    with patch("av.open") as av_open, patch(
-        "homeassistant.components.stream.time"
-    ) as mock_time, patch(
-        "homeassistant.components.stream.STREAM_RESTART_INCREMENT", 0
+    with (
+        patch("av.open") as av_open,
+        patch("homeassistant.components.stream.Stream._set_state", set_state_wrapper),
+        patch("homeassistant.components.stream.STREAM_RESTART_INCREMENT", 0),
     ):
         av_open.side_effect = av_open_side_effect
-        mock_time.time.side_effect = time_side_effect
         # Request stream. Enable retries which are disabled by default in tests.
         should_retry.return_value = True
         await stream.start()

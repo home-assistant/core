@@ -195,35 +195,6 @@ class SmhiWeather(WeatherEntity):
         """Retry refresh weather forecast."""
         await self.async_update(no_throttle=True)
 
-    @property
-    def forecast(self) -> list[Forecast] | None:
-        """Return the forecast."""
-        if self._forecast_daily is None or len(self._forecast_daily) < 2:
-            return None
-
-        data: list[Forecast] = []
-
-        for forecast in self._forecast_daily[1:]:
-            condition = CONDITION_MAP.get(forecast.symbol)
-
-            data.append(
-                {
-                    ATTR_FORECAST_TIME: forecast.valid_time.isoformat(),
-                    ATTR_FORECAST_NATIVE_TEMP: forecast.temperature_max,
-                    ATTR_FORECAST_NATIVE_TEMP_LOW: forecast.temperature_min,
-                    ATTR_FORECAST_NATIVE_PRECIPITATION: forecast.total_precipitation,
-                    ATTR_FORECAST_CONDITION: condition,
-                    ATTR_FORECAST_NATIVE_PRESSURE: forecast.pressure,
-                    ATTR_FORECAST_WIND_BEARING: forecast.wind_direction,
-                    ATTR_FORECAST_NATIVE_WIND_SPEED: forecast.wind_speed,
-                    ATTR_FORECAST_HUMIDITY: forecast.humidity,
-                    ATTR_FORECAST_NATIVE_WIND_GUST_SPEED: forecast.wind_gust,
-                    ATTR_FORECAST_CLOUD_COVERAGE: forecast.cloudiness,
-                }
-            )
-
-        return data
-
     def _get_forecast_data(
         self, forecast_data: list[SmhiForecast] | None
     ) -> list[Forecast] | None:

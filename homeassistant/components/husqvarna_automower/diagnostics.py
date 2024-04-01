@@ -1,4 +1,5 @@
 """Diagnostics support for Husqvarna Automower."""
+
 from __future__ import annotations
 
 import logging

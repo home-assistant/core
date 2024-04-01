@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.helpers.dispatcher import SignalType
+from homeassistant.util.signal_type import SignalType
 
 DOMAIN = "cloud"
 DATA_PLATFORMS_SETUP = "cloud_platforms_setup"

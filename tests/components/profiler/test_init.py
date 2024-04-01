@@ -332,18 +332,19 @@ async def test_log_object_sources(
         caplog.clear()
 
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=11))
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         assert "No new object growth found" in caplog.text
 
     fake_object2 = FakeObject()
 
-    with patch("gc.collect"), patch(
-        "gc.get_objects", return_value=[fake_object, fake_object2]
+    with (
+        patch("gc.collect"),
+        patch("gc.get_objects", return_value=[fake_object, fake_object2]),
     ):
         caplog.clear()
 
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=21))
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         assert "New object FakeObject (1/2)" in caplog.text
 
     many_objects = [FakeObject() for _ in range(30)]
@@ -351,7 +352,7 @@ async def test_log_object_sources(
         caplog.clear()
 
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=31))
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         assert "New object FakeObject (2/30)" in caplog.text
         assert "New objects overflowed by {'FakeObject': 25}" in caplog.text
 
@@ -361,7 +362,7 @@ async def test_log_object_sources(
     caplog.clear()
 
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=41))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert "FakeObject" not in caplog.text
     assert "No new object growth found" not in caplog.text
 
@@ -369,7 +370,7 @@ async def test_log_object_sources(
     await hass.async_block_till_done()
 
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=51))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert "FakeObject" not in caplog.text
     assert "No new object growth found" not in caplog.text
 

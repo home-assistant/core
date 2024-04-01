@@ -119,4 +119,5 @@ class PowerviewShadeButton(ShadeEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Handle the button press."""
-        await self.entity_description.press_action(self._shade)
+        async with self.coordinator.radio_operation_lock:
+            await self.entity_description.press_action(self._shade)

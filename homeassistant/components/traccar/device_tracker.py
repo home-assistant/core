@@ -144,9 +144,9 @@ async def async_setup_entry(
             [TraccarEntity(device, latitude, longitude, battery, accuracy, attrs)]
         )
 
-    hass.data[DOMAIN]["unsub_device_tracker"][
-        entry.entry_id
-    ] = async_dispatcher_connect(hass, TRACKER_UPDATE, _receive_data)
+    hass.data[DOMAIN]["unsub_device_tracker"][entry.entry_id] = (
+        async_dispatcher_connect(hass, TRACKER_UPDATE, _receive_data)
+    )
 
     # Restore previously loaded devices
     dev_reg = dr.async_get(hass)
