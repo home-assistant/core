@@ -45,6 +45,7 @@ NUMBER_TYPES: list[BMWNumberEntityDescription] = [
         native_max_value=100.0,
         native_min_value=20.0,
         native_step=5.0,
+        clamp=True,
         mode=NumberMode.SLIDER,
         value_fn=lambda v: v.fuel_and_battery.charging_target,
         remote_service=lambda v, o: v.remote_services.trigger_charging_settings_update(

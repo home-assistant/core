@@ -9,7 +9,7 @@ import respx
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError
 
 from . import check_remote_service_call, setup_mocked_integration
 
@@ -62,15 +62,16 @@ async def test_service_call_success(
 
 
 @pytest.mark.parametrize(
-    ("entity_id", "value"),
+    ("entity_id", "value", "clamped"),
     [
-        ("number.i4_edrive40_target_soc", "81"),
+        ("number.i4_edrive40_target_soc", "81", "80"),
     ],
 )
 async def test_service_call_invalid_input(
     hass: HomeAssistant,
     entity_id: str,
     value: str,
+    clamped: str,
     bmw_fixture: respx.Router,
 ) -> None:
     """Test not allowed values for number inputs."""
@@ -80,15 +81,15 @@ async def test_service_call_invalid_input(
     old_value = hass.states.get(entity_id).state
 
     # Test
-    with pytest.raises(ServiceValidationError):
-        await hass.services.async_call(
-            "number",
-            "set_value",
-            service_data={"value": value},
-            blocking=True,
-            target={"entity_id": entity_id},
-        )
-    assert hass.states.get(entity_id).state == old_value
+    await hass.services.async_call(
+        "number",
+        "set_value",
+        service_data={"value": value},
+        blocking=True,
+        target={"entity_id": entity_id},
+    )
+    assert hass.states.get(entity_id).state == clamped
+    assert hass.states.get(entity_id).state != old_value
 
 
 @pytest.mark.parametrize(

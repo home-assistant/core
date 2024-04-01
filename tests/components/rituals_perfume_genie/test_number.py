@@ -137,7 +137,7 @@ async def test_set_number_value_to_float(hass: HomeAssistant) -> None:
     assert state
     assert state.state == "3"
 
-    with pytest.raises(ServiceValidationError):
+    with pytest.raises(ValueError):
         await hass.services.async_call(
             NUMBER_DOMAIN,
             SERVICE_SET_VALUE,
