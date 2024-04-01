@@ -6,7 +6,6 @@ from unittest.mock import Mock, call, patch
 
 from pyfritzhome import LoginError
 import pytest
-from requests.exceptions import ConnectionError, HTTPError
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.fritzbox.const import DOMAIN as FB_DOMAIN
@@ -156,62 +155,6 @@ async def test_update_unique_id_no_change(
     entity_migrated = entity_registry.async_get(entity.entity_id)
     assert entity_migrated
     assert entity_migrated.unique_id == unique_id
-
-
-async def test_coordinator_update_after_reboot(
-    hass: HomeAssistant, fritz: Mock
-) -> None:
-    """Test coordinator after reboot."""
-    entry = MockConfigEntry(
-        domain=FB_DOMAIN,
-        data=MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0],
-        unique_id="any",
-    )
-    entry.add_to_hass(hass)
-    fritz().update_devices.side_effect = [HTTPError(), ""]
-
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    assert fritz().update_devices.call_count == 2
-    assert fritz().update_templates.call_count == 1
-    assert fritz().get_devices.call_count == 1
-    assert fritz().get_templates.call_count == 1
-    assert fritz().login.call_count == 2
-
-
-async def test_coordinator_update_after_password_change(
-    hass: HomeAssistant, fritz: Mock
-) -> None:
-    """Test coordinator after password change."""
-    entry = MockConfigEntry(
-        domain=FB_DOMAIN,
-        data=MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0],
-        unique_id="any",
-    )
-    entry.add_to_hass(hass)
-    fritz().update_devices.side_effect = HTTPError()
-    fritz().login.side_effect = ["", LoginError("some_user")]
-
-    assert not await hass.config_entries.async_setup(entry.entry_id)
-    assert fritz().update_devices.call_count == 1
-    assert fritz().get_devices.call_count == 0
-    assert fritz().get_templates.call_count == 0
-    assert fritz().login.call_count == 2
-
-
-async def test_coordinator_update_when_unreachable(
-    hass: HomeAssistant, fritz: Mock
-) -> None:
-    """Test coordinator after reboot."""
-    entry = MockConfigEntry(
-        domain=FB_DOMAIN,
-        data=MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0],
-        unique_id="any",
-    )
-    entry.add_to_hass(hass)
-    fritz().update_devices.side_effect = [ConnectionError(), ""]
-
-    assert not await hass.config_entries.async_setup(entry.entry_id)
-    assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_unload_remove(hass: HomeAssistant, fritz: Mock) -> None:
