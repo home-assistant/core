@@ -9,6 +9,7 @@ from systembridgeconnector.exceptions import (
     ConnectionErrorException,
 )
 
+from homeassistant.components.system_bridge import SERVICE_OPEN_URL
 from homeassistant.components.system_bridge.config_flow import SystemBridgeConfigFlow
 from homeassistant.components.system_bridge.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -189,6 +190,40 @@ async def test_get_data_timeout(
     entry = hass.config_entries.async_entries(DOMAIN)[0]
 
     assert entry.state == ConfigEntryState.SETUP_RETRY
+
+
+async def test_already_has_services(
+    hass: HomeAssistant,
+    mock_version: MagicMock,
+    mock_websocket_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test if services are registered."""
+    await setup_integration(hass, mock_config_entry)
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+
+    assert entry.state == ConfigEntryState.LOADED
+
+    assert hass.services.has_service(DOMAIN, SERVICE_OPEN_URL)
+
+    new_config_entry = MockConfigEntry(
+        title="Title 2",
+        domain=DOMAIN,
+        unique_id="uuid2",
+        version=SystemBridgeConfigFlow.VERSION,
+        minor_version=SystemBridgeConfigFlow.MINOR_VERSION,
+        data={
+            CONF_HOST: FIXTURE_USER_INPUT[CONF_HOST],
+            CONF_PORT: FIXTURE_USER_INPUT[CONF_PORT],
+            CONF_TOKEN: FIXTURE_USER_INPUT[CONF_TOKEN],
+        },
+    )
+    await setup_integration(hass, new_config_entry)
+    entry_2 = hass.config_entries.async_entries(DOMAIN)[1]
+
+    assert entry_2.state == ConfigEntryState.LOADED
+
+    assert hass.services.has_service(DOMAIN, SERVICE_OPEN_URL)
 
 
 async def test_migration_minor_1_to_2(
