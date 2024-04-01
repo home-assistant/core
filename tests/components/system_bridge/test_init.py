@@ -438,6 +438,26 @@ async def test_migration_minor_1_to_2(
     assert config_entry.state == ConfigEntryState.LOADED
 
 
+async def test_migration_major_future_version(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test migration."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=FIXTURE_UUID,
+        data={
+            CONF_HOST: FIXTURE_USER_INPUT[CONF_HOST],
+            CONF_PORT: FIXTURE_USER_INPUT[CONF_PORT],
+            CONF_TOKEN: FIXTURE_USER_INPUT[CONF_TOKEN],
+        },
+        version=SystemBridgeConfigFlow.VERSION + 1,
+        minor_version=SystemBridgeConfigFlow.MINOR_VERSION,
+    )
+
+    await setup_integration(hass, config_entry)
+
+
 async def test_migration_minor_future_version(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
