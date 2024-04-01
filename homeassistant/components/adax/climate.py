@@ -165,8 +165,6 @@ class LocalAdaxDevice(ClimateEntity):
             await self._adax_data_handler.set_target_temperature(temperature)
         elif hvac_mode == HVACMode.OFF:
             await self._adax_data_handler.set_target_temperature(0)
-        else:
-            return
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
