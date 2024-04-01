@@ -432,9 +432,13 @@ class Person(
         self._unsub_track_device: Callable[[], None] | None = None
 
         self._attr_unique_id = config[CONF_ID]
-        self._attr_name = config[CONF_NAME]
-        self._attr_entity_picture = config.get(CONF_PICTURE)
-        self._attr_device_trackers = config[CONF_DEVICE_TRACKERS]
+        self._set_attrs_from_config()
+
+    def _set_attrs_from_config(self) -> None:
+        """Set attributes from config."""
+        self._attr_name = self._config[CONF_NAME]
+        self._attr_entity_picture = self._config.get(CONF_PICTURE)
+        self._attr_device_trackers = self._config[CONF_DEVICE_TRACKERS]
 
     @classmethod
     def from_storage(cls, config: ConfigType) -> Self:
@@ -486,10 +490,7 @@ class Person(
     def _async_update_config(self, config: ConfigType) -> None:
         """Handle when the config is updated."""
         self._config = config
-
-        self._attr_name = config[CONF_NAME]
-        self._attr_entity_picture = config.get(CONF_PICTURE)
-        self._attr_device_trackers = config[CONF_DEVICE_TRACKERS]
+        self._set_attrs_from_config()
 
         if self._unsub_track_device is not None:
             self._unsub_track_device()
