@@ -8,8 +8,7 @@ from typing import Any
 from freezegun import freeze_time
 import pytest
 
-from homeassistant.components import mikrotik
-import homeassistant.components.device_tracker as device_tracker
+from homeassistant.components import device_tracker, mikrotik
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er

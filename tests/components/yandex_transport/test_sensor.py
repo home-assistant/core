@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-import homeassistant.components.sensor as sensor
+from homeassistant.components import sensor
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component

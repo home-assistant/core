@@ -8,7 +8,7 @@ from freezegun import freeze_time
 import pytest
 import voluptuous as vol
 
-import homeassistant.components.automation as automation
+from homeassistant.components import automation
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
