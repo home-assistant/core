@@ -700,6 +700,13 @@ class UtilityMeterSensor(RestoreSensor):
             # The entity no longer exists
             device_class_source = None
 
+        if (
+            device_class_source is None
+            and self._unit_of_measurement
+            in DEVICE_CLASS_UNITS[SensorDeviceClass.ENERGY]
+        ):
+            return SensorDeviceClass.ENERGY
+            
         # Inherits the source entity's class if it is compatible with the utility
         # meter entity's state class
         device_class = try_parse_enum(SensorDeviceClass, device_class_source)
@@ -709,9 +716,6 @@ class UtilityMeterSensor(RestoreSensor):
             and self.state_class in classes
         ):
             return device_class_source
-
-        if device_class_source is None and self._unit_of_measurement in DEVICE_CLASS_UNITS[SensorDeviceClass.ENERGY]:
-            return SensorDeviceClass.ENERGY
 
         return None
 
