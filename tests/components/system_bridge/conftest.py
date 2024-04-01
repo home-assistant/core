@@ -57,6 +57,15 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
         yield mock_setup_entry
 
 
+@pytest.fixture(autouse=True)
+def mock_setup_notify_platform() -> Generator[AsyncMock, None, None]:
+    """Mock notify platform setup."""
+    with patch(
+        "homeassistant.helpers.discovery.async_load_platform",
+    ) as mock_setup_notify_platform:
+        yield mock_setup_notify_platform
+
+
 @pytest.fixture
 def mock_version() -> Generator[AsyncMock, None, None]:
     """Return a mocked Version class."""
