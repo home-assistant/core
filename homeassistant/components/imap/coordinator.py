@@ -1,4 +1,4 @@
-"""Coordinator for imag integration."""
+"""Coordinator for imap integration."""
 
 from __future__ import annotations
 
