@@ -18,6 +18,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
       'sensor': dict({
@@ -46,6 +48,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.henk_active_calories_burnt_today',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '221.132',
   })
@@ -69,6 +72,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
       'sensor.private': dict({
@@ -98,6 +103,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.henk_active_time_today',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.530',
   })
@@ -121,6 +127,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -145,6 +153,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.henk_average_heart_rate',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '103',
   })
@@ -168,6 +177,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -192,6 +203,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.henk_average_respiratory_rate',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '14',
   })
@@ -215,6 +227,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -240,6 +254,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.henk_body_temperature',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '40',
   })
@@ -263,6 +278,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
       'sensor': dict({
@@ -291,6 +308,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.henk_bone_mass',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '10',
   })
@@ -314,6 +332,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -337,6 +357,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.henk_breathing_disturbances_intensity',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '9',
   })
@@ -358,6 +379,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
       'sensor': dict({
@@ -384,6 +407,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.henk_calories_burnt_last_workout',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '24',
   })
@@ -407,6 +431,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -432,6 +458,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.henk_deep_sleep',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '5820',
   })
@@ -455,6 +482,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -479,6 +508,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.henk_diastolic_blood_pressure',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '70',
   })
@@ -500,6 +530,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
       'sensor': dict({
@@ -527,6 +559,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.henk_distance_travelled_last_workout',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '232',
   })
@@ -550,6 +583,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
       'sensor': dict({
@@ -579,6 +614,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.henk_distance_travelled_today',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1020.121',
   })
@@ -600,6 +636,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -623,6 +661,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.henk_electrodermal_activity_feet',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '102',
   })
@@ -644,6 +683,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -667,6 +708,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.henk_electrodermal_activity_left_foot',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '102',
   })
@@ -688,6 +730,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -711,6 +755,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.henk_electrodermal_activity_right_foot',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '102',
   })
@@ -732,6 +777,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -756,6 +803,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.henk_elevation_change_last_workout',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '4',
   })
@@ -779,6 +827,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -805,6 +855,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.henk_elevation_change_today',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
@@ -828,6 +879,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -853,6 +906,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.henk_extracellular_water',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '100',
   })
@@ -876,6 +930,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
       'sensor': dict({
@@ -904,6 +960,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.henk_fat_free_mass',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '60',
   })
@@ -927,6 +984,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
       'sensor': dict({
@@ -955,6 +1014,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.henk_fat_mass',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '5',
   })
@@ -978,6 +1038,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
       'sensor': dict({
@@ -1005,6 +1067,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.henk_fat_ratio',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.07',
   })
@@ -1028,6 +1091,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -1052,6 +1117,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.henk_heart_pulse',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '60',
   })
@@ -1075,6 +1141,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
       'sensor': dict({
@@ -1103,6 +1171,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.henk_height',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2',
   })
@@ -1126,6 +1195,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -1151,6 +1222,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.henk_hydration',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.95',
   })
@@ -1174,6 +1246,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
       'sensor.private': dict({
@@ -1203,6 +1277,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.henk_intense_activity_today',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '7.0',
   })
@@ -1226,6 +1301,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -1251,6 +1328,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.henk_intracellular_water',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '100',
   })
@@ -1272,6 +1350,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
       'sensor.private': dict({
@@ -1299,6 +1379,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.henk_last_workout_duration',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '4.25',
   })
@@ -1320,6 +1401,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -1342,6 +1425,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.henk_last_workout_intensity',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '30',
   })
@@ -1415,6 +1499,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -1489,6 +1575,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.henk_last_workout_type',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'walk',
   })
@@ -1512,6 +1599,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -1537,6 +1626,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.henk_light_sleep',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '10440',
   })
@@ -1560,6 +1650,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -1584,6 +1676,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.henk_maximum_heart_rate',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '120',
   })
@@ -1607,6 +1700,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -1631,6 +1726,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.henk_maximum_respiratory_rate',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '20',
   })
@@ -1654,6 +1750,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -1678,6 +1776,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.henk_minimum_heart_rate',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '70',
   })
@@ -1701,6 +1800,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -1725,6 +1826,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.henk_minimum_respiratory_rate',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '10',
   })
@@ -1748,6 +1850,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
       'sensor.private': dict({
@@ -1777,6 +1881,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.henk_moderate_activity_today',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '24.8',
   })
@@ -1800,6 +1905,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
       'sensor': dict({
@@ -1828,6 +1935,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.henk_muscle_mass',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '50',
   })
@@ -1849,6 +1957,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
       'sensor.private': dict({
@@ -1876,6 +1986,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.henk_pause_during_last_workout',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
@@ -1899,6 +2010,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -1924,6 +2037,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.henk_pulse_wave_velocity',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '100',
   })
@@ -1947,6 +2061,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -1972,6 +2088,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.henk_rem_sleep',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2400',
   })
@@ -1995,6 +2112,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -2020,6 +2139,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.henk_skin_temperature',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '20',
   })
@@ -2043,6 +2163,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
       'sensor.private': dict({
@@ -2071,6 +2193,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.henk_sleep_goal',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '8.000',
   })
@@ -2094,6 +2217,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -2118,6 +2243,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.henk_sleep_score',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '37',
   })
@@ -2141,6 +2267,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -2164,6 +2292,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.henk_snoring',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1080',
   })
@@ -2187,6 +2316,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -2210,6 +2341,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.henk_snoring_episode_count',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '18',
   })
@@ -2233,6 +2365,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
       'sensor.private': dict({
@@ -2262,6 +2396,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.henk_soft_activity_today',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '25.3',
   })
@@ -2285,6 +2420,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -2309,6 +2446,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.henk_spo2',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.95',
   })
@@ -2332,6 +2470,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -2356,6 +2496,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.henk_step_goal',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '10000',
   })
@@ -2379,6 +2520,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -2404,6 +2547,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.henk_steps_today',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1155',
   })
@@ -2427,6 +2571,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -2451,6 +2597,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.henk_systolic_blood_pressure',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '100',
   })
@@ -2474,6 +2621,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -2499,6 +2648,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.henk_temperature',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '40',
   })
@@ -2522,6 +2672,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -2547,6 +2699,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.henk_time_to_sleep',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '540',
   })
@@ -2570,6 +2723,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -2595,6 +2750,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.henk_time_to_wakeup',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1140',
   })
@@ -2618,6 +2774,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
       'sensor': dict({
@@ -2646,6 +2804,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.henk_total_calories_burnt_today',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2444.149',
   })
@@ -2667,6 +2826,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -2689,6 +2850,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.henk_vascular_age',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '100',
   })
@@ -2710,6 +2872,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -2732,6 +2896,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.henk_visceral_fat_index',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '102',
   })
@@ -2755,6 +2920,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -2779,6 +2946,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.henk_vo2_max',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '100',
   })
@@ -2802,6 +2970,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -2826,6 +2996,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.henk_wakeup_count',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1',
   })
@@ -2849,6 +3020,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -2874,6 +3047,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.henk_wakeup_time',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '3060',
   })
@@ -2897,6 +3071,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
       'sensor': dict({
@@ -2925,6 +3101,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.henk_weight',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '70',
   })
@@ -2948,6 +3125,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -2973,6 +3152,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.henk_weight_goal',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '70.5',
   })

@@ -1,4 +1,5 @@
 """Test the imap entry initialization."""
+
 import asyncio
 from datetime import datetime, timedelta, timezone
 from typing import Any
@@ -8,6 +9,7 @@ from aioimaplib import AUTH, NONAUTH, SELECTED, AioImapException, Response
 import pytest
 
 from homeassistant.components.imap import DOMAIN
+from homeassistant.components.imap.const import CONF_CHARSET
 from homeassistant.components.imap.errors import InvalidAuth, InvalidFolder
 from homeassistant.components.sensor.const import SensorStateClass
 from homeassistant.const import STATE_UNAVAILABLE
@@ -81,7 +83,7 @@ async def test_entry_startup_and_unload(
     [
         InvalidAuth,
         InvalidFolder,
-        asyncio.TimeoutError,
+        TimeoutError,
     ],
 )
 async def test_entry_startup_fails(
@@ -131,13 +133,16 @@ async def test_entry_startup_fails(
     ],
 )
 @pytest.mark.parametrize("imap_has_capability", [True, False], ids=["push", "poll"])
+@pytest.mark.parametrize("charset", ["utf-8", "us-ascii"], ids=["utf-8", "us-ascii"])
 async def test_receiving_message_successfully(
-    hass: HomeAssistant, mock_imap_protocol: MagicMock, valid_date: bool
+    hass: HomeAssistant, mock_imap_protocol: MagicMock, valid_date: bool, charset: str
 ) -> None:
     """Test receiving a message successfully."""
     event_called = async_capture_events(hass, "imap_content")
 
-    config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
+    config = MOCK_CONFIG.copy()
+    config[CONF_CHARSET] = charset
+    config_entry = MockConfigEntry(domain=DOMAIN, data=config)
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -159,6 +164,7 @@ async def test_receiving_message_successfully(
     assert data["folder"] == "INBOX"
     assert data["sender"] == "john.doe@example.com"
     assert data["subject"] == "Test subject"
+    assert data["uid"] == "1"
     assert "Test body" in data["text"]
     assert (
         valid_date
@@ -208,6 +214,7 @@ async def test_receiving_message_with_invalid_encoding(
     assert data["sender"] == "john.doe@example.com"
     assert data["subject"] == "Test subject"
     assert data["text"] == TEST_BADLY_ENCODED_CONTENT
+    assert data["uid"] == "1"
 
 
 @pytest.mark.parametrize("imap_search", [TEST_SEARCH_RESPONSE])
@@ -246,6 +253,7 @@ async def test_receiving_message_no_subject_to_from(
     assert data["text"] == "Test body\r\n"
     assert data["headers"]["Return-Path"] == ("<john.doe@example.com>",)
     assert data["headers"]["Delivered-To"] == ("notify@example.com",)
+    assert data["uid"] == "1"
 
 
 @pytest.mark.parametrize("imap_has_capability", [True, False], ids=["push", "poll"])
@@ -413,7 +421,7 @@ async def test_late_folder_error(
     "imap_close",
     [
         AsyncMock(side_effect=AioImapException("Something went wrong")),
-        AsyncMock(side_effect=asyncio.TimeoutError),
+        AsyncMock(side_effect=TimeoutError),
     ],
     ids=["AioImapException", "TimeoutError"],
 )
@@ -456,7 +464,7 @@ async def test_handle_cleanup_exception(
     "imap_wait_server_push_exception",
     [
         AioImapException("Something went wrong"),
-        asyncio.TimeoutError,
+        TimeoutError,
     ],
     ids=["AioImapException", "TimeoutError"],
 )
@@ -464,7 +472,7 @@ async def test_lost_connection_with_imap_push(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     mock_imap_protocol: MagicMock,
-    imap_wait_server_push_exception: AioImapException | asyncio.TimeoutError,
+    imap_wait_server_push_exception: AioImapException | TimeoutError,
 ) -> None:
     """Test error handling when the connection is lost."""
     # Mock an error in waiting for a pushed update

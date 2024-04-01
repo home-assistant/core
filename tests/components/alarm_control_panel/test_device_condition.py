@@ -1,12 +1,13 @@
 """The tests for Alarm control panel device conditions."""
+
 import pytest
 from pytest_unordered import unordered
 
+from homeassistant.components import automation
 from homeassistant.components.alarm_control_panel import (
     DOMAIN,
     AlarmControlPanelEntityFeature,
 )
-import homeassistant.components.automation as automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
@@ -138,12 +139,12 @@ async def test_get_conditions(
 
 @pytest.mark.parametrize(
     ("hidden_by", "entity_category"),
-    (
+    [
         (er.RegistryEntryHider.INTEGRATION, None),
         (er.RegistryEntryHider.USER, None),
         (None, EntityCategory.CONFIG),
         (None, EntityCategory.DIAGNOSTIC),
-    ),
+    ],
 )
 async def test_get_conditions_hidden_auxiliary(
     hass: HomeAssistant,

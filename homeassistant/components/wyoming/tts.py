@@ -1,4 +1,5 @@
 """Support for Wyoming text-to-speech services."""
+
 from collections import defaultdict
 import io
 import logging

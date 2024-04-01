@@ -1,5 +1,7 @@
 """Config flow for Tedee integration."""
+
 from collections.abc import Mapping
+import logging
 from typing import Any
 
 from pytedee_async import (
@@ -11,13 +13,13 @@ from pytedee_async import (
 )
 import voluptuous as vol
 
-from homeassistant.components.webhook import async_generate_id as webhook_generate_id
-from homeassistant.config_entries import ConfigEntry, ConfigFlow
-from homeassistant.const import CONF_HOST, CONF_WEBHOOK_ID
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_HOST
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_LOCAL_ACCESS_TOKEN, DOMAIN, NAME
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class TedeeConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -27,7 +29,7 @@ class TedeeConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
 
@@ -48,7 +50,8 @@ class TedeeConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors[CONF_LOCAL_ACCESS_TOKEN] = "invalid_api_key"
             except TedeeClientException:
                 errors[CONF_HOST] = "invalid_host"
-            except TedeeDataUpdateException:
+            except TedeeDataUpdateException as exc:
+                _LOGGER.error("Error during local bridge discovery: %s", exc)
                 errors["base"] = "cannot_connect"
             else:
                 if self.reauth_entry:
@@ -62,10 +65,7 @@ class TedeeConfigFlow(ConfigFlow, domain=DOMAIN):
                     return self.async_abort(reason="reauth_successful")
                 await self.async_set_unique_id(local_bridge.serial)
                 self._abort_if_unique_id_configured()
-                return self.async_create_entry(
-                    title=NAME,
-                    data={**user_input, CONF_WEBHOOK_ID: webhook_generate_id()},
-                )
+                return self.async_create_entry(title=NAME, data=user_input)
 
         return self.async_show_form(
             step_id="user",
@@ -82,19 +82,31 @@ class TedeeConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
         self.reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
         )
-        return self.async_show_form(
-            step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        CONF_LOCAL_ACCESS_TOKEN,
-                        default=entry_data[CONF_LOCAL_ACCESS_TOKEN],
-                    ): str,
-                }
-            ),
-        )
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Dialog that informs the user that reauth is required."""
+        assert self.reauth_entry
+
+        if not user_input:
+            return self.async_show_form(
+                step_id="reauth_confirm",
+                data_schema=vol.Schema(
+                    {
+                        vol.Required(
+                            CONF_LOCAL_ACCESS_TOKEN,
+                            default=self.reauth_entry.data[CONF_LOCAL_ACCESS_TOKEN],
+                        ): str,
+                    }
+                ),
+            )
+        return await self.async_step_user(user_input)

@@ -1,4 +1,5 @@
 """Media player entity for the Bang & Olufsen integration."""
+
 from __future__ import annotations
 
 import json
@@ -50,16 +51,16 @@ from homeassistant.util.dt import utcnow
 
 from . import BangOlufsenData
 from .const import (
-    BANG_OLUFSEN_MEDIA_TYPE,
     BANG_OLUFSEN_STATES,
     CONF_BEOLINK_JID,
     CONNECTION_STATUS,
     DOMAIN,
     FALLBACK_SOURCES,
     HIDDEN_SOURCE_IDS,
-    SOURCE_ENUM,
     VALID_MEDIA_TYPES,
-    WEBSOCKET_NOTIFICATION,
+    BangOlufsenMediaType,
+    BangOlufsenSource,
+    WebsocketNotification,
 )
 from .entity import BangOlufsenEntity
 
@@ -94,11 +95,12 @@ async def async_setup_entry(
     async_add_entities(new_entities=[BangOlufsenMediaPlayer(config_entry, data.client)])
 
 
-class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
+class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
     """Representation of a media player."""
 
-    _attr_has_entity_name = False
     _attr_icon = "mdi:speaker-wireless"
+    _attr_name = None
+    _attr_device_class = MediaPlayerDeviceClass.SPEAKER
     _attr_supported_features = BANG_OLUFSEN_FEATURES
 
     def __init__(self, entry: ConfigEntry, client: MozartClient) -> None:
@@ -113,12 +115,9 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
             identifiers={(DOMAIN, self._unique_id)},
             manufacturer="Bang & Olufsen",
             model=self._model,
-            name=cast(str, self.name),
             serial_number=self._unique_id,
         )
-        self._attr_name = self._name
         self._attr_unique_id = self._unique_id
-        self._attr_device_class = MediaPlayerDeviceClass.SPEAKER
 
         # Misc. variables.
         self._audio_sources: dict[str, str] = {}
@@ -146,7 +145,7 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{self._unique_id}_{WEBSOCKET_NOTIFICATION.PLAYBACK_ERROR}",
+                f"{self._unique_id}_{WebsocketNotification.PLAYBACK_ERROR}",
                 self._update_playback_error,
             )
         )
@@ -154,7 +153,7 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{self._unique_id}_{WEBSOCKET_NOTIFICATION.PLAYBACK_METADATA}",
+                f"{self._unique_id}_{WebsocketNotification.PLAYBACK_METADATA}",
                 self._update_playback_metadata,
             )
         )
@@ -162,35 +161,35 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{self._unique_id}_{WEBSOCKET_NOTIFICATION.PLAYBACK_PROGRESS}",
+                f"{self._unique_id}_{WebsocketNotification.PLAYBACK_PROGRESS}",
                 self._update_playback_progress,
             )
         )
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{self._unique_id}_{WEBSOCKET_NOTIFICATION.PLAYBACK_STATE}",
+                f"{self._unique_id}_{WebsocketNotification.PLAYBACK_STATE}",
                 self._update_playback_state,
             )
         )
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{self._unique_id}_{WEBSOCKET_NOTIFICATION.REMOTE_MENU_CHANGED}",
+                f"{self._unique_id}_{WebsocketNotification.REMOTE_MENU_CHANGED}",
                 self._update_sources,
             )
         )
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{self._unique_id}_{WEBSOCKET_NOTIFICATION.SOURCE_CHANGE}",
+                f"{self._unique_id}_{WebsocketNotification.SOURCE_CHANGE}",
                 self._update_source_change,
             )
         )
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{self._unique_id}_{WEBSOCKET_NOTIFICATION.VOLUME}",
+                f"{self._unique_id}_{WebsocketNotification.VOLUME}",
                 self._update_volume,
             )
         )
@@ -336,7 +335,10 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
         self._source_change = data
 
         # Check if source is line-in or optical and progress should be updated
-        if self._source_change.id in (SOURCE_ENUM.lineIn, SOURCE_ENUM.spdif):
+        if self._source_change.id in (
+            BangOlufsenSource.LINE_IN,
+            BangOlufsenSource.SPDIF,
+        ):
             self._playback_progress = PlaybackProgress(progress=0)
 
     async def _update_volume(self, data: VolumeState) -> None:
@@ -368,7 +370,7 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
     def media_content_type(self) -> str:
         """Return the current media type."""
         # Hard to determine content type
-        if self.source == SOURCE_ENUM.uriStreamer:
+        if self.source == BangOlufsenSource.URI_STREAMER:
             return MediaType.URL
         return MediaType.MUSIC
 
@@ -426,21 +428,21 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
         # Try to fix some of the source_change chromecast weirdness.
         if hasattr(self._playback_metadata, "title"):
             # source_change is chromecast but line in is selected.
-            if self._playback_metadata.title == SOURCE_ENUM.lineIn:
-                return SOURCE_ENUM.lineIn
+            if self._playback_metadata.title == BangOlufsenSource.LINE_IN:
+                return BangOlufsenSource.LINE_IN
 
             # source_change is chromecast but bluetooth is selected.
-            if self._playback_metadata.title == SOURCE_ENUM.bluetooth:
-                return SOURCE_ENUM.bluetooth
+            if self._playback_metadata.title == BangOlufsenSource.BLUETOOTH:
+                return BangOlufsenSource.BLUETOOTH
 
             # source_change is line in, bluetooth or optical but stale metadata is sent through the WebSocket,
             # And the source has not changed.
             if self._source_change.id in (
-                SOURCE_ENUM.bluetooth,
-                SOURCE_ENUM.lineIn,
-                SOURCE_ENUM.spdif,
+                BangOlufsenSource.BLUETOOTH,
+                BangOlufsenSource.LINE_IN,
+                BangOlufsenSource.SPDIF,
             ):
-                return SOURCE_ENUM.chromeCast
+                return BangOlufsenSource.CHROMECAST
 
         # source_change is chromecast and there is metadata but no artwork. Bluetooth does support metadata but not artwork
         # So i assume that it is bluetooth and not chromecast
@@ -450,9 +452,9 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
         ):
             if (
                 len(self._playback_metadata.art) == 0
-                and self._source_change.name == SOURCE_ENUM.bluetooth
+                and self._source_change.name == BangOlufsenSource.BLUETOOTH
             ):
-                return SOURCE_ENUM.bluetooth
+                return BangOlufsenSource.BLUETOOTH
 
         return self._source_change.name
 
@@ -495,7 +497,7 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
 
     async def async_media_seek(self, position: float) -> None:
         """Seek to position in ms."""
-        if self.source == SOURCE_ENUM.deezer:
+        if self.source == BangOlufsenSource.DEEZER:
             await self._client.seek_to_position(position_ms=int(position * 1000))
             # Try to prevent the playback progress from bouncing in the UI.
             self._attr_media_position_updated_at = utcnow()
@@ -523,7 +525,6 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
             )
             return
 
-        # pylint: disable=consider-using-dict-items
         key = [x for x in self._sources if self._sources[x] == source][0]
 
         # Check for source type
@@ -570,14 +571,14 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
 
         # The "provider" media_type may not be suitable for overlay all the time.
         # Use it for now.
-        elif media_type == BANG_OLUFSEN_MEDIA_TYPE.TTS:
+        elif media_type == BangOlufsenMediaType.TTS:
             await self._client.post_overlay_play(
                 overlay_play_request=OverlayPlayRequest(
                     uri=Uri(location=media_id),
                 )
             )
 
-        elif media_type == BANG_OLUFSEN_MEDIA_TYPE.RADIO:
+        elif media_type == BangOlufsenMediaType.RADIO:
             await self._client.run_provided_scene(
                 scene_properties=SceneProperties(
                     action_list=[
@@ -589,10 +590,10 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
                 )
             )
 
-        elif media_type == BANG_OLUFSEN_MEDIA_TYPE.FAVOURITE:
+        elif media_type == BangOlufsenMediaType.FAVOURITE:
             await self._client.activate_preset(id=int(media_id))
 
-        elif media_type == BANG_OLUFSEN_MEDIA_TYPE.DEEZER:
+        elif media_type == BangOlufsenMediaType.DEEZER:
             try:
                 if media_id == "flow":
                     deezer_id = None

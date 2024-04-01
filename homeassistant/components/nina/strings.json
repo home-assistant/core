@@ -15,9 +15,6 @@
         }
       }
     },
-    "abort": {
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
-    },
     "error": {
       "no_selection": "Please select at least one city/county",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",

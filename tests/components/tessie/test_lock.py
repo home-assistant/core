@@ -6,6 +6,7 @@ import pytest
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.lock import (
+    ATTR_CODE,
     DOMAIN as LOCK_DOMAIN,
     SERVICE_LOCK,
     SERVICE_UNLOCK,
@@ -27,9 +28,8 @@ async def test_locks(
 
     assert_entities(hass, entry.entry_id, entity_registry, snapshot)
 
-    entity_id = "lock.test_lock"
-
     # Test lock set value functions
+    entity_id = "lock.test_lock"
     with patch("homeassistant.components.tessie.lock.lock") as mock_run:
         await hass.services.async_call(
             LOCK_DOMAIN,
@@ -47,8 +47,8 @@ async def test_locks(
             {ATTR_ENTITY_ID: [entity_id]},
             blocking=True,
         )
-
         mock_run.assert_called_once()
+    assert hass.states.get(entity_id).state == STATE_UNLOCKED
 
     # Test charge cable lock set value functions
     entity_id = "lock.test_charge_cable_lock"
@@ -71,3 +71,37 @@ async def test_locks(
         )
         assert hass.states.get(entity_id).state == STATE_UNLOCKED
         mock_run.assert_called_once()
+
+    # Test lock set value functions
+    entity_id = "lock.test_speed_limit"
+    with patch(
+        "homeassistant.components.tessie.lock.enable_speed_limit"
+    ) as mock_enable_speed_limit:
+        await hass.services.async_call(
+            LOCK_DOMAIN,
+            SERVICE_LOCK,
+            {ATTR_ENTITY_ID: [entity_id], ATTR_CODE: "1234"},
+            blocking=True,
+        )
+        assert hass.states.get(entity_id).state == STATE_LOCKED
+        mock_enable_speed_limit.assert_called_once()
+
+    with patch(
+        "homeassistant.components.tessie.lock.disable_speed_limit"
+    ) as mock_disable_speed_limit:
+        await hass.services.async_call(
+            LOCK_DOMAIN,
+            SERVICE_UNLOCK,
+            {ATTR_ENTITY_ID: [entity_id], ATTR_CODE: "1234"},
+            blocking=True,
+        )
+        assert hass.states.get(entity_id).state == STATE_UNLOCKED
+        mock_disable_speed_limit.assert_called_once()
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            LOCK_DOMAIN,
+            SERVICE_UNLOCK,
+            {ATTR_ENTITY_ID: [entity_id], ATTR_CODE: "abc"},
+            blocking=True,
+        )

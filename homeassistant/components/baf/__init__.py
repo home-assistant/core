@@ -1,7 +1,7 @@
 """The Big Ass Fans integration."""
+
 from __future__ import annotations
 
-import asyncio
 from asyncio import timeout
 
 from aiobafi6 import Device, Service
@@ -42,7 +42,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady(
             f"Unexpected device found at {ip_address}; expected {entry.unique_id}, found {device.dns_sd_uuid}"
         ) from ex
-    except asyncio.TimeoutError as ex:
+    except TimeoutError as ex:
         run_future.cancel()
         raise ConfigEntryNotReady(f"Timed out connecting to {ip_address}") from ex
 

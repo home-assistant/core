@@ -1,4 +1,5 @@
 """Support for AVM FRITZ!SmartHome thermostat devices."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -80,6 +81,7 @@ class FritzboxThermostat(FritzBoxDeviceEntity, ClimateEntity):
         | ClimateEntityFeature.TURN_ON
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _enable_turn_on_off_backwards_compatibility = False
 
     @property
     def current_temperature(self) -> float:

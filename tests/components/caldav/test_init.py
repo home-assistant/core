@@ -26,7 +26,7 @@ async def test_load_unload(
     assert config_entry.state == ConfigEntryState.NOT_LOADED
 
     with patch("homeassistant.components.caldav.config_flow.caldav.DAVClient"):
-        await config_entry.async_setup(hass)
+        await hass.config_entries.async_setup(config_entry.entry_id)
 
     assert config_entry.state == ConfigEntryState.LOADED
 
@@ -63,7 +63,7 @@ async def test_client_failure(
         "homeassistant.components.caldav.config_flow.caldav.DAVClient"
     ) as mock_client:
         mock_client.return_value.principal.side_effect = side_effect
-        await config_entry.async_setup(hass)
+        await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
     assert config_entry.state == expected_state

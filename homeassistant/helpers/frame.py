@@ -1,4 +1,5 @@
 """Provide frame helper for finding the current frame context."""
+
 from __future__ import annotations
 
 import asyncio
@@ -6,14 +7,20 @@ from collections.abc import Callable
 from contextlib import suppress
 from dataclasses import dataclass
 import functools
+import linecache
 import logging
 import sys
-from traceback import FrameSummary, extract_stack
-from typing import Any, TypeVar, cast
+from types import FrameType
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from homeassistant.core import HomeAssistant, async_get_hass
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import async_suggest_report_issue
+
+if TYPE_CHECKING:
+    from functools import cached_property
+else:
+    from homeassistant.backports.functools import cached_property
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,10 +35,51 @@ class IntegrationFrame:
     """Integration frame container."""
 
     custom_integration: bool
-    frame: FrameSummary
     integration: str
     module: str | None
     relative_filename: str
+    _frame: FrameType
+
+    @cached_property
+    def line_number(self) -> int:
+        """Return the line number of the frame."""
+        return self._frame.f_lineno
+
+    @cached_property
+    def filename(self) -> str:
+        """Return the filename of the frame."""
+        return self._frame.f_code.co_filename
+
+    @cached_property
+    def line(self) -> str:
+        """Return the line of the frame."""
+        return (linecache.getline(self.filename, self.line_number) or "?").strip()
+
+
+def get_integration_logger(fallback_name: str) -> logging.Logger:
+    """Return a logger by checking the current integration frame.
+
+    If Python is unable to access the sources files, the call stack frame
+    will be missing information, so let's guard by requiring a fallback name.
+    https://github.com/home-assistant/core/issues/24982
+    """
+    try:
+        integration_frame = get_integration_frame()
+    except MissingIntegrationFrame:
+        return logging.getLogger(fallback_name)
+
+    if integration_frame.custom_integration:
+        logger_name = f"custom_components.{integration_frame.integration}"
+    else:
+        logger_name = f"homeassistant.components.{integration_frame.integration}"
+
+    return logging.getLogger(logger_name)
+
+
+def get_current_frame(depth: int = 0) -> FrameType:
+    """Return the current frame."""
+    # Add one to depth since get_current_frame is included
+    return sys._getframe(depth + 1)  # pylint: disable=protected-access
 
 
 def get_integration_frame(exclude_integrations: set | None = None) -> IntegrationFrame:
@@ -40,13 +88,16 @@ def get_integration_frame(exclude_integrations: set | None = None) -> Integratio
     if not exclude_integrations:
         exclude_integrations = set()
 
-    for frame in reversed(extract_stack()):
+    frame: FrameType | None = get_current_frame()
+    while frame is not None:
+        filename = frame.f_code.co_filename
+
         for path in ("custom_components/", "homeassistant/components/"):
             try:
-                index = frame.filename.index(path)
+                index = filename.index(path)
                 start = index + len(path)
-                end = frame.filename.index("/", start)
-                integration = frame.filename[start:end]
+                end = filename.index("/", start)
+                integration = filename[start:end]
                 if integration not in exclude_integrations:
                     found_frame = frame
 
@@ -57,6 +108,8 @@ def get_integration_frame(exclude_integrations: set | None = None) -> Integratio
         if found_frame is not None:
             break
 
+        frame = frame.f_back
+
     if found_frame is None:
         raise MissingIntegrationFrame
 
@@ -64,16 +117,16 @@ def get_integration_frame(exclude_integrations: set | None = None) -> Integratio
     for module, module_obj in dict(sys.modules).items():
         if not hasattr(module_obj, "__file__"):
             continue
-        if module_obj.__file__ == found_frame.filename:
+        if module_obj.__file__ == found_frame.f_code.co_filename:
             found_module = module
             break
 
     return IntegrationFrame(
         custom_integration=path == "custom_components/",
-        frame=found_frame,
         integration=integration,
         module=found_module,
-        relative_filename=found_frame.filename[index:],
+        relative_filename=found_frame.f_code.co_filename[index:],
+        _frame=found_frame,
     )
 
 
@@ -86,6 +139,7 @@ def report(
     exclude_integrations: set | None = None,
     error_if_core: bool = True,
     level: int = logging.WARNING,
+    log_custom_component_only: bool = False,
 ) -> None:
     """Report incorrect usage.
 
@@ -99,10 +153,12 @@ def report(
         msg = f"Detected code that {what}. Please report this issue."
         if error_if_core:
             raise RuntimeError(msg) from err
-        _LOGGER.warning(msg, stack_info=True)
+        if not log_custom_component_only:
+            _LOGGER.warning(msg, stack_info=True)
         return
 
-    _report_integration(what, integration_frame, level)
+    if not log_custom_component_only or integration_frame.custom_integration:
+        _report_integration(what, integration_frame, level)
 
 
 def _report_integration(
@@ -114,9 +170,8 @@ def _report_integration(
 
     Async friendly.
     """
-    found_frame = integration_frame.frame
     # Keep track of integrations already reported to prevent flooding
-    key = f"{found_frame.filename}:{found_frame.lineno}"
+    key = f"{integration_frame.filename}:{integration_frame.line_number}"
     if key in _REPORTED_INTEGRATIONS:
         return
     _REPORTED_INTEGRATIONS.add(key)
@@ -137,8 +192,8 @@ def _report_integration(
         integration_frame.integration,
         what,
         integration_frame.relative_filename,
-        found_frame.lineno,
-        (found_frame.line or "?").strip(),
+        integration_frame.line_number,
+        integration_frame.line,
         report_issue,
     )
 

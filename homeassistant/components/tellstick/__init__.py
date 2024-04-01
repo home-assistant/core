@@ -1,4 +1,5 @@
 """Support for Tellstick."""
+
 import logging
 import threading
 

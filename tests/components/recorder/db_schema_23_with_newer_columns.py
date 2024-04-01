@@ -9,6 +9,7 @@ allow the recorder to startup successfully.
 
 It is used to test the schema migration logic.
 """
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta
@@ -253,7 +254,7 @@ class States(Base):  # type: ignore
         TIMESTAMP_TYPE, default=time.time
     )  # *** Not originally in v23, only added for recorder to startup ok
     last_updated = Column(DATETIME_TYPE, default=dt_util.utcnow, index=True)
-    last_updated_ts = Column(
+    last_updated_ts = Column(  # noqa: PIE794
         TIMESTAMP_TYPE, default=time.time, index=True
     )  # *** Not originally in v23, only added for recorder to startup ok
     created = Column(DATETIME_TYPE, default=dt_util.utcnow)
@@ -552,13 +553,11 @@ class StatisticsRuns(Base):  # type: ignore
 
 
 @overload
-def process_timestamp(ts: None) -> None:
-    ...
+def process_timestamp(ts: None) -> None: ...
 
 
 @overload
-def process_timestamp(ts: datetime) -> datetime:
-    ...
+def process_timestamp(ts: datetime) -> datetime: ...
 
 
 def process_timestamp(ts: datetime | None) -> datetime | None:
@@ -572,13 +571,11 @@ def process_timestamp(ts: datetime | None) -> datetime | None:
 
 
 @overload
-def process_timestamp_to_utc_isoformat(ts: None) -> None:
-    ...
+def process_timestamp_to_utc_isoformat(ts: None) -> None: ...
 
 
 @overload
-def process_timestamp_to_utc_isoformat(ts: datetime) -> str:
-    ...
+def process_timestamp_to_utc_isoformat(ts: datetime) -> str: ...
 
 
 def process_timestamp_to_utc_isoformat(ts: datetime | None) -> str | None:

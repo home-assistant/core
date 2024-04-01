@@ -1,4 +1,5 @@
 """Support for Xiaomi Aqara binary sensors."""
+
 import logging
 from typing import Any
 

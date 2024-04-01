@@ -1,6 +1,8 @@
 """Test the Lovelace Cast platform."""
+
+from collections.abc import Generator
 from time import time
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -12,6 +14,19 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_mock_service
+
+
+@pytest.fixture(autouse=True)
+def mock_onboarding_done() -> Generator[MagicMock, None, None]:
+    """Mock that Home Assistant is currently onboarding.
+
+    Enabled to prevent creating default dashboards during test execution.
+    """
+    with patch(
+        "homeassistant.components.onboarding.async_is_onboarded",
+        return_value=True,
+    ) as mock_onboarding:
+        yield mock_onboarding
 
 
 @pytest.fixture
@@ -43,20 +58,23 @@ async def mock_yaml_dashboard(hass):
         },
     )
 
-    with patch(
-        "homeassistant.components.lovelace.dashboard.load_yaml_dict",
-        return_value={
-            "title": "YAML Title",
-            "views": [
-                {
-                    "title": "Hello",
-                },
-                {"path": "second-view"},
-            ],
-        },
-    ), patch(
-        "homeassistant.components.lovelace.dashboard.os.path.getmtime",
-        return_value=time() + 10,
+    with (
+        patch(
+            "homeassistant.components.lovelace.dashboard.load_yaml_dict",
+            return_value={
+                "title": "YAML Title",
+                "views": [
+                    {
+                        "title": "Hello",
+                    },
+                    {"path": "second-view"},
+                ],
+            },
+        ),
+        patch(
+            "homeassistant.components.lovelace.dashboard.os.path.getmtime",
+            return_value=time() + 10,
+        ),
     ):
         yield
 

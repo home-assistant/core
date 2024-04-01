@@ -1,5 +1,5 @@
 """The tests for the august platform."""
-import asyncio
+
 from unittest.mock import Mock, patch
 
 from aiohttp import ClientResponseError
@@ -68,7 +68,7 @@ async def test_august_is_offline(hass: HomeAssistant) -> None:
 
     with patch(
         "yalexs.authenticator_async.AuthenticatorAsync.async_authenticate",
-        side_effect=asyncio.TimeoutError,
+        side_effect=TimeoutError,
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()

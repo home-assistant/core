@@ -1,8 +1,8 @@
 """Manager for esphome devices."""
+
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Coroutine
 from functools import partial
 import logging
 from typing import TYPE_CHECKING, Any, NamedTuple
@@ -30,17 +30,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_DEVICE_ID,
     CONF_MODE,
-    EVENT_HOMEASSISTANT_STOP,
+    EVENT_HOMEASSISTANT_CLOSE,
     EVENT_LOGGING_CHANGED,
 )
-from homeassistant.core import (
-    CALLBACK_TYPE,
-    Event,
-    HomeAssistant,
-    ServiceCall,
-    State,
-    callback,
-)
+from homeassistant.core import Event, HomeAssistant, ServiceCall, State, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
@@ -57,7 +50,7 @@ from homeassistant.helpers.issue_registry import (
 )
 from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.helpers.template import Template
-from homeassistant.helpers.typing import EventType
+from homeassistant.util.async_ import create_eager_task
 
 from .bluetooth import async_connect_scanner
 from .const import (
@@ -177,7 +170,7 @@ class ESPHomeManager:
         self.entry_data = entry_data
 
     async def on_stop(self, event: Event) -> None:
-        """Cleanup the socket client on HA stop."""
+        """Cleanup the socket client on HA close."""
         await cleanup_instance(self.hass, self.entry)
 
     @property
@@ -266,7 +259,8 @@ class ESPHomeManager:
                 service_data,
             )
 
-    async def _send_home_assistant_state(
+    @callback
+    def _send_home_assistant_state(
         self, entity_id: str, attribute: str | None, state: State | None
     ) -> None:
         """Forward Home Assistant states to ESPHome."""
@@ -282,12 +276,13 @@ class ESPHomeManager:
             else:
                 send_state = attr_val
 
-        await self.cli.send_home_assistant_state(entity_id, attribute, str(send_state))
+        self.cli.send_home_assistant_state(entity_id, attribute, str(send_state))
 
-    async def _send_home_assistant_state_event(
+    @callback
+    def _send_home_assistant_state_event(
         self,
         attribute: str | None,
-        event: EventType[EventStateChangedData],
+        event: Event[EventStateChangedData],
     ) -> None:
         """Forward Home Assistant states updates to ESPHome."""
         event_data = event.data
@@ -305,9 +300,7 @@ class ESPHomeManager:
         ):
             return
 
-        await self._send_home_assistant_state(
-            event.data["entity_id"], attribute, new_state
-        )
+        self._send_home_assistant_state(event.data["entity_id"], attribute, new_state)
 
     @callback
     def async_on_state_subscription(
@@ -323,10 +316,8 @@ class ESPHomeManager:
             )
         )
         # Send initial state
-        hass.async_create_task(
-            self._send_home_assistant_state(
-                entity_id, attribute, hass.states.get(entity_id)
-            )
+        self._send_home_assistant_state(
+            entity_id, attribute, hass.states.get(entity_id)
         )
 
     def _handle_pipeline_finished(self) -> None:
@@ -341,6 +332,7 @@ class ESPHomeManager:
         conversation_id: str,
         flags: int,
         audio_settings: VoiceAssistantAudioSettings,
+        wake_word_phrase: str | None,
     ) -> int | None:
         """Start a voice assistant pipeline."""
         if self.voice_assistant_udp_server is not None:
@@ -364,6 +356,7 @@ class ESPHomeManager:
                 conversation_id=conversation_id or None,
                 flags=flags,
                 audio_settings=audio_settings,
+                wake_word_phrase=wake_word_phrase,
             ),
             "esphome.voice_assistant_udp_server.run_pipeline",
         )
@@ -398,8 +391,8 @@ class ESPHomeManager:
         stored_device_name = entry.data.get(CONF_DEVICE_NAME)
         unique_id_is_mac_address = unique_id and ":" in unique_id
         results = await asyncio.gather(
-            cli.device_info(),
-            cli.list_entities_services(),
+            create_eager_task(cli.device_info()),
+            create_eager_task(cli.list_entities_services()),
         )
 
         device_info: EsphomeDeviceInfo = results[0]
@@ -461,44 +454,33 @@ class ESPHomeManager:
             reconnect_logic.name = device_info.name
 
         self.device_id = _async_setup_device_registry(hass, entry, entry_data)
-        entry_data.async_update_device_state(hass)
+
+        entry_data.async_update_device_state()
         await entry_data.async_update_static_infos(
             hass, entry, entity_infos, device_info.mac_address
         )
         _setup_services(hass, entry_data, services)
 
-        setup_coros_with_disconnect_callbacks: list[
-            Coroutine[Any, Any, CALLBACK_TYPE]
-        ] = []
         if device_info.bluetooth_proxy_feature_flags_compat(api_version):
-            setup_coros_with_disconnect_callbacks.append(
+            entry_data.disconnect_callbacks.add(
                 async_connect_scanner(
                     hass, entry_data, cli, device_info, self.domain_data.bluetooth_cache
                 )
             )
 
         if device_info.voice_assistant_version:
-            setup_coros_with_disconnect_callbacks.append(
+            entry_data.disconnect_callbacks.add(
                 cli.subscribe_voice_assistant(
                     self._handle_pipeline_start,
                     self._handle_pipeline_stop,
                 )
             )
 
-        setup_results = await asyncio.gather(
-            *setup_coros_with_disconnect_callbacks,
-            cli.subscribe_states(entry_data.async_update_state),
-            cli.subscribe_service_calls(self.async_on_service_call),
-            cli.subscribe_home_assistant_states(self.async_on_state_subscription),
-        )
+        cli.subscribe_states(entry_data.async_update_state)
+        cli.subscribe_service_calls(self.async_on_service_call)
+        cli.subscribe_home_assistant_states(self.async_on_state_subscription)
 
-        for result_idx in range(len(setup_coros_with_disconnect_callbacks)):
-            cancel_callback = setup_results[result_idx]
-            if TYPE_CHECKING:
-                assert cancel_callback is not None
-            entry_data.disconnect_callbacks.add(cancel_callback)
-
-        hass.async_create_task(entry_data.async_save_to_store())
+        entry_data.async_save_to_store()
         _async_check_firmware_version(hass, device_info, api_version)
         _async_check_using_api_password(hass, device_info, bool(self.password))
 
@@ -528,7 +510,7 @@ class ESPHomeManager:
             # since it generates a lot of state changed events and database
             # writes when we already know we're shutting down and the state
             # will be cleared anyway.
-            entry_data.async_update_device_state(hass)
+            entry_data.async_update_device_state()
 
     async def on_connect_error(self, err: Exception) -> None:
         """Start reauth flow if appropriate connect error type."""
@@ -560,12 +542,19 @@ class ESPHomeManager:
         # the callback twice when shutting down Home Assistant.
         # "Unable to remove unknown listener
         # <function EventBus.async_listen_once.<locals>.onetime_listener>"
+        # We only close the connection at the last possible moment
+        # when the CLOSE event is fired so anything using a Bluetooth
+        # proxy has a chance to shut down properly.
         entry_data.cleanup_callbacks.append(
-            hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, self.on_stop)
+            hass.bus.async_listen(
+                EVENT_HOMEASSISTANT_CLOSE, self.on_stop, run_immediately=True
+            )
         )
         entry_data.cleanup_callbacks.append(
             hass.bus.async_listen(
-                EVENT_LOGGING_CHANGED, self._async_handle_logging_changed
+                EVENT_LOGGING_CHANGED,
+                self._async_handle_logging_changed,
+                run_immediately=True,
             )
         )
 
@@ -706,11 +695,12 @@ ARG_TYPE_METADATA = {
 }
 
 
-async def execute_service(
+@callback
+def execute_service(
     entry_data: RuntimeEntryData, service: UserService, call: ServiceCall
 ) -> None:
     """Execute a service on a node."""
-    await entry_data.client.execute_service(service, call.data)
+    entry_data.client.execute_service(service, call.data)
 
 
 def build_service_name(device_info: EsphomeDeviceInfo, service: UserService) -> str:
@@ -790,8 +780,7 @@ def _setup_services(
             # New service
             to_register.append(service)
 
-    for service in old_services.values():
-        to_unregister.append(service)
+    to_unregister.extend(old_services.values())
 
     entry_data.services = {serv.key: serv for serv in services}
 

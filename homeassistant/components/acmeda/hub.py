@@ -1,4 +1,5 @@
 """Code to handle a Pulse Hub."""
+
 from __future__ import annotations
 
 import asyncio

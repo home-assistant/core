@@ -1,4 +1,5 @@
 """Config flow for pvpc_hourly_pricing."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -7,10 +8,14 @@ from typing import Any
 from aiopvpc import DEFAULT_POWER_KW, PVPCData
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlowWithConfigEntry,
+)
 from homeassistant.const import CONF_API_TOKEN, CONF_NAME
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util import dt as dt_util
 
@@ -32,7 +37,7 @@ _MAIL_TO_LINK = (
 )
 
 
-class TariffSelectorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class TariffSelectorConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle config flow for `pvpc_hourly_pricing`."""
 
     VERSION = 1
@@ -43,19 +48,19 @@ class TariffSelectorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     _use_api_token: bool = False
     _api_token: str | None = None
     _api: PVPCData | None = None
-    _reauth_entry: config_entries.ConfigEntry | None = None
+    _reauth_entry: ConfigEntry | None = None
 
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
+        config_entry: ConfigEntry,
     ) -> PVPCOptionsFlowHandler:
         """Get the options flow for this handler."""
         return PVPCOptionsFlowHandler(config_entry)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         if user_input is not None:
             await self.async_set_unique_id(user_input[ATTR_TARIFF])
@@ -92,7 +97,7 @@ class TariffSelectorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_api_token(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle optional step to define API token for extra sensors."""
         if user_input is not None:
             self._api_token = user_input[CONF_API_TOKEN]
@@ -110,7 +115,9 @@ class TariffSelectorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             description_placeholders={"mail_to_link": _MAIL_TO_LINK},
         )
 
-    async def _async_verify(self, step_id: str, data_schema: vol.Schema) -> FlowResult:
+    async def _async_verify(
+        self, step_id: str, data_schema: vol.Schema
+    ) -> ConfigFlowResult:
         """Attempt to verify the provided configuration."""
         errors: dict[str, str] = {}
         auth_ok = True
@@ -144,7 +151,9 @@ class TariffSelectorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         assert self._name is not None
         return self.async_create_entry(title=self._name, data=data)
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle re-authentication with ESIOS Token."""
         self._reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
@@ -159,7 +168,7 @@ class TariffSelectorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Confirm reauth dialog."""
         data_schema = vol.Schema(
             {
@@ -174,7 +183,7 @@ class TariffSelectorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(step_id="reauth_confirm", data_schema=data_schema)
 
 
-class PVPCOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
+class PVPCOptionsFlowHandler(OptionsFlowWithConfigEntry):
     """Handle PVPC options."""
 
     _power: float | None = None
@@ -182,7 +191,7 @@ class PVPCOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
 
     async def async_step_api_token(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle optional step to define API token for extra sensors."""
         if user_input is not None and user_input.get(CONF_API_TOKEN):
             return self.async_create_entry(
@@ -208,7 +217,7 @@ class PVPCOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage the options."""
         if user_input is not None:
             if user_input[CONF_USE_API_TOKEN]:

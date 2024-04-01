@@ -1,4 +1,5 @@
 """Test the WS66i 6-Zone Amplifier config flow."""
+
 from unittest.mock import patch
 
 from homeassistant import config_entries, data_entry_flow
@@ -31,12 +32,15 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["type"] == "form"
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.ws66i.config_flow.get_ws66i",
-    ) as mock_ws66i, patch(
-        "homeassistant.components.ws66i.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.ws66i.config_flow.get_ws66i",
+        ) as mock_ws66i,
+        patch(
+            "homeassistant.components.ws66i.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         ws66i_instance = mock_ws66i.return_value
 
         result2 = await hass.config_entries.flow.async_configure(

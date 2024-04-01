@@ -1,4 +1,5 @@
 """Test the Fronius config flow."""
+
 from unittest.mock import patch
 
 from pyfronius import FroniusError
@@ -39,7 +40,7 @@ LOGGER_INFO_RETURN_VALUE = {"unique_identifier": {"value": "123.4567"}}
 MOCK_DHCP_DATA = DhcpServiceInfo(
     hostname="fronius",
     ip="10.2.3.4",
-    macaddress="00:03:ac:11:22:33",
+    macaddress="0003ac112233",
 )
 
 
@@ -51,13 +52,16 @@ async def test_form_with_logger(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
 
-    with patch(
-        "pyfronius.Fronius.current_logger_info",
-        return_value=LOGGER_INFO_RETURN_VALUE,
-    ), patch(
-        "homeassistant.components.fronius.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "pyfronius.Fronius.current_logger_info",
+            return_value=LOGGER_INFO_RETURN_VALUE,
+        ),
+        patch(
+            "homeassistant.components.fronius.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -83,16 +87,20 @@ async def test_form_with_inverter(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
 
-    with patch(
-        "pyfronius.Fronius.current_logger_info",
-        side_effect=FroniusError,
-    ), patch(
-        "pyfronius.Fronius.inverter_info",
-        return_value=INVERTER_INFO_RETURN_VALUE,
-    ), patch(
-        "homeassistant.components.fronius.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "pyfronius.Fronius.current_logger_info",
+            side_effect=FroniusError,
+        ),
+        patch(
+            "pyfronius.Fronius.inverter_info",
+            return_value=INVERTER_INFO_RETURN_VALUE,
+        ),
+        patch(
+            "homeassistant.components.fronius.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -116,12 +124,15 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "pyfronius.Fronius.current_logger_info",
-        side_effect=FroniusError,
-    ), patch(
-        "pyfronius.Fronius.inverter_info",
-        side_effect=FroniusError,
+    with (
+        patch(
+            "pyfronius.Fronius.current_logger_info",
+            side_effect=FroniusError,
+        ),
+        patch(
+            "pyfronius.Fronius.inverter_info",
+            side_effect=FroniusError,
+        ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -140,12 +151,15 @@ async def test_form_no_device(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "pyfronius.Fronius.current_logger_info",
-        side_effect=FroniusError,
-    ), patch(
-        "pyfronius.Fronius.inverter_info",
-        return_value={"inverters": []},
+    with (
+        patch(
+            "pyfronius.Fronius.current_logger_info",
+            side_effect=FroniusError,
+        ),
+        patch(
+            "pyfronius.Fronius.inverter_info",
+            return_value={"inverters": []},
+        ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -259,11 +273,12 @@ async def test_form_updates_host(
 
 async def test_dhcp(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
     """Test starting a flow from discovery."""
-    with patch(
-        "homeassistant.components.fronius.config_flow.DHCP_REQUEST_DELAY", 0
-    ), patch(
-        "pyfronius.Fronius.current_logger_info",
-        return_value=LOGGER_INFO_RETURN_VALUE,
+    with (
+        patch("homeassistant.components.fronius.config_flow.DHCP_REQUEST_DELAY", 0),
+        patch(
+            "pyfronius.Fronius.current_logger_info",
+            return_value=LOGGER_INFO_RETURN_VALUE,
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=MOCK_DHCP_DATA
@@ -307,14 +322,16 @@ async def test_dhcp_invalid(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test starting a flow from discovery."""
-    with patch(
-        "homeassistant.components.fronius.config_flow.DHCP_REQUEST_DELAY", 0
-    ), patch(
-        "pyfronius.Fronius.current_logger_info",
-        side_effect=FroniusError,
-    ), patch(
-        "pyfronius.Fronius.inverter_info",
-        side_effect=FroniusError,
+    with (
+        patch("homeassistant.components.fronius.config_flow.DHCP_REQUEST_DELAY", 0),
+        patch(
+            "pyfronius.Fronius.current_logger_info",
+            side_effect=FroniusError,
+        ),
+        patch(
+            "pyfronius.Fronius.inverter_info",
+            side_effect=FroniusError,
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=MOCK_DHCP_DATA

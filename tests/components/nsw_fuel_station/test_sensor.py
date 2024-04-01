@@ -1,4 +1,5 @@
 """The tests for the NSW Fuel Station sensor platform."""
+
 from unittest.mock import patch
 
 from nsw_fuel import FuelCheckError
@@ -89,7 +90,7 @@ async def test_setup(get_fuel_prices, hass: HomeAssistant) -> None:
 
 def raise_fuel_check_error():
     """Raise fuel check error for testing error cases."""
-    raise FuelCheckError()
+    raise FuelCheckError
 
 
 @patch(

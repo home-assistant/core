@@ -1,4 +1,5 @@
 """Provide functionality to wake word."""
+
 from __future__ import annotations
 
 from abc import abstractmethod
@@ -153,7 +154,7 @@ async def websocket_entity_info(
     try:
         async with asyncio.timeout(TIMEOUT_FETCH_WAKE_WORDS):
             wake_words = await entity.get_supported_wake_words()
-    except asyncio.TimeoutError:
+    except TimeoutError:
         connection.send_error(
             msg["id"], websocket_api.const.ERR_TIMEOUT, "Timeout fetching wake words"
         )

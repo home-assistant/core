@@ -1,4 +1,5 @@
 """Provide info to system health."""
+
 from typing import Any
 
 from hass_nabucasa import Cloud

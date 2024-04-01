@@ -1,6 +1,5 @@
 """Test the bang_olufsen config_flow."""
 
-
 from unittest.mock import Mock
 
 from aiohttp.client_exceptions import ClientConnectorError
@@ -13,7 +12,6 @@ from homeassistant.const import CONF_SOURCE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .conftest import MockMozartClient
 from .const import (
     TEST_DATA_CREATE_ENTRY,
     TEST_DATA_USER,
@@ -27,10 +25,10 @@ pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
 async def test_config_flow_timeout_error(
-    hass: HomeAssistant, mock_client: MockMozartClient
+    hass: HomeAssistant, mock_mozart_client
 ) -> None:
     """Test we handle timeout_error."""
-    mock_client.get_beolink_self.side_effect = TimeoutError()
+    mock_mozart_client.get_beolink_self.side_effect = TimeoutError()
 
     result_user = await hass.config_entries.flow.async_init(
         handler=DOMAIN,
@@ -40,14 +38,16 @@ async def test_config_flow_timeout_error(
     assert result_user["type"] == FlowResultType.FORM
     assert result_user["errors"] == {"base": "timeout_error"}
 
-    assert mock_client.get_beolink_self.call_count == 1
+    assert mock_mozart_client.get_beolink_self.call_count == 1
 
 
 async def test_config_flow_client_connector_error(
-    hass: HomeAssistant, mock_client: MockMozartClient
+    hass: HomeAssistant, mock_mozart_client
 ) -> None:
     """Test we handle client_connector_error."""
-    mock_client.get_beolink_self.side_effect = ClientConnectorError(Mock(), Mock())
+    mock_mozart_client.get_beolink_self.side_effect = ClientConnectorError(
+        Mock(), Mock()
+    )
 
     result_user = await hass.config_entries.flow.async_init(
         handler=DOMAIN,
@@ -57,7 +57,7 @@ async def test_config_flow_client_connector_error(
     assert result_user["type"] == FlowResultType.FORM
     assert result_user["errors"] == {"base": "client_connector_error"}
 
-    assert mock_client.get_beolink_self.call_count == 1
+    assert mock_mozart_client.get_beolink_self.call_count == 1
 
 
 async def test_config_flow_invalid_ip(hass: HomeAssistant) -> None:
@@ -73,10 +73,10 @@ async def test_config_flow_invalid_ip(hass: HomeAssistant) -> None:
 
 
 async def test_config_flow_api_exception(
-    hass: HomeAssistant, mock_client: MockMozartClient
+    hass: HomeAssistant, mock_mozart_client
 ) -> None:
     """Test we handle api_exception."""
-    mock_client.get_beolink_self.side_effect = ApiException()
+    mock_mozart_client.get_beolink_self.side_effect = ApiException()
 
     result_user = await hass.config_entries.flow.async_init(
         handler=DOMAIN,
@@ -86,10 +86,10 @@ async def test_config_flow_api_exception(
     assert result_user["type"] == FlowResultType.FORM
     assert result_user["errors"] == {"base": "api_exception"}
 
-    assert mock_client.get_beolink_self.call_count == 1
+    assert mock_mozart_client.get_beolink_self.call_count == 1
 
 
-async def test_config_flow(hass: HomeAssistant, mock_client: MockMozartClient) -> None:
+async def test_config_flow(hass: HomeAssistant, mock_mozart_client) -> None:
     """Test config flow."""
 
     result_init = await hass.config_entries.flow.async_init(
@@ -109,12 +109,10 @@ async def test_config_flow(hass: HomeAssistant, mock_client: MockMozartClient) -
     assert result_user["type"] == FlowResultType.CREATE_ENTRY
     assert result_user["data"] == TEST_DATA_CREATE_ENTRY
 
-    assert mock_client.get_beolink_self.call_count == 1
+    assert mock_mozart_client.get_beolink_self.call_count == 1
 
 
-async def test_config_flow_zeroconf(
-    hass: HomeAssistant, mock_client: MockMozartClient
-) -> None:
+async def test_config_flow_zeroconf(hass: HomeAssistant, mock_mozart_client) -> None:
     """Test zeroconf discovery."""
 
     result_zeroconf = await hass.config_entries.flow.async_init(
@@ -134,7 +132,7 @@ async def test_config_flow_zeroconf(
     assert result_confirm["type"] == FlowResultType.CREATE_ENTRY
     assert result_confirm["data"] == TEST_DATA_CREATE_ENTRY
 
-    assert mock_client.get_beolink_self.call_count == 0
+    assert mock_mozart_client.get_beolink_self.call_count == 0
 
 
 async def test_config_flow_zeroconf_not_mozart_device(hass: HomeAssistant) -> None:

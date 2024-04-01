@@ -1,16 +1,16 @@
 """Config flow for the Home Assistant SkyConnect integration."""
+
 from __future__ import annotations
 
 from typing import Any
 
 from homeassistant.components import usb
 from homeassistant.components.homeassistant_hardware import silabs_multiprotocol_addon
-from homeassistant.config_entries import ConfigEntry, ConfigFlow
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 
-from .const import DOMAIN
-from .util import get_usb_service_info
+from .const import DOMAIN, HardwareVariant
+from .util import get_hardware_variant, get_usb_service_info
 
 
 class HomeAssistantSkyConnectConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -26,7 +26,9 @@ class HomeAssistantSkyConnectConfigFlow(ConfigFlow, domain=DOMAIN):
         """Return the options flow."""
         return HomeAssistantSkyConnectOptionsFlow(config_entry)
 
-    async def async_step_usb(self, discovery_info: usb.UsbServiceInfo) -> FlowResult:
+    async def async_step_usb(
+        self, discovery_info: usb.UsbServiceInfo
+    ) -> ConfigFlowResult:
         """Handle usb discovery."""
         device = discovery_info.device
         vid = discovery_info.vid
@@ -37,8 +39,12 @@ class HomeAssistantSkyConnectConfigFlow(ConfigFlow, domain=DOMAIN):
         unique_id = f"{vid}:{pid}_{serial_number}_{manufacturer}_{description}"
         if await self.async_set_unique_id(unique_id):
             self._abort_if_unique_id_configured(updates={"device": device})
+
+        assert description is not None
+        hw_variant = HardwareVariant.from_usb_product_name(description)
+
         return self.async_create_entry(
-            title="Home Assistant SkyConnect",
+            title=hw_variant.full_name,
             data={
                 "device": device,
                 "vid": vid,
@@ -74,10 +80,15 @@ class HomeAssistantSkyConnectOptionsFlow(silabs_multiprotocol_addon.OptionsFlowH
         """
         return {"usb": get_usb_service_info(self.config_entry)}
 
+    @property
+    def _hw_variant(self) -> HardwareVariant:
+        """Return the hardware variant."""
+        return get_hardware_variant(self.config_entry)
+
     def _zha_name(self) -> str:
         """Return the ZHA name."""
-        return "SkyConnect Multiprotocol"
+        return f"{self._hw_variant.short_name} Multiprotocol"
 
     def _hardware_name(self) -> str:
         """Return the name of the hardware."""
-        return "Home Assistant SkyConnect"
+        return self._hw_variant.full_name

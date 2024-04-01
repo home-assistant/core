@@ -1,4 +1,5 @@
 """Config flow for Homeassistant Analytics integration."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -13,11 +14,11 @@ import voluptuous as vol
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
+    ConfigFlowResult,
     OptionsFlow,
     OptionsFlowWithConfigEntry,
 )
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
     SelectOptionDict,
@@ -50,13 +51,27 @@ class HomeassistantAnalyticsConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
-        self._async_abort_entries_match()
-        if user_input:
-            return self.async_create_entry(
-                title="Home Assistant Analytics Insights", data={}, options=user_input
-            )
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            if not user_input.get(CONF_TRACKED_INTEGRATIONS) and not user_input.get(
+                CONF_TRACKED_CUSTOM_INTEGRATIONS
+            ):
+                errors["base"] = "no_integrations_selected"
+            else:
+                return self.async_create_entry(
+                    title="Home Assistant Analytics Insights",
+                    data={},
+                    options={
+                        CONF_TRACKED_INTEGRATIONS: user_input.get(
+                            CONF_TRACKED_INTEGRATIONS, []
+                        ),
+                        CONF_TRACKED_CUSTOM_INTEGRATIONS: user_input.get(
+                            CONF_TRACKED_CUSTOM_INTEGRATIONS, []
+                        ),
+                    },
+                )
 
         client = HomeassistantAnalyticsClient(
             session=async_get_clientsession(self.hass)
@@ -78,16 +93,17 @@ class HomeassistantAnalyticsConfigFlow(ConfigFlow, domain=DOMAIN):
         ]
         return self.async_show_form(
             step_id="user",
+            errors=errors,
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_TRACKED_INTEGRATIONS): SelectSelector(
+                    vol.Optional(CONF_TRACKED_INTEGRATIONS): SelectSelector(
                         SelectSelectorConfig(
                             options=options,
                             multiple=True,
                             sort=True,
                         )
                     ),
-                    vol.Required(CONF_TRACKED_CUSTOM_INTEGRATIONS): SelectSelector(
+                    vol.Optional(CONF_TRACKED_CUSTOM_INTEGRATIONS): SelectSelector(
                         SelectSelectorConfig(
                             options=list(custom_integrations),
                             multiple=True,
@@ -104,10 +120,26 @@ class HomeassistantAnalyticsOptionsFlowHandler(OptionsFlowWithConfigEntry):
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage the options."""
-        if user_input:
-            return self.async_create_entry(title="", data=user_input)
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            if not user_input.get(CONF_TRACKED_INTEGRATIONS) and not user_input.get(
+                CONF_TRACKED_CUSTOM_INTEGRATIONS
+            ):
+                errors["base"] = "no_integrations_selected"
+            else:
+                return self.async_create_entry(
+                    title="",
+                    data={
+                        CONF_TRACKED_INTEGRATIONS: user_input.get(
+                            CONF_TRACKED_INTEGRATIONS, []
+                        ),
+                        CONF_TRACKED_CUSTOM_INTEGRATIONS: user_input.get(
+                            CONF_TRACKED_CUSTOM_INTEGRATIONS, []
+                        ),
+                    },
+                )
 
         client = HomeassistantAnalyticsClient(
             session=async_get_clientsession(self.hass)
@@ -129,17 +161,18 @@ class HomeassistantAnalyticsOptionsFlowHandler(OptionsFlowWithConfigEntry):
         ]
         return self.async_show_form(
             step_id="init",
+            errors=errors,
             data_schema=self.add_suggested_values_to_schema(
                 vol.Schema(
                     {
-                        vol.Required(CONF_TRACKED_INTEGRATIONS): SelectSelector(
+                        vol.Optional(CONF_TRACKED_INTEGRATIONS): SelectSelector(
                             SelectSelectorConfig(
                                 options=options,
                                 multiple=True,
                                 sort=True,
                             )
                         ),
-                        vol.Required(CONF_TRACKED_CUSTOM_INTEGRATIONS): SelectSelector(
+                        vol.Optional(CONF_TRACKED_CUSTOM_INTEGRATIONS): SelectSelector(
                             SelectSelectorConfig(
                                 options=list(custom_integrations),
                                 multiple=True,

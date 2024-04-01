@@ -1,4 +1,5 @@
 """Test the habitica config flow."""
+
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohttp import ClientResponseError
@@ -22,15 +23,19 @@ async def test_form(hass: HomeAssistant) -> None:
     mock_obj = MagicMock()
     mock_obj.user.get = AsyncMock()
 
-    with patch(
-        "homeassistant.components.habitica.config_flow.HabitipyAsync",
-        return_value=mock_obj,
-    ), patch(
-        "homeassistant.components.habitica.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.habitica.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.habitica.config_flow.HabitipyAsync",
+            return_value=mock_obj,
+        ),
+        patch(
+            "homeassistant.components.habitica.async_setup", return_value=True
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.habitica.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {"api_user": "test-api-user", "api_key": "test-api-key"},

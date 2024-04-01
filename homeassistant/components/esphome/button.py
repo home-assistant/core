@@ -1,4 +1,5 @@
 """Support for ESPHome buttons."""
+
 from __future__ import annotations
 
 from aioesphomeapi import ButtonInfo, EntityInfo, EntityState
@@ -9,7 +10,11 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.enum import try_parse_enum
 
-from .entity import EsphomeEntity, platform_async_setup_entry
+from .entity import (
+    EsphomeEntity,
+    convert_api_error_ha_error,
+    platform_async_setup_entry,
+)
 
 
 async def async_setup_entry(
@@ -52,6 +57,7 @@ class EsphomeButton(EsphomeEntity[ButtonInfo, EntityState], ButtonEntity):
         self._on_entry_data_changed()
         self.async_write_ha_state()
 
+    @convert_api_error_ha_error
     async def async_press(self) -> None:
         """Press the button."""
-        await self._client.button_command(self._key)
+        self._client.button_command(self._key)

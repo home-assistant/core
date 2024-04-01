@@ -1,4 +1,5 @@
 """Test the Advantage Air Binary Sensor Platform."""
+
 from datetime import timedelta
 from unittest.mock import AsyncMock
 

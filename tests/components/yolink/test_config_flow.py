@@ -1,5 +1,5 @@
 """Test yolink config flow."""
-import asyncio
+
 from http import HTTPStatus
 from unittest.mock import patch
 
@@ -87,9 +87,12 @@ async def test_full_flow(
         },
     )
 
-    with patch("homeassistant.components.yolink.api.ConfigEntryAuth"), patch(
-        "homeassistant.components.yolink.async_setup_entry", return_value=True
-    ) as mock_setup:
+    with (
+        patch("homeassistant.components.yolink.api.ConfigEntryAuth"),
+        patch(
+            "homeassistant.components.yolink.async_setup_entry", return_value=True
+        ) as mock_setup,
+    ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["data"]["auth_implementation"] == DOMAIN
@@ -127,7 +130,7 @@ async def test_abort_if_authorization_timeout(
     with patch(
         "homeassistant.components.yolink.config_entry_oauth2_flow."
         "LocalOAuth2Implementation.async_generate_authorize_url",
-        side_effect=asyncio.TimeoutError,
+        side_effect=TimeoutError,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -202,9 +205,12 @@ async def test_reauthentication(
         },
     )
 
-    with patch("homeassistant.components.yolink.api.ConfigEntryAuth"), patch(
-        "homeassistant.components.yolink.async_setup_entry", return_value=True
-    ) as mock_setup:
+    with (
+        patch("homeassistant.components.yolink.api.ConfigEntryAuth"),
+        patch(
+            "homeassistant.components.yolink.async_setup_entry", return_value=True
+        ) as mock_setup,
+    ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
     token_data = old_entry.data["token"]
     assert token_data["access_token"] == "mock-access-token"

@@ -23,6 +23,21 @@
         }
       }
     },
+    "fan": {
+      "demo": {
+        "state_attributes": {
+          "preset_mode": {
+            "default": "mdi:circle-medium",
+            "state": {
+              "auto": "mdi:fan-auto",
+              "sleep": "mdi:bed",
+              "smart": "mdi:brain",
+              "on": "mdi:power"
+            }
+          }
+        }
+      }
+    },
     "number": {
       "volume": {
         "default": "mdi:volume-high"
@@ -58,5 +73,8 @@
         "default": "mdi:air-conditioner"
       }
     }
+  },
+  "services": {
+    "randomize_device_tracker_data": "mdi:dice-multiple"
   }
 }

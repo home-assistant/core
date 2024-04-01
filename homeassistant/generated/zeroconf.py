@@ -411,6 +411,11 @@ ZEROCONF = {
             "domain": "elgato",
         },
     ],
+    "_elmax-ssl._tcp.local.": [
+        {
+            "domain": "elmax",
+        },
+    ],
     "_enphase-envoy._tcp.local.": [
         {
             "domain": "enphase_envoy",
@@ -568,6 +573,11 @@ ZEROCONF = {
             },
         },
     ],
+    "_matter._tcp.local.": [
+        {
+            "domain": "matter",
+        },
+    ],
     "_mediaremotetv._tcp.local.": [
         {
             "domain": "apple_tv",
@@ -618,6 +628,11 @@ ZEROCONF = {
     "_plugwise._tcp.local.": [
         {
             "domain": "plugwise",
+        },
+    ],
+    "_powerview-g3._tcp.local.": [
+        {
+            "domain": "hunterdouglas_powerview",
         },
     ],
     "_powerview._tcp.local.": [

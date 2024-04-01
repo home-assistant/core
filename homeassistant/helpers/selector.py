@@ -1,4 +1,5 @@
 """Selectors for Home Assistant."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping, Sequence
@@ -868,6 +869,38 @@ class IconSelector(Selector[IconSelectorConfig]):
         """Validate the passed selection."""
         icon: str = vol.Schema(str)(data)
         return icon
+
+
+class LabelSelectorConfig(TypedDict, total=False):
+    """Class to represent a label selector config."""
+
+    multiple: bool
+
+
+@SELECTORS.register("label")
+class LabelSelector(Selector[LabelSelectorConfig]):
+    """Selector of a single or list of labels."""
+
+    selector_type = "label"
+
+    CONFIG_SCHEMA = vol.Schema(
+        {
+            vol.Optional("multiple", default=False): cv.boolean,
+        }
+    )
+
+    def __init__(self, config: LabelSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
+    def __call__(self, data: Any) -> str | list[str]:
+        """Validate the passed selection."""
+        if not self.config["multiple"]:
+            label_id: str = vol.Schema(str)(data)
+            return label_id
+        if not isinstance(data, list):
+            raise vol.Invalid("Value should be a list")
+        return [vol.Schema(str)(val) for val in data]
 
 
 class LanguageSelectorConfig(TypedDict, total=False):

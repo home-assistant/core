@@ -1,4 +1,5 @@
 """Provide common smhi fixtures."""
+
 import pytest
 
 from homeassistant.components.smhi.const import DOMAIN
