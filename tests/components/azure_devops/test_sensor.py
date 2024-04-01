@@ -11,14 +11,12 @@ from . import setup_integration
 from tests.common import MockConfigEntry
 
 
-@pytest.mark.usefixtures(
-    "entity_registry_enabled_by_default",
-    "mock_devops_client",
-)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensors(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
+    mock_devops_client: AsyncMock,
 ) -> None:
     """Test the sensor entities."""
     await setup_integration(hass, mock_config_entry)

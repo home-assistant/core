@@ -20,15 +20,13 @@ async def test_load_unload_entry(
 ) -> None:
     """Test a successful setup entry."""
     await setup_integration(hass, mock_config_entry)
-    entry = hass.config_entries.async_entries(DOMAIN)[0]
-
     assert mock_devops_client.authorized
     assert mock_devops_client.authorize.call_count == 1
     assert mock_devops_client.get_builds.call_count == 2
 
     assert mock_config_entry.state == ConfigEntryState.LOADED
 
-    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.config_entries.async_remove(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert entry.state == ConfigEntryState.NOT_LOADED
@@ -37,7 +35,7 @@ async def test_load_unload_entry(
 async def test_auth_failed(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_devops_client: MagicMock,
+    mock_devops_client: AsyncMock,
 ) -> None:
     """Test a failed setup entry."""
     mock_devops_client.authorize.return_value = False
