@@ -178,7 +178,7 @@ class LocalAdaxDevice(ClimateEntity):
         self._attr_target_temperature = data["target_temperature"]
         self._attr_current_temperature = data["current_temperature"]
         self._attr_available = self._attr_current_temperature is not None
-        if data["target_temperature"] == 0:
+        if self._attr_target_temperature == 0:
             self._attr_hvac_mode = HVACMode.OFF
             self._attr_icon = "mdi:radiator-off"
             if self._attr_target_temperature == 0:
