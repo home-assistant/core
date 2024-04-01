@@ -21,7 +21,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import HoneywellData
 from .const import DOMAIN
 
-EMERGENCY_HEAT_KEY = "emergecy_heat"
+EMERGENCY_HEAT_KEY = "emergency_heat"
 
 SWITCH_TYPES: tuple[SwitchEntityDescription, ...] = (
     SwitchEntityDescription(
@@ -63,7 +63,7 @@ class HoneywellSwitch(SwitchEntity):
         self._data = hass.data[DOMAIN][config_entry.entry_id]
         self._device = device
         self.entity_description = description
-        self._attr_unique_id = f"{device.deviceid}-{description.key}"
+        self._attr_unique_id = f"{device.deviceid}_{description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device.deviceid)},
             name=device.name,
@@ -71,23 +71,25 @@ class HoneywellSwitch(SwitchEntity):
         )
 
     async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn the switch on."""
-        try:
-            await self._device.set_system_mode("emheat")
-        except SomeComfortError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN, translation_key="switch_failed_on"
-            ) from err
+        """Turn the switch on if heat mode is enabled."""
+        if self._device.system_mode == "heat":
+            try:
+                await self._device.set_system_mode("emheat")
+            except SomeComfortError as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN, translation_key="switch_failed_on"
+                ) from err
 
     async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn the switch off."""
-        try:
-            await self._device.set_system_mode("off")
+        """Turn the switch off if on."""
+        if self.is_on:
+            try:
+                await self._device.set_system_mode("off")
 
-        except SomeComfortError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN, translation_key="switch_failed_off"
-            ) from err
+            except SomeComfortError as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN, translation_key="switch_failed_off"
+                ) from err
 
     @property
     def is_on(self) -> bool:
