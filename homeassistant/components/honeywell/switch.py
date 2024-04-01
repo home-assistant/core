@@ -21,10 +21,12 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import HoneywellData
 from .const import DOMAIN
 
+EMERGENCY_HEAT_KEY = "emergecy_heat"
+
 SWITCH_TYPES: tuple[SwitchEntityDescription, ...] = (
     SwitchEntityDescription(
-        key="emergency_heat",
-        translation_key="emergency_heat",
+        key=EMERGENCY_HEAT_KEY,
+        translation_key=EMERGENCY_HEAT_KEY,
         device_class=SwitchDeviceClass.SWITCH,
     ),
 )
