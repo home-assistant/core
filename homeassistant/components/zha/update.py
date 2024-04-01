@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from functools import cached_property
+import functools
 import logging
 from typing import Any
 
@@ -14,11 +15,13 @@ from homeassistant.components.update import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .entity import ZHAEntity
 from .helpers import (
+    SIGNAL_ADD_ENTITIES,
     EntityData,
     ZHAFirmwareUpdateCoordinator,
     get_zha_data,
@@ -45,8 +48,12 @@ async def async_setup_entry(
     ]
     async_add_entities(entities)
 
-    zha_data = get_zha_data(hass)
-    entities_to_create = zha_data.platforms[Platform.UPDATE]
+    unsub = async_dispatcher_connect(
+        hass,
+        SIGNAL_ADD_ENTITIES,
+        functools.partial(async_add_entities, entities_to_create),
+    )
+    config_entry.async_on_unload(unsub)
 
 
 class ZHAFirmwareUpdateEntity(

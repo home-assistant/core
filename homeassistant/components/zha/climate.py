@@ -6,6 +6,7 @@ at https://home-assistant.io/components/zha.climate/
 
 from __future__ import annotations
 
+import functools
 from typing import Any
 
 from homeassistant.components.climate import (
@@ -17,10 +18,11 @@ from homeassistant.components.climate import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PRECISION_TENTHS, Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .entity import ZHAEntity
-from .helpers import get_zha_data
+from .helpers import SIGNAL_ADD_ENTITIES, get_zha_data
 
 
 async def async_setup_entry(
@@ -33,6 +35,13 @@ async def async_setup_entry(
     entities_to_create = zha_data.platforms.pop(Platform.CLIMATE, [])
     entities = [Thermostat(entity_data) for entity_data in entities_to_create]
     async_add_entities(entities)
+
+    unsub = async_dispatcher_connect(
+        hass,
+        SIGNAL_ADD_ENTITIES,
+        functools.partial(async_add_entities, entities_to_create),
+    )
+    config_entry.async_on_unload(unsub)
 
 
 class Thermostat(ZHAEntity, ClimateEntity):

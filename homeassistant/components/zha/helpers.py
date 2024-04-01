@@ -132,6 +132,7 @@ ZHA_GW_MSG_LOG_ENTRY = "log_entry"
 ZHA_GW_MSG_LOG_OUTPUT = "log_output"
 SIGNAL_REMOVE = "remove"
 GROUP_ENTITY_DOMAINS = [Platform.LIGHT, Platform.SWITCH, Platform.FAN]
+SIGNAL_ADD_ENTITIES = "zha_add_entities"
 
 
 class GroupEntityReference(NamedTuple):
@@ -488,6 +489,8 @@ class ZHAGatewayProxy(EventBase):
         zha_device_proxy = self.device_proxies[event.device_info.ieee]
         device_info = zha_device_proxy.zha_device_info
         device_info[DEVICE_PAIRING_STATUS] = event.device_info.pairing_status.name
+        if event.new_join:
+            async_dispatcher_send(self.hass, SIGNAL_ADD_ENTITIES)
         async_dispatcher_send(
             self.hass,
             ZHA_GW_MSG,

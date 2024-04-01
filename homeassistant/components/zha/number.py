@@ -2,17 +2,19 @@
 
 from __future__ import annotations
 
+import functools
 import logging
 
 from homeassistant.components.number import NumberEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import UndefinedType
 
 from .entity import ZHAEntity
-from .helpers import get_zha_data
+from .helpers import SIGNAL_ADD_ENTITIES, get_zha_data
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,6 +29,13 @@ async def async_setup_entry(
     entities_to_create = zha_data.platforms.pop(Platform.NUMBER, [])
     entities = [ZhaNumber(entity_data) for entity_data in entities_to_create]
     async_add_entities(entities)
+
+    unsub = async_dispatcher_connect(
+        hass,
+        SIGNAL_ADD_ENTITIES,
+        functools.partial(async_add_entities, entities_to_create),
+    )
+    config_entry.async_on_unload(unsub)
 
 
 class ZhaNumber(ZHAEntity, NumberEntity):
