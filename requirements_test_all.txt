@@ -203,7 +203,7 @@ aiodhcpwatcher==1.0.0
 aiodiscover==2.0.0
 
 # homeassistant.components.dnsip
-aiodns==3.1.1
+aiodns==3.2.0
 
 # homeassistant.components.eafm
 aioeafm==0.1.2
@@ -454,7 +454,7 @@ auroranoaa==0.0.3
 aurorapy==0.2.7
 
 # homeassistant.components.axis
-axis==59
+axis==60
 
 # homeassistant.components.azure_event_hub
 azure-eventhub==5.11.1
@@ -883,7 +883,7 @@ holidays==0.45
 home-assistant-frontend==20240329.1
 
 # homeassistant.components.conversation
-home-assistant-intents==2024.3.27
+home-assistant-intents==2024.3.29
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2
@@ -1776,7 +1776,7 @@ python-roborock==0.40.0
 python-smarttub==0.0.36
 
 # homeassistant.components.songpal
-python-songpal==0.16.1
+python-songpal==0.16.2
 
 # homeassistant.components.tado
 python-tado==0.17.4
