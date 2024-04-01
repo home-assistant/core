@@ -1894,7 +1894,7 @@ async def test_device_id(hass: HomeAssistant) -> None:
 
 @pytest.mark.parametrize(
     ("yaml_config", "config_entry_configs"),
-    (
+    [
         (
             {
                 "utility_meter": {
@@ -1988,7 +1988,7 @@ async def test_device_id(hass: HomeAssistant) -> None:
                 },
             ],
         ),
-    ),
+    ],
 )
 async def test_device_class_inherited(
     hass: HomeAssistant, yaml_config, config_entry_configs
