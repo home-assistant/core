@@ -315,10 +315,11 @@ class FritzBoxTools(
         """Run registered entity update calls."""
         entity_states = {}
         for key in list(self._entity_update_functions):
-            _LOGGER.debug("update entity %s", key)
-            entity_states[key] = self._entity_update_functions[key](
-                self.fritz_status, self.data["entity_states"].get(key)
-            )
+            if (update_fn := self._entity_update_functions.get(key)) is not None:
+                _LOGGER.debug("update entity %s", key)
+                entity_states[key] = update_fn(
+                    self.fritz_status, self.data["entity_states"].get(key)
+                )
         return entity_states
 
     async def _async_update_data(self) -> UpdateCoordinatorDataType:
