@@ -1,4 +1,4 @@
-"""Diagnostics support for Honeywell."""
+"""Diagnostics support for Whirlpool."""
 
 from __future__ import annotations
 
