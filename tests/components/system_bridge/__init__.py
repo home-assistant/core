@@ -4,6 +4,7 @@ from collections.abc import Awaitable, Callable
 from dataclasses import asdict
 from ipaddress import ip_address
 from typing import Any
+from unittest.mock import patch
 
 from systembridgeconnector.const import TYPE_DATA_UPDATE
 from systembridgemodels.const import (
@@ -129,7 +130,10 @@ async def setup_integration(
     """Fixture for setting up the component."""
     config_entry.add_to_hass(hass)
 
-    await hass.config_entries.async_setup(config_entry.entry_id)
+    with patch(
+        "homeassistant.helpers.discovery.async_load_platform",
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
 
 
 async def mock_data_listener(
