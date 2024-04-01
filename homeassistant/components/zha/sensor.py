@@ -19,7 +19,12 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .entity import ZHAEntity
-from .helpers import SIGNAL_ADD_ENTITIES, EntityData, get_zha_data
+from .helpers import (
+    SIGNAL_ADD_ENTITIES,
+    EntityData,
+    async_add_entities as zha_async_add_entities,
+    get_zha_data,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,7 +43,9 @@ async def async_setup_entry(
     unsub = async_dispatcher_connect(
         hass,
         SIGNAL_ADD_ENTITIES,
-        functools.partial(async_add_entities, entities_to_create),
+        functools.partial(
+            zha_async_add_entities, async_add_entities, entities_to_create
+        ),
     )
     config_entry.async_on_unload(unsub)
 

@@ -74,6 +74,7 @@ from homeassistant.helpers import (
     entity_registry as er,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
@@ -937,3 +938,28 @@ def async_cluster_exists(hass: HomeAssistant, cluster_id, skip_coordinator=True)
             ):
                 return True
     return False
+
+
+@callback
+async def async_add_entities(
+    _async_add_entities: AddEntitiesCallback,
+    entities: list[
+        tuple[
+            type[ZHAEntity],
+            tuple[EntityData],
+            dict[str, Any],
+        ]
+    ],
+    **kwargs,
+) -> None:
+    """Add entities helper."""
+    if not entities:
+        return
+
+    to_add = [
+        ent_cls.create_entity(*args, **{**kwargs, **kw_args})
+        for ent_cls, args, kw_args in entities
+    ]
+    entities_to_add = [entity for entity in to_add if entity is not None]
+    _async_add_entities(entities_to_add, update_before_add=False)
+    entities.clear()
