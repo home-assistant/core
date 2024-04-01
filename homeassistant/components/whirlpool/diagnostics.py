@@ -28,18 +28,18 @@ async def async_get_config_entry_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
 
-    Whirlpool: WhirlpoolData = hass.data[DOMAIN][config_entry.entry_id]
+    whirlpool: WhirlpoolData = hass.data[DOMAIN][config_entry.entry_id]
     diagnostics_data = {
         "Washer_dryers": {
             wd["NAME"]: dict(wd.items())
-            for wd in Whirlpool.appliances_manager.washer_dryers
+            for wd in whirlpool.appliances_manager.washer_dryers
         },
         "aircons": {
-            ac["NAME"]: dict(ac.items()) for ac in Whirlpool.appliances_manager.aircons
+            ac["NAME"]: dict(ac.items()) for ac in whirlpool.appliances_manager.aircons
         },
         "ovens": {
             oven["NAME"]: dict(oven.items())
-            for oven in Whirlpool.appliances_manager.ovens
+            for oven in whirlpool.appliances_manager.ovens
         },
     }
 
