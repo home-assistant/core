@@ -9,7 +9,7 @@ from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.azure_devops.const import CONF_ORG, CONF_PROJECT, DOMAIN
 from homeassistant.core import HomeAssistant
 
-from . import FIXTURE_REAUTH_INPUT, FIXTURE_USER_INPUT, UNIQUE_ID
+from . import FIXTURE_REAUTH_INPUT, FIXTURE_USER_INPUT
 
 from tests.common import MockConfigEntry
 
@@ -192,18 +192,16 @@ async def test_reauth_project_error(hass: HomeAssistant) -> None:
         assert result2["errors"] == {"base": "project_error"}
 
 
-async def test_reauth_flow(hass: HomeAssistant) -> None:
+async def test_reauth_flow(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
     """Test reauth works."""
     with patch(
         "homeassistant.components.azure_devops.config_flow.DevOpsClient.authorize",
         return_value=False,
     ):
-        mock_config = MockConfigEntry(
-            domain=DOMAIN,
-            unique_id=UNIQUE_ID,
-            data=FIXTURE_USER_INPUT,
-        )
-        mock_config.add_to_hass(hass)
+        mock_config_entry.add_to_hass(hass)
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
