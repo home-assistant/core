@@ -250,6 +250,7 @@ async def test_reauth_connection_error(
     assert result2["step_id"] == "authenticate"
     assert result2["errors"] == {"base": "cannot_connect"}
 
+    mock_websocket_client.connect.side_effect = None
     mock_websocket_client.get_data.return_value = None
 
     result3 = await hass.config_entries.flow.async_configure(
