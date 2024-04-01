@@ -706,7 +706,7 @@ class UtilityMeterSensor(RestoreSensor):
             in DEVICE_CLASS_UNITS[SensorDeviceClass.ENERGY]
         ):
             return SensorDeviceClass.ENERGY
-            
+
         # Inherits the source entity's class if it is compatible with the utility
         # meter entity's state class
         device_class = try_parse_enum(SensorDeviceClass, device_class_source)
