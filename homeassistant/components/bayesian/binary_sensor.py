@@ -313,9 +313,9 @@ class BayesianBinarySensor(BinarySensorEntity):
                 self.hass, observations, text=f"{self._attr_name}/{entity}"
             )
 
-        all_template_observations: list[Observation] = []
-        for observations in self.observations_by_template.values():
-            all_template_observations.append(observations[0])
+        all_template_observations: list[Observation] = [
+            observations[0] for observations in self.observations_by_template.values()
+        ]
         if len(all_template_observations) == 2:
             raise_mirrored_entries(
                 self.hass,

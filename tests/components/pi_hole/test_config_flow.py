@@ -113,6 +113,7 @@ async def test_flow_reauth(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
     with _patch_init_hole(mocked_hole), _patch_config_flow_hole(mocked_hole):
         assert not await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
         flows = hass.config_entries.flow.async_progress()
 

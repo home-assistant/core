@@ -34,11 +34,10 @@ async def async_setup_entry(
     devices: list[FloDeviceDataUpdateCoordinator] = hass.data[FLO_DOMAIN][
         config_entry.entry_id
     ]["devices"]
-    entities = []
-    for device in devices:
-        if device.device_type != "puck_oem":
-            entities.append(FloSwitch(device))
-    async_add_entities(entities)
+
+    async_add_entities(
+        [FloSwitch(device) for device in devices if device.device_type != "puck_oem"]
+    )
 
     platform = entity_platform.async_get_current_platform()
 

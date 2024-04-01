@@ -264,7 +264,7 @@ async def test_gateway_initialize_bellows_thread(
     ) as mock_new:
         await zha_gateway.async_initialize()
 
-    mock_new.mock_calls[-1].kwargs["config"]["use_thread"] is thread_state
+    assert mock_new.mock_calls[-1].kwargs["config"]["use_thread"] is thread_state
 
     await zha_gateway.shutdown()
 

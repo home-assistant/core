@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from decimal import Decimal, DecimalException, InvalidOperation
@@ -14,6 +15,7 @@ import voluptuous as vol
 from homeassistant.components.sensor import (
     ATTR_LAST_RESET,
     DEVICE_CLASS_STATE_CLASSES,
+    DEVICE_CLASS_UNITS,
     RestoreSensor,
     SensorDeviceClass,
     SensorExtraStoredData,
@@ -22,12 +24,12 @@ from homeassistant.components.sensor import (
 from homeassistant.components.sensor.recorder import _suggest_report_issue
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_NAME,
     CONF_UNIQUE_ID,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    UnitOfEnergy,
 )
 from homeassistant.core import Event, HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -100,12 +102,6 @@ ATTR_PERIOD = "meter_period"
 ATTR_LAST_PERIOD = "last_period"
 ATTR_LAST_VALID_STATE = "last_valid_state"
 ATTR_TARIFF = "tariff"
-
-DEVICE_CLASS_MAP = {
-    UnitOfEnergy.WATT_HOUR: SensorDeviceClass.ENERGY,
-    UnitOfEnergy.KILO_WATT_HOUR: SensorDeviceClass.ENERGY,
-}
-
 
 PRECISION = 3
 PAUSED = "paused"
@@ -317,6 +313,7 @@ class UtilitySensorExtraStoredData(SensorExtraStoredData):
     last_reset: datetime | None
     last_valid_state: Decimal | None
     status: str
+    input_device_class: SensorDeviceClass | None
 
     def as_dict(self) -> dict[str, Any]:
         """Return a dict representation of the utility sensor data."""
@@ -328,6 +325,7 @@ class UtilitySensorExtraStoredData(SensorExtraStoredData):
             str(self.last_valid_state) if self.last_valid_state else None
         )
         data["status"] = self.status
+        data["input_device_class"] = str(self.input_device_class)
 
         return data
 
@@ -347,6 +345,9 @@ class UtilitySensorExtraStoredData(SensorExtraStoredData):
                 else None
             )
             status: str = restored["status"]
+            input_device_class = try_parse_enum(
+                SensorDeviceClass, restored.get("input_device_class")
+            )
         except KeyError:
             # restored is a dict, but does not have all values
             return None
@@ -361,6 +362,7 @@ class UtilitySensorExtraStoredData(SensorExtraStoredData):
             last_reset,
             last_valid_state,
             status,
+            input_device_class,
         )
 
 
@@ -401,6 +403,7 @@ class UtilityMeterSensor(RestoreSensor):
         self._last_valid_state = None
         self._collecting = None
         self._name = name
+        self._input_device_class = None
         self._unit_of_measurement = None
         self._period = meter_type
         if meter_type is not None:
@@ -420,9 +423,10 @@ class UtilityMeterSensor(RestoreSensor):
         self._tariff = tariff
         self._tariff_entity = tariff_entity
 
-    def start(self, unit):
+    def start(self, attributes: Mapping[str, Any]) -> None:
         """Initialize unit and state upon source initial update."""
-        self._unit_of_measurement = unit
+        self._input_device_class = attributes.get(ATTR_DEVICE_CLASS)
+        self._unit_of_measurement = attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         self._state = 0
         self.async_write_ha_state()
 
@@ -486,6 +490,7 @@ class UtilityMeterSensor(RestoreSensor):
         new_state = event.data["new_state"]
         if new_state is None:
             return
+        new_state_attributes: Mapping[str, Any] = new_state.attributes or {}
 
         # First check if the new_state is valid (see discussion in PR #88446)
         if (new_state_val := self._validate_state(new_state)) is None:
@@ -502,7 +507,7 @@ class UtilityMeterSensor(RestoreSensor):
             for sensor in self.hass.data[DATA_UTILITY][self._parent_meter][
                 DATA_TARIFF_SENSORS
             ]:
-                sensor.start(new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT))
+                sensor.start(new_state_attributes)
                 if self._unit_of_measurement is None:
                     _LOGGER.warning(
                         "Source sensor %s has no unit of measurement. Please %s",
@@ -516,7 +521,8 @@ class UtilityMeterSensor(RestoreSensor):
             # If net_consumption is off, the adjustment must be non-negative
             self._state += adjustment  # type: ignore[operator] # self._state will be set to by the start function if it is None, therefore it always has a valid Decimal value at this line
 
-        self._unit_of_measurement = new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        self._input_device_class = new_state_attributes.get(ATTR_DEVICE_CLASS)
+        self._unit_of_measurement = new_state_attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         self._last_valid_state = new_state_val
         self.async_write_ha_state()
 
@@ -604,6 +610,7 @@ class UtilityMeterSensor(RestoreSensor):
         if (last_sensor_data := await self.async_get_last_sensor_data()) is not None:
             # new introduced in 2022.04
             self._state = last_sensor_data.native_value
+            self._input_device_class = last_sensor_data.input_device_class
             self._unit_of_measurement = last_sensor_data.native_unit_of_measurement
             self._last_period = last_sensor_data.last_period
             self._last_reset = last_sensor_data.last_reset
@@ -715,6 +722,10 @@ class UtilityMeterSensor(RestoreSensor):
             and self.state_class in classes
         ):
             return device_class_source
+
+        if self._input_device_class is not None:
+            return self._input_device_class
+
         return None
 
     @property
@@ -766,6 +777,7 @@ class UtilityMeterSensor(RestoreSensor):
             self._last_reset,
             self._last_valid_state,
             PAUSED if self._collecting is None else COLLECTING,
+            self._input_device_class,
         )
 
     async def async_get_last_sensor_data(self) -> UtilitySensorExtraStoredData | None:

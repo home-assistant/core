@@ -413,6 +413,8 @@ async def test_group_removed(hass: HomeAssistant, mock_bridge_v1) -> None:
     await hass.services.async_call(
         "light", "turn_on", {"entity_id": "light.group_1"}, blocking=True
     )
+    # Wait for the group to be updated
+    await hass.async_block_till_done()
 
     # 2x group update, 1x light update, 1 turn on request
     assert len(mock_bridge_v1.mock_requests) == 4
@@ -440,6 +442,8 @@ async def test_light_removed(hass: HomeAssistant, mock_bridge_v1) -> None:
     await hass.services.async_call(
         "light", "turn_on", {"entity_id": "light.hue_lamp_1"}, blocking=True
     )
+    # Wait for the light to be updated
+    await hass.async_block_till_done()
 
     # 2x light update, 1 group update, 1 turn on request
     assert len(mock_bridge_v1.mock_requests) == 4

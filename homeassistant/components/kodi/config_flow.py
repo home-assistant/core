@@ -78,7 +78,7 @@ async def validate_ws(hass: HomeAssistant, data):
         await kwc.connect()
         if not kwc.connected:
             _LOGGER.warning("Cannot connect to %s:%s over WebSocket", host, ws_port)
-            raise WSCannotConnect()
+            raise WSCannotConnect
         kodi = Kodi(kwc)
         await kodi.ping()
     except CannotConnectError as error:

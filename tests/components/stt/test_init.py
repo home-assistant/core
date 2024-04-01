@@ -300,7 +300,7 @@ async def test_stream_audio(
 )
 @pytest.mark.parametrize(
     ("header", "status", "error"),
-    (
+    [
         (None, 400, "Missing X-Speech-Content header"),
         (
             (
@@ -331,7 +331,7 @@ async def test_stream_audio(
             400,
             "Missing language in X-Speech-Content header",
         ),
-    ),
+    ],
 )
 async def test_metadata_errors(
     hass: HomeAssistant,
