@@ -315,20 +315,24 @@ class ClimateGroup(GroupEntity, ClimateEntity):
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Forward the temperature command to all climate in the climate group."""
-        if kwargs.get(ATTR_TEMPERATURE):
+        if temp := kwargs.get(ATTR_TEMPERATURE):
             data = {
                 ATTR_ENTITY_ID: self._features[ClimateEntityFeature.TARGET_TEMPERATURE],
-                ATTR_TEMPERATURE: kwargs[ATTR_TEMPERATURE],
+                ATTR_TEMPERATURE: temp,
             }
-        elif kwargs.get(ATTR_TARGET_TEMP_HIGH):
+        elif (temp_high := kwargs.get(ATTR_TARGET_TEMP_HIGH)) and (
+            temp_low := kwargs.get(ATTR_TARGET_TEMP_LOW)
+        ):
             data = {
-                ATTR_ENTITY_ID: self._features[ClimateEntityFeature.TARGET_TEMPERATURE],
-                ATTR_TARGET_TEMP_HIGH: kwargs[ATTR_TARGET_TEMP_HIGH],
-                ATTR_TARGET_TEMP_LOW: kwargs[ATTR_TARGET_TEMP_LOW],
+                ATTR_ENTITY_ID: self._features[
+                    ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+                ],
+                ATTR_TARGET_TEMP_HIGH: temp_high,
+                ATTR_TARGET_TEMP_LOW: temp_low,
             }
-        if ATTR_HVAC_MODE in kwargs:
+        if hvac_mode := kwargs.get(ATTR_HVAC_MODE):
             data |= {
-                ATTR_HVAC_MODE: kwargs[ATTR_HVAC_MODE],
+                ATTR_HVAC_MODE: hvac_mode,
             }
 
         await self.hass.services.async_call(
