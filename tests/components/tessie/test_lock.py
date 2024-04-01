@@ -79,7 +79,7 @@ async def test_speed_limit_lock(
     """Tests that the lock entity is correct."""
 
     # Create the deprecated speed limit lock entity
-    entity_id = entity_registry.async_get_or_create(
+    entity = entity_registry.async_get_or_create(
         LOCK_DOMAIN,
         DOMAIN,
         "VINVINVIN-vehicle_state_speed_limit_mode_active",
