@@ -6,6 +6,7 @@ from unittest.mock import Mock, call, patch
 
 from pyfritzhome import LoginError
 import pytest
+from requests.exceptions import ConnectionError as RequestConnectionError
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.fritzbox.const import DOMAIN as FB_DOMAIN
@@ -79,6 +80,7 @@ async def test_update_unique_id(
     new_unique_id: str,
 ) -> None:
     """Test unique_id update of integration."""
+    fritz().get_devices.return_value = [FritzDeviceSwitchMock()]
     entry = MockConfigEntry(
         domain=FB_DOMAIN,
         data=MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0],
@@ -137,6 +139,7 @@ async def test_update_unique_id_no_change(
     unique_id: str,
 ) -> None:
     """Test unique_id is not updated of integration."""
+    fritz().get_devices.return_value = [FritzDeviceSwitchMock()]
     entry = MockConfigEntry(
         domain=FB_DOMAIN,
         data=MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0],
@@ -268,7 +271,7 @@ async def test_raise_config_entry_not_ready_when_offline(hass: HomeAssistant) ->
     entry.add_to_hass(hass)
     with patch(
         "homeassistant.components.fritzbox.Fritzhome.login",
-        side_effect=ConnectionError(),
+        side_effect=RequestConnectionError(),
     ) as mock_login:
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
