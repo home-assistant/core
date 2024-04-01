@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
+from functools import cached_property
 import logging
 from typing import Any, Self
 
@@ -402,12 +403,23 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-class Person(collection.CollectionEntity, RestoreEntity):
+CACHED_PROPERTIES_WITH_ATTR_ = {
+    "device_trackers",
+}
+
+
+class Person(
+    collection.CollectionEntity,
+    RestoreEntity,
+    cached_properties=CACHED_PROPERTIES_WITH_ATTR_,
+):
     """Represent a tracked person."""
 
     _entity_component_unrecorded_attributes = frozenset({ATTR_DEVICE_TRACKERS})
 
     _attr_should_poll = False
+    _attr_state: str | None = None
+    _attr_device_trackers: list[str] = []
     editable: bool
 
     def __init__(self, config: dict[str, Any]) -> None:
@@ -417,8 +429,12 @@ class Person(collection.CollectionEntity, RestoreEntity):
         self._longitude: float | None = None
         self._gps_accuracy: float | None = None
         self._source: str | None = None
-        self._state: str | None = None
         self._unsub_track_device: Callable[[], None] | None = None
+
+        self._attr_unique_id = config[CONF_ID]
+        self._attr_name = config[CONF_NAME]
+        self._attr_entity_picture = config.get(CONF_PICTURE)
+        self._attr_device_trackers = config[CONF_DEVICE_TRACKERS]
 
     @classmethod
     def from_storage(cls, config: ConfigType) -> Self:
@@ -434,47 +450,10 @@ class Person(collection.CollectionEntity, RestoreEntity):
         person.editable = False
         return person
 
-    @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        return self._config[CONF_NAME]
-
-    @property
-    def entity_picture(self) -> str | None:
-        """Return entity picture."""
-        return self._config.get(CONF_PICTURE)
-
-    @property
-    def state(self) -> str | None:
-        """Return the state of the person."""
-        return self._state
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return the state attributes of the person."""
-        data: dict[str, Any] = {ATTR_EDITABLE: self.editable, ATTR_ID: self.unique_id}
-        if self._latitude is not None:
-            data[ATTR_LATITUDE] = self._latitude
-        if self._longitude is not None:
-            data[ATTR_LONGITUDE] = self._longitude
-        if self._gps_accuracy is not None:
-            data[ATTR_GPS_ACCURACY] = self._gps_accuracy
-        if self._source is not None:
-            data[ATTR_SOURCE] = self._source
-        if (user_id := self._config.get(CONF_USER_ID)) is not None:
-            data[ATTR_USER_ID] = user_id
-        data[ATTR_DEVICE_TRACKERS] = self.device_trackers
-        return data
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID for the person."""
-        return self._config[CONF_ID]
-
-    @property
+    @cached_property
     def device_trackers(self) -> list[str]:
         """Return the device trackers for the person."""
-        return self._config[CONF_DEVICE_TRACKERS]
+        return self._attr_device_trackers
 
     async def async_added_to_hass(self) -> None:
         """Register device trackers."""
@@ -495,6 +474,9 @@ class Person(collection.CollectionEntity, RestoreEntity):
             self.hass.bus.async_listen_once(
                 EVENT_HOMEASSISTANT_START, _async_person_start_hass
             )
+            # Update extra state attributes now
+            # as there are attributes that can already be set
+            self._update_extra_state_attributes()
 
     async def async_update_config(self, config: ConfigType) -> None:
         """Handle when the config is updated."""
@@ -504,6 +486,10 @@ class Person(collection.CollectionEntity, RestoreEntity):
     def _async_update_config(self, config: ConfigType) -> None:
         """Handle when the config is updated."""
         self._config = config
+
+        self._attr_name = config[CONF_NAME]
+        self._attr_entity_picture = config.get(CONF_PICTURE)
+        self._attr_device_trackers = config[CONF_DEVICE_TRACKERS]
 
         if self._unsub_track_device is not None:
             self._unsub_track_device()
@@ -550,12 +536,13 @@ class Person(collection.CollectionEntity, RestoreEntity):
         if latest:
             self._parse_source_state(latest)
         else:
-            self._state = None
+            self._attr_state = None
             self._source = None
             self._latitude = None
             self._longitude = None
             self._gps_accuracy = None
 
+        self._update_extra_state_attributes()
         self.async_write_ha_state()
 
     @callback
@@ -564,11 +551,33 @@ class Person(collection.CollectionEntity, RestoreEntity):
 
         This is a device tracker state or the restored person state.
         """
-        self._state = state.state
+        self._attr_state = state.state
         self._source = state.entity_id
         self._latitude = state.attributes.get(ATTR_LATITUDE)
         self._longitude = state.attributes.get(ATTR_LONGITUDE)
         self._gps_accuracy = state.attributes.get(ATTR_GPS_ACCURACY)
+
+    @callback
+    def _update_extra_state_attributes(self) -> None:
+        """Update extra state attributes."""
+        data: dict[str, Any] = {
+            ATTR_EDITABLE: self.editable,
+            ATTR_ID: self.unique_id,
+            ATTR_DEVICE_TRACKERS: self.device_trackers,
+        }
+
+        if self._latitude is not None:
+            data[ATTR_LATITUDE] = self._latitude
+        if self._longitude is not None:
+            data[ATTR_LONGITUDE] = self._longitude
+        if self._gps_accuracy is not None:
+            data[ATTR_GPS_ACCURACY] = self._gps_accuracy
+        if self._source is not None:
+            data[ATTR_SOURCE] = self._source
+        if (user_id := self._config.get(CONF_USER_ID)) is not None:
+            data[ATTR_USER_ID] = user_id
+
+        self._attr_extra_state_attributes = data
 
 
 @websocket_api.websocket_command({vol.Required(CONF_TYPE): "person/list"})
