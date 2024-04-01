@@ -7,6 +7,8 @@ from functools import cached_property
 import logging
 from typing import Any
 
+from zigpy.application import ControllerApplication
+
 from homeassistant.components.update import (
     UpdateDeviceClass,
     UpdateEntity,
@@ -17,13 +19,15 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
 from .entity import ZHAEntity
 from .helpers import (
     SIGNAL_ADD_ENTITIES,
     EntityData,
-    ZHAFirmwareUpdateCoordinator,
     async_add_entities as zha_async_add_entities,
     get_zha_data,
     get_zha_gateway,
@@ -53,10 +57,34 @@ async def async_setup_entry(
         hass,
         SIGNAL_ADD_ENTITIES,
         functools.partial(
-            zha_async_add_entities, async_add_entities, entities_to_create
+            zha_async_add_entities,
+            async_add_entities,
+            ZHAFirmwareUpdateEntity,
+            entities_to_create,
         ),
     )
     config_entry.async_on_unload(unsub)
+
+
+class ZHAFirmwareUpdateCoordinator(DataUpdateCoordinator[None]):  # pylint: disable=hass-enforce-coordinator-module
+    """Firmware update coordinator that broadcasts updates network-wide."""
+
+    def __init__(
+        self, hass: HomeAssistant, controller_application: ControllerApplication
+    ) -> None:
+        """Initialize the coordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            name="ZHA firmware update coordinator",
+            update_method=self.async_update_data,
+        )
+        self.controller_application = controller_application
+
+    async def async_update_data(self) -> None:
+        """Fetch the latest firmware update data."""
+        # Broadcast to all devices
+        await self.controller_application.ota.broadcast_notify(jitter=100)
 
 
 class ZHAFirmwareUpdateEntity(

@@ -54,7 +54,6 @@ from zha.mixins import LogMixin
 from zha.zigbee.cluster_handlers import ClusterHandler
 from zha.zigbee.device import Device, ZHAEvent
 from zha.zigbee.group import Group, GroupMember
-from zigpy.application import ControllerApplication
 import zigpy.exceptions
 from zigpy.profiles import PROFILES
 import zigpy.types
@@ -75,7 +74,6 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
     ATTR_ACTIVE_COORDINATOR,
@@ -104,6 +102,7 @@ if TYPE_CHECKING:
     from logging import Filter, LogRecord
 
     from .entity import ZHAEntity
+    from .update import ZHAFirmwareUpdateCoordinator
 
     _LogFilterType = Filter | Callable[[LogRecord], bool]
 
@@ -694,27 +693,6 @@ class ZHAGatewayProxy(EventBase):
             entity_registry.async_remove(entry.entity_id)
 
 
-class ZHAFirmwareUpdateCoordinator(DataUpdateCoordinator[None]):  # pylint: disable=hass-enforce-coordinator-module
-    """Firmware update coordinator that broadcasts updates network-wide."""
-
-    def __init__(
-        self, hass: HomeAssistant, controller_application: ControllerApplication
-    ) -> None:
-        """Initialize the coordinator."""
-        super().__init__(
-            hass,
-            _LOGGER,
-            name="ZHA firmware update coordinator",
-            update_method=self.async_update_data,
-        )
-        self.controller_application = controller_application
-
-    async def async_update_data(self) -> None:
-        """Fetch the latest firmware update data."""
-        # Broadcast to all devices
-        await self.controller_application.ota.broadcast_notify(jitter=100)
-
-
 @callback
 def async_capture_log_levels() -> dict[str, int]:
     """Capture current logger levels for ZHA."""
@@ -943,23 +921,14 @@ def async_cluster_exists(hass: HomeAssistant, cluster_id, skip_coordinator=True)
 @callback
 async def async_add_entities(
     _async_add_entities: AddEntitiesCallback,
-    entities: list[
-        tuple[
-            type[ZHAEntity],
-            tuple[EntityData],
-            dict[str, Any],
-        ]
-    ],
+    entity_class: type[ZHAEntity],
+    entities: list[EntityData],
     **kwargs,
 ) -> None:
     """Add entities helper."""
     if not entities:
         return
 
-    to_add = [
-        ent_cls.create_entity(*args, **{**kwargs, **kw_args})
-        for ent_cls, args, kw_args in entities
-    ]
-    entities_to_add = [entity for entity in to_add if entity is not None]
+    entities_to_add = [entity_class(entity_data) for entity_data in entities]
     _async_add_entities(entities_to_add, update_before_add=False)
     entities.clear()

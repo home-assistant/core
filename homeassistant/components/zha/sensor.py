@@ -44,7 +44,7 @@ async def async_setup_entry(
         hass,
         SIGNAL_ADD_ENTITIES,
         functools.partial(
-            zha_async_add_entities, async_add_entities, entities_to_create
+            zha_async_add_entities, async_add_entities, Sensor, entities_to_create
         ),
     )
     config_entry.async_on_unload(unsub)
