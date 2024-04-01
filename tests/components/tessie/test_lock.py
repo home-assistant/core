@@ -76,7 +76,7 @@ async def test_locks(
 async def test_speed_limit_lock(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
-    """Tests that the lock entity is correct."""
+    """Tests that the deprecated speed limit lock entity is correct."""
 
     # Create the deprecated speed limit lock entity
     entity = entity_registry.async_get_or_create(
@@ -101,10 +101,10 @@ async def test_speed_limit_lock(
         await hass.services.async_call(
             LOCK_DOMAIN,
             SERVICE_LOCK,
-            {ATTR_ENTITY_ID: [entity_id], ATTR_CODE: "1234"},
+            {ATTR_ENTITY_ID: [entity.entity_id], ATTR_CODE: "1234"},
             blocking=True,
         )
-        assert hass.states.get(entity_id).state == STATE_LOCKED
+        assert hass.states.get(entity.entity_id).state == STATE_LOCKED
         mock_enable_speed_limit.assert_called_once()
 
     with patch(
@@ -113,16 +113,16 @@ async def test_speed_limit_lock(
         await hass.services.async_call(
             LOCK_DOMAIN,
             SERVICE_UNLOCK,
-            {ATTR_ENTITY_ID: [entity_id], ATTR_CODE: "1234"},
+            {ATTR_ENTITY_ID: [entity.entity_id], ATTR_CODE: "1234"},
             blocking=True,
         )
-        assert hass.states.get(entity_id).state == STATE_UNLOCKED
+        assert hass.states.get(entity.entity_id).state == STATE_UNLOCKED
         mock_disable_speed_limit.assert_called_once()
 
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             LOCK_DOMAIN,
             SERVICE_UNLOCK,
-            {ATTR_ENTITY_ID: [entity_id], ATTR_CODE: "abc"},
+            {ATTR_ENTITY_ID: [entity.entity_id], ATTR_CODE: "abc"},
             blocking=True,
         )

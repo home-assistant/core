@@ -64,7 +64,7 @@ async def async_setup_entry(
                         f"deprecated_speed_limit_{entity_id}_{item}",
                         breaks_in_ha_version="2024.11.0",
                         is_fixable=True,
-                        is_persistent=True,
+                        is_persistent=False,
                         severity=ir.IssueSeverity.WARNING,
                         translation_key="deprecated_speed_limit_entity",
                         translation_placeholders={
@@ -124,9 +124,9 @@ class TessieSpeedLimitEntity(TessieEntity, LockEntity):
             self.coordinator.hass,
             DOMAIN,
             "deprecated_speed_limit_locked",
-            breaks_in_ha_version="2024.10.0",
+            breaks_in_ha_version="2024.11.0",
             is_fixable=True,
-            is_persistent=True,
+            is_persistent=False,
             severity=ir.IssueSeverity.WARNING,
             translation_key="deprecated_speed_limit_locked",
         )
@@ -141,9 +141,9 @@ class TessieSpeedLimitEntity(TessieEntity, LockEntity):
             self.coordinator.hass,
             DOMAIN,
             "deprecated_speed_limit_unlocked",
-            breaks_in_ha_version="2024.10.0",
+            breaks_in_ha_version="2024.11.0",
             is_fixable=True,
-            is_persistent=True,
+            is_persistent=False,
             severity=ir.IssueSeverity.WARNING,
             translation_key="deprecated_speed_limit_unlocked",
         )
