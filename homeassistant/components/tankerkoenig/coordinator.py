@@ -89,7 +89,7 @@ class TankerkoenigDataUpdateCoordinator(DataUpdateCoordinator):
             entity_reg, self.config_entry.entry_id
         ):
             if entity.unique_id.split("_")[0] not in self._selected_stations:
-                _LOGGER.debug("remove obsolet entity entry %s", entity.entity_id)
+                _LOGGER.debug("Removing obsolete entity entry %s", entity.entity_id)
                 entity_reg.async_remove(entity.entity_id)
 
         device_reg = dr.async_get(self.hass)
@@ -100,7 +100,7 @@ class TankerkoenigDataUpdateCoordinator(DataUpdateCoordinator):
                 (ATTR_ID, station_id) in device.identifiers
                 for station_id in self._selected_stations
             ):
-                _LOGGER.debug("remove obsolet device entry %s", device.name)
+                _LOGGER.debug("Removing obsolete device entry %s", device.name)
                 device_reg.async_remove_device(device.id)
 
         if len(self.stations) > 10:
