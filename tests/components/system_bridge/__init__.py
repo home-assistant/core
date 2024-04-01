@@ -20,11 +20,13 @@ FIXTURE_REQUEST_ID = "test"
 FIXTURE_MAC_ADDRESS = "aa:bb:cc:dd:ee:ff"
 FIXTURE_UUID = "e91bf575-56f3-4c83-8f42-70ac17adcd33"
 
-FIXTURE_AUTH_INPUT = {CONF_TOKEN: "abc-123-def-456-ghi"}
+FIXTURE_AUTH_INPUT = {
+    CONF_TOKEN: "abc-123-def-456-ghi",
+}
 
 FIXTURE_USER_INPUT = {
     CONF_TOKEN: "abc-123-def-456-ghi",
-    CONF_HOST: "test-bridge",
+    CONF_HOST: "127.0.0.1",
     CONF_PORT: "9170",
 }
 
@@ -92,7 +94,12 @@ FIXTURE_DATA_RESPONSE_BAD = Response(
 )
 
 
-async def add_data(callback: Callable[[str, Any], Awaitable[None]]):
-    """Add data to the callback."""
-
-    await callback(MODEL_SYSTEM, FIXTURE_SYSTEM)
+async def mock_data_listener(
+    self,
+    callback: Callable[[str, Any], Awaitable[None]] | None = None,
+    _: bool = False,
+):
+    """Mock websocket data listener."""
+    if callback is not None:
+        # Simulate data received from the websocket
+        await callback(MODEL_SYSTEM, FIXTURE_SYSTEM)

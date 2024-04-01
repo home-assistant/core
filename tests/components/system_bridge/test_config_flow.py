@@ -1,6 +1,13 @@
 """Test the System Bridge config flow."""
 
+from unittest.mock import patch
+
 import pytest
+from systembridgeconnector.exceptions import (
+    AuthenticationException,
+    ConnectionClosedException,
+    ConnectionErrorException,
+)
 
 from homeassistant import config_entries
 from homeassistant.components.system_bridge.const import DOMAIN
@@ -8,7 +15,18 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from . import FIXTURE_USER_INPUT
+from . import (
+    FIXTURE_AUTH_INPUT,
+    FIXTURE_DATA_RESPONSE,
+    FIXTURE_USER_INPUT,
+    FIXTURE_UUID,
+    FIXTURE_ZEROCONF,
+    FIXTURE_ZEROCONF_BAD,
+    FIXTURE_ZEROCONF_INPUT,
+    mock_data_listener,
+)
+
+from tests.common import MockConfigEntry
 
 
 async def test_show_user_form(hass: HomeAssistant) -> None:
