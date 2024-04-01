@@ -37,7 +37,6 @@ class TankerkoenigDataUpdateCoordinator(DataUpdateCoordinator):
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: ConfigEntry,
         name: str,
         update_interval: int,
     ) -> None:
@@ -50,13 +49,14 @@ class TankerkoenigDataUpdateCoordinator(DataUpdateCoordinator):
             update_interval=timedelta(minutes=update_interval),
         )
 
-        self._selected_stations: list[str] = entry.data[CONF_STATIONS]
+        self._selected_stations: list[str] = self.config_entry.data[CONF_STATIONS]
         self.stations: dict[str, Station] = {}
-        self.fuel_types: list[str] = entry.data[CONF_FUEL_TYPES]
-        self.show_on_map: bool = entry.options[CONF_SHOW_ON_MAP]
+        self.fuel_types: list[str] = self.config_entry.data[CONF_FUEL_TYPES]
+        self.show_on_map: bool = self.config_entry.options[CONF_SHOW_ON_MAP]
 
         self._tankerkoenig = Tankerkoenig(
-            api_key=entry.data[CONF_API_KEY], session=async_get_clientsession(hass)
+            api_key=self.config_entry.data[CONF_API_KEY],
+            session=async_get_clientsession(hass),
         )
 
     async def async_setup(self) -> None:
