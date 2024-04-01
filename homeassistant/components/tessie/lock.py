@@ -62,7 +62,7 @@ async def async_setup_entry(
                         hass,
                         DOMAIN,
                         f"deprecated_speed_limit_{entity_id}_{item}",
-                        breaks_in_ha_version="2024.10.0",
+                        breaks_in_ha_version="2024.11.0",
                         is_fixable=True,
                         is_persistent=True,
                         severity=ir.IssueSeverity.WARNING,
