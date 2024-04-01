@@ -1,4 +1,4 @@
-"""Setup the MotionBlinds BLE tests."""
+"""Setup the MotionBlinds Bluetooth tests."""
 
 from unittest.mock import AsyncMock, Mock, patch
 
