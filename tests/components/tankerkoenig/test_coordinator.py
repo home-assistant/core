@@ -13,10 +13,13 @@ from aiotankerkoenig.exceptions import (
 )
 import pytest
 
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.tankerkoenig.const import DEFAULT_SCAN_INTERVAL, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import ATTR_ID, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -121,3 +124,64 @@ async def test_setup_exception_logging(
     await hass.async_block_till_done()
 
     assert expected_log in caplog.text
+
+
+async def test_automatic_registry_cleanup(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    tankerkoenig: AsyncMock,
+) -> None:
+    """Test automatic registry cleanup for obsolet entity and devices entries."""
+    # setup normal
+    config_entry.add_to_hass(hass)
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    entity_reg = er.async_get(hass)
+    device_reg = dr.async_get(hass)
+
+    assert (
+        len(er.async_entries_for_config_entry(entity_reg, config_entry.entry_id)) == 4
+    )
+    assert (
+        len(dr.async_entries_for_config_entry(device_reg, config_entry.entry_id)) == 1
+    )
+
+    # add obsolet entity and device entries
+    obsolet_station_id = "aabbccddee-xxxx-xxxx-xxxx-ff11223344"
+
+    entity_reg.async_get_or_create(
+        DOMAIN,
+        BINARY_SENSOR_DOMAIN,
+        f"{obsolet_station_id}_status",
+        config_entry=config_entry,
+    )
+    entity_reg.async_get_or_create(
+        DOMAIN,
+        SENSOR_DOMAIN,
+        f"{obsolet_station_id}_e10",
+        config_entry=config_entry,
+    )
+    device_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(ATTR_ID, obsolet_station_id)},
+        name="Obsolet Station",
+    )
+
+    assert (
+        len(er.async_entries_for_config_entry(entity_reg, config_entry.entry_id)) == 6
+    )
+    assert (
+        len(dr.async_entries_for_config_entry(device_reg, config_entry.entry_id)) == 2
+    )
+
+    # reload config entry to trigger automatic cleanup
+    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (
+        len(er.async_entries_for_config_entry(entity_reg, config_entry.entry_id)) == 4
+    )
+    assert (
+        len(dr.async_entries_for_config_entry(device_reg, config_entry.entry_id)) == 1
+    )
