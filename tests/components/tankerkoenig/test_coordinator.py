@@ -133,7 +133,7 @@ async def test_automatic_registry_cleanup(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test automatic registry cleanup for obsolet entity and devices entries."""
+    """Test automatic registry cleanup for obsolete entity and devices entries."""
     # setup normal
     config_entry.add_to_hass(hass)
     assert await async_setup_component(hass, DOMAIN, {})
@@ -148,25 +148,25 @@ async def test_automatic_registry_cleanup(
         == 1
     )
 
-    # add obsolet entity and device entries
-    obsolet_station_id = "aabbccddee-xxxx-xxxx-xxxx-ff11223344"
+    # add obsolete entity and device entries
+    obsolete_station_id = "aabbccddee-xxxx-xxxx-xxxx-ff11223344"
 
     entity_registry.async_get_or_create(
         DOMAIN,
         BINARY_SENSOR_DOMAIN,
-        f"{obsolet_station_id}_status",
+        f"{obsolete_station_id}_status",
         config_entry=config_entry,
     )
     entity_registry.async_get_or_create(
         DOMAIN,
         SENSOR_DOMAIN,
-        f"{obsolet_station_id}_e10",
+        f"{obsolete_station_id}_e10",
         config_entry=config_entry,
     )
     device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        identifiers={(ATTR_ID, obsolet_station_id)},
-        name="Obsolet Station",
+        identifiers={(ATTR_ID, obsolete_station_id)},
+        name="Obsolete Station",
     )
 
     assert (
