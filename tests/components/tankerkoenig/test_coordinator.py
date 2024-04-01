@@ -130,6 +130,8 @@ async def test_automatic_registry_cleanup(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     tankerkoenig: AsyncMock,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test automatic registry cleanup for obsolet entity and devices entries."""
     # setup normal
@@ -137,42 +139,43 @@ async def test_automatic_registry_cleanup(
     assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
-    entity_reg = er.async_get(hass)
-    device_reg = dr.async_get(hass)
-
     assert (
-        len(er.async_entries_for_config_entry(entity_reg, config_entry.entry_id)) == 4
+        len(er.async_entries_for_config_entry(entity_registry, config_entry.entry_id))
+        == 4
     )
     assert (
-        len(dr.async_entries_for_config_entry(device_reg, config_entry.entry_id)) == 1
+        len(dr.async_entries_for_config_entry(device_registry, config_entry.entry_id))
+        == 1
     )
 
     # add obsolet entity and device entries
     obsolet_station_id = "aabbccddee-xxxx-xxxx-xxxx-ff11223344"
 
-    entity_reg.async_get_or_create(
+    entity_registry.async_get_or_create(
         DOMAIN,
         BINARY_SENSOR_DOMAIN,
         f"{obsolet_station_id}_status",
         config_entry=config_entry,
     )
-    entity_reg.async_get_or_create(
+    entity_registry.async_get_or_create(
         DOMAIN,
         SENSOR_DOMAIN,
         f"{obsolet_station_id}_e10",
         config_entry=config_entry,
     )
-    device_reg.async_get_or_create(
+    device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={(ATTR_ID, obsolet_station_id)},
         name="Obsolet Station",
     )
 
     assert (
-        len(er.async_entries_for_config_entry(entity_reg, config_entry.entry_id)) == 6
+        len(er.async_entries_for_config_entry(entity_registry, config_entry.entry_id))
+        == 6
     )
     assert (
-        len(dr.async_entries_for_config_entry(device_reg, config_entry.entry_id)) == 2
+        len(dr.async_entries_for_config_entry(device_registry, config_entry.entry_id))
+        == 2
     )
 
     # reload config entry to trigger automatic cleanup
@@ -180,8 +183,10 @@ async def test_automatic_registry_cleanup(
     await hass.async_block_till_done()
 
     assert (
-        len(er.async_entries_for_config_entry(entity_reg, config_entry.entry_id)) == 4
+        len(er.async_entries_for_config_entry(entity_registry, config_entry.entry_id))
+        == 4
     )
     assert (
-        len(dr.async_entries_for_config_entry(device_reg, config_entry.entry_id)) == 1
+        len(dr.async_entries_for_config_entry(device_registry, config_entry.entry_id))
+        == 1
     )
