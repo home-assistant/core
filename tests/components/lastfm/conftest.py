@@ -1,9 +1,10 @@
 """Configure tests for the LastFM integration."""
 
 from collections.abc import Awaitable, Callable
-from unittest.mock import patch
+from typing import Generator
+from unittest.mock import patch, AsyncMock
 
-from pylast import Track, WSError
+from pylast import Track, WSError, User
 import pytest
 
 from homeassistant.components.lastfm.const import CONF_MAIN_USER, CONF_USERS, DOMAIN
@@ -20,10 +21,18 @@ from tests.components.lastfm import (
     MockUser,
 )
 
-ComponentSetup = Callable[[MockConfigEntry, MockUser], Awaitable[None]]
 
 
-@pytest.fixture(name="config_entry")
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.lastfm.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        yield mock_setup_entry
+
+@pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Create LastFM entry in Home Assistant."""
     return MockConfigEntry(
@@ -37,8 +46,8 @@ def mock_config_entry() -> MockConfigEntry:
     )
 
 
-@pytest.fixture(name="imported_config_entry")
-def mock_imported_config_entry() -> MockConfigEntry:
+@pytest.fixture
+def imported_config_entry() -> MockConfigEntry:
     """Create LastFM entry in Home Assistant."""
     return MockConfigEntry(
         domain=DOMAIN,
@@ -51,19 +60,37 @@ def mock_imported_config_entry() -> MockConfigEntry:
     )
 
 
-@pytest.fixture(name="setup_integration")
-async def mock_setup_integration(
+@pytest.fixture
+async def mock_lastfm_user(
     hass: HomeAssistant,
-) -> Callable[[MockConfigEntry, MockUser], Awaitable[None]]:
+) -> Generator[AsyncMock, None, None]:
     """Fixture for setting up the component."""
+    with (
+        patch(
+            "homeassistant.components.lastfm.User",
+            autospec=True,
+        ) as mock_user,
+    ):
+        user = mock_user.return_value
 
-    async def func(mock_config_entry: MockConfigEntry, mock_user: MockUser) -> None:
-        mock_config_entry.add_to_hass(hass)
-        with patch("pylast.User", return_value=mock_user):
-            assert await async_setup_component(hass, DOMAIN, {})
-            await hass.async_block_till_done()
+        yield user
 
-    return func
+@pytest.fixture
+async def mock_lastfm_network(
+    hass: HomeAssistant,
+) -> Generator[AsyncMock, None, None]:
+    """Fixture for setting up the component."""
+    with (
+        patch(
+            "homeassistant.components.lastfm.config_flow.LastFMNetwork",
+            autospec=True,
+        ) as mock_network,
+    ):
+        network = mock_network.return_value
+
+        network.get_user.return_value = AsyncMock(spec=User)
+
+        yield network
 
 
 @pytest.fixture(name="default_user")
