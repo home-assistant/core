@@ -2,18 +2,15 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from typing import Any
 
 from lektricowifi import Device, DeviceConnectionError
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_FRIENDLY_NAME, CONF_HOST
 from homeassistant.core import callback
-from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
@@ -29,14 +26,6 @@ class LektricoFlowHandler(ConfigFlow, domain=DOMAIN):
         self._host: str | None = None
         self._friendly_name: str | None = None
         self._serial_number: str | None = None
-
-    @staticmethod
-    @callback
-    def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
-    ) -> LektricoOptionsFlowHandler:
-        """Get the options flow for this handler."""
-        return LektricoOptionsFlowHandler(config_entry)
 
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
@@ -163,87 +152,3 @@ class LektricoFlowHandler(ConfigFlow, domain=DOMAIN):
 
         self._set_confirm_only()
         return self.async_show_form(step_id="confirm")
-
-
-class LektricoOptionsFlowHandler(config_entries.OptionsFlow):
-    """Handle Lektrico device options."""
-
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        """Initialize Lektrico device options flow."""
-        self.config_entry = config_entry
-
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Manage the Lektrico device options."""
-        errors: dict[str, str] = {}
-        options = dict(self.config_entry.options)
-
-        if user_input is not None:
-            _old_friendly_name: str = self.config_entry.data[CONF_FRIENDLY_NAME]
-            friendly_name = user_input[CONF_FRIENDLY_NAME]
-            options[CONF_FRIENDLY_NAME] = friendly_name
-
-            updated_config = dict(
-                self.config_entry.data
-            )  # {'host': '192.168.100.11', 'friendly_name': 'asd'}
-            updated_config[CONF_FRIENDLY_NAME] = friendly_name
-
-            # get the serial number from the old title
-            _index_sn: int = self.config_entry.title.rfind("_")
-            _taken_serial_number: str = ""
-            if _index_sn != -1:
-                _taken_serial_number = self.config_entry.title[_index_sn + 1 :]
-            self.hass.config_entries.async_update_entry(
-                self.config_entry,
-                data=updated_config,
-                title=f"{friendly_name}_{_taken_serial_number}",
-            )
-
-            await self.hass.config_entries.async_reload(self.config_entry.entry_id)
-
-            ent_reg = er.async_get(self.hass)
-            dr.async_get(self.hass)
-            for entity_entry in list(ent_reg.entities.values()):
-                if entity_entry.config_entry_id == self.config_entry.entry_id:
-                    # it's the entity of my device => rename it
-                    _old_entity_id: str = entity_entry.entity_id
-                    _friendly_name_index: int = _old_entity_id.find(_old_friendly_name)
-
-                    _new_entity_id: str = "{}{}{}".format(
-                        _old_entity_id[:_friendly_name_index],
-                        friendly_name,
-                        _old_entity_id[
-                            _friendly_name_index + len(_old_friendly_name) :
-                        ],
-                    )
-
-                    ent_reg.async_update_entity(
-                        entity_entry.entity_id, new_entity_id=_new_entity_id
-                    )
-
-            return self.async_create_entry(title="", data=options)
-
-        fields = {}
-
-        def _add_with_suggestion(key: str, validator: Callable | type[bool]) -> None:
-            """Add a field to with a suggested value.
-
-            For bools, use the existing value as default, or fallback to False.
-            """
-            if validator is bool:
-                fields[vol.Required(key, default=options.get(key, False))] = validator
-            elif (suggested_value := options.get(key)) is None:
-                fields[vol.Optional(key)] = validator
-            else:
-                fields[
-                    vol.Optional(key, description={"suggested_value": suggested_value})
-                ] = validator
-
-        _add_with_suggestion(CONF_FRIENDLY_NAME, str)
-
-        return self.async_show_form(
-            step_id="init",
-            data_schema=vol.Schema(fields),
-            errors=errors,
-        )

@@ -1,4 +1,5 @@
 """Fixtures for Lektrico Charging Station integration tests."""
+
 from ipaddress import ip_address
 from unittest.mock import patch
 
@@ -9,7 +10,11 @@ from homeassistant.components.zeroconf import ZeroconfServiceInfo
 MOCKED_DEVICE_IP_ADDRESS = "192.168.100.10"
 MOCKED_DEVICE_FRIENDLY_NAME = "test"
 MOCKED_DEVICE_SERIAL_NUMBER = "500006"
+MOCKED_DEVICE_SERIAL_NUMBER_FOR_EM = "810006"
+MOCKED_DEVICE_SERIAL_NUMBER_FOR_3EM = "830006"
 MOCKED_DEVICE_TYPE = "1p7k"
+MOCKED_DEVICE_TYPE_FOR_EM = "em"
+MOCKED_DEVICE_TYPE_FOR_3EM = "3em"
 MOCKED_DEVICE_BOARD_REV = "B"
 
 MOCKED_DEVICE_ZC_NAME = "Lektrico-1p7k-500006._http._tcp"
@@ -23,6 +28,32 @@ MOCKED_DEVICE_ZEROCONF_DATA = ZeroconfServiceInfo(
     name=MOCKED_DEVICE_ZC_NAME,
     properties={
         "id": "1p7k_500006",
+        "fw_id": "20230109-124642/v1.22-36-g56a3edd-develop-dirty",
+    },
+)
+
+MOCKED_DEVICE_ZEROCONF_DATA_FOR_EM = ZeroconfServiceInfo(
+    ip_address=ip_address(MOCKED_DEVICE_IP_ADDRESS),
+    ip_addresses=[ip_address(MOCKED_DEVICE_IP_ADDRESS)],
+    hostname=f"{MOCKED_DEVICE_ZC_NAME.lower()}.local.",
+    port=80,
+    type=MOCKED_DEVICE_ZC_TYPE,
+    name=MOCKED_DEVICE_ZC_NAME,
+    properties={
+        "id": "m2w_810006",
+        "fw_id": "20230109-124642/v1.22-36-g56a3edd-develop-dirty",
+    },
+)
+
+MOCKED_DEVICE_ZEROCONF_DATA_FOR_3EM = ZeroconfServiceInfo(
+    ip_address=ip_address(MOCKED_DEVICE_IP_ADDRESS),
+    ip_addresses=[ip_address(MOCKED_DEVICE_IP_ADDRESS)],
+    hostname=f"{MOCKED_DEVICE_ZC_NAME.lower()}.local.",
+    port=80,
+    type=MOCKED_DEVICE_ZC_TYPE,
+    name=MOCKED_DEVICE_ZC_NAME,
+    properties={
+        "id": "m2w_830006",
         "fw_id": "20230109-124642/v1.22-36-g56a3edd-develop-dirty",
     },
 )
