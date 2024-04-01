@@ -517,8 +517,8 @@
       "total_energy": {
         "name": "Total energy"
       },
-      "total_reverse_energy": {
-        "name": "Total reverse energy"
+      "total_return_energy": {
+        "name": "Total return energy"
       },
       "phase_a_current": {
         "name": "Phase A current"
