@@ -16,20 +16,15 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
-from .common import assert_entities, setup_platform
+from .common import DOMAIN, assert_entities, setup_platform
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_locks(
     hass: HomeAssistant, snapshot: SnapshotAssertion, entity_registry: er.EntityRegistry
 ) -> None:
     """Tests that the lock entity is correct."""
 
-    with patch(
-        "homeassistant.components.tessie.lock.automations_with_entity",
-        return_value=["item"],
-    ):
-        entry = await setup_platform(hass, [Platform.LOCK])
+    entry = await setup_platform(hass, [Platform.LOCK])
 
     assert_entities(hass, entry.entry_id, entity_registry, snapshot)
 
@@ -77,8 +72,29 @@ async def test_locks(
         assert hass.states.get(entity_id).state == STATE_UNLOCKED
         mock_run.assert_called_once()
 
+
+async def test_speed_limit_lock(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Tests that the lock entity is correct."""
+
+    # Create the deprecated speed limit lock entity
+    entity_id = entity_registry.async_get_or_create(
+        LOCK_DOMAIN,
+        DOMAIN,
+        "VINVINVIN-vehicle_state_speed_limit_mode_active",
+        original_name="Charge cable lock",
+        has_entity_name=True,
+        translation_key="vehicle_state_speed_limit_mode_active",
+    )
+
+    with patch(
+        "homeassistant.components.tessie.lock.automations_with_entity",
+        return_value=["item"],
+    ):
+        await setup_platform(hass, [Platform.LOCK])
+
     # Test lock set value functions
-    entity_id = "lock.test_speed_limit"
     with patch(
         "homeassistant.components.tessie.lock.enable_speed_limit"
     ) as mock_enable_speed_limit:
