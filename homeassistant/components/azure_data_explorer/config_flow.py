@@ -20,7 +20,6 @@ from .const import (
     CONF_APP_REG_ID,
     CONF_APP_REG_SECRET,
     CONF_AUTHORITY_ID,
-    # CONF_SEND_INTERVAL,
     CONF_USE_FREE,
     DEFAULT_OPTIONS,
     DOMAIN,
