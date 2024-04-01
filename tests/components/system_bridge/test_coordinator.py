@@ -139,3 +139,19 @@ async def test_setup_timeout(
     coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     await coordinator.async_request_refresh()
     await hass.async_block_till_done()
+
+
+async def test_wait_timeout(
+    hass: HomeAssistant,
+    mock_version: MagicMock,
+    mock_websocket_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test wait timeout."""
+    # Stop the listener from returning any data to trigger a timeout
+    mock_websocket_client.listen.side_effect = None
+
+    await setup_integration(hass, mock_config_entry)
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
