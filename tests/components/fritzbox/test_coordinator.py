@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
 from unittest.mock import Mock
 
 from pyfritzhome import LoginError
@@ -11,10 +12,13 @@ from homeassistant.components.fritzbox.const import DOMAIN as FB_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_DEVICES
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.util.dt import utcnow
 
+from . import FritzDeviceCoverMock, FritzDeviceSwitchMock
 from .const import MOCK_CONFIG
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_coordinator_update_after_reboot(
@@ -71,3 +75,37 @@ async def test_coordinator_update_when_unreachable(
 
     assert not await hass.config_entries.async_setup(entry.entry_id)
     assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_coordinator_automatic_registry_cleanup(
+    hass: HomeAssistant,
+    fritz: Mock,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test automatic registry cleanup."""
+    fritz().get_devices.return_value = [
+        FritzDeviceSwitchMock(ain="fake ain switch", name="fake_switch"),
+        FritzDeviceCoverMock(ain="fake ain cover", name="fake_cover"),
+    ]
+    entry = MockConfigEntry(
+        domain=FB_DOMAIN,
+        data=MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0],
+        unique_id="any",
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert len(er.async_entries_for_config_entry(entity_registry, entry.entry_id)) == 11
+    assert len(dr.async_entries_for_config_entry(device_registry, entry.entry_id)) == 2
+
+    fritz().get_devices.return_value = [
+        FritzDeviceSwitchMock(ain="fake ain switch", name="fake_switch")
+    ]
+
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=35))
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert len(er.async_entries_for_config_entry(entity_registry, entry.entry_id)) == 8
+    assert len(dr.async_entries_for_config_entry(device_registry, entry.entry_id)) == 1
