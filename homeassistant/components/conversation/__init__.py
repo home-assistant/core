@@ -30,7 +30,7 @@ from .agent_manager import (
     async_get_agent,
     get_agent_manager,
 )
-from .const import HOME_ASSISTANT_AGENT
+from .const import HOME_ASSISTANT_AGENT, OLD_HOME_ASSISTANT_AGENT
 from .default_agent import async_get_default_agent, async_setup_default_agent
 from .entity import ConversationEntity
 from .http import async_setup as async_setup_conversation_http
@@ -39,6 +39,7 @@ from .models import AbstractConversationAgent, ConversationInput, ConversationRe
 __all__ = [
     "DOMAIN",
     "HOME_ASSISTANT_AGENT",
+    "OLD_HOME_ASSISTANT_AGENT",
     "async_converse",
     "async_get_agent_info",
     "async_set_agent",

@@ -37,7 +37,9 @@ from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 AGENT_ID_OPTIONS = [
     None,
-    conversation.HOME_ASSISTANT_AGENT,
+    # Old value of conversation.HOME_ASSISTANT_AGENT,
+    "homeassistant"
+    # Current value of conversation.HOME_ASSISTANT_AGENT,
     "conversation.home_assistant",
 ]
 
@@ -53,14 +55,6 @@ class OrderBeerIntentHandler(intent.IntentHandler):
         response = intent_obj.create_response()
         response.async_set_speech(f"You ordered a {beer_style}")
         return response
-
-
-@pytest.fixture
-async def init_components(hass):
-    """Initialize relevant components with empty configs."""
-    assert await async_setup_component(hass, "homeassistant", {})
-    assert await async_setup_component(hass, "conversation", {})
-    assert await async_setup_component(hass, "intent", {})
 
 
 @pytest.mark.parametrize("agent_id", AGENT_ID_OPTIONS)

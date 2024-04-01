@@ -11,7 +11,7 @@ from homeassistant.core import Context, HomeAssistant, async_get_hass, callback
 from homeassistant.helpers import config_validation as cv, singleton
 from homeassistant.helpers.entity_component import EntityComponent
 
-from .const import DOMAIN, HOME_ASSISTANT_AGENT
+from .const import DOMAIN, HOME_ASSISTANT_AGENT, OLD_HOME_ASSISTANT_AGENT
 from .default_agent import async_get_default_agent
 from .entity import ConversationEntity
 from .models import (
@@ -44,7 +44,7 @@ def async_get_agent(
     hass: HomeAssistant, agent_id: str | None = None
 ) -> AbstractConversationAgent | ConversationEntity | None:
     """Get specified agent."""
-    if agent_id is None or agent_id == HOME_ASSISTANT_AGENT:
+    if agent_id is None or agent_id in (HOME_ASSISTANT_AGENT, OLD_HOME_ASSISTANT_AGENT):
         return async_get_default_agent(hass)
 
     if "." in agent_id:
@@ -75,6 +75,7 @@ async def async_converse(
         raise ValueError(f"Agent {agent_id} not found")
 
     if isinstance(agent, ConversationEntity):
+        agent.async_set_context(context)
         method = agent.internal_async_process
     else:
         method = agent.async_process
