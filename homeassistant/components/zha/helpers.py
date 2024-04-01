@@ -326,7 +326,7 @@ class ZHADeviceProxy(EventBase):
         self.gateway_proxy.hass.bus.async_fire(
             ZHA_EVENT,
             {
-                ATTR_DEVICE_IEEE: zha_event.device_ieee,
+                ATTR_DEVICE_IEEE: str(zha_event.device_ieee),
                 ATTR_UNIQUE_ID: zha_event.unique_id,
                 ATTR_DEVICE_ID: self.device_id,
                 **zha_event.data,
@@ -472,7 +472,7 @@ class ZHAGatewayProxy(EventBase):
             {
                 ATTR_TYPE: ZHA_GW_MSG_RAW_INIT,
                 ZHA_GW_MSG_DEVICE_INFO: {
-                    ATTR_NWK: event.device_info.nwk,
+                    ATTR_NWK: str(event.device_info.nwk),
                     ATTR_IEEE: str(event.device_info.ieee),
                     DEVICE_PAIRING_STATUS: event.device_info.pairing_status.name,
                     ATTR_MODEL: event.device_info.model
