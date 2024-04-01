@@ -1,4 +1,5 @@
 """Tests for the Lektrico Charging Station config flow."""
+
 import dataclasses
 from ipaddress import ip_address
 from unittest.mock import patch
@@ -18,8 +19,14 @@ from .conftest import (
     MOCKED_DEVICE_FRIENDLY_NAME,
     MOCKED_DEVICE_IP_ADDRESS,
     MOCKED_DEVICE_SERIAL_NUMBER,
+    MOCKED_DEVICE_SERIAL_NUMBER_FOR_3EM,
+    MOCKED_DEVICE_SERIAL_NUMBER_FOR_EM,
     MOCKED_DEVICE_TYPE,
+    MOCKED_DEVICE_TYPE_FOR_3EM,
+    MOCKED_DEVICE_TYPE_FOR_EM,
     MOCKED_DEVICE_ZEROCONF_DATA,
+    MOCKED_DEVICE_ZEROCONF_DATA_FOR_3EM,
+    MOCKED_DEVICE_ZEROCONF_DATA_FOR_EM,
     _patch_device_config,
 )
 
@@ -38,9 +45,12 @@ async def test_user_setup(hass: HomeAssistant) -> None:
     assert result["step_id"] == SOURCE_USER
     assert "flow_id" in result
 
-    with _patch_device_config(), patch(
-        "homeassistant.components.lektrico.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
+    with (
+        _patch_device_config(),
+        patch(
+            "homeassistant.components.lektrico.async_setup_entry", return_value=True
+        ) as mock_setup_entry,
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -168,3 +178,49 @@ async def test_discovered_zeroconf(hass: HomeAssistant) -> None:
 
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "missing_id"
+
+
+async def test_discovered_zeroconf_EM(hass: HomeAssistant) -> None:
+    """Test we can setup when EM discovered from zeroconf."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=MOCKED_DEVICE_ZEROCONF_DATA_FOR_EM,
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] is None
+
+    result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["data"] == {
+        CONF_HOST: MOCKED_DEVICE_IP_ADDRESS,
+        CONF_FRIENDLY_NAME: MOCKED_DEVICE_TYPE_FOR_EM,
+    }
+    assert (
+        result2["title"]
+        == f"{MOCKED_DEVICE_TYPE_FOR_EM}_{MOCKED_DEVICE_SERIAL_NUMBER_FOR_EM}"
+    )
+
+
+async def test_discovered_zeroconf_3EM(hass: HomeAssistant) -> None:
+    """Test we can setup when 3EM discovered from zeroconf."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=MOCKED_DEVICE_ZEROCONF_DATA_FOR_3EM,
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] is None
+
+    result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["data"] == {
+        CONF_HOST: MOCKED_DEVICE_IP_ADDRESS,
+        CONF_FRIENDLY_NAME: MOCKED_DEVICE_TYPE_FOR_3EM,
+    }
+    assert (
+        result2["title"]
+        == f"{MOCKED_DEVICE_TYPE_FOR_3EM}_{MOCKED_DEVICE_SERIAL_NUMBER_FOR_3EM}"
+    )
