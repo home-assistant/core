@@ -1235,6 +1235,7 @@ class Integration:
                 # If the domain is loaded, cache that the platform
                 # does not exist so we do not try to load it again
                 self._missing_platforms_cache[full_name] = True
+            raise
         except ImportError:
             raise
         except RuntimeError as err:
