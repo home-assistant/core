@@ -39,8 +39,11 @@ from homeassistant.core import (
     HomeAssistantError,
 )
 from homeassistant.exceptions import ConfigValidationError
-from homeassistant.helpers import config_validation as cv, issue_registry as ir
-import homeassistant.helpers.check_config as check_config
+from homeassistant.helpers import (
+    check_config,
+    config_validation as cv,
+    issue_registry as ir,
+)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import Integration, async_get_integration

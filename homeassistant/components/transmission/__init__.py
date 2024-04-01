@@ -267,9 +267,6 @@ async def get_api(
                 path=path,
             )
         )
-        _LOGGER.debug("Successfully connected to %s", host)
-        return api
-
     except TransmissionAuthError as error:
         _LOGGER.error("Credentials for Transmission client are not valid")
         raise AuthenticationError from error
@@ -279,3 +276,5 @@ async def get_api(
     except TransmissionError as error:
         _LOGGER.error(error)
         raise UnknownError from error
+    _LOGGER.debug("Successfully connected to %s", host)
+    return api
