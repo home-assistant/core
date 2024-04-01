@@ -47,11 +47,7 @@ async def async_setup_entry(
         zha_data.update_coordinator = ZHAFirmwareUpdateCoordinator(
             hass, get_zha_gateway(hass).application_controller
         )
-    entities_to_create = zha_data.platforms.pop(Platform.UPDATE, [])
-    entities = [
-        ZHAFirmwareUpdateEntity(entity_data) for entity_data in entities_to_create
-    ]
-    async_add_entities(entities)
+    entities_to_create = zha_data.platforms[Platform.UPDATE]
 
     unsub = async_dispatcher_connect(
         hass,

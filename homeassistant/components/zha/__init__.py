@@ -43,11 +43,12 @@ from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType
 
 from . import repairs, websocket_api
 from .const import CONF_USE_THREAD, DOMAIN
-from .helpers import HAZHAData, ZHAGatewayProxy, get_zha_data
+from .helpers import SIGNAL_ADD_ENTITIES, HAZHAData, ZHAGatewayProxy, get_zha_data
 from .radio_manager import ZhaRadioManager
 from .repairs.network_settings_inconsistent import warn_on_inconsistent_network_settings
 from .repairs.wrong_silabs_firmware import (
@@ -270,6 +271,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     await zha_data.gateway_proxy.async_initialize_devices_and_entities()
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
+    async_dispatcher_send(hass, SIGNAL_ADD_ENTITIES)
     return True
 
 
