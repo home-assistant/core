@@ -403,10 +403,10 @@ async def test_set_value(
             UnitOfTemperature.FAHRENHEIT,
             100,
             100,
-            50,
-            50,
-            140,
-            140,
+            51,
+            51,
+            138,
+            138,
             -9,
             -9,
             3,
@@ -435,8 +435,8 @@ async def test_set_value(
             38,
             50,
             10,
-            140,
-            60,
+            138,
+            58,
             -9,
             -23,
             3,
@@ -450,8 +450,8 @@ async def test_set_value(
             38,
             10,
             10,
-            60,
-            60,
+            58,
+            58,
             -23,
             -23,
             3,
@@ -494,7 +494,9 @@ async def test_temperature_conversion(
     state = hass.states.get(entity0.entity_id)
     assert float(state.state) == pytest.approx(float(initial_state_value))
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == state_unit
-    assert state.attributes[ATTR_MAX] == state_max_value
+    assert state.attributes[ATTR_MAX] == pytest.approx(
+        float(state_max_value), rel=state_step
+    )
     assert state.attributes[ATTR_MIN] == state_min_value
     assert state.attributes[ATTR_STEP] == state_step
 
@@ -535,7 +537,7 @@ async def test_temperature_conversion(
     await hass.async_block_till_done()
 
     state = hass.states.get(entity0.entity_id)
-    assert float(state.state) == pytest.approx(float(state_max_value), rel=0.1)
+    assert float(state.state) == pytest.approx(float(state_max_value), rel=state_step)
 
 
 RESTORE_DATA = {

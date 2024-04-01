@@ -174,16 +174,17 @@ async def test_number_entities(
 
     # Service set float value
 
-    await hass.services.async_call(
-        NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {
-            ATTR_ENTITY_ID: expected["entity_id"],
-            ATTR_VALUE: expected["unsupported_service_value"],
-        },
-        blocking=True,
-    )
-    assert aioclient_mock.mock_calls[2][2] == expected["unsupported_service_response"]
+    with pytest.raises(ServiceValidationError) as exc:
+        await hass.services.async_call(
+            NUMBER_DOMAIN,
+            SERVICE_SET_VALUE,
+            {
+                ATTR_ENTITY_ID: expected["entity_id"],
+                ATTR_VALUE: expected["unsupported_service_value"],
+            },
+            blocking=True,
+        )
+    assert exc.value.translation_key == "invalid_step_value"
 
     # Service set value beyond the supported range
 
