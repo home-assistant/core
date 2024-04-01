@@ -39,6 +39,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STARTED,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    UnitOfElectricCurrent,
     UnitOfEnergy,
     UnitOfVolume,
 )
