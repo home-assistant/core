@@ -7,6 +7,7 @@ import collections
 from collections.abc import Callable
 import dataclasses
 import enum
+import itertools
 import logging
 import re
 import time
@@ -20,13 +21,34 @@ from zha.application.const import (
     CLUSTER_TYPE_IN,
     CLUSTER_TYPE_OUT,
     DATA_ZHA,
+    DEVICE_PAIRING_STATUS,
+    UNKNOWN_MANUFACTURER,
+    UNKNOWN_MODEL,
     ZHA_EVENT,
     ZHA_GW_MSG,
+    ZHA_GW_MSG_DEVICE_INFO,
+    ZHA_GW_MSG_DEVICE_JOINED,
+    ZHA_GW_MSG_DEVICE_REMOVED,
+    ZHA_GW_MSG_GROUP_ADDED,
+    ZHA_GW_MSG_GROUP_INFO,
+    ZHA_GW_MSG_GROUP_MEMBER_ADDED,
+    ZHA_GW_MSG_GROUP_MEMBER_REMOVED,
+    ZHA_GW_MSG_GROUP_REMOVED,
+    ZHA_GW_MSG_RAW_INIT,
 )
-from zha.application.gateway import Gateway
+from zha.application.gateway import (
+    DeviceFullInitEvent,
+    DeviceJoinedEvent,
+    DeviceLeftEvent,
+    DeviceRemovedEvent,
+    Gateway,
+    GroupEvent,
+    RawDeviceInitializedEvent,
+)
 from zha.application.helpers import ZHAData
 from zha.application.platforms import GroupEntity, PlatformEntity
 from zha.event import EventBase
+from zha.mixins import LogMixin
 from zha.zigbee.cluster_handlers import ClusterHandler
 from zha.zigbee.device import Device, ZHAEvent
 from zha.zigbee.group import Group, GroupMember
@@ -72,6 +94,7 @@ from .const import (
     ATTR_SIGNATURE,
     DOMAIN,
 )
+from .entity import ZHAEntity
 
 if TYPE_CHECKING:
     from logging import Filter, LogRecord
@@ -103,6 +126,8 @@ DEBUG_LEVELS = {
 DEBUG_RELAY_LOGGERS = [DEBUG_COMP_ZHA, DEBUG_COMP_ZIGPY, DEBUG_LIB_ZHA]
 ZHA_GW_MSG_LOG_ENTRY = "log_entry"
 ZHA_GW_MSG_LOG_OUTPUT = "log_output"
+SIGNAL_REMOVE = "remove"
+GROUP_ENTITY_DOMAINS = [Platform.LIGHT, Platform.SWITCH, Platform.FAN]
 
 
 class GroupEntityReference(NamedTuple):
@@ -113,10 +138,10 @@ class GroupEntityReference(NamedTuple):
     entity_id: str
 
 
-class ZHAGroupProxy:
+class ZHAGroupProxy(LogMixin):
     """Proxy class to interact with the ZHA group instances."""
 
-    def __init__(self, group: Group, gateway_proxy) -> None:
+    def __init__(self, group: Group, gateway_proxy: ZHAGatewayProxy) -> None:
         """Initialize the gateway proxy."""
         self.group: Group = group
         self.gateway_proxy: ZHAGatewayProxy = gateway_proxy
@@ -175,25 +200,25 @@ class ZHAGroupProxy:
 class ZHADeviceProxy(EventBase):
     """Proxy class to interact with the ZHA device instances."""
 
+    _ha_device_id: str
+
     def __init__(self, device: Device, gateway_proxy) -> None:
         """Initialize the gateway proxy."""
         super().__init__()
         self.device: Device = device
         self.gateway_proxy: ZHAGatewayProxy = gateway_proxy
-
-        device_registry = dr.async_get(gateway_proxy.hass)
-        self.ha_device_info: dr.DeviceEntry | None = (
-            device_registry.async_get_or_create(
-                config_entry_id=gateway_proxy.config_entry.entry_id,
-                identifiers={(DOMAIN, str(device.ieee))},
-                connections={(dr.CONNECTION_ZIGBEE, str(device.ieee))},
-            )
-        )
-        assert self.ha_device_info is not None
-        self.device_id: str = self.ha_device_info.id
-
         self._unsubs: list[Callable[[], None]] = []
         self._unsubs.append(self.device.on_all_events(self._handle_event_protocol))
+
+    @property
+    def device_id(self) -> str:
+        """Return the HA device registry device id."""
+        return self._ha_device_id
+
+    @device_id.setter
+    def device_id(self, device_id: str) -> None:
+        """Set the HA device registry device id."""
+        self._ha_device_id = device_id
 
     @property
     def device_info(self) -> dict[str, Any]:
@@ -298,7 +323,7 @@ class ZHADeviceProxy(EventBase):
                 {
                     ATTR_DEVICE_IEEE: zha_event.device_ieee,
                     ATTR_UNIQUE_ID: zha_event.unique_id,
-                    ATTR_DEVICE_ID: self.ha_device_info.id,
+                    ATTR_DEVICE_ID: self.device_id,
                     **zha_event.data,
                 },
             )
@@ -337,7 +362,7 @@ class ZHAGatewayProxy(EventBase):
         self.debug_enabled: bool = False
         self._log_relay_handler: LogRelayHandler = LogRelayHandler(hass, self)
         self._unsubs: list[Callable[[], None]] = []
-        self._unsubs.append(self.gateway.on_all_events(self._handle_gateway_event))
+        self._unsubs.append(self.gateway.on_all_events(self._handle_event_protocol))
 
     @property
     def device_registry(self) -> collections.defaultdict[EUI64, list[EntityReference]]:
@@ -368,7 +393,7 @@ class ZHAGatewayProxy(EventBase):
         """Initialize devices and entities."""
         ha_zha_data = get_zha_data(self.hass)
         for device in self.gateway.devices.values():
-            device_proxy = ZHADeviceProxy(device, self)
+            device_proxy = self._async_get_or_create_device_proxy(device)
             self.device_proxies[device.ieee] = device_proxy
             for entity in device.platform_entities.values():
                 platform = Platform(entity.PLATFORM)
@@ -376,7 +401,7 @@ class ZHAGatewayProxy(EventBase):
                     EntityData(entity=entity, device_proxy=device_proxy)
                 )
         for group in self.gateway.groups.values():
-            group_proxy = ZHAGroupProxy(group, self)
+            group_proxy = self._async_get_or_create_group_proxy(group)
             self.group_proxies[group.group_id] = group_proxy
             for entity in group.group_entities.values():
                 platform = Platform(entity.PLATFORM)
@@ -391,9 +416,133 @@ class ZHAGatewayProxy(EventBase):
 
         await self.gateway.async_initialize_devices_and_entities()
 
-    def _handle_gateway_event(self, event) -> None:
-        """Handle a gateway event."""
-        self.hass.bus.async_fire(event.event, event)
+    def handle_device_joined(self, event: DeviceJoinedEvent) -> None:
+        """Handle a device joined event."""
+        async_dispatcher_send(
+            self.hass,
+            ZHA_GW_MSG,
+            {
+                ATTR_TYPE: ZHA_GW_MSG_DEVICE_JOINED,
+                ZHA_GW_MSG_DEVICE_INFO: {
+                    ATTR_NWK: event.device_info.nwk,
+                    ATTR_IEEE: str(event.device_info.ieee),
+                    DEVICE_PAIRING_STATUS: event.device_info.pairing_status.name,
+                },
+            },
+        )
+
+    def handle_device_removed(self, event: DeviceRemovedEvent) -> None:
+        """Handle a device removed event."""
+        zha_device_proxy = self.device_proxies.pop(event.device_info.ieee, None)
+        entity_refs = self._device_registry.pop(event.device_info.ieee, None)
+        if zha_device_proxy is not None:
+            device_info = zha_device_proxy.zha_device_info
+            # zha_device_proxy.async_cleanup_handles()
+            async_dispatcher_send(
+                self.hass, f"{SIGNAL_REMOVE}_{str(zha_device_proxy.device.ieee)}"
+            )
+            self.hass.async_create_task(
+                self._async_remove_device(zha_device_proxy, entity_refs),
+                "ZHAGateway._async_remove_device",
+            )
+            if device_info is not None:
+                async_dispatcher_send(
+                    self.hass,
+                    ZHA_GW_MSG,
+                    {
+                        ATTR_TYPE: ZHA_GW_MSG_DEVICE_REMOVED,
+                        ZHA_GW_MSG_DEVICE_INFO: device_info,
+                    },
+                )
+
+    def handle_device_left(self, event: DeviceLeftEvent) -> None:
+        """Handle a device left event."""
+
+    def handle_raw_device_initialized(self, event: RawDeviceInitializedEvent) -> None:
+        """Handle a raw device initialized event."""
+        manuf = event.device_info.manufacturer
+        async_dispatcher_send(
+            self.hass,
+            ZHA_GW_MSG,
+            {
+                ATTR_TYPE: ZHA_GW_MSG_RAW_INIT,
+                ZHA_GW_MSG_DEVICE_INFO: {
+                    ATTR_NWK: event.device_info.nwk,
+                    ATTR_IEEE: str(event.device_info.ieee),
+                    DEVICE_PAIRING_STATUS: event.device_info.pairing_status.name,
+                    ATTR_MODEL: event.device_info.model
+                    if event.device_info.model
+                    else UNKNOWN_MODEL,
+                    ATTR_MANUFACTURER: manuf if manuf else UNKNOWN_MANUFACTURER,
+                    ATTR_SIGNATURE: event.device_info.signature,
+                },
+            },
+        )
+
+    def handle_device_fully_initialized(self, event: DeviceFullInitEvent) -> None:
+        """Handle a device fully initialized event."""
+
+    def handle_group_member_removed(self, event: GroupEvent) -> None:
+        """Handle a group member removed event."""
+        zha_group_proxy = self._async_get_or_create_group_proxy(event.group_info)
+        zha_group_proxy.info("group_member_removed - group_info: %s", event.group_info)
+        self._send_group_gateway_message(
+            zha_group_proxy, ZHA_GW_MSG_GROUP_MEMBER_REMOVED
+        )
+
+    def handle_group_member_added(self, event: GroupEvent) -> None:
+        """Handle a group member added event."""
+        zha_group_proxy = self._async_get_or_create_group_proxy(event.group_info)
+        zha_group_proxy.info("group_member_added - group_info: %s", event.group_info)
+        self._send_group_gateway_message(zha_group_proxy, ZHA_GW_MSG_GROUP_MEMBER_ADDED)
+        # if len(zha_group_proxy.members) == 2:
+        # we need to do this because there wasn't already
+        # a group entity to remove and re-add
+        # discovery.GROUP_PROBE.discover_group_entities(zha_group)
+
+    def handle_group_added(self, event: GroupEvent) -> None:
+        """Handle a group added event."""
+        zha_group_proxy = self._async_get_or_create_group_proxy(event.group_info)
+        zha_group_proxy.info("group_added")
+        # need to dispatch for entity creation here
+        self._send_group_gateway_message(zha_group_proxy, ZHA_GW_MSG_GROUP_ADDED)
+
+    def handle_group_removed(self, event: GroupEvent) -> None:
+        """Handle a group removed event."""
+        self._send_group_gateway_message(event.group_info, ZHA_GW_MSG_GROUP_REMOVED)
+        zha_group_proxy = self._groups.pop(event.group_info.group_id)
+        zha_group_proxy.info("group_removed")
+        self._cleanup_group_entity_registry_entries(zha_group_proxy)
+
+    def _send_group_gateway_message(
+        self, zigpy_group: zigpy.group.Group, gateway_message_type: str
+    ) -> None:
+        """Send the gateway event for a zigpy group event."""
+        zha_group = self._groups.get(zigpy_group.group_id)
+        if zha_group is not None:
+            async_dispatcher_send(
+                self.hass,
+                ZHA_GW_MSG,
+                {
+                    ATTR_TYPE: gateway_message_type,
+                    ZHA_GW_MSG_GROUP_INFO: zha_group.group_info,
+                },
+            )
+
+    async def _async_remove_device(
+        self, device: ZHADeviceProxy, entity_refs: list[EntityReference] | None
+    ) -> None:
+        if entity_refs is not None:
+            remove_tasks: list[asyncio.Future[Any]] = [
+                entity_ref.remove_future for entity_ref in entity_refs
+            ]
+            if remove_tasks:
+                await asyncio.wait(remove_tasks)
+
+        device_registry = dr.async_get(self.hass)
+        reg_device = device_registry.async_get(device.device_id)
+        if reg_device is not None:
+            device_registry.async_remove_device(reg_device.id)
 
     @callback
     def async_enable_debug_mode(self, filterer: _LogFilterType | None = None) -> None:
@@ -426,6 +575,100 @@ class ZHAGatewayProxy(EventBase):
         for unsub in self._unsubs:
             unsub()
         await self.gateway.shutdown()
+
+    @callback
+    def _async_get_or_create_device_proxy(self, zha_device: Device) -> ZHADeviceProxy:
+        """Get or create a ZHA device."""
+        if (zha_device_proxy := self.device_proxies.get(zha_device.ieee)) is None:
+            zha_device_proxy = ZHADeviceProxy(zha_device, self)
+            self._devices[zha_device_proxy.device.ieee] = zha_device_proxy
+
+            device_registry = dr.async_get(self.hass)
+            device_registry_device = device_registry.async_get_or_create(
+                config_entry_id=self.config_entry.entry_id,
+                connections={(dr.CONNECTION_ZIGBEE, str(zha_device.ieee))},
+                identifiers={(DOMAIN, str(zha_device.ieee))},
+                name=zha_device.name,
+                manufacturer=zha_device.manufacturer,
+                model=zha_device.model,
+            )
+            zha_device_proxy.device_id = device_registry_device.id
+        return zha_device_proxy
+
+    @callback
+    def _async_get_or_create_group_proxy(self, zha_group: Group) -> ZHAGroupProxy:
+        """Get or create a ZHA group."""
+        zha_group_proxy = self.group_proxies.get(zha_group.group_id)
+        if zha_group_proxy is None:
+            zha_group_proxy = ZHAGroupProxy(zha_group, self)
+            self._groups[zha_group.group_id] = zha_group_proxy
+        return zha_group_proxy
+
+    def get_device_proxy(self, ieee: EUI64) -> ZHADeviceProxy | None:
+        """Return ZHADevice for given ieee."""
+        return self._devices.get(ieee)
+
+    def get_group_proxy(self, group_id: int | str) -> ZHAGroupProxy | None:
+        """Return Group for given group id."""
+        if isinstance(group_id, str):
+            for group in self.groups.values():
+                if group.name == group_id:
+                    return group
+            return None
+        return self.groups.get(group_id)
+
+    def get_entity_reference(self, entity_id: str) -> EntityReference | None:
+        """Return entity reference for given entity_id if found."""
+        for entity_reference in itertools.chain.from_iterable(
+            self.device_registry.values()
+        ):
+            if entity_id == entity_reference.reference_id:
+                return entity_reference
+        return None
+
+    def remove_entity_reference(self, entity: ZHAEntity) -> None:
+        """Remove entity reference for given entity_id if found."""
+        if entity.zha_device.ieee in self.device_registry:
+            entity_refs = self.device_registry.get(entity.zha_device.ieee)
+            self.device_registry[entity.zha_device.ieee] = [
+                e
+                for e in entity_refs  # type: ignore[union-attr]
+                if e.reference_id != entity.entity_id
+            ]
+
+    def _cleanup_group_entity_registry_entries(
+        self, zigpy_group: zigpy.group.Group
+    ) -> None:
+        """Remove entity registry entries for group entities when the groups are removed from HA."""
+        # first we collect the potential unique ids for entities that could be created from this group
+        possible_entity_unique_ids = [
+            f"{domain}_zha_group_0x{zigpy_group.group_id:04x}"
+            for domain in GROUP_ENTITY_DOMAINS
+        ]
+
+        # then we get all group entity entries tied to the coordinator
+        entity_registry = er.async_get(self.hass)
+        assert self.coordinator_zha_device
+        all_group_entity_entries = er.async_entries_for_device(
+            entity_registry,
+            self.coordinator_zha_device.device_id,
+            include_disabled_entities=True,
+        )
+
+        # then we get the entity entries for this specific group
+        # by getting the entries that match
+        entries_to_remove = [
+            entry
+            for entry in all_group_entity_entries
+            if entry.unique_id in possible_entity_unique_ids
+        ]
+
+        # then we remove the entries from the entity registry
+        for entry in entries_to_remove:
+            _LOGGER.debug(
+                "cleaning up entity registry entry for entity: %s", entry.entity_id
+            )
+            entity_registry.async_remove(entry.entity_id)
 
 
 @callback
