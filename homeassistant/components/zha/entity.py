@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
+import functools
 import logging
 from typing import Any
 
@@ -14,9 +15,10 @@ from homeassistant.const import ATTR_MANUFACTURER, ATTR_MODEL, ATTR_NAME, Entity
 from homeassistant.core import callback
 from homeassistant.helpers import entity
 from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE, DeviceInfo
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import DOMAIN
-from .helpers import EntityData
+from .helpers import SIGNAL_REMOVE, EntityData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -95,6 +97,13 @@ class ZHAEntity(LogMixin, entity.Entity):
         self.remove_future = self.hass.loop.create_future()
         self._unsubs.append(
             self.entity_data.entity.on_all_events(self._handle_entity_events)
+        )
+        self._unsubs.append(
+            async_dispatcher_connect(
+                self.hass,
+                f"{SIGNAL_REMOVE}_{self.entity_data.device_proxy.device.ieee}",
+                functools.partial(self.async_remove, force_remove=True),
+            )
         )
         self.entity_data.device_proxy.gateway_proxy.register_entity_reference(
             self.entity_data.device_proxy.device.ieee,
