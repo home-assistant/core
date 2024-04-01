@@ -20,7 +20,6 @@ _LOGGER = logging.getLogger(__name__)
 class DioChaconConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for dio_chacon."""
 
-    VERSION = 1
     _username: str
     _password: str
     _user_id: str

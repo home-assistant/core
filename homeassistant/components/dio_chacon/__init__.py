@@ -12,13 +12,19 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 
-from .const import DOMAIN, EVENT_DIO_CHACON_DEVICE_STATE_CHANGED
+from .const import (
+    DOMAIN,
+    EVENT_DIO_CHACON_DEVICE_STATE_CHANGED,
+    EVENT_DIO_CHACON_DEVICE_STATE_RELOAD,
+)
+
+SERVICE_RELOAD_STATE = "reload_state"
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS: list[Platform] = [Platform.COVER]
+PLATFORMS: list[Platform] = [Platform.COVER, Platform.LIGHT]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -44,25 +50,41 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Store an API object for the platforms to access
     hass.data[DOMAIN][entry.entry_id] = dio_chacon_client
 
+    # Disconnects the permanent websocket connection of home assistant shutdown
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, dio_chacon_client.disconnect())
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
+    await hass.async_add_executor_job(setup_dio_chacon_service, hass)
+
     return True
-
-
-async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Handle options update."""
-    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
+
+    hass.services.async_remove(DOMAIN, SERVICE_RELOAD_STATE)
+
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         hass.data[DOMAIN].pop(entry.entry_id)
 
     dio_chacon_client = hass.data[DOMAIN][entry.entry_id]
-
-    dio_chacon_client.disconnect()
+    await dio_chacon_client.disconnect()
 
     return unload_ok
+
+
+def setup_dio_chacon_service(hass: HomeAssistant) -> None:
+    """Implement a custom service.
+
+    This service allows user to reload all devices from the server.
+    """
+
+    def reload_devices_states(call: ServiceCall) -> None:
+        """Trigger a reload of the states of the devices."""
+        # No data input to call the service
+
+        _LOGGER.debug("Call to the reload service for all dio chacon devices")
+        hass.bus.fire(EVENT_DIO_CHACON_DEVICE_STATE_RELOAD)
+
+    hass.services.register(DOMAIN, SERVICE_RELOAD_STATE, reload_devices_states)
