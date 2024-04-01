@@ -28,3 +28,7 @@ async def test_sensors(
     assert state.attributes["source_branch"] == "main"
     assert state.attributes["source_version"] == "123"
     assert state.attributes["status"] == "completed"
+
+    entry = entity_registry.async_get("sensor.testproject_test_build_latest_build")
+    assert entry
+    assert entry.unique_id == "testorg_1234_9876_latest_build"
