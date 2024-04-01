@@ -38,7 +38,7 @@ from tests.typing import ClientSessionGenerator, WebSocketGenerator
 AGENT_ID_OPTIONS = [
     None,
     # Old value of conversation.HOME_ASSISTANT_AGENT,
-    "homeassistant"
+    "homeassistant",
     # Current value of conversation.HOME_ASSISTANT_AGENT,
     "conversation.home_assistant",
 ]
