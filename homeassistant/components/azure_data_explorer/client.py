@@ -1,4 +1,5 @@
 """Setting up the Azure Data Explorer ingest client."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping

@@ -1,4 +1,5 @@
 """Test the init functions for Azure Data Explorer."""
+
 from datetime import datetime, timedelta
 import logging
 from unittest.mock import patch

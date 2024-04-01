@@ -1,4 +1,5 @@
 """The Azure Data Explorer integration."""
+
 from __future__ import annotations
 
 import asyncio

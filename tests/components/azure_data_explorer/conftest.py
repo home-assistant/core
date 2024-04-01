@@ -1,4 +1,5 @@
 """Test fixtures for Azure Data Explorer."""
+
 from collections.abc import Generator
 from datetime import timedelta
 import logging
