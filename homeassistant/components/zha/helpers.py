@@ -421,7 +421,7 @@ class ZHAGatewayProxy(EventBase):
 
     def handle_device_joined(self, event: DeviceJoinedEvent) -> None:
         """Handle a device joined event."""
-        self._async_get_or_create_device_proxy(event.device_info.ieee)
+        self._async_get_or_create_device_proxy(event.device_info)
         async_dispatcher_send(
             self.hass,
             ZHA_GW_MSG,
