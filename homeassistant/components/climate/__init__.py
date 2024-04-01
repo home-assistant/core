@@ -718,6 +718,53 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             ft.partial(self.set_temperature, **kwargs)
         )
 
+    def set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
+        """Set new target temperature."""
+        raise NotImplementedError
+
+    async def async_set_target_temperature(
+        self,
+        temperature: float | None = None,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
+        """Set new target temperature."""
+        await self.hass.async_add_executor_job(
+            ft.partial(
+                self.set_temperature,
+                temperature=temperature,
+                hvac_mode=hvac_mode,
+            )
+        )
+
+    def set_target_temperature_range(
+        self,
+        temperature_high: float,
+        temperature_low: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
+        """Set new target temperature."""
+        raise NotImplementedError
+
+    async def async_set_target_temperature_range(
+        self,
+        temperature_high: float,
+        temperature_low: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
+        """Set new target temperature."""
+        await self.hass.async_add_executor_job(
+            ft.partial(
+                self.set_temperature,
+                temperature_high=temperature_high,
+                temperature_low=temperature_low,
+                hvac_mode=hvac_mode,
+            )
+        )
+
     def set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
         raise NotImplementedError
