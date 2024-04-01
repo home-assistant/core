@@ -6,7 +6,25 @@ from ipaddress import ip_address
 from typing import Any
 
 from systembridgeconnector.const import TYPE_DATA_UPDATE
-from systembridgemodels.const import MODEL_SYSTEM
+from systembridgemodels.const import (
+    MODEL_BATTERY,
+    MODEL_CPU,
+    MODEL_DISKS,
+    MODEL_DISPLAYS,
+    MODEL_GPUS,
+    MODEL_MEDIA,
+    MODEL_MEMORY,
+    MODEL_PROCESSES,
+    MODEL_SYSTEM,
+)
+from systembridgemodels.fixtures.modules.battery import FIXTURE_BATTERY
+from systembridgemodels.fixtures.modules.cpu import FIXTURE_CPU
+from systembridgemodels.fixtures.modules.disks import FIXTURE_DISKS
+from systembridgemodels.fixtures.modules.displays import FIXTURE_DISPLAYS
+from systembridgemodels.fixtures.modules.gpus import FIXTURE_GPUS
+from systembridgemodels.fixtures.modules.media import FIXTURE_MEDIA
+from systembridgemodels.fixtures.modules.memory import FIXTURE_MEMORY
+from systembridgemodels.fixtures.modules.processes import FIXTURE_PROCESSES
 from systembridgemodels.fixtures.modules.system import FIXTURE_SYSTEM
 from systembridgemodels.response import Response
 
@@ -108,11 +126,18 @@ async def setup_integration(
 
 
 async def mock_data_listener(
-    self,
     callback: Callable[[str, Any], Awaitable[None]] | None = None,
     _: bool = False,
 ):
     """Mock websocket data listener."""
     if callback is not None:
         # Simulate data received from the websocket
+        await callback(MODEL_BATTERY, FIXTURE_BATTERY)
+        await callback(MODEL_CPU, FIXTURE_CPU)
+        await callback(MODEL_DISKS, FIXTURE_DISKS)
+        await callback(MODEL_DISPLAYS, FIXTURE_DISPLAYS)
+        await callback(MODEL_GPUS, FIXTURE_GPUS)
+        await callback(MODEL_MEDIA, FIXTURE_MEDIA)
+        await callback(MODEL_MEMORY, FIXTURE_MEMORY)
+        await callback(MODEL_PROCESSES, FIXTURE_PROCESSES)
         await callback(MODEL_SYSTEM, FIXTURE_SYSTEM)

@@ -18,7 +18,13 @@ from homeassistant.components.system_bridge.config_flow import SystemBridgeConfi
 from homeassistant.components.system_bridge.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN
 
-from . import FIXTURE_REQUEST_ID, FIXTURE_TITLE, FIXTURE_USER_INPUT, FIXTURE_UUID
+from . import (
+    FIXTURE_REQUEST_ID,
+    FIXTURE_TITLE,
+    FIXTURE_USER_INPUT,
+    FIXTURE_UUID,
+    mock_data_listener,
+)
 
 from tests.common import MockConfigEntry
 
@@ -51,6 +57,19 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
+def mock_version() -> Generator[AsyncMock, None, None]:
+    """Return a mocked Version class."""
+    with patch(
+        "homeassistant.components.system_bridge.Version",
+        autospec=True,
+    ) as mock_version:
+        version = mock_version.return_value
+        version.check_supported.return_value = True
+
+        yield version
+
+
+@pytest.fixture
 def mock_websocket_client(
     get_data_model: GetData = GetData(
         modules=["system"],
@@ -59,7 +78,7 @@ def mock_websocket_client(
         modules=["system"]
     ),
 ) -> Generator[MagicMock, None, None]:
-    """Return a mocked WebSocketClient."""
+    """Return a mocked WebSocketClient client."""
     with (
         patch(
             "homeassistant.components.system_bridge.coordinator.WebSocketClient",
@@ -84,5 +103,7 @@ def mock_websocket_client(
             message="Data listener registered",
             data={EVENT_MODULES: register_data_listener_model.modules},
         )
+        # Trigger callback when listener is registered
+        websocket_client.listen.side_effect = mock_data_listener
 
         yield websocket_client

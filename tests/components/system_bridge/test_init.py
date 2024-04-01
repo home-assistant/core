@@ -1,85 +1,38 @@
 """Test the System Bridge integration."""
 
-import asyncio
-from collections.abc import Awaitable, Callable
-from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
-from systembridgemodels.const import (
-    MODEL_BATTERY,
-    MODEL_CPU,
-    MODEL_DISKS,
-    MODEL_DISPLAYS,
-    MODEL_GPUS,
-    MODEL_MEDIA,
-    MODEL_MEMORY,
-    MODEL_PROCESSES,
-    MODEL_SYSTEM,
-)
-from systembridgemodels.fixtures.modules.battery import FIXTURE_BATTERY
-from systembridgemodels.fixtures.modules.cpu import FIXTURE_CPU
-from systembridgemodels.fixtures.modules.disks import FIXTURE_DISKS
-from systembridgemodels.fixtures.modules.displays import FIXTURE_DISPLAYS
-from systembridgemodels.fixtures.modules.gpus import FIXTURE_GPUS
-from systembridgemodels.fixtures.modules.media import FIXTURE_MEDIA
-from systembridgemodels.fixtures.modules.memory import FIXTURE_MEMORY
-from systembridgemodels.fixtures.modules.processes import FIXTURE_PROCESSES
-from systembridgemodels.fixtures.modules.system import FIXTURE_SYSTEM
-
 from homeassistant.components.system_bridge.config_flow import SystemBridgeConfigFlow
-from homeassistant.components.system_bridge.const import DOMAIN, SCAN_INTERVAL
+from homeassistant.components.system_bridge.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT, CONF_TOKEN
 from homeassistant.core import HomeAssistant
-import homeassistant.util.dt as dt_util
 
 from . import FIXTURE_USER_INPUT, FIXTURE_UUID, setup_integration
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import MockConfigEntry
 
 
 async def test_load_unload_entry(
     hass: HomeAssistant,
+    mock_version: MagicMock,
     mock_websocket_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test load and unload entry."""
+    assert mock_version.check_supported.call_count == 0
+
     assert mock_websocket_client.connect.call_count == 0
     assert mock_websocket_client.listen.call_count == 0
     assert mock_websocket_client.close.call_count == 0
 
-    connection_connected = asyncio.Future()
-    connection_finished = asyncio.Future()
-
-    async def connect(
-        callback: Callable[[str, Any], Awaitable[None]],
-        _: bool = False,
-    ):
-        connection_connected.set_result(callback)
-        await connection_finished
-
-    # Mock listener with a Future
-    mock_websocket_client.listen.side_effect = connect
-
-    # Mock out the event bus
-    mock_bus = MagicMock()
-    hass.bus = mock_bus
-
     await setup_integration(hass, mock_config_entry)
     entry = hass.config_entries.async_entries(DOMAIN)[0]
 
-    # Next refresh it should connect
-    async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
-    callback = await connection_connected
-    await callback(MODEL_BATTERY, FIXTURE_BATTERY)
-    await callback(MODEL_CPU, FIXTURE_CPU)
-    await callback(MODEL_DISKS, FIXTURE_DISKS)
-    await callback(MODEL_DISPLAYS, FIXTURE_DISPLAYS)
-    await callback(MODEL_GPUS, FIXTURE_GPUS)
-    await callback(MODEL_MEDIA, FIXTURE_MEDIA)
-    await callback(MODEL_MEMORY, FIXTURE_MEMORY)
-    await callback(MODEL_PROCESSES, FIXTURE_PROCESSES)
-    await callback(MODEL_SYSTEM, FIXTURE_SYSTEM)
+    assert mock_version.check_supported.call_count == 1
+
+    assert mock_websocket_client.connect.call_count == 2
+    assert mock_websocket_client.listen.call_count == 2
 
     assert entry.state == ConfigEntryState.LOADED
 
