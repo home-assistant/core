@@ -490,6 +490,12 @@ class ZHAGatewayProxy(EventBase):
         device_info = zha_device_proxy.zha_device_info
         device_info[DEVICE_PAIRING_STATUS] = event.device_info.pairing_status.name
         if event.new_join:
+            ha_zha_data = get_zha_data(self.hass)
+            for entity in zha_device_proxy.device.platform_entities.values():
+                platform = Platform(entity.PLATFORM)
+                ha_zha_data.platforms[platform].append(
+                    EntityData(entity=entity, device_proxy=zha_device_proxy)
+                )
             async_dispatcher_send(self.hass, SIGNAL_ADD_ENTITIES)
         async_dispatcher_send(
             self.hass,
