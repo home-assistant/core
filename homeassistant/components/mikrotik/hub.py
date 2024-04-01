@@ -1,9 +1,9 @@
 """The Mikrotik router class."""
+
 from __future__ import annotations
 
 from datetime import timedelta
 import logging
-import socket
 import ssl
 from typing import Any
 
@@ -91,7 +91,7 @@ class MikrotikData:
     def get_info(self, param: str) -> str:
         """Return device model name."""
         cmd = IDENTITY if param == NAME else INFO
-        if data := self.command(MIKROTIK_SERVICES[cmd]):
+        if data := self.command(MIKROTIK_SERVICES[cmd], suppress_errors=(cmd == INFO)):
             return str(data[0].get(param))
         return ""
 
@@ -101,10 +101,18 @@ class MikrotikData:
         self.model = self.get_info(ATTR_MODEL)
         self.firmware = self.get_info(ATTR_FIRMWARE)
         self.serial_number = self.get_info(ATTR_SERIAL_NUMBER)
-        self.support_capsman = bool(self.command(MIKROTIK_SERVICES[IS_CAPSMAN]))
-        self.support_wireless = bool(self.command(MIKROTIK_SERVICES[IS_WIRELESS]))
-        self.support_wifiwave2 = bool(self.command(MIKROTIK_SERVICES[IS_WIFIWAVE2]))
-        self.support_wifi = bool(self.command(MIKROTIK_SERVICES[IS_WIFI]))
+        self.support_capsman = bool(
+            self.command(MIKROTIK_SERVICES[IS_CAPSMAN], suppress_errors=True)
+        )
+        self.support_wireless = bool(
+            self.command(MIKROTIK_SERVICES[IS_WIRELESS], suppress_errors=True)
+        )
+        self.support_wifiwave2 = bool(
+            self.command(MIKROTIK_SERVICES[IS_WIFIWAVE2], suppress_errors=True)
+        )
+        self.support_wifi = bool(
+            self.command(MIKROTIK_SERVICES[IS_WIFI], suppress_errors=True)
+        )
 
     def get_list_from_interface(self, interface: str) -> dict[str, dict[str, Any]]:
         """Get devices from interface."""
@@ -205,7 +213,10 @@ class MikrotikData:
         return True
 
     def command(
-        self, cmd: str, params: dict[str, Any] | None = None
+        self,
+        cmd: str,
+        params: dict[str, Any] | None = None,
+        suppress_errors: bool = False,
     ) -> list[dict[str, Any]]:
         """Retrieve data from Mikrotik API."""
         _LOGGER.debug("Running command %s", cmd)
@@ -216,7 +227,7 @@ class MikrotikData:
         except (
             librouteros.exceptions.ConnectionClosed,
             OSError,
-            socket.timeout,
+            TimeoutError,
         ) as api_error:
             _LOGGER.error("Mikrotik %s connection error %s", self._host, api_error)
             # try to reconnect
@@ -224,16 +235,15 @@ class MikrotikData:
             # we still have to raise CannotConnect to fail the update.
             raise CannotConnect from api_error
         except librouteros.exceptions.ProtocolError as api_error:
-            _LOGGER.warning(
-                "Mikrotik %s failed to retrieve data. cmd=[%s] Error: %s",
-                self._host,
-                cmd,
-                api_error,
-            )
+            emsg = "Mikrotik %s failed to retrieve data. cmd=[%s] Error: %s"
+            if suppress_errors and "no such command prefix" in str(api_error):
+                _LOGGER.debug(emsg, self._host, cmd, api_error)
+                return []
+            _LOGGER.warning(emsg, self._host, cmd, api_error)
             return []
 
 
-class MikrotikDataUpdateCoordinator(DataUpdateCoordinator[None]):
+class MikrotikDataUpdateCoordinator(DataUpdateCoordinator[None]):  # pylint: disable=hass-enforce-coordinator-module
     """Mikrotik Hub Object."""
 
     def __init__(
@@ -315,14 +325,15 @@ def get_api(entry: dict[str, Any]) -> librouteros.Api:
             entry[CONF_PASSWORD],
             **kwargs,
         )
-        _LOGGER.debug("Connected to %s successfully", entry[CONF_HOST])
-        return api
     except (
         librouteros.exceptions.LibRouterosError,
         OSError,
-        socket.timeout,
+        TimeoutError,
     ) as api_error:
         _LOGGER.error("Mikrotik %s error: %s", entry[CONF_HOST], api_error)
         if "invalid user name or password" in str(api_error):
             raise LoginError from api_error
         raise CannotConnect from api_error
+
+    _LOGGER.debug("Connected to %s successfully", entry[CONF_HOST])
+    return api

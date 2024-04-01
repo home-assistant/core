@@ -1,4 +1,5 @@
 """Provides helpers for Z-Wave JS device automations."""
+
 from __future__ import annotations
 
 from zwave_js_server.client import Client as ZwaveClient

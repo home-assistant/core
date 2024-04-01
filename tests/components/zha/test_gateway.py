@@ -1,11 +1,14 @@
 """Test ZHA Gateway."""
+
 import asyncio
-from unittest.mock import patch
+from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
-import zigpy.profiles.zha as zha
-import zigpy.zcl.clusters.general as general
-import zigpy.zcl.clusters.lighting as lighting
+from zigpy.application import ControllerApplication
+from zigpy.profiles import zha
+import zigpy.types
+from zigpy.zcl.clusters import general, lighting
+import zigpy.zdo.types
 
 from homeassistant.components.zha.core.gateway import ZHAGateway
 from homeassistant.components.zha.core.group import GroupMember
@@ -195,7 +198,7 @@ async def test_gateway_group_methods(
     # the group entity should not have been cleaned up
     assert entity_id not in hass.states.async_entity_ids(Platform.LIGHT)
 
-    with patch("zigpy.zcl.Cluster.request", side_effect=asyncio.TimeoutError):
+    with patch("zigpy.zcl.Cluster.request", side_effect=TimeoutError):
         await zha_group.members[0].async_remove_from_group()
         assert len(zha_group.members) == 1
         for member in zha_group.members:
@@ -222,6 +225,49 @@ async def test_gateway_create_group_with_id(
     assert zha_group.group_id == 0x1234
 
 
+@patch(
+    "homeassistant.components.zha.core.gateway.ZHAGateway.async_load_devices",
+    MagicMock(),
+)
+@patch(
+    "homeassistant.components.zha.core.gateway.ZHAGateway.async_load_groups",
+    MagicMock(),
+)
+@pytest.mark.parametrize(
+    ("device_path", "thread_state", "config_override"),
+    [
+        ("/dev/ttyUSB0", True, {}),
+        ("socket://192.168.1.123:9999", False, {}),
+        ("socket://192.168.1.123:9999", True, {"use_thread": True}),
+    ],
+)
+async def test_gateway_initialize_bellows_thread(
+    device_path: str,
+    thread_state: bool,
+    config_override: dict,
+    hass: HomeAssistant,
+    zigpy_app_controller: ControllerApplication,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test ZHA disabling the UART thread when connecting to a TCP coordinator."""
+    data = dict(config_entry.data)
+    data["device"]["path"] = device_path
+    config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(config_entry, data=data)
+
+    zha_gateway = ZHAGateway(hass, {"zigpy_config": config_override}, config_entry)
+
+    with patch(
+        "bellows.zigbee.application.ControllerApplication.new",
+        return_value=zigpy_app_controller,
+    ) as mock_new:
+        await zha_gateway.async_initialize()
+
+    assert mock_new.mock_calls[-1].kwargs["config"]["use_thread"] is thread_state
+
+    await zha_gateway.shutdown()
+
+
 @pytest.mark.parametrize(
     ("device_path", "config_override", "expected_channel"),
     [
@@ -240,11 +286,120 @@ async def test_gateway_force_multi_pan_channel(
     config_entry: MockConfigEntry,
 ) -> None:
     """Test ZHA disabling the UART thread when connecting to a TCP coordinator."""
-    config_entry.data = dict(config_entry.data)
-    config_entry.data["device"]["path"] = device_path
+    data = dict(config_entry.data)
+    data["device"]["path"] = device_path
     config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(config_entry, data=data)
 
     zha_gateway = ZHAGateway(hass, {"zigpy_config": config_override}, config_entry)
 
     _, config = zha_gateway.get_application_controller_data()
     assert config["network"]["channel"] == expected_channel
+
+
+async def test_single_reload_on_multiple_connection_loss(
+    hass: HomeAssistant,
+    zigpy_app_controller: ControllerApplication,
+    config_entry: MockConfigEntry,
+):
+    """Test that we only reload once when we lose the connection multiple times."""
+    config_entry.add_to_hass(hass)
+
+    zha_gateway = ZHAGateway(hass, {}, config_entry)
+
+    with patch(
+        "bellows.zigbee.application.ControllerApplication.new",
+        return_value=zigpy_app_controller,
+    ):
+        await zha_gateway.async_initialize()
+
+        with patch.object(
+            hass.config_entries, "async_reload", wraps=hass.config_entries.async_reload
+        ) as mock_reload:
+            zha_gateway.connection_lost(RuntimeError())
+            zha_gateway.connection_lost(RuntimeError())
+            zha_gateway.connection_lost(RuntimeError())
+            zha_gateway.connection_lost(RuntimeError())
+            zha_gateway.connection_lost(RuntimeError())
+
+        assert len(mock_reload.mock_calls) == 1
+
+        await hass.async_block_till_done()
+
+
+@pytest.mark.parametrize("radio_concurrency", [1, 2, 8])
+async def test_startup_concurrency_limit(
+    radio_concurrency: int,
+    hass: HomeAssistant,
+    zigpy_app_controller: ControllerApplication,
+    config_entry: MockConfigEntry,
+    zigpy_device_mock,
+):
+    """Test ZHA gateway limits concurrency on startup."""
+    config_entry.add_to_hass(hass)
+    zha_gateway = ZHAGateway(hass, {}, config_entry)
+
+    with patch(
+        "bellows.zigbee.application.ControllerApplication.new",
+        return_value=zigpy_app_controller,
+    ):
+        await zha_gateway.async_initialize()
+
+    for i in range(50):
+        zigpy_dev = zigpy_device_mock(
+            {
+                1: {
+                    SIG_EP_INPUT: [
+                        general.OnOff.cluster_id,
+                        general.LevelControl.cluster_id,
+                        lighting.Color.cluster_id,
+                        general.Groups.cluster_id,
+                    ],
+                    SIG_EP_OUTPUT: [],
+                    SIG_EP_TYPE: zha.DeviceType.COLOR_DIMMABLE_LIGHT,
+                    SIG_EP_PROFILE: zha.PROFILE_ID,
+                }
+            },
+            ieee=f"11:22:33:44:{i:08x}",
+            nwk=0x1234 + i,
+        )
+        zigpy_dev.node_desc.mac_capability_flags |= (
+            zigpy.zdo.types.NodeDescriptor.MACCapabilityFlags.MainsPowered
+        )
+
+        zha_gateway._async_get_or_create_device(zigpy_dev)
+
+    # Keep track of request concurrency during initialization
+    current_concurrency = 0
+    concurrencies = []
+
+    async def mock_send_packet(*args, **kwargs):
+        nonlocal current_concurrency
+
+        current_concurrency += 1
+        concurrencies.append(current_concurrency)
+
+        await asyncio.sleep(0.001)
+
+        current_concurrency -= 1
+        concurrencies.append(current_concurrency)
+
+    type(zha_gateway).radio_concurrency = PropertyMock(return_value=radio_concurrency)
+    assert zha_gateway.radio_concurrency == radio_concurrency
+
+    with patch(
+        "homeassistant.components.zha.core.device.ZHADevice.async_initialize",
+        side_effect=mock_send_packet,
+    ):
+        await zha_gateway.async_fetch_updated_state_mains()
+
+    await zha_gateway.shutdown()
+
+    # Make sure concurrency was always limited
+    assert current_concurrency == 0
+    assert min(concurrencies) == 0
+
+    if radio_concurrency > 1:
+        assert 1 <= max(concurrencies) < zha_gateway.radio_concurrency
+    else:
+        assert 1 == max(concurrencies) == zha_gateway.radio_concurrency

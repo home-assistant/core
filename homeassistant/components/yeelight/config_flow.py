@@ -1,7 +1,7 @@
 """Config flow for Yeelight integration."""
+
 from __future__ import annotations
 
-import asyncio
 import logging
 from urllib.parse import urlparse
 
@@ -10,12 +10,17 @@ import yeelight
 from yeelight.aio import AsyncBulb
 from yeelight.main import get_known_models
 
-from homeassistant import config_entries, exceptions
 from homeassistant.components import dhcp, onboarding, ssdp, zeroconf
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigEntryState,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_ID, CONF_MODEL, CONF_NAME
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 
 from .const import (
@@ -41,7 +46,7 @@ MODEL_UNKNOWN = "unknown"
 _LOGGER = logging.getLogger(__name__)
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class YeelightConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Yeelight."""
 
     VERSION = 1
@@ -60,19 +65,21 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_homekit(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle discovery from homekit."""
         self._discovered_ip = discovery_info.host
         return await self._async_handle_discovery()
 
-    async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
+    async def async_step_dhcp(
+        self, discovery_info: dhcp.DhcpServiceInfo
+    ) -> ConfigFlowResult:
         """Handle discovery from dhcp."""
         self._discovered_ip = discovery_info.ip
         return await self._async_handle_discovery()
 
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle discovery from zeroconf."""
         self._discovered_ip = discovery_info.host
         await self.async_set_unique_id(
@@ -80,7 +87,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
         return await self._async_handle_discovery_with_unique_id()
 
-    async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
+    async def async_step_ssdp(
+        self, discovery_info: ssdp.SsdpServiceInfo
+    ) -> ConfigFlowResult:
         """Handle discovery from ssdp."""
         self._discovered_ip = urlparse(discovery_info.ssdp_headers["location"]).hostname
         await self.async_set_unique_id(discovery_info.ssdp_headers["id"])
@@ -103,9 +112,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     ConfigEntryState.LOADED,
                 )
             if reload:
-                self.hass.async_create_task(
-                    self.hass.config_entries.async_reload(entry.entry_id)
-                )
+                self.hass.config_entries.async_schedule_reload(entry.entry_id)
             return self.async_abort(reason="already_configured")
         return await self._async_handle_discovery()
 
@@ -268,14 +275,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await bulb.async_listen(lambda _: True)
             await bulb.async_get_properties()
             await bulb.async_stop_listening()
-        except (asyncio.TimeoutError, yeelight.BulbException) as err:
+        except (TimeoutError, yeelight.BulbException) as err:
             _LOGGER.debug("Failed to get properties from %s: %s", host, err)
             raise CannotConnect from err
         _LOGGER.debug("Get properties: %s", bulb.last_properties)
         return MODEL_UNKNOWN
 
 
-class OptionsFlowHandler(config_entries.OptionsFlow):
+class OptionsFlowHandler(OptionsFlow):
     """Handle a option flow for Yeelight."""
 
     def __init__(self, config_entry: ConfigEntry) -> None:
@@ -326,5 +333,5 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         )
 
 
-class CannotConnect(exceptions.HomeAssistantError):
+class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""

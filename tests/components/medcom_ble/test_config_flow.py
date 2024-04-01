@@ -1,4 +1,5 @@
 """Test the Medcom Inspector BLE config flow."""
+
 from unittest.mock import patch
 
 from bleak import BleakError
@@ -34,14 +35,17 @@ async def test_bluetooth_discovery(hass: HomeAssistant) -> None:
     assert result["step_id"] == "bluetooth_confirm"
     assert result["description_placeholders"] == {"name": "InspectorBLE-D9A0"}
 
-    with patch_async_ble_device_from_address(MEDCOM_SERVICE_INFO), patch_medcom_ble(
-        MedcomBleDevice(
-            manufacturer="International Medcom",
-            model="Inspector BLE",
-            model_raw="Inspector-BLE",
-            name="Inspector BLE",
-            identifier="a0d95a570b00",
-        )
+    with (
+        patch_async_ble_device_from_address(MEDCOM_SERVICE_INFO),
+        patch_medcom_ble(
+            MedcomBleDevice(
+                manufacturer="International Medcom",
+                model="Inspector BLE",
+                model_raw="Inspector-BLE",
+                name="Inspector BLE",
+                identifier="a0d95a570b00",
+            )
+        ),
     ):
         with patch_async_setup_entry():
             result = await hass.config_entries.flow.async_configure(
@@ -88,17 +92,21 @@ async def test_user_setup(hass: HomeAssistant) -> None:
         "a0:d9:5a:57:0b:00": "InspectorBLE-D9A0"
     }
 
-    with patch_async_ble_device_from_address(MEDCOM_SERVICE_INFO), patch_medcom_ble(
-        MedcomBleDevice(
-            manufacturer="International Medcom",
-            model="Inspector BLE",
-            model_raw="Inspector-BLE",
-            name="Inspector BLE",
-            identifier="a0d95a570b00",
-        )
-    ), patch(
-        "homeassistant.components.medcom_ble.async_setup_entry",
-        return_value=True,
+    with (
+        patch_async_ble_device_from_address(MEDCOM_SERVICE_INFO),
+        patch_medcom_ble(
+            MedcomBleDevice(
+                manufacturer="International Medcom",
+                model="Inspector BLE",
+                model_raw="Inspector-BLE",
+                name="Inspector BLE",
+                identifier="a0d95a570b00",
+            )
+        ),
+        patch(
+            "homeassistant.components.medcom_ble.async_setup_entry",
+            return_value=True,
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_ADDRESS: "a0:d9:5a:57:0b:00"}
@@ -177,8 +185,9 @@ async def test_user_setup_unknown_error(hass: HomeAssistant) -> None:
     assert result["errors"] is None
     assert result["data_schema"] is not None
 
-    with patch_async_ble_device_from_address(MEDCOM_SERVICE_INFO), patch_medcom_ble(
-        None, Exception()
+    with (
+        patch_async_ble_device_from_address(MEDCOM_SERVICE_INFO),
+        patch_medcom_ble(None, Exception()),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_ADDRESS: "a0:d9:5a:57:0b:00"}
@@ -207,8 +216,9 @@ async def test_user_setup_unable_to_connect(hass: HomeAssistant) -> None:
         "a0:d9:5a:57:0b:00": "InspectorBLE-D9A0"
     }
 
-    with patch_async_ble_device_from_address(MEDCOM_SERVICE_INFO), patch_medcom_ble(
-        side_effect=BleakError("An error")
+    with (
+        patch_async_ble_device_from_address(MEDCOM_SERVICE_INFO),
+        patch_medcom_ble(side_effect=BleakError("An error")),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_ADDRESS: "a0:d9:5a:57:0b:00"}

@@ -1,4 +1,5 @@
 """Tests for Google Assistant SDK."""
+
 from datetime import timedelta
 import http
 import time
@@ -131,7 +132,9 @@ async def test_send_text_command(
     assert len(entries) == 1
     assert entries[0].state is ConfigEntryState.LOADED
     if configured_language_code:
-        entries[0].options = {"language_code": configured_language_code}
+        hass.config_entries.async_update_entry(
+            entries[0], options={"language_code": configured_language_code}
+        )
 
     command = "turn on home assistant unsupported device"
     with patch(
@@ -331,7 +334,7 @@ async def test_conversation_agent(
     entry = entries[0]
     assert entry.state is ConfigEntryState.LOADED
 
-    agent = await conversation._get_agent_manager(hass).async_get_agent(entry.entry_id)
+    agent = await conversation.get_agent_manager(hass).async_get_agent(entry.entry_id)
     assert agent.supported_languages == SUPPORTED_LANGUAGE_CODES
 
     text1 = "tell me a joke"

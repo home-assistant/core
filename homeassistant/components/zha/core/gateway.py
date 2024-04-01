@@ -1,4 +1,5 @@
 """Virtual gateway for Zigbee Home Automation."""
+
 from __future__ import annotations
 
 import asyncio
@@ -11,7 +12,7 @@ import itertools
 import logging
 import re
 import time
-from typing import TYPE_CHECKING, Any, NamedTuple, Self
+from typing import TYPE_CHECKING, Any, NamedTuple, Self, cast
 
 from zigpy.application import ControllerApplication
 from zigpy.config import (
@@ -29,13 +30,14 @@ from zigpy.state import State
 from zigpy.types.named import EUI64
 
 from homeassistant import __path__ as HOMEASSISTANT_PATH
-from homeassistant.components.system_log import LogEntry, _figure_out_source
+from homeassistant.components.system_log import LogEntry
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.async_ import gather_with_limited_concurrency
 
 from . import discovery
 from .const import (
@@ -46,7 +48,9 @@ from .const import (
     ATTR_SIGNATURE,
     ATTR_TYPE,
     CONF_RADIO_TYPE,
+    CONF_USE_THREAD,
     CONF_ZIGPY,
+    DATA_ZHA,
     DEBUG_COMP_BELLOWS,
     DEBUG_COMP_ZHA,
     DEBUG_COMP_ZIGPY,
@@ -129,9 +133,9 @@ class ZHAGateway:
         self._groups: dict[int, ZHAGroup] = {}
         self.application_controller: ControllerApplication = None
         self.coordinator_zha_device: ZHADevice = None  # type: ignore[assignment]
-        self._device_registry: collections.defaultdict[
-            EUI64, list[EntityReference]
-        ] = collections.defaultdict(list)
+        self._device_registry: collections.defaultdict[EUI64, list[EntityReference]] = (
+            collections.defaultdict(list)
+        )
         self._log_levels: dict[str, dict[str, int]] = {
             DEBUG_LEVEL_ORIGINAL: async_capture_log_levels(),
             DEBUG_LEVEL_CURRENT: async_capture_log_levels(),
@@ -140,7 +144,9 @@ class ZHAGateway:
         self._log_relay_handler = LogRelayHandler(hass, self)
         self.config_entry = config_entry
         self._unsubs: list[Callable[[], None]] = []
+
         self.shutting_down = False
+        self._reload_task: asyncio.Task | None = None
 
     def get_application_controller_data(self) -> tuple[ControllerApplication, dict]:
         """Get an uninitialized instance of a zigpy `ControllerApplication`."""
@@ -156,6 +162,15 @@ class ZHAGateway:
 
         if CONF_NWK_VALIDATE_SETTINGS not in app_config:
             app_config[CONF_NWK_VALIDATE_SETTINGS] = True
+
+        # The bellows UART thread sometimes propagates a cancellation into the main Core
+        # event loop, when a connection to a TCP coordinator fails in a specific way
+        if (
+            CONF_USE_THREAD not in app_config
+            and radio_type is RadioType.ezsp
+            and app_config[CONF_DEVICE][CONF_DEVICE_PATH].startswith("socket://")
+        ):
+            app_config[CONF_USE_THREAD] = False
 
         # Local import to avoid circular dependencies
         # pylint: disable-next=import-outside-toplevel
@@ -209,7 +224,7 @@ class ZHAGateway:
         zha_data.gateway = self
 
         self.coordinator_zha_device = self._async_get_or_create_device(
-            self._find_coordinator_device(), restored=True
+            self._find_coordinator_device()
         )
 
         self.async_load_devices()
@@ -220,12 +235,17 @@ class ZHAGateway:
 
     def connection_lost(self, exc: Exception) -> None:
         """Handle connection lost event."""
+        _LOGGER.debug("Connection to the radio was lost: %r", exc)
+
         if self.shutting_down:
             return
 
-        _LOGGER.debug("Connection to the radio was lost: %r", exc)
+        # Ensure we do not queue up multiple resets
+        if self._reload_task is not None:
+            _LOGGER.debug("Ignoring reset, one is already running")
+            return
 
-        self.hass.async_create_task(
+        self._reload_task = self.hass.async_create_task(
             self.hass.config_entries.async_reload(self.config_entry.entry_id)
         )
 
@@ -245,11 +265,10 @@ class ZHAGateway:
         """Restore ZHA devices from zigpy application state."""
 
         for zigpy_device in self.application_controller.devices.values():
-            zha_device = self._async_get_or_create_device(zigpy_device, restored=True)
+            zha_device = self._async_get_or_create_device(zigpy_device)
             delta_msg = "not known"
             if zha_device.last_seen is not None:
                 delta = round(time.time() - zha_device.last_seen)
-                zha_device.available = delta < zha_device.consider_unavailable_time
                 delta_msg = f"{str(timedelta(seconds=delta))} ago"
             _LOGGER.debug(
                 (
@@ -274,6 +293,39 @@ class ZHAGateway:
             # entity registry tied to the devices
             discovery.GROUP_PROBE.discover_group_entities(zha_group)
 
+    @property
+    def radio_concurrency(self) -> int:
+        """Maximum configured radio concurrency."""
+        return self.application_controller._concurrent_requests_semaphore.max_value  # pylint: disable=protected-access
+
+    async def async_fetch_updated_state_mains(self) -> None:
+        """Fetch updated state for mains powered devices."""
+        _LOGGER.debug("Fetching current state for mains powered devices")
+
+        now = time.time()
+
+        # Only delay startup to poll mains-powered devices that are online
+        online_devices = [
+            dev
+            for dev in self.devices.values()
+            if dev.is_mains_powered
+            and dev.last_seen is not None
+            and (now - dev.last_seen) < dev.consider_unavailable_time
+        ]
+
+        # Prioritize devices that have recently been contacted
+        online_devices.sort(key=lambda dev: cast(float, dev.last_seen), reverse=True)
+
+        # Make sure that we always leave slots for non-startup requests
+        max_poll_concurrency = max(1, self.radio_concurrency - 4)
+
+        await gather_with_limited_concurrency(
+            max_poll_concurrency,
+            *(dev.async_initialize(from_cache=False) for dev in online_devices),
+        )
+
+        _LOGGER.debug("completed fetching current state for mains powered devices")
+
     async def async_initialize_devices_and_entities(self) -> None:
         """Initialize devices and load entities."""
 
@@ -284,14 +336,9 @@ class ZHAGateway:
 
         async def fetch_updated_state() -> None:
             """Fetch updated state for mains powered devices."""
-            _LOGGER.debug("Fetching current state for mains powered devices")
-            await asyncio.gather(
-                *(
-                    dev.async_initialize(from_cache=False)
-                    for dev in self.devices.values()
-                    if dev.is_mains_powered
-                )
-            )
+            await self.async_fetch_updated_state_mains()
+            _LOGGER.debug("Allowing polled requests")
+            self.hass.data[DATA_ZHA].allow_polling = True
 
         # background the fetching of state for mains powered devices
         self.config_entry.async_create_background_task(
@@ -405,9 +452,9 @@ class ZHAGateway:
         self, device: ZHADevice, entity_refs: list[EntityReference] | None
     ) -> None:
         if entity_refs is not None:
-            remove_tasks: list[asyncio.Future[Any]] = []
-            for entity_ref in entity_refs:
-                remove_tasks.append(entity_ref.remove_future)
+            remove_tasks: list[asyncio.Future[Any]] = [
+                entity_ref.remove_future for entity_ref in entity_refs
+            ]
             if remove_tasks:
                 await asyncio.wait(remove_tasks)
 
@@ -575,11 +622,11 @@ class ZHAGateway:
 
     @callback
     def _async_get_or_create_device(
-        self, zigpy_device: zigpy.device.Device, restored: bool = False
+        self, zigpy_device: zigpy.device.Device
     ) -> ZHADevice:
         """Get or create a ZHA device."""
         if (zha_device := self._devices.get(zigpy_device.ieee)) is None:
-            zha_device = ZHADevice.new(self.hass, zigpy_device, self, restored)
+            zha_device = ZHADevice.new(self.hass, zigpy_device, self)
             self._devices[zigpy_device.ieee] = zha_device
 
             device_registry = dr.async_get(self.hass)
@@ -736,15 +783,17 @@ class ZHAGateway:
             _LOGGER.debug("Group: 0x%04x could not be found", group_id)
             return
         if group.members:
-            tasks = []
-            for member in group.members:
-                tasks.append(member.async_remove_from_group())
+            tasks = [member.async_remove_from_group() for member in group.members]
             if tasks:
                 await asyncio.gather(*tasks)
         self.application_controller.groups.pop(group_id)
 
     async def shutdown(self) -> None:
         """Stop ZHA Controller Application."""
+        if self.shutting_down:
+            _LOGGER.debug("Ignoring duplicate shutdown event")
+            return
+
         _LOGGER.debug("Shutting down ZHA ControllerApplication")
         self.shutting_down = True
 
@@ -820,10 +869,9 @@ class LogRelayHandler(logging.Handler):
 
     def emit(self, record: LogRecord) -> None:
         """Relay log message via dispatcher."""
-        if record.levelno >= logging.WARN:
-            entry = LogEntry(record, _figure_out_source(record, self.paths_re))
-        else:
-            entry = LogEntry(record, (record.pathname, record.lineno))
+        entry = LogEntry(
+            record, self.paths_re, figure_out_source=record.levelno >= logging.WARNING
+        )
         async_dispatcher_send(
             self.hass,
             ZHA_GW_MSG,

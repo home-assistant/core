@@ -1,9 +1,10 @@
 """An abstract class common to all Bond entities."""
+
 from __future__ import annotations
 
 from abc import abstractmethod
-from asyncio import Lock, TimeoutError as AsyncIOTimeoutError
-from datetime import datetime, timedelta
+from asyncio import Lock
+from datetime import datetime
 import logging
 
 from aiohttp import ClientError
@@ -27,8 +28,8 @@ from .utils import BondDevice, BondHub
 
 _LOGGER = logging.getLogger(__name__)
 
-_FALLBACK_SCAN_INTERVAL = timedelta(seconds=10)
-_BPUP_ALIVE_SCAN_INTERVAL = timedelta(seconds=60)
+_FALLBACK_SCAN_INTERVAL = 10
+_BPUP_ALIVE_SCAN_INTERVAL = 60
 
 
 class BondEntity(Entity):
@@ -139,7 +140,7 @@ class BondEntity(Entity):
         """Fetch via the API."""
         try:
             state: dict = await self._hub.bond.device_state(self._device_id)
-        except (ClientError, AsyncIOTimeoutError, OSError) as error:
+        except (ClientError, TimeoutError, OSError) as error:
             if self.available:
                 _LOGGER.warning(
                     "Entity %s has become unavailable", self.entity_id, exc_info=error

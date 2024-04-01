@@ -1,4 +1,5 @@
 """Provide common SFR Box fixtures."""
+
 from collections.abc import Generator
 import json
 from unittest.mock import AsyncMock, patch

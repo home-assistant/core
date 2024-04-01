@@ -1,7 +1,7 @@
 """Support for Blink Alarm Control Panel."""
+
 from __future__ import annotations
 
-import asyncio
 import logging
 
 from blinkpy.blinkpy import Blink, BlinkSyncModule
@@ -27,8 +27,6 @@ from .coordinator import BlinkUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-ICON = "mdi:security"
-
 
 async def async_setup_entry(
     hass: HomeAssistant, config: ConfigEntry, async_add_entities: AddEntitiesCallback
@@ -47,7 +45,6 @@ class BlinkSyncModuleHA(
 ):
     """Representation of a Blink Alarm Control Panel."""
 
-    _attr_icon = ICON
     _attr_supported_features = AlarmControlPanelEntityFeature.ARM_AWAY
     _attr_has_entity_name = True
     _attr_name = None
@@ -65,6 +62,7 @@ class BlinkSyncModuleHA(
             name=f"{DOMAIN} {name}",
             manufacturer=DEFAULT_BRAND,
             serial_number=sync.serial,
+            sw_version=sync.version,
         )
         self._update_attr()
 
@@ -90,7 +88,7 @@ class BlinkSyncModuleHA(
         try:
             await self.sync.async_arm(False)
 
-        except asyncio.TimeoutError as er:
+        except TimeoutError as er:
             raise HomeAssistantError("Blink failed to disarm camera") from er
 
         await self.coordinator.async_refresh()
@@ -100,7 +98,7 @@ class BlinkSyncModuleHA(
         try:
             await self.sync.async_arm(True)
 
-        except asyncio.TimeoutError as er:
+        except TimeoutError as er:
             raise HomeAssistantError("Blink failed to arm camera away") from er
 
         await self.coordinator.async_refresh()

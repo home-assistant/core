@@ -1,4 +1,5 @@
 """Diagnostics support for Sensibo."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -14,6 +15,7 @@ TO_REDACT = {
     "location",
     "ssid",
     "id",
+    "mac",
     "macAddress",
     "parentDeviceUid",
     "qrId",

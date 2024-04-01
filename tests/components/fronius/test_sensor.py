@@ -1,4 +1,5 @@
 """Tests for the Fronius sensor platform."""
+
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
@@ -370,6 +371,7 @@ async def test_gen24(
 async def test_gen24_storage(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
+    device_registry: dr.DeviceRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test Fronius Gen24 inverter with BYD battery and Ohmpilot entities."""
@@ -465,8 +467,6 @@ async def test_gen24_storage(
     assert_state("sensor.byd_battery_box_premium_hv_dc_voltage", 0.0)
 
     # Devices
-    device_registry = dr.async_get(hass)
-
     solar_net = device_registry.async_get_device(
         identifiers={(DOMAIN, "solar_net_12345678")}
     )
@@ -501,6 +501,7 @@ async def test_gen24_storage(
 async def test_primo_s0(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
+    device_registry: dr.DeviceRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test Fronius Primo dual inverter with S0 meter entities."""
@@ -573,8 +574,6 @@ async def test_primo_s0(
     assert_state("sensor.solarnet_energy_year", 11128933.25)
 
     # Devices
-    device_registry = dr.async_get(hass)
-
     solar_net = device_registry.async_get_device(
         identifiers={(DOMAIN, "solar_net_123.4567890")}
     )

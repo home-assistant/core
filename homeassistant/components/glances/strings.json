@@ -7,7 +7,6 @@
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
           "port": "[%key:common::config_flow::data::port%]",
-          "version": "Glances API Version (2 or 3)",
           "ssl": "[%key:common::config_flow::data::ssl%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
@@ -29,6 +28,88 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "disk_usage": {
+        "name": "{sensor_label} disk usage"
+      },
+      "disk_used": {
+        "name": "{sensor_label} disk used"
+      },
+      "disk_free": {
+        "name": "{sensor_label} disk free"
+      },
+      "memory_usage": {
+        "name": "Memory usage"
+      },
+      "memory_use": {
+        "name": "Memory use"
+      },
+      "memory_free": {
+        "name": "Memory free"
+      },
+      "swap_usage": {
+        "name": "Swap usage"
+      },
+      "swap_use": {
+        "name": "Swap use"
+      },
+      "swap_free": {
+        "name": "Swap free"
+      },
+      "processor_load": {
+        "name": "CPU load"
+      },
+      "process_running": {
+        "name": "Running"
+      },
+      "process_total": {
+        "name": "Total"
+      },
+      "process_threads": {
+        "name": "Threads"
+      },
+      "process_sleeping": {
+        "name": "Sleeping"
+      },
+      "cpu_usage": {
+        "name": "CPU usage"
+      },
+      "temperature": {
+        "name": "{sensor_label} temperature"
+      },
+      "fan_speed": {
+        "name": "{sensor_label} fan speed"
+      },
+      "charge": {
+        "name": "{sensor_label} charge"
+      },
+      "container_active": {
+        "name": "Containers active"
+      },
+      "container_cpu_usage": {
+        "name": "Containers CPU usage"
+      },
+      "container_memory_used": {
+        "name": "Containers memory used"
+      },
+      "raid_available": {
+        "name": "{sensor_label} available"
+      },
+      "raid_used": {
+        "name": "{sensor_label} used"
+      },
+      "uptime": {
+        "name": "Uptime"
+      }
+    }
+  },
+  "issues": {
+    "deprecated_version": {
+      "title": "Glances servers with version 2 is deprecated",
+      "description": "Glances servers with version 2 is deprecated and will not be supported in future versions of HA. It is recommended to update your server to Glances version 3 then reload the integration."
     }
   }
 }

@@ -1,4 +1,5 @@
 """Config flow for Suez Water integration."""
+
 from __future__ import annotations
 
 import logging
@@ -8,9 +9,8 @@ from pysuez import SuezClient
 from pysuez.client import PySuezError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import CONF_COUNTER_ID, DOMAIN
@@ -40,8 +40,8 @@ def validate_input(data: dict[str, Any]) -> None:
         )
         if not client.check_credentials():
             raise InvalidAuth
-    except PySuezError:
-        raise CannotConnect
+    except PySuezError as ex:
+        raise CannotConnect from ex
 
 
 class SuezWaterConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -51,7 +51,7 @@ class SuezWaterConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
@@ -75,7 +75,7 @@ class SuezWaterConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
 
-    async def async_step_import(self, user_input: dict[str, Any]) -> FlowResult:
+    async def async_step_import(self, user_input: dict[str, Any]) -> ConfigFlowResult:
         """Import the yaml config."""
         await self.async_set_unique_id(user_input[CONF_USERNAME])
         self._abort_if_unique_id_configured()

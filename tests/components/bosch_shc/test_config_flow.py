@@ -1,4 +1,5 @@
 """Test the Bosch SHC config flow."""
+
 from ipaddress import ip_address
 from unittest.mock import PropertyMock, mock_open, patch
 
@@ -43,17 +44,21 @@ async def test_form_user(hass: HomeAssistant, mock_zeroconf: None) -> None:
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-    with patch(
-        "boschshcpy.session.SHCSession.mdns_info",
-        return_value=SHCInformation,
-    ), patch(
-        "boschshcpy.information.SHCInformation.name",
-        new_callable=PropertyMock,
-        return_value="shc012345",
-    ), patch(
-        "boschshcpy.information.SHCInformation.unique_id",
-        new_callable=PropertyMock,
-        return_value="test-mac",
+    with (
+        patch(
+            "boschshcpy.session.SHCSession.mdns_info",
+            return_value=SHCInformation,
+        ),
+        patch(
+            "boschshcpy.information.SHCInformation.name",
+            new_callable=PropertyMock,
+            return_value="shc012345",
+        ),
+        patch(
+            "boschshcpy.information.SHCInformation.unique_id",
+            new_callable=PropertyMock,
+            return_value="test-mac",
+        ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -64,19 +69,23 @@ async def test_form_user(hass: HomeAssistant, mock_zeroconf: None) -> None:
     assert result2["step_id"] == "credentials"
     assert result2["errors"] == {}
 
-    with patch(
-        "boschshcpy.register_client.SHCRegisterClient.register",
-        return_value={
-            "token": "abc:123",
-            "cert": b"content_cert",
-            "key": b"content_key",
-        },
-    ), patch("os.mkdir"), patch("builtins.open"), patch(
-        "boschshcpy.session.SHCSession.authenticate"
-    ) as mock_authenticate, patch(
-        "homeassistant.components.bosch_shc.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "boschshcpy.register_client.SHCRegisterClient.register",
+            return_value={
+                "token": "abc:123",
+                "cert": b"content_cert",
+                "key": b"content_key",
+            },
+        ),
+        patch("os.mkdir"),
+        patch("homeassistant.components.bosch_shc.config_flow.open"),
+        patch("boschshcpy.session.SHCSession.authenticate") as mock_authenticate,
+        patch(
+            "homeassistant.components.bosch_shc.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
             {"password": "test"},
@@ -149,17 +158,21 @@ async def test_form_pairing_error(hass: HomeAssistant, mock_zeroconf: None) -> N
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "boschshcpy.session.SHCSession.mdns_info",
-        return_value=SHCInformation,
-    ), patch(
-        "boschshcpy.information.SHCInformation.name",
-        new_callable=PropertyMock,
-        return_value="shc012345",
-    ), patch(
-        "boschshcpy.information.SHCInformation.unique_id",
-        new_callable=PropertyMock,
-        return_value="test-mac",
+    with (
+        patch(
+            "boschshcpy.session.SHCSession.mdns_info",
+            return_value=SHCInformation,
+        ),
+        patch(
+            "boschshcpy.information.SHCInformation.name",
+            new_callable=PropertyMock,
+            return_value="shc012345",
+        ),
+        patch(
+            "boschshcpy.information.SHCInformation.unique_id",
+            new_callable=PropertyMock,
+            return_value="test-mac",
+        ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -191,17 +204,21 @@ async def test_form_user_invalid_auth(hass: HomeAssistant, mock_zeroconf: None) 
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "boschshcpy.session.SHCSession.mdns_info",
-        return_value=SHCInformation,
-    ), patch(
-        "boschshcpy.information.SHCInformation.name",
-        new_callable=PropertyMock,
-        return_value="shc012345",
-    ), patch(
-        "boschshcpy.information.SHCInformation.unique_id",
-        new_callable=PropertyMock,
-        return_value="test-mac",
+    with (
+        patch(
+            "boschshcpy.session.SHCSession.mdns_info",
+            return_value=SHCInformation,
+        ),
+        patch(
+            "boschshcpy.information.SHCInformation.name",
+            new_callable=PropertyMock,
+            return_value="shc012345",
+        ),
+        patch(
+            "boschshcpy.information.SHCInformation.unique_id",
+            new_callable=PropertyMock,
+            return_value="test-mac",
+        ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -212,16 +229,21 @@ async def test_form_user_invalid_auth(hass: HomeAssistant, mock_zeroconf: None) 
     assert result2["step_id"] == "credentials"
     assert result2["errors"] == {}
 
-    with patch(
-        "boschshcpy.register_client.SHCRegisterClient.register",
-        return_value={
-            "token": "abc:123",
-            "cert": b"content_cert",
-            "key": b"content_key",
-        },
-    ), patch("os.mkdir"), patch("builtins.open"), patch(
-        "boschshcpy.session.SHCSession.authenticate",
-        side_effect=SHCAuthenticationError,
+    with (
+        patch(
+            "boschshcpy.register_client.SHCRegisterClient.register",
+            return_value={
+                "token": "abc:123",
+                "cert": b"content_cert",
+                "key": b"content_key",
+            },
+        ),
+        patch("os.mkdir"),
+        patch("homeassistant.components.bosch_shc.config_flow.open"),
+        patch(
+            "boschshcpy.session.SHCSession.authenticate",
+            side_effect=SHCAuthenticationError,
+        ),
     ):
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
@@ -242,17 +264,21 @@ async def test_form_validate_connection_error(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "boschshcpy.session.SHCSession.mdns_info",
-        return_value=SHCInformation,
-    ), patch(
-        "boschshcpy.information.SHCInformation.name",
-        new_callable=PropertyMock,
-        return_value="shc012345",
-    ), patch(
-        "boschshcpy.information.SHCInformation.unique_id",
-        new_callable=PropertyMock,
-        return_value="test-mac",
+    with (
+        patch(
+            "boschshcpy.session.SHCSession.mdns_info",
+            return_value=SHCInformation,
+        ),
+        patch(
+            "boschshcpy.information.SHCInformation.name",
+            new_callable=PropertyMock,
+            return_value="shc012345",
+        ),
+        patch(
+            "boschshcpy.information.SHCInformation.unique_id",
+            new_callable=PropertyMock,
+            return_value="test-mac",
+        ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -263,16 +289,21 @@ async def test_form_validate_connection_error(
     assert result2["step_id"] == "credentials"
     assert result2["errors"] == {}
 
-    with patch(
-        "boschshcpy.register_client.SHCRegisterClient.register",
-        return_value={
-            "token": "abc:123",
-            "cert": b"content_cert",
-            "key": b"content_key",
-        },
-    ), patch("os.mkdir"), patch("builtins.open"), patch(
-        "boschshcpy.session.SHCSession.authenticate",
-        side_effect=SHCConnectionError,
+    with (
+        patch(
+            "boschshcpy.register_client.SHCRegisterClient.register",
+            return_value={
+                "token": "abc:123",
+                "cert": b"content_cert",
+                "key": b"content_key",
+            },
+        ),
+        patch("os.mkdir"),
+        patch("homeassistant.components.bosch_shc.config_flow.open"),
+        patch(
+            "boschshcpy.session.SHCSession.authenticate",
+            side_effect=SHCConnectionError,
+        ),
     ):
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
@@ -293,17 +324,21 @@ async def test_form_validate_session_error(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "boschshcpy.session.SHCSession.mdns_info",
-        return_value=SHCInformation,
-    ), patch(
-        "boschshcpy.information.SHCInformation.name",
-        new_callable=PropertyMock,
-        return_value="shc012345",
-    ), patch(
-        "boschshcpy.information.SHCInformation.unique_id",
-        new_callable=PropertyMock,
-        return_value="test-mac",
+    with (
+        patch(
+            "boschshcpy.session.SHCSession.mdns_info",
+            return_value=SHCInformation,
+        ),
+        patch(
+            "boschshcpy.information.SHCInformation.name",
+            new_callable=PropertyMock,
+            return_value="shc012345",
+        ),
+        patch(
+            "boschshcpy.information.SHCInformation.unique_id",
+            new_callable=PropertyMock,
+            return_value="test-mac",
+        ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -314,16 +349,21 @@ async def test_form_validate_session_error(
     assert result2["step_id"] == "credentials"
     assert result2["errors"] == {}
 
-    with patch(
-        "boschshcpy.register_client.SHCRegisterClient.register",
-        return_value={
-            "token": "abc:123",
-            "cert": b"content_cert",
-            "key": b"content_key",
-        },
-    ), patch("os.mkdir"), patch("builtins.open"), patch(
-        "boschshcpy.session.SHCSession.authenticate",
-        side_effect=SHCSessionError(""),
+    with (
+        patch(
+            "boschshcpy.register_client.SHCRegisterClient.register",
+            return_value={
+                "token": "abc:123",
+                "cert": b"content_cert",
+                "key": b"content_key",
+            },
+        ),
+        patch("os.mkdir"),
+        patch("homeassistant.components.bosch_shc.config_flow.open"),
+        patch(
+            "boschshcpy.session.SHCSession.authenticate",
+            side_effect=SHCSessionError(""),
+        ),
     ):
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
@@ -344,17 +384,21 @@ async def test_form_validate_exception(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "boschshcpy.session.SHCSession.mdns_info",
-        return_value=SHCInformation,
-    ), patch(
-        "boschshcpy.information.SHCInformation.name",
-        new_callable=PropertyMock,
-        return_value="shc012345",
-    ), patch(
-        "boschshcpy.information.SHCInformation.unique_id",
-        new_callable=PropertyMock,
-        return_value="test-mac",
+    with (
+        patch(
+            "boschshcpy.session.SHCSession.mdns_info",
+            return_value=SHCInformation,
+        ),
+        patch(
+            "boschshcpy.information.SHCInformation.name",
+            new_callable=PropertyMock,
+            return_value="shc012345",
+        ),
+        patch(
+            "boschshcpy.information.SHCInformation.unique_id",
+            new_callable=PropertyMock,
+            return_value="test-mac",
+        ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -365,16 +409,21 @@ async def test_form_validate_exception(
     assert result2["step_id"] == "credentials"
     assert result2["errors"] == {}
 
-    with patch(
-        "boschshcpy.register_client.SHCRegisterClient.register",
-        return_value={
-            "token": "abc:123",
-            "cert": b"content_cert",
-            "key": b"content_key",
-        },
-    ), patch("os.mkdir"), patch("builtins.open"), patch(
-        "boschshcpy.session.SHCSession.authenticate",
-        side_effect=Exception,
+    with (
+        patch(
+            "boschshcpy.register_client.SHCRegisterClient.register",
+            return_value={
+                "token": "abc:123",
+                "cert": b"content_cert",
+                "key": b"content_key",
+            },
+        ),
+        patch("os.mkdir"),
+        patch("homeassistant.components.bosch_shc.config_flow.open"),
+        patch(
+            "boschshcpy.session.SHCSession.authenticate",
+            side_effect=Exception,
+        ),
     ):
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
@@ -401,17 +450,21 @@ async def test_form_already_configured(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "boschshcpy.session.SHCSession.mdns_info",
-        return_value=SHCInformation,
-    ), patch(
-        "boschshcpy.information.SHCInformation.name",
-        new_callable=PropertyMock,
-        return_value="shc012345",
-    ), patch(
-        "boschshcpy.information.SHCInformation.unique_id",
-        new_callable=PropertyMock,
-        return_value="test-mac",
+    with (
+        patch(
+            "boschshcpy.session.SHCSession.mdns_info",
+            return_value=SHCInformation,
+        ),
+        patch(
+            "boschshcpy.information.SHCInformation.name",
+            new_callable=PropertyMock,
+            return_value="shc012345",
+        ),
+        patch(
+            "boschshcpy.information.SHCInformation.unique_id",
+            new_callable=PropertyMock,
+            return_value="test-mac",
+        ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -428,17 +481,21 @@ async def test_form_already_configured(
 async def test_zeroconf(hass: HomeAssistant, mock_zeroconf: None) -> None:
     """Test we get the form."""
 
-    with patch(
-        "boschshcpy.session.SHCSession.mdns_info",
-        return_value=SHCInformation,
-    ), patch(
-        "boschshcpy.information.SHCInformation.name",
-        new_callable=PropertyMock,
-        return_value="shc012345",
-    ), patch(
-        "boschshcpy.information.SHCInformation.unique_id",
-        new_callable=PropertyMock,
-        return_value="test-mac",
+    with (
+        patch(
+            "boschshcpy.session.SHCSession.mdns_info",
+            return_value=SHCInformation,
+        ),
+        patch(
+            "boschshcpy.information.SHCInformation.name",
+            new_callable=PropertyMock,
+            return_value="shc012345",
+        ),
+        patch(
+            "boschshcpy.information.SHCInformation.unique_id",
+            new_callable=PropertyMock,
+            return_value="test-mac",
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -462,19 +519,25 @@ async def test_zeroconf(hass: HomeAssistant, mock_zeroconf: None) -> None:
     assert result2["type"] == "form"
     assert result2["step_id"] == "credentials"
 
-    with patch(
-        "boschshcpy.register_client.SHCRegisterClient.register",
-        return_value={
-            "token": "abc:123",
-            "cert": b"content_cert",
-            "key": b"content_key",
-        },
-    ), patch("os.mkdir"), patch("builtins.open"), patch(
-        "boschshcpy.session.SHCSession.authenticate",
-    ), patch(
-        "homeassistant.components.bosch_shc.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "boschshcpy.register_client.SHCRegisterClient.register",
+            return_value={
+                "token": "abc:123",
+                "cert": b"content_cert",
+                "key": b"content_key",
+            },
+        ),
+        patch("os.mkdir"),
+        patch("homeassistant.components.bosch_shc.config_flow.open"),
+        patch(
+            "boschshcpy.session.SHCSession.authenticate",
+        ),
+        patch(
+            "homeassistant.components.bosch_shc.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
             {"password": "test"},
@@ -503,17 +566,21 @@ async def test_zeroconf_already_configured(
     )
     entry.add_to_hass(hass)
 
-    with patch(
-        "boschshcpy.session.SHCSession.mdns_info",
-        return_value=SHCInformation,
-    ), patch(
-        "boschshcpy.information.SHCInformation.name",
-        new_callable=PropertyMock,
-        return_value="shc012345",
-    ), patch(
-        "boschshcpy.information.SHCInformation.unique_id",
-        new_callable=PropertyMock,
-        return_value="test-mac",
+    with (
+        patch(
+            "boschshcpy.session.SHCSession.mdns_info",
+            return_value=SHCInformation,
+        ),
+        patch(
+            "boschshcpy.information.SHCInformation.name",
+            new_callable=PropertyMock,
+            return_value="shc012345",
+        ),
+        patch(
+            "boschshcpy.information.SHCInformation.unique_id",
+            new_callable=PropertyMock,
+            return_value="test-mac",
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -586,17 +653,21 @@ async def test_reauth(hass: HomeAssistant, mock_zeroconf: None) -> None:
     assert result["type"] == "form"
     assert result["step_id"] == "reauth_confirm"
 
-    with patch(
-        "boschshcpy.session.SHCSession.mdns_info",
-        return_value=SHCInformation,
-    ), patch(
-        "boschshcpy.information.SHCInformation.name",
-        new_callable=PropertyMock,
-        return_value="shc012345",
-    ), patch(
-        "boschshcpy.information.SHCInformation.unique_id",
-        new_callable=PropertyMock,
-        return_value="test-mac",
+    with (
+        patch(
+            "boschshcpy.session.SHCSession.mdns_info",
+            return_value=SHCInformation,
+        ),
+        patch(
+            "boschshcpy.information.SHCInformation.name",
+            new_callable=PropertyMock,
+            return_value="shc012345",
+        ),
+        patch(
+            "boschshcpy.information.SHCInformation.unique_id",
+            new_callable=PropertyMock,
+            return_value="test-mac",
+        ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -607,19 +678,23 @@ async def test_reauth(hass: HomeAssistant, mock_zeroconf: None) -> None:
         assert result2["step_id"] == "credentials"
         assert result2["errors"] == {}
 
-    with patch(
-        "boschshcpy.register_client.SHCRegisterClient.register",
-        return_value={
-            "token": "abc:123",
-            "cert": b"content_cert",
-            "key": b"content_key",
-        },
-    ), patch("os.mkdir"), patch("builtins.open"), patch(
-        "boschshcpy.session.SHCSession.authenticate"
-    ), patch(
-        "homeassistant.components.bosch_shc.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "boschshcpy.register_client.SHCRegisterClient.register",
+            return_value={
+                "token": "abc:123",
+                "cert": b"content_cert",
+                "key": b"content_key",
+            },
+        ),
+        patch("os.mkdir"),
+        patch("homeassistant.components.bosch_shc.config_flow.open"),
+        patch("boschshcpy.session.SHCSession.authenticate"),
+        patch(
+            "homeassistant.components.bosch_shc.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
             {"password": "test"},
@@ -641,7 +716,12 @@ async def test_tls_assets_writer(hass: HomeAssistant) -> None:
         "cert": b"content_cert",
         "key": b"content_key",
     }
-    with patch("os.mkdir"), patch("builtins.open", mock_open()) as mocked_file:
+    with (
+        patch("os.mkdir"),
+        patch(
+            "homeassistant.components.bosch_shc.config_flow.open", mock_open()
+        ) as mocked_file,
+    ):
         write_tls_asset(hass, CONF_SHC_CERT, assets["cert"])
         mocked_file.assert_called_with(
             hass.config.path(DOMAIN, CONF_SHC_CERT), "w", encoding="utf8"

@@ -1,0 +1,27 @@
+{
+  "entity_component": {
+    "_": {
+      "default": "mdi:toggle-switch-variant",
+      "state": {
+        "off": "mdi:toggle-switch-variant-off"
+      }
+    },
+    "switch": {
+      "default": "mdi:toggle-switch-variant",
+      "state": {
+        "off": "mdi:toggle-switch-variant-off"
+      }
+    },
+    "outlet": {
+      "default": "mdi:power-plug",
+      "state": {
+        "off": "mdi:power-plug-off"
+      }
+    }
+  },
+  "services": {
+    "toggle": "mdi:toggle-switch-variant",
+    "turn_off": "mdi:toggle-switch-variant-off",
+    "turn_on": "mdi:toggle-switch-variant"
+  }
+}

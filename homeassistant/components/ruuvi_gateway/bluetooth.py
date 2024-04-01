@@ -1,4 +1,5 @@
 """Bluetooth support for Ruuvi Gateway."""
+
 from __future__ import annotations
 
 import logging
@@ -84,7 +85,7 @@ def async_connect_scanner(
         coordinator=coordinator,
     )
     unload_callbacks = [
-        async_register_scanner(hass, scanner, connectable=False),
+        async_register_scanner(hass, scanner),
         scanner.async_setup(),
         scanner.start_polling(),
     ]

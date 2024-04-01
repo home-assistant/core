@@ -1,4 +1,5 @@
 """Config flow for Volvo On Call integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -8,14 +9,13 @@ from typing import Any
 import voluptuous as vol
 from volvooncall import Connection
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_PASSWORD,
     CONF_REGION,
     CONF_UNIT_SYSTEM,
     CONF_USERNAME,
 )
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from . import VolvoData
@@ -31,15 +31,15 @@ from .errors import InvalidAuth
 _LOGGER = logging.getLogger(__name__)
 
 
-class VolvoOnCallConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class VolvoOnCallConfigFlow(ConfigFlow, domain=DOMAIN):
     """VolvoOnCall config flow."""
 
     VERSION = 1
-    _reauth_entry: config_entries.ConfigEntry | None = None
+    _reauth_entry: ConfigEntry | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle user step."""
         errors = {}
         defaults = {
@@ -106,7 +106,9 @@ class VolvoOnCallConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=user_schema, errors=errors
         )
 
-    async def async_step_reauth(self, user_input: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, user_input: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
         self._reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]

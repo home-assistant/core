@@ -1,4 +1,5 @@
 """Coordinators for the Shelly integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -7,10 +8,9 @@ from dataclasses import dataclass
 from datetime import timedelta
 from typing import Any, Generic, TypeVar, cast
 
-import aioshelly
 from aioshelly.ble import async_ensure_ble_enabled, async_stop_scanner
 from aioshelly.block_device import BlockDevice, BlockUpdateType
-from aioshelly.const import MODEL_VALVE
+from aioshelly.const import MODEL_NAMES, MODEL_VALVE
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
 from aioshelly.rpc_device import RpcDevice, RpcUpdateType
 
@@ -57,7 +57,13 @@ from .const import (
     UPDATE_PERIOD_MULTIPLIER,
     BLEScannerMode,
 )
-from .utils import get_rpc_device_wakeup_period, update_device_fw_info
+from .utils import (
+    async_shutdown_device,
+    get_device_entry_gen,
+    get_http_port,
+    get_rpc_device_wakeup_period,
+    update_device_fw_info,
+)
 
 _DeviceT = TypeVar("_DeviceT", bound="BlockDevice|RpcDevice")
 
@@ -133,10 +139,10 @@ class ShellyCoordinatorBase(DataUpdateCoordinator[None], Generic[_DeviceT]):
             name=self.name,
             connections={(CONNECTION_NETWORK_MAC, self.mac)},
             manufacturer="Shelly",
-            model=aioshelly.const.MODEL_NAMES.get(self.model, self.model),
+            model=MODEL_NAMES.get(self.model, self.model),
             sw_version=self.sw_version,
-            hw_version=f"gen{self.device.gen} ({self.model})",
-            configuration_url=f"http://{self.entry.data[CONF_HOST]}",
+            hw_version=f"gen{get_device_entry_gen(self.entry)} ({self.model})",
+            configuration_url=f"http://{self.entry.data[CONF_HOST]}:{get_http_port(self.entry.data)}",
         )
         self.device_id = device_entry.id
 
@@ -145,6 +151,14 @@ class ShellyCoordinatorBase(DataUpdateCoordinator[None], Generic[_DeviceT]):
         self._debounced_reload.async_cancel()
         LOGGER.debug("Reloading entry %s", self.name)
         await self.hass.config_entries.async_reload(self.entry.entry_id)
+
+    async def async_shutdown_device_and_start_reauth(self) -> None:
+        """Shutdown Shelly device and start reauth flow."""
+        # not running disconnect events since we have auth error
+        # and won't be able to send commands to the device
+        self.last_update_success = False
+        await async_shutdown_device(self.device)
+        self.entry.async_start_reauth(self.hass)
 
 
 class ShellyBlockCoordinator(ShellyCoordinatorBase[BlockDevice]):
@@ -175,7 +189,9 @@ class ShellyBlockCoordinator(ShellyCoordinatorBase[BlockDevice]):
             self.async_add_listener(self._async_device_updates_handler)
         )
         entry.async_on_unload(
-            hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._handle_ha_stop)
+            hass.bus.async_listen_once(
+                EVENT_HOMEASSISTANT_STOP, self._handle_ha_stop, run_immediately=True
+            )
         )
 
     @callback
@@ -213,7 +229,7 @@ class ShellyBlockCoordinator(ShellyCoordinatorBase[BlockDevice]):
         # Check for input events and config change
         cfg_changed = 0
         for block in self.device.blocks:
-            if block.type == "device":
+            if block.type == "device" and block.cfgChanged is not None:
                 cfg_changed = block.cfgChanged
 
             # Shelly TRV sends information about changing the configuration for no
@@ -276,7 +292,7 @@ class ShellyBlockCoordinator(ShellyCoordinatorBase[BlockDevice]):
                 self.name,
                 ENTRY_RELOAD_COOLDOWN,
             )
-            self.hass.async_create_task(self._debounced_reload.async_call())
+            self._debounced_reload.async_schedule_call()
         self._last_cfg_changed = cfg_changed
 
     async def _async_update_data(self) -> None:
@@ -293,7 +309,7 @@ class ShellyBlockCoordinator(ShellyCoordinatorBase[BlockDevice]):
         except DeviceConnectionError as err:
             raise UpdateFailed(f"Error fetching data: {repr(err)}") from err
         except InvalidAuthError:
-            self.entry.async_start_reauth(self.hass)
+            await self.async_shutdown_device_and_start_reauth()
 
     @callback
     def _async_handle_update(
@@ -377,7 +393,7 @@ class ShellyRestCoordinator(ShellyCoordinatorBase[BlockDevice]):
         except DeviceConnectionError as err:
             raise UpdateFailed(f"Error fetching data: {repr(err)}") from err
         except InvalidAuthError:
-            self.entry.async_start_reauth(self.hass)
+            await self.async_shutdown_device_and_start_reauth()
         else:
             update_device_fw_info(self.hass, self.device, self.entry)
 
@@ -404,7 +420,9 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         self._input_event_listeners: list[Callable[[dict[str, Any]], None]] = []
 
         entry.async_on_unload(
-            hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._handle_ha_stop)
+            hass.bus.async_listen_once(
+                EVENT_HOMEASSISTANT_STOP, self._handle_ha_stop, run_immediately=True
+            )
         )
         entry.async_on_unload(entry.add_update_listener(self._async_update_listener))
 
@@ -493,7 +511,7 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
                     self.name,
                     ENTRY_RELOAD_COOLDOWN,
                 )
-                self.hass.async_create_task(self._debounced_reload.async_call())
+                self._debounced_reload.async_schedule_call()
             elif event_type in RPC_INPUTS_EVENTS_TYPES:
                 for event_callback in self._input_event_listeners:
                     event_callback(event)
@@ -531,7 +549,7 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         except DeviceConnectionError as err:
             raise UpdateFailed(f"Device disconnected: {repr(err)}") from err
         except InvalidAuthError:
-            self.entry.async_start_reauth(self.hass)
+            await self.async_shutdown_device_and_start_reauth()
 
     async def _async_disconnected(self) -> None:
         """Handle device disconnected."""
@@ -599,10 +617,10 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
     ) -> None:
         """Handle device update."""
         if update_type is RpcUpdateType.INITIALIZED:
-            self.hass.async_create_task(self._async_connected())
+            self.hass.async_create_task(self._async_connected(), eager_start=True)
             self.async_set_updated_data(None)
         elif update_type is RpcUpdateType.DISCONNECTED:
-            self.hass.async_create_task(self._async_disconnected())
+            self.hass.async_create_task(self._async_disconnected(), eager_start=True)
         elif update_type is RpcUpdateType.STATUS:
             self.async_set_updated_data(None)
             if self.sleep_period:
@@ -616,7 +634,7 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         self.device.subscribe_updates(self._async_handle_update)
         if self.device.initialized:
             # If we are already initialized, we are connected
-            self.hass.async_create_task(self._async_connected())
+            self.hass.async_create_task(self._async_connected(), eager_start=True)
 
     async def shutdown(self) -> None:
         """Shutdown the coordinator."""
@@ -624,7 +642,8 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
             try:
                 await async_stop_scanner(self.device)
             except InvalidAuthError:
-                self.entry.async_start_reauth(self.hass)
+                await self.async_shutdown_device_and_start_reauth()
+                return
         await self.device.shutdown()
         await self._async_disconnected()
 
@@ -654,7 +673,7 @@ class ShellyRpcPollingCoordinator(ShellyCoordinatorBase[RpcDevice]):
         except (DeviceConnectionError, RpcCallError) as err:
             raise UpdateFailed(f"Device disconnected: {repr(err)}") from err
         except InvalidAuthError:
-            self.entry.async_start_reauth(self.hass)
+            await self.async_shutdown_device_and_start_reauth()
 
 
 def get_block_coordinator_by_device_id(
@@ -698,4 +717,4 @@ async def async_reconnect_soon(hass: HomeAssistant, entry: ConfigEntry) -> None:
         and (entry_data := get_entry_data(hass).get(entry.entry_id))
         and (coordinator := entry_data.rpc)
     ):
-        hass.async_create_task(coordinator.async_request_refresh())
+        hass.async_create_task(coordinator.async_request_refresh(), eager_start=True)

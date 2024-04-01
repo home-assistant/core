@@ -1,4 +1,5 @@
 """Sensor for Suez Water Consumption data."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -18,6 +19,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, UnitOfVolume
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -72,12 +74,12 @@ async def async_setup_platform(
         async_create_issue(
             hass,
             DOMAIN,
-            f"deprecated_yaml_import_issue_${result['reason']}",
+            f"deprecated_yaml_import_issue_{result['reason']}",
             breaks_in_ha_version="2024.7.0",
             is_fixable=False,
             issue_domain=DOMAIN,
             severity=IssueSeverity.WARNING,
-            translation_key=f"deprecated_yaml_import_issue_${result['reason']}",
+            translation_key=f"deprecated_yaml_import_issue_{result['reason']}",
             translation_placeholders=ISSUE_PLACEHOLDER,
         )
 
@@ -89,21 +91,27 @@ async def async_setup_entry(
 ) -> None:
     """Set up Suez Water sensor from a config entry."""
     client = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([SuezSensor(client)], True)
+    async_add_entities([SuezSensor(client, entry.data[CONF_COUNTER_ID])], True)
 
 
 class SuezSensor(SensorEntity):
     """Representation of a Sensor."""
 
-    _attr_name = "Suez Water Client"
-    _attr_icon = "mdi:water-pump"
+    _attr_has_entity_name = True
+    _attr_translation_key = "water_usage_yesterday"
     _attr_native_unit_of_measurement = UnitOfVolume.LITERS
     _attr_device_class = SensorDeviceClass.WATER
 
-    def __init__(self, client: SuezClient) -> None:
+    def __init__(self, client: SuezClient, counter_id: int) -> None:
         """Initialize the data object."""
         self.client = client
         self._attr_extra_state_attributes = {}
+        self._attr_unique_id = f"{counter_id}_water_usage_yesterday"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, str(counter_id))},
+            entry_type=DeviceEntryType.SERVICE,
+            manufacturer="Suez",
+        )
 
     def _fetch_data(self) -> None:
         """Fetch latest data from Suez."""
@@ -116,28 +124,28 @@ class SuezSensor(SensorEntity):
 
             self._attr_extra_state_attributes["this_month_consumption"] = {}
             for item in self.client.attributes["thisMonthConsumption"]:
-                self._attr_extra_state_attributes["this_month_consumption"][
-                    item
-                ] = self.client.attributes["thisMonthConsumption"][item]
+                self._attr_extra_state_attributes["this_month_consumption"][item] = (
+                    self.client.attributes["thisMonthConsumption"][item]
+                )
             self._attr_extra_state_attributes["previous_month_consumption"] = {}
             for item in self.client.attributes["previousMonthConsumption"]:
                 self._attr_extra_state_attributes["previous_month_consumption"][
                     item
                 ] = self.client.attributes["previousMonthConsumption"][item]
-            self._attr_extra_state_attributes[
-                "highest_monthly_consumption"
-            ] = self.client.attributes["highestMonthlyConsumption"]
-            self._attr_extra_state_attributes[
-                "last_year_overall"
-            ] = self.client.attributes["lastYearOverAll"]
-            self._attr_extra_state_attributes[
-                "this_year_overall"
-            ] = self.client.attributes["thisYearOverAll"]
+            self._attr_extra_state_attributes["highest_monthly_consumption"] = (
+                self.client.attributes["highestMonthlyConsumption"]
+            )
+            self._attr_extra_state_attributes["last_year_overall"] = (
+                self.client.attributes["lastYearOverAll"]
+            )
+            self._attr_extra_state_attributes["this_year_overall"] = (
+                self.client.attributes["thisYearOverAll"]
+            )
             self._attr_extra_state_attributes["history"] = {}
             for item in self.client.attributes["history"]:
-                self._attr_extra_state_attributes["history"][
-                    item
-                ] = self.client.attributes["history"][item]
+                self._attr_extra_state_attributes["history"][item] = (
+                    self.client.attributes["history"][item]
+                )
 
         except PySuezError:
             self._attr_available = False

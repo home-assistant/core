@@ -1,9 +1,10 @@
 """Event parser and human readable log generator."""
+
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from sqlalchemy.engine.row import Row
 
@@ -16,9 +17,13 @@ from homeassistant.components.recorder.models import (
 )
 from homeassistant.const import ATTR_ICON, EVENT_STATE_CHANGED
 from homeassistant.core import Context, Event, State, callback
-import homeassistant.util.dt as dt_util
 from homeassistant.util.json import json_loads
 from homeassistant.util.ulid import ulid_to_bytes
+
+if TYPE_CHECKING:
+    from functools import cached_property
+else:
+    from homeassistant.backports.functools import cached_property
 
 
 @dataclass(slots=True)
@@ -35,16 +40,6 @@ class LogbookConfig:
 class LazyEventPartialState:
     """A lazy version of core Event with limited State joined in."""
 
-    __slots__ = [
-        "row",
-        "_event_data",
-        "_event_data_cache",
-        "event_type",
-        "entity_id",
-        "state",
-        "data",
-    ]
-
     def __init__(
         self,
         row: Row | EventAsRow,
@@ -54,17 +49,17 @@ class LazyEventPartialState:
         self.row = row
         self._event_data: dict[str, Any] | None = None
         self._event_data_cache = event_data_cache
-        self.event_type: str | None = self.row.event_type
-        self.entity_id: str | None = self.row.entity_id
-        self.state = self.row.state
         # We need to explicitly check for the row is EventAsRow as the unhappy path
         # to fetch row.data for Row is very expensive
-        if type(row) is EventAsRow:  # noqa: E721
+        if type(row) is EventAsRow:
             # If its an EventAsRow we can avoid the whole
             # json decode process as we already have the data
             self.data = row.data
             return
-        source = cast(str, self.row.event_data)
+        if TYPE_CHECKING:
+            source = cast(str, row.event_data)
+        else:
+            source = row.event_data
         if not source:
             self.data = {}
         elif event_data := self._event_data_cache.get(source):
@@ -74,17 +69,32 @@ class LazyEventPartialState:
                 dict[str, Any], json_loads(source)
             )
 
-    @property
+    @cached_property
+    def event_type(self) -> str | None:
+        """Return the event type."""
+        return self.row.event_type
+
+    @cached_property
+    def entity_id(self) -> str | None:
+        """Return the entity id."""
+        return self.row.entity_id
+
+    @cached_property
+    def state(self) -> str | None:
+        """Return the state."""
+        return self.row.state
+
+    @cached_property
     def context_id(self) -> str | None:
         """Return the context id."""
         return bytes_to_ulid_or_none(self.row.context_id_bin)
 
-    @property
+    @cached_property
     def context_user_id(self) -> str | None:
         """Return the context user id."""
         return bytes_to_uuid_hex_or_none(self.row.context_user_id_bin)
 
-    @property
+    @cached_property
     def context_parent_id(self) -> str | None:
         """Return the context parent id."""
         return bytes_to_ulid_or_none(self.row.context_parent_id_bin)
@@ -94,7 +104,7 @@ class LazyEventPartialState:
 class EventAsRow:
     """Convert an event to a row."""
 
-    data: dict[str, Any]
+    data: Mapping[str, Any]
     context: Context
     context_id_bin: bytes
     time_fired_ts: float
@@ -121,7 +131,7 @@ def async_event_to_row(event: Event) -> EventAsRow:
             context_id_bin=ulid_to_bytes(context.id),
             context_user_id_bin=uuid_hex_to_bytes_or_none(context.user_id),
             context_parent_id_bin=ulid_to_bytes_or_none(context.parent_id),
-            time_fired_ts=dt_util.utc_to_timestamp(event.time_fired),
+            time_fired_ts=event.time_fired_timestamp,
             row_id=hash(event),
         )
     # States are prefiltered so we never get states
@@ -137,7 +147,7 @@ def async_event_to_row(event: Event) -> EventAsRow:
         context_id_bin=ulid_to_bytes(context.id),
         context_user_id_bin=uuid_hex_to_bytes_or_none(context.user_id),
         context_parent_id_bin=ulid_to_bytes_or_none(context.parent_id),
-        time_fired_ts=dt_util.utc_to_timestamp(new_state.last_updated),
+        time_fired_ts=new_state.last_updated_timestamp,
         row_id=hash(event),
         icon=new_state.attributes.get(ATTR_ICON),
     )

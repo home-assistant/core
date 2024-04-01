@@ -1,4 +1,5 @@
 """Logging utilities."""
+
 from __future__ import annotations
 
 import asyncio
@@ -138,15 +139,13 @@ def _callback_wrapper(
 @overload
 def catch_log_exception(
     func: Callable[[*_Ts], Coroutine[Any, Any, Any]], format_err: Callable[[*_Ts], Any]
-) -> Callable[[*_Ts], Coroutine[Any, Any, None]]:
-    ...
+) -> Callable[[*_Ts], Coroutine[Any, Any, None]]: ...
 
 
 @overload
 def catch_log_exception(
     func: Callable[[*_Ts], Any], format_err: Callable[[*_Ts], Any]
-) -> Callable[[*_Ts], None] | Callable[[*_Ts], Coroutine[Any, Any, None]]:
-    ...
+) -> Callable[[*_Ts], None] | Callable[[*_Ts], Coroutine[Any, Any, None]]: ...
 
 
 def catch_log_exception(
@@ -189,7 +188,7 @@ def catch_log_coro_exception(
 
 
 def async_create_catching_coro(
-    target: Coroutine[Any, Any, _T]
+    target: Coroutine[Any, Any, _T],
 ) -> Coroutine[Any, Any, _T | None]:
     """Wrap a coroutine to catch and log exceptions.
 

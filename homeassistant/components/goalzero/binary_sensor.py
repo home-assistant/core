@@ -1,4 +1,5 @@
 """Support for Goal Zero Yeti Sensors."""
+
 from __future__ import annotations
 
 from typing import cast
@@ -22,7 +23,6 @@ BINARY_SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
     BinarySensorEntityDescription(
         key="backlight",
         translation_key="backlight",
-        icon="mdi:clock-digital",
     ),
     BinarySensorEntityDescription(
         key="app_online",

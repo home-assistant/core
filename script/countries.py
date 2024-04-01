@@ -3,6 +3,7 @@
 ISO does not publish a machine readable list free of charge, so the list is generated
 with help of the pycountry package.
 """
+
 from pathlib import Path
 
 import pycountry

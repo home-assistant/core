@@ -1,4 +1,5 @@
 """Test Home Assistant date util methods."""
+
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
@@ -87,12 +88,6 @@ def test_as_local_with_naive_object() -> None:
     ) < timedelta(seconds=1)
 
 
-def test_as_local_with_local_object() -> None:
-    """Test local with local object."""
-    now = dt_util.now()
-    assert now == now
-
-
 def test_as_local_with_utc_object() -> None:
     """Test local time with UTC object."""
     dt_util.set_default_time_zone(dt_util.get_time_zone(TEST_TIME_ZONE))
@@ -145,6 +140,12 @@ def test_parse_datetime_converts_correctly() -> None:
 def test_parse_datetime_returns_none_for_incorrect_format() -> None:
     """Test parse_datetime returns None if incorrect format."""
     assert dt_util.parse_datetime("not a datetime string") is None
+
+
+def test_parse_datetime_raises_for_incorrect_format() -> None:
+    """Test parse_datetime raises ValueError if raise_on_error is set with an incorrect format."""
+    with pytest.raises(ValueError):
+        dt_util.parse_datetime("not a datetime string", raise_on_error=True)
 
 
 @pytest.mark.parametrize(

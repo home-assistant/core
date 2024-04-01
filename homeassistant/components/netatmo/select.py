@@ -1,4 +1,5 @@
 """Support for the Netatmo climate schedule selector."""
+
 from __future__ import annotations
 
 import logging
@@ -19,7 +20,7 @@ from .const import (
     NETATMO_CREATE_SELECT,
 )
 from .data_handler import HOME, SIGNAL_NAME, NetatmoHome
-from .netatmo_entity_base import NetatmoBase
+from .entity import NetatmoBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,7 +40,7 @@ async def async_setup_entry(
     )
 
 
-class NetatmoScheduleSelect(NetatmoBase, SelectEntity):
+class NetatmoScheduleSelect(NetatmoBaseEntity, SelectEntity):
     """Representation a Netatmo thermostat schedule selector."""
 
     def __init__(

@@ -1,4 +1,5 @@
 """Tests for 1-Wire config flow."""
+
 from copy import deepcopy
 from unittest.mock import MagicMock, patch
 

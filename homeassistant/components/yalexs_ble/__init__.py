@@ -1,7 +1,6 @@
 """The Yale Access Bluetooth integration."""
-from __future__ import annotations
 
-import asyncio
+from __future__ import annotations
 
 from yalexs_ble import (
     AuthError,
@@ -10,13 +9,14 @@ from yalexs_ble import (
     LockState,
     PushLock,
     YaleXSBLEError,
+    close_stale_connections_by_address,
     local_name_is_unique,
 )
 
 from homeassistant.components import bluetooth
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, EVENT_HOMEASSISTANT_STOP, Platform
-from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, CoreState, Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .const import (
@@ -47,6 +47,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     id_ = local_name if has_unique_local_name else address
     push_lock.set_name(f"{entry.title} ({id_})")
 
+    # Ensure any lingering connections are closed since the device may not be
+    # advertising when its connected to another client which will prevent us
+    # from setting the device and setup will fail.
+    await close_stale_connections_by_address(address)
+
     @callback
     def _async_update_ble(
         service_info: bluetooth.BluetoothServiceInfoBleak,
@@ -69,6 +74,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # We may already have the advertisement, so check for it.
     if service_info := async_find_existing_service_info(hass, local_name, address):
         push_lock.update_advertisement(service_info.device, service_info.advertisement)
+    elif hass.state is CoreState.starting:
+        # If we are starting and the advertisement is not found, do not delay
+        # the setup. We will wait for the advertisement to be found and then
+        # discovery will trigger setup retry.
+        raise ConfigEntryNotReady("{local_name} ({address}) not advertising yet")
 
     entry.async_on_unload(
         bluetooth.async_register_callback(
@@ -83,7 +93,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await push_lock.wait_for_first_update(DEVICE_TIMEOUT)
     except AuthError as ex:
         raise ConfigEntryAuthFailed(str(ex)) from ex
-    except (YaleXSBLEError, asyncio.TimeoutError) as ex:
+    except (YaleXSBLEError, TimeoutError) as ex:
         raise ConfigEntryNotReady(
             f"{ex}; Try moving the Bluetooth adapter closer to {local_name}"
         ) from ex
@@ -117,7 +127,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     entry.async_on_unload(
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_shutdown)
+        hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STOP, _async_shutdown, run_immediately=True
+        )
     )
     return True
 

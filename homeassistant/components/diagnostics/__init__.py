@@ -1,4 +1,5 @@
 """The Diagnostics integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine, Mapping
@@ -40,13 +41,17 @@ CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 class DiagnosticsPlatformData:
     """Diagnostic platform data."""
 
-    config_entry_diagnostics: Callable[
-        [HomeAssistant, ConfigEntry], Coroutine[Any, Any, Mapping[str, Any]]
-    ] | None
-    device_diagnostics: Callable[
-        [HomeAssistant, ConfigEntry, DeviceEntry],
-        Coroutine[Any, Any, Mapping[str, Any]],
-    ] | None
+    config_entry_diagnostics: (
+        Callable[[HomeAssistant, ConfigEntry], Coroutine[Any, Any, Mapping[str, Any]]]
+        | None
+    )
+    device_diagnostics: (
+        Callable[
+            [HomeAssistant, ConfigEntry, DeviceEntry],
+            Coroutine[Any, Any, Mapping[str, Any]],
+        ]
+        | None
+    )
 
 
 @dataclass(slots=True)
@@ -85,7 +90,8 @@ class DiagnosticsProtocol(Protocol):
         """Return diagnostics for a device."""
 
 
-async def _register_diagnostics_platform(
+@callback
+def _register_diagnostics_platform(
     hass: HomeAssistant, integration_domain: str, platform: DiagnosticsProtocol
 ) -> None:
     """Register a diagnostics platform."""
@@ -197,7 +203,7 @@ async def _async_get_json_file_response(
     return web.Response(
         body=json_data,
         content_type="application/json",
-        headers={"Content-Disposition": f'attachment; filename="{filename}.json.txt"'},
+        headers={"Content-Disposition": f'attachment; filename="{filename}.json"'},
     )
 
 
@@ -231,7 +237,7 @@ class DownloadDiagnosticsView(http.HomeAssistantView):
 
         device_diagnostics = sub_type is not None
 
-        hass: HomeAssistant = request.app["hass"]
+        hass = request.app[http.KEY_HASS]
 
         if (config_entry := hass.config_entries.async_get_entry(d_id)) is None:
             return web.Response(status=HTTPStatus.NOT_FOUND)

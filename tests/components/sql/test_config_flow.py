@@ -1,4 +1,5 @@
 """Test the SQL config flow."""
+
 from __future__ import annotations
 
 from unittest.mock import patch
@@ -17,8 +18,18 @@ from . import (
     ENTRY_CONFIG_INVALID_COLUMN_NAME,
     ENTRY_CONFIG_INVALID_COLUMN_NAME_OPT,
     ENTRY_CONFIG_INVALID_QUERY,
+    ENTRY_CONFIG_INVALID_QUERY_2,
+    ENTRY_CONFIG_INVALID_QUERY_2_OPT,
+    ENTRY_CONFIG_INVALID_QUERY_3,
+    ENTRY_CONFIG_INVALID_QUERY_3_OPT,
     ENTRY_CONFIG_INVALID_QUERY_OPT,
+    ENTRY_CONFIG_MULTIPLE_QUERIES,
+    ENTRY_CONFIG_MULTIPLE_QUERIES_OPT,
     ENTRY_CONFIG_NO_RESULTS,
+    ENTRY_CONFIG_QUERY_NO_READ_ONLY,
+    ENTRY_CONFIG_QUERY_NO_READ_ONLY_CTE,
+    ENTRY_CONFIG_QUERY_NO_READ_ONLY_CTE_OPT,
+    ENTRY_CONFIG_QUERY_NO_READ_ONLY_OPT,
     ENTRY_CONFIG_WITH_VALUE_TEMPLATE,
 )
 
@@ -130,6 +141,56 @@ async def test_flow_fails_invalid_query(
     assert result5["type"] == FlowResultType.FORM
     assert result5["errors"] == {
         "query": "query_invalid",
+    }
+
+    result6 = await hass.config_entries.flow.async_configure(
+        result4["flow_id"],
+        user_input=ENTRY_CONFIG_INVALID_QUERY_2,
+    )
+
+    assert result6["type"] == FlowResultType.FORM
+    assert result6["errors"] == {
+        "query": "query_invalid",
+    }
+
+    result6 = await hass.config_entries.flow.async_configure(
+        result4["flow_id"],
+        user_input=ENTRY_CONFIG_INVALID_QUERY_3,
+    )
+
+    assert result6["type"] == FlowResultType.FORM
+    assert result6["errors"] == {
+        "query": "query_invalid",
+    }
+
+    result5 = await hass.config_entries.flow.async_configure(
+        result4["flow_id"],
+        user_input=ENTRY_CONFIG_QUERY_NO_READ_ONLY,
+    )
+
+    assert result5["type"] == FlowResultType.FORM
+    assert result5["errors"] == {
+        "query": "query_no_read_only",
+    }
+
+    result6 = await hass.config_entries.flow.async_configure(
+        result4["flow_id"],
+        user_input=ENTRY_CONFIG_QUERY_NO_READ_ONLY_CTE,
+    )
+
+    assert result6["type"] == FlowResultType.FORM
+    assert result6["errors"] == {
+        "query": "query_no_read_only",
+    }
+
+    result6 = await hass.config_entries.flow.async_configure(
+        result4["flow_id"],
+        user_input=ENTRY_CONFIG_MULTIPLE_QUERIES,
+    )
+
+    assert result6["type"] == FlowResultType.FORM
+    assert result6["errors"] == {
+        "query": "multiple_queries",
     }
 
     result5 = await hass.config_entries.flow.async_configure(
@@ -380,6 +441,56 @@ async def test_options_flow_fails_invalid_query(
         "query": "query_invalid",
     }
 
+    result3 = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input=ENTRY_CONFIG_INVALID_QUERY_2_OPT,
+    )
+
+    assert result3["type"] == FlowResultType.FORM
+    assert result3["errors"] == {
+        "query": "query_invalid",
+    }
+
+    result3 = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input=ENTRY_CONFIG_INVALID_QUERY_3_OPT,
+    )
+
+    assert result3["type"] == FlowResultType.FORM
+    assert result3["errors"] == {
+        "query": "query_invalid",
+    }
+
+    result2 = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input=ENTRY_CONFIG_QUERY_NO_READ_ONLY_OPT,
+    )
+
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["errors"] == {
+        "query": "query_no_read_only",
+    }
+
+    result3 = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input=ENTRY_CONFIG_QUERY_NO_READ_ONLY_CTE_OPT,
+    )
+
+    assert result3["type"] == FlowResultType.FORM
+    assert result3["errors"] == {
+        "query": "query_no_read_only",
+    }
+
+    result3 = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input=ENTRY_CONFIG_MULTIPLE_QUERIES_OPT,
+    )
+
+    assert result3["type"] == FlowResultType.FORM
+    assert result3["errors"] == {
+        "query": "multiple_queries",
+    }
+
     result4 = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
@@ -481,11 +592,14 @@ async def test_options_flow_db_url_empty(
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "init"
 
-    with patch(
-        "homeassistant.components.sql.async_setup_entry",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.sql.config_flow.sqlalchemy.create_engine",
+    with (
+        patch(
+            "homeassistant.components.sql.async_setup_entry",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.sql.config_flow.sqlalchemy.create_engine",
+        ),
     ):
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
@@ -516,11 +630,14 @@ async def test_full_flow_not_recorder_db(
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.sql.async_setup_entry",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.sql.config_flow.sqlalchemy.create_engine",
+    with (
+        patch(
+            "homeassistant.components.sql.async_setup_entry",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.sql.config_flow.sqlalchemy.create_engine",
+        ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -549,11 +666,14 @@ async def test_full_flow_not_recorder_db(
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "init"
 
-    with patch(
-        "homeassistant.components.sql.async_setup_entry",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.sql.config_flow.sqlalchemy.create_engine",
+    with (
+        patch(
+            "homeassistant.components.sql.async_setup_entry",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.sql.config_flow.sqlalchemy.create_engine",
+        ),
     ):
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],

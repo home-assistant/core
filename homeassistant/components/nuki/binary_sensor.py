@@ -1,4 +1,5 @@
 """Doorsensor Support for the Nuki Lock."""
+
 from __future__ import annotations
 
 from pynuki.constants import STATE_DOORSENSOR_OPENED
@@ -9,6 +10,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -19,14 +21,20 @@ from .const import ATTR_NUKI_ID, DOMAIN as NUKI_DOMAIN
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Set up the Nuki lock binary sensor."""
+    """Set up the Nuki binary sensors."""
     entry_data: NukiEntryData = hass.data[NUKI_DOMAIN][entry.entry_id]
 
-    entities = []
+    entities: list[NukiEntity] = []
 
     for lock in entry_data.locks:
         if lock.is_door_sensor_activated:
-            entities.extend([NukiDoorsensorEntity(entry_data.coordinator, lock)])
+            entities.append(NukiDoorsensorEntity(entry_data.coordinator, lock))
+        entities.append(NukiBatteryCriticalEntity(entry_data.coordinator, lock))
+        entities.append(NukiBatteryChargingEntity(entry_data.coordinator, lock))
+
+    for opener in entry_data.openers:
+        entities.append(NukiRingactionEntity(entry_data.coordinator, opener))
+        entities.append(NukiBatteryCriticalEntity(entry_data.coordinator, opener))
 
     async_add_entities(entities)
 
@@ -43,6 +51,7 @@ class NukiDoorsensorEntity(NukiEntity[NukiDevice], BinarySensorEntity):
         """Return a unique ID."""
         return f"{self._nuki_device.nuki_id}_doorsensor"
 
+    # Deprecated, can be removed in 2024.10
     @property
     def extra_state_attributes(self):
         """Return the device specific state attributes."""
@@ -70,3 +79,66 @@ class NukiDoorsensorEntity(NukiEntity[NukiDevice], BinarySensorEntity):
     def is_on(self):
         """Return true if the door is open."""
         return self.door_sensor_state == STATE_DOORSENSOR_OPENED
+
+
+class NukiRingactionEntity(NukiEntity[NukiDevice], BinarySensorEntity):
+    """Representation of a Nuki Opener Ringaction."""
+
+    _attr_has_entity_name = True
+    _attr_translation_key = "ring_action"
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        return f"{self._nuki_device.nuki_id}_ringaction"
+
+    # Deprecated, can be removed in 2024.10
+    @property
+    def extra_state_attributes(self):
+        """Return the device specific state attributes."""
+        data = {
+            ATTR_NUKI_ID: self._nuki_device.nuki_id,
+        }
+        return data
+
+    @property
+    def is_on(self) -> bool:
+        """Return the value of the ring action state."""
+        return self._nuki_device.ring_action_state
+
+
+class NukiBatteryCriticalEntity(NukiEntity[NukiDevice], BinarySensorEntity):
+    """Representation of Nuki Battery Critical."""
+
+    _attr_has_entity_name = True
+    _attr_device_class = BinarySensorDeviceClass.BATTERY
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        return f"{self._nuki_device.nuki_id}_battery_critical"
+
+    @property
+    def is_on(self) -> bool:
+        """Return the value of the battery critical."""
+        return self._nuki_device.battery_critical
+
+
+class NukiBatteryChargingEntity(NukiEntity[NukiDevice], BinarySensorEntity):
+    """Representation of a Nuki Battery charging."""
+
+    _attr_has_entity_name = True
+    _attr_device_class = BinarySensorDeviceClass.BATTERY_CHARGING
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_entity_registry_enabled_default = False
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        return f"{self._nuki_device.nuki_id}_battery_charging"
+
+    @property
+    def is_on(self) -> bool:
+        """Return the value of the battery charging."""
+        return self._nuki_device.battery_charging

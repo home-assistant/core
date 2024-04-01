@@ -1,4 +1,5 @@
 """The tests for the webdav todo component."""
+
 from datetime import UTC, date, datetime
 from typing import Any
 from unittest.mock import MagicMock, Mock
@@ -69,6 +70,19 @@ STATUS:NEEDS-ACTION
 END:VTODO
 END:VCALENDAR"""
 
+TODO_ALL_FIELDS = """BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//E-Corp.//CalDAV Client//EN
+BEGIN:VTODO
+UID:2
+DTSTAMP:20171125T000000Z
+SUMMARY:Cheese
+DESCRIPTION:Any kind will do
+STATUS:NEEDS-ACTION
+DUE:20171126
+END:VTODO
+END:VCALENDAR"""
+
 
 @pytest.fixture
 def platforms() -> list[Platform]:
@@ -132,6 +146,18 @@ async def mock_add_to_hass(
     config_entry.add_to_hass(hass)
 
 
+IGNORE_COMPONENTS = ["BEGIN", "END", "DTSTAMP", "PRODID", "UID", "VERSION"]
+
+
+def compact_ics(ics: str) -> list[str]:
+    """Pull out parts of the rfc5545 content useful for assertions in tests."""
+    return [
+        line
+        for line in ics.split("\n")
+        if line and not any(filter(line.startswith, IGNORE_COMPONENTS))
+    ]
+
+
 @pytest.mark.parametrize(
     ("todos", "expected_state"),
     [
@@ -163,7 +189,7 @@ async def test_todo_list_state(
     expected_state: str,
 ) -> None:
     """Test a calendar entity from a config entry."""
-    await config_entry.async_setup(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
 
     state = hass.states.get(TEST_ENTITY)
     assert state
@@ -185,7 +211,7 @@ async def test_supported_components(
     has_entity: bool,
 ) -> None:
     """Test a calendar supported components matches VTODO."""
-    await config_entry.async_setup(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
 
     state = hass.states.get(TEST_ENTITY)
     assert (state is not None) == has_entity
@@ -241,7 +267,7 @@ async def test_add_item(
 ) -> None:
     """Test adding an item to the list."""
     calendar.search.return_value = []
-    await config_entry.async_setup(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
 
     state = hass.states.get(TEST_ENTITY)
     assert state
@@ -273,7 +299,7 @@ async def test_add_item_failure(
     calendar: Mock,
 ) -> None:
     """Test failure when adding an item to the list."""
-    await config_entry.async_setup(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
 
     calendar.save_todo.side_effect = DAVError()
 
@@ -292,45 +318,148 @@ async def test_add_item_failure(
     [
         (
             {"rename": "Swiss Cheese"},
-            ["SUMMARY:Swiss Cheese", "STATUS:NEEDS-ACTION"],
+            [
+                "DESCRIPTION:Any kind will do",
+                "DUE;VALUE=DATE:20171126",
+                "STATUS:NEEDS-ACTION",
+                "SUMMARY:Swiss Cheese",
+            ],
             "1",
-            {**RESULT_ITEM, "summary": "Swiss Cheese"},
+            {
+                "uid": "2",
+                "summary": "Swiss Cheese",
+                "status": "needs_action",
+                "description": "Any kind will do",
+                "due": "2017-11-26",
+            },
         ),
         (
             {"status": "needs_action"},
-            ["SUMMARY:Cheese", "STATUS:NEEDS-ACTION"],
+            [
+                "DESCRIPTION:Any kind will do",
+                "DUE;VALUE=DATE:20171126",
+                "STATUS:NEEDS-ACTION",
+                "SUMMARY:Cheese",
+            ],
             "1",
-            RESULT_ITEM,
+            {
+                "uid": "2",
+                "summary": "Cheese",
+                "status": "needs_action",
+                "description": "Any kind will do",
+                "due": "2017-11-26",
+            },
         ),
         (
             {"status": "completed"},
-            ["SUMMARY:Cheese", "STATUS:COMPLETED"],
+            [
+                "DESCRIPTION:Any kind will do",
+                "DUE;VALUE=DATE:20171126",
+                "STATUS:COMPLETED",
+                "SUMMARY:Cheese",
+            ],
             "0",
-            {**RESULT_ITEM, "status": "completed"},
+            {
+                "uid": "2",
+                "summary": "Cheese",
+                "status": "completed",
+                "description": "Any kind will do",
+                "due": "2017-11-26",
+            },
         ),
         (
             {"rename": "Swiss Cheese", "status": "needs_action"},
-            ["SUMMARY:Swiss Cheese", "STATUS:NEEDS-ACTION"],
+            [
+                "DESCRIPTION:Any kind will do",
+                "DUE;VALUE=DATE:20171126",
+                "STATUS:NEEDS-ACTION",
+                "SUMMARY:Swiss Cheese",
+            ],
             "1",
-            {**RESULT_ITEM, "summary": "Swiss Cheese"},
+            {
+                "uid": "2",
+                "summary": "Swiss Cheese",
+                "status": "needs_action",
+                "description": "Any kind will do",
+                "due": "2017-11-26",
+            },
         ),
         (
             {"due_date": "2023-11-18"},
-            ["SUMMARY:Cheese", "DUE;VALUE=DATE:20231118"],
+            [
+                "DESCRIPTION:Any kind will do",
+                "DUE;VALUE=DATE:20231118",
+                "STATUS:NEEDS-ACTION",
+                "SUMMARY:Cheese",
+            ],
             "1",
-            {**RESULT_ITEM, "due": "2023-11-18"},
+            {
+                "uid": "2",
+                "summary": "Cheese",
+                "status": "needs_action",
+                "description": "Any kind will do",
+                "due": "2023-11-18",
+            },
         ),
         (
             {"due_datetime": "2023-11-18T08:30:00-06:00"},
-            ["SUMMARY:Cheese", "DUE;TZID=America/Regina:20231118T083000"],
+            [
+                "DESCRIPTION:Any kind will do",
+                "DUE;TZID=America/Regina:20231118T083000",
+                "STATUS:NEEDS-ACTION",
+                "SUMMARY:Cheese",
+            ],
             "1",
-            {**RESULT_ITEM, "due": "2023-11-18T08:30:00-06:00"},
+            {
+                "uid": "2",
+                "summary": "Cheese",
+                "status": "needs_action",
+                "description": "Any kind will do",
+                "due": "2023-11-18T08:30:00-06:00",
+            },
+        ),
+        (
+            {"due_datetime": None},
+            [
+                "DESCRIPTION:Any kind will do",
+                "STATUS:NEEDS-ACTION",
+                "SUMMARY:Cheese",
+            ],
+            "1",
+            {
+                "uid": "2",
+                "summary": "Cheese",
+                "status": "needs_action",
+                "description": "Any kind will do",
+            },
         ),
         (
             {"description": "Make sure to get Swiss"},
-            ["SUMMARY:Cheese", "DESCRIPTION:Make sure to get Swiss"],
+            [
+                "DESCRIPTION:Make sure to get Swiss",
+                "DUE;VALUE=DATE:20171126",
+                "STATUS:NEEDS-ACTION",
+                "SUMMARY:Cheese",
+            ],
             "1",
-            {**RESULT_ITEM, "description": "Make sure to get Swiss"},
+            {
+                "uid": "2",
+                "summary": "Cheese",
+                "status": "needs_action",
+                "due": "2017-11-26",
+                "description": "Make sure to get Swiss",
+            },
+        ),
+        (
+            {"description": None},
+            ["DUE;VALUE=DATE:20171126", "STATUS:NEEDS-ACTION", "SUMMARY:Cheese"],
+            "1",
+            {
+                "uid": "2",
+                "summary": "Cheese",
+                "status": "needs_action",
+                "due": "2017-11-26",
+            },
         ),
     ],
     ids=[
@@ -340,7 +469,9 @@ async def test_add_item_failure(
         "rename_status",
         "due_date",
         "due_datetime",
+        "clear_due_date",
         "description",
+        "clear_description",
     ],
 )
 async def test_update_item(
@@ -355,10 +486,10 @@ async def test_update_item(
 ) -> None:
     """Test updating an item on the list."""
 
-    item = Todo(dav_client, None, TODO_NEEDS_ACTION, calendar, "2")
+    item = Todo(dav_client, None, TODO_ALL_FIELDS, calendar, "2")
     calendar.search = MagicMock(return_value=[item])
 
-    await config_entry.async_setup(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
 
     state = hass.states.get(TEST_ENTITY)
     assert state
@@ -381,8 +512,7 @@ async def test_update_item(
 
     assert dav_client.put.call_args
     ics = dav_client.put.call_args.args[1]
-    for expected in expected_ics:
-        assert expected in ics
+    assert compact_ics(ics) == expected_ics
 
     state = hass.states.get(TEST_ENTITY)
     assert state
@@ -410,7 +540,7 @@ async def test_update_item_failure(
     item = Todo(dav_client, None, TODO_NEEDS_ACTION, calendar, "2")
     calendar.search = MagicMock(return_value=[item])
 
-    await config_entry.async_setup(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
 
     calendar.todo_by_uid = MagicMock(return_value=item)
     dav_client.put.side_effect = DAVError()
@@ -445,7 +575,7 @@ async def test_update_item_lookup_failure(
     item = Todo(dav_client, None, TODO_NEEDS_ACTION, calendar, "2")
     calendar.search = MagicMock(return_value=[item])
 
-    await config_entry.async_setup(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
 
     calendar.todo_by_uid.side_effect = side_effect
 
@@ -487,14 +617,14 @@ async def test_remove_item(
     item2 = Todo(dav_client, None, TODO_COMPLETED, calendar, "3")
     calendar.search = MagicMock(return_value=[item1, item2])
 
-    await config_entry.async_setup(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
 
     state = hass.states.get(TEST_ENTITY)
     assert state
     assert state.state == "1"
 
     def lookup(uid: str) -> Mock:
-        assert uid == "2" or uid == "3"
+        assert uid in ("2", "3")
         if uid == "2":
             return item1
         return item2
@@ -531,7 +661,7 @@ async def test_remove_item_lookup_failure(
 ) -> None:
     """Test failure while removing an item from the list."""
 
-    await config_entry.async_setup(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
 
     calendar.todo_by_uid.side_effect = side_effect
 
@@ -556,7 +686,7 @@ async def test_remove_item_failure(
     item = Todo(dav_client, "2.ics", TODO_NEEDS_ACTION, calendar, "2")
     calendar.search = MagicMock(return_value=[item])
 
-    await config_entry.async_setup(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
 
     def lookup(uid: str) -> Mock:
         return item
@@ -585,7 +715,7 @@ async def test_remove_item_not_found(
     item = Todo(dav_client, "2.ics", TODO_NEEDS_ACTION, calendar, "2")
     calendar.search = MagicMock(return_value=[item])
 
-    await config_entry.async_setup(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
 
     def lookup(uid: str) -> Mock:
         return item
@@ -614,7 +744,7 @@ async def test_subscribe(
     item = Todo(dav_client, None, TODO_NEEDS_ACTION, calendar, "2")
     calendar.search = MagicMock(return_value=[item])
 
-    await config_entry.async_setup(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
 
     # Subscribe and get the initial list
     client = await hass_ws_client(hass)

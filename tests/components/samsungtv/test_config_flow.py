@@ -1,4 +1,5 @@
 """Tests for Samsung TV config flow."""
+
 from copy import deepcopy
 from ipaddress import ip_address
 from unittest.mock import ANY, AsyncMock, Mock, call, patch
@@ -128,7 +129,7 @@ MOCK_SSDP_DATA_WRONGMODEL = ssdp.SsdpServiceInfo(
     },
 )
 MOCK_DHCP_DATA = dhcp.DhcpServiceInfo(
-    ip="fake_host", macaddress="aa:bb:dd:hh:cc:pp", hostname="fake_hostname"
+    ip="fake_host", macaddress="aabbccddeeff", hostname="fake_hostname"
 )
 EXISTING_IP = "192.168.40.221"
 MOCK_ZEROCONF_DATA = zeroconf.ZeroconfServiceInfo(
@@ -337,7 +338,7 @@ async def test_user_encrypted_websocket(
     assert result4["title"] == "TV-UE48JU6470 (UE48JU6400)"
     assert result4["data"][CONF_HOST] == "fake_host"
     assert result4["data"][CONF_NAME] == "TV-UE48JU6470"
-    assert result4["data"][CONF_MAC] == "aa:bb:ww:ii:ff:ii"
+    assert result4["data"][CONF_MAC] == "aa:bb:aa:aa:aa:aa"
     assert result4["data"][CONF_MANUFACTURER] == "Samsung"
     assert result4["data"][CONF_MODEL] == "UE48JU6400"
     assert result4["data"][CONF_SSDP_RENDERING_CONTROL_LOCATION] is None
@@ -391,12 +392,15 @@ async def test_user_legacy_not_supported(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("rest_api", "remoteencws_failing")
 async def test_user_websocket_not_supported(hass: HomeAssistant) -> None:
     """Test starting a flow by user for not supported device."""
-    with patch(
-        "homeassistant.components.samsungtv.bridge.Remote",
-        side_effect=OSError("Boom"),
-    ), patch(
-        "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncRemote.open",
-        side_effect=WebSocketProtocolError("Boom"),
+    with (
+        patch(
+            "homeassistant.components.samsungtv.bridge.Remote",
+            side_effect=OSError("Boom"),
+        ),
+        patch(
+            "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncRemote.open",
+            side_effect=WebSocketProtocolError("Boom"),
+        ),
     ):
         # websocket device not supported
         result = await hass.config_entries.flow.async_init(
@@ -411,12 +415,15 @@ async def test_user_websocket_access_denied(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test starting a flow by user for not supported device."""
-    with patch(
-        "homeassistant.components.samsungtv.bridge.Remote",
-        side_effect=OSError("Boom"),
-    ), patch(
-        "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncRemote.open",
-        side_effect=ConnectionClosedError(rcvd=None, sent=frames.Close(1002, "")),
+    with (
+        patch(
+            "homeassistant.components.samsungtv.bridge.Remote",
+            side_effect=OSError("Boom"),
+        ),
+        patch(
+            "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncRemote.open",
+            side_effect=ConnectionClosedError(rcvd=None, sent=frames.Close(1002, "")),
+        ),
     ):
         # websocket device not supported
         result = await hass.config_entries.flow.async_init(
@@ -430,12 +437,15 @@ async def test_user_websocket_access_denied(
 @pytest.mark.usefixtures("rest_api", "remoteencws_failing")
 async def test_user_websocket_auth_retry(hass: HomeAssistant) -> None:
     """Test starting a flow by user for not supported device."""
-    with patch(
-        "homeassistant.components.samsungtv.bridge.Remote",
-        side_effect=OSError("Boom"),
-    ), patch(
-        "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncRemote.open",
-        side_effect=UnauthorizedError,
+    with (
+        patch(
+            "homeassistant.components.samsungtv.bridge.Remote",
+            side_effect=OSError("Boom"),
+        ),
+        patch(
+            "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncRemote.open",
+            side_effect=UnauthorizedError,
+        ),
     ):
         # websocket device not supported
         result = await hass.config_entries.flow.async_init(
@@ -444,11 +454,14 @@ async def test_user_websocket_auth_retry(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "pairing"
     assert result["errors"] == {"base": "auth_missing"}
-    with patch(
-        "homeassistant.components.samsungtv.bridge.Remote",
-        side_effect=OSError("Boom"),
-    ), patch(
-        "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncRemote.open",
+    with (
+        patch(
+            "homeassistant.components.samsungtv.bridge.Remote",
+            side_effect=OSError("Boom"),
+        ),
+        patch(
+            "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncRemote.open",
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={}
@@ -465,12 +478,15 @@ async def test_user_websocket_auth_retry(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("rest_api_failing")
 async def test_user_not_successful(hass: HomeAssistant) -> None:
     """Test starting a flow by user but no connection found."""
-    with patch(
-        "homeassistant.components.samsungtv.bridge.Remote",
-        side_effect=OSError("Boom"),
-    ), patch(
-        "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncRemote.open",
-        side_effect=OSError("Boom"),
+    with (
+        patch(
+            "homeassistant.components.samsungtv.bridge.Remote",
+            side_effect=OSError("Boom"),
+        ),
+        patch(
+            "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncRemote.open",
+            side_effect=OSError("Boom"),
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data=MOCK_USER_DATA
@@ -482,12 +498,15 @@ async def test_user_not_successful(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("rest_api_failing")
 async def test_user_not_successful_2(hass: HomeAssistant) -> None:
     """Test starting a flow by user but no connection found."""
-    with patch(
-        "homeassistant.components.samsungtv.bridge.Remote",
-        side_effect=OSError("Boom"),
-    ), patch(
-        "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncRemote.open",
-        side_effect=ConnectionFailure("Boom"),
+    with (
+        patch(
+            "homeassistant.components.samsungtv.bridge.Remote",
+            side_effect=OSError("Boom"),
+        ),
+        patch(
+            "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncRemote.open",
+            side_effect=ConnectionFailure("Boom"),
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data=MOCK_USER_DATA
@@ -641,7 +660,7 @@ async def test_ssdp_websocket_success_populates_mac_address_and_ssdp_location(
     assert result["title"] == "Living Room (82GXARRS)"
     assert result["data"][CONF_HOST] == "fake_host"
     assert result["data"][CONF_NAME] == "Living Room"
-    assert result["data"][CONF_MAC] == "aa:bb:ww:ii:ff:ii"
+    assert result["data"][CONF_MAC] == "aa:bb:aa:aa:aa:aa"
     assert result["data"][CONF_MANUFACTURER] == "Samsung fake_manufacturer"
     assert result["data"][CONF_MODEL] == "82GXARRS"
     assert (
@@ -671,7 +690,7 @@ async def test_ssdp_websocket_success_populates_mac_address_and_main_tv_ssdp_loc
     assert result["title"] == "Living Room (82GXARRS)"
     assert result["data"][CONF_HOST] == "fake_host"
     assert result["data"][CONF_NAME] == "Living Room"
-    assert result["data"][CONF_MAC] == "aa:bb:ww:ii:ff:ii"
+    assert result["data"][CONF_MAC] == "aa:bb:aa:aa:aa:aa"
     assert result["data"][CONF_MANUFACTURER] == "Samsung fake_manufacturer"
     assert result["data"][CONF_MODEL] == "82GXARRS"
     assert (
@@ -723,7 +742,7 @@ async def test_ssdp_encrypted_websocket_success_populates_mac_address_and_ssdp_l
     assert result4["title"] == "TV-UE48JU6470 (UE48JU6400)"
     assert result4["data"][CONF_HOST] == "fake_host"
     assert result4["data"][CONF_NAME] == "TV-UE48JU6470"
-    assert result4["data"][CONF_MAC] == "aa:bb:ww:ii:ff:ii"
+    assert result4["data"][CONF_MAC] == "aa:bb:aa:aa:aa:aa"
     assert result4["data"][CONF_MANUFACTURER] == "Samsung fake_manufacturer"
     assert result4["data"][CONF_MODEL] == "UE48JU6400"
     assert (
@@ -756,16 +775,19 @@ async def test_ssdp_encrypted_websocket_not_supported(
 @pytest.mark.usefixtures("rest_api_failing")
 async def test_ssdp_websocket_cannot_connect(hass: HomeAssistant) -> None:
     """Test starting a flow from discovery and we cannot connect."""
-    with patch(
-        "homeassistant.components.samsungtv.bridge.Remote",
-        side_effect=OSError("Boom"),
-    ), patch(
-        "homeassistant.components.samsungtv.bridge.SamsungTVEncryptedWSAsyncRemote.start_listening",
-        side_effect=WebSocketProtocolError("Boom"),
-    ), patch(
-        "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncRemote",
-    ) as remotews, patch.object(
-        remotews, "open", side_effect=WebSocketProtocolError("Boom")
+    with (
+        patch(
+            "homeassistant.components.samsungtv.bridge.Remote",
+            side_effect=OSError("Boom"),
+        ),
+        patch(
+            "homeassistant.components.samsungtv.bridge.SamsungTVEncryptedWSAsyncRemote.start_listening",
+            side_effect=WebSocketProtocolError("Boom"),
+        ),
+        patch(
+            "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncRemote",
+        ) as remotews,
+        patch.object(remotews, "open", side_effect=WebSocketProtocolError("Boom")),
     ):
         # device not supported
         result = await hass.config_entries.flow.async_init(
@@ -792,15 +814,19 @@ async def test_ssdp_model_not_supported(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("remoteencws_failing")
 async def test_ssdp_not_successful(hass: HomeAssistant) -> None:
     """Test starting a flow from discovery but no device found."""
-    with patch(
-        "homeassistant.components.samsungtv.bridge.Remote",
-        side_effect=OSError("Boom"),
-    ), patch(
-        "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncRemote.open",
-        side_effect=OSError("Boom"),
-    ), patch(
-        "homeassistant.components.samsungtv.bridge.SamsungTVWSBridge.async_device_info",
-        return_value=MOCK_DEVICE_INFO,
+    with (
+        patch(
+            "homeassistant.components.samsungtv.bridge.Remote",
+            side_effect=OSError("Boom"),
+        ),
+        patch(
+            "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncRemote.open",
+            side_effect=OSError("Boom"),
+        ),
+        patch(
+            "homeassistant.components.samsungtv.bridge.SamsungTVWSBridge.async_device_info",
+            return_value=MOCK_DEVICE_INFO,
+        ),
     ):
         # confirm to add the entry
         result = await hass.config_entries.flow.async_init(
@@ -820,15 +846,19 @@ async def test_ssdp_not_successful(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("remoteencws_failing")
 async def test_ssdp_not_successful_2(hass: HomeAssistant) -> None:
     """Test starting a flow from discovery but no device found."""
-    with patch(
-        "homeassistant.components.samsungtv.bridge.Remote",
-        side_effect=OSError("Boom"),
-    ), patch(
-        "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncRemote.open",
-        side_effect=ConnectionFailure("Boom"),
-    ), patch(
-        "homeassistant.components.samsungtv.bridge.SamsungTVWSBridge.async_device_info",
-        return_value=MOCK_DEVICE_INFO,
+    with (
+        patch(
+            "homeassistant.components.samsungtv.bridge.Remote",
+            side_effect=OSError("Boom"),
+        ),
+        patch(
+            "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncRemote.open",
+            side_effect=ConnectionFailure("Boom"),
+        ),
+        patch(
+            "homeassistant.components.samsungtv.bridge.SamsungTVWSBridge.async_device_info",
+            return_value=MOCK_DEVICE_INFO,
+        ),
     ):
         # confirm to add the entry
         result = await hass.config_entries.flow.async_init(
@@ -916,7 +946,7 @@ async def test_dhcp_wireless(hass: HomeAssistant) -> None:
     assert result["title"] == "TV-UE48JU6470 (UE48JU6400)"
     assert result["data"][CONF_HOST] == "fake_host"
     assert result["data"][CONF_NAME] == "TV-UE48JU6470"
-    assert result["data"][CONF_MAC] == "aa:bb:ww:ii:ff:ii"
+    assert result["data"][CONF_MAC] == "aa:bb:aa:aa:aa:aa"
     assert result["data"][CONF_MANUFACTURER] == "Samsung"
     assert result["data"][CONF_MODEL] == "UE48JU6400"
     assert result["result"].unique_id == "223da676-497a-4e06-9507-5e27ec4f0fb3"
@@ -971,7 +1001,7 @@ async def test_zeroconf(hass: HomeAssistant) -> None:
     assert result["title"] == "Living Room (82GXARRS)"
     assert result["data"][CONF_HOST] == "127.0.0.1"
     assert result["data"][CONF_NAME] == "Living Room"
-    assert result["data"][CONF_MAC] == "aa:bb:ww:ii:ff:ii"
+    assert result["data"][CONF_MAC] == "aa:bb:aa:aa:aa:aa"
     assert result["data"][CONF_MANUFACTURER] == "Samsung"
     assert result["data"][CONF_MODEL] == "82GXARRS"
     assert result["result"].unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
@@ -1038,14 +1068,18 @@ async def test_zeroconf_and_dhcp_same_time(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("remoteencws_failing")
 async def test_autodetect_websocket(hass: HomeAssistant) -> None:
     """Test for send key with autodetection of protocol."""
-    with patch(
-        "homeassistant.components.samsungtv.bridge.Remote",
-        side_effect=OSError("Boom"),
-    ), patch(
-        "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncRemote"
-    ) as remotews, patch(
-        "homeassistant.components.samsungtv.bridge.SamsungTVAsyncRest",
-    ) as rest_api_class:
+    with (
+        patch(
+            "homeassistant.components.samsungtv.bridge.Remote",
+            side_effect=OSError("Boom"),
+        ),
+        patch(
+            "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncRemote"
+        ) as remotews,
+        patch(
+            "homeassistant.components.samsungtv.bridge.SamsungTVAsyncRest",
+        ) as rest_api_class,
+    ):
         remote = Mock(SamsungTVWSAsyncRemote)
         remote.__aenter__ = AsyncMock(return_value=remote)
         remote.__aexit__ = AsyncMock(return_value=False)
@@ -1085,14 +1119,18 @@ async def test_autodetect_websocket(hass: HomeAssistant) -> None:
 async def test_websocket_no_mac(hass: HomeAssistant, mac_address: Mock) -> None:
     """Test for send key with autodetection of protocol."""
     mac_address.return_value = "gg:ee:tt:mm:aa:cc"
-    with patch(
-        "homeassistant.components.samsungtv.bridge.Remote",
-        side_effect=OSError("Boom"),
-    ), patch(
-        "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncRemote"
-    ) as remotews, patch(
-        "homeassistant.components.samsungtv.bridge.SamsungTVAsyncRest",
-    ) as rest_api_class:
+    with (
+        patch(
+            "homeassistant.components.samsungtv.bridge.Remote",
+            side_effect=OSError("Boom"),
+        ),
+        patch(
+            "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncRemote"
+        ) as remotews,
+        patch(
+            "homeassistant.components.samsungtv.bridge.SamsungTVAsyncRest",
+        ) as rest_api_class,
+    ):
         remote = Mock(SamsungTVWSAsyncRemote)
         remote.__aenter__ = AsyncMock(return_value=remote)
         remote.__aexit__ = AsyncMock(return_value=False)
@@ -1188,13 +1226,16 @@ async def test_autodetect_legacy(hass: HomeAssistant) -> None:
 
 async def test_autodetect_none(hass: HomeAssistant) -> None:
     """Test for send key with autodetection of protocol."""
-    with patch(
-        "homeassistant.components.samsungtv.bridge.Remote",
-        side_effect=OSError("Boom"),
-    ) as remote, patch(
-        "homeassistant.components.samsungtv.bridge.SamsungTVAsyncRest.rest_device_info",
-        side_effect=ResponseError,
-    ) as rest_device_info:
+    with (
+        patch(
+            "homeassistant.components.samsungtv.bridge.Remote",
+            side_effect=OSError("Boom"),
+        ) as remote,
+        patch(
+            "homeassistant.components.samsungtv.bridge.SamsungTVAsyncRest.rest_device_info",
+            side_effect=ResponseError,
+        ) as rest_device_info,
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data=MOCK_USER_DATA
         )
@@ -1258,7 +1299,31 @@ async def test_update_missing_mac_unique_id_added_from_dhcp(
 
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
-    assert entry.data[CONF_MAC] == "aa:bb:dd:hh:cc:pp"
+    assert entry.data[CONF_MAC] == "aa:bb:cc:dd:ee:ff"
+    assert entry.unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
+
+
+@pytest.mark.usefixtures("remotews", "rest_api", "remoteencws_failing")
+async def test_update_incorrectly_formatted_mac_unique_id_added_from_dhcp(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test incorrectly formatted mac is updated and unique id added."""
+    entry_data = MOCK_OLD_ENTRY.copy()
+    entry_data[CONF_MAC] = "aabbccddeeff"
+    entry = MockConfigEntry(domain=DOMAIN, data=entry_data, unique_id=None)
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_DHCP},
+        data=MOCK_DHCP_DATA,
+    )
+    await hass.async_block_till_done()
+    assert len(mock_setup_entry.mock_calls) == 1
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
+    assert entry.data[CONF_MAC] == "aa:bb:cc:dd:ee:ff"
     assert entry.unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 
@@ -1329,7 +1394,7 @@ async def test_update_missing_mac_unique_id_ssdp_location_added_from_ssdp(
 
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
-    assert entry.data[CONF_MAC] == "aa:bb:ww:ii:ff:ii"
+    assert entry.data[CONF_MAC] == "aa:bb:aa:aa:aa:aa"
     # Wrong st
     assert CONF_SSDP_RENDERING_CONTROL_LOCATION not in entry.data
     assert entry.unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
@@ -1385,7 +1450,7 @@ async def test_update_missing_mac_unique_id_added_ssdp_location_updated_from_ssd
 
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
-    assert entry.data[CONF_MAC] == "aa:bb:ww:ii:ff:ii"
+    assert entry.data[CONF_MAC] == "aa:bb:aa:aa:aa:aa"
     # Wrong ST, ssdp location should not change
     assert (
         entry.data[CONF_SSDP_RENDERING_CONTROL_LOCATION] == "https://1.2.3.4:555/test"
@@ -1418,7 +1483,7 @@ async def test_update_missing_mac_unique_id_added_ssdp_location_rendering_st_upd
 
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
-    assert entry.data[CONF_MAC] == "aa:bb:ww:ii:ff:ii"
+    assert entry.data[CONF_MAC] == "aa:bb:aa:aa:aa:aa"
     # Correct ST, ssdp location should change
     assert (
         entry.data[CONF_SSDP_RENDERING_CONTROL_LOCATION]
@@ -1453,7 +1518,7 @@ async def test_update_missing_mac_unique_id_added_ssdp_location_main_tv_agent_st
 
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
-    assert entry.data[CONF_MAC] == "aa:bb:ww:ii:ff:ii"
+    assert entry.data[CONF_MAC] == "aa:bb:aa:aa:aa:aa"
     # Main TV Agent ST, ssdp location should change
     assert (
         entry.data[CONF_SSDP_MAIN_TV_AGENT_LOCATION]
@@ -1473,7 +1538,7 @@ async def test_update_ssdp_location_rendering_st_updated_from_ssdp(
     """Test with outdated ssdp_location with the correct st added via ssdp."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={**MOCK_OLD_ENTRY, CONF_MAC: "aa:bb:ww:ii:ff:ii"},
+        data={**MOCK_OLD_ENTRY, CONF_MAC: "aa:bb:aa:aa:aa:aa"},
         unique_id="be9554b9-c9fb-41f4-8920-22da015376a4",
     )
     entry.add_to_hass(hass)
@@ -1488,7 +1553,7 @@ async def test_update_ssdp_location_rendering_st_updated_from_ssdp(
 
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
-    assert entry.data[CONF_MAC] == "aa:bb:ww:ii:ff:ii"
+    assert entry.data[CONF_MAC] == "aa:bb:aa:aa:aa:aa"
     # Correct ST, ssdp location should be added
     assert (
         entry.data[CONF_SSDP_RENDERING_CONTROL_LOCATION]
@@ -1504,7 +1569,7 @@ async def test_update_main_tv_ssdp_location_rendering_st_updated_from_ssdp(
     """Test with outdated ssdp_location with the correct st added via ssdp."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={**MOCK_OLD_ENTRY, CONF_MAC: "aa:bb:ww:ii:ff:ii"},
+        data={**MOCK_OLD_ENTRY, CONF_MAC: "aa:bb:aa:aa:aa:aa"},
         unique_id="be9554b9-c9fb-41f4-8920-22da015376a4",
     )
     entry.add_to_hass(hass)
@@ -1519,7 +1584,7 @@ async def test_update_main_tv_ssdp_location_rendering_st_updated_from_ssdp(
 
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
-    assert entry.data[CONF_MAC] == "aa:bb:ww:ii:ff:ii"
+    assert entry.data[CONF_MAC] == "aa:bb:aa:aa:aa:aa"
     # Correct ST for MainTV, ssdp location should be added
     assert (
         entry.data[CONF_SSDP_MAIN_TV_AGENT_LOCATION]
@@ -1570,7 +1635,7 @@ async def test_update_legacy_missing_mac_from_dhcp(
         DOMAIN,
         context={"source": config_entries.SOURCE_DHCP},
         data=dhcp.DhcpServiceInfo(
-            ip=EXISTING_IP, macaddress="aa:bb:cc:dd:ee:ff", hostname="fake_hostname"
+            ip=EXISTING_IP, macaddress="aabbccddeeff", hostname="fake_hostname"
         ),
     )
     await hass.async_block_till_done()
@@ -1593,18 +1658,21 @@ async def test_update_legacy_missing_mac_from_dhcp_no_unique_id(
         data=MOCK_LEGACY_ENTRY,
     )
     entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.samsungtv.bridge.Remote.__enter__",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.samsungtv.bridge.SamsungTVEncryptedWSAsyncRemote.start_listening",
-        side_effect=WebSocketProtocolError("Boom"),
+    with (
+        patch(
+            "homeassistant.components.samsungtv.bridge.Remote.__enter__",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.samsungtv.bridge.SamsungTVEncryptedWSAsyncRemote.start_listening",
+            side_effect=WebSocketProtocolError("Boom"),
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
             data=dhcp.DhcpServiceInfo(
-                ip=EXISTING_IP, macaddress="aa:bb:cc:dd:ee:ff", hostname="fake_hostname"
+                ip=EXISTING_IP, macaddress="aabbccddeeff", hostname="fake_hostname"
             ),
         )
         await hass.async_block_till_done()
@@ -1623,7 +1691,7 @@ async def test_update_ssdp_location_unique_id_added_from_ssdp(
     """Test missing ssdp_location, and unique id added via ssdp."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={**MOCK_OLD_ENTRY, CONF_MAC: "aa:bb:ww:ii:ff:ii"},
+        data={**MOCK_OLD_ENTRY, CONF_MAC: "aa:bb:aa:aa:aa:aa"},
         unique_id=None,
     )
     entry.add_to_hass(hass)
@@ -1638,7 +1706,7 @@ async def test_update_ssdp_location_unique_id_added_from_ssdp(
 
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
-    assert entry.data[CONF_MAC] == "aa:bb:ww:ii:ff:ii"
+    assert entry.data[CONF_MAC] == "aa:bb:aa:aa:aa:aa"
     # Wrong st
     assert CONF_SSDP_RENDERING_CONTROL_LOCATION not in entry.data
     assert entry.unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
@@ -1651,7 +1719,7 @@ async def test_update_ssdp_location_unique_id_added_from_ssdp_with_rendering_con
     """Test missing ssdp_location, and unique id added via ssdp with rendering control st."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={**MOCK_OLD_ENTRY, CONF_MAC: "aa:bb:ww:ii:ff:ii"},
+        data={**MOCK_OLD_ENTRY, CONF_MAC: "aa:bb:aa:aa:aa:aa"},
         unique_id=None,
     )
     entry.add_to_hass(hass)
@@ -1666,7 +1734,7 @@ async def test_update_ssdp_location_unique_id_added_from_ssdp_with_rendering_con
 
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
-    assert entry.data[CONF_MAC] == "aa:bb:ww:ii:ff:ii"
+    assert entry.data[CONF_MAC] == "aa:bb:aa:aa:aa:aa"
     # Correct st
     assert (
         entry.data[CONF_SSDP_RENDERING_CONTROL_LOCATION]
@@ -1879,7 +1947,7 @@ async def test_update_incorrect_udn_matching_upnp_udn_unique_id_added_from_ssdp(
 
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
-    assert entry.data[CONF_MAC] == "aa:bb:ww:ii:ff:ii"
+    assert entry.data[CONF_MAC] == "aa:bb:aa:aa:aa:aa"
     assert entry.unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 
@@ -1890,7 +1958,7 @@ async def test_update_incorrect_udn_matching_mac_unique_id_added_from_ssdp(
     """Test updating the wrong udn from ssdp via mac match."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={**MOCK_OLD_ENTRY, CONF_MAC: "aa:bb:ww:ii:ff:ii"},
+        data={**MOCK_OLD_ENTRY, CONF_MAC: "aa:bb:aa:aa:aa:aa"},
         unique_id=None,
     )
     entry.add_to_hass(hass)
@@ -1905,7 +1973,7 @@ async def test_update_incorrect_udn_matching_mac_unique_id_added_from_ssdp(
 
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
-    assert entry.data[CONF_MAC] == "aa:bb:ww:ii:ff:ii"
+    assert entry.data[CONF_MAC] == "aa:bb:aa:aa:aa:aa"
     assert entry.unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 
@@ -1916,7 +1984,7 @@ async def test_update_incorrect_udn_matching_mac_from_dhcp(
     """Test that DHCP updates the wrong udn from ssdp via mac match."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={**MOCK_ENTRYDATA_WS, CONF_MAC: "aa:bb:ww:ii:ff:ii"},
+        data={**MOCK_ENTRYDATA_WS, CONF_MAC: "aa:bb:aa:aa:aa:aa"},
         source=config_entries.SOURCE_SSDP,
         unique_id="0d1cef00-00dc-1000-9c80-4844f7b172de",
     )
@@ -1932,7 +2000,7 @@ async def test_update_incorrect_udn_matching_mac_from_dhcp(
 
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
-    assert entry.data[CONF_MAC] == "aa:bb:ww:ii:ff:ii"
+    assert entry.data[CONF_MAC] == "aa:bb:aa:aa:aa:aa"
     assert entry.unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 

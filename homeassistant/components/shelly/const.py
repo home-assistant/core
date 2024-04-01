@@ -1,4 +1,5 @@
 """Constants for the Shelly integration."""
+
 from __future__ import annotations
 
 from enum import StrEnum
@@ -14,7 +15,10 @@ from aioshelly.const import (
     MODEL_DIMMER,
     MODEL_DIMMER_2,
     MODEL_DUO,
+    MODEL_DW,
+    MODEL_DW_2,
     MODEL_GAS,
+    MODEL_HT,
     MODEL_MOTION,
     MODEL_MOTION_2,
     MODEL_RGBW2,
@@ -29,11 +33,13 @@ LOGGER: Logger = getLogger(__package__)
 
 DATA_CONFIG_ENTRY: Final = "config_entry"
 CONF_COAP_PORT: Final = "coap_port"
-DEFAULT_COAP_PORT: Final = 5683
 FIRMWARE_PATTERN: Final = re.compile(r"^(\d{8})")
 
-# max light transition time in milliseconds
-MAX_TRANSITION_TIME: Final = 5000
+# max BLOCK light transition time in milliseconds (min=0)
+BLOCK_MAX_TRANSITION_TIME_MS: Final = 5000
+
+# min RPC light transition time in seconds (max=10800, limited by light entity to 6553)
+RPC_MIN_TRANSITION_TIME_SEC = 0.5
 
 RGBW_MODELS: Final = (
     MODEL_BULB,
@@ -53,6 +59,12 @@ MODELS_SUPPORTING_LIGHT_EFFECTS: Final = (
     MODEL_BULB,
     MODEL_BULB_RGBW,
     MODEL_RGBW2,
+)
+
+MODELS_WITH_WRONG_SLEEP_PERIOD: Final = (
+    MODEL_DW,
+    MODEL_DW_2,
+    MODEL_HT,
 )
 
 # Bulbs that support white & color modes
@@ -176,6 +188,10 @@ KELVIN_MAX_VALUE: Final = 6500
 KELVIN_MIN_VALUE_WHITE: Final = 2700
 KELVIN_MIN_VALUE_COLOR: Final = 3000
 
+# Sleep period
+BLOCK_WRONG_SLEEP_PERIOD = 21600
+BLOCK_EXPECTED_SLEEP_PERIOD = 43200
+
 UPTIME_DEVIATION: Final = 5
 
 # Time to wait before reloading entry upon device config change
@@ -199,6 +215,8 @@ PUSH_UPDATE_ISSUE_ID = "push_update_{unique}"
 
 NOT_CALIBRATED_ISSUE_ID = "not_calibrated_{unique}"
 
+FIRMWARE_UNSUPPORTED_ISSUE_ID = "firmware_unsupported_{unique}"
+
 GAS_VALVE_OPEN_STATES = ("opening", "opened")
 
 OTA_BEGIN = "ota_begin"
@@ -214,3 +232,7 @@ DEVICES_WITHOUT_FIRMWARE_CHANGELOG = (
     MODEL_MOTION_2,
     MODEL_VALVE,
 )
+
+CONF_GEN = "gen"
+
+SHELLY_PLUS_RGBW_CHANNELS = 4

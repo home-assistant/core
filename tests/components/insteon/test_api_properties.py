@@ -1,4 +1,5 @@
 """Test the Insteon properties APIs."""
+
 import json
 from unittest.mock import AsyncMock, patch
 

@@ -1,4 +1,5 @@
 """Test the Tami4 component."""
+
 import pytest
 from Tami4EdgeAPI import exceptions
 

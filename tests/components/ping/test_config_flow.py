@@ -1,4 +1,5 @@
 """Test the Ping (ICMP) config flow."""
+
 from __future__ import annotations
 
 import pytest
@@ -16,7 +17,7 @@ from tests.common import MockConfigEntry
 
 @pytest.mark.parametrize(
     ("host", "expected_title"),
-    (("192.618.178.1", "192.618.178.1"),),
+    [("192.618.178.1", "192.618.178.1")],
 )
 @pytest.mark.usefixtures("patch_setup")
 async def test_form(hass: HomeAssistant, host, expected_title) -> None:
@@ -42,12 +43,13 @@ async def test_form(hass: HomeAssistant, host, expected_title) -> None:
     assert result["options"] == {
         "count": 5,
         "host": host,
+        "consider_home": 180,
     }
 
 
 @pytest.mark.parametrize(
     ("host", "count", "expected_title"),
-    (("192.618.178.1", 10, "192.618.178.1"),),
+    [("192.618.178.1", 10, "192.618.178.1")],
 )
 @pytest.mark.usefixtures("patch_setup")
 async def test_options(hass: HomeAssistant, host, count, expected_title) -> None:
@@ -58,7 +60,7 @@ async def test_options(hass: HomeAssistant, host, count, expected_title) -> None
         source=config_entries.SOURCE_USER,
         data={},
         domain=DOMAIN,
-        options={"count": count, "host": host},
+        options={"count": count, "host": host, "consider_home": 180},
         title=expected_title,
     )
     config_entry.add_to_hass(hass)
@@ -83,6 +85,7 @@ async def test_options(hass: HomeAssistant, host, count, expected_title) -> None
     assert result["data"] == {
         "count": count,
         "host": "10.10.10.1",
+        "consider_home": 180,
     }
 
 
@@ -103,6 +106,7 @@ async def test_step_import(hass: HomeAssistant) -> None:
     assert result["options"] == {
         "host": "127.0.0.1",
         "count": 1,
+        "consider_home": 240,
     }
 
     # test import without name
@@ -119,4 +123,5 @@ async def test_step_import(hass: HomeAssistant) -> None:
     assert result["options"] == {
         "host": "10.10.10.10",
         "count": 5,
+        "consider_home": 180,
     }

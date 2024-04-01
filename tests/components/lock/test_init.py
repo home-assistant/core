@@ -1,10 +1,13 @@
 """The tests for the lock component."""
+
 from __future__ import annotations
 
+import re
 from typing import Any
 
 import pytest
 
+from homeassistant.components import lock
 from homeassistant.components.lock import (
     ATTR_CODE,
     CONF_DEFAULT_CODE,
@@ -20,10 +23,13 @@ from homeassistant.components.lock import (
     LockEntityFeature,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 import homeassistant.helpers.entity_registry as er
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 
 from .conftest import MockLock
+
+from tests.common import help_test_all, import_and_test_deprecated_constant_enum
 
 
 async def help_test_async_lock_service(
@@ -131,15 +137,15 @@ async def test_lock_open_with_code(
     state = hass.states.get(mock_lock_entity.entity_id)
     assert state.attributes["code_format"] == r"^\d{4}$"
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await help_test_async_lock_service(
             hass, mock_lock_entity.entity_id, SERVICE_OPEN
         )
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await help_test_async_lock_service(
             hass, mock_lock_entity.entity_id, SERVICE_OPEN, code=""
         )
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await help_test_async_lock_service(
             hass, mock_lock_entity.entity_id, SERVICE_OPEN, code="HELLO"
         )
@@ -167,15 +173,15 @@ async def test_lock_lock_with_code(
     mock_lock_entity.calls_unlock.assert_called_with(code="1234")
     assert mock_lock_entity.calls_lock.call_count == 0
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await help_test_async_lock_service(
             hass, mock_lock_entity.entity_id, SERVICE_LOCK
         )
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await help_test_async_lock_service(
             hass, mock_lock_entity.entity_id, SERVICE_LOCK, code=""
         )
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await help_test_async_lock_service(
             hass, mock_lock_entity.entity_id, SERVICE_LOCK, code="HELLO"
         )
@@ -203,15 +209,15 @@ async def test_lock_unlock_with_code(
     mock_lock_entity.calls_lock.assert_called_with(code="1234")
     assert mock_lock_entity.calls_unlock.call_count == 0
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await help_test_async_lock_service(
             hass, mock_lock_entity.entity_id, SERVICE_UNLOCK
         )
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await help_test_async_lock_service(
             hass, mock_lock_entity.entity_id, SERVICE_UNLOCK, code=""
         )
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await help_test_async_lock_service(
             hass, mock_lock_entity.entity_id, SERVICE_UNLOCK, code="HELLO"
         )
@@ -231,15 +237,15 @@ async def test_lock_with_illegal_code(
 ) -> None:
     """Test lock entity with default code that does not match the code format."""
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await help_test_async_lock_service(
             hass, mock_lock_entity.entity_id, SERVICE_OPEN, code="123456"
         )
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await help_test_async_lock_service(
             hass, mock_lock_entity.entity_id, SERVICE_LOCK, code="123456"
         )
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await help_test_async_lock_service(
             hass, mock_lock_entity.entity_id, SERVICE_UNLOCK, code="123456"
         )
@@ -341,15 +347,57 @@ async def test_lock_with_illegal_default_code(
     assert mock_lock_entity.state_attributes == {"code_format": r"^\d{4}$"}
     assert mock_lock_entity._lock_option_default_code == ""
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await help_test_async_lock_service(
             hass, mock_lock_entity.entity_id, SERVICE_OPEN
         )
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await help_test_async_lock_service(
             hass, mock_lock_entity.entity_id, SERVICE_LOCK
         )
-    with pytest.raises(ValueError):
+    with pytest.raises(
+        ServiceValidationError,
+        match=re.escape(
+            rf"The code for lock.test_lock doesn't match pattern ^\d{{{4}}}$"
+        ),
+    ) as exc:
         await help_test_async_lock_service(
             hass, mock_lock_entity.entity_id, SERVICE_UNLOCK
         )
+
+    assert (
+        str(exc.value)
+        == rf"The code for lock.test_lock doesn't match pattern ^\d{{{4}}}$"
+    )
+    assert exc.value.translation_key == "add_default_code"
+
+
+def test_all() -> None:
+    """Test module.__all__ is correctly set."""
+    help_test_all(lock)
+
+
+@pytest.mark.parametrize(("enum"), list(LockEntityFeature))
+def test_deprecated_constants(
+    caplog: pytest.LogCaptureFixture,
+    enum: LockEntityFeature,
+) -> None:
+    """Test deprecated constants."""
+    import_and_test_deprecated_constant_enum(caplog, lock, enum, "SUPPORT_", "2025.1")
+
+
+def test_deprecated_supported_features_ints(caplog: pytest.LogCaptureFixture) -> None:
+    """Test deprecated supported features ints."""
+
+    class MockLockEntity(lock.LockEntity):
+        _attr_supported_features = 1
+
+    entity = MockLockEntity()
+    assert entity.supported_features is lock.LockEntityFeature(1)
+    assert "MockLockEntity" in caplog.text
+    assert "is using deprecated supported features values" in caplog.text
+    assert "Instead it should use" in caplog.text
+    assert "LockEntityFeature.OPEN" in caplog.text
+    caplog.clear()
+    assert entity.supported_features is lock.LockEntityFeature(1)
+    assert "is using deprecated supported features values" not in caplog.text

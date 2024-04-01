@@ -41,12 +41,10 @@ class cached_property(Generic[_T]):
             )
 
     @overload
-    def __get__(self, instance: None, owner: type[Any] | None = None) -> Self:
-        ...
+    def __get__(self, instance: None, owner: type[Any] | None = None) -> Self: ...
 
     @overload
-    def __get__(self, instance: Any, owner: type[Any] | None = None) -> _T:
-        ...
+    def __get__(self, instance: Any, owner: type[Any] | None = None) -> _T: ...
 
     def __get__(
         self, instance: Any | None, owner: type[Any] | None = None

@@ -1,4 +1,5 @@
 """The tests for the Recorder component."""
+
 from datetime import datetime, timedelta
 from unittest.mock import PropertyMock
 
@@ -77,7 +78,7 @@ def test_from_event_to_db_state_attributes() -> None:
     dialect = SupportedDialect.MYSQL
 
     db_attrs.shared_attrs = StateAttributes.shared_attrs_bytes_from_event(
-        event, {}, dialect
+        event, dialect
     )
     assert db_attrs.to_native() == attrs
 
@@ -97,7 +98,7 @@ def test_repr() -> None:
         EVENT_STATE_CHANGED,
         {"entity_id": "sensor.temperature", "old_state": None, "new_state": state},
         context=state.context,
-        time_fired=fixed_time,
+        time_fired_timestamp=fixed_time.timestamp(),
     )
     assert "2016-07-09 11:00:00+00:00" in repr(States.from_event(event))
     assert "2016-07-09 11:00:00+00:00" in repr(Events.from_event(event))
@@ -163,7 +164,7 @@ def test_from_event_to_delete_state() -> None:
     assert db_state.entity_id == "sensor.temperature"
     assert db_state.state == ""
     assert db_state.last_changed_ts is None
-    assert db_state.last_updated_ts == event.time_fired.timestamp()
+    assert db_state.last_updated_ts == pytest.approx(event.time_fired.timestamp())
 
 
 def test_states_from_native_invalid_entity_id() -> None:
@@ -246,7 +247,10 @@ async def test_process_timestamp_to_utc_isoformat() -> None:
 async def test_event_to_db_model() -> None:
     """Test we can round trip Event conversion."""
     event = ha.Event(
-        "state_changed", {"some": "attr"}, ha.EventOrigin.local, dt_util.utcnow()
+        "state_changed",
+        {"some": "attr"},
+        ha.EventOrigin.local,
+        dt_util.utcnow().timestamp(),
     )
     db_event = Events.from_event(event)
     dialect = SupportedDialect.MYSQL
@@ -350,22 +354,6 @@ async def test_lazy_state_handles_same_last_updated_and_last_changed(
         "entity_id": "sensor.valid",
         "last_changed": "2021-06-12T03:04:01.000323+00:00",
         "last_updated": "2021-06-12T03:04:01.000323+00:00",
-        "state": "off",
-    }
-    lstate.last_updated = datetime(2020, 6, 12, 3, 4, 1, 323, tzinfo=dt_util.UTC)
-    assert lstate.as_dict() == {
-        "attributes": {"shared": True},
-        "entity_id": "sensor.valid",
-        "last_changed": "2021-06-12T03:04:01.000323+00:00",
-        "last_updated": "2020-06-12T03:04:01.000323+00:00",
-        "state": "off",
-    }
-    lstate.last_changed = datetime(2020, 6, 12, 3, 4, 1, 323, tzinfo=dt_util.UTC)
-    assert lstate.as_dict() == {
-        "attributes": {"shared": True},
-        "entity_id": "sensor.valid",
-        "last_changed": "2020-06-12T03:04:01.000323+00:00",
-        "last_updated": "2020-06-12T03:04:01.000323+00:00",
         "state": "off",
     }
 

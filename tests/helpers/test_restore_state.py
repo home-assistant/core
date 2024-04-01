@@ -1,4 +1,5 @@
 """The tests for the Restore component."""
+
 from collections.abc import Coroutine
 from datetime import datetime, timedelta
 import logging
@@ -31,6 +32,7 @@ from tests.common import (
     MockModule,
     MockPlatform,
     async_fire_time_changed,
+    json_round_trip,
     mock_integration,
     mock_platform,
 )
@@ -209,7 +211,7 @@ async def test_save_persistent_states(hass: HomeAssistant) -> None:
 
 async def test_hass_starting(hass: HomeAssistant) -> None:
     """Test that we cache data."""
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     now = dt_util.utcnow()
     stored_states = [
@@ -223,7 +225,7 @@ async def test_hass_starting(hass: HomeAssistant) -> None:
     await data.store.async_save([state.as_dict() for state in stored_states])
 
     # Emulate a fresh load
-    hass.state = CoreState.not_running
+    hass.set_state(CoreState.not_running)
     hass.data.pop(DATA_RESTORE_STATE)
     await async_load(hass)
     data = async_get(hass)
@@ -318,12 +320,15 @@ async def test_dump_data(hass: HomeAssistant) -> None:
     # b4 should not be written, since it is now expired
     # b5 should be written, since current state is restored by entity registry
     assert len(written_states) == 3
-    assert written_states[0]["state"]["entity_id"] == "input_boolean.b1"
-    assert written_states[0]["state"]["state"] == "on"
-    assert written_states[1]["state"]["entity_id"] == "input_boolean.b3"
-    assert written_states[1]["state"]["state"] == "off"
-    assert written_states[2]["state"]["entity_id"] == "input_boolean.b5"
-    assert written_states[2]["state"]["state"] == "off"
+    state0 = json_round_trip(written_states[0])
+    state1 = json_round_trip(written_states[1])
+    state2 = json_round_trip(written_states[2])
+    assert state0["state"]["entity_id"] == "input_boolean.b1"
+    assert state0["state"]["state"] == "on"
+    assert state1["state"]["entity_id"] == "input_boolean.b3"
+    assert state1["state"]["state"] == "off"
+    assert state2["state"]["entity_id"] == "input_boolean.b5"
+    assert state2["state"]["state"] == "off"
 
     # Test that removed entities are not persisted
     await entity.async_remove()
@@ -340,10 +345,12 @@ async def test_dump_data(hass: HomeAssistant) -> None:
     args = mock_write_data.mock_calls[0][1]
     written_states = args[0]
     assert len(written_states) == 2
-    assert written_states[0]["state"]["entity_id"] == "input_boolean.b3"
-    assert written_states[0]["state"]["state"] == "off"
-    assert written_states[1]["state"]["entity_id"] == "input_boolean.b5"
-    assert written_states[1]["state"]["state"] == "off"
+    state0 = json_round_trip(written_states[0])
+    state1 = json_round_trip(written_states[1])
+    assert state0["state"]["entity_id"] == "input_boolean.b3"
+    assert state0["state"]["state"] == "off"
+    assert state1["state"]["entity_id"] == "input_boolean.b5"
+    assert state1["state"]["state"] == "off"
 
 
 async def test_dump_error(hass: HomeAssistant) -> None:

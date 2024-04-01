@@ -1,4 +1,5 @@
 """Test the tractive config flow."""
+
 from unittest.mock import patch
 
 import aiotractive
@@ -24,12 +25,13 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["type"] == "form"
     assert result["errors"] is None
 
-    with patch(
-        "aiotractive.api.API.user_id", return_value={"user_id": "user_id"}
-    ), patch(
-        "homeassistant.components.tractive.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch("aiotractive.api.API.user_id", return_value="user_id"),
+        patch(
+            "homeassistant.components.tractive.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             USER_INPUT,
@@ -121,10 +123,13 @@ async def test_reauthentication(hass: HomeAssistant) -> None:
     assert result["errors"] == {}
     assert result["step_id"] == "reauth_confirm"
 
-    with patch("aiotractive.api.API.user_id", return_value="USERID"), patch(
-        "homeassistant.components.tractive.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch("aiotractive.api.API.user_id", return_value="USERID"),
+        patch(
+            "homeassistant.components.tractive.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             USER_INPUT,

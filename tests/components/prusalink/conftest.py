@@ -1,4 +1,5 @@
 """Fixtures for PrusaLink."""
+
 from unittest.mock import patch
 
 import pytest
@@ -14,7 +15,8 @@ def mock_config_entry(hass):
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={"host": "http://example.com", "username": "dummy", "password": "dummypw"},
-        version=2,
+        version=1,
+        minor_version=2,
     )
     entry.add_to_hass(hass)
     return entry
@@ -115,6 +117,32 @@ def mock_get_status_printing(hass):
 def mock_job_api_idle(hass):
     """Mock PrusaLink job API having no job."""
     resp = {}
+    with patch("pyprusalink.PrusaLink.get_job", return_value=resp):
+        yield resp
+
+
+@pytest.fixture
+def mock_job_api_idle_mk3(hass):
+    """Mock PrusaLink job API having a job with idle state (MK3)."""
+    resp = {
+        "id": 129,
+        "state": "IDLE",
+        "progress": 0.0,
+        "time_remaining": None,
+        "time_printing": 0,
+        "file": {
+            "refs": {
+                "icon": "/thumb/s/usb/TabletStand3~4.BGC",
+                "thumbnail": "/thumb/l/usb/TabletStand3~4.BGC",
+                "download": "/usb/TabletStand3~4.BGC",
+            },
+            "name": "TabletStand3~4.BGC",
+            "display_name": "TabletStand3.bgcode",
+            "path": "/usb",
+            "size": 754535,
+            "m_timestamp": 1698686881,
+        },
+    }
     with patch("pyprusalink.PrusaLink.get_job", return_value=resp):
         yield resp
 

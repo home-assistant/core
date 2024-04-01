@@ -1,4 +1,5 @@
 """Support for Roborock time."""
+
 import asyncio
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
@@ -25,9 +26,9 @@ from .device import RoborockEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
-class RoborockTimeDescriptionMixin:
-    """Define an entity description mixin for time entities."""
+@dataclass(frozen=True, kw_only=True)
+class RoborockTimeDescription(TimeEntityDescription):
+    """Class to describe a Roborock time entity."""
 
     # Gets the status of the switch
     cache_key: CacheableAttribute
@@ -37,16 +38,10 @@ class RoborockTimeDescriptionMixin:
     get_value: Callable[[AttributeCache], datetime.time]
 
 
-@dataclass(frozen=True)
-class RoborockTimeDescription(TimeEntityDescription, RoborockTimeDescriptionMixin):
-    """Class to describe an Roborock time entity."""
-
-
 TIME_DESCRIPTIONS: list[RoborockTimeDescription] = [
     RoborockTimeDescription(
         key="dnd_start_time",
         translation_key="dnd_start_time",
-        icon="mdi:bell-cancel",
         cache_key=CacheableAttribute.dnd_timer,
         update_value=lambda cache, desired_time: cache.update_value(
             [
@@ -64,7 +59,6 @@ TIME_DESCRIPTIONS: list[RoborockTimeDescription] = [
     RoborockTimeDescription(
         key="dnd_end_time",
         translation_key="dnd_end_time",
-        icon="mdi:bell-ring",
         cache_key=CacheableAttribute.dnd_timer,
         update_value=lambda cache, desired_time: cache.update_value(
             [
@@ -82,7 +76,6 @@ TIME_DESCRIPTIONS: list[RoborockTimeDescription] = [
     RoborockTimeDescription(
         key="off_peak_start",
         translation_key="off_peak_start",
-        icon="mdi:power-plug",
         cache_key=CacheableAttribute.valley_electricity_timer,
         update_value=lambda cache, desired_time: cache.update_value(
             [
@@ -101,7 +94,6 @@ TIME_DESCRIPTIONS: list[RoborockTimeDescription] = [
     RoborockTimeDescription(
         key="off_peak_end",
         translation_key="off_peak_end",
-        icon="mdi:power-plug-off",
         cache_key=CacheableAttribute.valley_electricity_timer,
         update_value=lambda cache, desired_time: cache.update_value(
             [

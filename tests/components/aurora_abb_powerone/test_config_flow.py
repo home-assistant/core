@@ -1,4 +1,5 @@
 """Test the Aurora ABB PowerOne Solar PV config flow."""
+
 from unittest.mock import patch
 
 from aurorapy.client import AuroraError, AuroraTimeoutError
@@ -8,10 +9,9 @@ from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.aurora_abb_powerone.const import (
     ATTR_FIRMWARE,
     ATTR_MODEL,
-    ATTR_SERIAL_NUMBER,
     DOMAIN,
 )
-from homeassistant.const import CONF_ADDRESS, CONF_PORT
+from homeassistant.const import ATTR_SERIAL_NUMBER, CONF_ADDRESS, CONF_PORT
 from homeassistant.core import HomeAssistant
 
 TEST_DATA = {"device": "/dev/ttyUSB7", "address": 3, "name": "MyAuroraPV"}
@@ -33,25 +33,32 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["type"] == "form"
     assert result["errors"] == {}
 
-    with patch(
-        "aurorapy.client.AuroraSerialClient.connect",
-        return_value=None,
-    ), patch(
-        "aurorapy.client.AuroraSerialClient.serial_number",
-        return_value="9876543",
-    ), patch(
-        "aurorapy.client.AuroraSerialClient.version",
-        return_value="9.8.7.6",
-    ), patch(
-        "aurorapy.client.AuroraSerialClient.pn",
-        return_value="A.B.C",
-    ), patch(
-        "aurorapy.client.AuroraSerialClient.firmware",
-        return_value="1.234",
-    ) as mock_setup, patch(
-        "homeassistant.components.aurora_abb_powerone.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "aurorapy.client.AuroraSerialClient.connect",
+            return_value=None,
+        ),
+        patch(
+            "aurorapy.client.AuroraSerialClient.serial_number",
+            return_value="9876543",
+        ),
+        patch(
+            "aurorapy.client.AuroraSerialClient.version",
+            return_value="9.8.7.6",
+        ),
+        patch(
+            "aurorapy.client.AuroraSerialClient.pn",
+            return_value="A.B.C",
+        ),
+        patch(
+            "aurorapy.client.AuroraSerialClient.firmware",
+            return_value="1.234",
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.aurora_abb_powerone.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_PORT: "/dev/ttyUSB7", CONF_ADDRESS: 7},
@@ -135,16 +142,20 @@ async def test_form_invalid_com_ports(hass: HomeAssistant) -> None:
         )
     assert result2["errors"] == {"base": "cannot_connect"}
 
-    with patch(
-        "aurorapy.client.AuroraSerialClient.connect",
-        side_effect=AuroraError("...Some other message!!!123..."),
-        return_value=None,
-    ), patch(
-        "serial.Serial.isOpen",
-        return_value=True,
-    ), patch(
-        "aurorapy.client.AuroraSerialClient.close",
-    ) as mock_clientclose:
+    with (
+        patch(
+            "aurorapy.client.AuroraSerialClient.connect",
+            side_effect=AuroraError("...Some other message!!!123..."),
+            return_value=None,
+        ),
+        patch(
+            "serial.Serial.isOpen",
+            return_value=True,
+        ),
+        patch(
+            "aurorapy.client.AuroraSerialClient.close",
+        ) as mock_clientclose,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_PORT: "/dev/ttyUSB7", CONF_ADDRESS: 7},

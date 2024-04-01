@@ -1,4 +1,5 @@
 """Allow to set up simple automation rules via the config file."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -7,7 +8,7 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from functools import partial
 import logging
-from typing import Any, Protocol, cast
+from typing import TYPE_CHECKING, Any, Protocol, cast
 
 import voluptuous as vol
 
@@ -58,6 +59,7 @@ from homeassistant.helpers import condition
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.deprecation import (
     DeprecatedConstant,
+    all_with_deprecated_constants,
     check_if_deprecated_constant,
     dir_with_deprecated_constants,
 )
@@ -71,6 +73,7 @@ from homeassistant.helpers.script import (
     CONF_MAX,
     CONF_MAX_EXCEEDED,
     Script,
+    ScriptRunResult,
     script_stack_cv,
 )
 from homeassistant.helpers.script_variables import ScriptVariables
@@ -109,6 +112,12 @@ from .const import (
 from .helpers import async_get_blueprints
 from .trace import trace_automation
 
+if TYPE_CHECKING:
+    from functools import cached_property
+else:
+    from homeassistant.backports.functools import cached_property
+
+
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
 
@@ -146,10 +155,6 @@ _DEPRECATED_AutomationTriggerData = DeprecatedConstant(
 _DEPRECATED_AutomationTriggerInfo = DeprecatedConstant(
     TriggerInfo, "TriggerInfo", "2025.1"
 )
-
-# Both can be removed if no deprecated constant are in this module anymore
-__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
-__dir__ = partial(dir_with_deprecated_constants, module_globals=globals())
 
 
 @bind_hass
@@ -229,6 +234,30 @@ def areas_in_automation(hass: HomeAssistant, entity_id: str) -> list[str]:
 
 
 @callback
+def automations_with_floor(hass: HomeAssistant, floor_id: str) -> list[str]:
+    """Return all automations that reference the floor."""
+    return _automations_with_x(hass, floor_id, "referenced_floors")
+
+
+@callback
+def floors_in_automation(hass: HomeAssistant, entity_id: str) -> list[str]:
+    """Return all floors in an automation."""
+    return _x_in_automation(hass, entity_id, "referenced_floors")
+
+
+@callback
+def automations_with_label(hass: HomeAssistant, label_id: str) -> list[str]:
+    """Return all automations that reference the label."""
+    return _automations_with_x(hass, label_id, "referenced_labels")
+
+
+@callback
+def labels_in_automation(hass: HomeAssistant, entity_id: str) -> list[str]:
+    """Return all labels in an automation."""
+    return _x_in_automation(hass, entity_id, "referenced_labels")
+
+
+@callback
 def automations_with_blueprint(hass: HomeAssistant, blueprint_path: str) -> list[str]:
     """Return all automations that reference the blueprint."""
     if DOMAIN not in hass.data:
@@ -269,8 +298,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     await _async_process_config(hass, config, component)
 
     # Add some default blueprints to blueprints/automation, does nothing
-    # if blueprints/automation already exists
-    await async_get_blueprints(hass).async_populate()
+    # if blueprints/automation already exists but still has to create
+    # an executor job to check if the folder exists so we run it in a
+    # separate task to avoid waiting for it to finish setting up
+    # since a tracked task will be waited at the end of startup
+    hass.async_create_task(
+        async_get_blueprints(hass).async_populate(), eager_start=True
+    )
 
     async def trigger_service_handler(
         entity: BaseAutomationEntity, service_call: ServiceCall
@@ -336,7 +370,17 @@ class BaseAutomationEntity(ToggleEntity, ABC):
             return {CONF_ID: self.unique_id}
         return None
 
-    @property
+    @cached_property
+    @abstractmethod
+    def referenced_labels(self) -> set[str]:
+        """Return a set of referenced labels."""
+
+    @cached_property
+    @abstractmethod
+    def referenced_floors(self) -> set[str]:
+        """Return a set of referenced floors."""
+
+    @cached_property
     @abstractmethod
     def referenced_areas(self) -> set[str]:
         """Return a set of referenced areas."""
@@ -346,12 +390,12 @@ class BaseAutomationEntity(ToggleEntity, ABC):
     def referenced_blueprint(self) -> str | None:
         """Return referenced blueprint or None."""
 
-    @property
+    @cached_property
     @abstractmethod
     def referenced_devices(self) -> set[str]:
         """Return a set of referenced devices."""
 
-    @property
+    @cached_property
     @abstractmethod
     def referenced_entities(self) -> set[str]:
         """Return a set of referenced entities."""
@@ -362,14 +406,14 @@ class BaseAutomationEntity(ToggleEntity, ABC):
         run_variables: dict[str, Any],
         context: Context | None = None,
         skip_condition: bool = False,
-    ) -> None:
+    ) -> ScriptRunResult | None:
         """Trigger automation."""
 
 
 class UnavailableAutomationEntity(BaseAutomationEntity):
     """A non-functional automation entity with its state set to unavailable.
 
-    This class is instatiated when an automation fails to validate.
+    This class is instantiated when an automation fails to validate.
     """
 
     _attr_should_poll = False
@@ -391,7 +435,17 @@ class UnavailableAutomationEntity(BaseAutomationEntity):
         """Return the name of the entity."""
         return self._name
 
-    @property
+    @cached_property
+    def referenced_labels(self) -> set[str]:
+        """Return a set of referenced labels."""
+        return set()
+
+    @cached_property
+    def referenced_floors(self) -> set[str]:
+        """Return a set of referenced floors."""
+        return set()
+
+    @cached_property
     def referenced_areas(self) -> set[str]:
         """Return a set of referenced areas."""
         return set()
@@ -401,12 +455,12 @@ class UnavailableAutomationEntity(BaseAutomationEntity):
         """Return referenced blueprint or None."""
         return None
 
-    @property
+    @cached_property
     def referenced_devices(self) -> set[str]:
         """Return a set of referenced devices."""
         return set()
 
-    @property
+    @cached_property
     def referenced_entities(self) -> set[str]:
         """Return a set of referenced entities."""
         return set()
@@ -448,8 +502,6 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         self.action_script.change_listener = self.async_write_ha_state
         self._initial_state = initial_state
         self._is_enabled = False
-        self._referenced_entities: set[str] | None = None
-        self._referenced_devices: set[str] | None = None
         self._logger = LOGGER
         self._variables = variables
         self._trigger_variables = trigger_variables
@@ -481,6 +533,16 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         return self._async_detach_triggers is not None or self._is_enabled
 
     @property
+    def referenced_labels(self) -> set[str]:
+        """Return a set of referenced labels."""
+        return self.action_script.referenced_labels
+
+    @property
+    def referenced_floors(self) -> set[str]:
+        """Return a set of referenced floors."""
+        return self.action_script.referenced_floors
+
+    @cached_property
     def referenced_areas(self) -> set[str]:
         """Return a set of referenced areas."""
         return self.action_script.referenced_areas
@@ -492,12 +554,9 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
             return None
         return cast(str, self._blueprint_inputs[CONF_USE_BLUEPRINT][CONF_PATH])
 
-    @property
+    @cached_property
     def referenced_devices(self) -> set[str]:
         """Return a set of referenced devices."""
-        if self._referenced_devices is not None:
-            return self._referenced_devices
-
         referenced = self.action_script.referenced_devices
 
         if self._cond_func is not None:
@@ -507,15 +566,11 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         for conf in self._trigger_config:
             referenced |= set(_trigger_extract_devices(conf))
 
-        self._referenced_devices = referenced
         return referenced
 
-    @property
+    @cached_property
     def referenced_entities(self) -> set[str]:
         """Return a set of referenced entities."""
-        if self._referenced_entities is not None:
-            return self._referenced_entities
-
         referenced = self.action_script.referenced_entities
 
         if self._cond_func is not None:
@@ -526,7 +581,6 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
             for entity_id in _trigger_extract_entities(conf):
                 referenced.add(entity_id)
 
-        self._referenced_entities = referenced
         return referenced
 
     async def async_added_to_hass(self) -> None:
@@ -584,7 +638,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         run_variables: dict[str, Any],
         context: Context | None = None,
         skip_condition: bool = False,
-    ) -> None:
+    ) -> ScriptRunResult | None:
         """Trigger automation.
 
         This method is a coroutine.
@@ -620,7 +674,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
                 except TemplateError as err:
                     self._logger.error("Error rendering variables: %s", err)
                     automation_trace.set_error(err)
-                    return
+                    return None
 
             # Prepare tracing the automation
             automation_trace.set_trace(trace_get())
@@ -647,7 +701,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
                     trace_get(clear=False),
                 )
                 script_execution_set("failed_conditions")
-                return
+                return None
 
             self.async_set_context(trigger_context)
             event_data = {
@@ -669,7 +723,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
 
             try:
                 with trace_path("action"):
-                    await self.action_script.async_run(
+                    return await self.action_script.async_run(
                         variables, trigger_context, started_action
                     )
             except ServiceNotFound as err:
@@ -700,6 +754,8 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
                 self._logger.exception("While executing automation %s", self.entity_id)
                 automation_trace.set_error(err)
 
+            return None
+
     async def async_will_remove_from_hass(self) -> None:
         """Remove listeners when removing automation from Home Assistant."""
         await super().async_will_remove_from_hass()
@@ -724,13 +780,15 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         self._is_enabled = True
 
         # HomeAssistant is starting up
-        if self.hass.state != CoreState.not_running:
+        if self.hass.state is not CoreState.not_running:
             self._async_detach_triggers = await self._async_attach_triggers(False)
             self.async_write_ha_state()
             return
 
         self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STARTED, self._async_enable_automation
+            EVENT_HOMEASSISTANT_STARTED,
+            self._async_enable_automation,
+            run_immediately=True,
         )
         self.async_write_ha_state()
 
@@ -1108,3 +1166,11 @@ def websocket_config(
             "config": automation.raw_config,
         },
     )
+
+
+# These can be removed if no deprecated constant are in this module anymore
+__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = partial(
+    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
+)
+__all__ = all_with_deprecated_constants(globals())

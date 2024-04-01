@@ -1,5 +1,5 @@
 """Tests for the update coordinator."""
-import asyncio
+
 from datetime import timedelta
 import logging
 from unittest.mock import AsyncMock, Mock, patch
@@ -22,7 +22,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 _LOGGER = logging.getLogger(__name__)
 
 KNOWN_ERRORS: list[tuple[Exception, type[Exception], str]] = [
-    (asyncio.TimeoutError(), asyncio.TimeoutError, "Timeout fetching test data"),
+    (TimeoutError(), TimeoutError, "Timeout fetching test data"),
     (
         requests.exceptions.Timeout(),
         requests.exceptions.Timeout,
@@ -506,7 +506,7 @@ async def test_stop_refresh_on_ha_stop(
 
     # Fire Home Assistant stop event
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
-    hass.state = CoreState.stopping
+    hass.set_state(CoreState.stopping)
     await hass.async_block_till_done()
 
     # Make sure no update with subscriber after stop event

@@ -1,4 +1,5 @@
 """Test the Switch config flow."""
+
 from typing import Any
 from unittest.mock import patch
 
@@ -25,7 +26,7 @@ from tests.typing import WebSocketGenerator
         "extra_options",
         "extra_attrs",
     ),
-    (
+    [
         ("binary_sensor", "on", "on", {}, {}, {"all": False}, {}),
         ("binary_sensor", "on", "on", {}, {"all": True}, {"all": True}, {}),
         ("cover", "open", "open", {}, {}, {}, {}),
@@ -55,7 +56,7 @@ from tests.typing import WebSocketGenerator
             {},
         ),
         ("switch", "on", "on", {}, {}, {}, {}),
-    ),
+    ],
 )
 async def test_config_flow(
     hass: HomeAssistant,
@@ -128,11 +129,11 @@ async def test_config_flow(
 
 
 @pytest.mark.parametrize(
-    ("hide_members", "hidden_by"), ((False, None), (True, "integration"))
+    ("hide_members", "hidden_by"), [(False, None), (True, "integration")]
 )
 @pytest.mark.parametrize(
     ("group_type", "extra_input"),
-    (
+    [
         ("binary_sensor", {"all": False}),
         ("cover", {}),
         ("event", {}),
@@ -141,7 +142,7 @@ async def test_config_flow(
         ("lock", {}),
         ("media_player", {}),
         ("switch", {}),
-    ),
+    ],
 )
 async def test_config_flow_hides_members(
     hass: HomeAssistant,
@@ -209,7 +210,7 @@ def get_suggested(schema, key):
 
 @pytest.mark.parametrize(
     ("group_type", "member_state", "extra_options", "options_options"),
-    (
+    [
         ("binary_sensor", "on", {"all": False}, {}),
         ("cover", "open", {}, {}),
         ("event", "2021-01-01T23:59:59.123+00:00", {}, {}),
@@ -224,7 +225,7 @@ def get_suggested(schema, key):
             {"ignore_non_numeric": False, "type": "sum"},
         ),
         ("switch", "on", {"all": False}, {}),
-    ),
+    ],
 )
 async def test_options(
     hass: HomeAssistant, group_type, member_state, extra_options, options_options
@@ -315,7 +316,7 @@ async def test_options(
 
 @pytest.mark.parametrize(
     ("group_type", "extra_options", "extra_options_after", "advanced"),
-    (
+    [
         ("light", {"all": False}, {"all": False}, False),
         ("light", {"all": True}, {"all": True}, False),
         ("light", {"all": False}, {"all": False}, True),
@@ -324,7 +325,7 @@ async def test_options(
         ("switch", {"all": True}, {"all": True}, False),
         ("switch", {"all": False}, {"all": False}, True),
         ("switch", {"all": True}, {"all": False}, True),
-    ),
+    ],
 )
 async def test_all_options(
     hass: HomeAssistant, group_type, extra_options, extra_options_after, advanced
@@ -386,14 +387,14 @@ async def test_all_options(
 
 @pytest.mark.parametrize(
     ("hide_members", "hidden_by_initial", "hidden_by"),
-    (
+    [
         (False, er.RegistryEntryHider.INTEGRATION, None),
         (True, None, er.RegistryEntryHider.INTEGRATION),
-    ),
+    ],
 )
 @pytest.mark.parametrize(
     ("group_type", "extra_input"),
-    (
+    [
         ("binary_sensor", {"all": False}),
         ("cover", {}),
         ("event", {}),
@@ -402,7 +403,7 @@ async def test_all_options(
         ("lock", {}),
         ("media_player", {}),
         ("switch", {}),
-    ),
+    ],
 )
 async def test_options_flow_hides_members(
     hass: HomeAssistant,
@@ -479,7 +480,7 @@ LIGHT_ATTRS = [
         "supported_color_modes": ["onoff"],
         "supported_features": 0,
     },
-    {"color_mode": "onoff"},
+    {"color_mode": "unknown"},
 ]
 LOCK_ATTRS = [{"supported_features": 1}, {}]
 MEDIA_PLAYER_ATTRS = [{"supported_features": 0}, {}]

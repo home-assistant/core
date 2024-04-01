@@ -1,4 +1,5 @@
 """Support for Velbus devices."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Coroutine
@@ -48,7 +49,7 @@ _P = ParamSpec("_P")
 
 
 def api_call(
-    func: Callable[Concatenate[_T, _P], Awaitable[None]]
+    func: Callable[Concatenate[_T, _P], Awaitable[None]],
 ) -> Callable[Concatenate[_T, _P], Coroutine[Any, Any, None]]:
     """Catch command exceptions."""
 

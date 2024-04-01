@@ -1,4 +1,5 @@
 """Test the Verisure config flow."""
+
 from __future__ import annotations
 
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -333,7 +334,7 @@ async def test_dhcp(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         data=dhcp.DhcpServiceInfo(
-            ip="1.2.3.4", macaddress="01:23:45:67:89:ab", hostname="mock_hostname"
+            ip="1.2.3.4", macaddress="0123456789ab", hostname="mock_hostname"
         ),
         context={"source": config_entries.SOURCE_DHCP},
     )

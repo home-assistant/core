@@ -1,4 +1,5 @@
 """Support for monitoring an SABnzbd NZB client."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
@@ -191,7 +192,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     @callback
     def extract_api(
-        func: Callable[[ServiceCall, SabnzbdApiData], Coroutine[Any, Any, None]]
+        func: Callable[[ServiceCall, SabnzbdApiData], Coroutine[Any, Any, None]],
     ) -> Callable[[ServiceCall], Coroutine[Any, Any, None]]:
         """Define a decorator to get the correct api for a service call."""
 

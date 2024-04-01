@@ -54,6 +54,9 @@ async def test_adam_select_regulation_mode(
     Also tests a change in climate _previous mode.
     """
 
+    state = hass.states.get("select.adam_gateway_mode")
+    assert state
+    assert state.state == "full"
     state = hass.states.get("select.adam_regulation_mode")
     assert state
     assert state.state == "cooling"

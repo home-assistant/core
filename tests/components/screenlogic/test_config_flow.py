@@ -1,4 +1,5 @@
 """Test the Pentair ScreenLogic config flow."""
+
 from unittest.mock import patch
 
 from screenlogicpy import ScreenLogicError
@@ -99,12 +100,15 @@ async def test_flow_discover_error(hass: HomeAssistant) -> None:
     assert result["errors"] == {}
     assert result["step_id"] == "gateway_entry"
 
-    with patch(
-        "homeassistant.components.screenlogic.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry, patch(
-        "homeassistant.components.screenlogic.config_flow.login.async_get_mac_address",
-        return_value="00-C0-33-01-01-01",
+    with (
+        patch(
+            "homeassistant.components.screenlogic.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+        patch(
+            "homeassistant.components.screenlogic.config_flow.login.async_get_mac_address",
+            return_value="00-C0-33-01-01-01",
+        ),
     ):
         result3 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -133,19 +137,22 @@ async def test_dhcp(hass: HomeAssistant) -> None:
         data=dhcp.DhcpServiceInfo(
             hostname="Pentair: 01-01-01",
             ip="1.1.1.1",
-            macaddress="AA:BB:CC:DD:EE:FF",
+            macaddress="aabbccddeeff",
         ),
     )
 
     assert result["type"] == "form"
     assert result["step_id"] == "gateway_entry"
 
-    with patch(
-        "homeassistant.components.screenlogic.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry, patch(
-        "homeassistant.components.screenlogic.config_flow.login.async_get_mac_address",
-        return_value="00-C0-33-01-01-01",
+    with (
+        patch(
+            "homeassistant.components.screenlogic.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+        patch(
+            "homeassistant.components.screenlogic.config_flow.login.async_get_mac_address",
+            return_value="00-C0-33-01-01-01",
+        ),
     ):
         result3 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -195,12 +202,15 @@ async def test_form_manual_entry(hass: HomeAssistant) -> None:
     assert result2["errors"] == {}
     assert result2["step_id"] == "gateway_entry"
 
-    with patch(
-        "homeassistant.components.screenlogic.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry, patch(
-        "homeassistant.components.screenlogic.config_flow.login.async_get_mac_address",
-        return_value="00-C0-33-01-01-01",
+    with (
+        patch(
+            "homeassistant.components.screenlogic.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+        patch(
+            "homeassistant.components.screenlogic.config_flow.login.async_get_mac_address",
+            return_value="00-C0-33-01-01-01",
+        ),
     ):
         result3 = await hass.config_entries.flow.async_configure(
             result["flow_id"],

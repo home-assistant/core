@@ -1,4 +1,5 @@
 """Component to allow numeric input for platforms."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -7,7 +8,7 @@ import dataclasses
 from datetime import timedelta
 import logging
 from math import ceil, floor
-from typing import Any, Self, final
+from typing import TYPE_CHECKING, Any, Self, final
 
 import voluptuous as vol
 
@@ -41,6 +42,11 @@ from .const import (  # noqa: F401
     NumberMode,
 )
 from .websocket_api import async_setup as async_setup_ws_api
+
+if TYPE_CHECKING:
+    from functools import cached_property
+else:
+    from homeassistant.backports.functools import cached_property
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -153,7 +159,18 @@ def floor_decimal(value: float, precision: float = 0) -> float:
     return floor(value * factor) / factor
 
 
-class NumberEntity(Entity):
+CACHED_PROPERTIES_WITH_ATTR_ = {
+    "device_class",
+    "native_max_value",
+    "native_min_value",
+    "native_step",
+    "mode",
+    "native_unit_of_measurement",
+    "native_value",
+}
+
+
+class NumberEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """Representation of a Number entity."""
 
     _entity_component_unrecorded_attributes = frozenset(
@@ -238,7 +255,7 @@ class NumberEntity(Entity):
         """
         return self.device_class is not None
 
-    @property
+    @cached_property
     def device_class(self) -> NumberDeviceClass | None:
         """Return the class of this entity."""
         if hasattr(self, "_attr_device_class"):
@@ -247,7 +264,7 @@ class NumberEntity(Entity):
             return self.entity_description.device_class
         return None
 
-    @property
+    @cached_property
     def native_min_value(self) -> float:
         """Return the minimum value."""
         if hasattr(self, "_attr_native_min_value"):
@@ -267,7 +284,7 @@ class NumberEntity(Entity):
             self.native_min_value, floor_decimal, self.device_class
         )
 
-    @property
+    @cached_property
     def native_max_value(self) -> float:
         """Return the maximum value."""
         if hasattr(self, "_attr_native_max_value"):
@@ -287,9 +304,11 @@ class NumberEntity(Entity):
             self.native_max_value, ceil_decimal, self.device_class
         )
 
-    @property
+    @cached_property
     def native_step(self) -> float | None:
         """Return the increment/decrement step."""
+        if hasattr(self, "_attr_native_step"):
+            return self._attr_native_step
         if (
             hasattr(self, "entity_description")
             and self.entity_description.native_step is not None
@@ -305,8 +324,6 @@ class NumberEntity(Entity):
 
     def _calculate_step(self, min_value: float, max_value: float) -> float:
         """Return the increment/decrement step."""
-        if hasattr(self, "_attr_native_step"):
-            return self._attr_native_step
         if (native_step := self.native_step) is not None:
             return native_step
         step = DEFAULT_STEP
@@ -316,7 +333,7 @@ class NumberEntity(Entity):
                 step /= 10.0
         return step
 
-    @property
+    @cached_property
     def mode(self) -> NumberMode:
         """Return the mode of the entity."""
         if hasattr(self, "_attr_mode"):
@@ -334,7 +351,7 @@ class NumberEntity(Entity):
         """Return the entity state."""
         return self.value
 
-    @property
+    @cached_property
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of the entity, if any."""
         if hasattr(self, "_attr_native_unit_of_measurement"):
@@ -362,7 +379,7 @@ class NumberEntity(Entity):
 
         return native_unit_of_measurement
 
-    @property
+    @cached_property
     def native_value(self) -> float | None:
         """Return the value reported by the number."""
         return self._attr_native_value
@@ -377,7 +394,7 @@ class NumberEntity(Entity):
 
     def set_native_value(self, value: float) -> None:
         """Set new value."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
@@ -386,7 +403,7 @@ class NumberEntity(Entity):
     @final
     def set_value(self, value: float) -> None:
         """Set new value."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @final
     async def async_set_value(self, value: float) -> None:
@@ -408,22 +425,22 @@ class NumberEntity(Entity):
         native_unit_of_measurement = self.native_unit_of_measurement
         unit_of_measurement = self.unit_of_measurement
         if native_unit_of_measurement != unit_of_measurement:
-            assert native_unit_of_measurement
-            assert unit_of_measurement
+            if TYPE_CHECKING:
+                assert native_unit_of_measurement
+                assert unit_of_measurement
 
             value_s = str(value)
             prec = len(value_s) - value_s.index(".") - 1 if "." in value_s else 0
 
             # Suppress ValueError (Could not convert value to float)
             with suppress(ValueError):
-                value_new: float = UNIT_CONVERTERS[device_class].convert(
-                    value,
+                value_new: float = UNIT_CONVERTERS[device_class].converter_factory(
                     native_unit_of_measurement,
                     unit_of_measurement,
-                )
+                )(value)
 
                 # Round to the wanted precision
-                value = method(value_new, prec)
+                return method(value_new, prec)
 
         return value
 
@@ -437,21 +454,22 @@ class NumberEntity(Entity):
         native_unit_of_measurement = self.native_unit_of_measurement
         unit_of_measurement = self.unit_of_measurement
         if native_unit_of_measurement != unit_of_measurement:
-            assert native_unit_of_measurement
-            assert unit_of_measurement
+            if TYPE_CHECKING:
+                assert native_unit_of_measurement
+                assert unit_of_measurement
 
-            value = UNIT_CONVERTERS[device_class].convert(
-                value,
+            return UNIT_CONVERTERS[device_class].converter_factory(
                 unit_of_measurement,
                 native_unit_of_measurement,
-            )
+            )(value)
 
         return value
 
     @callback
     def async_registry_entry_updated(self) -> None:
         """Run when the entity registry entry has been updated."""
-        assert self.registry_entry
+        if TYPE_CHECKING:
+            assert self.registry_entry
         if (
             (number_options := self.registry_entry.options.get(DOMAIN))
             and (custom_unit := number_options.get(CONF_UNIT_OF_MEASUREMENT))

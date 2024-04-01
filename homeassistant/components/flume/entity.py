@@ -1,4 +1,5 @@
 """Platform for shared base classes for sensors."""
+
 from __future__ import annotations
 
 from typing import TypeVar
@@ -58,7 +59,7 @@ class FlumeEntity(CoordinatorEntity[_FlumeCoordinatorT]):
             configuration_url="https://portal.flumewater.com",
         )
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Request an update when added."""
         await super().async_added_to_hass()
         # We do not ask for an update with async_add_entities()

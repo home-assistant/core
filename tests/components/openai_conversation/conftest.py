@@ -1,4 +1,5 @@
 """Tests helpers."""
+
 from unittest.mock import patch
 
 import pytest

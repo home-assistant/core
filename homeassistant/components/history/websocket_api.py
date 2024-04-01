@@ -1,10 +1,11 @@
 """Websocket API for the history integration."""
+
 from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable, Iterable, MutableMapping
 from dataclasses import dataclass
-from datetime import datetime as dt
+from datetime import datetime as dt, timedelta
 import logging
 from typing import Any, cast
 
@@ -34,8 +35,8 @@ from homeassistant.helpers.event import (
     async_track_point_in_utc_time,
     async_track_state_change_event,
 )
-from homeassistant.helpers.json import JSON_DUMP
-from homeassistant.helpers.typing import EventType
+from homeassistant.helpers.json import json_bytes
+from homeassistant.util.async_ import create_eager_task
 import homeassistant.util.dt as dt_util
 
 from .const import EVENT_COALESCE_TIME, MAX_PENDING_HISTORY_STATES
@@ -72,9 +73,9 @@ def _ws_get_significant_states(
     significant_changes_only: bool,
     minimal_response: bool,
     no_attributes: bool,
-) -> str:
+) -> bytes:
     """Fetch history significant_states and convert them to json in the executor."""
-    return JSON_DUMP(
+    return json_bytes(
         messages.result_message(
             msg_id,
             history.get_significant_states(
@@ -179,8 +180,8 @@ def _generate_stream_message(
     """Generate a history stream message response."""
     return {
         "states": states,
-        "start_time": dt_util.utc_to_timestamp(start_day),
-        "end_time": dt_util.utc_to_timestamp(end_day),
+        "start_time": start_day.timestamp(),
+        "end_time": end_day.timestamp(),
     }
 
 
@@ -201,9 +202,9 @@ def _generate_websocket_response(
     start_time: dt,
     end_time: dt,
     states: MutableMapping[str, list[dict[str, Any]]],
-) -> str:
+) -> bytes:
     """Generate a websocket response."""
-    return JSON_DUMP(
+    return json_bytes(
         messages.event_message(
             msg_id, _generate_stream_message(states, start_time, end_time)
         )
@@ -221,7 +222,7 @@ def _generate_historical_response(
     minimal_response: bool,
     no_attributes: bool,
     send_empty: bool,
-) -> tuple[float, dt | None, str | None]:
+) -> tuple[float, dt | None, bytes | None]:
     """Generate a historical response."""
     states = cast(
         MutableMapping[str, list[dict[str, Any]]],
@@ -302,13 +303,9 @@ def _history_compressed_state(state: State, no_attributes: bool) -> dict[str, An
     comp_state: dict[str, Any] = {COMPRESSED_STATE_STATE: state.state}
     if not no_attributes or state.domain in history.NEED_ATTRIBUTE_DOMAINS:
         comp_state[COMPRESSED_STATE_ATTRIBUTES] = state.attributes
-    comp_state[COMPRESSED_STATE_LAST_UPDATED] = dt_util.utc_to_timestamp(
-        state.last_updated
-    )
+    comp_state[COMPRESSED_STATE_LAST_UPDATED] = state.last_updated_timestamp
     if state.last_changed != state.last_updated:
-        comp_state[COMPRESSED_STATE_LAST_CHANGED] = dt_util.utc_to_timestamp(
-            state.last_changed
-        )
+        comp_state[COMPRESSED_STATE_LAST_CHANGED] = state.last_changed_timestamp
     return comp_state
 
 
@@ -334,11 +331,14 @@ async def _async_events_consumer(
     no_attributes: bool,
 ) -> None:
     """Stream events from the queue."""
+    subscriptions_setup_complete_timestamp = (
+        subscriptions_setup_complete_time.timestamp()
+    )
     while True:
         events: list[Event] = [await stream_queue.get()]
         # If the event is older than the last db
         # event we already sent it so we skip it.
-        if events[0].time_fired <= subscriptions_setup_complete_time:
+        if events[0].time_fired_timestamp <= subscriptions_setup_complete_timestamp:
             continue
         # We sleep for the EVENT_COALESCE_TIME so
         # we can group events together to minimize
@@ -350,7 +350,7 @@ async def _async_events_consumer(
 
         if history_states := _events_to_compressed_states(events, no_attributes):
             connection.send_message(
-                JSON_DUMP(
+                json_bytes(
                     messages.event_message(
                         msg_id,
                         {"states": history_states},
@@ -363,7 +363,7 @@ async def _async_events_consumer(
 def _async_subscribe_events(
     hass: HomeAssistant,
     subscriptions: list[CALLBACK_TYPE],
-    target: Callable[[Event], None],
+    target: Callable[[Event[Any]], None],
     entity_ids: list[str],
     significant_changes_only: bool,
     minimal_response: bool,
@@ -376,7 +376,7 @@ def _async_subscribe_events(
     assert is_callback(target), "target must be a callback"
 
     @callback
-    def _forward_state_events_filtered(event: EventType[EventStateChangedData]) -> None:
+    def _forward_state_events_filtered(event: Event[EventStateChangedData]) -> None:
         """Filter state events and forward them."""
         if (new_state := event.data["new_state"]) is None or (
             old_state := event.data["old_state"]
@@ -540,7 +540,7 @@ async def ws_stream(
         # Unsubscribe happened while sending historical states
         return
 
-    live_stream.task = asyncio.create_task(
+    live_stream.task = create_eager_task(
         _async_events_consumer(
             subscriptions_setup_complete_time,
             connection,
@@ -550,7 +550,7 @@ async def ws_stream(
         )
     )
 
-    live_stream.wait_sync_task = asyncio.create_task(
+    live_stream.wait_sync_task = create_eager_task(
         get_instance(hass).async_block_till_done()
     )
     await live_stream.wait_sync_task
@@ -567,7 +567,10 @@ async def ws_stream(
         hass,
         connection,
         msg_id,
-        last_event_time or start_time,
+        # Add one microsecond so we are outside the window of
+        # the last event we got from the database since otherwise
+        # we could fetch the same event twice
+        (last_event_time or start_time) + timedelta(microseconds=1),
         subscriptions_setup_complete_time,
         entity_ids,
         False,  # We don't want the start time state again

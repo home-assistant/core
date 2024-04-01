@@ -1,11 +1,12 @@
 """TemplateEntity utility class."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 import contextlib
 import itertools
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
@@ -20,6 +21,7 @@ from homeassistant.const import (
 from homeassistant.core import (
     CALLBACK_TYPE,
     Context,
+    Event,
     HomeAssistant,
     State,
     callback,
@@ -46,7 +48,7 @@ from homeassistant.helpers.trigger_template_entity import (
     TEMPLATE_ENTITY_BASE_SCHEMA,
     make_template_entity_base_schema,
 )
-from homeassistant.helpers.typing import ConfigType, EventType
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_ATTRIBUTE_TEMPLATES,
@@ -55,6 +57,11 @@ from .const import (
     CONF_AVAILABILITY_TEMPLATE,
     CONF_PICTURE,
 )
+
+if TYPE_CHECKING:
+    from functools import cached_property
+else:
+    from homeassistant.backports.functools import cached_property
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -184,7 +191,7 @@ class _TemplateAttribute:
     @callback
     def handle_result(
         self,
-        event: EventType[EventStateChangedData] | None,
+        event: Event[EventStateChangedData] | None,
         template: Template,
         last_result: str | None | TemplateError,
         result: str | TemplateError,
@@ -264,15 +271,18 @@ class TemplateEntity(Entity):
         self._attr_extra_state_attributes = {}
         self._self_ref_update_count = 0
         self._attr_unique_id = unique_id
-        self._preview_callback: Callable[
-            [
-                str | None,
-                dict[str, Any] | None,
-                dict[str, bool | set[str]] | None,
-                str | None,
-            ],
-            None,
-        ] | None = None
+        self._preview_callback: (
+            Callable[
+                [
+                    str | None,
+                    dict[str, Any] | None,
+                    dict[str, bool | set[str]] | None,
+                    str | None,
+                ],
+                None,
+            ]
+            | None
+        ) = None
         if config is None:
             self._attribute_templates = attribute_templates
             self._availability_template = availability_template
@@ -294,7 +304,7 @@ class TemplateEntity(Entity):
                 super().__init__("unknown.unknown", STATE_UNKNOWN)
                 self.entity_id = None  # type: ignore[assignment]
 
-            @property
+            @cached_property
             def name(self) -> str:
                 """Name of this state."""
                 return "<None>"
@@ -393,7 +403,7 @@ class TemplateEntity(Entity):
     @callback
     def _handle_results(
         self,
-        event: EventType[EventStateChangedData] | None,
+        event: Event[EventStateChangedData] | None,
         updates: list[TrackTemplateResult],
     ) -> None:
         """Call back the results to the attributes."""

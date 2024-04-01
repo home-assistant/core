@@ -2,6 +2,7 @@
 
 These APIs are the only documented way to interact with the bluetooth integration.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -181,13 +182,10 @@ def async_rediscover_address(hass: HomeAssistant, address: str) -> None:
 def async_register_scanner(
     hass: HomeAssistant,
     scanner: BaseHaScanner,
-    connectable: bool,
     connection_slots: int | None = None,
 ) -> CALLBACK_TYPE:
     """Register a BleakScanner."""
-    return _get_manager(hass).async_register_scanner(
-        scanner, connectable, connection_slots
-    )
+    return _get_manager(hass).async_register_scanner(scanner, connection_slots)
 
 
 @hass_callback

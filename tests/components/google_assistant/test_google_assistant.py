@@ -1,4 +1,5 @@
 """The tests for the Google Assistant component."""
+
 from http import HTTPStatus
 import json
 from unittest.mock import patch
@@ -233,25 +234,28 @@ async def test_query_climate_request(
     assert len(devices) == 3
     assert devices["climate.heatpump"] == {
         "online": True,
+        "on": True,
         "thermostatTemperatureSetpoint": 20.0,
         "thermostatTemperatureAmbient": 25.0,
         "thermostatMode": "heat",
     }
     assert devices["climate.ecobee"] == {
         "online": True,
+        "on": True,
         "thermostatTemperatureSetpointHigh": 24,
         "thermostatTemperatureAmbient": 23,
         "thermostatMode": "heatcool",
         "thermostatTemperatureSetpointLow": 21,
-        "currentFanSpeedSetting": "Auto Low",
+        "currentFanSpeedSetting": "auto_low",
     }
     assert devices["climate.hvac"] == {
         "online": True,
+        "on": True,
         "thermostatTemperatureSetpoint": 21,
         "thermostatTemperatureAmbient": 22,
         "thermostatMode": "cool",
-        "thermostatHumidityAmbient": 54,
-        "currentFanSpeedSetting": "On High",
+        "thermostatHumidityAmbient": 54.2,
+        "currentFanSpeedSetting": "on_high",
     }
 
 
@@ -294,25 +298,28 @@ async def test_query_climate_request_f(
     assert len(devices) == 3
     assert devices["climate.heatpump"] == {
         "online": True,
+        "on": True,
         "thermostatTemperatureSetpoint": -6.7,
         "thermostatTemperatureAmbient": -3.9,
         "thermostatMode": "heat",
     }
     assert devices["climate.ecobee"] == {
         "online": True,
+        "on": True,
         "thermostatTemperatureSetpointHigh": -4.4,
         "thermostatTemperatureAmbient": -5,
         "thermostatMode": "heatcool",
         "thermostatTemperatureSetpointLow": -6.1,
-        "currentFanSpeedSetting": "Auto Low",
+        "currentFanSpeedSetting": "auto_low",
     }
     assert devices["climate.hvac"] == {
         "online": True,
+        "on": True,
         "thermostatTemperatureSetpoint": -6.1,
         "thermostatTemperatureAmbient": -5.6,
         "thermostatMode": "cool",
-        "thermostatHumidityAmbient": 54,
-        "currentFanSpeedSetting": "On High",
+        "thermostatHumidityAmbient": 54.2,
+        "currentFanSpeedSetting": "on_high",
     }
     hass_fixture.config.units.temperature_unit = UnitOfTemperature.CELSIUS
 
@@ -356,8 +363,8 @@ async def test_query_humidifier_request(
     assert devices["humidifier.dehumidifier"] == {
         "on": True,
         "online": True,
-        "humiditySetpointPercent": 54,
-        "humidityAmbientPercent": 59,
+        "humiditySetpointPercent": 54.2,
+        "humidityAmbientPercent": 59.4,
     }
     assert devices["humidifier.hygrostat"] == {
         "on": True,

@@ -1,4 +1,5 @@
 """Constants for the Logger integration."""
+
 import logging
 
 DOMAIN = "logger"
@@ -20,7 +21,7 @@ LOGSEVERITY = {
     LOGSEVERITY_FATAL: logging.FATAL,
     LOGSEVERITY_ERROR: logging.ERROR,
     LOGSEVERITY_WARNING: logging.WARNING,
-    LOGSEVERITY_WARN: logging.WARN,
+    LOGSEVERITY_WARN: logging.WARNING,
     LOGSEVERITY_INFO: logging.INFO,
     LOGSEVERITY_DEBUG: logging.DEBUG,
     LOGSEVERITY_NOTSET: logging.NOTSET,

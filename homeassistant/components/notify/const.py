@@ -1,4 +1,5 @@
 """Provide common notify constants."""
+
 import logging
 
 import voluptuous as vol

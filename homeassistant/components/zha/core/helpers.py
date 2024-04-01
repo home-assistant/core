@@ -3,21 +3,18 @@
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/integrations/zha/
 """
+
 from __future__ import annotations
 
-import asyncio
 import binascii
 import collections
 from collections.abc import Callable, Iterator
 import dataclasses
 from dataclasses import dataclass
 import enum
-import functools
-import itertools
 import logging
-from random import uniform
 import re
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import TYPE_CHECKING, Any, ParamSpec, TypeVar, overload
 
 import voluptuous as vol
 import zigpy.exceptions
@@ -27,8 +24,33 @@ import zigpy.zcl
 from zigpy.zcl.foundation import CommandSchema
 import zigpy.zdo.types as zdo_types
 
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
+from homeassistant.components.number import NumberDeviceClass
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import (
+    Platform,
+    UnitOfApparentPower,
+    UnitOfDataRate,
+    UnitOfElectricCurrent,
+    UnitOfElectricPotential,
+    UnitOfEnergy,
+    UnitOfFrequency,
+    UnitOfInformation,
+    UnitOfIrradiance,
+    UnitOfLength,
+    UnitOfMass,
+    UnitOfPower,
+    UnitOfPrecipitationDepth,
+    UnitOfPressure,
+    UnitOfSoundPressure,
+    UnitOfSpeed,
+    UnitOfTemperature,
+    UnitOfTime,
+    UnitOfVolume,
+    UnitOfVolumeFlowRate,
+    UnitOfVolumetricFlux,
+)
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType
@@ -37,10 +59,14 @@ from .const import CLUSTER_TYPE_IN, CLUSTER_TYPE_OUT, CUSTOM_CONFIGURATION, DATA
 from .registries import BINDABLE_CLUSTERS
 
 if TYPE_CHECKING:
+    from .cluster_handlers import ClusterHandler
     from .device import ZHADevice
     from .gateway import ZHAGateway
 
+_ClusterHandlerT = TypeVar("_ClusterHandlerT", bound="ClusterHandler")
 _T = TypeVar("_T")
+_R = TypeVar("_R")
+_P = ParamSpec("_P")
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -76,9 +102,9 @@ async def safe_read(
             only_cache=only_cache,
             manufacturer=manufacturer,
         )
-        return result
     except Exception:  # pylint: disable=broad-except
         return {}
+    return result
 
 
 async def get_matched_clusters(
@@ -217,7 +243,7 @@ def async_get_zha_config_value(
     )
 
 
-def async_cluster_exists(hass, cluster_id, skip_coordinator=True):
+def async_cluster_exists(hass: HomeAssistant, cluster_id, skip_coordinator=True):
     """Determine if a device containing the specified in cluster is paired."""
     zha_gateway = get_zha_gateway(hass)
     zha_devices = zha_gateway.devices.values()
@@ -318,50 +344,7 @@ class LogMixin:
         return self.log(logging.ERROR, msg, *args, **kwargs)
 
 
-def retryable_req(
-    delays=(1, 5, 10, 15, 30, 60, 120, 180, 360, 600, 900, 1800), raise_=False
-):
-    """Make a method with ZCL requests retryable.
-
-    This adds delays keyword argument to function.
-    len(delays) is number of tries.
-    raise_ if the final attempt should raise the exception.
-    """
-
-    def decorator(func):
-        @functools.wraps(func)
-        async def wrapper(cluster_handler, *args, **kwargs):
-            exceptions = (zigpy.exceptions.ZigbeeException, asyncio.TimeoutError)
-            try_count, errors = 1, []
-            for delay in itertools.chain(delays, [None]):
-                try:
-                    return await func(cluster_handler, *args, **kwargs)
-                except exceptions as ex:
-                    errors.append(ex)
-                    if delay:
-                        delay = uniform(delay * 0.75, delay * 1.25)
-                        cluster_handler.debug(
-                            "%s: retryable request #%d failed: %s. Retrying in %ss",
-                            func.__name__,
-                            try_count,
-                            ex,
-                            round(delay, 1),
-                        )
-                        try_count += 1
-                        await asyncio.sleep(delay)
-                    else:
-                        cluster_handler.warning(
-                            "%s: all attempts have failed: %s", func.__name__, errors
-                        )
-                        if raise_:
-                            raise
-
-        return wrapper
-
-    return decorator
-
-
-def convert_install_code(value: str) -> bytes:
+def convert_install_code(value: str) -> zigpy.types.KeyData:
     """Convert string to install code bytes and validate length."""
 
     try:
@@ -372,10 +355,11 @@ def convert_install_code(value: str) -> bytes:
     if len(code) != 18:  # 16 byte code + 2 crc bytes
         raise vol.Invalid("invalid length of the install code")
 
-    if zigpy.util.convert_install_code(code) is None:
+    link_key = zigpy.util.convert_install_code(code)
+    if link_key is None:
         raise vol.Invalid("invalid install code")
 
-    return code
+    return link_key
 
 
 QR_CODES = (
@@ -403,13 +387,13 @@ QR_CODES = (
         [0-9a-fA-F]{34}
         ([0-9a-fA-F]{16}) # IEEE address
         DLK
-        ([0-9a-fA-F]{36}) # install code
+        ([0-9a-fA-F]{36}|[0-9a-fA-F]{32}) # install code / link key
         $
     """,
 )
 
 
-def qr_to_install_code(qr_code: str) -> tuple[zigpy.types.EUI64, bytes]:
+def qr_to_install_code(qr_code: str) -> tuple[zigpy.types.EUI64, zigpy.types.KeyData]:
     """Try to parse the QR code.
 
     if successful, return a tuple of a EUI64 address and install code.
@@ -422,10 +406,16 @@ def qr_to_install_code(qr_code: str) -> tuple[zigpy.types.EUI64, bytes]:
 
         ieee_hex = binascii.unhexlify(match[1])
         ieee = zigpy.types.EUI64(ieee_hex[::-1])
+
+        # Bosch supplies (A) device specific link key (DSLK) or (A) install code + crc
+        if "RB01SG" in code_pattern and len(match[2]) == 32:
+            link_key_hex = binascii.unhexlify(match[2])
+            link_key = zigpy.types.KeyData(link_key_hex)
+            return ieee, link_key
         install_code = match[2]
         # install_code sanity check
-        install_code = convert_install_code(install_code)
-        return ieee, install_code
+        link_key = convert_install_code(install_code)
+        return ieee, link_key
 
     raise vol.Invalid(f"couldn't convert qr code: {qr_code}")
 
@@ -442,6 +432,7 @@ class ZHAData:
     device_trigger_cache: dict[str, tuple[str, dict]] = dataclasses.field(
         default_factory=dict
     )
+    allow_polling: bool = dataclasses.field(default=False)
 
 
 def get_zha_data(hass: HomeAssistant) -> ZHAData:
@@ -458,3 +449,80 @@ def get_zha_gateway(hass: HomeAssistant) -> ZHAGateway:
         raise ValueError("No gateway object exists")
 
     return zha_gateway
+
+
+UNITS_OF_MEASURE = {
+    UnitOfApparentPower.__name__: UnitOfApparentPower,
+    UnitOfPower.__name__: UnitOfPower,
+    UnitOfEnergy.__name__: UnitOfEnergy,
+    UnitOfElectricCurrent.__name__: UnitOfElectricCurrent,
+    UnitOfElectricPotential.__name__: UnitOfElectricPotential,
+    UnitOfTemperature.__name__: UnitOfTemperature,
+    UnitOfTime.__name__: UnitOfTime,
+    UnitOfLength.__name__: UnitOfLength,
+    UnitOfFrequency.__name__: UnitOfFrequency,
+    UnitOfPressure.__name__: UnitOfPressure,
+    UnitOfSoundPressure.__name__: UnitOfSoundPressure,
+    UnitOfVolume.__name__: UnitOfVolume,
+    UnitOfVolumeFlowRate.__name__: UnitOfVolumeFlowRate,
+    UnitOfMass.__name__: UnitOfMass,
+    UnitOfIrradiance.__name__: UnitOfIrradiance,
+    UnitOfVolumetricFlux.__name__: UnitOfVolumetricFlux,
+    UnitOfPrecipitationDepth.__name__: UnitOfPrecipitationDepth,
+    UnitOfSpeed.__name__: UnitOfSpeed,
+    UnitOfInformation.__name__: UnitOfInformation,
+    UnitOfDataRate.__name__: UnitOfDataRate,
+}
+
+
+def validate_unit(quirks_unit: enum.Enum) -> enum.Enum:
+    """Validate and return a unit of measure."""
+    return UNITS_OF_MEASURE[type(quirks_unit).__name__](quirks_unit.value)
+
+
+@overload
+def validate_device_class(
+    device_class_enum: type[BinarySensorDeviceClass],
+    metadata_value,
+    platform: str,
+    logger: logging.Logger,
+) -> BinarySensorDeviceClass | None: ...
+
+
+@overload
+def validate_device_class(
+    device_class_enum: type[SensorDeviceClass],
+    metadata_value,
+    platform: str,
+    logger: logging.Logger,
+) -> SensorDeviceClass | None: ...
+
+
+@overload
+def validate_device_class(
+    device_class_enum: type[NumberDeviceClass],
+    metadata_value,
+    platform: str,
+    logger: logging.Logger,
+) -> NumberDeviceClass | None: ...
+
+
+def validate_device_class(
+    device_class_enum: type[BinarySensorDeviceClass]
+    | type[SensorDeviceClass]
+    | type[NumberDeviceClass],
+    metadata_value: enum.Enum,
+    platform: str,
+    logger: logging.Logger,
+) -> BinarySensorDeviceClass | SensorDeviceClass | NumberDeviceClass | None:
+    """Validate and return a device class."""
+    try:
+        return device_class_enum(metadata_value.value)
+    except ValueError as ex:
+        logger.warning(
+            "Quirks provided an invalid device class: %s for platform %s: %s",
+            metadata_value,
+            platform,
+            ex,
+        )
+        return None

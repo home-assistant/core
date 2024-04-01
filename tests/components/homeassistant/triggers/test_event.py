@@ -1,7 +1,8 @@
 """The tests for the Event automation."""
+
 import pytest
 
-import homeassistant.components.automation as automation
+from homeassistant.components import automation
 from homeassistant.const import ATTR_ENTITY_ID, ENTITY_MATCH_ALL, SERVICE_TURN_OFF
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -504,3 +505,66 @@ async def test_event_data_with_list(hass: HomeAssistant, calls) -> None:
     hass.bus.async_fire("test_event", {"some_attr": [1, 2, 3]})
     await hass.async_block_till_done()
     assert len(calls) == 1
+
+
+@pytest.mark.parametrize(
+    "event_type", ["state_reported", ["test_event", "state_reported"]]
+)
+async def test_state_reported_event(
+    hass: HomeAssistant, calls, caplog, event_type: list[str]
+) -> None:
+    """Test triggering on state reported event."""
+    context = Context()
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {"platform": "event", "event_type": event_type},
+                "action": {
+                    "service": "test.automation",
+                    "data_template": {"id": "{{ trigger.id}}"},
+                },
+            }
+        },
+    )
+
+    hass.bus.async_fire("test_event", context=context)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+    assert (
+        "Unnamed automation failed to setup triggers and has been disabled: Can't "
+        "listen to state_reported in event trigger for dictionary value @ "
+        "data['event_type']. Got None" in caplog.text
+    )
+
+
+async def test_templated_state_reported_event(
+    hass: HomeAssistant, calls, caplog
+) -> None:
+    """Test triggering on state reported event."""
+    context = Context()
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger_variables": {"event_type": "state_reported"},
+                "trigger": {"platform": "event", "event_type": "{{event_type}}"},
+                "action": {
+                    "service": "test.automation",
+                    "data_template": {"id": "{{ trigger.id}}"},
+                },
+            }
+        },
+    )
+
+    hass.bus.async_fire("test_event", context=context)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+    assert (
+        "Got error 'Can't listen to state_reported in event trigger' "
+        "when setting up triggers for automation 0" in caplog.text
+    )

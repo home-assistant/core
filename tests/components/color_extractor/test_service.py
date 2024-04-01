@@ -1,4 +1,5 @@
 """Tests for color_extractor component service calls."""
+
 import base64
 import io
 from typing import Any

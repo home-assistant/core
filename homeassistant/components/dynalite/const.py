@@ -1,4 +1,5 @@
 """Constants for the Dynalite component."""
+
 import logging
 
 from homeassistant.const import CONF_ROOM, Platform
@@ -6,7 +7,7 @@ from homeassistant.const import CONF_ROOM, Platform
 LOGGER = logging.getLogger(__package__)
 DOMAIN = "dynalite"
 
-PLATFORMS = [Platform.LIGHT, Platform.SWITCH, Platform.COVER]
+PLATFORMS = [Platform.COVER, Platform.LIGHT, Platform.SWITCH]
 
 
 CONF_ACTIVE = "active"

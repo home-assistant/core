@@ -1,6 +1,8 @@
 """Coordinator to handle Opower connections."""
+
 from datetime import datetime, timedelta
 import logging
+import socket
 from types import MappingProxyType
 from typing import Any, cast
 
@@ -51,7 +53,7 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
             update_interval=timedelta(hours=12),
         )
         self.api = Opower(
-            aiohttp_client.async_get_clientsession(hass),
+            aiohttp_client.async_get_clientsession(hass, family=socket.AF_INET),
             entry_data[CONF_UTILITY],
             entry_data[CONF_USERNAME],
             entry_data[CONF_PASSWORD],
@@ -107,7 +109,7 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
             )
 
             last_stat = await get_instance(self.hass).async_add_executor_job(
-                get_last_statistics, self.hass, 1, consumption_statistic_id, True, set()
+                get_last_statistics, self.hass, 1, cost_statistic_id, True, set()
             )
             if not last_stat:
                 _LOGGER.debug("Updating statistic for the first time")
@@ -117,7 +119,7 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
                 last_stats_time = None
             else:
                 cost_reads = await self._async_get_recent_cost_reads(
-                    account, last_stat[consumption_statistic_id][0]["start"]
+                    account, last_stat[cost_statistic_id][0]["start"]
                 )
                 if not cost_reads:
                     _LOGGER.debug("No recent usage/cost data. Skipping update")

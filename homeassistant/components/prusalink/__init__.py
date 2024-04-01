@@ -1,4 +1,5 @@
 """The PrusaLink integration."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -20,82 +21,34 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import issue_registry as ir
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
     UpdateFailed,
 )
 
+from .config_flow import ConfigFlow
 from .const import DOMAIN
 
 PLATFORMS: list[Platform] = [Platform.BUTTON, Platform.CAMERA, Platform.SENSOR]
 _LOGGER = logging.getLogger(__name__)
 
 
-async def _migrate_to_version_2(
-    hass: HomeAssistant, entry: ConfigEntry
-) -> PrusaLink | None:
-    """Migrate to Version 2."""
-    _LOGGER.debug("Migrating entry to version 2")
-
-    data = dict(entry.data)
-    # "maker" is currently hardcoded in the firmware
-    # https://github.com/prusa3d/Prusa-Firmware-Buddy/blob/bfb0ffc745ee6546e7efdba618d0e7c0f4c909cd/lib/WUI/wui_api.h#L19
-    data = {
-        **entry.data,
-        CONF_USERNAME: "maker",
-        CONF_PASSWORD: entry.data[CONF_API_KEY],
-    }
-    data.pop(CONF_API_KEY)
-
-    api = PrusaLink(
-        async_get_clientsession(hass),
-        data[CONF_HOST],
-        data[CONF_USERNAME],
-        data[CONF_PASSWORD],
-    )
-    try:
-        await api.get_info()
-    except InvalidAuth:
-        # We are unable to reach the new API which usually means
-        # that the user is running an outdated firmware version
-        ir.async_create_issue(
-            hass,
-            DOMAIN,
-            "firmware_5_1_required",
-            is_fixable=False,
-            severity=ir.IssueSeverity.ERROR,
-            translation_key="firmware_5_1_required",
-            translation_placeholders={
-                "entry_title": entry.title,
-                "prusa_mini_firmware_update": "https://help.prusa3d.com/article/firmware-updating-mini-mini_124784",
-                "prusa_mk4_xl_firmware_update": "https://help.prusa3d.com/article/how-to-update-firmware-mk4-xl_453086",
-            },
-        )
-        return None
-
-    entry.version = 2
-    hass.config_entries.async_update_entry(entry, data=data)
-    _LOGGER.info("Migrated config entry to version %d", entry.version)
-    return api
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up PrusaLink from a config entry."""
-    if entry.version == 1:
-        if (api := await _migrate_to_version_2(hass, entry)) is None:
-            return False
-        ir.async_delete_issue(hass, DOMAIN, "firmware_5_1_required")
-    else:
-        api = PrusaLink(
-            async_get_clientsession(hass),
-            entry.data[CONF_HOST],
-            entry.data[CONF_USERNAME],
-            entry.data[CONF_PASSWORD],
-        )
+    if entry.version == 1 and entry.minor_version < 2:
+        raise ConfigEntryError("Please upgrade your printer's firmware.")
+
+    api = PrusaLink(
+        get_async_client(hass),
+        entry.data[CONF_HOST],
+        entry.data[CONF_USERNAME],
+        entry.data[CONF_PASSWORD],
+    )
 
     coordinators = {
         "legacy_status": LegacyStatusCoordinator(hass, api),
@@ -112,9 +65,59 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Migrate old entry."""
-    # Version 1->2 migration are handled in async_setup_entry.
+    if config_entry.version > ConfigFlow.VERSION:
+        # This means the user has downgraded from a future version
+        return False
+
+    new_data = dict(config_entry.data)
+    if config_entry.version == 1:
+        if config_entry.minor_version < 2:
+            # Add username and password
+            # "maker" is currently hardcoded in the firmware
+            # https://github.com/prusa3d/Prusa-Firmware-Buddy/blob/bfb0ffc745ee6546e7efdba618d0e7c0f4c909cd/lib/WUI/wui_api.h#L19
+            username = "maker"
+            password = config_entry.data[CONF_API_KEY]
+
+            api = PrusaLink(
+                get_async_client(hass),
+                config_entry.data[CONF_HOST],
+                username,
+                password,
+            )
+            try:
+                await api.get_info()
+            except InvalidAuth:
+                # We are unable to reach the new API which usually means
+                # that the user is running an outdated firmware version
+                ir.async_create_issue(
+                    hass,
+                    DOMAIN,
+                    "firmware_5_1_required",
+                    is_fixable=False,
+                    severity=ir.IssueSeverity.ERROR,
+                    translation_key="firmware_5_1_required",
+                    translation_placeholders={
+                        "entry_title": config_entry.title,
+                        "prusa_mini_firmware_update": "https://help.prusa3d.com/article/firmware-updating-mini-mini_124784",
+                        "prusa_mk4_xl_firmware_update": "https://help.prusa3d.com/article/how-to-update-firmware-mk4-xl_453086",
+                    },
+                )
+                # There is a check in the async_setup_entry to prevent the setup if minor_version < 2
+                # Currently we can't reload the config entry
+                # if the migration returns False.
+                # Return True here to workaround that.
+                return True
+
+            new_data[CONF_USERNAME] = username
+            new_data[CONF_PASSWORD] = password
+
+        ir.async_delete_issue(hass, DOMAIN, "firmware_5_1_required")
+        hass.config_entries.async_update_entry(
+            config_entry, data=new_data, minor_version=2
+        )
+
     return True
 
 
@@ -129,7 +132,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 T = TypeVar("T", PrinterStatus, LegacyPrinterStatus, JobInfo)
 
 
-class PrusaLinkUpdateCoordinator(DataUpdateCoordinator[T], ABC):
+class PrusaLinkUpdateCoordinator(DataUpdateCoordinator[T], ABC):  # pylint: disable=hass-enforce-coordinator-module
     """Update coordinator for the printer."""
 
     config_entry: ConfigEntry
@@ -174,7 +177,7 @@ class PrusaLinkUpdateCoordinator(DataUpdateCoordinator[T], ABC):
         return timedelta(seconds=30)
 
 
-class StatusCoordinator(PrusaLinkUpdateCoordinator[PrinterStatus]):
+class StatusCoordinator(PrusaLinkUpdateCoordinator[PrinterStatus]):  # pylint: disable=hass-enforce-coordinator-module
     """Printer update coordinator."""
 
     async def _fetch_data(self) -> PrinterStatus:
@@ -182,7 +185,7 @@ class StatusCoordinator(PrusaLinkUpdateCoordinator[PrinterStatus]):
         return await self.api.get_status()
 
 
-class LegacyStatusCoordinator(PrusaLinkUpdateCoordinator[LegacyPrinterStatus]):
+class LegacyStatusCoordinator(PrusaLinkUpdateCoordinator[LegacyPrinterStatus]):  # pylint: disable=hass-enforce-coordinator-module
     """Printer legacy update coordinator."""
 
     async def _fetch_data(self) -> LegacyPrinterStatus:
@@ -190,7 +193,7 @@ class LegacyStatusCoordinator(PrusaLinkUpdateCoordinator[LegacyPrinterStatus]):
         return await self.api.get_legacy_printer()
 
 
-class JobUpdateCoordinator(PrusaLinkUpdateCoordinator[JobInfo]):
+class JobUpdateCoordinator(PrusaLinkUpdateCoordinator[JobInfo]):  # pylint: disable=hass-enforce-coordinator-module
     """Job update coordinator."""
 
     async def _fetch_data(self) -> JobInfo:
@@ -198,7 +201,7 @@ class JobUpdateCoordinator(PrusaLinkUpdateCoordinator[JobInfo]):
         return await self.api.get_job()
 
 
-class PrusaLinkEntity(CoordinatorEntity[PrusaLinkUpdateCoordinator]):
+class PrusaLinkEntity(CoordinatorEntity[PrusaLinkUpdateCoordinator]):  # pylint: disable=hass-enforce-coordinator-module
     """Defines a base PrusaLink entity."""
 
     _attr_has_entity_name = True

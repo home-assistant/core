@@ -1,4 +1,5 @@
 """Base classes for Hydrawise entities."""
+
 from __future__ import annotations
 
 from pydrawise.schema import Controller, Zone
@@ -48,5 +49,8 @@ class HydrawiseEntity(CoordinatorEntity[HydrawiseDataUpdateCoordinator]):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Get the latest data and updates the state."""
+        self.controller = self.coordinator.data.controllers[self.controller.id]
+        if self.zone:
+            self.zone = self.coordinator.data.zones[self.zone.id]
         self._update_attrs()
         super()._handle_coordinator_update()

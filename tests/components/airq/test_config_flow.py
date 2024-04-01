@@ -1,7 +1,8 @@
 """Test the air-Q config flow."""
+
 from unittest.mock import patch
 
-from aioairq import DeviceInfo, InvalidAuth, InvalidInput
+from aioairq import DeviceInfo, InvalidAuth
 from aiohttp.client_exceptions import ClientConnectionError
 import pytest
 
@@ -36,8 +37,9 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
 
-    with patch("aioairq.AirQ.validate"), patch(
-        "aioairq.AirQ.fetch_device_info", return_value=TEST_DEVICE_INFO
+    with (
+        patch("aioairq.AirQ.validate"),
+        patch("aioairq.AirQ.fetch_device_info", return_value=TEST_DEVICE_INFO),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -80,21 +82,6 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_invalid_input(hass: HomeAssistant) -> None:
-    """Test we handle cannot connect error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with patch("aioairq.AirQ.validate", side_effect=InvalidInput):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], TEST_USER_DATA | {CONF_IP_ADDRESS: "invalid_ip"}
-        )
-
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {"base": "invalid_input"}
-
-
 async def test_duplicate_error(hass: HomeAssistant) -> None:
     """Test that errors are shown when duplicates are added."""
     MockConfigEntry(
@@ -107,8 +94,9 @@ async def test_duplicate_error(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch("aioairq.AirQ.validate"), patch(
-        "aioairq.AirQ.fetch_device_info", return_value=TEST_DEVICE_INFO
+    with (
+        patch("aioairq.AirQ.validate"),
+        patch("aioairq.AirQ.fetch_device_info", return_value=TEST_DEVICE_INFO),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], TEST_USER_DATA
