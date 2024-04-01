@@ -189,4 +189,4 @@ class LocalAdaxDevice(ClimateEntity):
             self._attr_hvac_mode = HVACMode.HEAT
             self._attr_icon = "mdi:radiator"
             self._attr_target_temperature = data["target_temperature"]
-            
+
