@@ -52,6 +52,7 @@ from zha.mixins import LogMixin
 from zha.zigbee.cluster_handlers import ClusterHandler
 from zha.zigbee.device import Device, ZHAEvent
 from zha.zigbee.group import Group, GroupMember
+from zigpy.application import ControllerApplication
 import zigpy.exceptions
 from zigpy.profiles import PROFILES
 import zigpy.types
@@ -71,6 +72,7 @@ from homeassistant.helpers import (
     entity_registry as er,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
     ATTR_ACTIVE_COORDINATOR,
@@ -94,10 +96,11 @@ from .const import (
     ATTR_SIGNATURE,
     DOMAIN,
 )
-from .entity import ZHAEntity
 
 if TYPE_CHECKING:
     from logging import Filter, LogRecord
+
+    from .entity import ZHAEntity
 
     _LogFilterType = Filter | Callable[[LogRecord], bool]
 
@@ -317,16 +320,15 @@ class ZHADeviceProxy(EventBase):
 
     def handle_zha_event(self, zha_event: ZHAEvent) -> None:
         """Handle a ZHA event."""
-        if self.ha_device_info is not None:
-            self.gateway_proxy.hass.bus.async_fire(
-                ZHA_EVENT,
-                {
-                    ATTR_DEVICE_IEEE: zha_event.device_ieee,
-                    ATTR_UNIQUE_ID: zha_event.unique_id,
-                    ATTR_DEVICE_ID: self.device_id,
-                    **zha_event.data,
-                },
-            )
+        self.gateway_proxy.hass.bus.async_fire(
+            ZHA_EVENT,
+            {
+                ATTR_DEVICE_IEEE: zha_event.device_ieee,
+                ATTR_UNIQUE_ID: zha_event.unique_id,
+                ATTR_DEVICE_ID: self.device_id,
+                **zha_event.data,
+            },
+        )
 
 
 class EntityReference(NamedTuple):
@@ -581,7 +583,7 @@ class ZHAGatewayProxy(EventBase):
         """Get or create a ZHA device."""
         if (zha_device_proxy := self.device_proxies.get(zha_device.ieee)) is None:
             zha_device_proxy = ZHADeviceProxy(zha_device, self)
-            self._devices[zha_device_proxy.device.ieee] = zha_device_proxy
+            self.device_proxies[zha_device_proxy.device.ieee] = zha_device_proxy
 
             device_registry = dr.async_get(self.hass)
             device_registry_device = device_registry.async_get_or_create(
@@ -601,7 +603,7 @@ class ZHAGatewayProxy(EventBase):
         zha_group_proxy = self.group_proxies.get(zha_group.group_id)
         if zha_group_proxy is None:
             zha_group_proxy = ZHAGroupProxy(zha_group, self)
-            self._groups[zha_group.group_id] = zha_group_proxy
+            self.group_proxies[zha_group.group_id] = zha_group_proxy
         return zha_group_proxy
 
     def get_device_proxy(self, ieee: EUI64) -> ZHADeviceProxy | None:
@@ -669,6 +671,27 @@ class ZHAGatewayProxy(EventBase):
                 "cleaning up entity registry entry for entity: %s", entry.entity_id
             )
             entity_registry.async_remove(entry.entity_id)
+
+
+class ZHAFirmwareUpdateCoordinator(DataUpdateCoordinator[None]):  # pylint: disable=hass-enforce-coordinator-module
+    """Firmware update coordinator that broadcasts updates network-wide."""
+
+    def __init__(
+        self, hass: HomeAssistant, controller_application: ControllerApplication
+    ) -> None:
+        """Initialize the coordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            name="ZHA firmware update coordinator",
+            update_method=self.async_update_data,
+        )
+        self.controller_application = controller_application
+
+    async def async_update_data(self) -> None:
+        """Fetch the latest firmware update data."""
+        # Broadcast to all devices
+        await self.controller_application.ota.broadcast_notify(jitter=100)
 
 
 @callback
@@ -744,7 +767,9 @@ class HAZHAData:
     platforms: collections.defaultdict[Platform, list] = dataclasses.field(
         default_factory=lambda: collections.defaultdict(list)
     )
-    update_coordinator: Any | None = dataclasses.field(default=None)
+    update_coordinator: ZHAFirmwareUpdateCoordinator | None = dataclasses.field(
+        default=None
+    )
 
 
 @dataclasses.dataclass(kw_only=True, slots=True)

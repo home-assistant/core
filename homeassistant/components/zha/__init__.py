@@ -47,7 +47,12 @@ from homeassistant.helpers.typing import ConfigType
 
 from . import repairs, websocket_api
 from .const import CONF_USE_THREAD, DOMAIN
-from .helpers import HAZHAData, ZHAGatewayProxy, get_zha_data
+from .helpers import (
+    HAZHAData,
+    ZHAFirmwareUpdateCoordinator,
+    ZHAGatewayProxy,
+    get_zha_data,
+)
 from .radio_manager import ZhaRadioManager
 from .repairs.network_settings_inconsistent import warn_on_inconsistent_network_settings
 from .repairs.wrong_silabs_firmware import (
@@ -209,6 +214,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     try:
         zha_gateway = await Gateway.async_from_config(zha_data.data)
         zha_data.gateway_proxy = ZHAGatewayProxy(hass, config_entry, zha_gateway)
+        zha_data.update_coordinator = ZHAFirmwareUpdateCoordinator(
+            hass, zha_gateway.application_controller
+        )
     except NetworkSettingsInconsistent as exc:
         await warn_on_inconsistent_network_settings(
             hass,

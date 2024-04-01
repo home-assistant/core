@@ -6,8 +6,6 @@ from functools import cached_property
 import logging
 from typing import Any
 
-from zigpy.application import ControllerApplication
-
 from homeassistant.components.update import (
     UpdateDeviceClass,
     UpdateEntity,
@@ -17,13 +15,15 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .entity import ZHAEntity
-from .helpers import EntityData, get_zha_data, get_zha_gateway
+from .helpers import (
+    EntityData,
+    ZHAFirmwareUpdateCoordinator,
+    get_zha_data,
+    get_zha_gateway,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,27 +49,6 @@ async def async_setup_entry(
     entities_to_create = zha_data.platforms[Platform.UPDATE]
 
 
-class ZHAFirmwareUpdateCoordinator(DataUpdateCoordinator[None]):  # pylint: disable=hass-enforce-coordinator-module
-    """Firmware update coordinator that broadcasts updates network-wide."""
-
-    def __init__(
-        self, hass: HomeAssistant, controller_application: ControllerApplication
-    ) -> None:
-        """Initialize the coordinator."""
-        super().__init__(
-            hass,
-            _LOGGER,
-            name="ZHA firmware update coordinator",
-            update_method=self.async_update_data,
-        )
-        self.controller_application = controller_application
-
-    async def async_update_data(self) -> None:
-        """Fetch the latest firmware update data."""
-        # Broadcast to all devices
-        await self.controller_application.ota.broadcast_notify(jitter=100)
-
-
 class ZHAFirmwareUpdateEntity(
     ZHAEntity, CoordinatorEntity[ZHAFirmwareUpdateCoordinator], UpdateEntity
 ):
@@ -84,8 +63,8 @@ class ZHAFirmwareUpdateEntity(
 
     def __init__(self, entity_data: EntityData, **kwargs: Any) -> None:
         """Initialize the ZHA siren."""
-        super().__init__(entity_data, **kwargs)
         zha_data = get_zha_data(entity_data.device_proxy.gateway_proxy.hass)
+        super().__init__(entity_data, coordinator=zha_data.update_coordinator, **kwargs)
         CoordinatorEntity.__init__(self, zha_data.update_coordinator)
 
     @cached_property

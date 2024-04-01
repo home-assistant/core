@@ -31,9 +31,9 @@ class ZHAEntity(LogMixin, entity.Entity):
     _attr_should_poll = False
     remove_future: asyncio.Future[Any]
 
-    def __init__(self, entity_data: EntityData) -> None:
+    def __init__(self, entity_data: EntityData, *args, **kwargs) -> None:
         """Init ZHA entity."""
-        super().__init__()
+        super().__init__(*args, **kwargs)
         self.entity_data: EntityData = entity_data
         self._unsubs: list[Callable[[], None]] = []
         if (
