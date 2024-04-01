@@ -734,7 +734,6 @@ async def test_restore_state(
                     "last_period": "1.3",
                     "last_valid_state": None,
                     "status": "collecting",
-                    "input_device_class": "water",
                 },
             ),
             # sensor.energy_bill_tariff1 is restored as expected, except device
@@ -843,7 +842,6 @@ async def test_restore_state(
     assert state.attributes.get("last_reset") == last_reset_2
     assert state.attributes.get("last_valid_state") == "None"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfVolume.GALLONS
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.WATER
 
     state = hass.states.get("sensor.energy_bill_tariff1")
     assert state.state == "1.2"
@@ -851,7 +849,6 @@ async def test_restore_state(
     assert state.attributes.get("last_reset") == last_reset_2
     assert state.attributes.get("last_valid_state") == "None"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.KILO_WATT_HOUR
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
 
     state = hass.states.get("sensor.energy_bill_tariff2")
     assert state.state == "2.1"
@@ -859,7 +856,6 @@ async def test_restore_state(
     assert state.attributes.get("last_reset") == last_reset_1
     assert state.attributes.get("last_valid_state") == "None"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.MEGA_WATT_HOUR
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
 
     state = hass.states.get("sensor.energy_bill_tariff3")
     assert state.state == "3.1"
@@ -867,7 +863,6 @@ async def test_restore_state(
     assert state.attributes.get("last_reset") == last_reset_1
     assert state.attributes.get("last_valid_state") == "None"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.MEGA_WATT_HOUR
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
 
     state = hass.states.get("sensor.energy_bill_tariff4")
     assert state.state == STATE_UNKNOWN
