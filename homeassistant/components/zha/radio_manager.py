@@ -162,8 +162,8 @@ class ZhaRadioManager:
         assert self.current_settings is not None
 
         return (
-            f"channel={self.current_settings.network_info.channel},"
-            f"epid={self.current_settings.network_info.extended_pan_id}"
+            f"epid={self.current_settings.network_info.extended_pan_id},"
+            f"channel={self.current_settings.network_info.channel}"
         )
 
     @contextlib.asynccontextmanager

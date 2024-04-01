@@ -43,7 +43,7 @@ class SystemSerialPort:
     def unique_id(self) -> str:
         """Unique ID of the serial port."""
         # We use `device` here because it is assumed to be 100% stable
-        return f"SystemSerialPort:{self.device}_{self.manufacturer}_{self.product}"
+        return f"SystemSerialPort:{self.device}"
 
     def display_name(self, *, hide_device: bool = True) -> str:
         """Human-readable display name of the serial port."""

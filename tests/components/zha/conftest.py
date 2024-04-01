@@ -201,8 +201,9 @@ async def zigpy_app_controller():
 async def config_entry_fixture(hass) -> MockConfigEntry:
     """Fixture representing a config entry."""
     return MockConfigEntry(
-        version=5,
+        version=4,
         domain=zha_const.DOMAIN,
+        unique_id="epid=00:15:8d:00:02:32:4f:32,channel=15",
         data={
             zigpy.config.CONF_DEVICE: {zigpy.config.CONF_DEVICE_PATH: "/dev/ttyUSB0"},
             zha_const.CONF_RADIO_TYPE: "ezsp",

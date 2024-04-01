@@ -115,7 +115,7 @@ async def test_migrate_matching_port(
         domain=DOMAIN,
         options={},
         title="Test",
-        version=5,
+        version=4,
     )
     config_entry.add_to_hass(hass)
 
@@ -175,7 +175,7 @@ async def test_migrate_matching_port_usb(
         domain=DOMAIN,
         options={},
         title="Test",
-        version=5,
+        version=4,
     )
     config_entry.add_to_hass(hass)
 

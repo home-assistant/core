@@ -437,7 +437,7 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
 class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
-    VERSION = 5
+    VERSION = 4
 
     @staticmethod
     @callback

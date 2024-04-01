@@ -5,7 +5,6 @@ import contextlib
 import copy
 import logging
 import re
-import urllib.parse
 
 import voluptuous as vol
 from zhaquirks import setup as setup_quirks
@@ -48,7 +47,6 @@ from .repairs.wrong_silabs_firmware import (
     AlreadyRunningEZSP,
     warn_on_wrong_silabs_firmware,
 )
-from .serial_port import async_serial_port_from_path
 
 DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema({vol.Optional(CONF_TYPE): cv.string})
 ZHA_CONFIG_SCHEMA = {
@@ -123,6 +121,17 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         data[CONF_DEVICE][CONF_DEVICE_PATH] = cleaned_path
         hass.config_entries.async_update_entry(config_entry, data=data)
 
+    radio_mgr = ZhaRadioManager.from_config_entry(hass, config_entry)
+
+    # Migrate to a unique ID derived from the current network info
+    if config_entry.unique_id is None or not config_entry.unique_id.startswith("epid="):
+        await radio_mgr.async_load_network_settings()
+
+        unique_id = radio_mgr.get_unique_id()
+        _LOGGER.debug("Migrating config entry to unique ID %s", unique_id)
+
+        hass.config_entries.async_update_entry(config_entry, unique_id=unique_id)
+
     zha_data = get_zha_data(hass)
 
     if zha_data.yaml_config.get(CONF_ENABLE_QUIRKS, True):
@@ -132,7 +141,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     # Load and cache device trigger information early
     device_registry = dr.async_get(hass)
-    radio_mgr = ZhaRadioManager.from_config_entry(hass, config_entry)
 
     async with radio_mgr.connect_zigpy_app() as app:
         for dev in app.devices.values():
@@ -253,11 +261,6 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
 async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Migrate old entry."""
 
-    # Circular import
-    from .config_flow import (  # pylint: disable=import-outside-toplevel
-        DEFAULT_ZHA_ZEROCONF_PORT,
-    )
-
     _LOGGER.debug("Migrating from version %s", config_entry.version)
 
     if config_entry.version == 1:
@@ -296,39 +299,6 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             data[CONF_DEVICE][CONF_FLOW_CONTROL] = None
 
         hass.config_entries.async_update_entry(config_entry, data=data, version=4)
-
-    if config_entry.version == 4:
-        data = {**config_entry.data}
-        path = data[CONF_DEVICE][CONF_DEVICE_PATH]
-
-        # 38400 in migration version=4 was a mistake, it should have been 57600
-        if (
-            data[CONF_RADIO_TYPE] == "deconz"
-            and data[CONF_DEVICE][CONF_BAUDRATE] == 38400
-        ):
-            data[CONF_DEVICE][CONF_BAUDRATE] = 57600
-
-        # Use an explicit port in all `socket://` paths
-        if path.startswith("socket://"):
-            parsed = urllib.parse.urlparse(path)
-            path = (
-                f"socket://{parsed.hostname}:{parsed.port or DEFAULT_ZHA_ZEROCONF_PORT}"
-            )
-
-        # Find the unique serial port for the device, if one exists
-        port = await async_serial_port_from_path(hass, path)
-        data[CONF_DEVICE][CONF_DEVICE_PATH] = port.path
-
-        # Migrate to a unique ID derived from network settings
-        radio_mgr = ZhaRadioManager.from_config_entry(hass, config_entry)
-        await radio_mgr.async_load_network_settings()
-
-        hass.config_entries.async_update_entry(
-            config_entry,
-            unique_id=radio_mgr.get_unique_id(),
-            data=data,
-            version=5,
-        )
 
     _LOGGER.info("Migration to version %s successful", config_entry.version)
     return True

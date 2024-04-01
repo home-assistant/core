@@ -30,18 +30,18 @@ def test_system_serial_port() -> None:
     )
 
     assert port.path == "/dev/ttyAMA1"
-    assert port.unique_id == "SystemSerialPort:/dev/ttyAMA1_manufacturer_product"
+    assert port.unique_id == "SystemSerialPort:/dev/ttyAMA1"
     assert port.display_name() == "product - manufacturer"
 
     port.product = None
     assert port.display_name() == "manufacturer"
     assert port.display_name(hide_device=False) == "manufacturer (/dev/ttyAMA1)"
-    assert port.unique_id == "SystemSerialPort:/dev/ttyAMA1_manufacturer_None"
+    assert port.unique_id == "SystemSerialPort:/dev/ttyAMA1"
 
     port.manufacturer = None
     assert port.display_name() == "/dev/ttyAMA1"
     assert port.display_name(hide_device=False) == "/dev/ttyAMA1"
-    assert port.unique_id == "SystemSerialPort:/dev/ttyAMA1_None_None"
+    assert port.unique_id == "SystemSerialPort:/dev/ttyAMA1"
 
 
 def test_usb_serial_port() -> None:
