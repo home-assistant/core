@@ -148,10 +148,8 @@ class ClimateGroup(GroupEntity, ClimateEntity):
         self._entity_ids = entity_ids
 
         self._features: dict[ClimateEntityFeature, set[str]] = {
-            (
-                ClimateEntityFeature.TARGET_TEMPERATURE
-                | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
-            ): set(),
+            ClimateEntityFeature.TARGET_TEMPERATURE: set(),
+            ClimateEntityFeature.TARGET_TEMPERATURE_RANGE: set(),
             ClimateEntityFeature.TARGET_HUMIDITY: set(),
             ClimateEntityFeature.FAN_MODE: set(),
             ClimateEntityFeature.PRESET_MODE: set(),
@@ -317,22 +315,21 @@ class ClimateGroup(GroupEntity, ClimateEntity):
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Forward the temperature command to all climate in the climate group."""
-        data = {
-            ATTR_ENTITY_ID: self._features[
-                ClimateEntityFeature.TARGET_TEMPERATURE
-                | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
-            ]
-        }
-
+        if kwargs.get(ATTR_TEMPERATURE):
+            data = {
+                ATTR_ENTITY_ID: self._features[ClimateEntityFeature.TARGET_TEMPERATURE],
+                ATTR_TEMPERATURE: kwargs[ATTR_TEMPERATURE],
+            }
+        elif kwargs.get(ATTR_TARGET_TEMP_HIGH):
+            data = {
+                ATTR_ENTITY_ID: self._features[ClimateEntityFeature.TARGET_TEMPERATURE],
+                ATTR_TARGET_TEMP_HIGH: kwargs[ATTR_TARGET_TEMP_HIGH],
+                ATTR_TARGET_TEMP_LOW: kwargs[ATTR_TARGET_TEMP_LOW],
+            }
         if ATTR_HVAC_MODE in kwargs:
-            await self.async_set_hvac_mode(kwargs[ATTR_HVAC_MODE])
-
-        if ATTR_TEMPERATURE in kwargs:
-            data[ATTR_TEMPERATURE] = kwargs[ATTR_TEMPERATURE]
-        if ATTR_TARGET_TEMP_LOW in kwargs:
-            data[ATTR_TARGET_TEMP_LOW] = kwargs[ATTR_TARGET_TEMP_LOW]
-        if ATTR_TARGET_TEMP_HIGH in kwargs:
-            data[ATTR_TARGET_TEMP_HIGH] = kwargs[ATTR_TARGET_TEMP_HIGH]
+            data |= {
+                ATTR_HVAC_MODE: kwargs[ATTR_HVAC_MODE],
+            }
 
         await self.hass.services.async_call(
             DOMAIN, SERVICE_SET_TEMPERATURE, data, context=self._context
