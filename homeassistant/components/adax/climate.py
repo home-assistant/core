@@ -159,9 +159,7 @@ class LocalAdaxDevice(ClimateEntity):
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode."""
         if hvac_mode == HVACMode.HEAT:
-            temperature = max(
-                self.min_temp, self._attr_target_temperature or self.min_temp
-            )
+            temperature = self.target_temperature or self.min_temp
             await self._adax_data_handler.set_target_temperature(temperature)
         elif hvac_mode == HVACMode.OFF:
             await self._adax_data_handler.set_target_temperature(0)
