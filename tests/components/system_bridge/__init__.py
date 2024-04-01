@@ -87,6 +87,13 @@ FIXTURE_ZEROCONF_BAD = zeroconf.ZeroconfServiceInfo(
     },
 )
 
+FIXTURE_GENERIC_RESPONSE = Response(
+    id=FIXTURE_REQUEST_ID,
+    type="test",
+    message="test",
+    data={},
+)
+
 FIXTURE_DATA_RESPONSE = Response(
     id="1234",
     type=TYPE_DATA_UPDATE,
