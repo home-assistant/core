@@ -159,7 +159,7 @@ class LocalAdaxDevice(ClimateEntity):
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode."""
         if hvac_mode == HVACMode.HEAT:
-            temperature = self.target_temperature or self.min_temp
+            temperature = self._attr_target_temperature or self._attr_min_temp
             await self._adax_data_handler.set_target_temperature(temperature)
         elif hvac_mode == HVACMode.OFF:
             await self._adax_data_handler.set_target_temperature(0)
@@ -173,14 +173,13 @@ class LocalAdaxDevice(ClimateEntity):
     async def async_update(self) -> None:
         """Get the latest data."""
         data = await self._adax_data_handler.get_status()
-        self._attr_target_temperature = data["target_temperature"]
         self._attr_current_temperature = data["current_temperature"]
         self._attr_available = self._attr_current_temperature is not None
-        if self._attr_target_temperature == 0:
+        if data["target_temperature"] == 0:
             self._attr_hvac_mode = HVACMode.OFF
             self._attr_icon = "mdi:radiator-off"
             if self._attr_target_temperature == 0:
-                self._attr_target_temperature = self.min_temp
+                self._attr_target_temperature = self._attr_min_temp
         else:
             self._attr_hvac_mode = HVACMode.HEAT
             self._attr_icon = "mdi:radiator"
