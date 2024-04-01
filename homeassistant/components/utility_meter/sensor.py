@@ -14,6 +14,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import (
     ATTR_LAST_RESET,
+    DEVICE_CLASS_STATE_CLASSES,
     DEVICE_CLASS_UNITS,
     RestoreSensor,
     SensorDeviceClass,
@@ -701,8 +702,12 @@ class UtilityMeterSensor(RestoreSensor):
     @property
     def device_class(self):
         """Return the device class of the sensor."""
-        if self._input_device_class is not None:
-            return self._input_device_class
+        if (
+            (device_class := self._input_device_class) is not None
+            and (classes := DEVICE_CLASS_STATE_CLASSES.get(device_class)) is not None
+            and self.state_class in classes
+        ):
+            return device_class
         if self._unit_of_measurement in DEVICE_CLASS_UNITS[SensorDeviceClass.ENERGY]:
             return SensorDeviceClass.ENERGY
         return None
