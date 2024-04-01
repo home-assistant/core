@@ -4,23 +4,34 @@ from unittest.mock import MagicMock
 
 import aiohttp
 
+from homeassistant.components.azure_devops.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+
+from . import setup_integration
 
 from tests.common import MockConfigEntry
 
 
-async def test_init(
+async def test_load_unload_entry(
     hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
     mock_devops_client: MagicMock,
-    init_integration: MockConfigEntry,
 ) -> None:
     """Test a successful setup entry."""
+    await setup_integration(hass, mock_config_entry)
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+
     assert mock_devops_client.authorized
     assert mock_devops_client.authorize.call_count == 1
     assert mock_devops_client.get_builds.call_count == 2
 
-    assert init_integration.state == ConfigEntryState.LOADED
+    assert mock_config_entry.state == ConfigEntryState.LOADED
+
+    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state == ConfigEntryState.NOT_LOADED
 
 
 async def test_auth_failed(
@@ -32,12 +43,12 @@ async def test_auth_failed(
     mock_devops_client.authorize.return_value = False
     mock_devops_client.authorized = False
 
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await setup_integration(hass, mock_config_entry)
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
 
     assert not mock_devops_client.authorized
 
-    assert mock_config_entry.state == ConfigEntryState.SETUP_ERROR
+    assert entry.state == ConfigEntryState.SETUP_ERROR
 
 
 async def test_update_failed(
@@ -48,12 +59,12 @@ async def test_update_failed(
     """Test a failed update entry."""
     mock_devops_client.get_builds.side_effect = aiohttp.ClientError
 
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await setup_integration(hass, mock_config_entry)
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
 
     assert mock_devops_client.get_builds.call_count == 1
 
-    assert mock_config_entry.state == ConfigEntryState.SETUP_RETRY
+    assert entry.state == ConfigEntryState.SETUP_RETRY
 
 
 async def test_no_builds(
@@ -64,9 +75,9 @@ async def test_no_builds(
     """Test a failed update entry."""
     mock_devops_client.get_builds.return_value = None
 
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await setup_integration(hass, mock_config_entry)
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
 
-    assert mock_devops_client.get_builds.called
+    assert mock_devops_client.get_builds.call_count == 1
 
-    assert mock_config_entry.state == ConfigEntryState.SETUP_RETRY
+    assert entry.state == ConfigEntryState.SETUP_RETRY

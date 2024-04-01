@@ -2,8 +2,11 @@
 
 import pytest
 
+from homeassistant.components.azure_devops.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+
+from . import setup_integration
 
 from tests.common import MockConfigEntry
 
@@ -14,10 +17,13 @@ from tests.common import MockConfigEntry
 )
 async def test_sensors(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test the sensor entities."""
+    await setup_integration(hass, mock_config_entry)
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+
     assert (state := hass.states.get("sensor.testproject_test_build_latest_build"))
     assert state.state == "1"
     assert state.attributes["definition_id"] == 9876
