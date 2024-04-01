@@ -45,7 +45,7 @@ Mastodon.py==1.8.1
 Pillow==10.2.0
 
 # homeassistant.components.plex
-PlexAPI==4.15.10
+PlexAPI==4.15.11
 
 # homeassistant.components.progettihwsw
 ProgettiHWSW==0.1.3
@@ -206,7 +206,7 @@ aioasuswrt==1.4.0
 aioautomower==2024.3.4
 
 # homeassistant.components.azure_devops
-aioazuredevops==1.4.3
+aioazuredevops==2.0.0
 
 # homeassistant.components.baf
 aiobafi6==0.9.0
@@ -2560,7 +2560,7 @@ sisyphus-control==3.1.3
 slackclient==2.5.0
 
 # homeassistant.components.xmpp
-slixmpp==1.8.4
+slixmpp==1.8.5
 
 # homeassistant.components.smart_meter_texas
 smart-meter-texas==0.4.7
@@ -2802,7 +2802,7 @@ vallox-websocket-api==5.1.1
 vehicle==2.2.1
 
 # homeassistant.components.velbus
-velbus-aio==2023.12.0
+velbus-aio==2024.4.0
 
 # homeassistant.components.venstar
 venstarcolortouch==0.19
@@ -2932,7 +2932,7 @@ zamg==0.3.6
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.131.0
+zeroconf==0.132.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1
