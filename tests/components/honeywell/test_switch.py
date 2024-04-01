@@ -1,4 +1,5 @@
 """Tests for Honeywell switch component."""
+
 from unittest.mock import MagicMock
 
 from aiosomecomfort.exceptions import SomeComfortError
