@@ -311,7 +311,7 @@ class FritzBoxTools(
                 )
         return unregister_entity_updates
 
-    def entity_states_update(self) -> dict:
+    def _entity_states_update(self) -> dict:
         """Run registered entity update calls."""
         entity_states = {}
         for key in list(self._entity_update_functions):
@@ -330,7 +330,7 @@ class FritzBoxTools(
         try:
             await self.async_scan_devices()
             entity_data["entity_states"] = await self.hass.async_add_executor_job(
-                self.entity_states_update
+                self._entity_states_update
             )
             if self.has_call_deflections:
                 entity_data[
