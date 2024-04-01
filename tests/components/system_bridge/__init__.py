@@ -12,6 +12,9 @@ from systembridgemodels.response import Response
 
 from homeassistant.components import zeroconf
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN
+from homeassistant.core import HomeAssistant
+
+from tests.common import MockConfigEntry
 
 FIXTURE_TITLE = "TestSystem"
 
@@ -32,13 +35,13 @@ FIXTURE_USER_INPUT = {
 
 FIXTURE_ZEROCONF_INPUT = {
     CONF_TOKEN: "abc-123-def-456-ghi",
-    CONF_HOST: "127.0.0.1",
+    CONF_HOST: FIXTURE_USER_INPUT[CONF_HOST],
     CONF_PORT: "9170",
 }
 
 FIXTURE_ZEROCONF = zeroconf.ZeroconfServiceInfo(
-    ip_address=ip_address("127.0.0.1"),
-    ip_addresses=[ip_address("127.0.0.1")],
+    ip_address=ip_address(FIXTURE_USER_INPUT[CONF_HOST]),
+    ip_addresses=[ip_address(FIXTURE_USER_INPUT[CONF_HOST])],
     port=9170,
     hostname="test-bridge.local.",
     type="_system-bridge._tcp.local.",
@@ -47,7 +50,7 @@ FIXTURE_ZEROCONF = zeroconf.ZeroconfServiceInfo(
         "address": "http://test-bridge:9170",
         "fqdn": "test-bridge",
         "host": "test-bridge",
-        "ip": "127.0.0.1",
+        "ip": FIXTURE_USER_INPUT[CONF_HOST],
         "mac": FIXTURE_MAC_ADDRESS,
         "port": "9170",
         "uuid": FIXTURE_UUID,
@@ -55,8 +58,8 @@ FIXTURE_ZEROCONF = zeroconf.ZeroconfServiceInfo(
 )
 
 FIXTURE_ZEROCONF_BAD = zeroconf.ZeroconfServiceInfo(
-    ip_address=ip_address("127.0.0.1"),
-    ip_addresses=[ip_address("127.0.0.1")],
+    ip_address=ip_address(FIXTURE_USER_INPUT[CONF_HOST]),
+    ip_addresses=[ip_address(FIXTURE_USER_INPUT[CONF_HOST])],
     port=9170,
     hostname="test-bridge.local.",
     type="_system-bridge._tcp.local.",
@@ -92,6 +95,16 @@ FIXTURE_DATA_RESPONSE_BAD = Response(
     module=MODEL_SYSTEM,
     data={},
 )
+
+
+async def setup_integration(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Fixture for setting up the component."""
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
 
 
 async def mock_data_listener(
