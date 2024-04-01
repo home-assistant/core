@@ -19,6 +19,7 @@ from homeassistant.components.system_bridge.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN
 
 from . import (
+    FIXTURE_GENERIC_RESPONSE,
     FIXTURE_REQUEST_ID,
     FIXTURE_TITLE,
     FIXTURE_USER_INPUT,
@@ -79,6 +80,7 @@ def mock_websocket_client(
     ),
 ) -> Generator[MagicMock, None, None]:
     """Return a mocked WebSocketClient client."""
+
     with (
         patch(
             "homeassistant.components.system_bridge.coordinator.WebSocketClient",
@@ -105,5 +107,11 @@ def mock_websocket_client(
         )
         # Trigger callback when listener is registered
         websocket_client.listen.side_effect = mock_data_listener
+
+        websocket_client.open_path.return_value = FIXTURE_GENERIC_RESPONSE
+        websocket_client.power_shutdown.return_value = FIXTURE_GENERIC_RESPONSE
+        websocket_client.open_url.return_value = FIXTURE_GENERIC_RESPONSE
+        websocket_client.keyboard_keypress.return_value = FIXTURE_GENERIC_RESPONSE
+        websocket_client.keyboard_text.return_value = FIXTURE_GENERIC_RESPONSE
 
         yield websocket_client
