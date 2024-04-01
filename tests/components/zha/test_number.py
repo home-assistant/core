@@ -5,8 +5,7 @@ from unittest.mock import call, patch
 import pytest
 from zigpy.exceptions import ZigbeeException
 from zigpy.profiles import zha
-import zigpy.zcl.clusters.general as general
-import zigpy.zcl.clusters.lighting as lighting
+from zigpy.zcl.clusters import general, lighting
 import zigpy.zcl.foundation as zcl_f
 
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
