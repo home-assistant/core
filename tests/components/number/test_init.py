@@ -36,6 +36,7 @@ from homeassistant.const import (
     UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant, State
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
@@ -359,14 +360,20 @@ async def test_set_value(
     state = hass.states.get("number.test")
     assert state.state == "60.0"
 
-    # test ValueError trigger
-    with pytest.raises(ValueError):
+    # test range validation
+    with pytest.raises(ServiceValidationError) as exc:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SET_VALUE,
             {ATTR_VALUE: 110.0, ATTR_ENTITY_ID: "number.test"},
             blocking=True,
         )
+    assert exc.value.translation_domain == DOMAIN
+    assert exc.value.translation_key == "out_of_range"
+    assert (
+        str(exc.value)
+        == "Value 110.0 for number.test is outside valid range 0.0 - 100.0"
+    )
 
     await hass.async_block_till_done()
     state = hass.states.get("number.test")
@@ -396,10 +403,10 @@ async def test_set_value(
             UnitOfTemperature.FAHRENHEIT,
             100,
             100,
-            50,
-            50,
-            140,
-            140,
+            51,
+            51,
+            138,
+            138,
             -9,
             -9,
             3,
@@ -428,8 +435,8 @@ async def test_set_value(
             38,
             50,
             10,
-            140,
-            60,
+            138,
+            58,
             -9,
             -23,
             3,
@@ -443,8 +450,8 @@ async def test_set_value(
             38,
             10,
             10,
-            60,
-            60,
+            58,
+            58,
             -23,
             -23,
             3,
@@ -487,7 +494,9 @@ async def test_temperature_conversion(
     state = hass.states.get(entity0.entity_id)
     assert float(state.state) == pytest.approx(float(initial_state_value))
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == state_unit
-    assert state.attributes[ATTR_MAX] == state_max_value
+    assert state.attributes[ATTR_MAX] == pytest.approx(
+        float(state_max_value), rel=state_step
+    )
     assert state.attributes[ATTR_MIN] == state_min_value
     assert state.attributes[ATTR_STEP] == state_step
 
@@ -528,7 +537,7 @@ async def test_temperature_conversion(
     await hass.async_block_till_done()
 
     state = hass.states.get(entity0.entity_id)
-    assert float(state.state) == pytest.approx(float(state_max_value), rel=0.1)
+    assert float(state.state) == pytest.approx(float(state_max_value), rel=state_step)
 
 
 RESTORE_DATA = {
