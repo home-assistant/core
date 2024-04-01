@@ -26,6 +26,7 @@ from zha.application.const import (
     UNKNOWN_MODEL,
     ZHA_EVENT,
     ZHA_GW_MSG,
+    ZHA_GW_MSG_DEVICE_FULL_INIT,
     ZHA_GW_MSG_DEVICE_INFO,
     ZHA_GW_MSG_DEVICE_JOINED,
     ZHA_GW_MSG_DEVICE_REMOVED,
@@ -483,6 +484,17 @@ class ZHAGatewayProxy(EventBase):
 
     def handle_device_fully_initialized(self, event: DeviceFullInitEvent) -> None:
         """Handle a device fully initialized event."""
+        zha_device_proxy = self.device_proxies[event.device_info.ieee]
+        device_info = zha_device_proxy.zha_device_info
+        device_info[DEVICE_PAIRING_STATUS] = event.device_info.pairing_status.name
+        async_dispatcher_send(
+            self.hass,
+            ZHA_GW_MSG,
+            {
+                ATTR_TYPE: ZHA_GW_MSG_DEVICE_FULL_INIT,
+                ZHA_GW_MSG_DEVICE_INFO: device_info,
+            },
+        )
 
     def handle_group_member_removed(self, event: GroupEvent) -> None:
         """Handle a group member removed event."""
