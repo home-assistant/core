@@ -299,19 +299,13 @@ class ClimateGroup(GroupEntity, ClimateEntity):
         # Report the most common fan_mode.
         self._attr_preset_mode = most_frequent_attribute(states, ATTR_PRESET_MODE)
 
-        # Supported flags
-        self._attr_supported_features = ClimateEntityFeature(0)
-        for support in find_state_attributes(states, ATTR_SUPPORTED_FEATURES):
-            # Merge supported features by emulating support for every feature
-            # we find.
-            self._attr_supported_features |= support
-
         # Bitwise-and the supported features with the Grouped climate's features
         # so that we don't break in the future when a new feature is added.
-        all_supported_features = ClimateEntityFeature(0)
-        for feature_flags in self._features:
-            all_supported_features |= feature_flags
-        self._attr_supported_features &= all_supported_features
+        self._attr_supported_features = ClimateEntityFeature(0)
+        for feature_flags, entities in self._features.items():
+            if not entities:
+                continue
+            self._attr_supported_features |= feature_flags
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Forward the temperature command to all climate in the climate group."""
