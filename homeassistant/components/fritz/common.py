@@ -311,6 +311,20 @@ class FritzBoxTools(
                 )
         return unregister_entity_updates
 
+    async def async_entity_states_update(self) -> dict:
+        """Run registered entity update calls."""
+
+        def _entity_states_update() -> dict:
+            entity_states = {}
+            for key in list(self._entity_update_functions):
+                _LOGGER.debug("update entity %s", key)
+                entity_states[key] = self._entity_update_functions[key](
+                    self.fritz_status, self.data["entity_states"].get(key)
+                )
+            return entity_states
+
+        return await self.hass.async_add_executor_job(_entity_states_update)
+
     async def _async_update_data(self) -> UpdateCoordinatorDataType:
         """Update FritzboxTools data."""
         entity_data: UpdateCoordinatorDataType = {
@@ -319,15 +333,7 @@ class FritzBoxTools(
         }
         try:
             await self.async_scan_devices()
-            for key in list(self._entity_update_functions):
-                _LOGGER.debug("update entity %s", key)
-                entity_data["entity_states"][
-                    key
-                ] = await self.hass.async_add_executor_job(
-                    self._entity_update_functions[key],
-                    self.fritz_status,
-                    self.data["entity_states"].get(key),
-                )
+            entity_data["entity_states"] = await self.async_entity_states_update()
             if self.has_call_deflections:
                 entity_data[
                     "call_deflections"
