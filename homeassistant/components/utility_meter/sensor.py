@@ -313,7 +313,6 @@ class UtilitySensorExtraStoredData(SensorExtraStoredData):
     last_reset: datetime | None
     last_valid_state: Decimal | None
     status: str
-    input_device_class: SensorDeviceClass | None
 
     def as_dict(self) -> dict[str, Any]:
         """Return a dict representation of the utility sensor data."""
@@ -325,7 +324,6 @@ class UtilitySensorExtraStoredData(SensorExtraStoredData):
             str(self.last_valid_state) if self.last_valid_state else None
         )
         data["status"] = self.status
-        data["input_device_class"] = str(self.input_device_class)
 
         return data
 
@@ -345,9 +343,6 @@ class UtilitySensorExtraStoredData(SensorExtraStoredData):
                 else None
             )
             status: str = restored["status"]
-            input_device_class = try_parse_enum(
-                SensorDeviceClass, restored.get("input_device_class")
-            )
         except KeyError:
             # restored is a dict, but does not have all values
             return None
@@ -362,7 +357,6 @@ class UtilitySensorExtraStoredData(SensorExtraStoredData):
             last_reset,
             last_valid_state,
             status,
-            input_device_class,
         )
 
 
@@ -403,7 +397,6 @@ class UtilityMeterSensor(RestoreSensor):
         self._last_valid_state = None
         self._collecting = None
         self._name = name
-        self._input_device_class = None
         self._unit_of_measurement = None
         self._period = meter_type
         if meter_type is not None:
@@ -425,7 +418,6 @@ class UtilityMeterSensor(RestoreSensor):
 
     def start(self, attributes: Mapping[str, Any]) -> None:
         """Initialize unit and state upon source initial update."""
-        self._input_device_class = attributes.get(ATTR_DEVICE_CLASS)
         self._unit_of_measurement = attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         self._state = 0
         self.async_write_ha_state()
@@ -521,7 +513,6 @@ class UtilityMeterSensor(RestoreSensor):
             # If net_consumption is off, the adjustment must be non-negative
             self._state += adjustment  # type: ignore[operator] # self._state will be set to by the start function if it is None, therefore it always has a valid Decimal value at this line
 
-        self._input_device_class = new_state_attributes.get(ATTR_DEVICE_CLASS)
         self._unit_of_measurement = new_state_attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         self._last_valid_state = new_state_val
         self.async_write_ha_state()
@@ -610,7 +601,6 @@ class UtilityMeterSensor(RestoreSensor):
         if (last_sensor_data := await self.async_get_last_sensor_data()) is not None:
             # new introduced in 2022.04
             self._state = last_sensor_data.native_value
-            self._input_device_class = last_sensor_data.input_device_class
             self._unit_of_measurement = last_sensor_data.native_unit_of_measurement
             self._last_period = last_sensor_data.last_period
             self._last_reset = last_sensor_data.last_reset
@@ -710,9 +700,6 @@ class UtilityMeterSensor(RestoreSensor):
             # The entity no longer exists
             device_class_source = None
 
-        if device_class_source is None:
-            return DEVICE_CLASS_MAP.get(self._unit_of_measurement)
-
         # Inherits the source entity's class if it is compatible with the utility
         # meter entity's state class
         device_class = try_parse_enum(SensorDeviceClass, device_class_source)
@@ -723,8 +710,8 @@ class UtilityMeterSensor(RestoreSensor):
         ):
             return device_class_source
 
-        if self._input_device_class is not None:
-            return self._input_device_class
+        if device_class_source is None and self._unit_of_measurement in DEVICE_CLASS_UNITS[SensorDeviceClass.ENERGY]:
+            return SensorDeviceClass.ENERGY
 
         return None
 
@@ -777,7 +764,6 @@ class UtilityMeterSensor(RestoreSensor):
             self._last_reset,
             self._last_valid_state,
             PAUSED if self._collecting is None else COLLECTING,
-            self._input_device_class,
         )
 
     async def async_get_last_sensor_data(self) -> UtilitySensorExtraStoredData | None:
