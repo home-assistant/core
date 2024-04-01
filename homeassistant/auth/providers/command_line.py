@@ -211,4 +211,4 @@ def _async_get_hass_provider(hass):
         if prv.type == "homeassistant":
             return prv
 
-    raise RuntimeError("No Home Assistant provider found")
+    raise RuntimeError("No Home Assistant command_line provider found")
