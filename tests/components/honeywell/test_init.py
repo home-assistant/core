@@ -64,7 +64,7 @@ async def test_setup_multiple_thermostats(
     assert config_entry.state is ConfigEntryState.LOADED
     assert (
         hass.states.async_entity_ids_count() == 8
-    )  # 2 climate entities; 4 sensor entities
+    )  # 2 climate entities; 4 sensor entities; 2 switch entities
 
 
 async def test_setup_multiple_thermostats_with_same_deviceid(
@@ -85,7 +85,7 @@ async def test_setup_multiple_thermostats_with_same_deviceid(
     assert config_entry.state is ConfigEntryState.LOADED
     assert (
         hass.states.async_entity_ids_count() == 4
-    )  # 1 climate entity; 2 sensor entities
+    )  # 1 climate entity; 2 sensor entities; 1 switch enitiy
     assert "Platform honeywell does not generate unique IDs" not in caplog.text
 
 
@@ -210,7 +210,7 @@ async def test_remove_stale_device(
 
     assert (
         hass.states.async_entity_ids_count() == 4
-    )  # 1 climate entities; 2 sensor entities
+    )  # 1 climate entities; 2 sensor entities; 1 switch entity
 
     device_entries = dr.async_entries_for_config_entry(
         device_registry, config_entry.entry_id
