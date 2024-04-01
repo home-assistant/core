@@ -17,9 +17,10 @@ from aiotankerkoenig import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_SHOW_ON_MAP
+from homeassistant.const import ATTR_ID, CONF_API_KEY, CONF_SHOW_ON_MAP
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -30,6 +31,8 @@ _LOGGER = logging.getLogger(__name__)
 
 class TankerkoenigDataUpdateCoordinator(DataUpdateCoordinator):
     """Get the latest data from the API."""
+
+    config_entry: ConfigEntry
 
     def __init__(
         self,
@@ -80,6 +83,25 @@ class TankerkoenigDataUpdateCoordinator(DataUpdateCoordinator):
                 continue
 
             self.stations[station_id] = station
+
+        entity_reg = er.async_get(self.hass)
+        for entity in er.async_entries_for_config_entry(
+            entity_reg, self.config_entry.entry_id
+        ):
+            if entity.unique_id.split("_")[0] not in self._selected_stations:
+                _LOGGER.debug("remove obsolet entity entry %s", entity.entity_id)
+                entity_reg.async_remove(entity.entity_id)
+
+        device_reg = dr.async_get(self.hass)
+        for device in dr.async_entries_for_config_entry(
+            device_reg, self.config_entry.entry_id
+        ):
+            if not any(
+                (ATTR_ID, station_id) in device.identifiers
+                for station_id in self._selected_stations
+            ):
+                _LOGGER.debug("remove obsolet device entry %s", device.name)
+                device_reg.async_remove_device(device.id)
 
         if len(self.stations) > 10:
             _LOGGER.warning(
