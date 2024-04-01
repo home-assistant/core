@@ -21,7 +21,7 @@ FIXTURE_TITLE = "TestSystem"
 FIXTURE_REQUEST_ID = "test"
 
 FIXTURE_MAC_ADDRESS = "aa:bb:cc:dd:ee:ff"
-FIXTURE_UUID = "e91bf575-56f3-4c83-8f42-70ac17adcd33"
+FIXTURE_UUID = "uuid"
 
 FIXTURE_AUTH_INPUT = {
     CONF_TOKEN: "abc-123-def-456-ghi",

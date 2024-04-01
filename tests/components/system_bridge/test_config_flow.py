@@ -401,6 +401,7 @@ async def test_reauth_flow(
     await hass.async_block_till_done()
 
     assert result2["type"] == FlowResultType.ABORT
+    assert result2["reason"] == "reauth_successful"
 
 
 async def test_zeroconf_flow(
