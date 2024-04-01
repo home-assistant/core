@@ -1,26 +1,17 @@
 """Configure tests for the LastFM integration."""
 
-from collections.abc import Awaitable, Callable
-from typing import Generator
-from unittest.mock import patch, AsyncMock
+from collections.abc import Generator
+from unittest.mock import AsyncMock, patch
 
-from pylast import Track, WSError, User
+from pylast import LastFMNetwork, Track, User
 import pytest
 
 from homeassistant.components.lastfm.const import CONF_MAIN_USER, CONF_USERS, DOMAIN
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
-from tests.components.lastfm import (
-    API_KEY,
-    USERNAME_1,
-    USERNAME_2,
-    MockNetwork,
-    MockUser,
-)
-
+from tests.components.lastfm import API_KEY, USERNAME_1, USERNAME_2, MockUser
 
 
 @pytest.fixture
@@ -31,6 +22,7 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
         return_value=True,
     ) as mock_setup_entry:
         yield mock_setup_entry
+
 
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
@@ -63,21 +55,31 @@ def imported_config_entry() -> MockConfigEntry:
 @pytest.fixture
 async def mock_lastfm_user(
     hass: HomeAssistant,
-) -> Generator[AsyncMock, None, None]:
+) -> AsyncMock:
     """Fixture for setting up the component."""
-    with (
-        patch(
-            "homeassistant.components.lastfm.User",
-            autospec=True,
-        ) as mock_user,
-    ):
-        user = mock_user.return_value
+    user = AsyncMock(spec=User)
 
-        yield user
+    network = AsyncMock(spec=LastFMNetwork)
+    network.username = "testaccount1"
+
+    user.return_value.get_now_playing.return_value = Track("artist", "title", network)
+    user.return_value.get_top_tracks.return_value = [Track("artist", "title", network)]
+    user.return_value.get_recent_tracks.return_value = [
+        Track("artist", "title", network)
+    ]
+    user.return_value.get_friends.return_value = [MockUser()]
+    user.return_value.get_playcount.return_value = 1
+    user.return_value.get_image.return_value = "image"
+    user.return_value.get_name.return_value = "testaccount1"
+    user.name = "testaccount1"
+
+    return user
+
 
 @pytest.fixture
 async def mock_lastfm_network(
     hass: HomeAssistant,
+    mock_lastfm_user: AsyncMock,
 ) -> Generator[AsyncMock, None, None]:
     """Fixture for setting up the component."""
     with (
@@ -85,42 +87,13 @@ async def mock_lastfm_network(
             "homeassistant.components.lastfm.config_flow.LastFMNetwork",
             autospec=True,
         ) as mock_network,
+        patch(
+            "homeassistant.components.lastfm.coordinator.LastFMNetwork",
+            new=mock_network,
+        ),
     ):
         network = mock_network.return_value
 
-        network.get_user.return_value = AsyncMock(spec=User)
+        network.get_user.return_value = mock_lastfm_user
 
         yield network
-
-
-@pytest.fixture(name="default_user")
-def mock_default_user() -> MockUser:
-    """Return default mock user."""
-    return MockUser(
-        now_playing_result=Track("artist", "title", MockNetwork("lastfm")),
-        top_tracks=[Track("artist", "title", MockNetwork("lastfm"))],
-        recent_tracks=[Track("artist", "title", MockNetwork("lastfm"))],
-        friends=[MockUser()],
-    )
-
-
-@pytest.fixture(name="default_user_no_friends")
-def mock_default_user_no_friends() -> MockUser:
-    """Return default mock user without friends."""
-    return MockUser(
-        now_playing_result=Track("artist", "title", MockNetwork("lastfm")),
-        top_tracks=[Track("artist", "title", MockNetwork("lastfm"))],
-        recent_tracks=[Track("artist", "title", MockNetwork("lastfm"))],
-    )
-
-
-@pytest.fixture(name="first_time_user")
-def mock_first_time_user() -> MockUser:
-    """Return first time mock user."""
-    return MockUser(now_playing_result=None, top_tracks=[], recent_tracks=[])
-
-
-@pytest.fixture(name="not_found_user")
-def mock_not_found_user() -> MockUser:
-    """Return not found mock user."""
-    return MockUser(thrown_error=WSError("network", "status", "User not found"))
