@@ -60,6 +60,7 @@ async def test_load_unload_entry(
     assert mock_websocket_client.listen.call_count == 0
     assert mock_websocket_client.close.call_count == 0
 
+    # Load entry
     await setup_integration(hass, mock_config_entry)
     entry = hass.config_entries.async_entries(DOMAIN)[0]
 
@@ -70,6 +71,11 @@ async def test_load_unload_entry(
 
     assert entry.state == ConfigEntryState.LOADED
 
+    # Reload entry
+    await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Unload entry
     await hass.config_entries.async_remove(entry.entry_id)
     await hass.async_block_till_done()
 
