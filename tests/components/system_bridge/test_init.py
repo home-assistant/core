@@ -1,12 +1,20 @@
 """Test the System Bridge integration."""
 
+import asyncio
 from unittest.mock import AsyncMock, MagicMock
+
+from systembridgeconnector.exceptions import (
+    AuthenticationException,
+    ConnectionClosedException,
+    ConnectionErrorException,
+)
 
 from homeassistant.components.system_bridge.config_flow import SystemBridgeConfigFlow
 from homeassistant.components.system_bridge.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT, CONF_TOKEN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 
 from . import FIXTURE_USER_INPUT, FIXTURE_UUID, setup_integration
 
@@ -42,6 +50,147 @@ async def test_load_unload_entry(
     assert entry.state == ConfigEntryState.NOT_LOADED
 
 
+async def test_version_authentication_error(
+    hass: HomeAssistant,
+    mock_version: MagicMock,
+    mock_websocket_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test authentication error from version call."""
+    mock_version.check_supported.side_effect = AuthenticationException
+
+    await setup_integration(hass, mock_config_entry)
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+
+    assert entry.state == ConfigEntryState.SETUP_ERROR
+
+
+async def test_version_connection_closed(
+    hass: HomeAssistant,
+    mock_version: MagicMock,
+    mock_websocket_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test connection closed from version call."""
+    mock_version.check_supported.side_effect = ConnectionClosedException
+
+    await setup_integration(hass, mock_config_entry)
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+
+    assert entry.state == ConfigEntryState.SETUP_RETRY
+
+
+async def test_version_connection_error(
+    hass: HomeAssistant,
+    mock_version: MagicMock,
+    mock_websocket_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test connection error from version call."""
+    mock_version.check_supported.side_effect = ConnectionErrorException
+
+    await setup_integration(hass, mock_config_entry)
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+
+    assert entry.state == ConfigEntryState.SETUP_RETRY
+
+
+async def test_version_timeout(
+    hass: HomeAssistant,
+    mock_version: MagicMock,
+    mock_websocket_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test timeout from version call."""
+    mock_version.check_supported.side_effect = asyncio.TimeoutError
+
+    await setup_integration(hass, mock_config_entry)
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+
+    assert entry.state == ConfigEntryState.SETUP_RETRY
+
+
+async def test_version_not_supported(
+    hass: HomeAssistant,
+    mock_version: MagicMock,
+    mock_websocket_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test version not supported."""
+    mock_version.check_supported.return_value = False
+
+    await setup_integration(hass, mock_config_entry)
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+
+    assert entry.state == ConfigEntryState.SETUP_RETRY
+
+    issue_registry = ir.async_get(hass)
+    assert issue_registry.async_get_issue(
+        domain=DOMAIN,
+        issue_id=f"system_bridge_{entry.entry_id}_unsupported_version",
+    )
+
+
+async def test_get_data_authentication_error(
+    hass: HomeAssistant,
+    mock_version: MagicMock,
+    mock_websocket_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test authentication error from get_data call."""
+    mock_websocket_client.get_data.side_effect = AuthenticationException
+
+    await setup_integration(hass, mock_config_entry)
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+
+    assert entry.state == ConfigEntryState.SETUP_ERROR
+
+
+async def test_get_data_connection_closed(
+    hass: HomeAssistant,
+    mock_version: MagicMock,
+    mock_websocket_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test connection closed from get_data call."""
+    mock_websocket_client.get_data.side_effect = ConnectionClosedException
+
+    await setup_integration(hass, mock_config_entry)
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+
+    assert entry.state == ConfigEntryState.SETUP_RETRY
+
+
+async def test_get_data_connection_error(
+    hass: HomeAssistant,
+    mock_version: MagicMock,
+    mock_websocket_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test connection error from get_data call."""
+    mock_websocket_client.get_data.side_effect = ConnectionErrorException
+
+    await setup_integration(hass, mock_config_entry)
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+
+    assert entry.state == ConfigEntryState.SETUP_RETRY
+
+
+async def test_get_data_timeout(
+    hass: HomeAssistant,
+    mock_version: MagicMock,
+    mock_websocket_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test timeout from get_data call."""
+    mock_websocket_client.get_data.side_effect = asyncio.TimeoutError
+
+    await setup_integration(hass, mock_config_entry)
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+
+    assert entry.state == ConfigEntryState.SETUP_RETRY
+
+
 async def test_migration_minor_1_to_2(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
@@ -59,9 +208,7 @@ async def test_migration_minor_1_to_2(
         minor_version=1,
     )
 
-    config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
+    await setup_integration(hass, config_entry)
 
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -98,9 +245,7 @@ async def test_migration_minor_future_version(
         minor_version=config_entry_minor_version,
     )
 
-    config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
+    await setup_integration(hass, config_entry)
 
     assert len(mock_setup_entry.mock_calls) == 1
 
