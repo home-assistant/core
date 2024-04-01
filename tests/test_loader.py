@@ -274,7 +274,7 @@ async def test_get_integration_exceptions(hass: HomeAssistant) -> None:
 async def test_get_platform_caches_failures_when_component_loaded(
     hass: HomeAssistant,
 ) -> None:
-    """Test get_platform cache failures only when the component is loaded.
+    """Test get_platform caches failures only when the component is loaded.
 
     Only ModuleNotFoundError is cached, ImportError is not cached.
     """
@@ -378,7 +378,7 @@ async def test_get_platform_only_cached_module_not_found_when_component_loaded(
 async def test_async_get_platform_caches_failures_when_component_loaded(
     hass: HomeAssistant,
 ) -> None:
-    """Test async_get_platform cache failures only when the component is loaded.
+    """Test async_get_platform caches failures only when the component is loaded.
 
     Only ModuleNotFoundError is cached, ImportError is not cached.
     """
