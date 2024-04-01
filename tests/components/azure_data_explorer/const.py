@@ -1,4 +1,4 @@
-"""Constants for testing AEH."""
+"""Constants for testing Azure Data Explorer."""
 from homeassistant.components.azure_data_explorer.const import (
     CONF_ADX_CLUSTER_INGEST_URI,
     CONF_ADX_DATABASE_NAME,

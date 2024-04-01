@@ -1,4 +1,4 @@
-"""Test the init functions for AEH."""
+"""Test the init functions for Azure Data Explorer."""
 from datetime import datetime, timedelta
 import logging
 from unittest.mock import patch

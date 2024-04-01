@@ -1,4 +1,4 @@
-"""Test the AEH config flow."""
+"""Test the Azure Data Explorer config flow."""
 from azure.kusto.data.exceptions import KustoAuthenticationError, KustoServiceError
 import pytest
 
