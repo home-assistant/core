@@ -10,15 +10,7 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .conftest import (
-    GET_HASS_ADDRESS_FROM_ENTRY,
-    INITIALIZE_NOTIFICATION_COORDINATOR,
-    NOTIFICATION_COORDINATOR_CHECK_CONNECTION,
-    WEBIO_API_CHECK_CONNECTION,
-    WEBIO_API_GET_SERIAL_NUMBER,
-    WEBIO_API_REFRESH_DEVICE_INFO,
-    WEBIO_API_STATUS_SUBSCRIPTION,
-)
+from .conftest import BASE_CONFIG_FLOW, BASE_NASWEB_DATA
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
@@ -62,7 +54,7 @@ async def test_form_cannot_connect(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(WEBIO_API_CHECK_CONNECTION, return_value=False):
+    with patch(BASE_CONFIG_FLOW + "WebioAPI.check_connection", return_value=False):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], TEST_USER_INPUT
         )
@@ -81,7 +73,7 @@ async def test_form_invalid_auth(
     )
 
     with patch(
-        WEBIO_API_REFRESH_DEVICE_INFO,
+        BASE_CONFIG_FLOW + "WebioAPI.refresh_device_info",
         side_effect=AuthError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -102,7 +94,7 @@ async def test_form_missing_nasweb_data(
     )
 
     with patch(
-        WEBIO_API_GET_SERIAL_NUMBER,
+        BASE_CONFIG_FLOW + "WebioAPI.get_serial_number",
         return_value=None,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -110,19 +102,25 @@ async def test_form_missing_nasweb_data(
         )
         assert result2.get("type") == FlowResultType.FORM
         assert result2.get("errors") == {"base": "missing_nasweb_data"}
-    with patch(GET_HASS_ADDRESS_FROM_ENTRY, return_value=None):
+    with patch(
+        "homeassistant.components.nasweb.nasweb_data.NASwebData.get_webhook_url",
+        return_value=None,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], TEST_USER_INPUT
         )
         assert result2.get("type") == FlowResultType.FORM
         assert result2.get("errors") == {"base": "missing_nasweb_data"}
-    with patch(WEBIO_API_STATUS_SUBSCRIPTION, return_value=False):
+    with patch(BASE_CONFIG_FLOW + "WebioAPI.status_subscription", return_value=False):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], TEST_USER_INPUT
         )
         assert result2.get("type") == FlowResultType.FORM
         assert result2.get("errors") == {"base": "missing_nasweb_data"}
-    with patch(NOTIFICATION_COORDINATOR_CHECK_CONNECTION, return_value=False):
+    with patch(
+        BASE_NASWEB_DATA + "NotificationCoordinator.check_connection",
+        return_value=False,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], TEST_USER_INPUT
         )
@@ -139,12 +137,6 @@ async def test_form_exception(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(INITIALIZE_NOTIFICATION_COORDINATOR, return_value=None):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], TEST_USER_INPUT
-        )
-        assert result2.get("type") == FlowResultType.FORM
-        assert result2.get("errors") == {"base": "unknown"}
     with patch(
         "homeassistant.components.nasweb.config_flow.validate_input",
         side_effect=Exception,

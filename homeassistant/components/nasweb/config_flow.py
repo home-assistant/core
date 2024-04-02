@@ -48,6 +48,8 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
         coordinator = NASwebCoordinator(hass, webio_api)
         webhook_url = nasweb_data.get_webhook_url(hass)
+        if webhook_url is None:
+            raise MissingNASwebData("Cannot pass Home Assistant url to NASweb device")
         nasweb_data.notify_coordinator.add_coordinator(webio_serial, coordinator)
         subscription = await webio_api.status_subscription(webhook_url, True)
         if not subscription:

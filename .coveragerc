@@ -796,7 +796,7 @@ omit =
     homeassistant/components/nanoleaf/entity.py
     homeassistant/components/nanoleaf/light.py
     homeassistant/components/nasweb/__init__.py
-    homeassistant/components/nasweb/commons.py
+    homeassistant/components/nasweb/nasweb_data.py
     homeassistant/components/nasweb/coordinator.py
     homeassistant/components/nasweb/switch.py
     homeassistant/components/neato/__init__.py

@@ -4,8 +4,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from homeassistant.components.nasweb.coordinator import NotificationCoordinator
-
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock, None, None]:
@@ -16,49 +14,38 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
         yield mock_setup_entry
 
 
-BASE = "homeassistant.components.nasweb.config_flow"
-WEBIO_API_CHECK_CONNECTION = f"{BASE}.WebioAPI.check_connection"
-WEBIO_API_REFRESH_DEVICE_INFO = f"{BASE}.WebioAPI.refresh_device_info"
-INITIALIZE_NOTIFICATION_COORDINATOR = f"{BASE}.initialize_notification_coordinator"
-WEBIO_API_GET_SERIAL_NUMBER = f"{BASE}.WebioAPI.get_serial_number"
-GET_HASS_ADDRESS_FROM_ENTRY = f"{BASE}.get_hass_address_from_entry"
-WEBIO_API_STATUS_SUBSCRIPTION = f"{BASE}.WebioAPI.status_subscription"
-NOTIFICATION_COORDINATOR_CHECK_CONNECTION = (
-    f"{BASE}.NotificationCoordinator.check_connection"
-)
+BASE_CONFIG_FLOW = "homeassistant.components.nasweb.config_flow."
+BASE_NASWEB_DATA = "homeassistant.components.nasweb.nasweb_data."
 
 
 @pytest.fixture
 def validate_input_all_ok() -> Generator[dict[str, AsyncMock | MagicMock], None, None]:
     """Yield dictionary of mocked functions required for successful test_form execution."""
     with patch(
-        WEBIO_API_CHECK_CONNECTION,
+        BASE_CONFIG_FLOW + "WebioAPI.check_connection",
         return_value=True,
     ) as check_connection, patch(
-        WEBIO_API_REFRESH_DEVICE_INFO,
+        BASE_CONFIG_FLOW + "WebioAPI.refresh_device_info",
         return_value=True,
     ) as refresh_device_info, patch(
-        INITIALIZE_NOTIFICATION_COORDINATOR,
-        return_value=NotificationCoordinator(),
-    ) as initialize_coordinator, patch(
-        WEBIO_API_GET_SERIAL_NUMBER,
+        BASE_NASWEB_DATA + "NASwebData.get_webhook_url",
+        return_value="http://127.0.0.1:8123/api/webhook/de705e77291402afa0dd961426e9f19bb53631a9f2a106c52cfd2d2266913c04",
+    ) as get_webhook_url, patch(
+        BASE_CONFIG_FLOW + "WebioAPI.get_serial_number",
         return_value="0011223344556677",
     ) as get_serial, patch(
-        GET_HASS_ADDRESS_FROM_ENTRY,
-        return_value="False:localhost:8123",
-    ) as get_hass_address, patch(
-        WEBIO_API_STATUS_SUBSCRIPTION,
+        BASE_CONFIG_FLOW + "WebioAPI.status_subscription",
         return_value=True,
     ) as status_subscription, patch(
-        NOTIFICATION_COORDINATOR_CHECK_CONNECTION,
+        BASE_NASWEB_DATA + "NotificationCoordinator.check_connection",
         return_value=True,
     ) as check_status_confirmation:
         yield {
-            WEBIO_API_CHECK_CONNECTION: check_connection,
-            WEBIO_API_REFRESH_DEVICE_INFO: refresh_device_info,
-            INITIALIZE_NOTIFICATION_COORDINATOR: initialize_coordinator,
-            WEBIO_API_GET_SERIAL_NUMBER: get_serial,
-            GET_HASS_ADDRESS_FROM_ENTRY: get_hass_address,
-            WEBIO_API_STATUS_SUBSCRIPTION: status_subscription,
-            NOTIFICATION_COORDINATOR_CHECK_CONNECTION: check_status_confirmation,
+            BASE_CONFIG_FLOW + "WebioAPI.check_connection": check_connection,
+            BASE_CONFIG_FLOW + "WebioAPI.refresh_device_info": refresh_device_info,
+            BASE_NASWEB_DATA + "NASwebData.get_webhook_url": get_webhook_url,
+            BASE_CONFIG_FLOW + "WebioAPI.get_serial_number": get_serial,
+            BASE_CONFIG_FLOW + "WebioAPI.status_subscription": status_subscription,
+            BASE_NASWEB_DATA
+            + "NotificationCoordinator.check_connection": check_status_confirmation,
         }
