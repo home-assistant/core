@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from homeassistant import config_entries
+from homeassistant import config_entries, setup
 from homeassistant.components.ondilo_ico.const import (
     DOMAIN,
     OAUTH2_AUTHORIZE,
@@ -12,7 +12,7 @@ from homeassistant.components.ondilo_ico.const import (
 )
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType, setup
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from tests.common import MockConfigEntry

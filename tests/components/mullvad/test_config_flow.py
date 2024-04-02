@@ -4,10 +4,10 @@ from unittest.mock import patch
 
 from mullvad_api import MullvadAPIError
 
-from homeassistant import config_entries
+from homeassistant import config_entries, setup
 from homeassistant.components.mullvad.const import DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType, setup
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 

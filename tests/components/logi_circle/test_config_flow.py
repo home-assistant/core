@@ -15,7 +15,7 @@ from homeassistant.components.logi_circle.config_flow import (
     LogiCircleAuthCallbackView,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType, data_entry_flow
+from homeassistant.data_entry_flow import AbortFlow, FlowResultType
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -138,7 +138,7 @@ async def test_abort_if_already_setup(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
-    with pytest.raises(data_entry_flow.AbortFlow):
+    with pytest.raises(AbortFlow):
         result = await flow.async_step_code()
 
     result = await flow.async_step_auth()

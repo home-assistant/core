@@ -2,10 +2,10 @@
 
 from unittest.mock import patch
 
-from homeassistant import config_entries
+from homeassistant import config_entries, setup
 from homeassistant.components.kitchen_sink import DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType, setup
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.setup import async_setup_component
 
 
