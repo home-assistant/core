@@ -1,4 +1,5 @@
 """Demo platform that offers a fake notify entity."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping

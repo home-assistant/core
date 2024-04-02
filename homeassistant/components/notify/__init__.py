@@ -2,15 +2,13 @@
 
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Mapping
 from datetime import timedelta
 from enum import StrEnum
 from functools import partial
 import logging
-from typing import Any, final
+from typing import Any, final, override
 
-from typing_extensions import override
 import voluptuous as vol
 
 from homeassistant.backports.functools import cached_property
@@ -103,7 +101,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         "_async_send_message",
     )
 
-
     async def persistent_notification(service: ServiceCall) -> None:
         """Send notification via the built-in persistent_notify integration."""
         message: Template = service.data[ATTR_MESSAGE]
@@ -159,7 +156,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 class NotifyEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
-    """Representation of a nofify entity."""
+    """Representation of a notify entity."""
 
     entity_description: NotifyEntityDescription
     _attr_should_poll = False
@@ -225,7 +222,7 @@ class NotifyEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_
         data: Mapping[str, Any] | None = None,
     ) -> None:
         """Send a message."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_send_message(
         self,

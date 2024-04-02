@@ -1,4 +1,5 @@
 """Provide common notify constants."""
+
 from enum import IntFlag
 import logging
 
@@ -14,7 +15,7 @@ ATTR_MESSAGE = "message"
 # Target of the (legacy) notification (user, device, etc)
 ATTR_TARGET = "target"
 
-# Recipients for a notitication
+# Recipients for a notification
 ATTR_RECIPIENTS = "recipients"
 
 # Title of notification
