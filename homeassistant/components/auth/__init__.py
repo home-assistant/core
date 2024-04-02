@@ -215,17 +215,21 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """Create a strict connection url and return it."""
         if hass.http.strict_connection_non_cloud is StrictConnectionMode.DISABLED:
             raise ServiceValidationError(
-                "Strict connection is not enabled for non-cloud requests"
+                translation_domain=DOMAIN,
+                translation_key="strict_connection_not_enabled_non_cloud",
             )
+
+        try:
+            url = get_url(hass, prefer_external=True, allow_internal=False)
+        except NoURLAvailableError as ex:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="no_external_url_available",
+            ) from ex
 
         path = async_sign_path(
             hass, STRICT_CONNECTION_URL, timedelta(hours=1), use_content_user=True
         )
-        try:
-            url = get_url(hass, prefer_external=True, allow_internal=False)
-        except NoURLAvailableError as ex:
-            raise ServiceValidationError("No external URL available") from ex
-
         url = urljoin(url, path)
 
         return {

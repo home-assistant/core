@@ -1,4 +1,19 @@
 {
+  "exceptions": {
+    "strict_connection_not_enabled_non_cloud": {
+      "message": "Strict connection is not enabled for non-cloud requests"
+    },
+    "no_external_url_available": {
+      "message": "No external URL available"
+    }
+  },
+
+  "issues": {
+    "deprecated_legacy_api_password": {
+      "title": "The legacy API password is deprecated",
+      "description": "The legacy API password authentication provider is deprecated and will be removed. Please remove it from your YAML configuration and use the default Home Assistant authentication provider instead."
+    }
+  },
   "mfa_setup": {
     "totp": {
       "title": "TOTP",
@@ -30,12 +45,6 @@
       "error": {
         "invalid_code": "Invalid code, please try again."
       }
-    }
-  },
-  "issues": {
-    "deprecated_legacy_api_password": {
-      "title": "The legacy API password is deprecated",
-      "description": "The legacy API password authentication provider is deprecated and will be removed. Please remove it from your YAML configuration and use the default Home Assistant authentication provider instead."
     }
   },
   "services": {

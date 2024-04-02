@@ -371,6 +371,11 @@ def gen_auth_schema(config: Config, integration: Integration) -> vol.Schema:
     """Generate auth schema."""
     return vol.Schema(
         {
+            vol.Optional("exceptions"): cv.schema_with_slug_keys(
+                {vol.Optional("message"): translation_value_validator},
+                slug_validator=cv.slug,
+            ),
+            vol.Optional("issues"): gen_issues_schema(config, integration),
             vol.Optional("mfa_setup"): {
                 str: gen_data_entry_schema(
                     config=config,
@@ -379,7 +384,6 @@ def gen_auth_schema(config: Config, integration: Integration) -> vol.Schema:
                     require_step_title=True,
                 )
             },
-            vol.Optional("issues"): gen_issues_schema(config, integration),
             vol.Optional("services"): SERVICES_SCHEMA,
         }
     )
