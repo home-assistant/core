@@ -1,4 +1,4 @@
-"""Interfaces with TotalConnect sensors."""
+"""Interfaces with TotalConnect buttons."""
 
 import logging
 
