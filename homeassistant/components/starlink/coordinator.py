@@ -67,9 +67,10 @@ class StarlinkUpdateCoordinator(DataUpdateCoordinator[StarlinkData]):
                 result = await self.hass.async_add_executor_job(
                     self._get_starlink_data, self.channel_context
                 )
-                return result
             except GrpcError as exc:
                 raise UpdateFailed from exc
+            else:
+                return result
 
     async def async_stow_starlink(self, stow: bool) -> None:
         """Set whether Starlink system tied to this coordinator should be stowed."""
