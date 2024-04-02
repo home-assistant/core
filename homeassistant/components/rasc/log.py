@@ -2,29 +2,28 @@
 from __future__ import annotations
 
 import datetime
-import json
 import logging
 import os
 import shutil
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from .entity import Queue
+    pass
 
 
-class Trial:
+class Trail:
     """A class for recording trail."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the trail."""
         self.num = 0
 
-    def increment(self):
+    def increment(self) -> None:
         """Increase the trail."""
         self.num += 1
 
 
-trail = Trial()
+TRAIL = Trail()
 
 
 def set_log_dir() -> str:
@@ -38,7 +37,7 @@ def set_log_dir() -> str:
     return fp
 
 
-_LOG_PATH = set_log_dir()
+LOG_PATH = set_log_dir()
 
 
 def set_logger() -> logging.Logger:
@@ -46,7 +45,7 @@ def set_logger() -> logging.Logger:
     logger = logging.getLogger("rascal_logger")
     logger.setLevel(logging.DEBUG)
     log_format = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
-    filename = os.path.join(_LOG_PATH, "rascal.log")
+    filename = os.path.join(LOG_PATH, "rascal.log")
     log_handler = logging.FileHandler(filename, mode="w")
     log_handler.setLevel(logging.DEBUG)
     log_handler.setFormatter(log_format)

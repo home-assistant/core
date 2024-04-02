@@ -1215,7 +1215,8 @@ DOMAIN_PERSON: Final = "person"
 DOMAIN_ZONE: Final = "zone"
 DOMAIN_SENSOR: Final = "sensor"
 DOMAIN_TTS: Final = "tts"
-DOMAIN_RASCALSCHEDULER: Final = "rascalscheduler"
+DOMAIN_RASCALSCHEDULER: Final = "rascal_scheduler"
+DOMAIN_RASCALRESCHEDULER: Final = "rascal_rescheduler"
 DOMAIN_RASC: Final = "rasc"
 
 NAME_SUN_NEXT_DAWN: Final = "sun_next_dawn"
@@ -1237,5 +1238,16 @@ FCFS_POST: Final = "fcfs_post"
 JIT: Final = "jit"
 TIMELINE: Final = "tl"
 SCHEDULING_POLICY: Final = "scheduling_policy"
+
+
+RESCHEDULING_POLICY: Final = "rescheduling_policy"
+RV: Final = "rv"
+EARLY_START: Final = "early_start"
+
+RESCHEDULING_ESTIMATION: Final = "rescheduling_estimation"
+
+RESCHEDULING_ACCURACY: Final = "rescheduling_accuracy"
+RESCHEDULE_ALL: Final = "reschedule_all"
+RESCHEDULE_SOME: Final = "reschedule_some"
 
 TIMELINE_UNIT: Final = 1

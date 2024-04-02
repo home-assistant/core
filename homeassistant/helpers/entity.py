@@ -1253,10 +1253,24 @@ class Entity(ABC):
 
         return report_issue
 
+    @property
+    def get_current_state(self) -> dict[str, Any]:
+        """Return the current state of the entity."""
+        raise NotImplementedError()
+
     def async_get_action_target_state(
         self, action: dict[str, Any]
     ) -> dict[str, Any] | None:
         """Return expected state when action is complete."""
+        raise NotImplementedError()
+
+    def get_action_complete_percentage(
+        self, request_state: dict[str, Any], action: dict[str, Any]
+    ) -> float:
+        """Return the percentage of completion of an action.
+
+        None is unknown, 0 is not started, 1 is complete.
+        """
         raise NotImplementedError()
 
 
@@ -1320,6 +1334,11 @@ class ToggleEntity(Entity):
         else:
             await self.async_turn_on(**kwargs)
 
+    @property
+    def get_current_state(self) -> dict[str, Any]:
+        """Return the current state of the entity."""
+        return {"state": self.state, "is_on": self.is_on}
+
     def async_get_action_target_state(
         self, action: dict[str, Any]
     ) -> dict[str, Any] | None:
@@ -1339,3 +1358,20 @@ class ToggleEntity(Entity):
         elif action[CONF_SERVICE] == SERVICE_TOGGLE:
             target["is_on"] = _target_complete_state(not self.is_on)
         return target
+
+    def get_action_complete_percentage(
+        self, request_state: dict[str, Any], action: dict[str, Any]
+    ) -> float:
+        """Return the percentage of completion of an action.
+
+        None is unknown, 0 is not started, 1 is complete.
+        """
+        if CONF_SERVICE not in action:
+            return 0.0
+        if action[CONF_SERVICE] == SERVICE_TURN_ON:
+            return 1.0 if self.is_on else 0.0
+        if action[CONF_SERVICE] == SERVICE_TURN_OFF:
+            return 1.0 if not self.is_on else 0.0
+        if action[CONF_SERVICE] == SERVICE_TOGGLE:
+            return 0.0 if self.is_on == request_state["is_on"] else 1.0
+        return 0.0

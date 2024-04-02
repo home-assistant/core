@@ -287,6 +287,16 @@ class LockEntity(Entity):
 
         self._lock_option_default_code = ""
 
+    @property
+    def get_current_state(self) -> dict[str, Any]:
+        """Return the current state of the entity."""
+        return {
+            "is_locked": self.is_locked,
+            "is_locking": self.is_locking,
+            "is_unlocking": self.is_unlocking,
+            "is_jammed": self.is_jammed,
+        }
+
     def async_get_action_target_state(
         self, action: dict[str, Any]
     ) -> dict[str, Any] | None:
@@ -322,3 +332,43 @@ class LockEntity(Entity):
                 target["is_locking"] = _target_state(False)
 
         return target
+
+    def get_action_complete_percentage(
+        self, request_state: dict[str, Any], action: dict[str, Any]
+    ) -> float:
+        """Return the percentage of completion of an action.
+
+        None is unknown, 0 is not started, 1 is complete.
+        """
+        if CONF_SERVICE not in action:
+            return 0.0
+        if action[CONF_SERVICE] in SERVICE_LOCK:
+            if self.is_locked:
+                return 1.0
+            if self.is_locking:
+                return 0.5
+            return 0.0
+        if action[CONF_SERVICE] == SERVICE_UNLOCK:
+            if (
+                not self.is_locked
+                and not self.is_locking
+                and not self.is_unlocking
+                and not self.is_jammed
+            ):
+                return 1.0
+            if self.is_unlocking:
+                return 0.5
+            return 0.0
+        if (
+            self.supported_features & LockEntityFeature.OPEN
+            and action[CONF_SERVICE] == SERVICE_OPEN
+        ):
+            if (
+                not self.is_locked
+                and not self.is_locking
+                and not self.is_unlocking
+                and not self.is_jammed
+            ):
+                return 1.0
+            return 0.0
+        return 0.0

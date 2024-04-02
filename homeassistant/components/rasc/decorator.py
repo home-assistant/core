@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Any, TypeVar, cast, overload
 
 from homeassistant.helpers.entity import Entity
 
-from . import RASC
+from .abstraction import RASC
 from .const import DOMAIN
 
 if TYPE_CHECKING:

@@ -7,6 +7,8 @@ from contextlib import suppress
 from datetime import timedelta
 import json
 import logging
+import re
+import shortuuid
 import time
 from typing import Any, Generic, TypeVar
 
@@ -21,10 +23,10 @@ from homeassistant.const import (
     CONF_RESPONSE_VARIABLE,
 )
 from homeassistant.core import Context, HomeAssistant
-from homeassistant.helpers import config_validation as cv, service
-from homeassistant.helpers.rascalscheduler import (
-    generate_short_uuid,
-    get_entity_id_from_number,
+from homeassistant.helpers import (
+    config_validation as cv,
+    entity_registry as er,
+    service,
 )
 from homeassistant.util import slugify
 
@@ -40,6 +42,39 @@ TIME_MILLISECOND = 1000
 
 
 CONF_END_VIRTUAL_NODE = "end_virtual_node"
+CONF_ENTITY_REGISTRY = "entity_registry"
+
+
+def get_device_id_from_entity_id(hass: HomeAssistant, entity_id: str) -> str:
+    """Get device ID from an entity ID.
+
+    Raises ValueError if entity or device ID is invalid.
+    """
+    ent_reg = er.async_get(hass)
+    entity_entry = ent_reg.async_get(entity_id)
+
+    if entity_entry is None or entity_entry.device_id is None:
+        raise ValueError(f"Entity {entity_id} is not a valid entity.")
+
+    return str(entity_entry.device_id)
+
+
+def get_entity_id_from_number(hass: HomeAssistant, entity_id: str) -> str:
+    """Get entity_id from number."""
+    pattern = re.compile("^[^.]+[.][^.]+$")
+    if not pattern.match(entity_id):
+        registry: er.EntityRegistry = hass.data[CONF_ENTITY_REGISTRY]
+        entity_entry = registry.async_get(entity_id)
+        if not entity_entry or entity_entry.device_id is None:
+            raise ValueError(f"Entity {entity_id} is not a valid entity.")
+        return str(entity_entry.as_partial_dict[CONF_ENTITY_ID])
+
+    return str(entity_id)
+
+
+def generate_short_uuid(size: int = 5) -> str:
+    """Generate short uuid."""
+    return shortuuid.ShortUUID().random(length=size)
 
 
 class BaseRoutineEntity:
@@ -252,6 +287,8 @@ class ActionEntity:
         self.hass = hass
         self.action = action
         self._action_id = action_id
+        self.action_acked = False
+        self.action_started = False
         self.action_completed = False
         self.parents: list[ActionEntity] = []
         self.children: list[ActionEntity] = []
@@ -484,9 +521,11 @@ class Queue(Generic[_KT, _VT]):
     __slots__ = ("_keys", "_data")
 
     _keys: list[_KT]
-    _data: dict[_KT, _VT]
+    _data: dict[_KT, _VT | None]
 
-    def __init__(self, queue: Any = None) -> None:
+    def __init__(
+        self, queue: dict[_KT, _VT | None] | Queue[_KT, _VT] | None = None
+    ) -> None:
         """Initialize a queue entity."""
         self._data = {}
         self._keys = []
@@ -500,11 +539,11 @@ class Queue(Generic[_KT, _VT]):
                     "The provided queue does not support items() method and cannot be treated as a mapping"
                 )
 
-    def __getitem__(self, key: _KT) -> _VT:
+    def __getitem__(self, key: _KT) -> _VT | None:
         """Get item."""
         return self._data[key]
 
-    def __setitem__(self, key: _KT, value: _VT) -> None:
+    def __setitem__(self, key: _KT, value: _VT | None) -> None:
         """Set item."""
         self._keys.append(key)
         self._data[key] = value
@@ -530,24 +569,24 @@ class Queue(Generic[_KT, _VT]):
         """Get keys."""
         yield from self._keys
 
-    def items(self) -> Iterator[tuple[_KT, _VT]]:
+    def items(self) -> Iterator[tuple[_KT, _VT | None]]:
         """Get keys and values."""
         for key in self._keys:
             yield key, self._data[key]
 
-    def values(self) -> Iterator[_VT]:
+    def values(self) -> Iterator[_VT | None]:
         """Get values."""
         for key in self._keys:
             yield self._data[key]
 
-    def get(self, key, default=None) -> _VT:
+    def get(self, key, default=None) -> _VT | None:
         """Get the value with the key."""
         try:
             return self._data[key]
         except KeyError:
             return default
 
-    def getitem(self, index: int) -> _VT:
+    def getitem(self, index: int) -> _VT | None:
         """Get item in the index position."""
         try:
             key = self._keys[index]
@@ -555,7 +594,7 @@ class Queue(Generic[_KT, _VT]):
         except KeyError as e:
             raise KeyError("Key does not found while doing getitem.") from e
 
-    def pop(self, key: _KT, default=None) -> _VT:
+    def pop(self, key: _KT, default=None) -> _VT | None:
         """Pop the value according to the key."""
         value = self.get(key, default)
         del self._data[key]
@@ -568,14 +607,20 @@ class Queue(Generic[_KT, _VT]):
         self._keys = []
         self._data = {}
 
-    def updateitem(self, key: _KT, value: _VT) -> None:
+    def update(self, queue: Queue):
+        """Extend the queue."""
+        for key, value in queue.items():
+            self._keys.append(key)
+            self._data[key] = value
+
+    def updateitem(self, key: _KT, value: _VT | None) -> None:
         """Update the item."""
         try:
             self._data[key] = value
         except KeyError as e:
             raise KeyError("Key does not found while updating item.") from e
 
-    def setdefault(self, key: _KT, default: _VT) -> _VT:
+    def setdefault(self, key: _KT, default: _VT | None) -> _VT | None:
         """Return the value of the item with the specified key. If the key does not exist, insert the key with the specified value."""
         try:
             return self[key]
@@ -583,7 +628,7 @@ class Queue(Generic[_KT, _VT]):
             self[key] = default
             return self[key]
 
-    def top(self):
+    def top(self) -> tuple[_KT, _VT | None] | tuple[None, None]:
         """Get the first item in the queue."""
         if not self._keys:
             return None, None
@@ -592,7 +637,7 @@ class Queue(Generic[_KT, _VT]):
         value = self._data[key]
         return key, value
 
-    def end(self):
+    def end(self) -> tuple[_KT, _VT | None] | tuple[None, None]:
         """Get the last element in the queue."""
         if not self._keys:
             return None, None
@@ -601,7 +646,7 @@ class Queue(Generic[_KT, _VT]):
         value = self._data[key]
         return key, value
 
-    def insert_before(self, key: _KT, new_key: _KT, value: _VT) -> None:
+    def insert_before(self, key: _KT, new_key: _KT, value: _VT | None) -> None:
         """Insert the new_key before the key with the value."""
         try:
             self._keys.insert(self._keys.index(key), new_key)
@@ -609,7 +654,7 @@ class Queue(Generic[_KT, _VT]):
         except ValueError:
             raise KeyError(key) from ValueError
 
-    def insert_after(self, key: _KT, new_key: _KT, value: _VT) -> None:
+    def insert_after(self, key: _KT, new_key: _KT, value: _VT | None) -> None:
         """Insert the new_key after the key with the value."""
         try:
             self._keys.insert(self._keys.index(key) + 1, new_key)
@@ -624,15 +669,17 @@ class Queue(Generic[_KT, _VT]):
         except Exception as e:
             raise KeyError("An error occurred while getting the key index.") from e
 
-    def next(self, key: _KT) -> Any:
+    def next(self, key: _KT | None) -> _VT | None:
         """Return the next item with the key."""
+        if key is None:
+            return None
         index = self._keys.index(key)
         if index + 1 < len(self._keys):
             key = self._keys[index + 1]
             return self._data[key]
         return None
 
-    def nextitem(self, index: int) -> Any:
+    def nextitem(self, index: int) -> _VT | None:
         """Return the next item with the index."""
         if index + 1 < len(self._keys):
             key = self._keys[index + 1]

@@ -394,15 +394,41 @@ class FanEntity(ToggleEntity):
             return self._attr_preset_modes
         return None
 
-    def async_get_action_target_state(
+    @property
+    def get_current_state(self) -> dict[str, Any]:
+        """Return the current state of the entity."""
+        current_state: dict[str, Any] = {"is_on": self.is_on}
+        if self.supported_features & FanEntityFeature.SET_SPEED:
+            current_state["percentage"] = self.percentage
+        if self.supported_features & FanEntityFeature.DIRECTION:
+            current_state["current_direction"] = self.current_direction
+        if self.supported_features & FanEntityFeature.OSCILLATE:
+            current_state["oscillating"] = self.oscillating
+        if self.supported_features & FanEntityFeature.PRESET_MODE:
+            current_state["preset_mode"] = self.preset_mode
+        return current_state
+
+    def async_get_action_target_state(  # noqa: C901
         self, action: dict[str, Any]
     ) -> dict[str, Any] | None:
         """Return expected state when action is start/complete."""
 
         def _target_start_state(
-            current: int | float | None, target_complete_state: int | float
-        ) -> Callable[[int | float], bool]:
-            def match(value: int | float) -> bool:
+            current: int | float | str | None, target_complete_state: int | float | str
+        ) -> Callable[[int | float | str], bool]:
+            def match(value: int | float | str) -> bool:
+                if (
+                    isinstance(value, str)
+                    and isinstance(current, str)
+                    and isinstance(target_complete_state, str)
+                ):
+                    return value == current
+                if (
+                    isinstance(value, str)
+                    or isinstance(current, str)
+                    or isinstance(target_complete_state, str)
+                ):
+                    return False
                 if current is None:
                     if target_complete_state > 0:
                         return value == 0
@@ -411,7 +437,7 @@ class FanEntity(ToggleEntity):
                     return value > current
                 if target_complete_state < current:
                     return value < current
-                return value == current
+                return False
 
             return match
 
@@ -422,9 +448,9 @@ class FanEntity(ToggleEntity):
             return match
 
         def _target_complete_state(
-            target_complete_state: int,
-        ) -> Callable[[int], bool]:
-            def match(value: int) -> bool:
+            target_complete_state: int | str,
+        ) -> Callable[[int | str], bool]:
+            def match(value: int | str) -> bool:
                 return value == target_complete_state
 
             return match
@@ -432,6 +458,25 @@ class FanEntity(ToggleEntity):
         target: dict[str, Any] = super().async_get_action_target_state(action) or {}
 
         service_data = action[CONF_SERVICE_DATA]
+        if action[CONF_SERVICE] == SERVICE_TURN_ON:
+            if action[CONF_EVENT] == RASC_START:
+                if ATTR_PERCENTAGE in service_data:
+                    target[ATTR_PERCENTAGE] = _target_start_state(
+                        self.percentage, service_data[ATTR_PERCENTAGE]
+                    )
+                if ATTR_PRESET_MODE in service_data:
+                    target[ATTR_PRESET_MODE] = _target_start_state(
+                        self.preset_mode, service_data[ATTR_PRESET_MODE]
+                    )
+            else:
+                if ATTR_PERCENTAGE in service_data:
+                    target[ATTR_PERCENTAGE] = _target_complete_state(
+                        service_data[ATTR_PERCENTAGE]
+                    )
+                if ATTR_PRESET_MODE in service_data:
+                    target[ATTR_PRESET_MODE] = _target_complete_state(
+                        service_data[ATTR_PRESET_MODE]
+                    )
         if action[CONF_SERVICE] == SERVICE_SET_PERCENTAGE:
             if action[CONF_EVENT] == RASC_START:
                 target[ATTR_PERCENTAGE] = _target_start_state(
@@ -440,6 +485,26 @@ class FanEntity(ToggleEntity):
             else:
                 target[ATTR_PERCENTAGE] = _target_complete_state(
                     service_data[ATTR_PERCENTAGE]
+                )
+        elif action[CONF_SERVICE] == SERVICE_INCREASE_SPEED:
+            if action[CONF_EVENT] == RASC_START:
+                target[ATTR_PERCENTAGE] = _target_start_state(
+                    self.percentage,
+                    min(100, self.percentage + service_data[ATTR_PERCENTAGE_STEP]),
+                )
+            else:
+                target[ATTR_PERCENTAGE] = _target_complete_state(
+                    min(100, self.percentage + service_data[ATTR_PERCENTAGE_STEP])
+                )
+        elif action[CONF_SERVICE] == SERVICE_DECREASE_SPEED:
+            if action[CONF_EVENT] == RASC_START:
+                target[ATTR_PERCENTAGE] = _target_start_state(
+                    self.percentage,
+                    max(0, self.percentage - service_data[ATTR_PERCENTAGE_STEP]),
+                )
+            else:
+                target[ATTR_PERCENTAGE] = _target_complete_state(
+                    max(0, self.percentage - service_data[ATTR_PERCENTAGE_STEP])
                 )
         elif action[CONF_SERVICE] == SERVICE_SET_DIRECTION:
             if action[CONF_EVENT] == RASC_START:
@@ -450,5 +515,107 @@ class FanEntity(ToggleEntity):
                 target[ATTR_CURRENT_DIRECTION] = _target_complete_state(
                     service_data[ATTR_DIRECTION]
                 )
+        elif action[CONF_SERVICE] == SERVICE_OSCILLATE:
+            if action[CONF_EVENT] == RASC_START:
+                target[ATTR_OSCILLATING] = _target_start_state(
+                    self.oscillating, service_data[ATTR_OSCILLATING]
+                )
+            else:
+                target[ATTR_OSCILLATING] = _target_complete_state(
+                    service_data[ATTR_OSCILLATING]
+                )
+        elif action[CONF_SERVICE] == SERVICE_SET_PRESET_MODE:
+            if action[CONF_EVENT] == RASC_START:
+                target[ATTR_PRESET_MODE] = _target_start_state(
+                    self.preset_mode, service_data[ATTR_PRESET_MODE]
+                )
+            else:
+                target[ATTR_PRESET_MODE] = _target_complete_state(
+                    service_data[ATTR_PRESET_MODE]
+                )
 
         return target
+
+    def get_action_complete_percentage(
+        self, request_state: dict[str, Any], action: dict[str, Any]
+    ) -> float:
+        """Return the percentage of completion of an action.
+
+        None is unknown, 0 is not started, 1 is complete.
+        """
+        if CONF_SERVICE not in action:
+            return 0.0
+
+        if action[CONF_SERVICE] in (SERVICE_TURN_OFF, SERVICE_TOGGLE):
+            return super().get_action_complete_percentage(request_state, action)
+        if action[CONF_SERVICE] == SERVICE_TURN_ON:
+            if CONF_SERVICE_DATA not in action:
+                return 0.0
+            if ATTR_PERCENTAGE in action[CONF_SERVICE_DATA]:
+                complete_percentage: int | None = action[CONF_SERVICE_DATA][
+                    ATTR_PERCENTAGE
+                ]
+                if not complete_percentage or not self.percentage:
+                    return 0.0
+                return self.percentage / complete_percentage
+            if ATTR_PRESET_MODE in action[CONF_SERVICE_DATA]:
+                if self.preset_mode == action[CONF_SERVICE_DATA][ATTR_PRESET_MODE]:
+                    return 1.0
+                return 0.0
+        if action[CONF_SERVICE] == SERVICE_SET_PERCENTAGE:
+            if (
+                CONF_SERVICE_DATA not in action
+                or ATTR_PERCENTAGE not in action[CONF_SERVICE_DATA]
+            ):
+                return 0.0
+            complete_percentage = action[CONF_SERVICE_DATA][ATTR_PERCENTAGE]
+            if not complete_percentage or not self.percentage:
+                return 0.0
+            start_percentage: int = request_state.get("percentage", 0)
+            if start_percentage <= complete_percentage:
+                current_progress = self.percentage - start_percentage
+                target_progress = complete_percentage - start_percentage
+            else:
+                current_progress = start_percentage - self.percentage
+                target_progress = start_percentage - complete_percentage
+            return current_progress / target_progress
+        if action[CONF_SERVICE] == SERVICE_INCREASE_SPEED:
+            if (
+                CONF_SERVICE_DATA not in action
+                or ATTR_PERCENTAGE_STEP not in action[CONF_SERVICE_DATA]
+            ):
+                return 0.0
+            step: int | None = action[CONF_SERVICE_DATA][ATTR_PERCENTAGE_STEP]
+            if not step or not self.percentage:
+                return 0.0
+            start_percentage = request_state.get("percentage", 0)
+            complete_percentage = start_percentage + step
+            complete_percentage = min(100, complete_percentage)
+            current_progress = self.percentage - start_percentage
+            target_progress = complete_percentage - start_percentage
+            return current_progress / target_progress
+        if action[CONF_SERVICE] == SERVICE_DECREASE_SPEED:
+            if (
+                CONF_SERVICE_DATA not in action
+                or ATTR_PERCENTAGE_STEP not in action[CONF_SERVICE_DATA]
+            ):
+                return 0.0
+            step = action[CONF_SERVICE_DATA][ATTR_PERCENTAGE_STEP]
+            if not step or not self.percentage:
+                return 0.0
+            start_percentage = request_state.get("percentage", 0)
+            complete_percentage = start_percentage - step
+            complete_percentage = max(0, complete_percentage)
+            current_progress = start_percentage - self.percentage
+            target_progress = start_percentage - complete_percentage
+            return current_progress / target_progress
+        if action[CONF_SERVICE] == SERVICE_SET_DIRECTION:
+            if (
+                CONF_SERVICE_DATA not in action
+                or ATTR_DIRECTION not in action[CONF_SERVICE_DATA]
+            ):
+                return 0.0
+            if self.current_direction == action[CONF_SERVICE_DATA][ATTR_DIRECTION]:
+                return 1.0
+            return 0.0
+        return 0.0

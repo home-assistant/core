@@ -15,6 +15,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_EVENT,
     CONF_SERVICE,
+    CONF_SERVICE_DATA,
     RASC_START,
     SERVICE_CLOSE_COVER,
     SERVICE_CLOSE_COVER_TILT,
@@ -445,6 +446,17 @@ class CoverEntity(Entity):
             return fns["close"]
         return fns["open"]
 
+    @property
+    def get_current_state(self) -> dict[str, Any]:
+        """Return the current state of the entity."""
+        return {
+            "is_closed": self.is_closed,
+            "is_opening": self.is_opening,
+            "is_closing": self.is_closing,
+            "current_cover_position": self.current_cover_position,
+            "current_cover_tilt_position": self.current_cover_tilt_position,
+        }
+
     def async_get_action_target_state(
         self, action: dict[str, Any]
     ) -> dict[str, Any] | None:
@@ -454,6 +466,14 @@ class CoverEntity(Entity):
             target_complete_state: bool,
         ) -> Callable[[bool], bool]:
             def match(value: bool) -> bool:
+                return value == target_complete_state
+
+            return match
+
+        def _target_position(
+            target_complete_state: int,
+        ) -> Callable[[int], int]:
+            def match(value: int) -> bool:
                 return value == target_complete_state
 
             return match
@@ -478,6 +498,200 @@ class CoverEntity(Entity):
                 target["is_closed"] = _target_state(True)
                 target["is_opening"] = _target_state(False)
                 target["is_closing"] = _target_state(False)
+        elif action[CONF_SERVICE] == SERVICE_TOGGLE:
+            if action[CONF_EVENT] == RASC_START:
+                target["is_closed"] = _target_state(False)
+                target["is_opening"] = _target_state(
+                    not self._cover_is_last_toggle_direction_open
+                )
+                target["is_closing"] = _target_state(
+                    self._cover_is_last_toggle_direction_open
+                )
+            else:
+                target["is_closed"] = _target_state(
+                    self._cover_is_last_toggle_direction_open
+                )
+                target["is_opening"] = _target_state(False)
+                target["is_closing"] = _target_state(False)
+        elif action[CONF_SERVICE] == SERVICE_SET_COVER_POSITION:
+            if action[CONF_EVENT] == RASC_START:
+                target["is_closed"] = _target_state(False)
+            else:
+                target["is_closed"] = _target_state(False)
+                target["is_opening"] = _target_state(False)
+                target["is_closing"] = _target_state(False)
+                if (
+                    CONF_SERVICE_DATA in action
+                    and ATTR_POSITION in action[CONF_SERVICE_DATA]
+                ):
+                    position = action[CONF_SERVICE_DATA][ATTR_POSITION]
+                    target["current_cover_position"] = _target_position(position)
         elif action[CONF_SERVICE] == SERVICE_STOP_COVER:
             target["is_closed"] = lambda _: True
+
+        elif action[CONF_SERVICE] == SERVICE_OPEN_COVER_TILT:
+            if action[CONF_EVENT] == RASC_START:
+                target["is_closed"] = _target_state(False)
+                target["is_opening"] = _target_state(True)
+                target["is_closing"] = _target_state(False)
+            else:
+                target["current_cover_tilt_position"] = _target_position(100)
+                target["is_opening"] = _target_state(False)
+                target["is_closing"] = _target_state(False)
+        elif action[CONF_SERVICE] == SERVICE_CLOSE_COVER_TILT:
+            if action[CONF_EVENT] == RASC_START:
+                target["is_closed"] = _target_state(False)
+                target["is_opening"] = _target_state(False)
+                target["is_closing"] = _target_state(True)
+            else:
+                target["current_cover_tilt_position"] = _target_position(0)
+                target["is_opening"] = _target_state(False)
+                target["is_closing"] = _target_state(False)
+        elif action[CONF_SERVICE] == SERVICE_TOGGLE_COVER_TILT:
+            if action[CONF_EVENT] == RASC_START:
+                target["is_closed"] = _target_state(False)
+                target["is_opening"] = _target_state(
+                    not self._cover_is_last_toggle_direction_open
+                )
+                target["is_closing"] = _target_state(
+                    self._cover_is_last_toggle_direction_open
+                )
+            else:
+                position = 0 if self._cover_is_last_toggle_direction_open else 100
+                target["current_cover_tilt_position"] = _target_position(position)
+                target["is_opening"] = _target_state(False)
+                target["is_closing"] = _target_state(False)
+        elif action[CONF_SERVICE] == SERVICE_SET_COVER_TILT_POSITION:
+            if action[CONF_EVENT] == RASC_START:
+                target["is_closed"] = _target_state(False)
+            else:
+                target["is_closed"] = _target_state(False)
+                target["is_opening"] = _target_state(False)
+                target["is_closing"] = _target_state(False)
+                if (
+                    CONF_SERVICE_DATA in action
+                    and ATTR_TILT_POSITION in action[CONF_SERVICE_DATA]
+                ):
+                    position = action[CONF_SERVICE_DATA][ATTR_TILT_POSITION]
+                    target["current_cover_tilt_position"] = _target_position(position)
+        elif action[CONF_SERVICE] == SERVICE_STOP_COVER_TILT:
+            target["is_closed"] = lambda _: True
         return target
+
+    def get_action_complete_percentage(  # noqa: C901
+        self, request_state: dict[str, Any], action: dict[str, Any]
+    ) -> float:
+        """Return the percentage of completion of an action.
+
+        None is unknown, 0 is not started, 1 is complete.
+        """
+        if CONF_SERVICE not in action:
+            return 0.0
+
+        def _get_current_progress(
+            start_pos: int, cur_pos: int, compl_pos: int
+        ) -> float:
+            if compl_pos >= start_pos:
+                current_progress = cur_pos - start_pos
+                target_progress = compl_pos - start_pos
+                percentage = current_progress / target_progress
+                return percentage if percentage >= 0.0 else 0.0
+            current_progress = start_pos - cur_pos
+            target_progress = start_pos - compl_pos
+            percentage = current_progress / target_progress
+            return percentage if percentage >= 0.0 else 0.0
+
+        def _get_open_complete_percentage(tilt: bool = False) -> float:
+            if not tilt and (
+                not self.is_closed or self.is_closing or not self.current_cover_position
+            ):
+                return 0.0
+            if tilt and not self.current_cover_tilt_position:
+                return 0.0
+            complete_cover_position = 100
+            attr = (
+                "current_cover_position" if not tilt else "current_cover_tilt_position"
+            )
+            start_cover_position: int = request_state.get(attr, 0)
+            attr = ATTR_CURRENT_POSITION if not tilt else ATTR_CURRENT_TILT_POSITION
+            current_cover_position: int = self.state_attributes[attr]
+            return _get_current_progress(
+                start_cover_position, current_cover_position, complete_cover_position
+            )
+
+        def _get_close_complete_percentage(tilt: bool = False) -> float:
+            if not tilt and self.is_closed:
+                return 1.0
+            if not tilt and (not self.current_cover_position or self.is_opening):
+                return 0.0
+            if tilt and not self.current_cover_tilt_position:
+                return 0.0
+            complete_cover_position = 0
+            attr = (
+                "current_cover_position" if not tilt else "current_cover_tilt_position"
+            )
+            start_cover_position: int = request_state.get(attr, 0)
+            attr = ATTR_CURRENT_POSITION if not tilt else ATTR_CURRENT_TILT_POSITION
+            current_cover_position: int = self.state_attributes[attr]
+            return _get_current_progress(
+                start_cover_position, current_cover_position, complete_cover_position
+            )
+
+        def _get_set_cover_position_complete_percentage(tilt: bool = False) -> float:
+            attr = ATTR_POSITION if not tilt else ATTR_TILT_POSITION
+            if CONF_SERVICE_DATA not in action or attr not in action[CONF_SERVICE_DATA]:
+                return 0.0
+            complete_cover_position: int = action[CONF_SERVICE_DATA][attr] or 100
+            attr = (
+                "current_cover_position" if not tilt else "current_cover_tilt_position"
+            )
+            start_cover_position: int = request_state.get(attr, 0)
+            current_cover_position: int = self.state_attributes[attr]
+            if not current_cover_position:
+                return 0.0
+            return _get_current_progress(
+                start_cover_position, current_cover_position, complete_cover_position
+            )
+
+        def _get_stop_complete_percentage() -> float:
+            if self.is_closing or self.is_opening:
+                return 0.0
+            return 1.0
+
+        def _get_stop_tilt_complete_percentage() -> float:
+            return 0.0
+
+        if action[CONF_SERVICE] == SERVICE_OPEN_COVER:
+            return _get_open_complete_percentage()
+        if action[CONF_SERVICE] == SERVICE_CLOSE_COVER:
+            return _get_close_complete_percentage()
+        if action[CONF_SERVICE] == SERVICE_TOGGLE:
+            if CoverEntityFeature.STOP | self.supported_features and (
+                self.is_closing or self.is_opening
+            ):
+                return _get_stop_complete_percentage()
+            if self.is_closed:
+                return _get_open_complete_percentage()
+            if self._cover_is_last_toggle_direction_open:
+                return _get_close_complete_percentage()
+            return _get_open_complete_percentage()
+        if action[CONF_SERVICE] == SERVICE_SET_COVER_POSITION:
+            return _get_set_cover_position_complete_percentage()
+        if action[CONF_SERVICE] == SERVICE_STOP_COVER:
+            return _get_stop_complete_percentage()
+        if action[CONF_SERVICE] == SERVICE_OPEN_COVER_TILT:
+            return _get_open_complete_percentage(tilt=True)
+        if action[CONF_SERVICE] == SERVICE_CLOSE_COVER_TILT:
+            return _get_close_complete_percentage(tilt=True)
+        if action[CONF_SERVICE] == SERVICE_TOGGLE_COVER_TILT:
+            start_cover_tilt_position = request_state.get(
+                "current_cover_tilt_position", 0
+            )
+            if start_cover_tilt_position <= 50:
+                return _get_open_complete_percentage(tilt=True)
+            return _get_close_complete_percentage(tilt=True)
+        if action[CONF_SERVICE] == SERVICE_SET_COVER_TILT_POSITION:
+            return _get_set_cover_position_complete_percentage(tilt=True)
+        if action[CONF_SERVICE] == SERVICE_STOP_COVER_TILT:
+            return _get_stop_tilt_complete_percentage()
+        return 0.0
