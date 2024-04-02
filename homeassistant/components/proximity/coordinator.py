@@ -294,15 +294,15 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
                 old_lat = None
                 old_lon = None
 
-            entities_data[state_change_data.entity_id][
-                ATTR_DIR_OF_TRAVEL
-            ] = self._calc_direction_of_travel(
-                zone_state,
-                new_state,
-                old_lat,
-                old_lon,
-                new_state.attributes.get(ATTR_LATITUDE),
-                new_state.attributes.get(ATTR_LONGITUDE),
+            entities_data[state_change_data.entity_id][ATTR_DIR_OF_TRAVEL] = (
+                self._calc_direction_of_travel(
+                    zone_state,
+                    new_state,
+                    old_lat,
+                    old_lon,
+                    new_state.attributes.get(ATTR_LATITUDE),
+                    new_state.attributes.get(ATTR_LONGITUDE),
+                )
             )
 
         # takeover data for legacy proximity entity
@@ -337,9 +337,9 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
 
             if cast(int, nearest_distance_to) == int(distance_to):
                 _LOGGER.debug("set equally close entity_data: %s", entity_data)
-                proximity_data[
-                    ATTR_NEAREST
-                ] = f"{proximity_data[ATTR_NEAREST]}, {str(entity_data[ATTR_NAME])}"
+                proximity_data[ATTR_NEAREST] = (
+                    f"{proximity_data[ATTR_NEAREST]}, {str(entity_data[ATTR_NAME])}"
+                )
 
         return ProximityData(proximity_data, entities_data)
 

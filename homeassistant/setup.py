@@ -33,9 +33,9 @@ from .helpers.issue_registry import IssueSeverity, async_create_issue
 from .helpers.typing import ConfigType
 from .util.async_ import create_eager_task
 
-current_setup_group: contextvars.ContextVar[
-    tuple[str, str | None] | None
-] = contextvars.ContextVar("current_setup_group", default=None)
+current_setup_group: contextvars.ContextVar[tuple[str, str | None] | None] = (
+    contextvars.ContextVar("current_setup_group", default=None)
+)
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -166,7 +166,6 @@ async def async_setup_component(
         setup_future.set_result(result)
         if setup_done_future := setup_done_futures.pop(domain, None):
             setup_done_future.set_result(result)
-        return result
     except BaseException as err:
         futures = [setup_future]
         if setup_done_future := setup_done_futures.pop(domain, None):
@@ -185,6 +184,7 @@ async def async_setup_component(
                 # if there are no concurrent setup attempts
                 await future
         raise
+    return result
 
 
 async def _async_process_dependencies(

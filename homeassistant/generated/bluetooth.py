@@ -67,6 +67,21 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
         "service_uuid": "e7a60001-6639-429f-94fd-86de8ea26897",
     },
     {
+        "connectable": True,
+        "domain": "eq3btsmart",
+        "local_name": "CC-RT-BLE",
+    },
+    {
+        "connectable": True,
+        "domain": "eq3btsmart",
+        "local_name": "CC-RT-M-BLE",
+    },
+    {
+        "connectable": True,
+        "domain": "eq3btsmart",
+        "local_name": "CC-RT-BLE-EQ",
+    },
+    {
         "domain": "eufylife_ble",
         "local_name": "eufy T9140",
     },
@@ -427,6 +442,11 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
         ],
         "manufacturer_id": 89,
         "service_uuid": "0000fee5-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "connectable": True,
+        "domain": "motionblinds_ble",
+        "local_name": "MOTION_*",
     },
     {
         "domain": "oralb",
