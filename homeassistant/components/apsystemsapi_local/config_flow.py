@@ -14,7 +14,6 @@ DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_IP_ADDRESS): str,
         vol.Required(CONF_NAME): str,
-        vol.Optional("check", default=True): bool,
         vol.Optional(UPDATE_INTERVAL, default=15): int,
     }
 )
@@ -35,10 +34,9 @@ class APsystemsLocalAPIFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                if user_input["check"]:
-                    session = async_get_clientsession(self.hass, False)
-                    api = APsystemsEZ1M(user_input[CONF_IP_ADDRESS], session=session)
-                    await api.get_device_info()
+                session = async_get_clientsession(self.hass, False)
+                api = APsystemsEZ1M(user_input[CONF_IP_ADDRESS], session=session)
+                await api.get_device_info()
             except (TimeoutError, client_exceptions.ClientConnectionError) as exception:
                 LOGGER.warning(exception)
                 _errors["base"] = "connection_refused"
