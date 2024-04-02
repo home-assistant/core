@@ -8,9 +8,7 @@ from __future__ import annotations
 
 import dataclasses
 import sys
-from typing import Any
-
-from typing_extensions import dataclass_transform
+from typing import Any, dataclass_transform
 
 
 def _class_fields(cls: type, kw_only: bool) -> list[tuple[str, Any, Any]]:

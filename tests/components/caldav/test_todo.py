@@ -624,7 +624,7 @@ async def test_remove_item(
     assert state.state == "1"
 
     def lookup(uid: str) -> Mock:
-        assert uid == "2" or uid == "3"
+        assert uid in ("2", "3")
         if uid == "2":
             return item1
         return item2

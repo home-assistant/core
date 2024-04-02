@@ -276,7 +276,6 @@ CT_NET_CONSUMPTION_SENSORS = (
         native_unit_of_measurement=UnitOfFrequency.HERTZ,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.FREQUENCY,
-        suggested_unit_of_measurement=UnitOfFrequency.HERTZ,
         suggested_display_precision=1,
         entity_registry_enabled_default=False,
         value_fn=lambda ct: ct.frequency,

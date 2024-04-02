@@ -165,7 +165,7 @@ class AbstractConfig(ABC):
     def get_local_user_id(self, webhook_id):
         """Map webhook ID to a Home Assistant user ID.
 
-        Any action inititated by Google Assistant via the local SDK will be attributed
+        Any action initiated by Google Assistant via the local SDK will be attributed
         to the returned user ID.
 
         Return None if no user id is found for the webhook_id.

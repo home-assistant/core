@@ -182,25 +182,28 @@ class ZhaEntity(BaseZhaEntity, RestoreEntity):
         if entity_metadata.initially_disabled:
             self._attr_entity_registry_enabled_default = False
 
-        if entity_metadata.translation_key:
-            self._attr_translation_key = entity_metadata.translation_key
-
-        if hasattr(entity_metadata.entity_metadata, "attribute_name"):
-            if not entity_metadata.translation_key:
-                self._attr_translation_key = (
-                    entity_metadata.entity_metadata.attribute_name
-                )
-            self._unique_id_suffix = entity_metadata.entity_metadata.attribute_name
-        elif hasattr(entity_metadata.entity_metadata, "command_name"):
-            if not entity_metadata.translation_key:
-                self._attr_translation_key = (
-                    entity_metadata.entity_metadata.command_name
-                )
-            self._unique_id_suffix = entity_metadata.entity_metadata.command_name
+        has_device_class = hasattr(entity_metadata, "device_class")
+        has_attribute_name = hasattr(entity_metadata, "attribute_name")
+        has_command_name = hasattr(entity_metadata, "command_name")
+        if not has_device_class or (
+            has_device_class and entity_metadata.device_class is None
+        ):
+            if entity_metadata.translation_key:
+                self._attr_translation_key = entity_metadata.translation_key
+            elif has_attribute_name:
+                self._attr_translation_key = entity_metadata.attribute_name
+            elif has_command_name:
+                self._attr_translation_key = entity_metadata.command_name
+        if has_attribute_name:
+            self._unique_id_suffix = entity_metadata.attribute_name
+        elif has_command_name:
+            self._unique_id_suffix = entity_metadata.command_name
         if entity_metadata.entity_type is EntityType.CONFIG:
             self._attr_entity_category = EntityCategory.CONFIG
         elif entity_metadata.entity_type is EntityType.DIAGNOSTIC:
             self._attr_entity_category = EntityCategory.DIAGNOSTIC
+        else:
+            self._attr_entity_category = None
 
     @property
     def available(self) -> bool:

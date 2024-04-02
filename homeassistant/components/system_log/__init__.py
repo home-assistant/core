@@ -166,7 +166,6 @@ class LogEntry:
         "level",
         "message",
         "exception",
-        "extracted_tb",
         "root_cause",
         "source",
         "count",
@@ -200,7 +199,6 @@ class LogEntry:
         else:
             self.source = (record.pathname, record.lineno)
         self.count = 1
-        self.extracted_tb = extracted_tb
         self.key = (self.name, self.source, self.root_cause)
 
     def to_dict(self) -> dict[str, Any]:

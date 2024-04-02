@@ -256,9 +256,9 @@ class IntegrationMatchers:
 
     def __init__(self) -> None:
         """Init optimized integration matching."""
-        self._match_by_key: dict[
-            str, dict[str, list[tuple[str, dict[str, str]]]]
-        ] | None = None
+        self._match_by_key: (
+            dict[str, dict[str, list[tuple[str, dict[str, str]]]]] | None
+        ) = None
 
     @core_callback
     def async_setup(
@@ -735,10 +735,11 @@ async def _async_find_next_available_port(source: AddressTupleVXType) -> int:
         addr = (source[0],) + (port,) + source[2:]
         try:
             test_socket.bind(addr)
-            return port
         except OSError:
             if port == UPNP_SERVER_MAX_PORT - 1:
                 raise
+        else:
+            return port
 
     raise RuntimeError("unreachable")
 
