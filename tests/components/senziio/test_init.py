@@ -52,7 +52,6 @@ async def test_async_setup_entry(hass: HomeAssistant):
     assert device.model == A_DEVICE_MODEL
     assert device.name == A_FRIENDLY_NAME
     assert device.sw_version == "1.2.3"
-    assert device.hw_version == "1.0.0"
     assert device.serial_number == "theia-pro-2F3D56AA1234"
     assert device.connections == {("mac", "1a:2b:3c:4d:5e:6f")}
 
