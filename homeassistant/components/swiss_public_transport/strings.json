@@ -49,6 +49,22 @@
       }
     }
   },
+  "services": {
+    "fetch_connections": {
+      "name": "Fetch Connections",
+      "description": "Fetch a list of connections from the swiss public transport api.",
+      "fields": {
+        "entity_id": {
+          "name": "List",
+          "description": "Swiss public transport sensor to fetch connections for."
+        },
+        "limit": {
+          "name": "Limit",
+          "description": "Number of connections to fetch from [1-15]"
+        }
+      }
+    }
+  },
   "exceptions": {
     "invalid_data": {
       "message": "Setup failed for entry {config_title} with invalid data, check at the [stationboard]({stationboard_url}) if your station names are valid.\n{error}"
