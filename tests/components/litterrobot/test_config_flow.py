@@ -134,7 +134,7 @@ async def test_step_reauth(hass: HomeAssistant, mock_account: Account) -> None:
         data=entry.data,
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
     with (
@@ -151,7 +151,7 @@ async def test_step_reauth(hass: HomeAssistant, mock_account: Account) -> None:
             result["flow_id"],
             user_input={CONF_PASSWORD: CONFIG[litterrobot.DOMAIN][CONF_PASSWORD]},
         )
-        assert result["type"] == FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "reauth_successful"
         assert len(mock_setup_entry.mock_calls) == 1
 
@@ -174,7 +174,7 @@ async def test_step_reauth_failed(hass: HomeAssistant, mock_account: Account) ->
         data=entry.data,
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
     with patch(
@@ -186,7 +186,7 @@ async def test_step_reauth_failed(hass: HomeAssistant, mock_account: Account) ->
             user_input={CONF_PASSWORD: CONFIG[litterrobot.DOMAIN][CONF_PASSWORD]},
         )
 
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["errors"] == {"base": "invalid_auth"}
 
     with (
@@ -203,6 +203,6 @@ async def test_step_reauth_failed(hass: HomeAssistant, mock_account: Account) ->
             result["flow_id"],
             user_input={CONF_PASSWORD: CONFIG[litterrobot.DOMAIN][CONF_PASSWORD]},
         )
-        assert result["type"] == FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "reauth_successful"
         assert len(mock_setup_entry.mock_calls) == 1

@@ -5,9 +5,10 @@ from unittest.mock import ANY
 from haphilipsjs import PairingFailure
 import pytest
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components.philips_js.const import CONF_ALLOW_NOTIFY, DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from . import (
     MOCK_CONFIG,
@@ -78,7 +79,7 @@ async def test_reauth(
         data=mock_config_entry.data,
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -88,7 +89,7 @@ async def test_reauth(
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
     assert mock_config_entry.data == MOCK_CONFIG | {"system": mock_tv.system}
     assert len(mock_setup_entry.mock_calls) == 2
@@ -255,12 +256,12 @@ async def test_options_flow(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input={CONF_ALLOW_NOTIFY: True}
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert config_entry.options == {CONF_ALLOW_NOTIFY: True}

@@ -6,10 +6,11 @@ from unittest.mock import MagicMock, patch, sentinel
 from RFXtrx import RFXtrxTransportError
 import serial.tools.list_ports
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components.rfxtrx import DOMAIN, config_flow
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import MockConfigEntry
@@ -284,7 +285,7 @@ async def test_options_global(hass: HomeAssistant) -> None:
         user_input={"automatic_add": True, "protocols": SOME_PROTOCOLS},
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
     await hass.async_block_till_done()
 
@@ -319,7 +320,7 @@ async def test_no_protocols(hass: HomeAssistant) -> None:
         user_input={"automatic_add": False, "protocols": []},
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
     await hass.async_block_till_done()
 
@@ -374,7 +375,7 @@ async def test_options_add_device(hass: HomeAssistant) -> None:
         result["flow_id"], user_input={}
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
     await hass.async_block_till_done()
 
@@ -528,7 +529,7 @@ async def test_options_replace_sensor_device(hass: HomeAssistant) -> None:
         },
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
     await hass.async_block_till_done()
 
@@ -661,7 +662,7 @@ async def test_options_replace_control_device(hass: HomeAssistant) -> None:
         },
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
     await hass.async_block_till_done()
 
@@ -742,7 +743,7 @@ async def test_options_add_and_configure_device(hass: HomeAssistant) -> None:
         },
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
     await hass.async_block_till_done()
 
@@ -786,7 +787,7 @@ async def test_options_add_and_configure_device(hass: HomeAssistant) -> None:
         },
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
     await hass.async_block_till_done()
 
@@ -869,7 +870,7 @@ async def test_options_configure_rfy_cover_device(hass: HomeAssistant) -> None:
         },
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
     await hass.async_block_till_done()
 
