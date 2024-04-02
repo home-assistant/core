@@ -229,7 +229,7 @@ class CoverEntity(Entity):
     _attr_current_cover_position: int | None = None
     _attr_current_cover_tilt_position: int | None = None
     _attr_device_class: CoverDeviceClass | None
-    _attr_is_closed: bool | None
+    _attr_is_closed: bool | None = None
     _attr_is_closing: bool | None = None
     _attr_is_opening: bool | None = None
     _attr_state: None = None
