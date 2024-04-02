@@ -49,9 +49,9 @@ from tests.common import MockConfigEntry
 
 async def test_load_unload_entry(
     hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
     mock_version: MagicMock,
     mock_websocket_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test load and unload entry."""
     assert mock_version.check_supported.call_count == 0
@@ -83,9 +83,9 @@ async def test_load_unload_entry(
 
 async def test_version_authentication_error(
     hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
     mock_version: MagicMock,
     mock_websocket_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test authentication error from version call."""
     mock_version.check_supported.side_effect = AuthenticationException
@@ -97,9 +97,9 @@ async def test_version_authentication_error(
 
 async def test_version_connection_closed(
     hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
     mock_version: MagicMock,
     mock_websocket_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test connection closed from version call."""
     mock_version.check_supported.side_effect = ConnectionClosedException
@@ -111,9 +111,9 @@ async def test_version_connection_closed(
 
 async def test_version_connection_error(
     hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
     mock_version: MagicMock,
     mock_websocket_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test connection error from version call."""
     mock_version.check_supported.side_effect = ConnectionErrorException
@@ -125,9 +125,9 @@ async def test_version_connection_error(
 
 async def test_version_timeout(
     hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
     mock_version: MagicMock,
     mock_websocket_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test timeout from version call."""
     mock_version.check_supported.side_effect = asyncio.TimeoutError
@@ -139,9 +139,9 @@ async def test_version_timeout(
 
 async def test_version_not_supported(
     hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
     mock_version: MagicMock,
     mock_websocket_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test version not supported."""
     mock_version.check_supported.return_value = False
@@ -159,9 +159,9 @@ async def test_version_not_supported(
 
 async def test_get_data_authentication_error(
     hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
     mock_version: MagicMock,
     mock_websocket_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test authentication error from get_data call."""
     mock_websocket_client.get_data.side_effect = AuthenticationException
@@ -173,9 +173,9 @@ async def test_get_data_authentication_error(
 
 async def test_get_data_connection_closed(
     hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
     mock_version: MagicMock,
     mock_websocket_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test connection closed from get_data call."""
     mock_websocket_client.get_data.side_effect = ConnectionClosedException
@@ -187,9 +187,9 @@ async def test_get_data_connection_closed(
 
 async def test_get_data_connection_error(
     hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
     mock_version: MagicMock,
     mock_websocket_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test connection error from get_data call."""
     mock_websocket_client.get_data.side_effect = ConnectionErrorException
@@ -201,9 +201,9 @@ async def test_get_data_connection_error(
 
 async def test_get_data_timeout(
     hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
     mock_version: MagicMock,
     mock_websocket_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test timeout from get_data call."""
     mock_websocket_client.get_data.side_effect = asyncio.TimeoutError
@@ -215,9 +215,9 @@ async def test_get_data_timeout(
 
 async def test_already_has_services(
     hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
     mock_version: MagicMock,
     mock_websocket_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test if services are registered."""
     await setup_integration(hass, mock_config_entry)
@@ -260,9 +260,9 @@ async def test_already_has_services(
 
 async def test_services(
     hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
     mock_version: MagicMock,
     mock_websocket_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test if services are registered."""
     await setup_integration(hass, mock_config_entry)
@@ -444,6 +444,7 @@ async def test_migration_major_future_version(
     )
 
     await setup_integration(hass, config_entry)
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_migration_minor_future_version(
@@ -468,7 +469,6 @@ async def test_migration_minor_future_version(
     )
 
     await setup_integration(hass, config_entry)
-
     assert len(mock_setup_entry.mock_calls) == 1
 
     assert config_entry.version == config_entry_version
