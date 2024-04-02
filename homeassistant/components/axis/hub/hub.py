@@ -116,7 +116,7 @@ class AxisHub:
         if status.status.state == ClientState.ACTIVE:
             self.config.entry.async_on_unload(
                 await mqtt.async_subscribe(
-                    hass, f"{self.api.vapix.serial_number}/#", self.mqtt_message
+                    hass, f"{status.config.device_topic_prefix}/#", self.mqtt_message
                 )
             )
 
@@ -124,7 +124,8 @@ class AxisHub:
     def mqtt_message(self, message: ReceiveMessage) -> None:
         """Receive Axis MQTT message."""
         self.disconnect_from_stream()
-
+        if message.topic.endswith("event/connection"):
+            return
         event = mqtt_json_to_event(message.payload)
         self.api.event.handler(event)
 

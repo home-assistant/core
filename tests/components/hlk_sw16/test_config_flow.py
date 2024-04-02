@@ -32,9 +32,8 @@ class MockSW16Client:
             if self.disconnect_callback:
                 self.disconnect_callback()
             return await self.active_transaction
-        else:
-            self.active_transaction.set_result(True)
-            return self.active_transaction
+        self.active_transaction.set_result(True)
+        return self.active_transaction
 
     def stop(self):
         """Mock client stop."""
