@@ -10,7 +10,7 @@ timer.
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterable, KeysView, Mapping
+from collections.abc import Callable, Hashable, Iterable, KeysView, Mapping
 from datetime import datetime, timedelta
 from enum import StrEnum
 import logging
@@ -45,6 +45,7 @@ from homeassistant.core import (
     valid_entity_id,
 )
 from homeassistant.exceptions import MaxLengthExceeded
+from homeassistant.loader import async_suggest_report_issue
 from homeassistant.util import slugify, uuid as uuid_util
 from homeassistant.util.json import format_unserializable_data
 from homeassistant.util.read_only_dict import ReadOnlyDict
@@ -593,6 +594,56 @@ class EntityRegistryItems(BaseRegistryItems[RegistryEntry]):
         return [data[key] for key in self._area_id_index.get(area_id, ())]
 
 
+def _validate_item(
+    hass: HomeAssistant,
+    domain: str,
+    platform: str,
+    unique_id: str | Hashable | UndefinedType | Any,
+    *,
+    disabled_by: RegistryEntryDisabler | None | UndefinedType = None,
+    entity_category: EntityCategory | None | UndefinedType = None,
+    hidden_by: RegistryEntryHider | None | UndefinedType = None,
+) -> None:
+    """Validate entity registry item."""
+    if unique_id is not UNDEFINED and not isinstance(unique_id, Hashable):
+        raise TypeError(f"unique_id must be a string, got {unique_id}")
+    if unique_id is not UNDEFINED and not isinstance(unique_id, str):
+        # In HA Core 2025.04, we should fail if unique_id is not a string
+        report_issue = async_suggest_report_issue(hass, integration_domain=platform)
+        _LOGGER.error(
+            ("'%s' from integration %s has a non string unique_id" " '%s', please %s"),
+            domain,
+            platform,
+            unique_id,
+            report_issue,
+        )
+        return
+    if (
+        disabled_by
+        and disabled_by is not UNDEFINED
+        and not isinstance(disabled_by, RegistryEntryDisabler)
+    ):
+        raise ValueError(
+            f"disabled_by must be a RegistryEntryDisabler value, got {disabled_by}"
+        )
+    if (
+        entity_category
+        and entity_category is not UNDEFINED
+        and not isinstance(entity_category, EntityCategory)
+    ):
+        raise ValueError(
+            f"entity_category must be a valid EntityCategory instance, got {entity_category}"
+        )
+    if (
+        hidden_by
+        and hidden_by is not UNDEFINED
+        and not isinstance(hidden_by, RegistryEntryHider)
+    ):
+        raise ValueError(
+            f"hidden_by must be a RegistryEntryHider value, got {hidden_by}"
+        )
+
+
 class EntityRegistry(BaseRegistry):
     """Class to hold a registry of entities."""
 
@@ -725,6 +776,15 @@ class EntityRegistry(BaseRegistry):
         unit_of_measurement: str | None | UndefinedType = UNDEFINED,
     ) -> RegistryEntry:
         """Get entity. Create if it doesn't exist."""
+        _validate_item(
+            self.hass,
+            domain,
+            platform,
+            disabled_by=disabled_by,
+            entity_category=entity_category,
+            hidden_by=hidden_by,
+            unique_id=unique_id,
+        )
         config_entry_id: str | None | UndefinedType = UNDEFINED
         if not config_entry:
             config_entry_id = None
@@ -763,11 +823,6 @@ class EntityRegistry(BaseRegistry):
             known_object_ids,
         )
 
-        if disabled_by and not isinstance(disabled_by, RegistryEntryDisabler):
-            raise ValueError("disabled_by must be a RegistryEntryDisabler value")
-        if hidden_by and not isinstance(hidden_by, RegistryEntryHider):
-            raise ValueError("hidden_by must be a RegistryEntryHider value")
-
         if (
             disabled_by is None
             and config_entry
@@ -775,13 +830,6 @@ class EntityRegistry(BaseRegistry):
             and config_entry.pref_disable_new_entities
         ):
             disabled_by = RegistryEntryDisabler.INTEGRATION
-
-        if (
-            entity_category
-            and entity_category is not UNDEFINED
-            and not isinstance(entity_category, EntityCategory)
-        ):
-            raise ValueError("entity_category must be a valid EntityCategory instance")
 
         def none_if_undefined(value: T | UndefinedType) -> T | None:
             """Return None if value is UNDEFINED, otherwise return value."""
@@ -941,25 +989,15 @@ class EntityRegistry(BaseRegistry):
         new_values: dict[str, Any] = {}  # Dict with new key/value pairs
         old_values: dict[str, Any] = {}  # Dict with old key/value pairs
 
-        if (
-            disabled_by
-            and disabled_by is not UNDEFINED
-            and not isinstance(disabled_by, RegistryEntryDisabler)
-        ):
-            raise ValueError("disabled_by must be a RegistryEntryDisabler value")
-        if (
-            hidden_by
-            and hidden_by is not UNDEFINED
-            and not isinstance(hidden_by, RegistryEntryHider)
-        ):
-            raise ValueError("hidden_by must be a RegistryEntryHider value")
-
-        if (
-            entity_category
-            and entity_category is not UNDEFINED
-            and not isinstance(entity_category, EntityCategory)
-        ):
-            raise ValueError("entity_category must be a valid EntityCategory instance")
+        _validate_item(
+            self.hass,
+            old.domain,
+            old.platform,
+            disabled_by=disabled_by,
+            entity_category=entity_category,
+            hidden_by=hidden_by,
+            unique_id=new_unique_id,
+        )
 
         for attr_name, value in (
             ("aliases", aliases),
@@ -1157,6 +1195,27 @@ class EntityRegistry(BaseRegistry):
                 if entity["entity_category"] == "system":
                     entity["entity_category"] = None
 
+                try:
+                    domain = split_entity_id(entity["entity_id"])[0]
+                    _validate_item(
+                        self.hass, domain, entity["platform"], entity["unique_id"]
+                    )
+                except (TypeError, ValueError) as err:
+                    report_issue = async_suggest_report_issue(
+                        self.hass, integration_domain=entity["platform"]
+                    )
+                    _LOGGER.error(
+                        (
+                            "Entity registry entry '%s' from integration %s could not "
+                            "be loaded: '%s', please %s"
+                        ),
+                        entity["entity_id"],
+                        entity["platform"],
+                        str(err),
+                        report_issue,
+                    )
+                    continue
+
                 entities[entity["entity_id"]] = RegistryEntry(
                     aliases=set(entity["aliases"]),
                     area_id=entity["area_id"],
@@ -1192,6 +1251,13 @@ class EntityRegistry(BaseRegistry):
                     unit_of_measurement=entity["unit_of_measurement"],
                 )
             for entity in data["deleted_entities"]:
+                try:
+                    domain = split_entity_id(entity["entity_id"])[0]
+                    _validate_item(
+                        self.hass, domain, entity["platform"], entity["unique_id"]
+                    )
+                except (TypeError, ValueError):
+                    continue
                 key = (
                     split_entity_id(entity["entity_id"])[0],
                     entity["platform"],

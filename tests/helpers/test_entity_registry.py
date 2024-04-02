@@ -447,6 +447,96 @@ async def test_filter_on_load(
     assert entry_system_category.entity_category is None
 
 
+@pytest.mark.parametrize("load_registries", [False])
+async def test_load_bad_data(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test loading invalid data."""
+    hass_storage[er.STORAGE_KEY] = {
+        "version": er.STORAGE_VERSION_MAJOR,
+        "minor_version": er.STORAGE_VERSION_MINOR,
+        "data": {
+            "entities": [
+                {
+                    "aliases": [],
+                    "area_id": None,
+                    "capabilities": None,
+                    "categories": {},
+                    "config_entry_id": None,
+                    "device_class": None,
+                    "device_id": None,
+                    "disabled_by": None,
+                    "entity_category": None,
+                    "entity_id": "test.test1",
+                    "has_entity_name": False,
+                    "hidden_by": None,
+                    "icon": None,
+                    "id": "12345",
+                    "labels": [],
+                    "name": None,
+                    "options": None,
+                    "original_device_class": None,
+                    "original_icon": None,
+                    "original_name": None,
+                    "platform": "super_platform",
+                    "previous_unique_id": None,
+                    "supported_features": 0,
+                    "translation_key": None,
+                    "unique_id": 123,  # Should trigger warning
+                    "unit_of_measurement": None,
+                },
+                {
+                    "aliases": [],
+                    "area_id": None,
+                    "capabilities": None,
+                    "categories": {},
+                    "config_entry_id": None,
+                    "device_class": None,
+                    "device_id": None,
+                    "disabled_by": None,
+                    "entity_category": None,
+                    "entity_id": "test.test2",
+                    "has_entity_name": False,
+                    "hidden_by": None,
+                    "icon": None,
+                    "id": "12345",
+                    "labels": [],
+                    "name": None,
+                    "options": None,
+                    "original_device_class": None,
+                    "original_icon": None,
+                    "original_name": None,
+                    "platform": "super_platform",
+                    "previous_unique_id": None,
+                    "supported_features": 0,
+                    "translation_key": None,
+                    "unique_id": ["not", "valid"],  # Should not load
+                    "unit_of_measurement": None,
+                },
+            ],
+            "deleted_entities": [],
+        },
+    }
+
+    await er.async_load(hass)
+    registry = er.async_get(hass)
+
+    assert len(registry.entities) == 1
+    assert set(registry.entities.keys()) == {"test.test1"}
+
+    assert (
+        "'test' from integration super_platform has a non string unique_id '123', "
+        "please create a bug report" in caplog.text
+    )
+    assert (
+        "Entity registry entry 'test.test2' from integration super_platform could not "
+        "be loaded: 'unique_id must be a string, got ['not', 'valid']', please create "
+        "a bug report" in caplog.text
+    )
+
+
 def test_async_get_entity_id(entity_registry: er.EntityRegistry) -> None:
     """Test that entity_id is returned."""
     entry = entity_registry.async_get_or_create("light", "hue", "1234")
@@ -1470,6 +1560,38 @@ async def test_hidden_by_str_not_allowed(entity_registry: er.EntityRegistry) -> 
         entity_registry.async_update_entity(
             entity_id, hidden_by=er.RegistryEntryHider.USER.value
         )
+
+
+async def test_unique_id_non_hashable(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test unique_id which is not hashable."""
+    with pytest.raises(TypeError):
+        entity_registry.async_get_or_create("light", "hue", ["not", "valid"])
+
+    entity_id = entity_registry.async_get_or_create("light", "hue", "1234").entity_id
+    with pytest.raises(TypeError):
+        entity_registry.async_update_entity(entity_id, new_unique_id=["not", "valid"])
+
+
+async def test_unique_id_non_string(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test unique_id which is not a string."""
+    entity_registry.async_get_or_create("light", "hue", 1234)
+    assert (
+        "'light' from integration hue has a non string unique_id '1234', "
+        "please create a bug report" in caplog.text
+    )
+
+    entity_id = entity_registry.async_get_or_create("light", "hue", "1234").entity_id
+    entity_registry.async_update_entity(entity_id, new_unique_id=2345)
+    assert (
+        "'light' from integration hue has a non string unique_id '2345', "
+        "please create a bug report" in caplog.text
+    )
 
 
 def test_migrate_entity_to_new_platform(
