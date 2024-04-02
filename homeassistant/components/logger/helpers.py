@@ -28,6 +28,9 @@ from .const import (
     STORAGE_VERSION,
 )
 
+SAVE_DELAY = 15.0
+SAVE_DELAY_LONG = 180.0
+
 
 @callback
 def async_get_domain_config(hass: HomeAssistant) -> LoggerDomainConfig:
@@ -148,7 +151,7 @@ class LoggerSettings:
                 for domain, settings in stored_log_config.items()
             }
         }
-        await self._store.async_save(self._async_data_to_save())
+        self.async_save(SAVE_DELAY_LONG)
 
     @callback
     def _async_data_to_save(self) -> dict[str, dict[str, dict[str, str]]]:
@@ -164,9 +167,9 @@ class LoggerSettings:
         }
 
     @callback
-    def async_save(self) -> None:
+    def async_save(self, delay: float = SAVE_DELAY) -> None:
         """Save settings."""
-        self._store.async_delay_save(self._async_data_to_save, 15)
+        self._store.async_delay_save(self._async_data_to_save, delay)
 
     @callback
     def _async_get_logger_logs(self) -> dict[str, int]:
