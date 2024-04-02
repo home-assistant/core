@@ -26,9 +26,11 @@ async def async_setup_entry(
         buttons.append(TotalConnectClearBypassButton(location))
         buttons.append(TotalConnectBypassAllButton(location))
 
-        for zone in location.zones.values():
-            if zone.can_be_bypassed:
-                buttons.append(TotalConnectZoneBypassButton(location_id, zone))  # noqa: PERF401
+        buttons.extend(
+            TotalConnectZoneBypassButton(location_id, zone)
+            for zone in location.zones.values()
+            if zone.can_be_bypassed
+        )
 
     async_add_entities(buttons, True)
 
