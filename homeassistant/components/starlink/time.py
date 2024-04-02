@@ -61,16 +61,15 @@ class StarlinkTimeEntity(StarlinkEntity, TimeEntity):
 
 
 def _utc_minutes_to_time(utc_minutes: int, timezone: tzinfo) -> time:
+    hour = math.floor(utc_minutes / 60)
+    minute = utc_minutes % 60
     try:
-        hour = math.floor(utc_minutes / 60)
-        minute = utc_minutes % 60
         utc = datetime.now(UTC).replace(
             hour=hour, minute=minute, second=0, microsecond=0
         )
-        return utc.astimezone(timezone).time()
     except ValueError as exc:
-        # A ValueError here means that we did not pass a valid time in to `replace` above.
         raise HomeAssistantError from exc
+    return utc.astimezone(timezone).time()
 
 
 def _time_to_utc_minutes(t: time, timezone: tzinfo) -> int:
@@ -78,11 +77,10 @@ def _time_to_utc_minutes(t: time, timezone: tzinfo) -> int:
         zoned_time = datetime.now(timezone).replace(
             hour=t.hour, minute=t.minute, second=0, microsecond=0
         )
-        utc_time = zoned_time.astimezone(UTC).time()
-        return (utc_time.hour * 60) + utc_time.minute
     except ValueError as exc:
-        # A ValueError here means that we did not pass a valid time in to `replace` above.
         raise HomeAssistantError from exc
+    utc_time = zoned_time.astimezone(UTC).time()
+    return (utc_time.hour * 60) + utc_time.minute
 
 
 TIMES = [
