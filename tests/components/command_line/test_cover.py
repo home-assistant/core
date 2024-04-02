@@ -1,6 +1,6 @@
 """The tests the cover command line platform."""
 
-from __future__ import annotations  # noqa: I001
+from __future__ import annotations
 
 import asyncio
 from datetime import timedelta
