@@ -1,19 +1,5 @@
 {
   "entity": {
-    "binary_sensor": {
-      "presence": {
-        "default": "mdi:home",
-        "state": {
-          "off": "mdi:home-off"
-        }
-      },
-      "motion": {
-        "default": "mdi:motion-sensor",
-        "state": {
-          "off": "mdi:motion-sensor-off"
-        }
-      }
-    },
     "sensor": {
       "person-counter": {
         "default": "mdi:human"
