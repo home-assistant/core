@@ -385,7 +385,7 @@ async def test_availability(
     assert entity_state.state == STATE_UNAVAILABLE
 
 
-async def test_test_icon_template(hass: HomeAssistant) -> None:
+async def test_icon_template(hass: HomeAssistant) -> None:
     """Test with state value."""
     with tempfile.TemporaryDirectory() as tempdirname:
         path = os.path.join(tempdirname, "cover_status_icon")
