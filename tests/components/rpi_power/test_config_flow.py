@@ -1,4 +1,5 @@
 """Tests for rpi_power config flow."""
+
 from unittest.mock import MagicMock
 
 from homeassistant.components.rpi_power.const import DOMAIN

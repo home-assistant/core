@@ -1,4 +1,5 @@
 """ZHA device automation trigger tests."""
+
 from datetime import timedelta
 import time
 from unittest.mock import patch
@@ -6,9 +7,9 @@ from unittest.mock import patch
 import pytest
 from zigpy.application import ControllerApplication
 import zigpy.profiles.zha
-import zigpy.zcl.clusters.general as general
+from zigpy.zcl.clusters import general
 
-import homeassistant.components.automation as automation
+from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
@@ -71,10 +72,7 @@ def _same_lists(list_a, list_b):
     if len(list_a) != len(list_b):
         return False
 
-    for item in list_a:
-        if item not in list_b:
-            return False
-    return True
+    return all(item in list_b for item in list_a)
 
 
 @pytest.fixture

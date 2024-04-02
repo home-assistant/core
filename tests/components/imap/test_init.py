@@ -1,4 +1,5 @@
 """Test the imap entry initialization."""
+
 import asyncio
 from datetime import datetime, timedelta, timezone
 from typing import Any
@@ -163,6 +164,7 @@ async def test_receiving_message_successfully(
     assert data["folder"] == "INBOX"
     assert data["sender"] == "john.doe@example.com"
     assert data["subject"] == "Test subject"
+    assert data["uid"] == "1"
     assert "Test body" in data["text"]
     assert (
         valid_date
@@ -212,6 +214,7 @@ async def test_receiving_message_with_invalid_encoding(
     assert data["sender"] == "john.doe@example.com"
     assert data["subject"] == "Test subject"
     assert data["text"] == TEST_BADLY_ENCODED_CONTENT
+    assert data["uid"] == "1"
 
 
 @pytest.mark.parametrize("imap_search", [TEST_SEARCH_RESPONSE])
@@ -250,6 +253,7 @@ async def test_receiving_message_no_subject_to_from(
     assert data["text"] == "Test body\r\n"
     assert data["headers"]["Return-Path"] == ("<john.doe@example.com>",)
     assert data["headers"]["Delivered-To"] == ("notify@example.com",)
+    assert data["uid"] == "1"
 
 
 @pytest.mark.parametrize("imap_has_capability", [True, False], ids=["push", "poll"])

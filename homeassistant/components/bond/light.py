@@ -1,4 +1,5 @@
 """Support for Bond lights."""
+
 from __future__ import annotations
 
 import logging
@@ -273,6 +274,7 @@ class BondFireplace(BondEntity, LightEntity):
 
     _attr_color_mode = ColorMode.BRIGHTNESS
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+    _attr_translation_key = "fireplace"
 
     def _apply_state(self) -> None:
         state = self._device.state
@@ -280,7 +282,6 @@ class BondFireplace(BondEntity, LightEntity):
         flame = state.get("flame")
         self._attr_is_on = power == 1
         self._attr_brightness = round(flame * 255 / 100) if flame else None
-        self._attr_icon = "mdi:fireplace" if power == 1 else "mdi:fireplace-off"
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the fireplace on."""

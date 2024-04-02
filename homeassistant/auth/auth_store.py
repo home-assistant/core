@@ -1,4 +1,5 @@
 """Storage for auth models."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -29,6 +30,17 @@ STORAGE_KEY = "auth"
 GROUP_NAME_ADMIN = "Administrators"
 GROUP_NAME_USER = "Users"
 GROUP_NAME_READ_ONLY = "Read Only"
+
+# We always save the auth store after we load it since
+# we may migrate data and do not want to have to do it again
+# but we don't want to do it during startup so we schedule
+# the first save 5 minutes out knowing something else may
+# want to save the auth store before then, and since Storage
+# will honor the lower of the two delays, it will save it
+# faster if something else saves it.
+INITIAL_LOAD_SAVE_DELAY = 300
+
+DEFAULT_SAVE_DELAY = 1
 
 
 class AuthStore:
@@ -467,12 +479,12 @@ class AuthStore:
         self._groups = groups
         self._users = users
 
-        self._async_schedule_save()
+        self._async_schedule_save(INITIAL_LOAD_SAVE_DELAY)
 
     @callback
-    def _async_schedule_save(self) -> None:
+    def _async_schedule_save(self, delay: float = DEFAULT_SAVE_DELAY) -> None:
         """Save users."""
-        self._store.async_delay_save(self._data_to_save, 1)
+        self._store.async_delay_save(self._data_to_save, delay)
 
     @callback
     def _data_to_save(self) -> dict[str, list[dict[str, Any]]]:

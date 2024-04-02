@@ -1,4 +1,5 @@
 """Demo platform that has a couple of fake sensors."""
+
 from __future__ import annotations
 
 from homeassistant.components.sensor import (
@@ -24,7 +25,12 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Everything but the Kitchen Sink config entry."""
     async_create_device(
-        hass, config_entry.entry_id, "2CH Power strip", "2_ch_power_strip"
+        hass,
+        config_entry.entry_id,
+        None,
+        "n_ch_power_strip",
+        {"number_of_sockets": "2"},
+        "2_ch_power_strip",
     )
 
     async_add_entities(

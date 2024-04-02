@@ -1,23 +1,16 @@
 """Tests for the telegram_bot component."""
-import pytest
+
+from unittest.mock import AsyncMock, patch
+
 from telegram import Update
-from telegram.ext.dispatcher import Dispatcher
 
 from homeassistant.components.telegram_bot import DOMAIN, SERVICE_SEND_MESSAGE
 from homeassistant.components.telegram_bot.webhooks import TELEGRAM_WEBHOOK_URL
 from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 
 from tests.common import async_capture_events
 from tests.typing import ClientSessionGenerator
-
-
-@pytest.fixture(autouse=True)
-def clear_dispatcher():
-    """Clear the singleton that telegram.ext.dispatcher.Dispatcher sets on itself."""
-    yield
-    Dispatcher._set_singleton(None)
-    # This is how python-telegram-bot resets the dispatcher in their test suite
-    Dispatcher._Dispatcher__singleton_semaphore.release()
 
 
 async def test_webhook_platform_init(hass: HomeAssistant, webhook_platform) -> None:
@@ -109,18 +102,38 @@ async def test_webhook_endpoint_generates_telegram_callback_event(
 
 
 async def test_polling_platform_message_text_update(
-    hass: HomeAssistant, polling_platform, update_message_text
+    hass: HomeAssistant, config_polling, update_message_text
 ) -> None:
-    """Provide the `PollBot`s `Dispatcher` with an `Update` and assert fired `telegram_text` event."""
+    """Provide the `BaseTelegramBotEntity.update_handler` with an `Update` and assert fired `telegram_text` event."""
     events = async_capture_events(hass, "telegram_text")
 
-    def telegram_dispatcher_callback():
-        dispatcher = Dispatcher.get_instance()
-        update = Update.de_json(update_message_text, dispatcher.bot)
-        dispatcher.process_update(update)
+    with patch(
+        "homeassistant.components.telegram_bot.polling.ApplicationBuilder"
+    ) as application_builder_class:
+        await async_setup_component(
+            hass,
+            DOMAIN,
+            config_polling,
+        )
+        await hass.async_block_till_done()
+        # Set up the integration with the polling platform inside the patch context manager.
+        application = (
+            application_builder_class.return_value.bot.return_value.build.return_value
+        )
+        # Then call the callback and assert events fired.
+        handler = application.add_handler.call_args[0][0]
+        handle_update_callback = handler.callback
 
-    # python-telegram-bots `Updater` uses threading, so we need to schedule its callback in a sync context.
-    await hass.async_add_executor_job(telegram_dispatcher_callback)
+        # Create Update object using library API.
+        application.bot.defaults.tzinfo = None
+        update = Update.de_json(update_message_text, application.bot)
+
+        # handle_update_callback == BaseTelegramBotEntity.update_handler
+        await handle_update_callback(update, None)
+
+        application.updater.stop = AsyncMock()
+        application.stop = AsyncMock()
+        application.shutdown = AsyncMock()
 
     # Make sure event has fired
     await hass.async_block_till_done()

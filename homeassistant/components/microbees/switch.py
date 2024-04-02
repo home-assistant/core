@@ -1,4 +1,5 @@
 """Switch integration microBees."""
+
 from typing import Any
 
 from homeassistant.components.switch import SwitchEntity

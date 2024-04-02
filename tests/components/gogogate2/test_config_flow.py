@@ -1,4 +1,5 @@
 """Tests for the GogoGate2 component."""
+
 from ipaddress import ip_address
 from unittest.mock import MagicMock, patch
 

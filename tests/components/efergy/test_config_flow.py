@@ -1,4 +1,5 @@
 """Test Efergy config flow."""
+
 from unittest.mock import patch
 
 from pyefergy import exceptions

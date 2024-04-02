@@ -1,4 +1,5 @@
 """Constants for Discovergy integration tests."""
+
 import datetime
 
 from pydiscovergy.models import Location, Meter, Reading

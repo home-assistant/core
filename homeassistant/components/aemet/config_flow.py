@@ -1,4 +1,5 @@
 """Config flow for AEMET OpenData."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -7,10 +8,9 @@ from aemet_opendata.exceptions import AuthError
 from aemet_opendata.interface import AEMET, ConnectionOptions
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaFlowFormStep,
@@ -21,7 +21,7 @@ from .const import CONF_STATION_UPDATES, DEFAULT_NAME, DOMAIN
 
 OPTIONS_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_STATION_UPDATES): bool,
+        vol.Required(CONF_STATION_UPDATES, default=True): bool,
     }
 )
 OPTIONS_FLOW = {
@@ -29,12 +29,12 @@ OPTIONS_FLOW = {
 }
 
 
-class AemetConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class AemetConfigFlow(ConfigFlow, domain=DOMAIN):
     """Config flow for AEMET OpenData."""
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         errors = {}
 
@@ -75,7 +75,7 @@ class AemetConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
+        config_entry: ConfigEntry,
     ) -> SchemaOptionsFlowHandler:
         """Get the options flow for this handler."""
         return SchemaOptionsFlowHandler(config_entry, OPTIONS_FLOW)

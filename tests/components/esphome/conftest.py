@@ -1,4 +1,5 @@
 """esphome session fixtures."""
+
 from __future__ import annotations
 
 import asyncio
@@ -151,11 +152,13 @@ def mock_client(mock_device_info) -> APIClient:
     mock_client.address = "127.0.0.1"
     mock_client.api_version = APIVersion(99, 99)
 
-    with patch(
-        "homeassistant.components.esphome.manager.ReconnectLogic",
-        BaseMockReconnectLogic,
-    ), patch("homeassistant.components.esphome.APIClient", mock_client), patch(
-        "homeassistant.components.esphome.config_flow.APIClient", mock_client
+    with (
+        patch(
+            "homeassistant.components.esphome.manager.ReconnectLogic",
+            BaseMockReconnectLogic,
+        ),
+        patch("homeassistant.components.esphome.APIClient", mock_client),
+        patch("homeassistant.components.esphome.config_flow.APIClient", mock_client),
     ):
         yield mock_client
 
@@ -185,6 +188,7 @@ class MockESPHomeDevice:
         self.service_call_callback: Callable[[HomeassistantServiceCall], None]
         self.on_disconnect: Callable[[bool], None]
         self.on_connect: Callable[[bool], None]
+        self.on_connect_error: Callable[[Exception], None]
         self.home_assistant_state_subscription_callback: Callable[
             [str, str | None], None
         ]
@@ -219,9 +223,19 @@ class MockESPHomeDevice:
         """Set the connect callback."""
         self.on_connect = on_connect
 
+    def set_on_connect_error(
+        self, on_connect_error: Callable[[Exception], None]
+    ) -> None:
+        """Set the connect error callback."""
+        self.on_connect_error = on_connect_error
+
     async def mock_connect(self) -> None:
         """Mock connecting."""
         await self.on_connect()
+
+    async def mock_connect_error(self, exc: Exception) -> None:
+        """Mock connect error."""
+        await self.on_connect_error(exc)
 
     def set_home_assistant_state_subscription_callback(
         self,
@@ -306,6 +320,7 @@ async def _mock_generic_device_entry(
             super().__init__(*args, **kwargs)
             mock_device.set_on_disconnect(kwargs["on_disconnect"])
             mock_device.set_on_connect(kwargs["on_connect"])
+            mock_device.set_on_connect_error(kwargs["on_connect_error"])
             self._try_connect = self.mock_try_connect
 
         async def mock_try_connect(self):

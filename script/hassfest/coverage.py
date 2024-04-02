@@ -1,4 +1,5 @@
 """Validate coverage files."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -19,6 +20,42 @@ DONT_IGNORE = (
     "scene.py",
 )
 
+PREFIX = """# Sorted by hassfest.
+#
+# To sort, run python3 -m script.hassfest -p coverage
+
+[run]
+source = homeassistant
+omit =
+    homeassistant/__main__.py
+    homeassistant/helpers/signal.py
+    homeassistant/scripts/__init__.py
+    homeassistant/scripts/check_config.py
+    homeassistant/scripts/ensure_config.py
+    homeassistant/scripts/benchmark/__init__.py
+    homeassistant/scripts/macos/__init__.py
+
+    # omit pieces of code that rely on external devices being present
+"""
+
+SUFFIX = """[report]
+# Regexes for lines to exclude from consideration
+exclude_lines =
+    # Have to re-enable the standard pragma
+    pragma: no cover
+
+    # Don't complain about missing debug-only code:
+    def __repr__
+
+    # Don't complain if tests don't hit defensive assertion code:
+    raise AssertionError
+    raise NotImplementedError
+
+    # TYPE_CHECKING and @overload blocks are never executed during pytest run
+    if TYPE_CHECKING:
+    @overload
+"""
+
 
 def validate(integrations: dict[str, Integration], config: Config) -> None:
     """Validate coverage."""
@@ -27,6 +64,7 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
     not_found: list[str] = []
     checking = False
 
+    previous_line = ""
     with coverage_path.open("rt") as fp:
         for line in fp:
             line = line.strip()
@@ -54,12 +92,26 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
                 not_found.append(line)
                 continue
 
-            if not line.startswith("homeassistant/components/") or len(path.parts) != 4:
+            if not line.startswith("homeassistant/components/"):
                 continue
 
             integration_path = path.parent
+            while len(integration_path.parts) > 3:
+                integration_path = integration_path.parent
 
             integration = integrations[integration_path.name]
+
+            # Ensure sorted
+            if line < previous_line:
+                integration.add_error(
+                    "coverage",
+                    f"{line} is unsorted in .coveragerc file",
+                )
+            previous_line = line
+
+            # Ignore sub-directories for further checks
+            if len(path.parts) > 4:
+                continue
 
             if (
                 path.parts[-1] == "*"
@@ -84,3 +136,28 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
         raise RuntimeError(
             f".coveragerc references files that don't exist: {', '.join(not_found)}."
         )
+
+
+def generate(integrations: dict[str, Integration], config: Config) -> None:
+    """Sort coverage."""
+    coverage_path = config.root / ".coveragerc"
+    lines = []
+    start = False
+
+    with coverage_path.open("rt") as fp:
+        for line in fp:
+            if (
+                not start
+                and line
+                == "    # omit pieces of code that rely on external devices being present\n"
+            ):
+                start = True
+            elif line == "[report]\n":
+                break
+            elif start and line != "\n":
+                lines.append(line)
+
+    content = f"{PREFIX}{"".join(sorted(lines))}\n\n{SUFFIX}"
+
+    with coverage_path.open("w") as fp:
+        fp.write(content)

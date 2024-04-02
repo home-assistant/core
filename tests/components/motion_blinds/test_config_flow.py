@@ -1,4 +1,5 @@
 """Test the Motionblinds config flow."""
+
 import socket
 from unittest.mock import Mock, patch
 
@@ -72,41 +73,55 @@ TEST_INTERFACES = [
 @pytest.fixture(name="motion_blinds_connect", autouse=True)
 def motion_blinds_connect_fixture(mock_get_source_ip):
     """Mock Motionblinds connection and entry setup."""
-    with patch(
-        "homeassistant.components.motion_blinds.gateway.MotionGateway.GetDeviceList",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.motion_blinds.gateway.MotionGateway.Update",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.motion_blinds.gateway.MotionGateway.Check_gateway_multicast",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.motion_blinds.gateway.MotionGateway.device_list",
-        TEST_DEVICE_LIST,
-    ), patch(
-        "homeassistant.components.motion_blinds.gateway.MotionGateway.mac",
-        TEST_MAC,
-    ), patch(
-        "homeassistant.components.motion_blinds.config_flow.MotionDiscovery.discover",
-        return_value=TEST_DISCOVERY_1,
-    ), patch(
-        "homeassistant.components.motion_blinds.config_flow.MotionGateway.GetDeviceList",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.motion_blinds.config_flow.MotionGateway.available",
-        True,
-    ), patch(
-        "homeassistant.components.motion_blinds.gateway.AsyncMotionMulticast.Start_listen",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.motion_blinds.gateway.AsyncMotionMulticast.Stop_listen",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.motion_blinds.gateway.network.async_get_adapters",
-        return_value=TEST_INTERFACES,
-    ), patch(
-        "homeassistant.components.motion_blinds.async_setup_entry", return_value=True
+    with (
+        patch(
+            "homeassistant.components.motion_blinds.gateway.MotionGateway.GetDeviceList",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.motion_blinds.gateway.MotionGateway.Update",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.motion_blinds.gateway.MotionGateway.Check_gateway_multicast",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.motion_blinds.gateway.MotionGateway.device_list",
+            TEST_DEVICE_LIST,
+        ),
+        patch(
+            "homeassistant.components.motion_blinds.gateway.MotionGateway.mac",
+            TEST_MAC,
+        ),
+        patch(
+            "homeassistant.components.motion_blinds.config_flow.MotionDiscovery.discover",
+            return_value=TEST_DISCOVERY_1,
+        ),
+        patch(
+            "homeassistant.components.motion_blinds.config_flow.MotionGateway.GetDeviceList",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.motion_blinds.config_flow.MotionGateway.available",
+            True,
+        ),
+        patch(
+            "homeassistant.components.motion_blinds.gateway.AsyncMotionMulticast.Start_listen",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.motion_blinds.gateway.AsyncMotionMulticast.Stop_listen",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.motion_blinds.gateway.network.async_get_adapters",
+            return_value=TEST_INTERFACES,
+        ),
+        patch(
+            "homeassistant.components.motion_blinds.async_setup_entry",
+            return_value=True,
+        ),
     ):
         yield
 

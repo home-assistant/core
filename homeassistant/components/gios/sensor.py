@@ -1,4 +1,5 @@
 """Support for the GIOS service."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -229,11 +230,11 @@ class GiosSensor(CoordinatorEntity[GiosDataUpdateCoordinator], SensorEntity):
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        available = super().available
         sensor_data = getattr(self.coordinator.data, self.entity_description.key)
+        available = super().available and bool(sensor_data)
 
         # Sometimes the API returns sensor data without indexes
-        if self.entity_description.subkey:
+        if self.entity_description.subkey and available:
             return available and bool(sensor_data.index)
 
-        return available and bool(sensor_data)
+        return available

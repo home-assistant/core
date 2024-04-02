@@ -1,4 +1,5 @@
 """Buttons for Hunter Douglas Powerview advanced features."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -84,19 +85,18 @@ async def async_setup_entry(
     entities: list[ButtonEntity] = []
     for shade in pv_entry.shade_data.values():
         room_name = getattr(pv_entry.room_data.get(shade.room_id), ATTR_NAME, "")
-        for description in BUTTONS_SHADE:
-            if description.create_entity_fn(shade):
-                entities.append(
-                    PowerviewShadeButton(
-                        pv_entry.coordinator,
-                        pv_entry.device_info,
-                        room_name,
-                        shade,
-                        shade.name,
-                        description,
-                    )
-                )
-
+        entities.extend(
+            PowerviewShadeButton(
+                pv_entry.coordinator,
+                pv_entry.device_info,
+                room_name,
+                shade,
+                shade.name,
+                description,
+            )
+            for description in BUTTONS_SHADE
+            if description.create_entity_fn(shade)
+        )
     async_add_entities(entities)
 
 
@@ -119,4 +119,5 @@ class PowerviewShadeButton(ShadeEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Handle the button press."""
-        await self.entity_description.press_action(self._shade)
+        async with self.coordinator.radio_operation_lock:
+            await self.entity_description.press_action(self._shade)

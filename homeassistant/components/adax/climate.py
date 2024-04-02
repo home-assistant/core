@@ -1,4 +1,5 @@
 """Support for Adax wifi-enabled home heaters."""
+
 from __future__ import annotations
 
 from typing import Any, cast

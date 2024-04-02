@@ -1,13 +1,15 @@
 """Test the Enphase Envoy config flow."""
+
 from ipaddress import ip_address
 from unittest.mock import AsyncMock
 
 from pyenphase import EnvoyAuthenticationError, EnvoyError
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import config_entries
 from homeassistant.components import zeroconf
-from homeassistant.components.enphase_envoy.const import DOMAIN
+from homeassistant.components.enphase_envoy.const import DOMAIN, PLATFORMS
 from homeassistant.core import HomeAssistant
 
 
@@ -27,6 +29,7 @@ async def test_form(hass: HomeAssistant, config, setup_enphase_envoy) -> None:
             "password": "test-password",
         },
     )
+    await hass.async_block_till_done()
     assert result2["type"] == "create_entry"
     assert result2["title"] == "Envoy 1234"
     assert result2["data"] == {
@@ -56,6 +59,7 @@ async def test_user_no_serial_number(
             "password": "test-password",
         },
     )
+    await hass.async_block_till_done()
     assert result2["type"] == "create_entry"
     assert result2["title"] == "Envoy"
     assert result2["data"] == {
@@ -85,6 +89,7 @@ async def test_user_fetching_serial_fails(
             "password": "test-password",
         },
     )
+    await hass.async_block_till_done()
     assert result2["type"] == "create_entry"
     assert result2["title"] == "Envoy"
     assert result2["data"] == {
@@ -114,6 +119,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, setup_enphase_envoy) -> No
             "password": "test-password",
         },
     )
+    await hass.async_block_till_done()
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": "invalid_auth"}
 
@@ -135,6 +141,7 @@ async def test_form_cannot_connect(hass: HomeAssistant, setup_enphase_envoy) -> 
             "password": "test-password",
         },
     )
+    await hass.async_block_till_done()
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": "cannot_connect"}
 
@@ -156,6 +163,7 @@ async def test_form_unknown_error(hass: HomeAssistant, setup_enphase_envoy) -> N
             "password": "test-password",
         },
     )
+    await hass.async_block_till_done()
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": "unknown"}
 
@@ -198,6 +206,7 @@ async def test_zeroconf_pre_token_firmware(
             "password": "test-password",
         },
     )
+    await hass.async_block_till_done()
     assert result2["type"] == "create_entry"
     assert result2["title"] == "Envoy 1234"
     assert result2["result"].unique_id == "1234"
@@ -238,6 +247,7 @@ async def test_zeroconf_token_firmware(
             "password": "test-password",
         },
     )
+    await hass.async_block_till_done()
     assert result2["type"] == "create_entry"
     assert result2["title"] == "Envoy 1234"
     assert result2["result"].unique_id == "1234"
@@ -329,6 +339,7 @@ async def test_zeroconf_serial_already_exists(
             type="mock_type",
         ),
     )
+    await hass.async_block_till_done()
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
 
@@ -352,6 +363,7 @@ async def test_zeroconf_serial_already_exists_ignores_ipv6(
             type="mock_type",
         ),
     )
+    await hass.async_block_till_done()
     assert result["type"] == "abort"
     assert result["reason"] == "not_ipv4_address"
 
@@ -376,6 +388,7 @@ async def test_zeroconf_host_already_exists(
             type="mock_type",
         ),
     )
+    await hass.async_block_till_done()
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
 
@@ -400,5 +413,11 @@ async def test_reauth(hass: HomeAssistant, config_entry, setup_enphase_envoy) ->
             "password": "test-password",
         },
     )
+    await hass.async_block_till_done()
     assert result2["type"] == "abort"
     assert result2["reason"] == "reauth_successful"
+
+
+async def test_platforms(snapshot: SnapshotAssertion) -> None:
+    """Test if platform list changed and requires more tests."""
+    assert snapshot == PLATFORMS

@@ -1,4 +1,5 @@
 """Support for Twente Milieu sensors."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -33,35 +34,30 @@ SENSORS: tuple[TwenteMilieuSensorDescription, ...] = (
         key="tree",
         translation_key="christmas_tree_pickup",
         waste_type=WasteType.TREE,
-        icon="mdi:pine-tree",
         device_class=SensorDeviceClass.DATE,
     ),
     TwenteMilieuSensorDescription(
         key="Non-recyclable",
         translation_key="non_recyclable_waste_pickup",
         waste_type=WasteType.NON_RECYCLABLE,
-        icon="mdi:delete-empty",
         device_class=SensorDeviceClass.DATE,
     ),
     TwenteMilieuSensorDescription(
         key="Organic",
         translation_key="organic_waste_pickup",
         waste_type=WasteType.ORGANIC,
-        icon="mdi:delete-empty",
         device_class=SensorDeviceClass.DATE,
     ),
     TwenteMilieuSensorDescription(
         key="Paper",
         translation_key="paper_waste_pickup",
         waste_type=WasteType.PAPER,
-        icon="mdi:delete-empty",
         device_class=SensorDeviceClass.DATE,
     ),
     TwenteMilieuSensorDescription(
         key="Plastic",
         translation_key="packages_waste_pickup",
         waste_type=WasteType.PACKAGES,
-        icon="mdi:delete-empty",
         device_class=SensorDeviceClass.DATE,
     ),
 )

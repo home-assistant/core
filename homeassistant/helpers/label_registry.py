@@ -1,22 +1,28 @@
 """Provide a way to label and group anything."""
+
 from __future__ import annotations
 
-from collections import UserDict
-from collections.abc import Iterable, ValuesView
+from collections.abc import Iterable
 import dataclasses
 from dataclasses import dataclass
 from typing import Literal, TypedDict, cast
 
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.util import slugify
 
-from .typing import UNDEFINED, EventType, UndefinedType
+from .normalized_name_base_registry import (
+    NormalizedNameBaseRegistryEntry,
+    NormalizedNameBaseRegistryItems,
+    normalize_name,
+)
+from .registry import BaseRegistry
+from .storage import Store
+from .typing import UNDEFINED, UndefinedType
 
 DATA_REGISTRY = "label_registry"
 EVENT_LABEL_REGISTRY_UPDATED = "label_registry_updated"
 STORAGE_KEY = "core.label_registry"
 STORAGE_VERSION_MAJOR = 1
-SAVE_DELAY = 10
 
 
 class EventLabelRegistryUpdatedData(TypedDict):
@@ -26,77 +32,30 @@ class EventLabelRegistryUpdatedData(TypedDict):
     label_id: str
 
 
-EventLabelRegistryUpdated = EventType[EventLabelRegistryUpdatedData]
+EventLabelRegistryUpdated = Event[EventLabelRegistryUpdatedData]
 
 
-@dataclass(slots=True, frozen=True)
-class LabelEntry:
+@dataclass(slots=True, frozen=True, kw_only=True)
+class LabelEntry(NormalizedNameBaseRegistryEntry):
     """Label Registry Entry."""
 
     label_id: str
-    name: str
-    normalized_name: str
     description: str | None = None
     color: str | None = None
     icon: str | None = None
 
 
-class LabelRegistryItems(UserDict[str, LabelEntry]):
-    """Container for label registry items, maps label id -> entry.
-
-    Maintains an additional index:
-    - normalized name -> entry
-    """
-
-    def __init__(self) -> None:
-        """Initialize the container."""
-        super().__init__()
-        self._normalized_names: dict[str, LabelEntry] = {}
-
-    def values(self) -> ValuesView[LabelEntry]:
-        """Return the underlying values to avoid __iter__ overhead."""
-        return self.data.values()
-
-    def __setitem__(self, key: str, entry: LabelEntry) -> None:
-        """Add an item."""
-        data = self.data
-        normalized_name = _normalize_label_name(entry.name)
-
-        if key in data:
-            old_entry = data[key]
-            if (
-                normalized_name != old_entry.normalized_name
-                and normalized_name in self._normalized_names
-            ):
-                raise ValueError(
-                    f"The name {entry.name} ({normalized_name}) is already in use"
-                )
-            del self._normalized_names[old_entry.normalized_name]
-        data[key] = entry
-        self._normalized_names[normalized_name] = entry
-
-    def __delitem__(self, key: str) -> None:
-        """Remove an item."""
-        entry = self[key]
-        normalized_name = _normalize_label_name(entry.name)
-        del self._normalized_names[normalized_name]
-        super().__delitem__(key)
-
-    def get_label_by_name(self, name: str) -> LabelEntry | None:
-        """Get label by name."""
-        return self._normalized_names.get(_normalize_label_name(name))
-
-
-class LabelRegistry:
+class LabelRegistry(BaseRegistry):
     """Class to hold a registry of labels."""
 
-    labels: LabelRegistryItems
+    labels: NormalizedNameBaseRegistryItems[LabelEntry]
     _label_data: dict[str, LabelEntry]
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the label registry."""
         self.hass = hass
-        self._store = hass.helpers.storage.Store(
+        self._store: Store[dict[str, list[dict[str, str | None]]]] = Store(
+            hass,
             STORAGE_VERSION_MAJOR,
             STORAGE_KEY,
             atomic_writes=True,
@@ -114,7 +73,7 @@ class LabelRegistry:
     @callback
     def async_get_label_by_name(self, name: str) -> LabelEntry | None:
         """Get label by name."""
-        return self.labels.get_label_by_name(name)
+        return self.labels.get_by_name(name)
 
     @callback
     def async_list_labels(self) -> Iterable[LabelEntry]:
@@ -146,7 +105,7 @@ class LabelRegistry:
                 f"The name {name} ({label.normalized_name}) is already in use"
             )
 
-        normalized_name = _normalize_label_name(name)
+        normalized_name = normalize_name(name)
 
         label = LabelEntry(
             color=color,
@@ -205,7 +164,7 @@ class LabelRegistry:
 
         if name is not UNDEFINED and name != old.name:
             changes["name"] = name
-            changes["normalized_name"] = _normalize_label_name(name)
+            changes["normalized_name"] = normalize_name(name)
 
         if not changes:
             return old
@@ -226,11 +185,15 @@ class LabelRegistry:
     async def async_load(self) -> None:
         """Load the label registry."""
         data = await self._store.async_load()
-        labels = LabelRegistryItems()
+        labels = NormalizedNameBaseRegistryItems[LabelEntry]()
 
         if data is not None:
             for label in data["labels"]:
-                normalized_name = _normalize_label_name(label["name"])
+                # Check if the necessary keys are present
+                if label["label_id"] is None or label["name"] is None:
+                    continue
+
+                normalized_name = normalize_name(label["name"])
                 labels[label["label_id"]] = LabelEntry(
                     color=label["color"],
                     description=label["description"],
@@ -242,11 +205,6 @@ class LabelRegistry:
 
         self.labels = labels
         self._label_data = labels.data
-
-    @callback
-    def async_schedule_save(self) -> None:
-        """Schedule saving the label registry."""
-        self._store.async_delay_save(self._data_to_save, SAVE_DELAY)
 
     @callback
     def _data_to_save(self) -> dict[str, list[dict[str, str | None]]]:
@@ -276,8 +234,3 @@ async def async_load(hass: HomeAssistant) -> None:
     assert DATA_REGISTRY not in hass.data
     hass.data[DATA_REGISTRY] = LabelRegistry(hass)
     await hass.data[DATA_REGISTRY].async_load()
-
-
-def _normalize_label_name(label_name: str) -> str:
-    """Normalize a label name by removing whitespace and case folding."""
-    return label_name.casefold().replace(" ", "")

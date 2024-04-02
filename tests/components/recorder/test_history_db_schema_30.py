@@ -1,4 +1,5 @@
 """The tests the History component."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -44,8 +45,9 @@ def test_get_full_significant_states_with_session_entity_no_matches(
     now = dt_util.utcnow()
     time_before_recorder_ran = now - timedelta(days=1000)
     instance = recorder.get_instance(hass)
-    with session_scope(hass=hass) as session, patch.object(
-        instance.states_meta_manager, "active", False
+    with (
+        session_scope(hass=hass) as session,
+        patch.object(instance.states_meta_manager, "active", False),
     ):
         assert (
             history.get_full_significant_states_with_session(
@@ -73,8 +75,9 @@ def test_significant_states_with_session_entity_minimal_response_no_matches(
     now = dt_util.utcnow()
     time_before_recorder_ran = now - timedelta(days=1000)
     instance = recorder.get_instance(hass)
-    with session_scope(hass=hass) as session, patch.object(
-        instance.states_meta_manager, "active", False
+    with (
+        session_scope(hass=hass) as session,
+        patch.object(instance.states_meta_manager, "active", False),
     ):
         assert (
             history.get_significant_states_with_session(
@@ -325,7 +328,7 @@ def test_get_significant_states_minimal_response(
             entity_states = states[entity_id]
             for state_idx in range(1, len(entity_states)):
                 input_state = entity_states[state_idx]
-                orig_last_changed = orig_last_changed = json.dumps(
+                orig_last_changed = json.dumps(
                     process_timestamp(input_state.last_changed),
                     cls=JSONEncoder,
                 ).replace('"', "")
@@ -381,10 +384,7 @@ def test_get_significant_states_with_initial(
             if entity_id == "media_player.test":
                 states[entity_id] = states[entity_id][1:]
             for state in states[entity_id]:
-                if (
-                    state.last_changed == one
-                    or state.last_changed == one_with_microsecond
-                ):
+                if state.last_changed in (one, one_with_microsecond):
                     state.last_changed = one_and_half
                     state.last_updated = one_and_half
 
@@ -415,13 +415,11 @@ def test_get_significant_states_without_initial(
         one_with_microsecond = zero + timedelta(seconds=1, microseconds=1)
         one_and_half = zero + timedelta(seconds=1.5)
         for entity_id in states:
-            states[entity_id] = list(
-                filter(
-                    lambda s: s.last_changed != one
-                    and s.last_changed != one_with_microsecond,
-                    states[entity_id],
-                )
-            )
+            states[entity_id] = [
+                s
+                for s in states[entity_id]
+                if s.last_changed not in (one, one_with_microsecond)
+            ]
         del states["media_player.test2"]
 
         hist = history.get_significant_states(
@@ -516,9 +514,7 @@ def test_get_significant_states_only(
             return hass.states.get(entity_id)
 
         start = dt_util.utcnow() - timedelta(minutes=4)
-        points = []
-        for i in range(1, 4):
-            points.append(start + timedelta(minutes=i))
+        points = [start + timedelta(minutes=i) for i in range(1, 4)]
 
         states = []
         with freeze_time(start) as freezer:

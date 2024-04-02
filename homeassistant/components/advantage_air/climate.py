@@ -1,4 +1,5 @@
 """Climate platform for Advantage Air integration."""
+
 from __future__ import annotations
 
 import logging
@@ -57,7 +58,7 @@ HVAC_MODES = [
     HVACMode.FAN_ONLY,
     HVACMode.DRY,
 ]
-HVAC_MODES_MYAUTO = HVAC_MODES + [HVACMode.HEAT_COOL]
+HVAC_MODES_MYAUTO = [*HVAC_MODES, HVACMode.HEAT_COOL]
 SUPPORTED_FEATURES = (
     ClimateEntityFeature.FAN_MODE
     | ClimateEntityFeature.TURN_OFF

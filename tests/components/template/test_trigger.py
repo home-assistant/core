@@ -1,11 +1,12 @@
 """The tests for the Template automation."""
+
 from datetime import timedelta
 from unittest import mock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-import homeassistant.components.automation as automation
+from homeassistant.components import automation
 from homeassistant.components.template import trigger as template_trigger
 from homeassistant.const import (
     ATTR_ENTITY_ID,

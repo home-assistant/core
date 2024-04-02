@@ -1,4 +1,5 @@
 """synology_dsm coordinators."""
+
 from __future__ import annotations
 
 from datetime import timedelta

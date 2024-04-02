@@ -1,4 +1,5 @@
 """Setup Mullvad VPN Binary Sensors."""
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
