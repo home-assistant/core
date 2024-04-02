@@ -190,7 +190,7 @@
           'name': 'X-Wing',
           'phone': None,
           'positionId': 0,
-          'status': 'unknown',
+          'status': 'online',
           'uniqueId': 'abc123',
         }),
         'geofence': dict({
@@ -207,6 +207,7 @@
           'address': '**REDACTED**',
           'altitude': 546841384638,
           'attributes': dict({
+            'batteryLevel': 15.00000867601,
             'custom_attr_1': 'custom_attr_1_value',
           }),
           'course': 360,
@@ -232,8 +233,39 @@
     'entities': list([
       dict({
         'disabled': True,
+        'enity_id': 'sensor.x_wing_battery',
+        'state': None,
+        'unit_of_measurement': '%',
+      }),
+      dict({
+        'disabled': True,
+        'enity_id': 'sensor.x_wing_speed',
+        'state': None,
+        'unit_of_measurement': 'kn',
+      }),
+      dict({
+        'disabled': True,
+        'enity_id': 'sensor.x_wing_altitude',
+        'state': None,
+        'unit_of_measurement': 'm',
+      }),
+      dict({
+        'disabled': True,
+        'enity_id': 'sensor.x_wing_address',
+        'state': None,
+        'unit_of_measurement': None,
+      }),
+      dict({
+        'disabled': True,
+        'enity_id': 'sensor.x_wing_geofence',
+        'state': None,
+        'unit_of_measurement': None,
+      }),
+      dict({
+        'disabled': True,
         'enity_id': 'device_tracker.x_wing',
         'state': None,
+        'unit_of_measurement': None,
       }),
     ]),
     'subscription_status': 'disconnected',
@@ -311,6 +343,36 @@
       }),
     }),
     'entities': list([
+      dict({
+        'disabled': True,
+        'enity_id': 'sensor.x_wing_battery',
+        'state': None,
+        'unit_of_measurement': '%',
+      }),
+      dict({
+        'disabled': True,
+        'enity_id': 'sensor.x_wing_speed',
+        'state': None,
+        'unit_of_measurement': 'kn',
+      }),
+      dict({
+        'disabled': True,
+        'enity_id': 'sensor.x_wing_altitude',
+        'state': None,
+        'unit_of_measurement': 'm',
+      }),
+      dict({
+        'disabled': True,
+        'enity_id': 'sensor.x_wing_address',
+        'state': None,
+        'unit_of_measurement': None,
+      }),
+      dict({
+        'disabled': True,
+        'enity_id': 'sensor.x_wing_geofence',
+        'state': None,
+        'unit_of_measurement': None,
+      }),
       dict({
         'disabled': False,
         'enity_id': 'device_tracker.x_wing',
