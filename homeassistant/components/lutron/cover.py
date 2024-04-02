@@ -8,11 +8,7 @@ from typing import Any
 
 from pylutron import Output
 
-from homeassistant.components.cover import (
-    ATTR_POSITION,
-    CoverEntity,
-    CoverEntityFeature,
-)
+from homeassistant.components.cover import CoverEntity, CoverEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -54,19 +50,17 @@ class LutronCover(LutronDevice, CoverEntity):
     _lutron_device: Output
     _attr_name = None
 
-    def close_cover(self, **kwargs: Any) -> None:
+    def close_cover(self) -> None:
         """Close the cover."""
         self._lutron_device.level = 0
 
-    def open_cover(self, **kwargs: Any) -> None:
+    def open_cover(self) -> None:
         """Open the cover."""
         self._lutron_device.level = 100
 
-    def set_cover_position(self, **kwargs: Any) -> None:
+    def set_cover_position(self, position: int) -> None:
         """Move the shade to a specific position."""
-        if ATTR_POSITION in kwargs:
-            position = kwargs[ATTR_POSITION]
-            self._lutron_device.level = position
+        self._lutron_device.level = position
 
     def _request_state(self) -> None:
         """Request the state from the device."""

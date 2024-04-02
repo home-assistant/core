@@ -3,9 +3,8 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
 
-from homeassistant.components.cover import ATTR_POSITION, CoverDeviceClass, CoverEntity
+from homeassistant.components.cover import CoverDeviceClass, CoverEntity
 from homeassistant.const import ATTR_ID, STATE_CLOSED, STATE_CLOSING, STATE_OPENING
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -85,23 +84,23 @@ class SlideCover(CoverEntity):
             pos = int(pos * 100)
         return pos
 
-    async def async_open_cover(self, **kwargs: Any) -> None:
+    async def async_open_cover(self) -> None:
         """Open the cover."""
         self._slide["state"] = STATE_OPENING
         await self._api.slide_open(self._id)
 
-    async def async_close_cover(self, **kwargs: Any) -> None:
+    async def async_close_cover(self) -> None:
         """Close the cover."""
         self._slide["state"] = STATE_CLOSING
         await self._api.slide_close(self._id)
 
-    async def async_stop_cover(self, **kwargs: Any) -> None:
+    async def async_stop_cover(self) -> None:
         """Stop the cover."""
         await self._api.slide_stop(self._id)
 
-    async def async_set_cover_position(self, **kwargs: Any) -> None:
+    async def async_set_cover_position(self, position: int) -> None:
         """Move the cover to a specific position."""
-        position = kwargs[ATTR_POSITION] / 100
+        position: float = position / 100
         if not self._invert:
             position = 1 - position
 

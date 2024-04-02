@@ -3,13 +3,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
 
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.cover import (
-    ATTR_POSITION,
-    ATTR_TILT_POSITION,
     CoverDeviceClass,
     CoverEntity,
     CoverEntityDescription,
@@ -281,7 +278,7 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
 
         return None
 
-    def open_cover(self, **kwargs: Any) -> None:
+    def open_cover(self) -> None:
         """Open the cover."""
         value: bool | str = True
         if self.find_dpcode(
@@ -305,7 +302,7 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
 
         self._send_command(commands)
 
-    def close_cover(self, **kwargs: Any) -> None:
+    def close_cover(self) -> None:
         """Close cover."""
         value: bool | str = False
         if self.find_dpcode(
@@ -329,7 +326,7 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
 
         self._send_command(commands)
 
-    def set_cover_position(self, **kwargs: Any) -> None:
+    def set_cover_position(self, position: int) -> None:
         """Move the cover to a specific position."""
         if self._set_position is None:
             raise RuntimeError(
@@ -342,14 +339,14 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
                     "code": self._set_position.dpcode,
                     "value": round(
                         self._set_position.remap_value_from(
-                            kwargs[ATTR_POSITION], 0, 100, reverse=True
+                            position, 0, 100, reverse=True
                         )
                     ),
                 }
             ]
         )
 
-    def stop_cover(self, **kwargs: Any) -> None:
+    def stop_cover(self) -> None:
         """Stop the cover."""
         self._send_command(
             [
@@ -360,7 +357,7 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
             ]
         )
 
-    def set_cover_tilt_position(self, **kwargs: Any) -> None:
+    def set_cover_tilt_position(self, tilt_position: int) -> None:
         """Move the cover tilt to a specific position."""
         if self._tilt is None:
             raise RuntimeError(
@@ -372,9 +369,7 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
                 {
                     "code": self._tilt.dpcode,
                     "value": round(
-                        self._tilt.remap_value_from(
-                            kwargs[ATTR_TILT_POSITION], 0, 100, reverse=True
-                        )
+                        self._tilt.remap_value_from(tilt_position, 0, 100, reverse=True)
                     ),
                 }
             ]

@@ -2,11 +2,9 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 import pyvera as veraApi
 
-from homeassistant.components.cover import ATTR_POSITION, ENTITY_ID_FORMAT, CoverEntity
+from homeassistant.components.cover import ENTITY_ID_FORMAT, CoverEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -55,9 +53,9 @@ class VeraCover(VeraDevice[veraApi.VeraCurtain], CoverEntity):
             return 100
         return position
 
-    def set_cover_position(self, **kwargs: Any) -> None:
+    def set_cover_position(self, position: int) -> None:
         """Move the cover to a specific position."""
-        self.vera_device.set_level(kwargs.get(ATTR_POSITION))
+        self.vera_device.set_level(position)
         self.schedule_update_ha_state()
 
     @property
@@ -66,17 +64,17 @@ class VeraCover(VeraDevice[veraApi.VeraCurtain], CoverEntity):
         if self.current_cover_position is not None:
             return self.current_cover_position == 0
 
-    def open_cover(self, **kwargs: Any) -> None:
+    def open_cover(self) -> None:
         """Open the cover."""
         self.vera_device.open()
         self.schedule_update_ha_state()
 
-    def close_cover(self, **kwargs: Any) -> None:
+    def close_cover(self) -> None:
         """Close the cover."""
         self.vera_device.close()
         self.schedule_update_ha_state()
 
-    def stop_cover(self, **kwargs: Any) -> None:
+    def stop_cover(self) -> None:
         """Stop the cover."""
         self.vera_device.stop()
         self.schedule_update_ha_state()

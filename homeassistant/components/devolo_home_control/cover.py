@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 from homeassistant.components.cover import (
     CoverDeviceClass,
     CoverEntity,
@@ -55,14 +53,14 @@ class DevoloCoverDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, CoverEntity):
         """Return if the blind is closed or not."""
         return not bool(self._value)
 
-    def open_cover(self, **kwargs: Any) -> None:
+    def open_cover(self) -> None:
         """Open the blind."""
         self._multi_level_switch_property.set(100)
 
-    def close_cover(self, **kwargs: Any) -> None:
+    def close_cover(self) -> None:
         """Close the blind."""
         self._multi_level_switch_property.set(0)
 
-    def set_cover_position(self, **kwargs: Any) -> None:
+    def set_cover_position(self, position: int) -> None:
         """Set the blind to the given position."""
-        self._multi_level_switch_property.set(kwargs["position"])
+        self._multi_level_switch_property.set(position)

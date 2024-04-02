@@ -97,11 +97,11 @@ class ComelitCoverEntity(
         """Return if the cover is opening."""
         return self._current_action("opening")
 
-    async def async_close_cover(self, **kwargs: Any) -> None:
+    async def async_close_cover(self) -> None:
         """Close cover."""
         await self._api.set_device_status(COVER, self._device.index, STATE_OFF)
 
-    async def async_open_cover(self, **kwargs: Any) -> None:
+    async def async_open_cover(self) -> None:
         """Open cover."""
         await self._api.set_device_status(COVER, self._device.index, STATE_ON)
 

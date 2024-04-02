@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 from homeassistant.components.cover import CoverEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -54,15 +52,15 @@ class TellstickCover(TellstickDevice, CoverEntity):
         """Return True if unable to access real state of the entity."""
         return True
 
-    def close_cover(self, **kwargs: Any) -> None:
+    def close_cover(self) -> None:
         """Close the cover."""
         self._tellcore_device.down()
 
-    def open_cover(self, **kwargs: Any) -> None:
+    def open_cover(self) -> None:
         """Open the cover."""
         self._tellcore_device.up()
 
-    def stop_cover(self, **kwargs: Any) -> None:
+    def stop_cover(self) -> None:
         """Stop the cover."""
         self._tellcore_device.stop()
 

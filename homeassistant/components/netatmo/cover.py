@@ -3,12 +3,11 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, cast
+from typing import cast
 
 from pyatmo import modules as NaModules
 
 from homeassistant.components.cover import (
-    ATTR_POSITION,
     CoverDeviceClass,
     CoverEntity,
     CoverEntityFeature,
@@ -80,25 +79,25 @@ class NetatmoCover(NetatmoBaseEntity, CoverEntity):
         )
         self._attr_unique_id = f"{self._id}-{self._model}"
 
-    async def async_close_cover(self, **kwargs: Any) -> None:
+    async def async_close_cover(self) -> None:
         """Close the cover."""
         await self._cover.async_close()
         self._attr_is_closed = True
         self.async_write_ha_state()
 
-    async def async_open_cover(self, **kwargs: Any) -> None:
+    async def async_open_cover(self) -> None:
         """Open the cover."""
         await self._cover.async_open()
         self._attr_is_closed = False
         self.async_write_ha_state()
 
-    async def async_stop_cover(self, **kwargs: Any) -> None:
+    async def async_stop_cover(self) -> None:
         """Stop the cover."""
         await self._cover.async_stop()
 
-    async def async_set_cover_position(self, **kwargs: Any) -> None:
+    async def async_set_cover_position(self, position: int) -> None:
         """Move the cover shutter to a specific position."""
-        await self._cover.async_set_target_position(kwargs[ATTR_POSITION])
+        await self._cover.async_set_target_position(position)
 
     @callback
     def async_update_callback(self) -> None:

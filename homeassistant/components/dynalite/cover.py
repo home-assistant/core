@@ -63,21 +63,21 @@ class DynaliteCover(DynaliteBase, CoverEntity):
         """Return true if cover is closed."""
         return self._device.is_closed
 
-    async def async_open_cover(self, **kwargs: Any) -> None:
+    async def async_open_cover(self) -> None:
         """Open the cover."""
-        await self._device.async_open_cover(**kwargs)
+        await self._device.async_open_cover()
 
-    async def async_close_cover(self, **kwargs: Any) -> None:
+    async def async_close_cover(self) -> None:
         """Close the cover."""
-        await self._device.async_close_cover(**kwargs)
+        await self._device.async_close_cover()
 
-    async def async_set_cover_position(self, **kwargs: Any) -> None:
+    async def async_set_cover_position(self, position: int) -> None:
         """Set the cover position."""
-        await self._device.async_set_cover_position(**kwargs)
+        await self._device.async_set_cover_position(position=position)
 
-    async def async_stop_cover(self, **kwargs: Any) -> None:
+    async def async_stop_cover(self) -> None:
         """Stop the cover."""
-        await self._device.async_stop_cover(**kwargs)
+        await self._device.async_stop_cover()
 
     def initialize_state(self, state):
         """Initialize the state from cache."""
@@ -94,18 +94,18 @@ class DynaliteCoverWithTilt(DynaliteCover):
         """Return the current tilt position."""
         return self._device.current_cover_tilt_position
 
-    async def async_open_cover_tilt(self, **kwargs: Any) -> None:
+    async def async_open_cover_tilt(self) -> None:
         """Open cover tilt."""
-        await self._device.async_open_cover_tilt(**kwargs)
+        await self._device.async_open_cover_tilt()
 
-    async def async_close_cover_tilt(self, **kwargs: Any) -> None:
+    async def async_close_cover_tilt(self) -> None:
         """Close cover tilt."""
-        await self._device.async_close_cover_tilt(**kwargs)
+        await self._device.async_close_cover_tilt()
 
-    async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
+    async def async_set_cover_tilt_position(self, tilt_position: int) -> None:
         """Set the cover tilt position."""
-        await self._device.async_set_cover_tilt_position(**kwargs)
+        await self._device.async_set_cover_tilt_position(tilt_position=tilt_position)
 
-    async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
+    async def async_stop_cover_tilt(self) -> None:
         """Stop the cover tilt."""
-        await self._device.async_stop_cover_tilt(**kwargs)
+        await self._device.async_stop_cover_tilt()

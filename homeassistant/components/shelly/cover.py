@@ -8,7 +8,6 @@ from aioshelly.block_device import Block
 from aioshelly.const import RPC_GENERATIONS
 
 from homeassistant.components.cover import (
-    ATTR_POSITION,
     CoverDeviceClass,
     CoverEntity,
     CoverEntityFeature,
@@ -115,21 +114,19 @@ class BlockShellyCover(ShellyBlockEntity, CoverEntity):
 
         return self.block.roller == "open"
 
-    async def async_close_cover(self, **kwargs: Any) -> None:
+    async def async_close_cover(self) -> None:
         """Close cover."""
         self.control_result = await self.set_state(go="close")
         self.async_write_ha_state()
 
-    async def async_open_cover(self, **kwargs: Any) -> None:
+    async def async_open_cover(self) -> None:
         """Open cover."""
         self.control_result = await self.set_state(go="open")
         self.async_write_ha_state()
 
-    async def async_set_cover_position(self, **kwargs: Any) -> None:
+    async def async_set_cover_position(self, position: int) -> None:
         """Move the cover to a specific position."""
-        self.control_result = await self.set_state(
-            go="to_pos", roller_pos=kwargs[ATTR_POSITION]
-        )
+        self.control_result = await self.set_state(go="to_pos", roller_pos=position)
         self.async_write_ha_state()
 
     async def async_stop_cover(self, **_kwargs: Any) -> None:
@@ -182,19 +179,17 @@ class RpcShellyCover(ShellyRpcEntity, CoverEntity):
         """Return if the cover is opening."""
         return cast(bool, self.status["state"] == "opening")
 
-    async def async_close_cover(self, **kwargs: Any) -> None:
+    async def async_close_cover(self) -> None:
         """Close cover."""
         await self.call_rpc("Cover.Close", {"id": self._id})
 
-    async def async_open_cover(self, **kwargs: Any) -> None:
+    async def async_open_cover(self) -> None:
         """Open cover."""
         await self.call_rpc("Cover.Open", {"id": self._id})
 
-    async def async_set_cover_position(self, **kwargs: Any) -> None:
+    async def async_set_cover_position(self, position: int) -> None:
         """Move the cover to a specific position."""
-        await self.call_rpc(
-            "Cover.GoToPosition", {"id": self._id, "pos": kwargs[ATTR_POSITION]}
-        )
+        await self.call_rpc("Cover.GoToPosition", {"id": self._id, "pos": position})
 
     async def async_stop_cover(self, **_kwargs: Any) -> None:
         """Stop the cover."""

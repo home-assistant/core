@@ -9,8 +9,6 @@ from typing import Any
 from chip.clusters import Objects as clusters
 
 from homeassistant.components.cover import (
-    ATTR_POSITION,
-    ATTR_TILT_POSITION,
     CoverDeviceClass,
     CoverEntity,
     CoverEntityDescription,
@@ -74,32 +72,32 @@ class MatterCover(MatterEntity, CoverEntity):
             else None
         )
 
-    async def async_stop_cover(self, **kwargs: Any) -> None:
+    async def async_stop_cover(self) -> None:
         """Stop the cover movement."""
         await self.send_device_command(clusters.WindowCovering.Commands.StopMotion())
 
-    async def async_open_cover(self, **kwargs: Any) -> None:
+    async def async_open_cover(self) -> None:
         """Open the cover."""
         await self.send_device_command(clusters.WindowCovering.Commands.UpOrOpen())
 
-    async def async_close_cover(self, **kwargs: Any) -> None:
+    async def async_close_cover(self) -> None:
         """Close the cover."""
         await self.send_device_command(clusters.WindowCovering.Commands.DownOrClose())
 
-    async def async_set_cover_position(self, **kwargs: Any) -> None:
+    async def async_set_cover_position(self, position: int) -> None:
         """Set the cover to a specific position."""
-        position = kwargs[ATTR_POSITION]
         await self.send_device_command(
             # value needs to be inverted and is sent in 100ths
             clusters.WindowCovering.Commands.GoToLiftPercentage((100 - position) * 100)
         )
 
-    async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
+    async def async_set_cover_tilt_position(self, tilt_position: int) -> None:
         """Set the cover tilt to a specific position."""
-        position = kwargs[ATTR_TILT_POSITION]
         await self.send_device_command(
             # value needs to be inverted and is sent in 100ths
-            clusters.WindowCovering.Commands.GoToTiltPercentage((100 - position) * 100)
+            clusters.WindowCovering.Commands.GoToTiltPercentage(
+                (100 - tilt_position) * 100
+            )
         )
 
     async def send_device_command(self, command: Any) -> None:

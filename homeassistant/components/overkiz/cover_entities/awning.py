@@ -2,15 +2,11 @@
 
 from __future__ import annotations
 
-from typing import Any, cast
+from typing import cast
 
 from pyoverkiz.enums import OverkizCommand, OverkizState
 
-from homeassistant.components.cover import (
-    ATTR_POSITION,
-    CoverDeviceClass,
-    CoverEntityFeature,
-)
+from homeassistant.components.cover import CoverDeviceClass, CoverEntityFeature
 
 from .generic_cover import (
     COMMANDS_CLOSE,
@@ -56,17 +52,17 @@ class Awning(OverkizGenericCover):
 
         return None
 
-    async def async_set_cover_position(self, **kwargs: Any) -> None:
+    async def async_set_cover_position(self, position: int) -> None:
         """Move the cover to a specific position."""
         await self.executor.async_execute_command(
-            OverkizCommand.SET_DEPLOYMENT, kwargs[ATTR_POSITION]
+            OverkizCommand.SET_DEPLOYMENT, position
         )
 
-    async def async_open_cover(self, **kwargs: Any) -> None:
+    async def async_open_cover(self) -> None:
         """Open the cover."""
         await self.executor.async_execute_command(OverkizCommand.DEPLOY)
 
-    async def async_close_cover(self, **kwargs: Any) -> None:
+    async def async_close_cover(self) -> None:
         """Close the cover."""
         await self.executor.async_execute_command(OverkizCommand.UNDEPLOY)
 

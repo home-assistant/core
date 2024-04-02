@@ -2,15 +2,9 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 from velbusaio.channels import Blind as VelbusBlind
 
-from homeassistant.components.cover import (
-    ATTR_POSITION,
-    CoverEntity,
-    CoverEntityFeature,
-)
+from homeassistant.components.cover import CoverEntity, CoverEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -80,21 +74,21 @@ class VelbusCover(VelbusEntity, CoverEntity):
         return None
 
     @api_call
-    async def async_open_cover(self, **kwargs: Any) -> None:
+    async def async_open_cover(self) -> None:
         """Open the cover."""
         await self._channel.open()
 
     @api_call
-    async def async_close_cover(self, **kwargs: Any) -> None:
+    async def async_close_cover(self) -> None:
         """Close the cover."""
         await self._channel.close()
 
     @api_call
-    async def async_stop_cover(self, **kwargs: Any) -> None:
+    async def async_stop_cover(self) -> None:
         """Stop the cover."""
         await self._channel.stop()
 
     @api_call
-    async def async_set_cover_position(self, **kwargs: Any) -> None:
+    async def async_set_cover_position(self, position: int) -> None:
         """Move the cover to a specific position."""
-        await self._channel.set_position(100 - kwargs[ATTR_POSITION])
+        await self._channel.set_position(100 - position)

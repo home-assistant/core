@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 import pypck
 
 from homeassistant.components.cover import DOMAIN as DOMAIN_COVER, CoverEntity
@@ -95,7 +93,7 @@ class LcnOutputsCover(LcnEntity, CoverEntity):
                 pypck.lcn_defs.OutputPort["OUTPUTDOWN"]
             )
 
-    async def async_close_cover(self, **kwargs: Any) -> None:
+    async def async_close_cover(self) -> None:
         """Close the cover."""
         state = pypck.lcn_defs.MotorStateModifier.DOWN
         if not await self.device_connection.control_motors_outputs(
@@ -106,7 +104,7 @@ class LcnOutputsCover(LcnEntity, CoverEntity):
         self._attr_is_closing = True
         self.async_write_ha_state()
 
-    async def async_open_cover(self, **kwargs: Any) -> None:
+    async def async_open_cover(self) -> None:
         """Open the cover."""
         state = pypck.lcn_defs.MotorStateModifier.UP
         if not await self.device_connection.control_motors_outputs(
@@ -118,7 +116,7 @@ class LcnOutputsCover(LcnEntity, CoverEntity):
         self._attr_is_closing = False
         self.async_write_ha_state()
 
-    async def async_stop_cover(self, **kwargs: Any) -> None:
+    async def async_stop_cover(self) -> None:
         """Stop the cover."""
         state = pypck.lcn_defs.MotorStateModifier.STOP
         if not await self.device_connection.control_motors_outputs(state):
@@ -186,7 +184,7 @@ class LcnRelayCover(LcnEntity, CoverEntity):
         if not self.device_connection.is_group:
             await self.device_connection.cancel_status_request_handler(self.motor)
 
-    async def async_close_cover(self, **kwargs: Any) -> None:
+    async def async_close_cover(self) -> None:
         """Close the cover."""
         states = [pypck.lcn_defs.MotorStateModifier.NOCHANGE] * 4
         states[self.motor.value] = pypck.lcn_defs.MotorStateModifier.DOWN
@@ -196,7 +194,7 @@ class LcnRelayCover(LcnEntity, CoverEntity):
         self._attr_is_closing = True
         self.async_write_ha_state()
 
-    async def async_open_cover(self, **kwargs: Any) -> None:
+    async def async_open_cover(self) -> None:
         """Open the cover."""
         states = [pypck.lcn_defs.MotorStateModifier.NOCHANGE] * 4
         states[self.motor.value] = pypck.lcn_defs.MotorStateModifier.UP
@@ -207,7 +205,7 @@ class LcnRelayCover(LcnEntity, CoverEntity):
         self._attr_is_closing = False
         self.async_write_ha_state()
 
-    async def async_stop_cover(self, **kwargs: Any) -> None:
+    async def async_stop_cover(self) -> None:
         """Stop the cover."""
         states = [pypck.lcn_defs.MotorStateModifier.NOCHANGE] * 4
         states[self.motor.value] = pypck.lcn_defs.MotorStateModifier.STOP

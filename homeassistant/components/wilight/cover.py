@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 from pywilight.const import (
     COVER_V1,
     ITEM_COVER,
@@ -15,7 +13,7 @@ from pywilight.const import (
     WL_STOPPED,
 )
 
-from homeassistant.components.cover import ATTR_POSITION, CoverEntity
+from homeassistant.components.cover import CoverEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -94,19 +92,19 @@ class WiLightCover(WiLightDevice, CoverEntity):
             and wilight_to_hass_position(self._status["position_current"]) == 0
         )
 
-    async def async_open_cover(self, **kwargs: Any) -> None:
+    async def async_open_cover(self) -> None:
         """Open the cover."""
         await self._client.cover_command(self._index, WL_OPEN)
 
-    async def async_close_cover(self, **kwargs: Any) -> None:
+    async def async_close_cover(self) -> None:
         """Close cover."""
         await self._client.cover_command(self._index, WL_CLOSE)
 
-    async def async_set_cover_position(self, **kwargs: Any) -> None:
+    async def async_set_cover_position(self, position: int) -> None:
         """Move the cover to a specific position."""
-        position = hass_to_wilight_position(kwargs[ATTR_POSITION])
+        position = hass_to_wilight_position(position)
         await self._client.set_cover_position(self._index, position)
 
-    async def async_stop_cover(self, **kwargs: Any) -> None:
+    async def async_stop_cover(self) -> None:
         """Stop the cover."""
         await self._client.cover_command(self._index, WL_STOP)

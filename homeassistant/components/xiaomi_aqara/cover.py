@@ -1,8 +1,6 @@
 """Support for Xiaomi curtain."""
 
-from typing import Any
-
-from homeassistant.components.cover import ATTR_POSITION, CoverEntity
+from homeassistant.components.cover import CoverEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -56,21 +54,20 @@ class XiaomiGenericCover(XiaomiDevice, CoverEntity):
         """Return if the cover is closed."""
         return self.current_cover_position <= 0
 
-    def close_cover(self, **kwargs: Any) -> None:
+    def close_cover(self) -> None:
         """Close the cover."""
         self._write_to_hub(self._sid, **{self._data_key: "close"})
 
-    def open_cover(self, **kwargs: Any) -> None:
+    def open_cover(self) -> None:
         """Open the cover."""
         self._write_to_hub(self._sid, **{self._data_key: "open"})
 
-    def stop_cover(self, **kwargs: Any) -> None:
+    def stop_cover(self) -> None:
         """Stop the cover."""
         self._write_to_hub(self._sid, **{self._data_key: "stop"})
 
-    def set_cover_position(self, **kwargs: Any) -> None:
+    def set_cover_position(self, position: int) -> None:
         """Move the cover to a specific position."""
-        position = kwargs.get(ATTR_POSITION)
         if self._data_key == DATA_KEY_PROTO_V2:
             self._write_to_hub(self._sid, **{ATTR_CURTAIN_LEVEL: position})
         else:

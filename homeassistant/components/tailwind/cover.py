@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 from gotailwind import (
     TailwindDoorDisabledError,
     TailwindDoorLockedOutError,
@@ -56,7 +54,7 @@ class TailwindDoorCoverEntity(TailwindDoorEntity, CoverEntity):
             self.coordinator.data.doors[self.door_id].state == TailwindDoorState.CLOSED
         )
 
-    async def async_open_cover(self, **kwargs: Any) -> None:
+    async def async_open_cover(self) -> None:
         """Open the garage door.
 
         The Tailwind operating command will await the confirmation of the
@@ -88,7 +86,7 @@ class TailwindDoorCoverEntity(TailwindDoorEntity, CoverEntity):
             self._attr_is_opening = False
         await self.coordinator.async_request_refresh()
 
-    async def async_close_cover(self, **kwargs: Any) -> None:
+    async def async_close_cover(self) -> None:
         """Close the garage door.
 
         The Tailwind operating command will await the confirmation of the

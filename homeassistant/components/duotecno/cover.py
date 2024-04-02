@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 from duotecno.controller import PyDuotecno
 from duotecno.unit import DuoswitchUnit
 
@@ -52,16 +50,16 @@ class DuotecnoCover(DuotecnoEntity, CoverEntity):
         return self._unit.is_closing()
 
     @api_call
-    async def async_open_cover(self, **kwargs: Any) -> None:
+    async def async_open_cover(self) -> None:
         """Open the cover."""
         await self._unit.open()
 
     @api_call
-    async def async_close_cover(self, **kwargs: Any) -> None:
+    async def async_close_cover(self) -> None:
         """Close the cover."""
         await self._unit.close()
 
     @api_call
-    async def async_stop_cover(self, **kwargs: Any) -> None:
+    async def async_stop_cover(self) -> None:
         """Stop the cover."""
         await self._unit.stop()

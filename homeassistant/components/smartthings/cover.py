@@ -3,12 +3,10 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
-from typing import Any
 
 from pysmartthings import Attribute, Capability
 
 from homeassistant.components.cover import (
-    ATTR_POSITION,
     DOMAIN as COVER_DOMAIN,
     STATE_CLOSED,
     STATE_CLOSING,
@@ -97,7 +95,7 @@ class SmartThingsCover(SmartThingsEntity, CoverEntity):
         elif Capability.garage_door_control in device.capabilities:
             self._attr_device_class = CoverDeviceClass.GARAGE
 
-    async def async_close_cover(self, **kwargs: Any) -> None:
+    async def async_close_cover(self) -> None:
         """Close cover."""
         # Same command for all 3 supported capabilities
         await self._device.close(set_status=True)
@@ -105,7 +103,7 @@ class SmartThingsCover(SmartThingsEntity, CoverEntity):
         # the entity state ahead of receiving the confirming push updates
         self.async_schedule_update_ha_state(True)
 
-    async def async_open_cover(self, **kwargs: Any) -> None:
+    async def async_open_cover(self) -> None:
         """Open the cover."""
         # Same for all capability types
         await self._device.open(set_status=True)
@@ -113,17 +111,15 @@ class SmartThingsCover(SmartThingsEntity, CoverEntity):
         # the entity state ahead of receiving the confirming push updates
         self.async_schedule_update_ha_state(True)
 
-    async def async_set_cover_position(self, **kwargs: Any) -> None:
+    async def async_set_cover_position(self, position: int) -> None:
         """Move the cover to a specific position."""
         if not self.supported_features & CoverEntityFeature.SET_POSITION:
             return
         # Do not set_status=True as device will report progress.
         if Capability.window_shade_level in self._device.capabilities:
-            await self._device.set_window_shade_level(
-                kwargs[ATTR_POSITION], set_status=False
-            )
+            await self._device.set_window_shade_level(position, set_status=False)
         else:
-            await self._device.set_level(kwargs[ATTR_POSITION], set_status=False)
+            await self._device.set_level(position, set_status=False)
 
     async def async_update(self) -> None:
         """Update the attrs of the cover."""

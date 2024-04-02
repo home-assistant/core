@@ -2,14 +2,10 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 from blebox_uniapi.box import Box
 import blebox_uniapi.cover
 
 from homeassistant.components.cover import (
-    ATTR_POSITION,
-    ATTR_TILT_POSITION,
     CoverDeviceClass,
     CoverEntity,
     CoverEntityFeature,
@@ -104,29 +100,25 @@ class BleBoxCoverEntity(BleBoxEntity[blebox_uniapi.cover.Cover], CoverEntity):
         """Return whether cover is closed."""
         return self._is_state(STATE_CLOSED)
 
-    async def async_open_cover(self, **kwargs: Any) -> None:
+    async def async_open_cover(self) -> None:
         """Open the cover position."""
         await self._feature.async_open()
 
-    async def async_close_cover(self, **kwargs: Any) -> None:
+    async def async_close_cover(self) -> None:
         """Close the cover position."""
         await self._feature.async_close()
 
-    async def async_set_cover_position(self, **kwargs: Any) -> None:
+    async def async_set_cover_position(self, position: int) -> None:
         """Set the cover position."""
-
-        position = kwargs[ATTR_POSITION]
         await self._feature.async_set_position(100 - position)
 
-    async def async_stop_cover(self, **kwargs: Any) -> None:
+    async def async_stop_cover(self) -> None:
         """Stop the cover."""
         await self._feature.async_stop()
 
-    async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
+    async def async_set_cover_tilt_position(self, tilt_position: int) -> None:
         """Set the tilt position."""
-
-        position = kwargs[ATTR_TILT_POSITION]
-        await self._feature.async_set_tilt_position(100 - position)
+        await self._feature.async_set_tilt_position(100 - tilt_position)
 
     def _is_state(self, state_name) -> bool | None:
         value = BLEBOX_TO_HASS_COVER_STATES[self._feature.state]

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, cast
+from typing import cast
 
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import (
@@ -26,8 +26,6 @@ from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.value import Value as ZwaveValue
 
 from homeassistant.components.cover import (
-    ATTR_POSITION,
-    ATTR_TILT_POSITION,
     DOMAIN as COVER_DOMAIN,
     CoverDeviceClass,
     CoverEntity,
@@ -161,29 +159,29 @@ class CoverPositionMixin(ZWaveBaseEntity, CoverEntity):
             return None
         return self.zwave_to_percent_position(self._current_position_value.value)
 
-    async def async_set_cover_position(self, **kwargs: Any) -> None:
+    async def async_set_cover_position(self, position: int) -> None:
         """Move the cover to a specific position."""
         assert self._target_position_value
         await self._async_set_value(
             self._target_position_value,
-            self.percent_to_zwave_position(kwargs[ATTR_POSITION]),
+            self.percent_to_zwave_position(position),
         )
 
-    async def async_open_cover(self, **kwargs: Any) -> None:
+    async def async_open_cover(self) -> None:
         """Open the cover."""
         assert self._target_position_value
         await self._async_set_value(
             self._target_position_value, self._fully_open_position
         )
 
-    async def async_close_cover(self, **kwargs: Any) -> None:
+    async def async_close_cover(self) -> None:
         """Close cover."""
         assert self._target_position_value
         await self._async_set_value(
             self._target_position_value, self._fully_closed_position
         )
 
-    async def async_stop_cover(self, **kwargs: Any) -> None:
+    async def async_stop_cover(self) -> None:
         """Stop cover."""
         assert self._stop_position_value
         # Stop the cover, will stop regardless of the actual direction of travel.
@@ -257,25 +255,25 @@ class CoverTiltMixin(ZWaveBaseEntity, CoverEntity):
             return None
         return self.zwave_to_percent_tilt(int(value.value))
 
-    async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
+    async def async_set_cover_tilt_position(self, tilt_position: int) -> None:
         """Move the cover tilt to a specific position."""
         assert self._target_tilt_value
         await self._async_set_value(
             self._target_tilt_value,
-            self.percent_to_zwave_tilt(kwargs[ATTR_TILT_POSITION]),
+            self.percent_to_zwave_tilt(tilt_position),
         )
 
-    async def async_open_cover_tilt(self, **kwargs: Any) -> None:
+    async def async_open_cover_tilt(self) -> None:
         """Open the cover tilt."""
         assert self._target_tilt_value
         await self._async_set_value(self._target_tilt_value, self._fully_open_tilt)
 
-    async def async_close_cover_tilt(self, **kwargs: Any) -> None:
+    async def async_close_cover_tilt(self) -> None:
         """Close the cover tilt."""
         assert self._target_tilt_value
         await self._async_set_value(self._target_tilt_value, self._fully_closed_tilt)
 
-    async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
+    async def async_stop_cover_tilt(self) -> None:
         """Stop the cover tilt."""
         assert self._stop_tilt_value
         # Stop the tilt, will stop regardless of the actual direction of travel.
@@ -451,10 +449,10 @@ class ZwaveMotorizedBarrier(ZWaveBaseEntity, CoverEntity):
 
         return bool(self.info.primary_value.value == BarrierState.CLOSED)
 
-    async def async_open_cover(self, **kwargs: Any) -> None:
+    async def async_open_cover(self) -> None:
         """Open the garage door."""
         await self._async_set_value(self._target_state, BarrierState.OPEN)
 
-    async def async_close_cover(self, **kwargs: Any) -> None:
+    async def async_close_cover(self) -> None:
         """Close the garage door."""
         await self._async_set_value(self._target_state, BarrierState.CLOSED)

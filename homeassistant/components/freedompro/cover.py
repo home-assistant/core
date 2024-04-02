@@ -6,7 +6,6 @@ from typing import Any
 from pyfreedompro import put_state
 
 from homeassistant.components.cover import (
-    ATTR_POSITION,
     CoverDeviceClass,
     CoverEntity,
     CoverEntityFeature,
@@ -107,17 +106,17 @@ class Device(CoordinatorEntity[FreedomproDataUpdateCoordinator], CoverEntity):
         await super().async_added_to_hass()
         self._handle_coordinator_update()
 
-    async def async_open_cover(self, **kwargs: Any) -> None:
+    async def async_open_cover(self) -> None:
         """Open the cover."""
         await self.async_set_cover_position(position=100)
 
-    async def async_close_cover(self, **kwargs: Any) -> None:
+    async def async_close_cover(self) -> None:
         """Close the cover."""
         await self.async_set_cover_position(position=0)
 
-    async def async_set_cover_position(self, **kwargs: Any) -> None:
+    async def async_set_cover_position(self, position: int) -> None:
         """Async function to set position to cover."""
-        payload = {"position": kwargs[ATTR_POSITION]}
+        payload = {"position": position}
         await put_state(
             self._session,
             self._api_key,

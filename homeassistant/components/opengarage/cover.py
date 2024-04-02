@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, cast
+from typing import cast
 
 from homeassistant.components.cover import (
     CoverDeviceClass,
@@ -70,7 +70,7 @@ class OpenGarageCover(OpenGarageEntity, CoverEntity):
             return None
         return self._state == STATE_OPENING
 
-    async def async_close_cover(self, **kwargs: Any) -> None:
+    async def async_close_cover(self) -> None:
         """Close the cover."""
         if self._state in [STATE_CLOSED, STATE_CLOSING]:
             return
@@ -78,7 +78,7 @@ class OpenGarageCover(OpenGarageEntity, CoverEntity):
         self._state = STATE_CLOSING
         await self._push_button()
 
-    async def async_open_cover(self, **kwargs: Any) -> None:
+    async def async_open_cover(self) -> None:
         """Open the cover."""
         if self._state in [STATE_OPEN, STATE_OPENING]:
             return

@@ -2,13 +2,9 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 from aioesphomeapi import APIVersion, CoverInfo, CoverOperation, CoverState, EntityInfo
 
 from homeassistant.components.cover import (
-    ATTR_POSITION,
-    ATTR_TILT_POSITION,
     CoverDeviceClass,
     CoverEntity,
     CoverEntityFeature,
@@ -101,37 +97,36 @@ class EsphomeCover(EsphomeEntity[CoverInfo, CoverState], CoverEntity):
         return round(self._state.tilt * 100.0)
 
     @convert_api_error_ha_error
-    async def async_open_cover(self, **kwargs: Any) -> None:
+    async def async_open_cover(self) -> None:
         """Open the cover."""
         self._client.cover_command(key=self._key, position=1.0)
 
     @convert_api_error_ha_error
-    async def async_close_cover(self, **kwargs: Any) -> None:
+    async def async_close_cover(self) -> None:
         """Close cover."""
         self._client.cover_command(key=self._key, position=0.0)
 
     @convert_api_error_ha_error
-    async def async_stop_cover(self, **kwargs: Any) -> None:
+    async def async_stop_cover(self) -> None:
         """Stop the cover."""
         self._client.cover_command(key=self._key, stop=True)
 
     @convert_api_error_ha_error
-    async def async_set_cover_position(self, **kwargs: Any) -> None:
+    async def async_set_cover_position(self, position: int) -> None:
         """Move the cover to a specific position."""
-        self._client.cover_command(key=self._key, position=kwargs[ATTR_POSITION] / 100)
+        self._client.cover_command(key=self._key, position=position / 100)
 
     @convert_api_error_ha_error
-    async def async_open_cover_tilt(self, **kwargs: Any) -> None:
+    async def async_open_cover_tilt(self) -> None:
         """Open the cover tilt."""
         self._client.cover_command(key=self._key, tilt=1.0)
 
     @convert_api_error_ha_error
-    async def async_close_cover_tilt(self, **kwargs: Any) -> None:
+    async def async_close_cover_tilt(self) -> None:
         """Close the cover tilt."""
         self._client.cover_command(key=self._key, tilt=0.0)
 
     @convert_api_error_ha_error
-    async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
+    async def async_set_cover_tilt_position(self, tilt_position: int) -> None:
         """Move the cover tilt to a specific position."""
-        tilt_position: int = kwargs[ATTR_TILT_POSITION]
         self._client.cover_command(key=self._key, tilt=tilt_position / 100)

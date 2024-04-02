@@ -8,8 +8,6 @@ from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import Service, ServicesTypes
 
 from homeassistant.components.cover import (
-    ATTR_POSITION,
-    ATTR_TILT_POSITION,
     CoverDeviceClass,
     CoverEntity,
     CoverEntityFeature,
@@ -109,11 +107,11 @@ class HomeKitGarageDoorCover(HomeKitEntity, CoverEntity):
         """Return if the cover is opening or not."""
         return self._state == STATE_OPENING
 
-    async def async_open_cover(self, **kwargs: Any) -> None:
+    async def async_open_cover(self) -> None:
         """Send open command."""
         await self.set_door_state(STATE_OPEN)
 
-    async def async_close_cover(self, **kwargs: Any) -> None:
+    async def async_close_cover(self) -> None:
         """Send close command."""
         await self.set_door_state(STATE_CLOSED)
 
@@ -246,28 +244,26 @@ class HomeKitWindowCover(HomeKitEntity, CoverEntity):
             tilt_position = int(tilt_position / scale)
         return tilt_position
 
-    async def async_stop_cover(self, **kwargs: Any) -> None:
+    async def async_stop_cover(self) -> None:
         """Send hold command."""
         await self.async_put_characteristics({CharacteristicsTypes.POSITION_HOLD: 1})
 
-    async def async_open_cover(self, **kwargs: Any) -> None:
+    async def async_open_cover(self) -> None:
         """Send open command."""
         await self.async_set_cover_position(position=100)
 
-    async def async_close_cover(self, **kwargs: Any) -> None:
+    async def async_close_cover(self) -> None:
         """Send close command."""
         await self.async_set_cover_position(position=0)
 
-    async def async_set_cover_position(self, **kwargs: Any) -> None:
+    async def async_set_cover_position(self, position: int) -> None:
         """Send position command."""
-        position = kwargs[ATTR_POSITION]
         await self.async_put_characteristics(
             {CharacteristicsTypes.POSITION_TARGET: position}
         )
 
-    async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
+    async def async_set_cover_tilt_position(self, tilt_position: int) -> None:
         """Move the cover tilt to a specific position."""
-        tilt_position = kwargs[ATTR_TILT_POSITION]
         if self.is_vertical_tilt:
             # Recalculate to convert from percentage scale to arcdegree scale.
             scale = 0.9

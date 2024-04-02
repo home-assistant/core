@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, cast
+from typing import cast
 
 from pyoverkiz.enums import (
     OverkizCommand,
@@ -12,11 +12,7 @@ from pyoverkiz.enums import (
     UIWidget,
 )
 
-from homeassistant.components.cover import (
-    ATTR_POSITION,
-    CoverDeviceClass,
-    CoverEntityFeature,
-)
+from homeassistant.components.cover import CoverDeviceClass, CoverEntityFeature
 
 from ..coordinator import OverkizDataUpdateCoordinator
 from .generic_cover import (
@@ -93,17 +89,17 @@ class VerticalCover(OverkizGenericCover):
 
         return 100 - cast(int, position)
 
-    async def async_set_cover_position(self, **kwargs: Any) -> None:
+    async def async_set_cover_position(self, position: int) -> None:
         """Move the cover to a specific position."""
-        position = 100 - kwargs[ATTR_POSITION]
+        position = 100 - position
         await self.executor.async_execute_command(OverkizCommand.SET_CLOSURE, position)
 
-    async def async_open_cover(self, **kwargs: Any) -> None:
+    async def async_open_cover(self) -> None:
         """Open the cover."""
         if command := self.executor.select_command(*COMMANDS_OPEN):
             await self.executor.async_execute_command(command)
 
-    async def async_close_cover(self, **kwargs: Any) -> None:
+    async def async_close_cover(self) -> None:
         """Close the cover."""
         if command := self.executor.select_command(*COMMANDS_CLOSE):
             await self.executor.async_execute_command(command)
@@ -154,21 +150,21 @@ class LowSpeedCover(VerticalCover):
         self._attr_name = "Low speed"
         self._attr_unique_id = f"{self._attr_unique_id}_low_speed"
 
-    async def async_set_cover_position(self, **kwargs: Any) -> None:
+    async def async_set_cover_position(self, position: int) -> None:
         """Move the cover to a specific position."""
-        await self.async_set_cover_position_low_speed(**kwargs)
+        await self.async_set_cover_position_low_speed(position=position)
 
-    async def async_open_cover(self, **kwargs: Any) -> None:
+    async def async_open_cover(self) -> None:
         """Open the cover."""
-        await self.async_set_cover_position_low_speed(**{ATTR_POSITION: 100})
+        await self.async_set_cover_position_low_speed(position=100)
 
-    async def async_close_cover(self, **kwargs: Any) -> None:
+    async def async_close_cover(self) -> None:
         """Close the cover."""
-        await self.async_set_cover_position_low_speed(**{ATTR_POSITION: 0})
+        await self.async_set_cover_position_low_speed(position=0)
 
-    async def async_set_cover_position_low_speed(self, **kwargs: Any) -> None:
+    async def async_set_cover_position_low_speed(self, position: int) -> None:
         """Move the cover to a specific position with a low speed."""
-        position = 100 - kwargs.get(ATTR_POSITION, 0)
+        position = 100 - position
 
         await self.executor.async_execute_command(
             OverkizCommand.SET_CLOSURE_AND_LINEAR_SPEED,

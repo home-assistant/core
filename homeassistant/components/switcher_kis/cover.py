@@ -9,7 +9,6 @@ from aioswitcher.api import SwitcherBaseResponse, SwitcherType2Api
 from aioswitcher.device import DeviceCategory, ShutterDirection, SwitcherShutter
 
 from homeassistant.components.cover import (
-    ATTR_POSITION,
     CoverDeviceClass,
     CoverEntity,
     CoverEntityFeature,
@@ -114,18 +113,18 @@ class SwitcherCoverEntity(
                 f"args: {args}, response/error: {response or error}"
             )
 
-    async def async_close_cover(self, **kwargs: Any) -> None:
+    async def async_close_cover(self) -> None:
         """Close cover."""
         await self._async_call_api(API_SET_POSITON, 0)
 
-    async def async_open_cover(self, **kwargs: Any) -> None:
+    async def async_open_cover(self) -> None:
         """Open cover."""
         await self._async_call_api(API_SET_POSITON, 100)
 
-    async def async_set_cover_position(self, **kwargs: Any) -> None:
+    async def async_set_cover_position(self, position: int) -> None:
         """Move the cover to a specific position."""
-        await self._async_call_api(API_SET_POSITON, kwargs[ATTR_POSITION])
+        await self._async_call_api(API_SET_POSITON, position)
 
-    async def async_stop_cover(self, **kwargs: Any) -> None:
+    async def async_stop_cover(self) -> None:
         """Stop the cover."""
         await self._async_call_api(API_STOP)

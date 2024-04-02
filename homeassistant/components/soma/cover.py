@@ -2,10 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 from homeassistant.components.cover import (
-    ATTR_POSITION,
     ATTR_TILT_POSITION,
     CoverDeviceClass,
     CoverEntity,
@@ -70,7 +67,7 @@ class SomaTilt(SomaEntity, CoverEntity):
             return True
         return False
 
-    def close_cover_tilt(self, **kwargs: Any) -> None:
+    def close_cover_tilt(self) -> None:
         """Close the cover tilt."""
         response = self.api.set_shade_position(self.device["mac"], 100)
         if not is_api_response_success(response):
@@ -79,7 +76,7 @@ class SomaTilt(SomaEntity, CoverEntity):
             )
         self.set_position(0)
 
-    def open_cover_tilt(self, **kwargs: Any) -> None:
+    def open_cover_tilt(self) -> None:
         """Open the cover tilt."""
         response = self.api.set_shade_position(self.device["mac"], -100)
         if not is_api_response_success(response):
@@ -88,7 +85,7 @@ class SomaTilt(SomaEntity, CoverEntity):
             )
         self.set_position(100)
 
-    def stop_cover_tilt(self, **kwargs: Any) -> None:
+    def stop_cover_tilt(self) -> None:
         """Stop the cover tilt."""
         response = self.api.stop_shade(self.device["mac"])
         if not is_api_response_success(response):
@@ -98,19 +95,19 @@ class SomaTilt(SomaEntity, CoverEntity):
         # Set cover position to some value where up/down are both enabled
         self.set_position(50)
 
-    def set_cover_tilt_position(self, **kwargs: Any) -> None:
+    def set_cover_tilt_position(self, tilt_position: int) -> None:
         """Move the cover tilt to a specific position."""
         # 0 -> Closed down (api: 100)
         # 50 -> Fully open (api: 0)
         # 100 -> Closed up (api: -100)
-        target_api_position = 100 - ((kwargs[ATTR_TILT_POSITION] / 50) * 100)
+        target_api_position = 100 - ((tilt_position / 50) * 100)
         response = self.api.set_shade_position(self.device["mac"], target_api_position)
         if not is_api_response_success(response):
             raise HomeAssistantError(
                 f"Error while setting the cover position ({self.name}):"
                 f' {response["msg"]}'
             )
-        self.set_position(kwargs[ATTR_TILT_POSITION])
+        self.set_position(tilt_position)
 
     async def async_update(self) -> None:
         """Update the entity with the latest data."""
@@ -146,7 +143,7 @@ class SomaShade(SomaEntity, CoverEntity):
         """Return if the cover is closed."""
         return self.current_position == 0
 
-    def close_cover(self, **kwargs: Any) -> None:
+    def close_cover(self) -> None:
         """Close the cover."""
         response = self.api.set_shade_position(self.device["mac"], 100)
         if not is_api_response_success(response):
@@ -154,7 +151,7 @@ class SomaShade(SomaEntity, CoverEntity):
                 f'Error while closing the cover ({self.name}): {response["msg"]}'
             )
 
-    def open_cover(self, **kwargs: Any) -> None:
+    def open_cover(self) -> None:
         """Open the cover."""
         response = self.api.set_shade_position(self.device["mac"], 0)
         if not is_api_response_success(response):
@@ -162,7 +159,7 @@ class SomaShade(SomaEntity, CoverEntity):
                 f'Error while opening the cover ({self.name}): {response["msg"]}'
             )
 
-    def stop_cover(self, **kwargs: Any) -> None:
+    def stop_cover(self) -> None:
         """Stop the cover."""
         response = self.api.stop_shade(self.device["mac"])
         if not is_api_response_success(response):
@@ -172,12 +169,10 @@ class SomaShade(SomaEntity, CoverEntity):
         # Set cover position to some value where up/down are both enabled
         self.set_position(50)
 
-    def set_cover_position(self, **kwargs: Any) -> None:
+    def set_cover_position(self, position: int) -> None:
         """Move the cover shutter to a specific position."""
-        self.current_position = kwargs[ATTR_POSITION]
-        response = self.api.set_shade_position(
-            self.device["mac"], 100 - kwargs[ATTR_POSITION]
-        )
+        self.current_position = position
+        response = self.api.set_shade_position(self.device["mac"], 100 - position)
         if not is_api_response_success(response):
             raise HomeAssistantError(
                 f"Error while setting the cover position ({self.name}):"

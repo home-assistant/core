@@ -1,7 +1,5 @@
 """Support for Abode Security System covers."""
 
-from typing import Any
-
 from jaraco.abode.devices.cover import Cover
 from jaraco.abode.helpers.constants import TYPE_COVER
 
@@ -37,10 +35,10 @@ class AbodeCover(AbodeDevice, CoverEntity):
         """Return true if cover is closed, else False."""
         return not self._device.is_open
 
-    def close_cover(self, **kwargs: Any) -> None:
+    def close_cover(self) -> None:
         """Issue close command to cover."""
         self._device.close_cover()
 
-    def open_cover(self, **kwargs: Any) -> None:
+    def open_cover(self) -> None:
         """Issue open command to cover."""
         self._device.open_cover()

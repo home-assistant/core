@@ -8,7 +8,6 @@ from aiohttp.client_exceptions import ClientResponseError
 from brunt import BruntClientAsync, Thing
 
 from homeassistant.components.cover import (
-    ATTR_POSITION,
     CoverDeviceClass,
     CoverEntity,
     CoverEntityFeature,
@@ -152,17 +151,17 @@ class BruntDevice(
         """Return true if cover is closed, else False."""
         return self.current_cover_position == CLOSED_POSITION
 
-    async def async_open_cover(self, **kwargs: Any) -> None:
+    async def async_open_cover(self) -> None:
         """Set the cover to the open position."""
         await self._async_update_cover(OPEN_POSITION)
 
-    async def async_close_cover(self, **kwargs: Any) -> None:
+    async def async_close_cover(self) -> None:
         """Set the cover to the closed position."""
         await self._async_update_cover(CLOSED_POSITION)
 
-    async def async_set_cover_position(self, **kwargs: Any) -> None:
+    async def async_set_cover_position(self, position: int) -> None:
         """Set the cover to a specific position."""
-        await self._async_update_cover(int(kwargs[ATTR_POSITION]))
+        await self._async_update_cover(position)
 
     async def _async_update_cover(self, position: int) -> None:
         """Set the cover to the new position and wait for the update to be reflected."""

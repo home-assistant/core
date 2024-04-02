@@ -2,15 +2,11 @@
 
 from __future__ import annotations
 
-from typing import Any, cast
+from typing import cast
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 
-from homeassistant.components.cover import (
-    ATTR_TILT_POSITION,
-    CoverEntity,
-    CoverEntityFeature,
-)
+from homeassistant.components.cover import CoverEntity, CoverEntityFeature
 
 from ..entity import OverkizEntity
 
@@ -61,12 +57,12 @@ class OverkizGenericCover(OverkizEntity, CoverEntity):
 
         return None
 
-    async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
+    async def async_set_cover_tilt_position(self, tilt_position: int) -> None:
         """Move the cover tilt to a specific position."""
         if command := self.executor.select_command(*COMMANDS_SET_TILT_POSITION):
             await self.executor.async_execute_command(
                 command,
-                100 - kwargs[ATTR_TILT_POSITION],
+                100 - tilt_position,
             )
 
     @property
@@ -93,22 +89,22 @@ class OverkizGenericCover(OverkizEntity, CoverEntity):
 
         return None
 
-    async def async_open_cover_tilt(self, **kwargs: Any) -> None:
+    async def async_open_cover_tilt(self) -> None:
         """Open the cover tilt."""
         if command := self.executor.select_command(*COMMANDS_OPEN_TILT):
             await self.executor.async_execute_command(command)
 
-    async def async_close_cover_tilt(self, **kwargs: Any) -> None:
+    async def async_close_cover_tilt(self) -> None:
         """Close the cover tilt."""
         if command := self.executor.select_command(*COMMANDS_CLOSE_TILT):
             await self.executor.async_execute_command(command)
 
-    async def async_stop_cover(self, **kwargs: Any) -> None:
+    async def async_stop_cover(self) -> None:
         """Stop the cover."""
         if command := self.executor.select_command(*COMMANDS_STOP):
             await self.executor.async_execute_command(command)
 
-    async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
+    async def async_stop_cover_tilt(self) -> None:
         """Stop the cover tilt."""
         if command := self.executor.select_command(*COMMANDS_STOP_TILT):
             await self.executor.async_execute_command(command)

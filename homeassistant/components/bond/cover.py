@@ -2,12 +2,9 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 from bond_async import Action, BPUPSubscriptions, DeviceType
 
 from homeassistant.components.cover import (
-    ATTR_POSITION,
     CoverDeviceClass,
     CoverEntity,
     CoverEntityFeature,
@@ -84,33 +81,33 @@ class BondCover(BondEntity, CoverEntity):
         if (bond_position := state.get("position")) is not None:
             self._attr_current_cover_position = _bond_to_hass_position(bond_position)
 
-    async def async_set_cover_position(self, **kwargs: Any) -> None:
+    async def async_set_cover_position(self, position: int) -> None:
         """Set the cover position."""
         await self._hub.bond.action(
             self._device.device_id,
-            Action.set_position(_hass_to_bond_position(kwargs[ATTR_POSITION])),
+            Action.set_position(_hass_to_bond_position(position)),
         )
 
-    async def async_open_cover(self, **kwargs: Any) -> None:
+    async def async_open_cover(self) -> None:
         """Open the cover."""
         await self._hub.bond.action(self._device.device_id, Action.open())
 
-    async def async_close_cover(self, **kwargs: Any) -> None:
+    async def async_close_cover(self) -> None:
         """Close cover."""
         await self._hub.bond.action(self._device.device_id, Action.close())
 
-    async def async_stop_cover(self, **kwargs: Any) -> None:
+    async def async_stop_cover(self) -> None:
         """Hold cover."""
         await self._hub.bond.action(self._device.device_id, Action.hold())
 
-    async def async_open_cover_tilt(self, **kwargs: Any) -> None:
+    async def async_open_cover_tilt(self) -> None:
         """Open the cover tilt."""
         await self._hub.bond.action(self._device.device_id, Action.tilt_open())
 
-    async def async_close_cover_tilt(self, **kwargs: Any) -> None:
+    async def async_close_cover_tilt(self) -> None:
         """Close the cover tilt."""
         await self._hub.bond.action(self._device.device_id, Action.tilt_close())
 
-    async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
+    async def async_stop_cover_tilt(self) -> None:
         """Stop the cover."""
         await self._hub.bond.action(self._device.device_id, Action.hold())

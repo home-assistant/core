@@ -6,7 +6,7 @@ import logging
 from pprint import pformat
 from typing import Any
 
-from homeassistant.components.cover import ATTR_POSITION, CoverDeviceClass, CoverEntity
+from homeassistant.components.cover import CoverDeviceClass, CoverEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -69,9 +69,9 @@ class SuplaCoverEntity(SuplaEntity, CoverEntity):
             return 100 - state["shut"]
         return None
 
-    async def async_set_cover_position(self, **kwargs: Any) -> None:
+    async def async_set_cover_position(self, position: int) -> None:
         """Move the cover to a specific position."""
-        await self.async_action("REVEAL", percentage=kwargs.get(ATTR_POSITION))
+        await self.async_action("REVEAL", percentage=position)
 
     @property
     def is_closed(self) -> bool | None:
@@ -80,15 +80,15 @@ class SuplaCoverEntity(SuplaEntity, CoverEntity):
             return None
         return self.current_cover_position == 0
 
-    async def async_open_cover(self, **kwargs: Any) -> None:
+    async def async_open_cover(self) -> None:
         """Open the cover."""
         await self.async_action("REVEAL")
 
-    async def async_close_cover(self, **kwargs: Any) -> None:
+    async def async_close_cover(self) -> None:
         """Close the cover."""
         await self.async_action("SHUT")
 
-    async def async_stop_cover(self, **kwargs: Any) -> None:
+    async def async_stop_cover(self) -> None:
         """Stop the cover."""
         await self.async_action("STOP")
 
@@ -106,17 +106,17 @@ class SuplaDoorEntity(SuplaEntity, CoverEntity):
             return state.get("hi")
         return None
 
-    async def async_open_cover(self, **kwargs: Any) -> None:
+    async def async_open_cover(self) -> None:
         """Open the door."""
         if self.is_closed:
             await self.async_action("OPEN_CLOSE")
 
-    async def async_close_cover(self, **kwargs: Any) -> None:
+    async def async_close_cover(self) -> None:
         """Close the door."""
         if not self.is_closed:
             await self.async_action("OPEN_CLOSE")
 
-    async def async_stop_cover(self, **kwargs: Any) -> None:
+    async def async_stop_cover(self) -> None:
         """Stop the door."""
         await self.async_action("OPEN_CLOSE")
 

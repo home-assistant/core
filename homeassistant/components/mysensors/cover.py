@@ -3,9 +3,8 @@
 from __future__ import annotations
 
 from enum import Enum, unique
-from typing import Any
 
-from homeassistant.components.cover import ATTR_POSITION, CoverEntity
+from homeassistant.components.cover import CoverEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
@@ -106,7 +105,7 @@ class MySensorsCover(mysensors.device.MySensorsChildEntity, CoverEntity):
         set_req = self.gateway.const.SetReq
         return self._values.get(set_req.V_DIMMER)
 
-    async def async_open_cover(self, **kwargs: Any) -> None:
+    async def async_open_cover(self) -> None:
         """Move the cover up."""
         set_req = self.gateway.const.SetReq
         self.gateway.set_child_value(
@@ -120,7 +119,7 @@ class MySensorsCover(mysensors.device.MySensorsChildEntity, CoverEntity):
                 self._values[set_req.V_LIGHT] = STATE_ON
             self.async_write_ha_state()
 
-    async def async_close_cover(self, **kwargs: Any) -> None:
+    async def async_close_cover(self) -> None:
         """Move the cover down."""
         set_req = self.gateway.const.SetReq
         self.gateway.set_child_value(
@@ -134,9 +133,8 @@ class MySensorsCover(mysensors.device.MySensorsChildEntity, CoverEntity):
                 self._values[set_req.V_LIGHT] = STATE_OFF
             self.async_write_ha_state()
 
-    async def async_set_cover_position(self, **kwargs: Any) -> None:
+    async def async_set_cover_position(self, position: int) -> None:
         """Move the cover to a specific position."""
-        position = kwargs.get(ATTR_POSITION)
         set_req = self.gateway.const.SetReq
         self.gateway.set_child_value(
             self.node_id, self.child_id, set_req.V_DIMMER, position, ack=1
@@ -146,7 +144,7 @@ class MySensorsCover(mysensors.device.MySensorsChildEntity, CoverEntity):
             self._values[set_req.V_DIMMER] = position
             self.async_write_ha_state()
 
-    async def async_stop_cover(self, **kwargs: Any) -> None:
+    async def async_stop_cover(self) -> None:
         """Stop the device."""
         set_req = self.gateway.const.SetReq
         self.gateway.set_child_value(

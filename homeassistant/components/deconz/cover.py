@@ -2,16 +2,12 @@
 
 from __future__ import annotations
 
-from typing import Any, cast
-
 from pydeconz.interfaces.lights import CoverAction
 from pydeconz.models import ResourceType
 from pydeconz.models.event import EventType
 from pydeconz.models.light.cover import Cover
 
 from homeassistant.components.cover import (
-    ATTR_POSITION,
-    ATTR_TILT_POSITION,
     DOMAIN,
     CoverDeviceClass,
     CoverEntity,
@@ -89,16 +85,16 @@ class DeconzCover(DeconzDevice[Cover], CoverEntity):
         """Return if the cover is closed."""
         return not self._device.is_open
 
-    async def async_set_cover_position(self, **kwargs: Any) -> None:
+    async def async_set_cover_position(self, position: int) -> None:
         """Move the cover to a specific position."""
-        position = 100 - cast(int, kwargs[ATTR_POSITION])
+        position = 100 - position
         await self.hub.api.lights.covers.set_state(
             id=self._device.resource_id,
             lift=position,
             legacy_mode=self.legacy_mode,
         )
 
-    async def async_open_cover(self, **kwargs: Any) -> None:
+    async def async_open_cover(self) -> None:
         """Open cover."""
         await self.hub.api.lights.covers.set_state(
             id=self._device.resource_id,
@@ -106,7 +102,7 @@ class DeconzCover(DeconzDevice[Cover], CoverEntity):
             legacy_mode=self.legacy_mode,
         )
 
-    async def async_close_cover(self, **kwargs: Any) -> None:
+    async def async_close_cover(self) -> None:
         """Close cover."""
         await self.hub.api.lights.covers.set_state(
             id=self._device.resource_id,
@@ -114,7 +110,7 @@ class DeconzCover(DeconzDevice[Cover], CoverEntity):
             legacy_mode=self.legacy_mode,
         )
 
-    async def async_stop_cover(self, **kwargs: Any) -> None:
+    async def async_stop_cover(self) -> None:
         """Stop cover."""
         await self.hub.api.lights.covers.set_state(
             id=self._device.resource_id,
@@ -129,16 +125,16 @@ class DeconzCover(DeconzDevice[Cover], CoverEntity):
             return 100 - self._device.tilt
         return None
 
-    async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
+    async def async_set_cover_tilt_position(self, tilt_position: int) -> None:
         """Tilt the cover to a specific position."""
-        position = 100 - cast(int, kwargs[ATTR_TILT_POSITION])
+        position = 100 - tilt_position
         await self.hub.api.lights.covers.set_state(
             id=self._device.resource_id,
             tilt=position,
             legacy_mode=self.legacy_mode,
         )
 
-    async def async_open_cover_tilt(self, **kwargs: Any) -> None:
+    async def async_open_cover_tilt(self) -> None:
         """Open cover tilt."""
         await self.hub.api.lights.covers.set_state(
             id=self._device.resource_id,
@@ -146,7 +142,7 @@ class DeconzCover(DeconzDevice[Cover], CoverEntity):
             legacy_mode=self.legacy_mode,
         )
 
-    async def async_close_cover_tilt(self, **kwargs: Any) -> None:
+    async def async_close_cover_tilt(self) -> None:
         """Close cover tilt."""
         await self.hub.api.lights.covers.set_state(
             id=self._device.resource_id,
@@ -154,7 +150,7 @@ class DeconzCover(DeconzDevice[Cover], CoverEntity):
             legacy_mode=self.legacy_mode,
         )
 
-    async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
+    async def async_stop_cover_tilt(self) -> None:
         """Stop cover tilt."""
         await self.hub.api.lights.covers.set_state(
             id=self._device.resource_id,

@@ -3,15 +3,12 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
 
 import switchbot
 
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
     ATTR_CURRENT_TILT_POSITION,
-    ATTR_POSITION,
-    ATTR_TILT_POSITION,
     CoverDeviceClass,
     CoverEntity,
     CoverEntityFeature,
@@ -74,7 +71,7 @@ class SwitchBotCurtainEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
         if self._attr_current_cover_position is not None:
             self._attr_is_closed = self._attr_current_cover_position <= 20
 
-    async def async_open_cover(self, **kwargs: Any) -> None:
+    async def async_open_cover(self) -> None:
         """Open the curtain."""
 
         _LOGGER.debug("Switchbot to open curtain %s", self._address)
@@ -83,7 +80,7 @@ class SwitchBotCurtainEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
         self._attr_is_closing = self._device.is_closing()
         self.async_write_ha_state()
 
-    async def async_close_cover(self, **kwargs: Any) -> None:
+    async def async_close_cover(self) -> None:
         """Close the curtain."""
 
         _LOGGER.debug("Switchbot to close the curtain %s", self._address)
@@ -92,7 +89,7 @@ class SwitchBotCurtainEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
         self._attr_is_closing = self._device.is_closing()
         self.async_write_ha_state()
 
-    async def async_stop_cover(self, **kwargs: Any) -> None:
+    async def async_stop_cover(self) -> None:
         """Stop the moving of this device."""
 
         _LOGGER.debug("Switchbot to stop %s", self._address)
@@ -101,10 +98,8 @@ class SwitchBotCurtainEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
         self._attr_is_closing = self._device.is_closing()
         self.async_write_ha_state()
 
-    async def async_set_cover_position(self, **kwargs: Any) -> None:
+    async def async_set_cover_position(self, position: int) -> None:
         """Move the cover shutter to a specific position."""
-        position = kwargs.get(ATTR_POSITION)
-
         _LOGGER.debug("Switchbot to move at %d %s", position, self._address)
         self._last_run_success = bool(await self._device.set_position(position))
         self._attr_is_opening = self._device.is_opening()
@@ -159,33 +154,31 @@ class SwitchBotBlindTiltEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
                 _tilt > self.CLOSED_UP_THRESHOLD
             )
 
-    async def async_open_cover_tilt(self, **kwargs: Any) -> None:
+    async def async_open_cover_tilt(self) -> None:
         """Open the tilt."""
 
         _LOGGER.debug("Switchbot to open blind tilt %s", self._address)
         self._last_run_success = bool(await self._device.open())
         self.async_write_ha_state()
 
-    async def async_close_cover_tilt(self, **kwargs: Any) -> None:
+    async def async_close_cover_tilt(self) -> None:
         """Close the tilt."""
 
         _LOGGER.debug("Switchbot to close the blind tilt %s", self._address)
         self._last_run_success = bool(await self._device.close())
         self.async_write_ha_state()
 
-    async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
+    async def async_stop_cover_tilt(self) -> None:
         """Stop the moving of this device."""
 
         _LOGGER.debug("Switchbot to stop %s", self._address)
         self._last_run_success = bool(await self._device.stop())
         self.async_write_ha_state()
 
-    async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
+    async def async_set_cover_tilt_position(self, tilt_position: int) -> None:
         """Move the cover tilt to a specific position."""
-        position = kwargs.get(ATTR_TILT_POSITION)
-
-        _LOGGER.debug("Switchbot to move at %d %s", position, self._address)
-        self._last_run_success = bool(await self._device.set_position(position))
+        _LOGGER.debug("Switchbot to move at %d %s", tilt_position, self._address)
+        self._last_run_success = bool(await self._device.set_position(tilt_position))
         self.async_write_ha_state()
 
     @callback

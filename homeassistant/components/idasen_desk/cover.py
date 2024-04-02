@@ -7,7 +7,6 @@ from typing import Any
 from bleak.exc import BleakError
 
 from homeassistant.components.cover import (
-    ATTR_POSITION,
     CoverDeviceClass,
     CoverEntity,
     CoverEntityFeature,
@@ -73,31 +72,31 @@ class IdasenDeskCover(CoordinatorEntity[IdasenDeskCoordinator], CoverEntity):
         """Return if the cover is closed."""
         return self.current_cover_position == 0
 
-    async def async_close_cover(self, **kwargs: Any) -> None:
+    async def async_close_cover(self) -> None:
         """Close the cover."""
         try:
             await self._desk.move_down()
         except BleakError as err:
             raise HomeAssistantError("Failed to move down: Bluetooth error") from err
 
-    async def async_open_cover(self, **kwargs: Any) -> None:
+    async def async_open_cover(self) -> None:
         """Open the cover."""
         try:
             await self._desk.move_up()
         except BleakError as err:
             raise HomeAssistantError("Failed to move up: Bluetooth error") from err
 
-    async def async_stop_cover(self, **kwargs: Any) -> None:
+    async def async_stop_cover(self) -> None:
         """Stop the cover."""
         try:
             await self._desk.stop()
         except BleakError as err:
             raise HomeAssistantError("Failed to stop moving: Bluetooth error") from err
 
-    async def async_set_cover_position(self, **kwargs: Any) -> None:
+    async def async_set_cover_position(self, position: int) -> None:
         """Move the cover shutter to a specific position."""
         try:
-            await self._desk.move_to(int(kwargs[ATTR_POSITION]))
+            await self._desk.move_to(position)
         except BleakError as err:
             raise HomeAssistantError(
                 "Failed to move to specified position: Bluetooth error"

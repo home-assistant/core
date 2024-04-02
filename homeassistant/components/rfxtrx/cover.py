@@ -98,7 +98,7 @@ class RfxtrxCover(RfxtrxCommandEntity, CoverEntity):
             if old_state is not None:
                 self._attr_is_closed = old_state.state != STATE_OPEN
 
-    async def async_open_cover(self, **kwargs: Any) -> None:
+    async def async_open_cover(self) -> None:
         """Move the cover up."""
         if self._venetian_blind_mode == CONST_VENETIAN_BLIND_MODE_US:
             await self._async_send(self._device.send_up05sec)
@@ -109,7 +109,7 @@ class RfxtrxCover(RfxtrxCommandEntity, CoverEntity):
         self._attr_is_closed = False
         self.async_write_ha_state()
 
-    async def async_close_cover(self, **kwargs: Any) -> None:
+    async def async_close_cover(self) -> None:
         """Move the cover down."""
         if self._venetian_blind_mode == CONST_VENETIAN_BLIND_MODE_US:
             await self._async_send(self._device.send_down05sec)
@@ -120,27 +120,27 @@ class RfxtrxCover(RfxtrxCommandEntity, CoverEntity):
         self._attr_is_closed = True
         self.async_write_ha_state()
 
-    async def async_stop_cover(self, **kwargs: Any) -> None:
+    async def async_stop_cover(self) -> None:
         """Stop the cover."""
         await self._async_send(self._device.send_stop)
         self._attr_is_closed = False
         self.async_write_ha_state()
 
-    async def async_open_cover_tilt(self, **kwargs: Any) -> None:
+    async def async_open_cover_tilt(self) -> None:
         """Tilt the cover up."""
         if self._venetian_blind_mode == CONST_VENETIAN_BLIND_MODE_US:
             await self._async_send(self._device.send_up2sec)
         elif self._venetian_blind_mode == CONST_VENETIAN_BLIND_MODE_EU:
             await self._async_send(self._device.send_up05sec)
 
-    async def async_close_cover_tilt(self, **kwargs: Any) -> None:
+    async def async_close_cover_tilt(self) -> None:
         """Tilt the cover down."""
         if self._venetian_blind_mode == CONST_VENETIAN_BLIND_MODE_US:
             await self._async_send(self._device.send_down2sec)
         elif self._venetian_blind_mode == CONST_VENETIAN_BLIND_MODE_EU:
             await self._async_send(self._device.send_down05sec)
 
-    async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
+    async def async_stop_cover_tilt(self) -> None:
         """Stop the cover tilt."""
         await self._async_send(self._device.send_stop)
         self._attr_is_closed = False

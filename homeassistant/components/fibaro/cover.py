@@ -2,13 +2,9 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 from pyfibaro.fibaro_device import DeviceModel
 
 from homeassistant.components.cover import (
-    ATTR_POSITION,
-    ATTR_TILT_POSITION,
     ENTITY_ID_FORMAT,
     CoverEntity,
     CoverEntityFeature,
@@ -78,13 +74,13 @@ class FibaroCover(FibaroDevice, CoverEntity):
         """Return the current tilt position for venetian blinds."""
         return self.bound(self.level2)
 
-    def set_cover_position(self, **kwargs: Any) -> None:
+    def set_cover_position(self, position: int) -> None:
         """Move the cover to a specific position."""
-        self.set_level(kwargs.get(ATTR_POSITION))
+        self.set_level(position)
 
-    def set_cover_tilt_position(self, **kwargs: Any) -> None:
+    def set_cover_tilt_position(self, tilt_position: int) -> None:
         """Move the cover to a specific position."""
-        self.set_level2(kwargs.get(ATTR_TILT_POSITION))
+        self.set_level2(tilt_position)
 
     @property
     def is_closed(self) -> bool | None:
@@ -99,22 +95,22 @@ class FibaroCover(FibaroDevice, CoverEntity):
             return None
         return self.current_cover_position == 0
 
-    def open_cover(self, **kwargs: Any) -> None:
+    def open_cover(self) -> None:
         """Open the cover."""
         self.action("open")
 
-    def close_cover(self, **kwargs: Any) -> None:
+    def close_cover(self) -> None:
         """Close the cover."""
         self.action("close")
 
-    def open_cover_tilt(self, **kwargs: Any) -> None:
+    def open_cover_tilt(self) -> None:
         """Open the cover tilt."""
         self.set_level2(100)
 
-    def close_cover_tilt(self, **kwargs: Any) -> None:
+    def close_cover_tilt(self) -> None:
         """Close the cover."""
         self.set_level2(0)
 
-    def stop_cover(self, **kwargs: Any) -> None:
+    def stop_cover(self) -> None:
         """Stop the cover."""
         self.action("stop")

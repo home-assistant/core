@@ -1,7 +1,6 @@
 """Cover entity for Linear Garage Doors."""
 
 from datetime import timedelta
-from typing import Any
 
 from linear_garage_door import Linear
 
@@ -114,7 +113,7 @@ class LinearCoverEntity(CoordinatorEntity[LinearUpdateCoordinator], CoverEntity)
         """Return if cover is closing."""
         return bool(self._get_data("Opening_P") == "100")
 
-    async def async_close_cover(self, **kwargs: Any) -> None:
+    async def async_close_cover(self) -> None:
         """Close the garage door."""
         if self.is_closed:
             return
@@ -131,7 +130,7 @@ class LinearCoverEntity(CoordinatorEntity[LinearUpdateCoordinator], CoverEntity)
         await linear.operate_device(self._device_id, self._subdevice, "Close")
         await linear.close()
 
-    async def async_open_cover(self, **kwargs: Any) -> None:
+    async def async_open_cover(self) -> None:
         """Open the garage door."""
         if self.is_opened:
             return

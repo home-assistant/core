@@ -4,14 +4,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import logging
-from typing import Any
 
 from motionblindsble.const import MotionBlindType, MotionRunningType
 from motionblindsble.device import MotionDevice
 
 from homeassistant.components.cover import (
-    ATTR_POSITION,
-    ATTR_TILT_POSITION,
     CoverDeviceClass,
     CoverEntity,
     CoverEntityDescription,
@@ -94,7 +91,7 @@ class MotionblindsBLECoverEntity(MotionblindsBLEEntity, CoverEntity):
         self.device.register_running_callback(self.async_update_running)
         self.device.register_position_callback(self.async_update_position)
 
-    async def async_stop_cover(self, **kwargs: Any) -> None:
+    async def async_stop_cover(self) -> None:
         """Stop moving the cover entity."""
         _LOGGER.debug("(%s) Stopping", self.entry.data[CONF_MAC_CODE])
         await self.device.stop()
@@ -145,19 +142,19 @@ class PositionCover(MotionblindsBLECoverEntity):
         | CoverEntityFeature.SET_POSITION
     )
 
-    async def async_open_cover(self, **kwargs: Any) -> None:
+    async def async_open_cover(self) -> None:
         """Open the cover entity."""
         _LOGGER.debug("(%s) Opening", self.entry.data[CONF_MAC_CODE])
         await self.device.open()
 
-    async def async_close_cover(self, **kwargs: Any) -> None:
+    async def async_close_cover(self) -> None:
         """Close the cover entity."""
         _LOGGER.debug("(%s) Closing", self.entry.data[CONF_MAC_CODE])
         await self.device.close()
 
-    async def async_set_cover_position(self, **kwargs: Any) -> None:
+    async def async_set_cover_position(self, position: int) -> None:
         """Move the cover entity to a specific position."""
-        new_position: int = 100 - int(kwargs[ATTR_POSITION])
+        new_position: int = 100 - position
 
         _LOGGER.debug(
             "(%s) Setting position to %i",
@@ -177,23 +174,23 @@ class TiltCover(MotionblindsBLECoverEntity):
         | CoverEntityFeature.SET_TILT_POSITION
     )
 
-    async def async_open_cover_tilt(self, **kwargs: Any) -> None:
+    async def async_open_cover_tilt(self) -> None:
         """Tilt the cover entity open."""
         _LOGGER.debug("(%s) Tilt opening", self.entry.data[CONF_MAC_CODE])
         await self.device.open_tilt()
 
-    async def async_close_cover_tilt(self, **kwargs: Any) -> None:
+    async def async_close_cover_tilt(self) -> None:
         """Tilt the cover entity closed."""
         _LOGGER.debug("(%s) Tilt closing", self.entry.data[CONF_MAC_CODE])
         await self.device.close_tilt()
 
-    async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
+    async def async_stop_cover_tilt(self) -> None:
         """Stop tilting the cover entity."""
-        await self.async_stop_cover(**kwargs)
+        await self.async_stop_cover()
 
-    async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
+    async def async_set_cover_tilt_position(self, tilt_position: int) -> None:
         """Tilt the cover entity to a specific position."""
-        new_tilt: int = 100 - int(kwargs[ATTR_TILT_POSITION])
+        new_tilt: int = 100 - tilt_position
 
         _LOGGER.debug(
             "(%s) Setting tilt position to %i",

@@ -1,10 +1,6 @@
 """Support for Lutron Caseta shades."""
 
-from typing import Any
-
 from homeassistant.components.cover import (
-    ATTR_POSITION,
-    ATTR_TILT_POSITION,
     DOMAIN,
     CoverDeviceClass,
     CoverEntity,
@@ -40,25 +36,25 @@ class LutronCasetaShade(LutronCasetaDeviceUpdatableEntity, CoverEntity):
         """Return the current position of cover."""
         return self._device["current_state"]
 
-    async def async_close_cover(self, **kwargs: Any) -> None:
+    async def async_close_cover(self) -> None:
         """Close the cover."""
         await self._smartbridge.lower_cover(self.device_id)
         await self.async_update()
         self.async_write_ha_state()
 
-    async def async_stop_cover(self, **kwargs: Any) -> None:
+    async def async_stop_cover(self) -> None:
         """Stop the cover."""
         await self._smartbridge.stop_cover(self.device_id)
 
-    async def async_open_cover(self, **kwargs: Any) -> None:
+    async def async_open_cover(self) -> None:
         """Open the cover."""
         await self._smartbridge.raise_cover(self.device_id)
         await self.async_update()
         self.async_write_ha_state()
 
-    async def async_set_cover_position(self, **kwargs: Any) -> None:
+    async def async_set_cover_position(self, position: int) -> None:
         """Move the shade to a specific position."""
-        await self._smartbridge.set_value(self.device_id, kwargs[ATTR_POSITION])
+        await self._smartbridge.set_value(self.device_id, position)
 
 
 class LutronCasetaTiltOnlyBlind(LutronCasetaDeviceUpdatableEntity, CoverEntity):
@@ -82,21 +78,21 @@ class LutronCasetaTiltOnlyBlind(LutronCasetaDeviceUpdatableEntity, CoverEntity):
         """Return the current tilt position of blind."""
         return self._device["tilt"]
 
-    async def async_close_cover_tilt(self, **kwargs: Any) -> None:
+    async def async_close_cover_tilt(self) -> None:
         """Close the blind."""
         await self._smartbridge.set_tilt(self.device_id, 0)
         await self.async_update()
         self.async_write_ha_state()
 
-    async def async_open_cover_tilt(self, **kwargs: Any) -> None:
+    async def async_open_cover_tilt(self) -> None:
         """Open the blind."""
         await self._smartbridge.set_tilt(self.device_id, 50)
         await self.async_update()
         self.async_write_ha_state()
 
-    async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
+    async def async_set_cover_tilt_position(self, tilt_position: int) -> None:
         """Move the blind to a specific tilt."""
-        self._smartbridge.set_tilt(self.device_id, kwargs[ATTR_TILT_POSITION])
+        self._smartbridge.set_tilt(self.device_id, tilt_position)
 
 
 PYLUTRON_TYPE_TO_CLASSES = {

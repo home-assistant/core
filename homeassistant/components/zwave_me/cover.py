@@ -2,13 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
-
-from homeassistant.components.cover import (
-    ATTR_POSITION,
-    CoverEntity,
-    CoverEntityFeature,
-)
+from homeassistant.components.cover import CoverEntity, CoverEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -55,22 +49,21 @@ class ZWaveMeCover(ZWaveMeEntity, CoverEntity):
         | CoverEntityFeature.STOP
     )
 
-    def close_cover(self, **kwargs: Any) -> None:
+    def close_cover(self) -> None:
         """Close cover."""
         self.controller.zwave_api.send_command(self.device.id, "exact?level=0")
 
-    def open_cover(self, **kwargs: Any) -> None:
+    def open_cover(self) -> None:
         """Open cover."""
         self.controller.zwave_api.send_command(self.device.id, "exact?level=99")
 
-    def set_cover_position(self, **kwargs: Any) -> None:
+    def set_cover_position(self, position: int) -> None:
         """Update the current value."""
-        value = kwargs[ATTR_POSITION]
         self.controller.zwave_api.send_command(
-            self.device.id, f"exact?level={str(min(value, 99))}"
+            self.device.id, f"exact?level={str(min(position, 99))}"
         )
 
-    def stop_cover(self, **kwargs: Any) -> None:
+    def stop_cover(self) -> None:
         """Stop cover."""
         self.controller.zwave_api.send_command(self.device.id, "stop")
 

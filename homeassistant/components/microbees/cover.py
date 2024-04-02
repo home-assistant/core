@@ -76,7 +76,7 @@ class MBCover(MicroBeesEntity, CoverEntity):
         self._attr_is_closing = False
         self.async_write_ha_state()
 
-    async def async_open_cover(self, **kwargs: Any) -> None:
+    async def async_open_cover(self) -> None:
         """Open the cover."""
         sendCommand = await self.coordinator.microbees.sendCommand(
             self.actuator_up_id,
@@ -93,7 +93,7 @@ class MBCover(MicroBeesEntity, CoverEntity):
             self._reset_open_close,
         )
 
-    async def async_close_cover(self, **kwargs: Any) -> None:
+    async def async_close_cover(self) -> None:
         """Close the cover."""
         sendCommand = await self.coordinator.microbees.sendCommand(
             self.actuator_down_id,
@@ -109,7 +109,7 @@ class MBCover(MicroBeesEntity, CoverEntity):
             self._reset_open_close,
         )
 
-    async def async_stop_cover(self, **kwargs: Any) -> None:
+    async def async_stop_cover(self) -> None:
         """Stop the cover."""
         if self.is_opening:
             await self.coordinator.microbees.sendCommand(self.actuator_up_id, 0)

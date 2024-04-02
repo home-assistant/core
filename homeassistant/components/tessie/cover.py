@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 from tessie_api import (
     close_charge_port,
     close_windows,
@@ -65,7 +63,7 @@ class TessieWindowEntity(TessieEntity, CoverEntity):
             and self.get("vehicle_state_rp_window") == TessieCoverStates.CLOSED
         )
 
-    async def async_open_cover(self, **kwargs: Any) -> None:
+    async def async_open_cover(self) -> None:
         """Open windows."""
         await self.run(vent_windows)
         self.set(
@@ -75,7 +73,7 @@ class TessieWindowEntity(TessieEntity, CoverEntity):
             ("vehicle_state_rp_window", TessieCoverStates.OPEN),
         )
 
-    async def async_close_cover(self, **kwargs: Any) -> None:
+    async def async_close_cover(self) -> None:
         """Close windows."""
         await self.run(close_windows)
         self.set(
@@ -101,12 +99,12 @@ class TessieChargePortEntity(TessieEntity, CoverEntity):
         """Return if the cover is closed or not."""
         return not self._value
 
-    async def async_open_cover(self, **kwargs: Any) -> None:
+    async def async_open_cover(self) -> None:
         """Open windows."""
         await self.run(open_unlock_charge_port)
         self.set((self.key, True))
 
-    async def async_close_cover(self, **kwargs: Any) -> None:
+    async def async_close_cover(self) -> None:
         """Close windows."""
         await self.run(close_charge_port)
         self.set((self.key, False))
@@ -127,7 +125,7 @@ class TessieFrontTrunkEntity(TessieEntity, CoverEntity):
         """Return if the cover is closed or not."""
         return self._value == TessieCoverStates.CLOSED
 
-    async def async_open_cover(self, **kwargs: Any) -> None:
+    async def async_open_cover(self) -> None:
         """Open front trunk."""
         await self.run(open_front_trunk)
         self.set((self.key, TessieCoverStates.OPEN))
@@ -148,13 +146,13 @@ class TessieRearTrunkEntity(TessieEntity, CoverEntity):
         """Return if the cover is closed or not."""
         return self._value == TessieCoverStates.CLOSED
 
-    async def async_open_cover(self, **kwargs: Any) -> None:
+    async def async_open_cover(self) -> None:
         """Open rear trunk."""
         if self._value == TessieCoverStates.CLOSED:
             await self.run(open_close_rear_trunk)
             self.set((self.key, TessieCoverStates.OPEN))
 
-    async def async_close_cover(self, **kwargs: Any) -> None:
+    async def async_close_cover(self) -> None:
         """Close rear trunk."""
         if self._value == TessieCoverStates.OPEN:
             await self.run(open_close_rear_trunk)

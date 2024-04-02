@@ -7,7 +7,7 @@ from typing import Any, cast
 
 from pytradfri.command import Command
 
-from homeassistant.components.cover import ATTR_POSITION, CoverEntity
+from homeassistant.components.cover import CoverEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -78,25 +78,25 @@ class TradfriCover(TradfriBaseEntity, CoverEntity):
             return None
         return 100 - cast(int, self._device_data.current_cover_position)
 
-    async def async_set_cover_position(self, **kwargs: Any) -> None:
+    async def async_set_cover_position(self, position: int) -> None:
         """Move the cover to a specific position."""
         if not self._device_control:
             return
-        await self._api(self._device_control.set_state(100 - kwargs[ATTR_POSITION]))
+        await self._api(self._device_control.set_state(100 - position))
 
-    async def async_open_cover(self, **kwargs: Any) -> None:
+    async def async_open_cover(self) -> None:
         """Open the cover."""
         if not self._device_control:
             return
         await self._api(self._device_control.set_state(0))
 
-    async def async_close_cover(self, **kwargs: Any) -> None:
+    async def async_close_cover(self) -> None:
         """Close cover."""
         if not self._device_control:
             return
         await self._api(self._device_control.set_state(100))
 
-    async def async_stop_cover(self, **kwargs: Any) -> None:
+    async def async_stop_cover(self) -> None:
         """Close cover."""
         if not self._device_control:
             return

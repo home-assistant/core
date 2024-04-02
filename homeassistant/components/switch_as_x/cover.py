@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 from homeassistant.components.cover import (
     DOMAIN as COVER_DOMAIN,
     CoverEntity,
@@ -57,7 +55,7 @@ class CoverSwitch(BaseInvertableEntity, CoverEntity):
 
     _attr_supported_features = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
 
-    async def async_open_cover(self, **kwargs: Any) -> None:
+    async def async_open_cover(self) -> None:
         """Open the cover."""
         await self.hass.services.async_call(
             SWITCH_DOMAIN,
@@ -67,7 +65,7 @@ class CoverSwitch(BaseInvertableEntity, CoverEntity):
             context=self._context,
         )
 
-    async def async_close_cover(self, **kwargs: Any) -> None:
+    async def async_close_cover(self) -> None:
         """Close cover."""
         await self.hass.services.async_call(
             SWITCH_DOMAIN,

@@ -19,8 +19,6 @@ from aiopvapi.helpers.constants import (
 from aiopvapi.resources.shade import BaseShade, ShadePosition
 
 from homeassistant.components.cover import (
-    ATTR_POSITION,
-    ATTR_TILT_POSITION,
     CoverDeviceClass,
     CoverEntity,
     CoverEntityFeature,
@@ -165,7 +163,7 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
         """Return the close position and required additional positions."""
         return replace(self._shade.close_position, velocity=self.positions.velocity)
 
-    async def async_close_cover(self, **kwargs: Any) -> None:
+    async def async_close_cover(self) -> None:
         """Close the cover."""
         self._async_schedule_update_for_transition(self.transition_steps)
         await self._async_execute_move(self.close_position)
@@ -173,7 +171,7 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
         self._attr_is_closing = True
         self.async_write_ha_state()
 
-    async def async_open_cover(self, **kwargs: Any) -> None:
+    async def async_open_cover(self) -> None:
         """Open the cover."""
         self._async_schedule_update_for_transition(100 - self.transition_steps)
         await self._async_execute_move(self.open_position)
@@ -181,7 +179,7 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
         self._attr_is_closing = False
         self.async_write_ha_state()
 
-    async def async_stop_cover(self, **kwargs: Any) -> None:
+    async def async_stop_cover(self) -> None:
         """Stop the cover."""
         self._async_cancel_scheduled_transition_update()
         await self._shade.stop()
@@ -193,9 +191,9 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
         # no override required in base
         return target_hass_position
 
-    async def async_set_cover_position(self, **kwargs: Any) -> None:
+    async def async_set_cover_position(self, position: int) -> None:
         """Move the shade to a specific position."""
-        await self._async_set_cover_position(kwargs[ATTR_POSITION])
+        await self._async_set_cover_position(position)
 
     @callback
     def _get_shade_move(self, target_hass_position: int) -> ShadePosition:
@@ -380,21 +378,21 @@ class PowerViewShadeWithTiltBase(PowerViewShadeBase):
             self._shade.close_position_tilt, velocity=self.positions.velocity
         )
 
-    async def async_close_cover_tilt(self, **kwargs: Any) -> None:
+    async def async_close_cover_tilt(self) -> None:
         """Close the cover tilt."""
         self._async_schedule_update_for_transition(self.transition_steps)
         await self._async_execute_move(self.close_tilt_position)
         self.async_write_ha_state()
 
-    async def async_open_cover_tilt(self, **kwargs: Any) -> None:
+    async def async_open_cover_tilt(self) -> None:
         """Open the cover tilt."""
         self._async_schedule_update_for_transition(100 - self.transition_steps)
         await self._async_execute_move(self.open_tilt_position)
         self.async_write_ha_state()
 
-    async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
+    async def async_set_cover_tilt_position(self, tilt_position: int) -> None:
         """Move the tilt to a specific position."""
-        await self._async_set_cover_tilt_position(kwargs[ATTR_TILT_POSITION])
+        await self._async_set_cover_tilt_position(tilt_position)
 
     async def _async_set_cover_tilt_position(
         self, target_hass_tilt_position: int
@@ -423,7 +421,7 @@ class PowerViewShadeWithTiltBase(PowerViewShadeBase):
             velocity=self.positions.velocity,
         )
 
-    async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
+    async def async_stop_cover_tilt(self) -> None:
         """Stop the cover tilting."""
         await self.async_stop_cover()
 
@@ -551,9 +549,9 @@ class PowerViewShadeTopDown(PowerViewShadeBase):
         # inverted positioning
         return MAX_POSITION - self.positions.primary
 
-    async def async_set_cover_position(self, **kwargs: Any) -> None:
+    async def async_set_cover_position(self, position: int) -> None:
         """Move the shade to a specific position."""
-        await self._async_set_cover_position(MAX_POSITION - kwargs[ATTR_POSITION])
+        await self._async_set_cover_position(MAX_POSITION - position)
 
     @property
     def is_closed(self) -> bool:

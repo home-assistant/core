@@ -210,21 +210,21 @@ class GaradgetCover(CoverEntity):
         """Check the state of the service during an operation."""
         self.schedule_update_ha_state(True)
 
-    def close_cover(self, **kwargs: Any) -> None:
+    def close_cover(self) -> None:
         """Close the cover."""
         if self._state not in ["close", "closing"]:
             ret = self._put_command("setState", "close")
             self._start_watcher("close")
             return ret.get("return_value") == 1
 
-    def open_cover(self, **kwargs: Any) -> None:
+    def open_cover(self) -> None:
         """Open the cover."""
         if self._state not in ["open", "opening"]:
             ret = self._put_command("setState", "open")
             self._start_watcher("open")
             return ret.get("return_value") == 1
 
-    def stop_cover(self, **kwargs: Any) -> None:
+    def stop_cover(self) -> None:
         """Stop the door where it is."""
         if self._state not in ["stopped"]:
             ret = self._put_command("setState", "stop")

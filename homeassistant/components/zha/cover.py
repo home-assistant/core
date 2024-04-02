@@ -12,8 +12,6 @@ from zigpy.zcl.foundation import Status
 
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
-    ATTR_POSITION,
-    ATTR_TILT_POSITION,
     CoverDeviceClass,
     CoverEntity,
     CoverEntityFeature,
@@ -268,14 +266,14 @@ class ZhaCover(ZhaEntity, CoverEntity):
         self._state = state
         self.async_write_ha_state()
 
-    async def async_open_cover(self, **kwargs: Any) -> None:
+    async def async_open_cover(self) -> None:
         """Open the cover."""
         res = await self._cover_cluster_handler.up_open()
         if res[1] is not Status.SUCCESS:
             raise HomeAssistantError(f"Failed to open cover: {res[1]}")
         self.async_update_state(STATE_OPENING)
 
-    async def async_open_cover_tilt(self, **kwargs: Any) -> None:
+    async def async_open_cover_tilt(self) -> None:
         """Open the cover tilt."""
         # 0 is open in ZCL
         res = await self._cover_cluster_handler.go_to_tilt_percentage(0)
@@ -283,14 +281,14 @@ class ZhaCover(ZhaEntity, CoverEntity):
             raise HomeAssistantError(f"Failed to open cover tilt: {res[1]}")
         self.async_update_state(STATE_OPENING)
 
-    async def async_close_cover(self, **kwargs: Any) -> None:
+    async def async_close_cover(self) -> None:
         """Close the cover."""
         res = await self._cover_cluster_handler.down_close()
         if res[1] is not Status.SUCCESS:
             raise HomeAssistantError(f"Failed to close cover: {res[1]}")
         self.async_update_state(STATE_CLOSING)
 
-    async def async_close_cover_tilt(self, **kwargs: Any) -> None:
+    async def async_close_cover_tilt(self) -> None:
         """Close the cover tilt."""
         # 100 is closed in ZCL
         res = await self._cover_cluster_handler.go_to_tilt_percentage(100)
@@ -298,9 +296,9 @@ class ZhaCover(ZhaEntity, CoverEntity):
             raise HomeAssistantError(f"Failed to close cover tilt: {res[1]}")
         self.async_update_state(STATE_CLOSING)
 
-    async def async_set_cover_position(self, **kwargs: Any) -> None:
+    async def async_set_cover_position(self, position: int) -> None:
         """Move the cover to a specific position."""
-        self._target_lift_position = kwargs[ATTR_POSITION]
+        self._target_lift_position = position
         assert self._target_lift_position is not None
         assert self.current_cover_position is not None
         # the 100 - value is because we need to invert the value before giving it to ZCL
@@ -315,9 +313,9 @@ class ZhaCover(ZhaEntity, CoverEntity):
             else STATE_OPENING
         )
 
-    async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
+    async def async_set_cover_tilt_position(self, tilt_position: int) -> None:
         """Move the cover tilt to a specific position."""
-        self._target_tilt_position = kwargs[ATTR_TILT_POSITION]
+        self._target_tilt_position = tilt_position
         assert self._target_tilt_position is not None
         assert self.current_cover_tilt_position is not None
         # the 100 - value is because we need to invert the value before giving it to ZCL
@@ -332,7 +330,7 @@ class ZhaCover(ZhaEntity, CoverEntity):
             else STATE_OPENING
         )
 
-    async def async_stop_cover(self, **kwargs: Any) -> None:
+    async def async_stop_cover(self) -> None:
         """Stop the cover."""
         res = await self._cover_cluster_handler.stop()
         if res[1] is not Status.SUCCESS:
@@ -341,7 +339,7 @@ class ZhaCover(ZhaEntity, CoverEntity):
         self._determine_state(self.current_cover_position)
         self.async_write_ha_state()
 
-    async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
+    async def async_stop_cover_tilt(self) -> None:
         """Stop the cover tilt."""
         res = await self._cover_cluster_handler.stop()
         if res[1] is not Status.SUCCESS:
@@ -425,7 +423,7 @@ class Shade(ZhaEntity, CoverEntity):
         self._position = int(value * 100 / 255)
         self.async_write_ha_state()
 
-    async def async_open_cover(self, **kwargs: Any) -> None:
+    async def async_open_cover(self) -> None:
         """Open the window cover."""
         res = await self._on_off_cluster_handler.on()
         if res[1] != Status.SUCCESS:
@@ -434,7 +432,7 @@ class Shade(ZhaEntity, CoverEntity):
         self._is_open = True
         self.async_write_ha_state()
 
-    async def async_close_cover(self, **kwargs: Any) -> None:
+    async def async_close_cover(self) -> None:
         """Close the window cover."""
         res = await self._on_off_cluster_handler.off()
         if res[1] != Status.SUCCESS:
@@ -443,20 +441,19 @@ class Shade(ZhaEntity, CoverEntity):
         self._is_open = False
         self.async_write_ha_state()
 
-    async def async_set_cover_position(self, **kwargs: Any) -> None:
+    async def async_set_cover_position(self, position: int) -> None:
         """Move the roller shutter to a specific position."""
-        new_pos = kwargs[ATTR_POSITION]
         res = await self._level_cluster_handler.move_to_level_with_on_off(
-            new_pos * 255 / 100, 1
+            position * 255 / 100, 1
         )
 
         if res[1] != Status.SUCCESS:
             raise HomeAssistantError(f"Failed to set cover position: {res[1]}")
 
-        self._position = new_pos
+        self._position = position
         self.async_write_ha_state()
 
-    async def async_stop_cover(self, **kwargs: Any) -> None:
+    async def async_stop_cover(self) -> None:
         """Stop the cover."""
         res = await self._level_cluster_handler.stop()
         if res[1] != Status.SUCCESS:
@@ -473,7 +470,7 @@ class KeenVent(Shade):
     _attr_device_class = CoverDeviceClass.DAMPER
     _attr_translation_key: str = "keen_vent"
 
-    async def async_open_cover(self, **kwargs: Any) -> None:
+    async def async_open_cover(self) -> None:
         """Open the cover."""
         position = self._position or 100
         await asyncio.gather(

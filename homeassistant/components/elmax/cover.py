@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
 
 from elmax_api.model.command import CoverCommand
 from elmax_api.model.cover_status import CoverStatus
@@ -105,7 +104,7 @@ class ElmaxCover(ElmaxEntity, CoverEntity):
         """Return if the cover is closing or not."""
         return self.__check_cover_status(CoverStatus.DOWN)
 
-    async def async_stop_cover(self, **kwargs: Any) -> None:
+    async def async_stop_cover(self) -> None:
         """Stop the cover."""
         # To stop the cover, Elmax requires us to re-issue the same command once again.
         # To detect the current motion status, we request an immediate refresh to the coordinator

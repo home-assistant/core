@@ -2,13 +2,10 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 import pyads
 import voluptuous as vol
 
 from homeassistant.components.cover import (
-    ATTR_POSITION,
     DEVICE_CLASSES_SCHEMA,
     PLATFORM_SCHEMA,
     CoverEntity,
@@ -149,27 +146,26 @@ class AdsCover(AdsEntity, CoverEntity):
         """Return current position of cover."""
         return self._state_dict[STATE_KEY_POSITION]
 
-    def stop_cover(self, **kwargs: Any) -> None:
+    def stop_cover(self) -> None:
         """Fire the stop action."""
         if self._ads_var_stop:
             self._ads_hub.write_by_name(self._ads_var_stop, True, pyads.PLCTYPE_BOOL)
 
-    def set_cover_position(self, **kwargs: Any) -> None:
+    def set_cover_position(self, position: int) -> None:
         """Set cover position."""
-        position = kwargs[ATTR_POSITION]
         if self._ads_var_pos_set is not None:
             self._ads_hub.write_by_name(
                 self._ads_var_pos_set, position, pyads.PLCTYPE_BYTE
             )
 
-    def open_cover(self, **kwargs: Any) -> None:
+    def open_cover(self) -> None:
         """Move the cover up."""
         if self._ads_var_open is not None:
             self._ads_hub.write_by_name(self._ads_var_open, True, pyads.PLCTYPE_BOOL)
         elif self._ads_var_pos_set is not None:
             self.set_cover_position(position=100)
 
-    def close_cover(self, **kwargs: Any) -> None:
+    def close_cover(self) -> None:
         """Move the cover down."""
         if self._ads_var_close is not None:
             self._ads_hub.write_by_name(self._ads_var_close, True, pyads.PLCTYPE_BOOL)

@@ -188,17 +188,17 @@ class CommandCover(ManualTriggerEntity, CoverEntity):
         """
         await self._update_entity_state(dt_util.now())
 
-    async def async_open_cover(self, **kwargs: Any) -> None:
+    async def async_open_cover(self) -> None:
         """Open the cover."""
         await self._async_move_cover(self._command_open)
         await self._update_entity_state()
 
-    async def async_close_cover(self, **kwargs: Any) -> None:
+    async def async_close_cover(self) -> None:
         """Close the cover."""
         await self._async_move_cover(self._command_close)
         await self._update_entity_state()
 
-    async def async_stop_cover(self, **kwargs: Any) -> None:
+    async def async_stop_cover(self) -> None:
         """Stop the cover."""
         await self._async_move_cover(self._command_stop)
         await self._update_entity_state()

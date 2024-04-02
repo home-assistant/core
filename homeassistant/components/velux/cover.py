@@ -8,8 +8,6 @@ from pyvlx import OpeningDevice, Position
 from pyvlx.opening_device import Awning, Blind, GarageDoor, Gate, RollerShutter, Window
 
 from homeassistant.components.cover import (
-    ATTR_POSITION,
-    ATTR_TILT_POSITION,
     CoverDeviceClass,
     CoverEntity,
     CoverEntityFeature,
@@ -94,41 +92,41 @@ class VeluxCover(VeluxEntity, CoverEntity):
         """Return if the cover is closed."""
         return self.node.position.closed
 
-    async def async_close_cover(self, **kwargs: Any) -> None:
+    async def async_close_cover(self) -> None:
         """Close the cover."""
         await self.node.close(wait_for_completion=False)
 
-    async def async_open_cover(self, **kwargs: Any) -> None:
+    async def async_open_cover(self) -> None:
         """Open the cover."""
         await self.node.open(wait_for_completion=False)
 
-    async def async_set_cover_position(self, **kwargs: Any) -> None:
+    async def async_set_cover_position(self, position: int) -> None:
         """Move the cover to a specific position."""
-        position_percent = 100 - kwargs[ATTR_POSITION]
+        position_percent = 100 - position
 
         await self.node.set_position(
             Position(position_percent=position_percent), wait_for_completion=False
         )
 
-    async def async_stop_cover(self, **kwargs: Any) -> None:
+    async def async_stop_cover(self) -> None:
         """Stop the cover."""
         await self.node.stop(wait_for_completion=False)
 
-    async def async_close_cover_tilt(self, **kwargs: Any) -> None:
+    async def async_close_cover_tilt(self) -> None:
         """Close cover tilt."""
         await cast(Blind, self.node).close_orientation(wait_for_completion=False)
 
-    async def async_open_cover_tilt(self, **kwargs: Any) -> None:
+    async def async_open_cover_tilt(self) -> None:
         """Open cover tilt."""
         await cast(Blind, self.node).open_orientation(wait_for_completion=False)
 
-    async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
+    async def async_stop_cover_tilt(self) -> None:
         """Stop cover tilt."""
         await cast(Blind, self.node).stop_orientation(wait_for_completion=False)
 
-    async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
+    async def async_set_cover_tilt_position(self, tilt_position: int) -> None:
         """Move cover tilt to a specific position."""
-        position_percent = 100 - kwargs[ATTR_TILT_POSITION]
+        position_percent = 100 - tilt_position
         orientation = Position(position_percent=position_percent)
         await cast(Blind, self.node).set_orientation(
             orientation=orientation, wait_for_completion=False

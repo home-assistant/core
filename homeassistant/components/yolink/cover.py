@@ -75,10 +75,10 @@ class YoLinkCoverEntity(YoLinkEntity, CoverEntity):
         # it depends on paired device state, such as door sensor or contact sensor
         await self.call_device(ClientRequest("toggle", {}))
 
-    async def async_open_cover(self, **kwargs: Any) -> None:
+    async def async_open_cover(self) -> None:
         """Toggle garage door."""
         await self.toggle_garage_state()
 
-    async def async_close_cover(self, **kwargs: Any) -> None:
+    async def async_close_cover(self) -> None:
         """Toggle garage door."""
         await self.toggle_garage_state()

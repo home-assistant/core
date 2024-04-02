@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from typing import Any
 
 from AIOAladdinConnect import AladdinConnectClient, session_manager
 
@@ -103,12 +102,12 @@ class AladdinDevice(CoverEntity):
         self._acc.unregister_callback(self._serial, self._number)
         await self._acc.close()
 
-    async def async_close_cover(self, **kwargs: Any) -> None:
+    async def async_close_cover(self) -> None:
         """Issue close command to cover."""
         if not await self._acc.close_door(self._device_id, self._number):
             raise HomeAssistantError("Aladdin Connect API failed to close the cover")
 
-    async def async_open_cover(self, **kwargs: Any) -> None:
+    async def async_open_cover(self) -> None:
         """Issue open command to cover."""
         if not await self._acc.open_door(self._device_id, self._number):
             raise HomeAssistantError("Aladdin Connect API failed to open the cover")

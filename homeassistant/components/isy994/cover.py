@@ -2,15 +2,11 @@
 
 from __future__ import annotations
 
-from typing import Any, cast
+from typing import cast
 
 from pyisy.constants import ISY_VALUE_UNKNOWN
 
-from homeassistant.components.cover import (
-    ATTR_POSITION,
-    CoverEntity,
-    CoverEntityFeature,
-)
+from homeassistant.components.cover import CoverEntity, CoverEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -66,19 +62,18 @@ class ISYCoverEntity(ISYNodeEntity, CoverEntity):
             return None
         return bool(self._node.status == 0)
 
-    async def async_open_cover(self, **kwargs: Any) -> None:
+    async def async_open_cover(self) -> None:
         """Send the open cover command to the ISY cover device."""
         if not await self._node.turn_on():
             _LOGGER.error("Unable to open the cover")
 
-    async def async_close_cover(self, **kwargs: Any) -> None:
+    async def async_close_cover(self) -> None:
         """Send the close cover command to the ISY cover device."""
         if not await self._node.turn_off():
             _LOGGER.error("Unable to close the cover")
 
-    async def async_set_cover_position(self, **kwargs: Any) -> None:
+    async def async_set_cover_position(self, position: int) -> None:
         """Move the cover to a specific position."""
-        position = kwargs[ATTR_POSITION]
         if self._node.uom == UOM_8_BIT_RANGE:
             position = round(position * 255.0 / 100.0)
         if not await self._node.turn_on(val=position):
@@ -93,12 +88,12 @@ class ISYCoverProgramEntity(ISYProgramEntity, CoverEntity):
         """Get whether the ISY cover program is closed."""
         return bool(self._node.status)
 
-    async def async_open_cover(self, **kwargs: Any) -> None:
+    async def async_open_cover(self) -> None:
         """Send the open cover command to the ISY cover program."""
         if not await self._actions.run_then():
             _LOGGER.error("Unable to open the cover")
 
-    async def async_close_cover(self, **kwargs: Any) -> None:
+    async def async_close_cover(self) -> None:
         """Send the close cover command to the ISY cover program."""
         if not await self._actions.run_else():
             _LOGGER.error("Unable to close the cover")

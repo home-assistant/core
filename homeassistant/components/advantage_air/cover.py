@@ -3,7 +3,6 @@
 from typing import Any
 
 from homeassistant.components.cover import (
-    ATTR_POSITION,
     CoverDeviceClass,
     CoverEntity,
     CoverEntityFeature,
@@ -79,19 +78,19 @@ class AdvantageAirZoneVent(AdvantageAirZoneEntity, CoverEntity):
             return self._zone["value"]
         return 0
 
-    async def async_open_cover(self, **kwargs: Any) -> None:
+    async def async_open_cover(self) -> None:
         """Fully open zone vent."""
         await self.async_update_zone(
             {"state": ADVANTAGE_AIR_STATE_OPEN, "value": 100},
         )
 
-    async def async_close_cover(self, **kwargs: Any) -> None:
+    async def async_close_cover(self) -> None:
         """Fully close zone vent."""
         await self.async_update_zone({"state": ADVANTAGE_AIR_STATE_CLOSE})
 
-    async def async_set_cover_position(self, **kwargs: Any) -> None:
+    async def async_set_cover_position(self, position: int) -> None:
         """Change vent position."""
-        position = round(kwargs[ATTR_POSITION] / 5) * 5
+        position = round(position / 5) * 5
         if position == 0:
             await self.async_update_zone({"state": ADVANTAGE_AIR_STATE_CLOSE})
         else:
@@ -123,10 +122,10 @@ class AdvantageAirThingCover(AdvantageAirThingEntity, CoverEntity):
         """Return if cover is fully closed."""
         return self._data["value"] == 0
 
-    async def async_open_cover(self, **kwargs: Any) -> None:
+    async def async_open_cover(self) -> None:
         """Fully open zone vent."""
         return await self.async_turn_on()
 
-    async def async_close_cover(self, **kwargs: Any) -> None:
+    async def async_close_cover(self) -> None:
         """Fully close zone vent."""
         return await self.async_turn_off()
