@@ -10,6 +10,7 @@ from homeassistant.components import conversation
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import area_registry as ar, device_registry as dr, intent
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
@@ -124,6 +125,7 @@ async def test_template_error(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test that template error handling works."""
+    assert await async_setup_component(hass, "homeassistant", {})
     hass.config_entries.async_update_entry(
         mock_config_entry,
         options={
@@ -152,7 +154,7 @@ async def test_conversation_agent(
     mock_init_component,
 ) -> None:
     """Test GoogleGenerativeAIAgent."""
-    agent = await conversation.get_agent_manager(hass).async_get_agent(
+    agent = conversation.get_agent_manager(hass).async_get_agent(
         mock_config_entry.entry_id
     )
     assert agent.supported_languages == "*"
