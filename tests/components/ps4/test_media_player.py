@@ -234,6 +234,7 @@ async def test_media_attributes_are_fetched(hass: HomeAssistant) -> None:
 
     with patch(mock_func, return_value=mock_result) as mock_fetch:
         await mock_ddp_response(hass, MOCK_STATUS_PLAYING)
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     mock_state = hass.states.get(mock_entity_id)
     mock_attrs = dict(mock_state.attributes)
@@ -255,6 +256,7 @@ async def test_media_attributes_are_fetched(hass: HomeAssistant) -> None:
 
     with patch(mock_func, return_value=mock_result) as mock_fetch_app:
         await mock_ddp_response(hass, MOCK_STATUS_PLAYING)
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     mock_state = hass.states.get(mock_entity_id)
     mock_attrs = dict(mock_state.attributes)

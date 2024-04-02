@@ -6,7 +6,7 @@ from unittest.mock import patch
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-import homeassistant.components.automation as automation
+from homeassistant.components import automation
 from homeassistant.components.homeassistant.triggers import state as state_trigger
 from homeassistant.const import (
     ATTR_ENTITY_ID,

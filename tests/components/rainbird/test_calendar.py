@@ -125,7 +125,7 @@ def get_events_fixture(
         )
         assert response.status == HTTPStatus.OK
         results = await response.json()
-        return [{k: event[k] for k in {"summary", "start", "end"}} for event in results]
+        return [{k: event[k] for k in ("summary", "start", "end")} for event in results]
 
     return _fetch
 

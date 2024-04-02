@@ -8,8 +8,7 @@ from pytest_unordered import unordered
 import voluptuous as vol
 
 from homeassistant import config_entries, loader
-from homeassistant.components import device_automation
-import homeassistant.components.automation as automation
+from homeassistant.components import automation, device_automation
 from homeassistant.components.device_automation import (
     InvalidDeviceAutomationConfig,
     toggle_entity,
