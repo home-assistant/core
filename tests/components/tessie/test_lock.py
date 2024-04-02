@@ -24,6 +24,17 @@ async def test_locks(
 ) -> None:
     """Tests that the lock entity is correct."""
 
+    # Create the deprecated speed limit lock entity
+    entity_registry.async_get_or_create(
+        LOCK_DOMAIN,
+        DOMAIN,
+        "VINVINVIN-vehicle_state_speed_limit_mode_active",
+        original_name="Charge cable lock",
+        has_entity_name=True,
+        translation_key="vehicle_state_speed_limit_mode_active",
+        disabled_by=er.RegistryEntryDisabler.INTEGRATION,
+    )
+
     entry = await setup_platform(hass, [Platform.LOCK])
 
     assert_entities(hass, entry.entry_id, entity_registry, snapshot)
