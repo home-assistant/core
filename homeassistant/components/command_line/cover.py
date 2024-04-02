@@ -12,24 +12,19 @@ from homeassistant.const import (
     CONF_COMMAND_OPEN,
     CONF_COMMAND_STATE,
     CONF_COMMAND_STOP,
-    CONF_ICON,
     CONF_NAME,
     CONF_SCAN_INTERVAL,
-    CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.template import Template
-from homeassistant.helpers.trigger_template_entity import (
-    CONF_AVAILABILITY,
-    ManualTriggerEntity,
-)
+from homeassistant.helpers.trigger_template_entity import ManualTriggerEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util, slugify
 
-from .const import CONF_COMMAND_TIMEOUT, LOGGER
+from .const import CONF_COMMAND_TIMEOUT, LOGGER, TRIGGER_ENTITY_OPTIONS
 from .utils import async_call_shell_with_timeout, async_check_output_or_log
 
 SCAN_INTERVAL = timedelta(seconds=15)
@@ -45,30 +40,29 @@ async def async_setup_platform(
 
     covers = []
     discovery_info = cast(DiscoveryInfoType, discovery_info)
-    entities: dict[str, Any] = {slugify(discovery_info[CONF_NAME]): discovery_info}
+    entities: dict[str, dict[str, Any]] = {
+        slugify(discovery_info[CONF_NAME]): discovery_info
+    }
 
-    for device_name, device_config in entities.items():
-        value_template: Template | None = device_config.get(CONF_VALUE_TEMPLATE)
-        if value_template is not None:
+    for device_name, cover_config in entities.items():
+        if value_template := cover_config.get(CONF_VALUE_TEMPLATE):
             value_template.hass = hass
 
         trigger_entity_config = {
-            CONF_UNIQUE_ID: device_config.get(CONF_UNIQUE_ID),
-            CONF_NAME: Template(device_config.get(CONF_NAME, device_name), hass),
-            CONF_ICON: device_config.get(CONF_ICON),
-            CONF_AVAILABILITY: device_config.get(CONF_AVAILABILITY),
+            CONF_NAME: Template(cover_config.get(CONF_NAME, device_name), hass),
+            **{k: v for k, v in cover_config.items() if k in TRIGGER_ENTITY_OPTIONS},
         }
 
         covers.append(
             CommandCover(
                 trigger_entity_config,
-                device_config[CONF_COMMAND_OPEN],
-                device_config[CONF_COMMAND_CLOSE],
-                device_config[CONF_COMMAND_STOP],
-                device_config.get(CONF_COMMAND_STATE),
+                cover_config[CONF_COMMAND_OPEN],
+                cover_config[CONF_COMMAND_CLOSE],
+                cover_config[CONF_COMMAND_STOP],
+                cover_config.get(CONF_COMMAND_STATE),
                 value_template,
-                device_config[CONF_COMMAND_TIMEOUT],
-                device_config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL),
+                cover_config[CONF_COMMAND_TIMEOUT],
+                cover_config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL),
             )
         )
 
