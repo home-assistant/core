@@ -11,6 +11,7 @@ from homeassistant.core import HomeAssistant
 
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.components.enphase_envoy import setup_with_selected_platforms
+from tests.components.enphase_envoy.conftest import ALL_FIXTURES
 from tests.typing import ClientSessionGenerator
 
 # Fields to exclude from snapshot as they change each run
@@ -29,13 +30,7 @@ def limit_diagnostic_attrs(prop, path) -> bool:
     return prop in TO_EXCLUDE
 
 
-@pytest.mark.parametrize(
-    ("mock_envoy"),
-    [
-        pytest.param("envoy_metered_batt_relay", id="envoy_metered_batt_relay"),
-    ],
-    indirect=["mock_envoy"],
-)
+@pytest.mark.parametrize(("mock_envoy"), *ALL_FIXTURES, indirect=["mock_envoy"])
 async def test_entry_diagnostics(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
