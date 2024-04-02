@@ -9,8 +9,7 @@ from unittest.mock import Mock, call, patch
 
 import pytest
 
-from homeassistant.components import zone
-import homeassistant.components.device_tracker as device_tracker
+from homeassistant.components import device_tracker, zone
 from homeassistant.components.device_tracker import SourceType, const, legacy
 from homeassistant.const import (
     ATTR_ENTITY_PICTURE,
