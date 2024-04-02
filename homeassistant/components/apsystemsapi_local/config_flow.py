@@ -36,18 +36,17 @@ class APsystemsLocalAPIFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 if user_input["check"]:
+                    session = async_get_clientsession(self.hass, False)
                     api = APsystemsEZ1M(user_input[CONF_IP_ADDRESS], session=session)
                     await api.get_device_info()
             except (TimeoutError, client_exceptions.ClientConnectionError) as exception:
                 LOGGER.warning(exception)
                 _errors["base"] = "connection_refused"
             else:
-                await session.close()
                 return self.async_create_entry(
                     title=user_input[CONF_NAME],
                     data=user_input,
                 )
-        await session.close()
         return self.async_show_form(
             step_id="user",
             data_schema=DATA_SCHEMA,
