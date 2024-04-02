@@ -338,8 +338,9 @@ def mock_browse_by_idstring(
             ),
         ]
     # browse_by_id_string works with URL encoded or decoded strings
-    elif search_type == "genres" and (
-        idstring == "A:GENRE/Classic%20Rock" or idstring == "A:GENRE/Classic Rock"
+    if search_type == "genres" and idstring in (
+        "A:GENRE/Classic%20Rock",
+        "A:GENRE/Classic Rock",
     ):
         return [
             MockMusicServiceItem(
@@ -361,9 +362,9 @@ def mock_browse_by_idstring(
                 "object.container.person.musicArtist",
             ),
         ]
-    elif search_type == "composers" and (
-        idstring == "A:COMPOSER/Carlos%20Santana"
-        or idstring == "A:COMPOSER/Carlos Santana"
+    if search_type == "composers" and idstring in (
+        "A:COMPOSER/Carlos%20Santana",
+        "A:COMPOSER/Carlos Santana",
     ):
         return [
             MockMusicServiceItem(
