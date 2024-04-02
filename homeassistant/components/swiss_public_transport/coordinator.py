@@ -35,6 +35,14 @@ class DataConnection(TypedDict):
     delay: int
 
 
+def calculate_duration_in_seconds(duration_text: str) -> int | None:
+    """Transform and calculate the duration into seconds."""
+    # Transform 01d03:21:23 into 01 days 03:21:23
+    duration_text_pg_format = duration_text.replace("d", " days ")
+    duration = dt_util.parse_duration(duration_text_pg_format)
+    return duration.seconds if duration else None
+
+
 class SwissPublicTransportDataUpdateCoordinator(
     DataUpdateCoordinator[list[DataConnection]]
 ):
@@ -75,13 +83,6 @@ class SwissPublicTransportDataUpdateCoordinator(
                 "Unable to connect and retrieve data from transport.opendata.ch"
             )
             raise UpdateFailed from e
-
-        def calculate_duration_in_seconds(duration_text: str) -> int | None:
-            """Transform and calculate the duration into seconds."""
-            # Transform 01d03:21:23 into 01 days 03:21:23
-            duration_text_pg_format = duration_text.replace("d", " days ")
-            duration = dt_util.parse_duration(duration_text_pg_format)
-            return duration.seconds if duration else None
 
         connections = self._opendata.connections
         return [
