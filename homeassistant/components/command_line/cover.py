@@ -12,7 +12,6 @@ from homeassistant.const import (
     CONF_COMMAND_OPEN,
     CONF_COMMAND_STATE,
     CONF_COMMAND_STOP,
-    CONF_ICON,
     CONF_NAME,
     CONF_SCAN_INTERVAL,
     CONF_VALUE_TEMPLATE,
