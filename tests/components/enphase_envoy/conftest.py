@@ -33,36 +33,54 @@ ALL_FIXTURES = (
     [
         pytest.param("envoy", id="envoy"),
         pytest.param("envoy_metered_batt_relay", id="envoy_metered_batt_relay"),
+        pytest.param("envoy_nobatt_metered_3p", id="envoy_nobatt_metered_3p"),
+        pytest.param("envoy_1p_metered", id="envoy_1p_metered"),
+        pytest.param("envoy_tot_cons_metered", id="envoy_tot_cons_metered"),
     ],
 )
 BINARY_FIXTURES = (
     [
         pytest.param("envoy", 0, id="envoy"),
         pytest.param("envoy_metered_batt_relay", 4, id="envoy_metered_batt_relay"),
+        pytest.param("envoy_nobatt_metered_3p", 0, id="envoy_nobatt_metered_3p"),
+        pytest.param("envoy_1p_metered", 0, id="envoy_1p_metered"),
+        pytest.param("envoy_tot_cons_metered", 0, id="envoy_tot_cons_metered"),
     ],
 )
 NUMBER_FIXTURES = (
     [
         pytest.param("envoy", 0, id="envoy"),
         pytest.param("envoy_metered_batt_relay", 7, id="envoy_metered_batt_relay"),
+        pytest.param("envoy_nobatt_metered_3p", 0, id="envoy_nobatt_metered_3p"),
+        pytest.param("envoy_1p_metered", 0, id="envoy_1p_metered"),
+        pytest.param("envoy_tot_cons_metered", 0, id="envoy_tot_cons_metered"),
     ],
 )
 SELECT_FIXTURES = (
     [
         pytest.param("envoy", 0, id="envoy"),
         pytest.param("envoy_metered_batt_relay", 13, id="envoy_metered_batt_relay"),
+        pytest.param("envoy_nobatt_metered_3p", 0, id="envoy_nobatt_metered_3p"),
+        pytest.param("envoy_1p_metered", 0, id="envoy_1p_metered"),
+        pytest.param("envoy_tot_cons_metered", 0, id="envoy_tot_cons_metered"),
     ],
 )
 SENSOR_FIXTURES = (
     [
         pytest.param("envoy", 5, id="envoy"),
         pytest.param("envoy_metered_batt_relay", 51, id="envoy_metered_batt_relay"),
+        pytest.param("envoy_nobatt_metered_3p", 36, id="envoy_nobatt_metered_3p"),
+        pytest.param("envoy_1p_metered", 12, id="envoy_1p_metered"),
+        pytest.param("envoy_tot_cons_metered", 5, id="envoy_tot_cons_metered"),
     ],
 )
 SWITCH_FIXTURES = (
     [
         pytest.param("envoy", 0, id="envoy"),
         pytest.param("envoy_metered_batt_relay", 5, id="envoy_metered_batt_relay"),
+        pytest.param("envoy_nobatt_metered_3p", 0, id="envoy_nobatt_metered_3p"),
+        pytest.param("envoy_1p_metered", 0, id="envoy_1p_metered"),
+        pytest.param("envoy_tot_cons_metered", 0, id="envoy_tot_cons_metered"),
     ],
 )
 

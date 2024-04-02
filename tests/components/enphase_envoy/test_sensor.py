@@ -4,6 +4,7 @@ import itertools
 from unittest.mock import AsyncMock
 
 from pyenphase.const import PHASENAMES
+from pyenphase.models.meters import CtType
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -210,7 +211,9 @@ async def test_grid_data(
         "meter_status_flags_active_net_consumption_ct",
     )
 
-    if mock_envoy.data.ctmeter_consumption:
+    if mock_envoy.data.ctmeter_consumption and (
+        mock_envoy.consumption_meter_type == CtType.NET_CONSUMPTION
+    ):
         # these should be defined and have value from data
         data = mock_envoy.data.ctmeter_consumption
         CT_CONSUMPTION_TARGETS = (
@@ -240,7 +243,9 @@ async def test_grid_data(
         for name in (CT_CONSUMPTION_NAMES + CT_CONSUMPTION_NAMES_DISABLED)
     ]
 
-    if mock_envoy.data.ctmeter_consumption_phases:
+    if mock_envoy.data.ctmeter_consumption_phases and (
+        mock_envoy.consumption_meter_type == CtType.NET_CONSUMPTION
+    ):
         # these should be disabled by default
         for name in CT_CONSUMPTION_PHASE_NAMES:
             assert entity_status[f"{entity_base}_{name}"]
@@ -256,7 +261,9 @@ async def test_grid_data(
         for name in CT_PRODUCTION_PHASE_NAMES:
             assert entity_status[f"{entity_base}_{name}"]
 
-    if not mock_envoy.data.ctmeter_consumption:
+    if (not mock_envoy.data.ctmeter_consumption) and (
+        mock_envoy.consumption_meter_type == CtType.NET_CONSUMPTION
+    ):
         # these should not be defined if no ct meter
         for name in CT_CONSUMPTION_NAMES + CT_CONSUMPTION_NAMES_DISABLED:
             assert f"{entity_base}_{name}" not in entity_status
@@ -266,7 +273,9 @@ async def test_grid_data(
         for name in CT_PRODUCTION_NAMES_DISABLED:
             assert f"{entity_base}_{name}" not in entity_status
 
-    if not mock_envoy.data.ctmeter_consumption_phases:
+    if (not mock_envoy.data.ctmeter_consumption_phases) and (
+        mock_envoy.consumption_meter_type == CtType.NET_CONSUMPTION
+    ):
         # these should not be defined if no ct meter phase
         for name in CT_CONSUMPTION_PHASE_NAMES:
             assert f"{entity_base}_{name}" not in entity_status
