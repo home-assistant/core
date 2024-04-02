@@ -303,7 +303,7 @@ class EcovacsConfigFlow(ConfigFlow, domain=DOMAIN):
         except AbortFlow as ex:
             if ex.reason == "already_configured":
                 create_repair()
-            raise ex
+            raise
 
         if errors := result.get("errors"):
             error = errors["base"]

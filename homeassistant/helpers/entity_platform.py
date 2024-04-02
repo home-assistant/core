@@ -163,9 +163,9 @@ class EntityPlatform:
         # with the child dict indexed by entity_id
         #
         # This is usually media_player.yamaha, light.hue, switch.tplink, etc.
-        domain_platform_entities: dict[
-            tuple[str, str], dict[str, Entity]
-        ] = hass.data.setdefault(DATA_DOMAIN_PLATFORM_ENTITIES, {})
+        domain_platform_entities: dict[tuple[str, str], dict[str, Entity]] = (
+            hass.data.setdefault(DATA_DOMAIN_PLATFORM_ENTITIES, {})
+        )
         key = (domain, platform_name)
         self.domain_platform_entities = domain_platform_entities.setdefault(key, {})
 
@@ -362,10 +362,6 @@ class EntityPlatform:
                 pending = self._tasks.copy()
                 self._tasks.clear()
                 await asyncio.gather(*pending)
-
-            hass.config.components.add(full_name)
-            self._setup_complete = True
-            return True
         except PlatformNotReady as ex:
             tries += 1
             wait_time = min(tries, 6) * PLATFORM_NOT_READY_BASE_WAIT_TIME
@@ -417,6 +413,10 @@ class EntityPlatform:
                 self.domain,
             )
             return False
+        else:
+            hass.config.components.add(full_name)
+            self._setup_complete = True
+            return True
         finally:
             warn_task.cancel()
 

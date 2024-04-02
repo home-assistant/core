@@ -1,0 +1,18 @@
+{
+  "entity": {
+    "sensor": {
+      "bio": {
+        "default": "mdi:leaf"
+      },
+      "paper": {
+        "default": "mdi:file"
+      },
+      "plastic": {
+        "default": "mdi:recycle"
+      },
+      "residual": {
+        "default": "mdi:delete"
+      }
+    }
+  }
+}

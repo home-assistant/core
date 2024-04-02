@@ -64,15 +64,6 @@ class HomeAssistantError(Exception):
             return self._message
 
         if not self.generate_message:
-            # Initialize self._message to the string repr of the class
-            # to prevent a recursive loop.
-            self._message = (
-                f"Parent class {self.__class__.__name__} is missing __str__ method"
-            )
-            # If the there is an other super class involved,
-            # we want to call its __str__ method.
-            # If the super().__str__ method is missing in the base_class
-            # the call will be recursive and we return our initialized default.
             self._message = super().__str__()
             return self._message
 
@@ -81,9 +72,9 @@ class HomeAssistantError(Exception):
             assert self.translation_domain is not None
 
         if "async_get_exception_message" not in _function_cache:
-            _function_cache[
-                "async_get_exception_message"
-            ] = import_async_get_exception_message()
+            _function_cache["async_get_exception_message"] = (
+                import_async_get_exception_message()
+            )
 
         self._message = _function_cache["async_get_exception_message"](
             self.translation_domain, self.translation_key, self.translation_placeholders
@@ -96,20 +87,19 @@ class ConfigValidationError(HomeAssistantError, ExceptionGroup[Exception]):
 
     def __init__(
         self,
-        message: str,
+        message_translation_key: str,
         exceptions: list[Exception],
         translation_domain: str | None = None,
-        translation_key: str | None = None,
         translation_placeholders: dict[str, str] | None = None,
     ) -> None:
         """Initialize exception."""
         super().__init__(
-            *(message, exceptions),
+            *(message_translation_key, exceptions),
             translation_domain=translation_domain,
-            translation_key=translation_key,
+            translation_key=message_translation_key,
             translation_placeholders=translation_placeholders,
         )
-        self._message = message
+        self.generate_message = True
 
 
 class ServiceValidationError(HomeAssistantError):
@@ -269,17 +259,13 @@ class ServiceNotFound(HomeAssistantError):
     def __init__(self, domain: str, service: str) -> None:
         """Initialize error."""
         super().__init__(
-            self,
             translation_domain="homeassistant",
             translation_key="service_not_found",
             translation_placeholders={"domain": domain, "service": service},
         )
         self.domain = domain
         self.service = service
-
-    def __str__(self) -> str:
-        """Return string representation."""
-        return f"Service {self.domain}.{self.service} not found."
+        self.generate_message = True
 
 
 class MaxLengthExceeded(HomeAssistantError):
@@ -288,7 +274,6 @@ class MaxLengthExceeded(HomeAssistantError):
     def __init__(self, value: str, property_name: str, max_length: int) -> None:
         """Initialize error."""
         super().__init__(
-            self,
             translation_domain="homeassistant",
             translation_key="max_length_exceeded",
             translation_placeholders={
@@ -309,7 +294,6 @@ class DependencyError(HomeAssistantError):
     def __init__(self, failed_dependencies: list[str]) -> None:
         """Initialize error."""
         super().__init__(
-            self,
             f"Could not setup dependencies: {', '.join(failed_dependencies)}",
         )
         self.failed_dependencies = failed_dependencies

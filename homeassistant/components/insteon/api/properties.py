@@ -74,7 +74,7 @@ def _read_only_schema(name, value):
 
 
 def get_schema(prop, name, groups):
-    """Return the correct shema type."""
+    """Return the correct schema type."""
     if prop.is_read_only:
         return _read_only_schema(name, prop.value)
     if name == RAMP_RATE_IN_SEC:

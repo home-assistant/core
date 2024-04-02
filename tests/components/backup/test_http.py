@@ -21,12 +21,16 @@ async def test_downloading_backup(
 
     client = await hass_client()
 
-    with patch(
-        "homeassistant.components.backup.http.BackupManager.get_backup",
-        return_value=TEST_BACKUP,
-    ), patch("pathlib.Path.exists", return_value=True), patch(
-        "homeassistant.components.backup.http.FileResponse",
-        return_value=web.Response(text=""),
+    with (
+        patch(
+            "homeassistant.components.backup.http.BackupManager.get_backup",
+            return_value=TEST_BACKUP,
+        ),
+        patch("pathlib.Path.exists", return_value=True),
+        patch(
+            "homeassistant.components.backup.http.FileResponse",
+            return_value=web.Response(text=""),
+        ),
     ):
         resp = await client.get("/api/backup/download/abc123")
         assert resp.status == 200

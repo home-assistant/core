@@ -21,6 +21,7 @@
       ],
       // Please keep this file in sync with settings in home-assistant/.vscode/settings.default.json
       "settings": {
+        "python.experiments.optOutFrom": ["pythonTestAdapter"],
         "python.pythonPath": "/usr/local/bin/python",
         "python.testing.pytestArgs": ["--no-cov"],
         "editor.formatOnPaste": false,

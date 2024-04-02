@@ -578,6 +578,11 @@ ZEROCONF = {
             },
         },
     ],
+    "_matter._tcp.local.": [
+        {
+            "domain": "matter",
+        },
+    ],
     "_mediaremotetv._tcp.local.": [
         {
             "domain": "apple_tv",
