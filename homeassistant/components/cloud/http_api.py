@@ -135,12 +135,12 @@ def _handle_cloud_errors(
         """Handle exceptions that raise from the wrapped request handler."""
         try:
             result = await handler(view, request, *args, **kwargs)
-            return result
         except Exception as err:  # pylint: disable=broad-except
             status, msg = _process_cloud_exception(err, request.path)
             return view.json_message(
                 msg, status_code=status, message_code=err.__class__.__name__.lower()
             )
+        return result
 
     return error_handler
 
@@ -223,7 +223,10 @@ class CloudLoginView(HomeAssistantView):
         cloud: Cloud[CloudClient] = hass.data[DOMAIN]
         await cloud.login(data["email"], data["password"])
 
-        new_cloud_pipeline_id = await async_create_cloud_pipeline(hass)
+        if "assist_pipeline" in hass.config.components:
+            new_cloud_pipeline_id = await async_create_cloud_pipeline(hass)
+        else:
+            new_cloud_pipeline_id = None
         return self.json({"success": True, "cloud_pipeline": new_cloud_pipeline_id})
 
 

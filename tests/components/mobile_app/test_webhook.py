@@ -24,10 +24,6 @@ from homeassistant.setup import async_setup_component
 from .const import CALL_SERVICE, FIRE_EVENT, REGISTER_CLEARTEXT, RENDER_TEMPLATE, UPDATE
 
 from tests.common import async_capture_events, async_mock_service
-from tests.components.conversation.conftest import mock_agent
-
-# To avoid autoflake8 removing the import
-mock_agent = mock_agent
 
 
 @pytest.fixture
@@ -1027,14 +1023,18 @@ async def test_reregister_sensor(
 
 
 async def test_webhook_handle_conversation_process(
-    hass: HomeAssistant, homeassistant, create_registrations, webhook_client, mock_agent
+    hass: HomeAssistant,
+    homeassistant,
+    create_registrations,
+    webhook_client,
+    mock_conversation_agent,
 ) -> None:
     """Test that we can converse."""
     webhook_client.server.app.router._frozen = False
 
     with patch(
-        "homeassistant.components.conversation.AgentManager.async_get_agent",
-        return_value=mock_agent,
+        "homeassistant.components.conversation.agent_manager.async_get_agent",
+        return_value=mock_conversation_agent,
     ):
         resp = await webhook_client.post(
             "/api/webhook/{}".format(create_registrations[1]["webhook_id"]),
