@@ -84,8 +84,7 @@ class SystemBridgeSource(MediaSource):
             path_split[0], path_split[1] if len(path_split) > 1 else None
         )
 
-        result = _build_media_items(entry, files, path, item.identifier)
-        return result
+        return _build_media_items(entry, files, path, item.identifier)
 
     def _build_bridges(self) -> BrowseMediaSource:
         """Build bridges for System Bridge media."""
