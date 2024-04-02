@@ -1,5 +1,7 @@
 """Tests for init of Azure DevOps."""
 
+from unittest.mock import AsyncMock
+
 import pytest
 
 from homeassistant.components.azure_devops.const import DOMAIN
@@ -14,12 +16,12 @@ from tests.common import MockConfigEntry
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensors(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
     mock_devops_client: AsyncMock,
 ) -> None:
     """Test the sensor entities."""
-    await setup_integration(hass, mock_config_entry)
+    assert await setup_integration(hass, mock_config_entry)
     entry = hass.config_entries.async_entries(DOMAIN)[0]
 
     assert (state := hass.states.get("sensor.testproject_test_build_latest_build"))

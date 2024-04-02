@@ -1,7 +1,7 @@
 """Test fixtures for Azure DevOps."""
 
-from collections.abc import AsyncGenerator
-from unittest.mock import MagicMock, patch
+from collections.abc import AsyncGenerator, Generator
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -46,3 +46,13 @@ async def mock_config_entry() -> MockConfigEntry:
         data=FIXTURE_USER_INPUT,
         unique_id=UNIQUE_ID,
     )
+
+
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.azure_devops.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        yield mock_setup_entry

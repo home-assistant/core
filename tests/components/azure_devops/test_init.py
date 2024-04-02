@@ -1,6 +1,6 @@
 """Tests for init of Azure DevOps."""
 
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 import aiohttp
 
@@ -19,7 +19,9 @@ async def test_load_unload_entry(
     mock_devops_client: MagicMock,
 ) -> None:
     """Test a successful setup entry."""
-    await setup_integration(hass, mock_config_entry)
+    assert await setup_integration(hass, mock_config_entry)
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+
     assert mock_devops_client.authorized
     assert mock_devops_client.authorize.call_count == 1
     assert mock_devops_client.get_builds.call_count == 2
