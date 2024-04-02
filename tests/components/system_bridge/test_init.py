@@ -163,7 +163,7 @@ async def test_get_data_authentication_error(
     mock_version: MagicMock,
     mock_websocket_client: MagicMock,
 ) -> None:
-    """Test authentication error from get_data call."""
+    """Test authentication error from get data call."""
     mock_websocket_client.get_data.side_effect = AuthenticationException
 
     await setup_integration(hass, mock_config_entry)
@@ -177,7 +177,7 @@ async def test_get_data_connection_closed(
     mock_version: MagicMock,
     mock_websocket_client: MagicMock,
 ) -> None:
-    """Test connection closed from get_data call."""
+    """Test connection closed from get data call."""
     mock_websocket_client.get_data.side_effect = ConnectionClosedException
 
     await setup_integration(hass, mock_config_entry)
@@ -191,7 +191,7 @@ async def test_get_data_connection_error(
     mock_version: MagicMock,
     mock_websocket_client: MagicMock,
 ) -> None:
-    """Test connection error from get_data call."""
+    """Test connection error from get data call."""
     mock_websocket_client.get_data.side_effect = ConnectionErrorException
 
     await setup_integration(hass, mock_config_entry)
@@ -205,7 +205,7 @@ async def test_get_data_timeout(
     mock_version: MagicMock,
     mock_websocket_client: MagicMock,
 ) -> None:
-    """Test timeout from get_data call."""
+    """Test timeout from get data call."""
     mock_websocket_client.get_data.side_effect = asyncio.TimeoutError
 
     await setup_integration(hass, mock_config_entry)
