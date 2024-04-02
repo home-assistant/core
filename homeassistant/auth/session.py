@@ -1,4 +1,5 @@
 """Session auth module."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -118,10 +119,10 @@ class SessionManager:
             }
             self._async_schedule_save()
 
-        self._refresh_token_revoce_callbacks[
-            refresh_token_id
-        ] = self._auth.async_register_revoke_token_callback(
-            refresh_token_id, async_invalidate_auth_sessions
+        self._refresh_token_revoce_callbacks[refresh_token_id] = (
+            self._auth.async_register_revoke_token_callback(
+                refresh_token_id, async_invalidate_auth_sessions
+            )
         )
 
     async def async_create_session(

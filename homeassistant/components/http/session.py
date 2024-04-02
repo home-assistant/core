@@ -1,4 +1,5 @@
 """Session http module."""
+
 from functools import lru_cache
 import logging
 
