@@ -51,14 +51,11 @@ async def async_setup_platform(
         value_template: Template | None = device_config.get(CONF_VALUE_TEMPLATE)
         if value_template is not None:
             value_template.hass = hass
-        icon: Template | None = device_config.get(CONF_ICON)
-        if icon is not None:
-            icon.hass = hass
 
         trigger_entity_config = {
             CONF_UNIQUE_ID: device_config.get(CONF_UNIQUE_ID),
             CONF_NAME: Template(device_config.get(CONF_NAME, device_name), hass),
-            CONF_ICON: icon,
+            CONF_ICON: device_config.get(CONF_ICON),
             CONF_AVAILABILITY: device_config.get(CONF_AVAILABILITY),
         }
 
