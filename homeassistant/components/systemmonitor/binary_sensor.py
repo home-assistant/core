@@ -92,21 +92,20 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up System Montor binary sensors based on a config entry."""
-    entities: list[SystemMonitorSensor] = []
     coordinator: SystemMonitorCoordinator = hass.data[DOMAIN_COORDINATOR]
 
-    for sensor_description in SENSOR_TYPES:
-        _entry = entry.options.get(BINARY_SENSOR_DOMAIN, {})
-        for argument in _entry.get(CONF_PROCESS, []):
-            entities.append(
-                SystemMonitorSensor(
-                    coordinator,
-                    sensor_description,
-                    entry.entry_id,
-                    argument,
-                )
-            )
-    async_add_entities(entities)
+    async_add_entities(
+        SystemMonitorSensor(
+            coordinator,
+            sensor_description,
+            entry.entry_id,
+            argument,
+        )
+        for sensor_description in SENSOR_TYPES
+        for argument in entry.options.get(BINARY_SENSOR_DOMAIN, {}).get(
+            CONF_PROCESS, []
+        )
+    )
 
 
 class SystemMonitorSensor(

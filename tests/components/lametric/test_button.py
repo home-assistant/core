@@ -9,7 +9,6 @@ from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRE
 from homeassistant.components.lametric.const import DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_ICON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     EntityCategory,
@@ -33,7 +32,6 @@ async def test_button_app_next(
     """Test the LaMetric next app button."""
     state = hass.states.get("button.frenck_s_lametric_next_app")
     assert state
-    assert state.attributes.get(ATTR_ICON) == "mdi:arrow-right-bold"
     assert state.state == STATE_UNKNOWN
 
     entry = entity_registry.async_get("button.frenck_s_lametric_next_app")
@@ -80,7 +78,6 @@ async def test_button_app_previous(
     """Test the LaMetric previous app button."""
     state = hass.states.get("button.frenck_s_lametric_previous_app")
     assert state
-    assert state.attributes.get(ATTR_ICON) == "mdi:arrow-left-bold"
     assert state.state == STATE_UNKNOWN
 
     entry = entity_registry.async_get("button.frenck_s_lametric_previous_app")
@@ -127,7 +124,6 @@ async def test_button_dismiss_current_notification(
     """Test the LaMetric dismiss current notification button."""
     state = hass.states.get("button.frenck_s_lametric_dismiss_current_notification")
     assert state
-    assert state.attributes.get(ATTR_ICON) == "mdi:bell-cancel"
     assert state.state == STATE_UNKNOWN
 
     entry = entity_registry.async_get(
@@ -176,7 +172,6 @@ async def test_button_dismiss_all_notifications(
     """Test the LaMetric dismiss all notifications button."""
     state = hass.states.get("button.frenck_s_lametric_dismiss_all_notifications")
     assert state
-    assert state.attributes.get(ATTR_ICON) == "mdi:bell-cancel"
     assert state.state == STATE_UNKNOWN
 
     entry = entity_registry.async_get(

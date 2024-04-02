@@ -59,9 +59,9 @@ def get_capabilities(capabilities: Sequence[str]) -> Sequence[str] | None:
 
     supported = [Capability.switch]
 
-    for capability in optional:
-        if capability in capabilities:
-            supported.append(capability)
+    supported.extend(
+        capability for capability in optional if capability in capabilities
+    )
 
     return supported
 

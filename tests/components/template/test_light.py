@@ -2,7 +2,7 @@
 
 import pytest
 
-import homeassistant.components.light as light
+from homeassistant.components import light
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,

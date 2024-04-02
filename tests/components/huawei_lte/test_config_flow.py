@@ -102,7 +102,7 @@ async def test_already_configured(
 
 @pytest.mark.parametrize(
     ("exception", "errors", "data_patch"),
-    (
+    [
         (ConnectionError(), {CONF_URL: "unknown"}, {}),
         (requests.exceptions.SSLError(), {CONF_URL: "ssl_error_try_plain"}, {}),
         (
@@ -110,7 +110,7 @@ async def test_already_configured(
             {CONF_URL: "ssl_error_try_unverified"},
             {CONF_VERIFY_SSL: True},
         ),
-    ),
+    ],
 )
 async def test_connection_errors(
     hass: HomeAssistant,
@@ -158,7 +158,7 @@ def login_requests_mock(requests_mock):
 
 @pytest.mark.parametrize(
     ("request_outcome", "fixture_override", "errors"),
-    (
+    [
         (
             {
                 "text": f"<error><code>{LoginErrorEnum.USERNAME_WRONG}</code><message/></error>",
@@ -202,7 +202,7 @@ def login_requests_mock(requests_mock):
             {},
             {CONF_URL: "connection_timeout"},
         ),
-    ),
+    ],
 )
 async def test_login_error(
     hass: HomeAssistant, login_requests_mock, request_outcome, fixture_override, errors
@@ -224,7 +224,7 @@ async def test_login_error(
     assert result["errors"] == errors
 
 
-@pytest.mark.parametrize("scheme", ("http", "https"))
+@pytest.mark.parametrize("scheme", ["http", "https"])
 async def test_success(hass: HomeAssistant, login_requests_mock, scheme: str) -> None:
     """Test successful flow provides entry creation data."""
     user_input = {
@@ -239,8 +239,9 @@ async def test_success(hass: HomeAssistant, login_requests_mock, scheme: str) ->
         f"{user_input[CONF_URL]}api/user/login",
         text="<response>OK</response>",
     )
-    with patch("homeassistant.components.huawei_lte.async_setup"), patch(
-        "homeassistant.components.huawei_lte.async_setup_entry"
+    with (
+        patch("homeassistant.components.huawei_lte.async_setup"),
+        patch("homeassistant.components.huawei_lte.async_setup_entry"),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -257,7 +258,7 @@ async def test_success(hass: HomeAssistant, login_requests_mock, scheme: str) ->
 
 @pytest.mark.parametrize(
     ("requests_mock_request_kwargs", "upnp_data", "expected_result"),
-    (
+    [
         (
             {
                 "method": ANY,
@@ -304,7 +305,7 @@ async def test_success(hass: HomeAssistant, login_requests_mock, scheme: str) ->
                 "reason": "unsupported_device",
             },
         ),
-    ),
+    ],
 )
 async def test_ssdp(
     hass: HomeAssistant,
@@ -346,7 +347,7 @@ async def test_ssdp(
 
 @pytest.mark.parametrize(
     ("login_response_text", "expected_result", "expected_entry_data"),
-    (
+    [
         (
             "<response>OK</response>",
             {
@@ -364,7 +365,7 @@ async def test_ssdp(
             },
             {**FIXTURE_USER_INPUT, CONF_PASSWORD: "invalid-password"},
         ),
-    ),
+    ],
 )
 async def test_reauth(
     hass: HomeAssistant,
