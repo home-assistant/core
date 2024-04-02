@@ -104,6 +104,7 @@ class HERETravelTimeConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Init Config Flow."""
         self._config: dict[str, Any] = {}
+        self._entry: ConfigEntry | None = None
 
     @staticmethod
     @callback
@@ -128,10 +129,23 @@ class HERETravelTimeConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             if not errors:
-                self._config = user_input
+                self._config[CONF_NAME] = user_input[CONF_NAME]
+                self._config[CONF_API_KEY] = user_input[CONF_API_KEY]
+                self._config[CONF_MODE] = user_input[CONF_MODE]
                 return await self.async_step_origin_menu()
         return self.async_show_form(
             step_id="user", data_schema=get_user_step_schema(user_input), errors=errors
+        )
+
+    async def async_step_reconfigure(
+        self, _: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration."""
+        self._entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+        assert self._entry
+        self._config = self._entry.data.copy()
+        return self.async_show_form(
+            step_id="user", data_schema=get_user_step_schema(self._config)
         )
 
     async def async_step_origin_menu(self, _: None = None) -> ConfigFlowResult:
@@ -150,26 +164,22 @@ class HERETravelTimeConfigFlow(ConfigFlow, domain=DOMAIN):
             self._config[CONF_ORIGIN_LONGITUDE] = user_input[CONF_ORIGIN][
                 CONF_LONGITUDE
             ]
+            self._config.pop(CONF_ORIGIN_ENTITY_ID, None)
             return await self.async_step_destination_menu()
         schema = vol.Schema(
             {
                 vol.Required(
                     CONF_ORIGIN,
                     default={
-                        CONF_LATITUDE: self.hass.config.latitude,
-                        CONF_LONGITUDE: self.hass.config.longitude,
+                        CONF_LATITUDE: self._config.get(CONF_ORIGIN_LATITUDE)
+                        or self.hass.config.latitude,
+                        CONF_LONGITUDE: self._config.get(CONF_ORIGIN_LONGITUDE)
+                        or self.hass.config.longitude,
                     },
                 ): LocationSelector()
             }
         )
         return self.async_show_form(step_id="origin_coordinates", data_schema=schema)
-
-    async def async_step_destination_menu(self, _: None = None) -> ConfigFlowResult:
-        """Show the destination menu."""
-        return self.async_show_menu(
-            step_id="destination_menu",
-            menu_options=["destination_coordinates", "destination_entity"],
-        )
 
     async def async_step_origin_entity(
         self, user_input: dict[str, Any] | None = None
@@ -177,9 +187,25 @@ class HERETravelTimeConfigFlow(ConfigFlow, domain=DOMAIN):
         """Configure origin by using an entity."""
         if user_input is not None:
             self._config[CONF_ORIGIN_ENTITY_ID] = user_input[CONF_ORIGIN_ENTITY_ID]
+            self._config.pop(CONF_ORIGIN_LATITUDE, None)
+            self._config.pop(CONF_ORIGIN_LONGITUDE, None)
             return await self.async_step_destination_menu()
-        schema = vol.Schema({vol.Required(CONF_ORIGIN_ENTITY_ID): EntitySelector()})
+        schema = vol.Schema(
+            {
+                vol.Required(
+                    CONF_ORIGIN_ENTITY_ID,
+                    default=self._config.get(CONF_ORIGIN_ENTITY_ID),
+                ): EntitySelector()
+            }
+        )
         return self.async_show_form(step_id="origin_entity", data_schema=schema)
+
+    async def async_step_destination_menu(self, _: None = None) -> ConfigFlowResult:
+        """Show the destination menu."""
+        return self.async_show_menu(
+            step_id="destination_menu",
+            menu_options=["destination_coordinates", "destination_entity"],
+        )
 
     async def async_step_destination_coordinates(
         self,
@@ -193,6 +219,14 @@ class HERETravelTimeConfigFlow(ConfigFlow, domain=DOMAIN):
             self._config[CONF_DESTINATION_LONGITUDE] = user_input[CONF_DESTINATION][
                 CONF_LONGITUDE
             ]
+            self._config.pop(CONF_DESTINATION_ENTITY_ID, None)
+            if self._entry:
+                return self.async_update_reload_and_abort(
+                    self._entry,
+                    title=self._config[CONF_NAME],
+                    data=self._config,
+                    reason="reconfigure_successful",
+                )
             return self.async_create_entry(
                 title=self._config[CONF_NAME],
                 data=self._config,
@@ -203,8 +237,10 @@ class HERETravelTimeConfigFlow(ConfigFlow, domain=DOMAIN):
                 vol.Required(
                     CONF_DESTINATION,
                     default={
-                        CONF_LATITUDE: self.hass.config.latitude,
-                        CONF_LONGITUDE: self.hass.config.longitude,
+                        CONF_LATITUDE: self._config.get(CONF_DESTINATION_LATITUDE)
+                        or self.hass.config.latitude,
+                        CONF_LONGITUDE: self._config.get(CONF_DESTINATION_LONGITUDE)
+                        or self.hass.config.longitude,
                     },
                 ): LocationSelector()
             }
@@ -222,13 +258,24 @@ class HERETravelTimeConfigFlow(ConfigFlow, domain=DOMAIN):
             self._config[CONF_DESTINATION_ENTITY_ID] = user_input[
                 CONF_DESTINATION_ENTITY_ID
             ]
+            self._config.pop(CONF_DESTINATION_LATITUDE, None)
+            self._config.pop(CONF_DESTINATION_LONGITUDE, None)
+            if self._entry:
+                return self.async_update_reload_and_abort(
+                    self._entry, data=self._config, reason="reconfigure_successful"
+                )
             return self.async_create_entry(
                 title=self._config[CONF_NAME],
                 data=self._config,
                 options=DEFAULT_OPTIONS,
             )
         schema = vol.Schema(
-            {vol.Required(CONF_DESTINATION_ENTITY_ID): EntitySelector()}
+            {
+                vol.Required(
+                    CONF_DESTINATION_ENTITY_ID,
+                    default=self._config.get(CONF_DESTINATION_ENTITY_ID),
+                ): EntitySelector()
+            }
         )
         return self.async_show_form(step_id="destination_entity", data_schema=schema)
 
