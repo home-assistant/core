@@ -1081,7 +1081,7 @@ hole==0.8.0
 holidays==0.45
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240329.1
+home-assistant-frontend==20240402.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.3.29
@@ -2451,7 +2451,7 @@ rfk101py==0.0.1
 rflink==0.0.66
 
 # homeassistant.components.ring
-ring-doorbell[listen]==0.8.8
+ring-doorbell[listen]==0.8.9
 
 # homeassistant.components.fleetgo
 ritassist==0.9.2
@@ -2469,7 +2469,7 @@ rokuecp==0.19.2
 romy==0.0.9
 
 # homeassistant.components.roomba
-roombapy==1.6.13
+roombapy==1.8.1
 
 # homeassistant.components.roon
 roonapi==0.1.6
