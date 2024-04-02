@@ -84,7 +84,7 @@ async def test_form(
             user_flow["flow_id"],
             TESTDATA,
         )
-        assert result1["type"] == FlowResultType.FORM
+        assert result1["type"] is FlowResultType.FORM
         assert result1["step_id"] == "user_confirm_still"
         client = await hass_client()
         preview_id = result1["flow_id"]
@@ -97,7 +97,7 @@ async def test_form(
             user_input={CONF_CONFIRMED_OK: True},
         )
         await hass.async_block_till_done()
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "127_0_0_1"
     assert result2["options"] == {
         CONF_STILL_IMAGE_URL: "http://127.0.0.1/testurl/1",
@@ -138,13 +138,13 @@ async def test_form_only_stillimage(
             data,
         )
         await hass.async_block_till_done()
-        assert result1["type"] == FlowResultType.FORM
+        assert result1["type"] is FlowResultType.FORM
         assert result1["step_id"] == "user_confirm_still"
         result2 = await hass.config_entries.flow.async_configure(
             result1["flow_id"],
             user_input={CONF_CONFIRMED_OK: True},
         )
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "127_0_0_1"
     assert result2["options"] == {
         CONF_STILL_IMAGE_URL: "http://127.0.0.1/testurl/1",
@@ -171,13 +171,13 @@ async def test_form_reject_still_preview(
             user_flow["flow_id"],
             TESTDATA,
         )
-    assert result1["type"] == FlowResultType.FORM
+    assert result1["type"] is FlowResultType.FORM
     assert result1["step_id"] == "user_confirm_still"
     result2 = await hass.config_entries.flow.async_configure(
         result1["flow_id"],
         user_input={CONF_CONFIRMED_OK: False},
     )
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "user"
 
 
@@ -201,7 +201,7 @@ async def test_form_still_preview_cam_off(
             user_flow["flow_id"],
             TESTDATA,
         )
-        assert result1["type"] == FlowResultType.FORM
+        assert result1["type"] is FlowResultType.FORM
         assert result1["step_id"] == "user_confirm_still"
         preview_id = result1["flow_id"]
         # Try to view the image, should be unavailable.
@@ -222,14 +222,14 @@ async def test_form_only_stillimage_gif(
             user_flow["flow_id"],
             data,
         )
-        assert result1["type"] == FlowResultType.FORM
+        assert result1["type"] is FlowResultType.FORM
         assert result1["step_id"] == "user_confirm_still"
         result2 = await hass.config_entries.flow.async_configure(
             result1["flow_id"],
             user_input={CONF_CONFIRMED_OK: True},
         )
         await hass.async_block_till_done()
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["options"][CONF_CONTENT_TYPE] == "image/gif"
 
 
@@ -247,14 +247,14 @@ async def test_form_only_svg_whitespace(
             user_flow["flow_id"],
             data,
         )
-        assert result1["type"] == FlowResultType.FORM
+        assert result1["type"] is FlowResultType.FORM
         assert result1["step_id"] == "user_confirm_still"
         result2 = await hass.config_entries.flow.async_configure(
             result1["flow_id"],
             user_input={CONF_CONFIRMED_OK: True},
         )
     await hass.async_block_till_done()
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
 
 
 @respx.mock
@@ -282,14 +282,14 @@ async def test_form_only_still_sample(
             user_flow["flow_id"],
             data,
         )
-        assert result1["type"] == FlowResultType.FORM
+        assert result1["type"] is FlowResultType.FORM
         assert result1["step_id"] == "user_confirm_still"
         result2 = await hass.config_entries.flow.async_configure(
             result1["flow_id"],
             user_input={CONF_CONFIRMED_OK: True},
         )
         await hass.async_block_till_done()
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
 
 
 @respx.mock
@@ -371,13 +371,13 @@ async def test_form_rtsp_mode(
         result1 = await hass.config_entries.flow.async_configure(
             user_flow["flow_id"], data
         )
-        assert result1["type"] == FlowResultType.FORM
+        assert result1["type"] is FlowResultType.FORM
         assert result1["step_id"] == "user_confirm_still"
         result2 = await hass.config_entries.flow.async_configure(
             result1["flow_id"],
             user_input={CONF_CONFIRMED_OK: True},
         )
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "127_0_0_1"
     assert result2["options"] == {
         CONF_STILL_IMAGE_URL: "http://127.0.0.1/testurl/1",
@@ -408,14 +408,14 @@ async def test_form_only_stream(
             user_flow["flow_id"],
             data,
         )
-        assert result1["type"] == FlowResultType.FORM
+        assert result1["type"] is FlowResultType.FORM
         assert result1["step_id"] == "user_confirm_still"
         result3 = await hass.config_entries.flow.async_configure(
             result1["flow_id"],
             user_input={CONF_CONFIRMED_OK: True},
         )
         await hass.async_block_till_done()
-    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == "127_0_0_1"
     assert result3["options"] == {
         CONF_AUTHENTICATION: HTTP_BASIC_AUTHENTICATION,
@@ -451,7 +451,7 @@ async def test_form_still_and_stream_not_provided(
             CONF_VERIFY_SSL: False,
         },
     )
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "no_still_image_or_stream_url"}
 
 
@@ -680,7 +680,7 @@ async def test_options_template_error(
     await hass.async_block_till_done()
 
     result = await hass.config_entries.options.async_init(mock_entry.entry_id)
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
     # try updating the still image url
@@ -691,16 +691,16 @@ async def test_options_template_error(
             result["flow_id"],
             user_input=data,
         )
-        assert result2["type"] == FlowResultType.FORM
+        assert result2["type"] is FlowResultType.FORM
         assert result2["step_id"] == "confirm_still"
 
         result2a = await hass.config_entries.options.async_configure(
             result2["flow_id"], user_input={CONF_CONFIRMED_OK: True}
         )
-        assert result2a["type"] == FlowResultType.CREATE_ENTRY
+        assert result2a["type"] is FlowResultType.CREATE_ENTRY
 
         result3 = await hass.config_entries.options.async_init(mock_entry.entry_id)
-        assert result3["type"] == FlowResultType.FORM
+        assert result3["type"] is FlowResultType.FORM
         assert result3["step_id"] == "init"
 
         # verify that an invalid template reports the correct UI error.
@@ -709,7 +709,7 @@ async def test_options_template_error(
             result3["flow_id"],
             user_input=data,
         )
-        assert result4.get("type") == FlowResultType.FORM
+        assert result4.get("type") is FlowResultType.FORM
         assert result4["errors"] == {"still_image_url": "template_error"}
 
         # verify that an invalid template reports the correct UI error.
@@ -720,7 +720,7 @@ async def test_options_template_error(
             user_input=data,
         )
 
-        assert result5.get("type") == FlowResultType.FORM
+        assert result5.get("type") is FlowResultType.FORM
         assert result5["errors"] == {"stream_source": "template_error"}
 
         # verify that an relative stream url is rejected.
@@ -730,7 +730,7 @@ async def test_options_template_error(
             result5["flow_id"],
             user_input=data,
         )
-        assert result6.get("type") == FlowResultType.FORM
+        assert result6.get("type") is FlowResultType.FORM
         assert result6["errors"] == {"stream_source": "relative_url"}
 
         # verify that an malformed stream url is rejected.
@@ -740,7 +740,7 @@ async def test_options_template_error(
             result6["flow_id"],
             user_input=data,
         )
-    assert result7.get("type") == FlowResultType.FORM
+    assert result7.get("type") is FlowResultType.FORM
     assert result7["errors"] == {"stream_source": "malformed_url"}
 
 
@@ -778,7 +778,7 @@ async def test_options_only_stream(
     await hass.async_block_till_done()
 
     result = await hass.config_entries.options.async_init(mock_entry.entry_id)
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
     # try updating the config options
@@ -787,13 +787,13 @@ async def test_options_only_stream(
             result["flow_id"],
             user_input=data,
         )
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "confirm_still"
 
     result3 = await hass.config_entries.options.async_configure(
         result2["flow_id"], user_input={CONF_CONFIRMED_OK: True}
     )
-    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["data"][CONF_CONTENT_TYPE] == "image/jpeg"
 
 
@@ -886,7 +886,7 @@ async def test_use_wallclock_as_timestamps_option(
     result = await hass.config_entries.options.async_init(
         mock_entry.entry_id, context={"show_advanced_options": True}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
     with (
         patch("homeassistant.components.generic.async_setup_entry", return_value=True),
@@ -896,12 +896,12 @@ async def test_use_wallclock_as_timestamps_option(
             result["flow_id"],
             user_input={CONF_USE_WALLCLOCK_AS_TIMESTAMPS: True, **TESTDATA},
         )
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     # Test what happens if user rejects the preview
     result3 = await hass.config_entries.options.async_configure(
         result2["flow_id"], user_input={CONF_CONFIRMED_OK: False}
     )
-    assert result3["type"] == FlowResultType.FORM
+    assert result3["type"] is FlowResultType.FORM
     assert result3["step_id"] == "init"
     with (
         patch("homeassistant.components.generic.async_setup_entry", return_value=True),
@@ -911,10 +911,10 @@ async def test_use_wallclock_as_timestamps_option(
             result3["flow_id"],
             user_input={CONF_USE_WALLCLOCK_AS_TIMESTAMPS: True, **TESTDATA},
         )
-    assert result4["type"] == FlowResultType.FORM
+    assert result4["type"] is FlowResultType.FORM
     assert result4["step_id"] == "confirm_still"
     result5 = await hass.config_entries.options.async_configure(
         result4["flow_id"],
         user_input={CONF_CONFIRMED_OK: True},
     )
-    assert result5["type"] == FlowResultType.CREATE_ENTRY
+    assert result5["type"] is FlowResultType.CREATE_ENTRY
