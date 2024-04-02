@@ -12,6 +12,7 @@ from homeassistant.components.roomba import config_flow
 from homeassistant.components.roomba.const import CONF_BLID, CONF_CONTINUOUS, DOMAIN
 from homeassistant.const import CONF_DELAY, CONF_HOST, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
@@ -1049,3 +1050,39 @@ async def test_dhcp_discovery_partial_hostname(hass: HomeAssistant) -> None:
     current_flows = hass.config_entries.flow.async_progress()
     assert len(current_flows) == 1
     assert current_flows[0]["flow_id"] == result2["flow_id"]
+
+
+async def test_options_flow(
+    hass: HomeAssistant,
+) -> None:
+    """Test config flow options."""
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=VALID_CONFIG,
+        unique_id="BLID",
+    )
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.roomba.async_setup_entry",
+        return_value=True,
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_CONTINUOUS: True, CONF_DELAY: 1},
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["data"] == {CONF_CONTINUOUS: True, CONF_DELAY: 1}
+    assert config_entry.options == {CONF_CONTINUOUS: True, CONF_DELAY: 1}
