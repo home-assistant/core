@@ -62,15 +62,15 @@ async def mock_lastfm_user(
     network = AsyncMock(spec=LastFMNetwork)
     network.username = "testaccount1"
 
-    user.return_value.get_now_playing.return_value = Track("artist", "title", network)
+    user.get_now_playing.return_value = Track("artist", "title", network)
     user.return_value.get_top_tracks.return_value = [Track("artist", "title", network)]
     user.return_value.get_recent_tracks.return_value = [
         Track("artist", "title", network)
     ]
-    user.return_value.get_friends.return_value = [MockUser()]
-    user.return_value.get_playcount.return_value = 1
-    user.return_value.get_image.return_value = "image"
-    user.return_value.get_name.return_value = "testaccount1"
+    user.get_friends.return_value = [MockUser()]
+    user.get_playcount.return_value = 1
+    user.get_image.return_value = "image"
+    user.get_name.return_value = "testaccount1"
     user.name = "testaccount1"
 
     return user
