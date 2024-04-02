@@ -179,7 +179,6 @@ class ZHAGroupProxy(LogMixin):
         entity_info = []
 
         for entity_ref in entity_refs.get(member.device.ieee):  # type: ignore[union-attr]
-            # We have device entities now that don't leverage cluster handlers
             if not entity_ref.entity_data.is_group_entity:
                 continue
             entity = entity_registry.async_get(entity_ref.ha_entity_id)
@@ -187,8 +186,8 @@ class ZHAGroupProxy(LogMixin):
             if (
                 entity is None
                 or entity_ref.entity_data.group_proxy is None
-                or entity_ref.entity_data.group_proxy.group.endpoint.endpoint_id
-                != member.endpoint_id
+                or entity_ref.entity_data.group_proxy.group.group_id
+                != member.group.group_id
             ):
                 continue
 

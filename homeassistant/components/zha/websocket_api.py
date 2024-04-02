@@ -464,8 +464,9 @@ async def websocket_get_groupable_devices(
                         ),
                     }
                     for entity_ref in entity_refs
-                    if entity_ref.entity_data.group_proxy is not None
-                    and entity_ref.entity_data.group_proxy.group.endpoint.endpoint_id
+                    if list(entity_ref.entity_data.entity.cluster_handlers.values())[
+                        0
+                    ].cluster.endpoint.endpoint_id
                     == ep_id
                 ],
                 "device": device.zha_device_info,
