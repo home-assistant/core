@@ -28,7 +28,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Zigbee Home Automation siren from config entry."""
     zha_data = get_zha_data(hass)
-    entities_to_create = zha_data.platforms[Platform.SENSOR]
+    entities_to_create = zha_data.platforms[Platform.SIREN]
 
     unsub = async_dispatcher_connect(
         hass,
