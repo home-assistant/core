@@ -32,7 +32,7 @@ async def async_setup_entry(
             if zone.can_be_bypassed
         )
 
-    async_add_entities(buttons, True)
+    async_add_entities(buttons)
 
 
 class TotalConnectZoneBypassButton(ButtonEntity):
