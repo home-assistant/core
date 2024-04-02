@@ -32,7 +32,7 @@ async def test_mqtt_setup(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) -> N
     )
     await hass.async_block_till_done()
     assert result is not None
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         "drop_command_topic": "drop_connect/DROP-1_C0FFEE/cmd/255",
         "drop_data_topic": "drop_connect/DROP-1_C0FFEE/data/255/#",
@@ -69,7 +69,7 @@ async def test_duplicate(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) -> No
     )
     await hass.async_block_till_done()
     assert result is not None
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
     # Attempting configuration of the same object should abort
     result = await hass.config_entries.flow.async_init(

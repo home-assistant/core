@@ -5,7 +5,7 @@ from unittest.mock import patch
 from aurorapy.client import AuroraError, AuroraTimeoutError
 from serial.tools import list_ports_common
 
-from homeassistant import config_entries, data_entry_flow, setup
+from homeassistant import config_entries
 from homeassistant.components.aurora_abb_powerone.const import (
     ATTR_FIRMWARE,
     ATTR_MODEL,
@@ -13,6 +13,7 @@ from homeassistant.components.aurora_abb_powerone.const import (
 )
 from homeassistant.const import ATTR_SERIAL_NUMBER, CONF_ADDRESS, CONF_PORT
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType, setup
 
 TEST_DATA = {"device": "/dev/ttyUSB7", "address": 3, "name": "MyAuroraPV"}
 
@@ -64,7 +65,7 @@ async def test_form(hass: HomeAssistant) -> None:
             {CONF_PORT: "/dev/ttyUSB7", CONF_ADDRESS: 7},
         )
 
-    assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
 
     assert result2["data"] == {
         CONF_PORT: "/dev/ttyUSB7",
