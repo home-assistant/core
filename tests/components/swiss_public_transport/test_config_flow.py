@@ -124,7 +124,7 @@ async def test_flow_user_init_data_already_configured(hass: HomeAssistant) -> No
             user_input=MOCK_DATA_STEP,
         )
 
-        assert result["type"] == FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "already_configured"
 
 
@@ -152,7 +152,7 @@ async def test_import(
         )
         await hass.async_block_till_done()
 
-        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["data"] == MOCK_DATA_IMPORT
         assert len(mock_setup_entry.mock_calls) == 1
 
@@ -179,7 +179,7 @@ async def test_import_error(hass: HomeAssistant, raise_error, text_error) -> Non
         )
         await hass.async_block_till_done()
 
-        assert result["type"] == FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == text_error
 
 
@@ -199,5 +199,5 @@ async def test_import_already_configured(hass: HomeAssistant) -> None:
         data=MOCK_DATA_IMPORT,
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
