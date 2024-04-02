@@ -16,7 +16,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import data_entry_flow
+from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import TEST_HOST, TEST_PASSWORD, TEST_USERNAME
 
@@ -36,7 +36,7 @@ async def test_config_flow(hass: HomeAssistant, qnap_connect: MagicMock) -> None
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] is data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -46,7 +46,7 @@ async def test_config_flow(hass: HomeAssistant, qnap_connect: MagicMock) -> None
         STANDARD_CONFIG,
     )
 
-    assert result["type"] is data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
 
@@ -56,7 +56,7 @@ async def test_config_flow(hass: HomeAssistant, qnap_connect: MagicMock) -> None
         STANDARD_CONFIG,
     )
 
-    assert result["type"] is data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "invalid_auth"}
 
@@ -66,7 +66,7 @@ async def test_config_flow(hass: HomeAssistant, qnap_connect: MagicMock) -> None
         STANDARD_CONFIG,
     )
 
-    assert result["type"] is data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "unknown"}
 
@@ -76,7 +76,7 @@ async def test_config_flow(hass: HomeAssistant, qnap_connect: MagicMock) -> None
         STANDARD_CONFIG,
     )
 
-    assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Test NAS name"
     assert result["data"] == {
         CONF_HOST: "1.2.3.4",

@@ -5,11 +5,11 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from homeassistant import config_entries
+from homeassistant import config_entries, setup
 from homeassistant.components.snapcast.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType, setup
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 

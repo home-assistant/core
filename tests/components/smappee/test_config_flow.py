@@ -4,6 +4,7 @@ from http import HTTPStatus
 from ipaddress import ip_address
 from unittest.mock import patch
 
+from homeassistant import setup
 from homeassistant.components import zeroconf
 from homeassistant.components.smappee.const import (
     CONF_SERIALNUMBER,
@@ -15,7 +16,7 @@ from homeassistant.components.smappee.const import (
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType, setup
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from tests.common import MockConfigEntry

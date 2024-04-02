@@ -5,11 +5,11 @@ from unittest.mock import AsyncMock, patch
 from asyncsleepiq import SleepIQLoginException, SleepIQTimeoutException
 import pytest
 
-from homeassistant import config_entries
+from homeassistant import config_entries, setup
 from homeassistant.components.sleepiq.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType, setup
+from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import SLEEPIQ_CONFIG, setup_platform
 
