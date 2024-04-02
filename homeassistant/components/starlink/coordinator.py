@@ -58,14 +58,14 @@ class StarlinkUpdateCoordinator(DataUpdateCoordinator[StarlinkData]):
     async def _async_update_data(self) -> StarlinkData:
         async with asyncio.timeout(4):
             try:
-                status, location, sleep = await asyncio.gather(
-                    self.hass.async_add_executor_job(status_data, self.channel_context),
-                    self.hass.async_add_executor_job(
-                        location_data, self.channel_context
-                    ),
-                    self.hass.async_add_executor_job(
-                        get_sleep_config, self.channel_context
-                    ),
+                status = await self.hass.async_add_executor_job(
+                    status_data, self.channel_context
+                )
+                location = await self.hass.async_add_executor_job(
+                    location_data, self.channel_context
+                )
+                sleep = await self.hass.async_add_executor_job(
+                    get_sleep_config, self.channel_context
                 )
                 return StarlinkData(location, sleep, *status)
             except GrpcError as exc:
