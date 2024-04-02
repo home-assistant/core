@@ -2,8 +2,6 @@
 
 from unittest.mock import AsyncMock
 
-from pyenphase.models.dry_contacts import DryContactAction, DryContactMode
-from pyenphase.models.tariff import EnvoyStorageMode
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -25,14 +23,11 @@ from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
 from tests.components.enphase_envoy import setup_with_selected_platforms
+from tests.components.enphase_envoy.conftest import ALL_FIXTURES, SELECT_FIXTURES
 
 
 @pytest.mark.parametrize(
-    ("mock_envoy", "entity_count"),
-    [
-        pytest.param("envoy_metered_batt_relay", 13, id="envoy_metered_batt_relay"),
-    ],
-    indirect=["mock_envoy"],
+    ("mock_envoy", "entity_count"), *SELECT_FIXTURES, indirect=["mock_envoy"]
 )
 async def test_select(
     hass: HomeAssistant,
@@ -45,260 +40,139 @@ async def test_select(
     """Test enphase_envoy select entities."""
     await setup_with_selected_platforms(hass, config_entry, [Platform.SELECT])
 
-    # these entities states should be created from test data
+    # number entities states should be created from test data
     assert len(hass.states.async_all()) == entity_count
-    assert entity_registry
 
-    # compare registered entities against snapshot of prior run
     entity_entries = er.async_entries_for_config_entry(
         entity_registry, config_entry.entry_id
     )
-    assert entity_entries
-    for entity_entry in entity_entries:
-        assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
-        assert hass.states.get(entity_entry.entity_id) == snapshot(
-            name=f"{entity_entry.entity_id}-state"
-        )
+
+    if entity_count == 0:
+        assert len(entity_entries) == 0
+    else:
+        # compare registered entities against snapshot of prior run
+        assert entity_entries
+        for entity_entry in entity_entries:
+            assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
+            assert hass.states.get(entity_entry.entity_id) == snapshot(
+                name=f"{entity_entry.entity_id}-state"
+            )
 
 
-@pytest.mark.parametrize(
-    ("mock_envoy", "entity_count"),
-    [
-        pytest.param("envoy", 0, id="envoy"),
-    ],
-    indirect=["mock_envoy"],
-)
-async def test_no_select(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    snapshot: SnapshotAssertion,
-    mock_envoy: AsyncMock,
-    entity_registry: AsyncMock,
-    entity_count: int,
-) -> None:
-    """Test enphase_envoy switch entities."""
-    await setup_with_selected_platforms(hass, config_entry, [Platform.SELECT])
-
-    # these entities states should be created enabled from test data
-    assert len(hass.states.async_all()) == entity_count
-
-
-@pytest.mark.parametrize(
-    ("mock_envoy", "entity_id", "relay_id", "expected_action", "initial_value"),
-    [
-        pytest.param(
-            "envoy_metered_batt_relay",
-            "select.nc1_fixture_grid_action",
-            "NC1",
-            "grid_action",
-            RELAY_ACTION_MAP[DryContactAction.SHED],
-            id="envoy_metered_batt_relay",
-        ),
-        pytest.param(
-            "envoy_metered_batt_relay",
-            "select.nc2_fixture_grid_action",
-            "NC2",
-            "grid_action",
-            RELAY_ACTION_MAP[DryContactAction.APPLY],
-            id="envoy_metered_batt_relay",
-        ),
-        pytest.param(
-            "envoy_metered_batt_relay",
-            "select.nc3_fixture_grid_action",
-            "NC3",
-            "grid_action",
-            RELAY_ACTION_MAP[DryContactAction.SHED],
-            id="envoy_metered_batt_relay",
-        ),
-        pytest.param(
-            "envoy_metered_batt_relay",
-            "select.nc1_fixture_microgrid_action",
-            "NC1",
-            "micro_grid_action",
-            RELAY_ACTION_MAP[DryContactAction.SHED],
-            id="envoy_metered_batt_relay",
-        ),
-        pytest.param(
-            "envoy_metered_batt_relay",
-            "select.nc2_fixture_microgrid_action",
-            "NC2",
-            "micro_grid_action",
-            RELAY_ACTION_MAP[DryContactAction.SHED],
-            id="envoy_metered_batt_relay",
-        ),
-        pytest.param(
-            "envoy_metered_batt_relay",
-            "select.nc3_fixture_microgrid_action",
-            "NC3",
-            "micro_grid_action",
-            RELAY_ACTION_MAP[DryContactAction.APPLY],
-            id="envoy_metered_batt_relay",
-        ),
-        pytest.param(
-            "envoy_metered_batt_relay",
-            "select.nc1_fixture_generator_action",
-            "NC1",
-            "generator_action",
-            RELAY_ACTION_MAP[DryContactAction.SHED],
-            id="envoy_metered_batt_relay",
-        ),
-        pytest.param(
-            "envoy_metered_batt_relay",
-            "select.nc2_fixture_generator_action",
-            "NC2",
-            "generator_action",
-            RELAY_ACTION_MAP[DryContactAction.SHED],
-            id="envoy_metered_batt_relay",
-        ),
-        pytest.param(
-            "envoy_metered_batt_relay",
-            "select.nc3_fixture_generator_action",
-            "NC3",
-            "generator_action",
-            RELAY_ACTION_MAP[DryContactAction.APPLY],
-            id="envoy_metered_batt_relay",
-        ),
-    ],
-    indirect=["mock_envoy"],
-)
+@pytest.mark.parametrize(("mock_envoy"), *ALL_FIXTURES, indirect=["mock_envoy"])
 async def test_select_relay_actions(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     mock_envoy: AsyncMock,
     mock_update_dry_contact: AsyncMock,
-    entity_id: str,
-    relay_id: str,
-    expected_action: str,
-    initial_value: str,
 ) -> None:
     """Test enphase_envoy select relay entities actions."""
     await setup_with_selected_platforms(hass, config_entry, [Platform.SELECT])
 
-    # verify initial value
-    switch_state = hass.states.get(entity_id)
-    assert switch_state.state == initial_value
+    entity_base = f"{Platform.SELECT}."
 
-    # test each action for relays
-    for action in ACTION_OPTIONS:
-        await hass.services.async_call(
-            Platform.SELECT,
-            "select_option",
-            {
-                ATTR_ENTITY_ID: entity_id,
-                "option": action,
-            },
-            blocking=True,
-        )
-        mock_update_dry_contact.assert_awaited_once()
-        mock_update_dry_contact.assert_called_with(
-            {"id": relay_id, expected_action: REVERSE_RELAY_ACTION_MAP[action]}
-        )
-        mock_update_dry_contact.reset_mock()
+    if mock_envoy.data.dry_contact_settings:
+        for id, dry_contact in mock_envoy.data.dry_contact_settings.items():
+            name = dry_contact.load_name.lower().replace(" ", "_")
+            targets = []
+            targets.extend(
+                (
+                    ("generator_action", dry_contact.generator_action),
+                    ("microgrid_action", dry_contact.micro_grid_action),
+                    ("grid_action", dry_contact.grid_action),
+                )
+            )
+            for target in targets:
+                test_entity = f"{entity_base}{name}_{target[0]}"
+                assert RELAY_ACTION_MAP[target[1]] == (
+                    current_state := hass.states.get(test_entity).state
+                )
+                for mode in [mode for mode in ACTION_OPTIONS if not current_state]:
+                    await hass.services.async_call(
+                        Platform.SELECT,
+                        "select_option",
+                        {
+                            ATTR_ENTITY_ID: test_entity,
+                            "option": mode,
+                        },
+                        blocking=True,
+                    )
+                    mock_update_dry_contact.assert_awaited_once()
+                    mock_update_dry_contact.assert_called_with(
+                        {"id": id, target[0]: REVERSE_RELAY_ACTION_MAP[mode]}
+                    )
+                    mock_update_dry_contact.reset_mock()
 
 
-@pytest.mark.parametrize(
-    ("mock_envoy", "entity_id", "relay_id", "expected_mode", "initial_value"),
-    [
-        pytest.param(
-            "envoy_metered_batt_relay",
-            "select.nc1_fixture_mode",
-            "NC1",
-            "mode",
-            RELAY_MODE_MAP[DryContactMode.MANUAL],
-            id="envoy_metered_batt_relay",
-        ),
-        pytest.param(
-            "envoy_metered_batt_relay",
-            "select.nc2_fixture_mode",
-            "NC2",
-            "mode",
-            RELAY_MODE_MAP[DryContactMode.MANUAL],
-            id="envoy_metered_batt_relay",
-        ),
-        pytest.param(
-            "envoy_metered_batt_relay",
-            "select.nc3_fixture_mode",
-            "NC3",
-            "mode",
-            RELAY_MODE_MAP[DryContactMode.MANUAL],
-            id="envoy_metered_batt_relay",
-        ),
-    ],
-    indirect=["mock_envoy"],
-)
+@pytest.mark.parametrize(("mock_envoy"), *ALL_FIXTURES, indirect=["mock_envoy"])
 async def test_select_relay_modes(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     mock_envoy: AsyncMock,
     mock_update_dry_contact: AsyncMock,
-    entity_id: str,
-    relay_id: str,
-    expected_mode: str,
-    initial_value: str,
 ) -> None:
     """Test enphase_envoy select relay entities modes."""
     await setup_with_selected_platforms(hass, config_entry, [Platform.SELECT])
 
-    # verify initial value
-    switch_state = hass.states.get(entity_id)
-    assert switch_state.state == initial_value
+    entity_base = f"{Platform.SELECT}."
 
-    # test each mode for relays
-    for mode in MODE_OPTIONS:
-        await hass.services.async_call(
-            Platform.SELECT,
-            "select_option",
-            {
-                ATTR_ENTITY_ID: entity_id,
-                "option": mode,
-            },
-            blocking=True,
-        )
-        mock_update_dry_contact.assert_awaited_once()
-        mock_update_dry_contact.assert_called_with(
-            {"id": relay_id, expected_mode: REVERSE_RELAY_MODE_MAP[mode]}
-        )
-        mock_update_dry_contact.reset_mock()
+    if mock_envoy.data.dry_contact_settings:
+        for id, dry_contact in mock_envoy.data.dry_contact_settings.items():
+            name = dry_contact.load_name.lower().replace(" ", "_")
+            test_entity = f"{entity_base}{name}_mode"
+            assert RELAY_MODE_MAP[dry_contact.mode] == (
+                current_state := hass.states.get(test_entity).state
+            )
+            for mode in [mode for mode in MODE_OPTIONS if not current_state]:
+                await hass.services.async_call(
+                    Platform.SELECT,
+                    "select_option",
+                    {
+                        ATTR_ENTITY_ID: test_entity,
+                        "option": mode,
+                    },
+                    blocking=True,
+                )
+                mock_update_dry_contact.assert_awaited_once()
+                mock_update_dry_contact.assert_called_with(
+                    {"id": id, "mode": REVERSE_RELAY_MODE_MAP[mode]}
+                )
+                mock_update_dry_contact.reset_mock()
 
 
-@pytest.mark.parametrize(
-    ("mock_envoy", "entity_id", "initial_value"),
-    [
-        pytest.param(
-            "envoy_metered_batt_relay",
-            "select.enpower_654321_storage_mode",
-            STORAGE_MODE_MAP[EnvoyStorageMode.SELF_CONSUMPTION],
-            id="envoy_metered_batt_relay",
-        ),
-    ],
-    indirect=["mock_envoy"],
-)
+@pytest.mark.parametrize(("mock_envoy"), *ALL_FIXTURES, indirect=["mock_envoy"])
 async def test_select_storage_modes(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     mock_envoy: AsyncMock,
     mock_set_storage_mode: AsyncMock,
-    entity_id: str,
-    initial_value: str,
 ) -> None:
     """Test enphase_envoy select entities storage modes."""
     await setup_with_selected_platforms(hass, config_entry, [Platform.SELECT])
 
-    # verify initial value
-    switch_state = hass.states.get(entity_id)
-    assert switch_state.state == initial_value
+    entity_base = f"{Platform.SELECT}.enpower_"
 
-    # test each mode for relays
-    for mode in STORAGE_MODE_OPTIONS:
-        await hass.services.async_call(
-            Platform.SELECT,
-            "select_option",
-            {
-                ATTR_ENTITY_ID: entity_id,
-                "option": mode,
-            },
-            blocking=True,
+    if (
+        mock_envoy.data.tariff
+        and mock_envoy.data.tariff.storage_settings
+        and mock_envoy.data.enpower
+    ):
+        sn = mock_envoy.data.enpower.serial_number
+        test_entity = f"{entity_base}{sn}_storage_mode"
+        assert STORAGE_MODE_MAP[mock_envoy.data.tariff.storage_settings.mode] == (
+            current_state := hass.states.get(test_entity).state
         )
-        mock_set_storage_mode.assert_awaited_once()
-        mock_set_storage_mode.assert_called_with(REVERSE_STORAGE_MODE_MAP[mode])
-        mock_set_storage_mode.reset_mock()
+
+        for mode in [mode for mode in STORAGE_MODE_OPTIONS if not current_state]:
+            await hass.services.async_call(
+                Platform.SELECT,
+                "select_option",
+                {
+                    ATTR_ENTITY_ID: test_entity,
+                    "option": mode,
+                },
+                blocking=True,
+            )
+            mock_set_storage_mode.assert_awaited_once()
+            mock_set_storage_mode.assert_called_with(REVERSE_STORAGE_MODE_MAP[mode])
+            mock_set_storage_mode.reset_mock()

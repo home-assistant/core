@@ -29,6 +29,43 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, load_json_object_fixture
 
+ALL_FIXTURES = (
+    [
+        pytest.param("envoy", id="envoy"),
+        pytest.param("envoy_metered_batt_relay", id="envoy_metered_batt_relay"),
+    ],
+)
+BINARY_FIXTURES = (
+    [
+        pytest.param("envoy", 0, id="envoy"),
+        pytest.param("envoy_metered_batt_relay", 4, id="envoy_metered_batt_relay"),
+    ],
+)
+NUMBER_FIXTURES = (
+    [
+        pytest.param("envoy", 0, id="envoy"),
+        pytest.param("envoy_metered_batt_relay", 7, id="envoy_metered_batt_relay"),
+    ],
+)
+SELECT_FIXTURES = (
+    [
+        pytest.param("envoy", 0, id="envoy"),
+        pytest.param("envoy_metered_batt_relay", 13, id="envoy_metered_batt_relay"),
+    ],
+)
+SENSOR_FIXTURES = (
+    [
+        pytest.param("envoy", 5, id="envoy"),
+        pytest.param("envoy_metered_batt_relay", 51, id="envoy_metered_batt_relay"),
+    ],
+)
+SWITCH_FIXTURES = (
+    [
+        pytest.param("envoy", 0, id="envoy"),
+        pytest.param("envoy_metered_batt_relay", 5, id="envoy_metered_batt_relay"),
+    ],
+)
+
 
 @pytest.fixture(name="config_entry")
 def config_entry_fixture(hass: HomeAssistant, config, serial_number):
