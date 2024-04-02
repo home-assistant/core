@@ -11,6 +11,8 @@ from systembridgeconnector.const import (
     TYPE_DATA_GET,
     TYPE_DATA_LISTENER_REGISTERED,
 )
+from systembridgemodels.media_directories import MediaDirectory
+from systembridgemodels.media_files import MediaFile
 from systembridgemodels.modules import GetData, RegisterDataListener
 from systembridgemodels.response import Response
 
@@ -116,6 +118,28 @@ def mock_websocket_client(
         )
         # Trigger callback when listener is registered
         websocket_client.listen.side_effect = mock_data_listener
+
+        websocket_client.get_directories.return_value = [
+            MediaDirectory(
+                key="testdirectory",
+                path="testdirectory",
+            )
+        ]
+        media_file = MediaFile(
+            name="testfile.txt",
+            path="testdirectory/testfile.txt",
+            fullpath="/home/user/testdirectory/testfile.txt",
+            size=100,
+            last_accessed=1630000000,
+            created=1630000000,
+            modified=1630000000,
+            is_directory=False,
+            is_file=True,
+            is_link=False,
+            mime_type="text/plain",
+        )
+        websocket_client.get_files.return_value = [media_file]
+        websocket_client.get_file.return_value = media_file
 
         websocket_client.open_path.return_value = FIXTURE_GENERIC_RESPONSE
         websocket_client.power_shutdown.return_value = FIXTURE_GENERIC_RESPONSE
