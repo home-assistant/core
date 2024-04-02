@@ -12,7 +12,7 @@ from systembridgeconnector.const import (
     TYPE_DATA_LISTENER_REGISTERED,
 )
 from systembridgemodels.media_directories import MediaDirectory
-from systembridgemodels.media_files import MediaFile
+from systembridgemodels.media_files import MediaFile, MediaFiles
 from systembridgemodels.modules import GetData, RegisterDataListener
 from systembridgemodels.response import Response
 
@@ -141,7 +141,9 @@ def mock_websocket_client(
             is_link=False,
             mime_type="text/plain",
         )
-        websocket_client.get_files.return_value = [media_file]
+        websocket_client.get_files.return_value = MediaFiles(
+            files=[media_file], path="testdirectory"
+        )
         websocket_client.get_file.return_value = media_file
 
         websocket_client.open_path.return_value = FIXTURE_GENERIC_RESPONSE

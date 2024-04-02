@@ -1,53 +1,121 @@
 """Test the System Bridge integration."""
 
-from unittest.mock import MagicMock
-
+import pytest
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import paths
 
-from homeassistant.components.media_source import URI_SCHEME, async_browse_media
+from homeassistant.components.media_player.errors import BrowseError
+from homeassistant.components.media_source import (
+    DOMAIN as MEDIA_SOURCE_DOMAIN,
+    URI_SCHEME,
+    async_browse_media,
+    async_resolve_media,
+)
 from homeassistant.components.system_bridge.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
-
-from . import FIXTURE_UUID, setup_integration
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
 
-async def test_async_browse_media(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    snapshot: SnapshotAssertion,
-    mock_config_entry: MockConfigEntry,
-    mock_setup_entry: MagicMock,
-) -> None:
-    """Test async_browse_media."""
-    await setup_integration(hass, mock_config_entry)
-
-    assert mock_config_entry.state == ConfigEntryState.LOADED
-
-    # Get device from device registry
-    device = device_registry.async_get_or_create(
-        config_entry_id=mock_config_entry.entry_id,
-        identifiers={(DOMAIN, FIXTURE_UUID)},
+@pytest.fixture(autouse=True)
+async def setup_component(hass: HomeAssistant) -> None:
+    """Set up component."""
+    assert await async_setup_component(
+        hass,
+        MEDIA_SOURCE_DOMAIN,
+        {},
     )
-    assert device is not None
 
+
+async def test_root(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test root media browsing."""
     browse_media_root = await async_browse_media(
         hass,
         f"{URI_SCHEME}{DOMAIN}",
     )
 
     assert browse_media_root.as_dict() == snapshot(
-        name=f"{DOMAIN}_browse_media_root",
+        name=f"{DOMAIN}_media_source_root",
         exclude=paths("children", "media_content_id"),
     )
 
-    # browse_media_entry = await async_browse_media(
-    #     hass,
-    #     f"{URI_SCHEME}{DOMAIN}~~{entry.entry_id}",
-    # )
 
-    # assert browse_media_entry.as_dict() == snapshot(name=f"{DOMAIN}_browse_media_entry")
+async def test_entry(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test browsing entry."""
+    browse_media_entry = await async_browse_media(
+        hass,
+        f"{URI_SCHEME}{DOMAIN}/{init_integration.entry_id}",
+    )
+
+    assert browse_media_entry.as_dict() == snapshot(
+        name=f"{DOMAIN}_media_source_entry",
+        exclude=paths("children", "media_content_id"),
+    )
+
+
+async def test_directory(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test browsing directory."""
+    browse_media_directory = await async_browse_media(
+        hass,
+        f"{URI_SCHEME}{DOMAIN}/{init_integration.entry_id}~~testdirectory",
+    )
+
+    assert browse_media_directory.as_dict() == snapshot(
+        name=f"{DOMAIN}_media_source_directory",
+        exclude=paths("children", "media_content_id"),
+    )
+
+
+async def test_file(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test browsing file."""
+    resolve_media_file = await async_resolve_media(
+        hass,
+        f"{URI_SCHEME}{DOMAIN}/{init_integration.entry_id}~~testdirectory/testfile.txt~~text/plain",
+        None,
+    )
+
+    assert resolve_media_file == snapshot(
+        name=f"{DOMAIN}_media_source_file",
+    )
+
+
+async def test_bad_entry(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test invalid entry raises BrowseError."""
+    with pytest.raises(BrowseError):
+        await async_browse_media(
+            hass,
+            f"{URI_SCHEME}{DOMAIN}/badentryid",
+        )
+
+    with pytest.raises(BrowseError):
+        await async_browse_media(
+            hass,
+            f"{URI_SCHEME}{DOMAIN}/badentryid~~baddirectory",
+        )
+
+    with pytest.raises(ValueError):
+        await async_resolve_media(
+            hass,
+            f"{URI_SCHEME}{DOMAIN}/badentryid~~baddirectory/badfile.txt~~text/plain",
+            None,
+        )

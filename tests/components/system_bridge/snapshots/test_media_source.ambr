@@ -14,3 +14,45 @@
     'title': 'System Bridge',
   })
 # ---
+# name: test_directory[system_bridge_media_source_directory]
+  dict({
+    'can_expand': True,
+    'can_play': False,
+    'children_media_class': None,
+    'media_class': <MediaClass.DIRECTORY: 'directory'>,
+    'media_content_type': '',
+    'not_shown': 0,
+    'thumbnail': None,
+    'title': 'TestSystem - testdirectory',
+  })
+# ---
+# name: test_entry[system_bridge_media_source_entry]
+  dict({
+    'can_expand': True,
+    'can_play': False,
+    'children_media_class': <MediaClass.DIRECTORY: 'directory'>,
+    'media_class': <MediaClass.DIRECTORY: 'directory'>,
+    'media_content_type': '',
+    'not_shown': 0,
+    'thumbnail': None,
+    'title': 'TestSystem',
+  })
+# ---
+# name: test_file[system_bridge_media_source_file]
+  dict({
+    'mime_type': 'text/plain',
+    'url': 'http://127.0.0.1:9170/api/media/file/data?token=abc-123-def-456-ghi&base=testdirectory&path=testfile.txt',
+  })
+# ---
+# name: test_root[system_bridge_media_source_root]
+  dict({
+    'can_expand': True,
+    'can_play': False,
+    'children_media_class': <MediaClass.DIRECTORY: 'directory'>,
+    'media_class': <MediaClass.DIRECTORY: 'directory'>,
+    'media_content_type': '',
+    'not_shown': 0,
+    'thumbnail': None,
+    'title': 'System Bridge',
+  })
+# ---
