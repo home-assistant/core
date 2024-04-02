@@ -7,6 +7,7 @@ import datetime
 from ipaddress import IPv4Network, IPv6Network, ip_network
 import logging
 import os
+import socket
 import ssl
 from tempfile import NamedTemporaryFile
 from typing import Any, Final, TypedDict, cast
@@ -98,11 +99,14 @@ STORAGE_KEY: Final = DOMAIN
 STORAGE_VERSION: Final = 1
 SAVE_DELAY: Final = 180
 
+_HAS_IPV6 = hasattr(socket, "AF_INET6")
+_DEFAULT_BIND = ["0.0.0.0", "::"] if _HAS_IPV6 else ["0.0.0.0"]
+
 HTTP_SCHEMA: Final = vol.All(
     cv.deprecated(CONF_BASE_URL),
     vol.Schema(
         {
-            vol.Optional(CONF_SERVER_HOST): vol.All(
+            vol.Optional(CONF_SERVER_HOST, default=_DEFAULT_BIND): vol.All(
                 cv.ensure_list, vol.Length(min=1), [cv.string]
             ),
             vol.Optional(CONF_SERVER_PORT, default=SERVER_PORT): cv.port,
