@@ -80,9 +80,10 @@ async def test_having_owner_finishes_user_step(
     """If owner user already exists, mark user step as complete."""
     MockUser(is_owner=True).add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.onboarding.views.async_setup"
-    ) as mock_setup, patch.object(onboarding, "STEPS", [onboarding.STEP_USER]):
+    with (
+        patch("homeassistant.components.onboarding.views.async_setup") as mock_setup,
+        patch.object(onboarding, "STEPS", [onboarding.STEP_USER]),
+    ):
         assert await async_setup_component(hass, "onboarding", {})
 
     assert len(mock_setup.mock_calls) == 0

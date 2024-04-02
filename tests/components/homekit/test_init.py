@@ -114,9 +114,13 @@ async def test_bridge_with_triggers(
     )
     entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.network.async_get_source_ip", return_value="1.2.3.4"
-    ), patch(f"{PATH_HOMEKIT}.async_port_is_available", return_value=True):
+    with (
+        patch(
+            "homeassistant.components.network.async_get_source_ip",
+            return_value="1.2.3.4",
+        ),
+        patch(f"{PATH_HOMEKIT}.async_port_is_available", return_value=True),
+    ):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)

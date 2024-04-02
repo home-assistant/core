@@ -18,6 +18,7 @@ from homeassistant.config_entries import (
     SOURCE_DHCP,
     SOURCE_IGNORE,
     SOURCE_REAUTH,
+    SOURCE_RECONFIGURE,
     SOURCE_SSDP,
     SOURCE_USER,
     SOURCE_ZEROCONF,
@@ -257,6 +258,44 @@ async def test_reauth_flow_update_configuration(
     assert mock_config_entry.data[CONF_PORT] == 443
     assert mock_config_entry.data[CONF_USERNAME] == "user2"
     assert mock_config_entry.data[CONF_PASSWORD] == "pass2"
+
+
+async def test_reconfiguration_flow_update_configuration(
+    hass: HomeAssistant, mock_config_entry, mock_vapix_requests
+) -> None:
+    """Test that config flow reconfiguration updates configured device."""
+    assert mock_config_entry.data[CONF_HOST] == "1.2.3.4"
+    assert mock_config_entry.data[CONF_USERNAME] == "root"
+    assert mock_config_entry.data[CONF_PASSWORD] == "pass"
+
+    result = await hass.config_entries.flow.async_init(
+        AXIS_DOMAIN,
+        context={
+            "source": SOURCE_RECONFIGURE,
+            "entry_id": mock_config_entry.entry_id,
+        },
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    mock_vapix_requests("2.3.4.5")
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: "2.3.4.5",
+            CONF_USERNAME: "user",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert mock_config_entry.data[CONF_PROTOCOL] == "http"
+    assert mock_config_entry.data[CONF_HOST] == "2.3.4.5"
+    assert mock_config_entry.data[CONF_PORT] == 80
+    assert mock_config_entry.data[CONF_USERNAME] == "user"
+    assert mock_config_entry.data[CONF_PASSWORD] == "pass"
 
 
 @pytest.mark.parametrize(

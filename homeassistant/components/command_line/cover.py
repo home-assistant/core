@@ -12,6 +12,7 @@ from homeassistant.const import (
     CONF_COMMAND_OPEN,
     CONF_COMMAND_STATE,
     CONF_COMMAND_STOP,
+    CONF_ICON,
     CONF_NAME,
     CONF_SCAN_INTERVAL,
     CONF_UNIQUE_ID,
@@ -54,6 +55,7 @@ async def async_setup_platform(
         trigger_entity_config = {
             CONF_UNIQUE_ID: device_config.get(CONF_UNIQUE_ID),
             CONF_NAME: Template(device_config.get(CONF_NAME, device_name), hass),
+            CONF_ICON: device_config.get(CONF_ICON),
             CONF_AVAILABILITY: device_config.get(CONF_AVAILABILITY),
         }
 

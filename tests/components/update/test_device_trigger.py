@@ -5,7 +5,7 @@ from datetime import timedelta
 import pytest
 from pytest_unordered import unordered
 
-import homeassistant.components.automation as automation
+from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.update import DOMAIN
 from homeassistant.const import CONF_PLATFORM, STATE_OFF, STATE_ON, EntityCategory
@@ -20,7 +20,9 @@ from tests.common import (
     async_get_device_automation_capabilities,
     async_get_device_automations,
     async_mock_service,
+    setup_test_component_platform,
 )
+from tests.components.update.common import MockUpdateEntity
 
 
 @pytest.fixture(autouse=True, name="stub_blueprint_populate")
@@ -180,12 +182,10 @@ async def test_if_fires_on_state_change(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     calls: list[ServiceCall],
-    enable_custom_integrations: None,
+    mock_update_entities: list[MockUpdateEntity],
 ) -> None:
     """Test for turn_on and turn_off triggers firing."""
-    platform = getattr(hass.components, f"test.{DOMAIN}")
-
-    platform.init()
+    setup_test_component_platform(hass, DOMAIN, mock_update_entities)
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
 
@@ -282,12 +282,10 @@ async def test_if_fires_on_state_change_legacy(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     calls: list[ServiceCall],
-    enable_custom_integrations: None,
+    mock_update_entities: list[MockUpdateEntity],
 ) -> None:
     """Test for turn_on and turn_off triggers firing."""
-    platform = getattr(hass.components, f"test.{DOMAIN}")
-
-    platform.init()
+    setup_test_component_platform(hass, DOMAIN, mock_update_entities)
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
 
@@ -352,12 +350,10 @@ async def test_if_fires_on_state_change_with_for(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     calls: list[ServiceCall],
-    enable_custom_integrations: None,
+    mock_update_entities: list[MockUpdateEntity],
 ) -> None:
     """Test for triggers firing with delay."""
-    platform = getattr(hass.components, f"test.{DOMAIN}")
-
-    platform.init()
+    setup_test_component_platform(hass, DOMAIN, mock_update_entities)
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
 

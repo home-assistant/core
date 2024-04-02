@@ -27,12 +27,15 @@ from tests.common import MockConfigEntry
 @pytest.fixture(name="tankerkoenig")
 def mock_tankerkoenig() -> Generator[AsyncMock, None, None]:
     """Mock the aiotankerkoenig client."""
-    with patch(
-        "homeassistant.components.tankerkoenig.coordinator.Tankerkoenig",
-        autospec=True,
-    ) as mock_tankerkoenig, patch(
-        "homeassistant.components.tankerkoenig.config_flow.Tankerkoenig",
-        new=mock_tankerkoenig,
+    with (
+        patch(
+            "homeassistant.components.tankerkoenig.coordinator.Tankerkoenig",
+            autospec=True,
+        ) as mock_tankerkoenig,
+        patch(
+            "homeassistant.components.tankerkoenig.config_flow.Tankerkoenig",
+            new=mock_tankerkoenig,
+        ),
     ):
         mock = mock_tankerkoenig.return_value
         mock.station_details.return_value = STATION

@@ -1,6 +1,6 @@
 """Support for the (unofficial) Tado API."""
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 from typing import Any
 
@@ -448,7 +448,8 @@ class TadoConnector:
         """Send meter reading to Tado."""
         if self.tado is None:
             raise HomeAssistantError("Tado object is not initialized")
+        dt: str = datetime.now().strftime("%Y-%m-%d")
         try:
-            return self.tado.set_eiq_meter_readings(reading=reading)
+            return self.tado.set_eiq_meter_readings(date=dt, reading=reading)
         except RequestException as exc:
             raise HomeAssistantError("Could not set meter reading") from exc
