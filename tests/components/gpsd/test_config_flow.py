@@ -8,7 +8,7 @@ from homeassistant import config_entries
 from homeassistant.components.gpsd.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType, data_entry_flow
+from homeassistant.data_entry_flow import FlowResultType
 
 HOST = "gpsd.local"
 
@@ -53,7 +53,7 @@ async def test_connection_error(hass: HomeAssistant) -> None:
             data={CONF_HOST: "nonexistent.local", CONF_PORT: 1234},
         )
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "cannot_connect"
 
 

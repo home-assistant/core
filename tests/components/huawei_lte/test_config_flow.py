@@ -24,7 +24,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType, data_entry_flow
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
@@ -271,7 +271,7 @@ async def test_success(hass: HomeAssistant, login_requests_mock, scheme: str) ->
                 ssdp.ATTR_UPNP_SERIAL: "00000000",
             },
             {
-                "type": data_entry_flow.FlowResultType.FORM,
+                "type": FlowResultType.FORM,
                 "step_id": "user",
                 "errors": {},
             },
@@ -287,7 +287,7 @@ async def test_success(hass: HomeAssistant, login_requests_mock, scheme: str) ->
                 # No ssdp.ATTR_UPNP_SERIAL
             },
             {
-                "type": data_entry_flow.FlowResultType.FORM,
+                "type": FlowResultType.FORM,
                 "step_id": "user",
                 "errors": {},
             },
@@ -302,7 +302,7 @@ async def test_success(hass: HomeAssistant, login_requests_mock, scheme: str) ->
                 # Does not matter
             },
             {
-                "type": data_entry_flow.FlowResultType.ABORT,
+                "type": FlowResultType.ABORT,
                 "reason": "unsupported_device",
             },
         ),
@@ -352,7 +352,7 @@ async def test_ssdp(
         (
             "<response>OK</response>",
             {
-                "type": data_entry_flow.FlowResultType.ABORT,
+                "type": FlowResultType.ABORT,
                 "reason": "reauth_successful",
             },
             FIXTURE_USER_INPUT,
@@ -360,7 +360,7 @@ async def test_ssdp(
         (
             f"<error><code>{LoginErrorEnum.PASSWORD_WRONG}</code><message/></error>",
             {
-                "type": data_entry_flow.FlowResultType.FORM,
+                "type": FlowResultType.FORM,
                 "errors": {CONF_PASSWORD: "incorrect_password"},
                 "step_id": "reauth_confirm",
             },

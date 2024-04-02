@@ -17,7 +17,7 @@ from homeassistant.components.imap.const import (
 from homeassistant.components.imap.errors import InvalidAuth, InvalidFolder
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType, data_entry_flow
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
@@ -402,19 +402,19 @@ async def test_key_options_in_options_form(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("advanced_options", "assert_result"),
     [
-        ({"max_message_size": 8192}, data_entry_flow.FlowResultType.CREATE_ENTRY),
-        ({"max_message_size": 1024}, data_entry_flow.FlowResultType.FORM),
-        ({"max_message_size": 65536}, data_entry_flow.FlowResultType.FORM),
+        ({"max_message_size": 8192}, FlowResultType.CREATE_ENTRY),
+        ({"max_message_size": 1024}, FlowResultType.FORM),
+        ({"max_message_size": 65536}, FlowResultType.FORM),
         (
             {"custom_event_data_template": "{{ subject }}"},
-            data_entry_flow.FlowResultType.CREATE_ENTRY,
+            FlowResultType.CREATE_ENTRY,
         ),
         (
             {"custom_event_data_template": "{{ invalid_syntax"},
-            data_entry_flow.FlowResultType.FORM,
+            FlowResultType.FORM,
         ),
-        ({"enable_push": True}, data_entry_flow.FlowResultType.CREATE_ENTRY),
-        ({"enable_push": False}, data_entry_flow.FlowResultType.CREATE_ENTRY),
+        ({"enable_push": True}, FlowResultType.CREATE_ENTRY),
+        ({"enable_push": False}, FlowResultType.CREATE_ENTRY),
     ],
     ids=[
         "valid_message_size",
@@ -429,7 +429,7 @@ async def test_key_options_in_options_form(hass: HomeAssistant) -> None:
 async def test_advanced_options_form(
     hass: HomeAssistant,
     advanced_options: dict[str, str],
-    assert_result: data_entry_flow.FlowResultType,
+    assert_result: FlowResultType,
 ) -> None:
     """Test we show the advanced options."""
 
