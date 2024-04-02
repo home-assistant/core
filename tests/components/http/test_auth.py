@@ -4,6 +4,7 @@ from collections.abc import Awaitable, Callable
 from datetime import timedelta
 from http import HTTPStatus
 from ipaddress import ip_network
+import logging
 from unittest.mock import Mock, patch
 
 from aiohttp import BasicAuth, ServerDisconnectedError, web
@@ -40,6 +41,7 @@ from homeassistant.components.http.request_context import (
     current_request,
     setup_request_context,
 )
+from homeassistant.components.http.session import COOKIE_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.setup import async_setup_component
 
@@ -49,6 +51,7 @@ from tests.common import MockUser, async_fire_time_changed
 from tests.test_util import mock_real_ip
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
+_LOGGER = logging.getLogger(__name__)
 API_PASSWORD = "test-password"
 
 # Don't add 127.0.0.1/::1 as trusted, as it may interfere with other test cases
@@ -853,7 +856,9 @@ async def _test_strict_connection_non_cloud_enabled_external_unauthenticated_req
     # set strict connection cookie with temp session
     assert session._temp_sessions == {}
     set_mock_ip(LOCALHOST_ADDRESSES[0])
-    session_id = await (await client.get("/test/cookie?token=temp")).text()
+    resp = await client.get("/test/cookie?token=temp")
+    session_id = await resp.text()
+    cookie = resp.cookies[COOKIE_NAME].value
 
     freezer.tick(timedelta(seconds=1))
     async_fire_time_changed(hass)
@@ -861,7 +866,10 @@ async def _test_strict_connection_non_cloud_enabled_external_unauthenticated_req
 
     assert session_id in session._temp_sessions
     for remote_addr in EXTERNAL_ADDRESSES:
+        _LOGGER.info("Testing %s", remote_addr)
         set_mock_ip(remote_addr)
+        client.session.cookie_jar.clear()
+        client.session.cookie_jar.update_cookies({COOKIE_NAME: cookie})
         resp = await client.get("/")
         assert resp.status == HTTPStatus.OK
         assert await resp.json() == {"authenticated": False}
