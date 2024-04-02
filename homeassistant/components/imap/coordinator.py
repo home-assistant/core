@@ -1,4 +1,4 @@
-"""Coordinator for imag integration."""
+"""Coordinator for imap integration."""
 
 from __future__ import annotations
 
@@ -254,6 +254,7 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int | None]):
                 initial = False
             self._last_message_id = message_id
             data = {
+                "entry_id": self.config_entry.entry_id,
                 "server": self.config_entry.data[CONF_SERVER],
                 "username": self.config_entry.data[CONF_USERNAME],
                 "search": self.config_entry.data[CONF_SEARCH],

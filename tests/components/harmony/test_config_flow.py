@@ -4,12 +4,13 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import aiohttp
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components import ssdp
 from homeassistant.components.harmony.config_flow import CannotConnect
 from homeassistant.components.harmony.const import DOMAIN, PREVIOUS_ACTIVE_ACTIVITY
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
@@ -211,7 +212,7 @@ async def test_options_flow(hass: HomeAssistant, mock_hc, mock_write_config) -> 
     assert await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
@@ -219,7 +220,7 @@ async def test_options_flow(hass: HomeAssistant, mock_hc, mock_write_config) -> 
         user_input={"activity": PREVIOUS_ACTIVE_ACTIVITY, "delay_secs": 0.4},
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert config_entry.options == {
         "activity": PREVIOUS_ACTIVE_ACTIVITY,
         "delay_secs": 0.4,

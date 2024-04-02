@@ -57,13 +57,13 @@ async def test_cloud_form(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.MENU
+    assert result["type"] is FlowResultType.MENU
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"next_step_id": "cloud"}
     )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {}
 
     with (
@@ -88,7 +88,7 @@ async def test_cloud_form(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == TEST_SITE_NAME
     assert result3["data"] == TEST_CLOUD_DATA
     assert len(mock_setup_entry.mock_calls) == 1
@@ -120,7 +120,7 @@ async def test_cloud_error(hass: HomeAssistant, login_with_error, error) -> None
         )
 
     mock_close.assert_awaited_once()
-    assert result3["type"] == FlowResultType.FORM
+    assert result3["type"] is FlowResultType.FORM
     assert result3["errors"] == {"base": error}
 
 
@@ -146,7 +146,7 @@ async def test_form_cloud_already_exists(hass: HomeAssistant) -> None:
         result2["flow_id"], TEST_CLOUD_DATA
     )
 
-    assert result3["type"] == FlowResultType.ABORT
+    assert result3["type"] is FlowResultType.ABORT
     assert result3["reason"] == "already_configured"
 
 
@@ -236,13 +236,13 @@ async def test_local_form(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.MENU
+    assert result["type"] is FlowResultType.MENU
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"next_step_id": "local"}
     )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {}
 
     with (
@@ -272,7 +272,7 @@ async def test_local_form(hass: HomeAssistant) -> None:
         "type": "local",
         CONF_COMMUNICATION_DELAY: 0,
     }
-    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == TEST_SITE_NAME
     assert result3["data"] == expected_data
     assert len(mock_setup_entry.mock_calls) == 1
@@ -300,7 +300,7 @@ async def test_local_error(hass: HomeAssistant, connect_with_error, error) -> No
         result2["flow_id"], TEST_LOCAL_DATA
     )
 
-    assert result3["type"] == FlowResultType.FORM
+    assert result3["type"] is FlowResultType.FORM
     assert result3["errors"] == {"base": error}
 
 
@@ -339,7 +339,7 @@ async def test_form_local_already_exists(hass: HomeAssistant) -> None:
             result2["flow_id"], TEST_LOCAL_DATA
         )
 
-    assert result3["type"] == FlowResultType.ABORT
+    assert result3["type"] is FlowResultType.ABORT
     assert result3["reason"] == "already_configured"
 
 
@@ -355,14 +355,14 @@ async def test_options_flow(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input=TEST_OPTIONS,
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "risco_to_ha"
 
     result = await hass.config_entries.options.async_configure(
@@ -370,7 +370,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
         user_input=TEST_RISCO_TO_HA,
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "ha_to_risco"
 
     with patch("homeassistant.components.risco.async_setup_entry", return_value=True):
@@ -379,7 +379,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
             user_input=TEST_HA_TO_RISCO,
         )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert entry.options == {
         **TEST_OPTIONS,
         "risco_states_to_ha": TEST_RISCO_TO_HA,

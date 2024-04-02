@@ -6,11 +6,12 @@ from unittest.mock import MagicMock, Mock, patch
 import pytest
 import requests
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components import zeroconf
 from homeassistant.components.doorbird.const import CONF_EVENTS, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
@@ -46,7 +47,7 @@ async def test_user_form(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     doorbirdapi = _get_mock_doorbirdapi_return_values(
@@ -195,7 +196,7 @@ async def test_form_zeroconf_correct_oui(hass: HomeAssistant) -> None:
             ),
         )
         await hass.async_block_till_done()
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -265,7 +266,7 @@ async def test_form_zeroconf_correct_oui_wrong_device(
             ),
         )
         await hass.async_block_till_done()
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "not_doorbird_device"
 
 
@@ -285,7 +286,7 @@ async def test_form_user_cannot_connect(hass: HomeAssistant) -> None:
             VALID_CONFIG,
         )
 
-    assert result2["type"] == data_entry_flow.FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
@@ -326,12 +327,12 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     ):
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "init"
 
         result = await hass.config_entries.options.async_configure(
             result["flow_id"], user_input={CONF_EVENTS: "eventa,   eventc,    eventq"}
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         assert config_entry.options == {CONF_EVENTS: ["eventa", "eventc", "eventq"]}

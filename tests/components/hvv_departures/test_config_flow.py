@@ -5,7 +5,6 @@ from unittest.mock import patch
 
 from pygti.exceptions import CannotConnect, InvalidAuth
 
-from homeassistant import data_entry_flow
 from homeassistant.components.hvv_departures.const import (
     CONF_FILTER,
     CONF_REAL_TIME,
@@ -15,6 +14,7 @@ from homeassistant.components.hvv_departures.const import (
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_OFFSET, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry, load_fixture
 
@@ -289,7 +289,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
 
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "init"
 
         result = await hass.config_entries.options.async_configure(
@@ -297,7 +297,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
             user_input={CONF_FILTER: ["0"], CONF_OFFSET: 15, CONF_REAL_TIME: False},
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         assert config_entry.options == {
             CONF_FILTER: [
                 {
@@ -349,7 +349,7 @@ async def test_options_flow_invalid_auth(hass: HomeAssistant) -> None:
     ):
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "init"
 
         assert result["errors"] == {"base": "invalid_auth"}
@@ -388,7 +388,7 @@ async def test_options_flow_cannot_connect(hass: HomeAssistant) -> None:
     ):
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "init"
 
         assert result["errors"] == {"base": "cannot_connect"}
