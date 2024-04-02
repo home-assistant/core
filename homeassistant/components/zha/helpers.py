@@ -130,7 +130,7 @@ DEBUG_LEVELS = {
 DEBUG_RELAY_LOGGERS = [DEBUG_COMP_ZHA, DEBUG_COMP_ZIGPY, DEBUG_LIB_ZHA]
 ZHA_GW_MSG_LOG_ENTRY = "log_entry"
 ZHA_GW_MSG_LOG_OUTPUT = "log_output"
-SIGNAL_REMOVE = "zha_remove"
+SIGNAL_REMOVE_ENTITIES = "zha_remove_entities"
 GROUP_ENTITY_DOMAINS = [Platform.LIGHT, Platform.SWITCH, Platform.FAN]
 SIGNAL_ADD_ENTITIES = "zha_add_entities"
 
@@ -426,7 +426,8 @@ class ZHAGatewayProxy(EventBase):
             device_info = zha_device_proxy.zha_device_info
             # zha_device_proxy.async_cleanup_handles()
             async_dispatcher_send(
-                self.hass, f"{SIGNAL_REMOVE}_{str(zha_device_proxy.device.ieee)}"
+                self.hass,
+                f"{SIGNAL_REMOVE_ENTITIES}_{str(zha_device_proxy.device.ieee)}",
             )
             self.hass.async_create_task(
                 self._async_remove_device(zha_device_proxy, entity_refs),
@@ -491,6 +492,7 @@ class ZHAGatewayProxy(EventBase):
         """Handle a group member removed event."""
         zha_group_proxy = self._async_get_or_create_group_proxy(event.group_info)
         zha_group_proxy.info("group_member_removed - group_info: %s", event.group_info)
+        self._update_group_entities(event)
         self._send_group_gateway_message(
             zha_group_proxy, ZHA_GW_MSG_GROUP_MEMBER_REMOVED
         )
@@ -501,17 +503,14 @@ class ZHAGatewayProxy(EventBase):
         zha_group_proxy = self._async_get_or_create_group_proxy(event.group_info)
         zha_group_proxy.info("group_member_added - group_info: %s", event.group_info)
         self._send_group_gateway_message(zha_group_proxy, ZHA_GW_MSG_GROUP_MEMBER_ADDED)
-        # if len(zha_group_proxy.members) == 2:
-        # we need to do this because there wasn't already
-        # a group entity to remove and re-add
-        # discovery.GROUP_PROBE.discover_group_entities(zha_group)
+        self._update_group_entities(event)
 
     @callback
     def handle_group_added(self, event: GroupEvent) -> None:
         """Handle a group added event."""
         zha_group_proxy = self._async_get_or_create_group_proxy(event.group_info)
         zha_group_proxy.info("group_added")
-        # need to dispatch for entity creation here
+        self._update_group_entities(event)
         self._send_group_gateway_message(zha_group_proxy, ZHA_GW_MSG_GROUP_ADDED)
 
     @callback
@@ -673,6 +672,17 @@ class ZHAGatewayProxy(EventBase):
                 "cleaning up entity registry entry for entity: %s", entry.entity_id
             )
             entity_registry.async_remove(entry.entity_id)
+
+    def _update_group_entities(self, group_event: GroupEvent) -> None:
+        """Update group entities when a group event is received."""
+        async_dispatcher_send(
+            self.hass,
+            f"{SIGNAL_REMOVE_ENTITIES}_group_{group_event.group_info.group_id}",
+        )
+        self._create_entity_metadata(
+            self.group_proxies[group_event.group_info.group_id]
+        )
+        async_dispatcher_send(self.hass, SIGNAL_ADD_ENTITIES)
 
     def _send_group_gateway_message(
         self, zigpy_group: zigpy.group.Group, gateway_message_type: str

@@ -18,7 +18,7 @@ from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import DOMAIN
-from .helpers import SIGNAL_REMOVE, EntityData
+from .helpers import SIGNAL_REMOVE_ENTITIES, EntityData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -98,10 +98,16 @@ class ZHAEntity(LogMixin, entity.Entity):
         self._unsubs.append(
             self.entity_data.entity.on_all_events(self._handle_entity_events)
         )
+        remove_signal = (
+            f"{SIGNAL_REMOVE_ENTITIES}_group_{self.entity_data.group_proxy.group.group_id}"
+            if self.entity_data.is_group_entity
+            and self.entity_data.group_proxy is not None
+            else f"{SIGNAL_REMOVE_ENTITIES}_{self.entity_data.device_proxy.device.ieee}"
+        )
         self._unsubs.append(
             async_dispatcher_connect(
                 self.hass,
-                f"{SIGNAL_REMOVE}_{self.entity_data.device_proxy.device.ieee}",
+                remove_signal,
                 functools.partial(self.async_remove, force_remove=True),
             )
         )
