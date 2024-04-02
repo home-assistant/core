@@ -59,6 +59,10 @@
     "deprecated_yaml_import_issue_unknown": {
       "title": "The swiss public transport YAML configuration import failed with unknown error raised by python-opendata-transport",
       "description": "Configuring swiss public transport using YAML is being removed but there was an unknown error importing your YAML configuration.\n\nCheck your configuration or have a look at the documentation of the integration."
+    },
+    "deprecated_extra_state_attributes": {
+      "title": "The Swiss public transport state attributes are being removed",
+      "description": "The information available prior in the extra state attributes of the sensors is being replaced by a handful of individual sensors. All information remains available in this new form. Please adapt your scripts and lambdas to this new implementation."
     }
   }
 }

@@ -132,6 +132,16 @@ async def async_setup_entry(
         SwissPublicTransportSensor(coordinator, description, unique_id)
         for description in SENSORS
     )
+    async_create_issue(
+        hass,
+        DOMAIN,
+        "deprecated_extra_state_attributes",
+        breaks_in_ha_version="2024.10.0",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_extra_state_attributes",
+    )
 
 
 async def async_setup_platform(
