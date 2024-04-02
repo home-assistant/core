@@ -9,7 +9,7 @@ import pytest
 import serial
 import serial.tools.list_ports
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components.dsmr import DOMAIN, config_flow
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -196,7 +196,7 @@ async def test_setup_serial(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] is None
 
@@ -205,7 +205,7 @@ async def test_setup_serial(
         {"type": "Serial"},
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "setup_serial"
     assert result["errors"] == {}
 
@@ -216,7 +216,7 @@ async def test_setup_serial(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == port.device
     assert result["data"] == entry_data
 
@@ -499,7 +499,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
         patch("homeassistant.components.dsmr.async_setup_entry", return_value=True),
         patch("homeassistant.components.dsmr.async_unload_entry", return_value=True),
     ):
-        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
 
         await hass.async_block_till_done()
 

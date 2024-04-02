@@ -4,9 +4,10 @@ from unittest.mock import patch
 
 from aiohttp import ClientError
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components.aurora.const import DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
@@ -104,7 +105,7 @@ async def test_option_flow(hass: HomeAssistant) -> None:
             data=None,
         )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
@@ -112,5 +113,5 @@ async def test_option_flow(hass: HomeAssistant) -> None:
         user_input={"forecast_threshold": 65},
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"]["forecast_threshold"] == 65
