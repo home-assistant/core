@@ -358,5 +358,5 @@ async def test_dhcp_discovery_non_intellifire_device(
         ),
     )
 
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "not_intellifire_device"

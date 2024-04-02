@@ -47,7 +47,7 @@ async def test_invalid_credential(hass: HomeAssistant, mock_setup) -> None:
             },
         )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_auth"}
 
 
@@ -129,7 +129,7 @@ async def test_no_flip_id(hass: HomeAssistant, mock_setup) -> None:
         )
 
         assert result["step_id"] == "user"
-        assert result["type"] == "form"
+        assert result["type"] is FlowResultType.FORM
         assert result["errors"] == {"base": "no_flipr_id_found"}
 
     assert len(mock_flipr_client.mock_calls) == 1
@@ -148,7 +148,7 @@ async def test_http_errors(hass: HomeAssistant, mock_setup) -> None:
             },
         )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
     with patch(
@@ -165,5 +165,5 @@ async def test_http_errors(hass: HomeAssistant, mock_setup) -> None:
             },
         )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "unknown"}

@@ -35,7 +35,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, config, setup_airnow) -> N
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     result2 = await hass.config_entries.flow.async_configure(result["flow_id"], config)
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
@@ -46,7 +46,7 @@ async def test_form_invalid_location(hass: HomeAssistant, config, setup_airnow) 
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     result2 = await hass.config_entries.flow.async_configure(result["flow_id"], config)
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_location"}
 
 
@@ -57,7 +57,7 @@ async def test_form_cannot_connect(hass: HomeAssistant, config, setup_airnow) ->
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     result2 = await hass.config_entries.flow.async_configure(result["flow_id"], config)
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
@@ -68,7 +68,7 @@ async def test_form_empty_result(hass: HomeAssistant, config, setup_airnow) -> N
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     result2 = await hass.config_entries.flow.async_configure(result["flow_id"], config)
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_location"}
 
 
@@ -79,7 +79,7 @@ async def test_form_unexpected(hass: HomeAssistant, config, setup_airnow) -> Non
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     result2 = await hass.config_entries.flow.async_configure(result["flow_id"], config)
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
 
 
@@ -89,7 +89,7 @@ async def test_entry_already_exists(hass: HomeAssistant, config, config_entry) -
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     result2 = await hass.config_entries.flow.async_configure(result["flow_id"], config)
-    assert result2["type"] == "abort"
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "already_configured"
 
 

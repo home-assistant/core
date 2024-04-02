@@ -86,7 +86,7 @@ async def test_flow_user_init_data_unknown_error_and_recover(
         user_input=MOCK_DATA_STEP,
     )
 
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].title == MOCK_DATA_STEP["email"]
 
     assert result["data"] == MOCK_DATA_STEP
