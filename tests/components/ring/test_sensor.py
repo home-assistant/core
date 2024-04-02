@@ -113,7 +113,7 @@ async def test_health_sensor(
         ("front_door", "last_ding", "2018-03-05T15:03:40+00:00"),
         ("front_door", "last_activity", "2018-03-05T15:03:40+00:00"),
         ("front", "last_motion", "2017-03-05T15:03:40+00:00"),
-        ("ingress", "last_activity", "unknown"),
+        ("ingress", "last_activity", "2024-02-02T11:21:24+00:00"),
     ],
     ids=[
         "doorbell-motion",

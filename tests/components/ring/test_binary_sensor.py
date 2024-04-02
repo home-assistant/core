@@ -1,6 +1,5 @@
 """The tests for the Ring binary sensor platform."""
 
-
 from homeassistant.core import HomeAssistant
 
 from .common import setup_platform

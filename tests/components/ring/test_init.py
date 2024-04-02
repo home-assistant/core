@@ -6,7 +6,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from ring_doorbell import AuthenticationError, RingError, RingTimeout
 
-import homeassistant.components.ring as ring
+from homeassistant.components import ring
 from homeassistant.components.ring import DOMAIN
 from homeassistant.components.ring.const import SCAN_INTERVAL
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState

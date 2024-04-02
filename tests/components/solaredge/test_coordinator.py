@@ -53,7 +53,7 @@ async def test_solaredgeoverviewdataservice_energy_values_validity(
     mock_solaredge().get_overview.return_value = mock_overview_data
     freezer.tick(OVERVIEW_UPDATE_DELAY)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     state = hass.states.get("sensor.solaredge_lifetime_energy")
     assert state
     assert state.state == str(mock_overview_data["overview"]["lifeTimeData"]["energy"])
@@ -63,7 +63,7 @@ async def test_solaredgeoverviewdataservice_energy_values_validity(
     mock_solaredge().get_overview.return_value = mock_overview_data
     freezer.tick(OVERVIEW_UPDATE_DELAY)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("sensor.solaredge_lifetime_energy")
     assert state
@@ -74,7 +74,7 @@ async def test_solaredgeoverviewdataservice_energy_values_validity(
     mock_solaredge().get_overview.return_value = mock_overview_data
     freezer.tick(OVERVIEW_UPDATE_DELAY)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("sensor.solaredge_lifetime_energy")
     assert state
@@ -85,7 +85,7 @@ async def test_solaredgeoverviewdataservice_energy_values_validity(
     mock_solaredge().get_overview.return_value = mock_overview_data
     freezer.tick(OVERVIEW_UPDATE_DELAY)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("sensor.solaredge_energy_this_year")
     assert state
@@ -103,7 +103,7 @@ async def test_solaredgeoverviewdataservice_energy_values_validity(
     mock_solaredge().get_overview.return_value = mock_overview_data
     freezer.tick(OVERVIEW_UPDATE_DELAY)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("sensor.solaredge_lifetime_energy")
     assert state

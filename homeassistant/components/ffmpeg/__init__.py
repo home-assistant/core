@@ -19,7 +19,6 @@ from homeassistant.const import (
 from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
-    SignalType,
     async_dispatcher_connect,
     async_dispatcher_send,
 )
@@ -27,6 +26,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.system_info import is_official_image
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
+from homeassistant.util.signal_type import SignalType
 
 if TYPE_CHECKING:
     from functools import cached_property
@@ -229,7 +229,7 @@ class FFmpegBase(Entity, Generic[_HAFFmpegT]):
 
         This method is a coroutine.
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def _async_stop_ffmpeg(self, entity_ids: list[str] | None) -> None:
         """Stop a FFmpeg process.

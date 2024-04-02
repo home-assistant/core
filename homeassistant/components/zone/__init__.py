@@ -315,7 +315,9 @@ async def async_setup_entry(
 
     await storage_collection.async_create_item(data)
 
-    hass.async_create_task(hass.config_entries.async_remove(config_entry.entry_id))
+    hass.async_create_task(
+        hass.config_entries.async_remove(config_entry.entry_id), eager_start=True
+    )
 
     return True
 
@@ -331,6 +333,7 @@ class Zone(collection.CollectionEntity):
     """Representation of a Zone."""
 
     editable: bool
+    _attr_should_poll = False
 
     def __init__(self, config: ConfigType) -> None:
         """Initialize the zone."""
@@ -339,6 +342,16 @@ class Zone(collection.CollectionEntity):
         self._attrs: dict | None = None
         self._remove_listener: Callable[[], None] | None = None
         self._persons_in_zone: set[str] = set()
+        self._set_attrs_from_config()
+
+    def _set_attrs_from_config(self) -> None:
+        """Set the attributes from the config."""
+        config = self._config
+        name: str = config[CONF_NAME]
+        self._attr_name = name
+        self._case_folded_name = name.casefold()
+        self._attr_unique_id = config.get(CONF_ID)
+        self._attr_icon = config.get(CONF_ICON)
 
     @classmethod
     def from_storage(cls, config: ConfigType) -> Self:
@@ -361,31 +374,12 @@ class Zone(collection.CollectionEntity):
         """Return the state property really does nothing for a zone."""
         return len(self._persons_in_zone)
 
-    @property
-    def name(self) -> str:
-        """Return name."""
-        return cast(str, self._config[CONF_NAME])
-
-    @property
-    def unique_id(self) -> str | None:
-        """Return unique ID."""
-        return self._config.get(CONF_ID)
-
-    @property
-    def icon(self) -> str | None:
-        """Return the icon if any."""
-        return self._config.get(CONF_ICON)
-
-    @property
-    def should_poll(self) -> bool:
-        """Zone does not poll."""
-        return False
-
     async def async_update_config(self, config: ConfigType) -> None:
         """Handle when the config is updated."""
         if self._config == config:
             return
         self._config = config
+        self._set_attrs_from_config()
         self._generate_attrs()
         self.async_write_ha_state()
 
@@ -394,13 +388,14 @@ class Zone(collection.CollectionEntity):
         self, evt: Event[event.EventStateChangedData]
     ) -> None:
         person_entity_id = evt.data["entity_id"]
-        cur_count = len(self._persons_in_zone)
+        persons_in_zone = self._persons_in_zone
+        cur_count = len(persons_in_zone)
         if self._state_is_in_zone(evt.data["new_state"]):
-            self._persons_in_zone.add(person_entity_id)
-        elif person_entity_id in self._persons_in_zone:
-            self._persons_in_zone.remove(person_entity_id)
+            persons_in_zone.add(person_entity_id)
+        elif person_entity_id in persons_in_zone:
+            persons_in_zone.remove(person_entity_id)
 
-        if len(self._persons_in_zone) != cur_count:
+        if len(persons_in_zone) != cur_count:
             self._generate_attrs()
             self.async_write_ha_state()
 
@@ -408,10 +403,11 @@ class Zone(collection.CollectionEntity):
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
         person_domain = "person"  # avoid circular import
-        persons = self.hass.states.async_entity_ids(person_domain)
-        for person in persons:
-            if self._state_is_in_zone(self.hass.states.get(person)):
-                self._persons_in_zone.add(person)
+        self._persons_in_zone = {
+            state.entity_id
+            for state in self.hass.states.async_all(person_domain)
+            if self._state_is_in_zone(state)
+        }
         self._generate_attrs()
 
         self.async_on_remove(
@@ -446,7 +442,7 @@ class Zone(collection.CollectionEntity):
                 STATE_UNAVAILABLE,
             )
             and (
-                state.state.casefold() == self.name.casefold()
+                state.state.casefold() == self._case_folded_name
                 or (state.state == STATE_HOME and self.entity_id == ENTITY_ID_HOME)
             )
         )

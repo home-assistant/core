@@ -167,7 +167,7 @@ def _mocked_chime(device_dict):
 
 
 def _mocked_other(device_dict):
-    capabilities = ["open"]
+    capabilities = ["open", "history"]
 
     other = MagicMock(spec=ring_doorbell.RingOther, name="Mocked Intercom")
     other.configure_mock(**device_dict)
@@ -180,6 +180,7 @@ def _mocked_other(device_dict):
     )
 
     other.has_capability.side_effect = lambda c: c in capabilities
+    other.history.return_value = INTERCOM_HISTORY
 
     other.configure_mock(wifi_signal_category=None, wifi_signal_strength=None)
     other.update_health_data.side_effect = lambda: _update_health_data(

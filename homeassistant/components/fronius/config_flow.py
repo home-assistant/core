@@ -115,7 +115,7 @@ class FroniusConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle a flow initiated by the DHCP client."""
         for entry in self._async_current_entries(include_ignore=False):
-            if entry.data[CONF_HOST].lstrip("http://").rstrip("/").lower() in (
+            if entry.data[CONF_HOST].removeprefix("http://").rstrip("/").lower() in (
                 discovery_info.ip,
                 discovery_info.hostname,
             ):
