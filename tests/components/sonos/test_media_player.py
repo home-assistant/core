@@ -1,6 +1,7 @@
 """Tests for the Sonos Media Player platform."""
 
 import logging
+
 import pytest
 
 from homeassistant.components.media_player import (
@@ -18,7 +19,7 @@ from homeassistant.helpers.device_registry import (
     DeviceRegistry,
 )
 
-from .conftest import SoCoMockFactory
+from .conftest import MockMusicServiceItem, SoCoMockFactory
 
 
 async def test_device_registry(
@@ -187,35 +188,14 @@ async def test_play_media_library(
         )
 
 
-class _MockMusicServiceItem:
-    """Mocks a Soco MusicServiceItem."""
-
-    def __init__(
-        self,
-        title: str,
-        item_id: str,
-        parent_id: str,
-        item_class: str,
-    ) -> None:
-        """Initialize the mock item."""
-        self.title = title
-        self.item_id = item_id
-        self.item_class = item_class
-        self.parent_id = parent_id
-
-    def get_uri(self) -> str:
-        """Return URI."""
-        return self.item_id.replace("S://", "x-file-cifs://")
-
-
 _mock_playlists = [
-    _MockMusicServiceItem(
+    MockMusicServiceItem(
         "playlist1",
         "S://192.168.1.68/music/iTunes/iTunes%20Music%20Library.xml#GUID_1",
         "A:PLAYLISTS",
         "object.container.playlistContainer",
     ),
-    _MockMusicServiceItem(
+    MockMusicServiceItem(
         "playlist2",
         "S://192.168.1.68/music/iTunes/iTunes%20Music%20Library.xml#GUID_2",
         "A:PLAYLISTS",
