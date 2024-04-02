@@ -807,7 +807,7 @@ async def _test_strict_connection_non_cloud_enabled_external_unauthenticated_req
 
     freezer.tick(TEMP_TIMEOUT + timedelta(minutes=1))
     async_fire_time_changed(hass)
-    # await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
     assert session._temp_sessions == {}
     for remote_addr in EXTERNAL_ADDRESSES:
