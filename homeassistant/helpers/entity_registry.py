@@ -608,7 +608,7 @@ def _validate_item(
     if unique_id is not UNDEFINED and not isinstance(unique_id, Hashable):
         raise TypeError(f"unique_id must be a string, got {unique_id}")
     if unique_id is not UNDEFINED and not isinstance(unique_id, str):
-        # In HA Core 2025.04, we should fail if unique_id is not a string
+        # In HA Core 2025.4, we should fail if unique_id is not a string
         report_issue = async_suggest_report_issue(hass, integration_domain=platform)
         _LOGGER.error(
             ("'%s' from integration %s has a non string unique_id" " '%s', please %s"),
