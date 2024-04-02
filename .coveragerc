@@ -1482,6 +1482,7 @@ omit =
     homeassistant/components/traccar_server/device_tracker.py
     homeassistant/components/traccar_server/entity.py
     homeassistant/components/traccar_server/helpers.py
+    homeassistant/components/traccar_server/sensor.py
     homeassistant/components/tractive/__init__.py
     homeassistant/components/tractive/binary_sensor.py
     homeassistant/components/tractive/device_tracker.py

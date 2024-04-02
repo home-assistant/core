@@ -44,6 +44,7 @@ async def test_device_diagnostics(
     mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
     device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test device diagnostics."""
     await setup_integration(hass, mock_config_entry)
@@ -58,6 +59,15 @@ async def test_device_diagnostics(
     for device in dr.async_entries_for_config_entry(
         device_registry, mock_config_entry.entry_id
     ):
+        entities = er.async_entries_for_device(
+            entity_registry,
+            device_id=device.id,
+            include_disabled_entities=True,
+        )
+        # Enable all entitits to show everything in snapshots
+        for entity in entities:
+            entity_registry.async_update_entity(entity.entity_id, disabled_by=None)
+
         result = await get_diagnostics_for_device(
             hass, hass_client, mock_config_entry, device=device
         )
