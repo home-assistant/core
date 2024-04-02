@@ -5,9 +5,10 @@ from unittest.mock import AsyncMock
 from aioazuredevops.core import DevOpsProject
 import aiohttp
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components.azure_devops.const import CONF_ORG, CONF_PROJECT, DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from . import FIXTURE_REAUTH_INPUT, FIXTURE_USER_INPUT
 
@@ -20,7 +21,7 @@ async def test_show_user_form(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
 
@@ -37,7 +38,7 @@ async def test_authorization_error(
         context={"source": config_entries.SOURCE_USER},
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -46,7 +47,7 @@ async def test_authorization_error(
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] == data_entry_flow.FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "user"
     assert result2["errors"] == {"base": "invalid_auth"}
 
@@ -65,7 +66,7 @@ async def test_reauth_authorization_error(
         data=FIXTURE_USER_INPUT,
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth"
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -74,7 +75,7 @@ async def test_reauth_authorization_error(
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] == data_entry_flow.FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "reauth"
     assert result2["errors"] == {"base": "invalid_auth"}
 
@@ -92,7 +93,7 @@ async def test_connection_error(
         context={"source": config_entries.SOURCE_USER},
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -101,7 +102,7 @@ async def test_connection_error(
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] == data_entry_flow.FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "user"
     assert result2["errors"] == {"base": "cannot_connect"}
 
@@ -120,7 +121,7 @@ async def test_reauth_connection_error(
         data=FIXTURE_USER_INPUT,
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth"
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -129,7 +130,7 @@ async def test_reauth_connection_error(
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] == data_entry_flow.FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "reauth"
     assert result2["errors"] == {"base": "cannot_connect"}
 
@@ -148,7 +149,7 @@ async def test_project_error(
         context={"source": config_entries.SOURCE_USER},
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -157,7 +158,7 @@ async def test_project_error(
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] == data_entry_flow.FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "user"
     assert result2["errors"] == {"base": "project_error"}
 
@@ -180,7 +181,7 @@ async def test_reauth_project_error(
         data=FIXTURE_USER_INPUT,
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth"
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -189,7 +190,7 @@ async def test_reauth_project_error(
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] == data_entry_flow.FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "reauth"
     assert result2["errors"] == {"base": "project_error"}
 
@@ -211,7 +212,7 @@ async def test_reauth_flow(
         data=FIXTURE_USER_INPUT,
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth"
     assert result["errors"] == {"base": "invalid_auth"}
 
@@ -227,7 +228,7 @@ async def test_reauth_flow(
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
 
 
@@ -242,7 +243,7 @@ async def test_full_flow_implementation(
         context={"source": config_entries.SOURCE_USER},
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -252,7 +253,7 @@ async def test_full_flow_implementation(
     await hass.async_block_till_done()
     assert len(mock_setup_entry.mock_calls) == 1
 
-    assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert (
         result2["title"]
         == f"{FIXTURE_USER_INPUT[CONF_ORG]}/{FIXTURE_USER_INPUT[CONF_PROJECT]}"
