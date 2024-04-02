@@ -125,12 +125,13 @@ FIXTURE_DATA_RESPONSE_BAD = Response(
 async def setup_integration(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-) -> None:
+) -> bool:
     """Fixture for setting up the component."""
     config_entry.add_to_hass(hass)
 
-    await hass.config_entries.async_setup(config_entry.entry_id)
+    setup_result = await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
+    return setup_result
 
 
 async def mock_data_listener(

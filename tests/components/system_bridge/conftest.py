@@ -18,7 +18,9 @@ from systembridgemodels.response import Response
 
 from homeassistant.components.system_bridge.config_flow import SystemBridgeConfigFlow
 from homeassistant.components.system_bridge.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN
+from homeassistant.core import HomeAssistant
 
 from . import (
     FIXTURE_GENERIC_RESPONSE,
@@ -27,6 +29,7 @@ from . import (
     FIXTURE_USER_INPUT,
     FIXTURE_UUID,
     mock_data_listener,
+    setup_integration,
 )
 
 from tests.common import MockConfigEntry
@@ -148,3 +151,18 @@ def mock_websocket_client(
         websocket_client.keyboard_text.return_value = FIXTURE_GENERIC_RESPONSE
 
         yield websocket_client
+
+
+@pytest.fixture
+async def init_integration(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_version: MagicMock,
+    mock_websocket_client: MagicMock,
+) -> MockConfigEntry:
+    """Initialize the System Bridge integration."""
+    assert await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state == ConfigEntryState.LOADED
+
+    return mock_config_entry

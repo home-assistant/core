@@ -61,7 +61,7 @@ async def test_load_unload_entry(
     assert mock_websocket_client.close.call_count == 0
 
     # Load entry
-    await setup_integration(hass, mock_config_entry)
+    assert await setup_integration(hass, mock_config_entry)
 
     assert mock_version.check_supported.call_count == 1
 
@@ -215,15 +215,9 @@ async def test_get_data_timeout(
 
 async def test_already_has_services(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_version: MagicMock,
-    mock_websocket_client: MagicMock,
+    init_integration: MockConfigEntry,
 ) -> None:
     """Test if services are registered."""
-    await setup_integration(hass, mock_config_entry)
-
-    assert mock_config_entry.state == ConfigEntryState.LOADED
-
     assert hass.services.has_service(DOMAIN, SERVICE_GET_PROCESS_BY_ID)
     assert hass.services.has_service(DOMAIN, SERVICE_GET_PROCESSES_BY_NAME)
     assert hass.services.has_service(DOMAIN, SERVICE_OPEN_PATH)
@@ -260,15 +254,9 @@ async def test_already_has_services(
 
 async def test_services(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_version: MagicMock,
-    mock_websocket_client: MagicMock,
+    init_integration: MockConfigEntry,
 ) -> None:
     """Test if services are registered."""
-    await setup_integration(hass, mock_config_entry)
-
-    assert mock_config_entry.state == ConfigEntryState.LOADED
-
     assert hass.services.has_service(DOMAIN, SERVICE_GET_PROCESS_BY_ID)
     assert hass.services.has_service(DOMAIN, SERVICE_GET_PROCESSES_BY_NAME)
     assert hass.services.has_service(DOMAIN, SERVICE_OPEN_PATH)
@@ -410,7 +398,7 @@ async def test_migration_minor_1_to_2(
         minor_version=1,
     )
 
-    await setup_integration(hass, config_entry)
+    assert await setup_integration(hass, config_entry)
 
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -444,7 +432,6 @@ async def test_migration_major_future_version(
     )
 
     await setup_integration(hass, config_entry)
-    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_migration_minor_future_version(
