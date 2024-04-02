@@ -17,7 +17,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.setup import async_when_setup
 
 
-class AxisConnectivity:
+class AxisEventSource:
     """Manage connection to event sources from an Axis device."""
 
     def __init__(

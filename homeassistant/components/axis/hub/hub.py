@@ -14,8 +14,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from ..const import ATTR_MANUFACTURER, DOMAIN as AXIS_DOMAIN
 from .config import AxisConfig
-from .connectivity import AxisConnectivity
 from .entity_loader import AxisEntityLoader
+from .event_source import AxisEventSource
 
 
 class AxisHub:
@@ -28,7 +28,7 @@ class AxisHub:
         self.hass = hass
         self.config = AxisConfig.from_config_entry(config_entry)
         self.entity_loader = AxisEntityLoader(self)
-        self.connectivity = AxisConnectivity(hass, config_entry, api)
+        self.event_source = AxisEventSource(hass, config_entry, api)
         self.api = api
 
         self.fw_version = api.vapix.firmware_version
@@ -47,14 +47,14 @@ class AxisHub:
     @property
     def available(self) -> bool:
         """Connection state to the device."""
-        return self.connectivity.available
+        return self.event_source.available
 
     # Signals
 
     @property
     def signal_reachable(self) -> str:
         """Device specific event to signal a change in connection status."""
-        return self.connectivity.signal_reachable
+        return self.event_source.signal_reachable
 
     @property
     def signal_new_address(self) -> str:
@@ -73,7 +73,7 @@ class AxisHub:
         """
         hub = AxisHub.get_hub(hass, config_entry)
         hub.config = AxisConfig.from_config_entry(config_entry)
-        hub.connectivity.config_entry = config_entry
+        hub.event_source.config_entry = config_entry
         hub.api.config.host = hub.config.host
         async_dispatcher_send(hass, hub.signal_new_address)
 
@@ -97,13 +97,13 @@ class AxisHub:
     def setup(self) -> None:
         """Set up the device events."""
         self.entity_loader.initialize_platforms()
-        self.connectivity.setup()
+        self.event_source.setup()
 
     async def shutdown(self, event: Event) -> None:
         """Stop the event stream."""
-        self.connectivity.teardown()
+        self.event_source.teardown()
 
     @callback
     def teardown(self) -> None:
         """Reset this device to default state."""
-        self.connectivity.teardown()
+        self.event_source.teardown()
