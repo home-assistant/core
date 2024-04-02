@@ -11,7 +11,7 @@ from homeassistant.components.webhook import (
     async_unregister as webhook_unregister,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.network import get_url
+from homeassistant.helpers.network import NoURLAvailableError, get_url
 
 from .const import DOMAIN, WEBHOOK_URL
 from .coordinator import NASwebCoordinator, NotificationCoordinator
@@ -59,7 +59,10 @@ class NASwebData:
             return
         webhook_unregister(hass, self.webhook_id)
 
-    def get_webhook_url(self, hass: HomeAssistant) -> str:
+    def get_webhook_url(self, hass: HomeAssistant) -> str | None:
         """Return webhook url for Push API."""
-        hass_url = get_url(hass)
+        try:
+            hass_url = get_url(hass)
+        except NoURLAvailableError:
+            return None
         return WEBHOOK_URL.format(internal_url=hass_url, webhook_id=self.webhook_id)

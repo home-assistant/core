@@ -49,6 +49,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     nasweb_data.notify_coordinator.add_coordinator(webio_serial, coordinator)
 
     webhook_url = nasweb_data.get_webhook_url(hass)
+    if webhook_url is None:
+        _LOGGER.error("Cannot pass Home Assistant url to NASweb device")
+        return False
     if not await webio_api.status_subscription(webhook_url, True):
         _LOGGER.error("Failed to subscribe for status updates from webio")
         return False
@@ -79,7 +82,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry.entry_id
         )
         webhook_url = nasweb_data.get_webhook_url(hass)
-        await coordinator.webio_api.status_subscription(webhook_url, False)
+        if webhook_url is not None:
+            await coordinator.webio_api.status_subscription(webhook_url, False)
         serial = coordinator.webio_api.get_serial_number()
         if serial is not None:
             nasweb_data.notify_coordinator.remove_coordinator(serial)
