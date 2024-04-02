@@ -23,8 +23,6 @@ class DataConnection(TypedDict):
     """A connection data class."""
 
     departure: datetime | None
-    next_departure: datetime | None
-    next_on_departure: datetime | None
     duration: str
     platform: str
     remaining_time: str
@@ -60,13 +58,6 @@ class SwissPublicTransportDataUpdateCoordinator(
             return departure_datetime - dt_util.as_local(dt_util.utcnow())
         return None
 
-    def nth_departure_time(self, i: int) -> datetime | None:
-        """Get nth departure time."""
-        connections = self._opendata.connections
-        if len(connections) > i and connections[i] is not None:
-            return dt_util.parse_datetime(connections[i]["departure"])
-        return None
-
     async def _async_update_data(self) -> list[DataConnection]:
         try:
             await self._opendata.async_get_data()
@@ -80,9 +71,9 @@ class SwissPublicTransportDataUpdateCoordinator(
 
         return [
             DataConnection(
-                departure=self.nth_departure_time(i),
-                next_departure=self.nth_departure_time(i + 1),
-                next_on_departure=self.nth_departure_time(i + 2),
+                departure=dt_util.parse_datetime(
+                    self._opendata.connections[i]["departure"]
+                ),
                 train_number=connections[i]["number"],
                 platform=connections[i]["platform"],
                 transfers=connections[i]["transfers"],
