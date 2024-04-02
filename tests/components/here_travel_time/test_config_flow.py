@@ -5,7 +5,7 @@ from unittest.mock import patch
 from here_routing import HERERoutingError, HERERoutingUnauthorizedError
 import pytest
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components.here_travel_time.const import (
     CONF_ARRIVAL_TIME,
     CONF_DEPARTURE_TIME,
@@ -22,6 +22,7 @@ from homeassistant.components.here_travel_time.const import (
 )
 from homeassistant.const import CONF_API_KEY, CONF_MODE, CONF_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType, data_entry_flow
 
 from .const import (
     API_KEY,
@@ -124,7 +125,7 @@ async def test_step_user(hass: HomeAssistant, menu_options) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -137,7 +138,7 @@ async def test_step_user(hass: HomeAssistant, menu_options) -> None:
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] == data_entry_flow.FlowResultType.MENU
+    assert result2["type"] is FlowResultType.MENU
     assert result2["menu_options"] == menu_options
 
 
@@ -149,7 +150,7 @@ async def test_step_origin_coordinates(
     menu_result = await hass.config_entries.flow.async_configure(
         user_step_result["flow_id"], {"next_step_id": "origin_coordinates"}
     )
-    assert menu_result["type"] == data_entry_flow.FlowResultType.FORM
+    assert menu_result["type"] is FlowResultType.FORM
 
     location_selector_result = await hass.config_entries.flow.async_configure(
         menu_result["flow_id"],
@@ -161,7 +162,7 @@ async def test_step_origin_coordinates(
             }
         },
     )
-    assert location_selector_result["type"] == data_entry_flow.FlowResultType.MENU
+    assert location_selector_result["type"] is FlowResultType.MENU
 
 
 @pytest.mark.usefixtures("valid_response")
@@ -172,13 +173,13 @@ async def test_step_origin_entity(
     menu_result = await hass.config_entries.flow.async_configure(
         user_step_result["flow_id"], {"next_step_id": "origin_entity"}
     )
-    assert menu_result["type"] == data_entry_flow.FlowResultType.FORM
+    assert menu_result["type"] is FlowResultType.FORM
 
     entity_selector_result = await hass.config_entries.flow.async_configure(
         menu_result["flow_id"],
         {"origin_entity_id": "zone.home"},
     )
-    assert entity_selector_result["type"] == data_entry_flow.FlowResultType.MENU
+    assert entity_selector_result["type"] is FlowResultType.MENU
 
 
 @pytest.mark.usefixtures("valid_response")
@@ -189,7 +190,7 @@ async def test_step_destination_coordinates(
     menu_result = await hass.config_entries.flow.async_configure(
         origin_step_result["flow_id"], {"next_step_id": "destination_coordinates"}
     )
-    assert menu_result["type"] == data_entry_flow.FlowResultType.FORM
+    assert menu_result["type"] is FlowResultType.FORM
 
     location_selector_result = await hass.config_entries.flow.async_configure(
         menu_result["flow_id"],
@@ -201,9 +202,7 @@ async def test_step_destination_coordinates(
             }
         },
     )
-    assert (
-        location_selector_result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    )
+    assert location_selector_result["type"] is FlowResultType.CREATE_ENTRY
     entry = hass.config_entries.async_entries(DOMAIN)[0]
     assert entry.data == {
         CONF_NAME: "test",
@@ -225,13 +224,13 @@ async def test_step_destination_entity(
     menu_result = await hass.config_entries.flow.async_configure(
         origin_step_result["flow_id"], {"next_step_id": "destination_entity"}
     )
-    assert menu_result["type"] == data_entry_flow.FlowResultType.FORM
+    assert menu_result["type"] is FlowResultType.FORM
 
     entity_selector_result = await hass.config_entries.flow.async_configure(
         menu_result["flow_id"],
         {"destination_entity_id": "zone.home"},
     )
-    assert entity_selector_result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert entity_selector_result["type"] is FlowResultType.CREATE_ENTRY
     entry = hass.config_entries.async_entries(DOMAIN)[0]
     assert entry.data == {
         CONF_NAME: "test",
@@ -310,7 +309,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
@@ -320,7 +319,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
         },
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.MENU
+    assert result["type"] is FlowResultType.MENU
 
 
 @pytest.mark.usefixtures("valid_response")
@@ -331,7 +330,7 @@ async def test_options_flow_arrival_time_step(
     menu_result = await hass.config_entries.options.async_configure(
         option_init_result["flow_id"], {"next_step_id": "arrival_time"}
     )
-    assert menu_result["type"] == data_entry_flow.FlowResultType.FORM
+    assert menu_result["type"] is FlowResultType.FORM
     time_selector_result = await hass.config_entries.options.async_configure(
         option_init_result["flow_id"],
         user_input={
@@ -339,7 +338,7 @@ async def test_options_flow_arrival_time_step(
         },
     )
 
-    assert time_selector_result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert time_selector_result["type"] is FlowResultType.CREATE_ENTRY
     entry = hass.config_entries.async_entries(DOMAIN)[0]
     assert entry.options == {
         CONF_ROUTE_MODE: ROUTE_MODE_FASTEST,
@@ -355,7 +354,7 @@ async def test_options_flow_departure_time_step(
     menu_result = await hass.config_entries.options.async_configure(
         option_init_result["flow_id"], {"next_step_id": "departure_time"}
     )
-    assert menu_result["type"] == data_entry_flow.FlowResultType.FORM
+    assert menu_result["type"] is FlowResultType.FORM
     time_selector_result = await hass.config_entries.options.async_configure(
         option_init_result["flow_id"],
         user_input={
@@ -363,7 +362,7 @@ async def test_options_flow_departure_time_step(
         },
     )
 
-    assert time_selector_result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert time_selector_result["type"] is FlowResultType.CREATE_ENTRY
     entry = hass.config_entries.async_entries(DOMAIN)[0]
     assert entry.options == {
         CONF_ROUTE_MODE: ROUTE_MODE_FASTEST,
@@ -380,7 +379,7 @@ async def test_options_flow_no_time_step(
         option_init_result["flow_id"], {"next_step_id": "no_time"}
     )
 
-    assert menu_result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert menu_result["type"] is FlowResultType.CREATE_ENTRY
     entry = hass.config_entries.async_entries(DOMAIN)[0]
     assert entry.options == {
         CONF_ROUTE_MODE: ROUTE_MODE_FASTEST,
