@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Final
+from typing import Final
 
 from aioairzone.common import OperationAction, OperationMode
 from aioairzone.const import (
@@ -32,9 +32,6 @@ from aioairzone.const import (
 )
 
 from homeassistant.components.climate import (
-    ATTR_HVAC_MODE,
-    ATTR_TARGET_TEMP_HIGH,
-    ATTR_TARGET_TEMP_LOW,
     FAN_AUTO,
     FAN_HIGH,
     FAN_LOW,
@@ -45,7 +42,6 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -219,18 +215,33 @@ class AirzoneClimate(AirzoneZoneEntity, ClimateEntity):
                 f"Mode can't be changed on slave zone {self.entity_id}"
             )
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set new target temperature."""
-        params = {}
-        if ATTR_TEMPERATURE in kwargs:
-            params[API_SET_POINT] = kwargs[ATTR_TEMPERATURE]
-        if ATTR_TARGET_TEMP_LOW in kwargs and ATTR_TARGET_TEMP_HIGH in kwargs:
-            params[API_COOL_SET_POINT] = kwargs[ATTR_TARGET_TEMP_HIGH]
-            params[API_HEAT_SET_POINT] = kwargs[ATTR_TARGET_TEMP_LOW]
+        params = {API_SET_POINT: temperature}
         await self._async_update_hvac_params(params)
 
-        if ATTR_HVAC_MODE in kwargs:
-            await self.async_set_hvac_mode(kwargs[ATTR_HVAC_MODE])
+        if hvac_mode is not None:
+            await self.async_set_hvac_mode(hvac_mode=hvac_mode)
+
+    async def async_set_target_temperature_range(
+        self,
+        temperature_high: float,
+        temperature_low: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
+        """Set new target temperature."""
+        params = {
+            API_COOL_SET_POINT: temperature_high,
+            API_HEAT_SET_POINT: temperature_low,
+        }
+        await self._async_update_hvac_params(params)
+
+        if hvac_mode is not None:
+            await self.async_set_hvac_mode(hvac_mode=hvac_mode)
 
     @callback
     def _handle_coordinator_update(self) -> None:

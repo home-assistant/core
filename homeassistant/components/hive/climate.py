@@ -2,7 +2,6 @@
 
 from datetime import timedelta
 import logging
-from typing import Any
 
 import voluptuous as vol
 
@@ -110,11 +109,13 @@ class HiveClimateEntity(HiveEntity, ClimateEntity):
         await self.hive.heating.setMode(self.device, new_mode)
 
     @refresh_system
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set new target temperature."""
-        new_temperature = kwargs.get(ATTR_TEMPERATURE)
-        if new_temperature is not None:
-            await self.hive.heating.setTargetTemperature(self.device, new_temperature)
+        await self.hive.heating.setTargetTemperature(self.device, temperature)
 
     @refresh_system
     async def async_set_preset_mode(self, preset_mode: str) -> None:

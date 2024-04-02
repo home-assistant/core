@@ -15,7 +15,6 @@ from evohomeasync2.schema.const import (
     SZ_SYSTEM_MODE,
     SZ_SYSTEM_MODE_STATUS,
     SZ_TEMPERATURE_STATUS,
-    SZ_UNTIL,
     SZ_ZONE_ID,
     ZoneModelType,
     ZoneType,
@@ -272,25 +271,15 @@ class EvoZone(EvoChild, EvoClimateEntity):
             return 35
         return self._evo_device.max_heat_setpoint
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set a new target temperature."""
-
         assert self._evo_device.setpointStatus is not None  # mypy check
-
-        temperature = kwargs["temperature"]
-
-        if (until := kwargs.get("until")) is None:
-            if self._evo_device.mode == EVO_FOLLOW:
-                await self._update_schedule()
-                until = dt_util.parse_datetime(self.setpoints.get("next_sp_from", ""))
-            elif self._evo_device.mode == EVO_TEMPOVER:
-                until = dt_util.parse_datetime(
-                    self._evo_device.setpointStatus[SZ_UNTIL]
-                )
-
-        until = dt_util.as_utc(until) if until else None
         await self._evo_broker.call_client_api(
-            self._evo_device.set_temperature(temperature, until=until)
+            self._evo_device.set_temperature(temperature, until=None)
         )
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
@@ -436,7 +425,11 @@ class EvoController(EvoClimateEntity):
             return None
         return TCS_PRESET_TO_HA.get(self._evo_tcs.system_mode)
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Raise exception as Controllers don't have a target temperature."""
         raise NotImplementedError("Evohome Controllers don't have target temperatures.")
 

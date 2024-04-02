@@ -18,7 +18,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -142,10 +142,13 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
             return {"error_code": data.error_code}
         return {}
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set the target temperature."""
-        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is not None:
-            await self.coordinator.async_set_temperature(self._ac_index, temperature)
+        await self.coordinator.async_set_temperature(self._ac_index, temperature)
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the hvac mode."""

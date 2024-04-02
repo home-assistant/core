@@ -155,9 +155,13 @@ class BSBLANClimate(
                 translation_placeholders={"preset_mode": preset_mode},
             )
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set new target temperatures."""
-        await self.async_set_data(**kwargs)
+        await self.async_set_data(temperature=temperature, hvac_mode=hvac_mode)
 
     async def async_set_data(self, **kwargs: Any) -> None:
         """Set device settings using BSBLAN."""

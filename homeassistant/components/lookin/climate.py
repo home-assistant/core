@@ -3,13 +3,12 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Final, cast
+from typing import Final, cast
 
 from aiolookin import Climate, MeteoSensor, Remote
 from aiolookin.models import UDPCommandType, UDPEvent
 
 from homeassistant.components.climate import (
-    ATTR_HVAC_MODE,
     FAN_AUTO,
     FAN_HIGH,
     FAN_LOW,
@@ -21,12 +20,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_TEMPERATURE,
-    PRECISION_WHOLE,
-    Platform,
-    UnitOfTemperature,
-)
+from homeassistant.const import PRECISION_WHOLE, Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -131,13 +125,15 @@ class ConditionerEntity(LookinCoordinatorEntity, ClimateEntity):
         self._climate.hvac_mode = mode
         await self._async_update_conditioner()
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set the temperature of the device."""
-        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
-            return
         self._climate.temp_celsius = int(temperature)
         lookin_index = LOOKIN_HVAC_MODE_IDX_TO_HASS
-        if hvac_mode := kwargs.get(ATTR_HVAC_MODE):
+        if hvac_mode is not None:
             self._climate.hvac_mode = HASS_TO_LOOKIN_HVAC_MODE[hvac_mode]
         elif self._climate.hvac_mode == lookin_index.index(HVACMode.OFF):
             #

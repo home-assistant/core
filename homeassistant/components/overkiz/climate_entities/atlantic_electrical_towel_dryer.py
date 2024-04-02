@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, cast
+from typing import cast
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 
@@ -13,7 +13,7 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
+from homeassistant.const import UnitOfTemperature
 
 from ..const import DOMAIN
 from ..coordinator import OverkizDataUpdateCoordinator
@@ -102,10 +102,12 @@ class AtlanticElectricalTowelDryer(OverkizEntity, ClimateEntity):
 
         return None
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set new temperature."""
-        temperature = kwargs[ATTR_TEMPERATURE]
-
         if self.hvac_mode == HVACMode.AUTO:
             await self.executor.async_execute_command(
                 OverkizCommand.SET_DEROGATED_TARGET_TEMPERATURE, temperature

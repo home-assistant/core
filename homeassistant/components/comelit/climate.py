@@ -16,7 +16,7 @@ from homeassistant.components.climate import (
     UnitOfTemperature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS
+from homeassistant.const import PRECISION_TENTHS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -181,18 +181,20 @@ class ComelitClimateEntity(CoordinatorEntity[ComelitSerialBridge], ClimateEntity
 
         return None
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set new target temperature."""
-        if (
-            target_temp := kwargs.get(ATTR_TEMPERATURE)
-        ) is None or self.hvac_mode == HVACMode.OFF:
+        if self.hvac_mode == HVACMode.OFF:
             return
 
         await self.coordinator.api.set_clima_status(
             self._device.index, ClimaComelitCommand.MANUAL
         )
         await self.coordinator.api.set_clima_status(
-            self._device.index, ClimaComelitCommand.SET, target_temp
+            self._device.index, ClimaComelitCommand.SET, temperature
         )
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:

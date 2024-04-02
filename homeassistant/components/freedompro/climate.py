@@ -10,13 +10,12 @@ from aiohttp.client import ClientSession
 from pyfreedompro import put_state
 
 from homeassistant.components.climate import (
-    ATTR_HVAC_MODE,
     ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, CONF_API_KEY, UnitOfTemperature
+from homeassistant.const import CONF_API_KEY, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -137,20 +136,23 @@ class Device(CoordinatorEntity[FreedomproDataUpdateCoordinator], ClimateEntity):
         )
         await self.coordinator.async_request_refresh()
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Async function to set temperature to climate."""
-        payload = {}
-        if ATTR_HVAC_MODE in kwargs:
-            if kwargs[ATTR_HVAC_MODE] not in SUPPORTED_HVAC_MODES:
+        payload: dict[str, Any] = {}
+        if hvac_mode is not None:
+            if hvac_mode not in SUPPORTED_HVAC_MODES:
                 _LOGGER.error(
                     "Got unsupported hvac_mode %s, expected one of %s",
-                    kwargs[ATTR_HVAC_MODE],
+                    hvac_mode,
                     SUPPORTED_HVAC_MODES,
                 )
                 return
-            payload["heatingCoolingState"] = HVAC_INVERT_MAP[kwargs[ATTR_HVAC_MODE]]
-        if ATTR_TEMPERATURE in kwargs:
-            payload["targetTemperature"] = kwargs[ATTR_TEMPERATURE]
+            payload["heatingCoolingState"] = HVAC_INVERT_MAP[hvac_mode]
+        payload["targetTemperature"] = temperature
         await put_state(
             self._session,
             self._api_key,

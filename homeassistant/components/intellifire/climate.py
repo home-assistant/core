@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 from homeassistant.components.climate import (
     ClimateEntity,
     ClimateEntityDescription,
@@ -11,7 +9,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -78,14 +76,17 @@ class IntellifireClimate(IntellifireEntity, ClimateEntity):
             return HVACMode.HEAT
         return HVACMode.OFF
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Turn on thermostat by setting a target temperature."""
-        raw_target_temp = kwargs[ATTR_TEMPERATURE]
-        self.last_temp = int(raw_target_temp)
+        self.last_temp = int(temperature)
         LOGGER.debug(
             "Setting target temp to %sc %sf",
-            int(raw_target_temp),
-            (raw_target_temp * 9 / 5) + 32,
+            int(temperature),
+            (temperature * 9 / 5) + 32,
         )
         await self.coordinator.control_api.set_thermostat_c(
             temp_c=self.last_temp,

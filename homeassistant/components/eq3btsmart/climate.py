@@ -1,14 +1,12 @@
 """Platform for eQ-3 climate entities."""
 
 import logging
-from typing import Any
 
 from eq3btsmart import Thermostat
 from eq3btsmart.const import EQ3BT_MAX_TEMP, EQ3BT_OFF_TEMP, Eq3Preset, OperationMode
 from eq3btsmart.exceptions import Eq3Exception
 
 from homeassistant.components.climate import (
-    ATTR_HVAC_MODE,
     PRESET_NONE,
     ClimateEntity,
     ClimateEntityFeature,
@@ -16,7 +14,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, PRECISION_HALVES, UnitOfTemperature
+from homeassistant.const import PRECISION_HALVES, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.device_registry import (
@@ -244,24 +242,20 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
             return HVACAction.IDLE
         return HVACAction.HEATING
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set new target temperature."""
 
-        if ATTR_HVAC_MODE in kwargs:
-            mode: HVACMode | None
-            if (mode := kwargs.get(ATTR_HVAC_MODE)) is None:
-                return
-
-            if mode is not HVACMode.OFF:
-                await self.async_set_hvac_mode(mode)
+        if hvac_mode is not None:
+            if hvac_mode is not HVACMode.OFF:
+                await self.async_set_hvac_mode(hvac_mode)
             else:
                 raise ServiceValidationError(
                     f"[{self._eq3_config.mac_address}] Can't change HVAC mode to off while changing temperature",
                 )
-
-        temperature: float | None
-        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
-            return
 
         previous_temperature = self._target_temperature
         self._target_temperature = temperature

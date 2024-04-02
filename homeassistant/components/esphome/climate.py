@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, cast
+from typing import Any
 
 from aioesphomeapi import (
     ClimateAction,
@@ -16,9 +16,6 @@ from aioesphomeapi import (
 )
 
 from homeassistant.components.climate import (
-    ATTR_HVAC_MODE,
-    ATTR_TARGET_TEMP_HIGH,
-    ATTR_TARGET_TEMP_LOW,
     FAN_AUTO,
     FAN_DIFFUSE,
     FAN_FOCUS,
@@ -47,7 +44,6 @@ from homeassistant.components.climate import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_TEMPERATURE,
     PRECISION_HALVES,
     PRECISION_TENTHS,
     PRECISION_WHOLE,
@@ -280,19 +276,38 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
         return round(self._state.target_humidity)
 
     @convert_api_error_ha_error
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set new target temperature (and operation mode if set)."""
-        data: dict[str, Any] = {"key": self._key}
-        if ATTR_HVAC_MODE in kwargs:
-            data["mode"] = _CLIMATE_MODES.from_hass(
-                cast(HVACMode, kwargs[ATTR_HVAC_MODE])
-            )
-        if ATTR_TEMPERATURE in kwargs:
-            data["target_temperature"] = kwargs[ATTR_TEMPERATURE]
-        if ATTR_TARGET_TEMP_LOW in kwargs:
-            data["target_temperature_low"] = kwargs[ATTR_TARGET_TEMP_LOW]
-        if ATTR_TARGET_TEMP_HIGH in kwargs:
-            data["target_temperature_high"] = kwargs[ATTR_TARGET_TEMP_HIGH]
+        data: dict[str, Any] = {
+            "key": self._key,
+            "target_temperature": temperature,
+        }
+        if hvac_mode is not None:
+            data |= {
+                "mode": _CLIMATE_MODES.from_hass(hvac_mode),
+            }
+        self._client.climate_command(**data)
+
+    async def async_set_target_temperature_range(
+        self,
+        temperature_high: float,
+        temperature_low: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
+        """Set new target temperature range."""
+        data: dict[str, Any] = {
+            "key": self._key,
+            "target_temperature_low": temperature_low,
+            "target_temperature_high": temperature_high,
+        }
+        if hvac_mode is not None:
+            data |= {
+                "mode": _CLIMATE_MODES.from_hass(hvac_mode),
+            }
         self._client.climate_command(**data)
 
     @convert_api_error_ha_error

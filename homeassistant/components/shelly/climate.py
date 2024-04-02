@@ -19,7 +19,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
@@ -321,11 +321,12 @@ class BlockSleepingClimate(
         except InvalidAuthError:
             await self.coordinator.async_shutdown_device_and_start_reauth()
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set new target temperature."""
-        if (current_temp := kwargs.get(ATTR_TEMPERATURE)) is None:
-            return
-
         # Shelly TRV accepts target_t in Fahrenheit or Celsius, but you must
         # send the units that the device expects
         if self.block is not None and self.block.channel is not None:
@@ -334,13 +335,13 @@ class BlockSleepingClimate(
             ]
             LOGGER.debug("Themostat settings: %s", therm)
             if therm.get("target_t", {}).get("units", "C") == "F":
-                current_temp = TemperatureConverter.convert(
-                    cast(float, current_temp),
+                temperature = TemperatureConverter.convert(
+                    temperature,
                     UnitOfTemperature.CELSIUS,
                     UnitOfTemperature.FAHRENHEIT,
                 )
 
-        await self.set_state_full_path(target_t_enabled=1, target_t=f"{current_temp}")
+        await self.set_state_full_path(target_t_enabled=1, target_t=f"{temperature}")
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode."""
@@ -500,14 +501,15 @@ class RpcClimate(ShellyRpcEntity, ClimateEntity):
             else HVACAction.HEATING
         )
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set new target temperature."""
-        if (target_temp := kwargs.get(ATTR_TEMPERATURE)) is None:
-            return
-
         await self.call_rpc(
             "Thermostat.SetConfig",
-            {"config": {"id": self._id, "target_C": target_temp}},
+            {"config": {"id": self._id, "target_C": temperature}},
         )
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:

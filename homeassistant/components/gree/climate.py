@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
 
 from greeclimate.device import (
     TEMP_MAX,
@@ -18,7 +17,6 @@ from greeclimate.device import (
 )
 
 from homeassistant.components.climate import (
-    ATTR_HVAC_MODE,
     FAN_AUTO,
     FAN_HIGH,
     FAN_LOW,
@@ -37,7 +35,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, UnitOfTemperature
+from homeassistant.const import PRECISION_WHOLE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -149,15 +147,15 @@ class GreeClimateEntity(GreeEntity, ClimateEntity):
         """Return the target temperature for the device."""
         return self.coordinator.device.target_temperature
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set new target temperature."""
-        if ATTR_TEMPERATURE not in kwargs:
-            raise ValueError(f"Missing parameter {ATTR_TEMPERATURE}")
-
-        if hvac_mode := kwargs.get(ATTR_HVAC_MODE):
+        if hvac_mode is not None:
             await self.async_set_hvac_mode(hvac_mode)
 
-        temperature = kwargs[ATTR_TEMPERATURE]
         _LOGGER.debug(
             "Setting temperature to %d for %s",
             temperature,

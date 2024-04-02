@@ -18,7 +18,6 @@ from homeassistant.components.climate import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_NAME,
-    ATTR_TEMPERATURE,
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
     UnitOfTemperature,
@@ -175,10 +174,12 @@ class AmbiclimateEntity(ClimateEntity):
             name=heater.name,
         )
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set new target temperature."""
-        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
-            return
         await self._heater.set_target_temperature(temperature)
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:

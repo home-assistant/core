@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
 
 from iaqualink.device import AqualinkThermostat
 
@@ -14,7 +13,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -88,9 +87,13 @@ class HassAqualinkThermostat(AqualinkEntity, ClimateEntity):
         return float(self.dev.state)
 
     @refresh_system
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set new target temperature."""
-        await await_or_reraise(self.dev.set_temperature(int(kwargs[ATTR_TEMPERATURE])))
+        await await_or_reraise(self.dev.set_temperature(int(temperature)))
 
     @property
     def current_temperature(self) -> float | None:

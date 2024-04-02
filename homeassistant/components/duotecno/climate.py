@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Final
+from typing import Final
 
 from duotecno.controller import PyDuotecno
 from duotecno.unit import SensUnit
@@ -13,7 +13,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -80,11 +80,13 @@ class DuotecnoClimate(DuotecnoEntity, ClimateEntity):
         return PRESETMODES_REVERSE[self._unit.get_preset()]
 
     @api_call
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set new target temperatures."""
-        if (temp := kwargs.get(ATTR_TEMPERATURE)) is None:
-            return
-        await self._unit.set_temp(temp)
+        await self._unit.set_temp(temperature)
 
     @api_call
     async def async_set_preset_mode(self, preset_mode: str) -> None:

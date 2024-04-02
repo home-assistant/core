@@ -10,7 +10,7 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -81,9 +81,12 @@ class InComfortClimate(IncomfortChild, ClimateEntity):
         """Return max valid temperature that can be set."""
         return 30.0
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set a new target temperature for this zone."""
-        temperature = kwargs.get(ATTR_TEMPERATURE)
         await self._room.set_override(temperature)
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:

@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 from pydeconz.models.event import EventType
 from pydeconz.models.sensor.thermostat import (
     Thermostat,
@@ -29,7 +27,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -231,20 +229,22 @@ class DeconzThermostat(DeconzDevice[Thermostat], ClimateEntity):
 
         return None
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set new target temperature."""
-        if ATTR_TEMPERATURE not in kwargs:
-            raise ValueError(f"Expected attribute {ATTR_TEMPERATURE}")
 
         if self._device.mode == ThermostatMode.COOL:
             await self.hub.api.sensors.thermostat.set_config(
                 id=self._device.resource_id,
-                cooling_setpoint=kwargs[ATTR_TEMPERATURE] * 100,
+                cooling_setpoint=int(temperature * 100),
             )
         else:
             await self.hub.api.sensors.thermostat.set_config(
                 id=self._device.resource_id,
-                heating_setpoint=kwargs[ATTR_TEMPERATURE] * 100,
+                heating_setpoint=int(temperature * 100),
             )
 
     @property

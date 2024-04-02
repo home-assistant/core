@@ -18,12 +18,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_MODE,
     ATTR_STATE,
-    ATTR_TEMPERATURE,
     PRECISION_TENTHS,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.unit_conversion import TemperatureConverter
@@ -310,24 +309,16 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
         """Return True if entity is available."""
         return self.device_data.available and super().available
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set new target temperature."""
-        if "targetTemperature" not in self.device_data.active_features:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="no_target_temperature_in_features",
-            )
-
-        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="no_target_temperature",
-            )
-
         if temperature == self.target_temperature:
             return
 
-        new_temp = _find_valid_target_temp(temperature, self.device_data.temp_list)
+        new_temp = _find_valid_target_temp(int(temperature), self.device_data.temp_list)
         await self.async_send_api_call(
             key=AC_STATE_TO_DATA["targetTemperature"],
             value=new_temp,

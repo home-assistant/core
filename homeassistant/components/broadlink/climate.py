@@ -3,7 +3,6 @@
 from typing import Any
 
 from homeassistant.components.climate import (
-    ATTR_TEMPERATURE,
     ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
@@ -51,9 +50,12 @@ class BroadlinkThermostat(BroadlinkEntity, ClimateEntity):
         self._attr_unique_id = device.unique_id
         self._attr_hvac_mode = None
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set new target temperature."""
-        temperature = kwargs[ATTR_TEMPERATURE]
         await self._device.async_request(self._device.api.set_temp, temperature)
         self._attr_target_temperature = temperature
         self.async_write_ha_state()

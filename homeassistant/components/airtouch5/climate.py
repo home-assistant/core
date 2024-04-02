@@ -1,7 +1,6 @@
 """AirTouch 5 component to control AirTouch 5 Climate Devices."""
 
 import logging
-from typing import Any
 
 from airtouch5py.airtouch5_simple_client import Airtouch5SimpleClient
 from airtouch5py.packets.ac_ability import AcAbility
@@ -35,7 +34,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -255,13 +254,13 @@ class Airtouch5AC(Airtouch5ClimateEntity):
         fan_speed = FAN_MODE_TO_SET_AC_FAN_SPEED[fan_mode]
         await self._control(fan=fan_speed)
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set new target temperatures."""
-        if (temp := kwargs.get(ATTR_TEMPERATURE)) is None:
-            _LOGGER.debug("Argument `temperature` is missing in set_temperature")
-            return
-
-        await self._control(temp=temp)
+        await self._control(temp=int(temperature))
 
 
 class Airtouch5Zone(Airtouch5ClimateEntity):
@@ -361,16 +360,15 @@ class Airtouch5Zone(Airtouch5ClimateEntity):
 
         await self._control(power=power)
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set new target temperatures."""
-
-        if (temp := kwargs.get(ATTR_TEMPERATURE)) is None:
-            _LOGGER.debug("Argument `temperature` is missing in set_temperature")
-            return
-
         await self._control(
             zsv=ZoneSettingValue.SET_TARGET_SETPOINT,
-            value=float(temp),
+            value=temperature,
         )
 
     async def async_turn_on(self) -> None:

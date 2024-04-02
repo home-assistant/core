@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 from velbusaio.channels import Temperature as VelbusTemp
 
 from homeassistant.components.climate import (
@@ -12,7 +10,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -67,11 +65,13 @@ class VelbusClimate(VelbusEntity, ClimateEntity):
         return self._channel.get_state()
 
     @api_call
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set new target temperatures."""
-        if (temp := kwargs.get(ATTR_TEMPERATURE)) is None:
-            return
-        await self._channel.set_temp(temp)
+        await self._channel.set_temp(temperature)
         self.async_write_ha_state()
 
     @api_call

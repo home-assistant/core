@@ -4,13 +4,12 @@ from __future__ import annotations
 
 import logging
 from random import randrange
-from typing import Any, NamedTuple
+from typing import NamedTuple
 
 from pyintesishome import IHAuthenticationError, IHConnectionError, IntesisHome
 import voluptuous as vol
 
 from homeassistant.components.climate import (
-    ATTR_HVAC_MODE,
     PLATFORM_SCHEMA,
     PRESET_BOOST,
     PRESET_COMFORT,
@@ -24,7 +23,6 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.const import (
-    ATTR_TEMPERATURE,
     CONF_DEVICE,
     CONF_PASSWORD,
     CONF_USERNAME,
@@ -263,15 +261,18 @@ class IntesisAC(ClimateEntity):
         """Return the current preset mode."""
         return self._preset
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set new target temperature."""
-        if hvac_mode := kwargs.get(ATTR_HVAC_MODE):
+        if hvac_mode is not None:
             await self.async_set_hvac_mode(hvac_mode)
 
-        if temperature := kwargs.get(ATTR_TEMPERATURE):
-            _LOGGER.debug("Setting %s to %s degrees", self._device_type, temperature)
-            await self._controller.set_temperature(self._device_id, temperature)
-            self._target_temp = temperature
+        _LOGGER.debug("Setting %s to %s degrees", self._device_type, temperature)
+        await self._controller.set_temperature(self._device_id, temperature)
+        self._target_temp = temperature
 
         # Write updated temperature to HA state to avoid flapping (API confirmation is slow)
         self.async_write_ha_state()

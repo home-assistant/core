@@ -6,7 +6,6 @@ import asyncio
 from datetime import datetime, timedelta
 import logging
 import math
-from typing import Any
 
 import voluptuous as vol
 
@@ -389,10 +388,12 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         # Ensure we update the current operation after changing the mode
         self.async_write_ha_state()
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set new target temperature."""
-        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
-            return
         self._target_temp = temperature
         await self._async_control_heating(force=True)
         self.async_write_ha_state()

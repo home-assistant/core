@@ -1,7 +1,5 @@
 """Support for mill wifi-enabled home heaters."""
 
-from typing import Any
-
 import mill
 from mill_local import OperationMode
 import voluptuous as vol
@@ -14,7 +12,6 @@ from homeassistant.components.climate import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_TEMPERATURE,
     CONF_IP_ADDRESS,
     CONF_USERNAME,
     PRECISION_TENTHS,
@@ -122,10 +119,12 @@ class MillHeater(CoordinatorEntity[MillDataUpdateCoordinator], ClimateEntity):
 
         self._update_attr(heater)
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set new target temperature."""
-        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
-            return
         await self.coordinator.mill_data_connection.set_heater_temp(
             self._id, float(temperature)
         )
@@ -212,10 +211,12 @@ class LocalMillHeater(CoordinatorEntity[MillDataUpdateCoordinator], ClimateEntit
 
         self._update_attr()
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set new target temperature."""
-        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
-            return
         await self.coordinator.mill_data_connection.set_target_temperature(
             float(temperature)
         )

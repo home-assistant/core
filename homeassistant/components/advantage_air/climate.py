@@ -3,11 +3,8 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
 
 from homeassistant.components.climate import (
-    ATTR_TARGET_TEMP_HIGH,
-    ATTR_TARGET_TEMP_LOW,
     FAN_AUTO,
     FAN_HIGH,
     FAN_LOW,
@@ -17,7 +14,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, UnitOfTemperature
+from homeassistant.const import PRECISION_WHOLE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -225,17 +222,27 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
             mode = fan_mode
         await self.async_update_ac({"fan": mode})
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set the Temperature."""
-        if ATTR_TEMPERATURE in kwargs:
-            await self.async_update_ac({"setTemp": kwargs[ATTR_TEMPERATURE]})
-        if ATTR_TARGET_TEMP_LOW in kwargs and ATTR_TARGET_TEMP_HIGH in kwargs:
-            await self.async_update_ac(
-                {
-                    ADVANTAGE_AIR_COOL_TARGET: kwargs[ATTR_TARGET_TEMP_HIGH],
-                    ADVANTAGE_AIR_HEAT_TARGET: kwargs[ATTR_TARGET_TEMP_LOW],
-                }
-            )
+        await self.async_update_ac({"setTemp": temperature})
+
+    async def async_set_target_temperature_range(
+        self,
+        temperature_high: float,
+        temperature_low: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
+        """Set new target temperature range."""
+        await self.async_update_ac(
+            {
+                ADVANTAGE_AIR_COOL_TARGET: temperature_high,
+                ADVANTAGE_AIR_HEAT_TARGET: temperature_low,
+            }
+        )
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode."""
@@ -300,7 +307,10 @@ class AdvantageAirZone(AdvantageAirZoneEntity, ClimateEntity):
         else:
             await self.async_turn_on()
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set the Temperature."""
-        temp = kwargs.get(ATTR_TEMPERATURE)
-        await self.async_update_zone({"setTemp": temp})
+        await self.async_update_zone({"setTemp": temperature})

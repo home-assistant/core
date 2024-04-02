@@ -202,9 +202,22 @@ class DaikinClimate(ClimateEntity):
         """Return the temperature we try to reach."""
         return self._api.device.target_temperature
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set new target temperature."""
-        await self._set(kwargs)
+        params = {
+            HA_ATTR_TO_DAIKIN[ATTR_TARGET_TEMPERATURE]: format_target_temperature(
+                temperature
+            ),
+        }
+        if hvac_mode is not None:
+            params |= {
+                HA_ATTR_TO_DAIKIN[ATTR_HVAC_MODE]: HA_STATE_TO_DAIKIN[hvac_mode],
+            }
+        await self._api.device.set(params)
 
     @property
     def hvac_action(self) -> HVACAction | None:

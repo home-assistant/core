@@ -1,7 +1,6 @@
 """The Flexit Nordic (BACnet) integration."""
 
 import asyncio.exceptions
-from typing import Any
 
 from flexit_bacnet import (
     VENTILATION_MODE_AWAY,
@@ -20,7 +19,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, PRECISION_HALVES, UnitOfTemperature
+from homeassistant.const import PRECISION_HALVES, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -105,11 +104,12 @@ class FlexitClimateEntity(FlexitEntity, ClimateEntity):
 
         return self.device.air_temp_setpoint_home
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set new target temperature."""
-        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
-            return
-
         try:
             if self.device.ventilation_mode == VENTILATION_MODE_AWAY:
                 await self.device.set_air_temp_setpoint_away(temperature)

@@ -18,9 +18,6 @@ from aiohomekit.model.services import Service, ServicesTypes
 from aiohomekit.utils import clamp_enum_to_char
 
 from homeassistant.components.climate import (
-    ATTR_HVAC_MODE,
-    ATTR_TARGET_TEMP_HIGH,
-    ATTR_TARGET_TEMP_LOW,
     DEFAULT_MAX_TEMP,
     DEFAULT_MIN_TEMP,
     FAN_AUTO,
@@ -37,7 +34,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, Platform, UnitOfTemperature
+from homeassistant.const import Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.percentage import (
@@ -248,17 +245,20 @@ class HomeKitHeaterCoolerEntity(HomeKitBaseClimateEntity):
             {CharacteristicsTypes.ROTATION_SPEED: speed}
         )
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set new target temperature."""
-        temp = kwargs.get(ATTR_TEMPERATURE)
         state = self.service.value(CharacteristicsTypes.TARGET_HEATER_COOLER_STATE)
         if state == TargetHeaterCoolerStateValues.COOL:
             await self.async_put_characteristics(
-                {CharacteristicsTypes.TEMPERATURE_COOLING_THRESHOLD: temp}
+                {CharacteristicsTypes.TEMPERATURE_COOLING_THRESHOLD: temperature}
             )
         elif state == TargetHeaterCoolerStateValues.HEAT:
             await self.async_put_characteristics(
-                {CharacteristicsTypes.TEMPERATURE_HEATING_THRESHOLD: temp}
+                {CharacteristicsTypes.TEMPERATURE_HEATING_THRESHOLD: temperature}
             )
         else:
             hvac_mode = TARGET_HEATER_COOLER_STATE_HOMEKIT_TO_HASS.get(state)
@@ -491,42 +491,51 @@ class HomeKitClimateEntity(HomeKitBaseClimateEntity):
             CharacteristicsTypes.RELATIVE_HUMIDITY_TARGET,
         ]
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set new target temperature."""
         chars: dict[str, Any] = {}
 
         value = self.service.value(CharacteristicsTypes.HEATING_COOLING_TARGET)
         mode = MODE_HOMEKIT_TO_HASS[value]
 
-        if kwargs.get(ATTR_HVAC_MODE, mode) != mode:
-            mode = kwargs[ATTR_HVAC_MODE]
+        if hvac_mode is not None and hvac_mode != mode:
+            mode = hvac_mode
             chars[CharacteristicsTypes.HEATING_COOLING_TARGET] = MODE_HASS_TO_HOMEKIT[
                 mode
             ]
 
-        temp = kwargs.get(ATTR_TEMPERATURE)
-        heat_temp = kwargs.get(ATTR_TARGET_TEMP_LOW)
-        cool_temp = kwargs.get(ATTR_TARGET_TEMP_HIGH)
+        chars[CharacteristicsTypes.TEMPERATURE_TARGET] = temperature
+        await self.async_put_characteristics(chars)
 
-        if (
-            (mode == HVACMode.HEAT_COOL)
-            and (
-                ClimateEntityFeature.TARGET_TEMPERATURE_RANGE in self.supported_features
-            )
-            and heat_temp
-            and cool_temp
-        ):
-            if temp is None:
-                temp = (cool_temp + heat_temp) / 2
-            chars.update(
-                {
-                    CharacteristicsTypes.TEMPERATURE_HEATING_THRESHOLD: heat_temp,
-                    CharacteristicsTypes.TEMPERATURE_COOLING_THRESHOLD: cool_temp,
-                    CharacteristicsTypes.TEMPERATURE_TARGET: temp,
-                }
-            )
-        else:
-            chars[CharacteristicsTypes.TEMPERATURE_TARGET] = temp
+    async def async_set_target_temperature_range(
+        self,
+        temperature_high: float,
+        temperature_low: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
+        """Set new target temperature range."""
+        chars: dict[str, Any] = {}
+
+        value = self.service.value(CharacteristicsTypes.HEATING_COOLING_TARGET)
+        mode = MODE_HOMEKIT_TO_HASS[value]
+
+        if hvac_mode is not None and hvac_mode != mode:
+            mode = hvac_mode
+            chars[CharacteristicsTypes.HEATING_COOLING_TARGET] = MODE_HASS_TO_HOMEKIT[
+                mode
+            ]
+
+        if mode == HVACMode.HEAT_COOL:
+            temp = (temperature_high + temperature_low) / 2
+            chars |= {
+                CharacteristicsTypes.TEMPERATURE_HEATING_THRESHOLD: temperature_low,
+                CharacteristicsTypes.TEMPERATURE_COOLING_THRESHOLD: temperature_high,
+                CharacteristicsTypes.TEMPERATURE_TARGET: temp,
+            }
 
         await self.async_put_characteristics(chars)
 

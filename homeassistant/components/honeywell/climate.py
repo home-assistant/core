@@ -17,8 +17,6 @@ from aiosomecomfort import (
 from aiosomecomfort.device import Device as SomeComfortDevice
 
 from homeassistant.components.climate import (
-    ATTR_TARGET_TEMP_HIGH,
-    ATTR_TARGET_TEMP_LOW,
     DEFAULT_MAX_TEMP,
     DEFAULT_MIN_TEMP,
     FAN_AUTO,
@@ -32,7 +30,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
@@ -327,10 +325,8 @@ class HoneywellUSThermostat(ClimateEntity):
         cool_status = self._device.raw_ui_data.get("StatusCool", 0)
         return heat_status == 2 or cool_status == 2
 
-    async def _set_temperature(self, **kwargs) -> None:
+    async def _set_temperature(self, temperature: float) -> None:
         """Set new target temperature."""
-        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
-            return
         try:
             # Get current mode
             mode = self._device.system_mode
@@ -371,15 +367,26 @@ class HoneywellUSThermostat(ClimateEntity):
                 f"Honeywell set temperature failed: invalid temperature {temperature}."
             ) from err
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set new target temperature."""
         if {HVACMode.COOL, HVACMode.HEAT} & set(self._hvac_mode_map):
-            await self._set_temperature(**kwargs)
+            await self._set_temperature(temperature=temperature)
+
+    async def async_set_target_temperature_range(
+        self,
+        temperature_high: float,
+        temperature_low: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
+        """Set new target temperature range."""
+        if {HVACMode.COOL, HVACMode.HEAT} & set(self._hvac_mode_map):
             try:
-                if temperature := kwargs.get(ATTR_TARGET_TEMP_HIGH):
-                    await self._device.set_setpoint_cool(temperature)
-                if temperature := kwargs.get(ATTR_TARGET_TEMP_LOW):
-                    await self._device.set_setpoint_heat(temperature)
+                await self._device.set_setpoint_cool(temperature_high)
+                await self._device.set_setpoint_heat(temperature_low)
 
             except UnexpectedResponse as err:
                 raise HomeAssistantError(
@@ -387,9 +394,9 @@ class HoneywellUSThermostat(ClimateEntity):
                 ) from err
 
             except SomeComfortError as err:
-                _LOGGER.error("Invalid temperature %.1f: %s", temperature, err)
+                _LOGGER.error("Invalid temperature %.1f: %s", temperature_high, err)
                 raise ValueError(
-                    f"Honeywell set temperature failed: invalid temperature: {temperature}."
+                    f"Honeywell set temperature failed: invalid temperature: {temperature_high}."
                 ) from err
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:

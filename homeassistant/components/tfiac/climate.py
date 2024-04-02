@@ -5,7 +5,6 @@ from __future__ import annotations
 from concurrent import futures
 from datetime import timedelta
 import logging
-from typing import Any
 
 from pytfiac import Tfiac
 import voluptuous as vol
@@ -24,7 +23,7 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.const import ATTR_TEMPERATURE, CONF_HOST, UnitOfTemperature
+from homeassistant.const import CONF_HOST, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -173,10 +172,13 @@ class TfiacClimate(ClimateEntity):
         """List of available swing modes."""
         return SUPPORT_SWING
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set new target temperature."""
-        if (temp := kwargs.get(ATTR_TEMPERATURE)) is not None:
-            await self._client.set_state(TARGET_TEMP, temp)
+        await self._client.set_state(TARGET_TEMP, temperature)
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""

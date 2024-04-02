@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, cast
+from typing import cast
 
 import pypck
 
@@ -14,7 +14,6 @@ from homeassistant.components.climate import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_TEMPERATURE,
     CONF_ADDRESS,
     CONF_DOMAIN,
     CONF_ENTITIES,
@@ -87,7 +86,7 @@ class LcnClimate(LcnEntity, ClimateEntity):
         self._min_temp = config[CONF_DOMAIN_DATA][CONF_MIN_TEMP]
 
         self._current_temperature = None
-        self._target_temperature = None
+        self._target_temperature: float | None = None
         self._is_on = True
 
         self._attr_hvac_modes = [HVACMode.HEAT]
@@ -167,11 +166,12 @@ class LcnClimate(LcnEntity, ClimateEntity):
             self._target_temperature = None
             self.async_write_ha_state()
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set new target temperature."""
-        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
-            return
-
         if not await self.device_connection.var_abs(
             self.setpoint, temperature, self.unit
         ):

@@ -12,7 +12,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -89,11 +89,15 @@ class LivisiClimate(LivisiEntity, ClimateEntity):
         self._attr_max_temp = config.get("maxTemperature", MAX_TEMPERATURE)
         self._attr_min_temp = config.get("minTemperature", MIN_TEMPERATURE)
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set new target temperature."""
         response = await self.aio_livisi.async_vrcc_set_temperature(
             self._target_temperature_capability,
-            kwargs.get(ATTR_TEMPERATURE),
+            temperature,
             self.coordinator.is_avatar,
         )
         if response is None:

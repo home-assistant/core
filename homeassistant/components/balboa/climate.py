@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from enum import IntEnum
-from typing import Any
 
 from pybalboa import SpaClient, SpaControl
 from pybalboa.enums import HeatMode, HeatState, TemperatureUnit
@@ -15,12 +14,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_TEMPERATURE,
-    PRECISION_HALVES,
-    PRECISION_WHOLE,
-    UnitOfTemperature,
-)
+from homeassistant.const import PRECISION_HALVES, PRECISION_WHOLE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -132,9 +126,13 @@ class BalboaClimateEntity(BalboaEntity, ClimateEntity):
         """Return current preset mode."""
         return self._client.heat_mode.state.name.lower()
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set a new target temperature."""
-        await self._client.set_temperature(kwargs[ATTR_TEMPERATURE])
+        await self._client.set_temperature(temperature)
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""

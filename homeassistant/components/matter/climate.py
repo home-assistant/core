@@ -3,16 +3,13 @@
 from __future__ import annotations
 
 from enum import IntEnum
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from chip.clusters import Objects as clusters
 from matter_server.client.models import device_types
 from matter_server.common.helpers.util import create_attribute_path_from_attribute
 
 from homeassistant.components.climate import (
-    ATTR_HVAC_MODE,
-    ATTR_TARGET_TEMP_HIGH,
-    ATTR_TARGET_TEMP_LOW,
     DEFAULT_MAX_TEMP,
     DEFAULT_MIN_TEMP,
     ClimateEntity,
@@ -22,7 +19,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, Platform, UnitOfTemperature
+from homeassistant.const import Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -105,55 +102,69 @@ class MatterClimate(MatterEntity, ClimateEntity):
         if any(mode for mode in self.hvac_modes if mode != HVACMode.OFF):
             self._attr_supported_features |= ClimateEntityFeature.TURN_ON
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set new target temperature."""
-        target_hvac_mode: HVACMode | None = kwargs.get(ATTR_HVAC_MODE)
-        if target_hvac_mode is not None:
-            await self.async_set_hvac_mode(target_hvac_mode)
+        if hvac_mode is not None:
+            await self.async_set_hvac_mode(hvac_mode)
 
-        current_mode = target_hvac_mode or self.hvac_mode
+        current_mode = hvac_mode or self.hvac_mode
         command = None
-        if current_mode in (HVACMode.HEAT, HVACMode.COOL):
-            # when current mode is either heat or cool, the temperature arg must be provided.
-            temperature: float | None = kwargs.get(ATTR_TEMPERATURE)
-            if temperature is None:
-                raise ValueError("Temperature must be provided")
-            if self.target_temperature is None:
-                raise ValueError("Current target_temperature should not be None")
-            command = self._create_optional_setpoint_command(
-                clusters.Thermostat.Enums.SetpointAdjustMode.kCool
-                if current_mode == HVACMode.COOL
-                else clusters.Thermostat.Enums.SetpointAdjustMode.kHeat,
-                temperature,
-                self.target_temperature,
+        if current_mode not in (HVACMode.HEAT, HVACMode.COOL):
+            return
+
+        # when current mode is either heat or cool, the temperature arg must be provided.
+        if self.target_temperature is None:
+            raise ValueError("Current target_temperature should not be None")
+        command = self._create_optional_setpoint_command(
+            clusters.Thermostat.Enums.SetpointAdjustMode.kCool
+            if current_mode == HVACMode.COOL
+            else clusters.Thermostat.Enums.SetpointAdjustMode.kHeat,
+            temperature,
+            self.target_temperature,
+        )
+        if command is not None:
+            await self.matter_client.send_device_command(
+                node_id=self._endpoint.node.node_id,
+                endpoint_id=self._endpoint.endpoint_id,
+                command=command,
             )
-        elif current_mode == HVACMode.HEAT_COOL:
-            temperature_low: float | None = kwargs.get(ATTR_TARGET_TEMP_LOW)
-            temperature_high: float | None = kwargs.get(ATTR_TARGET_TEMP_HIGH)
-            if temperature_low is None or temperature_high is None:
-                raise ValueError(
-                    "temperature_low and temperature_high must be provided"
-                )
-            if (
-                self.target_temperature_low is None
-                or self.target_temperature_high is None
-            ):
-                raise ValueError(
-                    "current target_temperature_low and target_temperature_high should not be None"
-                )
-            # due to ha send both high and low temperature, we need to check which one is changed
-            command = self._create_optional_setpoint_command(
-                clusters.Thermostat.Enums.SetpointAdjustMode.kHeat,
-                temperature_low,
-                self.target_temperature_low,
+
+    async def async_set_target_temperature_range(
+        self,
+        temperature_high: float,
+        temperature_low: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
+        """Set new target temperature range."""
+        if hvac_mode is not None:
+            await self.async_set_hvac_mode(hvac_mode)
+
+        current_mode = hvac_mode or self.hvac_mode
+        if current_mode != HVACMode.HEAT_COOL:
+            return
+
+        if self.target_temperature_high is None or self.target_temperature_low is None:
+            raise ValueError(
+                "target_temperature_high and target_temperature_low needs to be set."
             )
-            if command is None:
-                command = self._create_optional_setpoint_command(
-                    clusters.Thermostat.Enums.SetpointAdjustMode.kCool,
-                    temperature_high,
-                    self.target_temperature_high,
-                )
-        if command:
+
+        # due to ha send both high and low temperature, we need to check which one is changed
+        command = self._create_optional_setpoint_command(
+            clusters.Thermostat.Enums.SetpointAdjustMode.kHeat,
+            temperature_low,
+            self.target_temperature_low,
+        )
+        if command is None:
+            command = self._create_optional_setpoint_command(
+                clusters.Thermostat.Enums.SetpointAdjustMode.kCool,
+                temperature_high,
+                self.target_temperature_high,
+            )
+        if command is not None:
             await self.matter_client.send_device_command(
                 node_id=self._endpoint.node.node_id,
                 endpoint_id=self._endpoint.endpoint_id,

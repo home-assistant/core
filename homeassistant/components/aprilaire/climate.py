@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 from pyaprilaire.const import Attribute
 
 from homeassistant.components.climate import (
@@ -230,28 +228,23 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
 
         return None
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set new target temperature."""
+        await self.coordinator.client.update_setpoint(temperature, temperature)
+        await self.coordinator.client.read_control()
 
-        cool_setpoint = 0
-        heat_setpoint = 0
-
-        if temperature := kwargs.get("temperature"):
-            if self.coordinator.data.get(Attribute.MODE) == 3:
-                cool_setpoint = temperature
-            else:
-                heat_setpoint = temperature
-        else:
-            if target_temp_low := kwargs.get("target_temp_low"):
-                heat_setpoint = target_temp_low
-            if target_temp_high := kwargs.get("target_temp_high"):
-                cool_setpoint = target_temp_high
-
-        if cool_setpoint == 0 and heat_setpoint == 0:
-            return
-
-        await self.coordinator.client.update_setpoint(cool_setpoint, heat_setpoint)
-
+    async def async_set_target_temperature_range(
+        self,
+        temperature_high: float,
+        temperature_low: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
+        """Set new target temperature range."""
+        await self.coordinator.client.update_setpoint(temperature_low, temperature_high)
         await self.coordinator.client.read_control()
 
     async def async_set_humidity(self, humidity: int) -> None:

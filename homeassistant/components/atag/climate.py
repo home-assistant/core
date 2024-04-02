@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 from homeassistant.components.climate import (
     PRESET_AWAY,
     PRESET_BOOST,
@@ -13,7 +11,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.enum import try_parse_enum
@@ -81,9 +79,13 @@ class AtagThermostat(AtagEntity, ClimateEntity):
         preset = self.coordinator.data.climate.preset_mode
         return PRESET_INVERTED.get(preset)
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set new target temperature."""
-        await self.coordinator.data.climate.set_temp(kwargs.get(ATTR_TEMPERATURE))
+        await self.coordinator.data.climate.set_temp(temperature)
         self.async_write_ha_state()
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:

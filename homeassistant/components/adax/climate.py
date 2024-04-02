@@ -14,7 +14,6 @@ from homeassistant.components.climate import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_TEMPERATURE,
     CONF_IP_ADDRESS,
     CONF_PASSWORD,
     CONF_TOKEN,
@@ -107,10 +106,12 @@ class AdaxDevice(ClimateEntity):
             return
         await self._adax_data_handler.update()
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set new target temperature."""
-        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
-            return
         await self._adax_data_handler.set_room_target_temperature(
             self._device_id, temperature, True
         )
@@ -152,10 +153,12 @@ class LocalAdaxDevice(ClimateEntity):
             manufacturer="Adax",
         )
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set new target temperature."""
-        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
-            return
         await self._adax_data_handler.set_target_temperature(temperature)
 
     async def async_update(self) -> None:

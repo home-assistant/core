@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
 
 from huum.const import SaunaStatus
 from huum.exceptions import SafetyException
@@ -16,7 +15,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, UnitOfTemperature
+from homeassistant.const import PRECISION_WHOLE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -102,15 +101,16 @@ class HuumDevice(ClimateEntity):
         elif hvac_mode == HVACMode.OFF:
             await self._huum_handler.turn_off()
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set new target temperature."""
-        temperature = kwargs.get(ATTR_TEMPERATURE)
-        if temperature is None:
-            return
-        self._target_temperature = temperature
+        self._target_temperature = int(temperature)
 
         if self.hvac_mode == HVACMode.HEAT:
-            await self._turn_on(temperature)
+            await self._turn_on(self._target_temperature)
 
     async def async_update(self) -> None:
         """Get the latest status data.

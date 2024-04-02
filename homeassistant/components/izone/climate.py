@@ -23,7 +23,6 @@ from homeassistant.components.climate import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_TEMPERATURE,
     CONF_EXCLUDE,
     PRECISION_HALVES,
     PRECISION_TENTHS,
@@ -400,13 +399,13 @@ class ControllerDevice(ClimateEntity):
         else:
             self.set_available(True)
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set new target temperature."""
-        if not self.supported_features & ClimateEntityFeature.TARGET_TEMPERATURE:
-            self.async_schedule_update_ha_state(True)
-            return
-        if (temp := kwargs.get(ATTR_TEMPERATURE)) is not None:
-            await self.wrap_and_catch(self._controller.set_temp_setpoint(temp))
+        await self.wrap_and_catch(self._controller.set_temp_setpoint(temperature))
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
@@ -579,12 +578,15 @@ class ZoneDevice(ClimateEntity):
         )
         self.async_write_ha_state()
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set new target temperature."""
         if self._zone.mode != Zone.Mode.AUTO:
             return
-        if (temp := kwargs.get(ATTR_TEMPERATURE)) is not None:
-            await self._controller.wrap_and_catch(self._zone.set_temp_setpoint(temp))
+        await self._controller.wrap_and_catch(self._zone.set_temp_setpoint(temperature))
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target operation mode."""

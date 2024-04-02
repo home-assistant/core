@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 import radiotherm
 
 from homeassistant.components.climate import (
@@ -18,7 +16,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, PRECISION_HALVES, UnitOfTemperature
+from homeassistant.const import PRECISION_HALVES, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -81,7 +79,7 @@ PARALLEL_UPDATES = 1
 CONF_HOLD_TEMP = "hold_temp"
 
 
-def round_temp(temperature):
+def round_temp(temperature: float) -> float:
     """Round a temperature to the resolution of the thermostat.
 
     RadioThermostats can handle 0.5 degree temps so the input
@@ -170,16 +168,18 @@ class RadioThermostat(RadioThermostatEntity, ClimateEntity):
             elif self.hvac_action == HVACAction.HEATING:
                 self._attr_target_temperature = data["t_heat"]
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set new target temperature."""
-        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
-            return
         await self.hass.async_add_executor_job(self._set_temperature, temperature)
         self._attr_target_temperature = temperature
         self.async_write_ha_state()
         await self.coordinator.async_request_refresh()
 
-    def _set_temperature(self, temperature: int) -> None:
+    def _set_temperature(self, temperature: float) -> None:
         """Set new target temperature."""
         temperature = round_temp(temperature)
         if self.hvac_mode == HVACMode.COOL:

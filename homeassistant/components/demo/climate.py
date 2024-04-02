@@ -2,19 +2,14 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 from homeassistant.components.climate import (
-    ATTR_HVAC_MODE,
-    ATTR_TARGET_TEMP_HIGH,
-    ATTR_TARGET_TEMP_LOW,
     ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -242,17 +237,27 @@ class DemoClimate(ClimateEntity):
         """List of available swing modes."""
         return self._swing_modes
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set new target temperatures."""
-        if kwargs.get(ATTR_TEMPERATURE) is not None:
-            self._target_temperature = kwargs.get(ATTR_TEMPERATURE)
-        if (
-            kwargs.get(ATTR_TARGET_TEMP_HIGH) is not None
-            and kwargs.get(ATTR_TARGET_TEMP_LOW) is not None
-        ):
-            self._target_temperature_high = kwargs.get(ATTR_TARGET_TEMP_HIGH)
-            self._target_temperature_low = kwargs.get(ATTR_TARGET_TEMP_LOW)
-        if (hvac_mode := kwargs.get(ATTR_HVAC_MODE)) is not None:
+        self._target_temperature = temperature
+        if hvac_mode is not None:
+            self._hvac_mode = hvac_mode
+        self.async_write_ha_state()
+
+    async def async_set_target_temperature_range(
+        self,
+        temperature_high: float,
+        temperature_low: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
+        """Set new target temperature range."""
+        self._target_temperature_high = temperature_high
+        self._target_temperature_low = temperature_low
+        if hvac_mode is not None:
             self._hvac_mode = hvac_mode
         self.async_write_ha_state()
 

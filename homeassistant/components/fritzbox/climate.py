@@ -2,10 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 from homeassistant.components.climate import (
-    ATTR_HVAC_MODE,
     PRESET_COMFORT,
     PRESET_ECO,
     ClimateEntity,
@@ -13,12 +10,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_BATTERY_LEVEL,
-    ATTR_TEMPERATURE,
-    PRECISION_HALVES,
-    UnitOfTemperature,
-)
+from homeassistant.const import ATTR_BATTERY_LEVEL, PRECISION_HALVES, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -99,16 +91,17 @@ class FritzboxThermostat(FritzBoxDeviceEntity, ClimateEntity):
             return OFF_REPORT_SET_TEMPERATURE
         return self.data.target_temperature  # type: ignore [no-any-return]
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set new target temperature."""
-        if kwargs.get(ATTR_HVAC_MODE) is not None:
-            hvac_mode = kwargs[ATTR_HVAC_MODE]
+        if hvac_mode is not None:
             await self.async_set_hvac_mode(hvac_mode)
-        elif kwargs.get(ATTR_TEMPERATURE) is not None:
-            temperature = kwargs[ATTR_TEMPERATURE]
-            await self.hass.async_add_executor_job(
-                self.data.set_target_temperature, temperature
-            )
+        await self.hass.async_add_executor_job(
+            self.data.set_target_temperature, temperature
+        )
         await self.coordinator.async_refresh()
 
     @property

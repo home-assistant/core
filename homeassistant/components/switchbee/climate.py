@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 from switchbee.api.central_unit import SwitchBeeDeviceOfflineError, SwitchBeeError
 from switchbee.const import (
     ApiAttribute,
@@ -24,7 +22,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -142,9 +140,13 @@ class SwitchBeeClimateEntity(SwitchBeeDeviceEntity[SwitchBeeThermostat], Climate
                 power=ApiStateCommand.ON, mode=HVAC_MODE_HASS_TO_SB[hvac_mode]
             )
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set new target temperature."""
-        await self._operate(target_temperature=kwargs[ATTR_TEMPERATURE])
+        await self._operate(target_temperature=int(temperature))
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set AC fan mode."""

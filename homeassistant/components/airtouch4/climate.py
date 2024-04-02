@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
 
 from homeassistant.components.climate import (
     FAN_AUTO,
@@ -17,7 +16,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -284,15 +283,16 @@ class AirtouchGroup(CoordinatorEntity, ClimateEntity):
         )
         return [AT_TO_HA_FAN_SPEED[speed] for speed in airtouch_fan_speeds]
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set new target temperatures."""
-        if (temp := kwargs.get(ATTR_TEMPERATURE)) is None:
-            _LOGGER.debug("Argument `temperature` is missing in set_temperature")
-            return
 
-        _LOGGER.debug("Setting temp of %s to %s", self._group_number, str(temp))
+        _LOGGER.debug("Setting temp of %s to %s", self._group_number, str(temperature))
         self._unit = await self._airtouch.SetGroupToTemperature(
-            self._group_number, int(temp)
+            self._group_number, int(temperature)
         )
         self.async_write_ha_state()
 

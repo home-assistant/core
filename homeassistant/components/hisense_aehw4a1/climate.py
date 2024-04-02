@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
 
 from pyaehw4a1.aehw4a1 import AehW4a1
 import pyaehw4a1.exceptions
@@ -26,7 +25,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, UnitOfTemperature
+from homeassistant.const import PRECISION_WHOLE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -227,21 +226,24 @@ class ClimateAehW4a1(ClimateEntity):
             self._attr_target_temperature = None
             self._attr_preset_mode = None
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set new target temperatures."""
         if self._on != "1":
             _LOGGER.warning(
                 "AC at %s is off, could not set temperature", self._attr_unique_id
             )
             return
-        if (temp := kwargs.get(ATTR_TEMPERATURE)) is not None:
-            _LOGGER.debug("Setting temp of %s to %s", self._attr_unique_id, temp)
-            if self._attr_preset_mode != PRESET_NONE:
-                await self.async_set_preset_mode(PRESET_NONE)
-            if self._attr_temperature_unit == UnitOfTemperature.CELSIUS:
-                await self._device.command(f"temp_{int(temp)}_C")
-            else:
-                await self._device.command(f"temp_{int(temp)}_F")
+        _LOGGER.debug("Setting temp of %s to %s", self._attr_unique_id, temperature)
+        if self._attr_preset_mode != PRESET_NONE:
+            await self.async_set_preset_mode(PRESET_NONE)
+        if self._attr_temperature_unit == UnitOfTemperature.CELSIUS:
+            await self._device.command(f"temp_{int(temperature)}_C")
+        else:
+            await self._device.command(f"temp_{int(temperature)}_F")
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new fan mode."""

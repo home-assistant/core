@@ -22,7 +22,6 @@ from homeassistant.components.modbus import (
     get_hub,
 )
 from homeassistant.const import (
-    ATTR_TEMPERATURE,
     CONF_NAME,
     CONF_SLAVE,
     DEVICE_DEFAULT_NAME,
@@ -155,14 +154,14 @@ class Flexit(ClimateEntity):
             "outdoor_air_temp": self._outdoor_air_temp,
         }
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set new target temperature."""
-        if (target_temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
-            _LOGGER.error("Received invalid temperature")
-            return
-
-        if await self._async_write_int16_to_register(8, int(target_temperature * 10)):
-            self._attr_target_temperature = target_temperature
+        if await self._async_write_int16_to_register(8, int(temperature * 10)):
+            self._attr_target_temperature = temperature
         else:
             _LOGGER.error("Modbus error setting target temperature to Flexit")
 

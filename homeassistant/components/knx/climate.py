@@ -17,7 +17,6 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.const import (
-    ATTR_TEMPERATURE,
     CONF_ENTITY_CATEGORY,
     CONF_NAME,
     Platform,
@@ -181,12 +180,14 @@ class KNXClimate(KnxEntity, ClimateEntity):
         temp = self._device.target_temperature_max
         return temp if temp is not None else super().max_temp
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set new target temperature."""
-        temperature = kwargs.get(ATTR_TEMPERATURE)
-        if temperature is not None:
-            await self._device.set_target_temperature(temperature)
-            self.async_write_ha_state()
+        await self._device.set_target_temperature(temperature)
+        self.async_write_ha_state()
 
     @property
     def hvac_mode(self) -> HVACMode:

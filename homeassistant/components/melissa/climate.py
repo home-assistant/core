@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
 
 from homeassistant.components.climate import (
     FAN_AUTO,
@@ -14,7 +13,7 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, UnitOfTemperature
+from homeassistant.const import PRECISION_WHOLE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -142,10 +141,13 @@ class MelissaClimate(ClimateEntity):
         """Return the maximum supported temperature for the thermostat."""
         return 30
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set new target temperature."""
-        temp = kwargs.get(ATTR_TEMPERATURE)
-        await self.async_send({self._api.TEMP: temp})
+        await self.async_send({self._api.TEMP: temperature})
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set fan mode."""

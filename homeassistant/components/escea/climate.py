@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Coroutine
 import logging
-from typing import Any
 
 from pescea import Controller
 
@@ -17,7 +16,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, UnitOfTemperature
+from homeassistant.const import PRECISION_WHOLE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -203,11 +202,13 @@ class ControllerEntity(ClimateEntity):
         else:
             self.set_available(True)
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set new target temperature."""
-        temp = kwargs.get(ATTR_TEMPERATURE)
-        if temp is not None:
-            await self.wrap_and_catch(self._controller.set_desired_temp(temp))
+        await self.wrap_and_catch(self._controller.set_desired_temp(temperature))
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""

@@ -1,7 +1,5 @@
 """Support for SwitchBot Air Conditioner remotes."""
 
-from typing import Any
-
 from switchbot_api import AirConditionerCommands
 
 import homeassistant.components.climate as FanState
@@ -11,7 +9,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -78,7 +76,7 @@ class SwitchBotCloudAirConditionner(SwitchBotCloudEntity, ClimateEntity):
     ]
     _attr_hvac_mode = HVACMode.FAN_ONLY
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _attr_target_temperature = 21
+    _attr_target_temperature = 21.0
     _attr_name = None
     _enable_turn_on_off_backwards_compatibility = False
 
@@ -112,10 +110,12 @@ class SwitchBotCloudAirConditionner(SwitchBotCloudEntity, ClimateEntity):
         self._attr_fan_mode = fan_mode
         self.async_write_ha_state()
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set target temperature."""
-        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
-            return
         await self._do_send_command(temperature=temperature)
         self._attr_target_temperature = temperature
         self.async_write_ha_state()

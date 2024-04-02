@@ -36,7 +36,6 @@ from aioairzone_cloud.const import (
 )
 
 from homeassistant.components.climate import (
-    ATTR_HVAC_MODE,
     FAN_AUTO,
     FAN_HIGH,
     FAN_LOW,
@@ -47,7 +46,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -223,20 +222,24 @@ class AirzoneDeviceClimate(AirzoneClimate):
         }
         await self._async_update_params(params)
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set new target temperature."""
-        params: dict[str, Any] = {}
-        if ATTR_TEMPERATURE in kwargs:
-            params[API_SETPOINT] = {
-                API_VALUE: kwargs[ATTR_TEMPERATURE],
+        params: dict[str, Any] = {
+            API_SETPOINT: {
+                API_VALUE: temperature,
                 API_OPTS: {
                     API_UNITS: TemperatureUnit.CELSIUS.value,
                 },
             }
+        }
         await self._async_update_params(params)
 
-        if ATTR_HVAC_MODE in kwargs:
-            await self.async_set_hvac_mode(kwargs[ATTR_HVAC_MODE])
+        if hvac_mode is not None:
+            await self.async_set_hvac_mode(hvac_mode)
 
 
 class AirzoneDeviceGroupClimate(AirzoneClimate):
@@ -266,20 +269,24 @@ class AirzoneDeviceGroupClimate(AirzoneClimate):
         }
         await self._async_update_params(params)
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set new target temperature."""
-        params: dict[str, Any] = {}
-        if ATTR_TEMPERATURE in kwargs:
-            params[API_PARAMS] = {
-                API_SETPOINT: kwargs[ATTR_TEMPERATURE],
-            }
-            params[API_OPTS] = {
+        params: dict[str, Any] = {
+            API_PARAMS: {
+                API_SETPOINT: temperature,
+            },
+            API_OPTS: {
                 API_UNITS: TemperatureUnit.CELSIUS.value,
-            }
+            },
+        }
         await self._async_update_params(params)
 
-        if ATTR_HVAC_MODE in kwargs:
-            await self.async_set_hvac_mode(kwargs[ATTR_HVAC_MODE])
+        if hvac_mode is not None:
+            await self.async_set_hvac_mode(hvac_mode)
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode."""

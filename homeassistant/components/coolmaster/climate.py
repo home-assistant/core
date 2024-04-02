@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
 
 from pycoolmasternet_async import SWING_MODES
 
@@ -13,7 +12,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -123,12 +122,15 @@ class CoolmasterClimate(CoolmasterEntity, ClimateEntity):
         """Return swing modes if supported."""
         return SWING_MODES if self.swing_mode is not None else None
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set new target temperatures."""
-        if (temp := kwargs.get(ATTR_TEMPERATURE)) is not None:
-            _LOGGER.debug("Setting temp of %s to %s", self.unique_id, str(temp))
-            self._unit = await self._unit.set_thermostat(temp)
-            self.async_write_ha_state()
+        _LOGGER.debug("Setting temp of %s to %s", self.unique_id, str(temperature))
+        self._unit = await self._unit.set_thermostat(temperature)
+        self.async_write_ha_state()
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new fan mode."""

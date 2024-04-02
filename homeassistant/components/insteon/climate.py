@@ -2,14 +2,10 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 from pyinsteon.config import CELSIUS
 from pyinsteon.constants import ThermostatMode
 
 from homeassistant.components.climate import (
-    ATTR_TARGET_TEMP_HIGH,
-    ATTR_TARGET_TEMP_LOW,
     FAN_AUTO,
     ClimateEntity,
     ClimateEntityFeature,
@@ -17,7 +13,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, Platform, UnitOfTemperature
+from homeassistant.const import Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -180,19 +176,26 @@ class InsteonClimateEntity(InsteonEntity, ClimateEntity):
         attr["humidifier"] = humidifier
         return attr
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set new target temperature."""
-        target_temp = kwargs.get(ATTR_TEMPERATURE)
-        target_temp_low = kwargs.get(ATTR_TARGET_TEMP_LOW)
-        target_temp_high = kwargs.get(ATTR_TARGET_TEMP_HIGH)
-        if target_temp is not None:
-            if self._insteon_device.groups[SYSTEM_MODE].value == ThermostatMode.HEAT:
-                await self._insteon_device.async_set_heat_set_point(target_temp)
-            elif self._insteon_device.groups[SYSTEM_MODE].value == ThermostatMode.COOL:
-                await self._insteon_device.async_set_cool_set_point(target_temp)
-        else:
-            await self._insteon_device.async_set_heat_set_point(target_temp_low)
-            await self._insteon_device.async_set_cool_set_point(target_temp_high)
+        if self._insteon_device.groups[SYSTEM_MODE].value == ThermostatMode.HEAT:
+            await self._insteon_device.async_set_heat_set_point(temperature)
+        elif self._insteon_device.groups[SYSTEM_MODE].value == ThermostatMode.COOL:
+            await self._insteon_device.async_set_cool_set_point(temperature)
+
+    async def async_set_target_temperature_range(
+        self,
+        temperature_high: float,
+        temperature_low: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
+        """Set new target temperature range."""
+        await self._insteon_device.async_set_heat_set_point(temperature_low)
+        await self._insteon_device.async_set_cool_set_point(temperature_high)
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""

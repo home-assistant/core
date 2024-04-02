@@ -23,7 +23,6 @@ from homeassistant.components.climate import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_SUGGESTED_AREA,
-    ATTR_TEMPERATURE,
     PRECISION_HALVES,
     STATE_OFF,
     UnitOfTemperature,
@@ -379,10 +378,14 @@ class NetatmoThermostat(NetatmoBaseEntity, ClimateEntity):
 
         self.async_write_ha_state()
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set new target temperature for 2 hours."""
         await self._room.async_therm_set(
-            STATE_NETATMO_MANUAL, min(kwargs[ATTR_TEMPERATURE], DEFAULT_MAX_TEMP)
+            STATE_NETATMO_MANUAL, min(temperature, DEFAULT_MAX_TEMP)
         )
         self.async_write_ha_state()
 

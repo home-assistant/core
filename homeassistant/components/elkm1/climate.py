@@ -9,8 +9,6 @@ from elkm1_lib.elements import Element
 from elkm1_lib.thermostats import Thermostat
 
 from homeassistant.components.climate import (
-    ATTR_TARGET_TEMP_HIGH,
-    ATTR_TARGET_TEMP_LOW,
     FAN_AUTO,
     FAN_ON,
     ClimateEntity,
@@ -165,14 +163,15 @@ class ElkThermostat(ElkEntity, ClimateEntity):
         thermostat_mode, elk_fan_mode = HASS_TO_ELK_FAN_MODES[fan_mode]
         self._elk_set(thermostat_mode, elk_fan_mode)
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature_range(
+        self,
+        temperature_high: float,
+        temperature_low: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set new target temperature."""
-        low_temp = kwargs.get(ATTR_TARGET_TEMP_LOW)
-        high_temp = kwargs.get(ATTR_TARGET_TEMP_HIGH)
-        if low_temp is not None:
-            self._element.set(ThermostatSetting.HEAT_SETPOINT, round(low_temp))
-        if high_temp is not None:
-            self._element.set(ThermostatSetting.COOL_SETPOINT, round(high_temp))
+        self._element.set(ThermostatSetting.HEAT_SETPOINT, round(temperature_low))
+        self._element.set(ThermostatSetting.COOL_SETPOINT, round(temperature_high))
 
     def _element_changed(self, element: Element, changeset: Any) -> None:
         if self._element.mode is None:

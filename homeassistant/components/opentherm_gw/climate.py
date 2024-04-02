@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
 
 from pyotgw import vars as gw_vars
 
@@ -18,7 +17,6 @@ from homeassistant.components.climate import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_TEMPERATURE,
     CONF_ID,
     PRECISION_HALVES,
     PRECISION_TENTHS,
@@ -247,13 +245,13 @@ class OpenThermClimate(ClimateEntity):
         """Set the preset mode."""
         _LOGGER.warning("Changing preset mode is not supported")
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set new target temperature."""
-        if ATTR_TEMPERATURE in kwargs:
-            temp = float(kwargs[ATTR_TEMPERATURE])
-            if temp == self.target_temperature:
-                return
-            self._new_target_temperature = await self._gateway.gateway.set_target_temp(
-                temp, self.temporary_ovrd_mode
-            )
-            self.async_write_ha_state()
+        self._new_target_temperature = await self._gateway.gateway.set_target_temp(
+            temperature, self.temporary_ovrd_mode
+        )
+        self.async_write_ha_state()

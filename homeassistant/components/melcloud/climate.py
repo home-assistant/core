@@ -16,7 +16,6 @@ from pymelcloud.atw_device import (
 import voluptuous as vol
 
 from homeassistant.components.climate import (
-    ATTR_HVAC_MODE,
     DEFAULT_MAX_TEMP,
     DEFAULT_MIN_TEMP,
     ClimateEntity,
@@ -25,7 +24,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -222,19 +221,16 @@ class AtaDeviceClimate(MelCloudClimate):
         """Return the temperature we try to reach."""
         return self._device.target_temperature
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set new target temperature."""
-        set_dict: dict[str, Any] = {}
-        if ATTR_HVAC_MODE in kwargs:
-            self._apply_set_hvac_mode(
-                kwargs.get(ATTR_HVAC_MODE, self.hvac_mode), set_dict
-            )
+        if hvac_mode is not None:
+            self._apply_set_hvac_mode(hvac_mode, {})
 
-        if ATTR_TEMPERATURE in kwargs:
-            set_dict["target_temperature"] = kwargs.get(ATTR_TEMPERATURE)
-
-        if set_dict:
-            await self._device.set(set_dict)
+        await self._device.set({"target_temperature": temperature})
 
     @property
     def fan_mode(self) -> str | None:
@@ -385,8 +381,10 @@ class AtwDeviceZoneClimate(MelCloudClimate):
         """Return the temperature we try to reach."""
         return self._zone.target_temperature
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set new target temperature."""
-        await self._zone.set_target_temperature(
-            kwargs.get("temperature", self.target_temperature)
-        )
+        await self._zone.set_target_temperature(temperature)

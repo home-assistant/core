@@ -1,7 +1,6 @@
 """BleBox climate entity."""
 
 from datetime import timedelta
-from typing import Any
 
 from blebox_uniapi.box import Box
 import blebox_uniapi.climate
@@ -13,7 +12,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -119,7 +118,10 @@ class BleBoxClimateEntity(BleBoxEntity[blebox_uniapi.climate.Climate], ClimateEn
 
         await self._feature.async_off()
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set the thermostat temperature."""
-        value = kwargs[ATTR_TEMPERATURE]
-        await self._feature.async_set_temperature(value)
+        await self._feature.async_set_temperature(temperature)

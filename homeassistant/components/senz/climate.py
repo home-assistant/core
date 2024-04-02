@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 from aiosenz import MODE_AUTO, Thermostat
 
 from homeassistant.components.climate import (
@@ -13,7 +11,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, UnitOfTemperature
+from homeassistant.const import PRECISION_TENTHS, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -105,8 +103,11 @@ class SENZClimate(CoordinatorEntity, ClimateEntity):
             await self._thermostat.manual()
         await self.coordinator.async_request_refresh()
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set new target temperature."""
-        temp: float = kwargs[ATTR_TEMPERATURE]
-        await self._thermostat.manual(temp)
+        await self._thermostat.manual(temperature)
         await self.coordinator.async_request_refresh()

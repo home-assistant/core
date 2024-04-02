@@ -2,15 +2,13 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 from homeassistant.components.climate import (
     ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, PRECISION_HALVES, UnitOfTemperature
+from homeassistant.const import PRECISION_HALVES, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -97,17 +95,20 @@ class TeslemetryClimateEntity(TeslemetryVehicleEntity, ClimateEntity):
             ("climate_state_climate_keeper_mode", "off"),
         )
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set the climate temperature."""
-        temp = kwargs[ATTR_TEMPERATURE]
         with handle_command():
             await self.wake_up_if_asleep()
             await self.api.set_temps(
-                driver_temp=temp,
-                passenger_temp=temp,
+                driver_temp=temperature,
+                passenger_temp=temperature,
             )
 
-        self.set((f"climate_state_{self.key}_setting", temp))
+        self.set((f"climate_state_{self.key}_setting", temperature))
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the climate mode and state."""

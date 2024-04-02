@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 from homeassistant import config_entries
 from homeassistant.components.climate import (
     ClimateEntity,
@@ -11,7 +9,7 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -58,8 +56,12 @@ class BAFAutoComfort(BAFEntity, ClimateEntity):
         """Set the HVAC mode."""
         self._device.auto_comfort_enable = hvac_mode == HVACMode.FAN_ONLY
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set the target temperature."""
         if not self._device.auto_comfort_enable:
             self._device.auto_comfort_enable = True
-        self._device.comfort_ideal_temperature = kwargs[ATTR_TEMPERATURE]
+        self._device.comfort_ideal_temperature = temperature

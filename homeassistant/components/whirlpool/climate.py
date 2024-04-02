@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
 
 from aiohttp import ClientSession
 from whirlpool.aircon import Aircon, FanSpeed as AirconFanSpeed, Mode as AirconMode
@@ -24,7 +23,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -158,9 +157,13 @@ class AirConEntity(ClimateEntity):
         """Return the temperature we try to reach."""
         return self._aircon.get_temp()
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set new target temperature."""
-        await self._aircon.set_temp(kwargs.get(ATTR_TEMPERATURE))
+        await self._aircon.set_temp(temperature)
 
     @property
     def current_humidity(self) -> int:

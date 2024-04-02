@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, cast
+from typing import cast
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 
@@ -17,7 +17,6 @@ from homeassistant.components.climate import (
     HVACMode,
     UnitOfTemperature,
 )
-from homeassistant.const import ATTR_TEMPERATURE
 
 from ..const import DOMAIN
 from ..coordinator import OverkizDataUpdateCoordinator
@@ -98,13 +97,15 @@ class ValveHeatingTemperatureInterface(OverkizEntity, ClimateEntity):
 
         return None
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set new temperature."""
-        temperature = kwargs[ATTR_TEMPERATURE]
-
         await self.executor.async_execute_command(
             OverkizCommand.SET_DEROGATION,
-            float(temperature),
+            temperature,
             OverkizCommandParam.FURTHER_NOTICE,
         )
 

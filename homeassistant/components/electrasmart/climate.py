@@ -5,7 +5,6 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 import time
-from typing import Any
 
 from electrasmart.api import STATUS_SUCCESS, Attributes, ElectraAPI, ElectraApiError
 from electrasmart.device import ElectraAirConditioner, OperationMode
@@ -25,7 +24,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -250,12 +249,12 @@ class ElectraClimateEntity(ClimateEntity):
 
         await self._async_operate_electra_ac()
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set new target temperature."""
-
-        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
-            raise ValueError("No target temperature provided")
-
         self._electra_ac_device.set_temperature(int(temperature))
         await self._async_operate_electra_ac()
 

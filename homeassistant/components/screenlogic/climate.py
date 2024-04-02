@@ -2,7 +2,6 @@
 
 from dataclasses import dataclass
 import logging
-from typing import Any
 
 from screenlogicpy.const.common import UNIT, ScreenLogicCommunicationError
 from screenlogicpy.const.data import ATTR, DEVICE, VALUE
@@ -19,7 +18,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -145,11 +144,12 @@ class ScreenLogicClimate(ScreenLogicPushEntity, ClimateEntity, RestoreEntity):
             return HEAT_MODE(self._last_preset).title
         return HEAT_MODE(self.entity_data[VALUE.HEAT_MODE][ATTR.VALUE]).title
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Change the setpoint of the heater."""
-        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
-            raise ValueError(f"Expected attribute {ATTR_TEMPERATURE}")
-
         try:
             await self.gateway.async_set_heat_temp(
                 int(self._data_key), int(temperature)

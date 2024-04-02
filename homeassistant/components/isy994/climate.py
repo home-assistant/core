@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 from pyisy.constants import (
     CMD_CLIMATE_FAN_SETTING,
     CMD_CLIMATE_MODE,
@@ -18,8 +16,6 @@ from pyisy.constants import (
 from pyisy.nodes import Node
 
 from homeassistant.components.climate import (
-    ATTR_TARGET_TEMP_HIGH,
-    ATTR_TARGET_TEMP_LOW,
     FAN_AUTO,
     FAN_OFF,
     FAN_ON,
@@ -29,12 +25,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_TEMPERATURE,
-    PRECISION_TENTHS,
-    Platform,
-    UnitOfTemperature,
-)
+from homeassistant.const import PRECISION_TENTHS, Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -187,20 +178,27 @@ class ISYThermostatEntity(ISYNodeEntity, ClimateEntity):
             return FAN_OFF
         return UOM_TO_STATES[UOM_FAN_MODES].get(fan_mode.value, FAN_OFF)
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set new target temperature."""
-        target_temp = kwargs.get(ATTR_TEMPERATURE)
-        target_temp_low = kwargs.get(ATTR_TARGET_TEMP_LOW)
-        target_temp_high = kwargs.get(ATTR_TARGET_TEMP_HIGH)
-        if target_temp is not None:
-            if self.hvac_mode == HVACMode.COOL:
-                target_temp_high = target_temp
-            if self.hvac_mode == HVACMode.HEAT:
-                target_temp_low = target_temp
-        if target_temp_low is not None:
-            await self._node.set_climate_setpoint_heat(int(target_temp_low))
-        if target_temp_high is not None:
-            await self._node.set_climate_setpoint_cool(int(target_temp_high))
+        if self.hvac_mode == HVACMode.COOL:
+            await self._node.set_climate_setpoint_cool(int(temperature))
+        if self.hvac_mode == HVACMode.HEAT:
+            await self._node.set_climate_setpoint_heat(int(temperature))
+        self.async_write_ha_state()
+
+    async def async_set_target_temperature_range(
+        self,
+        temperature_high: float,
+        temperature_low: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
+        """Set new target temperature range."""
+        await self._node.set_climate_setpoint_heat(int(temperature_low))
+        await self._node.set_climate_setpoint_cool(int(temperature_high))
         self.async_write_ha_state()
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
