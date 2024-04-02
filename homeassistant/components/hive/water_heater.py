@@ -75,6 +75,14 @@ class HiveWaterHeater(HiveEntity, WaterHeaterEntity):
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_operation_list = SUPPORT_WATER_HEATER
 
+    @property
+    def extra_state_attributes(self):
+        """Return the additional state attributes."""
+        attributes = {}
+        attributes['operation_state'] = self._attr_current_state
+
+        return attributes
+
     @refresh_system
     async def async_turn_on(self, **kwargs):
         """Turn on hotwater."""
@@ -108,3 +116,4 @@ class HiveWaterHeater(HiveEntity, WaterHeaterEntity):
             self._attr_current_operation = HIVE_TO_HASS_STATE[
                 self.device["status"]["current_operation"]
             ]
+            self._attr_current_state = await self.hive.hotwater.getState(self.device)
