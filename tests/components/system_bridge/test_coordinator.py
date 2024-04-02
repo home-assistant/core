@@ -16,7 +16,7 @@ from homeassistant.components.system_bridge.coordinator import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from . import setup_integration
+from . import mock_data_listener_bad, setup_integration
 
 from tests.common import MockConfigEntry
 
@@ -126,6 +126,20 @@ async def test_wait_timeout(
     """Test wait timeout."""
     # Stop the listener from returning any data to trigger a timeout
     mock_websocket_client.listen.side_effect = None
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_not_ready(
+    hass: HomeAssistant,
+    mock_version: MagicMock,
+    mock_websocket_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test not ready."""
+    mock_websocket_client.listen.side_effect = mock_data_listener_bad
 
     await setup_integration(hass, mock_config_entry)
 

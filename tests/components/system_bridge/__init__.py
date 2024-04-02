@@ -150,3 +150,20 @@ async def mock_data_listener(
         await callback(MODEL_MEMORY, FIXTURE_MEMORY)
         await callback(MODEL_PROCESSES, FIXTURE_PROCESSES)
         await callback(MODEL_SYSTEM, FIXTURE_SYSTEM)
+
+
+async def mock_data_listener_bad(
+    callback: Callable[[str, Any], Awaitable[None]] | None = None,
+    _: bool = False,
+):
+    """Mock websocket data listener."""
+    if callback is not None:
+        # Simulate data received from the websocket
+        await callback(MODEL_BATTERY, FIXTURE_BATTERY)
+        await callback(MODEL_CPU, FIXTURE_CPU)
+        await callback(MODEL_DISKS, FIXTURE_DISKS)
+        await callback(MODEL_DISPLAYS, FIXTURE_DISPLAYS)
+        await callback(MODEL_GPUS, FIXTURE_GPUS)
+        await callback(MODEL_MEDIA, FIXTURE_MEDIA)
+        await callback(MODEL_MEMORY, FIXTURE_MEMORY)
+        await callback(MODEL_PROCESSES, FIXTURE_PROCESSES)
