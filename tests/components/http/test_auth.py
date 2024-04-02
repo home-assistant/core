@@ -854,12 +854,17 @@ async def _test_strict_connection_non_cloud_enabled_external_unauthenticated_req
     assert session._temp_sessions == {}
     set_mock_ip(LOCALHOST_ADDRESSES[0])
     session_id = await (await client.get("/test/cookie?token=temp")).text()
+
+    freezer.tick(timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
     assert session_id in session._temp_sessions
     for remote_addr in EXTERNAL_ADDRESSES:
         set_mock_ip(remote_addr)
-        req = await client.get("/")
-        assert req.status == HTTPStatus.OK
-        assert await req.json() == {"authenticated": False}
+        resp = await client.get("/")
+        assert resp.status == HTTPStatus.OK
+        assert await resp.json() == {"authenticated": False}
 
     freezer.tick(TEMP_TIMEOUT + timedelta(minutes=1))
     async_fire_time_changed(hass)
@@ -899,6 +904,11 @@ async def _static_page_unauthorized_request(
         _test_strict_connection_non_cloud_enabled_external_unauthenticated_requests_refresh_token,
         _test_strict_connection_non_cloud_enabled_external_unauthenticated_requests_temp_session,
     ],
+    ids=[
+        "no cookie",
+        "refresh token cookie",
+        "temp session cookie",
+    ],
 )
 @pytest.mark.parametrize(
     ("strict_connection_mode", "request_func"),
@@ -906,6 +916,7 @@ async def _static_page_unauthorized_request(
         (StrictConnectionMode.DROP_CONNECTION, _drop_connection_unauthorized_request),
         (StrictConnectionMode.STATIC_PAGE, _static_page_unauthorized_request),
     ],
+    ids=["drop connection", "static page"],
 )
 async def test_strict_connection_non_cloud_external_unauthenticated_requests(
     hass: HomeAssistant,
@@ -929,7 +940,6 @@ async def test_strict_connection_non_cloud_external_unauthenticated_requests(
     request_func: Callable[[HomeAssistant, TestClient], Awaitable[None]],
 ) -> None:
     """Test external unauthenticated requests with strict connection non cloud."""
-
     await test_func(
         hass,
         app_strict_connection,
