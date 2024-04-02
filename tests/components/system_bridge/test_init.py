@@ -62,24 +62,23 @@ async def test_load_unload_entry(
 
     # Load entry
     await setup_integration(hass, mock_config_entry)
-    entry = hass.config_entries.async_entries(DOMAIN)[0]
 
     assert mock_version.check_supported.call_count == 1
 
     assert mock_websocket_client.connect.call_count == 2
     assert mock_websocket_client.listen.call_count == 2
 
-    assert entry.state == ConfigEntryState.LOADED
+    assert mock_config_entry.state == ConfigEntryState.LOADED
 
     # Reload entry
-    await hass.config_entries.async_reload(entry.entry_id)
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     # Unload entry
-    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.config_entries.async_remove(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.state == ConfigEntryState.NOT_LOADED
+    assert mock_config_entry.state == ConfigEntryState.NOT_LOADED
 
 
 async def test_version_authentication_error(
@@ -92,9 +91,8 @@ async def test_version_authentication_error(
     mock_version.check_supported.side_effect = AuthenticationException
 
     await setup_integration(hass, mock_config_entry)
-    entry = hass.config_entries.async_entries(DOMAIN)[0]
 
-    assert entry.state == ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.state == ConfigEntryState.SETUP_ERROR
 
 
 async def test_version_connection_closed(
@@ -107,9 +105,8 @@ async def test_version_connection_closed(
     mock_version.check_supported.side_effect = ConnectionClosedException
 
     await setup_integration(hass, mock_config_entry)
-    entry = hass.config_entries.async_entries(DOMAIN)[0]
 
-    assert entry.state == ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.state == ConfigEntryState.SETUP_RETRY
 
 
 async def test_version_connection_error(
@@ -122,9 +119,8 @@ async def test_version_connection_error(
     mock_version.check_supported.side_effect = ConnectionErrorException
 
     await setup_integration(hass, mock_config_entry)
-    entry = hass.config_entries.async_entries(DOMAIN)[0]
 
-    assert entry.state == ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.state == ConfigEntryState.SETUP_RETRY
 
 
 async def test_version_timeout(
@@ -137,9 +133,8 @@ async def test_version_timeout(
     mock_version.check_supported.side_effect = asyncio.TimeoutError
 
     await setup_integration(hass, mock_config_entry)
-    entry = hass.config_entries.async_entries(DOMAIN)[0]
 
-    assert entry.state == ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.state == ConfigEntryState.SETUP_RETRY
 
 
 async def test_version_not_supported(
@@ -152,14 +147,13 @@ async def test_version_not_supported(
     mock_version.check_supported.return_value = False
 
     await setup_integration(hass, mock_config_entry)
-    entry = hass.config_entries.async_entries(DOMAIN)[0]
 
-    assert entry.state == ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.state == ConfigEntryState.SETUP_RETRY
 
     issue_registry = ir.async_get(hass)
     assert issue_registry.async_get_issue(
         domain=DOMAIN,
-        issue_id=f"system_bridge_{entry.entry_id}_unsupported_version",
+        issue_id=f"system_bridge_{mock_config_entry.entry_id}_unsupported_version",
     )
 
 
@@ -173,9 +167,8 @@ async def test_get_data_authentication_error(
     mock_websocket_client.get_data.side_effect = AuthenticationException
 
     await setup_integration(hass, mock_config_entry)
-    entry = hass.config_entries.async_entries(DOMAIN)[0]
 
-    assert entry.state == ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.state == ConfigEntryState.SETUP_ERROR
 
 
 async def test_get_data_connection_closed(
@@ -188,9 +181,8 @@ async def test_get_data_connection_closed(
     mock_websocket_client.get_data.side_effect = ConnectionClosedException
 
     await setup_integration(hass, mock_config_entry)
-    entry = hass.config_entries.async_entries(DOMAIN)[0]
 
-    assert entry.state == ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.state == ConfigEntryState.SETUP_RETRY
 
 
 async def test_get_data_connection_error(
@@ -203,9 +195,8 @@ async def test_get_data_connection_error(
     mock_websocket_client.get_data.side_effect = ConnectionErrorException
 
     await setup_integration(hass, mock_config_entry)
-    entry = hass.config_entries.async_entries(DOMAIN)[0]
 
-    assert entry.state == ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.state == ConfigEntryState.SETUP_RETRY
 
 
 async def test_get_data_timeout(
@@ -218,9 +209,8 @@ async def test_get_data_timeout(
     mock_websocket_client.get_data.side_effect = asyncio.TimeoutError
 
     await setup_integration(hass, mock_config_entry)
-    entry = hass.config_entries.async_entries(DOMAIN)[0]
 
-    assert entry.state == ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.state == ConfigEntryState.SETUP_RETRY
 
 
 async def test_already_has_services(
@@ -231,9 +221,8 @@ async def test_already_has_services(
 ) -> None:
     """Test if services are registered."""
     await setup_integration(hass, mock_config_entry)
-    entry = hass.config_entries.async_entries(DOMAIN)[0]
 
-    assert entry.state == ConfigEntryState.LOADED
+    assert mock_config_entry.state == ConfigEntryState.LOADED
 
     assert hass.services.has_service(DOMAIN, SERVICE_GET_PROCESS_BY_ID)
     assert hass.services.has_service(DOMAIN, SERVICE_GET_PROCESSES_BY_NAME)
@@ -277,9 +266,8 @@ async def test_services(
 ) -> None:
     """Test if services are registered."""
     await setup_integration(hass, mock_config_entry)
-    entry = hass.config_entries.async_entries(DOMAIN)[0]
 
-    assert entry.state == ConfigEntryState.LOADED
+    assert mock_config_entry.state == ConfigEntryState.LOADED
 
     assert hass.services.has_service(DOMAIN, SERVICE_GET_PROCESS_BY_ID)
     assert hass.services.has_service(DOMAIN, SERVICE_GET_PROCESSES_BY_NAME)

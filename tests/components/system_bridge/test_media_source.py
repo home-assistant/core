@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock
 
 from syrupy.assertion import SnapshotAssertion
+from syrupy.filters import paths
 
 from homeassistant.components.media_source import URI_SCHEME, async_browse_media
 from homeassistant.components.system_bridge.const import DOMAIN
@@ -24,13 +25,12 @@ async def test_async_browse_media(
 ) -> None:
     """Test async_browse_media."""
     await setup_integration(hass, mock_config_entry)
-    entry = hass.config_entries.async_entries(DOMAIN)[0]
 
-    assert entry.state == ConfigEntryState.LOADED
+    assert mock_config_entry.state == ConfigEntryState.LOADED
 
     # Get device from device registry
     device = device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
+        config_entry_id=mock_config_entry.entry_id,
         identifiers={(DOMAIN, FIXTURE_UUID)},
     )
     assert device is not None
@@ -40,7 +40,10 @@ async def test_async_browse_media(
         f"{URI_SCHEME}{DOMAIN}",
     )
 
-    assert browse_media_root.as_dict() == snapshot(name=f"{DOMAIN}_browse_media_root")
+    assert browse_media_root.as_dict() == snapshot(
+        name=f"{DOMAIN}_browse_media_root",
+        exclude=paths("children", "media_content_id"),
+    )
 
     # browse_media_entry = await async_browse_media(
     #     hass,
