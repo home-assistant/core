@@ -34,7 +34,6 @@ async def test_climate(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
-    mock_vehicle_data,
 ) -> None:
     """Tests that the climate entity is correct."""
 
@@ -154,10 +153,13 @@ async def test_errors(
         assert error.from_exception == InvalidCommand
 
     for response in COMMAND_ERRORS:
-        with patch(
-            "homeassistant.components.teslemetry.VehicleSpecific.auto_conditioning_start",
-            return_value=response,
-        ) as mock_on, pytest.raises(ServiceValidationError) as error:
+        with (
+            patch(
+                "homeassistant.components.teslemetry.VehicleSpecific.auto_conditioning_start",
+                return_value=response,
+            ) as mock_on,
+            pytest.raises(ServiceValidationError) as error,
+        ):
             await hass.services.async_call(
                 CLIMATE_DOMAIN,
                 SERVICE_TURN_ON,
