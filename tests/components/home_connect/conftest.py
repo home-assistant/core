@@ -3,10 +3,15 @@
 from collections.abc import Awaitable, Callable, Generator
 import time
 from typing import Any
-from unittest.mock import CallableMixin, MagicMock, Mock, NonCallableMock, patch
+from unittest.mock import (
+    CallableMixin,
+    MagicMock,
+    Mock,
+    NonCallableMock,
+    PropertyMock,
+    patch,
+)
 
-import homeconnect
-from homeconnect import HomeConnectAPI
 from homeconnect.api import HomeConnectAppliance, HomeConnectError
 import pytest
 
@@ -15,7 +20,7 @@ from homeassistant.components.application_credentials import (
     async_import_client_credential,
 )
 from homeassistant.components.home_connect import update_all_devices
-from homeassistant.components.home_connect.api import ConfigEntryAuth, Dishwasher
+from homeassistant.components.home_connect.api import Dishwasher
 from homeassistant.components.home_connect.const import (
     ATTR_AMBIENT,
     ATTR_DESC,
@@ -173,31 +178,33 @@ async def mock_integration_setup(
 
 
 @pytest.fixture(name="get_appliances")
-def mock_get_appliances(hass: HomeAssistant, config_entry: MockConfigEntry):
-    """Fixture for the get_appliances API method."""
-    with patch.object(
-        HomeConnectAPI,
-        "get_appliances",
-        side_effect=lambda: get_appliances(hass.data[DOMAIN][config_entry.entry_id]),
-    ):
-        yield
+def mock_get_appliances() -> Generator[None, Any, None]:
+    """Mock ConfigEntryAuth parent (HomeAssistantAPI) method."""
+    with patch(
+        "homeassistant.components.home_connect.api.ConfigEntryAuth.get_appliances",
+    ) as mock:
+        yield mock
 
 
 @pytest.fixture(name="appliance")
-def mock_appliance() -> Generator[Mock, None, None]:
+def mock_appliance(request) -> Mock:
     """Fixture to mock Appliance."""
-    mock = Mock(autospec=homeconnect.HomeConnectAPI)
+    app = "Washer"
+    if hasattr(request, "param") and request.param:
+        app = request.param
+
+    mock = MagicMock(
+        autospec=HomeConnectAppliance,
+        **MOCK_APPLIANCES_PROPERTIES.get(app),
+    )
+    mock.name = app
+    type(mock).status = PropertyMock(return_value={})
     mock.get.return_value = {}
-    mock.get_appliances.return_value = []
     mock.get_programs_available.return_value = []
     mock.get_status.return_value = {}
     mock.get_settings.return_value = {}
 
-    with patch(
-        "homeconnect.HomeConnectAPI",
-        return_value=mock,
-    ):
-        yield mock
+    return mock
 
 
 @pytest.fixture(name="problematic_appliance")
@@ -246,7 +253,7 @@ def mock_config_entry_auth_devices():
         yield
 
 
-def get_appliances(config_entry_auth: ConfigEntryAuth):
+def get_appliances():
     """Return a list of `HomeConnectAppliance` instances for all appliances."""
 
     appliances = {}
@@ -305,7 +312,5 @@ def get_appliances(config_entry_auth: ConfigEntryAuth):
         )
 
         appliances[haId] = appliance
-
-    config_entry_auth._appliances = appliances
 
     return list(appliances.values())

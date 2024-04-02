@@ -152,12 +152,7 @@ async def test_http_error(
 ) -> None:
     """Test HTTP errors during setup integration."""
     assert config_entry.state == ConfigEntryState.NOT_LOADED
-    future = utcnow() + timedelta(minutes=20)
-    async_fire_time_changed(hass, future)
-    await hass.async_block_till_done()
-
     assert await integration_setup()
-
     assert get_devices.call_count == 1
     assert config_entry.state == ConfigEntryState.LOADED
 
