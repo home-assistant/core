@@ -8,7 +8,7 @@ from unittest.mock import AsyncMock, MagicMock, call
 import pytest
 from reolink_aio.exceptions import ApiError, CredentialsInvalidError, ReolinkError
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components import dhcp
 from homeassistant.components.reolink import DEVICE_UPDATE_INTERVAL, const
 from homeassistant.components.reolink.config_flow import DEFAULT_PROTOCOL
@@ -23,6 +23,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType, data_entry_flow
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.util.dt import utcnow
 
@@ -231,7 +232,7 @@ async def test_options_flow(hass: HomeAssistant, mock_setup_entry: MagicMock) ->
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
@@ -239,7 +240,7 @@ async def test_options_flow(hass: HomeAssistant, mock_setup_entry: MagicMock) ->
         user_input={CONF_PROTOCOL: "rtmp"},
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert config_entry.options == {
         CONF_PROTOCOL: "rtmp",
     }
@@ -323,7 +324,7 @@ async def test_reauth(hass: HomeAssistant, mock_setup_entry: MagicMock) -> None:
         data=config_entry.data,
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
     result = await hass.config_entries.flow.async_configure(
@@ -331,7 +332,7 @@ async def test_reauth(hass: HomeAssistant, mock_setup_entry: MagicMock) -> None:
         {},
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -343,7 +344,7 @@ async def test_reauth(hass: HomeAssistant, mock_setup_entry: MagicMock) -> None:
         },
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert config_entry.data[CONF_HOST] == TEST_HOST
     assert config_entry.data[CONF_USERNAME] == TEST_USERNAME2
@@ -362,7 +363,7 @@ async def test_dhcp_flow(hass: HomeAssistant, mock_setup_entry: MagicMock) -> No
         const.DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=dhcp_data
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 

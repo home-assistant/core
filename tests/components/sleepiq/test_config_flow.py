@@ -5,10 +5,11 @@ from unittest.mock import AsyncMock, patch
 from asyncsleepiq import SleepIQLoginException, SleepIQTimeoutException
 import pytest
 
-from homeassistant import config_entries, data_entry_flow, setup
+from homeassistant import config_entries
 from homeassistant.components.sleepiq.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType, setup
 
 from .conftest import SLEEPIQ_CONFIG, setup_platform
 
@@ -49,7 +50,7 @@ async def test_show_set_form(hass: HomeAssistant) -> None:
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data=None
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
 
 
@@ -70,7 +71,7 @@ async def test_login_failure(hass: HomeAssistant, side_effect, error) -> None:
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data=SLEEPIQ_CONFIG
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
         assert result["errors"] == {"base": error}
 
@@ -89,7 +90,7 @@ async def test_success(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["data"][CONF_USERNAME] == SLEEPIQ_CONFIG[CONF_USERNAME]
     assert result2["data"][CONF_PASSWORD] == SLEEPIQ_CONFIG[CONF_PASSWORD]
     assert len(mock_setup_entry.mock_calls) == 1
@@ -124,5 +125,5 @@ async def test_reauth_password(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"

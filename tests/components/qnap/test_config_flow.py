@@ -5,7 +5,7 @@ from unittest.mock import MagicMock
 import pytest
 from requests.exceptions import ConnectTimeout
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components.qnap import const
 from homeassistant.const import (
     CONF_HOST,
@@ -16,6 +16,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import data_entry_flow
 
 from .conftest import TEST_HOST, TEST_PASSWORD, TEST_USERNAME
 

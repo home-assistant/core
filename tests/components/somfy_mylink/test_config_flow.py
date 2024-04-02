@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components import dhcp
 from homeassistant.components.somfy_mylink.const import (
     CONF_REVERSED_TARGET_IDS,
@@ -13,6 +13,7 @@ from homeassistant.components.somfy_mylink.const import (
 )
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
@@ -182,7 +183,7 @@ async def test_options_not_loaded(hass: HomeAssistant) -> None:
     ):
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
         await hass.async_block_till_done()
-        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
 
 
 @pytest.mark.parametrize("reversed", [True, False])
@@ -211,7 +212,7 @@ async def test_options_with_targets(hass: HomeAssistant, reversed) -> None:
         await hass.async_block_till_done()
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
         await hass.async_block_till_done()
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "init"
 
         result2 = await hass.config_entries.options.async_configure(
@@ -219,19 +220,19 @@ async def test_options_with_targets(hass: HomeAssistant, reversed) -> None:
             user_input={"target_id": "a"},
         )
 
-        assert result2["type"] == data_entry_flow.FlowResultType.FORM
+        assert result2["type"] is FlowResultType.FORM
         result3 = await hass.config_entries.options.async_configure(
             result2["flow_id"],
             user_input={"reverse": reversed},
         )
 
-        assert result3["type"] == data_entry_flow.FlowResultType.FORM
+        assert result3["type"] is FlowResultType.FORM
 
         result4 = await hass.config_entries.options.async_configure(
             result3["flow_id"],
             user_input={"target_id": None},
         )
-        assert result4["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result4["type"] is FlowResultType.CREATE_ENTRY
 
         assert config_entry.options == {
             CONF_REVERSED_TARGET_IDS: {"a": reversed},
