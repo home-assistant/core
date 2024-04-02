@@ -276,6 +276,9 @@ async def test_options_flow_without_friends(
 ) -> None:
     """Test updating options for someone without friends."""
     await setup_integration(hass, mock_config_entry)
+    mock_lastfm_user.get_friends.side_effect = PyLastError(
+        "network", "status", "Page not found"
+    )
     result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
