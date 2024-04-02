@@ -88,12 +88,6 @@ def test_as_local_with_naive_object() -> None:
     ) < timedelta(seconds=1)
 
 
-def test_as_local_with_local_object() -> None:
-    """Test local with local object."""
-    now = dt_util.now()
-    assert now == now
-
-
 def test_as_local_with_utc_object() -> None:
     """Test local time with UTC object."""
     dt_util.set_default_time_zone(dt_util.get_time_zone(TEST_TIME_ZONE))

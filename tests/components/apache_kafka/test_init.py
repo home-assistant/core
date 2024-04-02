@@ -9,7 +9,7 @@ from unittest.mock import patch
 
 import pytest
 
-import homeassistant.components.apache_kafka as apache_kafka
+from homeassistant.components import apache_kafka
 from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component

@@ -16,7 +16,7 @@ import voluptuous as vol
 
 # Otherwise can't test just this file (import order issue)
 from homeassistant import config_entries, exceptions
-import homeassistant.components.scene as scene
+from homeassistant.components import scene
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_DEVICE_ID,

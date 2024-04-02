@@ -62,6 +62,7 @@ from homeassistant.helpers import (
     label_registry as lr,
     recorder as recorder_helper,
 )
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import BASE_PLATFORMS, async_setup_component
 from homeassistant.util import location
@@ -985,7 +986,7 @@ async def _mqtt_mock_entry(
         # connected set to True to get a more realistic behavior when subscribing
         mock_mqtt_instance.connected = True
 
-        hass.helpers.dispatcher.async_dispatcher_send(mqtt.MQTT_CONNECTED)
+        async_dispatcher_send(hass, mqtt.MQTT_CONNECTED)
         await hass.async_block_till_done()
 
         return mock_mqtt_instance

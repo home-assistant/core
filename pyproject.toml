@@ -304,6 +304,10 @@ disable = [
     "use-list-literal", # C405
     "useless-object-inheritance", # UP004
     "useless-return", # PLR1711
+    "no-else-break", # RET508
+    "no-else-continue", # RET507
+    "no-else-raise", # RET506
+    "no-else-return", # RET505
     # "no-self-use", # PLR6301  # Optional plugin, not enabled
 
     # Handled by mypy
@@ -633,6 +637,7 @@ select = [
     "PIE", # flake8-pie
     "PL", # pylint
     "PT", # flake8-pytest-style
+    "RET", # flake8-return
     "RSE", # flake8-raise
     "RUF005", # Consider iterable unpacking instead of concatenation
     "RUF006", # Store a reference to the return value of asyncio.create_task
@@ -713,9 +718,12 @@ ignore = [
 
     # temporarily disabled
     "PT019",
+    "RET504",
+    "RET503",
+    "RET502",
+    "RET501",
     "TRY002",
-    "TRY301",
-    "TRY300"
+    "TRY301"
 ]
 
 [tool.ruff.lint.flake8-import-conventions.extend-aliases]
