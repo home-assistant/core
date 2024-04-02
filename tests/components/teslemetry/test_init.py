@@ -1,6 +1,5 @@
 """Test the Tessie init."""
 
-
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from tesla_fleet_api.exceptions import (
