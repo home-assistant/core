@@ -11,7 +11,6 @@ from aiohttp import BasicAuth, ServerDisconnectedError, web
 from aiohttp.test_utils import TestClient
 from aiohttp.web_exceptions import HTTPUnauthorized
 from aiohttp_session import get_session
-from freezegun.api import FrozenDateTimeFactory
 import jwt
 import pytest
 import yarl
@@ -41,9 +40,9 @@ from homeassistant.components.http.request_context import (
     current_request,
     setup_request_context,
 )
-from homeassistant.components.http.session import COOKIE_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.setup import async_setup_component
+from homeassistant.util.dt import utcnow
 
 from . import HTTP_HEADER_HA_AUTH
 
@@ -785,7 +784,6 @@ async def _test_strict_connection_non_cloud_enabled_external_unauthenticated_req
         [HomeAssistant, TestClient], Awaitable[None]
     ],
     strict_connection_mode: StrictConnectionMode,
-    *args,
 ) -> None:
     """Test external unauthenticated requests with strict connection non cloud enabled."""
     client, set_mock_ip, _ = await _test_strict_connection_non_cloud_enabled_setup(
@@ -806,7 +804,6 @@ async def _test_strict_connection_non_cloud_enabled_external_unauthenticated_req
         [HomeAssistant, TestClient], Awaitable[None]
     ],
     strict_connection_mode: StrictConnectionMode,
-    *args,
 ) -> None:
     """Test external unauthenticated requests with strict connection non cloud enabled and refresh token cookie."""
     (
@@ -845,7 +842,6 @@ async def _test_strict_connection_non_cloud_enabled_external_unauthenticated_req
         [HomeAssistant, TestClient], Awaitable[None]
     ],
     strict_connection_mode: StrictConnectionMode,
-    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test external unauthenticated requests with strict connection non cloud enabled and temp cookie."""
     client, set_mock_ip, _ = await _test_strict_connection_non_cloud_enabled_setup(
@@ -856,27 +852,17 @@ async def _test_strict_connection_non_cloud_enabled_external_unauthenticated_req
     # set strict connection cookie with temp session
     assert session._temp_sessions == {}
     set_mock_ip(LOCALHOST_ADDRESSES[0])
-    resp = await client.get("/test/cookie?token=temp")
-    session_id = await resp.text()
-    cookie = resp.cookies[COOKIE_NAME].value
-
-    freezer.tick(timedelta(seconds=1))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
+    session_id = await (await client.get("/test/cookie?token=temp")).text()
     assert session_id in session._temp_sessions
     for remote_addr in EXTERNAL_ADDRESSES:
         _LOGGER.info("Testing %s", remote_addr)
         set_mock_ip(remote_addr)
-        client.session.cookie_jar.clear()
-        client.session.cookie_jar.update_cookies({COOKIE_NAME: cookie})
         resp = await client.get("/")
         assert resp.status == HTTPStatus.OK
         assert await resp.json() == {"authenticated": False}
 
-    freezer.tick(TEMP_TIMEOUT + timedelta(minutes=1))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    async_fire_time_changed(hass, utcnow() + TEMP_TIMEOUT + timedelta(minutes=1))
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert session._temp_sessions == {}
     for remote_addr in EXTERNAL_ADDRESSES:
@@ -931,7 +917,6 @@ async def test_strict_connection_non_cloud_external_unauthenticated_requests(
     app_strict_connection: web.Application,
     aiohttp_client: ClientSessionGenerator,
     hass_access_token: str,
-    freezer: FrozenDateTimeFactory,
     test_func: Callable[
         [
             HomeAssistant,
@@ -940,7 +925,6 @@ async def test_strict_connection_non_cloud_external_unauthenticated_requests(
             str,
             Callable[[HomeAssistant, TestClient], Awaitable[None]],
             StrictConnectionMode,
-            FrozenDateTimeFactory,
         ],
         Awaitable[None],
     ],
@@ -955,5 +939,4 @@ async def test_strict_connection_non_cloud_external_unauthenticated_requests(
         hass_access_token,
         request_func,
         strict_connection_mode,
-        freezer,
     )
