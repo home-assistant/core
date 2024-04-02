@@ -7,7 +7,6 @@ import argparse
 from dataclasses import dataclass, field
 from math import ceil
 from pathlib import Path
-import random
 import subprocess
 import sys
 from typing import Final
@@ -31,7 +30,6 @@ class Bucket:
 
     def get_paths_line(self) -> str:
         """Return paths."""
-        random.shuffle(self._paths)
         return " ".join(self._paths) + "\n"
 
 
