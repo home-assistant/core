@@ -66,13 +66,8 @@ class Sensor(ZHAEntity, SensorEntity):
             and entity._attr_state_class is not None
         ):
             self._attr_state_class = SensorStateClass(entity._attr_state_class.value)
-        if (
-            hasattr(entity, "_attr_native_unit_of_measurement")
-            and entity._attr_native_unit_of_measurement is not None
-        ):
-            self._attr_native_unit_of_measurement = (
-                entity._attr_native_unit_of_measurement
-            )
+
+        self._attr_native_unit_of_measurement = entity.info_object.unit
         # TODO
         """
         if hasattr(entity, "entity_description"):
