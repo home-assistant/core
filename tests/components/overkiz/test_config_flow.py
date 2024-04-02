@@ -16,11 +16,12 @@ from pyoverkiz.exceptions import (
 )
 import pytest
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components import dhcp
 from homeassistant.components.overkiz.const import DOMAIN
 from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
@@ -243,7 +244,7 @@ async def test_form_invalid_auth_cloud(
 
     await hass.async_block_till_done()
 
-    assert result4["type"] == data_entry_flow.FlowResultType.FORM
+    assert result4["type"] is FlowResultType.FORM
     assert result4["errors"] == {"base": error}
 
 
@@ -304,7 +305,7 @@ async def test_form_invalid_auth_local(
 
     await hass.async_block_till_done()
 
-    assert result4["type"] == data_entry_flow.FlowResultType.FORM
+    assert result4["type"] is FlowResultType.FORM
     assert result4["errors"] == {"base": error}
 
 
@@ -350,7 +351,7 @@ async def test_form_local_developer_mode_disabled(
             },
         )
 
-    assert result4["type"] == data_entry_flow.FlowResultType.FORM
+    assert result4["type"] is FlowResultType.FORM
     assert result4["errors"] == {"base": "developer_mode_disabled"}
 
 
@@ -386,7 +387,7 @@ async def test_form_invalid_cozytouch_auth(
 
     await hass.async_block_till_done()
 
-    assert result3["type"] == data_entry_flow.FlowResultType.FORM
+    assert result3["type"] is FlowResultType.FORM
     assert result3["errors"] == {"base": error}
     assert result3["step_id"] == "cloud"
 
@@ -436,7 +437,7 @@ async def test_cloud_abort_on_duplicate_entry(
             {"username": TEST_EMAIL, "password": TEST_PASSWORD},
         )
 
-    assert result4["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result4["type"] is FlowResultType.ABORT
     assert result4["reason"] == "already_configured"
 
 
@@ -496,7 +497,7 @@ async def test_local_abort_on_duplicate_entry(
             },
         )
 
-    assert result4["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result4["type"] is FlowResultType.ABORT
     assert result4["reason"] == "already_configured"
 
 
@@ -582,7 +583,7 @@ async def test_cloud_reauth_success(hass: HomeAssistant) -> None:
         data=mock_entry.data,
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "cloud"
 
     with (
@@ -600,7 +601,7 @@ async def test_cloud_reauth_success(hass: HomeAssistant) -> None:
             },
         )
 
-        assert result2["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result2["type"] is FlowResultType.ABORT
         assert result2["reason"] == "reauth_successful"
         assert mock_entry.data["username"] == TEST_EMAIL
         assert mock_entry.data["password"] == TEST_PASSWORD2
@@ -632,7 +633,7 @@ async def test_cloud_reauth_wrong_account(hass: HomeAssistant) -> None:
         data=mock_entry.data,
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "cloud"
 
     with (
@@ -650,7 +651,7 @@ async def test_cloud_reauth_wrong_account(hass: HomeAssistant) -> None:
             },
         )
 
-        assert result2["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result2["type"] is FlowResultType.ABORT
         assert result2["reason"] == "reauth_wrong_account"
 
 
@@ -681,7 +682,7 @@ async def test_local_reauth_success(hass: HomeAssistant) -> None:
         data=mock_entry.data,
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "local_or_cloud"
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -707,7 +708,7 @@ async def test_local_reauth_success(hass: HomeAssistant) -> None:
             },
         )
 
-        assert result3["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result3["type"] is FlowResultType.ABORT
         assert result3["reason"] == "reauth_successful"
         assert mock_entry.data["username"] == TEST_EMAIL
         assert mock_entry.data["password"] == TEST_PASSWORD2
@@ -739,7 +740,7 @@ async def test_local_reauth_wrong_account(hass: HomeAssistant) -> None:
         },
         data=mock_entry.data,
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "local_or_cloud"
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -765,7 +766,7 @@ async def test_local_reauth_wrong_account(hass: HomeAssistant) -> None:
             },
         )
 
-        assert result3["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result3["type"] is FlowResultType.ABORT
         assert result3["reason"] == "reauth_wrong_account"
 
 
@@ -781,7 +782,7 @@ async def test_dhcp_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
         context={"source": config_entries.SOURCE_DHCP},
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == config_entries.SOURCE_USER
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -840,7 +841,7 @@ async def test_dhcp_flow_already_configured(hass: HomeAssistant) -> None:
         context={"source": config_entries.SOURCE_DHCP},
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -852,7 +853,7 @@ async def test_zeroconf_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -
         context={"source": config_entries.SOURCE_ZEROCONF},
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == config_entries.SOURCE_USER
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -905,7 +906,7 @@ async def test_local_zeroconf_flow(
         context={"source": config_entries.SOURCE_ZEROCONF},
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == config_entries.SOURCE_USER
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -967,5 +968,5 @@ async def test_zeroconf_flow_already_configured(hass: HomeAssistant) -> None:
         context={"source": config_entries.SOURCE_ZEROCONF},
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
