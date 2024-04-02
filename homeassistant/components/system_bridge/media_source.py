@@ -2,10 +2,6 @@
 
 from __future__ import annotations
 
-from dataclasses import asdict
-import json
-import logging
-
 from systembridgemodels.media_directories import MediaDirectory
 from systembridgemodels.media_files import MediaFile, MediaFiles
 
@@ -23,8 +19,6 @@ from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
 from .coordinator import SystemBridgeDataUpdateCoordinator
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_get_media_source(hass: HomeAssistant) -> MediaSource:
@@ -89,10 +83,8 @@ class SystemBridgeSource(MediaSource):
         files = await coordinator.async_get_media_files(
             path_split[0], path_split[1] if len(path_split) > 1 else None
         )
-        _LOGGER.error(json.dumps(asdict(files)))
 
         result = _build_media_items(entry, files, path, item.identifier)
-        _LOGGER.error(json.dumps(result.as_dict()))
         return result
 
     def _build_bridges(self) -> BrowseMediaSource:
@@ -208,29 +200,6 @@ def _build_media_item(
         media_class = MediaClass.DIRECTORY
     else:
         media_class = MEDIA_CLASS_MAP[media_file.mime_type.split("/", 1)[0]]
-
-    _LOGGER.error(
-        json.dumps(
-            {
-                "path": path,
-                "media_file": asdict(media_file),
-                "ext": ext,
-                "media_class": media_class,
-                "browse_media_source": BrowseMediaSource(
-                    domain=DOMAIN,
-                    identifier=f"{path}/{media_file.name}{ext}",
-                    media_class=media_class,
-                    media_content_type=media_file.mime_type,
-                    title=media_file.name,
-                    can_play=media_file.is_file,
-                    can_expand=media_file.is_directory,
-                ).as_dict(),
-                "is_directory": media_file.is_directory,
-                "is_file": media_file.is_file,
-                "mime_type": media_file.mime_type,
-            }
-        )
-    )
 
     return BrowseMediaSource(
         domain=DOMAIN,
