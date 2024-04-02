@@ -752,15 +752,13 @@ def _add_set_cookie_endpoint(app: web.Application, refresh_token: RefreshToken) 
     app.router.add_get("/test/cookie", set_cookie)
 
 
-async def _test_strict_connection_non_cloud_enabled_external_unauthenticated_requests(
+async def _test_strict_connection_non_cloud_enabled_setup(
     hass: HomeAssistant,
     app: web.Application,
     aiohttp_client: ClientSessionGenerator,
     hass_access_token: str,
-    freezer: FrozenDateTimeFactory,
-    perform_unauthenticatd_request: Callable[[TestClient], Awaitable[None]],
     strict_connection_mode: StrictConnectionMode,
-) -> None:
+) -> tuple[TestClient, Callable[[str], None], RefreshToken]:
     """Test external unauthenticated requests with strict connection non cloud enabled."""
     refresh_token = hass.auth.async_validate_access_token(hass_access_token)
     assert refresh_token
@@ -772,10 +770,50 @@ async def _test_strict_connection_non_cloud_enabled_external_unauthenticated_req
     await async_setup_auth(hass, app, strict_connection_mode)
     set_mock_ip = mock_real_ip(app)
     client = await aiohttp_client(app)
+    return (client, set_mock_ip, refresh_token)
+
+
+async def _test_strict_connection_non_cloud_enabled_external_unauthenticated_requests(
+    hass: HomeAssistant,
+    app: web.Application,
+    aiohttp_client: ClientSessionGenerator,
+    hass_access_token: str,
+    perform_unauthenticatd_request: Callable[
+        [HomeAssistant, TestClient], Awaitable[None]
+    ],
+    strict_connection_mode: StrictConnectionMode,
+    *args,
+) -> None:
+    """Test external unauthenticated requests with strict connection non cloud enabled."""
+    client, set_mock_ip, _ = await _test_strict_connection_non_cloud_enabled_setup(
+        hass, app, aiohttp_client, hass_access_token, strict_connection_mode
+    )
 
     for remote_addr in EXTERNAL_ADDRESSES:
         set_mock_ip(remote_addr)
-        await perform_unauthenticatd_request(client)
+        await perform_unauthenticatd_request(hass, client)
+
+
+async def _test_strict_connection_non_cloud_enabled_external_unauthenticated_requests_refresh_token(
+    hass: HomeAssistant,
+    app: web.Application,
+    aiohttp_client: ClientSessionGenerator,
+    hass_access_token: str,
+    perform_unauthenticatd_request: Callable[
+        [HomeAssistant, TestClient], Awaitable[None]
+    ],
+    strict_connection_mode: StrictConnectionMode,
+    *args,
+) -> None:
+    """Test external unauthenticated requests with strict connection non cloud enabled and refresh token cookie."""
+    (
+        client,
+        set_mock_ip,
+        refresh_token,
+    ) = await _test_strict_connection_non_cloud_enabled_setup(
+        hass, app, aiohttp_client, hass_access_token, strict_connection_mode
+    )
+    session = hass.auth.session
 
     # set strict connection cookie with refresh token
     set_mock_ip(LOCALHOST_ADDRESSES[0])
@@ -792,7 +830,25 @@ async def _test_strict_connection_non_cloud_enabled_external_unauthenticated_req
     assert session._strict_connection_sessions == {}
     for remote_addr in EXTERNAL_ADDRESSES:
         set_mock_ip(remote_addr)
-        await perform_unauthenticatd_request(client)
+        await perform_unauthenticatd_request(hass, client)
+
+
+async def _test_strict_connection_non_cloud_enabled_external_unauthenticated_requests_temp_session(
+    hass: HomeAssistant,
+    app: web.Application,
+    aiohttp_client: ClientSessionGenerator,
+    hass_access_token: str,
+    perform_unauthenticatd_request: Callable[
+        [HomeAssistant, TestClient], Awaitable[None]
+    ],
+    strict_connection_mode: StrictConnectionMode,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test external unauthenticated requests with strict connection non cloud enabled and temp cookie."""
+    client, set_mock_ip, _ = await _test_strict_connection_non_cloud_enabled_setup(
+        hass, app, aiohttp_client, hass_access_token, strict_connection_mode
+    )
+    session = hass.auth.session
 
     # set strict connection cookie with temp session
     assert session._temp_sessions == {}
@@ -812,59 +868,74 @@ async def _test_strict_connection_non_cloud_enabled_external_unauthenticated_req
     assert session._temp_sessions == {}
     for remote_addr in EXTERNAL_ADDRESSES:
         set_mock_ip(remote_addr)
-        await perform_unauthenticatd_request(client)
+        await perform_unauthenticatd_request(hass, client)
 
 
-async def test_strict_connection_non_cloud_drop_connection_external_unauthenticated_requests(
+async def _drop_connection_unauthorized_request(
+    _: HomeAssistant, client: TestClient
+) -> None:
+    with pytest.raises(ServerDisconnectedError):
+        # unauthorized requests should raise ServerDisconnectedError
+        await client.get("/")
+
+
+async def _static_page_unauthorized_request(
+    hass: HomeAssistant, client: TestClient
+) -> None:
+    req = await client.get("/")
+    assert req.status == HTTPStatus.IM_A_TEAPOT
+
+    def read_static_page() -> str:
+        with open(STRICT_CONNECTION_STATIC_PAGE, encoding="utf-8") as file:
+            return file.read()
+
+    assert await req.text() == await hass.async_add_executor_job(read_static_page)
+
+
+@pytest.mark.parametrize(
+    "test_func",
+    [
+        _test_strict_connection_non_cloud_enabled_external_unauthenticated_requests,
+        _test_strict_connection_non_cloud_enabled_external_unauthenticated_requests_refresh_token,
+        _test_strict_connection_non_cloud_enabled_external_unauthenticated_requests_temp_session,
+    ],
+)
+@pytest.mark.parametrize(
+    ("strict_connection_mode", "request_func"),
+    [
+        (StrictConnectionMode.DROP_CONNECTION, _drop_connection_unauthorized_request),
+        (StrictConnectionMode.STATIC_PAGE, _static_page_unauthorized_request),
+    ],
+)
+async def test_strict_connection_non_cloud_external_unauthenticated_requests(
     hass: HomeAssistant,
     app_strict_connection: web.Application,
     aiohttp_client: ClientSessionGenerator,
     hass_access_token: str,
     freezer: FrozenDateTimeFactory,
+    test_func: Callable[
+        [
+            HomeAssistant,
+            web.Application,
+            ClientSessionGenerator,
+            str,
+            Callable[[HomeAssistant, TestClient], Awaitable[None]],
+            StrictConnectionMode,
+            FrozenDateTimeFactory,
+        ],
+        Awaitable[None],
+    ],
+    strict_connection_mode: StrictConnectionMode,
+    request_func: Callable[[HomeAssistant, TestClient], Awaitable[None]],
 ) -> None:
-    """Test external unauthenticated requests with strict connection non cloud set to drop_connection."""
+    """Test external unauthenticated requests with strict connection non cloud."""
 
-    async def unauthorized_request(client: TestClient) -> None:
-        with pytest.raises(ServerDisconnectedError):
-            # unauthorized requests should raise ServerDisconnectedError
-            await client.get("/")
-
-    await _test_strict_connection_non_cloud_enabled_external_unauthenticated_requests(
+    await test_func(
         hass,
         app_strict_connection,
         aiohttp_client,
         hass_access_token,
+        request_func,
+        strict_connection_mode,
         freezer,
-        unauthorized_request,
-        StrictConnectionMode.DROP_CONNECTION,
-    )
-
-
-async def test_strict_connection_non_cloud_static_page_external_unauthenticated_requests(
-    hass: HomeAssistant,
-    app_strict_connection: web.Application,
-    aiohttp_client: ClientSessionGenerator,
-    hass_access_token: str,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test external unauthenticated requests with strict connection non cloud set to static_page."""
-
-    async def unauthorized_request(client: TestClient) -> None:
-        req = await client.get("/")
-        assert req.status == HTTPStatus.IM_A_TEAPOT
-
-        def read_static_page() -> str:
-            with open(STRICT_CONNECTION_STATIC_PAGE, encoding="utf-8") as file:
-                return file.read()
-
-        assert await req.text() == await hass.async_add_executor_job(read_static_page)
-
-    await _test_strict_connection_non_cloud_enabled_external_unauthenticated_requests(
-        hass,
-        app_strict_connection,
-        aiohttp_client,
-        hass_access_token,
-        freezer,
-        unauthorized_request,
-        StrictConnectionMode.STATIC_PAGE,
     )
