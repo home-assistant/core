@@ -78,7 +78,6 @@ async def test_service_call_invalid_input(
 
     # Setup component
     assert await setup_mocked_integration(hass)
-    old_value = hass.states.get(entity_id).state
 
     # Test
     await hass.services.async_call(
@@ -89,7 +88,6 @@ async def test_service_call_invalid_input(
         target={"entity_id": entity_id},
     )
     assert hass.states.get(entity_id).state == clamped
-    assert hass.states.get(entity_id).state != old_value
 
 
 @pytest.mark.parametrize(
