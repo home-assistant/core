@@ -70,14 +70,6 @@ TRACCAR_SERVER_SENSOR_ENTITY_DESCRIPTIONS = (
         translation_key="address",
         value_fn=lambda x: x["address"],
     ),
-    TraccarServerSensorEntityDescription[DeviceModel](
-        key="status",
-        data_key="device",
-        translation_key="status",
-        device_class=SensorDeviceClass.ENUM,
-        value_fn=lambda x: x["status"],
-        options=["offline", "online", "unknown"],
-    ),
     TraccarServerSensorEntityDescription[GeofenceModel | None](
         key="name",
         data_key="geofence",
