@@ -422,7 +422,7 @@ async def websocket_get_devices(
 @callback
 def _get_entity_name(zha_gateway: Gateway, entity_ref: EntityReference) -> str | None:
     entity_registry = er.async_get(zha_gateway.hass)
-    entry = entity_registry.async_get(entity_ref.reference_id)
+    entry = entity_registry.async_get(entity_ref.ha_entity_id)
     return entry.name if entry else None
 
 
@@ -431,7 +431,7 @@ def _get_entity_original_name(
     zha_gateway: Gateway, entity_ref: EntityReference
 ) -> str | None:
     entity_registry = er.async_get(zha_gateway.hass)
-    entry = entity_registry.async_get(entity_ref.reference_id)
+    entry = entity_registry.async_get(entity_ref.ha_entity_id)
     return entry.original_name if entry else None
 
 
@@ -452,7 +452,7 @@ async def websocket_get_groupable_devices(
     groupable_devices: list[dict[str, Any]] = []
 
     for device in devices:
-        entity_refs = zha_gateway_proxy.device_registry[device.ieee]
+        entity_refs = zha_gateway_proxy.ha_entity_refs[device.ieee]
         groupable_devices.extend(
             {
                 "endpoint_id": ep_id,
@@ -464,9 +464,8 @@ async def websocket_get_groupable_devices(
                         ),
                     }
                     for entity_ref in entity_refs
-                    if list(entity_ref.cluster_handlers.values())[
-                        0
-                    ].cluster.endpoint.endpoint_id
+                    if entity_ref.entity_data.group_proxy is not None
+                    and entity_ref.entity_data.group_proxy.group.endpoint.endpoint_id
                     == ep_id
                 ],
                 "device": device.zha_device_info,
