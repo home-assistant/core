@@ -141,7 +141,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise_on_error(response, "seen_failed")
         await client.close()
 
-    hass.services.async_register(DOMAIN, "seen", async_seen, SERVICE_SEEN_SCHEMA)
+    if not hass.services.has_service(DOMAIN, "seen"):
+        hass.services.async_register(DOMAIN, "seen", async_seen, SERVICE_SEEN_SCHEMA)
 
     async def async_move(call: ServiceCall) -> None:
         """Process move email service call."""
@@ -177,7 +178,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             ) from exc
         await client.close()
 
-    hass.services.async_register(DOMAIN, "move", async_move, SERVICE_MOVE_SCHEMA)
+    if not hass.services.has_service(DOMAIN, "move"):
+        hass.services.async_register(DOMAIN, "move", async_move, SERVICE_MOVE_SCHEMA)
 
     async def async_delete(call: ServiceCall) -> None:
         """Process deleting email service call."""
@@ -204,7 +206,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             ) from exc
         await client.close()
 
-    hass.services.async_register(DOMAIN, "delete", async_delete, SERVICE_DELETE_SCHEMA)
+    if not hass.services.has_service(DOMAIN, "delete"):
+        hass.services.async_register(
+            DOMAIN, "delete", async_delete, SERVICE_DELETE_SCHEMA
+        )
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
