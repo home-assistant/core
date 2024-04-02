@@ -9,7 +9,6 @@ import voluptuous as vol
 
 from homeassistant.components import water_heater
 from homeassistant.components.water_heater import (
-    ATTR_OPERATION_MODE,
     DEFAULT_MIN_TEMP,
     STATE_ECO,
     STATE_ELECTRIC,
@@ -294,12 +293,15 @@ class MqttWaterHeater(MqttTemperatureControlEntity, WaterHeaterEntity):
 
         self.prepare_subscribe_topics(topics)
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_temperature(  # type: ignore[override]
+        self, temperature: float, operation_mode: str | None = None
+    ) -> None:
         """Set new target temperature."""
-        operation_mode: str | None
-        if (operation_mode := kwargs.get(ATTR_OPERATION_MODE)) is not None:
+        if operation_mode is not None:
             await self.async_set_operation_mode(operation_mode)
-        await super().async_set_temperature(**kwargs)
+        await super().async_set_temperature(
+            temperature=temperature, operation_mode=operation_mode
+        )
 
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set new operation mode."""
@@ -310,7 +312,7 @@ class MqttWaterHeater(MqttTemperatureControlEntity, WaterHeaterEntity):
             self._attr_current_operation = operation_mode
             self.async_write_ha_state()
 
-    async def async_turn_on(self, **kwargs: Any) -> None:
+    async def async_turn_on(self) -> None:
         """Turn the entity on."""
         if CONF_POWER_COMMAND_TOPIC in self._config:
             mqtt_payload = self._command_templates[CONF_POWER_COMMAND_TEMPLATE](
@@ -318,7 +320,7 @@ class MqttWaterHeater(MqttTemperatureControlEntity, WaterHeaterEntity):
             )
             await self._publish(CONF_POWER_COMMAND_TOPIC, mqtt_payload)
 
-    async def async_turn_off(self, **kwargs: Any) -> None:
+    async def async_turn_off(self) -> None:
         """Turn the entity off."""
         if CONF_POWER_COMMAND_TOPIC in self._config:
             mqtt_payload = self._command_templates[CONF_POWER_COMMAND_TEMPLATE](

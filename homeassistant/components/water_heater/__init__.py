@@ -104,8 +104,6 @@ CONVERTIBLE_ATTRIBUTE = [ATTR_TEMPERATURE]
 
 _LOGGER = logging.getLogger(__name__)
 
-ON_OFF_SERVICE_SCHEMA = vol.Schema({vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids})
-
 SET_AWAY_MODE_SCHEMA = vol.Schema(
     {
         vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
@@ -154,12 +152,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         SERVICE_SET_OPERATION_MODE,
         SET_OPERATION_MODE_SCHEMA,
         "async_handle_set_operation_mode",
-    )
-    component.async_register_entity_service(
-        SERVICE_TURN_OFF, ON_OFF_SERVICE_SCHEMA, "async_turn_off"
-    )
-    component.async_register_entity_service(
-        SERVICE_TURN_ON, ON_OFF_SERVICE_SCHEMA, "async_turn_on"
     )
 
     return True
@@ -329,31 +321,39 @@ class WaterHeaterEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Return true if away mode is on."""
         return self._attr_is_away_mode_on
 
-    def set_temperature(self, **kwargs: Any) -> None:
+    def set_temperature(
+        self, temperature: float, operation_mode: str | None = None
+    ) -> None:
         """Set new target temperature."""
         raise NotImplementedError
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_temperature(
+        self, temperature: float, operation_mode: str | None = None
+    ) -> None:
         """Set new target temperature."""
         await self.hass.async_add_executor_job(
-            ft.partial(self.set_temperature, **kwargs)
+            ft.partial(
+                self.set_temperature,
+                temperature=temperature,
+                operation_mode=operation_mode,
+            )
         )
 
-    def turn_on(self, **kwargs: Any) -> None:
+    def turn_on(self) -> None:
         """Turn the water heater on."""
         raise NotImplementedError
 
-    async def async_turn_on(self, **kwargs: Any) -> None:
+    async def async_turn_on(self) -> None:
         """Turn the water heater on."""
-        await self.hass.async_add_executor_job(ft.partial(self.turn_on, **kwargs))
+        await self.hass.async_add_executor_job(self.turn_on)
 
-    def turn_off(self, **kwargs: Any) -> None:
+    def turn_off(self) -> None:
         """Turn the water heater off."""
         raise NotImplementedError
 
-    async def async_turn_off(self, **kwargs: Any) -> None:
+    async def async_turn_off(self) -> None:
         """Turn the water heater off."""
-        await self.hass.async_add_executor_job(ft.partial(self.turn_off, **kwargs))
+        await self.hass.async_add_executor_job(self.turn_off)
 
     def set_operation_mode(self, operation_mode: str) -> None:
         """Set new target operation mode."""
@@ -455,18 +455,15 @@ async def async_service_temperature_set(
     entity: WaterHeaterEntity, service: ServiceCall
 ) -> None:
     """Handle set temperature service."""
-    hass = entity.hass
-    kwargs = {}
-
-    for value, temp in service.data.items():
-        if value in CONVERTIBLE_ATTRIBUTE:
-            kwargs[value] = TemperatureConverter.convert(
-                temp, hass.config.units.temperature_unit, entity.temperature_unit
-            )
-        else:
-            kwargs[value] = temp
-
-    await entity.async_set_temperature(**kwargs)
+    operation_mode: str | None = service.data.get(ATTR_OPERATION_MODE)
+    await entity.async_set_temperature(
+        temperature=TemperatureConverter.convert(
+            service.data[ATTR_TEMPERATURE],
+            entity.hass.config.units.temperature_unit,
+            entity.temperature_unit,
+        ),
+        operation_mode=operation_mode,
+    )
 
 
 # These can be removed if no deprecated constant are in this module anymore

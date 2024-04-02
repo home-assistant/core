@@ -21,7 +21,7 @@ from homeassistant.components.water_heater import (
     WaterHeaterEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, UnitOfTemperature
+from homeassistant.const import PRECISION_TENTHS, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -144,11 +144,12 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
         except PyViCareInvalidDataError as invalid_data_exception:
             _LOGGER.error("Invalid data from Vicare server: %s", invalid_data_exception)
 
-    def set_temperature(self, **kwargs: Any) -> None:
+    def set_temperature(
+        self, temperature: float, operation_mode: str | None = None
+    ) -> None:
         """Set new target temperatures."""
-        if (temp := kwargs.get(ATTR_TEMPERATURE)) is not None:
-            self._api.setDomesticHotWaterTemperature(temp)
-            self._attr_target_temperature = temp
+        self._api.setDomesticHotWaterTemperature(temperature)
+        self._attr_target_temperature = temperature
 
     @property
     def current_operation(self):

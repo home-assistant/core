@@ -26,7 +26,7 @@ from homeassistant.components.water_heater import (
     WaterHeaterEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF
+from homeassistant.const import STATE_OFF
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -93,11 +93,11 @@ class AirzoneWaterHeater(AirzoneHotWaterEntity, WaterHeaterEntity):
 
         self._async_update_attrs()
 
-    async def async_turn_off(self, **kwargs: Any) -> None:
+    async def async_turn_off(self) -> None:
         """Turn the water heater off."""
         await self._async_update_dhw_params({API_ACS_ON: 0})
 
-    async def async_turn_on(self, **kwargs: Any) -> None:
+    async def async_turn_on(self) -> None:
         """Turn the water heater off."""
         await self._async_update_dhw_params({API_ACS_ON: 1})
 
@@ -106,11 +106,12 @@ class AirzoneWaterHeater(AirzoneHotWaterEntity, WaterHeaterEntity):
         params = OPERATION_MODE_TO_DHW_PARAMS.get(operation_mode, {})
         await self._async_update_dhw_params(params)
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_temperature(
+        self, temperature: float, operation_mode: str | None = None
+    ) -> None:
         """Set new target temperature."""
-        params: dict[str, Any] = {}
-        if ATTR_TEMPERATURE in kwargs:
-            params[API_ACS_SET_POINT] = kwargs[ATTR_TEMPERATURE]
+        del operation_mode  # Unused.
+        params: dict[str, Any] = {API_ACS_SET_POINT: temperature}
         await self._async_update_dhw_params(params)
 
     @callback

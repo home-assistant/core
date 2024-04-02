@@ -2,14 +2,12 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 from homeassistant.components.water_heater import (
     WaterHeaterEntity,
     WaterHeaterEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -75,9 +73,11 @@ class DemoWaterHeater(WaterHeaterEntity):
             "off",
         ]
 
-    def set_temperature(self, **kwargs: Any) -> None:
+    def set_temperature(
+        self, temperature: float, operation_mode: str | None = None
+    ) -> None:
         """Set new target temperatures."""
-        self._attr_target_temperature = kwargs.get(ATTR_TEMPERATURE)
+        self._attr_target_temperature = temperature
         self.schedule_update_ha_state()
 
     def set_operation_mode(self, operation_mode: str) -> None:
@@ -95,10 +95,10 @@ class DemoWaterHeater(WaterHeaterEntity):
         self._attr_is_away_mode_on = False
         self.schedule_update_ha_state()
 
-    def turn_on(self, **kwargs: Any) -> None:
+    def turn_on(self) -> None:
         """Turn on water heater."""
         self.set_operation_mode("eco")
 
-    def turn_off(self, **kwargs: Any) -> None:
+    def turn_off(self) -> None:
         """Turn off water heater."""
         self.set_operation_mode("off")

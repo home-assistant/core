@@ -2,7 +2,6 @@
 
 from datetime import timedelta
 import logging
-from typing import Any
 
 from pyeconet.equipment import EquipmentType
 from pyeconet.equipment.water_heater import WaterHeaterOperationMode
@@ -18,7 +17,7 @@ from homeassistant.components.water_heater import (
     WaterHeaterEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF, UnitOfTemperature
+from homeassistant.const import STATE_OFF, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -114,12 +113,11 @@ class EcoNetWaterHeater(EcoNetEntity, WaterHeaterEntity):
             )
         return WaterHeaterEntityFeature.TARGET_TEMPERATURE
 
-    def set_temperature(self, **kwargs: Any) -> None:
+    def set_temperature(
+        self, temperature: float, operation_mode: str | None = None
+    ) -> None:
         """Set new target temperature."""
-        if (target_temp := kwargs.get(ATTR_TEMPERATURE)) is not None:
-            self.water_heater.set_set_point(target_temp)
-        else:
-            _LOGGER.error("A target temperature must be provided")
+        self.water_heater.set_set_point(temperature)
 
     def set_operation_mode(self, operation_mode: str) -> None:
         """Set operation mode."""

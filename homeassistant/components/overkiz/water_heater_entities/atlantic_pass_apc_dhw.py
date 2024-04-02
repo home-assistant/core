@@ -1,6 +1,6 @@
 """Support for Atlantic Pass APC DHW."""
 
-from typing import Any, cast
+from typing import cast
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 
@@ -12,7 +12,7 @@ from homeassistant.components.water_heater import (
     WaterHeaterEntity,
     WaterHeaterEntityFeature,
 )
-from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
+from homeassistant.const import UnitOfTemperature
 
 from ..entity import OverkizEntity
 
@@ -52,10 +52,10 @@ class AtlanticPassAPCDHW(OverkizEntity, WaterHeaterEntity):
             self.executor.select_state(OverkizState.CORE_TARGET_DWH_TEMPERATURE),
         )
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_temperature(
+        self, temperature: float, operation_mode: str | None = None
+    ) -> None:
         """Set new temperature."""
-        temperature = kwargs[ATTR_TEMPERATURE]
-
         if self.is_eco_mode_on:
             await self.executor.async_execute_command(
                 OverkizCommand.SET_ECO_TARGET_DHW_TEMPERATURE, temperature

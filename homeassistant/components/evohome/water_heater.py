@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 import evohomeasync2 as evo
 from evohomeasync2.schema.const import (
@@ -146,11 +146,11 @@ class EvoDHW(EvoChild, WaterHeaterEntity):
         """Turn away mode off."""
         await self._evo_broker.call_client_api(self._evo_device.reset_mode())
 
-    async def async_turn_on(self, **kwargs: Any) -> None:
+    async def async_turn_on(self) -> None:
         """Turn on."""
         await self._evo_broker.call_client_api(self._evo_device.set_on())
 
-    async def async_turn_off(self, **kwargs: Any) -> None:
+    async def async_turn_off(self) -> None:
         """Turn off."""
         await self._evo_broker.call_client_api(self._evo_device.set_off())
 

@@ -1,14 +1,12 @@
 """ATAG water heater component."""
 
-from typing import Any
-
 from homeassistant.components.water_heater import (
     STATE_ECO,
     STATE_PERFORMANCE,
     WaterHeaterEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF, Platform, UnitOfTemperature
+from homeassistant.const import STATE_OFF, Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -44,9 +42,11 @@ class AtagWaterHeater(AtagEntity, WaterHeaterEntity):
         operation = self.coordinator.data.dhw.current_operation
         return operation if operation in self.operation_list else STATE_OFF
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_temperature(
+        self, temperature: float, operation_mode: str | None = None
+    ) -> None:
         """Set new target temperature."""
-        if await self.coordinator.data.dhw.set_temp(kwargs.get(ATTR_TEMPERATURE)):
+        if await self.coordinator.data.dhw.set_temp(temperature):
             self.async_write_ha_state()
 
     @property

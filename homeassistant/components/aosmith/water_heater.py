@@ -1,7 +1,5 @@
 """The water heater platform for the A. O. Smith integration."""
 
-from typing import Any
-
 from py_aosmith.models import OperationMode as AOSmithOperationMode
 
 from homeassistant.components.water_heater import (
@@ -136,13 +134,12 @@ class AOSmithWaterHeaterEntity(AOSmithStatusEntity, WaterHeaterEntity):
 
             await self.coordinator.async_request_refresh()
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_temperature(
+        self, temperature: float, operation_mode: str | None = None
+    ) -> None:
         """Set new target temperature."""
-        temperature = kwargs.get("temperature")
-        if temperature is not None:
-            await self.client.update_setpoint(self.junction_id, temperature)
-
-            await self.coordinator.async_request_refresh()
+        await self.client.update_setpoint(self.junction_id, int(temperature))
+        await self.coordinator.async_request_refresh()
 
     async def async_turn_away_mode_on(self) -> None:
         """Turn away mode on."""

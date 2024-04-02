@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, cast
+from typing import cast
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 
@@ -13,7 +13,7 @@ from homeassistant.components.water_heater import (
     WaterHeaterEntity,
     WaterHeaterEntityFeature,
 )
-from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF, STATE_ON, UnitOfTemperature
+from homeassistant.const import STATE_OFF, STATE_ON, UnitOfTemperature
 
 from ..coordinator import OverkizDataUpdateCoordinator
 from ..entity import OverkizEntity
@@ -230,17 +230,17 @@ class DomesticHotWaterProduction(OverkizEntity, WaterHeaterEntity):
             return target_temperature_low.value_as_float
         return None
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_temperature(
+        self, temperature: float, operation_mode: str | None = None
+    ) -> None:
         """Set new target temperature."""
-        target_temperature = kwargs[ATTR_TEMPERATURE]
-
         if self.executor.has_command(OverkizCommand.SET_TARGET_TEMPERATURE):
             await self.executor.async_execute_command(
-                OverkizCommand.SET_TARGET_TEMPERATURE, target_temperature
+                OverkizCommand.SET_TARGET_TEMPERATURE, temperature
             )
         elif self.executor.has_command(OverkizCommand.SET_WATER_TARGET_TEMPERATURE):
             await self.executor.async_execute_command(
-                OverkizCommand.SET_WATER_TARGET_TEMPERATURE, target_temperature
+                OverkizCommand.SET_WATER_TARGET_TEMPERATURE, temperature
             )
 
         if self.executor.has_command(OverkizCommand.REFRESH_TARGET_TEMPERATURE):

@@ -62,11 +62,11 @@ class AtwWaterHeater(WaterHeaterEntity):
         """Update state from MELCloud."""
         await self._api.async_update()
 
-    async def async_turn_on(self, **kwargs: Any) -> None:
+    async def async_turn_on(self) -> None:
         """Turn the entity on."""
         await self._device.set({PROPERTY_POWER: True})
 
-    async def async_turn_off(self, **kwargs: Any) -> None:
+    async def async_turn_off(self) -> None:
         """Turn the entity off."""
         await self._device.set({PROPERTY_POWER: False})
 
@@ -101,13 +101,13 @@ class AtwWaterHeater(WaterHeaterEntity):
         """Return the temperature we try to reach."""
         return self._device.target_tank_temperature
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_temperature(
+        self, temperature: float, operation_mode: str | None = None
+    ) -> None:
         """Set new target temperature."""
         await self._device.set(
             {
-                PROPERTY_TARGET_TANK_TEMPERATURE: kwargs.get(
-                    "temperature", self.target_temperature
-                )
+                PROPERTY_TARGET_TANK_TEMPERATURE: temperature,
             }
         )
 

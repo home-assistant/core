@@ -217,10 +217,11 @@ class TadoWaterHeater(TadoZoneEntity, WaterHeaterEntity):
             hvac_mode=CONST_MODE_HEAT, target_temp=temperature, duration=time_period
         )
 
-    def set_temperature(self, **kwargs: Any) -> None:
+    def set_temperature(
+        self, temperature: float, operation_mode: str | None = None
+    ) -> None:
         """Set new target temperature."""
-        temperature = kwargs.get(ATTR_TEMPERATURE)
-        if not self._supports_temperature_control or temperature is None:
+        if not self._supports_temperature_control:
             return
 
         if self._current_tado_hvac_mode not in (

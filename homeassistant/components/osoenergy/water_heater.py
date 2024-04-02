@@ -120,19 +120,19 @@ class OSOEnergyWaterHeater(
         """Return the maximum temperature."""
         return self.device.max_temperature
 
-    async def async_turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self) -> None:
         """Turn on hotwater."""
         await self.osoenergy.hotwater.turn_on(self.device, True)
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self) -> None:
         """Turn off hotwater."""
         await self.osoenergy.hotwater.turn_off(self.device, True)
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_temperature(
+        self, temperature: float, operation_mode: str | None = None
+    ) -> None:
         """Set new target temperature."""
-        target_temperature = int(kwargs.get("temperature", self.target_temperature))
-        profile = [target_temperature] * 24
-
+        profile = [int(temperature)] * 24
         await self.osoenergy.hotwater.set_profile(self.device, profile)
 
     async def async_update(self) -> None:

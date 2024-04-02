@@ -76,12 +76,12 @@ class HiveWaterHeater(HiveEntity, WaterHeaterEntity):
     _attr_operation_list = SUPPORT_WATER_HEATER
 
     @refresh_system
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self):
         """Turn on hotwater."""
         await self.hive.hotwater.setMode(self.device, "MANUAL")
 
     @refresh_system
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self):
         """Turn on hotwater."""
         await self.hive.hotwater.setMode(self.device, "OFF")
 
