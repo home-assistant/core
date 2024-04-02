@@ -1108,10 +1108,10 @@ class ReloadServiceHelper:
     async def execute_service(self, service_call: ServiceCall) -> None:
         """Execute the service.
 
-        If a previous reload task if currently in progress, wait for it to finish first.
+        If a previous reload task is currently in progress, wait for it to finish first.
         Once the previous reload task has finished, one of the waiting tasks will be
         assigned to execute the reload of the targets it is assigned to reload. The
-        others tasks will wait if they should reload the same target, otherwise they
+        other tasks will wait if they should reload the same target, otherwise they
         will wait for the next round.
         """
 
