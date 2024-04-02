@@ -6,7 +6,7 @@ from unittest.mock import patch
 
 import pytest
 import zigpy.profiles.zha
-import zigpy.zcl.clusters.general as general
+from zigpy.zcl.clusters import general
 
 from homeassistant.components.device_tracker import SourceType
 from homeassistant.components.zha.core.registries import (

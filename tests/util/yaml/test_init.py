@@ -16,7 +16,7 @@ import yaml as pyyaml
 from homeassistant.config import YAML_CONFIG_FILE, load_yaml_config_file
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-import homeassistant.util.yaml as yaml
+from homeassistant.util import yaml
 from homeassistant.util.yaml import loader as yaml_loader
 
 from tests.common import extract_stack_to_frame, get_test_config_dir, patch_yaml_files

@@ -38,6 +38,7 @@ from tests.common import MockConfigEntry
 from tests.typing import ClientSessionGenerator
 
 SKYCONNECT_DEVICE = "/dev/serial/by-id/usb-Nabu_Casa_SkyConnect_v1.0_9e2adbd75b8beb119fe564a0f320645d-if00-port0"
+CONNECT_ZBT1_DEVICE = "/dev/serial/by-id/usb-Nabu_Casa_Home_Assistant_Connect_ZBT-1_9e2adbd75b8beb119fe564a0f320645d-if00-port0"
 
 
 def set_flasher_app_type(app_type: ApplicationType) -> Callable[[Flasher], None]:
@@ -66,6 +67,22 @@ def test_detect_radio_hardware(hass: HomeAssistant) -> None:
     )
     skyconnect_config_entry.add_to_hass(hass)
 
+    connect_zbt1_config_entry = MockConfigEntry(
+        data={
+            "device": CONNECT_ZBT1_DEVICE,
+            "vid": "10C4",
+            "pid": "EA60",
+            "serial_number": "3c0ed67c628beb11b1cd64a0f320645d",
+            "manufacturer": "Nabu Casa",
+            "description": "Home Assistant Connect ZBT-1",
+        },
+        domain=SKYCONNECT_DOMAIN,
+        options={},
+        title="Home Assistant Connect ZBT-1",
+    )
+    connect_zbt1_config_entry.add_to_hass(hass)
+
+    assert _detect_radio_hardware(hass, CONNECT_ZBT1_DEVICE) == HardwareType.SKYCONNECT
     assert _detect_radio_hardware(hass, SKYCONNECT_DEVICE) == HardwareType.SKYCONNECT
     assert (
         _detect_radio_hardware(hass, SKYCONNECT_DEVICE + "_foo") == HardwareType.OTHER

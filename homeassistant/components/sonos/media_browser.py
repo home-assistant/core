@@ -170,6 +170,7 @@ def build_item_response(
             payload["idstring"].split("/")[2:]
         )
         payload["idstring"] = urllib.parse.unquote(payload["idstring"])
+
     try:
         search_type = MEDIA_TYPES_TO_SONOS[payload["search_type"]]
     except KeyError:
@@ -210,7 +211,7 @@ def build_item_response(
 
     if not title:
         try:
-            title = payload["idstring"].split("/")[1]
+            title = urllib.parse.unquote(payload["idstring"].split("/")[1])
         except IndexError:
             title = LIBRARY_TITLES_MAPPING[payload["idstring"]]
 
