@@ -5,7 +5,7 @@ from unittest.mock import patch
 from aurorapy.client import AuroraError, AuroraTimeoutError
 from serial.tools import list_ports_common
 
-from homeassistant import config_entries
+from homeassistant import config_entries, setup
 from homeassistant.components.aurora_abb_powerone.const import (
     ATTR_FIRMWARE,
     ATTR_MODEL,
@@ -13,7 +13,7 @@ from homeassistant.components.aurora_abb_powerone.const import (
 )
 from homeassistant.const import ATTR_SERIAL_NUMBER, CONF_ADDRESS, CONF_PORT
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType, setup
+from homeassistant.data_entry_flow import FlowResultType
 
 TEST_DATA = {"device": "/dev/ttyUSB7", "address": 3, "name": "MyAuroraPV"}
 

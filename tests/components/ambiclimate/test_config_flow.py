@@ -11,7 +11,7 @@ from homeassistant.components.http import KEY_HASS
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType, data_entry_flow
+from homeassistant.data_entry_flow import AbortFlow, FlowResultType
 from homeassistant.setup import async_setup_component
 from homeassistant.util import aiohttp
 
@@ -55,7 +55,7 @@ async def test_abort_if_already_setup(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
-    with pytest.raises(data_entry_flow.AbortFlow):
+    with pytest.raises(AbortFlow):
         result = await flow.async_step_code()
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"

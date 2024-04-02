@@ -10,7 +10,7 @@ from homeassistant import config_entries
 from homeassistant.components.brunt.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType, data_entry_flow
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
@@ -89,10 +89,10 @@ async def test_form_error(hass: HomeAssistant, side_effect, error_message) -> No
 @pytest.mark.parametrize(
     ("side_effect", "result_type", "password", "step_id", "reason"),
     [
-        (None, data_entry_flow.FlowResultType.ABORT, "test", None, "reauth_successful"),
+        (None, FlowResultType.ABORT, "test", None, "reauth_successful"),
         (
             Exception,
-            data_entry_flow.FlowResultType.FORM,
+            FlowResultType.FORM,
             CONFIG[CONF_PASSWORD],
             "reauth_confirm",
             None,
