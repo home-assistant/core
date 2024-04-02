@@ -4,7 +4,6 @@ from unittest.mock import AsyncMock, MagicMock
 
 import aiohttp
 
-from homeassistant.components.azure_devops.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
@@ -20,7 +19,6 @@ async def test_load_unload_entry(
 ) -> None:
     """Test a successful setup entry."""
     assert await setup_integration(hass, mock_config_entry)
-    entry = hass.config_entries.async_entries(DOMAIN)[0]
 
     assert mock_devops_client.authorized
     assert mock_devops_client.authorize.call_count == 1
@@ -31,7 +29,7 @@ async def test_load_unload_entry(
     await hass.config_entries.async_remove(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.state == ConfigEntryState.NOT_LOADED
+    assert mock_config_entry.state == ConfigEntryState.NOT_LOADED
 
 
 async def test_auth_failed(
@@ -44,11 +42,10 @@ async def test_auth_failed(
     mock_devops_client.authorized = False
 
     await setup_integration(hass, mock_config_entry)
-    entry = hass.config_entries.async_entries(DOMAIN)[0]
 
     assert not mock_devops_client.authorized
 
-    assert entry.state == ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.state == ConfigEntryState.SETUP_ERROR
 
 
 async def test_update_failed(
@@ -60,11 +57,10 @@ async def test_update_failed(
     mock_devops_client.get_builds.side_effect = aiohttp.ClientError
 
     await setup_integration(hass, mock_config_entry)
-    entry = hass.config_entries.async_entries(DOMAIN)[0]
 
     assert mock_devops_client.get_builds.call_count == 1
 
-    assert entry.state == ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.state == ConfigEntryState.SETUP_RETRY
 
 
 async def test_no_builds(
@@ -76,8 +72,7 @@ async def test_no_builds(
     mock_devops_client.get_builds.return_value = None
 
     await setup_integration(hass, mock_config_entry)
-    entry = hass.config_entries.async_entries(DOMAIN)[0]
 
     assert mock_devops_client.get_builds.call_count == 1
 
-    assert entry.state == ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.state == ConfigEntryState.SETUP_RETRY
