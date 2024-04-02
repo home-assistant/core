@@ -88,15 +88,15 @@
         },
         "incl_filter": {
           "name": "[%key:component::waze_travel_time::options::step::init::data::incl_filter%]",
-          "description": "Which streetnames must be part of the route."
+          "description": "Which street names must be part of the route."
         },
         "excl_filter": {
           "name": "[%key:component::waze_travel_time::options::step::init::data::excl_filter%]",
-          "description": "Which streetnames must not be part of the route."
+          "description": "Which street names must not be part of the route."
         },
         "realtime": {
           "name": "[%key:component::waze_travel_time::options::step::init::data::realtime%]",
-          "description": "Use realtime or statistical data."
+          "description": "Use real-time or statistical data."
         },
         "avoid_toll_roads": {
           "name": "[%key:component::waze_travel_time::options::step::init::data::avoid_toll_roads%]",
@@ -108,7 +108,7 @@
         },
         "avoid_subscription_roads": {
           "name": "[%key:component::waze_travel_time::options::step::init::data::avoid_subscription_roads%]",
-          "description": "Whether to avoid subscription roads."
+          "description": "Whether to avoid subscription roads. "
         }
       }
     }
