@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components.device_tracker import (
     CONF_CONSIDER_HOME,
     CONF_SCAN_INTERVAL,
@@ -17,6 +17,7 @@ from homeassistant.components.nmap_tracker.const import (
 )
 from homeassistant.const import CONF_EXCLUDE, CONF_HOSTS
 from homeassistant.core import CoreState, HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
@@ -203,7 +204,7 @@ async def test_options_flow(hass: HomeAssistant, mock_get_source_ip) -> None:
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
     assert result["data_schema"]({}) == {
@@ -232,7 +233,7 @@ async def test_options_flow(hass: HomeAssistant, mock_get_source_ip) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert config_entry.options == {
         CONF_HOSTS: "192.168.1.0/24,192.168.2.0/24",
         CONF_HOME_INTERVAL: 5,
