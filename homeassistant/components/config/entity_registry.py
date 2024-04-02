@@ -1,4 +1,5 @@
 """HTTP views to interact with the entity registry."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -152,8 +153,19 @@ def websocket_get_entities(
         # If passed in, we update value. Passing None will remove old value.
         vol.Optional("aliases"): list,
         vol.Optional("area_id"): vol.Any(str, None),
+        # Categories is a mapping of key/value (scope/category_id) pairs.
+        # If passed in, we update/adjust only the provided scope(s).
+        # Other category scopes in the entity, are left as is.
+        #
+        # Categorized items such as entities
+        # can only be in 1 category ID per scope at a time.
+        # Therefore, passing in a category ID will either add or move
+        # the entity to that specific category. Passing in None will
+        # remove the entity from the category.
+        vol.Optional("categories"): cv.schema_with_slug_keys(vol.Any(str, None)),
         vol.Optional("device_class"): vol.Any(str, None),
         vol.Optional("icon"): vol.Any(str, None),
+        vol.Optional("labels"): [str],
         vol.Optional("name"): vol.Any(str, None),
         vol.Optional("new_entity_id"): str,
         # We only allow setting disabled_by user via API.
@@ -213,6 +225,10 @@ def websocket_update_entity(
         # Convert aliases to a set
         changes["aliases"] = set(msg["aliases"])
 
+    if "labels" in msg:
+        # Convert labels to a set
+        changes["labels"] = set(msg["labels"])
+
     if "disabled_by" in msg and msg["disabled_by"] is None:
         # Don't allow enabling an entity of a disabled device
         if entity_entry.device_id:
@@ -225,6 +241,18 @@ def websocket_update_entity(
                     )
                 )
                 return
+
+    # Update the categories if provided
+    if "categories" in msg:
+        categories = entity_entry.categories.copy()
+        for scope, category_id in msg["categories"].items():
+            if scope in categories and category_id is None:
+                # Remove the category from the scope as it was unset
+                del categories[scope]
+            elif category_id is not None:
+                # Add or update the category for the given scope
+                categories[scope] = category_id
+        changes["categories"] = categories
 
     try:
         if changes:

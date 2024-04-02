@@ -1,4 +1,5 @@
 """The tests for the Home Assistant HTTP component."""
+
 from datetime import timedelta
 from http import HTTPStatus
 from ipaddress import ip_network
@@ -17,6 +18,7 @@ from homeassistant.auth.providers.legacy_api_password import (
     LegacyApiPasswordAuthProvider,
 )
 from homeassistant.components import websocket_api
+from homeassistant.components.http import KEY_HASS
 from homeassistant.components.http.auth import (
     CONTENT_USER_NAME,
     DATA_SIGN_SECRET,
@@ -78,7 +80,7 @@ async def get_legacy_user(auth):
 def app(hass):
     """Fixture to set up a web.Application."""
     app = web.Application()
-    app["hass"] = hass
+    app[KEY_HASS] = hass
     app.router.add_get("/", mock_handler)
     async_setup_forwarded(app, True, [])
     return app
@@ -88,7 +90,7 @@ def app(hass):
 def app2(hass):
     """Fixture to set up a web.Application without real_ip middleware."""
     app = web.Application()
-    app["hass"] = hass
+    app[KEY_HASS] = hass
     app.router.add_get("/", mock_handler)
     return app
 

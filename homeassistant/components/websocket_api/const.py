@@ -1,4 +1,5 @@
 """Websocket constants."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
@@ -7,7 +8,7 @@ from typing import TYPE_CHECKING, Any, Final
 from homeassistant.core import HomeAssistant
 
 if TYPE_CHECKING:
-    from .connection import ActiveConnection  # noqa: F401
+    from .connection import ActiveConnection
 
 
 WebSocketCommandHandler = Callable[

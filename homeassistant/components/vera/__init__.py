@@ -1,4 +1,5 @@
 """Support for Vera devices."""
+
 from __future__ import annotations
 
 import asyncio
@@ -128,14 +129,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if device_type is not None:
             vera_devices[device_type].append(device)
 
-    vera_scenes = []
-    for scene in all_scenes:
-        vera_scenes.append(scene)
-
     controller_data = ControllerData(
         controller=controller,
         devices=vera_devices,
-        scenes=vera_scenes,
+        scenes=all_scenes,
         config_entry=entry,
     )
 

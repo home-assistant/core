@@ -1,4 +1,5 @@
 """Diagnostics platform for Traccar Server."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -12,7 +13,26 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from .const import DOMAIN
 from .coordinator import TraccarServerCoordinator
 
-TO_REDACT = {CONF_ADDRESS, CONF_LATITUDE, CONF_LONGITUDE}
+TO_REDACT = {
+    CONF_ADDRESS,
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+    "area",  # This is the polygon area of a geofence
+}
+
+
+def _entity_state(
+    hass: HomeAssistant,
+    entity: er.RegistryEntry,
+) -> dict[str, Any] | None:
+    return (
+        {
+            "state": state.state,
+            "attributes": state.attributes,
+        }
+        if (state := hass.states.get(entity.entity_id))
+        else None
+    )
 
 
 async def async_get_config_entry_diagnostics(
@@ -30,16 +50,16 @@ async def async_get_config_entry_diagnostics(
 
     return async_redact_data(
         {
+            "subscription_status": coordinator.client.subscription_status,
             "config_entry_options": dict(config_entry.options),
             "coordinator_data": coordinator.data,
             "entities": [
                 {
                     "enity_id": entity.entity_id,
                     "disabled": entity.disabled,
-                    "state": {"state": state.state, "attributes": state.attributes},
+                    "state": _entity_state(hass, entity),
                 }
                 for entity in entities
-                if (state := hass.states.get(entity.entity_id)) is not None
             ],
         },
         TO_REDACT,
@@ -63,16 +83,16 @@ async def async_get_device_diagnostics(
 
     return async_redact_data(
         {
+            "subscription_status": coordinator.client.subscription_status,
             "config_entry_options": dict(entry.options),
             "coordinator_data": coordinator.data,
             "entities": [
                 {
                     "enity_id": entity.entity_id,
                     "disabled": entity.disabled,
-                    "state": {"state": state.state, "attributes": state.attributes},
+                    "state": _entity_state(hass, entity),
                 }
                 for entity in entities
-                if (state := hass.states.get(entity.entity_id)) is not None
             ],
         },
         TO_REDACT,

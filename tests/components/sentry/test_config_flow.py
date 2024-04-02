@@ -1,4 +1,5 @@
 """Test the sentry config flow."""
+
 import logging
 from unittest.mock import patch
 
@@ -31,10 +32,13 @@ async def test_full_user_flow_implementation(hass: HomeAssistant) -> None:
     assert result.get("type") == FlowResultType.FORM
     assert result.get("errors") == {}
 
-    with patch("homeassistant.components.sentry.config_flow.Dsn"), patch(
-        "homeassistant.components.sentry.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch("homeassistant.components.sentry.config_flow.Dsn"),
+        patch(
+            "homeassistant.components.sentry.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {"dsn": "http://public@sentry.local/1"},

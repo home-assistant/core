@@ -1,4 +1,5 @@
 """Support for Netgear LTE sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -36,14 +37,12 @@ SENSORS: tuple[NetgearLTESensorEntityDescription, ...] = (
     NetgearLTESensorEntityDescription(
         key="sms",
         translation_key="sms",
-        icon="mdi:message-processing",
         native_unit_of_measurement="unread",
         value_fn=lambda modem_data: sum(1 for x in modem_data.data.sms if x.unread),
     ),
     NetgearLTESensorEntityDescription(
         key="sms_total",
         translation_key="sms_total",
-        icon="mdi:message-processing",
         native_unit_of_measurement="messages",
         value_fn=lambda modem_data: len(modem_data.data.sms),
     ),
@@ -84,49 +83,42 @@ SENSORS: tuple[NetgearLTESensorEntityDescription, ...] = (
         key="upstream",
         translation_key="upstream",
         entity_registry_enabled_default=False,
-        icon="mdi:ip-network",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     NetgearLTESensorEntityDescription(
         key="connection_text",
         translation_key="connection_text",
         entity_registry_enabled_default=False,
-        icon="mdi:radio-tower",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     NetgearLTESensorEntityDescription(
         key="connection_type",
         translation_key="connection_type",
         entity_registry_enabled_default=False,
-        icon="mdi:ip",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     NetgearLTESensorEntityDescription(
         key="current_ps_service_type",
         translation_key="service_type",
         entity_registry_enabled_default=False,
-        icon="mdi:radio-tower",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     NetgearLTESensorEntityDescription(
         key="register_network_display",
         translation_key="register_network_display",
         entity_registry_enabled_default=False,
-        icon="mdi:web",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     NetgearLTESensorEntityDescription(
         key="current_band",
         translation_key="band",
         entity_registry_enabled_default=False,
-        icon="mdi:radio-tower",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     NetgearLTESensorEntityDescription(
         key="cell_id",
         translation_key="cell_id",
         entity_registry_enabled_default=False,
-        icon="mdi:radio-tower",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )

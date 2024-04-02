@@ -1,4 +1,5 @@
 """Support for esphome numbers."""
+
 from __future__ import annotations
 
 import math
@@ -16,7 +17,12 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.enum import try_parse_enum
 
-from .entity import EsphomeEntity, esphome_state_property, platform_async_setup_entry
+from .entity import (
+    EsphomeEntity,
+    convert_api_error_ha_error,
+    esphome_state_property,
+    platform_async_setup_entry,
+)
 from .enum_mapper import EsphomeEnumMapper
 
 
@@ -77,6 +83,7 @@ class EsphomeNumber(EsphomeEntity[NumberInfo, NumberState], NumberEntity):
             return None
         return state.state
 
+    @convert_api_error_ha_error
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
-        await self._client.number_command(self._key, value)
+        self._client.number_command(self._key, value)

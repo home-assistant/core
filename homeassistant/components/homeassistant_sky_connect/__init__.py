@@ -1,4 +1,5 @@
 """The Home Assistant SkyConnect integration."""
+
 from __future__ import annotations
 
 from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon import (

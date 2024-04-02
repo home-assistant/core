@@ -1,4 +1,5 @@
 """Test the Reolink config flow."""
+
 from datetime import timedelta
 import json
 from typing import Any
@@ -473,19 +474,18 @@ async def test_dhcp_ip_update(
         const.DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=dhcp_data
     )
 
-    expected_calls = []
-    for host in host_call_list:
-        expected_calls.append(
-            call(
-                host,
-                TEST_USERNAME,
-                TEST_PASSWORD,
-                port=TEST_PORT,
-                use_https=TEST_USE_HTTPS,
-                protocol=DEFAULT_PROTOCOL,
-                timeout=DEFAULT_TIMEOUT,
-            )
+    expected_calls = [
+        call(
+            host,
+            TEST_USERNAME,
+            TEST_PASSWORD,
+            port=TEST_PORT,
+            use_https=TEST_USE_HTTPS,
+            protocol=DEFAULT_PROTOCOL,
+            timeout=DEFAULT_TIMEOUT,
         )
+        for host in host_call_list
+    ]
 
     assert reolink_connect_class.call_args_list == expected_calls
 

@@ -1,4 +1,5 @@
 """Tests for Fritz!Tools image platform."""
+
 from datetime import timedelta
 from http import HTTPStatus
 from unittest.mock import patch
@@ -198,7 +199,7 @@ async def test_image_update_unavailable(
     # fritzbox becomes unavailable
     fc_class_mock().call_action_side_effect(ReadTimeout)
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=60))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("image.mock_title_guestwifi")
     assert state.state == STATE_UNKNOWN
@@ -206,7 +207,7 @@ async def test_image_update_unavailable(
     # fritzbox is available again
     fc_class_mock().call_action_side_effect(None)
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=60))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("image.mock_title_guestwifi")
     assert state.state != STATE_UNKNOWN

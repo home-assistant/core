@@ -1,11 +1,11 @@
 """Test ZHA analog output."""
+
 from unittest.mock import call, patch
 
 import pytest
 from zigpy.exceptions import ZigbeeException
 from zigpy.profiles import zha
-import zigpy.zcl.clusters.general as general
-import zigpy.zcl.clusters.lighting as lighting
+from zigpy.zcl.clusters import general, lighting
 import zigpy.zcl.foundation as zcl_f
 
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
@@ -191,14 +191,14 @@ async def test_number(
 
 @pytest.mark.parametrize(
     ("attr", "initial_value", "new_value"),
-    (
+    [
         ("on_off_transition_time", 20, 5),
         ("on_level", 255, 50),
         ("on_transition_time", 5, 1),
         ("off_transition_time", 5, 1),
         ("default_move_rate", 1, 5),
         ("start_up_current_level", 254, 125),
-    ),
+    ],
 )
 async def test_level_control_number(
     hass: HomeAssistant,
@@ -323,7 +323,7 @@ async def test_level_control_number(
 
 @pytest.mark.parametrize(
     ("attr", "initial_value", "new_value"),
-    (("start_up_color_temperature", 500, 350),),
+    [("start_up_color_temperature", 500, 350)],
 )
 async def test_color_number(
     hass: HomeAssistant,

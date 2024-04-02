@@ -1,4 +1,5 @@
 """Test the Homeassistant Analytics config flow."""
+
 from typing import Any
 from unittest.mock import AsyncMock
 
@@ -161,7 +162,7 @@ async def test_form_already_configured(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    assert result["reason"] == "single_instance_allowed"
 
 
 @pytest.mark.parametrize(

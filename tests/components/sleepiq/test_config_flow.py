@@ -1,4 +1,5 @@
 """Tests for the SleepIQ config flow."""
+
 from unittest.mock import AsyncMock, patch
 
 from asyncsleepiq import SleepIQLoginException, SleepIQTimeoutException

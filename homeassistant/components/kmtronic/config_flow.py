@@ -1,4 +1,5 @@
 """Config flow for kmtronic integration."""
+
 from __future__ import annotations
 
 import logging
@@ -8,9 +9,10 @@ from pykmtronic.auth import Auth
 from pykmtronic.hub import KMTronicHubAPI
 import voluptuous as vol
 
-from homeassistant import config_entries, core, exceptions
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import aiohttp_client
 
 from .const import CONF_REVERSE, DOMAIN
@@ -26,7 +28,7 @@ DATA_SCHEMA = vol.Schema(
 )
 
 
-async def validate_input(hass: core.HomeAssistant, data):
+async def validate_input(hass: HomeAssistant, data):
     """Validate the user input allows us to connect."""
     session = aiohttp_client.async_get_clientsession(hass)
     auth = Auth(
@@ -47,7 +49,7 @@ async def validate_input(hass: core.HomeAssistant, data):
     return data
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class KmtronicConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for kmtronic."""
 
     VERSION = 1
@@ -55,7 +57,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
+        config_entry: ConfigEntry,
     ) -> KMTronicOptionsFlow:
         """Get the options flow for this handler."""
         return KMTronicOptionsFlow(config_entry)
@@ -81,18 +83,18 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
-class CannotConnect(exceptions.HomeAssistantError):
+class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""
 
 
-class InvalidAuth(exceptions.HomeAssistantError):
+class InvalidAuth(HomeAssistantError):
     """Error to indicate there is invalid auth."""
 
 
-class KMTronicOptionsFlow(config_entries.OptionsFlow):
+class KMTronicOptionsFlow(OptionsFlow):
     """Handle options."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+    def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
         self.config_entry = config_entry
 

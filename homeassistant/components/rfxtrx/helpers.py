@@ -1,6 +1,5 @@
 """Provides helpers for RFXtrx."""
 
-
 from RFXtrx import RFXtrxDevice, get_device
 
 from homeassistant.core import HomeAssistant, callback

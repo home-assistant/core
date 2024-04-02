@@ -1,9 +1,10 @@
 """Test the onboarding views."""
+
 import asyncio
 from http import HTTPStatus
 import os
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -79,30 +80,40 @@ async def mock_supervisor_fixture(hass, aioclient_mock):
             },
         },
     )
-    with patch.dict(os.environ, {"SUPERVISOR": "127.0.0.1"}), patch(
-        "homeassistant.components.hassio.HassIO.is_connected",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.hassio.HassIO.get_info",
-        return_value={},
-    ), patch(
-        "homeassistant.components.hassio.HassIO.get_host_info",
-        return_value={},
-    ), patch(
-        "homeassistant.components.hassio.HassIO.get_store",
-        return_value={},
-    ), patch(
-        "homeassistant.components.hassio.HassIO.get_supervisor_info",
-        return_value={"diagnostics": True},
-    ), patch(
-        "homeassistant.components.hassio.HassIO.get_os_info",
-        return_value={},
-    ), patch(
-        "homeassistant.components.hassio.HassIO.get_ingress_panels",
-        return_value={"panels": {}},
-    ), patch.dict(
-        os.environ,
-        {"SUPERVISOR_TOKEN": "123456"},
+    with (
+        patch.dict(os.environ, {"SUPERVISOR": "127.0.0.1"}),
+        patch(
+            "homeassistant.components.hassio.HassIO.is_connected",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.hassio.HassIO.get_info",
+            return_value={},
+        ),
+        patch(
+            "homeassistant.components.hassio.HassIO.get_host_info",
+            return_value={},
+        ),
+        patch(
+            "homeassistant.components.hassio.HassIO.get_store",
+            return_value={},
+        ),
+        patch(
+            "homeassistant.components.hassio.HassIO.get_supervisor_info",
+            return_value={"diagnostics": True},
+        ),
+        patch(
+            "homeassistant.components.hassio.HassIO.get_os_info",
+            return_value={},
+        ),
+        patch(
+            "homeassistant.components.hassio.HassIO.get_ingress_panels",
+            return_value={"panels": {}},
+        ),
+        patch.dict(
+            os.environ,
+            {"SUPERVISOR_TOKEN": "123456"},
+        ),
     ):
         yield
 
@@ -110,16 +121,18 @@ async def mock_supervisor_fixture(hass, aioclient_mock):
 @pytest.fixture
 def mock_default_integrations():
     """Mock the default integrations set up during onboarding."""
-    with patch(
-        "homeassistant.components.rpi_power.config_flow.new_under_voltage"
-    ), patch(
-        "homeassistant.components.rpi_power.binary_sensor.new_under_voltage"
-    ), patch(
-        "homeassistant.components.met.async_setup_entry", return_value=True
-    ), patch(
-        "homeassistant.components.radio_browser.async_setup_entry", return_value=True
-    ), patch(
-        "homeassistant.components.shopping_list.async_setup_entry", return_value=True
+    with (
+        patch("homeassistant.components.rpi_power.config_flow.new_under_voltage"),
+        patch("homeassistant.components.rpi_power.binary_sensor.new_under_voltage"),
+        patch("homeassistant.components.met.async_setup_entry", return_value=True),
+        patch(
+            "homeassistant.components.radio_browser.async_setup_entry",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.shopping_list.async_setup_entry",
+            return_value=True,
+        ),
     ):
         yield
 
@@ -567,6 +580,28 @@ async def test_onboarding_core_no_rpi_power(
     assert not rpi_power_state
 
 
+async def test_onboarding_core_ensures_analytics_loaded(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    hass_client: ClientSessionGenerator,
+    mock_default_integrations,
+) -> None:
+    """Test finishing the core step ensures analytics is ready."""
+    mock_storage(hass_storage, {"done": [const.STEP_USER]})
+    assert "analytics" not in hass.config.components
+
+    assert await async_setup_component(hass, "onboarding", {})
+    await hass.async_block_till_done()
+
+    client = await hass_client()
+    resp = await client.post("/api/onboarding/core_config")
+
+    assert resp.status == 200
+
+    await hass.async_block_till_done()
+    assert "analytics" in hass.config.components
+
+
 async def test_onboarding_analytics(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
@@ -632,3 +667,64 @@ async def test_onboarding_installation_type_after_done(
     resp = await client.get("/api/onboarding/installation_type")
 
     assert resp.status == 401
+
+
+async def test_complete_onboarding(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
+    """Test completing onboarding calls listeners."""
+    listener_1 = Mock()
+    onboarding.async_add_listener(hass, listener_1)
+    listener_1.assert_not_called()
+
+    assert await async_setup_component(hass, "onboarding", {})
+    await hass.async_block_till_done()
+
+    listener_2 = Mock()
+    onboarding.async_add_listener(hass, listener_2)
+    listener_2.assert_not_called()
+
+    client = await hass_client()
+
+    assert not onboarding.async_is_onboarded(hass)
+
+    # Complete the user step
+    resp = await client.post(
+        "/api/onboarding/users",
+        json={
+            "client_id": CLIENT_ID,
+            "name": "Test Name",
+            "username": "test-user",
+            "password": "test-pass",
+            "language": "en",
+        },
+    )
+    assert resp.status == 200
+    assert not onboarding.async_is_onboarded(hass)
+    listener_2.assert_not_called()
+
+    # Complete the core config step
+    resp = await client.post("/api/onboarding/core_config")
+    assert resp.status == 200
+    assert not onboarding.async_is_onboarded(hass)
+    listener_2.assert_not_called()
+
+    # Complete the integration step
+    resp = await client.post(
+        "/api/onboarding/integration",
+        json={"client_id": CLIENT_ID, "redirect_uri": CLIENT_REDIRECT_URI},
+    )
+    assert resp.status == 200
+    assert not onboarding.async_is_onboarded(hass)
+    listener_2.assert_not_called()
+
+    # Complete the analytics step
+    resp = await client.post("/api/onboarding/analytics")
+    assert resp.status == 200
+    assert onboarding.async_is_onboarded(hass)
+    listener_1.assert_not_called()  # Registered before the integration was setup
+    listener_2.assert_called_once_with()
+
+    listener_3 = Mock()
+    onboarding.async_add_listener(hass, listener_3)
+    listener_3.assert_called_once_with()

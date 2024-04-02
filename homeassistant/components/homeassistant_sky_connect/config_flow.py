@@ -1,4 +1,5 @@
 """Config flow for the Home Assistant SkyConnect integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -22,13 +23,13 @@ from homeassistant.components.zha import DOMAIN as ZHA_DOMAIN
 from homeassistant.components.zha.repairs.wrong_silabs_firmware import (
     probe_silabs_firmware_type,
 )
-from homeassistant.config_entries import ConfigEntry, ConfigFlow
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import AbortFlow, FlowResult
+from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.singleton import singleton
 
-from .const import DOMAIN
-from .util import get_usb_service_info
+from .const import DOMAIN, HardwareVariant
+from .util import get_hardware_variant, get_usb_service_info
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -78,6 +79,7 @@ class HomeAssistantSkyConnectConfigFlow(ConfigFlow, domain=DOMAIN):
         self._hass = None
         self._current_firmware_type: ApplicationType | None = None
         self._usb_info: usb.UsbServiceInfo | None = None
+        self._hw_variant: HardwareVariant | None = None
 
         self.install_task: asyncio.Task | None = None
         self.start_task: asyncio.Task | None = None
@@ -114,7 +116,9 @@ class HomeAssistantSkyConnectConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return addon_info
 
-    async def async_step_usb(self, discovery_info: usb.UsbServiceInfo) -> FlowResult:
+    async def async_step_usb(
+        self, discovery_info: usb.UsbServiceInfo
+    ) -> ConfigFlowResult:
         """Handle usb discovery."""
         device = discovery_info.device
         vid = discovery_info.vid
@@ -133,11 +137,14 @@ class HomeAssistantSkyConnectConfigFlow(ConfigFlow, domain=DOMAIN):
 
         self._usb_info = discovery_info
 
+        assert description is not None
+        self._hw_variant = HardwareVariant.from_usb_product_name(description)
+
         return await self.async_step_confirm()
 
     async def async_step_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Confirm a discovery."""
         self._set_confirm_only()
 
@@ -154,7 +161,7 @@ class HomeAssistantSkyConnectConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_pick_firmware(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Pick Thread or Zigbee firmware."""
         assert self._usb_info is not None
         assert self._current_firmware_type is not None
@@ -188,13 +195,13 @@ class HomeAssistantSkyConnectConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_pick_firmware_thread(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Pick Thread firmware."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_step_pick_firmware_zigbee(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Pick Zigbee firmware."""
         if self._current_firmware_type == ApplicationType.EZSP:
             return await self.async_step_confirm_zigbee()
@@ -217,7 +224,7 @@ class HomeAssistantSkyConnectConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_install_zigbee_flasher_addon(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Show progress dialog for installing the Zigbee flasher addon."""
         fw_flasher_manager = get_zigbee_flasher_addon_manager(self.hass)
         addon_info = await self._async_get_addon_info(fw_flasher_manager)
@@ -250,7 +257,7 @@ class HomeAssistantSkyConnectConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_run_zigbee_flasher_addon(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Configure the flasher addon to point to the SkyConnect."""
         fw_flasher_manager = get_zigbee_flasher_addon_manager(self.hass)
         addon_info = await self._async_get_addon_info(fw_flasher_manager)
@@ -297,7 +304,7 @@ class HomeAssistantSkyConnectConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_zigbee_flasher_failed(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Flasher add-on start failed."""
         fw_flasher_manager = get_zigbee_flasher_addon_manager(self.hass)
         return self.async_abort(
@@ -307,7 +314,7 @@ class HomeAssistantSkyConnectConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_zigbee_flashing_complete(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Show completion dialog for flashing Zigbee firmware."""
         fw_flasher_manager = get_zigbee_flasher_addon_manager(self.hass)
         await fw_flasher_manager.async_uninstall_addon_waiting()
@@ -316,16 +323,17 @@ class HomeAssistantSkyConnectConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_confirm_zigbee(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Confirm a discovery."""
         self._set_confirm_only()
         assert self._usb_info is not None
+        assert self._hw_variant is not None
 
         await self.hass.config_entries.flow.async_init(
             ZHA_DOMAIN,
             context={"source": "hardware"},
             data={
-                "name": "SkyConnect",
+                "name": self._hw_variant.full_name,
                 "port": {
                     "path": self._usb_info.device,
                     "baudrate": 115200,
@@ -336,7 +344,7 @@ class HomeAssistantSkyConnectConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
         return self.async_create_entry(
-            title="SkyConnect",
+            title=self._hw_variant.full_name,
             data={
                 "vid": self._usb_info.vid,
                 "pid": self._usb_info.pid,
@@ -372,10 +380,15 @@ class HomeAssistantSkyConnectOptionsFlow(silabs_multiprotocol_addon.OptionsFlowH
         """
         return {"usb": get_usb_service_info(self.config_entry)}
 
+    @property
+    def _hw_variant(self) -> HardwareVariant:
+        """Return the hardware variant."""
+        return get_hardware_variant(self.config_entry)
+
     def _zha_name(self) -> str:
         """Return the ZHA name."""
-        return "SkyConnect Multiprotocol"
+        return f"{self._hw_variant.short_name} Multiprotocol"
 
     def _hardware_name(self) -> str:
         """Return the name of the hardware."""
-        return "Home Assistant SkyConnect"
+        return self._hw_variant.full_name

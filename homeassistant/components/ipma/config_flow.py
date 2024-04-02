@@ -1,4 +1,5 @@
 """Config flow to configure IPMA component."""
+
 import logging
 from typing import Any
 
@@ -7,9 +8,8 @@ from pyipma.api import IPMA_API
 from pyipma.location import Location
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
@@ -25,7 +25,7 @@ class IpmaFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         errors = {}
 
@@ -40,8 +40,8 @@ class IpmaFlowHandler(ConfigFlow, domain=DOMAIN):
                     user_input[CONF_LATITUDE],
                     user_input[CONF_LONGITUDE],
                 )
-            except IPMAException as err:
-                _LOGGER.exception(err)
+            except IPMAException:
+                _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
                 return self.async_create_entry(title=location.name, data=user_input)

@@ -1,13 +1,13 @@
 """Test ZHA Gateway."""
+
 import asyncio
 from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
 from zigpy.application import ControllerApplication
-import zigpy.profiles.zha as zha
+from zigpy.profiles import zha
 import zigpy.types
-import zigpy.zcl.clusters.general as general
-import zigpy.zcl.clusters.lighting as lighting
+from zigpy.zcl.clusters import general, lighting
 import zigpy.zdo.types
 
 from homeassistant.components.zha.core.gateway import ZHAGateway
@@ -263,7 +263,7 @@ async def test_gateway_initialize_bellows_thread(
     ) as mock_new:
         await zha_gateway.async_initialize()
 
-    mock_new.mock_calls[-1].kwargs["config"]["use_thread"] is thread_state
+    assert mock_new.mock_calls[-1].kwargs["config"]["use_thread"] is thread_state
 
     await zha_gateway.shutdown()
 

@@ -1,4 +1,5 @@
 """Test the NZBGet switches."""
+
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,

@@ -1,4 +1,5 @@
 """Event parser and human readable log generator."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
@@ -50,7 +51,7 @@ class LazyEventPartialState:
         self._event_data_cache = event_data_cache
         # We need to explicitly check for the row is EventAsRow as the unhappy path
         # to fetch row.data for Row is very expensive
-        if type(row) is EventAsRow:  # noqa: E721
+        if type(row) is EventAsRow:
             # If its an EventAsRow we can avoid the whole
             # json decode process as we already have the data
             self.data = row.data

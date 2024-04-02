@@ -1,4 +1,5 @@
 """Tests for Google Assistant SDK."""
+
 from datetime import timedelta
 import http
 import time
@@ -333,7 +334,7 @@ async def test_conversation_agent(
     entry = entries[0]
     assert entry.state is ConfigEntryState.LOADED
 
-    agent = await conversation._get_agent_manager(hass).async_get_agent(entry.entry_id)
+    agent = await conversation.get_agent_manager(hass).async_get_agent(entry.entry_id)
     assert agent.supported_languages == SUPPORTED_LANGUAGE_CODES
 
     text1 = "tell me a joke"

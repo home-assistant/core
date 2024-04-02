@@ -1,4 +1,5 @@
 """Define constants for the Growatt Server component."""
+
 from homeassistant.const import Platform
 
 CONF_PLANT_ID = "plant_id"

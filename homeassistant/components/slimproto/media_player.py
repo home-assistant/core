@@ -1,11 +1,12 @@
 """MediaPlayer platform for SlimProto Player integration."""
+
 from __future__ import annotations
 
 import asyncio
 from typing import Any
 
 from aioslimproto.client import PlayerState, SlimClient
-from aioslimproto.const import EventType, SlimEvent
+from aioslimproto.models import EventType, SlimEvent
 from aioslimproto.server import SlimServer
 
 from homeassistant.components import media_source
@@ -106,9 +107,9 @@ class SlimProtoPlayer(MediaPlayerEntity):
         )
         # PiCore + SqueezeESP32 player has web interface
         if "-pCP" in self.player.firmware or self.player.device_model == "SqueezeESP32":
-            self._attr_device_info[
-                "configuration_url"
-            ] = f"http://{self.player.device_address}"
+            self._attr_device_info["configuration_url"] = (
+                f"http://{self.player.device_address}"
+            )
         self.update_attributes()
 
     async def async_added_to_hass(self) -> None:
@@ -144,9 +145,23 @@ class SlimProtoPlayer(MediaPlayerEntity):
     def update_attributes(self) -> None:
         """Handle player updates."""
         self._attr_volume_level = self.player.volume_level / 100
+        self._attr_is_volume_muted = self.player.muted
         self._attr_media_position = self.player.elapsed_seconds
         self._attr_media_position_updated_at = utcnow()
-        self._attr_media_content_id = self.player.current_url
+        if (current_media := self.player.current_media) and (
+            metadata := current_media.metadata
+        ):
+            self._attr_media_content_id = metadata.get("item_id", current_media.url)
+            self._attr_media_artist = metadata.get("artist")
+            self._attr_media_album_name = metadata.get("album")
+            self._attr_media_title = metadata.get("title")
+            self._attr_media_image_url = metadata.get("image_url")
+        else:
+            self._attr_media_content_id = current_media.url if current_media else None
+            self._attr_media_artist = None
+            self._attr_media_album_name = None
+            self._attr_media_title = None
+            self._attr_media_image_url = None
         self._attr_media_content_type = "music"
 
     async def async_media_play(self) -> None:
