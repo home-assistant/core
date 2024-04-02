@@ -1,0 +1,17 @@
+{
+  "domain": "senziio",
+  "name": "Senziio",
+  "codeowners": ["@pmiguez", "@fzuccolo"],
+  "config_flow": true,
+  "dependencies": ["mqtt"],
+  "documentation": "https://www.home-assistant.io/integrations/senziio",
+  "homekit": {},
+  "iot_class": "local_push",
+  "requirements": ["senziio==0.0.1"],
+  "zeroconf": [
+    {
+      "type": "_http._tcp.local.",
+      "name": "senziio*"
+    }
+  ]
+}

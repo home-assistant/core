@@ -465,6 +465,7 @@ FLOWS = {
         "sensorpush",
         "sentry",
         "senz",
+        "senziio",
         "seventeentrack",
         "sfr_box",
         "sharkiq",

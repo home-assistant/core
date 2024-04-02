@@ -2532,6 +2532,9 @@ sensorpush-ble==1.6.2
 # homeassistant.components.sentry
 sentry-sdk==1.40.3
 
+# homeassistant.components.senziio
+senziio==0.0.1
+
 # homeassistant.components.sfr_box
 sfrbox-api==0.0.8
 

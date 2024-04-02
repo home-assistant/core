@@ -5280,6 +5280,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "senziio": {
+      "name": "Senziio",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "serial": {
       "name": "Serial",
       "integration_type": "hub",
