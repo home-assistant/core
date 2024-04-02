@@ -118,7 +118,7 @@ async def test_async_step_finish_error(hass: HomeAssistant) -> None:
             data={CONF_CONTROLLER: "http://127.0.0.1:123/"},
         )
 
-        assert result["type"] == "abort"
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "cannot_connect"
         assert result["description_placeholders"] == {
             "base_url": "http://127.0.0.1:123"

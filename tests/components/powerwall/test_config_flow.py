@@ -36,7 +36,7 @@ async def test_form_source_user(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     mock_powerwall = await _mock_powerwall_site_name(hass, "MySite")
@@ -57,7 +57,7 @@ async def test_form_source_user(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "create_entry"
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "MySite"
     assert result2["data"] == VALID_CONFIG
     assert len(mock_setup_entry.mock_calls) == 1
@@ -81,7 +81,7 @@ async def test_form_cannot_connect(hass: HomeAssistant, exc: Exception) -> None:
             VALID_CONFIG,
         )
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {CONF_IP_ADDRESS: "cannot_connect"}
 
 
@@ -104,7 +104,7 @@ async def test_invalid_auth(hass: HomeAssistant) -> None:
             VALID_CONFIG,
         )
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {CONF_PASSWORD: "invalid_auth"}
 
 
@@ -124,7 +124,7 @@ async def test_form_unknown_exeption(hass: HomeAssistant) -> None:
             result["flow_id"], VALID_CONFIG
         )
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
 
 
@@ -147,7 +147,7 @@ async def test_form_wrong_version(hass: HomeAssistant) -> None:
             VALID_CONFIG,
         )
 
-    assert result3["type"] == "form"
+    assert result3["type"] is FlowResultType.FORM
     assert result3["errors"] == {"base": "wrong_version"}
 
 
@@ -166,7 +166,7 @@ async def test_already_configured(hass: HomeAssistant) -> None:
             hostname="any",
         ),
     )
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -193,7 +193,7 @@ async def test_already_configured_with_ignored(hass: HomeAssistant) -> None:
                 hostname="00GGX",
             ),
         )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
     with (
@@ -212,7 +212,7 @@ async def test_already_configured_with_ignored(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "create_entry"
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Some site"
     assert result2["data"] == {"ip_address": "1.1.1.1", "password": "00GGX"}
     assert len(mock_setup_entry.mock_calls) == 1
@@ -235,7 +235,7 @@ async def test_dhcp_discovery_manual_configure(hass: HomeAssistant) -> None:
                 hostname="any",
             ),
         )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     with (
@@ -254,7 +254,7 @@ async def test_dhcp_discovery_manual_configure(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "create_entry"
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Some site"
     assert result2["data"] == VALID_CONFIG
     assert len(mock_setup_entry.mock_calls) == 1
@@ -277,7 +277,7 @@ async def test_dhcp_discovery_auto_configure(hass: HomeAssistant) -> None:
                 hostname="00GGX",
             ),
         )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
     with (
@@ -296,7 +296,7 @@ async def test_dhcp_discovery_auto_configure(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "create_entry"
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Some site"
     assert result2["data"] == {"ip_address": "1.1.1.1", "password": "00GGX"}
     assert len(mock_setup_entry.mock_calls) == 1
@@ -340,7 +340,7 @@ async def test_form_reauth(hass: HomeAssistant) -> None:
         context={"source": config_entries.SOURCE_REAUTH, "entry_id": entry.entry_id},
         data=entry.data,
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     mock_powerwall = await _mock_powerwall_site_name(hass, "My site")
@@ -363,7 +363,7 @@ async def test_form_reauth(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "abort"
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
     assert len(mock_setup_entry.mock_calls) == 1
 
