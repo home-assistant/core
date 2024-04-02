@@ -1903,7 +1903,7 @@ rokuecp==0.19.2
 romy==0.0.9
 
 # homeassistant.components.roomba
-roombapy==1.6.13
+roombapy==1.8.1
 
 # homeassistant.components.roon
 roonapi==0.1.6
