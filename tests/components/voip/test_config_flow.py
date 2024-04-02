@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components import voip
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -29,7 +29,7 @@ async def test_form_user(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {}
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -59,7 +59,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     result = await hass.config_entries.options.async_init(
         config_entry.entry_id,
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
     # Default
@@ -67,7 +67,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
         result["flow_id"],
         user_input={},
     )
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert config_entry.options == {"sip_port": 5060}
 
     # Manual
@@ -78,5 +78,5 @@ async def test_options_flow(hass: HomeAssistant) -> None:
         result["flow_id"],
         user_input={"sip_port": 5061},
     )
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert config_entry.options == {"sip_port": 5061}
