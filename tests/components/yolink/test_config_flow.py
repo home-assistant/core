@@ -5,10 +5,10 @@ from unittest.mock import patch
 
 from yolink.const import OAUTH2_AUTHORIZE, OAUTH2_TOKEN
 
-from homeassistant import config_entries
+from homeassistant import config_entries, setup
 from homeassistant.components import application_credentials
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType, setup
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from tests.common import MockConfigEntry
