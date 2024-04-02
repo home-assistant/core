@@ -124,27 +124,53 @@ def mock_websocket_client(
 
         websocket_client.get_directories.return_value = [
             MediaDirectory(
-                key="testdirectory",
-                path="testdirectory",
+                key="documents",
+                path="/home/user/documents",
             )
         ]
-        media_file = MediaFile(
-            name="testfile.txt",
-            path="testdirectory/testfile.txt",
-            fullpath="/home/user/testdirectory/testfile.txt",
-            size=100,
-            last_accessed=1630000000,
-            created=1630000000,
-            modified=1630000000,
-            is_directory=False,
-            is_file=True,
-            is_link=False,
-            mime_type="text/plain",
-        )
         websocket_client.get_files.return_value = MediaFiles(
-            files=[media_file], path="testdirectory"
+            files=[
+                MediaFile(
+                    name="testsubdirectory",
+                    path="testsubdirectory",
+                    fullpath="/home/user/documents/testsubdirectory",
+                    size=100,
+                    last_accessed=1630000000,
+                    created=1630000000,
+                    modified=1630000000,
+                    is_directory=True,
+                    is_file=False,
+                    is_link=False,
+                ),
+                MediaFile(
+                    name="testfile.txt",
+                    path="testfile.txt",
+                    fullpath="/home/user/documents/testfile.txt",
+                    size=100,
+                    last_accessed=1630000000,
+                    created=1630000000,
+                    modified=1630000000,
+                    is_directory=False,
+                    is_file=True,
+                    is_link=False,
+                    mime_type="text/plain",
+                ),
+                MediaFile(
+                    name="testfile.jpg",
+                    path="testfile.jpg",
+                    fullpath="/home/user/documents/testimage.jpg",
+                    size=100,
+                    last_accessed=1630000000,
+                    created=1630000000,
+                    modified=1630000000,
+                    is_directory=False,
+                    is_file=True,
+                    is_link=False,
+                    mime_type="image/jpeg",
+                ),
+            ],
+            path="",
         )
-        websocket_client.get_file.return_value = media_file
 
         websocket_client.open_path.return_value = FIXTURE_GENERIC_RESPONSE
         websocket_client.power_shutdown.return_value = FIXTURE_GENERIC_RESPONSE

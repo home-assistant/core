@@ -70,11 +70,28 @@ async def test_directory(
     """Test browsing directory."""
     browse_media_directory = await async_browse_media(
         hass,
-        f"{URI_SCHEME}{DOMAIN}/{init_integration.entry_id}~~testdirectory",
+        f"{URI_SCHEME}{DOMAIN}/{init_integration.entry_id}~~documents",
     )
 
     assert browse_media_directory.as_dict() == snapshot(
         name=f"{DOMAIN}_media_source_directory",
+        exclude=paths("children", "media_content_id"),
+    )
+
+
+async def test_subdirectory(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test browsing directory."""
+    browse_media_directory = await async_browse_media(
+        hass,
+        f"{URI_SCHEME}{DOMAIN}/{init_integration.entry_id}~~documents/testsubdirectory",
+    )
+
+    assert browse_media_directory.as_dict() == snapshot(
+        name=f"{DOMAIN}_media_source_subdirectory",
         exclude=paths("children", "media_content_id"),
     )
 
@@ -87,12 +104,22 @@ async def test_file(
     """Test browsing file."""
     resolve_media_file = await async_resolve_media(
         hass,
-        f"{URI_SCHEME}{DOMAIN}/{init_integration.entry_id}~~testdirectory/testfile.txt~~text/plain",
+        f"{URI_SCHEME}{DOMAIN}/{init_integration.entry_id}~~documents/testfile.txt~~text/plain",
         None,
     )
 
     assert resolve_media_file == snapshot(
-        name=f"{DOMAIN}_media_source_file",
+        name=f"{DOMAIN}_media_source_file_text",
+    )
+
+    resolve_media_file = await async_resolve_media(
+        hass,
+        f"{URI_SCHEME}{DOMAIN}/{init_integration.entry_id}~~documents/testimage.jpg~~image/jpeg",
+        None,
+    )
+
+    assert resolve_media_file == snapshot(
+        name=f"{DOMAIN}_media_source_file_image",
     )
 
 
