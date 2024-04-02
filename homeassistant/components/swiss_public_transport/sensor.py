@@ -55,7 +55,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 class SwissPublicTransportSensorEntityDescription(SensorEntityDescription):
     """Describes swiss public transport sensor entity."""
 
-    exists_fn: Callable[[DataConnection], bool]
     value_fn: Callable[[DataConnection], StateType | datetime]
 
     index: int = 0
@@ -70,7 +69,6 @@ SENSORS: tuple[SwissPublicTransportSensorEntityDescription, ...] = (
             device_class=SensorDeviceClass.TIMESTAMP,
             has_legacy_attributes=i == 0,
             value_fn=lambda data_connection: data_connection["departure"],
-            exists_fn=lambda data_connection: data_connection is not None,
             index=i,
         )
         for i in range(SENSOR_CONNECTIONS_COUNT)
@@ -80,19 +78,16 @@ SENSORS: tuple[SwissPublicTransportSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.SECONDS,
         value_fn=lambda data_connection: data_connection["duration"],
-        exists_fn=lambda data_connection: data_connection is not None,
     ),
     SwissPublicTransportSensorEntityDescription(
         key="transfers",
         translation_key="transfers",
         value_fn=lambda data_connection: data_connection["transfers"],
-        exists_fn=lambda data_connection: data_connection is not None,
     ),
     SwissPublicTransportSensorEntityDescription(
         key="platform",
         translation_key="platform",
         value_fn=lambda data_connection: data_connection["platform"],
-        exists_fn=lambda data_connection: data_connection is not None,
     ),
     SwissPublicTransportSensorEntityDescription(
         key="delay",
@@ -100,7 +95,6 @@ SENSORS: tuple[SwissPublicTransportSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
         value_fn=lambda data_connection: data_connection["delay"],
-        exists_fn=lambda data_connection: data_connection is not None,
     ),
 )
 
@@ -191,13 +185,6 @@ class SwissPublicTransportSensor(
             identifiers={(DOMAIN, unique_id)},
             manufacturer="Opendata.ch",
             entry_type=DeviceEntryType.SERVICE,
-        )
-
-    @property
-    def enabled(self) -> bool:
-        """Enable the sensor if data is available."""
-        return self.entity_description.exists_fn(
-            self.coordinator.data[self.entity_description.index]
         )
 
     @property
