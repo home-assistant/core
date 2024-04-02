@@ -1137,6 +1137,21 @@ async def test_get_agent_info(
     assert agent_info == snapshot
 
 
+@pytest.mark.parametrize("agent_id", AGENT_ID_OPTIONS)
+async def test_prepare_agent(
+    hass: HomeAssistant,
+    init_components,
+    agent_id: str,
+) -> None:
+    """Test prepare agent."""
+    with patch(
+        "homeassistant.components.conversation.default_agent.DefaultAgent.async_prepare"
+    ) as mock_prepare:
+        await conversation.async_prepare_agent(hass, agent_id, "en")
+
+    assert len(mock_prepare.mock_calls) == 1
+
+
 async def test_ws_hass_agent_debug(
     hass: HomeAssistant,
     init_components,
