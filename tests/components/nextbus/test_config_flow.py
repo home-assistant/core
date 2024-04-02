@@ -5,11 +5,11 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from homeassistant import config_entries, setup
+from homeassistant import config_entries
 from homeassistant.components.nextbus.const import CONF_AGENCY, CONF_ROUTE, DOMAIN
 from homeassistant.const import CONF_NAME, CONF_STOP
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.data_entry_flow import FlowResultType, setup
 
 
 @pytest.fixture
@@ -47,7 +47,7 @@ async def test_import_config(
     )
     await hass.async_block_till_done()
 
-    assert result.get("type") == FlowResultType.CREATE_ENTRY
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert (
         result.get("title")
         == "San Francisco Muni F - Market & Wharves Market St & 7th St (Outbound)"
@@ -64,7 +64,7 @@ async def test_import_config(
     )
     await hass.async_block_till_done()
 
-    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "already_configured"
 
 
@@ -100,7 +100,7 @@ async def test_import_config_invalid(
     )
     await hass.async_block_till_done()
 
-    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == expected_reason
 
 
@@ -112,7 +112,7 @@ async def test_user_config(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "agency"
 
     # Select agency
@@ -136,7 +136,7 @@ async def test_user_config(
     )
     await hass.async_block_till_done()
 
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "stop"
 
     # Select stop
@@ -148,7 +148,7 @@ async def test_user_config(
     )
     await hass.async_block_till_done()
 
-    assert result.get("type") == FlowResultType.CREATE_ENTRY
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert result.get("data") == {
         "agency": "sf-muni",
         "route": "F",
