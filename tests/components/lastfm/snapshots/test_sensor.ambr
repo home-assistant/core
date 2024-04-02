@@ -3,7 +3,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Last.fm',
-      'entity_picture': <MagicMock name='LastFMNetwork().get_user().get_image()' id='4847937024'>,
+      'entity_picture': 'image',
       'friendly_name': 'LastFM testaccount1',
       'last_played': None,
       'play_count': 0,
@@ -24,10 +24,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Last.fm',
-      'entity_picture': <MagicMock name='LastFMNetwork().get_user().get_image()' id='4841627120'>,
+      'entity_picture': 'image',
       'friendly_name': 'LastFM testaccount1',
       'last_played': None,
-      'play_count': <MagicMock name='LastFMNetwork().get_user().get_playcount()' id='4848424224'>,
+      'play_count': 1,
       'top_played': None,
     }),
     'context': <ANY>,
@@ -35,6 +35,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': "<MagicMock name='LastFMNetwork().get_user().get_now_playing().artist' id='4852540448'> - <MagicMock name='LastFMNetwork().get_user().get_now_playing().title' id='4852533680'>",
+    'state': 'artist - title',
   })
 # ---
