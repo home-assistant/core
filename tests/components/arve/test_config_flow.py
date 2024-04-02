@@ -9,17 +9,9 @@ from homeassistant.const import CONF_ACCESS_TOKEN, CONF_CLIENT_SECRET
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from . import USER_INPUT
+from . import USER_INPUT, async_init_integration
 
 from tests.common import MockConfigEntry
-
-
-async def create_entry(result, mock_setup_entry: AsyncMock):
-    """Create test entry."""
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Name of the device"
-    assert result["data"] == USER_INPUT
-    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
@@ -56,6 +48,9 @@ async def test_form_abort_already_configured(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test form aborts if already configured."""
+    await async_init_integration(hass, mock_config_entry)
+    await hass.async_block_till_done()
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -74,3 +69,26 @@ async def test_form_abort_already_configured(
 
     assert result2["type"] == FlowResultType.ABORT
     assert result2["reason"] == "already_configured"
+
+
+async def test_correct_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
+    """Test the whole flow."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    with patch(
+        "asyncarve.Arve.get_customer_id",
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], USER_INPUT
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["data"] == USER_INPUT
+    assert len(mock_setup_entry.mock_calls) == 1

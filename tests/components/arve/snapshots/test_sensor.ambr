@@ -4,14 +4,16 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': 'measurement',
+    }),
     'config_entry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.my_arve_air_quality_index',
+    'entity_id': 'sensor.test_sensor_air_quality_index',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -23,12 +25,12 @@
     }),
     'original_device_class': <SensorDeviceClass.AQI: 'aqi'>,
     'original_icon': None,
-    'original_name': 'AQI',
+    'original_name': 'Air quality index',
     'platform': 'arve',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'aqi',
-    'unique_id': 'test-serial-number_aqi',
+    'translation_key': None,
+    'unique_id': 'test-serial-number_AQI',
     'unit_of_measurement': None,
   })
 # ---
@@ -37,14 +39,16 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': 'measurement',
+    }),
     'config_entry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.my_arve_carbon_dioxide',
+    'entity_id': 'sensor.test_sensor_carbon_dioxide',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -56,12 +60,12 @@
     }),
     'original_device_class': <SensorDeviceClass.CO2: 'carbon_dioxide'>,
     'original_icon': None,
-    'original_name': 'CO2',
+    'original_name': 'Carbon dioxide',
     'platform': 'arve',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'co2',
-    'unique_id': 'test-serial-number_co2',
+    'translation_key': None,
+    'unique_id': 'test-serial-number_CO2',
     'unit_of_measurement': 'ppm',
   })
 # ---
@@ -70,14 +74,16 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': 'measurement',
+    }),
     'config_entry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.my_arve_humidity',
+    'entity_id': 'sensor.test_sensor_humidity',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -93,8 +99,8 @@
     'platform': 'arve',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'humidity',
-    'unique_id': 'test-serial-number_humidity',
+    'translation_key': None,
+    'unique_id': 'test-serial-number_Humidity',
     'unit_of_measurement': '%',
   })
 # ---
@@ -136,14 +142,16 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': 'measurement',
+    }),
     'config_entry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.my_arve_pm10',
+    'entity_id': 'sensor.test_sensor_pm10',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -159,8 +167,8 @@
     'platform': 'arve',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'pm10',
-    'unique_id': 'test-serial-number_pm10',
+    'translation_key': None,
+    'unique_id': 'test-serial-number_PM10',
     'unit_of_measurement': 'µg/m³',
   })
 # ---
@@ -169,14 +177,16 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': 'measurement',
+    }),
     'config_entry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.my_arve_pm2_5',
+    'entity_id': 'sensor.test_sensor_pm2_5',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -188,12 +198,12 @@
     }),
     'original_device_class': <SensorDeviceClass.PM25: 'pm25'>,
     'original_icon': None,
-    'original_name': 'PM25',
+    'original_name': 'PM2.5',
     'platform': 'arve',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'pm25',
-    'unique_id': 'test-serial-number_pm25',
+    'translation_key': None,
+    'unique_id': 'test-serial-number_PM25',
     'unit_of_measurement': 'µg/m³',
   })
 # ---
@@ -202,14 +212,16 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': 'measurement',
+    }),
     'config_entry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.my_arve_temperature',
+    'entity_id': 'sensor.test_sensor_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -225,9 +237,44 @@
     'platform': 'arve',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'temperature',
-    'unique_id': 'test-serial-number_temperature',
+    'translation_key': None,
+    'unique_id': 'test-serial-number_Temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_sensors[entry_test-serial-number_total_volatile_organic_compounds]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': 'measurement',
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_sensor_total_volatile_organic_compounds',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Total volatile organic compounds',
+    'platform': 'arve',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'tvoc',
+    'unique_id': 'test-serial-number_TVOC',
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[entry_test-serial-number_tvoc]
@@ -368,5 +415,107 @@
     'last_changed': <ANY>,
     'last_updated': <ANY>,
     'state': "<AsyncMock name='Arve().device_sensor_data().tvoc' id='4683902432'>",
+  })
+# ---
+# name: test_sensors[test_sensor_air_quality_index]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'aqi',
+      'friendly_name': 'Test Sensor Air quality index',
+      'state_class': 'measurement',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_sensor_air_quality_index',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '14',
+  })
+# ---
+# name: test_sensors[test_sensor_carbon_dioxide]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'carbon_dioxide',
+      'friendly_name': 'Test Sensor Carbon dioxide',
+      'state_class': 'measurement',
+      'unit_of_measurement': 'ppm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_sensor_carbon_dioxide',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '595.75',
+  })
+# ---
+# name: test_sensors[test_sensor_humidity]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'humidity',
+      'friendly_name': 'Test Sensor Humidity',
+      'state_class': 'measurement',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_sensor_humidity',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '28.71',
+  })
+# ---
+# name: test_sensors[test_sensor_pm10]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'pm10',
+      'friendly_name': 'Test Sensor PM10',
+      'state_class': 'measurement',
+      'unit_of_measurement': 'µg/m³',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_sensor_pm10',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.16',
+  })
+# ---
+# name: test_sensors[test_sensor_pm2_5]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'pm25',
+      'friendly_name': 'Test Sensor PM2.5',
+      'state_class': 'measurement',
+      'unit_of_measurement': 'µg/m³',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_sensor_pm2_5',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.19',
+  })
+# ---
+# name: test_sensors[test_sensor_temperature]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Test Sensor Temperature',
+      'state_class': 'measurement',
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_sensor_temperature',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '26.02',
+  })
+# ---
+# name: test_sensors[test_sensor_total_volatile_organic_compounds]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Sensor Total volatile organic compounds',
+      'state_class': 'measurement',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_sensor_total_volatile_organic_compounds',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '7',
   })
 # ---

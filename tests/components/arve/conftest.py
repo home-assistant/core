@@ -3,6 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from asyncarve import ArveCustomer, ArveDevices, ArveSensPro, ArveSensProData
 import pytest
 
 from homeassistant.components.arve.const import DOMAIN
@@ -25,8 +26,9 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 @pytest.fixture
 def mock_config_entry(hass: HomeAssistant, mock_arve: MagicMock) -> MockConfigEntry:
     """Return the default mocked config entry."""
-    entry = MockConfigEntry(title="Arve", domain=DOMAIN, data=USER_INPUT, unique_id=1)
-    entry.add_to_hass(hass)
+    entry = MockConfigEntry(
+        title="Arve", domain=DOMAIN, data=USER_INPUT, unique_id=mock_arve.customer_id
+    )
     return entry
 
 
@@ -41,5 +43,15 @@ def mock_arve():
     ):
         arve = arve_mock.return_value
         arve.device_sn = "test-serial-number"
+        arve.customer_id = 12345
+
+        arve.get_customer_id.return_value = ArveCustomer(12345)
+
+        arve.get_devices.return_value = ArveDevices(["test-serial-number"])
+        arve.get_sensor_info.return_value = ArveSensPro("Test Sensor", "1.0", "prov1")
+
+        arve.device_sensor_data.return_value = ArveSensProData(
+            14, 595.75, 28.71, 0.16, 0.19, 26.02, 7
+        )
 
         yield arve

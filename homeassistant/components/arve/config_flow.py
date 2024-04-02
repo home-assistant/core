@@ -27,18 +27,17 @@ class ArveConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         errors: dict[str, str] = {}
         if user_input is not None:
-            self._async_abort_entries_match(user_input)
             arve = Arve(
                 user_input[CONF_ACCESS_TOKEN],
                 user_input[CONF_CLIENT_SECRET],
             )
             try:
                 customer: ArveCustomer = await arve.get_customer_id()
-                await self.async_set_unique_id(customer.customerId)
-                self._abort_if_unique_id_configured()
             except ArveConnectionError:
                 errors["base"] = "cannot_connect"
             else:
+                await self.async_set_unique_id(customer.customerId)
+                self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title="Arve",
                     data=user_input,
