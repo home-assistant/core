@@ -6,7 +6,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 import voluptuous as vol
 
@@ -25,7 +25,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -56,10 +56,10 @@ class SwissPublicTransportSensorEntityDescription(SensorEntityDescription):
     """Describes swiss public transport sensor entity."""
 
     exists_fn: Callable[[DataConnection], bool]
-    value_fn: Callable[[DataConnection], Any]
+    value_fn: Callable[[DataConnection], StateType | datetime]
 
-    index: int | None = None
-    has_legacy_attributes: bool
+    index: int = 0
+    has_legacy_attributes: bool = False
 
 
 SENSORS: tuple[SwissPublicTransportSensorEntityDescription, ...] = (
@@ -68,7 +68,6 @@ SENSORS: tuple[SwissPublicTransportSensorEntityDescription, ...] = (
             key=f"departure{i or ''}",
             translation_key=f"departure{i}",
             device_class=SensorDeviceClass.TIMESTAMP,
-            icon="mdi:bus-clock",
             has_legacy_attributes=i == 0,
             value_fn=lambda data_connection: data_connection["departure"],
             exists_fn=lambda data_connection: data_connection is not None,
@@ -78,27 +77,20 @@ SENSORS: tuple[SwissPublicTransportSensorEntityDescription, ...] = (
     ],
     SwissPublicTransportSensorEntityDescription(
         key="duration",
-        translation_key="duration",
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.SECONDS,
-        icon="mdi:timeline-clock",
-        has_legacy_attributes=False,
         value_fn=lambda data_connection: data_connection["duration"],
         exists_fn=lambda data_connection: data_connection is not None,
     ),
     SwissPublicTransportSensorEntityDescription(
         key="transfers",
         translation_key="transfers",
-        icon="mdi:transit-transfer",
-        has_legacy_attributes=False,
         value_fn=lambda data_connection: data_connection["transfers"],
         exists_fn=lambda data_connection: data_connection is not None,
     ),
     SwissPublicTransportSensorEntityDescription(
         key="platform",
         translation_key="platform",
-        icon="mdi:bus-stop-uncovered",
-        has_legacy_attributes=False,
         value_fn=lambda data_connection: data_connection["platform"],
         exists_fn=lambda data_connection: data_connection is not None,
     ),
@@ -107,8 +99,6 @@ SENSORS: tuple[SwissPublicTransportSensorEntityDescription, ...] = (
         translation_key="delay",
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
-        icon="mdi:clock-plus",
-        has_legacy_attributes=False,
         value_fn=lambda data_connection: data_connection["delay"],
         exists_fn=lambda data_connection: data_connection is not None,
     ),
@@ -131,16 +121,6 @@ async def async_setup_entry(
     async_add_entities(
         SwissPublicTransportSensor(coordinator, description, unique_id)
         for description in SENSORS
-    )
-    async_create_issue(
-        hass,
-        DOMAIN,
-        "deprecated_extra_state_attributes",
-        breaks_in_ha_version="2024.10.0",
-        is_fixable=False,
-        issue_domain=DOMAIN,
-        severity=IssueSeverity.WARNING,
-        translation_key="deprecated_extra_state_attributes",
     )
 
 
@@ -217,14 +197,14 @@ class SwissPublicTransportSensor(
     def enabled(self) -> bool:
         """Enable the sensor if data is available."""
         return self.entity_description.exists_fn(
-            self.coordinator.data[self.entity_description.index or 0]
+            self.coordinator.data[self.entity_description.index]
         )
 
     @property
-    def native_value(self) -> datetime | None:
+    def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(
-            self.coordinator.data[self.entity_description.index or 0]
+            self.coordinator.data[self.entity_description.index]
         )
 
     async def async_added_to_hass(self) -> None:
@@ -247,7 +227,7 @@ class SwissPublicTransportSensor(
             self._attr_extra_state_attributes = {
                 key: value
                 for key, value in self.coordinator.data[
-                    self.entity_description.index or 0
+                    self.entity_description.index
                 ].items()
                 if key not in {"departure"}
             }
