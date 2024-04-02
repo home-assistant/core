@@ -49,12 +49,9 @@ async def async_setup_platform(
             value_template.hass = hass
 
         trigger_entity_config = {
-            CONF_NAME: Template(cover_config.get(CONF_NAME, device_name), hass)
+            CONF_NAME: Template(cover_config.get(CONF_NAME, device_name), hass),
+            **{k: v for k, v in cover_config.items() if k in TRIGGER_ENTITY_OPTIONS},
         }
-        for key in TRIGGER_ENTITY_OPTIONS:
-            if key not in cover_config:
-                continue
-            trigger_entity_config[key] = cover_config[key]
 
         covers.append(
             CommandCover(

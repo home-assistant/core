@@ -55,11 +55,10 @@ async def async_setup_platform(
     if value_template := sensor_config.get(CONF_VALUE_TEMPLATE):
         value_template.hass = hass
 
-    trigger_entity_config = {CONF_NAME: Template(sensor_config[CONF_NAME], hass)}
-    for key in TRIGGER_ENTITY_OPTIONS:
-        if key not in sensor_config:
-            continue
-        trigger_entity_config[key] = sensor_config[key]
+    trigger_entity_config = {
+        CONF_NAME: Template(sensor_config[CONF_NAME], hass),
+        **{k: v for k, v in sensor_config.items() if k in TRIGGER_ENTITY_OPTIONS},
+    }
 
     async_add_entities(
         [

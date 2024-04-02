@@ -48,12 +48,9 @@ async def async_setup_platform(
             value_template.hass = hass
 
         trigger_entity_config = {
-            CONF_NAME: Template(switch_config.get(CONF_NAME, object_id), hass)
+            CONF_NAME: Template(switch_config.get(CONF_NAME, object_id), hass),
+            **{k: v for k, v in switch_config.items() if k in TRIGGER_ENTITY_OPTIONS},
         }
-        for key in TRIGGER_ENTITY_OPTIONS:
-            if key not in switch_config:
-                continue
-            trigger_entity_config[key] = switch_config[key]
 
         switches.append(
             CommandSwitch(

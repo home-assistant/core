@@ -58,12 +58,11 @@ async def async_setup_platform(
     data = CommandSensorData(hass, command, command_timeout)
 
     trigger_entity_config = {
-        CONF_NAME: Template(binary_sensor_config.get(CONF_NAME, DEFAULT_NAME), hass)
+        CONF_NAME: Template(binary_sensor_config.get(CONF_NAME, DEFAULT_NAME), hass),
+        **{
+            k: v for k, v in binary_sensor_config.items() if k in TRIGGER_ENTITY_OPTIONS
+        },
     }
-    for key in TRIGGER_ENTITY_OPTIONS:
-        if key not in binary_sensor_config:
-            continue
-        trigger_entity_config[key] = binary_sensor_config[key]
 
     async_add_entities(
         [
