@@ -14,8 +14,7 @@ from systembridgeconnector.exceptions import (
 )
 from systembridgeconnector.websocket_client import WebSocketClient
 from systembridgemodels.media_directories import MediaDirectory
-from systembridgemodels.media_files import MediaFile, MediaFiles
-from systembridgemodels.media_get_file import MediaGetFile
+from systembridgemodels.media_files import MediaFiles
 from systembridgemodels.media_get_files import MediaGetFiles
 from systembridgemodels.modules import GetData, RegisterDataListener
 from systembridgemodels.response import Response
@@ -98,19 +97,6 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
         """Get media files."""
         return await self.websocket_client.get_files(
             MediaGetFiles(
-                base=base,
-                path=path,
-            )
-        )
-
-    async def async_get_media_file(
-        self,
-        base: str,
-        path: str,
-    ) -> MediaFile | None:
-        """Get media file."""
-        return await self.websocket_client.get_file(
-            MediaGetFile(
                 base=base,
                 path=path,
             )
