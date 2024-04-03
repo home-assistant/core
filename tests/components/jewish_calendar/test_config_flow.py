@@ -1,11 +1,11 @@
 """Test the Jewish calendar config flow."""
+
 from unittest.mock import patch
 
 import pytest
 
 from homeassistant import config_entries, data_entry_flow, setup
-from homeassistant.components.jewish_calendar import config_flow
-from homeassistant.components.jewish_calendar.const import (
+from homeassistant.components.jewish_calendar import (
     CONF_CANDLE_LIGHT_MINUTES,
     CONF_DIASPORA,
     CONF_HAVDALAH_OFFSET_MINUTES,
@@ -13,10 +13,9 @@ from homeassistant.components.jewish_calendar.const import (
     DEFAULT_DIASPORA,
     DEFAULT_LANGUAGE,
     DOMAIN,
+    config_flow,
 )
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
-
-from tests.common import mock_coro
 
 
 async def test_step_user(hass):
@@ -28,16 +27,20 @@ async def test_step_user(hass):
     assert result["type"] == "form"
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.jewish_calendar.config_flow.validate_input",
-        return_value=mock_coro({"title": "Test Title"}),
-    ), patch(
-        "homeassistant.components.jewish_calendar.async_setup",
-        return_value=mock_coro(True),
-    ) as mock_setup, patch(
-        "homeassistant.components.jewish_calendar.async_setup_entry",
-        return_value=mock_coro(True),
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.jewish_calendar.config_flow.validate_input",
+            return_value={"title": "Test Title"},
+        ),
+        patch(
+            "homeassistant.components.jewish_calendar.async_setup",
+            return_value=True,
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.jewish_calendar.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {"name": "JCalendar", "diaspora": True, "language": "hebrew"},
