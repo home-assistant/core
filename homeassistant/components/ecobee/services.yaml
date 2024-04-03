@@ -99,6 +99,37 @@ set_fan_min_on_time:
           min: 0
           max: 60
           unit_of_measurement: minutes
+set_aux_cutover_threshold:
+  fields:
+    entity_id:
+      selector:
+        entity:
+          integration: ecobee
+          domain: climate
+    aux_cutover_threshold:
+      required: true
+      selector:
+        options:
+        - -25
+        - -20
+        - -15
+        - -10
+        - -50
+        - 00
+        - 50
+        - 10
+        - 15
+        - 20
+        - 25
+        - 30
+        - 35
+        - 40
+        - 45
+        - 50
+        - 55
+        - 60
+        - 65
+        unit_of_measurement: "°F"
 
 set_dst_mode:
   target:

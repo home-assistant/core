@@ -129,6 +129,20 @@
         }
       }
     },
+    "set_aux_cutover_threshold": {
+      "name": "Set the temperature at which aux heat takes over",
+      "description": "Sets the minimum temperature at which the compressor will be used to generate heat, and at which Emergency/Aux heat will take precence.",
+      "fields": {
+        "entity_id": {
+          "name": "Entity",
+          "description": "[%key:component::ecobee::services::resume_program::fields::entity_id::description%]"
+        },
+        "aux_cutover_threshold": {
+          "name": "[%key:component::ecobee::services::create_vacation::fields::aux_cutover_threshold::name%]",
+          "description": "New value of aux cutover temperature."
+        }
+      }
+    },
     "set_dst_mode": {
       "name": "Set Daylight savings time mode",
       "description": "Enables/disables automatic daylight savings time.",

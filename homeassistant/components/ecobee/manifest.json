@@ -1,6 +1,7 @@
 {
   "domain": "ecobee",
   "name": "ecobee",
+  "version":"0.0.1",
   "codeowners": [],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/ecobee",

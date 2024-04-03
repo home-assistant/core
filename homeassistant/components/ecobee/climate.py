@@ -43,6 +43,7 @@ ATTR_COOL_TEMP = "cool_temp"
 ATTR_END_DATE = "end_date"
 ATTR_END_TIME = "end_time"
 ATTR_FAN_MIN_ON_TIME = "fan_min_on_time"
+ATTR_AUX_CUTOVER_THRESHOLD = "aux_cutover_threshold"
 ATTR_FAN_MODE = "fan_mode"
 ATTR_HEAT_TEMP = "heat_temp"
 ATTR_RESUME_ALL = "resume_all"
@@ -112,6 +113,7 @@ SERVICE_CREATE_VACATION = "create_vacation"
 SERVICE_DELETE_VACATION = "delete_vacation"
 SERVICE_RESUME_PROGRAM = "resume_program"
 SERVICE_SET_FAN_MIN_ON_TIME = "set_fan_min_on_time"
+SERVICE_SET_AUX_CUTOVER_THRESHOLD = "set_aux_cutover_threshold"
 SERVICE_SET_DST_MODE = "set_dst_mode"
 SERVICE_SET_MIC_MODE = "set_mic_mode"
 SERVICE_SET_OCCUPANCY_MODES = "set_occupancy_modes"
@@ -167,6 +169,13 @@ SET_FAN_MIN_ON_TIME_SCHEMA = vol.Schema(
     {
         vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
         vol.Required(ATTR_FAN_MIN_ON_TIME): vol.Coerce(int),
+    }
+)
+
+SET_AUX_CUTOVER_THRESHOLD_SCHEMA = vol.Schema(
+    {
+        vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+        vol.Required(ATTR_AUX_CUTOVER_THRESHOLD): vol.All(vol.Coerce(int), vol.Any(-25,-20,-15,-10,-50,0,50,10,15,20,25,30,35,40,45,50,55,60,65))
     }
 )
 
@@ -246,6 +255,23 @@ async def async_setup_entry(
             thermostat.set_fan_min_on_time(str(fan_min_on_time))
 
             thermostat.schedule_update_ha_state(True)
+    
+    def aux_cutover_threshold_set_service(service: ServiceCall) -> None:
+        """Set the minimum fan on time on the target thermostats."""
+        entity_id = service.data.get(ATTR_ENTITY_ID)
+        aux_cutover_threshold = service.data[ATTR_AUX_CUTOVER_THRESHOLD]
+
+        if entity_id:
+            target_thermostats = [
+                entity for entity in entities if entity.entity_id in entity_id
+            ]
+        else:
+            target_thermostats = entities
+
+        for thermostat in target_thermostats:
+            thermostat.set_aux_cutover_threshold(aux_cutover_threshold)
+
+            thermostat.schedule_update_ha_state(True)
 
     def resume_program_set_service(service: ServiceCall) -> None:
         """Resume the program on the target thermostats."""
@@ -287,6 +313,13 @@ async def async_setup_entry(
 
     hass.services.async_register(
         DOMAIN,
+        SERVICE_SET_AUX_CUTOVER_THRESHOLD,
+        aux_cutover_threshold_set_service,
+        schema=SET_AUX_CUTOVER_THRESHOLD_SCHEMA,
+    )
+
+    hass.services.async_register(
+        DOMAIN,
         SERVICE_RESUME_PROGRAM,
         resume_program_set_service,
         schema=RESUME_PROGRAM_SCHEMA,
@@ -297,6 +330,7 @@ async def async_setup_entry(
         {vol.Required(ATTR_DST_ENABLED): cv.boolean},
         "set_dst_mode",
     )
+  
 
     platform.async_register_entity_service(
         SERVICE_SET_MIC_MODE,
@@ -545,14 +579,25 @@ class Thermostat(ClimateEntity):
     def extra_state_attributes(self):
         """Return device specific state attributes."""
         status = self.thermostat["equipmentStatus"]
-        return {
-            "fan": self.fan,
-            "climate_mode": self._preset_modes[
-                self.thermostat["program"]["currentClimateRef"]
-            ],
-            "equipment_running": status,
-            "fan_min_on_time": self.settings["fanMinOnTime"],
-        }
+        if self.has_aux_heat:
+            return {
+                "fan": self.fan,
+                "climate_mode": self._preset_modes[
+                    self.thermostat["program"]["currentClimateRef"]
+                ],
+                "equipment_running": status,
+                "fan_min_on_time": self.settings["fanMinOnTime"],
+                "aux_cutover_threshold": self.settings["compressorProtectionMinTemp"] / 10
+            }
+        else:
+            return {
+                "fan": self.fan,
+                "climate_mode": self._preset_modes[
+                    self.thermostat["program"]["currentClimateRef"]
+                ],
+                "equipment_running": status,
+                "fan_min_on_time": self.settings["fanMinOnTime"]
+           }
 
     @property
     def is_aux_heat(self) -> bool:
@@ -739,6 +784,11 @@ class Thermostat(ClimateEntity):
     def set_fan_min_on_time(self, fan_min_on_time):
         """Set the minimum fan on time."""
         self.data.ecobee.set_fan_min_on_time(self.thermostat_index, fan_min_on_time)
+        self.update_without_throttle = True
+
+    def set_aux_cutover_threshold(self, aux_cutover_threshold):
+        """Set the minimum fan on time."""
+        self.data.ecobee.set_aux_cutover_threshold(self.thermostat_index, aux_cutover_threshold)
         self.update_without_throttle = True
 
     def resume_program(self, resume_all):

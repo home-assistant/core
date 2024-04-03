@@ -336,6 +336,15 @@ async def test_set_fan_min_on_time(thermostat, data) -> None:
     thermostat.set_fan_min_on_time(20)
     data.ecobee.set_fan_min_on_time.assert_has_calls([mock.call(1, 20)])
 
+async def test_set_aux_cutover_threshold(thermostat, data) -> None:
+    """Test aux cutover threshold setter."""
+    data.reset_mock()
+    thermostat.set_aux_cutover_threshold(-20)
+    data.ecobee.set_aux_cutover_threshold.assert_has_calls([mock.call(1, -20)])
+    data.reset_mock()
+    thermostat.set_aux_cutover_threshold(20)
+    data.ecobee.set_aux_cutover_threshold.assert_has_calls([mock.call(1, 20)])
+
 
 async def test_resume_program(thermostat, data) -> None:
     """Test resume program."""
