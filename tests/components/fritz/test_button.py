@@ -2,7 +2,7 @@
 
 import copy
 from datetime import timedelta
-from unittest.mock import PropertyMock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -80,6 +80,7 @@ async def test_buttons(
 
 async def test_wol_button(
     hass: HomeAssistant,
+    entity_registry_enabled_by_default: None,
     fc_class_mock,
     fh_class_mock,
 ) -> None:
@@ -87,12 +88,8 @@ async def test_wol_button(
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
     entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.helpers.entity.Entity.entity_registry_enabled_default",
-        PropertyMock(return_value=True),
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     assert entry.state == ConfigEntryState.LOADED
 
@@ -117,6 +114,7 @@ async def test_wol_button(
 
 async def test_wol_button_new_device(
     hass: HomeAssistant,
+    entity_registry_enabled_by_default: None,
     fc_class_mock,
     fh_class_mock,
 ) -> None:
@@ -125,29 +123,24 @@ async def test_wol_button_new_device(
     entry.add_to_hass(hass)
 
     mesh_data = copy.deepcopy(MOCK_MESH_DATA)
-    with (
-        patch(
-            "homeassistant.helpers.entity.Entity.entity_registry_enabled_default",
-            PropertyMock(return_value=True),
-        ),
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-        assert entry.state == ConfigEntryState.LOADED
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert entry.state == ConfigEntryState.LOADED
 
-        assert hass.states.get("button.printer_wake_on_lan")
+    assert hass.states.get("button.printer_wake_on_lan")
 
-        mesh_data["nodes"].append(MOCK_NEW_DEVICE_NODE)
-        fh_class_mock.get_mesh_topology.return_value = mesh_data
+    mesh_data["nodes"].append(MOCK_NEW_DEVICE_NODE)
+    fh_class_mock.get_mesh_topology.return_value = mesh_data
 
-        async_fire_time_changed(hass, utcnow() + timedelta(seconds=60))
-        await hass.async_block_till_done(wait_background_tasks=True)
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=60))
+    await hass.async_block_till_done(wait_background_tasks=True)
 
-        assert hass.states.get("button.server_wake_on_lan")
+    assert hass.states.get("button.server_wake_on_lan")
 
 
 async def test_wol_button_absent_for_mesh_slave(
     hass: HomeAssistant,
+    entity_registry_enabled_by_default: None,
     fc_class_mock,
     fh_class_mock,
 ) -> None:
@@ -158,22 +151,18 @@ async def test_wol_button_absent_for_mesh_slave(
     slave_mesh_data = copy.deepcopy(MOCK_MESH_DATA)
     slave_mesh_data["nodes"][0]["mesh_role"] = MeshRoles.SLAVE
     fh_class_mock.get_mesh_topology.return_value = slave_mesh_data
-    with (
-        patch(
-            "homeassistant.helpers.entity.Entity.entity_registry_enabled_default",
-            PropertyMock(return_value=True),
-        ),
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-        assert entry.state == ConfigEntryState.LOADED
 
-        button = hass.states.get("button.printer_wake_on_lan")
-        assert button is None
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert entry.state == ConfigEntryState.LOADED
+
+    button = hass.states.get("button.printer_wake_on_lan")
+    assert button is None
 
 
 async def test_wol_button_absent_for_non_lan_device(
     hass: HomeAssistant,
+    entity_registry_enabled_by_default: None,
     fc_class_mock,
     fh_class_mock,
 ) -> None:
@@ -188,15 +177,10 @@ async def test_wol_button_absent_for_non_lan_device(
     printer_node_interface["type"] = "WLAN"
     printer_node_interface["node_links"][0]["node_interface_1_uid"] = "ni-230"
     fh_class_mock.get_mesh_topology.return_value = printer_wifi_data
-    with (
-        patch(
-            "homeassistant.helpers.entity.Entity.entity_registry_enabled_default",
-            PropertyMock(return_value=True),
-        ),
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-        assert entry.state == ConfigEntryState.LOADED
 
-        button = hass.states.get("button.printer_wake_on_lan")
-        assert button is None
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert entry.state == ConfigEntryState.LOADED
+
+    button = hass.states.get("button.printer_wake_on_lan")
+    assert button is None
