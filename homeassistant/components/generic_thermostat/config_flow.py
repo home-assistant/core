@@ -1,14 +1,16 @@
 """Config flow for the Generic Thermostat integration."""
+
 from __future__ import annotations
+
+from typing import Any
 
 import voluptuous as vol
 
 from homeassistant.components.climate import HVACMode
 from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.config_entries import ConfigEntry, ConfigFlow
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import PRECISION_HALVES, PRECISION_TENTHS, PRECISION_WHOLE
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import selector
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaFlowFormStep,
@@ -37,15 +39,17 @@ from .const import (
 )
 
 CONF_PRECISION_LIST = [
-    selector.SelectOptionDict(value=str(PRECISION_TENTHS), label=str(PRECISION_TENTHS)),
-    selector.SelectOptionDict(value=str(PRECISION_HALVES), label=str(PRECISION_HALVES)),
-    selector.SelectOptionDict(value=str(PRECISION_WHOLE), label=str(PRECISION_WHOLE)),
+    str(PRECISION_TENTHS),
+    str(PRECISION_HALVES),
+    str(PRECISION_WHOLE),
 ]
 
 OPTIONS_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_AC_MODE): bool,
-        vol.Optional(CONF_MAX_TEMP): float,
+        vol.Optional(CONF_AC_MODE, default=False): selector.BooleanSelector(),
+        vol.Optional(CONF_MAX_TEMP): selector.NumberSelector(
+            selector.NumberSelectorConfig(mode=selector.NumberSelectorMode.BOX)
+        ),
         vol.Optional(CONF_MIN_TEMP, default=DEFAULT_MIN_TEMP): float,
         vol.Optional(CONF_MIN_DUR): selector.DurationSelector(
             selector.DurationSelectorConfig()
@@ -96,7 +100,9 @@ class GenericThermostatConfigFlow(ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return SchemaOptionsFlowHandler(config_entry, OPTIONS_FLOW)
 
-    async def async_step_user(self, user_input=None) -> FlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle the form."""
         if user_input is None:
             return self.async_show_form(
