@@ -110,6 +110,11 @@ class EcobeeHumidifier(HumidifierEntity):
         """Return the desired humidity set point."""
         return int(self.thermostat["runtime"]["desiredHumidity"])
 
+    @property
+    def current_humidity(self) -> int | None:
+        """Return the current humidity."""
+        return int(self.thermostat["runtime"]["actualHumidity"])
+
     def set_mode(self, mode):
         """Set humidifier mode (auto, off, manual)."""
         if mode.lower() not in (self.available_modes):
