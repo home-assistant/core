@@ -147,6 +147,7 @@ async def test_alarm_create_delete(
     two_alarms = copy(alarm_clock_extended.ListAlarms.return_value)
 
     await async_setup_sonos()
+    await hass.async_block_till_done()
 
     assert "switch.sonos_alarm_14" in entity_registry.entities
     assert "switch.sonos_alarm_15" not in entity_registry.entities
