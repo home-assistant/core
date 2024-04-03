@@ -87,7 +87,7 @@ async def test_form_errors(hass: HomeAssistant, side_effect, error, mock_test) -
         result2["flow_id"],
         CONFIG,
     )
-    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_reauth(hass: HomeAssistant, mock_test) -> None:
