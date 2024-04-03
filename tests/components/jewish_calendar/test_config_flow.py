@@ -16,9 +16,10 @@ from homeassistant.components.jewish_calendar import (
     config_flow,
 )
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
+from homeassistant.core import HomeAssistant
 
 
-async def test_step_user(hass):
+async def test_step_user(hass: HomeAssistant) -> None:
     """Test user config."""
     await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
@@ -28,10 +29,6 @@ async def test_step_user(hass):
     assert result["errors"] == {}
 
     with (
-        patch(
-            "homeassistant.components.jewish_calendar.config_flow.validate_input",
-            return_value={"title": "Test Title"},
-        ),
         patch(
             "homeassistant.components.jewish_calendar.async_setup",
             return_value=True,
@@ -46,12 +43,18 @@ async def test_step_user(hass):
             {"name": "JCalendar", "diaspora": True, "language": "hebrew"},
         )
 
-    assert result2["type"] == "form"
-    assert result2["title"] == "Test Title"
+    assert result2["type"] == "create_entry"
+    assert result2["title"] == "JCalendar"
     assert result2["data"] == {
         "name": "JCalendar",
         "diaspora": True,
         "language": "hebrew",
+        "location": {
+            "latitude": hass.config.latitude,
+            "longitude": hass.config.longitude,
+        },
+        "elevation": hass.config.elevation,
+        "time_zone": hass.config.time_zone,
     }
 
     await hass.async_block_till_done()
@@ -61,7 +64,7 @@ async def test_step_user(hass):
 
 @pytest.mark.parametrize("diaspora", [True, False])
 @pytest.mark.parametrize("language", ["hebrew", "english"])
-async def test_step_import_no_options(hass, language, diaspora):
+async def test_step_import_no_options(hass: HomeAssistant, language, diaspora) -> None:
     """Test that the import step works."""
     conf = {
         DOMAIN: {CONF_NAME: "test", CONF_LANGUAGE: language, CONF_DIASPORA: diaspora}
@@ -80,7 +83,7 @@ async def test_step_import_no_options(hass, language, diaspora):
     }
 
 
-async def test_step_import_with_options(hass):
+async def test_step_import_with_options(hass: HomeAssistant) -> None:
     """Test that the import step works."""
     conf = {
         DOMAIN: {
