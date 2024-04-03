@@ -5,7 +5,7 @@ from unittest.mock import patch
 from pyotgw.vars import OTGW, OTGW_ABOUT
 from serial import SerialException
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components.opentherm_gw.const import (
     CONF_FLOOR_TEMP,
     CONF_PRECISION,
@@ -22,6 +22,7 @@ from homeassistant.const import (
     PRECISION_TENTHS,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
@@ -241,7 +242,7 @@ async def test_options_migration(hass: HomeAssistant) -> None:
             entry.entry_id, context={"source": config_entries.SOURCE_USER}, data=None
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "init"
 
         result = await hass.config_entries.options.async_configure(
@@ -249,7 +250,7 @@ async def test_options_migration(hass: HomeAssistant) -> None:
             user_input={},
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["data"][CONF_READ_PRECISION] == PRECISION_TENTHS
         assert result["data"][CONF_SET_PRECISION] == PRECISION_TENTHS
         assert result["data"][CONF_FLOOR_TEMP] is True
@@ -281,7 +282,7 @@ async def test_options_form(hass: HomeAssistant) -> None:
     result = await hass.config_entries.options.async_init(
         entry.entry_id, context={"source": "test"}, data=None
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
@@ -294,7 +295,7 @@ async def test_options_form(hass: HomeAssistant) -> None:
         },
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_READ_PRECISION] == PRECISION_HALVES
     assert result["data"][CONF_SET_PRECISION] == PRECISION_HALVES
     assert result["data"][CONF_TEMPORARY_OVRD_MODE] is True
@@ -308,7 +309,7 @@ async def test_options_form(hass: HomeAssistant) -> None:
         result["flow_id"], user_input={CONF_READ_PRECISION: 0}
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_READ_PRECISION] == 0.0
     assert result["data"][CONF_SET_PRECISION] == PRECISION_HALVES
     assert result["data"][CONF_TEMPORARY_OVRD_MODE] is True
@@ -328,7 +329,7 @@ async def test_options_form(hass: HomeAssistant) -> None:
         },
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_READ_PRECISION] == PRECISION_TENTHS
     assert result["data"][CONF_SET_PRECISION] == PRECISION_HALVES
     assert result["data"][CONF_TEMPORARY_OVRD_MODE] is False

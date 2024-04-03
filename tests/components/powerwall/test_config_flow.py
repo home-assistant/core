@@ -321,7 +321,7 @@ async def test_dhcp_discovery_cannot_connect(hass: HomeAssistant) -> None:
                 hostname="00GGX",
             ),
         )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
 
 
@@ -399,7 +399,7 @@ async def test_dhcp_discovery_update_ip_address(hass: HomeAssistant) -> None:
             ),
         )
         await hass.async_block_till_done()
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert entry.data[CONF_IP_ADDRESS] == "1.1.1.1"
 
@@ -436,7 +436,7 @@ async def test_dhcp_discovery_does_not_update_ip_when_auth_fails(
             ),
         )
         await hass.async_block_till_done()
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert entry.data[CONF_IP_ADDRESS] == "1.2.3.4"
 
@@ -473,7 +473,7 @@ async def test_dhcp_discovery_does_not_update_ip_when_auth_successful(
             ),
         )
         await hass.async_block_till_done()
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert entry.data[CONF_IP_ADDRESS] == "1.2.3.4"
 
@@ -508,7 +508,7 @@ async def test_dhcp_discovery_updates_unique_id(hass: HomeAssistant) -> None:
             ),
         )
         await hass.async_block_till_done()
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert entry.data[CONF_IP_ADDRESS] == "1.2.3.4"
     assert entry.unique_id == MOCK_GATEWAY_DIN
@@ -547,7 +547,7 @@ async def test_dhcp_discovery_updates_unique_id_when_entry_is_failed(
             ),
         )
         await hass.async_block_till_done()
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert entry.data[CONF_IP_ADDRESS] == "1.2.3.4"
     assert entry.unique_id == MOCK_GATEWAY_DIN
@@ -586,7 +586,7 @@ async def test_discovered_wifi_does_not_update_ip_if_is_still_online(
             ),
         )
         await hass.async_block_till_done()
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert entry.data[CONF_IP_ADDRESS] == "1.2.3.4"
 
@@ -635,6 +635,6 @@ async def test_discovered_wifi_does_not_update_ip_online_but_access_denied(
             ),
         )
         await hass.async_block_till_done()
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert entry.data[CONF_IP_ADDRESS] == "1.2.3.4"

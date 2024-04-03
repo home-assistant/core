@@ -5,10 +5,11 @@ from unittest.mock import patch
 from aiohttp import ClientConnectionError
 import faadelays
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components.faa_delays.const import DOMAIN
 from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import HomeAssistantError
 
 from tests.common import MockConfigEntry
@@ -61,7 +62,7 @@ async def test_duplicate_error(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=conf
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 

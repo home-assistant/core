@@ -6,6 +6,7 @@ from unittest.mock import ANY, patch
 
 import pytest
 
+from homeassistant.components import conversation
 from homeassistant.components.assist_pipeline.const import DOMAIN
 from homeassistant.components.assist_pipeline.pipeline import (
     STORAGE_KEY,
@@ -117,6 +118,7 @@ async def test_loading_pipelines_from_storage(
     hass: HomeAssistant, hass_storage: dict[str, Any]
 ) -> None:
     """Test loading stored pipelines on start."""
+    id_1 = "01GX8ZWBAQYWNB1XV3EXEZ75DY"
     hass_storage[STORAGE_KEY] = {
         "version": STORAGE_VERSION,
         "minor_version": STORAGE_VERSION_MINOR,
@@ -124,9 +126,9 @@ async def test_loading_pipelines_from_storage(
         "data": {
             "items": [
                 {
-                    "conversation_engine": "conversation_engine_1",
+                    "conversation_engine": conversation.OLD_HOME_ASSISTANT_AGENT,
                     "conversation_language": "language_1",
-                    "id": "01GX8ZWBAQYWNB1XV3EXEZ75DY",
+                    "id": id_1,
                     "language": "language_1",
                     "name": "name_1",
                     "stt_engine": "stt_engine_1",
@@ -166,7 +168,7 @@ async def test_loading_pipelines_from_storage(
                     "wake_word_id": "wakeword_id_3",
                 },
             ],
-            "preferred_item": "01GX8ZWBAQYWNB1XV3EXEZ75DY",
+            "preferred_item": id_1,
         },
     }
 
@@ -175,7 +177,8 @@ async def test_loading_pipelines_from_storage(
     pipeline_data: PipelineData = hass.data[DOMAIN]
     store = pipeline_data.pipeline_store
     assert len(store.data) == 3
-    assert store.async_get_preferred_item() == "01GX8ZWBAQYWNB1XV3EXEZ75DY"
+    assert store.async_get_preferred_item() == id_1
+    assert store.data[id_1].conversation_engine == conversation.HOME_ASSISTANT_AGENT
 
 
 async def test_migrate_pipeline_store(
@@ -262,7 +265,7 @@ async def test_create_default_pipeline(
         tts_engine_id="test",
         pipeline_name="Test pipeline",
     ) == Pipeline(
-        conversation_engine="homeassistant",
+        conversation_engine="conversation.home_assistant",
         conversation_language="en",
         id=ANY,
         language="en",
@@ -304,7 +307,7 @@ async def test_get_pipelines(hass: HomeAssistant) -> None:
     pipelines = async_get_pipelines(hass)
     assert list(pipelines) == [
         Pipeline(
-            conversation_engine="homeassistant",
+            conversation_engine="conversation.home_assistant",
             conversation_language="en",
             id=ANY,
             language="en",
@@ -351,7 +354,7 @@ async def test_default_pipeline_no_stt_tts(
     # Check the default pipeline
     pipeline = async_get_pipeline(hass, None)
     assert pipeline == Pipeline(
-        conversation_engine="homeassistant",
+        conversation_engine="conversation.home_assistant",
         conversation_language=conv_language,
         id=pipeline.id,
         language=pipeline_language,
@@ -414,7 +417,7 @@ async def test_default_pipeline(
     # Check the default pipeline
     pipeline = async_get_pipeline(hass, None)
     assert pipeline == Pipeline(
-        conversation_engine="homeassistant",
+        conversation_engine="conversation.home_assistant",
         conversation_language=conv_language,
         id=pipeline.id,
         language=pipeline_language,
@@ -445,7 +448,7 @@ async def test_default_pipeline_unsupported_stt_language(
     # Check the default pipeline
     pipeline = async_get_pipeline(hass, None)
     assert pipeline == Pipeline(
-        conversation_engine="homeassistant",
+        conversation_engine="conversation.home_assistant",
         conversation_language="en",
         id=pipeline.id,
         language="en",
@@ -476,7 +479,7 @@ async def test_default_pipeline_unsupported_tts_language(
     # Check the default pipeline
     pipeline = async_get_pipeline(hass, None)
     assert pipeline == Pipeline(
-        conversation_engine="homeassistant",
+        conversation_engine="conversation.home_assistant",
         conversation_language="en",
         id=pipeline.id,
         language="en",
@@ -502,7 +505,7 @@ async def test_update_pipeline(
     pipelines = list(pipelines)
     assert pipelines == [
         Pipeline(
-            conversation_engine="homeassistant",
+            conversation_engine="conversation.home_assistant",
             conversation_language="en",
             id=ANY,
             language="en",

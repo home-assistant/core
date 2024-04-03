@@ -6,7 +6,7 @@ from unittest.mock import DEFAULT, AsyncMock, PropertyMock, patch
 import blebox_uniapi
 import pytest
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components import zeroconf
 from homeassistant.components.blebox import config_flow
 from homeassistant.const import CONF_IP_ADDRESS
@@ -189,7 +189,7 @@ async def test_already_configured(hass: HomeAssistant, valid_feature_mock) -> No
         context={"source": config_entries.SOURCE_USER},
         data={config_flow.CONF_HOST: "172.2.3.4", config_flow.CONF_PORT: 80},
     )
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "address_already_configured"
 
 
@@ -238,13 +238,13 @@ async def test_flow_with_zeroconf(hass: HomeAssistant) -> None:
         ),
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
 
     with patch("homeassistant.components.blebox.async_setup_entry", return_value=True):
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["data"] == {"host": "172.100.123.4", "port": 80}
 
 
@@ -278,7 +278,7 @@ async def test_flow_with_zeroconf_when_already_configured(hass: HomeAssistant) -
             ),
         )
 
-        assert result2["type"] == FlowResultType.ABORT
+        assert result2["type"] is FlowResultType.ABORT
         assert result2["reason"] == "already_configured"
 
 
@@ -301,7 +301,7 @@ async def test_flow_with_zeroconf_when_device_unsupported(hass: HomeAssistant) -
                 properties={"_raw": {}},
             ),
         )
-        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "unsupported_device_version"
 
 
@@ -327,5 +327,5 @@ async def test_flow_with_zeroconf_when_device_response_unsupported(
                 properties={"_raw": {}},
             ),
         )
-        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "unsupported_device_response"

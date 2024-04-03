@@ -9,7 +9,7 @@ from pylutron_caseta.pairing import PAIR_CA, PAIR_CERT, PAIR_KEY
 from pylutron_caseta.smartbridge import Smartbridge
 import pytest
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components import zeroconf
 from homeassistant.components.lutron_caseta import DOMAIN
 import homeassistant.components.lutron_caseta.config_flow as CasetaConfigFlow
@@ -22,6 +22,7 @@ from homeassistant.components.lutron_caseta.const import (
 )
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from . import ENTRY_MOCK_DATA, MockBridge
 
@@ -107,7 +108,7 @@ async def test_bridge_cannot_connect(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == CasetaConfigFlow.ABORT_REASON_CANNOT_CONNECT
 
 
@@ -130,7 +131,7 @@ async def test_bridge_cannot_connect_unknown_error(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == CasetaConfigFlow.ABORT_REASON_CANNOT_CONNECT
 
 
@@ -150,7 +151,7 @@ async def test_bridge_invalid_ssl_error(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == CasetaConfigFlow.ABORT_REASON_CANNOT_CONNECT
 
 
@@ -171,7 +172,7 @@ async def test_duplicate_bridge_import(hass: HomeAssistant) -> None:
             data=ENTRY_MOCK_DATA,
         )
 
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert len(mock_setup_entry.mock_calls) == 0
 

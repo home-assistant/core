@@ -202,7 +202,7 @@ async def test_no_appliances_flow(hass: HomeAssistant, region, brand) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == config_entries.SOURCE_USER
 
     with (
@@ -222,7 +222,7 @@ async def test_no_appliances_flow(hass: HomeAssistant, region, brand) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "no_appliances"}
 
 
@@ -246,7 +246,7 @@ async def test_reauth_flow(hass: HomeAssistant, region, brand) -> None:
     )
 
     assert result["step_id"] == "reauth_confirm"
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     with (
@@ -274,7 +274,7 @@ async def test_reauth_flow(hass: HomeAssistant, region, brand) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.ABORT
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
     assert mock_entry.data == {
         CONF_USERNAME: "test-username",
@@ -310,7 +310,7 @@ async def test_reauth_flow_auth_error(hass: HomeAssistant, region, brand) -> Non
     )
 
     assert result["step_id"] == "reauth_confirm"
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
     with (
         patch(
@@ -329,7 +329,7 @@ async def test_reauth_flow_auth_error(hass: HomeAssistant, region, brand) -> Non
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
@@ -356,7 +356,7 @@ async def test_reauth_flow_connnection_error(
     )
 
     assert result["step_id"] == "reauth_confirm"
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     with (
@@ -379,5 +379,5 @@ async def test_reauth_flow_connnection_error(
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
