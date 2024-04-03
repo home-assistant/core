@@ -142,7 +142,7 @@ async def test_no_plants_on_account(hass: HomeAssistant) -> None:
             result["flow_id"], SUNWEG_USER_INPUT
         )
 
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_plants"
 
 
@@ -219,5 +219,5 @@ async def test_existing_plant_configured(hass: HomeAssistant, plant_fixture) -> 
             result["flow_id"], SUNWEG_USER_INPUT
         )
 
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"

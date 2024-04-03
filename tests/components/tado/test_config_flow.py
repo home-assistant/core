@@ -176,7 +176,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
             {"username": "test-username", "password": "test-password"},
         )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_auth"}
 
 
@@ -199,7 +199,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
             {"username": "test-username", "password": "test-password"},
         )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -220,7 +220,7 @@ async def test_no_homes(hass: HomeAssistant) -> None:
             {"username": "test-username", "password": "test-password"},
         )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "no_homes"}
 
 
@@ -240,7 +240,7 @@ async def test_form_homekit(hass: HomeAssistant) -> None:
             type="mock_type",
         ),
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
     flow = next(
         flow
@@ -267,7 +267,7 @@ async def test_form_homekit(hass: HomeAssistant) -> None:
             type="mock_type",
         ),
     )
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
 
 
 async def test_import_step(hass: HomeAssistant) -> None:
