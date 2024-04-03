@@ -365,7 +365,7 @@ aiotankerkoenig==0.4.1
 aiotractive==0.5.6
 
 # homeassistant.components.unifi
-aiounifi==73
+aiounifi==74
 
 # homeassistant.components.vlc_telnet
 aiovlc==0.1.0
@@ -709,7 +709,7 @@ fivem-api==0.1.2
 fjaraskupan==2.3.0
 
 # homeassistant.components.flexit_bacnet
-flexit_bacnet==2.1.0
+flexit_bacnet==2.2.1
 
 # homeassistant.components.flipr
 flipr-api==1.5.1
@@ -877,13 +877,13 @@ hole==0.8.0
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.45
+holidays==0.46
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240329.1
+home-assistant-frontend==20240403.1
 
 # homeassistant.components.conversation
-home-assistant-intents==2024.3.29
+home-assistant-intents==2024.4.3
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2
@@ -1180,7 +1180,7 @@ openerz-api==0.3.0
 openhomedevice==2.2.0
 
 # homeassistant.components.opower
-opower==0.4.1
+opower==0.4.2
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
@@ -1894,7 +1894,7 @@ reolink-aio==0.8.9
 rflink==0.0.66
 
 # homeassistant.components.ring
-ring-doorbell[listen]==0.8.8
+ring-doorbell[listen]==0.8.9
 
 # homeassistant.components.roku
 rokuecp==0.19.2
@@ -1903,7 +1903,7 @@ rokuecp==0.19.2
 romy==0.0.9
 
 # homeassistant.components.roomba
-roombapy==1.6.13
+roombapy==1.8.1
 
 # homeassistant.components.roon
 roonapi==0.1.6
@@ -1985,7 +1985,7 @@ soco==0.30.2
 solaredge==0.0.2
 
 # homeassistant.components.solax
-solax==0.3.2
+solax==3.1.0
 
 # homeassistant.components.somfy_mylink
 somfy-mylink-synergy==1.0.6
@@ -2201,7 +2201,7 @@ webmin-xmlrpc==0.0.2
 webrtc-noise-gain==1.2.3
 
 # homeassistant.components.whirlpool
-whirlpool-sixth-sense==0.18.6
+whirlpool-sixth-sense==0.18.7
 
 # homeassistant.components.whois
 whois==0.9.27
@@ -2246,7 +2246,7 @@ yalesmartalarmclient==0.3.9
 yalexs-ble==2.4.2
 
 # homeassistant.components.august
-yalexs==2.0.0
+yalexs==3.0.1
 
 # homeassistant.components.yeelight
 yeelight==0.7.14
@@ -2267,7 +2267,7 @@ yt-dlp==2024.03.10
 zamg==0.3.6
 
 # homeassistant.components.zeroconf
-zeroconf==0.131.0
+zeroconf==0.132.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1
