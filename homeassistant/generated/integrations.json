@@ -3754,7 +3754,7 @@
           "integration_type": "device",
           "config_flow": true,
           "iot_class": "assumed_state",
-          "name": "Motionblinds BLE"
+          "name": "Motionblinds Bluetooth"
         }
       }
     },
