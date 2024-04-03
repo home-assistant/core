@@ -1,12 +1,12 @@
 """Config flow to configure WiLight."""
+
 from urllib.parse import urlparse
 
 import pywilight
 
 from homeassistant.components import ssdp
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
-from homeassistant.data_entry_flow import FlowResult
 
 from . import DOMAIN
 
@@ -50,7 +50,9 @@ class WiLightFlowHandler(ConfigFlow, domain=DOMAIN):
         }
         return self.async_create_entry(title=self._title, data=data)
 
-    async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
+    async def async_step_ssdp(
+        self, discovery_info: ssdp.SsdpServiceInfo
+    ) -> ConfigFlowResult:
         """Handle a discovered WiLight."""
         # Filter out basic information
         if (

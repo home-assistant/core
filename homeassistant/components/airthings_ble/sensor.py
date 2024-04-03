@@ -1,4 +1,5 @@
 """Support for airthings ble sensors."""
+
 from __future__ import annotations
 
 import dataclasses
@@ -50,12 +51,14 @@ SENSORS_MAPPING_TEMPLATE: dict[str, SensorEntityDescription] = {
         key="radon_1day_avg",
         translation_key="radon_1day_avg",
         native_unit_of_measurement=VOLUME_BECQUEREL,
+        suggested_display_precision=0,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "radon_longterm_avg": SensorEntityDescription(
         key="radon_longterm_avg",
         translation_key="radon_longterm_avg",
         native_unit_of_measurement=VOLUME_BECQUEREL,
+        suggested_display_precision=0,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "radon_1day_level": SensorEntityDescription(
@@ -80,7 +83,7 @@ SENSORS_MAPPING_TEMPLATE: dict[str, SensorEntityDescription] = {
     ),
     "pressure": SensorEntityDescription(
         key="pressure",
-        device_class=SensorDeviceClass.PRESSURE,
+        device_class=SensorDeviceClass.ATMOSPHERIC_PRESSURE,
         native_unit_of_measurement=UnitOfPressure.MBAR,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -168,6 +171,7 @@ async def async_setup_entry(
             sensors_mapping[key] = dataclasses.replace(
                 val,
                 native_unit_of_measurement=VOLUME_PICOCURIE,
+                suggested_display_precision=1,
             )
 
     entities = []

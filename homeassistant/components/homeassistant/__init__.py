@@ -1,4 +1,5 @@
 """Integration providing core pieces of infrastructure."""
+
 import asyncio
 from collections.abc import Callable, Coroutine
 import itertools as it
@@ -34,6 +35,11 @@ from homeassistant.helpers.service import (
 from homeassistant.helpers.template import async_load_custom_templates
 from homeassistant.helpers.typing import ConfigType
 
+# The scene integration will do a late import of scene
+# so we want to make sure its loaded with the component
+# so its already in memory when its imported so the import
+# does not do blocking I/O in the event loop.
+from . import scene as scene_pre_import  # noqa: F401
 from .const import (
     DATA_EXPOSED_ENTITIES,
     DATA_STOP_HANDLER,

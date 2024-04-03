@@ -1,4 +1,5 @@
 """Test fixtures for calendar sensor platforms."""
+
 from collections.abc import Generator
 import datetime
 import secrets

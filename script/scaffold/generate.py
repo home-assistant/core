@@ -1,4 +1,5 @@
 """Generate an integration."""
+
 from pathlib import Path
 
 from .model import Info

@@ -1,4 +1,5 @@
 """Support for Logitech UE Smart Radios."""
+
 from __future__ import annotations
 
 import logging

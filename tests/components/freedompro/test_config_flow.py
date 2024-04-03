@@ -1,4 +1,5 @@
 """Define tests for the Freedompro config flow."""
+
 from unittest.mock import patch
 
 import pytest

@@ -1,4 +1,5 @@
 """Support for Broadlink climate devices."""
+
 from typing import Any
 
 from homeassistant.components.climate import (

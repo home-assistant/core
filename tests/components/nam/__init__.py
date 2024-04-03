@@ -1,4 +1,5 @@
 """Tests for the Nettigo Air Monitor integration."""
+
 from unittest.mock import AsyncMock, Mock, patch
 
 from homeassistant.components.nam.const import DOMAIN
@@ -57,9 +58,12 @@ async def init_integration(hass, co2_sensor=True) -> MockConfigEntry:
 
     update_response = Mock(json=AsyncMock(return_value=nam_data))
 
-    with patch("homeassistant.components.nam.NettigoAirMonitor.initialize"), patch(
-        "homeassistant.components.nam.NettigoAirMonitor._async_http_request",
-        return_value=update_response,
+    with (
+        patch("homeassistant.components.nam.NettigoAirMonitor.initialize"),
+        patch(
+            "homeassistant.components.nam.NettigoAirMonitor._async_http_request",
+            return_value=update_response,
+        ),
     ):
         entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)

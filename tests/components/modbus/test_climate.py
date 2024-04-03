@@ -1,4 +1,5 @@
 """The tests for the Modbus climate component."""
+
 import pytest
 
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN

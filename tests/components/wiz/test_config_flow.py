@@ -1,4 +1,5 @@
 """Test the WiZ Platform config flow."""
+
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -51,12 +52,16 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["type"] == "form"
     assert result["errors"] == {}
     # Patch functions
-    with _patch_wizlight(), patch(
-        "homeassistant.components.wiz.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry, patch(
-        "homeassistant.components.wiz.async_setup", return_value=True
-    ) as mock_setup:
+    with (
+        _patch_wizlight(),
+        patch(
+            "homeassistant.components.wiz.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+        patch(
+            "homeassistant.components.wiz.async_setup", return_value=True
+        ) as mock_setup,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             TEST_CONNECTION,
@@ -89,12 +94,16 @@ async def test_user_flow_enters_dns_name(hass: HomeAssistant) -> None:
     assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "no_ip"}
 
-    with _patch_wizlight(), patch(
-        "homeassistant.components.wiz.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry, patch(
-        "homeassistant.components.wiz.async_setup", return_value=True
-    ) as mock_setup:
+    with (
+        _patch_wizlight(),
+        patch(
+            "homeassistant.components.wiz.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+        patch(
+            "homeassistant.components.wiz.async_setup", return_value=True
+        ) as mock_setup,
+    ):
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
             TEST_CONNECTION,
@@ -264,14 +273,18 @@ async def test_discovered_by_dhcp_or_integration_discovery(
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "discovery_confirm"
 
-    with _patch_wizlight(
-        device=None, extended_white_range=extended_white_range, bulb_type=bulb_type
-    ), patch(
-        "homeassistant.components.wiz.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry, patch(
-        "homeassistant.components.wiz.async_setup", return_value=True
-    ) as mock_setup:
+    with (
+        _patch_wizlight(
+            device=None, extended_white_range=extended_white_range, bulb_type=bulb_type
+        ),
+        patch(
+            "homeassistant.components.wiz.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+        patch(
+            "homeassistant.components.wiz.async_setup", return_value=True
+        ) as mock_setup,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {},
@@ -379,11 +392,15 @@ async def test_setup_via_discovery(hass: HomeAssistant) -> None:
     assert result2["step_id"] == "pick_device"
     assert not result2["errors"]
 
-    with _patch_wizlight(), patch(
-        "homeassistant.components.wiz.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.wiz.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
+    with (
+        _patch_wizlight(),
+        patch(
+            "homeassistant.components.wiz.async_setup", return_value=True
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.wiz.async_setup_entry", return_value=True
+        ) as mock_setup_entry,
+    ):
         result3 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_DEVICE: FAKE_MAC},
@@ -432,10 +449,13 @@ async def test_setup_via_discovery_cannot_connect(hass: HomeAssistant) -> None:
     assert result2["step_id"] == "pick_device"
     assert not result2["errors"]
 
-    with patch(
-        "homeassistant.components.wiz.wizlight.getBulbConfig",
-        side_effect=WizLightTimeOutError,
-    ), _patch_discovery():
+    with (
+        patch(
+            "homeassistant.components.wiz.wizlight.getBulbConfig",
+            side_effect=WizLightTimeOutError,
+        ),
+        _patch_discovery(),
+    ):
         result3 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_DEVICE: FAKE_MAC},
@@ -488,15 +508,19 @@ async def test_discovery_with_firmware_update(hass: HomeAssistant) -> None:
     # updates and we now can see its really RGBWW not RGBW since the older
     # firmwares did not tell us how many white channels exist
 
-    with patch(
-        "homeassistant.components.wiz.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry, patch(
-        "homeassistant.components.wiz.async_setup", return_value=True
-    ) as mock_setup, _patch_wizlight(
-        device=None,
-        extended_white_range=FAKE_EXTENDED_WHITE_RANGE,
-        bulb_type=FAKE_RGBWW_BULB,
+    with (
+        patch(
+            "homeassistant.components.wiz.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+        patch(
+            "homeassistant.components.wiz.async_setup", return_value=True
+        ) as mock_setup,
+        _patch_wizlight(
+            device=None,
+            extended_white_range=FAKE_EXTENDED_WHITE_RANGE,
+            bulb_type=FAKE_RGBWW_BULB,
+        ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -522,13 +546,18 @@ async def test_discovery_with_firmware_update(hass: HomeAssistant) -> None:
 )
 async def test_discovered_during_onboarding(hass: HomeAssistant, source, data) -> None:
     """Test dhcp or discovery during onboarding creates the config entry."""
-    with _patch_wizlight(), patch(
-        "homeassistant.components.wiz.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry, patch(
-        "homeassistant.components.wiz.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.onboarding.async_is_onboarded", return_value=False
+    with (
+        _patch_wizlight(),
+        patch(
+            "homeassistant.components.wiz.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+        patch(
+            "homeassistant.components.wiz.async_setup", return_value=True
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.onboarding.async_is_onboarded", return_value=False
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": source}, data=data

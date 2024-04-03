@@ -1,4 +1,5 @@
 """Tests for the Device Registry."""
+
 from collections.abc import Iterable
 from contextlib import AbstractContextManager, nullcontext
 import time
@@ -2303,7 +2304,7 @@ async def test_entries_for_label(
         "placeholders",
         "expected_device_name",
     ),
-    (
+    [
         (None, None, None, "Device Bla"),
         (
             "test_device",
@@ -2333,7 +2334,7 @@ async def test_entries_for_label(
             {"placeholder": "special"},
             "English dev special",
         ),
-    ),
+    ],
 )
 async def test_device_name_translation_placeholders(
     hass: HomeAssistant,
@@ -2380,7 +2381,7 @@ async def test_device_name_translation_placeholders(
         "expectation",
         "expected_error",
     ),
-    (
+    [
         (
             "test_device",
             {
@@ -2425,7 +2426,7 @@ async def test_device_name_translation_placeholders(
                 "not match the name '{placeholder} English dev'"
             ),
         ),
-    ),
+    ],
 )
 async def test_device_name_translation_placeholders_errors(
     hass: HomeAssistant,
@@ -2452,13 +2453,17 @@ async def test_device_name_translation_placeholders_errors(
 
     config_entry_1 = MockConfigEntry()
     config_entry_1.add_to_hass(hass)
-    with patch(
-        "homeassistant.helpers.device_registry.translation.async_get_cached_translations",
-        side_effect=async_get_cached_translations,
-    ), patch(
-        "homeassistant.helpers.device_registry.get_release_channel",
-        return_value=release_channel,
-    ), expectation:
+    with (
+        patch(
+            "homeassistant.helpers.device_registry.translation.async_get_cached_translations",
+            side_effect=async_get_cached_translations,
+        ),
+        patch(
+            "homeassistant.helpers.device_registry.get_release_channel",
+            return_value=release_channel,
+        ),
+        expectation,
+    ):
         device_registry.async_get_or_create(
             config_entry_id=config_entry_1.entry_id,
             connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},

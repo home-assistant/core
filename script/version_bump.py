@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Helper script to bump the current version."""
+
 import argparse
 import re
 import subprocess
@@ -23,7 +24,9 @@ def _bump_release(release, bump_type):
     return major, minor, patch
 
 
-def bump_version(version, bump_type):
+def bump_version(
+    version: Version, bump_type: str, *, nightly_version: str | None = None
+) -> Version:
     """Return a new version given a current version and action."""
     to_change = {}
 
@@ -82,14 +85,23 @@ def bump_version(version, bump_type):
             to_change["pre"] = ("b", 0)
 
     elif bump_type == "nightly":
-        # Convert 0.70.0d0 to 0.70.0d20190424, fails when run on non dev release
+        # Convert 0.70.0d0 to 0.70.0d201904241254, fails when run on non dev release
         if not version.is_devrelease:
             raise ValueError("Can only be run on dev release")
 
-        to_change["dev"] = ("dev", dt_util.utcnow().strftime("%Y%m%d"))
+        new_dev = dt_util.utcnow().strftime("%Y%m%d%H%M")
+        if nightly_version:
+            new_version = Version(nightly_version)
+            if new_version.release != version.release:
+                raise ValueError("Nightly version must have the same release version")
+            if not new_version.is_devrelease:
+                raise ValueError("Nightly version must be a dev version")
+            new_dev = new_version.dev
+
+        to_change["dev"] = ("dev", new_dev)
 
     else:
-        assert False, f"Unsupported type: {bump_type}"
+        raise ValueError(f"Unsupported type: {bump_type}")
 
     temp = Version("0")
     temp._version = version._version._replace(**to_change)
@@ -145,7 +157,7 @@ def write_ci_workflow(version: Version) -> None:
         fp.write(content)
 
 
-def main():
+def main() -> None:
     """Execute script."""
     parser = argparse.ArgumentParser(description="Bump version of Home Assistant")
     parser.add_argument(
@@ -156,7 +168,14 @@ def main():
     parser.add_argument(
         "--commit", action="store_true", help="Create a version bump commit."
     )
+    parser.add_argument(
+        "--set-nightly-version", help="Set the nightly version to", type=str
+    )
+
     arguments = parser.parse_args()
+
+    if arguments.set_nightly_version and arguments.type != "nightly":
+        parser.error("--set-nightly-version requires type set to nightly.")
 
     if (
         arguments.commit
@@ -166,7 +185,9 @@ def main():
         return
 
     current = Version(const.__version__)
-    bumped = bump_version(current, arguments.type)
+    bumped = bump_version(
+        current, arguments.type, nightly_version=arguments.set_nightly_version
+    )
     assert bumped > current, "BUG! New version is not newer than old version"
 
     write_version(bumped)
@@ -180,7 +201,7 @@ def main():
     subprocess.run(["git", "commit", "-nam", f"Bump version to {bumped}"], check=True)
 
 
-def test_bump_version():
+def test_bump_version() -> None:
     """Make sure it all works."""
     import pytest
 
@@ -203,12 +224,27 @@ def test_bump_version():
     assert bump_version(Version("0.56.0.dev0"), "minor") == Version("0.56.0")
     assert bump_version(Version("0.56.2.dev0"), "minor") == Version("0.57.0")
 
-    today = dt_util.utcnow().strftime("%Y%m%d")
+    now = dt_util.utcnow().strftime("%Y%m%d%H%M")
     assert bump_version(Version("0.56.0.dev0"), "nightly") == Version(
-        f"0.56.0.dev{today}"
+        f"0.56.0.dev{now}"
     )
-    with pytest.raises(ValueError):
-        assert bump_version(Version("0.56.0"), "nightly")
+    assert bump_version(
+        Version("2024.4.0.dev20240327"),
+        "nightly",
+        nightly_version="2024.4.0.dev202403271315",
+    ) == Version("2024.4.0.dev202403271315")
+    with pytest.raises(ValueError, match="Can only be run on dev release"):
+        bump_version(Version("0.56.0"), "nightly")
+    with pytest.raises(
+        ValueError, match="Nightly version must have the same release version"
+    ):
+        bump_version(
+            Version("0.56.0.dev0"),
+            "nightly",
+            nightly_version="2024.4.0.dev202403271315",
+        )
+    with pytest.raises(ValueError, match="Nightly version must be a dev version"):
+        bump_version(Version("0.56.0.dev0"), "nightly", nightly_version="0.56.0")
 
 
 if __name__ == "__main__":

@@ -1,4 +1,5 @@
 """Test the Oncue config flow."""
+
 from unittest.mock import patch
 
 from aiooncue import LoginFailedException
@@ -19,10 +20,13 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {}
 
-    with patch("homeassistant.components.oncue.config_flow.Oncue.async_login"), patch(
-        "homeassistant.components.oncue.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch("homeassistant.components.oncue.config_flow.Oncue.async_login"),
+        patch(
+            "homeassistant.components.oncue.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {

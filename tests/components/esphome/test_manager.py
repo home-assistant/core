@@ -1,4 +1,5 @@
 """Test ESPHome manager."""
+
 import asyncio
 from collections.abc import Awaitable, Callable
 from unittest.mock import AsyncMock, call

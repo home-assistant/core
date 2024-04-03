@@ -1,4 +1,5 @@
 """Support for INSTEON Modems (PLM and Hub)."""
+
 from contextlib import suppress
 import logging
 

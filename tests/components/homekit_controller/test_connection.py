@@ -273,6 +273,7 @@ async def test_thread_provision(
         },
         blocking=True,
     )
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert config_entry.data["Connection"] == "CoAP"
 

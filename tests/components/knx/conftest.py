@@ -1,4 +1,5 @@
 """Conftest for the KNX integration."""
+
 from __future__ import annotations
 
 import asyncio

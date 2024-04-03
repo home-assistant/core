@@ -1,4 +1,5 @@
 """Test the DLNA config flow."""
+
 from __future__ import annotations
 
 from collections.abc import Iterable
@@ -586,9 +587,9 @@ async def test_ssdp_ignore_device(hass: HomeAssistant) -> None:
 
     discovery = dataclasses.replace(MOCK_DISCOVERY)
     discovery.upnp = dict(discovery.upnp)
-    discovery.upnp[
-        ssdp.ATTR_UPNP_DEVICE_TYPE
-    ] = "urn:schemas-upnp-org:device:ZonePlayer:1"
+    discovery.upnp[ssdp.ATTR_UPNP_DEVICE_TYPE] = (
+        "urn:schemas-upnp-org:device:ZonePlayer:1"
+    )
     result = await hass.config_entries.flow.async_init(
         DLNA_DOMAIN,
         context={"source": config_entries.SOURCE_SSDP},

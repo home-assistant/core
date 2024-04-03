@@ -1,4 +1,5 @@
 """The Risco integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -16,7 +17,7 @@ from pyrisco import (
 )
 from pyrisco.cloud.alarm import Alarm
 from pyrisco.cloud.event import Event
-from pyrisco.common import Partition, Zone
+from pyrisco.common import Partition, System, Zone
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -41,6 +42,7 @@ from .const import (
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     EVENTS_COORDINATOR,
+    SYSTEM_UPDATE_SIGNAL,
     TYPE_LOCAL,
 )
 
@@ -88,7 +90,7 @@ async def _async_setup_local_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
     try:
         await risco.connect()
     except CannotConnectError as error:
-        raise ConfigEntryNotReady() from error
+        raise ConfigEntryNotReady from error
     except UnauthorizedError:
         _LOGGER.exception("Failed to login to Risco cloud")
         return False
@@ -120,6 +122,12 @@ async def _async_setup_local_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
             callback()
 
     entry.async_on_unload(risco.add_partition_handler(_partition))
+
+    async def _system(system: System) -> None:
+        _LOGGER.debug("Risco system update")
+        async_dispatcher_send(hass, SYSTEM_UPDATE_SIGNAL)
+
+    entry.async_on_unload(risco.add_system_handler(_system))
 
     entry.async_on_unload(entry.add_update_listener(_update_listener))
 

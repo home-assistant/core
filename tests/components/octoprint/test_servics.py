@@ -1,4 +1,5 @@
 """Test the OctoPrint services."""
+
 from unittest.mock import patch
 
 from homeassistant.components.octoprint.const import (

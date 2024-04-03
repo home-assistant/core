@@ -1,4 +1,5 @@
 """Tests for Tomorrow.io sensor entities."""
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -104,9 +105,7 @@ def _enable_entity(hass: HomeAssistant, entity_name: str) -> None:
     """Enable disabled entity."""
     ent_reg = async_get(hass)
     entry = ent_reg.async_get(entity_name)
-    updated_entry = ent_reg.async_update_entity(
-        entry.entity_id, **{"disabled_by": None}
-    )
+    updated_entry = ent_reg.async_update_entity(entry.entity_id, disabled_by=None)
     assert updated_entry != entry
     assert updated_entry.disabled is False
 

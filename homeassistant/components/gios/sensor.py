@@ -1,4 +1,5 @@
 """Support for the GIOS service."""
+
 from __future__ import annotations
 
 from collections.abc import Callable

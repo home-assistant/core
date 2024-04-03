@@ -1,4 +1,5 @@
 """Test helpers for Husqvarna Automower."""
+
 from collections.abc import Generator
 import time
 from unittest.mock import AsyncMock, patch

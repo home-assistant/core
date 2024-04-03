@@ -1,4 +1,5 @@
 """Test fixtures for voice assistant."""
+
 from __future__ import annotations
 
 from collections.abc import AsyncIterable, Generator
@@ -110,6 +111,7 @@ class MockTTSProvider(tts.Provider):
             tts.Voice("fran_drescher", "Fran Drescher"),
         ]
     }
+    _supported_options = ["voice", "age", tts.ATTR_AUDIO_OUTPUT]
 
     @property
     def default_language(self) -> str:
@@ -129,7 +131,7 @@ class MockTTSProvider(tts.Provider):
     @property
     def supported_options(self) -> list[str]:
         """Return list of supported options like voice, emotions."""
-        return ["voice", "age", tts.ATTR_AUDIO_OUTPUT]
+        return self._supported_options
 
     def get_tts_audio(
         self, message: str, language: str, options: dict[str, Any]

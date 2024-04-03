@@ -1,4 +1,5 @@
 """Support for Electric Kiwi hour of free power."""
+
 from __future__ import annotations
 
 import logging

@@ -1,4 +1,5 @@
 """Constants for kraken tests."""
+
 import pandas as pd
 
 TRADEABLE_ASSET_PAIR_RESPONSE = pd.DataFrame(

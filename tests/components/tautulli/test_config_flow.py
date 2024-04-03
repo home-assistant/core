@@ -1,4 +1,5 @@
 """Test Tautulli config flow."""
+
 from unittest.mock import AsyncMock, patch
 
 from pytautulli import exceptions
@@ -170,9 +171,10 @@ async def test_flow_reauth(
 
     new_conf = {CONF_API_KEY: "efgh"}
     CONF_DATA[CONF_API_KEY] = "efgh"
-    with patch_config_flow_tautulli(AsyncMock()), patch(
-        "homeassistant.components.tautulli.async_setup_entry"
-    ) as mock_entry:
+    with (
+        patch_config_flow_tautulli(AsyncMock()),
+        patch("homeassistant.components.tautulli.async_setup_entry") as mock_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input=new_conf,

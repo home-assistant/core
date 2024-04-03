@@ -1,4 +1,5 @@
 """Test the Vacuum significant change platform."""
+
 import pytest
 
 from homeassistant.components.vacuum import (

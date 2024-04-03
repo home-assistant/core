@@ -1,4 +1,5 @@
 """The tests for the Jewish calendar binary sensors."""
+
 from datetime import datetime as dt, timedelta
 
 import pytest
