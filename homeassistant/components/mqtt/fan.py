@@ -1,4 +1,5 @@
 """Support for MQTT fans."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -31,10 +32,10 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.percentage import (
-    int_states_in_range,
     percentage_to_ranged_value,
     ranged_value_to_percentage,
 )
+from homeassistant.util.scaling import int_states_in_range
 
 from . import subscription
 from .config import MQTT_RW_SCHEMA
@@ -116,16 +117,16 @@ _LOGGER = logging.getLogger(__name__)
 def valid_speed_range_configuration(config: ConfigType) -> ConfigType:
     """Validate that the fan speed_range configuration is valid, throws if it isn't."""
     if config[CONF_SPEED_RANGE_MIN] == 0:
-        raise ValueError("speed_range_min must be > 0")
+        raise vol.Invalid("speed_range_min must be > 0")
     if config[CONF_SPEED_RANGE_MIN] >= config[CONF_SPEED_RANGE_MAX]:
-        raise ValueError("speed_range_max must be > speed_range_min")
+        raise vol.Invalid("speed_range_max must be > speed_range_min")
     return config
 
 
 def valid_preset_mode_configuration(config: ConfigType) -> ConfigType:
     """Validate that the preset mode reset payload is not one of the preset modes."""
     if config[CONF_PAYLOAD_RESET_PRESET_MODE] in config[CONF_PRESET_MODES_LIST]:
-        raise ValueError("preset_modes must not contain payload_reset_preset_mode")
+        raise vol.Invalid("preset_modes must not contain payload_reset_preset_mode")
     return config
 
 
@@ -318,13 +319,11 @@ class MqttFan(MqttEntity, FanEntity):
             ATTR_PRESET_MODE: config.get(CONF_PRESET_MODE_COMMAND_TEMPLATE),
             ATTR_OSCILLATING: config.get(CONF_OSCILLATION_COMMAND_TEMPLATE),
         }
-        self._command_templates = {}
-        for key, tpl in command_templates.items():
-            self._command_templates[key] = MqttCommandTemplate(
-                tpl, entity=self
-            ).async_render
+        self._command_templates = {
+            key: MqttCommandTemplate(tpl, entity=self).async_render
+            for key, tpl in command_templates.items()
+        }
 
-        self._value_templates = {}
         value_templates: dict[str, Template | None] = {
             CONF_STATE: config.get(CONF_STATE_VALUE_TEMPLATE),
             ATTR_DIRECTION: config.get(CONF_DIRECTION_VALUE_TEMPLATE),
@@ -332,11 +331,12 @@ class MqttFan(MqttEntity, FanEntity):
             ATTR_PRESET_MODE: config.get(CONF_PRESET_MODE_VALUE_TEMPLATE),
             ATTR_OSCILLATING: config.get(CONF_OSCILLATION_VALUE_TEMPLATE),
         }
-        for key, tpl in value_templates.items():
-            self._value_templates[key] = MqttValueTemplate(
-                tpl,
-                entity=self,
+        self._value_templates = {
+            key: MqttValueTemplate(
+                tpl, entity=self
             ).async_render_with_possible_json_value
+            for key, tpl in value_templates.items()
+        }
 
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
@@ -553,8 +553,6 @@ class MqttFan(MqttEntity, FanEntity):
 
         This method is a coroutine.
         """
-        self._valid_preset_mode_or_raise(preset_mode)
-
         mqtt_payload = self._command_templates[ATTR_PRESET_MODE](preset_mode)
 
         await self.async_publish(

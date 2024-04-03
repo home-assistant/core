@@ -1,4 +1,5 @@
 """The Synology DSM component."""
+
 from __future__ import annotations
 
 from itertools import chain
@@ -40,7 +41,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Synology DSM sensors."""
 
-    # Migrate device indentifiers
+    # Migrate device identifiers
     dev_reg = dr.async_get(hass)
     devices: list[dr.DeviceEntry] = dr.async_entries_for_config_entry(
         dev_reg, entry.entry_id

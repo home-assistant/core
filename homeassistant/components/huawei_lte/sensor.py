@@ -1,14 +1,13 @@
 """Support for Huawei LTE sensors."""
+
 from __future__ import annotations
 
 from bisect import bisect
 from collections.abc import Callable, Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
 import re
-
-from huawei_lte_api.enums.net import NetworkModeEnum
 
 from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
@@ -31,7 +30,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import HuaweiLteBaseEntityWithDevice
+from . import HuaweiLteBaseEntityWithDevice, Router
 from .const import (
     DOMAIN,
     KEY_DEVICE_INFORMATION,
@@ -80,9 +79,9 @@ def format_last_reset_elapsed_seconds(value: str | None) -> datetime | None:
     try:
         last_reset = datetime.now() - timedelta(seconds=int(value))
         last_reset.replace(microsecond=0)
-        return last_reset
     except ValueError:
         return None
+    return last_reset
 
 
 def signal_icon(limits: Sequence[int], value: StateType) -> str:
@@ -113,7 +112,7 @@ class HuaweiSensorGroup:
     exclude: re.Pattern[str] | None = None
 
 
-@dataclass
+@dataclass(frozen=True)
 class HuaweiSensorEntityDescription(SensorEntityDescription):
     """Class describing Huawei LTE sensor entities."""
 
@@ -575,10 +574,6 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
             "State": HuaweiSensorEntityDescription(
                 key="State",
                 translation_key="operator_search_mode",
-                format_fn=lambda x: (
-                    {"0": "Auto", "1": "Manual"}.get(x),
-                    None,
-                ),
                 entity_category=EntityCategory.DIAGNOSTIC,
             ),
         },
@@ -588,19 +583,7 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
         descriptions={
             "NetworkMode": HuaweiSensorEntityDescription(
                 key="NetworkMode",
-                translation_key="preferred_mode",
-                format_fn=lambda x: (
-                    {
-                        NetworkModeEnum.MODE_AUTO.value: "4G/3G/2G",
-                        NetworkModeEnum.MODE_4G_3G_AUTO.value: "4G/3G",
-                        NetworkModeEnum.MODE_4G_2G_AUTO.value: "4G/2G",
-                        NetworkModeEnum.MODE_4G_ONLY.value: "4G",
-                        NetworkModeEnum.MODE_3G_2G_AUTO.value: "3G/2G",
-                        NetworkModeEnum.MODE_3G_ONLY.value: "3G",
-                        NetworkModeEnum.MODE_2G_ONLY.value: "2G",
-                    }.get(x),
-                    None,
-                ),
+                translation_key="preferred_network_mode",
                 entity_category=EntityCategory.DIAGNOSTIC,
             ),
         },
@@ -691,36 +674,41 @@ async def async_setup_entry(
                 items = filter(key_meta.include.search, items)
             if key_meta.exclude:
                 items = [x for x in items if not key_meta.exclude.search(x)]
-        for item in items:
-            sensors.append(
-                HuaweiLteSensor(
-                    router,
-                    key,
-                    item,
-                    SENSOR_META[key].descriptions.get(
-                        item, HuaweiSensorEntityDescription(key=item)
-                    ),
-                )
+        sensors.extend(
+            HuaweiLteSensor(
+                router,
+                key,
+                item,
+                SENSOR_META[key].descriptions.get(
+                    item, HuaweiSensorEntityDescription(key=item)
+                ),
             )
+            for item in items
+        )
 
     async_add_entities(sensors, True)
 
 
-@dataclass
 class HuaweiLteSensor(HuaweiLteBaseEntityWithDevice, SensorEntity):
     """Huawei LTE sensor entity."""
 
-    key: str
-    item: str
     entity_description: HuaweiSensorEntityDescription
+    _state: StateType = None
+    _unit: str | None = None
+    _last_reset: datetime | None = None
 
-    _state: StateType = field(default=None, init=False)
-    _unit: str | None = field(default=None, init=False)
-    _last_reset: datetime | None = field(default=None, init=False)
-
-    def __post_init__(self) -> None:
-        """Initialize remaining attributes."""
-        self._attr_name = self.entity_description.name or self.item
+    def __init__(
+        self,
+        router: Router,
+        key: str,
+        item: str,
+        entity_description: HuaweiSensorEntityDescription,
+    ) -> None:
+        """Initialize."""
+        super().__init__(router)
+        self.key = key
+        self.item = item
+        self.entity_description = entity_description
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to needed data on add."""

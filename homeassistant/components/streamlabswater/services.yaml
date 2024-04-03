@@ -7,3 +7,6 @@ set_away_mode:
           options:
             - "away"
             - "home"
+    location_id:
+      selector:
+        text:

@@ -1,8 +1,9 @@
 """The tests for Cover device conditions."""
+
 import pytest
 from pytest_unordered import unordered
 
-import homeassistant.components.automation as automation
+from homeassistant.components import automation
 from homeassistant.components.cover import DOMAIN, CoverEntityFeature
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.const import (
@@ -24,7 +25,9 @@ from tests.common import (
     async_get_device_automation_capabilities,
     async_get_device_automations,
     async_mock_service,
+    setup_test_component_platform,
 )
+from tests.components.cover.common import MockCover
 
 
 @pytest.fixture(autouse=True, name="stub_blueprint_populate")
@@ -122,12 +125,12 @@ async def test_get_conditions(
 
 @pytest.mark.parametrize(
     ("hidden_by", "entity_category"),
-    (
+    [
         (RegistryEntryHider.INTEGRATION, None),
         (RegistryEntryHider.USER, None),
         (None, EntityCategory.CONFIG),
         (None, EntityCategory.DIAGNOSTIC),
-    ),
+    ],
 )
 async def test_get_conditions_hidden_auxiliary(
     hass: HomeAssistant,
@@ -173,12 +176,11 @@ async def test_get_condition_capabilities(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    enable_custom_integrations: None,
+    mock_cover_entities: list[MockCover],
 ) -> None:
     """Test we get the expected capabilities from a cover condition."""
-    platform = getattr(hass.components, f"test.{DOMAIN}")
-    platform.init()
-    ent = platform.ENTITIES[0]
+    setup_test_component_platform(hass, DOMAIN, mock_cover_entities)
+    ent = mock_cover_entities[0]
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
 
@@ -207,12 +209,11 @@ async def test_get_condition_capabilities_legacy(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    enable_custom_integrations: None,
+    mock_cover_entities: list[MockCover],
 ) -> None:
     """Test we get the expected capabilities from a cover condition."""
-    platform = getattr(hass.components, f"test.{DOMAIN}")
-    platform.init()
-    ent = platform.ENTITIES[0]
+    setup_test_component_platform(hass, DOMAIN, mock_cover_entities)
+    ent = mock_cover_entities[0]
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
 
@@ -244,12 +245,11 @@ async def test_get_condition_capabilities_set_pos(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    enable_custom_integrations: None,
+    mock_cover_entities: list[MockCover],
 ) -> None:
     """Test we get the expected capabilities from a cover condition."""
-    platform = getattr(hass.components, f"test.{DOMAIN}")
-    platform.init()
-    ent = platform.ENTITIES[1]
+    setup_test_component_platform(hass, DOMAIN, mock_cover_entities)
+    ent = mock_cover_entities[1]
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
 
@@ -301,12 +301,12 @@ async def test_get_condition_capabilities_set_tilt_pos(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    enable_custom_integrations: None,
+    mock_cover_entities: list[MockCover],
 ) -> None:
     """Test we get the expected capabilities from a cover condition."""
-    platform = getattr(hass.components, f"test.{DOMAIN}")
-    platform.init()
-    ent = platform.ENTITIES[3]
+    setup_test_component_platform(hass, DOMAIN, mock_cover_entities)
+
+    ent = mock_cover_entities[3]
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
 
@@ -355,10 +355,21 @@ async def test_get_condition_capabilities_set_tilt_pos(
 
 
 async def test_if_state(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, calls
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    calls,
 ) -> None:
     """Test for turn_on and turn_off conditions."""
-    entry = entity_registry.async_get_or_create(DOMAIN, "test", "5678")
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entry = entity_registry.async_get_or_create(
+        DOMAIN, "test", "5678", device_id=device_entry.id
+    )
 
     hass.states.async_set(entry.entity_id, STATE_OPEN)
 
@@ -373,7 +384,7 @@ async def test_if_state(
                         {
                             "condition": "device",
                             "domain": DOMAIN,
-                            "device_id": "",
+                            "device_id": device_entry.id,
                             "entity_id": entry.id,
                             "type": "is_open",
                         }
@@ -395,7 +406,7 @@ async def test_if_state(
                         {
                             "condition": "device",
                             "domain": DOMAIN,
-                            "device_id": "",
+                            "device_id": device_entry.id,
                             "entity_id": entry.id,
                             "type": "is_closed",
                         }
@@ -417,7 +428,7 @@ async def test_if_state(
                         {
                             "condition": "device",
                             "domain": DOMAIN,
-                            "device_id": "",
+                            "device_id": device_entry.id,
                             "entity_id": entry.id,
                             "type": "is_opening",
                         }
@@ -439,7 +450,7 @@ async def test_if_state(
                         {
                             "condition": "device",
                             "domain": DOMAIN,
-                            "device_id": "",
+                            "device_id": device_entry.id,
                             "entity_id": entry.id,
                             "type": "is_closing",
                         }
@@ -487,10 +498,21 @@ async def test_if_state(
 
 
 async def test_if_state_legacy(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, calls
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    calls,
 ) -> None:
     """Test for turn_on and turn_off conditions."""
-    entry = entity_registry.async_get_or_create(DOMAIN, "test", "5678")
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entry = entity_registry.async_get_or_create(
+        DOMAIN, "test", "5678", device_id=device_entry.id
+    )
 
     hass.states.async_set(entry.entity_id, STATE_OPEN)
 
@@ -505,7 +527,7 @@ async def test_if_state_legacy(
                         {
                             "condition": "device",
                             "domain": DOMAIN,
-                            "device_id": "",
+                            "device_id": device_entry.id,
                             "entity_id": entry.entity_id,
                             "type": "is_open",
                         }
@@ -533,19 +555,26 @@ async def test_if_state_legacy(
 
 async def test_if_position(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     calls,
     caplog: pytest.LogCaptureFixture,
-    enable_custom_integrations: None,
+    mock_cover_entities: list[MockCover],
 ) -> None:
     """Test for position conditions."""
-    platform = getattr(hass.components, f"test.{DOMAIN}")
-    platform.init()
-    ent = platform.ENTITIES[1]
+    setup_test_component_platform(hass, DOMAIN, mock_cover_entities)
+    ent = mock_cover_entities[1]
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
 
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
     entry = entity_registry.async_get(ent.entity_id)
+    entity_registry.async_update_entity(entry.entity_id, device_id=device_entry.id)
 
     assert await async_setup_component(
         hass,
@@ -559,7 +588,7 @@ async def test_if_position(
                             "conditions": {
                                 "condition": "device",
                                 "domain": DOMAIN,
-                                "device_id": "",
+                                "device_id": device_entry.id,
                                 "entity_id": entry.id,
                                 "type": "is_position",
                                 "above": 45,
@@ -593,7 +622,7 @@ async def test_if_position(
                         {
                             "condition": "device",
                             "domain": DOMAIN,
-                            "device_id": "",
+                            "device_id": device_entry.id,
                             "entity_id": entry.id,
                             "type": "is_position",
                             "below": 90,
@@ -616,7 +645,7 @@ async def test_if_position(
                         {
                             "condition": "device",
                             "domain": DOMAIN,
-                            "device_id": "",
+                            "device_id": device_entry.id,
                             "entity_id": entry.id,
                             "type": "is_position",
                             "above": 45,
@@ -686,19 +715,26 @@ async def test_if_position(
 
 async def test_if_tilt_position(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     calls,
     caplog: pytest.LogCaptureFixture,
-    enable_custom_integrations: None,
+    mock_cover_entities: list[MockCover],
 ) -> None:
     """Test for tilt position conditions."""
-    platform = getattr(hass.components, f"test.{DOMAIN}")
-    platform.init()
-    ent = platform.ENTITIES[3]
+    setup_test_component_platform(hass, DOMAIN, mock_cover_entities)
+    ent = mock_cover_entities[3]
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
 
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
     entry = entity_registry.async_get(ent.entity_id)
+    entity_registry.async_update_entity(entry.entity_id, device_id=device_entry.id)
 
     assert await async_setup_component(
         hass,
@@ -712,7 +748,7 @@ async def test_if_tilt_position(
                             "conditions": {
                                 "condition": "device",
                                 "domain": DOMAIN,
-                                "device_id": "",
+                                "device_id": device_entry.id,
                                 "entity_id": entry.id,
                                 "type": "is_tilt_position",
                                 "above": 45,
@@ -746,7 +782,7 @@ async def test_if_tilt_position(
                         {
                             "condition": "device",
                             "domain": DOMAIN,
-                            "device_id": "",
+                            "device_id": device_entry.id,
                             "entity_id": entry.id,
                             "type": "is_tilt_position",
                             "below": 90,
@@ -769,7 +805,7 @@ async def test_if_tilt_position(
                         {
                             "condition": "device",
                             "domain": DOMAIN,
-                            "device_id": "",
+                            "device_id": device_entry.id,
                             "entity_id": entry.id,
                             "type": "is_tilt_position",
                             "above": 45,

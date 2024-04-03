@@ -1,6 +1,8 @@
 """Support for functionality to download files."""
+
+from __future__ import annotations
+
 from http import HTTPStatus
-import logging
 import os
 import re
 import threading
@@ -8,33 +10,26 @@ import threading
 import requests
 import voluptuous as vol
 
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.data_entry_flow import FlowResultType
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import raise_if_invalid_filename, raise_if_invalid_path
 
-_LOGGER = logging.getLogger(__name__)
-
-ATTR_FILENAME = "filename"
-ATTR_SUBDIR = "subdir"
-ATTR_URL = "url"
-ATTR_OVERWRITE = "overwrite"
-
-CONF_DOWNLOAD_DIR = "download_dir"
-
-DOMAIN = "downloader"
-DOWNLOAD_FAILED_EVENT = "download_failed"
-DOWNLOAD_COMPLETED_EVENT = "download_completed"
-
-SERVICE_DOWNLOAD_FILE = "download_file"
-
-SERVICE_DOWNLOAD_FILE_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_URL): cv.url,
-        vol.Optional(ATTR_SUBDIR): cv.string,
-        vol.Optional(ATTR_FILENAME): cv.string,
-        vol.Optional(ATTR_OVERWRITE, default=False): cv.boolean,
-    }
+from .const import (
+    _LOGGER,
+    ATTR_FILENAME,
+    ATTR_OVERWRITE,
+    ATTR_SUBDIR,
+    ATTR_URL,
+    CONF_DOWNLOAD_DIR,
+    DOMAIN,
+    DOWNLOAD_COMPLETED_EVENT,
+    DOWNLOAD_FAILED_EVENT,
+    SERVICE_DOWNLOAD_FILE,
 )
 
 CONFIG_SCHEMA = vol.Schema(
@@ -43,9 +38,46 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass: HomeAssistant, config: ConfigType) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Downloader component, via the YAML file."""
+    if DOMAIN not in config:
+        return True
+
+    import_result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={
+            CONF_DOWNLOAD_DIR: config[DOMAIN][CONF_DOWNLOAD_DIR],
+        },
+    )
+
+    translation_key = "deprecated_yaml"
+    if (
+        import_result["type"] == FlowResultType.ABORT
+        and import_result["reason"] == "import_failed"
+    ):
+        translation_key = "import_failed"
+
+    async_create_issue(
+        hass,
+        DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        breaks_in_ha_version="2024.9.0",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=IssueSeverity.WARNING,
+        translation_key=translation_key,
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "Downloader",
+        },
+    )
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Listen for download events to download files."""
-    download_path = config[DOMAIN][CONF_DOWNLOAD_DIR]
+    download_path = entry.data[CONF_DOWNLOAD_DIR]
 
     # If path is relative, we assume relative to Home Assistant config dir
     if not os.path.isabs(download_path):
@@ -55,13 +87,12 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         _LOGGER.error(
             "Download path %s does not exist. File Downloader not active", download_path
         )
-
         return False
 
     def download_file(service: ServiceCall) -> None:
         """Start thread to download file specified in the URL."""
 
-        def do_download():
+        def do_download() -> None:
             """Download the file."""
             try:
                 url = service.data[ATTR_URL]
@@ -166,11 +197,19 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         threading.Thread(target=do_download).start()
 
-    hass.services.register(
+    async_register_admin_service(
+        hass,
         DOMAIN,
         SERVICE_DOWNLOAD_FILE,
         download_file,
-        schema=SERVICE_DOWNLOAD_FILE_SCHEMA,
+        schema=vol.Schema(
+            {
+                vol.Optional(ATTR_FILENAME): cv.string,
+                vol.Optional(ATTR_SUBDIR): cv.string,
+                vol.Required(ATTR_URL): cv.url,
+                vol.Optional(ATTR_OVERWRITE, default=False): cv.boolean,
+            }
+        ),
     )
 
     return True

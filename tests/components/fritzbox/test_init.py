@@ -1,4 +1,5 @@
 """Tests for the AVM Fritz!Box integration."""
+
 from __future__ import annotations
 
 from unittest.mock import Mock, call, patch
@@ -72,6 +73,7 @@ async def test_setup(hass: HomeAssistant, fritz: Mock) -> None:
 )
 async def test_update_unique_id(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     fritz: Mock,
     entitydata: dict,
     old_unique_id: str,
@@ -85,7 +87,6 @@ async def test_update_unique_id(
     )
     entry.add_to_hass(hass)
 
-    entity_registry = er.async_get(hass)
     entity: er.RegistryEntry = entity_registry.async_get_or_create(
         **entitydata,
         config_entry=entry,
@@ -131,6 +132,7 @@ async def test_update_unique_id(
 )
 async def test_update_unique_id_no_change(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     fritz: Mock,
     entitydata: dict,
     unique_id: str,
@@ -143,7 +145,6 @@ async def test_update_unique_id_no_change(
     )
     entry.add_to_hass(hass)
 
-    entity_registry = er.async_get(hass)
     entity = entity_registry.async_get_or_create(
         **entitydata,
         config_entry=entry,
@@ -296,7 +297,7 @@ async def test_remove_device(
     )
     response = await ws_client.receive_json()
     assert not response["success"]
-    assert response["error"]["code"] == "unknown_error"
+    assert response["error"]["code"] == "home_assistant_error"
     await hass.async_block_till_done()
 
     # try to delete orphan_device

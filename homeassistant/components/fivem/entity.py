@@ -1,4 +1,5 @@
 """The FiveM entity."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -16,7 +17,7 @@ from .coordinator import FiveMDataUpdateCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class FiveMEntityDescription(EntityDescription):
     """Describes FiveM entity."""
 

@@ -1,4 +1,5 @@
 """The tests for the nexbus sensor component."""
+
 from collections.abc import Generator
 from copy import deepcopy
 from unittest.mock import MagicMock, patch
@@ -8,15 +9,10 @@ from py_nextbus.client import NextBusFormatError, NextBusHTTPError, RouteStop
 import pytest
 
 from homeassistant.components import sensor
-from homeassistant.components.nextbus.const import (
-    CONF_AGENCY,
-    CONF_ROUTE,
-    CONF_STOP,
-    DOMAIN,
-)
+from homeassistant.components.nextbus.const import CONF_AGENCY, CONF_ROUTE, DOMAIN
 from homeassistant.components.nextbus.coordinator import NextBusDataUpdateCoordinator
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, CONF_STOP
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.helpers.update_coordinator import UpdateFailed
@@ -278,10 +274,10 @@ async def test_direction_list(
 
 @pytest.mark.parametrize(
     "client_exception",
-    (
+    [
         NextBusHTTPError("failed", HTTPError("url", 500, "error", MagicMock(), None)),
         NextBusFormatError("failed"),
-    ),
+    ],
 )
 async def test_prediction_exceptions(
     hass: HomeAssistant,
@@ -316,10 +312,10 @@ async def test_custom_name(
 
 @pytest.mark.parametrize(
     "prediction_results",
-    (
+    [
         {},
         {"Error": "Failed"},
-    ),
+    ],
 )
 async def test_no_predictions(
     hass: HomeAssistant,

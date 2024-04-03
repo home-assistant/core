@@ -1,4 +1,5 @@
 """The Minecraft Server integration."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -7,7 +8,12 @@ import logging
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .api import MinecraftServer, MinecraftServerConnectionError, MinecraftServerData
+from .api import (
+    MinecraftServer,
+    MinecraftServerConnectionError,
+    MinecraftServerData,
+    MinecraftServerNotInitializedError,
+)
 
 SCAN_INTERVAL = timedelta(seconds=60)
 
@@ -32,5 +38,8 @@ class MinecraftServerCoordinator(DataUpdateCoordinator[MinecraftServerData]):
         """Get updated data from the server."""
         try:
             return await self._api.async_get_data()
-        except MinecraftServerConnectionError as error:
+        except (
+            MinecraftServerConnectionError,
+            MinecraftServerNotInitializedError,
+        ) as error:
             raise UpdateFailed(error) from error

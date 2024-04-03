@@ -1,12 +1,13 @@
 """Support for OVO Energy sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
-from dataclasses import dataclass
+import dataclasses
 from datetime import datetime, timedelta
 from typing import Final
 
-from ovoenergy import OVODailyUsage
+from ovoenergy.models import OVODailyUsage
 from ovoenergy.ovoenergy import OVOEnergy
 
 from homeassistant.components.sensor import (
@@ -33,7 +34,7 @@ KEY_LAST_ELECTRICITY_COST: Final = "last_electricity_cost"
 KEY_LAST_GAS_COST: Final = "last_gas_cost"
 
 
-@dataclass
+@dataclasses.dataclass(frozen=True)
 class OVOEnergySensorEntityDescription(SensorEntityDescription):
     """Class describing System Bridge sensor entities."""
 
@@ -81,7 +82,6 @@ SENSOR_TYPES_GAS: tuple[OVOEnergySensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        icon="mdi:gas-cylinder",
         value=lambda usage: usage.gas[-1].consumption,
     ),
     OVOEnergySensorEntityDescription(
@@ -89,7 +89,6 @@ SENSOR_TYPES_GAS: tuple[OVOEnergySensorEntityDescription, ...] = (
         translation_key=KEY_LAST_GAS_COST,
         device_class=SensorDeviceClass.MONETARY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        icon="mdi:cash-multiple",
         value=lambda usage: usage.gas[-1].cost.amount
         if usage.gas[-1].cost is not None
         else None,
@@ -130,8 +129,11 @@ async def async_setup_entry(
                     and coordinator.data.electricity[-1] is not None
                     and coordinator.data.electricity[-1].cost is not None
                 ):
-                    description.native_unit_of_measurement = (
-                        coordinator.data.electricity[-1].cost.currency_unit
+                    description = dataclasses.replace(
+                        description,
+                        native_unit_of_measurement=(
+                            coordinator.data.electricity[-1].cost.currency_unit
+                        ),
                     )
                 entities.append(OVOEnergySensor(coordinator, description, client))
         if coordinator.data.gas:
@@ -141,9 +143,12 @@ async def async_setup_entry(
                     and coordinator.data.gas[-1] is not None
                     and coordinator.data.gas[-1].cost is not None
                 ):
-                    description.native_unit_of_measurement = coordinator.data.gas[
-                        -1
-                    ].cost.currency_unit
+                    description = dataclasses.replace(
+                        description,
+                        native_unit_of_measurement=coordinator.data.gas[
+                            -1
+                        ].cost.currency_unit,
+                    )
                 entities.append(OVOEnergySensor(coordinator, description, client))
 
     async_add_entities(entities, True)

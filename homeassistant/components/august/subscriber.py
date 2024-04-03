@@ -1,11 +1,12 @@
 """Base class for August entity."""
 
+from __future__ import annotations
 
 from abc import abstractmethod
 from datetime import datetime, timedelta
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.helpers.event import async_track_time_interval
 
 
@@ -34,7 +35,7 @@ class AugustSubscriberMixin:
 
         self._subscriptions.setdefault(device_id, []).append(update_callback)
 
-        def _unsubscribe():
+        def _unsubscribe() -> None:
             self.async_unsubscribe_device_id(device_id, update_callback)
 
         return _unsubscribe
@@ -44,22 +45,30 @@ class AugustSubscriberMixin:
         """Refresh data."""
 
     @callback
+    def _async_scheduled_refresh(self, now: datetime) -> None:
+        """Call the refresh method."""
+        self._hass.async_create_task(self._async_refresh(now), eager_start=True)
+
+    @callback
     def _async_setup_listeners(self) -> None:
         """Create interval and stop listeners."""
         self._unsub_interval = async_track_time_interval(
             self._hass,
-            self._async_refresh,
+            self._async_scheduled_refresh,
             self._update_interval,
             name="august refresh",
         )
 
         @callback
-        def _async_cancel_update_interval(_):
+        def _async_cancel_update_interval(_: Event) -> None:
             self._stop_interval = None
-            self._unsub_interval()
+            if self._unsub_interval:
+                self._unsub_interval()
 
         self._stop_interval = self._hass.bus.async_listen(
-            EVENT_HOMEASSISTANT_STOP, _async_cancel_update_interval
+            EVENT_HOMEASSISTANT_STOP,
+            _async_cancel_update_interval,
+            run_immediately=True,
         )
 
     @callback

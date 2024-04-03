@@ -1,4 +1,5 @@
 """Matter climate platform."""
+
 from __future__ import annotations
 
 from enum import IntEnum
@@ -44,7 +45,7 @@ HVAC_SYSTEM_MODE_MAP = {
 }
 SystemModeEnum = clusters.Thermostat.Enums.ThermostatSystemMode
 ControlSequenceEnum = clusters.Thermostat.Enums.ThermostatControlSequence
-ThermostatFeature = clusters.Thermostat.Bitmaps.ThermostatFeature
+ThermostatFeature = clusters.Thermostat.Bitmaps.Feature
 
 
 class ThermostatRunningState(IntEnum):
@@ -73,11 +74,8 @@ class MatterClimate(MatterEntity, ClimateEntity):
     """Representation of a Matter climate entity."""
 
     _attr_temperature_unit: str = UnitOfTemperature.CELSIUS
-    _attr_supported_features: ClimateEntityFeature = (
-        ClimateEntityFeature.TARGET_TEMPERATURE
-        | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
-    )
     _attr_hvac_mode: HVACMode = HVACMode.OFF
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,
@@ -99,6 +97,13 @@ class MatterClimate(MatterEntity, ClimateEntity):
             self._attr_hvac_modes.append(HVACMode.COOL)
         if feature_map & ThermostatFeature.kAutoMode:
             self._attr_hvac_modes.append(HVACMode.HEAT_COOL)
+        self._attr_supported_features = (
+            ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+            | ClimateEntityFeature.TURN_OFF
+        )
+        if any(mode for mode in self.hvac_modes if mode != HVACMode.OFF):
+            self._attr_supported_features |= ClimateEntityFeature.TURN_ON
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
@@ -268,7 +273,7 @@ class MatterClimate(MatterEntity, ClimateEntity):
 
     @staticmethod
     def _create_optional_setpoint_command(
-        mode: clusters.Thermostat.Enums.SetpointAdjustMode,
+        mode: clusters.Thermostat.Enums.SetpointAdjustMode | int,
         target_temp: float,
         current_target_temp: float,
     ) -> clusters.Thermostat.Commands.SetpointRaiseLower | None:
@@ -308,6 +313,6 @@ DISCOVERY_SCHEMAS = [
             clusters.Thermostat.Attributes.UnoccupiedCoolingSetpoint,
             clusters.Thermostat.Attributes.UnoccupiedHeatingSetpoint,
         ),
-        device_type=(device_types.Thermostat,),
+        device_type=(device_types.Thermostat, device_types.RoomAirConditioner),
     ),
 ]

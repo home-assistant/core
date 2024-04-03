@@ -1,4 +1,5 @@
 """Support for Synology DSM cameras."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -35,7 +36,7 @@ from .models import SynologyDSMData
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True, kw_only=True)
 class SynologyDSMCameraEntityDescription(
     CameraEntityDescription, SynologyDSMEntityDescription
 ):
@@ -153,7 +154,9 @@ class SynoDSMCamera(SynologyDSMBaseEntity[SynologyDSMCameraUpdateCoordinator], C
         if not self.available:
             return None
         try:
-            return await self._api.surveillance_station.get_camera_image(self.entity_description.key, self.snapshot_quality)  # type: ignore[no-any-return]
+            return await self._api.surveillance_station.get_camera_image(  # type: ignore[no-any-return]
+                self.entity_description.key, self.snapshot_quality
+            )
         except (
             SynologyDSMAPIErrorException,
             SynologyDSMRequestException,

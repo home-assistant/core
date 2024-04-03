@@ -1,17 +1,15 @@
 """Tests for the Bluetooth integration advertisement tracking."""
+
 from datetime import timedelta
 import time
-from unittest.mock import patch
 
+from habluetooth.advertisement_tracker import ADVERTISING_TIMES_NEEDED
 import pytest
 
 from homeassistant.components.bluetooth import (
     async_get_learned_advertising_interval,
     async_register_scanner,
     async_track_unavailable,
-)
-from homeassistant.components.bluetooth.advertisement_tracker import (
-    ADVERTISING_TIMES_NEEDED,
 )
 from homeassistant.components.bluetooth.const import (
     FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
@@ -27,6 +25,7 @@ from . import (
     generate_ble_device,
     inject_advertisement_with_time_and_source,
     inject_advertisement_with_time_and_source_connectable,
+    patch_bluetooth_time,
 )
 
 from tests.common import async_fire_time_changed
@@ -72,9 +71,8 @@ async def test_advertisment_interval_shorter_than_adapter_stack_timeout(
     )
 
     monotonic_now = start_monotonic_time + ((ADVERTISING_TIMES_NEEDED - 1) * 2)
-    with patch(
-        "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
-        return_value=monotonic_now + UNAVAILABLE_TRACK_SECONDS,
+    with patch_bluetooth_time(
+        monotonic_now + UNAVAILABLE_TRACK_SECONDS,
     ):
         async_fire_time_changed(
             hass, dt_util.utcnow() + timedelta(seconds=UNAVAILABLE_TRACK_SECONDS)
@@ -125,9 +123,8 @@ async def test_advertisment_interval_longer_than_adapter_stack_timeout_connectab
     monotonic_now = start_monotonic_time + (
         (ADVERTISING_TIMES_NEEDED - 1) * ONE_HOUR_SECONDS
     )
-    with patch(
-        "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
-        return_value=monotonic_now + UNAVAILABLE_TRACK_SECONDS,
+    with patch_bluetooth_time(
+        monotonic_now + UNAVAILABLE_TRACK_SECONDS,
     ):
         async_fire_time_changed(
             hass, dt_util.utcnow() + timedelta(seconds=UNAVAILABLE_TRACK_SECONDS)
@@ -191,9 +188,8 @@ async def test_advertisment_interval_longer_than_adapter_stack_timeout_adapter_c
     monotonic_now = start_monotonic_time + (
         (ADVERTISING_TIMES_NEEDED - 1) * ONE_HOUR_SECONDS
     )
-    with patch(
-        "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
-        return_value=monotonic_now + UNAVAILABLE_TRACK_SECONDS,
+    with patch_bluetooth_time(
+        monotonic_now + UNAVAILABLE_TRACK_SECONDS,
     ):
         async_fire_time_changed(
             hass, dt_util.utcnow() + timedelta(seconds=UNAVAILABLE_TRACK_SECONDS)
@@ -247,9 +243,8 @@ async def test_advertisment_interval_longer_than_adapter_stack_timeout_not_conne
     monotonic_now = start_monotonic_time + (
         (ADVERTISING_TIMES_NEEDED - 1) * ONE_HOUR_SECONDS
     )
-    with patch(
-        "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
-        return_value=monotonic_now + UNAVAILABLE_TRACK_SECONDS,
+    with patch_bluetooth_time(
+        monotonic_now + UNAVAILABLE_TRACK_SECONDS,
     ):
         async_fire_time_changed(
             hass, dt_util.utcnow() + timedelta(seconds=UNAVAILABLE_TRACK_SECONDS)
@@ -323,9 +318,8 @@ async def test_advertisment_interval_shorter_than_adapter_stack_timeout_adapter_
     monotonic_now = start_monotonic_time + (
         (ADVERTISING_TIMES_NEEDED - 1) * ONE_HOUR_SECONDS
     )
-    with patch(
-        "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
-        return_value=monotonic_now + UNAVAILABLE_TRACK_SECONDS,
+    with patch_bluetooth_time(
+        monotonic_now + UNAVAILABLE_TRACK_SECONDS,
     ):
         async_fire_time_changed(
             hass, dt_util.utcnow() + timedelta(seconds=UNAVAILABLE_TRACK_SECONDS)
@@ -352,8 +346,8 @@ async def test_advertisment_interval_longer_than_adapter_stack_timeout_adapter_c
     )
     switchbot_device_went_unavailable = False
 
-    scanner = FakeScanner(hass, "new", "fake_adapter")
-    cancel_scanner = async_register_scanner(hass, scanner, False)
+    scanner = FakeScanner("new", "fake_adapter")
+    cancel_scanner = async_register_scanner(hass, scanner)
 
     @callback
     def _switchbot_device_unavailable_callback(_address: str) -> None:
@@ -404,9 +398,8 @@ async def test_advertisment_interval_longer_than_adapter_stack_timeout_adapter_c
     monotonic_now = start_monotonic_time + (
         (ADVERTISING_TIMES_NEEDED - 1) * ONE_HOUR_SECONDS
     )
-    with patch(
-        "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
-        return_value=monotonic_now + UNAVAILABLE_TRACK_SECONDS,
+    with patch_bluetooth_time(
+        monotonic_now + UNAVAILABLE_TRACK_SECONDS,
     ):
         async_fire_time_changed(
             hass, dt_util.utcnow() + timedelta(seconds=UNAVAILABLE_TRACK_SECONDS)
@@ -417,9 +410,8 @@ async def test_advertisment_interval_longer_than_adapter_stack_timeout_adapter_c
     cancel_scanner()
 
     # Now that the scanner is gone we should go back to the stack default timeout
-    with patch(
-        "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
-        return_value=monotonic_now + UNAVAILABLE_TRACK_SECONDS,
+    with patch_bluetooth_time(
+        monotonic_now + UNAVAILABLE_TRACK_SECONDS,
     ):
         async_fire_time_changed(
             hass, dt_util.utcnow() + timedelta(seconds=UNAVAILABLE_TRACK_SECONDS)
@@ -429,9 +421,8 @@ async def test_advertisment_interval_longer_than_adapter_stack_timeout_adapter_c
     assert switchbot_device_went_unavailable is False
 
     # Now that the scanner is gone we should go back to the stack default timeout
-    with patch(
-        "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
-        return_value=monotonic_now + UNAVAILABLE_TRACK_SECONDS,
+    with patch_bluetooth_time(
+        monotonic_now + UNAVAILABLE_TRACK_SECONDS,
     ):
         async_fire_time_changed(
             hass,
@@ -486,9 +477,8 @@ async def test_advertisment_interval_longer_increasing_than_adapter_stack_timeou
     )
 
     monotonic_now = start_monotonic_time + UNAVAILABLE_TRACK_SECONDS + 1
-    with patch(
-        "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
-        return_value=monotonic_now + UNAVAILABLE_TRACK_SECONDS,
+    with patch_bluetooth_time(
+        monotonic_now + UNAVAILABLE_TRACK_SECONDS,
     ):
         async_fire_time_changed(
             hass, dt_util.utcnow() + timedelta(seconds=UNAVAILABLE_TRACK_SECONDS)

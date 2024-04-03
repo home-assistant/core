@@ -1,4 +1,5 @@
 """Support for getting collected information from PVOutput."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -28,18 +29,11 @@ from .const import CONF_SYSTEM_ID, DOMAIN
 from .coordinator import PVOutputDataUpdateCoordinator
 
 
-@dataclass
-class PVOutputSensorEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class PVOutputSensorEntityDescription(SensorEntityDescription):
+    """Describes a PVOutput sensor entity."""
 
     value_fn: Callable[[Status], int | float | None]
-
-
-@dataclass
-class PVOutputSensorEntityDescription(
-    SensorEntityDescription, PVOutputSensorEntityDescriptionMixin
-):
-    """Describes a PVOutput sensor entity."""
 
 
 SENSORS: tuple[PVOutputSensorEntityDescription, ...] = (

@@ -1,5 +1,5 @@
 """Test ESPHome dashboard features."""
-import asyncio
+
 from unittest.mock import patch
 
 from aioesphomeapi import DeviceInfo, InvalidAuthAPIError
@@ -45,12 +45,31 @@ async def test_restore_dashboard_storage(
         assert mock_get_or_create.call_count == 1
 
 
+async def test_restore_dashboard_storage_end_to_end(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, hass_storage
+) -> MockConfigEntry:
+    """Restore dashboard url and slug from storage."""
+    hass_storage[dashboard.STORAGE_KEY] = {
+        "version": dashboard.STORAGE_VERSION,
+        "minor_version": dashboard.STORAGE_VERSION,
+        "key": dashboard.STORAGE_KEY,
+        "data": {"info": {"addon_slug": "test-slug", "host": "new-host", "port": 6052}},
+    }
+    with patch(
+        "homeassistant.components.esphome.dashboard.ESPHomeDashboardAPI"
+    ) as mock_dashboard_api:
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+        assert mock_config_entry.state == ConfigEntryState.LOADED
+        assert mock_dashboard_api.mock_calls[0][1][0] == "http://new-host:6052"
+
+
 async def test_setup_dashboard_fails(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, hass_storage
 ) -> MockConfigEntry:
     """Test that nothing is stored on failed dashboard setup when there was no dashboard before."""
     with patch.object(
-        dashboard.ESPHomeDashboardAPI, "get_devices", side_effect=asyncio.TimeoutError
+        dashboard.ESPHomeDashboardAPI, "get_devices", side_effect=TimeoutError
     ) as mock_get_devices:
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
@@ -79,11 +98,14 @@ async def test_setup_dashboard_fails_when_already_setup(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    with patch.object(
-        dashboard.ESPHomeDashboardAPI, "get_devices", side_effect=asyncio.TimeoutError
-    ) as mock_get_devices, patch(
-        "homeassistant.components.esphome.async_setup_entry", return_value=True
-    ) as mock_setup:
+    with (
+        patch.object(
+            dashboard.ESPHomeDashboardAPI, "get_devices", side_effect=TimeoutError
+        ) as mock_get_devices,
+        patch(
+            "homeassistant.components.esphome.async_setup_entry", return_value=True
+        ) as mock_setup,
+    ):
         await dashboard.async_set_dashboard_info(hass, "test-slug", "test-host", 6052)
         await hass.async_block_till_done()
 
@@ -147,12 +169,15 @@ async def test_new_dashboard_fix_reauth(
 
     await dashboard.async_get_dashboard(hass).async_refresh()
 
-    with patch(
-        "homeassistant.components.esphome.dashboard.ESPHomeDashboardAPI.get_encryption_key",
-        return_value=VALID_NOISE_PSK,
-    ) as mock_get_encryption_key, patch(
-        "homeassistant.components.esphome.async_setup_entry", return_value=True
-    ) as mock_setup:
+    with (
+        patch(
+            "homeassistant.components.esphome.dashboard.ESPHomeDashboardAPI.get_encryption_key",
+            return_value=VALID_NOISE_PSK,
+        ) as mock_get_encryption_key,
+        patch(
+            "homeassistant.components.esphome.async_setup_entry", return_value=True
+        ) as mock_setup,
+    ):
         await dashboard.async_set_dashboard_info(hass, "test-slug", "test-host", 6052)
         await hass.async_block_till_done()
 
@@ -168,6 +193,9 @@ async def test_dashboard_supports_update(hass: HomeAssistant, mock_dashboard) ->
     # No data
     assert not dash.supports_update
 
+    await dash.async_refresh()
+    assert dash.supports_update is None
+
     # supported version
     mock_dashboard["configured"].append(
         {
@@ -177,11 +205,11 @@ async def test_dashboard_supports_update(hass: HomeAssistant, mock_dashboard) ->
         }
     )
     await dash.async_refresh()
-
-    assert dash.supports_update
+    assert dash.supports_update is True
 
     # unsupported version
+    dash.supports_update = None
     mock_dashboard["configured"][0]["current_version"] = "2023.1.0"
     await dash.async_refresh()
 
-    assert not dash.supports_update
+    assert dash.supports_update is False

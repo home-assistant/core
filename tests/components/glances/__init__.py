@@ -1,12 +1,12 @@
 """Tests for Glances."""
 
+from datetime import datetime
 from typing import Any
 
 MOCK_USER_INPUT: dict[str, Any] = {
     "host": "0.0.0.0",
     "username": "username",
     "password": "password",
-    "version": 3,
     "port": 61208,
     "ssl": False,
     "verify_ssl": True,
@@ -174,6 +174,8 @@ MOCK_DATA = {
     "uptime": "3 days, 10:25:20",
 }
 
+MOCK_REFERENCE_DATE: datetime = datetime.fromisoformat("2024-02-13T14:13:12")
+
 HA_SENSOR_DATA: dict[str, Any] = {
     "fs": {
         "/ssl": {"disk_use": 30.7, "disk_use_percent": 6.7, "disk_free": 426.5},
@@ -181,8 +183,8 @@ HA_SENSOR_DATA: dict[str, Any] = {
     },
     "sensors": {
         "cpu_thermal 1": {"temperature_core": 59},
-        "err_temp": {"temperature_hdd": "Unavailable"},
-        "na_temp": {"temperature_hdd": "Unavailable"},
+        "err_temp": {"temperature_hdd": "unavailable"},
+        "na_temp": {"temperature_hdd": "unavailable"},
     },
     "mem": {
         "memory_use_percent": 27.6,
@@ -208,4 +210,5 @@ HA_SENSOR_DATA: dict[str, Any] = {
             "config": "UU",
         },
     },
+    "uptime": "3 days, 10:25:20",
 }

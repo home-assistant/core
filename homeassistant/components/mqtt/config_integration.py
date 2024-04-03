@@ -1,4 +1,5 @@
 """Support for MQTT platform config setup."""
+
 from __future__ import annotations
 
 import voluptuous as vol
@@ -53,6 +54,7 @@ CONFIG_SCHEMA_BASE = vol.Schema(
         Platform.TEXT.value: vol.All(cv.ensure_list, [dict]),
         Platform.UPDATE.value: vol.All(cv.ensure_list, [dict]),
         Platform.VACUUM.value: vol.All(cv.ensure_list, [dict]),
+        Platform.VALVE.value: vol.All(cv.ensure_list, [dict]),
         Platform.WATER_HEATER.value: vol.All(cv.ensure_list, [dict]),
     }
 )

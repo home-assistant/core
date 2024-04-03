@@ -1,4 +1,5 @@
 """Support for Decora dimmers."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -60,7 +61,7 @@ PLATFORM_SCHEMA = vol.Schema(
 
 
 def retry(
-    method: Callable[Concatenate[_DecoraLightT, _P], _R]
+    method: Callable[Concatenate[_DecoraLightT, _P], _R],
 ) -> Callable[Concatenate[_DecoraLightT, _P], _R | None]:
     """Retry bluetooth commands."""
 

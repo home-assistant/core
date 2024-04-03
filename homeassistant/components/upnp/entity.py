@@ -1,4 +1,5 @@
 """Entity for UPnP/IGD."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -10,7 +11,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .coordinator import UpnpDataUpdateCoordinator
 
 
-@dataclass
+@dataclass(frozen=True)
 class UpnpEntityDescription(EntityDescription):
     """UPnP entity description."""
 
@@ -19,7 +20,7 @@ class UpnpEntityDescription(EntityDescription):
 
     def __post_init__(self):
         """Post initialize."""
-        self.value_key = self.value_key or self.key
+        object.__setattr__(self, "value_key", self.value_key or self.key)
 
 
 class UpnpEntity(CoordinatorEntity[UpnpDataUpdateCoordinator]):

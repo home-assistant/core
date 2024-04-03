@@ -1,7 +1,9 @@
 """Test RainMachine diagnostics."""
+
 from regenmaschine.errors import RainMachineError
 
 from homeassistant.components.diagnostics import REDACTED
+from homeassistant.components.rainmachine.const import DEFAULT_ZONE_RUN
 from homeassistant.core import HomeAssistant
 
 from tests.components.diagnostics import get_diagnostics_for_config_entry
@@ -19,6 +21,7 @@ async def test_entry_diagnostics(
         "entry": {
             "entry_id": config_entry.entry_id,
             "version": 2,
+            "minor_version": 1,
             "domain": "rainmachine",
             "title": "Mock Title",
             "data": {
@@ -27,7 +30,11 @@ async def test_entry_diagnostics(
                 "port": 8080,
                 "ssl": True,
             },
-            "options": {"use_app_run_times": False},
+            "options": {
+                "zone_run_time": DEFAULT_ZONE_RUN,
+                "use_app_run_times": False,
+                "allow_inactive_zones_to_run": False,
+            },
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "source": "user",
@@ -645,6 +652,7 @@ async def test_entry_diagnostics_failed_controller_diagnostics(
         "entry": {
             "entry_id": config_entry.entry_id,
             "version": 2,
+            "minor_version": 1,
             "domain": "rainmachine",
             "title": "Mock Title",
             "data": {
@@ -653,7 +661,11 @@ async def test_entry_diagnostics_failed_controller_diagnostics(
                 "port": 8080,
                 "ssl": True,
             },
-            "options": {"use_app_run_times": False},
+            "options": {
+                "zone_run_time": DEFAULT_ZONE_RUN,
+                "use_app_run_times": False,
+                "allow_inactive_zones_to_run": False,
+            },
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "source": "user",

@@ -1,9 +1,6 @@
 """Test the Cloudflare config flow."""
-from pycfdns.exceptions import (
-    CloudflareAuthenticationException,
-    CloudflareConnectionException,
-    CloudflareZoneException,
-)
+
+import pycfdns
 
 from homeassistant.components.cloudflare.const import CONF_RECORDS, DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
@@ -28,7 +25,7 @@ async def test_user_form(hass: HomeAssistant, cfupdate_flow) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={CONF_SOURCE: SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -38,7 +35,7 @@ async def test_user_form(hass: HomeAssistant, cfupdate_flow) -> None:
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "zone"
     assert result["errors"] == {}
 
@@ -48,7 +45,7 @@ async def test_user_form(hass: HomeAssistant, cfupdate_flow) -> None:
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "records"
     assert result["errors"] is None
 
@@ -59,7 +56,7 @@ async def test_user_form(hass: HomeAssistant, cfupdate_flow) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == USER_INPUT_ZONE[CONF_ZONE]
 
     assert result["data"]
@@ -81,13 +78,13 @@ async def test_user_form_cannot_connect(hass: HomeAssistant, cfupdate_flow) -> N
         DOMAIN, context={CONF_SOURCE: SOURCE_USER}
     )
 
-    instance.get_zones.side_effect = CloudflareConnectionException()
+    instance.list_zones.side_effect = pycfdns.ComunicationException()
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         USER_INPUT,
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -99,32 +96,14 @@ async def test_user_form_invalid_auth(hass: HomeAssistant, cfupdate_flow) -> Non
         DOMAIN, context={CONF_SOURCE: SOURCE_USER}
     )
 
-    instance.get_zones.side_effect = CloudflareAuthenticationException()
+    instance.list_zones.side_effect = pycfdns.AuthenticationException()
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         USER_INPUT,
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_auth"}
-
-
-async def test_user_form_invalid_zone(hass: HomeAssistant, cfupdate_flow) -> None:
-    """Test we handle invalid zone error."""
-    instance = cfupdate_flow.return_value
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={CONF_SOURCE: SOURCE_USER}
-    )
-
-    instance.get_zones.side_effect = CloudflareZoneException()
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        USER_INPUT,
-    )
-
-    assert result["type"] == FlowResultType.FORM
-    assert result["errors"] == {"base": "invalid_zone"}
 
 
 async def test_user_form_unexpected_exception(
@@ -137,13 +116,13 @@ async def test_user_form_unexpected_exception(
         DOMAIN, context={CONF_SOURCE: SOURCE_USER}
     )
 
-    instance.get_zones.side_effect = Exception()
+    instance.list_zones.side_effect = Exception()
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         USER_INPUT,
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "unknown"}
 
 
@@ -157,7 +136,7 @@ async def test_user_form_single_instance_allowed(hass: HomeAssistant) -> None:
         context={CONF_SOURCE: SOURCE_USER},
         data=USER_INPUT,
     )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
 
 
@@ -175,7 +154,7 @@ async def test_reauth_flow(hass: HomeAssistant, cfupdate_flow) -> None:
         },
         data=entry.data,
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
     with _patch_async_setup_entry() as mock_setup_entry:
@@ -185,7 +164,7 @@ async def test_reauth_flow(hass: HomeAssistant, cfupdate_flow) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
 
     assert entry.data[CONF_API_TOKEN] == "other_token"

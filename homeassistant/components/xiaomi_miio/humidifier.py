@@ -1,4 +1,5 @@
 """Support for Xiaomi Mi Air Purifier and Xiaomi Mi Air Humidifier with humidifier entity."""
+
 import logging
 import math
 from typing import Any
@@ -20,13 +21,12 @@ from homeassistant.components.humidifier import (
     HumidifierEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_MODE, CONF_MODEL
+from homeassistant.const import ATTR_MODE, CONF_DEVICE, CONF_MODEL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.percentage import percentage_to_ranged_value
 
 from .const import (
-    CONF_DEVICE,
     CONF_FLOW_TYPE,
     DOMAIN,
     KEY_COORDINATOR,
@@ -159,7 +159,7 @@ class XiaomiGenericHumidifier(XiaomiCoordinatedMiioEntity, HumidifierEntity):
             self._state = False
             self.async_write_ha_state()
 
-    def translate_humidity(self, humidity):
+    def translate_humidity(self, humidity: float) -> float | None:
         """Translate the target humidity to the first valid step."""
         return (
             math.ceil(percentage_to_ranged_value((1, self._humidity_steps), humidity))
@@ -240,7 +240,7 @@ class XiaomiAirHumidifier(XiaomiGenericHumidifier, HumidifierEntity):
             else None
         )
 
-    async def async_set_humidity(self, humidity: int) -> None:
+    async def async_set_humidity(self, humidity: float) -> None:
         """Set the target humidity of the humidifier and set the mode to auto."""
         target_humidity = self.translate_humidity(humidity)
         if not target_humidity:
@@ -318,7 +318,7 @@ class XiaomiAirHumidifierMiot(XiaomiAirHumidifier):
             )
         return None
 
-    async def async_set_humidity(self, humidity: int) -> None:
+    async def async_set_humidity(self, humidity: float) -> None:
         """Set the target humidity of the humidifier and set the mode to auto."""
         target_humidity = self.translate_humidity(humidity)
         if not target_humidity:
@@ -393,7 +393,7 @@ class XiaomiAirHumidifierMjjsq(XiaomiAirHumidifier):
                 return self._target_humidity
         return None
 
-    async def async_set_humidity(self, humidity: int) -> None:
+    async def async_set_humidity(self, humidity: float) -> None:
         """Set the target humidity of the humidifier and set the mode to Humidity."""
         target_humidity = self.translate_humidity(humidity)
         if not target_humidity:

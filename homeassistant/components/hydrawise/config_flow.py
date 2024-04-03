@@ -5,47 +5,44 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import Any
 
+from aiohttp import ClientError
 from pydrawise import legacy
-from requests.exceptions import ConnectTimeout, HTTPError
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN
-from homeassistant.data_entry_flow import AbortFlow, FlowResult, FlowResultType
+from homeassistant.data_entry_flow import AbortFlow, FlowResultType
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
 from .const import DOMAIN, LOGGER
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class HydrawiseConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Hydrawise."""
 
     VERSION = 1
 
     async def _create_entry(
-        self, api_key: str, *, on_failure: Callable[[str], FlowResult]
-    ) -> FlowResult:
+        self, api_key: str, *, on_failure: Callable[[str], ConfigFlowResult]
+    ) -> ConfigFlowResult:
         """Create the config entry."""
+        api = legacy.LegacyHydrawiseAsync(api_key)
         try:
-            api = await self.hass.async_add_executor_job(
-                legacy.LegacyHydrawise, api_key
-            )
-        except ConnectTimeout:
+            # Skip fetching zones to save on metered API calls.
+            user = await api.get_user(fetch_zones=False)
+        except TimeoutError:
             return on_failure("timeout_connect")
-        except HTTPError as ex:
+        except ClientError as ex:
             LOGGER.error("Unable to connect to Hydrawise cloud service: %s", ex)
             return on_failure("cannot_connect")
 
-        if not api.status:
-            return on_failure("unknown")
-
-        await self.async_set_unique_id(f"hydrawise-{api.customer_id}")
+        await self.async_set_unique_id(f"hydrawise-{user.customer_id}")
         self._abort_if_unique_id_configured()
 
         return self.async_create_entry(title="Hydrawise", data={CONF_API_KEY: api_key})
 
-    def _import_issue(self, error_type: str) -> FlowResult:
+    def _import_issue(self, error_type: str) -> ConfigFlowResult:
         """Create an issue about a YAML import failure."""
         async_create_issue(
             self.hass,
@@ -55,7 +52,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             is_fixable=False,
             severity=IssueSeverity.ERROR,
             translation_key="deprecated_yaml_import_issue",
-            translation_placeholders={"error_type": error_type},
+            translation_placeholders={
+                "error_type": error_type,
+                "url": "/config/integrations/dashboard/add?domain=hydrawise",
+            },
         )
         return self.async_abort(reason=error_type)
 
@@ -78,14 +78,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial setup."""
         if user_input is not None:
             api_key = user_input[CONF_API_KEY]
             return await self._create_entry(api_key, on_failure=self._show_form)
         return self._show_form()
 
-    def _show_form(self, error_type: str | None = None) -> FlowResult:
+    def _show_form(self, error_type: str | None = None) -> ConfigFlowResult:
         errors = {}
         if error_type is not None:
             errors["base"] = error_type
@@ -95,7 +95,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(self, import_data: dict[str, Any]) -> FlowResult:
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import data from YAML."""
         try:
             result = await self._create_entry(

@@ -1,5 +1,13 @@
 """Constants for the cloud component."""
+
+from __future__ import annotations
+
+from typing import Any
+
+from homeassistant.util.signal_type import SignalType
+
 DOMAIN = "cloud"
+DATA_PLATFORMS_SETUP = "cloud_platforms_setup"
 REQUEST_TIMEOUT = 10
 
 PREF_ENABLE_ALEXA = "alexa_enabled"
@@ -13,6 +21,7 @@ PREF_GOOGLE_REPORT_STATE = "google_report_state"
 PREF_ALEXA_ENTITY_CONFIGS = "alexa_entity_configs"
 PREF_ALEXA_REPORT_STATE = "alexa_report_state"
 PREF_DISABLE_2FA = "disable_2fa"
+PREF_INSTANCE_ID = "instance_id"
 PREF_SHOULD_EXPOSE = "should_expose"
 PREF_GOOGLE_LOCAL_WEBHOOK_ID = "google_local_webhook_id"
 PREF_USERNAME = "username"
@@ -22,7 +31,9 @@ PREF_GOOGLE_DEFAULT_EXPOSE = "google_default_expose"
 PREF_ALEXA_SETTINGS_VERSION = "alexa_settings_version"
 PREF_GOOGLE_SETTINGS_VERSION = "google_settings_version"
 PREF_TTS_DEFAULT_VOICE = "tts_default_voice"
-DEFAULT_TTS_DEFAULT_VOICE = ("en-US", "female")
+PREF_GOOGLE_CONNECTED = "google_connected"
+PREF_REMOTE_ALLOW_REMOTE_ENABLE = "remote_allow_remote_enable"
+DEFAULT_TTS_DEFAULT_VOICE = ("en-US", "JennyNeural")
 DEFAULT_DISABLE_2FA = False
 DEFAULT_ALEXA_REPORT_STATE = True
 DEFAULT_GOOGLE_REPORT_STATE = True
@@ -62,4 +73,7 @@ CONF_SERVICEHANDLERS_SERVER = "servicehandlers_server"
 MODE_DEV = "development"
 MODE_PROD = "production"
 
-DISPATCHER_REMOTE_UPDATE = "cloud_remote_update"
+DISPATCHER_REMOTE_UPDATE: SignalType[Any] = SignalType("cloud_remote_update")
+
+STT_ENTITY_UNIQUE_ID = "cloud-speech-to-text"
+TTS_ENTITY_UNIQUE_ID = "cloud-text-to-speech"

@@ -1,6 +1,7 @@
 """Test blueprint models."""
+
 import logging
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -49,7 +50,7 @@ def blueprint_2():
 def domain_bps(hass):
     """Domain blueprints fixture."""
     return models.DomainBlueprints(
-        hass, "automation", logging.getLogger(__name__), None
+        hass, "automation", logging.getLogger(__name__), None, AsyncMock()
     )
 
 
@@ -206,14 +207,18 @@ async def test_domain_blueprints_get_blueprint_errors(
     """Test domain blueprints."""
     assert hass.data["blueprint"]["automation"] is domain_bps
 
-    with pytest.raises(errors.FailedToLoad), patch(
-        "homeassistant.util.yaml.load_yaml", side_effect=FileNotFoundError
+    with (
+        pytest.raises(errors.FailedToLoad),
+        patch("homeassistant.util.yaml.load_yaml", side_effect=FileNotFoundError),
     ):
         await domain_bps.async_get_blueprint("non-existing-path")
 
-    with patch(
-        "homeassistant.util.yaml.load_yaml", return_value={"blueprint": "invalid"}
-    ), pytest.raises(errors.FailedToLoad):
+    with (
+        patch(
+            "homeassistant.util.yaml.load_yaml", return_value={"blueprint": "invalid"}
+        ),
+        pytest.raises(errors.FailedToLoad),
+    ):
         await domain_bps.async_get_blueprint("non-existing-path")
 
 
@@ -239,8 +244,9 @@ async def test_domain_blueprints_inputs_from_config(domain_bps, blueprint_1) -> 
     with pytest.raises(errors.InvalidBlueprintInputs):
         await domain_bps.async_inputs_from_config({"not-referencing": "use_blueprint"})
 
-    with pytest.raises(errors.MissingInput), patch.object(
-        domain_bps, "async_get_blueprint", return_value=blueprint_1
+    with (
+        pytest.raises(errors.MissingInput),
+        patch.object(domain_bps, "async_get_blueprint", return_value=blueprint_1),
     ):
         await domain_bps.async_inputs_from_config(
             {"use_blueprint": {"path": "bla.yaml", "input": {}}}
@@ -257,12 +263,8 @@ async def test_domain_blueprints_inputs_from_config(domain_bps, blueprint_1) -> 
 async def test_domain_blueprints_add_blueprint(domain_bps, blueprint_1) -> None:
     """Test DomainBlueprints.async_add_blueprint."""
     with patch.object(domain_bps, "_create_file") as create_file_mock:
-        # Should add extension when not present.
-        await domain_bps.async_add_blueprint(blueprint_1, "something")
+        await domain_bps.async_add_blueprint(blueprint_1, "something.yaml")
         assert create_file_mock.call_args[0][1] == "something.yaml"
-
-        await domain_bps.async_add_blueprint(blueprint_1, "something2.yaml")
-        assert create_file_mock.call_args[0][1] == "something2.yaml"
 
     # Should be in cache.
     with patch.object(domain_bps, "_load_blueprint") as mock_load:

@@ -1,24 +1,34 @@
 """Assist pipeline Websocket API."""
+
 import asyncio
 
 # Suppressing disable=deprecated-module is needed for Python 3.11
 import audioop  # pylint: disable=deprecated-module
+import base64
 from collections.abc import AsyncGenerator, Callable
+import contextlib
 import logging
-from typing import Any
+import math
+from typing import Any, Final
 
 import voluptuous as vol
 
 from homeassistant.components import conversation, stt, tts, websocket_api
-from homeassistant.const import MATCH_ALL
+from homeassistant.const import ATTR_DEVICE_ID, ATTR_SECONDS, MATCH_ALL
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.util import language as language_util
 
-from .const import DEFAULT_PIPELINE_TIMEOUT, DEFAULT_WAKE_WORD_TIMEOUT, DOMAIN
+from .const import (
+    DEFAULT_PIPELINE_TIMEOUT,
+    DEFAULT_WAKE_WORD_TIMEOUT,
+    DOMAIN,
+    EVENT_RECORDING,
+)
 from .error import PipelineNotFound
 from .pipeline import (
     AudioSettings,
+    DeviceAudioQueue,
     PipelineData,
     PipelineError,
     PipelineEvent,
@@ -32,6 +42,11 @@ from .pipeline import (
 
 _LOGGER = logging.getLogger(__name__)
 
+CAPTURE_RATE: Final = 16000
+CAPTURE_WIDTH: Final = 2
+CAPTURE_CHANNELS: Final = 1
+MAX_CAPTURE_TIMEOUT: Final = 60.0
+
 
 @callback
 def async_register_websocket_api(hass: HomeAssistant) -> None:
@@ -39,7 +54,9 @@ def async_register_websocket_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_run)
     websocket_api.async_register_command(hass, websocket_list_languages)
     websocket_api.async_register_command(hass, websocket_list_runs)
+    websocket_api.async_register_command(hass, websocket_list_devices)
     websocket_api.async_register_command(hass, websocket_get_run)
+    websocket_api.async_register_command(hass, websocket_device_capture)
 
 
 @websocket_api.websocket_command(
@@ -81,7 +98,12 @@ def async_register_websocket_api(hass: HomeAssistant) -> None:
                     extra=vol.ALLOW_EXTRA,
                 ),
                 PipelineStage.STT: vol.Schema(
-                    {vol.Required("input"): {vol.Required("sample_rate"): int}},
+                    {
+                        vol.Required("input"): {
+                            vol.Required("sample_rate"): int,
+                            vol.Optional("wake_word_phrase"): str,
+                        }
+                    },
                     extra=vol.ALLOW_EXTRA,
                 ),
                 PipelineStage.INTENT: vol.Schema(
@@ -133,12 +155,15 @@ async def websocket_run(
         msg_input = msg["input"]
         audio_queue: asyncio.Queue[bytes] = asyncio.Queue()
         incoming_sample_rate = msg_input["sample_rate"]
+        wake_word_phrase: str | None = None
 
         if start_stage == PipelineStage.WAKE_WORD:
             wake_word_settings = WakeWordSettings(
                 timeout=msg["input"].get("timeout", DEFAULT_WAKE_WORD_TIMEOUT),
                 audio_seconds_to_buffer=msg_input.get("audio_seconds_to_buffer", 0),
             )
+        elif start_stage == PipelineStage.STT:
+            wake_word_phrase = msg["input"].get("wake_word_phrase")
 
         async def stt_stream() -> AsyncGenerator[bytes, None]:
             state = None
@@ -173,6 +198,7 @@ async def websocket_run(
             channel=stt.AudioChannels.CHANNEL_MONO,
         )
         input_args["stt_stream"] = stt_stream()
+        input_args["wake_word_phrase"] = wake_word_phrase
 
         # Audio settings
         audio_settings = AudioSettings(
@@ -225,7 +251,7 @@ async def websocket_run(
         # Task contains a timeout
         async with asyncio.timeout(timeout):
             await run_task
-    except asyncio.TimeoutError:
+    except TimeoutError:
         pipeline_input.run.process_event(
             PipelineEvent(
                 PipelineEventType.ERROR,
@@ -269,6 +295,35 @@ def websocket_list_runs(
                 for id, pipeline_run in pipeline_debug.items()
             ]
         },
+    )
+
+
+@callback
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "assist_pipeline/device/list",
+    }
+)
+def websocket_list_devices(
+    hass: HomeAssistant,
+    connection: websocket_api.connection.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """List assist devices."""
+    pipeline_data: PipelineData = hass.data[DOMAIN]
+    ent_reg = er.async_get(hass)
+    connection.send_result(
+        msg["id"],
+        [
+            {
+                "device_id": device_id,
+                "pipeline_entity": ent_reg.async_get_entity_id(
+                    "select", info.domain, f"{info.unique_id_prefix}-pipeline"
+                ),
+            }
+            for device_id, info in pipeline_data.pipeline_devices.items()
+        ],
     )
 
 
@@ -371,3 +426,100 @@ async def websocket_list_languages(
             else pipeline_languages
         },
     )
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "assist_pipeline/device/capture",
+        vol.Required("device_id"): str,
+        vol.Required("timeout"): vol.All(
+            # 0 < timeout <= MAX_CAPTURE_TIMEOUT
+            vol.Coerce(float),
+            vol.Range(min=0, min_included=False, max=MAX_CAPTURE_TIMEOUT),
+        ),
+    }
+)
+@websocket_api.async_response
+async def websocket_device_capture(
+    hass: HomeAssistant,
+    connection: websocket_api.connection.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Capture raw audio from a satellite device and forward to client."""
+    pipeline_data: PipelineData = hass.data[DOMAIN]
+    device_id = msg["device_id"]
+
+    # Number of seconds to record audio in wall clock time
+    timeout_seconds = msg["timeout"]
+
+    # We don't know the chunk size, so the upper bound is calculated assuming a
+    # single sample (16 bits) per queue item.
+    max_queue_items = (
+        # +1 for None to signal end
+        int(math.ceil(timeout_seconds * CAPTURE_RATE)) + 1
+    )
+
+    audio_queue = DeviceAudioQueue(queue=asyncio.Queue(maxsize=max_queue_items))
+
+    # Running simultaneous captures for a single device will not work by design.
+    # The new capture will cause the old capture to stop.
+    if (
+        old_audio_queue := pipeline_data.device_audio_queues.pop(device_id, None)
+    ) is not None:
+        with contextlib.suppress(asyncio.QueueFull):
+            # Signal other websocket command that we're taking over
+            old_audio_queue.queue.put_nowait(None)
+
+    # Only one client can be capturing audio at a time
+    pipeline_data.device_audio_queues[device_id] = audio_queue
+
+    def clean_up_queue() -> None:
+        # Clean up our audio queue
+        maybe_audio_queue = pipeline_data.device_audio_queues.get(device_id)
+        if (maybe_audio_queue is not None) and (maybe_audio_queue.id == audio_queue.id):
+            # Only pop if this is our queue
+            pipeline_data.device_audio_queues.pop(device_id)
+
+    # Unsubscribe cleans up queue
+    connection.subscriptions[msg["id"]] = clean_up_queue
+
+    # Audio will follow as events
+    connection.send_result(msg["id"])
+
+    # Record to logbook
+    hass.bus.async_fire(
+        EVENT_RECORDING,
+        {
+            ATTR_DEVICE_ID: device_id,
+            ATTR_SECONDS: timeout_seconds,
+        },
+    )
+
+    try:
+        with contextlib.suppress(TimeoutError):
+            async with asyncio.timeout(timeout_seconds):
+                while True:
+                    # Send audio chunks encoded as base64
+                    audio_bytes = await audio_queue.queue.get()
+                    if audio_bytes is None:
+                        # Signal to stop
+                        break
+
+                    connection.send_event(
+                        msg["id"],
+                        {
+                            "type": "audio",
+                            "rate": CAPTURE_RATE,  # hertz
+                            "width": CAPTURE_WIDTH,  # bytes
+                            "channels": CAPTURE_CHANNELS,
+                            "audio": base64.b64encode(audio_bytes).decode("ascii"),
+                        },
+                    )
+
+        # Capture has ended
+        connection.send_event(
+            msg["id"], {"type": "end", "overflow": audio_queue.overflow}
+        )
+    finally:
+        clean_up_queue()

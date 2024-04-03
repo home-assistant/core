@@ -478,5 +478,37 @@
         }
       }
     }
+  },
+  "exceptions": {
+    "no_target_temperature_in_features": {
+      "message": "Current mode doesn't support setting target temperature"
+    },
+    "no_target_temperature": {
+      "message": "No target temperature provided"
+    },
+    "no_fan_level_in_features": {
+      "message": "Current mode doesn't support setting fan level"
+    },
+    "fan_mode_not_supported": {
+      "message": "Climate fan mode {fan_mode} is not supported by the integration, please open an issue"
+    },
+    "no_swing_in_features": {
+      "message": "Current mode doesn't support setting swing"
+    },
+    "swing_not_supported": {
+      "message": "Climate swing mode {swing_mode} is not supported by the integration, please open an issue"
+    },
+    "service_result_not_true": {
+      "message": "Could not execute service for {name}"
+    },
+    "service_raised": {
+      "message": "Could not execute service for {name} with error {error}"
+    },
+    "select_option_not_available": {
+      "message": "Current mode {hvac_mode} doesn't support setting {key}"
+    },
+    "climate_react_not_available": {
+      "message": "Use Sensibo Enable Climate React Service once to enable switch or the Sensibo app"
+    }
   }
 }

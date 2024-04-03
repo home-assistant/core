@@ -1,4 +1,5 @@
 """Support to interface with Sonos players."""
+
 from __future__ import annotations
 
 import datetime
@@ -280,9 +281,9 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
 
     async def _async_fallback_poll(self) -> None:
         """Retrieve latest state by polling."""
-        await self.hass.data[DATA_SONOS].favorites[
-            self.speaker.household_id
-        ].async_poll()
+        await (
+            self.hass.data[DATA_SONOS].favorites[self.speaker.household_id].async_poll()
+        )
         await self.hass.async_add_executor_job(self._update)
 
     def _update(self) -> None:
@@ -625,13 +626,13 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
                 soco.play_uri(media_id, force_radio=is_radio)
         elif media_type == MediaType.PLAYLIST:
             if media_id.startswith("S:"):
-                item = media_browser.get_media(self.media.library, media_id, media_type)
-                soco.play_uri(item.get_uri())
-                return
-            try:
+                playlist = media_browser.get_media(
+                    self.media.library, media_id, media_type
+                )
+            else:
                 playlists = soco.get_sonos_playlists(complete_result=True)
-                playlist = next(p for p in playlists if p.title == media_id)
-            except StopIteration:
+                playlist = next((p for p in playlists if p.title == media_id), None)
+            if not playlist:
                 _LOGGER.error('Could not find a Sonos playlist named "%s"', media_id)
             else:
                 soco.clear_queue()

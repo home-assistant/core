@@ -1,22 +1,25 @@
 """Test Home Assistant yaml loader."""
+
+from collections.abc import Generator
 import importlib
 import io
 import os
 import pathlib
 from typing import Any
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import pytest
+import voluptuous as vol
 import yaml as pyyaml
 
 from homeassistant.config import YAML_CONFIG_FILE, load_yaml_config_file
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-import homeassistant.util.yaml as yaml
+from homeassistant.util import yaml
 from homeassistant.util.yaml import loader as yaml_loader
 
-from tests.common import get_test_config_dir, patch_yaml_files
+from tests.common import extract_stack_to_frame, get_test_config_dir, patch_yaml_files
 
 
 @pytest.fixture(params=["enable_c_loader", "disable_c_loader"])
@@ -57,7 +60,7 @@ def test_simple_list(try_both_loaders) -> None:
     """Test simple list."""
     conf = "config:\n  - simple\n  - list"
     with io.StringIO(conf) as file:
-        doc = yaml_loader.yaml.load(file, Loader=yaml_loader.SafeLineLoader)
+        doc = yaml_loader.parse_yaml(file)
     assert doc["config"] == ["simple", "list"]
 
 
@@ -65,12 +68,12 @@ def test_simple_dict(try_both_loaders) -> None:
     """Test simple dict."""
     conf = "key: value"
     with io.StringIO(conf) as file:
-        doc = yaml_loader.yaml.load(file, Loader=yaml_loader.SafeLineLoader)
+        doc = yaml_loader.parse_yaml(file)
     assert doc["key"] == "value"
 
 
 @pytest.mark.parametrize("hass_config_yaml", ["message:\n  {{ states.state }}"])
-def test_unhashable_key(mock_hass_config_yaml: None) -> None:
+def test_unhashable_key(try_both_loaders, mock_hass_config_yaml: None) -> None:
     """Test an unhashable key."""
     with pytest.raises(HomeAssistantError):
         load_yaml_config_file(YAML_CONFIG_FILE)
@@ -88,7 +91,7 @@ def test_environment_variable(try_both_loaders) -> None:
     os.environ["PASSWORD"] = "secret_password"
     conf = "password: !env_var PASSWORD"
     with io.StringIO(conf) as file:
-        doc = yaml_loader.yaml.load(file, Loader=yaml_loader.SafeLineLoader)
+        doc = yaml_loader.parse_yaml(file)
     assert doc["password"] == "secret_password"
     del os.environ["PASSWORD"]
 
@@ -97,7 +100,7 @@ def test_environment_variable_default(try_both_loaders) -> None:
     """Test config file with default value for environment variable."""
     conf = "password: !env_var PASSWORD secret_password"
     with io.StringIO(conf) as file:
-        doc = yaml_loader.yaml.load(file, Loader=yaml_loader.SafeLineLoader)
+        doc = yaml_loader.parse_yaml(file)
     assert doc["password"] == "secret_password"
 
 
@@ -105,12 +108,16 @@ def test_invalid_environment_variable(try_both_loaders) -> None:
     """Test config file with no environment variable sat."""
     conf = "password: !env_var PASSWORD"
     with pytest.raises(HomeAssistantError), io.StringIO(conf) as file:
-        yaml_loader.yaml.load(file, Loader=yaml_loader.SafeLineLoader)
+        yaml_loader.parse_yaml(file)
 
 
 @pytest.mark.parametrize(
     ("hass_config_yaml_files", "value"),
-    [({"test.yaml": "value"}, "value"), ({"test.yaml": None}, {})],
+    [
+        ({"test.yaml": "value"}, "value"),
+        ({"test.yaml": None}, {}),
+        ({"test.yaml": "123"}, 123),
+    ],
 )
 def test_include_yaml(
     try_both_loaders, mock_hass_config_yaml: None, value: Any
@@ -118,24 +125,29 @@ def test_include_yaml(
     """Test include yaml."""
     conf = "key: !include test.yaml"
     with io.StringIO(conf) as file:
-        doc = yaml_loader.yaml.load(file, Loader=yaml_loader.SafeLineLoader)
+        doc = yaml_loader.parse_yaml(file)
         assert doc["key"] == value
 
 
 @patch("homeassistant.util.yaml.loader.os.walk")
 @pytest.mark.parametrize(
-    "hass_config_yaml_files", [{"/test/one.yaml": "one", "/test/two.yaml": "two"}]
+    ("hass_config_yaml_files", "value"),
+    [
+        ({"/test/one.yaml": "one", "/test/two.yaml": "two"}, ["one", "two"]),
+        ({"/test/one.yaml": "1", "/test/two.yaml": "2"}, [1, 2]),
+        ({"/test/one.yaml": "1", "/test/two.yaml": None}, [1]),
+    ],
 )
 def test_include_dir_list(
-    mock_walk, try_both_loaders, mock_hass_config_yaml: None
+    mock_walk, try_both_loaders, mock_hass_config_yaml: None, value: Any
 ) -> None:
     """Test include dir list yaml."""
     mock_walk.return_value = [["/test", [], ["two.yaml", "one.yaml"]]]
 
     conf = "key: !include_dir_list /test"
     with io.StringIO(conf) as file:
-        doc = yaml_loader.yaml.load(file, Loader=yaml_loader.SafeLineLoader)
-        assert doc["key"] == sorted(["one", "two"])
+        doc = yaml_loader.parse_yaml(file)
+        assert sorted(doc["key"]) == sorted(value)
 
 
 @patch("homeassistant.util.yaml.loader.os.walk")
@@ -162,7 +174,7 @@ def test_include_dir_list_recursive(
     conf = "key: !include_dir_list /test"
     with io.StringIO(conf) as file:
         assert ".ignore" in mock_walk.return_value[0][1], "Expecting .ignore in here"
-        doc = yaml_loader.yaml.load(file, Loader=yaml_loader.SafeLineLoader)
+        doc = yaml_loader.parse_yaml(file)
         assert "tmp2" in mock_walk.return_value[0][1]
         assert ".ignore" not in mock_walk.return_value[0][1]
         assert sorted(doc["key"]) == sorted(["zero", "one", "two"])
@@ -170,11 +182,24 @@ def test_include_dir_list_recursive(
 
 @patch("homeassistant.util.yaml.loader.os.walk")
 @pytest.mark.parametrize(
-    "hass_config_yaml_files",
-    [{"/test/first.yaml": "one", "/test/second.yaml": "two"}],
+    ("hass_config_yaml_files", "value"),
+    [
+        (
+            {"/test/first.yaml": "one", "/test/second.yaml": "two"},
+            {"first": "one", "second": "two"},
+        ),
+        (
+            {"/test/first.yaml": "1", "/test/second.yaml": "2"},
+            {"first": 1, "second": 2},
+        ),
+        (
+            {"/test/first.yaml": "1", "/test/second.yaml": None},
+            {"first": 1, "second": {}},
+        ),
+    ],
 )
 def test_include_dir_named(
-    mock_walk, try_both_loaders, mock_hass_config_yaml: None
+    mock_walk, try_both_loaders, mock_hass_config_yaml: None, value: Any
 ) -> None:
     """Test include dir named yaml."""
     mock_walk.return_value = [
@@ -182,10 +207,9 @@ def test_include_dir_named(
     ]
 
     conf = "key: !include_dir_named /test"
-    correct = {"first": "one", "second": "two"}
     with io.StringIO(conf) as file:
-        doc = yaml_loader.yaml.load(file, Loader=yaml_loader.SafeLineLoader)
-        assert doc["key"] == correct
+        doc = yaml_loader.parse_yaml(file)
+        assert doc["key"] == value
 
 
 @patch("homeassistant.util.yaml.loader.os.walk")
@@ -213,7 +237,7 @@ def test_include_dir_named_recursive(
     correct = {"first": "one", "second": "two", "third": "three"}
     with io.StringIO(conf) as file:
         assert ".ignore" in mock_walk.return_value[0][1], "Expecting .ignore in here"
-        doc = yaml_loader.yaml.load(file, Loader=yaml_loader.SafeLineLoader)
+        doc = yaml_loader.parse_yaml(file)
         assert "tmp2" in mock_walk.return_value[0][1]
         assert ".ignore" not in mock_walk.return_value[0][1]
         assert doc["key"] == correct
@@ -221,19 +245,32 @@ def test_include_dir_named_recursive(
 
 @patch("homeassistant.util.yaml.loader.os.walk")
 @pytest.mark.parametrize(
-    "hass_config_yaml_files",
-    [{"/test/first.yaml": "- one", "/test/second.yaml": "- two\n- three"}],
+    ("hass_config_yaml_files", "value"),
+    [
+        (
+            {"/test/first.yaml": "- one", "/test/second.yaml": "- two\n- three"},
+            ["one", "two", "three"],
+        ),
+        (
+            {"/test/first.yaml": "- 1", "/test/second.yaml": "- 2\n- 3"},
+            [1, 2, 3],
+        ),
+        (
+            {"/test/first.yaml": "- 1", "/test/second.yaml": None},
+            [1],
+        ),
+    ],
 )
 def test_include_dir_merge_list(
-    mock_walk, try_both_loaders, mock_hass_config_yaml: None
+    mock_walk, try_both_loaders, mock_hass_config_yaml: None, value: Any
 ) -> None:
     """Test include dir merge list yaml."""
     mock_walk.return_value = [["/test", [], ["first.yaml", "second.yaml"]]]
 
     conf = "key: !include_dir_merge_list /test"
     with io.StringIO(conf) as file:
-        doc = yaml_loader.yaml.load(file, Loader=yaml_loader.SafeLineLoader)
-        assert sorted(doc["key"]) == sorted(["one", "two", "three"])
+        doc = yaml_loader.parse_yaml(file)
+        assert sorted(doc["key"]) == sorted(value)
 
 
 @patch("homeassistant.util.yaml.loader.os.walk")
@@ -260,7 +297,7 @@ def test_include_dir_merge_list_recursive(
     conf = "key: !include_dir_merge_list /test"
     with io.StringIO(conf) as file:
         assert ".ignore" in mock_walk.return_value[0][1], "Expecting .ignore in here"
-        doc = yaml_loader.yaml.load(file, Loader=yaml_loader.SafeLineLoader)
+        doc = yaml_loader.parse_yaml(file)
         assert "tmp2" in mock_walk.return_value[0][1]
         assert ".ignore" not in mock_walk.return_value[0][1]
         assert sorted(doc["key"]) == sorted(["one", "two", "three", "four"])
@@ -268,24 +305,41 @@ def test_include_dir_merge_list_recursive(
 
 @patch("homeassistant.util.yaml.loader.os.walk")
 @pytest.mark.parametrize(
-    "hass_config_yaml_files",
+    ("hass_config_yaml_files", "value"),
     [
-        {
-            "/test/first.yaml": "key1: one",
-            "/test/second.yaml": "key2: two\nkey3: three",
-        }
+        (
+            {
+                "/test/first.yaml": "key1: one",
+                "/test/second.yaml": "key2: two\nkey3: three",
+            },
+            {"key1": "one", "key2": "two", "key3": "three"},
+        ),
+        (
+            {
+                "/test/first.yaml": "key1: 1",
+                "/test/second.yaml": "key2: 2\nkey3: 3",
+            },
+            {"key1": 1, "key2": 2, "key3": 3},
+        ),
+        (
+            {
+                "/test/first.yaml": "key1: 1",
+                "/test/second.yaml": None,
+            },
+            {"key1": 1},
+        ),
     ],
 )
 def test_include_dir_merge_named(
-    mock_walk, try_both_loaders, mock_hass_config_yaml: None
+    mock_walk, try_both_loaders, mock_hass_config_yaml: None, value: Any
 ) -> None:
     """Test include dir merge named yaml."""
     mock_walk.return_value = [["/test", [], ["first.yaml", "second.yaml"]]]
 
     conf = "key: !include_dir_merge_named /test"
     with io.StringIO(conf) as file:
-        doc = yaml_loader.yaml.load(file, Loader=yaml_loader.SafeLineLoader)
-        assert doc["key"] == {"key1": "one", "key2": "two", "key3": "three"}
+        doc = yaml_loader.parse_yaml(file)
+        assert doc["key"] == value
 
 
 @patch("homeassistant.util.yaml.loader.os.walk")
@@ -312,7 +366,7 @@ def test_include_dir_merge_named_recursive(
     conf = "key: !include_dir_merge_named /test"
     with io.StringIO(conf) as file:
         assert ".ignore" in mock_walk.return_value[0][1], "Expecting .ignore in here"
-        doc = yaml_loader.yaml.load(file, Loader=yaml_loader.SafeLineLoader)
+        doc = yaml_loader.parse_yaml(file)
         assert "tmp2" in mock_walk.return_value[0][1]
         assert ".ignore" not in mock_walk.return_value[0][1]
         assert doc["key"] == {
@@ -463,9 +517,9 @@ class TestSecrets(unittest.TestCase):
 
     def test_secrets_are_not_dict(self):
         """Did secrets handle non-dict file."""
-        FILES[
-            self._secret_path
-        ] = "- http_pw: pwhttp\n  comp1_un: un1\n  comp1_pw: pw1\n"
+        FILES[self._secret_path] = (
+            "- http_pw: pwhttp\n  comp1_un: un1\n  comp1_pw: pw1\n"
+        )
         with pytest.raises(HomeAssistantError):
             load_yaml(
                 self._yaml_path,
@@ -538,7 +592,7 @@ def test_c_loader_is_available_in_ci() -> None:
     assert yaml.loader.HAS_C_LOADER is True
 
 
-async def test_loading_actual_file_with_syntax(
+async def test_loading_actual_file_with_syntax_error(
     hass: HomeAssistant, try_both_loaders
 ) -> None:
     """Test loading a real file with syntax errors."""
@@ -547,3 +601,131 @@ async def test_loading_actual_file_with_syntax(
             "fixtures", "bad.yaml.txt"
         )
         await hass.async_add_executor_job(load_yaml_config_file, fixture_path)
+
+
+@pytest.fixture
+def mock_integration_frame() -> Generator[Mock, None, None]:
+    """Mock as if we're calling code from inside an integration."""
+    correct_frame = Mock(
+        filename="/home/paulus/homeassistant/components/hue/light.py",
+        lineno="23",
+        line="self.light.is_on",
+    )
+    with (
+        patch(
+            "homeassistant.helpers.frame.linecache.getline",
+            return_value=correct_frame.line,
+        ),
+        patch(
+            "homeassistant.helpers.frame.get_current_frame",
+            return_value=extract_stack_to_frame(
+                [
+                    Mock(
+                        filename="/home/paulus/homeassistant/core.py",
+                        lineno="23",
+                        line="do_something()",
+                    ),
+                    correct_frame,
+                    Mock(
+                        filename="/home/paulus/aiohue/lights.py",
+                        lineno="2",
+                        line="something()",
+                    ),
+                ]
+            ),
+        ),
+    ):
+        yield correct_frame
+
+
+@pytest.mark.parametrize(
+    ("loader_class", "message"),
+    [
+        (yaml.loader.SafeLoader, "'SafeLoader' instead of 'FastSafeLoader'"),
+        (
+            yaml.loader.SafeLineLoader,
+            "'SafeLineLoader' instead of 'PythonSafeLoader'",
+        ),
+    ],
+)
+async def test_deprecated_loaders(
+    hass: HomeAssistant,
+    mock_integration_frame: Mock,
+    caplog: pytest.LogCaptureFixture,
+    loader_class,
+    message: str,
+) -> None:
+    """Test instantiating the deprecated yaml loaders logs a warning."""
+    with (
+        pytest.raises(TypeError),
+        patch("homeassistant.helpers.frame._REPORTED_INTEGRATIONS", set()),
+    ):
+        loader_class()
+    assert (f"Detected that integration 'hue' uses deprecated {message}") in caplog.text
+
+
+def test_string_annotated(try_both_loaders) -> None:
+    """Test strings are annotated with file + line."""
+    conf = (
+        "key1: str\n"
+        "key2:\n"
+        "  blah: blah\n"
+        "key3:\n"
+        " - 1\n"
+        " - 2\n"
+        " - 3\n"
+        "key4: yes\n"
+        "key5: 1\n"
+        "key6: 1.0\n"
+    )
+    expected_annotations = {
+        "key1": [("<file>", 1), ("<file>", 1)],
+        "key2": [("<file>", 2), ("<file>", 3)],
+        "key3": [("<file>", 4), ("<file>", 5)],
+        "key4": [("<file>", 8), (None, None)],
+        "key5": [("<file>", 9), (None, None)],
+        "key6": [("<file>", 10), (None, None)],
+    }
+    with io.StringIO(conf) as file:
+        doc = yaml_loader.parse_yaml(file)
+    for key, value in doc.items():
+        assert getattr(key, "__config_file__", None) == expected_annotations[key][0][0]
+        assert getattr(key, "__line__", None) == expected_annotations[key][0][1]
+        assert (
+            getattr(value, "__config_file__", None) == expected_annotations[key][1][0]
+        )
+        assert getattr(value, "__line__", None) == expected_annotations[key][1][1]
+
+
+def test_string_used_as_vol_schema(try_both_loaders) -> None:
+    """Test the subclassed strings can be used in voluptuous schemas."""
+    conf = "wanted_data:\n  key_1: value_1\n  key_2: value_2\n"
+    with io.StringIO(conf) as file:
+        doc = yaml_loader.parse_yaml(file)
+
+    # Test using the subclassed strings in a schema
+    schema = vol.Schema(
+        {vol.Required(key): value for key, value in doc["wanted_data"].items()},
+    )
+    # Test using the subclassed strings when validating a schema
+    schema(doc["wanted_data"])
+    schema({"key_1": "value_1", "key_2": "value_2"})
+    with pytest.raises(vol.Invalid):
+        schema({"key_1": "value_2", "key_2": "value_1"})
+
+
+@pytest.mark.parametrize(
+    ("hass_config_yaml", "expected_data"), [("", {}), ("bla:", {"bla": None})]
+)
+def test_load_yaml_dict(
+    try_both_loaders, mock_hass_config_yaml: None, expected_data: Any
+) -> None:
+    """Test item without a key."""
+    assert yaml.load_yaml_dict(YAML_CONFIG_FILE) == expected_data
+
+
+@pytest.mark.parametrize("hass_config_yaml", ["abc", "123", "[]"])
+def test_load_yaml_dict_fail(try_both_loaders, mock_hass_config_yaml: None) -> None:
+    """Test item without a key."""
+    with pytest.raises(yaml_loader.YamlTypeError):
+        yaml_loader.load_yaml_dict(YAML_CONFIG_FILE)

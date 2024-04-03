@@ -1,4 +1,5 @@
 """The test for the Trafikverket Camera coordinator."""
+
 from __future__ import annotations
 
 from unittest.mock import patch
@@ -40,9 +41,9 @@ async def test_coordinator(
         source=SOURCE_USER,
         data=ENTRY_CONFIG,
         entry_id="1",
-        version=2,
+        version=3,
         unique_id="trafikverket_camera-1234",
-        title="Test location",
+        title="Test Camera",
     )
     entry.add_to_hass(hass)
 
@@ -54,7 +55,7 @@ async def test_coordinator(
         await hass.async_block_till_done()
 
         mock_data.assert_called_once()
-        state1 = hass.states.get("camera.test_location")
+        state1 = hass.states.get("camera.test_camera")
         assert state1.state == "idle"
 
 
@@ -101,9 +102,9 @@ async def test_coordinator_failed_update(
         source=SOURCE_USER,
         data=ENTRY_CONFIG,
         entry_id="1",
-        version=2,
+        version=3,
         unique_id="trafikverket_camera-1234",
-        title="Test location",
+        title="Test Camera",
     )
     entry.add_to_hass(hass)
 
@@ -115,7 +116,7 @@ async def test_coordinator_failed_update(
         await hass.async_block_till_done()
 
     mock_data.assert_called_once()
-    state = hass.states.get("camera.test_location")
+    state = hass.states.get("camera.test_camera")
     assert state is None
     assert entry.state == entry_state
 
@@ -135,7 +136,7 @@ async def test_coordinator_failed_get_image(
         source=SOURCE_USER,
         data=ENTRY_CONFIG,
         entry_id="1",
-        version=2,
+        version=3,
         unique_id="trafikverket_camera-1234",
         title="Test location",
     )
@@ -149,6 +150,6 @@ async def test_coordinator_failed_get_image(
         await hass.async_block_till_done()
 
     mock_data.assert_called_once()
-    state = hass.states.get("camera.test_location")
+    state = hass.states.get("camera.test_camera")
     assert state is None
     assert entry.state is config_entries.ConfigEntryState.SETUP_RETRY

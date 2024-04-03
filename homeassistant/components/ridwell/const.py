@@ -1,4 +1,5 @@
 """Constants for the Ridwell integration."""
+
 import logging
 
 DOMAIN = "ridwell"

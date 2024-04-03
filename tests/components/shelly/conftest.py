@@ -1,9 +1,9 @@
 """Test configuration for Shelly."""
-from __future__ import annotations
 
 from unittest.mock import AsyncMock, Mock, PropertyMock, patch
 
 from aioshelly.block_device import BlockDevice, BlockUpdateType
+from aioshelly.const import MODEL_1, MODEL_25, MODEL_PLUS_2PM
 from aioshelly.rpc_device import RpcDevice, RpcUpdateType
 import pytest
 
@@ -11,6 +11,7 @@ from homeassistant.components.shelly.const import (
     EVENT_SHELLY_CLICK,
     REST_SENSORS_UPDATE_INTERVAL,
 )
+from homeassistant.core import HomeAssistant
 
 from . import MOCK_MAC
 
@@ -22,7 +23,7 @@ MOCK_SETTINGS = {
     "device": {
         "mac": MOCK_MAC,
         "hostname": "test-host",
-        "type": "SHSW-25",
+        "type": MODEL_25,
         "num_outputs": 2,
     },
     "coiot": {"update_period": 15},
@@ -63,6 +64,24 @@ def mock_light_set_state(
     }
 
 
+def mock_white_light_set_state(
+    turn="on",
+    temp=4050,
+    gain=19,
+    brightness=128,
+    transition=0,
+):
+    """Mock white light block set_state."""
+    return {
+        "ison": turn == "on",
+        "mode": "white",
+        "gain": gain,
+        "temp": temp,
+        "brightness": brightness,
+        "transition": transition,
+    }
+
+
 MOCK_BLOCKS = [
     Mock(
         sensor_ids={
@@ -84,6 +103,7 @@ MOCK_BLOCKS = [
         sensor_ids={"roller": "stop", "rollerPos": 0},
         channel="1",
         type="roller",
+        description="roller_0",
         set_state=AsyncMock(
             side_effect=lambda go, roller_pos=0: {
                 "current_pos": roller_pos,
@@ -98,6 +118,7 @@ MOCK_BLOCKS = [
         colorTemp=mock_light_set_state()["temp"],
         **mock_light_set_state(),
         type="light",
+        description="light_0",
         set_state=AsyncMock(side_effect=mock_light_set_state),
     ),
     Mock(
@@ -145,20 +166,32 @@ MOCK_BLOCKS = [
 
 MOCK_CONFIG = {
     "input:0": {"id": 0, "name": "Test name input 0", "type": "button"},
+    "input:1": {"id": 1, "type": "analog", "enable": True},
+    "input:2": {"id": 2, "name": "Gas", "type": "count", "enable": True},
     "light:0": {"name": "test light_0"},
+    "light:1": {"name": "test light_1"},
+    "light:2": {"name": "test light_2"},
+    "light:3": {"name": "test light_3"},
+    "rgb:0": {"name": "test rgb_0"},
+    "rgbw:0": {"name": "test rgbw_0"},
     "switch:0": {"name": "test switch_0"},
     "cover:0": {"name": "test cover_0"},
+    "thermostat:0": {
+        "id": 0,
+        "enable": True,
+        "type": "heating",
+    },
     "sys": {
         "ui_data": {},
         "device": {"name": "Test name"},
-        "wakeup_period": 0,
     },
+    "wifi": {"sta": {"enable": True}, "sta1": {"enable": False}},
 }
 
 MOCK_SHELLY_COAP = {
     "mac": MOCK_MAC,
     "auth": False,
-    "fw": "20201124-092854/v1.9.0@57ac4ad8",
+    "fw": "20210715-092854/v1.11.0@57ac4ad8",
     "num_outputs": 2,
 }
 
@@ -166,10 +199,10 @@ MOCK_SHELLY_RPC = {
     "name": "Test Gen2",
     "id": "shellyplus2pm-123456789abc",
     "mac": MOCK_MAC,
-    "model": "SNSW-002P16EU",
+    "model": MODEL_PLUS_2PM,
     "gen": 2,
-    "fw_id": "20220830-130540/0.11.0-gfa1bc37",
-    "ver": "0.11.0",
+    "fw_id": "20230803-130540/1.0.0-gfa1bc37",
+    "ver": "1.0.0",
     "app": "Plus2PM",
     "auth_en": False,
     "auth_domain": None,
@@ -192,7 +225,14 @@ MOCK_STATUS_COAP = {
 MOCK_STATUS_RPC = {
     "switch:0": {"output": True},
     "input:0": {"id": 0, "state": None},
+    "input:1": {"id": 1, "percent": 89, "xpercent": 8.9},
+    "input:2": {"id": 2, "counts": {"total": 56174, "xtotal": 561.74}},
     "light:0": {"output": True, "brightness": 53.0},
+    "light:1": {"output": True, "brightness": 53.0},
+    "light:2": {"output": True, "brightness": 53.0},
+    "light:3": {"output": True, "brightness": 53.0},
+    "rgb:0": {"output": True, "brightness": 53.0, "rgb": [45, 55, 65]},
+    "rgbw:0": {"output": True, "brightness": 53.0, "rgb": [21, 22, 23], "white": 120},
     "cloud": {"connected": False},
     "cover:0": {
         "state": "stopped",
@@ -207,11 +247,19 @@ MOCK_STATUS_RPC = {
     "em1:1": {"act_power": 123.3},
     "em1data:0": {"total_act_energy": 123456.4},
     "em1data:1": {"total_act_energy": 987654.3},
+    "thermostat:0": {
+        "id": 0,
+        "enable": True,
+        "target_C": 23,
+        "current_C": 12.3,
+        "output": True,
+    },
     "sys": {
         "available_updates": {
             "beta": {"version": "some_beta_version"},
             "stable": {"version": "some_beta_version"},
-        }
+        },
+        "relay_in_thermostat": True,
     },
     "voltmeter": {"voltage": 4.321},
     "wifi": {"rssi": -63},
@@ -239,19 +287,19 @@ def mock_ws_server():
 
 
 @pytest.fixture
-def device_reg(hass):
+def device_reg(hass: HomeAssistant):
     """Return an empty, loaded, registry."""
     return mock_device_registry(hass)
 
 
 @pytest.fixture
-def calls(hass):
+def calls(hass: HomeAssistant):
     """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 
 
 @pytest.fixture
-def events(hass):
+def events(hass: HomeAssistant):
     """Yield caught shelly_click events."""
     return async_capture_events(hass, EVENT_SHELLY_CLICK)
 
@@ -276,11 +324,12 @@ async def mock_block_device():
             blocks=MOCK_BLOCKS,
             settings=MOCK_SETTINGS,
             shelly=MOCK_SHELLY_COAP,
-            version="0.10.0",
+            version="1.11.0",
             status=MOCK_STATUS_COAP,
             firmware_version="some fw string",
             initialized=True,
-            model="SHSW-1",
+            model=MODEL_1,
+            gen=1,
         )
         type(device).name = PropertyMock(return_value="Test name")
         block_device_mock.return_value = device
@@ -299,7 +348,7 @@ def _mock_rpc_device(version: str | None = None):
         config=MOCK_CONFIG,
         event={},
         shelly=MOCK_SHELLY_RPC,
-        version=version or "0.12.0",
+        version=version or "1.0.0",
         hostname="test-host",
         status=MOCK_STATUS_RPC,
         firmware_version="some fw string",
@@ -310,27 +359,11 @@ def _mock_rpc_device(version: str | None = None):
 
 
 @pytest.fixture
-async def mock_pre_ble_rpc_device():
-    """Mock rpc (Gen2, Websocket) device pre BLE."""
-    with patch("aioshelly.rpc_device.RpcDevice.create") as rpc_device_mock:
-
-        def update():
-            rpc_device_mock.return_value.subscribe_updates.call_args[0][0](
-                {}, RpcUpdateType.STATUS
-            )
-
-        device = _mock_rpc_device("0.11.0")
-        rpc_device_mock.return_value = device
-        rpc_device_mock.return_value.mock_update = Mock(side_effect=update)
-
-        yield rpc_device_mock.return_value
-
-
-@pytest.fixture
 async def mock_rpc_device():
     """Mock rpc (Gen2, Websocket) device with BLE support."""
-    with patch("aioshelly.rpc_device.RpcDevice.create") as rpc_device_mock, patch(
-        "homeassistant.components.shelly.bluetooth.async_start_scanner"
+    with (
+        patch("aioshelly.rpc_device.RpcDevice.create") as rpc_device_mock,
+        patch("homeassistant.components.shelly.bluetooth.async_start_scanner"),
     ):
 
         def update():
@@ -348,7 +381,7 @@ async def mock_rpc_device():
                 {}, RpcUpdateType.DISCONNECTED
             )
 
-        device = _mock_rpc_device("0.12.0")
+        device = _mock_rpc_device()
         rpc_device_mock.return_value = device
         rpc_device_mock.return_value.mock_disconnected = Mock(side_effect=disconnected)
         rpc_device_mock.return_value.mock_update = Mock(side_effect=update)

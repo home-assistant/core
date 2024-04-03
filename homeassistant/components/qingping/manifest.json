@@ -20,5 +20,5 @@
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/qingping",
   "iot_class": "local_push",
-  "requirements": ["qingping-ble==0.8.2"]
+  "requirements": ["qingping-ble==0.10.0"]
 }

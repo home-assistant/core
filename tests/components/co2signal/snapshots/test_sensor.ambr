@@ -1,0 +1,105 @@
+# serializer version: 1
+# name: test_sensor[sensor.electricity_maps_co2_intensity]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.electricity_maps_co2_intensity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'CO2 intensity',
+    'platform': 'co2signal',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'carbon_intensity',
+    'unique_id': '904a74160aa6f335526706bee85dfb83_co2intensity',
+    'unit_of_measurement': 'gCO2eq/kWh',
+  })
+# ---
+# name: test_sensor[sensor.electricity_maps_co2_intensity].1
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Electricity Maps',
+      'country_code': 'FR',
+      'friendly_name': 'Electricity Maps CO2 intensity',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'gCO2eq/kWh',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.electricity_maps_co2_intensity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '45.9862319009581',
+  })
+# ---
+# name: test_sensor[sensor.electricity_maps_grid_fossil_fuel_percentage]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.electricity_maps_grid_fossil_fuel_percentage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Grid fossil fuel percentage',
+    'platform': 'co2signal',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'fossil_fuel_percentage',
+    'unique_id': '904a74160aa6f335526706bee85dfb83_fossilFuelPercentage',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensor[sensor.electricity_maps_grid_fossil_fuel_percentage].1
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Electricity Maps',
+      'country_code': 'FR',
+      'friendly_name': 'Electricity Maps Grid fossil fuel percentage',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.electricity_maps_grid_fossil_fuel_percentage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '5.4611827419371',
+  })
+# ---

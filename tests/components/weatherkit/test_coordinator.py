@@ -1,4 +1,5 @@
 """Test WeatherKit data coordinator."""
+
 from datetime import timedelta
 from unittest.mock import patch
 
@@ -23,7 +24,7 @@ async def test_failed_updates(hass: HomeAssistant) -> None:
     ):
         async_fire_time_changed(
             hass,
-            utcnow() + timedelta(minutes=15),
+            utcnow() + timedelta(minutes=5),
         )
         await hass.async_block_till_done()
 

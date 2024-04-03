@@ -1,8 +1,9 @@
 """The tests for Arcam FMJ Receiver control device triggers."""
+
 import pytest
 
+from homeassistant.components import automation
 from homeassistant.components.arcam_fmj.const import DOMAIN
-import homeassistant.components.automation as automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -82,7 +83,7 @@ async def test_if_fires_on_turn_on_request(
                     "trigger": {
                         "platform": "device",
                         "domain": DOMAIN,
-                        "device_id": "",
+                        "device_id": entry.device_id,
                         "entity_id": entry.id,
                         "type": "turn_on",
                     },
@@ -128,7 +129,7 @@ async def test_if_fires_on_turn_on_request_legacy(
                     "trigger": {
                         "platform": "device",
                         "domain": DOMAIN,
-                        "device_id": "",
+                        "device_id": entry.device_id,
                         "entity_id": entry.entity_id,
                         "type": "turn_on",
                     },

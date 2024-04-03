@@ -1,4 +1,5 @@
 """Provide functionality for TTS."""
+
 from __future__ import annotations
 
 from abc import abstractmethod
@@ -13,14 +14,16 @@ import logging
 import mimetypes
 import os
 import re
-from typing import Any, TypedDict, final
+import subprocess
+import tempfile
+from typing import Any, Final, TypedDict, final
 
 from aiohttp import web
 import mutagen
 from mutagen.id3 import ID3, TextFrame as ID3Text
 import voluptuous as vol
 
-from homeassistant.components import websocket_api
+from homeassistant.components import ffmpeg, websocket_api
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.media_player import (
     ATTR_MEDIA_ANNOUNCE,
@@ -72,11 +75,15 @@ __all__ = [
     "async_get_media_source_audio",
     "async_support_options",
     "ATTR_AUDIO_OUTPUT",
+    "ATTR_PREFERRED_FORMAT",
+    "ATTR_PREFERRED_SAMPLE_RATE",
+    "ATTR_PREFERRED_SAMPLE_CHANNELS",
     "CONF_LANG",
     "DEFAULT_CACHE_DIR",
     "generate_media_source_id",
     "PLATFORM_SCHEMA_BASE",
     "PLATFORM_SCHEMA",
+    "SampleFormat",
     "Provider",
     "TtsAudioType",
     "Voice",
@@ -86,8 +93,18 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_PLATFORM = "platform"
 ATTR_AUDIO_OUTPUT = "audio_output"
+ATTR_PREFERRED_FORMAT = "preferred_format"
+ATTR_PREFERRED_SAMPLE_RATE = "preferred_sample_rate"
+ATTR_PREFERRED_SAMPLE_CHANNELS = "preferred_sample_channels"
 ATTR_MEDIA_PLAYER_ENTITY_ID = "media_player_entity_id"
 ATTR_VOICE = "voice"
+
+_DEFAULT_FORMAT = "mp3"
+_PREFFERED_FORMAT_OPTIONS: Final[set[str]] = {
+    ATTR_PREFERRED_FORMAT,
+    ATTR_PREFERRED_SAMPLE_RATE,
+    ATTR_PREFERRED_SAMPLE_CHANNELS,
+}
 
 CONF_LANG = "language"
 
@@ -199,6 +216,84 @@ def async_get_text_to_speech_languages(hass: HomeAssistant) -> set[str]:
     return languages
 
 
+async def async_convert_audio(
+    hass: HomeAssistant,
+    from_extension: str,
+    audio_bytes: bytes,
+    to_extension: str,
+    to_sample_rate: int | None = None,
+    to_sample_channels: int | None = None,
+) -> bytes:
+    """Convert audio to a preferred format using ffmpeg."""
+    ffmpeg_manager = ffmpeg.get_ffmpeg_manager(hass)
+    return await hass.async_add_executor_job(
+        lambda: _convert_audio(
+            ffmpeg_manager.binary,
+            from_extension,
+            audio_bytes,
+            to_extension,
+            to_sample_rate=to_sample_rate,
+            to_sample_channels=to_sample_channels,
+        )
+    )
+
+
+def _convert_audio(
+    ffmpeg_binary: str,
+    from_extension: str,
+    audio_bytes: bytes,
+    to_extension: str,
+    to_sample_rate: int | None = None,
+    to_sample_channels: int | None = None,
+) -> bytes:
+    """Convert audio to a preferred format using ffmpeg."""
+
+    # We have to use a temporary file here because some formats like WAV store
+    # the length of the file in the header, and therefore cannot be written in a
+    # streaming fashion.
+    with tempfile.NamedTemporaryFile(
+        mode="wb+", suffix=f".{to_extension}"
+    ) as output_file:
+        # input
+        command = [
+            ffmpeg_binary,
+            "-y",  # overwrite temp file
+            "-f",
+            from_extension,
+            "-i",
+            "pipe:",  # input from stdin
+        ]
+
+        # output
+        command.extend(["-f", to_extension])
+
+        if to_sample_rate is not None:
+            command.extend(["-ar", str(to_sample_rate)])
+
+        if to_sample_channels is not None:
+            command.extend(["-ac", str(to_sample_channels)])
+
+        if to_extension == "mp3":
+            # Max quality for MP3
+            command.extend(["-q:a", "0"])
+
+        command.append(output_file.name)
+
+        with subprocess.Popen(
+            command, stdin=subprocess.PIPE, stderr=subprocess.PIPE
+        ) as proc:
+            _stdout, stderr = proc.communicate(input=audio_bytes)
+            if proc.returncode != 0:
+                _LOGGER.error(stderr.decode())
+                raise RuntimeError(
+                    f"Unexpected error while running ffmpeg with arguments: {command}."
+                    "See log for details."
+                )
+
+        output_file.seek(0)
+        return output_file.read()
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up TTS."""
     websocket_api.async_register_command(hass, websocket_list_engines)
@@ -231,9 +326,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     platform_setups = await async_setup_legacy(hass, config)
 
-    if platform_setups:
-        await asyncio.wait([asyncio.create_task(setup) for setup in platform_setups])
-
     component.async_register_entity_service(
         "speak",
         {
@@ -256,6 +348,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         async_clear_cache_handle,
         schema=SCHEMA_SERVICE_CLEAR_CACHE,
     )
+
+    for setup in platform_setups:
+        # Tasks are created as tracked tasks to ensure startup
+        # waits for them to finish, but we explicitly do not
+        # want to wait for them to finish here because we want
+        # any config entries that use tts as a base platform
+        # to be able to start with out having to wait for the
+        # legacy platforms to finish setting up.
+        hass.async_create_task(setup, eager_start=True)
 
     return True
 
@@ -369,7 +470,7 @@ class TextToSpeechEntity(RestoreEntity):
         self, message: str, language: str, options: dict[str, Any]
     ) -> TtsAudioType:
         """Load tts audio file from the engine."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_get_tts_audio(
         self, message: str, language: str, options: dict[str, Any]
@@ -413,24 +514,21 @@ class SpeechManager:
         self.file_cache: dict[str, str] = {}
         self.mem_cache: dict[str, TTSCache] = {}
 
-    async def async_init_cache(self) -> None:
-        """Init config folder and load file cache."""
+    def _init_cache(self) -> dict[str, str]:
+        """Init cache folder and fetch files."""
         try:
-            self.cache_dir = await self.hass.async_add_executor_job(
-                _init_tts_cache_dir, self.hass, self.cache_dir
-            )
+            self.cache_dir = _init_tts_cache_dir(self.hass, self.cache_dir)
         except OSError as err:
             raise HomeAssistantError(f"Can't init cache dir {err}") from err
 
         try:
-            cache_files = await self.hass.async_add_executor_job(
-                _get_cache_files, self.cache_dir
-            )
+            return _get_cache_files(self.cache_dir)
         except OSError as err:
             raise HomeAssistantError(f"Can't read cache dir {err}") from err
 
-        if cache_files:
-            self.file_cache.update(cache_files)
+    async def async_init_cache(self) -> None:
+        """Init config folder and load file cache."""
+        self.file_cache.update(await self.hass.async_add_executor_job(self._init_cache))
 
     async def async_clear_cache(self) -> None:
         """Read file cache and delete files."""
@@ -458,7 +556,7 @@ class SpeechManager:
         self.providers[engine] = provider
 
         self.hass.config.components.add(
-            PLATFORM_FORMAT.format(domain=engine, platform=DOMAIN)
+            PLATFORM_FORMAT.format(domain=DOMAIN, platform=engine)
         )
 
     @callback
@@ -478,14 +576,23 @@ class SpeechManager:
         ):
             raise HomeAssistantError(f"Language '{language}' not supported")
 
-        # Update default options with provided options
-        merged_options = dict(engine_instance.default_options or {})
-        merged_options.update(options or {})
-
+        options = options or {}
         supported_options = engine_instance.supported_options or []
-        invalid_opts = [
-            opt_name for opt_name in merged_options if opt_name not in supported_options
-        ]
+
+        # Update default options with provided options
+        invalid_opts: list[str] = []
+        merged_options = dict(engine_instance.default_options or {})
+        for option_name, option_value in options.items():
+            # Only count an option as invalid if it's not a "preferred format"
+            # option. These are used as hints to the TTS system if supported,
+            # and otherwise as parameters to ffmpeg conversion.
+            if (option_name in supported_options) or (
+                option_name in _PREFFERED_FORMAT_OPTIONS
+            ):
+                merged_options[option_name] = option_value
+            else:
+                invalid_opts.append(option_name)
+
         if invalid_opts:
             raise HomeAssistantError(f"Invalid options found: {invalid_opts}")
 
@@ -520,12 +627,7 @@ class SpeechManager:
         # Load speech from engine into memory
         else:
             filename = await self._async_get_tts_audio(
-                engine_instance,
-                cache_key,
-                message,
-                use_cache,
-                language,
-                options,
+                engine_instance, cache_key, message, use_cache, language, options
             )
 
         return f"/api/tts_proxy/{filename}"
@@ -590,10 +692,31 @@ class SpeechManager:
 
         This method is a coroutine.
         """
-        if options is not None and ATTR_AUDIO_OUTPUT in options:
-            expected_extension = options[ATTR_AUDIO_OUTPUT]
+        options = dict(options or {})
+        supported_options = engine_instance.supported_options or []
+
+        # Extract preferred format options.
+        #
+        # These options are used by Assist pipelines, etc. to get a format that
+        # the voice satellite will support.
+        #
+        # The TTS system ideally supports options directly so we won't have
+        # to convert with ffmpeg later. If not, we pop the options here and
+        # perform the conversation after receiving the audio.
+        if ATTR_PREFERRED_FORMAT in supported_options:
+            final_extension = options.get(ATTR_PREFERRED_FORMAT, _DEFAULT_FORMAT)
         else:
-            expected_extension = None
+            final_extension = options.pop(ATTR_PREFERRED_FORMAT, _DEFAULT_FORMAT)
+
+        if ATTR_PREFERRED_SAMPLE_RATE in supported_options:
+            sample_rate = options.get(ATTR_PREFERRED_SAMPLE_RATE)
+        else:
+            sample_rate = options.pop(ATTR_PREFERRED_SAMPLE_RATE, None)
+
+        if ATTR_PREFERRED_SAMPLE_CHANNELS in supported_options:
+            sample_channels = options.get(ATTR_PREFERRED_SAMPLE_CHANNELS)
+        else:
+            sample_channels = options.pop(ATTR_PREFERRED_SAMPLE_CHANNELS, None)
 
         async def get_tts_data() -> str:
             """Handle data available."""
@@ -614,8 +737,27 @@ class SpeechManager:
                     f"No TTS from {engine_instance.name} for '{message}'"
                 )
 
+            # Only convert if we have a preferred format different than the
+            # expected format from the TTS system, or if a specific sample
+            # rate/format/channel count is requested.
+            needs_conversion = (
+                (final_extension != extension)
+                or (sample_rate is not None)
+                or (sample_channels is not None)
+            )
+
+            if needs_conversion:
+                data = await async_convert_audio(
+                    self.hass,
+                    extension,
+                    data,
+                    to_extension=final_extension,
+                    to_sample_rate=sample_rate,
+                    to_sample_channels=sample_channels,
+                )
+
             # Create file infos
-            filename = f"{cache_key}.{extension}".lower()
+            filename = f"{cache_key}.{final_extension}".lower()
 
             # Validate filename
             if not _RE_VOICE_FILE.match(filename) and not _RE_LEGACY_VOICE_FILE.match(
@@ -626,10 +768,11 @@ class SpeechManager:
                 )
 
             # Save to memory
-            if extension == "mp3":
+            if final_extension == "mp3":
                 data = self.write_tags(
                     filename, data, engine_instance.name, message, language, options
                 )
+
             self._async_store_to_memcache(cache_key, filename, data)
 
             if cache:
@@ -641,9 +784,6 @@ class SpeechManager:
 
         audio_task = self.hass.async_create_task(get_tts_data())
 
-        if expected_extension is None:
-            return await audio_task
-
         def handle_error(_future: asyncio.Future) -> None:
             """Handle error."""
             if audio_task.exception():
@@ -651,7 +791,7 @@ class SpeechManager:
 
         audio_task.add_done_callback(handle_error)
 
-        filename = f"{cache_key}.{expected_extension}".lower()
+        filename = f"{cache_key}.{final_extension}".lower()
         self.mem_cache[cache_key] = {
             "filename": filename,
             "voice": b"",
@@ -747,11 +887,12 @@ class SpeechManager:
                 raise HomeAssistantError(f"{cache_key} not in cache!")
             await self._async_file_to_mem(cache_key)
 
-        content, _ = mimetypes.guess_type(filename)
         cached = self.mem_cache[cache_key]
         if pending := cached.get("pending"):
             await pending
             cached = self.mem_cache[cache_key]
+
+        content, _ = mimetypes.guess_type(filename)
         return content, cached["voice"]
 
     @staticmethod

@@ -119,8 +119,7 @@ class TradfriAirPurifierFan(TradfriBaseEntity, FanEntity):
         if not self._device_control:
             return
 
-        if not preset_mode == ATTR_AUTO:
-            raise ValueError("Preset must be 'Auto'.")
+        # Preset must be 'Auto'
 
         await self._api(self._device_control.turn_on_auto_mode())
 

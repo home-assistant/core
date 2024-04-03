@@ -1,4 +1,5 @@
 """Extend the basic Accessory and Bridge functions."""
+
 from __future__ import annotations
 
 import logging
@@ -36,12 +37,14 @@ from homeassistant.const import (
     PERCENTAGE,
     STATE_ON,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
     UnitOfTemperature,
     __version__,
 )
 from homeassistant.core import (
     CALLBACK_TYPE,
     Context,
+    Event,
     HomeAssistant,
     State,
     callback as ha_callback,
@@ -52,7 +55,6 @@ from homeassistant.helpers.event import (
     EventStateChangedData,
     async_track_state_change_event,
 )
-from homeassistant.helpers.typing import EventType
 from homeassistant.util.decorator import Registry
 
 from .const import (
@@ -70,6 +72,7 @@ from .const import (
     CONF_LINKED_BATTERY_SENSOR,
     CONF_LOW_BATTERY_THRESHOLD,
     DEFAULT_LOW_BATTERY_THRESHOLD,
+    EMPTY_MAC,
     EVENT_HOMEKIT_CHANGED,
     HK_CHARGING,
     HK_NOT_CHARGABLE,
@@ -81,6 +84,7 @@ from .const import (
     MAX_VERSION_LENGTH,
     SERV_ACCESSORY_INFO,
     SERV_BATTERY_SERVICE,
+    SIGNAL_RELOAD_ENTITIES,
     TYPE_FAUCET,
     TYPE_OUTLET,
     TYPE_SHOWER,
@@ -425,7 +429,9 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
         """Return if accessory is available."""
         return self._available
 
-    async def run(self) -> None:
+    @ha_callback
+    @pyhap_callback  # type: ignore[misc]
+    def run(self) -> None:
         """Handle accessory driver started event."""
         if state := self.hass.states.get(self.entity_id):
             self.async_update_state_callback(state)
@@ -474,7 +480,7 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
 
     @ha_callback
     def async_update_event_state_callback(
-        self, event: EventType[EventStateChangedData]
+        self, event: Event[EventStateChangedData]
     ) -> None:
         """Handle state change event listener callback."""
         new_state = event.data["new_state"]
@@ -506,7 +512,7 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
         _LOGGER.debug("New_state: %s", new_state)
         # HomeKit handles unavailable state via the available property
         # so we should not propagate it here
-        if new_state is None or new_state.state == STATE_UNAVAILABLE:
+        if new_state is None or new_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
             return
         battery_state = None
         battery_charging_state = None
@@ -526,7 +532,7 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
 
     @ha_callback
     def async_update_linked_battery_callback(
-        self, event: EventType[EventStateChangedData]
+        self, event: Event[EventStateChangedData]
     ) -> None:
         """Handle linked battery sensor state change listener callback."""
         if (new_state := event.data["new_state"]) is None:
@@ -539,7 +545,7 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
 
     @ha_callback
     def async_update_linked_battery_charging_callback(
-        self, event: EventType[EventStateChangedData]
+        self, event: Event[EventStateChangedData]
     ) -> None:
         """Handle linked battery charging sensor state change listener callback."""
         if (new_state := event.data["new_state"]) is None:
@@ -584,7 +590,7 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
 
         Overridden by accessory types.
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @ha_callback
     def async_call_service(
@@ -607,7 +613,8 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
         self.hass.async_create_task(
             self.hass.services.async_call(
                 domain, service, service_data, context=context
-            )
+            ),
+            eager_start=True,
         )
 
     @ha_callback
@@ -615,7 +622,7 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
         """Reload and recreate an accessory and update the c# value in the mDNS record."""
         async_dispatcher_send(
             self.hass,
-            f"homekit_reload_entities_{self.driver.entry_id}",
+            SIGNAL_RELOAD_ENTITIES.format(self.driver.entry_id),
             (self.entity_id,),
         )
 
@@ -678,7 +685,9 @@ class HomeDriver(AccessoryDriver):  # type: ignore[misc]
         **kwargs: Any,
     ) -> None:
         """Initialize a AccessoryDriver object."""
-        super().__init__(**kwargs)
+        # Always set an empty mac of pyhap will incur
+        # the cost of generating a new one for every driver
+        super().__init__(**kwargs, mac=EMPTY_MAC)
         self.hass = hass
         self.entry_id = entry_id
         self._bridge_name = bridge_name

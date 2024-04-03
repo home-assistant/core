@@ -1,4 +1,5 @@
 """Test significant change helper."""
+
 import pytest
 
 from homeassistant.components.sensor import SensorDeviceClass
@@ -17,9 +18,9 @@ async def checker_fixture(hass):
     ):
         return abs(float(old_state) - float(new_state)) > 4
 
-    hass.data[significant_change.DATA_FUNCTIONS][
-        "test_domain"
-    ] = async_check_significant_change
+    hass.data[significant_change.DATA_FUNCTIONS]["test_domain"] = (
+        async_check_significant_change
+    )
     return checker
 
 
@@ -72,3 +73,14 @@ async def test_significant_change_extra(hass: HomeAssistant, checker) -> None:
         State(ent_id, "200", attrs), extra_arg=1
     )
     assert checker.async_is_significant_change(State(ent_id, "200", attrs), extra_arg=2)
+
+
+async def test_check_valid_float(hass: HomeAssistant) -> None:
+    """Test extra significant checker works."""
+    assert significant_change.check_valid_float("1")
+    assert significant_change.check_valid_float("1.0")
+    assert significant_change.check_valid_float(1)
+    assert significant_change.check_valid_float(1.0)
+    assert not significant_change.check_valid_float("")
+    assert not significant_change.check_valid_float("invalid")
+    assert not significant_change.check_valid_float("1.1.1")

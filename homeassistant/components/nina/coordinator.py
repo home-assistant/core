@@ -1,4 +1,5 @@
 """DataUpdateCoordinator for the nina integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -66,7 +67,7 @@ class NINADataUpdateCoordinator(
 
     @staticmethod
     def _remove_duplicate_warnings(
-        warnings: dict[str, list[Any]]
+        warnings: dict[str, list[Any]],
     ) -> dict[str, list[Any]]:
         """Remove warnings with the same title and expires timestamp in a region."""
         all_filtered_warnings: dict[str, list[Any]] = {}

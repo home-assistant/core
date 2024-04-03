@@ -1,4 +1,5 @@
 """The tests for deCONZ logbook."""
+
 from unittest.mock import patch
 
 from homeassistant.components.deconz.const import CONF_GESTURE, DOMAIN as DECONZ_DOMAIN
@@ -27,7 +28,9 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_humanifying_deconz_alarm_event(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test humanifying deCONZ event."""
     data = {
@@ -61,8 +64,6 @@ async def test_humanifying_deconz_alarm_event(
     with patch.dict(DECONZ_WEB_REQUEST, data):
         await setup_deconz_integration(hass, aioclient_mock)
 
-    device_registry = dr.async_get(hass)
-
     keypad_event_id = slugify(data["sensors"]["1"]["name"])
     keypad_serial = serial_from_unique_id(data["sensors"]["1"]["uniqueid"])
     keypad_entry = device_registry.async_get_device(
@@ -74,6 +75,7 @@ async def test_humanifying_deconz_alarm_event(
 
     hass.config.components.add("recorder")
     assert await async_setup_component(hass, "logbook", {})
+    await hass.async_block_till_done()
 
     events = mock_humanify(
         hass,
@@ -112,7 +114,9 @@ async def test_humanifying_deconz_alarm_event(
 
 
 async def test_humanifying_deconz_event(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test humanifying deCONZ event."""
     data = {
@@ -152,8 +156,6 @@ async def test_humanifying_deconz_event(
     with patch.dict(DECONZ_WEB_REQUEST, data):
         await setup_deconz_integration(hass, aioclient_mock)
 
-    device_registry = dr.async_get(hass)
-
     switch_event_id = slugify(data["sensors"]["1"]["name"])
     switch_serial = serial_from_unique_id(data["sensors"]["1"]["uniqueid"])
     switch_entry = device_registry.async_get_device(
@@ -183,6 +185,7 @@ async def test_humanifying_deconz_event(
 
     hass.config.components.add("recorder")
     assert await async_setup_component(hass, "logbook", {})
+    await hass.async_block_till_done()
 
     events = mock_humanify(
         hass,

@@ -1,4 +1,5 @@
 """Fixtures for Trafikverket Camera integration tests."""
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -32,9 +33,9 @@ async def load_integration_from_entry(
         source=SOURCE_USER,
         data=ENTRY_CONFIG,
         entry_id="1",
-        version=2,
+        version=3,
         unique_id="trafikverket_camera-1234",
-        title="Test location",
+        title="Test Camera",
     )
 
     config_entry.add_to_hass(hass)
@@ -54,7 +55,7 @@ def fixture_get_camera() -> CameraInfo:
     """Construct Camera Mock."""
 
     return CameraInfo(
-        camera_name="Test_camera",
+        camera_name="Test Camera",
         camera_id="1234",
         active=True,
         deleted=False,
@@ -68,6 +69,65 @@ def fixture_get_camera() -> CameraInfo:
         status="Running",
         camera_type="Road",
     )
+
+
+@pytest.fixture(name="get_camera2")
+def fixture_get_camera2() -> CameraInfo:
+    """Construct Camera Mock 2."""
+
+    return CameraInfo(
+        camera_name="Test Camera2",
+        camera_id="5678",
+        active=True,
+        deleted=False,
+        description="Test Camera for testing2",
+        direction="180",
+        fullsizephoto=True,
+        location="Test location2",
+        modified=datetime(2022, 4, 4, 4, 4, 4, tzinfo=dt_util.UTC),
+        phototime=datetime(2022, 4, 4, 4, 4, 4, tzinfo=dt_util.UTC),
+        photourl="https://www.testurl.com/test_photo2.jpg",
+        status="Running",
+        camera_type="Road",
+    )
+
+
+@pytest.fixture(name="get_cameras")
+def fixture_get_cameras() -> CameraInfo:
+    """Construct Camera Mock with multiple cameras."""
+
+    return [
+        CameraInfo(
+            camera_name="Test Camera",
+            camera_id="1234",
+            active=True,
+            deleted=False,
+            description="Test Camera for testing",
+            direction="180",
+            fullsizephoto=True,
+            location="Test location",
+            modified=datetime(2022, 4, 4, 4, 4, 4, tzinfo=dt_util.UTC),
+            phototime=datetime(2022, 4, 4, 4, 4, 4, tzinfo=dt_util.UTC),
+            photourl="https://www.testurl.com/test_photo.jpg",
+            status="Running",
+            camera_type="Road",
+        ),
+        CameraInfo(
+            camera_name="Test Camera2",
+            camera_id="5678",
+            active=True,
+            deleted=False,
+            description="Test Camera for testing2",
+            direction="180",
+            fullsizephoto=True,
+            location="Test location2",
+            modified=datetime(2022, 4, 4, 4, 4, 4, tzinfo=dt_util.UTC),
+            phototime=datetime(2022, 4, 4, 4, 4, 4, tzinfo=dt_util.UTC),
+            photourl="https://www.testurl.com/test_photo2.jpg",
+            status="Running",
+            camera_type="Road",
+        ),
+    ]
 
 
 @pytest.fixture(name="get_camera_no_location")

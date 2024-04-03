@@ -1,4 +1,5 @@
 """Tests for the LaMetric services."""
+
 from unittest.mock import MagicMock
 
 from demetriek import (
@@ -34,10 +35,10 @@ pytestmark = pytest.mark.usefixtures("init_integration")
 
 async def test_service_chart(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_lametric: MagicMock,
 ) -> None:
     """Test the LaMetric chart service."""
-    entity_registry = er.async_get(hass)
 
     entry = entity_registry.async_get("button.frenck_s_lametric_next_app")
     assert entry
@@ -121,10 +122,10 @@ async def test_service_chart(
 
 async def test_service_message(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_lametric: MagicMock,
 ) -> None:
     """Test the LaMetric message service."""
-    entity_registry = er.async_get(hass)
 
     entry = entity_registry.async_get("button.frenck_s_lametric_next_app")
     assert entry

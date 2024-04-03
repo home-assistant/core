@@ -1,4 +1,5 @@
 """Support for D-Link Power Plug Switches."""
+
 from __future__ import annotations
 
 from datetime import timedelta

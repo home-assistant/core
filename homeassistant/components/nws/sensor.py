@@ -1,4 +1,5 @@
 """Sensors for National Weather Service (NWS)."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -39,7 +40,7 @@ from .const import ATTRIBUTION, CONF_STATION, DOMAIN, OBSERVATION_VALID_TIME
 PARALLEL_UPDATES = 0
 
 
-@dataclass
+@dataclass(frozen=True)
 class NWSSensorEntityDescription(SensorEntityDescription):
     """Class describing NWSSensor entities."""
 

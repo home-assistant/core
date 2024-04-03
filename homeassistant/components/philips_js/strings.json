@@ -44,6 +44,14 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "recording_new": {
+        "name": "New recording available"
+      },
+      "recording_ongoing": {
+        "name": "Recording ongoing"
+      }
+    },
     "light": {
       "ambilight": {
         "name": "Ambilight"

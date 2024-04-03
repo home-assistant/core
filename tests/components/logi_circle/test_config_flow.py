@@ -1,11 +1,13 @@
 """Tests for Logi Circle config flow."""
+
 import asyncio
 from http import HTTPStatus
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
+from homeassistant.components.http import KEY_HASS
 from homeassistant.components.logi_circle import config_flow
 from homeassistant.components.logi_circle.config_flow import (
     DOMAIN,
@@ -13,6 +15,7 @@ from homeassistant.components.logi_circle.config_flow import (
     LogiCircleAuthCallbackView,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import AbortFlow, FlowResultType
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -23,7 +26,7 @@ class MockRequest:
 
     def __init__(self, hass, query):
         """Init request object."""
-        self.app = {"hass": hass}
+        self.app = {KEY_HASS: hass}
         self.query = query
 
 
@@ -65,7 +68,7 @@ async def test_step_import(hass: HomeAssistant, mock_logi_circle) -> None:
     flow = init_config_flow(hass)
 
     result = await flow.async_step_import()
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "auth"
 
 
@@ -83,18 +86,18 @@ async def test_full_flow_implementation(hass: HomeAssistant, mock_logi_circle) -
     flow = init_config_flow(hass)
 
     result = await flow.async_step_user()
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     result = await flow.async_step_user({"flow_impl": "test-other"})
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "auth"
     assert result["description_placeholders"] == {
         "authorization_url": "http://example.com"
     }
 
     result = await flow.async_step_code("123ABC")
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Logi Circle ({})".format("testId")
 
 
@@ -112,7 +115,7 @@ async def test_abort_if_no_implementation_registered(hass: HomeAssistant) -> Non
     flow.hass = hass
 
     result = await flow.async_step_user()
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "missing_configuration"
 
 
@@ -125,28 +128,28 @@ async def test_abort_if_already_setup(hass: HomeAssistant) -> None:
         config_flow.DOMAIN,
         context={"source": config_entries.SOURCE_USER},
     )
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN,
         context={"source": config_entries.SOURCE_IMPORT},
     )
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
-    with pytest.raises(data_entry_flow.AbortFlow):
+    with pytest.raises(AbortFlow):
         result = await flow.async_step_code()
 
     result = await flow.async_step_auth()
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "external_setup"
 
 
 @pytest.mark.parametrize(
     ("side_effect", "error"),
     [
-        (asyncio.TimeoutError, "authorize_url_timeout"),
+        (TimeoutError, "authorize_url_timeout"),
         (AuthorizationFailed, "invalid_auth"),
     ],
 )
@@ -158,7 +161,7 @@ async def test_abort_if_authorize_fails(
     mock_logi_circle.authorize.side_effect = side_effect
 
     result = await flow.async_step_code("123ABC")
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "external_error"
 
     result = await flow.async_step_auth()
@@ -170,7 +173,7 @@ async def test_not_pick_implementation_if_only_one(hass: HomeAssistant) -> None:
     flow = init_config_flow(hass)
 
     result = await flow.async_step_user()
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "auth"
 
 

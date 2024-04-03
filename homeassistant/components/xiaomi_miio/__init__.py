@@ -1,4 +1,5 @@
 """Support for Xiaomi Miio."""
+
 from __future__ import annotations
 
 import asyncio
@@ -35,7 +36,7 @@ from miio import (
 from miio.gateway.gateway import GatewayException
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_TOKEN, Platform
+from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_MODEL, CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -43,7 +44,6 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import (
     ATTR_AVAILABLE,
-    CONF_DEVICE,
     CONF_FLOW_TYPE,
     CONF_GATEWAY,
     DOMAIN,
@@ -340,10 +340,8 @@ async def async_create_miio_device_and_coordinator(
         device = AirFreshA1(host, token, lazy_discover=lazy_discover)
     elif model == MODEL_AIRFRESH_T2017:
         device = AirFreshT2017(host, token, lazy_discover=lazy_discover)
-    elif (
-        model in MODELS_VACUUM
-        or model.startswith(ROBOROCK_GENERIC)
-        or model.startswith(ROCKROBO_GENERIC)
+    elif model in MODELS_VACUUM or model.startswith(
+        (ROBOROCK_GENERIC, ROCKROBO_GENERIC)
     ):
         # TODO: add lazy_discover as argument when python-miio add support # pylint: disable=fixme
         device = RoborockVacuum(host, token)
@@ -412,9 +410,9 @@ async def async_setup_gateway_entry(hass: HomeAssistant, entry: ConfigEntry) -> 
     try:
         await gateway.async_connect_gateway(host, token)
     except AuthException as error:
-        raise ConfigEntryAuthFailed() from error
+        raise ConfigEntryAuthFailed from error
     except SetupException as error:
-        raise ConfigEntryNotReady() from error
+        raise ConfigEntryNotReady from error
     gateway_info = gateway.gateway_info
 
     device_registry = dr.async_get(hass)

@@ -1,4 +1,5 @@
 """Tests for the Insteon lock."""
+
 from unittest.mock import patch
 
 import pytest
@@ -42,12 +43,16 @@ def lock_platform_only():
 @pytest.fixture(autouse=True)
 def patch_setup_and_devices():
     """Patch the Insteon setup process and devices."""
-    with patch.object(insteon, "async_connect", new=mock_connection), patch.object(
-        insteon, "async_close"
-    ), patch.object(insteon, "devices", devices), patch.object(
-        insteon_utils, "devices", devices
-    ), patch.object(
-        insteon_entity, "devices", devices
+    with (
+        patch.object(insteon, "async_connect", new=mock_connection),
+        patch.object(insteon, "async_close"),
+        patch.object(insteon, "devices", devices),
+        patch.object(insteon_utils, "devices", devices),
+        patch.object(
+            insteon_entity,
+            "devices",
+            devices,
+        ),
     ):
         yield
 
@@ -57,18 +62,20 @@ async def mock_connection(*args, **kwargs):
     return True
 
 
-async def test_lock_lock(hass: HomeAssistant) -> None:
+async def test_lock_lock(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test locking an Insteon lock device."""
 
     config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_INPUT_PLM)
     config_entry.add_to_hass(hass)
-    registry_entity = er.async_get(hass)
 
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
     try:
-        lock = registry_entity.async_get("lock.device_55_55_55_55_55_55")
+        lock = entity_registry.async_get("lock.device_55_55_55_55_55_55")
         state = hass.states.get(lock.entity_id)
         assert state.state is STATE_UNLOCKED
 
@@ -82,19 +89,21 @@ async def test_lock_lock(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
 
-async def test_lock_unlock(hass: HomeAssistant) -> None:
+async def test_lock_unlock(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test locking an Insteon lock device."""
 
     config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_INPUT_PLM)
     config_entry.add_to_hass(hass)
-    registry_entity = er.async_get(hass)
 
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
     devices["55.55.55"].groups[1].set_value(255)
 
     try:
-        lock = registry_entity.async_get("lock.device_55_55_55_55_55_55")
+        lock = entity_registry.async_get("lock.device_55_55_55_55_55_55")
         state = hass.states.get(lock.entity_id)
 
         assert state.state is STATE_LOCKED

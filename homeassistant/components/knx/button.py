@@ -1,4 +1,5 @@
 """Support for KNX/IP buttons."""
+
 from __future__ import annotations
 
 from xknx import XKNX
@@ -6,18 +7,12 @@ from xknx.devices import RawValue as XknxRawValue
 
 from homeassistant import config_entries
 from homeassistant.components.button import ButtonEntity
-from homeassistant.const import CONF_ENTITY_CATEGORY, CONF_NAME, Platform
+from homeassistant.const import CONF_ENTITY_CATEGORY, CONF_NAME, CONF_PAYLOAD, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (
-    CONF_PAYLOAD,
-    CONF_PAYLOAD_LENGTH,
-    DATA_KNX_CONFIG,
-    DOMAIN,
-    KNX_ADDRESS,
-)
+from .const import CONF_PAYLOAD_LENGTH, DATA_KNX_CONFIG, DOMAIN, KNX_ADDRESS
 from .knx_entity import KnxEntity
 
 

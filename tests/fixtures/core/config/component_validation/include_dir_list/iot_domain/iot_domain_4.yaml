@@ -1,0 +1,4 @@
+# This violates the non_adr_0007.iot_domain platform schema (no_such_option does not exist)
+platform: non_adr_0007
+no_such_option: abc
+option1: abc
