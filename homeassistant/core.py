@@ -172,11 +172,6 @@ class EventStateChangedData(TypedDict):
     new_state: State | None
 
 
-if not TYPE_CHECKING:
-    # Use plain dict at runtime for performance
-    EventStateChangedData = dict
-
-
 # SOURCE_* are deprecated as of Home Assistant 2022.2, use ConfigSource instead
 _DEPRECATED_SOURCE_DISCOVERED = DeprecatedConstantEnum(
     ConfigSource.DISCOVERED, "2025.1"
@@ -2036,11 +2031,14 @@ class StateMachine:
             return False
 
         old_state.expire()
+        state_changed_data: EventStateChangedData = {
+            "entity_id": entity_id,
+            "old_state": old_state,
+            "new_state": None,
+        }
         self._bus._async_fire(  # pylint: disable=protected-access
             EVENT_STATE_CHANGED,
-            EventStateChangedData(
-                entity_id=entity_id, old_state=old_state, new_state=None
-            ),
+            state_changed_data,
             context=context,
         )
         return True
@@ -2189,11 +2187,14 @@ class StateMachine:
         if old_state is not None:
             old_state.expire()
         self._states[entity_id] = state
+        state_changed_data: EventStateChangedData = {
+            "entity_id": entity_id,
+            "old_state": old_state,
+            "new_state": state,
+        }
         self._bus._async_fire(  # pylint: disable=protected-access
             EVENT_STATE_CHANGED,
-            EventStateChangedData(
-                entity_id=entity_id, old_state=old_state, new_state=state
-            ),
+            state_changed_data,
             context=context,
             time_fired=timestamp,
         )
