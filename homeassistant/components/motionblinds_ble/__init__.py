@@ -34,7 +34,7 @@ CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up Bluetooth BLE integration."""
+    """Set up Motionblinds Bluetooth integration."""
 
     _LOGGER.debug("Setting up Motionblinds Bluetooth integration")
 
