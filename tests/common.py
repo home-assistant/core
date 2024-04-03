@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-from collections import OrderedDict
 from collections.abc import AsyncGenerator, Generator, Mapping, Sequence
 from contextlib import asynccontextmanager, contextmanager
 from datetime import UTC, datetime, timedelta
@@ -649,7 +648,7 @@ def mock_area_registry(
     fixture instead.
     """
     registry = ar.AreaRegistry(hass)
-    registry.areas = mock_entries or OrderedDict()
+    registry.areas = mock_entries or ar.AreaRegistryItems()
 
     hass.data[ar.DATA_REGISTRY] = registry
     return registry

@@ -115,13 +115,13 @@ class AreaRegistryItems(NormalizedNameBaseRegistryItems[AreaEntry]):
             self._unindex_entry_value(key, floor_id, self._floors_index)
         return super()._unindex_entry(key, replacement_entry)
 
-    def get_entries_for_label(self, label: str) -> list[AreaEntry]:
-        """Get entries for label."""
+    def get_areas_for_label(self, label: str) -> list[AreaEntry]:
+        """Get areas for label."""
         data = self.data
         return [data[key] for key in self._labels_index.get(label, ())]
 
-    def get_entries_for_floor(self, floor: str) -> list[AreaEntry]:
-        """Get entries for floor."""
+    def get_areas_for_floor(self, floor: str) -> list[AreaEntry]:
+        """Get areas for floor."""
         data = self.data
         return [data[key] for key in self._floors_index.get(floor, ())]
 
@@ -408,10 +408,10 @@ async def async_load(hass: HomeAssistant) -> None:
 @callback
 def async_entries_for_floor(registry: AreaRegistry, floor_id: str) -> list[AreaEntry]:
     """Return entries that match a floor."""
-    return registry.areas.get_entries_for_floor(floor_id)
+    return registry.areas.get_areas_for_floor(floor_id)
 
 
 @callback
 def async_entries_for_label(registry: AreaRegistry, label_id: str) -> list[AreaEntry]:
     """Return entries that match a label."""
-    return registry.areas.get_entries_for_label(label_id)
+    return registry.areas.get_areas_for_label(label_id)
