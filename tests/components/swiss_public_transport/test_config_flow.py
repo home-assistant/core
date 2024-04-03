@@ -34,7 +34,7 @@ async def test_flow_user_init_data_success(hass: HomeAssistant) -> None:
         config_flow.DOMAIN, context={"source": "user"}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["handler"] == "swiss_public_transport"
     assert result["data_schema"] == config_flow.DATA_SCHEMA
@@ -52,7 +52,7 @@ async def test_flow_user_init_data_success(hass: HomeAssistant) -> None:
             user_input=MOCK_DATA_STEP,
         )
 
-        assert result["type"] == "create_entry"
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["result"].title == "test_start test_destination"
 
         assert result["data"] == MOCK_DATA_STEP
@@ -83,7 +83,7 @@ async def test_flow_user_init_data_error_and_recover(
             user_input=MOCK_DATA_STEP,
         )
 
-        assert result["type"] == "form"
+        assert result["type"] is FlowResultType.FORM
         assert result["errors"]["base"] == text_error
 
         # Recover
@@ -94,7 +94,7 @@ async def test_flow_user_init_data_error_and_recover(
             user_input=MOCK_DATA_STEP,
         )
 
-        assert result["type"] == "create_entry"
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["result"].title == "test_start test_destination"
 
         assert result["data"] == MOCK_DATA_STEP

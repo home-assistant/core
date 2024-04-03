@@ -116,7 +116,7 @@ async def test_integration_already_exists(hass: HomeAssistant) -> None:
         context={"source": config_entries.SOURCE_USER},
     )
     assert result
-    assert result.get("type") == "abort"
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "already_configured"
 
 

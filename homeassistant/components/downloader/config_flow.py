@@ -55,8 +55,9 @@ class DownloaderConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def _validate_input(self, user_input: dict[str, Any]) -> None:
         """Validate the user input if the directory exists."""
-        if not os.path.isabs(user_input[CONF_DOWNLOAD_DIR]):
-            download_path = self.hass.config.path(user_input[CONF_DOWNLOAD_DIR])
+        download_path = user_input[CONF_DOWNLOAD_DIR]
+        if not os.path.isabs(download_path):
+            download_path = self.hass.config.path(download_path)
 
         if not os.path.isdir(download_path):
             _LOGGER.error(

@@ -127,7 +127,7 @@ async def test_form_only_stillimage(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     data = TESTDATA.copy()
@@ -501,7 +501,7 @@ async def test_form_image_http_exceptions(
         )
     await hass.async_block_till_done()
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == expected_message
 
 
@@ -518,7 +518,7 @@ async def test_form_stream_invalidimage(
         )
     await hass.async_block_till_done()
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"still_image_url": "invalid_still_image"}
 
 
@@ -535,7 +535,7 @@ async def test_form_stream_invalidimage2(
         )
     await hass.async_block_till_done()
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"still_image_url": "unable_still_load_no_image"}
 
 
@@ -552,7 +552,7 @@ async def test_form_stream_invalidimage3(
         )
     await hass.async_block_till_done()
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"still_image_url": "invalid_still_image"}
 
 
@@ -571,7 +571,7 @@ async def test_form_stream_timeout(hass: HomeAssistant, fakeimg_png, user_flow) 
             user_flow["flow_id"],
             TESTDATA,
         )
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"stream_source": "timeout"}
 
 
@@ -588,7 +588,7 @@ async def test_form_stream_worker_error(
             user_flow["flow_id"],
             TESTDATA,
         )
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"stream_source": "Some message"}
 
 
@@ -606,7 +606,7 @@ async def test_form_stream_permission_error(
             user_flow["flow_id"],
             TESTDATA,
         )
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"stream_source": "stream_not_permitted"}
 
 
@@ -623,7 +623,7 @@ async def test_form_no_route_to_host(
             user_flow["flow_id"],
             TESTDATA,
         )
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"stream_source": "stream_no_route_to_host"}
 
 
@@ -640,7 +640,7 @@ async def test_form_stream_io_error(
             user_flow["flow_id"],
             TESTDATA,
         )
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"stream_source": "stream_io_error"}
 
 
