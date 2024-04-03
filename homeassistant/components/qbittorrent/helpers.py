@@ -1,5 +1,8 @@
 """Helper functions for qBittorrent."""
 
+from datetime import UTC, datetime
+from typing import Any
+
 from qbittorrent.client import Client
 
 
