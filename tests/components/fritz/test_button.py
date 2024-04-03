@@ -128,6 +128,7 @@ async def test_wol_button_new_device(
     assert entry.state == ConfigEntryState.LOADED
 
     assert hass.states.get("button.printer_wake_on_lan")
+    assert not hass.states.get("button.server_wake_on_lan")
 
     mesh_data["nodes"].append(MOCK_NEW_DEVICE_NODE)
     fh_class_mock.get_mesh_topology.return_value = mesh_data
@@ -135,6 +136,7 @@ async def test_wol_button_new_device(
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=60))
     await hass.async_block_till_done(wait_background_tasks=True)
 
+    assert hass.states.get("button.printer_wake_on_lan")
     assert hass.states.get("button.server_wake_on_lan")
 
 
