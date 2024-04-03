@@ -1,4 +1,5 @@
 """Deprecation helpers for Home Assistant."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -277,7 +278,7 @@ def check_if_deprecated_constant(name: str, module_globals: dict[str, Any]) -> A
         # specifies that __getattr__ should raise AttributeError if the attribute is not
         # found.
         # https://peps.python.org/pep-0562/#specification
-        raise AttributeError(msg)  # noqa: TRY004
+        raise AttributeError(msg)
 
     _print_deprecation_warning_internal(
         name,

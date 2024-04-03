@@ -13,7 +13,6 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "limit_reached": "Request limit reached",
       "invalid_token": "Invalid token",
-      "no_cards_found": "No charge cards found",
       "already_connected": "Already connected",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },

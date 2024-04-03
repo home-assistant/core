@@ -1,4 +1,5 @@
 """Support for AirVisual Pro sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -26,20 +27,13 @@ from . import AirVisualProData, AirVisualProEntity
 from .const import DOMAIN
 
 
-@dataclass(frozen=True)
-class AirVisualProMeasurementKeyMixin:
-    """Define an entity description mixin to include a measurement key."""
+@dataclass(frozen=True, kw_only=True)
+class AirVisualProMeasurementDescription(SensorEntityDescription):
+    """Describe an AirVisual Pro sensor."""
 
     value_fn: Callable[
         [dict[str, Any], dict[str, Any], dict[str, Any], dict[str, Any]], float | int
     ]
-
-
-@dataclass(frozen=True)
-class AirVisualProMeasurementDescription(
-    SensorEntityDescription, AirVisualProMeasurementKeyMixin
-):
-    """Describe an AirVisual Pro sensor."""
 
 
 SENSOR_DESCRIPTIONS = (

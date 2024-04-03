@@ -1,4 +1,5 @@
 """Config flow for pushbullet integration."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -6,9 +7,8 @@ from typing import Any
 from pushbullet import InvalidKeyError, PushBullet, PushbulletError
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_NAME
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import selector
 
 from .const import DEFAULT_NAME, DOMAIN
@@ -21,12 +21,12 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-class PushBulletConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class PushBulletConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for pushbullet integration."""
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors = {}
 

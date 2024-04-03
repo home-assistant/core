@@ -1,4 +1,5 @@
 """Support for Baidu speech service."""
+
 import logging
 
 from aip import AipSpeech

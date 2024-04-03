@@ -1,4 +1,5 @@
 """The test for the ecobee thermostat humidifier module."""
+
 from unittest.mock import patch
 
 import pytest

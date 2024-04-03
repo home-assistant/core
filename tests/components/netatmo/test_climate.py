@@ -1,8 +1,10 @@
 """The tests for the Netatmo climate platform."""
+
 from datetime import timedelta
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
+from syrupy import SnapshotAssertion
 from voluptuous.error import MultipleInvalid
 
 from homeassistant.components.climate import (
@@ -31,19 +33,44 @@ from homeassistant.components.netatmo.const import (
     SERVICE_SET_TEMPERATURE_WITH_END_DATETIME,
     SERVICE_SET_TEMPERATURE_WITH_TIME_PERIOD,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, CONF_WEBHOOK_ID
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_TEMPERATURE,
+    CONF_WEBHOOK_ID,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
+import homeassistant.helpers.entity_registry as er
 from homeassistant.util import dt as dt_util
 
-from .common import selected_platforms, simulate_webhook
+from .common import selected_platforms, simulate_webhook, snapshot_platform_entities
+
+from tests.common import MockConfigEntry
+
+
+async def test_entity(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    netatmo_auth: AsyncMock,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test entities."""
+    await snapshot_platform_entities(
+        hass,
+        config_entry,
+        Platform.CLIMATE,
+        entity_registry,
+        snapshot,
+    )
 
 
 async def test_webhook_event_handling_thermostats(
-    hass: HomeAssistant, config_entry, netatmo_auth
+    hass: HomeAssistant, config_entry: MockConfigEntry, netatmo_auth: AsyncMock
 ) -> None:
     """Test service and webhook event handling with thermostats."""
-    with selected_platforms(["climate"]):
+    with selected_platforms([Platform.CLIMATE]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
 
         await hass.async_block_till_done()
@@ -214,10 +241,10 @@ async def test_webhook_event_handling_thermostats(
 
 
 async def test_service_preset_mode_frost_guard_thermostat(
-    hass: HomeAssistant, config_entry, netatmo_auth
+    hass: HomeAssistant, config_entry: MockConfigEntry, netatmo_auth: AsyncMock
 ) -> None:
     """Test service with frost guard preset for thermostats."""
-    with selected_platforms(["climate"]):
+    with selected_platforms([Platform.CLIMATE]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
 
         await hass.async_block_till_done()
@@ -287,10 +314,10 @@ async def test_service_preset_mode_frost_guard_thermostat(
 
 
 async def test_service_preset_modes_thermostat(
-    hass: HomeAssistant, config_entry, netatmo_auth
+    hass: HomeAssistant, config_entry: MockConfigEntry, netatmo_auth: AsyncMock
 ) -> None:
     """Test service with preset modes for thermostats."""
-    with selected_platforms(["climate"]):
+    with selected_platforms([Platform.CLIMATE]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
 
         await hass.async_block_till_done()
@@ -367,10 +394,10 @@ async def test_service_preset_modes_thermostat(
 
 
 async def test_service_set_temperature_with_end_datetime(
-    hass: HomeAssistant, config_entry, netatmo_auth
+    hass: HomeAssistant, config_entry: MockConfigEntry, netatmo_auth: AsyncMock
 ) -> None:
     """Test service setting temperature with an end datetime."""
-    with selected_platforms(["climate"]):
+    with selected_platforms([Platform.CLIMATE]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
 
         await hass.async_block_till_done()
@@ -425,10 +452,10 @@ async def test_service_set_temperature_with_end_datetime(
 
 
 async def test_service_set_temperature_with_time_period(
-    hass: HomeAssistant, config_entry, netatmo_auth
+    hass: HomeAssistant, config_entry: MockConfigEntry, netatmo_auth: AsyncMock
 ) -> None:
     """Test service setting temperature with an end datetime."""
-    with selected_platforms(["climate"]):
+    with selected_platforms([Platform.CLIMATE]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
 
         await hass.async_block_till_done()
@@ -483,10 +510,10 @@ async def test_service_set_temperature_with_time_period(
 
 
 async def test_service_clear_temperature_setting(
-    hass: HomeAssistant, config_entry, netatmo_auth
+    hass: HomeAssistant, config_entry: MockConfigEntry, netatmo_auth: AsyncMock
 ) -> None:
     """Test service clearing temperature setting."""
-    with selected_platforms(["climate"]):
+    with selected_platforms([Platform.CLIMATE]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
 
         await hass.async_block_till_done()
@@ -564,10 +591,10 @@ async def test_service_clear_temperature_setting(
 
 
 async def test_webhook_event_handling_no_data(
-    hass: HomeAssistant, config_entry, netatmo_auth
+    hass: HomeAssistant, config_entry: MockConfigEntry, netatmo_auth: AsyncMock
 ) -> None:
     """Test service and webhook event handling with erroneous data."""
-    with selected_platforms(["climate"]):
+    with selected_platforms([Platform.CLIMATE]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
 
         await hass.async_block_till_done()
@@ -618,7 +645,7 @@ async def test_service_schedule_thermostats(
     hass: HomeAssistant, config_entry, caplog: pytest.LogCaptureFixture, netatmo_auth
 ) -> None:
     """Test service for selecting Netatmo schedule with thermostats."""
-    with selected_platforms(["climate"]):
+    with selected_platforms([Platform.CLIMATE]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
 
         await hass.async_block_till_done()
@@ -671,7 +698,7 @@ async def test_service_preset_mode_with_end_time_thermostats(
     hass: HomeAssistant, config_entry, caplog: pytest.LogCaptureFixture, netatmo_auth
 ) -> None:
     """Test service for set preset mode with end datetime for Netatmo thermostats."""
-    with selected_platforms(["climate"]):
+    with selected_platforms([Platform.CLIMATE]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
 
         await hass.async_block_till_done()
@@ -740,10 +767,10 @@ async def test_service_preset_mode_with_end_time_thermostats(
 
 
 async def test_service_preset_mode_already_boost_valves(
-    hass: HomeAssistant, config_entry, netatmo_auth
+    hass: HomeAssistant, config_entry: MockConfigEntry, netatmo_auth: AsyncMock
 ) -> None:
     """Test service with boost preset for valves when already in boost mode."""
-    with selected_platforms(["climate"]):
+    with selected_platforms([Platform.CLIMATE]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
 
         await hass.async_block_till_done()
@@ -820,10 +847,10 @@ async def test_service_preset_mode_already_boost_valves(
 
 
 async def test_service_preset_mode_boost_valves(
-    hass: HomeAssistant, config_entry, netatmo_auth
+    hass: HomeAssistant, config_entry: MockConfigEntry, netatmo_auth: AsyncMock
 ) -> None:
     """Test service with boost preset for valves."""
-    with selected_platforms(["climate"]):
+    with selected_platforms([Platform.CLIMATE]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
 
         await hass.async_block_till_done()
@@ -875,7 +902,7 @@ async def test_service_preset_mode_invalid(
     hass: HomeAssistant, config_entry, caplog: pytest.LogCaptureFixture, netatmo_auth
 ) -> None:
     """Test service with invalid preset."""
-    with selected_platforms(["climate"]):
+    with selected_platforms([Platform.CLIMATE]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
 
         await hass.async_block_till_done()
@@ -891,10 +918,10 @@ async def test_service_preset_mode_invalid(
 
 
 async def test_valves_service_turn_off(
-    hass: HomeAssistant, config_entry, netatmo_auth
+    hass: HomeAssistant, config_entry: MockConfigEntry, netatmo_auth: AsyncMock
 ) -> None:
     """Test service turn off for valves."""
-    with selected_platforms(["climate"]):
+    with selected_platforms([Platform.CLIMATE]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
 
         await hass.async_block_till_done()
@@ -943,10 +970,10 @@ async def test_valves_service_turn_off(
 
 
 async def test_valves_service_turn_on(
-    hass: HomeAssistant, config_entry, netatmo_auth
+    hass: HomeAssistant, config_entry: MockConfigEntry, netatmo_auth: AsyncMock
 ) -> None:
     """Test service turn on for valves."""
-    with selected_platforms(["climate"]):
+    with selected_platforms([Platform.CLIMATE]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
 
         await hass.async_block_till_done()
@@ -990,10 +1017,10 @@ async def test_valves_service_turn_on(
 
 
 async def test_webhook_home_id_mismatch(
-    hass: HomeAssistant, config_entry, netatmo_auth
+    hass: HomeAssistant, config_entry: MockConfigEntry, netatmo_auth: AsyncMock
 ) -> None:
     """Test service turn on for valves."""
-    with selected_platforms(["climate"]):
+    with selected_platforms([Platform.CLIMATE]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
 
         await hass.async_block_till_done()
@@ -1030,10 +1057,10 @@ async def test_webhook_home_id_mismatch(
 
 
 async def test_webhook_set_point(
-    hass: HomeAssistant, config_entry, netatmo_auth
+    hass: HomeAssistant, config_entry: MockConfigEntry, netatmo_auth: AsyncMock
 ) -> None:
     """Test service turn on for valves."""
-    with selected_platforms(["climate"]):
+    with selected_platforms([Platform.CLIMATE]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
 
         await hass.async_block_till_done()

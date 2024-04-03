@@ -1,5 +1,9 @@
 """Constants used by multiple MQTT modules."""
+
+import jinja2
+
 from homeassistant.const import CONF_PAYLOAD, Platform
+from homeassistant.exceptions import TemplateError
 
 ATTR_DISCOVERY_HASH = "discovery_hash"
 ATTR_DISCOVERY_PAYLOAD = "discovery_payload"
@@ -7,6 +11,7 @@ ATTR_DISCOVERY_TOPIC = "discovery_topic"
 ATTR_PAYLOAD = "payload"
 ATTR_QOS = "qos"
 ATTR_RETAIN = "retain"
+ATTR_SERIAL_NUMBER = "serial_number"
 ATTR_TOPIC = "topic"
 
 CONF_AVAILABILITY = "availability"
@@ -73,6 +78,7 @@ CONF_CONNECTIONS = "connections"
 CONF_MANUFACTURER = "manufacturer"
 CONF_HW_VERSION = "hw_version"
 CONF_SW_VERSION = "sw_version"
+CONF_SERIAL_NUMBER = "serial_number"
 CONF_VIA_DEVICE = "via_device"
 CONF_DEPRECATED_VIA_HUB = "via_hub"
 CONF_SUGGESTED_AREA = "suggested_area"
@@ -136,34 +142,6 @@ MQTT_DISCONNECTED = "mqtt_disconnected"
 PAYLOAD_EMPTY_JSON = "{}"
 PAYLOAD_NONE = "None"
 
-PLATFORMS = [
-    Platform.ALARM_CONTROL_PANEL,
-    Platform.BINARY_SENSOR,
-    Platform.BUTTON,
-    Platform.CAMERA,
-    Platform.CLIMATE,
-    Platform.DEVICE_TRACKER,
-    Platform.EVENT,
-    Platform.COVER,
-    Platform.FAN,
-    Platform.HUMIDIFIER,
-    Platform.IMAGE,
-    Platform.LAWN_MOWER,
-    Platform.LIGHT,
-    Platform.LOCK,
-    Platform.NUMBER,
-    Platform.SELECT,
-    Platform.SCENE,
-    Platform.SENSOR,
-    Platform.SIREN,
-    Platform.SWITCH,
-    Platform.TEXT,
-    Platform.UPDATE,
-    Platform.VACUUM,
-    Platform.VALVE,
-    Platform.WATER_HEATER,
-]
-
 RELOADABLE_PLATFORMS = [
     Platform.ALARM_CONTROL_PANEL,
     Platform.BINARY_SENSOR,
@@ -191,3 +169,5 @@ RELOADABLE_PLATFORMS = [
     Platform.VALVE,
     Platform.WATER_HEATER,
 ]
+
+TEMPLATE_ERRORS = (jinja2.TemplateError, TemplateError, TypeError, ValueError)

@@ -1,0 +1,45 @@
+{
+  "active_interfaces": [
+    {
+      "fullname": "lo",
+      "up": 1,
+      "index": 0,
+      "scope6": ["host"],
+      "netmask": "255.0.0.0",
+      "netmask6": [128],
+      "edit": 1,
+      "broadcast": 0,
+      "mtu": 65536,
+      "name": "lo",
+      "address": "127.0.0.1",
+      "address6": ["::1"]
+    },
+    {
+      "mtu": 1500,
+      "fullname": "enp6s0",
+      "up": 1,
+      "index": 1,
+      "ether": "12:34:56:78:9a:bc",
+      "address6": [],
+      "netmask6": [],
+      "edit": 1,
+      "scope6": [],
+      "name": "enp6s0"
+    },
+    {
+      "edit": 1,
+      "netmask6": [64],
+      "netmask": "255.255.255.0",
+      "scope6": ["link"],
+      "up": 1,
+      "index": 2,
+      "fullname": "eno1",
+      "address6": ["fe80::2:3:4"],
+      "address": "192.168.1.4",
+      "name": "eno1",
+      "mtu": 1500,
+      "broadcast": "192.168.1.255",
+      "ether": "12:34:56:78:9a:bd"
+    }
+  ]
+}

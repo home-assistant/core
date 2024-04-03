@@ -1,4 +1,5 @@
 """The tests the History component."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -245,6 +246,41 @@ def test_state_changes_during_period(
     assert_multiple_states_equal_without_context(states[:limit], hist[entity_id])
 
 
+def test_state_changes_during_period_last_reported(
+    hass_recorder: Callable[..., HomeAssistant],
+) -> None:
+    """Test state change during period."""
+    hass = hass_recorder()
+    entity_id = "media_player.test"
+
+    def set_state(state):
+        """Set the state."""
+        hass.states.set(entity_id, state)
+        wait_recording_done(hass)
+        return hass.states.get(entity_id)
+
+    start = dt_util.utcnow()
+    point1 = start + timedelta(seconds=1)
+    point2 = point1 + timedelta(seconds=1)
+    end = point2 + timedelta(seconds=1)
+
+    with freeze_time(start) as freezer:
+        set_state("idle")
+
+        freezer.move_to(point1)
+        set_state("YouTube")
+
+        freezer.move_to(point2)
+        states = [set_state("YouTube")]
+
+        freezer.move_to(end)
+        set_state("Netflix")
+
+    hist = history.state_changes_during_period(hass, start, end, entity_id)
+
+    assert_multiple_states_equal_without_context(states, hist[entity_id])
+
+
 def test_state_changes_during_period_descending(
     hass_recorder: Callable[..., HomeAssistant],
 ) -> None:
@@ -379,6 +415,38 @@ def test_get_last_state_changes(hass_recorder: Callable[..., HomeAssistant]) -> 
     assert_multiple_states_equal_without_context(states, hist[entity_id])
 
 
+def test_get_last_state_changes_last_reported(
+    hass_recorder: Callable[..., HomeAssistant],
+) -> None:
+    """Test number of state changes."""
+    hass = hass_recorder()
+    entity_id = "sensor.test"
+
+    def set_state(state):
+        """Set the state."""
+        hass.states.set(entity_id, state)
+        wait_recording_done(hass)
+        return hass.states.get(entity_id)
+
+    start = dt_util.utcnow() - timedelta(minutes=2)
+    point = start + timedelta(minutes=1)
+    point2 = point + timedelta(minutes=1, seconds=1)
+    states = []
+
+    with freeze_time(start) as freezer:
+        set_state("1")
+
+        freezer.move_to(point)
+        states.append(set_state("1"))
+
+        freezer.move_to(point2)
+        states.append(set_state("2"))
+
+    hist = history.get_last_state_changes(hass, 2, entity_id)
+
+    assert_multiple_states_equal_without_context(states, hist[entity_id])
+
+
 def test_get_last_state_change(hass_recorder: Callable[..., HomeAssistant]) -> None:
     """Test getting the last state change for an entity."""
     hass = hass_recorder()
@@ -486,7 +554,7 @@ def test_get_significant_states_minimal_response(
         entity_states = states[entity_id]
         for state_idx in range(1, len(entity_states)):
             input_state = entity_states[state_idx]
-            orig_last_changed = orig_last_changed = json.dumps(
+            orig_last_changed = json.dumps(
                 process_timestamp(input_state.last_changed),
                 cls=JSONEncoder,
             ).replace('"', "")
@@ -568,14 +636,13 @@ def test_get_significant_states_without_initial(
     one_with_microsecond = zero + timedelta(seconds=1, microseconds=1)
     one_and_half = zero + timedelta(seconds=1.5)
     for entity_id in states:
-        states[entity_id] = list(
-            filter(
-                lambda s: s.last_changed != one
-                and s.last_changed != one_with_microsecond,
-                states[entity_id],
-            )
-        )
+        states[entity_id] = [
+            s
+            for s in states[entity_id]
+            if s.last_changed not in (one, one_with_microsecond)
+        ]
     del states["media_player.test2"]
+    del states["thermostat.test3"]
 
     hist = history.get_significant_states(
         hass,
@@ -597,6 +664,7 @@ def test_get_significant_states_entity_id(
     del states["media_player.test3"]
     del states["thermostat.test"]
     del states["thermostat.test2"]
+    del states["thermostat.test3"]
     del states["script.can_cancel_this_one"]
 
     hist = history.get_significant_states(hass, zero, four, ["media_player.test"])
@@ -657,9 +725,7 @@ def test_get_significant_states_only(
         return hass.states.get(entity_id)
 
     start = dt_util.utcnow() - timedelta(minutes=4)
-    points = []
-    for i in range(1, 4):
-        points.append(start + timedelta(minutes=i))
+    points = [start + timedelta(minutes=i) for i in range(1, 4)]
 
     states = []
     with freeze_time(start) as freezer:
@@ -746,6 +812,7 @@ def record_states(hass) -> tuple[datetime, datetime, dict[str, list[State]]]:
     mp3 = "media_player.test3"
     therm = "thermostat.test"
     therm2 = "thermostat.test2"
+    therm3 = "thermostat.test3"
     zone = "zone.home"
     script_c = "script.can_cancel_this_one"
 
@@ -761,7 +828,7 @@ def record_states(hass) -> tuple[datetime, datetime, dict[str, list[State]]]:
     three = two + timedelta(seconds=1)
     four = three + timedelta(seconds=1)
 
-    states = {therm: [], therm2: [], mp: [], mp2: [], mp3: [], script_c: []}
+    states = {therm: [], therm2: [], therm3: [], mp: [], mp2: [], mp3: [], script_c: []}
     with freeze_time(one) as freezer:
         states[mp].append(
             set_state(mp, "idle", attributes={"media_title": str(sentinel.mt1)})
@@ -775,6 +842,8 @@ def record_states(hass) -> tuple[datetime, datetime, dict[str, list[State]]]:
         states[therm].append(
             set_state(therm, 20, attributes={"current_temperature": 19.5})
         )
+        # This state will be updated
+        set_state(therm3, 20, attributes={"current_temperature": 19.5})
 
         freezer.move_to(one + timedelta(microseconds=1))
         states[mp].append(
@@ -795,6 +864,8 @@ def record_states(hass) -> tuple[datetime, datetime, dict[str, list[State]]]:
         states[therm2].append(
             set_state(therm2, 20, attributes={"current_temperature": 19})
         )
+        # This state will be updated
+        set_state(therm3, 20, attributes={"current_temperature": 19.5})
 
         freezer.move_to(three)
         states[mp].append(
@@ -806,6 +877,9 @@ def record_states(hass) -> tuple[datetime, datetime, dict[str, list[State]]]:
         # Attributes changed even though state is the same
         states[therm].append(
             set_state(therm, 21, attributes={"current_temperature": 20})
+        )
+        states[therm3].append(
+            set_state(therm3, 20, attributes={"current_temperature": 19.5})
         )
 
     return zero, four, states

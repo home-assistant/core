@@ -25,30 +25,6 @@
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },
-  "issues": {
-    "service_deprecation_turn_off": {
-      "title": "Litter-Robot vaccum support for {old_service} is being removed",
-      "fix_flow": {
-        "step": {
-          "confirm": {
-            "title": "[%key:component::litterrobot::issues::service_deprecation_turn_off::title%]",
-            "description": "Litter-Robot vaccum support for the {old_service} service is deprecated and will be removed in Home Assistant 2024.2; Please adjust any automation or script that uses the service to instead call {new_service} and select submit below to mark this issue as resolved."
-          }
-        }
-      }
-    },
-    "service_deprecation_turn_on": {
-      "title": "[%key:component::litterrobot::issues::service_deprecation_turn_off::title%]",
-      "fix_flow": {
-        "step": {
-          "confirm": {
-            "title": "[%key:component::litterrobot::issues::service_deprecation_turn_off::title%]",
-            "description": "[%key:component::litterrobot::issues::service_deprecation_turn_off::fix_flow::step::confirm::description%]"
-          }
-        }
-      }
-    }
-  },
   "entity": {
     "binary_sensor": {
       "sleeping": {

@@ -1,4 +1,5 @@
 """Interfaces with TotalConnect alarm control panels."""
+
 from __future__ import annotations
 
 from total_connect_client import ArmingHelper
@@ -35,21 +36,21 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up TotalConnect alarm panels based on a config entry."""
-    alarms = []
+    alarms: list[TotalConnectAlarm] = []
 
     coordinator: TotalConnectDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     for location_id, location in coordinator.client.locations.items():
         location_name = location.location_name
-        for partition_id in location.partitions:
-            alarms.append(
-                TotalConnectAlarm(
-                    coordinator=coordinator,
-                    name=location_name,
-                    location_id=location_id,
-                    partition_id=partition_id,
-                )
+        alarms.extend(
+            TotalConnectAlarm(
+                coordinator=coordinator,
+                name=location_name,
+                location_id=location_id,
+                partition_id=partition_id,
             )
+            for partition_id in location.partitions
+        )
 
     async_add_entities(alarms)
 
@@ -115,6 +116,7 @@ class TotalConnectAlarm(
         return DeviceInfo(
             identifiers={(DOMAIN, self._device.serial_number)},
             name=self._device.name,
+            serial_number=self._device.serial_number,
         )
 
     @property

@@ -1,4 +1,5 @@
 """Code to handle a Xiaomi Device."""
+
 import datetime
 from enum import Enum
 from functools import partial
@@ -149,15 +150,14 @@ class XiaomiCoordinatedMiioEntity(CoordinatorEntity[_T]):
             result = await self.hass.async_add_executor_job(
                 partial(func, *args, **kwargs)
             )
-
-            _LOGGER.debug("Response received from miio device: %s", result)
-
-            return True
         except DeviceException as exc:
             if self.available:
                 _LOGGER.error(mask_error, exc)
 
             return False
+
+        _LOGGER.debug("Response received from miio device: %s", result)
+        return True
 
     @classmethod
     def _extract_value_from_attribute(cls, state, attribute):

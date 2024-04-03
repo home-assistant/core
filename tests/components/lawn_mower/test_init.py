@@ -1,4 +1,5 @@
 """The tests for the lawn mower integration."""
+
 from collections.abc import Generator
 from unittest.mock import MagicMock
 

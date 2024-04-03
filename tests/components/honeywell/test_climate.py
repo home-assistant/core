@@ -1,4 +1,5 @@
 """Test the Whirlpool Sixth Sense climate domain."""
+
 import datetime
 from unittest.mock import MagicMock
 
@@ -28,7 +29,7 @@ from homeassistant.components.climate import (
     SERVICE_SET_TEMPERATURE,
     HVACMode,
 )
-from homeassistant.components.honeywell.climate import RETRY, SCAN_INTERVAL
+from homeassistant.components.honeywell.climate import PRESET_HOLD, RETRY, SCAN_INTERVAL
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_TEMPERATURE,
@@ -46,7 +47,6 @@ from . import init_integration, reset_mock
 from tests.common import async_fire_time_changed
 
 FAN_ACTION = "fan_action"
-PRESET_HOLD = "Hold"
 
 
 async def test_no_thermostat_options(

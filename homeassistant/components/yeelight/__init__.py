@@ -1,7 +1,7 @@
 """Support for Xiaomi Yeelight WiFi color bulb."""
+
 from __future__ import annotations
 
-import asyncio
 import logging
 
 import voluptuous as vol
@@ -214,7 +214,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         device = await _async_get_device(hass, entry.data[CONF_HOST], entry)
         await _async_initialize(hass, entry, device)
-    except (asyncio.TimeoutError, OSError, BulbException) as ex:
+    except (TimeoutError, OSError, BulbException) as ex:
         raise ConfigEntryNotReady from ex
 
     found_unique_id = device.unique_id

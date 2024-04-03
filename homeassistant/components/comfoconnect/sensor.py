@@ -1,4 +1,5 @@
 """Platform to control a Zehnder ComfoAir Q350/450/600 ventilation unit."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -79,19 +80,11 @@ ATTR_SUPPLY_TEMPERATURE = "supply_temperature"
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
-class ComfoconnectRequiredKeysMixin:
-    """Mixin for required keys."""
-
-    sensor_id: int
-
-
-@dataclass(frozen=True)
-class ComfoconnectSensorEntityDescription(
-    SensorEntityDescription, ComfoconnectRequiredKeysMixin
-):
+@dataclass(frozen=True, kw_only=True)
+class ComfoconnectSensorEntityDescription(SensorEntityDescription):
     """Describes Comfoconnect sensor entity."""
 
+    sensor_id: int
     multiplier: float = 1
 
 

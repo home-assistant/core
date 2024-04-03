@@ -1,4 +1,5 @@
 """Trace support for automation."""
+
 from __future__ import annotations
 
 from collections.abc import Generator
@@ -64,7 +65,7 @@ def trace_automation(
     except Exception as ex:
         if automation_id:
             trace.set_error(ex)
-        raise ex
+        raise
     finally:
         if automation_id:
             trace.finished()

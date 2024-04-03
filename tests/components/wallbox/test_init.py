@@ -1,4 +1,5 @@
 """Test Wallbox Init Component."""
+
 import json
 
 import requests_mock

@@ -1,4 +1,5 @@
 """Plugwise Switch component for HomeAssistant."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -33,13 +34,11 @@ SWITCHES: tuple[PlugwiseSwitchEntityDescription, ...] = (
     PlugwiseSwitchEntityDescription(
         key="dhw_cm_switch",
         translation_key="dhw_cm_switch",
-        icon="mdi:water-plus",
         entity_category=EntityCategory.CONFIG,
     ),
     PlugwiseSwitchEntityDescription(
         key="lock",
         translation_key="lock",
-        icon="mdi:lock",
         entity_category=EntityCategory.CONFIG,
     ),
     PlugwiseSwitchEntityDescription(
@@ -51,7 +50,6 @@ SWITCHES: tuple[PlugwiseSwitchEntityDescription, ...] = (
         key="cooling_ena_switch",
         translation_key="cooling_ena_switch",
         name="Cooling",
-        icon="mdi:snowflake-thermometer",
         entity_category=EntityCategory.CONFIG,
     ),
 )

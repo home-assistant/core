@@ -1,4 +1,5 @@
 """Common fixtures for testing greeneye_monitor."""
+
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 

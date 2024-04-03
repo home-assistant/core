@@ -1,4 +1,5 @@
 """The tractive integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -39,7 +40,6 @@ from .const import (
     SERVER_UNAVAILABLE,
     SWITCH_KEY_MAP,
     TRACKABLES,
-    TRACKER_ACTIVITY_STATUS_UPDATED,
     TRACKER_HARDWARE_STATUS_UPDATED,
     TRACKER_POSITION_UPDATED,
     TRACKER_SWITCH_STATUS_UPDATED,
@@ -129,6 +129,13 @@ async def _generate_trackables(
     if not trackable["device_id"]:
         return None
 
+    if "details" not in trackable:
+        _LOGGER.info(
+            "Tracker %s has no details and will be skipped. This happens for shared trackers",
+            trackable["device_id"],
+        )
+        return None
+
     tracker = client.tracker(trackable["device_id"])
 
     tracker_details, hw_info, pos_report = await asyncio.gather(
@@ -212,9 +219,6 @@ class TractiveClient:
                     if server_was_unavailable:
                         _LOGGER.debug("Tractive is back online")
                         server_was_unavailable = False
-                    if event["message"] == "activity_update":
-                        self._send_activity_update(event)
-                        continue
                     if event["message"] == "wellness_overview":
                         self._send_wellness_update(event)
                         continue
@@ -283,15 +287,6 @@ class TractiveClient:
             TRACKER_SWITCH_STATUS_UPDATED, event["tracker_id"], payload
         )
 
-    def _send_activity_update(self, event: dict[str, Any]) -> None:
-        payload = {
-            ATTR_MINUTES_ACTIVE: event["progress"]["achieved_minutes"],
-            ATTR_DAILY_GOAL: event["progress"]["goal_minutes"],
-        }
-        self._dispatch_tracker_event(
-            TRACKER_ACTIVITY_STATUS_UPDATED, event["pet_id"], payload
-        )
-
     def _send_wellness_update(self, event: dict[str, Any]) -> None:
         sleep_day = None
         sleep_night = None
@@ -301,6 +296,8 @@ class TractiveClient:
         payload = {
             ATTR_ACTIVITY_LABEL: event["wellness"].get("activity_label"),
             ATTR_CALORIES: event["activity"]["calories"],
+            ATTR_DAILY_GOAL: event["activity"]["minutes_goal"],
+            ATTR_MINUTES_ACTIVE: event["activity"]["minutes_active"],
             ATTR_MINUTES_DAY_SLEEP: sleep_day,
             ATTR_MINUTES_NIGHT_SLEEP: sleep_night,
             ATTR_MINUTES_REST: event["activity"]["minutes_rest"],

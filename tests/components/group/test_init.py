@@ -1,4 +1,5 @@
 """The tests for the Group components."""
+
 from __future__ import annotations
 
 from collections import OrderedDict
@@ -7,7 +8,7 @@ from unittest.mock import patch
 
 import pytest
 
-import homeassistant.components.group as group
+from homeassistant.components import group
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_FRIENDLY_NAME,
@@ -553,6 +554,7 @@ async def test_group_updated_after_device_tracker_zone_change(
 
     assert await async_setup_component(hass, "group", {})
     assert await async_setup_component(hass, "device_tracker", {})
+    await hass.async_block_till_done()
 
     await group.Group.async_create_group(
         hass,
@@ -758,6 +760,7 @@ async def test_service_group_services_add_remove_entities(hass: HomeAssistant) -
     assert await async_setup_component(hass, "person", {})
     with assert_setup_component(0, "group"):
         await async_setup_component(hass, "group", {"group": {}})
+    await hass.async_block_till_done()
 
     assert hass.services.has_service("group", group.SERVICE_SET)
 
@@ -1139,7 +1142,7 @@ async def test_group_alarm(hass: HomeAssistant) -> None:
     hass.states.async_set("alarm_control_panel.one", "armed_away")
     hass.states.async_set("alarm_control_panel.two", "armed_home")
     hass.states.async_set("alarm_control_panel.three", "armed_away")
-    hass.state = CoreState.stopped
+    hass.set_state(CoreState.stopped)
 
     assert await async_setup_component(
         hass,
@@ -1187,7 +1190,7 @@ async def test_group_vacuum_off(hass: HomeAssistant) -> None:
     hass.states.async_set("vacuum.one", "docked")
     hass.states.async_set("vacuum.two", "off")
     hass.states.async_set("vacuum.three", "off")
-    hass.state = CoreState.stopped
+    hass.set_state(CoreState.stopped)
 
     assert await async_setup_component(
         hass,
@@ -1229,6 +1232,8 @@ async def test_group_vacuum_on(hass: HomeAssistant) -> None:
 
 async def test_device_tracker_not_home(hass: HomeAssistant) -> None:
     """Test group of device_tracker not_home."""
+    await async_setup_component(hass, "device_tracker", {})
+    await hass.async_block_till_done()
     hass.states.async_set("device_tracker.one", "not_home")
     hass.states.async_set("device_tracker.two", "not_home")
     hass.states.async_set("device_tracker.three", "not_home")
@@ -1280,7 +1285,7 @@ async def test_switch_removed(hass: HomeAssistant) -> None:
     hass.states.async_set("switch.two", "off")
     hass.states.async_set("switch.three", "on")
 
-    hass.state = CoreState.stopped
+    hass.set_state(CoreState.stopped)
     assert await async_setup_component(
         hass,
         "group",
@@ -1409,7 +1414,7 @@ async def test_group_that_references_a_group_of_lights(hass: HomeAssistant) -> N
         "light.living_front_ri",
         "light.living_back_lef",
     ]
-    hass.state = CoreState.stopped
+    hass.set_state(CoreState.stopped)
 
     for entity_id in entity_ids:
         hass.states.async_set(entity_id, "off")
@@ -1443,7 +1448,7 @@ async def test_group_that_references_a_group_of_covers(hass: HomeAssistant) -> N
         "cover.living_front_ri",
         "cover.living_back_lef",
     ]
-    hass.state = CoreState.stopped
+    hass.set_state(CoreState.stopped)
 
     for entity_id in entity_ids:
         hass.states.async_set(entity_id, "closed")
@@ -1479,7 +1484,7 @@ async def test_group_that_references_two_groups_of_covers(hass: HomeAssistant) -
         "cover.living_front_ri",
         "cover.living_back_lef",
     ]
-    hass.state = CoreState.stopped
+    hass.set_state(CoreState.stopped)
 
     for entity_id in entity_ids:
         hass.states.async_set(entity_id, "closed")
@@ -1523,7 +1528,7 @@ async def test_group_that_references_two_types_of_groups(hass: HomeAssistant) ->
         "device_tracker.living_front_ri",
         "device_tracker.living_back_lef",
     ]
-    hass.state = CoreState.stopped
+    hass.set_state(CoreState.stopped)
 
     for entity_id in group_1_entity_ids:
         hass.states.async_set(entity_id, "closed")
@@ -1621,7 +1626,7 @@ async def test_plant_group(hass: HomeAssistant) -> None:
 
 @pytest.mark.parametrize(
     ("group_type", "member_state", "extra_options"),
-    (
+    [
         ("binary_sensor", "on", {"all": False}),
         ("cover", "open", {}),
         ("fan", "on", {}),
@@ -1637,7 +1642,7 @@ async def test_plant_group(hass: HomeAssistant) -> None:
                 "state_class": "measurement",
             },
         ),
-    ),
+    ],
 )
 async def test_setup_and_remove_config_entry(
     hass: HomeAssistant,
@@ -1684,24 +1689,24 @@ async def test_setup_and_remove_config_entry(
 
 @pytest.mark.parametrize(
     ("hide_members", "hidden_by_initial", "hidden_by"),
-    (
+    [
         (False, er.RegistryEntryHider.INTEGRATION, er.RegistryEntryHider.INTEGRATION),
         (False, None, None),
         (False, er.RegistryEntryHider.USER, er.RegistryEntryHider.USER),
         (True, er.RegistryEntryHider.INTEGRATION, None),
         (True, None, None),
         (True, er.RegistryEntryHider.USER, er.RegistryEntryHider.USER),
-    ),
+    ],
 )
 @pytest.mark.parametrize(
     ("group_type", "extra_options"),
-    (
+    [
         ("binary_sensor", {"all": False}),
         ("cover", {}),
         ("fan", {}),
         ("light", {"all": False}),
         ("media_player", {}),
-    ),
+    ],
 )
 async def test_unhide_members_on_remove(
     hass: HomeAssistant,

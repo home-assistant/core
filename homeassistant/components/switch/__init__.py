@@ -1,4 +1,5 @@
 """Component to interface with switches that can be controlled remotely."""
+
 from __future__ import annotations
 
 from datetime import timedelta

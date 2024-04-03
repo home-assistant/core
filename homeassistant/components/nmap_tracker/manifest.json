@@ -7,9 +7,5 @@
   "documentation": "https://www.home-assistant.io/integrations/nmap_tracker",
   "iot_class": "local_polling",
   "loggers": ["nmap"],
-  "requirements": [
-    "netmap==0.7.0.2",
-    "getmac==0.9.4",
-    "mac-vendor-lookup==0.1.12"
-  ]
+  "requirements": ["netmap==0.7.0.2", "getmac==0.9.4", "aiooui==0.1.5"]
 }

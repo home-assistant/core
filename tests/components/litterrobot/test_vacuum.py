@@ -1,4 +1,5 @@
 """Test the Litter-Robot vacuum entity."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -13,8 +14,6 @@ from homeassistant.components.vacuum import (
     DOMAIN as PLATFORM_DOMAIN,
     SERVICE_START,
     SERVICE_STOP,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
     STATE_DOCKED,
     STATE_ERROR,
 )
@@ -103,16 +102,6 @@ async def test_vacuum_with_error(
         (SERVICE_START, "start_cleaning", None),
         (SERVICE_STOP, "set_power_status", None),
         (
-            SERVICE_TURN_OFF,
-            "set_power_status",
-            {"issues": {(DOMAIN, "service_deprecation_turn_off")}},
-        ),
-        (
-            SERVICE_TURN_ON,
-            "set_power_status",
-            {"issues": {(DOMAIN, "service_deprecation_turn_on")}},
-        ),
-        (
             SERVICE_SET_SLEEP_MODE,
             "set_sleep_mode",
             {"data": {"enabled": True, "start_time": "22:30"}},
@@ -150,53 +139,3 @@ async def test_commands(
 
     issue_registry = ir.async_get(hass)
     assert set(issue_registry.issues.keys()) == issues
-
-
-@pytest.mark.parametrize(
-    ("service", "issue_id", "placeholders"),
-    [
-        (
-            SERVICE_TURN_OFF,
-            "service_deprecation_turn_off",
-            {
-                "old_service": "vacuum.turn_off",
-                "new_service": "vacuum.stop",
-            },
-        ),
-        (
-            SERVICE_TURN_ON,
-            "service_deprecation_turn_on",
-            {
-                "old_service": "vacuum.turn_on",
-                "new_service": "vacuum.start",
-            },
-        ),
-    ],
-)
-async def test_issues(
-    hass: HomeAssistant,
-    mock_account: MagicMock,
-    caplog: pytest.LogCaptureFixture,
-    service: str,
-    issue_id: str,
-    placeholders: dict[str, str],
-) -> None:
-    """Test issues raised by calling deprecated services."""
-    await setup_integration(hass, mock_account, PLATFORM_DOMAIN)
-
-    vacuum = hass.states.get(VACUUM_ENTITY_ID)
-    assert vacuum
-    assert vacuum.state == STATE_DOCKED
-
-    await hass.services.async_call(
-        PLATFORM_DOMAIN,
-        service,
-        {ATTR_ENTITY_ID: VACUUM_ENTITY_ID},
-        blocking=True,
-    )
-
-    issue_registry = ir.async_get(hass)
-    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
-    assert issue.is_fixable is True
-    assert issue.is_persistent is True
-    assert issue.translation_placeholders == placeholders

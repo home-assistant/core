@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable
 import datetime
 from http import HTTPStatus
@@ -10,6 +11,7 @@ from unittest.mock import Mock, patch
 
 from aiohttp.client_exceptions import ClientError
 from freezegun import freeze_time
+from freezegun.api import FrozenDateTimeFactory
 from oauth2client.client import (
     DeviceFlowInfo,
     FlowExchangeError,
@@ -149,7 +151,7 @@ async def test_full_flow_application_creds(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result.get("type") == "progress"
+    assert result.get("type") is FlowResultType.SHOW_PROGRESS
     assert result.get("step_id") == "auth"
     assert "description_placeholders" in result
     assert "url" in result["description_placeholders"]
@@ -165,7 +167,7 @@ async def test_full_flow_application_creds(
             flow_id=result["flow_id"]
         )
 
-    assert result.get("type") == "create_entry"
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert result.get("title") == EMAIL_ADDRESS
     assert "data" in result
     data = result["data"]
@@ -211,7 +213,7 @@ async def test_code_error(
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-        assert result.get("type") == "abort"
+        assert result.get("type") is FlowResultType.ABORT
         assert result.get("reason") == "oauth_error"
 
 
@@ -231,7 +233,7 @@ async def test_timeout_error(
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-        assert result.get("type") == "abort"
+        assert result.get("type") is FlowResultType.ABORT
         assert result.get("reason") == "timeout_connect"
 
 
@@ -250,7 +252,7 @@ async def test_expired_after_exchange(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result.get("type") == "progress"
+    assert result.get("type") is FlowResultType.SHOW_PROGRESS
     assert result.get("step_id") == "auth"
     assert "description_placeholders" in result
     assert "url" in result["description_placeholders"]
@@ -265,7 +267,7 @@ async def test_expired_after_exchange(
         await hass.async_block_till_done()
 
     result = await hass.config_entries.flow.async_configure(flow_id=result["flow_id"])
-    assert result.get("type") == "abort"
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "code_expired"
 
 
@@ -273,6 +275,7 @@ async def test_exchange_error(
     hass: HomeAssistant,
     mock_code_flow: Mock,
     mock_exchange: Mock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test an error while exchanging the code for credentials."""
     await async_import_client_credential(
@@ -284,38 +287,43 @@ async def test_exchange_error(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result.get("type") == "progress"
+    assert result.get("type") is FlowResultType.SHOW_PROGRESS
     assert result.get("step_id") == "auth"
     assert "description_placeholders" in result
     assert "url" in result["description_placeholders"]
 
     # Run one tick to invoke the credential exchange check
-    now = utcnow()
+    step2_exchange_called = asyncio.Event()
+
+    def step2_exchange(*args, **kwargs):
+        hass.loop.call_soon_threadsafe(step2_exchange_called.set)
+        raise FlowExchangeError
+
     with patch(
         "homeassistant.components.google.api.OAuth2WebServerFlow.step2_exchange",
-        side_effect=FlowExchangeError(),
+        side_effect=step2_exchange,
     ):
-        now += CODE_CHECK_ALARM_TIMEDELTA
-        await fire_alarm(hass, now)
-        await hass.async_block_till_done()
+        freezer.tick(CODE_CHECK_ALARM_TIMEDELTA)
+        async_fire_time_changed(hass, utcnow())
+        await step2_exchange_called.wait()
 
     # Status has not updated, will retry
     result = await hass.config_entries.flow.async_configure(flow_id=result["flow_id"])
-    assert result.get("type") == "progress"
+    assert result.get("type") is FlowResultType.SHOW_PROGRESS
     assert result.get("step_id") == "auth"
 
     # Run another tick, which attempts credential exchange again
     with patch(
         "homeassistant.components.google.async_setup_entry", return_value=True
     ) as mock_setup:
-        now += CODE_CHECK_ALARM_TIMEDELTA
-        await fire_alarm(hass, now)
+        freezer.tick(CODE_CHECK_ALARM_TIMEDELTA)
+        async_fire_time_changed(hass, utcnow())
         await hass.async_block_till_done()
         result = await hass.config_entries.flow.async_configure(
             flow_id=result["flow_id"]
         )
 
-    assert result.get("type") == "create_entry"
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert result.get("title") == EMAIL_ADDRESS
     assert "data" in result
     data = result["data"]
@@ -365,7 +373,7 @@ async def test_duplicate_config_entries(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result.get("type") == "progress"
+    assert result.get("type") is FlowResultType.SHOW_PROGRESS
     assert result.get("step_id") == "auth"
     assert "description_placeholders" in result
     assert "url" in result["description_placeholders"]
@@ -375,7 +383,7 @@ async def test_duplicate_config_entries(
     await fire_alarm(hass, now + CODE_CHECK_ALARM_TIMEDELTA)
     await hass.async_block_till_done()
     result = await hass.config_entries.flow.async_configure(flow_id=result["flow_id"])
-    assert result.get("type") == "abort"
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "already_configured"
 
 
@@ -407,7 +415,7 @@ async def test_multiple_config_entries(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result.get("type") == "progress"
+    assert result.get("type") is FlowResultType.SHOW_PROGRESS
     assert result.get("step_id") == "auth"
     assert "description_placeholders" in result
     assert "url" in result["description_placeholders"]
@@ -422,7 +430,7 @@ async def test_multiple_config_entries(
         result = await hass.config_entries.flow.async_configure(
             flow_id=result["flow_id"]
         )
-    assert result.get("type") == "create_entry"
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert result.get("title") == "another-email@example.com"
     assert len(mock_setup.mock_calls) == 1
 
@@ -437,7 +445,7 @@ async def test_missing_configuration(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result.get("type") == "abort"
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "missing_credentials"
 
 
@@ -463,7 +471,7 @@ async def test_wrong_configuration(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result.get("type") == "abort"
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "oauth_error"
 
 
@@ -498,14 +506,14 @@ async def test_reauth_flow(
         },
         data=config_entry.data,
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
     result = await hass.config_entries.flow.async_configure(
         flow_id=result["flow_id"],
         user_input={},
     )
-    assert result.get("type") == "progress"
+    assert result.get("type") is FlowResultType.SHOW_PROGRESS
     assert result.get("step_id") == "auth"
     assert "description_placeholders" in result
     assert "url" in result["description_placeholders"]
@@ -521,7 +529,7 @@ async def test_reauth_flow(
             flow_id=result["flow_id"]
         )
 
-    assert result.get("type") == "abort"
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "reauth_successful"
 
     entries = hass.config_entries.async_entries(DOMAIN)
@@ -568,7 +576,7 @@ async def test_calendar_lookup_failure(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result.get("type") == "progress"
+    assert result.get("type") is FlowResultType.SHOW_PROGRESS
     assert result.get("step_id") == "auth"
     assert "description_placeholders" in result
     assert "url" in result["description_placeholders"]
@@ -582,7 +590,7 @@ async def test_calendar_lookup_failure(
             flow_id=result["flow_id"]
         )
 
-    assert result.get("type") == "abort"
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == reason
 
 
@@ -603,7 +611,7 @@ async def test_options_flow_triggers_reauth(
     assert config_entry.options == {}  # Default is read_write
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
     data_schema = result["data_schema"].schema
     assert set(data_schema) == {"calendar_access"}
@@ -614,7 +622,7 @@ async def test_options_flow_triggers_reauth(
             "calendar_access": "read_only",
         },
     )
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert config_entry.options == {"calendar_access": "read_only"}
 
 
@@ -635,7 +643,7 @@ async def test_options_flow_no_changes(
     assert config_entry.options == {}  # Default is read_write
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
@@ -644,7 +652,7 @@ async def test_options_flow_no_changes(
             "calendar_access": "read_write",
         },
     )
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert config_entry.options == {"calendar_access": "read_write"}
 
 
@@ -679,7 +687,7 @@ async def test_web_auth_compatibility(
             "redirect_uri": "https://example.com/auth/external/callback",
         },
     )
-    assert result["type"] == "external"
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
     assert result["url"] == (
         f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
         "&redirect_uri=https://example.com/auth/external/callback"
@@ -708,7 +716,7 @@ async def test_web_auth_compatibility(
         "homeassistant.components.google.async_setup_entry", return_value=True
     ) as mock_setup:
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     token = result.get("data", {}).get("token", {})
     del token["expires_at"]
     assert token == {
@@ -762,7 +770,7 @@ async def test_web_reauth_flow(
         },
         data=config_entry.data,
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
     with patch(
@@ -783,7 +791,7 @@ async def test_web_reauth_flow(
             "redirect_uri": "https://example.com/auth/external/callback",
         },
     )
-    assert result.get("type") == "external"
+    assert result.get("type") is FlowResultType.EXTERNAL_STEP
     assert result["url"] == (
         f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
         "&redirect_uri=https://example.com/auth/external/callback"
@@ -812,7 +820,7 @@ async def test_web_reauth_flow(
         "homeassistant.components.google.async_setup_entry", return_value=True
     ) as mock_setup:
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
 
     entries = hass.config_entries.async_entries(DOMAIN)

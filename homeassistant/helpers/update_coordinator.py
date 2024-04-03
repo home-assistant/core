@@ -1,4 +1,5 @@
 """Helpers to help coordinate updates."""
+
 from __future__ import annotations
 
 from abc import abstractmethod
@@ -8,22 +9,16 @@ from datetime import datetime, timedelta
 import logging
 from random import randint
 from time import monotonic
-from typing import Any, Generic, Protocol, TypeVar
+from typing import Any, Generic, Protocol
 import urllib.error
 
 import aiohttp
 import requests
+from typing_extensions import TypeVar
 
 from homeassistant import config_entries
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import (
-    CALLBACK_TYPE,
-    Event,
-    HassJob,
-    HassJobType,
-    HomeAssistant,
-    callback,
-)
+from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryError,
@@ -37,12 +32,14 @@ from .debounce import Debouncer
 REQUEST_REFRESH_DEFAULT_COOLDOWN = 10
 REQUEST_REFRESH_DEFAULT_IMMEDIATE = True
 
-_DataT = TypeVar("_DataT")
+_DataT = TypeVar("_DataT", default=dict[str, Any])
 _BaseDataUpdateCoordinatorT = TypeVar(
     "_BaseDataUpdateCoordinatorT", bound="BaseDataUpdateCoordinatorProtocol"
 )
 _DataUpdateCoordinatorT = TypeVar(
-    "_DataUpdateCoordinatorT", bound="DataUpdateCoordinator[Any]"
+    "_DataUpdateCoordinatorT",
+    bound="DataUpdateCoordinator[Any]",
+    default="DataUpdateCoordinator[dict[str, Any]]",
 )
 
 
@@ -84,6 +81,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         self.logger = logger
         self.name = name
         self.update_method = update_method
+        self._update_interval_seconds: float | None = None
         self.update_interval = update_interval
         self._shutdown_requested = False
         self.config_entry = config_entries.current_entry.get()
@@ -103,18 +101,6 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         )
 
         self._listeners: dict[CALLBACK_TYPE, tuple[CALLBACK_TYPE, object | None]] = {}
-        job_name = "DataUpdateCoordinator"
-        type_name = type(self).__name__
-        if type_name != job_name:
-            job_name += f" {type_name}"
-        job_name += f" {name}"
-        if entry := self.config_entry:
-            job_name += f" {entry.title} {entry.domain} {entry.entry_id}"
-        self._job = HassJob(
-            self._handle_refresh_interval,
-            job_name,
-            job_type=HassJobType.Coroutinefunction,
-        )
         self._unsub_refresh: CALLBACK_TYPE | None = None
         self._unsub_shutdown: CALLBACK_TYPE | None = None
         self._request_refresh_task: asyncio.TimerHandle | None = None
@@ -150,7 +136,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             await self.async_shutdown()
 
         self._unsub_shutdown = self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STOP, _on_hass_stop
+            EVENT_HOMEASSISTANT_STOP, _on_hass_stop, run_immediately=True
         )
 
     @callback
@@ -186,7 +172,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         self._shutdown_requested = True
         self._async_unsub_refresh()
         self._async_unsub_shutdown()
-        await self._debounced_refresh.async_shutdown()
+        self._debounced_refresh.async_shutdown()
 
     @callback
     def _unschedule_refresh(self) -> None:
@@ -212,10 +198,21 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             self._unsub_shutdown()
             self._unsub_shutdown = None
 
+    @property
+    def update_interval(self) -> timedelta | None:
+        """Interval between updates."""
+        return self._update_interval
+
+    @update_interval.setter
+    def update_interval(self, value: timedelta | None) -> None:
+        """Set interval between updates."""
+        self._update_interval = value
+        self._update_interval_seconds = value.total_seconds() if value else None
+
     @callback
     def _schedule_refresh(self) -> None:
         """Schedule a refresh."""
-        if self.update_interval is None:
+        if self._update_interval_seconds is None:
             return
 
         if self.config_entry and self.config_entry.pref_disable_polling:
@@ -225,19 +222,37 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         # than the debouncer cooldown, this would cause the debounce to never be called
         self._async_unsub_refresh()
 
-        # We use event.async_call_at because DataUpdateCoordinator does
-        # not need an exact update interval.
-        now = self.hass.loop.time()
+        # We use loop.call_at because DataUpdateCoordinator does
+        # not need an exact update interval which also avoids
+        # calling dt_util.utcnow() on every update.
+        hass = self.hass
+        loop = hass.loop
 
-        next_refresh = int(now) + self._microsecond
-        next_refresh += self.update_interval.total_seconds()
-        self._unsub_refresh = event.async_call_at(
-            self.hass,
-            self._job,
-            next_refresh,
+        next_refresh = (
+            int(loop.time()) + self._microsecond + self._update_interval_seconds
         )
+        self._unsub_refresh = loop.call_at(
+            next_refresh, self.__wrap_handle_refresh_interval
+        ).cancel
 
-    async def _handle_refresh_interval(self, _now: datetime) -> None:
+    @callback
+    def __wrap_handle_refresh_interval(self) -> None:
+        """Handle a refresh interval occurrence."""
+        if self.config_entry:
+            self.config_entry.async_create_background_task(
+                self.hass,
+                self._handle_refresh_interval(),
+                name=f"{self.name} - {self.config_entry.title} - refresh",
+                eager_start=True,
+            )
+        else:
+            self.hass.async_create_background_task(
+                self._handle_refresh_interval(),
+                name=f"{self.name} - refresh",
+                eager_start=True,
+            )
+
+    async def _handle_refresh_interval(self, _now: datetime | None = None) -> None:
         """Handle a refresh interval occurrence."""
         self._unsub_refresh = None
         await self._async_refresh(log_failures=True, scheduled=True)
@@ -299,7 +314,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         try:
             self.data = await self._async_update_data()
 
-        except (asyncio.TimeoutError, requests.exceptions.Timeout) as err:
+        except (TimeoutError, requests.exceptions.Timeout) as err:
             self.last_exception = err
             if self.last_update_success:
                 if log_failures:
@@ -363,14 +378,12 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
                 self.config_entry.async_start_reauth(self.hass)
         except NotImplementedError as err:
             self.last_exception = err
-            raise err
+            raise
 
         except Exception as err:  # pylint: disable=broad-except
             self.last_exception = err
             self.last_update_success = False
-            self.logger.exception(
-                "Unexpected error fetching %s data: %s", self.name, err
-            )
+            self.logger.exception("Unexpected error fetching %s data", self.name)
 
         else:
             if not self.last_update_success:

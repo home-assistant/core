@@ -3,6 +3,7 @@
 The only mocking required is of the underlying SmartThings API object so
 real HTTP calls are not initiated during testing.
 """
+
 from pysmartthings import ATTRIBUTES, CAPABILITIES, Attribute, Capability
 
 from homeassistant.components.binary_sensor import (
@@ -106,7 +107,7 @@ async def test_unload_config_entry(hass: HomeAssistant, device_factory) -> None:
         "Motion Sensor 1", [Capability.motion_sensor], {Attribute.motion: "inactive"}
     )
     config_entry = await setup_platform(hass, BINARY_SENSOR_DOMAIN, devices=[device])
-    config_entry.state = ConfigEntryState.LOADED
+    config_entry.mock_state(hass, ConfigEntryState.LOADED)
     # Act
     await hass.config_entries.async_forward_entry_unload(config_entry, "binary_sensor")
     # Assert
