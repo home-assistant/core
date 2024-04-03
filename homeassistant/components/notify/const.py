@@ -45,4 +45,3 @@ class NotifyEntityFeature(IntFlag):
     MESSAGE = 1
     TITLE = 2
     RECIPIENTS = 4
-    DATA = 8

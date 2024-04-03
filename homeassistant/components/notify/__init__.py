@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from datetime import timedelta
 from enum import StrEnum
 from functools import partial
@@ -77,7 +76,6 @@ SERVICE_SEND_MESSAGE_SCHEMA = cv.make_entity_service_schema(
         vol.Optional(ATTR_MESSAGE): cv.string,
         vol.Optional(ATTR_TITLE): cv.string,
         vol.Optional(ATTR_RECIPIENTS): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(ATTR_DATA): dict,
     }
 )
 
@@ -219,7 +217,6 @@ class NotifyEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_
         message: str | None = None,
         title: str | None = None,
         recipients: list[str] | None = None,
-        data: Mapping[str, Any] | None = None,
     ) -> None:
         """Send a message."""
         raise NotImplementedError
@@ -229,9 +226,8 @@ class NotifyEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_
         message: str | None = None,
         title: str | None = None,
         recipients: list[str] | None = None,
-        data: Mapping[str, Any] | None = None,
     ) -> None:
         """Send a message."""
         await self.hass.async_add_executor_job(
-            partial(self.send_message, message, title, recipients, data)
+            partial(self.send_message, message, title, recipients)
         )

@@ -52,10 +52,6 @@
         "recipients": {
           "name": "Recipients",
           "description": "The recipients that receive the notification message."
-        },
-        "data": {
-          "name": "Data",
-          "description": "Data data mapping that is attached to the notitication message."
         }
       }
     },

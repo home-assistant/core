@@ -2,9 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-from typing import Any
-
 from homeassistant.components import persistent_notification
 from homeassistant.components.notify import (
     NotifyDeviceClass,
@@ -54,7 +51,7 @@ async def async_setup_entry(
                 unique_id="notify_with_data",
                 device_name="MyAVR",
                 entity_name="LCD",
-                supported_features=NotifyEntityFeature.DATA,
+                supported_features=NotifyEntityFeature.MESSAGE,
                 device_class=NotifyDeviceClass.DISPLAY,
             ),
         ]
@@ -90,12 +87,11 @@ class DemoNotify(NotifyEntity):
         message: str | None = None,
         title: str | None = None,
         recipients: list[str] | None = None,
-        data: Mapping[str, Any] | None = None,
     ) -> None:
         """Send out a persistent notification."""
         status_update = (
             f"Name: {self.name}, Message: {message}, Title: {title}, "
-            f"Recipients: {recipients}, Data: {data}"
+            f"Recipients: {recipients}"
         )
         persistent_notification.async_create(
             self.hass, status_update, "Demo notification"

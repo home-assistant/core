@@ -1,7 +1,6 @@
 """The tests for notify services that change targets."""
 
 import asyncio
-from collections.abc import Mapping
 import copy
 from pathlib import Path
 from typing import Any
@@ -48,7 +47,6 @@ TEST_KWARGS = {
     "message": "Test message",
     "title": "My title",
     "recipients": ["user1@example.com", "user1@example.com"],
-    "data": {"server": "server.example.com"},
 }
 
 
@@ -59,7 +57,6 @@ class MockNotifyEntity(MockEntity, NotifyEntity):
         NotifyEntityFeature.MESSAGE
         | NotifyEntityFeature.TITLE
         | NotifyEntityFeature.RECIPIENTS
-        | NotifyEntityFeature.DATA
     )
     _attr_device_class = NotifyDeviceClass.EMAIL
 
@@ -70,11 +67,10 @@ class MockNotifyEntity(MockEntity, NotifyEntity):
         message: str | None = None,
         title: str | None = None,
         recipients: list[str] | None = None,
-        data: Mapping[str, Any] | None = None,
     ) -> None:
         """Send a notification message."""
         self.send_message_mock_calls(
-            message=message, title=title, recipients=recipients, data=data
+            message=message, title=title, recipients=recipients
         )
 
 
