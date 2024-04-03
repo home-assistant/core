@@ -1116,6 +1116,7 @@ jobs:
       && github.event.inputs.pylint-only != 'true'
       && github.event.inputs.mypy-only != 'true'
       && needs.info.outputs.tests_glob
+      && needs.info.outputs.test_full_suite == 'false'
     needs:
       - info
       - base
