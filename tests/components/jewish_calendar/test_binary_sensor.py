@@ -9,7 +9,6 @@ from homeassistant.components import jewish_calendar
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -169,7 +168,6 @@ MELACHA_TEST_IDS = [
 )
 async def test_issur_melacha_sensor(
     hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
     now,
     candle_lighting,
     havdalah,
@@ -203,7 +201,9 @@ async def test_issur_melacha_sensor(
         await hass.async_block_till_done()
 
         assert (
-            hass.states.get("binary_sensor.issur_melacha_in_effect").state
+            hass.states.get(
+                "binary_sensor.jewish_calendar_issur_melacha_in_effect"
+            ).state
             == result["state"]
         )
 
@@ -211,7 +211,9 @@ async def test_issur_melacha_sensor(
             async_fire_time_changed(hass, result["update"])
             await hass.async_block_till_done()
             assert (
-                hass.states.get("binary_sensor.issur_melacha_in_effect").state
+                hass.states.get(
+                    "binary_sensor.jewish_calendar_issur_melacha_in_effect"
+                ).state
                 == result["new_state"]
             )
 
@@ -271,7 +273,10 @@ async def test_issur_melacha_sensor_update(
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
         assert (
-            hass.states.get("binary_sensor.issur_melacha_in_effect").state == result[0]
+            hass.states.get(
+                "binary_sensor.jewish_calendar_issur_melacha_in_effect"
+            ).state
+            == result[0]
         )
 
     test_time += timedelta(microseconds=1)
@@ -279,7 +284,10 @@ async def test_issur_melacha_sensor_update(
         async_fire_time_changed(hass, test_time)
         await hass.async_block_till_done()
         assert (
-            hass.states.get("binary_sensor.issur_melacha_in_effect").state == result[1]
+            hass.states.get(
+                "binary_sensor.jewish_calendar_issur_melacha_in_effect"
+            ).state
+            == result[1]
         )
 
 

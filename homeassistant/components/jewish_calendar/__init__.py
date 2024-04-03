@@ -88,7 +88,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up a configuration entry for Jewish calendar."""
-    name = config_entry.data[CONF_NAME]
+    name = config_entry.data.get(CONF_NAME, DEFAULT_NAME)
     language = config_entry.data.get(CONF_LANGUAGE, DEFAULT_LANGUAGE)
     diaspora = config_entry.data.get(CONF_DIASPORA, DEFAULT_DIASPORA)
 
