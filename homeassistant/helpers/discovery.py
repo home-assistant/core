@@ -155,7 +155,6 @@ async def async_load_platform(
     Warning: This method can load a base component if its not loaded which
     can take a long time since base components currently have to import
     every platform integration listed under it to do config validation.
-
     To avoid waiting for this, use
     `hass.async_create_task(async_load_platform(..))` instead.
     """
