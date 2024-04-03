@@ -597,7 +597,7 @@ class Thermostat(ClimateEntity):
                 ],
                 "equipment_running": status,
                 "fan_min_on_time": self.settings["fanMinOnTime"]
-           }
+            }
 
     @property
     def is_aux_heat(self) -> bool:
@@ -788,8 +788,12 @@ class Thermostat(ClimateEntity):
 
     def set_aux_cutover_threshold(self, aux_cutover_threshold):
         """Set the minimum fan on time."""
-        self.data.ecobee.set_aux_cutover_threshold(self.thermostat_index, aux_cutover_threshold)
-        self.update_without_throttle = True
+        if self.has_aux_heat:
+            self.data.ecobee.set_aux_cutover_threshold(self.thermostat_index, aux_cutover_threshold)
+            self.update_without_throttle = True
+        else:
+            _LOGGER.error("Aux Heat is not present.")
+            return
 
     def resume_program(self, resume_all):
         """Resume the thermostat schedule program."""
