@@ -1,14 +1,16 @@
 """Test the Logitech Harmony Hub config flow."""
+
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import aiohttp
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components import ssdp
 from homeassistant.components.harmony.config_flow import CannotConnect
 from homeassistant.components.harmony.const import DOMAIN, PREVIOUS_ACTIVE_ACTIVITY
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
@@ -31,13 +33,16 @@ async def test_user_form(hass: HomeAssistant) -> None:
     assert result["errors"] == {}
 
     harmonyapi = _get_mock_harmonyapi(connect=True)
-    with patch(
-        "homeassistant.components.harmony.util.HarmonyAPI",
-        return_value=harmonyapi,
-    ), patch(
-        "homeassistant.components.harmony.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.harmony.util.HarmonyAPI",
+            return_value=harmonyapi,
+        ),
+        patch(
+            "homeassistant.components.harmony.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {"host": "1.2.3.4", "name": "friend"},
@@ -83,13 +88,16 @@ async def test_form_ssdp(hass: HomeAssistant) -> None:
 
     harmonyapi = _get_mock_harmonyapi(connect=True)
 
-    with patch(
-        "homeassistant.components.harmony.util.HarmonyAPI",
-        return_value=harmonyapi,
-    ), patch(
-        "homeassistant.components.harmony.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.harmony.util.HarmonyAPI",
+            return_value=harmonyapi,
+        ),
+        patch(
+            "homeassistant.components.harmony.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {},
@@ -204,7 +212,7 @@ async def test_options_flow(hass: HomeAssistant, mock_hc, mock_write_config) -> 
     assert await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
@@ -212,7 +220,7 @@ async def test_options_flow(hass: HomeAssistant, mock_hc, mock_write_config) -> 
         user_input={"activity": PREVIOUS_ACTIVE_ACTIVITY, "delay_secs": 0.4},
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert config_entry.options == {
         "activity": PREVIOUS_ACTIVE_ACTIVITY,
         "delay_secs": 0.4,

@@ -1,4 +1,5 @@
 """Test the Hi-Link HLK-SW16 config flow."""
+
 import asyncio
 from unittest.mock import patch
 
@@ -31,9 +32,8 @@ class MockSW16Client:
             if self.disconnect_callback:
                 self.disconnect_callback()
             return await self.active_transaction
-        else:
-            self.active_transaction.set_result(True)
-            return self.active_transaction
+        self.active_transaction.set_result(True)
+        return self.active_transaction
 
     def stop(self):
         """Mock client stop."""
@@ -64,15 +64,19 @@ async def test_form(hass: HomeAssistant) -> None:
 
     mock_hlk_sw16_connection = await create_mock_hlk_sw16_connection(False)
 
-    with patch(
-        "homeassistant.components.hlk_sw16.config_flow.create_hlk_sw16_connection",
-        return_value=mock_hlk_sw16_connection,
-    ), patch(
-        "homeassistant.components.hlk_sw16.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.hlk_sw16.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.hlk_sw16.config_flow.create_hlk_sw16_connection",
+            return_value=mock_hlk_sw16_connection,
+        ),
+        patch(
+            "homeassistant.components.hlk_sw16.async_setup", return_value=True
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.hlk_sw16.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             conf,
@@ -125,15 +129,19 @@ async def test_import(hass: HomeAssistant) -> None:
 
     mock_hlk_sw16_connection = await create_mock_hlk_sw16_connection(False)
 
-    with patch(
-        "homeassistant.components.hlk_sw16.config_flow.connect_client",
-        return_value=mock_hlk_sw16_connection,
-    ), patch(
-        "homeassistant.components.hlk_sw16.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.hlk_sw16.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.hlk_sw16.config_flow.connect_client",
+            return_value=mock_hlk_sw16_connection,
+        ),
+        patch(
+            "homeassistant.components.hlk_sw16.async_setup", return_value=True
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.hlk_sw16.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             conf,
@@ -189,7 +197,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.hlk_sw16.config_flow.connect_client",
-        side_effect=asyncio.TimeoutError,
+        side_effect=TimeoutError,
         return_value=None,
     ):
         result2 = await hass.config_entries.flow.async_configure(

@@ -1,0 +1,16 @@
+{
+  "youtube": {
+    "title": "YouTube",
+    "description": "Instructions on how to integrate YouTube within Home Assistant.",
+    "quality_scale": "",
+    "iot_class": "Cloud Polling",
+    "integration_type": "service"
+  },
+  "hue": {
+    "title": "Philips Hue",
+    "description": "Instructions on setting up Philips Hue within Home Assistant.",
+    "quality_scale": "platinum",
+    "iot_class": "Local Push",
+    "integration_type": "hub"
+  }
+}

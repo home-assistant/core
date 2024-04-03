@@ -1,4 +1,5 @@
 """Support for WaterHeater devices of (EMEA/EU) Honeywell TCC systems."""
+
 from __future__ import annotations
 
 import logging
@@ -89,6 +90,7 @@ class EvoDHW(EvoChild, WaterHeaterEntity):
         self._evo_id = evo_device.dhwId
 
         self._attr_unique_id = evo_device.dhwId
+        self._attr_name = evo_device.name  # is static
 
         self._attr_precision = (
             PRECISION_TENTHS if evo_broker.client_v1 else PRECISION_WHOLE

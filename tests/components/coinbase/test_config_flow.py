@@ -1,4 +1,5 @@
 """Test the Coinbase config flow."""
+
 import logging
 from unittest.mock import patch
 
@@ -34,18 +35,21 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["type"] == "form"
     assert result["errors"] == {}
 
-    with patch(
-        "coinbase.wallet.client.Client.get_current_user",
-        return_value=mock_get_current_user(),
-    ), patch(
-        "coinbase.wallet.client.Client.get_accounts", new=mocked_get_accounts
-    ), patch(
-        "coinbase.wallet.client.Client.get_exchange_rates",
-        return_value=mock_get_exchange_rates(),
-    ), patch(
-        "homeassistant.components.coinbase.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "coinbase.wallet.client.Client.get_current_user",
+            return_value=mock_get_current_user(),
+        ),
+        patch("coinbase.wallet.client.Client.get_accounts", new=mocked_get_accounts),
+        patch(
+            "coinbase.wallet.client.Client.get_exchange_rates",
+            return_value=mock_get_exchange_rates(),
+        ),
+        patch(
+            "homeassistant.components.coinbase.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -189,17 +193,20 @@ async def test_form_catch_all_exception(hass: HomeAssistant) -> None:
 async def test_option_form(hass: HomeAssistant) -> None:
     """Test we handle a good wallet currency option."""
 
-    with patch(
-        "coinbase.wallet.client.Client.get_current_user",
-        return_value=mock_get_current_user(),
-    ), patch(
-        "coinbase.wallet.client.Client.get_accounts", new=mocked_get_accounts
-    ), patch(
-        "coinbase.wallet.client.Client.get_exchange_rates",
-        return_value=mock_get_exchange_rates(),
-    ), patch(
-        "homeassistant.components.coinbase.update_listener"
-    ) as mock_update_listener:
+    with (
+        patch(
+            "coinbase.wallet.client.Client.get_current_user",
+            return_value=mock_get_current_user(),
+        ),
+        patch("coinbase.wallet.client.Client.get_accounts", new=mocked_get_accounts),
+        patch(
+            "coinbase.wallet.client.Client.get_exchange_rates",
+            return_value=mock_get_exchange_rates(),
+        ),
+        patch(
+            "homeassistant.components.coinbase.update_listener"
+        ) as mock_update_listener,
+    ):
         config_entry = await init_mock_coinbase(hass)
         await hass.async_block_till_done()
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
@@ -219,14 +226,16 @@ async def test_option_form(hass: HomeAssistant) -> None:
 
 async def test_form_bad_account_currency(hass: HomeAssistant) -> None:
     """Test we handle a bad currency option."""
-    with patch(
-        "coinbase.wallet.client.Client.get_current_user",
-        return_value=mock_get_current_user(),
-    ), patch(
-        "coinbase.wallet.client.Client.get_accounts", new=mocked_get_accounts
-    ), patch(
-        "coinbase.wallet.client.Client.get_exchange_rates",
-        return_value=mock_get_exchange_rates(),
+    with (
+        patch(
+            "coinbase.wallet.client.Client.get_current_user",
+            return_value=mock_get_current_user(),
+        ),
+        patch("coinbase.wallet.client.Client.get_accounts", new=mocked_get_accounts),
+        patch(
+            "coinbase.wallet.client.Client.get_exchange_rates",
+            return_value=mock_get_exchange_rates(),
+        ),
     ):
         config_entry = await init_mock_coinbase(hass)
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
@@ -246,14 +255,16 @@ async def test_form_bad_account_currency(hass: HomeAssistant) -> None:
 
 async def test_form_bad_exchange_rate(hass: HomeAssistant) -> None:
     """Test we handle a bad exchange rate."""
-    with patch(
-        "coinbase.wallet.client.Client.get_current_user",
-        return_value=mock_get_current_user(),
-    ), patch(
-        "coinbase.wallet.client.Client.get_accounts", new=mocked_get_accounts
-    ), patch(
-        "coinbase.wallet.client.Client.get_exchange_rates",
-        return_value=mock_get_exchange_rates(),
+    with (
+        patch(
+            "coinbase.wallet.client.Client.get_current_user",
+            return_value=mock_get_current_user(),
+        ),
+        patch("coinbase.wallet.client.Client.get_accounts", new=mocked_get_accounts),
+        patch(
+            "coinbase.wallet.client.Client.get_exchange_rates",
+            return_value=mock_get_exchange_rates(),
+        ),
     ):
         config_entry = await init_mock_coinbase(hass)
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
@@ -272,14 +283,16 @@ async def test_form_bad_exchange_rate(hass: HomeAssistant) -> None:
 
 async def test_option_catch_all_exception(hass: HomeAssistant) -> None:
     """Test we handle an unknown exception in the option flow."""
-    with patch(
-        "coinbase.wallet.client.Client.get_current_user",
-        return_value=mock_get_current_user(),
-    ), patch(
-        "coinbase.wallet.client.Client.get_accounts", new=mocked_get_accounts
-    ), patch(
-        "coinbase.wallet.client.Client.get_exchange_rates",
-        return_value=mock_get_exchange_rates(),
+    with (
+        patch(
+            "coinbase.wallet.client.Client.get_current_user",
+            return_value=mock_get_current_user(),
+        ),
+        patch("coinbase.wallet.client.Client.get_accounts", new=mocked_get_accounts),
+        patch(
+            "coinbase.wallet.client.Client.get_exchange_rates",
+            return_value=mock_get_exchange_rates(),
+        ),
     ):
         config_entry = await init_mock_coinbase(hass)
         result = await hass.config_entries.options.async_init(config_entry.entry_id)

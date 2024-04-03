@@ -1,4 +1,5 @@
 """Tests for Switcher button platform."""
+
 from unittest.mock import ANY, patch
 
 from aioswitcher.api import DeviceState, SwitcherBaseResponse, ThermostatSwing

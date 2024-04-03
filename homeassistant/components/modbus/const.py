@@ -1,4 +1,5 @@
 """Constants used in modbus integration."""
+
 from enum import Enum
 
 from homeassistant.const import (
@@ -15,7 +16,6 @@ from homeassistant.const import (
 CONF_BAUDRATE = "baudrate"
 CONF_BYTESIZE = "bytesize"
 CONF_CLIMATES = "climates"
-CONF_CLOSE_COMM_ON_ERROR = "close_comm_on_error"
 CONF_DATA_TYPE = "data_type"
 CONF_DEVICE_ADDRESS = "device_address"
 CONF_FANS = "fans"
@@ -29,7 +29,6 @@ CONF_MSG_WAIT = "message_wait_milliseconds"
 CONF_NAN_VALUE = "nan_value"
 CONF_PARITY = "parity"
 CONF_RETRIES = "retries"
-CONF_RETRY_ON_EMPTY = "retry_on_empty"
 CONF_PRECISION = "precision"
 CONF_SCALE = "scale"
 CONF_SLAVE_COUNT = "slave_count"

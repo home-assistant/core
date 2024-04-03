@@ -1,28 +1,21 @@
 """Test the Rfxtrx config flow."""
+
 import os
 from unittest.mock import MagicMock, patch, sentinel
 
+from RFXtrx import RFXtrxTransportError
 import serial.tools.list_ports
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components.rfxtrx import DOMAIN, config_flow
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import MockConfigEntry
 
 SOME_PROTOCOLS = ["ac", "arc"]
-
-
-def serial_connect(self):
-    """Mock a serial connection."""
-    self.serial = True
-
-
-def serial_connect_fail(self):
-    """Mock a failed serial connection."""
-    self.serial = None
 
 
 def com_port():
@@ -46,7 +39,6 @@ async def start_options_flow(hass, entry):
     return await hass.config_entries.options.async_init(entry.entry_id)
 
 
-@patch("homeassistant.components.rfxtrx.rfxtrxmod.PyNetworkTransport", autospec=True)
 async def test_setup_network(transport_mock, hass: HomeAssistant) -> None:
     """Test we can setup network."""
     result = await hass.config_entries.flow.async_init(
@@ -83,15 +75,7 @@ async def test_setup_network(transport_mock, hass: HomeAssistant) -> None:
 
 
 @patch("serial.tools.list_ports.comports", return_value=[com_port()])
-@patch(
-    "homeassistant.components.rfxtrx.rfxtrxmod.PySerialTransport.connect",
-    serial_connect,
-)
-@patch(
-    "homeassistant.components.rfxtrx.rfxtrxmod.PySerialTransport.close",
-    return_value=None,
-)
-async def test_setup_serial(com_mock, connect_mock, hass: HomeAssistant) -> None:
+async def test_setup_serial(com_mock, transport_mock, hass: HomeAssistant) -> None:
     """Test we can setup serial."""
     port = com_port()
 
@@ -129,15 +113,9 @@ async def test_setup_serial(com_mock, connect_mock, hass: HomeAssistant) -> None
 
 
 @patch("serial.tools.list_ports.comports", return_value=[com_port()])
-@patch(
-    "homeassistant.components.rfxtrx.rfxtrxmod.PySerialTransport.connect",
-    serial_connect,
-)
-@patch(
-    "homeassistant.components.rfxtrx.rfxtrxmod.PySerialTransport.close",
-    return_value=None,
-)
-async def test_setup_serial_manual(com_mock, connect_mock, hass: HomeAssistant) -> None:
+async def test_setup_serial_manual(
+    com_mock, transport_mock, hass: HomeAssistant
+) -> None:
     """Test we can setup serial with manual entry."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -180,13 +158,9 @@ async def test_setup_serial_manual(com_mock, connect_mock, hass: HomeAssistant) 
     }
 
 
-@patch(
-    "homeassistant.components.rfxtrx.rfxtrxmod.PyNetworkTransport",
-    autospec=True,
-    side_effect=OSError,
-)
 async def test_setup_network_fail(transport_mock, hass: HomeAssistant) -> None:
     """Test we can setup network."""
+    transport_mock.return_value.connect.side_effect = RFXtrxTransportError
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -214,12 +188,9 @@ async def test_setup_network_fail(transport_mock, hass: HomeAssistant) -> None:
 
 
 @patch("serial.tools.list_ports.comports", return_value=[com_port()])
-@patch(
-    "homeassistant.components.rfxtrx.rfxtrxmod.PySerialTransport.connect",
-    side_effect=serial.SerialException,
-)
-async def test_setup_serial_fail(com_mock, connect_mock, hass: HomeAssistant) -> None:
+async def test_setup_serial_fail(com_mock, transport_mock, hass: HomeAssistant) -> None:
     """Test setup serial failed connection."""
+    transport_mock.return_value.connect.side_effect = RFXtrxTransportError
     port = com_port()
 
     result = await hass.config_entries.flow.async_init(
@@ -249,12 +220,11 @@ async def test_setup_serial_fail(com_mock, connect_mock, hass: HomeAssistant) ->
 
 
 @patch("serial.tools.list_ports.comports", return_value=[com_port()])
-@patch(
-    "homeassistant.components.rfxtrx.rfxtrxmod.PySerialTransport.connect",
-    serial_connect_fail,
-)
-async def test_setup_serial_manual_fail(com_mock, hass: HomeAssistant) -> None:
+async def test_setup_serial_manual_fail(
+    com_mock, transport_mock, hass: HomeAssistant
+) -> None:
     """Test setup serial failed connection."""
+    transport_mock.return_value.connect.side_effect = RFXtrxTransportError
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -315,7 +285,7 @@ async def test_options_global(hass: HomeAssistant) -> None:
         user_input={"automatic_add": True, "protocols": SOME_PROTOCOLS},
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
     await hass.async_block_till_done()
 
@@ -350,7 +320,7 @@ async def test_no_protocols(hass: HomeAssistant) -> None:
         user_input={"automatic_add": False, "protocols": []},
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
     await hass.async_block_till_done()
 
@@ -405,7 +375,7 @@ async def test_options_add_device(hass: HomeAssistant) -> None:
         result["flow_id"], user_input={}
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
     await hass.async_block_till_done()
 
@@ -559,7 +529,7 @@ async def test_options_replace_sensor_device(hass: HomeAssistant) -> None:
         },
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
     await hass.async_block_till_done()
 
@@ -692,7 +662,7 @@ async def test_options_replace_control_device(hass: HomeAssistant) -> None:
         },
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
     await hass.async_block_till_done()
 
@@ -773,7 +743,7 @@ async def test_options_add_and_configure_device(hass: HomeAssistant) -> None:
         },
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
     await hass.async_block_till_done()
 
@@ -817,7 +787,7 @@ async def test_options_add_and_configure_device(hass: HomeAssistant) -> None:
         },
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
     await hass.async_block_till_done()
 
@@ -900,7 +870,7 @@ async def test_options_configure_rfy_cover_device(hass: HomeAssistant) -> None:
         },
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
     await hass.async_block_till_done()
 

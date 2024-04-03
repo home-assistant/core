@@ -1,4 +1,5 @@
 """Binary sensors for the Elexa Guardian integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -29,9 +30,9 @@ from .const import (
     DOMAIN,
     SIGNAL_PAIRED_SENSOR_COORDINATOR_ADDED,
 )
+from .coordinator import GuardianDataUpdateCoordinator
 from .util import (
     EntityDomainReplacementStrategy,
-    GuardianDataUpdateCoordinator,
     async_finish_entity_domain_replacements,
 )
 

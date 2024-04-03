@@ -1,4 +1,5 @@
 """Support for iss sensor."""
+
 from __future__ import annotations
 
 import logging

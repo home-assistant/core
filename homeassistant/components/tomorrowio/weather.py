@@ -1,4 +1,5 @@
 """Weather component that handles meteorological data for your location."""
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -296,11 +297,6 @@ class TomorrowioWeatherEntity(TomorrowioEntity, SingleCoordinatorWeatherEntity):
                 break
 
         return forecasts
-
-    @property
-    def forecast(self) -> list[Forecast] | None:
-        """Return the forecast array."""
-        return self._forecast(self.forecast_type)
 
     @callback
     def _async_forecast_daily(self) -> list[Forecast] | None:

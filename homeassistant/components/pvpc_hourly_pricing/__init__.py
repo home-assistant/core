@@ -1,4 +1,5 @@
 """The pvpc_hourly_pricing integration to collect Spain official electric prices."""
+
 from datetime import timedelta
 import logging
 
@@ -59,7 +60,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-class ElecPricesDataUpdateCoordinator(DataUpdateCoordinator[EsiosApiData]):
+class ElecPricesDataUpdateCoordinator(DataUpdateCoordinator[EsiosApiData]):  # pylint: disable=hass-enforce-coordinator-module
     """Class to manage fetching Electricity prices data from API."""
 
     def __init__(

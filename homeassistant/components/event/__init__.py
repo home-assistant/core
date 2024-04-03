@@ -1,4 +1,5 @@
 """Component for handling incoming events as a platform."""
+
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
@@ -9,7 +10,7 @@ from typing import TYPE_CHECKING, Any, Self, final
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.config_validation import (  # noqa: F401
+from homeassistant.helpers.config_validation import (
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
 )
@@ -146,7 +147,7 @@ class EventEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_)
             and self.entity_description.event_types is not None
         ):
             return self.entity_description.event_types
-        raise AttributeError()
+        raise AttributeError
 
     @final
     def _trigger_event(

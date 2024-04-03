@@ -1,4 +1,5 @@
 """Test WattTime diagnostics."""
+
 from syrupy import SnapshotAssertion
 from syrupy.filters import props
 

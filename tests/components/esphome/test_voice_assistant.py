@@ -70,6 +70,19 @@ def voice_assistant_udp_server_v2(
     return voice_assistant_udp_server(entry=mock_voice_assistant_v2_entry)
 
 
+@pytest.fixture
+def test_wav() -> bytes:
+    """Return one second of empty WAV audio."""
+    with io.BytesIO() as wav_io:
+        with wave.open(wav_io, "wb") as wav_file:
+            wav_file.setframerate(16000)
+            wav_file.setsampwidth(2)
+            wav_file.setnchannels(1)
+            wav_file.writeframes(bytes(_ONE_SECOND))
+
+        return wav_io.getvalue()
+
+
 async def test_pipeline_events(
     hass: HomeAssistant,
     voice_assistant_udp_server_v1: VoiceAssistantUDPServer,
@@ -211,9 +224,13 @@ async def test_udp_server_queue(
 
     voice_assistant_udp_server_v1.close()
 
-    with pytest.raises(RuntimeError):
-        async for data in voice_assistant_udp_server_v1._iterate_packets():
-            assert data == bytes(1024)
+    # Stopping the UDP server should cause _iterate_packets to break out
+    # immediately without yielding any data.
+    has_data = False
+    async for _data in voice_assistant_udp_server_v1._iterate_packets():
+        has_data = True
+
+    assert not has_data, "Server was stopped"
 
 
 async def test_error_calls_handle_finished(
@@ -241,11 +258,13 @@ async def test_udp_server_multiple(
     ):
         await voice_assistant_udp_server_v1.start_server()
 
-    with patch(
-        "homeassistant.components.esphome.voice_assistant.UDP_PORT",
-        new=unused_udp_port_factory(),
-    ), pytest.raises(RuntimeError):
-        pass
+    with (
+        patch(
+            "homeassistant.components.esphome.voice_assistant.UDP_PORT",
+            new=unused_udp_port_factory(),
+        ),
+        pytest.raises(RuntimeError),
+    ):
         await voice_assistant_udp_server_v1.start_server()
 
 
@@ -257,10 +276,13 @@ async def test_udp_server_after_stopped(
 ) -> None:
     """Test that the UDP server raises an error if started after stopped."""
     voice_assistant_udp_server_v1.close()
-    with patch(
-        "homeassistant.components.esphome.voice_assistant.UDP_PORT",
-        new=unused_udp_port_factory(),
-    ), pytest.raises(RuntimeError):
+    with (
+        patch(
+            "homeassistant.components.esphome.voice_assistant.UDP_PORT",
+            new=unused_udp_port_factory(),
+        ),
+        pytest.raises(RuntimeError),
+    ):
         await voice_assistant_udp_server_v1.start_server()
 
 
@@ -362,35 +384,33 @@ async def test_send_tts_not_called_when_empty(
 async def test_send_tts(
     hass: HomeAssistant,
     voice_assistant_udp_server_v2: VoiceAssistantUDPServer,
+    test_wav,
 ) -> None:
     """Test the UDP server calls sendto to transmit audio data to device."""
-    with io.BytesIO() as wav_io:
-        with wave.open(wav_io, "wb") as wav_file:
-            wav_file.setframerate(16000)
-            wav_file.setsampwidth(2)
-            wav_file.setnchannels(1)
-            wav_file.writeframes(bytes(_ONE_SECOND))
-
-        wav_bytes = wav_io.getvalue()
-
     with patch(
         "homeassistant.components.esphome.voice_assistant.tts.async_get_media_source_audio",
-        return_value=("wav", wav_bytes),
+        return_value=("wav", test_wav),
     ):
+        voice_assistant_udp_server_v2.started = True
         voice_assistant_udp_server_v2.transport = Mock(spec=asyncio.DatagramTransport)
-
-        voice_assistant_udp_server_v2._event_callback(
-            PipelineEvent(
-                type=PipelineEventType.TTS_END,
-                data={
-                    "tts_output": {"media_id": _TEST_MEDIA_ID, "url": _TEST_OUTPUT_URL}
-                },
+        with patch.object(
+            voice_assistant_udp_server_v2.transport, "is_closing", return_value=False
+        ):
+            voice_assistant_udp_server_v2._event_callback(
+                PipelineEvent(
+                    type=PipelineEventType.TTS_END,
+                    data={
+                        "tts_output": {
+                            "media_id": _TEST_MEDIA_ID,
+                            "url": _TEST_OUTPUT_URL,
+                        }
+                    },
+                )
             )
-        )
 
-        await voice_assistant_udp_server_v2._tts_done.wait()
+            await voice_assistant_udp_server_v2._tts_done.wait()
 
-        voice_assistant_udp_server_v2.transport.sendto.assert_called()
+            voice_assistant_udp_server_v2.transport.sendto.assert_called()
 
 
 async def test_send_tts_wrong_sample_rate(
@@ -400,17 +420,20 @@ async def test_send_tts_wrong_sample_rate(
     """Test the UDP server calls sendto to transmit audio data to device."""
     with io.BytesIO() as wav_io:
         with wave.open(wav_io, "wb") as wav_file:
-            wav_file.setframerate(22050)  # should be 16000
+            wav_file.setframerate(22050)
             wav_file.setsampwidth(2)
             wav_file.setnchannels(1)
             wav_file.writeframes(bytes(_ONE_SECOND))
 
         wav_bytes = wav_io.getvalue()
-
-    with patch(
-        "homeassistant.components.esphome.voice_assistant.tts.async_get_media_source_audio",
-        return_value=("wav", wav_bytes),
-    ), pytest.raises(ValueError):
+    with (
+        patch(
+            "homeassistant.components.esphome.voice_assistant.tts.async_get_media_source_audio",
+            return_value=("wav", wav_bytes),
+        ),
+        pytest.raises(ValueError),
+    ):
+        voice_assistant_udp_server_v2.started = True
         voice_assistant_udp_server_v2.transport = Mock(spec=asyncio.DatagramTransport)
 
         voice_assistant_udp_server_v2._event_callback(
@@ -431,10 +454,14 @@ async def test_send_tts_wrong_format(
     voice_assistant_udp_server_v2: VoiceAssistantUDPServer,
 ) -> None:
     """Test that only WAV audio will be streamed."""
-    with patch(
-        "homeassistant.components.esphome.voice_assistant.tts.async_get_media_source_audio",
-        return_value=("raw", bytes(1024)),
-    ), pytest.raises(ValueError):
+    with (
+        patch(
+            "homeassistant.components.esphome.voice_assistant.tts.async_get_media_source_audio",
+            return_value=("raw", bytes(1024)),
+        ),
+        pytest.raises(ValueError),
+    ):
+        voice_assistant_udp_server_v2.started = True
         voice_assistant_udp_server_v2.transport = Mock(spec=asyncio.DatagramTransport)
 
         voice_assistant_udp_server_v2._event_callback(
@@ -450,6 +477,33 @@ async def test_send_tts_wrong_format(
         await voice_assistant_udp_server_v2._tts_task  # raises ValueError
 
 
+async def test_send_tts_not_started(
+    hass: HomeAssistant,
+    voice_assistant_udp_server_v2: VoiceAssistantUDPServer,
+    test_wav,
+) -> None:
+    """Test the UDP server does not call sendto when not started."""
+    with patch(
+        "homeassistant.components.esphome.voice_assistant.tts.async_get_media_source_audio",
+        return_value=("wav", test_wav),
+    ):
+        voice_assistant_udp_server_v2.started = False
+        voice_assistant_udp_server_v2.transport = Mock(spec=asyncio.DatagramTransport)
+
+        voice_assistant_udp_server_v2._event_callback(
+            PipelineEvent(
+                type=PipelineEventType.TTS_END,
+                data={
+                    "tts_output": {"media_id": _TEST_MEDIA_ID, "url": _TEST_OUTPUT_URL}
+                },
+            )
+        )
+
+        await voice_assistant_udp_server_v2._tts_done.wait()
+
+        voice_assistant_udp_server_v2.transport.sendto.assert_not_called()
+
+
 async def test_wake_word(
     hass: HomeAssistant,
     voice_assistant_udp_server_v2: VoiceAssistantUDPServer,
@@ -459,11 +513,12 @@ async def test_wake_word(
     async def async_pipeline_from_audio_stream(*args, start_stage, **kwargs):
         assert start_stage == PipelineStage.WAKE_WORD
 
-    with patch(
-        "homeassistant.components.esphome.voice_assistant.async_pipeline_from_audio_stream",
-        new=async_pipeline_from_audio_stream,
-    ), patch(
-        "asyncio.Event.wait"  # TTS wait event
+    with (
+        patch(
+            "homeassistant.components.esphome.voice_assistant.async_pipeline_from_audio_stream",
+            new=async_pipeline_from_audio_stream,
+        ),
+        patch("asyncio.Event.wait"),  # TTS wait event
     ):
         voice_assistant_udp_server_v2.transport = Mock()
 
@@ -515,10 +570,15 @@ async def test_wake_word_abort_exception(
     async def async_pipeline_from_audio_stream(*args, **kwargs):
         raise WakeWordDetectionAborted
 
-    with patch(
-        "homeassistant.components.esphome.voice_assistant.async_pipeline_from_audio_stream",
-        new=async_pipeline_from_audio_stream,
-    ), patch.object(voice_assistant_udp_server_v2, "handle_event") as mock_handle_event:
+    with (
+        patch(
+            "homeassistant.components.esphome.voice_assistant.async_pipeline_from_audio_stream",
+            new=async_pipeline_from_audio_stream,
+        ),
+        patch.object(
+            voice_assistant_udp_server_v2, "handle_event"
+        ) as mock_handle_event,
+    ):
         voice_assistant_udp_server_v2.transport = Mock()
 
         await voice_assistant_udp_server_v2.run_pipeline(

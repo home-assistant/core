@@ -1,4 +1,5 @@
 """Config flow for OpenSky integration."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -11,6 +12,7 @@ import voluptuous as vol
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
+    ConfigFlowResult,
     OptionsFlowWithConfigEntry,
 )
 from homeassistant.const import (
@@ -22,13 +24,16 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_CONTRIBUTING_USER, DEFAULT_NAME, DOMAIN
-from .sensor import CONF_ALTITUDE, DEFAULT_ALTITUDE
+from .const import (
+    CONF_ALTITUDE,
+    CONF_CONTRIBUTING_USER,
+    DEFAULT_ALTITUDE,
+    DEFAULT_NAME,
+    DOMAIN,
+)
 
 
 class OpenSkyConfigFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -44,7 +49,7 @@ class OpenSkyConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Initialize user input."""
         if user_input is not None:
             return self.async_create_entry(
@@ -77,31 +82,13 @@ class OpenSkyConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             ),
         )
 
-    async def async_step_import(self, import_config: ConfigType) -> FlowResult:
-        """Import config from yaml."""
-        entry_data = {
-            CONF_LATITUDE: import_config.get(CONF_LATITUDE, self.hass.config.latitude),
-            CONF_LONGITUDE: import_config.get(
-                CONF_LONGITUDE, self.hass.config.longitude
-            ),
-        }
-        self._async_abort_entries_match(entry_data)
-        return self.async_create_entry(
-            title=import_config.get(CONF_NAME, DEFAULT_NAME),
-            data=entry_data,
-            options={
-                CONF_RADIUS: import_config[CONF_RADIUS] * 1000,
-                CONF_ALTITUDE: import_config.get(CONF_ALTITUDE, DEFAULT_ALTITUDE),
-            },
-        )
-
 
 class OpenSkyOptionsFlowHandler(OptionsFlowWithConfigEntry):
     """OpenSky Options flow handler."""
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Initialize form."""
         errors: dict[str, str] = {}
         if user_input is not None:
@@ -113,19 +100,17 @@ class OpenSkyOptionsFlowHandler(OptionsFlowWithConfigEntry):
             if user_input[CONF_CONTRIBUTING_USER] and not authentication:
                 errors["base"] = "no_authentication"
             if authentication and not errors:
-                async with OpenSky(
-                    session=async_get_clientsession(self.hass)
-                ) as opensky:
-                    try:
-                        await opensky.authenticate(
-                            BasicAuth(
-                                login=user_input[CONF_USERNAME],
-                                password=user_input[CONF_PASSWORD],
-                            ),
-                            contributing_user=user_input[CONF_CONTRIBUTING_USER],
-                        )
-                    except OpenSkyUnauthenticatedError:
-                        errors["base"] = "invalid_auth"
+                opensky = OpenSky(session=async_get_clientsession(self.hass))
+                try:
+                    await opensky.authenticate(
+                        BasicAuth(
+                            login=user_input[CONF_USERNAME],
+                            password=user_input[CONF_PASSWORD],
+                        ),
+                        contributing_user=user_input[CONF_CONTRIBUTING_USER],
+                    )
+                except OpenSkyUnauthenticatedError:
+                    errors["base"] = "invalid_auth"
             if not errors:
                 return self.async_create_entry(
                     title=self.options.get(CONF_NAME, "OpenSky"),

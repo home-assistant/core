@@ -1,7 +1,9 @@
 """Middleware to add some basic security filtering to requests."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
+from functools import lru_cache
 import logging
 import re
 from typing import Final
@@ -43,6 +45,7 @@ UNSAFE_URL_BYTES = ["\t", "\r", "\n"]
 def setup_security_filter(app: Application) -> None:
     """Create security filter middleware for the app."""
 
+    @lru_cache
     def _recursive_unquote(value: str) -> str:
         """Handle values that are encoded multiple times."""
         if (unquoted := unquote(value)) != value:
@@ -54,31 +57,35 @@ def setup_security_filter(app: Application) -> None:
         request: Request, handler: Callable[[Request], Awaitable[StreamResponse]]
     ) -> StreamResponse:
         """Process request and block commonly known exploit attempts."""
+        path_with_query_string = f"{request.path}?{request.query_string}"
+
         for unsafe_byte in UNSAFE_URL_BYTES:
-            if unsafe_byte in request.path:
+            if unsafe_byte in path_with_query_string:
+                if unsafe_byte in request.query_string:
+                    _LOGGER.warning(
+                        "Filtered a request with unsafe byte query string: %s",
+                        request.raw_path,
+                    )
+                    raise HTTPBadRequest
                 _LOGGER.warning(
                     "Filtered a request with an unsafe byte in path: %s",
                     request.raw_path,
                 )
                 raise HTTPBadRequest
 
-            if unsafe_byte in request.query_string:
+        if FILTERS.search(_recursive_unquote(path_with_query_string)):
+            # Check the full path with query string first, if its
+            # a hit, than check just the query string to give a more
+            # specific warning.
+            if FILTERS.search(_recursive_unquote(request.query_string)):
                 _LOGGER.warning(
-                    "Filtered a request with unsafe byte query string: %s",
+                    "Filtered a request with a potential harmful query string: %s",
                     request.raw_path,
                 )
                 raise HTTPBadRequest
 
-        if FILTERS.search(_recursive_unquote(request.path)):
             _LOGGER.warning(
                 "Filtered a potential harmful request to: %s", request.raw_path
-            )
-            raise HTTPBadRequest
-
-        if FILTERS.search(_recursive_unquote(request.query_string)):
-            _LOGGER.warning(
-                "Filtered a request with a potential harmful query string: %s",
-                request.raw_path,
             )
             raise HTTPBadRequest
 

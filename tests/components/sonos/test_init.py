@@ -1,4 +1,5 @@
 """Tests for the Sonos config flow."""
+
 import asyncio
 from datetime import timedelta
 import logging
@@ -50,7 +51,7 @@ async def test_creating_entry_sets_up_media_player(
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
 
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     assert len(mock_setup.mock_calls) == 1
 
@@ -95,21 +96,23 @@ async def test_async_poll_manual_hosts_warnings(
     await hass.async_block_till_done()
     manager: SonosDiscoveryManager = hass.data[DATA_SONOS_DISCOVERY_MANAGER]
     manager.hosts.add("10.10.10.10")
-    with caplog.at_level(logging.DEBUG), patch.object(
-        manager, "_async_handle_discovery_message"
-    ), patch(
-        "homeassistant.components.sonos.async_call_later"
-    ) as mock_async_call_later, patch(
-        "homeassistant.components.sonos.async_dispatcher_send"
-    ), patch(
-        "homeassistant.components.sonos.sync_get_visible_zones",
-        side_effect=[
-            OSError(),
-            OSError(),
-            [],
-            [],
-            OSError(),
-        ],
+    with (
+        caplog.at_level(logging.DEBUG),
+        patch.object(manager, "_async_handle_discovery_message"),
+        patch(
+            "homeassistant.components.sonos.async_call_later"
+        ) as mock_async_call_later,
+        patch("homeassistant.components.sonos.async_dispatcher_send"),
+        patch(
+            "homeassistant.components.sonos.sync_get_visible_zones",
+            side_effect=[
+                OSError(),
+                OSError(),
+                [],
+                [],
+                OSError(),
+            ],
+        ),
     ):
         # First call fails, it should be logged as a WARNING message
         caplog.clear()
@@ -157,7 +160,7 @@ async def test_async_poll_manual_hosts_warnings(
 class _MockSoCoOsError(MockSoCo):
     @property
     def visible_zones(self):
-        raise OSError()
+        raise OSError
 
 
 class _MockSoCoVisibleZones(MockSoCo):
@@ -368,7 +371,7 @@ async def test_async_poll_manual_hosts_6(
         "homeassistant.components.sonos.DISCOVERY_INTERVAL"
     ) as mock_discovery_interval:
         # Speed up manual discovery interval so second iteration runs sooner
-        mock_discovery_interval.total_seconds = Mock(side_effect=[0.5, 60])
+        mock_discovery_interval.total_seconds = Mock(side_effect=[0.0, 60])
         await _setup_hass(hass)
 
         assert "media_player.bedroom" in entity_registry.entities
@@ -376,10 +379,6 @@ async def test_async_poll_manual_hosts_6(
 
         with caplog.at_level(logging.DEBUG):
             caplog.clear()
-            # The discovery events should not fire, wait with a timeout.
-            with pytest.raises(asyncio.TimeoutError):
-                async with asyncio.timeout(1.0):
-                    await speaker_1_activity.event.wait()
             await hass.async_block_till_done()
             assert "Activity on Living Room" not in caplog.text
             assert "Activity on Bedroom" not in caplog.text

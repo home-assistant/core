@@ -1,4 +1,5 @@
 """Tedee lock entities."""
+
 from typing import Any
 
 from pytedee_async import TedeeClientException, TedeeLock, TedeeLockState
@@ -73,6 +74,11 @@ class TedeeLockEntity(TedeeEntity, LockEntity):
     def is_jammed(self) -> bool:
         """Return true if lock is jammed."""
         return self._lock.is_state_jammed
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return super().available and self._lock.is_connected
 
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the door."""

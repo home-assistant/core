@@ -1,4 +1,5 @@
 """Tuya Home Assistant Base Device Model."""
+
 from __future__ import annotations
 
 import base64
@@ -7,7 +8,7 @@ import json
 import struct
 from typing import Any, Literal, Self, overload
 
-from tuya_iot import TuyaDevice, TuyaDeviceManager
+from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -135,9 +136,11 @@ class TuyaEntity(Entity):
     _attr_has_entity_name = True
     _attr_should_poll = False
 
-    def __init__(self, device: TuyaDevice, device_manager: TuyaDeviceManager) -> None:
+    def __init__(self, device: CustomerDevice, device_manager: Manager) -> None:
         """Init TuyaHaEntity."""
         self._attr_unique_id = f"tuya.{device.id}"
+        # TuyaEntity initialize mq can subscribe
+        device.set_up = True
         self.device = device
         self.device_manager = device_manager
 
@@ -163,8 +166,7 @@ class TuyaEntity(Entity):
         *,
         prefer_function: bool = False,
         dptype: Literal[DPType.ENUM],
-    ) -> EnumTypeData | None:
-        ...
+    ) -> EnumTypeData | None: ...
 
     @overload
     def find_dpcode(
@@ -173,8 +175,7 @@ class TuyaEntity(Entity):
         *,
         prefer_function: bool = False,
         dptype: Literal[DPType.INTEGER],
-    ) -> IntegerTypeData | None:
-        ...
+    ) -> IntegerTypeData | None: ...
 
     @overload
     def find_dpcode(
@@ -182,8 +183,7 @@ class TuyaEntity(Entity):
         dpcodes: str | DPCode | tuple[DPCode, ...] | None,
         *,
         prefer_function: bool = False,
-    ) -> DPCode | None:
-        ...
+    ) -> DPCode | None: ...
 
     def find_dpcode(
         self,

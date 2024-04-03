@@ -1,4 +1,5 @@
 """Mock data for Roborock tests."""
+
 from __future__ import annotations
 
 from PIL import Image

@@ -1,4 +1,5 @@
 """Test the Switcher climate platform."""
+
 from unittest.mock import ANY, patch
 
 from aioswitcher.api import SwitcherBaseResponse

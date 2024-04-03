@@ -1,5 +1,6 @@
 """Support for the (unofficial) Tado API."""
-from datetime import timedelta
+
+from datetime import datetime, timedelta
 import logging
 
 from PyTado.interface import Tado
@@ -10,10 +11,11 @@ from homeassistant.components.climate import PRESET_AWAY, PRESET_HOME
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import Throttle
 
 from .const import (
@@ -33,6 +35,7 @@ from .const import (
     UPDATE_MOBILE_DEVICE_TRACK,
     UPDATE_TRACK,
 )
+from .services import setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,6 +53,14 @@ SCAN_INTERVAL = timedelta(minutes=5)
 SCAN_MOBILE_DEVICE_INTERVAL = timedelta(seconds=30)
 
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up Tado."""
+
+    setup_services(hass)
+
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -186,12 +197,13 @@ class TadoConnector:
 
     def get_mobile_devices(self):
         """Return the Tado mobile devices."""
-        return self.tado.getMobileDevices()
+        return self.tado.get_mobile_devices()
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Update the registered zones."""
         self.update_devices()
+        self.update_mobile_devices()
         self.update_zones()
         self.update_home()
 
@@ -203,17 +215,31 @@ class TadoConnector:
             _LOGGER.error("Unable to connect to Tado while updating mobile devices")
             return
 
+        if not mobile_devices:
+            _LOGGER.debug("No linked mobile devices found for home ID %s", self.home_id)
+            return
+
+        # Errors are planned to be converted to exceptions
+        # in PyTado library, so this can be removed
+        if "errors" in mobile_devices and mobile_devices["errors"]:
+            _LOGGER.error(
+                "Error for home ID %s while updating mobile devices: %s",
+                self.home_id,
+                mobile_devices["errors"],
+            )
+            return
+
         for mobile_device in mobile_devices:
             self.data["mobile_device"][mobile_device["id"]] = mobile_device
+            _LOGGER.debug(
+                "Dispatching update to %s mobile device: %s",
+                self.home_id,
+                mobile_device,
+            )
 
-        _LOGGER.debug(
-            "Dispatching update to %s mobile devices: %s",
-            self.home_id,
-            mobile_devices,
-        )
         dispatcher_send(
             self.hass,
-            SIGNAL_TADO_MOBILE_DEVICE_UPDATE_RECEIVED,
+            SIGNAL_TADO_MOBILE_DEVICE_UPDATE_RECEIVED.format(self.home_id),
         )
 
     def update_devices(self):
@@ -222,6 +248,20 @@ class TadoConnector:
             devices = self.tado.get_devices()
         except RuntimeError:
             _LOGGER.error("Unable to connect to Tado while updating devices")
+            return
+
+        if not devices:
+            _LOGGER.debug("No linked devices found for home ID %s", self.home_id)
+            return
+
+        # Errors are planned to be converted to exceptions
+        # in PyTado library, so this can be removed
+        if "errors" in devices and devices["errors"]:
+            _LOGGER.error(
+                "Error for home ID %s while updating devices: %s",
+                self.home_id,
+                devices["errors"],
+            )
             return
 
         for device in devices:
@@ -396,3 +436,11 @@ class TadoConnector:
             self.tado.set_temp_offset(device_id, offset)
         except RequestException as exc:
             _LOGGER.error("Could not set temperature offset: %s", exc)
+
+    def set_meter_reading(self, reading: int) -> dict[str, str]:
+        """Send meter reading to Tado."""
+        dt: str = datetime.now().strftime("%Y-%m-%d")
+        try:
+            return self.tado.set_eiq_meter_readings(date=dt, reading=reading)
+        except RequestException as exc:
+            raise HomeAssistantError("Could not set meter reading") from exc

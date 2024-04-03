@@ -1,12 +1,19 @@
 """Test config flow for Insteon."""
+
 from __future__ import annotations
 
 import logging
 
 from pyinsteon import async_close, async_connect, devices
 
-from homeassistant import config_entries
 from homeassistant.components import dhcp, usb
+from homeassistant.config_entries import (
+    DEFAULT_DISCOVERY_UNIQUE_ID,
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import (
     CONF_ADDRESS,
     CONF_DEVICE,
@@ -17,7 +24,6 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -66,11 +72,12 @@ async def _async_connect(**kwargs):
     """Connect to the Insteon modem."""
     try:
         await async_connect(**kwargs)
-        _LOGGER.info("Connected to Insteon modem")
-        return True
     except ConnectionError:
         _LOGGER.error("Could not connect to Insteon modem")
         return False
+
+    _LOGGER.info("Connected to Insteon modem")
+    return True
 
 
 def _remove_override(address, options):
@@ -78,10 +85,11 @@ def _remove_override(address, options):
     new_options = {}
     if options.get(CONF_X10):
         new_options[CONF_X10] = options.get(CONF_X10)
-    new_overrides = []
-    for override in options[CONF_OVERRIDE]:
-        if override[CONF_ADDRESS] != address:
-            new_overrides.append(override)
+    new_overrides = [
+        override
+        for override in options[CONF_OVERRIDE]
+        if override[CONF_ADDRESS] != address
+    ]
     if new_overrides:
         new_options[CONF_OVERRIDE] = new_overrides
     return new_options
@@ -94,19 +102,20 @@ def _remove_x10(device, options):
     new_options = {}
     if options.get(CONF_OVERRIDE):
         new_options[CONF_OVERRIDE] = options.get(CONF_OVERRIDE)
-    new_x10 = []
-    for existing_device in options[CONF_X10]:
+    new_x10 = [
+        existing_device
+        for existing_device in options[CONF_X10]
         if (
             existing_device[CONF_HOUSECODE].lower() != housecode
             or existing_device[CONF_UNITCODE] != unitcode
-        ):
-            new_x10.append(existing_device)
+        )
+    ]
     if new_x10:
         new_options[CONF_X10] = new_x10
     return new_options, housecode, unitcode
 
 
-class InsteonFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class InsteonFlowHandler(ConfigFlow, domain=DOMAIN):
     """Insteon config flow handler."""
 
     _device_path: str | None = None
@@ -116,7 +125,7 @@ class InsteonFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
+        config_entry: ConfigEntry,
     ) -> InsteonOptionsFlowHandler:
         """Define the config flow to handle options."""
         return InsteonOptionsFlowHandler(config_entry)
@@ -185,7 +194,9 @@ class InsteonFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             step_id=step_id, data_schema=data_schema, errors=errors
         )
 
-    async def async_step_usb(self, discovery_info: usb.UsbServiceInfo) -> FlowResult:
+    async def async_step_usb(
+        self, discovery_info: usb.UsbServiceInfo
+    ) -> ConfigFlowResult:
         """Handle USB discovery."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
@@ -203,10 +214,10 @@ class InsteonFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.context["title_placeholders"] = {
             CONF_NAME: f"Insteon PLM {self._device_name}"
         }
-        await self.async_set_unique_id(config_entries.DEFAULT_DISCOVERY_UNIQUE_ID)
+        await self.async_set_unique_id(DEFAULT_DISCOVERY_UNIQUE_ID)
         return await self.async_step_confirm_usb()
 
-    async def async_step_confirm_usb(self, user_input=None) -> FlowResult:
+    async def async_step_confirm_usb(self, user_input=None) -> ConfigFlowResult:
         """Confirm a USB discovery."""
         if user_input is not None:
             return await self.async_step_plm({CONF_DEVICE: self._device_path})
@@ -216,7 +227,9 @@ class InsteonFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             description_placeholders={CONF_NAME: self._device_name},
         )
 
-    async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
+    async def async_step_dhcp(
+        self, discovery_info: dhcp.DhcpServiceInfo
+    ) -> ConfigFlowResult:
         """Handle a DHCP discovery."""
         self.discovered_conf = {CONF_HOST: discovery_info.ip}
         self.context["title_placeholders"] = {
@@ -226,14 +239,14 @@ class InsteonFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return await self.async_step_user()
 
 
-class InsteonOptionsFlowHandler(config_entries.OptionsFlow):
+class InsteonOptionsFlowHandler(OptionsFlow):
     """Handle an Insteon options flow."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+    def __init__(self, config_entry: ConfigEntry) -> None:
         """Init the InsteonOptionsFlowHandler class."""
         self.config_entry = config_entry
 
-    async def async_step_init(self, user_input=None) -> FlowResult:
+    async def async_step_init(self, user_input=None) -> ConfigFlowResult:
         """Init the options config flow."""
         menu_options = [STEP_ADD_OVERRIDE, STEP_ADD_X10]
 
@@ -250,7 +263,7 @@ class InsteonOptionsFlowHandler(config_entries.OptionsFlow):
 
         return self.async_show_menu(step_id="init", menu_options=menu_options)
 
-    async def async_step_change_hub_config(self, user_input=None) -> FlowResult:
+    async def async_step_change_hub_config(self, user_input=None) -> ConfigFlowResult:
         """Change the Hub configuration."""
         errors = {}
         if user_input is not None:
@@ -276,7 +289,7 @@ class InsteonOptionsFlowHandler(config_entries.OptionsFlow):
             step_id=STEP_CHANGE_HUB_CONFIG, data_schema=data_schema, errors=errors
         )
 
-    async def async_step_change_plm_config(self, user_input=None) -> FlowResult:
+    async def async_step_change_plm_config(self, user_input=None) -> ConfigFlowResult:
         """Change the PLM configuration."""
         errors = {}
         if user_input is not None:
@@ -299,7 +312,7 @@ class InsteonOptionsFlowHandler(config_entries.OptionsFlow):
             step_id=STEP_CHANGE_PLM_CONFIG, data_schema=data_schema, errors=errors
         )
 
-    async def async_step_add_override(self, user_input=None) -> FlowResult:
+    async def async_step_add_override(self, user_input=None) -> ConfigFlowResult:
         """Add a device override."""
         errors = {}
         if user_input is not None:
@@ -315,7 +328,7 @@ class InsteonOptionsFlowHandler(config_entries.OptionsFlow):
             step_id=STEP_ADD_OVERRIDE, data_schema=data_schema, errors=errors
         )
 
-    async def async_step_add_x10(self, user_input=None) -> FlowResult:
+    async def async_step_add_x10(self, user_input=None) -> ConfigFlowResult:
         """Add an X10 device."""
         errors: dict[str, str] = {}
         if user_input is not None:
@@ -328,7 +341,7 @@ class InsteonOptionsFlowHandler(config_entries.OptionsFlow):
             step_id=STEP_ADD_X10, data_schema=data_schema, errors=errors
         )
 
-    async def async_step_remove_override(self, user_input=None) -> FlowResult:
+    async def async_step_remove_override(self, user_input=None) -> ConfigFlowResult:
         """Remove a device override."""
         errors: dict[str, str] = {}
         options = self.config_entry.options
@@ -346,7 +359,7 @@ class InsteonOptionsFlowHandler(config_entries.OptionsFlow):
             step_id=STEP_REMOVE_OVERRIDE, data_schema=data_schema, errors=errors
         )
 
-    async def async_step_remove_x10(self, user_input=None) -> FlowResult:
+    async def async_step_remove_x10(self, user_input=None) -> ConfigFlowResult:
         """Remove an X10 device."""
         errors: dict[str, str] = {}
         options = self.config_entry.options

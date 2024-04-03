@@ -1,4 +1,5 @@
 """Test the Xiaomi Miio config flow."""
+
 from ipaddress import ip_address
 from unittest.mock import Mock, patch
 
@@ -7,11 +8,12 @@ from micloud.micloudexception import MiCloudAccessDenied
 from miio import DeviceException
 import pytest
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components import zeroconf
 from homeassistant.components.xiaomi_miio import const
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_MAC, CONF_MODEL, CONF_TOKEN
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from . import TEST_MAC
 
@@ -72,19 +74,25 @@ def xiaomi_miio_connect_fixture():
     """Mock miio connection and entry setup."""
     mock_info = get_mock_info()
 
-    with patch(
-        "homeassistant.components.xiaomi_miio.device.Device.info",
-        return_value=mock_info,
-    ), patch(
-        "homeassistant.components.xiaomi_miio.config_flow.MiCloud.login",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.xiaomi_miio.config_flow.MiCloud.get_devices",
-        return_value=TEST_CLOUD_DEVICES_1,
-    ), patch(
-        "homeassistant.components.xiaomi_miio.async_setup_entry", return_value=True
-    ), patch(
-        "homeassistant.components.xiaomi_miio.async_unload_entry", return_value=True
+    with (
+        patch(
+            "homeassistant.components.xiaomi_miio.device.Device.info",
+            return_value=mock_info,
+        ),
+        patch(
+            "homeassistant.components.xiaomi_miio.config_flow.MiCloud.login",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.xiaomi_miio.config_flow.MiCloud.get_devices",
+            return_value=TEST_CLOUD_DEVICES_1,
+        ),
+        patch(
+            "homeassistant.components.xiaomi_miio.async_setup_entry", return_value=True
+        ),
+        patch(
+            "homeassistant.components.xiaomi_miio.async_unload_entry", return_value=True
+        ),
     ):
         yield
 
@@ -890,7 +898,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
@@ -900,7 +908,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
         },
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert config_entry.options == {
         const.CONF_CLOUD_SUBDEVICES: True,
     }
@@ -930,7 +938,7 @@ async def test_options_flow_incomplete(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
@@ -939,7 +947,7 @@ async def test_options_flow_incomplete(hass: HomeAssistant) -> None:
         },
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
     assert result["errors"] == {"base": "cloud_credentials_incomplete"}
 

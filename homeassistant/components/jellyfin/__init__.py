@@ -1,4 +1,5 @@
 """The Jellyfin integration."""
+
 from typing import Any
 
 from homeassistant.config_entries import ConfigEntry

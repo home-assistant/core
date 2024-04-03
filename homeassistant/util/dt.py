@@ -1,4 +1,5 @@
 """Helper methods to handle the time in Home Assistant."""
+
 from __future__ import annotations
 
 import bisect
@@ -99,7 +100,7 @@ def get_time_zone(time_zone_str: str) -> dt.tzinfo | None:
 
 # We use a partial here since it is implemented in native code
 # and avoids the global lookup of UTC
-utcnow: partial[dt.datetime] = partial(dt.datetime.now, UTC)
+utcnow = partial(dt.datetime.now, UTC)
 utcnow.__doc__ = "Get now in UTC time."
 
 
@@ -178,20 +179,17 @@ def start_of_local_day(dt_or_d: dt.date | dt.datetime | None = None) -> dt.datet
 # All rights reserved.
 # https://github.com/django/django/blob/main/LICENSE
 @overload
-def parse_datetime(dt_str: str) -> dt.datetime | None:
-    ...
+def parse_datetime(dt_str: str) -> dt.datetime | None: ...
 
 
 @overload
-def parse_datetime(dt_str: str, *, raise_on_error: Literal[True]) -> dt.datetime:
-    ...
+def parse_datetime(dt_str: str, *, raise_on_error: Literal[True]) -> dt.datetime: ...
 
 
 @overload
 def parse_datetime(
     dt_str: str, *, raise_on_error: Literal[False] | bool
-) -> dt.datetime | None:
-    ...
+) -> dt.datetime | None: ...
 
 
 def parse_datetime(dt_str: str, *, raise_on_error: bool = False) -> dt.datetime | None:
@@ -393,7 +391,8 @@ def find_next_time_expression_time(
             next_second = seconds[0]
             result += dt.timedelta(minutes=1)
 
-        result = result.replace(second=next_second)
+        if result.second != next_second:
+            result = result.replace(second=next_second)
 
         # Match next minute
         next_minute = _lower_bound(minutes, result.minute)
@@ -406,7 +405,8 @@ def find_next_time_expression_time(
             next_minute = minutes[0]
             result += dt.timedelta(hours=1)
 
-        result = result.replace(minute=next_minute)
+        if result.minute != next_minute:
+            result = result.replace(minute=next_minute)
 
         # Match next hour
         next_hour = _lower_bound(hours, result.hour)
@@ -419,7 +419,8 @@ def find_next_time_expression_time(
             next_hour = hours[0]
             result += dt.timedelta(days=1)
 
-        result = result.replace(hour=next_hour)
+        if result.hour != next_hour:
+            result = result.replace(hour=next_hour)
 
         if result.tzinfo in (None, UTC):
             # Using UTC, no DST checking needed

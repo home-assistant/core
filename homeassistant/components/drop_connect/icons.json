@@ -1,0 +1,65 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "leak": {
+        "default": "mdi:pipe-leak"
+      },
+      "pending_notification": {
+        "default": "mdi:bell-ring"
+      },
+      "pump": {
+        "default": "mdi:water-pump"
+      },
+      "reserve_in_use": {
+        "default": "mdi:water"
+      },
+      "salt": {
+        "default": "mdi:shaker"
+      }
+    },
+    "select": {
+      "protect_mode": {
+        "default": "mdi:home-flood"
+      }
+    },
+    "sensor": {
+      "current_flow_rate": {
+        "default": "mdi:shower-head"
+      },
+      "peak_flow_rate": {
+        "default": "mdi:shower-head"
+      },
+      "inlet_tds": {
+        "default": "mdi:water-opacity"
+      },
+      "outlet_tds": {
+        "default": "mdi:water-opacity"
+      },
+      "cart1": {
+        "default": "mdi:gauge"
+      },
+      "cart2": {
+        "default": "mdi:gauge"
+      },
+      "cart3": {
+        "default": "mdi:gauge"
+      }
+    },
+    "switch": {
+      "water": {
+        "default": "mdi:valve",
+        "state": {
+          "on": "mdi:valve-open",
+          "off": "mdi:valve-closed"
+        }
+      },
+      "bypass": {
+        "default": "mdi:valve",
+        "state": {
+          "on": "mdi:valve-open",
+          "off": "mdi:valve-closed"
+        }
+      }
+    }
+  }
+}

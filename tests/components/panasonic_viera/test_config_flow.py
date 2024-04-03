@@ -1,4 +1,5 @@
 """Test the Panasonic Viera config flow."""
+
 from unittest.mock import patch
 
 from panasonic_viera import SOAPError

@@ -1,4 +1,5 @@
 """Tests for the solax config flow."""
+
 from unittest.mock import patch
 
 from solax import RealTimeAPI
@@ -17,7 +18,11 @@ def __mock_real_time_api_success():
 
 def __mock_get_data():
     return InverterResponse(
-        data=None, serial_number="ABCDEFGHIJ", version="2.034.06", type=4
+        data=None,
+        dongle_serial_number="ABCDEFGHIJ",
+        version="2.034.06",
+        type=4,
+        inverter_serial_number="XXXXXXX",
     )
 
 
@@ -29,13 +34,17 @@ async def test_form_success(hass: HomeAssistant) -> None:
     assert flow["type"] == "form"
     assert flow["errors"] == {}
 
-    with patch(
-        "homeassistant.components.solax.config_flow.real_time_api",
-        return_value=__mock_real_time_api_success(),
-    ), patch("solax.RealTimeAPI.get_data", return_value=__mock_get_data()), patch(
-        "homeassistant.components.solax.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.solax.config_flow.real_time_api",
+            return_value=__mock_real_time_api_success(),
+        ),
+        patch("solax.RealTimeAPI.get_data", return_value=__mock_get_data()),
+        patch(
+            "homeassistant.components.solax.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         entry_result = await hass.config_entries.flow.async_configure(
             flow["flow_id"],
             {CONF_IP_ADDRESS: "192.168.1.87", CONF_PORT: 80, CONF_PASSWORD: "password"},

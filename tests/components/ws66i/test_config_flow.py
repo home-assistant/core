@@ -1,7 +1,8 @@
 """Test the WS66i 6-Zone Amplifier config flow."""
+
 from unittest.mock import patch
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components.ws66i.const import (
     CONF_SOURCE_1,
     CONF_SOURCE_2,
@@ -15,6 +16,7 @@ from homeassistant.components.ws66i.const import (
 )
 from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from .test_media_player import AttrDict
 
@@ -31,12 +33,15 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["type"] == "form"
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.ws66i.config_flow.get_ws66i",
-    ) as mock_ws66i, patch(
-        "homeassistant.components.ws66i.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.ws66i.config_flow.get_ws66i",
+        ) as mock_ws66i,
+        patch(
+            "homeassistant.components.ws66i.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         ws66i_instance = mock_ws66i.return_value
 
         result2 = await hass.config_entries.flow.async_configure(
@@ -126,7 +131,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
 
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "init"
 
         result = await hass.config_entries.options.async_configure(
@@ -141,7 +146,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
             },
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         assert config_entry.options[CONF_SOURCES] == {
             "1": "one",
             "2": "too",

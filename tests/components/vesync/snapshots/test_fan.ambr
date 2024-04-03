@@ -18,6 +18,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'VeSync',
       'model': 'LV-PUR131S',
       'name': 'Air Purifier 131s',
@@ -52,6 +54,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -80,6 +84,7 @@
     'context': <ANY>,
     'entity_id': 'fan.air_purifier_131s',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
@@ -103,6 +108,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'VeSync',
       'model': 'Core200S',
       'name': 'Air Purifier 200s',
@@ -136,6 +143,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -170,6 +179,7 @@
     'context': <ANY>,
     'entity_id': 'fan.air_purifier_200s',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
@@ -193,6 +203,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'VeSync',
       'model': 'LAP-C401S-WJP',
       'name': 'Air Purifier 400s',
@@ -227,6 +239,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -262,6 +276,7 @@
     'context': <ANY>,
     'entity_id': 'fan.air_purifier_400s',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
@@ -285,6 +300,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'VeSync',
       'model': 'LAP-C601S-WUS',
       'name': 'Air Purifier 600s',
@@ -319,6 +336,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -354,6 +373,7 @@
     'context': <ANY>,
     'entity_id': 'fan.air_purifier_600s',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
@@ -377,6 +397,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'VeSync',
       'model': 'ESL100',
       'name': 'Dimmable Light',
@@ -411,6 +433,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'VeSync',
       'model': 'ESWD16',
       'name': 'Dimmer Switch',
@@ -461,6 +485,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'VeSync',
       'model': 'wifi-switch-1.3',
       'name': 'Outlet',
@@ -495,6 +521,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'VeSync',
       'model': 'ESL100CW',
       'name': 'Temperature Light',
@@ -529,6 +557,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'VeSync',
       'model': 'ESWL01',
       'name': 'Wall Switch',

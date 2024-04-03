@@ -1,4 +1,5 @@
 """Fixtures for DLNA DMS tests."""
+
 from __future__ import annotations
 
 from collections.abc import AsyncIterable, Iterable

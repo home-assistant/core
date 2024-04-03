@@ -9,7 +9,7 @@
           "device_input": "[%key:common::config_flow::data::device%]"
         }
       },
-      "reconfigure": {
+      "restore_device": {
         "title": "Device reconfiguration",
         "description": "Reconfigure this device to restore its functionality."
       },

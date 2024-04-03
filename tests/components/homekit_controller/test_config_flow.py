@@ -1,4 +1,5 @@
 """Tests for homekit_controller config flow."""
+
 import asyncio
 from ipaddress import ip_address
 import unittest.mock
@@ -483,6 +484,44 @@ async def test_discovery_invalid_config_entry(hass: HomeAssistant, controller) -
 
     # And new config flow should continue allowing user to set up a new pairing
     assert result["type"] == "form"
+
+
+async def test_discovery_ignored_config_entry(hass: HomeAssistant, controller) -> None:
+    """There is already a config entry but it is ignored."""
+    pairing = await controller.add_paired_device(Accessories(), "00:00:00:00:00:00")
+
+    MockConfigEntry(
+        domain="homekit_controller",
+        data={},
+        unique_id="00:00:00:00:00:00",
+        source=config_entries.SOURCE_IGNORE,
+    ).add_to_hass(hass)
+
+    # We just added a mock config entry so it must be visible in hass
+    assert len(hass.config_entries.async_entries()) == 1
+
+    device = setup_mock_accessory(controller)
+    discovery_info = get_device_discovery_info(device)
+
+    # Device is discovered
+    with patch.object(
+        pairing,
+        "list_accessories_and_characteristics",
+        side_effect=AuthenticationError("Invalid pairing keys"),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            "homekit_controller",
+            context={"source": config_entries.SOURCE_ZEROCONF},
+            data=discovery_info,
+        )
+
+    # Entry is still ignored
+    config_entry_count = len(hass.config_entries.async_entries())
+    assert config_entry_count == 1
+
+    # We should abort since there is no accessory id in the data
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
 async def test_discovery_already_configured(hass: HomeAssistant, controller) -> None:
@@ -1029,6 +1068,7 @@ async def test_mdns_update_to_paired_during_pairing(
         "source": config_entries.SOURCE_ZEROCONF,
     }
 
+    finish_pairing_started = asyncio.Event()
     mdns_update_to_paired = asyncio.Event()
 
     original_async_start_pairing = device.async_start_pairing
@@ -1037,6 +1077,7 @@ async def test_mdns_update_to_paired_during_pairing(
         finish_pairing = await original_async_start_pairing(*args, **kwargs)
 
         async def _finish_pairing(*args, **kwargs):
+            finish_pairing_started.set()
             # Insert an event wait to make sure
             # we trigger the mdns update in the middle of the pairing
             await mdns_update_to_paired.wait()
@@ -1060,6 +1101,8 @@ async def test_mdns_update_to_paired_during_pairing(
             result["flow_id"], user_input={"pairing_code": "111-22-333"}
         )
     )
+    # Ensure the task starts
+    await finish_pairing_started.wait()
     # Make sure when the device is discovered as paired via mdns
     # it does not abort pairing if it happens before pairing is finished
     result2 = await hass.config_entries.flow.async_init(
@@ -1067,11 +1110,11 @@ async def test_mdns_update_to_paired_during_pairing(
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=discovery_info_paired,
     )
-    assert result2["type"] == FlowResultType.ABORT
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "already_paired"
     mdns_update_to_paired.set()
     result = await task
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Koogeek-LS1-20833F"
     assert result["data"] == {}
 
@@ -1087,7 +1130,7 @@ async def test_discovery_no_bluetooth_support(hass: HomeAssistant, controller) -
             context={"source": config_entries.SOURCE_BLUETOOTH},
             data=HK_BLUETOOTH_SERVICE_INFO_NOT_DISCOVERED,
         )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "ignored_model"
 
 
@@ -1102,7 +1145,7 @@ async def test_bluetooth_not_homekit(hass: HomeAssistant, controller) -> None:
             context={"source": config_entries.SOURCE_BLUETOOTH},
             data=NOT_HK_BLUETOOTH_SERVICE_INFO,
         )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "ignored_model"
 
 
@@ -1119,7 +1162,7 @@ async def test_bluetooth_valid_device_no_discovery(
             context={"source": config_entries.SOURCE_BLUETOOTH},
             data=HK_BLUETOOTH_SERVICE_INFO_NOT_DISCOVERED,
         )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "accessory_not_found_error"
 
 
@@ -1139,7 +1182,7 @@ async def test_bluetooth_valid_device_discovery_paired(
             data=HK_BLUETOOTH_SERVICE_INFO_DISCOVERED_PAIRED,
         )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_paired"
 
 
@@ -1160,7 +1203,7 @@ async def test_bluetooth_valid_device_discovery_unpaired(
             data=HK_BLUETOOTH_SERVICE_INFO_DISCOVERED_UNPAIRED,
         )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "pair"
     assert storage.get_map("00:00:00:00:00:00") is None
 
@@ -1171,11 +1214,11 @@ async def test_bluetooth_valid_device_discovery_unpaired(
     }
 
     result2 = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     result3 = await hass.config_entries.flow.async_configure(
         result2["flow_id"], user_input={"pairing_code": "111-22-333"}
     )
-    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == "Koogeek-LS1-20833F"
     assert result3["data"] == {}
 
@@ -1213,7 +1256,7 @@ async def test_discovery_updates_ip_when_config_entry_set_up(
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=discovery_info,
     )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     await hass.async_block_till_done()
 
@@ -1251,7 +1294,7 @@ async def test_discovery_updates_ip_config_entry_not_set_up(
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=discovery_info,
     )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     await hass.async_block_till_done()
 

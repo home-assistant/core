@@ -1,4 +1,5 @@
 """Support for tracking consumption over given periods of time."""
+
 from datetime import timedelta
 import logging
 
@@ -27,6 +28,7 @@ from .const import (
     CONF_METER_OFFSET,
     CONF_METER_PERIODICALLY_RESETTING,
     CONF_METER_TYPE,
+    CONF_SENSOR_ALWAYS_AVAILABLE,
     CONF_SOURCE_SENSOR,
     CONF_TARIFF,
     CONF_TARIFF_ENTITY,
@@ -93,6 +95,7 @@ METER_CONFIG_SCHEMA = vol.Schema(
                 cv.ensure_list, vol.Unique(), [cv.string]
             ),
             vol.Optional(CONF_CRON_PATTERN): validate_cron_pattern,
+            vol.Optional(CONF_SENSOR_ALWAYS_AVAILABLE, default=False): cv.boolean,
         },
         period_or_cron,
     )
@@ -161,8 +164,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 )
             )
 
-            hass.data[DATA_UTILITY][meter][CONF_TARIFF_ENTITY] = "{}.{}".format(
-                SELECT_DOMAIN, meter
+            hass.data[DATA_UTILITY][meter][CONF_TARIFF_ENTITY] = (
+                f"{SELECT_DOMAIN}.{meter}"
             )
 
             # add one meter for each tariff
@@ -210,9 +213,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entity_entry = entity_registry.async_get_or_create(
             Platform.SELECT, DOMAIN, entry.entry_id, suggested_object_id=entry.title
         )
-        hass.data[DATA_UTILITY][entry.entry_id][
-            CONF_TARIFF_ENTITY
-        ] = entity_entry.entity_id
+        hass.data[DATA_UTILITY][entry.entry_id][CONF_TARIFF_ENTITY] = (
+            entity_entry.entity_id
+        )
         await hass.config_entries.async_forward_entry_setups(
             entry, (Platform.SELECT, Platform.SENSOR)
         )
@@ -264,8 +267,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
     if config_entry.version == 1:
         new = {**config_entry.options}
         new[CONF_METER_PERIODICALLY_RESETTING] = True
-        config_entry.version = 2
-        hass.config_entries.async_update_entry(config_entry, options=new)
+        hass.config_entries.async_update_entry(config_entry, options=new, version=2)
 
     _LOGGER.info("Migration to version %s successful", config_entry.version)
 

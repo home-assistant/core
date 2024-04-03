@@ -1,4 +1,5 @@
 """Tests for private bluetooth device config flow."""
+
 from unittest.mock import patch
 
 from homeassistant import config_entries
@@ -25,7 +26,7 @@ async def test_setup_user_no_bluetooth(
         const.DOMAIN,
         context={"source": config_entries.SOURCE_USER},
     )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "bluetooth_not_available"
 
 
@@ -113,7 +114,7 @@ async def test_flow_works(hass: HomeAssistant, enable_bluetooth: None) -> None:
             user_input={"irk": "irk:00000000000000000000000000000000"},
         )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Test Test Test"
     assert result["data"] == {"irk": "00000000000000000000000000000000"}
     assert result["result"].unique_id == "00000000000000000000000000000000"
@@ -152,7 +153,7 @@ async def test_flow_works_by_base64(
             user_input={"irk": "AAAAAAAAAAAAAAAAAAAAAA=="},
         )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Test Test Test"
     assert result["data"] == {"irk": "00000000000000000000000000000000"}
     assert result["result"].unique_id == "00000000000000000000000000000000"

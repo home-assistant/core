@@ -1,4 +1,5 @@
 """Config flow for LEDBLE integration."""
+
 from __future__ import annotations
 
 import logging
@@ -8,20 +9,19 @@ from bluetooth_data_tools import human_readable_name
 from led_ble import BLEAK_EXCEPTIONS, LEDBLE
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
     async_discovered_service_info,
 )
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ADDRESS
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN, LOCAL_NAMES, UNSUPPORTED_SUB_MODEL
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class LedBleConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Yale Access Bluetooth."""
 
     VERSION = 1
@@ -33,7 +33,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the bluetooth discovery step."""
         if discovery_info.name.startswith(UNSUPPORTED_SUB_MODEL):
             # These versions speak a different protocol
@@ -51,7 +51,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the user step to pick discovered device."""
         errors: dict[str, str] = {}
 

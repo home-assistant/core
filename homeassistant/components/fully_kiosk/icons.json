@@ -1,0 +1,7 @@
+{
+  "services": {
+    "load_url": "mdi:link",
+    "set_config": "mdi:cog",
+    "start_application": "mdi:rocket-launch"
+  }
+}

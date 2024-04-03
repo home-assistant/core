@@ -1,4 +1,5 @@
 """Test Honeywell diagnostics."""
+
 from unittest.mock import MagicMock
 
 from syrupy import SnapshotAssertion

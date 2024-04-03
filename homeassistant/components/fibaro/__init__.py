@@ -1,4 +1,5 @@
 """Support for the Fibaro devices."""
+
 from __future__ import annotations
 
 from collections import defaultdict
@@ -42,12 +43,12 @@ PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.CLIMATE,
     Platform.COVER,
+    Platform.EVENT,
     Platform.LIGHT,
+    Platform.LOCK,
     Platform.SCENE,
     Platform.SENSOR,
-    Platform.LOCK,
     Platform.SWITCH,
-    Platform.EVENT,
 ]
 
 FIBARO_TYPEMAP = {

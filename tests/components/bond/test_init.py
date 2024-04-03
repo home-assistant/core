@@ -1,5 +1,5 @@
 """Tests for the Bond module."""
-import asyncio
+
 from unittest.mock import MagicMock, Mock
 
 from aiohttp import ClientConnectionError, ClientResponseError
@@ -45,7 +45,7 @@ async def test_async_setup_no_domain_config(hass: HomeAssistant) -> None:
     [
         ClientConnectionError,
         ClientResponseError(MagicMock(), MagicMock(), status=404),
-        asyncio.TimeoutError,
+        TimeoutError,
         OSError,
     ],
 )
@@ -89,20 +89,21 @@ async def test_async_setup_entry_sets_up_hub_and_supported_domains(
         data={CONF_HOST: "some host", CONF_ACCESS_TOKEN: "test-token"},
     )
 
-    with patch_bond_bridge(), patch_bond_version(
-        return_value={
-            "bondid": "ZXXX12345",
-            "target": "test-model",
-            "fw_ver": "test-version",
-            "mcu_ver": "test-hw-version",
-        }
-    ), patch_setup_entry("cover") as mock_cover_async_setup_entry, patch_setup_entry(
-        "fan"
-    ) as mock_fan_async_setup_entry, patch_setup_entry(
-        "light"
-    ) as mock_light_async_setup_entry, patch_setup_entry(
-        "switch"
-    ) as mock_switch_async_setup_entry:
+    with (
+        patch_bond_bridge(),
+        patch_bond_version(
+            return_value={
+                "bondid": "ZXXX12345",
+                "target": "test-model",
+                "fw_ver": "test-version",
+                "mcu_ver": "test-hw-version",
+            }
+        ),
+        patch_setup_entry("cover") as mock_cover_async_setup_entry,
+        patch_setup_entry("fan") as mock_fan_async_setup_entry,
+        patch_setup_entry("light") as mock_light_async_setup_entry,
+        patch_setup_entry("switch") as mock_switch_async_setup_entry,
+    ):
         result = await setup_bond_entity(hass, config_entry, patch_device_ids=True)
         assert result is True
         await hass.async_block_till_done()
@@ -171,21 +172,25 @@ async def test_old_identifiers_are_removed(
         name="old",
     )
 
-    with patch_bond_bridge(), patch_bond_version(
-        return_value={
-            "bondid": "ZXXX12345",
-            "target": "test-model",
-            "fw_ver": "test-version",
-        }
-    ), patch_start_bpup(), patch_bond_device_ids(
-        return_value=["bond-device-id", "device_id"]
-    ), patch_bond_device(
-        return_value={
-            "name": "test1",
-            "type": DeviceType.GENERIC_DEVICE,
-        }
-    ), patch_bond_device_properties(return_value={}), patch_bond_device_state(
-        return_value={}
+    with (
+        patch_bond_bridge(),
+        patch_bond_version(
+            return_value={
+                "bondid": "ZXXX12345",
+                "target": "test-model",
+                "fw_ver": "test-version",
+            }
+        ),
+        patch_start_bpup(),
+        patch_bond_device_ids(return_value=["bond-device-id", "device_id"]),
+        patch_bond_device(
+            return_value={
+                "name": "test1",
+                "type": DeviceType.GENERIC_DEVICE,
+            }
+        ),
+        patch_bond_device_properties(return_value={}),
+        patch_bond_device_state(return_value={}),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id) is True
         await hass.async_block_till_done()
@@ -210,24 +215,26 @@ async def test_smart_by_bond_device_suggested_area(
 
     config_entry.add_to_hass(hass)
 
-    with patch_bond_bridge(
-        side_effect=ClientResponseError(Mock(), Mock(), status=404)
-    ), patch_bond_version(
-        return_value={
-            "bondid": "KXXX12345",
-            "target": "test-model",
-            "fw_ver": "test-version",
-        }
-    ), patch_start_bpup(), patch_bond_device_ids(
-        return_value=["bond-device-id", "device_id"]
-    ), patch_bond_device(
-        return_value={
-            "name": "test1",
-            "type": DeviceType.GENERIC_DEVICE,
-            "location": "Den",
-        }
-    ), patch_bond_device_properties(return_value={}), patch_bond_device_state(
-        return_value={}
+    with (
+        patch_bond_bridge(side_effect=ClientResponseError(Mock(), Mock(), status=404)),
+        patch_bond_version(
+            return_value={
+                "bondid": "KXXX12345",
+                "target": "test-model",
+                "fw_ver": "test-version",
+            }
+        ),
+        patch_start_bpup(),
+        patch_bond_device_ids(return_value=["bond-device-id", "device_id"]),
+        patch_bond_device(
+            return_value={
+                "name": "test1",
+                "type": DeviceType.GENERIC_DEVICE,
+                "location": "Den",
+            }
+        ),
+        patch_bond_device_properties(return_value={}),
+        patch_bond_device_state(return_value={}),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id) is True
         await hass.async_block_till_done()
@@ -252,27 +259,31 @@ async def test_bridge_device_suggested_area(
 
     config_entry.add_to_hass(hass)
 
-    with patch_bond_bridge(
-        return_value={
-            "name": "Office Bridge",
-            "location": "Office",
-        }
-    ), patch_bond_version(
-        return_value={
-            "bondid": "ZXXX12345",
-            "target": "test-model",
-            "fw_ver": "test-version",
-        }
-    ), patch_start_bpup(), patch_bond_device_ids(
-        return_value=["bond-device-id", "device_id"]
-    ), patch_bond_device(
-        return_value={
-            "name": "test1",
-            "type": DeviceType.GENERIC_DEVICE,
-            "location": "Bathroom",
-        }
-    ), patch_bond_device_properties(return_value={}), patch_bond_device_state(
-        return_value={}
+    with (
+        patch_bond_bridge(
+            return_value={
+                "name": "Office Bridge",
+                "location": "Office",
+            }
+        ),
+        patch_bond_version(
+            return_value={
+                "bondid": "ZXXX12345",
+                "target": "test-model",
+                "fw_ver": "test-version",
+            }
+        ),
+        patch_start_bpup(),
+        patch_bond_device_ids(return_value=["bond-device-id", "device_id"]),
+        patch_bond_device(
+            return_value={
+                "name": "test1",
+                "type": DeviceType.GENERIC_DEVICE,
+                "location": "Bathroom",
+            }
+        ),
+        patch_bond_device_properties(return_value={}),
+        patch_bond_device_state(return_value={}),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id) is True
         await hass.async_block_till_done()

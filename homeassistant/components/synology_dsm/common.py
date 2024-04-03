@@ -1,4 +1,5 @@
 """The Synology DSM component."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -128,7 +129,7 @@ class SynoApi:
                 self._entry.unique_id,
                 err,
             )
-            raise err
+            raise
 
     @callback
     def subscribe(self, api_key: str, unique_id: str) -> Callable[[], None]:
@@ -267,7 +268,7 @@ class SynoApi:
             LOGGER.debug(
                 "Error from '%s': %s", self._entry.unique_id, err, exc_info=True
             )
-            raise err
+            raise
 
     async def async_reboot(self) -> None:
         """Reboot NAS."""

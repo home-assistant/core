@@ -1,4 +1,5 @@
 """Tests for Tibber config flow."""
+
 from asyncio import TimeoutError
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
@@ -32,7 +33,7 @@ async def test_show_config_form(recorder_mock: Recorder, hass: HomeAssistant) ->
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
 
@@ -55,7 +56,7 @@ async def test_create_entry(recorder_mock: Recorder, hass: HomeAssistant) -> Non
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data=test_data
         )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == title
     assert result["data"] == test_data
 
@@ -91,7 +92,7 @@ async def test_create_entry_exceptions(
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data=test_data
         )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"][CONF_ACCESS_TOKEN] == expected_error
 
 
@@ -108,5 +109,5 @@ async def test_flow_entry_already_exists(
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data=test_data
         )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
