@@ -164,6 +164,7 @@ class SmartPlugSensor(CoordinatedTPLinkEntity, SensorEntity):
         self.entity_description = description
         self._attr_unique_id = f"{legacy_device_id(device)}_{description.key}"
         if has_parent:
+            assert isinstance(device.alias, str)
             self._attr_translation_placeholders = {"device_name": device.alias}
             if description.translation_key:
                 self._attr_translation_key = f"{description.translation_key}_child"
