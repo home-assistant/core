@@ -36,7 +36,7 @@ async def test_form_user(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "create_entry"
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Mullvad VPN"
     assert result2["data"] == {}
     assert len(mock_setup_entry.mock_calls) == 1

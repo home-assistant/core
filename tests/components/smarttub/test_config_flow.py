@@ -18,7 +18,7 @@ async def test_form(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     with patch(
@@ -30,7 +30,7 @@ async def test_form(hass: HomeAssistant) -> None:
             {CONF_EMAIL: "test-email", CONF_PASSWORD: "test-password"},
         )
 
-        assert result["type"] == "create_entry"
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == "test-email"
         assert result["data"] == {
             CONF_EMAIL: "test-email",
@@ -53,7 +53,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, smarttub_api) -> None:
         {CONF_EMAIL: "test-email", CONF_PASSWORD: "test-password"},
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_auth"}
 
 

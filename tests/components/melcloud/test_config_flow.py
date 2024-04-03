@@ -52,7 +52,7 @@ async def test_form(hass: HomeAssistant, mock_login, mock_get_devices) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
     with patch(
@@ -64,7 +64,7 @@ async def test_form(hass: HomeAssistant, mock_login, mock_get_devices) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "create_entry"
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "test-email@test-domain.com"
     assert result2["data"] == {
         "username": "test-email@test-domain.com",
@@ -90,7 +90,7 @@ async def test_form_errors(
     )
 
     assert len(mock_login.mock_calls) == 1
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == reason
 
 
@@ -114,7 +114,7 @@ async def test_form_response_errors(
         data={"username": "test-email@test-domain.com", "password": "test-password"},
     )
 
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == message
 
 
@@ -139,7 +139,7 @@ async def test_token_refresh(hass: HomeAssistant, mock_login, mock_get_devices) 
             },
         )
 
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     await hass.async_block_till_done()
     assert len(mock_setup_entry.mock_calls) == 0

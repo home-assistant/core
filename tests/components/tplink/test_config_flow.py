@@ -55,13 +55,13 @@ async def test_discovery(hass: HomeAssistant) -> None:
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
         await hass.async_block_till_done()
-        assert result["type"] == "form"
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
         assert not result["errors"]
 
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         await hass.async_block_till_done()
-        assert result2["type"] == "form"
+        assert result2["type"] is FlowResultType.FORM
         assert result2["step_id"] == "pick_device"
         assert not result2["errors"]
 
@@ -69,13 +69,13 @@ async def test_discovery(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-        assert result["type"] == "form"
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
         assert not result["errors"]
 
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         await hass.async_block_till_done()
-        assert result2["type"] == "form"
+        assert result2["type"] is FlowResultType.FORM
         assert result2["step_id"] == "pick_device"
         assert not result2["errors"]
 
@@ -92,7 +92,7 @@ async def test_discovery(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result3["type"] == "create_entry"
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == DEFAULT_ENTRY_TITLE
     assert result3["data"] == CREATE_ENTRY_DATA_LEGACY
     mock_setup.assert_called_once()
@@ -132,7 +132,7 @@ async def test_discovery_auth(
         },
     )
     await hass.async_block_till_done()
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "discovery_auth_confirm"
     assert not result["errors"]
 
@@ -184,7 +184,7 @@ async def test_discovery_auth_errors(
         },
     )
     await hass.async_block_till_done()
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "discovery_auth_confirm"
     assert not result["errors"]
 
@@ -235,7 +235,7 @@ async def test_discovery_new_credentials(
         },
     )
     await hass.async_block_till_done()
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "discovery_auth_confirm"
     assert not result["errors"]
 
@@ -287,7 +287,7 @@ async def test_discovery_new_credentials_invalid(
         },
     )
     await hass.async_block_till_done()
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "discovery_auth_confirm"
     assert not result["errors"]
 

@@ -75,7 +75,7 @@ async def test_full_flow(
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert len(mock_setup.mock_calls) == 1
 
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TITLE
     assert "result" in result
     assert result["result"].unique_id == "UC_x5XG1OV2P6uZZ5FSM9Ttw"
@@ -300,7 +300,7 @@ async def test_reauth(
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == abort_reason
     assert result["description_placeholders"] == placeholders
     assert len(mock_setup.mock_calls) == calls
