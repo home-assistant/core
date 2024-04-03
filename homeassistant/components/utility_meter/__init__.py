@@ -150,7 +150,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     DOMAIN,
                     {meter: {CONF_METER: meter}},
                     config,
-                )
+                ),
+                eager_start=True,
             )
         else:
             # create tariff selection
@@ -161,7 +162,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     DOMAIN,
                     {CONF_METER: meter, CONF_TARIFFS: conf[CONF_TARIFFS]},
                     config,
-                )
+                ),
+                eager_start=True,
             )
 
             hass.data[DATA_UTILITY][meter][CONF_TARIFF_ENTITY] = (
@@ -180,7 +182,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             hass.async_create_task(
                 discovery.async_load_platform(
                     hass, SENSOR_DOMAIN, DOMAIN, tariff_confs, config
-                )
+                ),
+                eager_start=True,
             )
 
     return True

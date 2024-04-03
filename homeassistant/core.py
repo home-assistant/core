@@ -50,7 +50,7 @@ from typing_extensions import TypeVar
 import voluptuous as vol
 import yarl
 
-from . import block_async_io, util
+from . import util
 from .const import (
     ATTR_DOMAIN,
     ATTR_FRIENDLY_NAME,
@@ -130,7 +130,6 @@ STOP_STAGE_SHUTDOWN_TIMEOUT = 100
 FINAL_WRITE_STAGE_SHUTDOWN_TIMEOUT = 60
 CLOSE_STAGE_SHUTDOWN_TIMEOUT = 30
 
-block_async_io.enable()
 
 _T = TypeVar("_T")
 _R = TypeVar("_R")
@@ -441,8 +440,7 @@ class HomeAssistant:
         """Set the current state."""
         self.state = state
         for prop in ("is_running", "is_stopping"):
-            with suppress(AttributeError):
-                delattr(self, prop)
+            self.__dict__.pop(prop, None)
 
     def start(self) -> int:
         """Start Home Assistant.
@@ -774,8 +772,11 @@ class HomeAssistant:
     ) -> asyncio.Future[_T]:
         """Add an executor job from within the event loop."""
         task = self.loop.run_in_executor(None, target, *args)
-        self._tasks.add(task)
-        task.add_done_callback(self._tasks.remove)
+
+        tracked = asyncio.current_task() in self._tasks
+        task_bucket = self._tasks if tracked else self._background_tasks
+        task_bucket.add(task)
+        task.add_done_callback(task_bucket.remove)
 
         return task
 
@@ -783,11 +784,11 @@ class HomeAssistant:
     def async_add_import_executor_job(
         self, target: Callable[[*_Ts], _T], *args: *_Ts
     ) -> asyncio.Future[_T]:
-        """Add an import executor job from within the event loop."""
-        task = self.loop.run_in_executor(self.import_executor, target, *args)
-        self._tasks.add(task)
-        task.add_done_callback(self._tasks.remove)
-        return task
+        """Add an import executor job from within the event loop.
+
+        The future returned from this method must be awaited in the event loop.
+        """
+        return self.loop.run_in_executor(self.import_executor, target, *args)
 
     @overload
     @callback
@@ -1101,10 +1102,8 @@ class HomeAssistant:
                 _LOGGER.exception(
                     "Task %s could not be canceled during final shutdown stage", task
                 )
-            except Exception as exc:  # pylint: disable=broad-except
-                _LOGGER.exception(
-                    "Task %s error during final shutdown stage: %s", task, exc
-                )
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Task %s error during final shutdown stage", task)
 
         # Prevent run_callback_threadsafe from scheduling any additional
         # callbacks in the event loop as callbacks created on the futures
@@ -2690,9 +2689,10 @@ class Config:
         for allowed_path in self.allowlist_external_dirs:
             try:
                 thepath.relative_to(allowed_path)
-                return True
             except ValueError:
                 pass
+            else:
+                return True
 
         return False
 

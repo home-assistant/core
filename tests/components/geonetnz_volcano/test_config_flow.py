@@ -3,7 +3,6 @@
 from datetime import timedelta
 from unittest.mock import patch
 
-from homeassistant import data_entry_flow
 from homeassistant.components.geonetnz_volcano import config_flow
 from homeassistant.const import (
     CONF_LATITUDE,
@@ -13,6 +12,7 @@ from homeassistant.const import (
     CONF_UNIT_SYSTEM,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 
 async def test_duplicate_error(hass: HomeAssistant, config_entry) -> None:
@@ -34,7 +34,7 @@ async def test_show_form(hass: HomeAssistant) -> None:
 
     result = await flow.async_step_user(user_input=None)
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
 
@@ -61,7 +61,7 @@ async def test_step_import(hass: HomeAssistant) -> None:
         ),
     ):
         result = await flow.async_step_import(import_config=conf)
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "-41.2, 174.7"
     assert result["data"] == {
         CONF_LATITUDE: -41.2,
@@ -91,7 +91,7 @@ async def test_step_user(hass: HomeAssistant) -> None:
         ),
     ):
         result = await flow.async_step_user(user_input=conf)
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "-41.2, 174.7"
     assert result["data"] == {
         CONF_LATITUDE: -41.2,

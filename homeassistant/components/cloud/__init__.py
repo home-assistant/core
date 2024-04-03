@@ -27,7 +27,6 @@ from homeassistant.helpers import config_validation as cv, entityfilter
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import (
-    SignalType,
     async_dispatcher_connect,
     async_dispatcher_send,
 )
@@ -35,6 +34,7 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
+from homeassistant.util.signal_type import SignalType
 
 from . import account_link, http_api
 from .client import CloudClient
@@ -262,7 +262,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """Shutdown event."""
         await cloud.stop()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _shutdown)
+    hass.bus.async_listen_once(
+        EVENT_HOMEASSISTANT_STOP, _shutdown, run_immediately=True
+    )
 
     _remote_handle_prefs_updated(cloud)
 
@@ -343,7 +345,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             DOMAIN,
             {"platform_loaded": tts_platform_loaded},
             config,
-        )
+        ),
+        eager_start=True,
     )
 
     async_call_later(

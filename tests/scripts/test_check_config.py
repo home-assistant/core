@@ -6,7 +6,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.config import YAML_CONFIG_FILE
-import homeassistant.scripts.check_config as check_config
+from homeassistant.scripts import check_config
 
 from tests.common import get_test_config_dir
 

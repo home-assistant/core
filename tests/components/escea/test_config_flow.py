@@ -60,12 +60,12 @@ async def test_not_found(
         )
 
         # Confirmation form
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
 
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_devices_found"
     assert discovery_service.return_value.close.call_count == 1
 
@@ -95,12 +95,12 @@ async def test_found(
         )
 
         # Confirmation form
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
 
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert mock_setup.call_count == 1
 
 
@@ -117,6 +117,6 @@ async def test_single_instance_allowed(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
     assert discovery_service.call_count == 0

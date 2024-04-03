@@ -1,4 +1,4 @@
-"""Coordinator for imag integration."""
+"""Coordinator for imap integration."""
 
 from __future__ import annotations
 
@@ -254,6 +254,7 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int | None]):
                 initial = False
             self._last_message_id = message_id
             data = {
+                "entry_id": self.config_entry.entry_id,
                 "server": self.config_entry.data[CONF_SERVER],
                 "username": self.config_entry.data[CONF_USERNAME],
                 "search": self.config_entry.data[CONF_SEARCH],
@@ -264,6 +265,7 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int | None]):
                 "sender": message.sender,
                 "subject": message.subject,
                 "headers": message.headers,
+                "uid": last_message_uid,
             }
             if self.custom_event_template is not None:
                 try:
@@ -397,8 +399,6 @@ class ImapPollingDataUpdateCoordinator(ImapDataUpdateCoordinator):
         """Update the number of unread emails."""
         try:
             messages = await self._async_fetch_number_of_messages()
-            self.auth_errors = 0
-            return messages
         except (
             AioImapException,
             UpdateFailed,
@@ -424,6 +424,9 @@ class ImapPollingDataUpdateCoordinator(ImapDataUpdateCoordinator):
                 self.config_entry.async_start_reauth(self.hass)
             self.async_set_update_error(ex)
             raise ConfigEntryAuthFailed from ex
+
+        self.auth_errors = 0
+        return messages
 
 
 class ImapPushDataUpdateCoordinator(ImapDataUpdateCoordinator):

@@ -39,10 +39,10 @@ class RymProDataUpdateCoordinator(DataUpdateCoordinator[dict[int, dict]]):
                 meter["consumption_forecast"] = await self.rympro.consumption_forecast(
                     meter_id
                 )
-            return meters
         except UnauthorizedError as error:
             assert self.config_entry
             await self.hass.config_entries.async_reload(self.config_entry.entry_id)
             raise UpdateFailed(error) from error
         except (CannotConnectError, OperationError) as error:
             raise UpdateFailed(error) from error
+        return meters

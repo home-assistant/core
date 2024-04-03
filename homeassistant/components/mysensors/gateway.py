@@ -71,9 +71,9 @@ def is_socket_address(value: str) -> str:
     """Validate that value is a valid address."""
     try:
         socket.getaddrinfo(value, None)
-        return value
     except OSError as err:
         raise vol.Invalid("Device is not a valid domain name or ip address") from err
+    return value
 
 
 async def try_connect(

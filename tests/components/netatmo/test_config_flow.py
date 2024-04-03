@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 from pyatmo.const import ALL_SCOPES
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components import zeroconf
 from homeassistant.components.netatmo import config_flow
 from homeassistant.components.netatmo.const import (
@@ -16,6 +16,7 @@ from homeassistant.components.netatmo.const import (
     OAUTH2_TOKEN,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from .conftest import CLIENT_ID
@@ -37,7 +38,7 @@ async def test_abort_if_existing_entry(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         "netatmo", context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
 
     result = await hass.config_entries.flow.async_init(
@@ -53,7 +54,7 @@ async def test_abort_if_existing_entry(hass: HomeAssistant) -> None:
             type="mock_type",
         ),
     )
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -140,28 +141,28 @@ async def test_option_flow(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "public_weather_areas"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input={CONF_NEW_AREA: "Home"}
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "public_weather"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input=valid_option
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "public_weather_areas"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input={}
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     for k, v in expected_result.items():
         assert config_entry.options[CONF_WEATHER_AREAS]["Home"][k] == v
 
@@ -198,28 +199,28 @@ async def test_option_flow_wrong_coordinates(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "public_weather_areas"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input={CONF_NEW_AREA: "Home"}
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "public_weather"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input=valid_option
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "public_weather_areas"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input={}
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     for k, v in expected_result.items():
         assert config_entry.options[CONF_WEATHER_AREAS]["Home"][k] == v
 
@@ -282,7 +283,7 @@ async def test_reauth(
     result = await hass.config_entries.flow.async_init(
         "netatmo", context={"source": config_entries.SOURCE_REAUTH}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
     # Confirm reauth flow
@@ -319,7 +320,7 @@ async def test_reauth(
 
     new_entry2 = hass.config_entries.async_entries(DOMAIN)[0]
 
-    assert result3["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result3["type"] is FlowResultType.ABORT
     assert result3["reason"] == "reauth_successful"
     assert new_entry2.state == config_entries.ConfigEntryState.LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
