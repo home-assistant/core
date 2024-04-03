@@ -84,6 +84,17 @@ async def test_next_start_sensor(
     assert state is not None
     assert state.state == result
 
+    values = mower_list_to_dictionary_dataclass(
+        load_json_value_fixture("mower.json", DOMAIN)
+    )
+    values[TEST_MOWER_ID].planner.next_start_timestamp = 0
+    mock_automower_client.get_status.return_value = values
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.test_mower_1_next_start")
+    assert state.state == "unknown"
+
 
 @pytest.mark.parametrize(
     ("sensor_to_test"),
