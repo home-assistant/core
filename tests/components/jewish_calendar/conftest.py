@@ -1,4 +1,5 @@
 """Common fixtures for the jewish_calendar tests."""
+
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 

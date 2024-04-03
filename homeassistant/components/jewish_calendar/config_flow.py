@@ -1,4 +1,5 @@
 """Config flow for Jewish calendar integration."""
+
 from __future__ import annotations
 
 import logging
@@ -7,7 +8,12 @@ import zoneinfo
 
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import (
     CONF_ELEVATION,
     CONF_LANGUAGE,
@@ -16,7 +22,6 @@ from homeassistant.const import (
     CONF_TIME_ZONE,
 )
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.selector import (
     BooleanSelector,
     LocationSelector,
@@ -57,7 +62,7 @@ class JewishCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors = {}
 
@@ -115,7 +120,9 @@ class JewishCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(self, import_config: ConfigType | None) -> FlowResult:
+    async def async_step_import(
+        self, import_config: ConfigType | None
+    ) -> ConfigFlowResult:
         """Import a config entry from configuration.yaml."""
         return await self.async_step_user(import_config)
 
@@ -129,7 +136,7 @@ class JewishCalendarOptionsFlowHandler(OptionsFlow):
 
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage the Jewish Calendar options."""
         if user_input is not None:
             return self.async_create_entry(data=user_input)
