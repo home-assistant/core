@@ -42,8 +42,6 @@ from .entity import (
 )
 from .models import TeslemetryEnergyData, TeslemetryVehicleData
 
-PARALLEL_UPDATES = 0
-
 CHARGE_STATES = {
     "Starting": "starting",
     "Charging": "charging",
