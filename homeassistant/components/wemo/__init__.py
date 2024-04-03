@@ -212,7 +212,8 @@ class WemoDispatcher:
             hass.async_create_task(
                 hass.config_entries.async_forward_entry_setups(
                     self._config_entry, platforms_to_load
-                )
+                ),
+                eager_start=True,
             )
 
         self._added_serial_numbers.add(wemo.serial_number)
