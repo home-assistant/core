@@ -5,9 +5,6 @@ from typing import Any
 
 from qbittorrent.client import Client
 
-from typing import Any
-from datetime import datetime, timezone
-
 
 def setup_client(url: str, username: str, password: str, verify_ssl: bool) -> Client:
     """Create a qBittorrent client."""
