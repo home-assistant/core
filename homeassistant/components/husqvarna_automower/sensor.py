@@ -6,6 +6,7 @@ from datetime import datetime
 import logging
 
 from aioautomower.model import MowerAttributes, MowerModes, RestrictedReasons
+from aioautomower.utils import convert_timestamp_to_datetime_utc
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -298,9 +299,9 @@ SENSOR_TYPES: tuple[AutomowerSensorEntityDescription, ...] = (
         key="next_start_timestamp",
         translation_key="next_start_timestamp",
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda data: None
-        if data.planner.next_start_datetime is None
-        else dt_util.as_local(data.planner.next_start_datetime),
+        value_fn=lambda data: convert_timestamp_to_datetime_utc(
+            data.planner.next_start_timestamp, dt_util.DEFAULT_TIME_ZONE
+        ),
     ),
     AutomowerSensorEntityDescription(
         key="error",
