@@ -84,7 +84,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         if not coordinator.last_update_success:
             return
 
-        hass.async_create_task(async_update_alerts())
+        hass.async_create_task(async_update_alerts(), eager_start=True)
 
     coordinator = AlertUpdateCoordinator(hass)
     coordinator.async_add_listener(async_schedule_update_alerts)

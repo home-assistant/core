@@ -50,7 +50,7 @@ from typing_extensions import TypeVar
 import voluptuous as vol
 import yarl
 
-from . import block_async_io, util
+from . import util
 from .const import (
     ATTR_DOMAIN,
     ATTR_FRIENDLY_NAME,
@@ -130,7 +130,6 @@ STOP_STAGE_SHUTDOWN_TIMEOUT = 100
 FINAL_WRITE_STAGE_SHUTDOWN_TIMEOUT = 60
 CLOSE_STAGE_SHUTDOWN_TIMEOUT = 30
 
-block_async_io.enable()
 
 _T = TypeVar("_T")
 _R = TypeVar("_R")
@@ -441,8 +440,7 @@ class HomeAssistant:
         """Set the current state."""
         self.state = state
         for prop in ("is_running", "is_stopping"):
-            with suppress(AttributeError):
-                delattr(self, prop)
+            self.__dict__.pop(prop, None)
 
     def start(self) -> int:
         """Start Home Assistant.
