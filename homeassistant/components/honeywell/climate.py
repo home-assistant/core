@@ -489,6 +489,9 @@ class HoneywellUSThermostat(ClimateEntity):
             is_persistent=True,
             severity=ir.IssueSeverity.WARNING,
             translation_key="service_deprecation",
+            translation_placeholders={
+                "name": self.name if isinstance(self.name, str) else "",
+            },
         )
         try:
             await self._device.set_system_mode("emheat")
@@ -509,6 +512,9 @@ class HoneywellUSThermostat(ClimateEntity):
             is_persistent=True,
             severity=ir.IssueSeverity.WARNING,
             translation_key="service_deprecation",
+            translation_placeholders={
+                "name": self.name if isinstance(self.name, str) else "",
+            },
         )
 
         try:
