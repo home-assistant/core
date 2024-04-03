@@ -14,6 +14,7 @@ from aiohttp_session import get_session
 import jwt
 import pytest
 import yarl
+from yarl import URL
 
 from homeassistant.auth.const import GROUP_ID_READ_ONLY
 from homeassistant.auth.models import RefreshToken, User
@@ -853,6 +854,7 @@ async def _test_strict_connection_non_cloud_enabled_external_unauthenticated_req
     assert session._temp_sessions == {}
     set_mock_ip(LOCALHOST_ADDRESSES[0])
     session_id = await (await client.get("/test/cookie?token=temp")).text()
+    assert client.session.cookie_jar.filter_cookies(URL("http://127.0.0.1"))
     assert session_id in session._temp_sessions
     for remote_addr in EXTERNAL_ADDRESSES:
         _LOGGER.info("Testing %s", remote_addr)
