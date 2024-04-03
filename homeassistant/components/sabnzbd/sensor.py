@@ -39,6 +39,8 @@ SENSOR_TYPES: tuple[SabnzbdSensorEntityDescription, ...] = (
         translation_key="speed",
         device_class=SensorDeviceClass.DATA_RATE,
         native_unit_of_measurement=UnitOfDataRate.KILOBYTES_PER_SECOND,
+        suggested_unit_of_measurement=UnitOfDataRate.MEGABYTES_PER_SECOND,
+        suggested_display_precision=1,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SabnzbdSensorEntityDescription(
@@ -73,6 +75,7 @@ SENSOR_TYPES: tuple[SabnzbdSensorEntityDescription, ...] = (
         key="noofslots_total",
         translation_key="queue_count",
         state_class=SensorStateClass.TOTAL,
+        suggested_display_precision=2,
     ),
     SabnzbdSensorEntityDescription(
         key="day_size",
@@ -81,6 +84,7 @@ SENSOR_TYPES: tuple[SabnzbdSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.DATA_SIZE,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=2,
     ),
     SabnzbdSensorEntityDescription(
         key="week_size",
@@ -89,6 +93,7 @@ SENSOR_TYPES: tuple[SabnzbdSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.DATA_SIZE,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=2,
     ),
     SabnzbdSensorEntityDescription(
         key="month_size",
@@ -97,6 +102,7 @@ SENSOR_TYPES: tuple[SabnzbdSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.DATA_SIZE,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=2,
     ),
     SabnzbdSensorEntityDescription(
         key="total_size",
@@ -104,6 +110,7 @@ SENSOR_TYPES: tuple[SabnzbdSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfInformation.GIGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=2,
     ),
 )
 
