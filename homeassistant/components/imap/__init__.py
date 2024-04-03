@@ -38,6 +38,9 @@ CONF_TARGET_FOLDER = "target_folder"
 
 _LOGGER = logging.getLogger(__name__)
 
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
 _SERVICE_UID_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_ENTRY): cv.string,
