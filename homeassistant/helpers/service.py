@@ -554,8 +554,10 @@ def async_extract_referenced_entity_ids(  # noqa: C901
     selected.referenced_areas.update(selector.area_ids)
     if selected.referenced_areas:
         for area_id in selected.referenced_areas:
-            for device_entry in dev_reg.devices.get_devices_for_area_id(area_id):
-                selected.referenced_devices.add(device_entry.id)
+            selected.referenced_devices.update(
+                device_entry.id
+                for device_entry in dev_reg.devices.get_devices_for_area_id(area_id)
+            )
 
     if not selected.referenced_areas and not selected.referenced_devices:
         return selected
