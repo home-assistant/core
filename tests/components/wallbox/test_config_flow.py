@@ -5,7 +5,7 @@ import json
 
 import requests_mock
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components.wallbox import config_flow
 from homeassistant.components.wallbox.const import (
     CHARGER_ADDED_ENERGY_KEY,
@@ -18,6 +18,7 @@ from homeassistant.components.wallbox.const import (
     DOMAIN,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from . import (
     authorisation_response,
@@ -47,7 +48,7 @@ async def test_show_set_form(hass: HomeAssistant) -> None:
     flow.hass = hass
     result = await flow.async_step_user(user_input=None)
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
 

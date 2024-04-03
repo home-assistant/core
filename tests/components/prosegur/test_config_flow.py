@@ -153,7 +153,7 @@ async def test_reauth_flow(hass: HomeAssistant, mock_list_contracts) -> None:
         data=entry.data,
     )
     assert result["step_id"] == "reauth_confirm"
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     with (
@@ -175,7 +175,7 @@ async def test_reauth_flow(hass: HomeAssistant, mock_list_contracts) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.ABORT
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
     assert entry.data == {
         "country": "PT",
@@ -231,5 +231,5 @@ async def test_reauth_flow_error(hass: HomeAssistant, exception, base_error) -> 
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"]["base"] == base_error

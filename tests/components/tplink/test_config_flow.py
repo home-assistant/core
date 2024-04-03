@@ -102,7 +102,7 @@ async def test_discovery(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert not result["errors"]
 
@@ -110,7 +110,7 @@ async def test_discovery(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.ABORT
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "no_devices_found"
 
 
@@ -661,7 +661,7 @@ async def test_discovered_by_discovery_and_dhcp(hass: HomeAssistant) -> None:
             ),
         )
         await hass.async_block_till_done()
-    assert result3["type"] == FlowResultType.ABORT
+    assert result3["type"] is FlowResultType.ABORT
     assert result3["reason"] == "cannot_connect"
 
 
@@ -1104,7 +1104,7 @@ async def test_pick_device_errors(
                 CONF_PASSWORD: "fake_password",
             },
         )
-        assert result4["type"] == FlowResultType.CREATE_ENTRY
+        assert result4["type"] is FlowResultType.CREATE_ENTRY
         assert result4["context"]["unique_id"] == MAC_ADDRESS
 
 

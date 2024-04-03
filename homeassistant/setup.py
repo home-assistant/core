@@ -504,6 +504,12 @@ async def async_prepare_setup_platform(
             log_error(f"Unable to import the component ({exc}).")
             return None
 
+    if not integration.platforms_exists((domain,)):
+        log_error(
+            f"Platform not found (No module named '{integration.pkg_path}.{domain}')"
+        )
+        return None
+
     try:
         platform = await integration.async_get_platform(domain)
     except ImportError as exc:
