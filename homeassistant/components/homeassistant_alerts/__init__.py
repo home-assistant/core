@@ -23,6 +23,7 @@ from homeassistant.helpers.issue_registry import (
 from homeassistant.helpers.start import async_at_start
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.setup import EventComponentLoaded
 
 COMPONENT_LOADED_COOLDOWN = 30
 DOMAIN = "homeassistant_alerts"
@@ -99,7 +100,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         )
 
         @callback
-        def _component_loaded(_: Event) -> None:
+        def _component_loaded(_: Event[EventComponentLoaded]) -> None:
             refresh_debouncer.async_schedule_call()
 
         await coordinator.async_refresh()
