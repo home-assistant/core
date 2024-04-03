@@ -835,6 +835,7 @@ class MQTT:
         timestamp = dt_util.utcnow()
 
         subscriptions = self._matching_subscriptions(topic)
+        msg_cache_by_subscription_topic: dict[str, ReceiveMessage] = {}
 
         for subscription in subscriptions:
             if msg.retain:
@@ -858,17 +859,24 @@ class MQTT:
                         subscription.job,
                     )
                     continue
-            self.hass.async_run_hass_job(
-                subscription.job,
-                ReceiveMessage(
+            subscription_topic = subscription.topic
+            if subscription_topic not in msg_cache_by_subscription_topic:
+                # Only make one copy of the message
+                # per topic so we avoid storing a separate
+                # dataclass in memory for each subscriber
+                # to the same topic for retained messages
+                receive_msg = ReceiveMessage(
                     topic,
                     payload,
                     msg.qos,
                     msg.retain,
-                    subscription.topic,
+                    subscription_topic,
                     timestamp,
-                ),
-            )
+                )
+                msg_cache_by_subscription_topic[subscription_topic] = receive_msg
+            else:
+                receive_msg = msg_cache_by_subscription_topic[subscription_topic]
+            self.hass.async_run_hass_job(subscription.job, receive_msg)
         self._mqtt_data.state_write_requests.process_write_state_requests(msg)
 
     def _mqtt_on_callback(
