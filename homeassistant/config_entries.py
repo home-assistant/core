@@ -13,7 +13,6 @@ from collections.abc import (
     Mapping,
     ValuesView,
 )
-import contextlib
 from contextvars import ContextVar
 from copy import deepcopy
 from enum import Enum, StrEnum
@@ -463,8 +462,7 @@ class ConfigEntry:
 
     def clear_cache(self) -> None:
         """Clear cached properties."""
-        with contextlib.suppress(AttributeError):
-            delattr(self, "as_json_fragment")
+        self.__dict__.pop("as_json_fragment", None)
 
     @cached_property
     def as_json_fragment(self) -> json_fragment:
