@@ -1,0 +1,13 @@
+pushgateway:
+  fields:
+    gateway:
+      required: true
+      selector:
+        text:
+    job:
+      required: true
+      selector:
+        text:
+    extra_labels:
+      selector:
+        object:

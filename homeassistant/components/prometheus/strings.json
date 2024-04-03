@@ -1,0 +1,22 @@
+{
+  "services": {
+    "pushgateway": {
+      "name": "Push Gateway",
+      "description": "Send metrics for one pushgaway",
+      "fields": {
+        "gateway": {
+          "name": "Gateway",
+          "description": "0.0.0.0:9091"
+        },
+        "job": {
+          "name": "Job",
+          "description": "home-assistant"
+        },
+        "extra_labels": {
+          "name": "Extra Labels",
+          "description": "Extra labels for metrics."
+        }
+      }
+    }
+  }
+}

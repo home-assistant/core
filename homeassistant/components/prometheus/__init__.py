@@ -142,6 +142,20 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         if entity_filter(state.entity_id):
             metrics.handle_state(state)
 
+    def pushgateway(call: hacore.ServiceCall) -> None:
+        gateway = call.data.get("gateway", "localhost:9091")
+        job = call.data.get("job", "homeassistant")
+        extra_labels = call.data.get("extra_labels", {})
+
+        prometheus_client.push_to_gateway(
+            gateway,
+            job=job,
+            registry=prometheus_client.REGISTRY,
+            grouping_key=extra_labels,
+        )
+
+    hass.services.register(DOMAIN, "pushgateway", pushgateway)
+
     return True
 
 
