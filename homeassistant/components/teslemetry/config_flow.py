@@ -40,7 +40,7 @@ class TeslemetryConfigFlow(ConfigFlow, domain=DOMAIN):
             access_token=user_input[CONF_ACCESS_TOKEN],
         )
         try:
-            metadata = await teslemetry.metadata()
+            await teslemetry.test()
         except InvalidToken:
             return {CONF_ACCESS_TOKEN: "invalid_access_token"}
         except SubscriptionRequired:
@@ -50,8 +50,6 @@ class TeslemetryConfigFlow(ConfigFlow, domain=DOMAIN):
         except TeslaFleetError as e:
             LOGGER.error(str(e))
             return {"base": "unknown"}
-        self._entry = await self.async_set_unique_id(metadata.get("uid"))
-
         return {}
 
     async def async_step_user(
@@ -77,26 +75,26 @@ class TeslemetryConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle reauth on failure."""
-        return await self.async_step_reauth_confirm(entry_data)
+        self._entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+        return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
         self, user_input: Mapping[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle users reauth credentials."""
 
+        assert self._entry
         errors: dict[str, str] | None = None
 
         if user_input and not (errors := await self.async_auth(user_input)):
-            if self._entry:
-                self.hass.config_entries.async_update_entry(
-                    self._entry,
-                    data=user_input,
-                )
-                self.hass.async_create_task(
-                    self.hass.config_entries.async_reload(self._entry.entry_id)
-                )
-                return self.async_abort(reason="reauth_successful")
-            return self.async_create_entry(title="Teslemetry", data=user_input)
+            self.hass.config_entries.async_update_entry(
+                self._entry,
+                data=user_input,
+            )
+            self.hass.async_create_task(
+                self.hass.config_entries.async_reload(self._entry.entry_id)
+            )
+            return self.async_abort(reason="reauth_successful")
 
         return self.async_show_form(
             step_id="reauth_confirm",
