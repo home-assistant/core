@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from datetime import date
-from typing import Any
 
 from nibe.coil import Coil
 from nibe.coil_groups import (
@@ -15,10 +14,6 @@ from nibe.coil_groups import (
 from nibe.exceptions import CoilNotFoundException
 
 from homeassistant.components.climate import (
-    ATTR_HVAC_MODE,
-    ATTR_TARGET_TEMP_HIGH,
-    ATTR_TARGET_TEMP_LOW,
-    ATTR_TEMPERATURE,
     ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
@@ -196,32 +191,42 @@ class NibeClimateEntity(CoordinatorEntity[Coordinator], ClimateEntity):
 
         return False
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set target temperatures."""
-        coordinator = self.coordinator
-        hvac_mode = kwargs.get(ATTR_HVAC_MODE, self._attr_hvac_mode)
+        hvac_mode = hvac_mode or self._attr_hvac_mode
 
-        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is not None:
-            if hvac_mode == HVACMode.HEAT:
-                await coordinator.async_write_coil(
-                    self._coil_setpoint_heat, temperature
-                )
-            elif hvac_mode == HVACMode.COOL:
-                await coordinator.async_write_coil(
-                    self._coil_setpoint_cool, temperature
-                )
-            else:
-                raise ValueError(
-                    "'set_temperature' requires 'hvac_mode' when passing"
-                    " 'temperature' and 'hvac_mode' is not already set to"
-                    " 'heat' or 'cool'"
-                )
+        if hvac_mode == HVACMode.HEAT:
+            await self.coordinator.async_write_coil(
+                self._coil_setpoint_heat, temperature
+            )
+        elif hvac_mode == HVACMode.COOL:
+            await self.coordinator.async_write_coil(
+                self._coil_setpoint_cool, temperature
+            )
+        else:
+            raise ValueError(
+                "'set_temperature' requires 'hvac_mode' when passing"
+                " 'temperature' and 'hvac_mode' is not already set to"
+                " 'heat' or 'cool'"
+            )
 
-        if (temperature := kwargs.get(ATTR_TARGET_TEMP_LOW)) is not None:
-            await coordinator.async_write_coil(self._coil_setpoint_heat, temperature)
-
-        if (temperature := kwargs.get(ATTR_TARGET_TEMP_HIGH)) is not None:
-            await coordinator.async_write_coil(self._coil_setpoint_cool, temperature)
+    async def async_set_target_temperature_range(
+        self,
+        temperature_high: float,
+        temperature_low: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
+        """Set new target temperature range."""
+        await self.coordinator.async_write_coil(
+            self._coil_setpoint_heat, temperature_low
+        )
+        await self.coordinator.async_write_coil(
+            self._coil_setpoint_cool, temperature_high
+        )
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""

@@ -10,9 +10,6 @@ from typing import Any
 from pysmartthings import Attribute, Capability
 
 from homeassistant.components.climate import (
-    ATTR_HVAC_MODE,
-    ATTR_TARGET_TEMP_HIGH,
-    ATTR_TARGET_TEMP_LOW,
     DOMAIN as CLIMATE_DOMAIN,
     SWING_BOTH,
     SWING_HORIZONTAL,
@@ -24,7 +21,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -202,38 +199,56 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateEntity):
         # the entity state ahead of receiving the confirming push updates
         self.async_schedule_update_ha_state(True)
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set new operation mode and target temperatures."""
         # Operation state
-        if operation_state := kwargs.get(ATTR_HVAC_MODE):
-            mode = STATE_TO_MODE[operation_state]
+        if hvac_mode is not None:
+            mode = STATE_TO_MODE[hvac_mode]
             await self._device.set_thermostat_mode(mode, set_status=True)
             await self.async_update()
 
         # Heat/cool setpoint
-        heating_setpoint = None
-        cooling_setpoint = None
         if self.hvac_mode == HVACMode.HEAT:
-            heating_setpoint = kwargs.get(ATTR_TEMPERATURE)
+            await self._device.set_heating_setpoint(
+                round(temperature, 3), set_status=True
+            )
         elif self.hvac_mode == HVACMode.COOL:
-            cooling_setpoint = kwargs.get(ATTR_TEMPERATURE)
-        else:
-            heating_setpoint = kwargs.get(ATTR_TARGET_TEMP_LOW)
-            cooling_setpoint = kwargs.get(ATTR_TARGET_TEMP_HIGH)
-        tasks = []
-        if heating_setpoint is not None:
-            tasks.append(
+            await self._device.set_cooling_setpoint(
+                round(temperature, 3), set_status=True
+            )
+
+        # State is set optimistically in the commands above, therefore update
+        # the entity state ahead of receiving the confirming push updates
+        self.async_schedule_update_ha_state(True)
+
+    async def async_set_target_temperature_range(
+        self,
+        temperature_high: float,
+        temperature_low: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
+        """Set new operation mode and range temperatures."""
+        # Operation state
+        if hvac_mode is not None:
+            mode = STATE_TO_MODE[hvac_mode]
+            await self._device.set_thermostat_mode(mode, set_status=True)
+            await self.async_update()
+
+        # Heat/cool setpoint
+        await asyncio.gather(
+            *[
                 self._device.set_heating_setpoint(
-                    round(heating_setpoint, 3), set_status=True
-                )
-            )
-        if cooling_setpoint is not None:
-            tasks.append(
+                    round(temperature_low, 3), set_status=True
+                ),
                 self._device.set_cooling_setpoint(
-                    round(cooling_setpoint, 3), set_status=True
-                )
-            )
-        await asyncio.gather(*tasks)
+                    round(temperature_high, 3), set_status=True
+                ),
+            ]
+        )
 
         # State is set optimistically in the commands above, therefore update
         # the entity state ahead of receiving the confirming push updates
@@ -400,21 +415,23 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
         # the entity state ahead of receiving the confirming push updates
         self.async_write_ha_state()
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set new target temperature."""
         tasks = []
         # operation mode
-        if operation_mode := kwargs.get(ATTR_HVAC_MODE):
-            if operation_mode == HVACMode.OFF:
+        if hvac_mode is not None:
+            if hvac_mode == HVACMode.OFF:
                 tasks.append(self._device.switch_off(set_status=True))
             else:
                 if not self._device.status.switch:
                     tasks.append(self._device.switch_on(set_status=True))
-                tasks.append(self.async_set_hvac_mode(operation_mode))
+                tasks.append(self.async_set_hvac_mode(hvac_mode))
         # temperature
-        tasks.append(
-            self._device.set_cooling_setpoint(kwargs[ATTR_TEMPERATURE], set_status=True)
-        )
+        tasks.append(self._device.set_cooling_setpoint(temperature, set_status=True))
         await asyncio.gather(*tasks)
         # State is set optimistically in the command above, therefore update
         # the entity state ahead of receiving the confirming push updates

@@ -9,14 +9,10 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 import functools
 from random import randint
-from typing import Any
 
 from zigpy.zcl.clusters.hvac import Fan as F, Thermostat as T
 
 from homeassistant.components.climate import (
-    ATTR_HVAC_MODE,
-    ATTR_TARGET_TEMP_HIGH,
-    ATTR_TARGET_TEMP_LOW,
     FAN_AUTO,
     FAN_ON,
     PRESET_AWAY,
@@ -30,12 +26,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_TEMPERATURE,
-    PRECISION_TENTHS,
-    Platform,
-    UnitOfTemperature,
-)
+from homeassistant.const import PRECISION_TENTHS, Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -432,46 +423,59 @@ class Thermostat(ZhaEntity, ClimateEntity):
         self._preset = preset_mode
         self.async_write_ha_state()
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set new target temperature."""
-        low_temp = kwargs.get(ATTR_TARGET_TEMP_LOW)
-        high_temp = kwargs.get(ATTR_TARGET_TEMP_HIGH)
-        temp = kwargs.get(ATTR_TEMPERATURE)
-        hvac_mode = kwargs.get(ATTR_HVAC_MODE)
 
         if hvac_mode is not None:
             await self.async_set_hvac_mode(hvac_mode)
 
         is_away = self.preset_mode == PRESET_AWAY
 
-        if self.hvac_mode == HVACMode.HEAT_COOL:
-            if low_temp is not None:
-                await self._thrm.async_set_heating_setpoint(
-                    temperature=int(low_temp * ZCL_TEMP),
-                    is_away=is_away,
-                )
-            if high_temp is not None:
-                await self._thrm.async_set_cooling_setpoint(
-                    temperature=int(high_temp * ZCL_TEMP),
-                    is_away=is_away,
-                )
-        elif temp is not None:
-            if self.hvac_mode == HVACMode.COOL:
-                await self._thrm.async_set_cooling_setpoint(
-                    temperature=int(temp * ZCL_TEMP),
-                    is_away=is_away,
-                )
-            elif self.hvac_mode == HVACMode.HEAT:
-                await self._thrm.async_set_heating_setpoint(
-                    temperature=int(temp * ZCL_TEMP),
-                    is_away=is_away,
-                )
-            else:
-                self.debug("Not setting temperature for '%s' mode", self.hvac_mode)
-                return
+        if self.hvac_mode == HVACMode.COOL:
+            await self._thrm.async_set_cooling_setpoint(
+                temperature=int(temperature * ZCL_TEMP),
+                is_away=is_away,
+            )
+        elif self.hvac_mode == HVACMode.HEAT:
+            await self._thrm.async_set_heating_setpoint(
+                temperature=int(temperature * ZCL_TEMP),
+                is_away=is_away,
+            )
         else:
-            self.debug("incorrect %s setting for '%s' mode", kwargs, self.hvac_mode)
+            self.debug("Not setting temperature for '%s' mode", self.hvac_mode)
             return
+
+        self.async_write_ha_state()
+
+    async def async_set_target_temperature_range(
+        self,
+        temperature_high: float,
+        temperature_low: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
+        """Set new target temperature range."""
+
+        if hvac_mode is not None:
+            await self.async_set_hvac_mode(hvac_mode)
+
+        is_away = self.preset_mode == PRESET_AWAY
+
+        if self.hvac_mode != HVACMode.HEAT_COOL:
+            self.debug("incorrect setting for '%s' mode", self.hvac_mode)
+            return
+
+        await self._thrm.async_set_heating_setpoint(
+            temperature=int(temperature_low * ZCL_TEMP),
+            is_away=is_away,
+        )
+        await self._thrm.async_set_cooling_setpoint(
+            temperature=int(temperature_high * ZCL_TEMP),
+            is_away=is_away,
+        )
 
         self.async_write_ha_state()
 

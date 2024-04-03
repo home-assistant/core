@@ -4,19 +4,17 @@ from __future__ import annotations
 
 from asyncio import sleep
 from functools import cached_property
-from typing import Any, cast
+from typing import cast
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 
 from homeassistant.components.climate import (
-    ATTR_TARGET_TEMP_HIGH,
-    ATTR_TARGET_TEMP_LOW,
     PRESET_NONE,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
 )
-from homeassistant.const import ATTR_TEMPERATURE, PRECISION_HALVES
+from homeassistant.const import PRECISION_HALVES
 
 from ..coordinator import OverkizDataUpdateCoordinator
 from ..executor import OverkizExecutor
@@ -357,42 +355,60 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
             self.executor.select_state(OverkizState.CORE_HEATING_TARGET_TEMPERATURE),
         )
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set new temperature."""
+        if self.is_using_derogated_temperature_fallback:
+            return await super().async_set_target_temperature(
+                temperature=temperature, hvac_mode=hvac_mode
+            )
+
+        if self.hvac_mode == HVACMode.HEAT:
+            await self.executor.async_execute_command(
+                OverkizCommand.SET_HEATING_TARGET_TEMPERATURE,
+                temperature,
+            )
+
+        elif self.hvac_mode == HVACMode.COOL:
+            await self.executor.async_execute_command(
+                OverkizCommand.SET_COOLING_TARGET_TEMPERATURE,
+                temperature,
+            )
+
+        await self.executor.async_execute_command(
+            OverkizCommand.SET_DEROGATION_ON_OFF_STATE,
+            OverkizCommandParam.ON,
+        )
+
+        await self.async_refresh_modes()
+
+    async def async_set_target_temperature_range(
+        self,
+        temperature_high: float,
+        temperature_low: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
+        """Set new target temperature range."""
 
         if self.is_using_derogated_temperature_fallback:
-            return await super().async_set_temperature(**kwargs)
+            return await super().async_set_target_temperature_range(
+                temperature_high=temperature_high,
+                temperature_low=temperature_low,
+                hvac_mode=hvac_mode,
+            )
 
-        target_temperature = kwargs.get(ATTR_TEMPERATURE)
-        target_temp_low = kwargs.get(ATTR_TARGET_TEMP_LOW)
-        target_temp_high = kwargs.get(ATTR_TARGET_TEMP_HIGH)
-        hvac_mode = self.hvac_mode
-
-        if hvac_mode == HVACMode.HEAT_COOL:
-            if target_temp_low is not None:
-                await self.executor.async_execute_command(
-                    OverkizCommand.SET_HEATING_TARGET_TEMPERATURE,
-                    target_temp_low,
-                )
-
-            if target_temp_high is not None:
-                await self.executor.async_execute_command(
-                    OverkizCommand.SET_COOLING_TARGET_TEMPERATURE,
-                    target_temp_high,
-                )
-
-        elif target_temperature is not None:
-            if hvac_mode == HVACMode.HEAT:
-                await self.executor.async_execute_command(
-                    OverkizCommand.SET_HEATING_TARGET_TEMPERATURE,
-                    target_temperature,
-                )
-
-            elif hvac_mode == HVACMode.COOL:
-                await self.executor.async_execute_command(
-                    OverkizCommand.SET_COOLING_TARGET_TEMPERATURE,
-                    target_temperature,
-                )
+        if self.hvac_mode == HVACMode.HEAT_COOL:
+            await self.executor.async_execute_command(
+                OverkizCommand.SET_HEATING_TARGET_TEMPERATURE,
+                temperature_low,
+            )
+            await self.executor.async_execute_command(
+                OverkizCommand.SET_COOLING_TARGET_TEMPERATURE,
+                temperature_high,
+            )
 
         await self.executor.async_execute_command(
             OverkizCommand.SET_DEROGATION_ON_OFF_STATE,

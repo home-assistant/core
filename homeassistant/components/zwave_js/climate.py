@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, cast
+from typing import cast
 
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import CommandClass
@@ -21,9 +21,6 @@ from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.value import Value as ZwaveValue
 
 from homeassistant.components.climate import (
-    ATTR_HVAC_MODE,
-    ATTR_TARGET_TEMP_HIGH,
-    ATTR_TARGET_TEMP_LOW,
     DEFAULT_MAX_TEMP,
     DEFAULT_MIN_TEMP,
     DOMAIN as CLIMATE_DOMAIN,
@@ -34,7 +31,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, UnitOfTemperature
+from homeassistant.const import PRECISION_TENTHS, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -466,32 +463,44 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
 
         await self._async_set_value(self._fan_mode, new_state)
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set new target temperature."""
-        hvac_mode: HVACMode | None = kwargs.get(ATTR_HVAC_MODE)
-
         if hvac_mode is not None:
             await self.async_set_hvac_mode(hvac_mode)
-        if len(self._current_mode_setpoint_enums) == 1:
-            setpoint: ZwaveValue = self._setpoint_value_or_raise(
-                self._current_mode_setpoint_enums[0]
-            )
-            target_temp: float | None = kwargs.get(ATTR_TEMPERATURE)
-            if target_temp is not None:
-                await self._async_set_value(setpoint, target_temp)
-        elif len(self._current_mode_setpoint_enums) == 2:
-            setpoint_low: ZwaveValue = self._setpoint_value_or_raise(
-                self._current_mode_setpoint_enums[0]
-            )
-            setpoint_high: ZwaveValue = self._setpoint_value_or_raise(
-                self._current_mode_setpoint_enums[1]
-            )
-            target_temp_low: float | None = kwargs.get(ATTR_TARGET_TEMP_LOW)
-            target_temp_high: float | None = kwargs.get(ATTR_TARGET_TEMP_HIGH)
-            if target_temp_low is not None:
-                await self._async_set_value(setpoint_low, target_temp_low)
-            if target_temp_high is not None:
-                await self._async_set_value(setpoint_high, target_temp_high)
+
+        if len(self._current_mode_setpoint_enums) != 1:
+            return
+
+        setpoint: ZwaveValue = self._setpoint_value_or_raise(
+            self._current_mode_setpoint_enums[0]
+        )
+        await self._async_set_value(setpoint, temperature)
+
+    async def async_set_target_temperature_range(
+        self,
+        temperature_high: float,
+        temperature_low: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
+        """Set new target temperature range."""
+        if hvac_mode is not None:
+            await self.async_set_hvac_mode(hvac_mode)
+
+        if len(self._current_mode_setpoint_enums) != 2:
+            return
+
+        setpoint_low: ZwaveValue = self._setpoint_value_or_raise(
+            self._current_mode_setpoint_enums[0]
+        )
+        setpoint_high: ZwaveValue = self._setpoint_value_or_raise(
+            self._current_mode_setpoint_enums[1]
+        )
+        await self._async_set_value(setpoint_low, temperature_low)
+        await self._async_set_value(setpoint_high, temperature_high)
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""

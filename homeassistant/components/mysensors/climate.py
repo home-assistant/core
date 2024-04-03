@@ -2,17 +2,13 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 from homeassistant.components.climate import (
-    ATTR_TARGET_TEMP_HIGH,
-    ATTR_TARGET_TEMP_LOW,
     ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, Platform, UnitOfTemperature
+from homeassistant.const import Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -158,37 +154,59 @@ class MySensorsHVAC(mysensors.device.MySensorsChildEntity, ClimateEntity):
         """List of available fan modes."""
         return FAN_LIST
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set new target temperature."""
         set_req = self.gateway.const.SetReq
-        temp = kwargs.get(ATTR_TEMPERATURE)
-        low = kwargs.get(ATTR_TARGET_TEMP_LOW)
-        high = kwargs.get(ATTR_TARGET_TEMP_HIGH)
         heat = self._values.get(set_req.V_HVAC_SETPOINT_HEAT)
         cool = self._values.get(set_req.V_HVAC_SETPOINT_COOL)
-        updates = []
-        if temp is not None:
-            if heat is not None:
-                # Set HEAT Target temperature
-                value_type = set_req.V_HVAC_SETPOINT_HEAT
-            elif cool is not None:
-                # Set COOL Target temperature
-                value_type = set_req.V_HVAC_SETPOINT_COOL
-            if heat is not None or cool is not None:
-                updates = [(value_type, temp)]
-        elif all(val is not None for val in (low, high, heat, cool)):
-            updates = [
-                (set_req.V_HVAC_SETPOINT_HEAT, low),
-                (set_req.V_HVAC_SETPOINT_COOL, high),
-            ]
-        for value_type, value in updates:
-            self.gateway.set_child_value(
-                self.node_id, self.child_id, value_type, value, ack=1
-            )
-            if self.assumed_state:
-                # Optimistically assume that device has changed state
-                self._values[value_type] = value
-                self.async_write_ha_state()
+        if heat is not None:
+            # Set HEAT Target temperature
+            value_type = set_req.V_HVAC_SETPOINT_HEAT
+        elif cool is not None:
+            # Set COOL Target temperature
+            value_type = set_req.V_HVAC_SETPOINT_COOL
+        else:
+            return
+
+        self.gateway.set_child_value(
+            self.node_id, self.child_id, value_type, temperature, ack=1
+        )
+        if self.assumed_state:
+            # Optimistically assume that device has changed state
+            self._values[value_type] = temperature
+            self.async_write_ha_state()
+
+    async def async_set_target_temperature_range(
+        self,
+        temperature_high: float,
+        temperature_low: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
+        """Set new target temperature range."""
+        set_req = self.gateway.const.SetReq
+        self.gateway.set_child_value(
+            self.node_id,
+            self.child_id,
+            set_req.V_HVAC_SETPOINT_HEAT,
+            temperature_low,
+            ack=1,
+        )
+        self.gateway.set_child_value(
+            self.node_id,
+            self.child_id,
+            set_req.V_HVAC_SETPOINT_COOL,
+            temperature_high,
+            ack=1,
+        )
+        if self.assumed_state:
+            # Optimistically assume that device has changed state
+            self._values[set_req.V_HVAC_SETPOINT_HEAT] = temperature_low
+            self._values[set_req.V_HVAC_SETPOINT_COOL] = temperature_high
+            self.async_write_ha_state()
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target temperature."""

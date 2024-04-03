@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 from nexia.const import (
     HOLD_PERMANENT,
     HOLD_RESUME_SCHEDULE,
@@ -24,15 +22,13 @@ import voluptuous as vol
 from homeassistant.components.climate import (
     ATTR_HUMIDITY,
     ATTR_HVAC_MODE,
-    ATTR_TARGET_TEMP_HIGH,
-    ATTR_TARGET_TEMP_LOW,
     ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
@@ -310,42 +306,53 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
 
         return NEXIA_TO_HA_HVAC_MODE_MAP[mode]
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set target temperature."""
-        new_heat_temp = kwargs.get(ATTR_TARGET_TEMP_LOW)
-        new_cool_temp = kwargs.get(ATTR_TARGET_TEMP_HIGH)
-        set_temp = kwargs.get(ATTR_TEMPERATURE)
+        await self._zone.set_heat_cool_temp(
+            set_temperature=temperature,
+        )
+        self._signal_zone_update()
 
+    async def async_set_target_temperature_range(
+        self,
+        temperature_high: float,
+        temperature_low: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
+        """Set new target temperature range."""
         deadband = self._thermostat.get_deadband()
         cur_cool_temp = self._zone.get_cooling_setpoint()
         cur_heat_temp = self._zone.get_heating_setpoint()
         (min_temp, max_temp) = self._thermostat.get_setpoint_limits()
 
         # Check that we're not going to hit any minimum or maximum values
-        if new_heat_temp and new_heat_temp + deadband > max_temp:
-            new_heat_temp = max_temp - deadband
-        if new_cool_temp and new_cool_temp - deadband < min_temp:
-            new_cool_temp = min_temp + deadband
+        if temperature_low and temperature_low + deadband > max_temp:
+            temperature_low = max_temp - deadband
+        if temperature_high and temperature_high - deadband < min_temp:
+            temperature_high = min_temp + deadband
 
         # Check that we're within the deadband range, fix it if we're not
         if (
-            new_heat_temp
-            and new_heat_temp != cur_heat_temp
-            and new_cool_temp - new_heat_temp < deadband
+            temperature_low
+            and temperature_low != cur_heat_temp
+            and temperature_high - temperature_low < deadband
         ):
-            new_cool_temp = new_heat_temp + deadband
+            temperature_high = temperature_low + deadband
 
         if (
-            new_cool_temp
-            and new_cool_temp != cur_cool_temp
-            and new_cool_temp - new_heat_temp < deadband
+            temperature_high
+            and temperature_high != cur_cool_temp
+            and temperature_high - temperature_low < deadband
         ):
-            new_heat_temp = new_cool_temp - deadband
+            temperature_low = temperature_high - deadband
 
         await self._zone.set_heat_cool_temp(
-            heat_temperature=new_heat_temp,
-            cool_temperature=new_cool_temp,
-            set_temperature=set_temp,
+            heat_temperature=temperature_low,
+            cool_temperature=temperature_high,
         )
         self._signal_zone_update()
 

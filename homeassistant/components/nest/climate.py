@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, cast
+from typing import cast
 
 from google_nest_sdm.device import Device
 from google_nest_sdm.device_manager import DeviceManager
@@ -17,9 +17,6 @@ from google_nest_sdm.thermostat_traits import (
 )
 
 from homeassistant.components.climate import (
-    ATTR_HVAC_MODE,
-    ATTR_TARGET_TEMP_HIGH,
-    ATTR_TARGET_TEMP_LOW,
     FAN_OFF,
     FAN_ON,
     PRESET_ECO,
@@ -30,7 +27,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -271,44 +268,66 @@ class ThermostatEntity(ClimateEntity):
         trait = self._device.traits[ThermostatModeTrait.NAME]
         try:
             await trait.set_mode(api_mode)
+            self._attr_hvac_mode = hvac_mode
         except ApiException as err:
             raise HomeAssistantError(
                 f"Error setting {self.entity_id} HVAC mode to {hvac_mode}: {err}"
             ) from err
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set new target temperature."""
-        hvac_mode = self.hvac_mode
-        if kwargs.get(ATTR_HVAC_MODE) is not None:
-            hvac_mode = kwargs[ATTR_HVAC_MODE]
+        if hvac_mode is not None:
             await self.async_set_hvac_mode(hvac_mode)
-        low_temp = kwargs.get(ATTR_TARGET_TEMP_LOW)
-        high_temp = kwargs.get(ATTR_TARGET_TEMP_HIGH)
-        temp = kwargs.get(ATTR_TEMPERATURE)
+
         if ThermostatTemperatureSetpointTrait.NAME not in self._device.traits:
             raise HomeAssistantError(
-                f"Error setting {self.entity_id} temperature to {kwargs}: "
+                f"Error setting {self.entity_id} temperature to {temperature}: "
                 "Unable to find setpoint trait."
             )
         trait = self._device.traits[ThermostatTemperatureSetpointTrait.NAME]
         try:
-            if self.preset_mode == PRESET_ECO or hvac_mode == HVACMode.HEAT_COOL:
-                if low_temp and high_temp:
-                    if high_temp - low_temp < MIN_TEMP_RANGE:
-                        # Ensure there is a minimum gap from the new temp. Pick
-                        # the temp that is not changing as the one to move.
-                        if abs(high_temp - self.target_temperature_high) < 0.01:
-                            high_temp = low_temp + MIN_TEMP_RANGE
-                        else:
-                            low_temp = high_temp - MIN_TEMP_RANGE
-                    await trait.set_range(low_temp, high_temp)
-            elif hvac_mode == HVACMode.COOL and temp:
-                await trait.set_cool(temp)
-            elif hvac_mode == HVACMode.HEAT and temp:
-                await trait.set_heat(temp)
+            if self.hvac_mode == HVACMode.COOL:
+                await trait.set_cool(temperature)
+            elif self.hvac_mode == HVACMode.HEAT:
+                await trait.set_heat(temperature)
         except ApiException as err:
             raise HomeAssistantError(
-                f"Error setting {self.entity_id} temperature to {kwargs}: {err}"
+                f"Error setting {self.entity_id} temperature to {temperature}: {err}"
+            ) from err
+
+    async def async_set_target_temperature_range(
+        self,
+        temperature_high: float,
+        temperature_low: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
+        """Set new target temperature range."""
+        if hvac_mode is not None:
+            await self.async_set_hvac_mode(hvac_mode)
+
+        if ThermostatTemperatureSetpointTrait.NAME not in self._device.traits:
+            raise HomeAssistantError(
+                f"Error setting {self.entity_id} temperature to [{temperature_low}, {temperature_high}]: "
+                "Unable to find setpoint trait."
+            )
+        trait = self._device.traits[ThermostatTemperatureSetpointTrait.NAME]
+        try:
+            if self.preset_mode == PRESET_ECO or self.hvac_mode == HVACMode.HEAT_COOL:
+                if temperature_high - temperature_low < MIN_TEMP_RANGE:
+                    # Ensure there is a minimum gap from the new temp. Pick
+                    # the temp that is not changing as the one to move.
+                    if abs(temperature_high - self.target_temperature_high) < 0.01:
+                        temperature_high = temperature_low + MIN_TEMP_RANGE
+                    else:
+                        temperature_low = temperature_high - MIN_TEMP_RANGE
+                await trait.set_range(temperature_low, temperature_high)
+        except ApiException as err:
+            raise HomeAssistantError(
+                f"Error setting {self.entity_id} temperature to [{temperature_low}, {temperature_high}]: {err}"
             ) from err
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:

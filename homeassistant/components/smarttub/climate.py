@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 from smarttub import Spa
 
 from homeassistant.components.climate import (
@@ -15,7 +13,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.unit_conversion import TemperatureConverter
@@ -119,9 +117,12 @@ class SmartTubThermostat(SmartTubEntity, ClimateEntity):
         """Return the target water temperature."""
         return self.spa_status.set_temperature
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set new target temperature."""
-        temperature = kwargs[ATTR_TEMPERATURE]
         await self.spa.set_temperature(temperature)
         await self.coordinator.async_refresh()
 

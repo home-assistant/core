@@ -5,16 +5,13 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.components.climate import (
-    ATTR_HVAC_MODE,
-    ATTR_TARGET_TEMP_HIGH,
-    ATTR_TARGET_TEMP_LOW,
     ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -191,24 +188,42 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
         return self.device.get("active_preset")
 
     @plugwise_command
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set new target temperature."""
-        data: dict[str, Any] = {}
-        if ATTR_TEMPERATURE in kwargs:
-            data["setpoint"] = kwargs.get(ATTR_TEMPERATURE)
-        if ATTR_TARGET_TEMP_HIGH in kwargs:
-            data["setpoint_high"] = kwargs.get(ATTR_TARGET_TEMP_HIGH)
-        if ATTR_TARGET_TEMP_LOW in kwargs:
-            data["setpoint_low"] = kwargs.get(ATTR_TARGET_TEMP_LOW)
+        data: dict[str, Any] = {
+            "setpoint": temperature,
+        }
 
-        for temperature in data.values():
-            if temperature is None or not (
-                self._attr_min_temp <= temperature <= self._attr_max_temp
-            ):
+        if not (self._attr_min_temp <= temperature <= self._attr_max_temp):
+            raise ValueError("Invalid temperature change requested")
+
+        if hvac_mode is not None:
+            await self.async_set_hvac_mode(hvac_mode)
+
+        await self.coordinator.api.set_temperature(self.device["location"], data)
+
+    async def async_set_target_temperature_range(
+        self,
+        temperature_high: float,
+        temperature_low: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
+        """Set new target temperature range."""
+        data: dict[str, Any] = {
+            "setpoint_high": temperature_high,
+            "setpoint_low": temperature_low,
+        }
+
+        for temperature in (temperature_low, temperature_high):
+            if not (self._attr_min_temp <= temperature <= self._attr_max_temp):
                 raise ValueError("Invalid temperature change requested")
 
-        if mode := kwargs.get(ATTR_HVAC_MODE):
-            await self.async_set_hvac_mode(mode)
+        if hvac_mode is not None:
+            await self.async_set_hvac_mode(hvac_mode)
 
         await self.coordinator.api.set_temperature(self.device["location"], data)
 

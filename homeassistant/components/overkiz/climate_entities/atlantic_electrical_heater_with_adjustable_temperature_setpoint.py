@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 
 from homeassistant.components.climate import (
@@ -15,7 +13,7 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
+from homeassistant.const import UnitOfTemperature
 
 from ..const import DOMAIN
 from ..coordinator import OverkizDataUpdateCoordinator
@@ -149,9 +147,12 @@ class AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint(
             return temperature.value_as_float
         return None
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set new temperature."""
-        temperature = kwargs[ATTR_TEMPERATURE]
         await self.executor.async_execute_command(
             OverkizCommand.SET_TARGET_TEMPERATURE, temperature
         )

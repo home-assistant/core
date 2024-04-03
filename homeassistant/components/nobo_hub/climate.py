@@ -2,13 +2,9 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 from pynobo import nobo
 
 from homeassistant.components.climate import (
-    ATTR_TARGET_TEMP_HIGH,
-    ATTR_TARGET_TEMP_LOW,
     PRESET_AWAY,
     PRESET_COMFORT,
     PRESET_ECO,
@@ -135,16 +131,18 @@ class NoboZone(ClimateEntity):
             self._id,
         )
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
-        """Set new target temperature."""
-        if ATTR_TARGET_TEMP_LOW in kwargs:
-            low = round(kwargs[ATTR_TARGET_TEMP_LOW])
-            high = round(kwargs[ATTR_TARGET_TEMP_HIGH])
-            low = min(low, high)
-            high = max(low, high)
-            await self._nobo.async_update_zone(
-                self._id, temp_comfort_c=high, temp_eco_c=low
-            )
+    async def async_set_target_temperature_range(
+        self,
+        temperature_high: float,
+        temperature_low: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
+        """Set new target temperature range."""
+        temperature_low = min(temperature_low, temperature_high)
+        temperature_high = max(temperature_low, temperature_high)
+        await self._nobo.async_update_zone(
+            self._id, temp_comfort_c=temperature_high, temp_eco_c=temperature_low
+        )
 
     async def async_update(self) -> None:
         """Fetch new state data for this zone."""

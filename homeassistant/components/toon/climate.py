@@ -22,7 +22,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -105,9 +105,12 @@ class ToonThermostatDevice(ToonDisplayDeviceEntity, ClimateEntity):
         return {"heating_type": self.coordinator.data.agreement.heating_type}
 
     @toon_exception_handler
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Change the setpoint of the thermostat."""
-        temperature = kwargs.get(ATTR_TEMPERATURE)
         await self.coordinator.toon.set_current_setpoint(temperature)
 
     @toon_exception_handler

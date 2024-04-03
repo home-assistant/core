@@ -11,9 +11,6 @@ import voluptuous as vol
 
 from homeassistant.components import climate
 from homeassistant.components.climate import (
-    ATTR_HVAC_MODE,
-    ATTR_TARGET_TEMP_HIGH,
-    ATTR_TARGET_TEMP_LOW,
     DEFAULT_MAX_HUMIDITY,
     DEFAULT_MIN_HUMIDITY,
     FAN_AUTO,
@@ -30,7 +27,6 @@ from homeassistant.components.climate import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_TEMPERATURE,
     CONF_NAME,
     CONF_OPTIMISTIC,
     CONF_PAYLOAD_OFF,
@@ -553,18 +549,33 @@ class MqttTemperatureControlEntity(MqttEntity, ABC):
         return changed
 
     @abstractmethod
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set new target temperatures."""
         changed = await self._set_climate_attribute(
-            kwargs.get(ATTR_TEMPERATURE),
+            temperature,
             CONF_TEMP_COMMAND_TOPIC,
             CONF_TEMP_COMMAND_TEMPLATE,
             CONF_TEMP_STATE_TOPIC,
             "_attr_target_temperature",
         )
+        if not changed:
+            return
+        self.async_write_ha_state()
 
-        changed |= await self._set_climate_attribute(
-            kwargs.get(ATTR_TARGET_TEMP_LOW),
+    @abstractmethod
+    async def async_set_target_temperature_range(
+        self,
+        temperature_high: float,
+        temperature_low: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
+        """Set new target temperature range."""
+        changed = await self._set_climate_attribute(
+            temperature_low,
             CONF_TEMP_LOW_COMMAND_TOPIC,
             CONF_TEMP_LOW_COMMAND_TEMPLATE,
             CONF_TEMP_LOW_STATE_TOPIC,
@@ -572,7 +583,7 @@ class MqttTemperatureControlEntity(MqttEntity, ABC):
         )
 
         changed |= await self._set_climate_attribute(
-            kwargs.get(ATTR_TARGET_TEMP_HIGH),
+            temperature_high,
             CONF_TEMP_HIGH_COMMAND_TOPIC,
             CONF_TEMP_HIGH_COMMAND_TEMPLATE,
             CONF_TEMP_HIGH_STATE_TOPIC,
@@ -858,12 +869,28 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
 
         self.prepare_subscribe_topics(topics)
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_target_temperature(
+        self,
+        temperature: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
         """Set new target temperatures."""
-        operation_mode: HVACMode | None
-        if (operation_mode := kwargs.get(ATTR_HVAC_MODE)) is not None:
-            await self.async_set_hvac_mode(operation_mode)
-        await super().async_set_temperature(**kwargs)
+        if hvac_mode is not None:
+            await self.async_set_hvac_mode(hvac_mode)
+        await super().async_set_target_temperature(temperature=temperature)
+
+    async def async_set_target_temperature_range(
+        self,
+        temperature_high: float,
+        temperature_low: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
+        """Set new target temperature range."""
+        if hvac_mode is not None:
+            await self.async_set_hvac_mode(hvac_mode)
+        await super().async_set_target_temperature_range(
+            temperature_high=temperature_high, temperature_low=temperature_low
+        )
 
     async def async_set_humidity(self, humidity: float) -> None:
         """Set new target humidity."""
