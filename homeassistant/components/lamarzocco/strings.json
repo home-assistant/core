@@ -66,6 +66,11 @@
         "name": "Start backflush"
       }
     },
+    "calendar": {
+      "auto_on_off_schedule": {
+        "name": "Auto on/off schedule ({id})"
+      }
+    },
     "number": {
       "coffee_temp": {
         "name": "Coffee target temperature"
@@ -134,6 +139,9 @@
       }
     },
     "switch": {
+      "auto_on_off": {
+        "name": "Auto on/off ({id})"
+      },
       "steam_boiler": {
         "name": "Steam boiler"
       }

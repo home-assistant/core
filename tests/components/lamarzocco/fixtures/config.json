@@ -137,11 +137,19 @@
         "saturday",
         "sunday"
       ],
-      "enabled": false,
+      "enabled": true,
       "id": "Os2OswX",
       "steam": true,
       "timeOff": "24:0",
-      "timeOn": "24:0"
+      "timeOn": "22:0"
+    },
+    {
+      "days": ["sunday"],
+      "enabled": true,
+      "id": "aXFz5bJ",
+      "steam": true,
+      "timeOff": "7:30",
+      "timeOn": "7:0"
     }
   ],
   "clock": "1901-07-08T10:29:00",

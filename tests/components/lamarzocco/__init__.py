@@ -25,6 +25,8 @@ SERIAL_DICT = {
     MachineModel.LINEA_MINI: "LM01234",
 }
 
+WAKE_UP_SLEEP_ENTRY_IDS = ["Os2OswX", "aXFz5bJ"]
+
 
 async def async_init_integration(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
