@@ -158,7 +158,7 @@ async def test_form_reauth(hass: HomeAssistant, cloud_config_entry) -> None:
         context={"source": config_entries.SOURCE_REAUTH},
         data=cloud_config_entry.data,
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     with (
@@ -183,7 +183,7 @@ async def test_form_reauth(hass: HomeAssistant, cloud_config_entry) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "abort"
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
     assert cloud_config_entry.data[CONF_PASSWORD] == "new_password"
     assert len(mock_setup_entry.mock_calls) == 1
@@ -199,7 +199,7 @@ async def test_form_reauth_with_new_username(
         context={"source": config_entries.SOURCE_REAUTH},
         data=cloud_config_entry.data,
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     with (
@@ -224,7 +224,7 @@ async def test_form_reauth_with_new_username(
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "abort"
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
     assert cloud_config_entry.data[CONF_USERNAME] == "new_user"
     assert cloud_config_entry.unique_id == "new_user"

@@ -66,7 +66,7 @@ async def test_flow_works(
         config_flow.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_init(
@@ -75,7 +75,7 @@ async def test_flow_works(
         data={config_flow.CONF_HOST: "172.2.3.4", config_flow.CONF_PORT: 80},
     )
 
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "My gate controller"
     assert result["data"] == {
         config_flow.CONF_HOST: "172.2.3.4",

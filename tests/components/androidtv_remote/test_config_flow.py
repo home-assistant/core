@@ -880,7 +880,7 @@ async def test_options_flow(
 
     # Trigger options flow, first time
     result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
     data_schema = result["data_schema"].schema
     assert set(data_schema) == {"enable_ime"}
@@ -889,7 +889,7 @@ async def test_options_flow(
         result["flow_id"],
         user_input={"enable_ime": False},
     )
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert mock_config_entry.options == {"enable_ime": False}
     await hass.async_block_till_done()
 
@@ -902,7 +902,7 @@ async def test_options_flow(
         result["flow_id"],
         user_input={"enable_ime": False},
     )
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert mock_config_entry.options == {"enable_ime": False}
     await hass.async_block_till_done()
 
@@ -915,7 +915,7 @@ async def test_options_flow(
         result["flow_id"],
         user_input={"enable_ime": True},
     )
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert mock_config_entry.options == {"enable_ime": True}
     await hass.async_block_till_done()
 
