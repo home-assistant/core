@@ -9,9 +9,6 @@
     },
     "display": {
       "name": "Display notifier"
-    },
-    "email": {
-      "name": "Email notifier"
     }
   },
   "services": {
@@ -43,15 +40,7 @@
       "fields": {
         "message": {
           "name": "Message",
-          "description": "The message body for your notification message."
-        },
-        "title": {
-          "name": "Title",
-          "description": "Title for your notification message."
-        },
-        "recipients": {
-          "name": "Recipients",
-          "description": "The recipients that receive the notification message."
+          "description": "Your notification message."
         }
       }
     },

@@ -11,12 +11,13 @@ from homeassistant.components.notify import (
     DOMAIN as NOTIFY_DOMAIN,
     SERVICE_SEND_MESSAGE,
 )
+from homeassistant.components.notify.const import ATTR_MESSAGE
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-ENTITY_SMTP = "notify.smtp_relay_smtp_notifier"
+ENTITY_DIRECT_MESSAGE = "notify.mybox_personal_notifier"
 
 
 @pytest.fixture
@@ -38,7 +39,7 @@ async def setup_comp(hass: HomeAssistant, notify_only: None):
 
 def test_setup_params(hass: HomeAssistant) -> None:
     """Test the initial parameters."""
-    state = hass.states.get(ENTITY_SMTP)
+    state = hass.states.get(ENTITY_DIRECT_MESSAGE)
     assert state
     assert state.state == STATE_UNKNOWN
 
@@ -47,7 +48,7 @@ async def test_send_message(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
     """Test pressing the button."""
-    state = hass.states.get(ENTITY_SMTP)
+    state = hass.states.get(ENTITY_DIRECT_MESSAGE)
     assert state
     assert state.state == STATE_UNKNOWN
 
@@ -56,10 +57,10 @@ async def test_send_message(
     await hass.services.async_call(
         NOTIFY_DOMAIN,
         SERVICE_SEND_MESSAGE,
-        {ATTR_ENTITY_ID: ENTITY_SMTP},
+        {ATTR_ENTITY_ID: ENTITY_DIRECT_MESSAGE, ATTR_MESSAGE: "You have an update!"},
         blocking=True,
     )
 
-    state = hass.states.get(ENTITY_SMTP)
+    state = hass.states.get(ENTITY_DIRECT_MESSAGE)
     assert state
     assert state.state == now.isoformat()

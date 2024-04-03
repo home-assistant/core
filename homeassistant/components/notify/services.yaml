@@ -26,26 +26,9 @@ send_message:
       domain: notify
   fields:
     message:
+      required: true
       selector:
         text:
-      filter:
-        supported_features:
-          - notify.NotifyEntityFeature.MESSAGE
-    title:
-      selector:
-        text:
-      filter:
-        supported_features:
-          - notify.NotifyEntityFeature.TITLE
-    recipients:
-      selector:
-        select:
-          options: []
-          custom_value: true
-          multiple: true
-      filter:
-        supported_features:
-          - notify.NotifyEntityFeature.RECIPIENTS
 
 persistent_notification:
   fields:

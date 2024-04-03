@@ -17,7 +17,6 @@ from homeassistant.components.notify import (
     NotifyDeviceClass,
     NotifyEntity,
     NotifyEntityDescription,
-    NotifyEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -43,22 +42,13 @@ from tests.common import (
     mock_restore_cache,
 )
 
-TEST_KWARGS = {
-    "message": "Test message",
-    "title": "My title",
-    "recipients": ["user1@example.com", "user1@example.com"],
-}
+TEST_KWARGS = {"message": "Test message"}
 
 
 class MockNotifyEntity(MockEntity, NotifyEntity):
     """Mock Email notitier entity to use in tests."""
 
-    _attr_supported_features = (
-        NotifyEntityFeature.MESSAGE
-        | NotifyEntityFeature.TITLE
-        | NotifyEntityFeature.RECIPIENTS
-    )
-    _attr_device_class = NotifyDeviceClass.EMAIL
+    _attr_device_class = NotifyDeviceClass.DIRECT_MESSAGE
 
     send_message_mock_calls = MagicMock()
 
@@ -218,7 +208,7 @@ async def test_name(hass: HomeAssistant, config_flow_fixture: None) -> None:
     entity4.entity_id = "notify.test4"
     entity4.entity_description = NotifyEntityDescription(
         "test",
-        NotifyDeviceClass.EMAIL,
+        NotifyDeviceClass.DIRECT_MESSAGE,
         has_entity_name=True,
     )
 
@@ -243,29 +233,24 @@ async def test_name(hass: HomeAssistant, config_flow_fixture: None) -> None:
 
     state = hass.states.get(entity1.entity_id)
     assert state
-    assert state.attributes == {"supported_features": 0}
+    assert state.attributes == {}
 
     state = hass.states.get(entity2.entity_id)
     assert state
-    assert state.attributes == {
-        "device_class": "direct_message",
-        "supported_features": 0,
-    }
+    assert state.attributes == {"device_class": "direct_message"}
 
     state = hass.states.get(entity3.entity_id)
     assert state
     assert state.attributes == {
         "device_class": "display",
-        "supported_features": 0,
         "friendly_name": "Display notifier",
     }
 
     state = hass.states.get(entity4.entity_id)
     assert state
     assert state.attributes == {
-        "device_class": "email",
-        "supported_features": 0,
-        "friendly_name": "Email notifier",
+        "device_class": "direct_message",
+        "friendly_name": "Direct message notifier",
     }
 
 

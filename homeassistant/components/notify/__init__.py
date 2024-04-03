@@ -34,7 +34,6 @@ from .const import (  # noqa: F401
     SERVICE_NOTIFY,
     SERVICE_PERSISTENT_NOTIFICATION,
     SERVICE_SEND_MESSAGE,
-    NotifyEntityFeature,
 )
 from .legacy import (  # noqa: F401
     BaseNotificationService,
@@ -160,7 +159,7 @@ class NotifyEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_
     _attr_should_poll = False
     _attr_device_class: NotifyDeviceClass | None
     _attr_state: None = None
-    _attr_supported_features: NotifyEntityFeature = NotifyEntityFeature(0)
+    _attr_supported_features: None
     __last_notified_isoformat: str | None = None
 
     def _default_to_device_class_name(self) -> bool:
@@ -214,20 +213,14 @@ class NotifyEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_
 
     def send_message(
         self,
-        message: str | None = None,
-        title: str | None = None,
-        recipients: list[str] | None = None,
+        message: str,
     ) -> None:
         """Send a message."""
         raise NotImplementedError
 
     async def async_send_message(
         self,
-        message: str | None = None,
-        title: str | None = None,
-        recipients: list[str] | None = None,
+        message: str,
     ) -> None:
         """Send a message."""
-        await self.hass.async_add_executor_job(
-            partial(self.send_message, message, title, recipients)
-        )
+        await self.hass.async_add_executor_job(partial(self.send_message, message))

@@ -1,6 +1,5 @@
 """Provide common notify constants."""
 
-from enum import IntFlag
 import logging
 
 import voluptuous as vol
@@ -37,11 +36,3 @@ NOTIFY_SERVICE_SCHEMA = vol.Schema(
         vol.Optional(ATTR_DATA): dict,
     }
 )
-
-
-class NotifyEntityFeature(IntFlag):
-    """Supported features of the notify entity."""
-
-    MESSAGE = 1
-    TITLE = 2
-    RECIPIENTS = 4
