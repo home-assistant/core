@@ -1184,6 +1184,7 @@ omit =
     homeassistant/components/rympro/coordinator.py
     homeassistant/components/rympro/sensor.py
     homeassistant/components/sabnzbd/__init__.py
+    homeassistant/components/sabnzbd/coordinator.py
     homeassistant/components/sabnzbd/sensor.py
     homeassistant/components/saj/sensor.py
     homeassistant/components/satel_integra/*
