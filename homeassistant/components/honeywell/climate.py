@@ -169,6 +169,7 @@ class HoneywellUSThermostat(ClimateEntity):
             manufacturer="Honeywell",
         )
 
+        self._attr_translation_placeholders = {"name": device.name}
         self._attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
         if device.temperature_unit == "C":
             self._attr_temperature_unit = UnitOfTemperature.CELSIUS
@@ -489,9 +490,6 @@ class HoneywellUSThermostat(ClimateEntity):
             is_persistent=True,
             severity=ir.IssueSeverity.WARNING,
             translation_key="service_deprecation",
-            translation_placeholders={
-                "name": self.name if isinstance(self.name, str) else "",
-            },
         )
         try:
             await self._device.set_system_mode("emheat")
@@ -512,9 +510,6 @@ class HoneywellUSThermostat(ClimateEntity):
             is_persistent=True,
             severity=ir.IssueSeverity.WARNING,
             translation_key="service_deprecation",
-            translation_placeholders={
-                "name": self.name if isinstance(self.name, str) else "",
-            },
         )
 
         try:
