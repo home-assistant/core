@@ -23,7 +23,14 @@ import cryptography.hazmat.backends.openssl.backend  # noqa: F401
 import voluptuous as vol
 import yarl
 
-from . import config as conf_util, config_entries, core, loader, requirements
+from . import (
+    block_async_io,
+    config as conf_util,
+    config_entries,
+    core,
+    loader,
+    requirements,
+)
 
 # Pre-import frontend deps which have no requirements here to avoid
 # loading them at run time and blocking the event loop. We do this ahead
@@ -78,6 +85,7 @@ from .helpers import (
     translation,
 )
 from .helpers.dispatcher import async_dispatcher_send
+from .helpers.storage import get_internal_store_manager
 from .helpers.system_info import async_get_system_info
 from .helpers.typing import ConfigType
 from .setup import (
@@ -91,6 +99,11 @@ from .setup import (
 from .util.async_ import create_eager_task
 from .util.logging import async_activate_log_queue_handler
 from .util.package import async_get_user_site, is_virtual_env
+
+with contextlib.suppress(ImportError):
+    # Ensure anyio backend is imported to avoid it being imported in the event loop
+    from anyio._backends import _asyncio  # noqa: F401
+
 
 if TYPE_CHECKING:
     from .runner import RuntimeConfig
@@ -194,16 +207,35 @@ CRITICAL_INTEGRATIONS = {
     "frontend",
 }
 
-SETUP_ORDER = {
+SETUP_ORDER = (
     # Load logging as soon as possible
-    "logging": LOGGING_INTEGRATIONS,
-    # Setup frontend
-    "frontend": FRONTEND_INTEGRATIONS,
-    # Setup recorder
-    "recorder": RECORDER_INTEGRATIONS,
+    ("logging", LOGGING_INTEGRATIONS),
+    # Setup frontend and recorder
+    ("frontend, recorder", {*FRONTEND_INTEGRATIONS, *RECORDER_INTEGRATIONS}),
     # Start up debuggers. Start these first in case they want to wait.
-    "debugger": DEBUGGER_INTEGRATIONS,
-}
+    ("debugger", DEBUGGER_INTEGRATIONS),
+)
+
+#
+# Storage keys we are likely to load during startup
+# in order of when we expect to load them.
+#
+# If they do not exist they will not be loaded
+#
+PRELOAD_STORAGE = [
+    "core.network",
+    "http.auth",
+    "image",
+    "lovelace_dashboards",
+    "lovelace_resources",
+    "core.uuid",
+    "lovelace.map",
+    "bluetooth.passive_update_processor",
+    "bluetooth.remote_scanners",
+    "assist_pipeline.pipelines",
+    "core.analytics",
+    "auth_module.totp",
+]
 
 
 async def async_setup_hass(
@@ -235,6 +267,8 @@ async def async_setup_hass(
     _LOGGER.info("Config directory: %s", runtime_config.config_dir)
 
     loader.async_setup(hass)
+    block_async_io.enable()
+
     config_dict = None
     basic_setup_success = False
 
@@ -348,6 +382,7 @@ async def async_load_base_functionality(hass: core.HomeAssistant) -> None:
     entity.async_setup(hass)
     template.async_setup(hass)
     await asyncio.gather(
+        create_eager_task(get_internal_store_manager(hass).async_initialize()),
         create_eager_task(area_registry.async_load(hass)),
         create_eager_task(category_registry.async_load(hass)),
         create_eager_task(device_registry.async_load(hass)),
@@ -736,7 +771,7 @@ async def _async_resolve_domains_to_setup(
         *chain.from_iterable(platform_integrations.values()),
     }
 
-    translations_to_load = {*domains_to_setup, *additional_manifests_to_load}
+    translations_to_load = additional_manifests_to_load.copy()
 
     # Resolve all dependencies so we know all integrations
     # that will have to be loaded and start right-away
@@ -820,6 +855,12 @@ async def _async_resolve_domains_to_setup(
         "check installed requirements",
         eager_start=True,
     )
+
+    #
+    # Only add the domains_to_setup after we finish resolving
+    # as new domains are likely to added in the process
+    #
+    translations_to_load.update(domains_to_setup)
     # Start loading translations for all integrations we are going to set up
     # in the background so they are ready when we need them. This avoids a
     # lot of waiting for the translation load lock and a thundering herd of
@@ -833,6 +874,17 @@ async def _async_resolve_domains_to_setup(
     hass.async_create_background_task(
         translation.async_load_integrations(hass, translations_to_load),
         "load translations",
+        eager_start=True,
+    )
+
+    # Preload storage for all integrations we are going to set up
+    # so we do not have to wait for it to be loaded when we need it
+    # in the setup process.
+    hass.async_create_background_task(
+        get_internal_store_manager(hass).async_preload(
+            [*PRELOAD_STORAGE, *domains_to_setup]
+        ),
+        "preload storage",
         eager_start=True,
     )
 
@@ -856,10 +908,9 @@ async def _async_set_up_integrations(
     if "recorder" in domains_to_setup:
         recorder.async_initialize_recorder(hass)
 
-    pre_stage_domains: dict[str, set[str]] = {
-        name: domains_to_setup & domain_group
-        for name, domain_group in SETUP_ORDER.items()
-    }
+    pre_stage_domains = [
+        (name, domains_to_setup & domain_group) for name, domain_group in SETUP_ORDER
+    ]
 
     # calculate what components to setup in what stage
     stage_1_domains: set[str] = set()
@@ -885,10 +936,18 @@ async def _async_set_up_integrations(
 
     stage_2_domains = domains_to_setup - stage_1_domains
 
-    for name, domain_group in pre_stage_domains.items():
+    for name, domain_group in pre_stage_domains:
         if domain_group:
             stage_2_domains -= domain_group
             _LOGGER.info("Setting up %s: %s", name, domain_group)
+            to_be_loaded = domain_group.copy()
+            to_be_loaded.update(
+                dep
+                for domain in domain_group
+                if (integration := integration_cache.get(domain)) is not None
+                for dep in integration.all_dependencies
+            )
+            async_set_domains_to_be_loaded(hass, to_be_loaded)
             await async_setup_multi_components(hass, domain_group, config)
 
     # Enables after dependencies when setting up stage 1 domains

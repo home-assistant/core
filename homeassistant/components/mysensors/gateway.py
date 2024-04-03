@@ -71,9 +71,9 @@ def is_socket_address(value: str) -> str:
     """Validate that value is a valid address."""
     try:
         socket.getaddrinfo(value, None)
-        return value
     except OSError as err:
         raise vol.Invalid("Device is not a valid domain name or ip address") from err
+    return value
 
 
 async def try_connect(
@@ -279,10 +279,8 @@ async def _gw_start(
 
     gateway.on_conn_made = gateway_connected
     # Don't use hass.async_create_task to avoid holding up setup indefinitely.
-    hass.data[DOMAIN][
-        MYSENSORS_GATEWAY_START_TASK.format(entry.entry_id)
-    ] = asyncio.create_task(
-        gateway.start()
+    hass.data[DOMAIN][MYSENSORS_GATEWAY_START_TASK.format(entry.entry_id)] = (
+        asyncio.create_task(gateway.start())
     )  # store the connect task so it can be cancelled in gw_stop
 
     async def stop_this_gw(_: Event) -> None:

@@ -1,4 +1,5 @@
 """Provide a way to categorize things within a defined scope."""
+
 from __future__ import annotations
 
 from collections.abc import Iterable
@@ -10,6 +11,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.util.ulid import ulid_now
 
 from .registry import BaseRegistry
+from .storage import Store
 from .typing import UNDEFINED, EventType, UndefinedType
 
 DATA_REGISTRY = "category_registry"
@@ -45,7 +47,8 @@ class CategoryRegistry(BaseRegistry):
         """Initialize the category registry."""
         self.hass = hass
         self.categories: dict[str, dict[str, CategoryEntry]] = {}
-        self._store = hass.helpers.storage.Store(
+        self._store: Store[dict[str, dict[str, list[dict[str, str]]]]] = Store(
+            hass,
             STORAGE_VERSION_MAJOR,
             STORAGE_KEY,
             atomic_writes=True,
