@@ -7,6 +7,7 @@ from requests.exceptions import RequestException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    ATTR_DEVICE_ID,
     CONF_PASSWORD,
     CONF_URL,
     CONF_USERNAME,
@@ -15,6 +16,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 
 from .const import DOMAIN, SERVICE_GET_TORRENTS, STATE_ATTR_TORRENT_INFO, TORRENT_FILTER
 from .coordinator import QBittorrentDataCoordinator
@@ -48,6 +50,12 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     async def handle_get_torrents(service_call: ServiceCall):
+        device_registry = dr.async_get(hass)
+        device_entry = device_registry.async_get(service_call.data[ATTR_DEVICE_ID])
+
+        if device_entry is None:
+            return
+
         coordinator: QBittorrentDataCoordinator = hass.data[DOMAIN][
             config_entry.entry_id
         ]

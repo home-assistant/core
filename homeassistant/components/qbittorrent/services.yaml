@@ -1,5 +1,10 @@
 get_torrents:
   fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: qbittorrent
     torrent_filter:
       required: true
       example: "all"
