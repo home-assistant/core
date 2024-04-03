@@ -175,7 +175,7 @@ SET_FAN_MIN_ON_TIME_SCHEMA = vol.Schema(
 SET_AUX_CUTOVER_THRESHOLD_SCHEMA = vol.Schema(
     {
         vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-        vol.Required(ATTR_AUX_CUTOVER_THRESHOLD): vol.All(vol.Coerce(int), vol.Any(-25,-20,-15,-10,-50,0,50,10,15,20,25,30,35,40,45,50,55,60,65))
+        vol.Required(ATTR_AUX_CUTOVER_THRESHOLD): vol.All(vol.Coerce(int), vol.Any(-25,-20,-15,-10,-5,0,5,10,15,20,25,30,35,40,45,50,55,60,65))
     }
 )
 
