@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
 
 from homeassistant.components.sensor import (
@@ -28,7 +27,6 @@ class SabnzbdSensorEntityDescription(SensorEntityDescription):
     """Describes Sabnzbd sensor entity."""
 
     key: str
-    value_fn: Callable[[StateType], StateType] = lambda value: value
 
 
 SENSOR_TYPES: tuple[SabnzbdSensorEntityDescription, ...] = (
@@ -40,9 +38,8 @@ SENSOR_TYPES: tuple[SabnzbdSensorEntityDescription, ...] = (
         key="kbpersec",
         translation_key="speed",
         device_class=SensorDeviceClass.DATA_RATE,
-        native_unit_of_measurement=UnitOfDataRate.MEGABYTES_PER_SECOND,
+        native_unit_of_measurement=UnitOfDataRate.KILOBYTES_PER_SECOND,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda value: float(value) / 1024 if value is not None else None,
     ),
     SabnzbdSensorEntityDescription(
         key="mb",
@@ -167,6 +164,4 @@ class SabnzbdSensor(CoordinatorEntity[SabnzbdUpdateCoordinator], SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return latest sensor data."""
-        return self.entity_description.value_fn(
-            self.coordinator.data.get(self.entity_description.key)
-        )
+        return self.coordinator.data.get(self.entity_description.key)
