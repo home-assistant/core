@@ -164,6 +164,19 @@ class ConfigSource(enum.StrEnum):
     YAML = "yaml"
 
 
+class EventStateChangedData(TypedDict):
+    """EventStateChanged data."""
+
+    entity_id: str
+    old_state: State | None
+    new_state: State | None
+
+
+if not TYPE_CHECKING:
+    # Use plain dict at runtime for performance
+    EventStateChangedData = dict
+
+
 # SOURCE_* are deprecated as of Home Assistant 2022.2, use ConfigSource instead
 _DEPRECATED_SOURCE_DISCOVERED = DeprecatedConstantEnum(
     ConfigSource.DISCOVERED, "2025.1"
@@ -2025,7 +2038,9 @@ class StateMachine:
         old_state.expire()
         self._bus._async_fire(  # pylint: disable=protected-access
             EVENT_STATE_CHANGED,
-            {"entity_id": entity_id, "old_state": old_state, "new_state": None},
+            EventStateChangedData(
+                entity_id=entity_id, old_state=old_state, new_state=None
+            ),
             context=context,
         )
         return True
@@ -2176,7 +2191,9 @@ class StateMachine:
         self._states[entity_id] = state
         self._bus._async_fire(  # pylint: disable=protected-access
             EVENT_STATE_CHANGED,
-            {"entity_id": entity_id, "old_state": old_state, "new_state": state},
+            EventStateChangedData(
+                entity_id=entity_id, old_state=old_state, new_state=state
+            ),
             context=context,
             time_fired=timestamp,
         )

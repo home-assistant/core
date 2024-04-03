@@ -11,15 +11,7 @@ import functools as ft
 import logging
 from random import randint
 import time
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Concatenate,
-    Generic,
-    ParamSpec,
-    TypedDict,
-    TypeVar,
-)
+from typing import TYPE_CHECKING, Any, Concatenate, Generic, ParamSpec, TypeVar
 
 import attr
 
@@ -33,6 +25,7 @@ from homeassistant.const import (
 from homeassistant.core import (
     CALLBACK_TYPE,
     Event,
+    EventStateChangedData,
     HassJob,
     HassJobType,
     HomeAssistant,
@@ -161,14 +154,6 @@ class TrackTemplateResult:
     template: Template
     last_result: Any
     result: Any
-
-
-class EventStateChangedData(TypedDict):
-    """EventStateChanged data."""
-
-    entity_id: str
-    old_state: State | None
-    new_state: State | None
 
 
 def threaded_listener_factory(
