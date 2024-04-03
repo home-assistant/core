@@ -174,7 +174,7 @@ async def test_token_reauthentication(
         },
         data=mock_entry.data,
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
     with patch(
@@ -187,7 +187,7 @@ async def test_token_reauthentication(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -231,7 +231,7 @@ async def test_form_errors_reauthentication(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"]["base"] == reason
 
     mock_login.side_effect = None
@@ -245,7 +245,7 @@ async def test_form_errors_reauthentication(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
 
 
@@ -290,7 +290,7 @@ async def test_client_errors_reauthentication(
         await hass.async_block_till_done()
 
     assert result["errors"]["base"] == reason
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
 
     mock_login.side_effect = None
     with patch(
@@ -303,5 +303,5 @@ async def test_client_errors_reauthentication(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"

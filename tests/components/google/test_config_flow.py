@@ -716,7 +716,7 @@ async def test_web_auth_compatibility(
         "homeassistant.components.google.async_setup_entry", return_value=True
     ) as mock_setup:
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     token = result.get("data", {}).get("token", {})
     del token["expires_at"]
     assert token == {
@@ -820,7 +820,7 @@ async def test_web_reauth_flow(
         "homeassistant.components.google.async_setup_entry", return_value=True
     ) as mock_setup:
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
 
     entries = hass.config_entries.async_entries(DOMAIN)

@@ -5,9 +5,10 @@ from unittest.mock import patch
 from blinkpy.auth import LoginError
 from blinkpy.blinkpy import BlinkSetupError
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components.blink import DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 
 async def test_form(hass: HomeAssistant) -> None:
@@ -295,5 +296,5 @@ async def test_reauth_shows_user_step(hass: HomeAssistant) -> None:
         context={"source": config_entries.SOURCE_REAUTH},
         data={"username": "blink@example.com", "password": "invalid_password"},
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"

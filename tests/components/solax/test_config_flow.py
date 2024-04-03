@@ -18,7 +18,11 @@ def __mock_real_time_api_success():
 
 def __mock_get_data():
     return InverterResponse(
-        data=None, serial_number="ABCDEFGHIJ", version="2.034.06", type=4
+        data=None,
+        dongle_serial_number="ABCDEFGHIJ",
+        version="2.034.06",
+        type=4,
+        inverter_serial_number="XXXXXXX",
     )
 
 

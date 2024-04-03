@@ -5,10 +5,11 @@ from unittest.mock import patch
 
 from pyoctoprintapi import ApiError, DiscoverySettings
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components import ssdp, zeroconf
 from homeassistant.components.octoprint.const import DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
@@ -242,7 +243,7 @@ async def test_show_zerconf_form(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_show_ssdp_form(hass: HomeAssistant) -> None:
@@ -311,7 +312,7 @@ async def test_show_ssdp_form(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_import_yaml(hass: HomeAssistant) -> None:
@@ -347,7 +348,7 @@ async def test_import_yaml(hass: HomeAssistant) -> None:
             },
         )
         await hass.async_block_till_done()
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert "errors" not in result
 
 
@@ -384,7 +385,7 @@ async def test_import_duplicate_yaml(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
         assert len(request_app_key.mock_calls) == 0
 
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 

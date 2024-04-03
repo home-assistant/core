@@ -11,10 +11,11 @@ from uuid import uuid4
 import pytest
 import voluptuous as vol
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components import mqtt
 from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
@@ -354,7 +355,7 @@ async def test_hassio_ignored(hass: HomeAssistant) -> None:
         context={"source": config_entries.SOURCE_HASSIO},
     )
     assert result
-    assert result.get("type") == data_entry_flow.FlowResultType.ABORT
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "already_configured"
 
 
@@ -473,7 +474,7 @@ async def test_option_flow(
         mqtt_mock.async_connect.reset_mock()
 
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "broker"
 
         result = await hass.config_entries.options.async_configure(
@@ -485,7 +486,7 @@ async def test_option_flow(
                 mqtt.CONF_PASSWORD: "pass",
             },
         )
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "options"
 
         await hass.async_block_till_done()
@@ -510,7 +511,7 @@ async def test_option_flow(
                 "will_retain": True,
             },
         )
-        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["data"] == {}
         assert config_entry.data == {
             mqtt.CONF_BROKER: "another-broker",
@@ -609,7 +610,7 @@ async def test_bad_certificate(
     mqtt_mock.async_connect.reset_mock()
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "broker"
 
     result = await hass.config_entries.options.async_configure(
@@ -682,7 +683,7 @@ async def test_keepalive_validation(
     mqtt_mock.async_connect.reset_mock()
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "broker"
 
     if error:
@@ -722,7 +723,7 @@ async def test_disable_birth_will(
     mqtt_mock.async_connect.reset_mock()
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "broker"
 
     result = await hass.config_entries.options.async_configure(
@@ -734,7 +735,7 @@ async def test_disable_birth_will(
             mqtt.CONF_PASSWORD: "pass",
         },
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "options"
 
     await hass.async_block_till_done()
@@ -757,7 +758,7 @@ async def test_disable_birth_will(
             "will_retain": True,
         },
     )
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {}
     assert config_entry.data == {
         mqtt.CONF_BROKER: "another-broker",
@@ -799,7 +800,7 @@ async def test_invalid_discovery_prefix(
     mqtt_mock.async_connect.reset_mock()
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "broker"
 
     result = await hass.config_entries.options.async_configure(
@@ -809,7 +810,7 @@ async def test_invalid_discovery_prefix(
             mqtt.CONF_PORT: 2345,
         },
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "options"
 
     await hass.async_block_till_done()
@@ -822,7 +823,7 @@ async def test_invalid_discovery_prefix(
             mqtt.CONF_DISCOVERY_PREFIX: "homeassistant#invalid",
         },
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "options"
     assert result["errors"]["base"] == "bad_discovery_prefix"
     assert config_entry.data == {
@@ -892,7 +893,7 @@ async def test_option_flow_default_suggested_values(
 
     # Test default/suggested values from config
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "broker"
     defaults = {
         mqtt.CONF_BROKER: "test-broker",
@@ -916,7 +917,7 @@ async def test_option_flow_default_suggested_values(
             mqtt.CONF_PASSWORD: "p4ss",
         },
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "options"
     defaults = {
         mqtt.CONF_DISCOVERY: True,
@@ -950,11 +951,11 @@ async def test_option_flow_default_suggested_values(
             "will_retain": True,
         },
     )
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
     # Test updated default/suggested values from config
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "broker"
     defaults = {
         mqtt.CONF_BROKER: "another-broker",
@@ -973,7 +974,7 @@ async def test_option_flow_default_suggested_values(
         result["flow_id"],
         user_input={mqtt.CONF_BROKER: "another-broker", mqtt.CONF_PORT: 2345},
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "options"
     defaults = {
         mqtt.CONF_DISCOVERY: False,
@@ -1007,7 +1008,7 @@ async def test_option_flow_default_suggested_values(
             "will_retain": True,
         },
     )
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
     # Make sure all MQTT related jobs are done before ending the test
     await hass.async_block_till_done()
@@ -1049,7 +1050,7 @@ async def test_skipping_advanced_options(
     result = await hass.config_entries.options.async_init(
         config_entry.entry_id, context={"show_advanced_options": True}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "broker"
 
     result = await hass.config_entries.options.async_configure(
@@ -1221,7 +1222,7 @@ async def test_try_connection_with_advanced_parameters(
 
     # Test default/suggested values from config
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "broker"
     defaults = {
         mqtt.CONF_BROKER: "test-broker",
@@ -1261,7 +1262,7 @@ async def test_try_connection_with_advanced_parameters(
             mqtt.CONF_WS_HEADERS: '{"h3": "v3"}',
         },
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
     assert result["step_id"] == "options"
     await hass.async_block_till_done()
@@ -1292,7 +1293,7 @@ async def test_try_connection_with_advanced_parameters(
         result["flow_id"],
         user_input={},
     )
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     await hass.async_block_till_done()
 
 
