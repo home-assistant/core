@@ -63,7 +63,7 @@ async def test_form(hass: HomeAssistant, bootstrap: Bootstrap, nvr: NVR) -> None
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert not result["errors"]
 
     bootstrap.nvr = nvr
@@ -91,7 +91,7 @@ async def test_form(hass: HomeAssistant, bootstrap: Bootstrap, nvr: NVR) -> None
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "UnifiProtect"
     assert result2["data"] == {
         "host": "1.1.1.1",
@@ -127,7 +127,7 @@ async def test_form_version_too_old(
             },
         )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "protect_version"}
 
 
@@ -150,7 +150,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"password": "invalid_auth"}
 
 
@@ -178,7 +178,7 @@ async def test_form_cloud_user(
             },
         )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cloud_user"}
 
 
@@ -201,7 +201,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
@@ -230,7 +230,7 @@ async def test_form_reauth_auth(
             "entry_id": mock_config.entry_id,
         },
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert not result["errors"]
     flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
     assert flows[0]["context"]["title_placeholders"] == {
@@ -250,7 +250,7 @@ async def test_form_reauth_auth(
             },
         )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"password": "invalid_auth"}
     assert result2["step_id"] == "reauth_confirm"
 
@@ -274,7 +274,7 @@ async def test_form_reauth_auth(
         )
         await hass.async_block_till_done()
 
-    assert result3["type"] == FlowResultType.ABORT
+    assert result3["type"] is FlowResultType.ABORT
     assert result3["reason"] == "reauth_successful"
     assert len(mock_setup.mock_calls) == 1
 
@@ -310,7 +310,7 @@ async def test_form_options(hass: HomeAssistant, ufp_client: ProtectApiClient) -
         assert mock_config.state == config_entries.ConfigEntryState.LOADED
 
         result = await hass.config_entries.options.async_init(mock_config.entry_id)
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert not result["errors"]
         assert result["step_id"] == "init"
 
@@ -323,7 +323,7 @@ async def test_form_options(hass: HomeAssistant, ufp_client: ProtectApiClient) -
             },
         )
 
-        assert result2["type"] == FlowResultType.CREATE_ENTRY
+        assert result2["type"] is FlowResultType.CREATE_ENTRY
         assert result2["data"] == {
             "all_updates": True,
             "disable_rtsp": True,
@@ -354,7 +354,7 @@ async def test_discovered_by_ssdp_or_dhcp(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "discovery_started"
 
 
@@ -371,7 +371,7 @@ async def test_discovered_by_unifi_discovery_direct_connect(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "discovery_confirm"
     flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
     assert flows[0]["context"]["title_placeholders"] == {
@@ -405,7 +405,7 @@ async def test_discovered_by_unifi_discovery_direct_connect(
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "UnifiProtect"
     assert result2["data"] == {
         "host": DIRECT_CONNECT_DOMAIN,
@@ -446,7 +446,7 @@ async def test_discovered_by_unifi_discovery_direct_connect_updated(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert mock_config.data[CONF_HOST] == DIRECT_CONNECT_DOMAIN
 
@@ -484,7 +484,7 @@ async def test_discovered_by_unifi_discovery_direct_connect_updated_but_not_usin
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert mock_config.data[CONF_HOST] == "127.0.0.1"
 
@@ -522,7 +522,7 @@ async def test_discovered_by_unifi_discovery_does_not_update_ip_when_console_is_
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert mock_config.data[CONF_HOST] == "1.2.2.2"
 
@@ -553,7 +553,7 @@ async def test_discovered_host_not_updated_if_existing_is_a_hostname(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert mock_config.data[CONF_HOST] == "a.hostname"
 
@@ -571,7 +571,7 @@ async def test_discovered_by_unifi_discovery(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "discovery_confirm"
     flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
     assert flows[0]["context"]["title_placeholders"] == {
@@ -605,7 +605,7 @@ async def test_discovered_by_unifi_discovery(
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "UnifiProtect"
     assert result2["data"] == {
         "host": DEVICE_IP_ADDRESS,
@@ -632,7 +632,7 @@ async def test_discovered_by_unifi_discovery_partial(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "discovery_confirm"
     flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
     assert flows[0]["context"]["title_placeholders"] == {
@@ -666,7 +666,7 @@ async def test_discovered_by_unifi_discovery_partial(
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "UnifiProtect"
     assert result2["data"] == {
         "host": DEVICE_IP_ADDRESS,
@@ -706,7 +706,7 @@ async def test_discovered_by_unifi_discovery_direct_connect_on_different_interfa
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -736,7 +736,7 @@ async def test_discovered_by_unifi_discovery_direct_connect_on_different_interfa
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -777,7 +777,7 @@ async def test_discovered_by_unifi_discovery_direct_connect_on_different_interfa
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -814,7 +814,7 @@ async def test_discovered_by_unifi_discovery_direct_connect_on_different_interfa
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "discovery_confirm"
     flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
     assert flows[0]["context"]["title_placeholders"] == {
@@ -848,7 +848,7 @@ async def test_discovered_by_unifi_discovery_direct_connect_on_different_interfa
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "UnifiProtect"
     assert result2["data"] == {
         "host": "nomatchsameip.ui.direct",
@@ -892,7 +892,7 @@ async def test_discovered_by_unifi_discovery_direct_connect_on_different_interfa
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -913,5 +913,5 @@ async def test_discovery_can_be_ignored(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"

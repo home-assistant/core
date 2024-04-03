@@ -262,7 +262,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """Shutdown event."""
         await cloud.stop()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _shutdown)
+    hass.bus.async_listen_once(
+        EVENT_HOMEASSISTANT_STOP, _shutdown, run_immediately=True
+    )
 
     _remote_handle_prefs_updated(cloud)
 
@@ -343,7 +345,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             DOMAIN,
             {"platform_loaded": tts_platform_loaded},
             config,
-        )
+        ),
+        eager_start=True,
     )
 
     async_call_later(

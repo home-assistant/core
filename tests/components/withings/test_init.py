@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 from urllib.parse import urlparse
 
 from aiohttp.hdrs import METH_HEAD
@@ -13,15 +13,13 @@ from aiowithings import (
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import cloud
 from homeassistant.components.cloud import CloudNotAvailable
 from homeassistant.components.webhook import async_generate_url
-from homeassistant.components.withings import CONFIG_SCHEMA, async_setup
-from homeassistant.components.withings.const import CONF_USE_WEBHOOK, DOMAIN
-from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_WEBHOOK_ID
+from homeassistant.components.withings.const import DOMAIN
+from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
@@ -35,87 +33,6 @@ from tests.common import (
 )
 from tests.components.cloud import mock_cloud
 from tests.typing import ClientSessionGenerator
-
-
-def config_schema_validate(withings_config) -> dict:
-    """Assert a schema config succeeds."""
-    hass_config = {DOMAIN: withings_config}
-
-    return CONFIG_SCHEMA(hass_config)
-
-
-def config_schema_assert_fail(withings_config) -> None:
-    """Assert a schema config will fail."""
-    with pytest.raises(vol.MultipleInvalid):
-        config_schema_validate(withings_config)
-
-
-def test_config_schema_basic_config() -> None:
-    """Test schema."""
-    config_schema_validate(
-        {
-            CONF_CLIENT_ID: "my_client_id",
-            CONF_CLIENT_SECRET: "my_client_secret",
-            CONF_USE_WEBHOOK: True,
-        }
-    )
-
-
-def test_config_schema_client_id() -> None:
-    """Test schema."""
-    config_schema_assert_fail(
-        {CONF_CLIENT_SECRET: "my_client_secret", CONF_CLIENT_ID: ""}
-    )
-    config_schema_validate(
-        {CONF_CLIENT_SECRET: "my_client_secret", CONF_CLIENT_ID: "my_client_id"}
-    )
-
-
-def test_config_schema_client_secret() -> None:
-    """Test schema."""
-    config_schema_assert_fail({CONF_CLIENT_ID: "my_client_id", CONF_CLIENT_SECRET: ""})
-    config_schema_validate(
-        {CONF_CLIENT_ID: "my_client_id", CONF_CLIENT_SECRET: "my_client_secret"}
-    )
-
-
-def test_config_schema_use_webhook() -> None:
-    """Test schema."""
-    config_schema_validate(
-        {CONF_CLIENT_ID: "my_client_id", CONF_CLIENT_SECRET: "my_client_secret"}
-    )
-    config = config_schema_validate(
-        {
-            CONF_CLIENT_ID: "my_client_id",
-            CONF_CLIENT_SECRET: "my_client_secret",
-            CONF_USE_WEBHOOK: True,
-        }
-    )
-    assert config[DOMAIN][CONF_USE_WEBHOOK] is True
-    config = config_schema_validate(
-        {
-            CONF_CLIENT_ID: "my_client_id",
-            CONF_CLIENT_SECRET: "my_client_secret",
-            CONF_USE_WEBHOOK: False,
-        }
-    )
-    assert config[DOMAIN][CONF_USE_WEBHOOK] is False
-    config_schema_assert_fail(
-        {
-            CONF_CLIENT_ID: "my_client_id",
-            CONF_CLIENT_SECRET: "my_client_secret",
-            CONF_USE_WEBHOOK: "A",
-        }
-    )
-
-
-async def test_async_setup_no_config(hass: HomeAssistant) -> None:
-    """Test method."""
-    hass.async_create_task = MagicMock()
-
-    await async_setup(hass, {})
-
-    hass.async_create_task.assert_not_called()
 
 
 async def test_data_manager_webhook_subscription(
