@@ -84,11 +84,21 @@
             'longitude': '**REDACTED**',
             'motion': False,
             'source_type': 'gps',
-            'status': 'online',
             'traccar_id': 0,
             'tracker': 'traccar_server',
           }),
           'state': 'not_home',
+        }),
+        'unit_of_measurement': None,
+      }),
+      dict({
+        'disabled': False,
+        'enity_id': 'binary_sensor.x_wing_status',
+        'state': dict({
+          'attributes': dict({
+            'friendly_name': 'X-Wing Status',
+          }),
+          'state': 'on',
         }),
         'unit_of_measurement': None,
       }),
@@ -233,6 +243,12 @@
     'entities': list([
       dict({
         'disabled': True,
+        'enity_id': 'binary_sensor.x_wing_status',
+        'state': None,
+        'unit_of_measurement': None,
+      }),
+      dict({
+        'disabled': True,
         'enity_id': 'sensor.x_wing_battery',
         'state': None,
         'unit_of_measurement': '%',
@@ -345,6 +361,12 @@
     'entities': list([
       dict({
         'disabled': True,
+        'enity_id': 'binary_sensor.x_wing_status',
+        'state': None,
+        'unit_of_measurement': None,
+      }),
+      dict({
+        'disabled': True,
         'enity_id': 'sensor.x_wing_battery',
         'state': None,
         'unit_of_measurement': '%',
@@ -386,7 +408,6 @@
             'longitude': '**REDACTED**',
             'motion': False,
             'source_type': 'gps',
-            'status': 'online',
             'traccar_id': 0,
             'tracker': 'traccar_server',
           }),
