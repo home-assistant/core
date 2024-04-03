@@ -296,9 +296,9 @@ async def async_get_custom_components(
     hass: HomeAssistant,
 ) -> dict[str, Integration]:
     """Return cached list of custom integrations."""
-    comps_or_future: dict[str, Integration] | asyncio.Future[
-        dict[str, Integration]
-    ] | None = hass.data.get(DATA_CUSTOM_COMPONENTS)
+    comps_or_future: (
+        dict[str, Integration] | asyncio.Future[dict[str, Integration]] | None
+    ) = hass.data.get(DATA_CUSTOM_COMPONENTS)
 
     if comps_or_future is None:
         future = hass.data[DATA_CUSTOM_COMPONENTS] = hass.loop.create_future()
@@ -1550,6 +1550,20 @@ class Helpers:
     def __getattr__(self, helper_name: str) -> ModuleWrapper:
         """Fetch a helper."""
         helper = importlib.import_module(f"homeassistant.helpers.{helper_name}")
+
+        # Local import to avoid circular dependencies
+        from .helpers.frame import report  # pylint: disable=import-outside-toplevel
+
+        report(
+            (
+                f"accesses hass.helpers.{helper_name}."
+                " This is deprecated and will stop working in Home Assistant 2024.11, it"
+                f" should be updated to import functions used from {helper_name} directly"
+            ),
+            error_if_core=False,
+            log_custom_component_only=True,
+        )
+
         wrapped = ModuleWrapper(self._hass, helper)
         setattr(self, helper_name, wrapped)
         return wrapped

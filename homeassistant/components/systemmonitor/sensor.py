@@ -7,6 +7,7 @@ import contextlib
 from dataclasses import dataclass
 from datetime import datetime
 from functools import lru_cache
+import ipaddress
 import logging
 import socket
 import sys
@@ -136,6 +137,11 @@ def get_ip_address(
     if entity.argument in addresses:
         for addr in addresses[entity.argument]:
             if addr.family == IF_ADDRS_FAMILY[entity.entity_description.key]:
+                address = ipaddress.ip_address(addr.address)
+                if address.version == 6 and (
+                    address.is_link_local or address.is_loopback
+                ):
+                    continue
                 return addr.address
     return None
 

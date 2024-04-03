@@ -271,15 +271,18 @@ class TemplateEntity(Entity):
         self._attr_extra_state_attributes = {}
         self._self_ref_update_count = 0
         self._attr_unique_id = unique_id
-        self._preview_callback: Callable[
-            [
-                str | None,
-                dict[str, Any] | None,
-                dict[str, bool | set[str]] | None,
-                str | None,
-            ],
-            None,
-        ] | None = None
+        self._preview_callback: (
+            Callable[
+                [
+                    str | None,
+                    dict[str, Any] | None,
+                    dict[str, bool | set[str]] | None,
+                    str | None,
+                ],
+                None,
+            ]
+            | None
+        ) = None
         if config is None:
             self._attribute_templates = attribute_templates
             self._availability_template = availability_template

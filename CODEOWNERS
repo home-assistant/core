@@ -5,13 +5,30 @@
 # https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
 
 # Home Assistant Core
-setup.cfg @home-assistant/core
+.core_files.yaml @home-assistant/core
+.git-blame-ignore-revs @home-assistant/core
+.gitattributes @home-assistant/core
+.gitignore @home-assistant/core
+.hadolint.yaml @home-assistant/core
+.pre-commit-config.yaml @home-assistant/core
+.prettierignore @home-assistant/core
+.yamllint @home-assistant/core
 pyproject.toml @home-assistant/core
+requirements_test.txt @home-assistant/core
+/.devcontainer/ @home-assistant/core
+/.github/ @home-assistant/core
+/.vscode/ @home-assistant/core
 /homeassistant/*.py @home-assistant/core
+/homeassistant/auth/ @home-assistant/core
+/homeassistant/backports/ @home-assistant/core
 /homeassistant/helpers/ @home-assistant/core
+/homeassistant/scripts/ @home-assistant/core
 /homeassistant/util/ @home-assistant/core
+/pylint/ @home-assistant/core
+/script/ @home-assistant/core
 
 # Home Assistant Supervisor
+.dockerignore @home-assistant/supervisor
 build.json @home-assistant/supervisor
 /machine/ @home-assistant/supervisor
 /rootfs/ @home-assistant/supervisor
@@ -361,6 +378,8 @@ build.json @home-assistant/supervisor
 /tests/components/emulated_hue/ @bdraco @Tho85
 /homeassistant/components/emulated_kasa/ @kbickar
 /tests/components/emulated_kasa/ @kbickar
+/homeassistant/components/energenie_power_sockets/ @gnumpi
+/tests/components/energenie_power_sockets/ @gnumpi
 /homeassistant/components/energy/ @home-assistant/core
 /tests/components/energy/ @home-assistant/core
 /homeassistant/components/energyzero/ @klaasnicolaas
@@ -379,6 +398,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/epson/ @pszafer
 /tests/components/epson/ @pszafer
 /homeassistant/components/epsonworkforce/ @ThaStealth
+/homeassistant/components/eq3btsmart/ @eulemitkeule @dbuezas
+/tests/components/eq3btsmart/ @eulemitkeule @dbuezas
 /homeassistant/components/escea/ @lazdavila
 /tests/components/escea/ @lazdavila
 /homeassistant/components/esphome/ @OttoWinter @jesserockz @kbx81 @bdraco
@@ -841,6 +862,8 @@ build.json @home-assistant/supervisor
 /tests/components/mopeka/ @bdraco
 /homeassistant/components/motion_blinds/ @starkillerOG
 /tests/components/motion_blinds/ @starkillerOG
+/homeassistant/components/motionblinds_ble/ @LennP @jerrybboy
+/tests/components/motionblinds_ble/ @LennP @jerrybboy
 /homeassistant/components/motioneye/ @dermotduffy
 /tests/components/motioneye/ @dermotduffy
 /homeassistant/components/motionmount/ @RJPoelstra
@@ -931,6 +954,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/octoprint/ @rfleming71
 /tests/components/octoprint/ @rfleming71
 /homeassistant/components/ohmconnect/ @robbiet480
+/homeassistant/components/ollama/ @synesthesiam
+/tests/components/ollama/ @synesthesiam
 /homeassistant/components/ombi/ @larssont
 /homeassistant/components/omnilogic/ @oliver84 @djtimca @gentoosu
 /tests/components/omnilogic/ @oliver84 @djtimca @gentoosu
