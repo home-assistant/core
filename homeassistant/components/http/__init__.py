@@ -187,7 +187,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if conf is None:
         conf = cast(ConfData, HTTP_SCHEMA({}))
 
-    server_host = conf.get(CONF_SERVER_HOST)
+    server_host = conf[CONF_SERVER_HOST]
     server_port = conf[CONF_SERVER_PORT]
     ssl_certificate = conf.get(CONF_SSL_CERTIFICATE)
     ssl_peer_certificate = conf.get(CONF_SSL_PEER_CERTIFICATE)
