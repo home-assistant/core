@@ -47,6 +47,7 @@ async def test_switch_attributes(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test for correct Sonos switch states."""
+
     alarm = entity_registry.entities["switch.sonos_alarm_14"]
     alarm_state = hass.states.get(alarm.entity_id)
     assert alarm_state.state == STATE_ON
@@ -122,6 +123,7 @@ async def test_switch_attributes(
 
     # Trigger subscription callback for speaker discovery
     await fire_zgs_event()
+    await hass.async_block_till_done()
 
     status_light_state = hass.states.get(status_light.entity_id)
     assert status_light_state.state == STATE_ON
