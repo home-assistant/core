@@ -11,6 +11,7 @@ import zigpy.application
 import zigpy.types as t
 import zigpy_deconz.zigbee.application
 import zigpy_xbee.zigbee.application
+import zigpy_zboss.zigbee.application
 import zigpy_zigate.zigbee.application
 import zigpy_znp.zigbee.application
 
@@ -270,6 +271,10 @@ class RadioType(enum.Enum):
     xbee = (
         "XBee = Digi XBee Zigbee radios: Digi XBee Series 2, 2C, 3",
         zigpy_xbee.zigbee.application.ControllerApplication,
+    )
+    zboss = (
+        "ZBOSS = Nordic nRF52840 Dongle",
+        zigpy_zboss.zigbee.application.ControllerApplication,
     )
 
     @classmethod
