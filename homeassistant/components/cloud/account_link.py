@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime
 import logging
-from typing import Any, cast
+from typing import Any
 
 import aiohttp
 from awesomeversion import AwesomeVersion
@@ -64,7 +64,8 @@ async def _get_services(hass: HomeAssistant) -> list[dict[str, Any]]:
     """Get the available services."""
     services: list[dict[str, Any]]
     if DATA_SERVICES in hass.data:
-        return cast(list[dict[str, Any]], hass.data[DATA_SERVICES])
+        services = hass.data[DATA_SERVICES]
+        return services  # noqa: RET504
 
     try:
         services = await account_link.async_fetch_available_services(hass.data[DOMAIN])

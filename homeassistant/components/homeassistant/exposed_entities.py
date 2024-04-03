@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping
 import dataclasses
 from itertools import chain
-from typing import Any, TypedDict, cast
+from typing import Any, TypedDict
 
 import voluptuous as vol
 
@@ -258,7 +258,8 @@ class ExposedEntities:
             return self._async_should_expose_legacy_entity(assistant, entity_id)
         if assistant in registry_entry.options:
             if "should_expose" in registry_entry.options[assistant]:
-                return cast(bool, registry_entry.options[assistant]["should_expose"])
+                should_expose = registry_entry.options[assistant]["should_expose"]
+                return should_expose  # noqa: RET504
 
         if self.async_get_expose_new_entities(assistant):
             should_expose = self._is_default_exposed(entity_id, registry_entry)
@@ -284,7 +285,8 @@ class ExposedEntities:
             exposed_entity := self.entities.get(entity_id)
         ) and assistant in exposed_entity.assistants:
             if "should_expose" in exposed_entity.assistants[assistant]:
-                return cast(bool, exposed_entity.assistants[assistant]["should_expose"])
+                should_expose = exposed_entity.assistants[assistant]["should_expose"]
+                return should_expose  # noqa: RET504
 
         if self.async_get_expose_new_entities(assistant):
             should_expose = self._is_default_exposed(entity_id, None)
