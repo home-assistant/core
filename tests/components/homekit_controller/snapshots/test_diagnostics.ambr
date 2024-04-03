@@ -70,7 +70,6 @@
         'manfacturer': 'Koogeek',
         'model': 'LS1',
         'name': 'Koogeek-LS1-20833F',
-        'serial_number': 'AAAA011111111111',
         'sw_version': '2.2.15',
       }),
     ]),
@@ -396,7 +395,6 @@
       'manfacturer': 'Koogeek',
       'model': 'LS1',
       'name': 'Koogeek-LS1-20833F',
-      'serial_number': 'AAAA011111111111',
       'sw_version': '2.2.15',
     }),
     'entity-map': list([
