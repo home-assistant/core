@@ -19,11 +19,19 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class QBittorrentDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
-    """Coordinator for updating QBittorrent data."""
+    """Coordinator for updating qBittorrent data."""
 
     def __init__(self, hass: HomeAssistant, client: Client) -> None:
         """Initialize coordinator."""
         self.client = client
+        # self.main_data: dict[str, int] = {}
+        self.total_torrents: dict[str, int] = {}
+        self.active_torrents: dict[str, int] = {}
+        self.inactive_torrents: dict[str, int] = {}
+        self.paused_torrents: dict[str, int] = {}
+        self.seeding_torrents: dict[str, int] = {}
+        self.started_torrents: dict[str, int] = {}
+
 
         super().__init__(
             hass,
