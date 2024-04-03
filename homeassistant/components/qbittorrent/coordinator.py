@@ -32,7 +32,6 @@ class QBittorrentDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.seeding_torrents: dict[str, int] = {}
         self.started_torrents: dict[str, int] = {}
 
-
         super().__init__(
             hass,
             _LOGGER,
