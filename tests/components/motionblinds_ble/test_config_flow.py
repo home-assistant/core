@@ -1,4 +1,4 @@
-"""Test the MotionBlinds Bluetooth config flow."""
+"""Test the Motionblinds Bluetooth config flow."""
 
 from unittest.mock import patch
 
