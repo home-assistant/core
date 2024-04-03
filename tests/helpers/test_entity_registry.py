@@ -473,7 +473,7 @@ async def test_load_bad_data(
                     "has_entity_name": False,
                     "hidden_by": None,
                     "icon": None,
-                    "id": "12345",
+                    "id": "00001",
                     "labels": [],
                     "name": None,
                     "options": None,
@@ -501,7 +501,7 @@ async def test_load_bad_data(
                     "has_entity_name": False,
                     "hidden_by": None,
                     "icon": None,
-                    "id": "12345",
+                    "id": "00002",
                     "labels": [],
                     "name": None,
                     "options": None,
@@ -516,7 +516,24 @@ async def test_load_bad_data(
                     "unit_of_measurement": None,
                 },
             ],
-            "deleted_entities": [],
+            "deleted_entities": [
+                {
+                    "config_entry_id": None,
+                    "entity_id": "test.test3",
+                    "id": "00003",
+                    "orphaned_timestamp": None,
+                    "platform": "super_platform",
+                    "unique_id": 234,  # Should trigger warning
+                },
+                {
+                    "config_entry_id": None,
+                    "entity_id": "test.test4",
+                    "id": "00004",
+                    "orphaned_timestamp": None,
+                    "platform": "super_platform",
+                    "unique_id": ["also", "not", "valid"],  # Should not load
+                },
+            ],
         },
     }
 
@@ -525,6 +542,9 @@ async def test_load_bad_data(
 
     assert len(registry.entities) == 1
     assert set(registry.entities.keys()) == {"test.test1"}
+
+    assert len(registry.deleted_entities) == 1
+    assert set(registry.deleted_entities.keys()) == {("test", "super_platform", 234)}
 
     assert (
         "'test' from integration super_platform has a non string unique_id '123', "
