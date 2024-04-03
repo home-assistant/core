@@ -8,6 +8,7 @@ from homeassistant import config_entries
 from homeassistant.components import dynalite
 from homeassistant.const import CONF_PORT
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.issue_registry import (
     IssueSeverity,
     async_get as async_get_issue_registry,
@@ -86,7 +87,7 @@ async def test_existing(hass: HomeAssistant) -> None:
             context={"source": config_entries.SOURCE_IMPORT},
             data={dynalite.CONF_HOST: host},
         )
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -116,7 +117,7 @@ async def test_existing_update(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
         assert mock_dyn_dev().configure.call_count == 2
         assert mock_dyn_dev().configure.mock_calls[1][1][0]["port"] == port2
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -136,7 +137,7 @@ async def test_two_entries(hass: HomeAssistant) -> None:
             context={"source": config_entries.SOURCE_IMPORT},
             data={dynalite.CONF_HOST: host2},
         )
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].state == config_entries.ConfigEntryState.LOADED
 
 
@@ -148,7 +149,7 @@ async def test_setup_user(hass):
         dynalite.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] is None
 
@@ -161,7 +162,7 @@ async def test_setup_user(hass):
             {"host": host, "port": port},
         )
 
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].state == config_entries.ConfigEntryState.LOADED
     assert result["title"] == host
     assert result["data"] == {
@@ -188,5 +189,5 @@ async def test_setup_user_existing_host(hass):
             {"host": host, "port": 1234},
         )
 
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"

@@ -524,7 +524,7 @@ def async_setup_scanner_platform(
                 ]
                 kwargs["gps_accuracy"] = 0
 
-            hass.async_create_task(async_see_device(**kwargs))
+            hass.async_create_task(async_see_device(**kwargs), eager_start=True)
 
     cancel_legacy_scan = async_track_time_interval(
         hass,
@@ -532,7 +532,7 @@ def async_setup_scanner_platform(
         interval,
         name=f"device_tracker {platform} legacy scan",
     )
-    hass.async_create_task(async_device_tracker_scan(None))
+    hass.async_create_task(async_device_tracker_scan(None), eager_start=True)
 
     @callback
     def _on_hass_stop(_: Event) -> None:
@@ -722,7 +722,8 @@ class DeviceTracker:
         self.hass.async_create_task(
             self.async_update_config(
                 self.hass.config.path(YAML_DEVICES), dev_id, device
-            )
+            ),
+            eager_start=True,
         )
 
     async def async_update_config(self, path: str, dev_id: str, device: Device) -> None:
@@ -743,7 +744,9 @@ class DeviceTracker:
         """
         for device in self.devices.values():
             if (device.track and device.last_update_home) and device.stale(now):
-                self.hass.async_create_task(device.async_update_ha_state(True))
+                self.hass.async_create_task(
+                    device.async_update_ha_state(True), eager_start=True
+                )
 
     async def async_setup_tracked_device(self) -> None:
         """Set up all not exists tracked devices.

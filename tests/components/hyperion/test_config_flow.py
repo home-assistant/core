@@ -10,7 +10,6 @@ from unittest.mock import AsyncMock, Mock, patch
 
 from hyperion import const
 
-from homeassistant import data_entry_flow
 from homeassistant.components import ssdp
 from homeassistant.components.hyperion.const import (
     CONF_AUTH_ID,
@@ -30,7 +29,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.data_entry_flow import FlowResult, FlowResultType
 
 from . import (
     TEST_AUTH_REQUIRED_RESP,
@@ -165,7 +164,7 @@ async def test_user_if_no_configuration(hass: HomeAssistant) -> None:
     """Check flow behavior when no configuration is present."""
     result = await _init_flow(hass)
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["handler"] == DOMAIN
 
@@ -180,7 +179,7 @@ async def test_user_existing_id_abort(hass: HomeAssistant) -> None:
         "homeassistant.components.hyperion.client.HyperionClient", return_value=client
     ):
         result = await _configure_flow(hass, result, user_input=TEST_HOST_PORT)
-        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "already_configured"
 
 
@@ -196,7 +195,7 @@ async def test_user_client_errors(hass: HomeAssistant) -> None:
         "homeassistant.components.hyperion.client.HyperionClient", return_value=client
     ):
         result = await _configure_flow(hass, result, user_input=TEST_HOST_PORT)
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["errors"]["base"] == "cannot_connect"
 
     # Fail the auth check call.
@@ -206,7 +205,7 @@ async def test_user_client_errors(hass: HomeAssistant) -> None:
         "homeassistant.components.hyperion.client.HyperionClient", return_value=client
     ):
         result = await _configure_flow(hass, result, user_input=TEST_HOST_PORT)
-        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "auth_required_error"
 
 
@@ -225,7 +224,7 @@ async def test_user_confirm_cannot_connect(hass: HomeAssistant) -> None:
         side_effect=[good_client, bad_client],
     ):
         result = await _configure_flow(hass, result, user_input=TEST_HOST_PORT)
-        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "cannot_connect"
 
 
@@ -241,7 +240,7 @@ async def test_user_confirm_id_error(hass: HomeAssistant) -> None:
         "homeassistant.components.hyperion.client.HyperionClient", return_value=client
     ):
         result = await _configure_flow(hass, result, user_input=TEST_HOST_PORT)
-        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "no_id"
 
 
@@ -255,7 +254,7 @@ async def test_user_noauth_flow_success(hass: HomeAssistant) -> None:
     ):
         result = await _configure_flow(hass, result, user_input=TEST_HOST_PORT)
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["handler"] == DOMAIN
     assert result["title"] == TEST_TITLE
     assert result["data"] == {
@@ -274,7 +273,7 @@ async def test_user_auth_required(hass: HomeAssistant) -> None:
         "homeassistant.components.hyperion.client.HyperionClient", return_value=client
     ):
         result = await _configure_flow(hass, result, user_input=TEST_HOST_PORT)
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "auth"
 
 
@@ -288,7 +287,7 @@ async def test_auth_static_token_auth_required_fail(hass: HomeAssistant) -> None
         "homeassistant.components.hyperion.client.HyperionClient", return_value=client
     ):
         result = await _configure_flow(hass, result, user_input=TEST_HOST_PORT)
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "auth_required_error"
 
 
@@ -308,7 +307,7 @@ async def test_auth_static_token_success(hass: HomeAssistant) -> None:
             hass, result, user_input={CONF_CREATE_TOKEN: False, CONF_TOKEN: TEST_TOKEN}
         )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["handler"] == DOMAIN
     assert result["title"] == TEST_TITLE
     assert result["data"] == {
@@ -334,7 +333,7 @@ async def test_auth_static_token_login_connect_fail(hass: HomeAssistant) -> None
             hass, result, user_input={CONF_CREATE_TOKEN: False, CONF_TOKEN: TEST_TOKEN}
         )
 
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
 
 
@@ -357,7 +356,7 @@ async def test_auth_static_token_login_fail(hass: HomeAssistant) -> None:
             hass, result, user_input={CONF_CREATE_TOKEN: False, CONF_TOKEN: TEST_TOKEN}
         )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"]["base"] == "invalid_access_token"
 
 
@@ -372,7 +371,7 @@ async def test_auth_create_token_approval_declined(hass: HomeAssistant) -> None:
         "homeassistant.components.hyperion.client.HyperionClient", return_value=client
     ):
         result = await _configure_flow(hass, result, user_input=TEST_HOST_PORT)
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "auth"
 
     client.async_request_token = AsyncMock(return_value=TEST_REQUEST_TOKEN_FAIL)
@@ -390,7 +389,7 @@ async def test_auth_create_token_approval_declined(hass: HomeAssistant) -> None:
             hass, result, user_input={CONF_CREATE_TOKEN: True}
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "create_token"
         assert result["description_placeholders"] == {
             CONF_AUTH_ID: TEST_AUTH_ID,
@@ -398,13 +397,13 @@ async def test_auth_create_token_approval_declined(hass: HomeAssistant) -> None:
 
         result = await _configure_flow(hass, result)
         await hass.async_block_till_done()
-        assert result["type"] == data_entry_flow.FlowResultType.EXTERNAL_STEP
+        assert result["type"] is FlowResultType.EXTERNAL_STEP
         assert result["step_id"] == "create_token_external"
 
         # The flow will be automatically advanced by the auth token response.
 
         result = await _configure_flow(hass, result)
-        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "auth_new_token_not_granted_error"
 
 
@@ -486,7 +485,7 @@ async def test_auth_create_token_when_issued_token_fails(
         "homeassistant.components.hyperion.client.HyperionClient", return_value=client
     ):
         result = await _configure_flow(hass, result, user_input=TEST_HOST_PORT)
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "auth"
 
     client.async_request_token = AsyncMock(return_value=TEST_REQUEST_TOKEN_SUCCESS)
@@ -503,14 +502,14 @@ async def test_auth_create_token_when_issued_token_fails(
         result = await _configure_flow(
             hass, result, user_input={CONF_CREATE_TOKEN: True}
         )
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "create_token"
         assert result["description_placeholders"] == {
             CONF_AUTH_ID: TEST_AUTH_ID,
         }
 
         result = await _configure_flow(hass, result)
-        assert result["type"] == data_entry_flow.FlowResultType.EXTERNAL_STEP
+        assert result["type"] is FlowResultType.EXTERNAL_STEP
         assert result["step_id"] == "create_token_external"
 
         # The flow will be automatically advanced by the auth token response.
@@ -519,7 +518,7 @@ async def test_auth_create_token_when_issued_token_fails(
         client.async_client_connect = AsyncMock(return_value=False)
 
         result = await _configure_flow(hass, result)
-        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "cannot_connect"
 
 
@@ -534,7 +533,7 @@ async def test_auth_create_token_success(hass: HomeAssistant) -> None:
         "homeassistant.components.hyperion.client.HyperionClient", return_value=client
     ):
         result = await _configure_flow(hass, result, user_input=TEST_HOST_PORT)
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "auth"
 
     client.async_request_token = AsyncMock(return_value=TEST_REQUEST_TOKEN_SUCCESS)
@@ -551,19 +550,19 @@ async def test_auth_create_token_success(hass: HomeAssistant) -> None:
         result = await _configure_flow(
             hass, result, user_input={CONF_CREATE_TOKEN: True}
         )
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "create_token"
         assert result["description_placeholders"] == {
             CONF_AUTH_ID: TEST_AUTH_ID,
         }
 
         result = await _configure_flow(hass, result)
-        assert result["type"] == data_entry_flow.FlowResultType.EXTERNAL_STEP
+        assert result["type"] is FlowResultType.EXTERNAL_STEP
         assert result["step_id"] == "create_token_external"
 
         # The flow will be automatically advanced by the auth token response.
         result = await _configure_flow(hass, result)
-        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["handler"] == DOMAIN
         assert result["title"] == TEST_TITLE
         assert result["data"] == {
@@ -613,7 +612,7 @@ async def test_auth_create_token_success_but_login_fail(
         # The flow will be automatically advanced by the auth token response.
         result = await _configure_flow(hass, result)
 
-        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "auth_new_token_not_work_error"
 
 
@@ -633,7 +632,7 @@ async def test_ssdp_success(hass: HomeAssistant) -> None:
     ):
         result = await _configure_flow(hass, result)
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["handler"] == DOMAIN
     assert result["title"] == TEST_TITLE
     assert result["data"] == {
@@ -654,7 +653,7 @@ async def test_ssdp_cannot_connect(hass: HomeAssistant) -> None:
         result = await _init_flow(hass, source=SOURCE_SSDP, data=TEST_SSDP_SERVICE_INFO)
         await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
 
 
@@ -672,7 +671,7 @@ async def test_ssdp_missing_serial(hass: HomeAssistant) -> None:
         result = await _init_flow(hass, source=SOURCE_SSDP, data=bad_data)
         await hass.async_block_till_done()
 
-        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "no_id"
 
 
@@ -691,7 +690,7 @@ async def test_ssdp_failure_bad_port_json(hass: HomeAssistant) -> None:
         result = await _configure_flow(hass, result)
         await hass.async_block_till_done()
 
-        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["data"][CONF_PORT] == const.DEFAULT_PORT_JSON
 
 
@@ -716,7 +715,7 @@ async def test_ssdp_failure_bad_port_ui(hass: HomeAssistant) -> None:
     ):
         result = await _init_flow(hass, source=SOURCE_SSDP, data=bad_data)
 
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "auth"
 
         client.async_request_token = AsyncMock(return_value=TEST_REQUEST_TOKEN_FAIL)
@@ -725,7 +724,7 @@ async def test_ssdp_failure_bad_port_ui(hass: HomeAssistant) -> None:
             hass, result, user_input={CONF_CREATE_TOKEN: True}
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "create_token"
 
         # Verify a working URL is used despite the bad port number
@@ -749,8 +748,8 @@ async def test_ssdp_abort_duplicates(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result_1["type"] == data_entry_flow.FlowResultType.FORM
-    assert result_2["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result_1["type"] is FlowResultType.FORM
+    assert result_2["type"] is FlowResultType.ABORT
     assert result_2["reason"] == "already_in_progress"
 
 
@@ -768,7 +767,7 @@ async def test_options_priority(hass: HomeAssistant) -> None:
         assert hass.states.get(TEST_ENTITY_ID_1) is not None
 
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "init"
 
         new_priority = 1
@@ -777,7 +776,7 @@ async def test_options_priority(hass: HomeAssistant) -> None:
             user_input={CONF_PRIORITY: new_priority},
         )
         await hass.async_block_till_done()
-        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["data"][CONF_PRIORITY] == new_priority
 
         # Turn the light on and ensure the new priority is used.
@@ -810,14 +809,14 @@ async def test_options_effect_show_list(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
 
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
             user_input={CONF_EFFECT_SHOW_LIST: ["effect1", "effect3"]},
         )
         await hass.async_block_till_done()
-        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
 
         # effect1 and effect3 only, so effect2 is hidden.
         assert result["data"][CONF_EFFECT_HIDE_LIST] == ["effect2"]
@@ -838,7 +837,7 @@ async def test_options_effect_hide_list_cannot_connect(hass: HomeAssistant) -> N
         client.async_client_connect = AsyncMock(return_value=False)
 
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
-        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "cannot_connect"
 
 
@@ -867,13 +866,13 @@ async def test_reauth_success(hass: HomeAssistant) -> None:
             data=config_data,
         )
         await hass.async_block_till_done()
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
 
         result = await _configure_flow(
             hass, result, user_input={CONF_CREATE_TOKEN: False, CONF_TOKEN: TEST_TOKEN}
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "reauth_successful"
         assert CONF_TOKEN in config_entry.data
 
@@ -899,5 +898,5 @@ async def test_reauth_cannot_connect(hass: HomeAssistant) -> None:
             data=config_data,
         )
         await hass.async_block_till_done()
-        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "cannot_connect"
