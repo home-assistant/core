@@ -29,6 +29,13 @@ from .const import (
 )
 
 SAVE_DELAY = 15.0
+# At startup, we want to save after a long delay to avoid
+# saving while the system is still starting up. If the system
+# for some reason restarts quickly, it will still be written
+# at the final write event. In most cases we expect startup
+# to happen in less than 180 seconds, but if it takes longer
+# its likely delayed because of remote I/O and not local
+# I/O so its fine to save at that point.
 SAVE_DELAY_LONG = 180.0
 
 
