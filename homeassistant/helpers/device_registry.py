@@ -533,19 +533,19 @@ class ActiveDeviceRegistryItems(DeviceRegistryItems[DeviceEntry]):
         super()._unindex_entry(key, replacement_entry)
 
     def get_devices_for_area_id(self, area_id: str) -> list[DeviceEntry]:
-        """Get entries for area."""
+        """Get devices for area."""
         data = self.data
         return [data[key] for key in self._area_id_index.get(area_id, ())]
 
     def get_devices_for_label(self, label: str) -> list[DeviceEntry]:
-        """Get entries for label."""
+        """Get devices for label."""
         data = self.data
         return [data[key] for key in self._labels_index.get(label, ())]
 
     def get_devices_for_config_entry_id(
         self, config_entry_id: str
     ) -> list[DeviceEntry]:
-        """Get entries for config entry."""
+        """Get devices for config entry."""
         data = self.data
         return [
             data[key] for key in self._config_entry_id_index.get(config_entry_id, ())
