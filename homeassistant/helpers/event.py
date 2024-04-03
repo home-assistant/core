@@ -25,6 +25,7 @@ from homeassistant.const import (
 from homeassistant.core import (
     CALLBACK_TYPE,
     Event,
+    # Explicit reexport of 'EventStateChangedData' for backwards compatibility
     EventStateChangedData as EventStateChangedData,  # noqa: PLC0414
     HassJob,
     HassJobType,
