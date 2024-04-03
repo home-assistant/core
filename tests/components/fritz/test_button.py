@@ -1,6 +1,7 @@
 """Tests for Fritz!Tools button platform."""
 
 import copy
+from datetime import timedelta
 from unittest.mock import PropertyMock, patch
 
 import pytest
@@ -10,10 +11,11 @@ from homeassistant.components.fritz.const import DOMAIN, MeshRoles
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
+from homeassistant.util.dt import utcnow
 
-from .const import MOCK_MESH_DATA, MOCK_USER_DATA
+from .const import MOCK_MESH_DATA, MOCK_NEW_DEVICE_NODE, MOCK_USER_DATA
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_button_setup(hass: HomeAssistant, fc_class_mock, fh_class_mock) -> None:
@@ -113,6 +115,40 @@ async def test_wol_button(
         assert button.state != STATE_UNKNOWN
 
 
+async def test_wol_button_new_device(
+    hass: HomeAssistant,
+    fc_class_mock,
+    fh_class_mock,
+) -> None:
+    """Test WoL button is created for new device at runtime."""
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    entry.add_to_hass(hass)
+
+    mesh_data = copy.deepcopy(MOCK_MESH_DATA)
+    with (
+        patch(
+            "tests.components.fritz.conftest.FritzHostMock.get_mesh_topology"
+        ) as mock_get_mesh_topology,
+        patch(
+            "homeassistant.helpers.entity.Entity.entity_registry_enabled_default",
+            PropertyMock(return_value=True),
+        ),
+    ):
+        mock_get_mesh_topology.return_value = mesh_data
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        assert entry.state == ConfigEntryState.LOADED
+
+        assert hass.states.get("button.printer_wake_on_lan")
+
+        mesh_data["nodes"].append(MOCK_NEW_DEVICE_NODE)
+
+        async_fire_time_changed(hass, utcnow() + timedelta(seconds=60))
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        assert hass.states.get("button.server_wake_on_lan")
+
+
 async def test_wol_button_absent_for_mesh_slave(
     hass: HomeAssistant,
     fc_class_mock,
@@ -153,7 +189,11 @@ async def test_wol_button_absent_for_non_lan_device(
 
     printer_wifi_data = copy.deepcopy(MOCK_MESH_DATA)
     # initialization logic uses the connection type of the `node_interface_1_uid` pair of the printer
-    printer_wifi_data["nodes"][0]["node_interfaces"][3]["type"] = "WLAN"
+    # ni-230 is wifi interface of fritzbox
+    printer_node_interface = printer_wifi_data["nodes"][1]["node_interfaces"][0]
+    printer_node_interface["type"] = "WLAN"
+    printer_node_interface["node_links"][0]["node_interface_1_uid"] = "ni-230"
+
     with (
         patch(
             "tests.components.fritz.conftest.FritzHostMock.get_mesh_topology",
