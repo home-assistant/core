@@ -31,6 +31,7 @@ SENSORS: list[SensorEntityDescription] = [
     ),
     SensorEntityDescription(
         key="rssi",
+        entity_registry_enabled_default=False,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -104,4 +105,5 @@ class RomySensor(RomyEntity, SensorEntity):
     @property
     def native_value(self) -> int:
         """Return the value of the sensor."""
-        return self.romy.sensors[self.entity_description.key]
+        value: int = self.romy.sensors[self.entity_description.key]
+        return value
