@@ -25,7 +25,7 @@ from homeassistant.const import (
 from homeassistant.core import (
     CALLBACK_TYPE,
     Event,
-    EventStateChangedData,
+    EventStateChangedData as EventStateChangedData,  # noqa: PLC0414
     HassJob,
     HassJobType,
     HomeAssistant,
