@@ -140,9 +140,9 @@ async def _async_connect(**kwargs):
         await async_close()
     try:
         await async_connect(**kwargs)
-        return True
     except ConnectionError:
         return False
+    return True
 
 
 @websocket_api.websocket_command({vol.Required(TYPE): "insteon/config/get"})
