@@ -9,7 +9,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import ATTR_CATEGORY, ATTR_MOTION, ATTR_TRACCAR_ID, ATTR_TRACKER, DOMAIN
+from .const import ATTR_CATEGORY, ATTR_TRACCAR_ID, ATTR_TRACKER, DOMAIN
 from .coordinator import TraccarServerCoordinator
 from .entity import TraccarServerEntity
 
@@ -39,7 +39,6 @@ class TraccarServerDeviceTracker(TraccarServerEntity, TrackerEntity):
         return {
             **self.traccar_attributes,
             ATTR_CATEGORY: self.traccar_device["category"],
-            ATTR_MOTION: self.traccar_position["attributes"].get("motion", False),
             ATTR_TRACCAR_ID: self.traccar_device["id"],
             ATTR_TRACKER: DOMAIN,
         }

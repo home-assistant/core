@@ -44,6 +44,13 @@
   },
   "entity": {
     "binary_sensor": {
+      "motion": {
+        "name": "Motion",
+        "state": {
+          "off": "Stopped",
+          "on": "Moving"
+        }
+      },
       "status": {
         "name": "Status",
         "state": {

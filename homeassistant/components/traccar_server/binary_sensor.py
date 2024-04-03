@@ -38,6 +38,12 @@ class TraccarServerBinarySensorEntityDescription(
 
 TRACCAR_SERVER_BINARY_SENSOR_ENTITY_DESCRIPTIONS = (
     TraccarServerBinarySensorEntityDescription[DeviceModel](
+        key="attributes.motion",
+        data_key="position",
+        translation_key="motion",
+        value_fn=lambda x: x["attributes"].get("motion", False),
+    ),
+    TraccarServerBinarySensorEntityDescription[DeviceModel](
         key="status",
         data_key="device",
         translation_key="status",
