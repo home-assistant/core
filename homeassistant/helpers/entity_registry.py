@@ -512,11 +512,13 @@ class EntityRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
 class EntityRegistryItems(BaseRegistryItems[RegistryEntry]):
     """Container for entity registry items, maps entity_id -> entry.
 
-    Maintains four additional indexes:
+    Maintains six additional indexes:
     - id -> entry
     - (domain, platform, unique_id) -> entity_id
-    - config_entry_id -> list[key]
-    - device_id -> list[key]
+    - config_entry_id -> dict[key, True]
+    - device_id -> dict[key, True]
+    - area_id -> dict[key, True]
+    - label -> dict[key, True]
     """
 
     def __init__(self) -> None:
