@@ -532,17 +532,17 @@ class ActiveDeviceRegistryItems(DeviceRegistryItems[DeviceEntry]):
             self._unindex_entry_value(key, config_entry_id, self._config_entry_id_index)
         super()._unindex_entry(key, replacement_entry)
 
-    def get_entries_for_area_id(self, area_id: str) -> list[DeviceEntry]:
+    def get_devices_for_area_id(self, area_id: str) -> list[DeviceEntry]:
         """Get entries for area."""
         data = self.data
         return [data[key] for key in self._area_id_index.get(area_id, ())]
 
-    def get_entries_for_label(self, label: str) -> list[DeviceEntry]:
+    def get_devices_for_label(self, label: str) -> list[DeviceEntry]:
         """Get entries for label."""
         data = self.data
         return [data[key] for key in self._labels_index.get(label, ())]
 
-    def get_entries_for_config_entry_id(
+    def get_devices_for_config_entry_id(
         self, config_entry_id: str
     ) -> list[DeviceEntry]:
         """Get entries for config entry."""
@@ -1079,7 +1079,7 @@ async def async_load(hass: HomeAssistant) -> None:
 @callback
 def async_entries_for_area(registry: DeviceRegistry, area_id: str) -> list[DeviceEntry]:
     """Return entries that match an area."""
-    return registry.devices.get_entries_for_area_id(area_id)
+    return registry.devices.get_devices_for_area_id(area_id)
 
 
 @callback
@@ -1087,7 +1087,7 @@ def async_entries_for_label(
     registry: DeviceRegistry, label_id: str
 ) -> list[DeviceEntry]:
     """Return entries that match a label."""
-    return registry.devices.get_entries_for_label(label_id)
+    return registry.devices.get_devices_for_label(label_id)
 
 
 @callback
@@ -1095,7 +1095,7 @@ def async_entries_for_config_entry(
     registry: DeviceRegistry, config_entry_id: str
 ) -> list[DeviceEntry]:
     """Return entries that match a config entry."""
-    return registry.devices.get_entries_for_config_entry_id(config_entry_id)
+    return registry.devices.get_devices_for_config_entry_id(config_entry_id)
 
 
 @callback
