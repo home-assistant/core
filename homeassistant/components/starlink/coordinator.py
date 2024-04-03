@@ -55,8 +55,9 @@ class StarlinkUpdateCoordinator(DataUpdateCoordinator[StarlinkData]):
             update_interval=timedelta(seconds=5),
         )
 
-    def _get_starlink_data(self, channel_context: ChannelContext) -> StarlinkData:
+    def _get_starlink_data(self) -> StarlinkData:
         """Retrieve Starlink data."""
+        channel_context = self.channel_context
         status = status_data(channel_context)
         location = location_data(channel_context)
         sleep = get_sleep_config(channel_context)
@@ -65,13 +66,10 @@ class StarlinkUpdateCoordinator(DataUpdateCoordinator[StarlinkData]):
     async def _async_update_data(self) -> StarlinkData:
         async with asyncio.timeout(4):
             try:
-                result = await self.hass.async_add_executor_job(
-                    self._get_starlink_data, self.channel_context
-                )
+                result = await self.hass.async_add_executor_job(self._get_starlink_data)
             except GrpcError as exc:
                 raise UpdateFailed from exc
-            else:
-                return result
+            return result
 
     async def async_stow_starlink(self, stow: bool) -> None:
         """Set whether Starlink system tied to this coordinator should be stowed."""
