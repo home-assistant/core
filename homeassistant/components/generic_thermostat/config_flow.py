@@ -2,14 +2,29 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 import voluptuous as vol
 
 from homeassistant.components.climate import HVACMode
+from homeassistant.components.climate.const import (
+    PRESET_ACTIVITY,
+    PRESET_AWAY,
+    PRESET_COMFORT,
+    PRESET_ECO,
+    PRESET_HOME,
+    PRESET_SLEEP,
+)
+from homeassistant.components.generic_thermostat.climate import CONF_PRESETS
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
-from homeassistant.const import PRECISION_HALVES, PRECISION_TENTHS, PRECISION_WHOLE
+from homeassistant.const import (
+    CONF_UNIQUE_ID,
+    PRECISION_HALVES,
+    PRECISION_TENTHS,
+    PRECISION_WHOLE,
+)
 from homeassistant.core import callback
 from homeassistant.helpers import selector
 from homeassistant.helpers.schema_config_entry_flow import (
@@ -78,6 +93,17 @@ OPTIONS_SCHEMA = vol.Schema(
                 mode=selector.SelectSelectorMode.DROPDOWN,
             )
         ),
+        **{
+            vol.Optional(CONF_PRESETS[preset]): vol.Coerce(float)
+            for preset in (
+                PRESET_AWAY,
+                PRESET_COMFORT,
+                PRESET_ECO,
+                PRESET_HOME,
+                PRESET_SLEEP,
+                PRESET_ACTIVITY,
+            )
+        },
     }
 )
 
@@ -85,6 +111,8 @@ OPTIONS_SCHEMA = vol.Schema(
 OPTIONS_FLOW = {
     "init": SchemaFlowFormStep(OPTIONS_SCHEMA),
 }
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class GenericThermostatConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -123,3 +151,29 @@ class GenericThermostatConfigFlow(ConfigFlow, domain=DOMAIN):
                 ),
             )
         return self.async_create_entry(title=DEFAULT_NAME, data=user_input)
+
+    async def async_step_import(
+        self, import_config: dict[str, Any]
+    ) -> ConfigFlowResult:
+        """Import a config entry."""
+        _LOGGER.debug("Importing Tado from configuration.yaml")
+        self._async_abort_entries_match(
+            {
+                CONF_HEATER: import_config[CONF_HEATER],
+                CONF_SENSOR: import_config[CONF_SENSOR],
+                CONF_UNIQUE_ID: import_config[CONF_UNIQUE_ID],
+            }
+        )
+
+        await self.async_set_unique_id(import_config[CONF_UNIQUE_ID])
+        self._abort_if_unique_id_configured()
+
+        return self.async_create_entry(
+            title=import_config[CONF_NAME],
+            data={
+                CONF_NAME: import_config[CONF_NAME],
+                CONF_HEATER: import_config[CONF_HEATER],
+                CONF_SENSOR: import_config[CONF_SENSOR],
+                CONF_UNIQUE_ID: import_config[CONF_UNIQUE_ID],
+            },
+        )

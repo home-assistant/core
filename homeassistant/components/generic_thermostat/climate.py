@@ -25,7 +25,7 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_TEMPERATURE,
@@ -50,6 +50,7 @@ from homeassistant.core import (
     State,
     callback,
 )
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import ConditionError
 from homeassistant.helpers import condition
 import homeassistant.helpers.config_validation as cv
@@ -59,6 +60,7 @@ from homeassistant.helpers.event import (
     async_track_state_change_event,
     async_track_time_interval,
 )
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -152,6 +154,36 @@ async def async_setup_platform(
     target_temperature_step: float | None = config.get(CONF_TEMP_STEP)
     unit = hass.config.units.temperature_unit
     unique_id: str | None = config.get(CONF_UNIQUE_ID)
+
+    import_result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={
+            CONF_NAME: name,
+            CONF_HEATER: heater_entity_id,
+            CONF_SENSOR: sensor_entity_id,
+            CONF_MIN_TEMP: min_temp,
+            CONF_UNIQUE_ID: unique_id,
+        },
+    )
+
+    translation_key = "deprecated_yaml_import_device_tracker"
+    if import_result.get("type") == FlowResultType.ABORT:
+        translation_key = "import_aborted"
+        if import_result.get("reason") == "import_failed":
+            translation_key = "import_failed"
+        if import_result.get("reason") == "import_failed_invalid_auth":
+            translation_key = "import_failed_invalid_auth"
+
+    async_create_issue(
+        hass,
+        DOMAIN,
+        "deprecated_yaml_import_device_tracker",
+        breaks_in_ha_version="2024.10.0",
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key=translation_key,
+    )
 
     async_add_entities(
         [

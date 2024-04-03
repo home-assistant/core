@@ -30,9 +30,15 @@
           "target_temp": "Target temperature",
           "initial_hvac_mode": "Initial HVAC mode",
           "away_temp": "Away temperature",
+          "eco_temp": "Eco temperature",
+          "comfort_temp": "Comfort temperature",
+          "home_temp": "Home temperature",
+          "sleep_temp": "Sleep temperature",
+          "activity_temp": "Activity temperature",
           "precision": "Precision",
           "send_if_off": "Send if off",
-          "keep_alive": "Keep alive"
+          "keep_alive": "Keep alive",
+          "target_temp_step": "Target temperature step"
         },
         "data_description": {
           "ac_mode": "Set the switch specified in the heater option to be treated as a cooling device instead of a heating device.",
@@ -42,8 +48,14 @@
           "min_temp": "Set minimum set point available. Default is 7.0°C.",
           "max_temp": "Set maximum set point available.",
           "target_temp": "Set initial target temperature. Failure to set this variable will result in target temperature being set to null on startup. As of version 0.59, it will retain the target temperature set before restart if available.",
+          "target_temp_step": "Set the step size for setting the target temperature. Default is 0.1 for Celsius and 1.0 for Fahrenheit.",
           "initial_hvac_mode": "Set the initial HVAC mode. Valid values are off, heat or cool. Value has to be double quoted. If this parameter is not set, it is preferable to set a keep_alive value. This is helpful to align any discrepancies between generic_thermostat and heater state.",
           "away_temp": "Set the temperature used by preset_mode: away.",
+          "eco_temp": "Set the temperature used by preset_mode: eco.",
+          "comfort_temp": "Set the temperature used by preset_mode: comfort.",
+          "home_temp": "Set the temperature used by preset_mode: home.",
+          "sleep_temp": "Set the temperature used by preset_mode: sleep.",
+          "activity_temp": "Set the temperature used by preset_mode: activity.",
           "precision": "The desired precision for this device. Can be used to match your actual thermostat’s precision. Supported values are 0.1, 0.5 and 1.0. This value is also used as the step size for setting the target temperature.\nDefault: 0.1 for Celsius and 1.0 for Fahrenheit.",
           "send_if_off": "If true, the thermostat will send the target temperature to the heater switch even if it is turned off.",
           "keep_alive": "Set a keep-alive interval. If set, the switch specified in the heater option will be triggered every time the interval elapses. Use with heaters and A/C units that shut off if they don’t receive a signal from their remote for a while. Use also with switches that might lose state. The keep-alive call is done with the current valid climate integration state (either on or off). When keep_alive is set the min_cycle_duration option will be ignored."
