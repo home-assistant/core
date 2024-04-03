@@ -22,7 +22,7 @@ async def test_form(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     with (
@@ -36,7 +36,7 @@ async def test_form(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCK_USER_INPUT["host"]
     assert result["data"] == MOCK_USER_INPUT
 
@@ -58,7 +58,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
             MOCK_USER_INPUT,
         )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
     assert len(mock_setup_entry.mock_calls) == 0
 
@@ -78,7 +78,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
             MOCK_USER_INPUT,
         )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_auth"}
     assert len(mock_setup_entry.mock_calls) == 0
 
@@ -99,7 +99,7 @@ async def test_form_cannot_retrieve_device_info(hass: HomeAssistant) -> None:
             MOCK_USER_INPUT,
         )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_retrieve_device_info"}
     assert len(mock_setup_entry.mock_calls) == 0
 
@@ -119,7 +119,7 @@ async def test_form_unexpected_exception(hass: HomeAssistant) -> None:
             MOCK_USER_INPUT,
         )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "unknown"}
     assert len(mock_setup_entry.mock_calls) == 0
 
@@ -143,6 +143,6 @@ async def test_form_already_configured(hass: HomeAssistant, mock_config_entry) -
             MOCK_USER_INPUT,
         )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert len(mock_setup_entry.mock_calls) == 0

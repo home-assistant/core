@@ -583,9 +583,9 @@ def stream_worker(
         # dts. Use "or 1" to deal with this.
         start_dts = next_video_packet.dts - (next_video_packet.duration or 1)
         first_keyframe.dts = first_keyframe.pts = start_dts
-    except StreamWorkerError as ex:
+    except StreamWorkerError:
         container.close()
-        raise ex
+        raise
     except StopIteration as ex:
         container.close()
         raise StreamEndedError("Stream ended; no additional packets") from ex
@@ -612,8 +612,8 @@ def stream_worker(
         while not quit_event.is_set():
             try:
                 packet = next(container_packets)
-            except StreamWorkerError as ex:
-                raise ex
+            except StreamWorkerError:
+                raise
             except StopIteration as ex:
                 raise StreamEndedError("Stream ended; no additional packets") from ex
             except av.AVError as ex:

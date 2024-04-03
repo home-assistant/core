@@ -5,7 +5,7 @@ from aiohomekit.model.services import ServicesTypes
 import pytest
 from pytest_unordered import unordered
 
-import homeassistant.components.automation as automation
+from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.homekit_controller.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState

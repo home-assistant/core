@@ -20,7 +20,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -30,7 +30,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
 
     result3 = await hass.config_entries.flow.async_configure(
         result2["flow_id"],
@@ -40,7 +40,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     )
     await hass.async_block_till_done()
 
-    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == "Germany, BW"
     assert result3["data"] == {
         "country": "DE",
@@ -54,7 +54,7 @@ async def test_form_no_subdivision(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -64,7 +64,7 @@ async def test_form_no_subdivision(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Sweden"
     assert result2["data"] == {
         "country": "SE",
@@ -108,7 +108,7 @@ async def test_single_combination_country_province(hass: HomeAssistant) -> None:
         context={"source": config_entries.SOURCE_USER},
         data=data_se,
     )
-    assert result_se["type"] == FlowResultType.ABORT
+    assert result_se["type"] is FlowResultType.ABORT
     assert result_se["reason"] == "already_configured"
 
     # Test for country with subdivisions
@@ -117,7 +117,7 @@ async def test_single_combination_country_province(hass: HomeAssistant) -> None:
         context={"source": config_entries.SOURCE_USER},
         data=data_de,
     )
-    assert result_de_step1["type"] == FlowResultType.FORM
+    assert result_de_step1["type"] is FlowResultType.FORM
 
     result_de_step2 = await hass.config_entries.flow.async_configure(
         result_de_step1["flow_id"],
@@ -125,7 +125,7 @@ async def test_single_combination_country_province(hass: HomeAssistant) -> None:
             CONF_PROVINCE: data_de[CONF_PROVINCE],
         },
     )
-    assert result_de_step2["type"] == FlowResultType.ABORT
+    assert result_de_step2["type"] is FlowResultType.ABORT
     assert result_de_step2["reason"] == "already_configured"
 
 
@@ -167,7 +167,7 @@ async def test_form_babel_unresolved_language(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Germany, BW"
     assert result["data"] == {
         "country": "DE",
@@ -213,7 +213,7 @@ async def test_form_babel_replace_dash_with_underscore(hass: HomeAssistant) -> N
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Germany, BW"
     assert result["data"] == {
         "country": "DE",
@@ -237,7 +237,7 @@ async def test_reconfigure(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> 
             "entry_id": entry.entry_id,
         },
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -247,7 +247,7 @@ async def test_reconfigure(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> 
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     entry = hass.config_entries.async_get_entry(entry.entry_id)
     assert entry.title == "Germany, NW"
@@ -274,7 +274,7 @@ async def test_reconfigure_incorrect_language(
             "entry_id": entry.entry_id,
         },
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -284,7 +284,7 @@ async def test_reconfigure_incorrect_language(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     entry = hass.config_entries.async_get_entry(entry.entry_id)
     assert entry.title == "Germany, NW"
@@ -315,7 +315,7 @@ async def test_reconfigure_entry_exists(
             "entry_id": entry.entry_id,
         },
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -325,7 +325,7 @@ async def test_reconfigure_entry_exists(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     entry = hass.config_entries.async_get_entry(entry.entry_id)
     assert entry.title == "Germany, BW"

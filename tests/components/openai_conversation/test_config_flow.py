@@ -30,7 +30,7 @@ async def test_form(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
     with (
@@ -50,7 +50,7 @@ async def test_form(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["data"] == {
         "api_key": "bla",
     }
@@ -72,7 +72,7 @@ async def test_options(
         },
     )
     await hass.async_block_till_done()
-    assert options["type"] == FlowResultType.CREATE_ENTRY
+    assert options["type"] is FlowResultType.CREATE_ENTRY
     assert options["data"]["prompt"] == "Speak like a pirate"
     assert options["data"]["max_tokens"] == 200
     assert options["data"][CONF_CHAT_MODEL] == DEFAULT_CHAT_MODEL
@@ -113,5 +113,5 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
             },
         )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": error}

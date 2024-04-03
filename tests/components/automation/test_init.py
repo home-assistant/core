@@ -9,7 +9,7 @@ from unittest.mock import Mock, patch
 import pytest
 
 from homeassistant import config_entries
-import homeassistant.components.automation as automation
+from homeassistant.components import automation
 from homeassistant.components.automation import (
     ATTR_SOURCE,
     DOMAIN,
