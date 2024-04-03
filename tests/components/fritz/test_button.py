@@ -127,14 +127,10 @@ async def test_wol_button_new_device(
     mesh_data = copy.deepcopy(MOCK_MESH_DATA)
     with (
         patch(
-            "tests.components.fritz.conftest.FritzHostMock.get_mesh_topology"
-        ) as mock_get_mesh_topology,
-        patch(
             "homeassistant.helpers.entity.Entity.entity_registry_enabled_default",
             PropertyMock(return_value=True),
         ),
     ):
-        mock_get_mesh_topology.return_value = mesh_data
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
         assert entry.state == ConfigEntryState.LOADED
@@ -142,6 +138,7 @@ async def test_wol_button_new_device(
         assert hass.states.get("button.printer_wake_on_lan")
 
         mesh_data["nodes"].append(MOCK_NEW_DEVICE_NODE)
+        fh_class_mock.get_mesh_topology.return_value = mesh_data
 
         async_fire_time_changed(hass, utcnow() + timedelta(seconds=60))
         await hass.async_block_till_done(wait_background_tasks=True)
@@ -160,11 +157,8 @@ async def test_wol_button_absent_for_mesh_slave(
 
     slave_mesh_data = copy.deepcopy(MOCK_MESH_DATA)
     slave_mesh_data["nodes"][0]["mesh_role"] = MeshRoles.SLAVE
+    fh_class_mock.get_mesh_topology.return_value = slave_mesh_data
     with (
-        patch(
-            "tests.components.fritz.conftest.FritzHostMock.get_mesh_topology",
-            return_value=slave_mesh_data,
-        ),
         patch(
             "homeassistant.helpers.entity.Entity.entity_registry_enabled_default",
             PropertyMock(return_value=True),
@@ -193,12 +187,8 @@ async def test_wol_button_absent_for_non_lan_device(
     printer_node_interface = printer_wifi_data["nodes"][1]["node_interfaces"][0]
     printer_node_interface["type"] = "WLAN"
     printer_node_interface["node_links"][0]["node_interface_1_uid"] = "ni-230"
-
+    fh_class_mock.get_mesh_topology.return_value = printer_wifi_data
     with (
-        patch(
-            "tests.components.fritz.conftest.FritzHostMock.get_mesh_topology",
-            return_value=printer_wifi_data,
-        ),
         patch(
             "homeassistant.helpers.entity.Entity.entity_registry_enabled_default",
             PropertyMock(return_value=True),
