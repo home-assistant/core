@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from collections import UserDict
-from collections.abc import Mapping, ValuesView
+from collections.abc import Mapping
 from enum import StrEnum
 from functools import lru_cache, partial
 import logging
@@ -31,7 +30,7 @@ from .deprecation import (
 )
 from .frame import report
 from .json import JSON_DUMP, find_paths_unserializable_data, json_bytes, json_fragment
-from .registry import BaseRegistry
+from .registry import BaseRegistry, BaseRegistryItems
 from .typing import UNDEFINED, UndefinedType
 
 if TYPE_CHECKING:
@@ -443,7 +442,7 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
 _EntryTypeT = TypeVar("_EntryTypeT", DeviceEntry, DeletedDeviceEntry)
 
 
-class DeviceRegistryItems(UserDict[str, _EntryTypeT]):
+class DeviceRegistryItems(BaseRegistryItems[_EntryTypeT]):
     """Container for device registry items, maps device id -> entry.
 
     Maintains two additional indexes:
@@ -457,33 +456,22 @@ class DeviceRegistryItems(UserDict[str, _EntryTypeT]):
         self._connections: dict[tuple[str, str], _EntryTypeT] = {}
         self._identifiers: dict[tuple[str, str], _EntryTypeT] = {}
 
-    def values(self) -> ValuesView[_EntryTypeT]:
-        """Return the underlying values to avoid __iter__ overhead."""
-        return self.data.values()
-
-    def __setitem__(self, key: str, entry: _EntryTypeT) -> None:
-        """Add an item."""
-        data = self.data
-        if key in data:
-            old_entry = data[key]
-            for connection in old_entry.connections:
-                del self._connections[connection]
-            for identifier in old_entry.identifiers:
-                del self._identifiers[identifier]
-        data[key] = entry
+    def _index_entry(self, key: str, entry: _EntryTypeT) -> None:
+        """Index an entry."""
         for connection in entry.connections:
             self._connections[connection] = entry
         for identifier in entry.identifiers:
             self._identifiers[identifier] = entry
 
-    def __delitem__(self, key: str) -> None:
-        """Remove an item."""
-        entry = self[key]
-        for connection in entry.connections:
+    def _unindex_entry(
+        self, key: str, replacement_entry: _EntryTypeT | None = None
+    ) -> None:
+        """Unindex an entry."""
+        old_entry = self.data[key]
+        for connection in old_entry.connections:
             del self._connections[connection]
-        for identifier in entry.identifiers:
+        for identifier in old_entry.identifiers:
             del self._identifiers[identifier]
-        super().__delitem__(key)
 
     def get_entry(
         self,
