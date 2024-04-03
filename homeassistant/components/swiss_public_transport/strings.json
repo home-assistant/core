@@ -32,6 +32,18 @@
       },
       "departure2": {
         "name": "Departure +2"
+      },
+      "duration": {
+        "name": "Duration"
+      },
+      "transfers": {
+        "name": "Transfers"
+      },
+      "platform": {
+        "name": "Platform"
+      },
+      "delay": {
+        "name": "Delay"
       }
     }
   },

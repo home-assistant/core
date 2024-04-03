@@ -7,12 +7,12 @@ from unittest.mock import patch
 from brother import SnmpError, UnsupportedModelError
 import pytest
 
-from homeassistant import data_entry_flow
 from homeassistant.components import zeroconf
 from homeassistant.components.brother.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST, CONF_TYPE
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry, load_fixture
 
@@ -27,7 +27,7 @@ async def test_show_form(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
 
@@ -46,7 +46,7 @@ async def test_create_entry_with_hostname(hass: HomeAssistant) -> None:
             data={CONF_HOST: "example.local", CONF_TYPE: "laser"},
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == "HL-L2340DW 0123456789"
         assert result["data"][CONF_HOST] == "example.local"
         assert result["data"][CONF_TYPE] == "laser"
@@ -65,7 +65,7 @@ async def test_create_entry_with_ipv4_address(hass: HomeAssistant) -> None:
             DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == "HL-L2340DW 0123456789"
         assert result["data"][CONF_HOST] == "127.0.0.1"
         assert result["data"][CONF_TYPE] == "laser"
@@ -86,7 +86,7 @@ async def test_create_entry_with_ipv6_address(hass: HomeAssistant) -> None:
             data={CONF_HOST: "2001:db8::1428:57ab", CONF_TYPE: "laser"},
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == "HL-L2340DW 0123456789"
         assert result["data"][CONF_HOST] == "2001:db8::1428:57ab"
         assert result["data"][CONF_TYPE] == "laser"
@@ -140,7 +140,7 @@ async def test_unsupported_model_error(hass: HomeAssistant) -> None:
             DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "unsupported_model"
 
 
@@ -160,7 +160,7 @@ async def test_device_exists_abort(hass: HomeAssistant) -> None:
             DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "already_configured"
 
 
@@ -185,7 +185,7 @@ async def test_zeroconf_exception(hass: HomeAssistant, exc: Exception) -> None:
             ),
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "cannot_connect"
 
 
@@ -209,7 +209,7 @@ async def test_zeroconf_unsupported_model(hass: HomeAssistant) -> None:
             ),
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "unsupported_model"
         assert len(mock_get_data.mock_calls) == 0
 
@@ -244,7 +244,7 @@ async def test_zeroconf_device_exists_abort(hass: HomeAssistant) -> None:
             ),
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "already_configured"
 
     # Test config entry got updated with latest IP
@@ -274,7 +274,7 @@ async def test_zeroconf_no_probe_existing_device(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert len(mock_get_data.mock_calls) == 0
 
@@ -305,13 +305,13 @@ async def test_zeroconf_confirm_create_entry(hass: HomeAssistant) -> None:
         assert result["step_id"] == "zeroconf_confirm"
         assert result["description_placeholders"]["model"] == "HL-L2340DW"
         assert result["description_placeholders"]["serial_number"] == "0123456789"
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_TYPE: "laser"}
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == "HL-L2340DW 0123456789"
         assert result["data"][CONF_HOST] == "127.0.0.1"
         assert result["data"][CONF_TYPE] == "laser"
