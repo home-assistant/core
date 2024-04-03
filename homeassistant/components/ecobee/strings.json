@@ -131,15 +131,15 @@
     },
     "set_aux_cutover_threshold": {
       "name": "Set the temperature at which aux heat takes over",
-      "description": "Sets the minimum temperature at which the compressor will be used to generate heat, and at which Emergency/Aux heat will take precence.",
+      "description": "Sets the minimum temperature at which the compressor will be used to generate heat, and at which Emergency/Aux heat will take precedence.",
       "fields": {
         "entity_id": {
           "name": "Entity",
           "description": "[%key:component::ecobee::services::resume_program::fields::entity_id::description%]"
         },
         "aux_cutover_threshold": {
-          "name": "[%key:component::ecobee::services::create_vacation::fields::aux_cutover_threshold::name%]",
-          "description": "New value of aux cutover temperature."
+          "name": "Heat Pump Lockout Threshold",
+          "description": "New value of the desired heat pump lockout, or the temperature at which aux heat will take precedence."
         }
       }
     },
