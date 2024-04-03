@@ -136,7 +136,7 @@ async def test_user_adds_full_device(hass: HomeAssistant, full_device, pairing) 
     result6 = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"pin": 1234}
     )
-    assert result6["type"] == "create_entry"
+    assert result6["type"] is FlowResultType.CREATE_ENTRY
     assert result6["data"] == {
         "address": "127.0.0.1",
         "credentials": {
@@ -174,7 +174,7 @@ async def test_user_adds_dmap_device(
     result6 = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"pin": 1234}
     )
-    assert result6["type"] == "create_entry"
+    assert result6["type"] is FlowResultType.CREATE_ENTRY
     assert result6["data"] == {
         "address": "127.0.0.1",
         "credentials": {Protocol.DMAP.value: "dmap_creds"},
@@ -540,7 +540,7 @@ async def test_ignores_disabled_service(
     result3 = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"pin": 1111}
     )
-    assert result3["type"] == "create_entry"
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["data"] == {
         "address": "127.0.0.1",
         "credentials": {
@@ -621,7 +621,7 @@ async def test_zeroconf_add_mrp_device(
     result3 = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"pin": 1111}
     )
-    assert result3["type"] == "create_entry"
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["data"] == {
         "address": "127.0.0.1",
         "credentials": {Protocol.MRP.value: "mrp_creds"},
@@ -651,7 +651,7 @@ async def test_zeroconf_add_dmap_device(
     assert result2["description_placeholders"] == {"protocol": "DMAP", "pin": "1111"}
 
     result3 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    assert result3["type"] == "create_entry"
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["data"] == {
         "address": "127.0.0.1",
         "credentials": {Protocol.DMAP.value: "dmap_creds"},
@@ -1224,7 +1224,7 @@ async def test_option_start_off(hass: HomeAssistant) -> None:
     result2 = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input={CONF_START_OFF: True}
     )
-    assert result2["type"] == "create_entry"
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
 
     assert config_entry.options[CONF_START_OFF]
 

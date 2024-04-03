@@ -78,7 +78,7 @@ async def test_form_cannot_authenticate(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
@@ -108,7 +108,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
@@ -176,7 +176,7 @@ async def test_form_reauth(hass: HomeAssistant, entry: MockConfigEntry) -> None:
             },
         )
 
-    assert result2["type"] == "abort"
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
 
     await hass.config_entries.async_unload(entry.entry_id)
@@ -216,7 +216,7 @@ async def test_form_reauth_invalid(hass: HomeAssistant, entry: MockConfigEntry) 
             },
         )
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "reauth_invalid"}
 
     await hass.config_entries.async_unload(entry.entry_id)

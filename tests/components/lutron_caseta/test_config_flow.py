@@ -75,7 +75,7 @@ async def test_bridge_import_flow(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == CasetaConfigFlow.ENTRY_DEFAULT_TITLE
     assert result["data"] == entry_mock_data
     assert result["result"].unique_id == "000004d2"
@@ -102,7 +102,7 @@ async def test_bridge_cannot_connect(hass: HomeAssistant) -> None:
             data=entry_mock_data,
         )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == STEP_IMPORT_FAILED
     assert result["errors"] == {"base": ERROR_CANNOT_CONNECT}
 
@@ -125,7 +125,7 @@ async def test_bridge_cannot_connect_unknown_error(hass: HomeAssistant) -> None:
             data=EMPTY_MOCK_CONFIG_ENTRY,
         )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == STEP_IMPORT_FAILED
     assert result["errors"] == {"base": ERROR_CANNOT_CONNECT}
 
@@ -145,7 +145,7 @@ async def test_bridge_invalid_ssl_error(hass: HomeAssistant) -> None:
             data=EMPTY_MOCK_CONFIG_ENTRY,
         )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == STEP_IMPORT_FAILED
     assert result["errors"] == {"base": ERROR_CANNOT_CONNECT}
 
@@ -195,7 +195,7 @@ async def test_already_configured_with_ignored(hass: HomeAssistant) -> None:
             CONF_CA_CERTS: "",
         },
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
 
 
 async def test_form_user(hass: HomeAssistant, tmp_path: Path) -> None:
@@ -207,7 +207,7 @@ async def test_form_user(hass: HomeAssistant, tmp_path: Path) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
     assert result["step_id"] == "user"
 
@@ -218,7 +218,7 @@ async def test_form_user(hass: HomeAssistant, tmp_path: Path) -> None:
         },
     )
     await hass.async_block_till_done()
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "link"
 
     with (
@@ -240,7 +240,7 @@ async def test_form_user(hass: HomeAssistant, tmp_path: Path) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result3["type"] == "create_entry"
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == "1.1.1.1"
     assert result3["data"] == {
         CONF_HOST: "1.1.1.1",
@@ -261,7 +261,7 @@ async def test_form_user_pairing_fails(hass: HomeAssistant, tmp_path: Path) -> N
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
     assert result["step_id"] == "user"
 
@@ -272,7 +272,7 @@ async def test_form_user_pairing_fails(hass: HomeAssistant, tmp_path: Path) -> N
         },
     )
     await hass.async_block_till_done()
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "link"
 
     with (
@@ -294,7 +294,7 @@ async def test_form_user_pairing_fails(hass: HomeAssistant, tmp_path: Path) -> N
         )
         await hass.async_block_till_done()
 
-    assert result3["type"] == "form"
+    assert result3["type"] is FlowResultType.FORM
     assert result3["errors"] == {"base": "cannot_connect"}
     assert len(mock_setup.mock_calls) == 0
     assert len(mock_setup_entry.mock_calls) == 0
@@ -311,7 +311,7 @@ async def test_form_user_reuses_existing_assets_when_pairing_again(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
     assert result["step_id"] == "user"
 
@@ -322,7 +322,7 @@ async def test_form_user_reuses_existing_assets_when_pairing_again(
         },
     )
     await hass.async_block_till_done()
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "link"
 
     with (
@@ -344,7 +344,7 @@ async def test_form_user_reuses_existing_assets_when_pairing_again(
         )
         await hass.async_block_till_done()
 
-    assert result3["type"] == "create_entry"
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == "1.1.1.1"
     assert result3["data"] == {
         CONF_HOST: "1.1.1.1",
@@ -366,7 +366,7 @@ async def test_form_user_reuses_existing_assets_when_pairing_again(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
     assert result["step_id"] == "user"
 
@@ -380,7 +380,7 @@ async def test_form_user_reuses_existing_assets_when_pairing_again(
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "link"
 
     with (
@@ -396,7 +396,7 @@ async def test_form_user_reuses_existing_assets_when_pairing_again(
         )
         await hass.async_block_till_done()
 
-    assert result3["type"] == "create_entry"
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == "1.1.1.1"
     assert result3["data"] == {
         CONF_HOST: "1.1.1.1",
@@ -433,7 +433,7 @@ async def test_zeroconf_host_already_configured(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -461,7 +461,7 @@ async def test_zeroconf_lutron_id_already_configured(hass: HomeAssistant) -> Non
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert config_entry.data[CONF_HOST] == "1.1.1.1"
 
@@ -484,7 +484,7 @@ async def test_zeroconf_not_lutron_device(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "not_lutron_device"
 
 
@@ -512,7 +512,7 @@ async def test_zeroconf(hass: HomeAssistant, source, tmp_path: Path) -> None:
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "link"
 
     with (
@@ -534,7 +534,7 @@ async def test_zeroconf(hass: HomeAssistant, source, tmp_path: Path) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "create_entry"
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "abc"
     assert result2["data"] == {
         CONF_HOST: "1.1.1.1",

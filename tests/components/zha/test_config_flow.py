@@ -580,7 +580,7 @@ async def test_discovery_via_usb_deconz_already_discovered(hass: HomeAssistant) 
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "not_zha_device"
 
 
@@ -602,7 +602,7 @@ async def test_discovery_via_usb_deconz_already_setup(hass: HomeAssistant) -> No
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "not_zha_device"
 
 
@@ -684,7 +684,7 @@ async def test_discovery_already_setup(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
 
 
@@ -812,7 +812,7 @@ async def test_user_flow_existing_config_entry(hass: HomeAssistant) -> None:
         DOMAIN, context={CONF_SOURCE: SOURCE_USER}
     )
 
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
 
 
 @patch(f"bellows.{PROBE_FUNCTION_PATH}", return_value=False)
