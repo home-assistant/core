@@ -1,4 +1,5 @@
 """Test the imap entry initialization."""
+
 import asyncio
 from datetime import datetime, timedelta, timezone
 from typing import Any

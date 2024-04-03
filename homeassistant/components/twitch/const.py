@@ -1,4 +1,5 @@
 """Const for Twitch."""
+
 import logging
 
 from twitchAPI.twitch import AuthScope

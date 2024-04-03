@@ -1,4 +1,5 @@
 """Diagnostics platform for Traccar Server."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -18,6 +19,20 @@ TO_REDACT = {
     CONF_LONGITUDE,
     "area",  # This is the polygon area of a geofence
 }
+
+
+def _entity_state(
+    hass: HomeAssistant,
+    entity: er.RegistryEntry,
+) -> dict[str, Any] | None:
+    return (
+        {
+            "state": state.state,
+            "attributes": state.attributes,
+        }
+        if (state := hass.states.get(entity.entity_id))
+        else None
+    )
 
 
 async def async_get_config_entry_diagnostics(
@@ -42,10 +57,9 @@ async def async_get_config_entry_diagnostics(
                 {
                     "enity_id": entity.entity_id,
                     "disabled": entity.disabled,
-                    "state": {"state": state.state, "attributes": state.attributes},
+                    "state": _entity_state(hass, entity),
                 }
                 for entity in entities
-                if (state := hass.states.get(entity.entity_id)) is not None
             ],
         },
         TO_REDACT,
@@ -76,10 +90,9 @@ async def async_get_device_diagnostics(
                 {
                     "enity_id": entity.entity_id,
                     "disabled": entity.disabled,
-                    "state": {"state": state.state, "attributes": state.attributes},
+                    "state": _entity_state(hass, entity),
                 }
                 for entity in entities
-                if (state := hass.states.get(entity.entity_id)) is not None
             ],
         },
         TO_REDACT,

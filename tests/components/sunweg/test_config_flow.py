@@ -1,4 +1,5 @@
 """Tests for the Sun WEG server config flow."""
+
 from unittest.mock import patch
 
 from sunweg.api import APIHelper
@@ -45,8 +46,9 @@ async def test_no_plants_on_account(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch.object(APIHelper, "authenticate", return_value=True), patch.object(
-        APIHelper, "listPlants", return_value=[]
+    with (
+        patch.object(APIHelper, "authenticate", return_value=True),
+        patch.object(APIHelper, "listPlants", return_value=[]),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], SUNWEG_USER_INPUT
@@ -64,8 +66,9 @@ async def test_multiple_plant_ids(hass: HomeAssistant, plant_fixture) -> None:
     user_input = SUNWEG_USER_INPUT.copy()
     plant_list = [plant_fixture, plant_fixture]
 
-    with patch.object(APIHelper, "authenticate", return_value=True), patch.object(
-        APIHelper, "listPlants", return_value=plant_list
+    with (
+        patch.object(APIHelper, "authenticate", return_value=True),
+        patch.object(APIHelper, "listPlants", return_value=plant_list),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input
@@ -92,10 +95,13 @@ async def test_one_plant_on_account(hass: HomeAssistant, plant_fixture) -> None:
     )
     user_input = SUNWEG_USER_INPUT.copy()
 
-    with patch.object(APIHelper, "authenticate", return_value=True), patch.object(
-        APIHelper,
-        "listPlants",
-        return_value=[plant_fixture],
+    with (
+        patch.object(APIHelper, "authenticate", return_value=True),
+        patch.object(
+            APIHelper,
+            "listPlants",
+            return_value=[plant_fixture],
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input
@@ -116,10 +122,13 @@ async def test_existing_plant_configured(hass: HomeAssistant, plant_fixture) -> 
     )
     user_input = SUNWEG_USER_INPUT.copy()
 
-    with patch.object(APIHelper, "authenticate", return_value=True), patch.object(
-        APIHelper,
-        "listPlants",
-        return_value=[plant_fixture],
+    with (
+        patch.object(APIHelper, "authenticate", return_value=True),
+        patch.object(
+            APIHelper,
+            "listPlants",
+            return_value=[plant_fixture],
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input

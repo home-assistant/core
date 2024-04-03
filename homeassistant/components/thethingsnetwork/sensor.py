@@ -1,4 +1,5 @@
 """Support for The Things Network's Data storage integration."""
+
 from __future__ import annotations
 
 import asyncio

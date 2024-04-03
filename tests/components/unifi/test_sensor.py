@@ -1,4 +1,5 @@
 """UniFi Network sensor platform tests."""
+
 from copy import deepcopy
 from datetime import datetime, timedelta
 from unittest.mock import patch
@@ -18,10 +19,11 @@ from homeassistant.components.sensor import (
 from homeassistant.components.unifi.const import (
     CONF_ALLOW_BANDWIDTH_SENSORS,
     CONF_ALLOW_UPTIME_SENSORS,
+    CONF_DETECTION_TIME,
     CONF_TRACK_CLIENTS,
     CONF_TRACK_DEVICES,
+    DEFAULT_DETECTION_TIME,
     DEVICE_STATES,
-    DOMAIN as UNIFI_DOMAIN,
 )
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import ATTR_DEVICE_CLASS, STATE_UNAVAILABLE, EntityCategory
@@ -395,7 +397,6 @@ async def test_bandwidth_sensors(
 
     # Verify reset sensor after heartbeat expires
 
-    hub = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
     new_time = dt_util.utcnow()
     wireless_client["last_seen"] = dt_util.as_timestamp(new_time)
 
@@ -409,8 +410,11 @@ async def test_bandwidth_sensors(
     assert hass.states.get("sensor.wireless_client_rx").state == "3456.0"
     assert hass.states.get("sensor.wireless_client_tx").state == "7891.0"
 
-    new_time = new_time + hub.option_detection_time + timedelta(seconds=1)
-
+    new_time += timedelta(
+        seconds=(
+            config_entry.options.get(CONF_DETECTION_TIME, DEFAULT_DETECTION_TIME) + 1
+        )
+    )
     with freeze_time(new_time):
         async_fire_time_changed(hass, new_time)
         await hass.async_block_till_done()

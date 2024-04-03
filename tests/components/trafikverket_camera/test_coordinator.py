@@ -1,4 +1,5 @@
 """The test for the Trafikverket Camera coordinator."""
+
 from __future__ import annotations
 
 from unittest.mock import patch

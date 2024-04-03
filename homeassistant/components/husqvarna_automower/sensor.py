@@ -1,7 +1,8 @@
 """Creates a the sensor entities for the mower."""
+
 from collections.abc import Callable
 from dataclasses import dataclass
-import datetime
+from datetime import datetime
 import logging
 
 from aioautomower.model import MowerAttributes, MowerModes
@@ -16,6 +17,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfLength, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 from .coordinator import AutomowerDataUpdateCoordinator
@@ -29,7 +32,7 @@ class AutomowerSensorEntityDescription(SensorEntityDescription):
     """Describes Automower sensor entity."""
 
     exists_fn: Callable[[MowerAttributes], bool] = lambda _: True
-    value_fn: Callable[[MowerAttributes], str]
+    value_fn: Callable[[MowerAttributes], StateType | datetime]
 
 
 SENSOR_TYPES: tuple[AutomowerSensorEntityDescription, ...] = (
@@ -108,7 +111,6 @@ SENSOR_TYPES: tuple[AutomowerSensorEntityDescription, ...] = (
     AutomowerSensorEntityDescription(
         key="number_of_charging_cycles",
         translation_key="number_of_charging_cycles",
-        icon="mdi:battery-sync-outline",
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.TOTAL,
         exists_fn=lambda data: data.statistics.number_of_charging_cycles is not None,
@@ -117,7 +119,6 @@ SENSOR_TYPES: tuple[AutomowerSensorEntityDescription, ...] = (
     AutomowerSensorEntityDescription(
         key="number_of_collisions",
         translation_key="number_of_collisions",
-        icon="mdi:counter",
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.TOTAL,
         exists_fn=lambda data: data.statistics.number_of_collisions is not None,
@@ -138,7 +139,7 @@ SENSOR_TYPES: tuple[AutomowerSensorEntityDescription, ...] = (
         key="next_start_timestamp",
         translation_key="next_start_timestamp",
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda data: data.planner.next_start_dateteime,
+        value_fn=lambda data: dt_util.as_local(data.planner.next_start_datetime),
     ),
 )
 
@@ -173,6 +174,6 @@ class AutomowerSensorEntity(AutomowerBaseEntity, SensorEntity):
         self._attr_unique_id = f"{mower_id}_{description.key}"
 
     @property
-    def native_value(self) -> str | int | datetime.datetime | None:
+    def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.mower_attributes)

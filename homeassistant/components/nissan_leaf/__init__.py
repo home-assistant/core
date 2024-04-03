@@ -1,4 +1,5 @@
 """Support for the Nissan Leaf Carwings/Nissan Connect API."""
+
 from __future__ import annotations
 
 import asyncio
@@ -320,9 +321,9 @@ class LeafDataStore:
                     self.data[DATA_RANGE_AC] = None
 
                 if hasattr(server_response, "cruising_range_ac_off_km"):
-                    self.data[
-                        DATA_RANGE_AC_OFF
-                    ] = server_response.cruising_range_ac_off_km
+                    self.data[DATA_RANGE_AC_OFF] = (
+                        server_response.cruising_range_ac_off_km
+                    )
                 else:
                     self.data[DATA_RANGE_AC_OFF] = None
 

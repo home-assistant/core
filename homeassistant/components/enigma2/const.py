@@ -1,4 +1,5 @@
 """Constants for the Enigma2 platform."""
+
 DOMAIN = "enigma2"
 
 CONF_USE_CHANNEL_ICON = "use_channel_icon"

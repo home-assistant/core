@@ -1,4 +1,5 @@
 """The Brother component."""
+
 from __future__ import annotations
 
 from asyncio import timeout

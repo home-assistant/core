@@ -1,4 +1,5 @@
 """Provides the Toon DataUpdateCoordinator."""
+
 from __future__ import annotations
 
 import logging

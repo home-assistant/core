@@ -1,4 +1,5 @@
 """The test for the sensibo coordinator."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -75,7 +76,7 @@ async def test_coordinator_setup_and_update_errors(
 
     client.get_all.side_effect = ConnectionError("Could not connect")
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=1))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     client.get_all.assert_called_once()
     state = hass.states.get("alarm_control_panel.yale_smart_alarm")
     assert state.state == STATE_UNAVAILABLE
@@ -83,7 +84,7 @@ async def test_coordinator_setup_and_update_errors(
 
     client.get_all.side_effect = ConnectionError("Could not connect")
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=2))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     client.get_all.assert_called_once()
     state = hass.states.get("alarm_control_panel.yale_smart_alarm")
     assert state.state == STATE_UNAVAILABLE
@@ -91,7 +92,7 @@ async def test_coordinator_setup_and_update_errors(
 
     client.get_all.side_effect = TimeoutError("Could not connect")
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=3))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     client.get_all.assert_called_once()
     state = hass.states.get("alarm_control_panel.yale_smart_alarm")
     assert state.state == STATE_UNAVAILABLE
@@ -99,7 +100,7 @@ async def test_coordinator_setup_and_update_errors(
 
     client.get_all.side_effect = UnknownError("info")
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=4))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     client.get_all.assert_called_once()
     state = hass.states.get("alarm_control_panel.yale_smart_alarm")
     assert state.state == STATE_UNAVAILABLE
@@ -109,7 +110,7 @@ async def test_coordinator_setup_and_update_errors(
     client.get_all.return_value = load_json
     client.get_armed_status.return_value = YALE_STATE_ARM_FULL
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     client.get_all.assert_called_once()
     state = hass.states.get("alarm_control_panel.yale_smart_alarm")
     assert state.state == STATE_ALARM_ARMED_AWAY
@@ -117,7 +118,7 @@ async def test_coordinator_setup_and_update_errors(
 
     client.get_all.side_effect = AuthenticationError("Can not authenticate")
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=6))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     client.get_all.assert_called_once()
     state = hass.states.get("alarm_control_panel.yale_smart_alarm")
     assert state.state == STATE_UNAVAILABLE

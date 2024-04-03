@@ -1,0 +1,20 @@
+{
+  "entity": {
+    "switch": {
+      "standby": {
+        "default": "mdi:power"
+      },
+      "rain_delay": {
+        "default": "mdi:camera-timer"
+      }
+    }
+  },
+  "services": {
+    "set_zone_moisture_percent": "mdi:water-percent",
+    "start_multiple_zone_schedule": "mdi:play",
+    "pause_watering": "mdi:pause",
+    "resume_watering": "mdi:play",
+    "stop_watering": "mdi:stop",
+    "start_watering": "mdi:water"
+  }
+}

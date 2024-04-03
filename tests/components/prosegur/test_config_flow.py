@@ -1,4 +1,5 @@
 """Test the Prosegur Alarm config flow."""
+
 from unittest.mock import patch
 
 import pytest
@@ -21,13 +22,16 @@ async def test_form(hass: HomeAssistant, mock_list_contracts) -> None:
     assert result["type"] == "form"
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.prosegur.config_flow.Installation.list",
-        return_value=mock_list_contracts,
-    ) as mock_retrieve, patch(
-        "homeassistant.components.prosegur.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.prosegur.config_flow.Installation.list",
+            return_value=mock_list_contracts,
+        ) as mock_retrieve,
+        patch(
+            "homeassistant.components.prosegur.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -152,13 +156,16 @@ async def test_reauth_flow(hass: HomeAssistant, mock_list_contracts) -> None:
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.prosegur.config_flow.Installation.list",
-        return_value=mock_list_contracts,
-    ) as mock_installation, patch(
-        "homeassistant.components.prosegur.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.prosegur.config_flow.Installation.list",
+            return_value=mock_list_contracts,
+        ) as mock_installation,
+        patch(
+            "homeassistant.components.prosegur.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {

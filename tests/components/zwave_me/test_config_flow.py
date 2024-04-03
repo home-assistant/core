@@ -1,4 +1,5 @@
 """Test the zwave_me config flow."""
+
 from ipaddress import ip_address
 from unittest.mock import patch
 
@@ -28,12 +29,15 @@ MOCK_ZEROCONF_DATA = zeroconf.ZeroconfServiceInfo(
 
 async def test_form(hass: HomeAssistant) -> None:
     """Test we get the form."""
-    with patch(
-        "homeassistant.components.zwave_me.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry, patch(
-        "homeassistant.components.zwave_me.helpers.get_uuid",
-        return_value="test_uuid",
+    with (
+        patch(
+            "homeassistant.components.zwave_me.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+        patch(
+            "homeassistant.components.zwave_me.helpers.get_uuid",
+            return_value="test_uuid",
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -60,12 +64,15 @@ async def test_form(hass: HomeAssistant) -> None:
 
 async def test_zeroconf(hass: HomeAssistant) -> None:
     """Test starting a flow from zeroconf."""
-    with patch(
-        "homeassistant.components.zwave_me.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry, patch(
-        "homeassistant.components.zwave_me.helpers.get_uuid",
-        return_value="test_uuid",
+    with (
+        patch(
+            "homeassistant.components.zwave_me.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+        patch(
+            "homeassistant.components.zwave_me.helpers.get_uuid",
+            return_value="test_uuid",
+        ),
     ):
         result: FlowResult = await hass.config_entries.flow.async_init(
             DOMAIN,

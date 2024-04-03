@@ -1,4 +1,5 @@
 """DataUpdateCoordinator for the Homeassistant Analytics integration."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

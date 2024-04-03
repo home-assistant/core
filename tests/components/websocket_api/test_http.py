@@ -1,4 +1,5 @@
 """Test Websocket API http module."""
+
 import asyncio
 from datetime import timedelta
 from typing import Any, cast
@@ -85,7 +86,7 @@ async def test_cleanup_on_cancellation(
 
         @callback
         def _raise():
-            raise ValueError()
+            raise ValueError
 
         connection.subscriptions[msg_id] = _raise
         connection.send_result(msg_id)
@@ -103,7 +104,7 @@ async def test_cleanup_on_cancellation(
     def cancel_in_handler(
         hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
     ) -> None:
-        raise asyncio.CancelledError()
+        raise asyncio.CancelledError
 
     async_register_command(hass, cancel_in_handler)
 
@@ -370,10 +371,13 @@ async def test_prepare_fail(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test failing to prepare."""
-    with patch(
-        "homeassistant.components.websocket_api.http.web.WebSocketResponse.prepare",
-        side_effect=(TimeoutError, web.WebSocketResponse.prepare),
-    ), pytest.raises(ServerDisconnectedError):
+    with (
+        patch(
+            "homeassistant.components.websocket_api.http.web.WebSocketResponse.prepare",
+            side_effect=(TimeoutError, web.WebSocketResponse.prepare),
+        ),
+        pytest.raises(ServerDisconnectedError),
+    ):
         await hass_ws_client(hass)
 
     assert "Timeout preparing request" in caplog.text

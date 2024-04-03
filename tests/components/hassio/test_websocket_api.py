@@ -1,4 +1,5 @@
 """Test websocket API."""
+
 import pytest
 
 from homeassistant.components.hassio.const import (

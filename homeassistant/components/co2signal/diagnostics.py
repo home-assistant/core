@@ -1,4 +1,5 @@
 """Diagnostics support for CO2Signal."""
+
 from __future__ import annotations
 
 from dataclasses import asdict

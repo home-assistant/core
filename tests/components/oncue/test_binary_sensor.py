@@ -1,4 +1,5 @@
 """Tests for the oncue binary_sensor."""
+
 from __future__ import annotations
 
 from homeassistant.components import oncue

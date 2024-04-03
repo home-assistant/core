@@ -1,4 +1,5 @@
 """Custom loader."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Iterator
@@ -292,8 +293,7 @@ def _add_reference(
     obj: list | NodeListClass,
     loader: LoaderType,
     node: yaml.nodes.Node,
-) -> NodeListClass:
-    ...
+) -> NodeListClass: ...
 
 
 @overload
@@ -301,13 +301,13 @@ def _add_reference(
     obj: str | NodeStrClass,
     loader: LoaderType,
     node: yaml.nodes.Node,
-) -> NodeStrClass:
-    ...
+) -> NodeStrClass: ...
 
 
 @overload
-def _add_reference(obj: _DictT, loader: LoaderType, node: yaml.nodes.Node) -> _DictT:
-    ...
+def _add_reference(
+    obj: _DictT, loader: LoaderType, node: yaml.nodes.Node
+) -> _DictT: ...
 
 
 def _add_reference(  # type: ignore[no-untyped-def]
@@ -318,7 +318,7 @@ def _add_reference(  # type: ignore[no-untyped-def]
         obj = NodeListClass(obj)
     if isinstance(obj, str):
         obj = NodeStrClass(obj)
-    try:  # noqa: SIM105 suppress is much slower
+    try:  # suppress is much slower
         setattr(obj, "__config_file__", loader.get_name)
         setattr(obj, "__line__", node.start_mark.line + 1)
     except AttributeError:

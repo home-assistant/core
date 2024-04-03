@@ -1,4 +1,5 @@
 """Support for monitoring OctoPrint 3D printers."""
+
 from __future__ import annotations
 
 import logging

@@ -1,4 +1,5 @@
 """API for myUplink bound to Home Assistant OAuth."""
+
 from __future__ import annotations
 
 from typing import cast

@@ -1,4 +1,5 @@
 """The tests for the litejet component."""
+
 from unittest.mock import patch
 
 from serial import SerialException

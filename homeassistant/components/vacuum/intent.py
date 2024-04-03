@@ -1,6 +1,5 @@
 """Intents for the vacuum integration."""
 
-
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import intent
 

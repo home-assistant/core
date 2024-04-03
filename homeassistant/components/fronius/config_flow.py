@@ -1,4 +1,5 @@
 """Config flow for Fronius integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -8,11 +9,10 @@ from typing import Any, Final
 from pyfronius import Fronius, FroniusError
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components.dhcp import DhcpServiceInfo
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -73,7 +73,7 @@ async def validate_host(
     )
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class FroniusConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Fronius."""
 
     VERSION = 1
@@ -84,7 +84,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         if user_input is None:
             return self.async_show_form(
@@ -110,10 +110,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
 
-    async def async_step_dhcp(self, discovery_info: DhcpServiceInfo) -> FlowResult:
+    async def async_step_dhcp(
+        self, discovery_info: DhcpServiceInfo
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by the DHCP client."""
         for entry in self._async_current_entries(include_ignore=False):
-            if entry.data[CONF_HOST].lstrip("http://").rstrip("/").lower() in (
+            if entry.data[CONF_HOST].removeprefix("http://").rstrip("/").lower() in (
                 discovery_info.ip,
                 discovery_info.hostname,
             ):
@@ -133,7 +135,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_confirm_discovery(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Attempt to confirm."""
         title = create_title(self.info)
         if user_input is not None:

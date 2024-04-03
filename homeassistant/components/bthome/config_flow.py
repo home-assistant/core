@@ -15,9 +15,8 @@ from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
     async_discovered_service_info,
 )
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ADDRESS
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN
 
@@ -48,7 +47,7 @@ class BTHomeConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the bluetooth discovery step."""
         await self.async_set_unique_id(discovery_info.address)
         self._abort_if_unique_id_configured()
@@ -68,7 +67,7 @@ class BTHomeConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_get_encryption_key(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Enter a bindkey for an encrypted BTHome device."""
         assert self._discovery_info
         assert self._discovered_device
@@ -102,7 +101,7 @@ class BTHomeConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_bluetooth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Confirm discovery."""
         if user_input is not None or not onboarding.async_is_onboarded(self.hass):
             return self._async_get_or_create_entry()
@@ -115,7 +114,7 @@ class BTHomeConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the user step to pick discovered device."""
         if user_input is not None:
             address = user_input[CONF_ADDRESS]
@@ -158,7 +157,9 @@ class BTHomeConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema({vol.Required(CONF_ADDRESS): vol.In(titles)}),
         )
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by a reauth event."""
         entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         assert entry is not None
@@ -174,7 +175,9 @@ class BTHomeConfigFlow(ConfigFlow, domain=DOMAIN):
         # Otherwise there wasn't actually encryption so abort
         return self.async_abort(reason="reauth_successful")
 
-    def _async_get_or_create_entry(self, bindkey: str | None = None) -> FlowResult:
+    def _async_get_or_create_entry(
+        self, bindkey: str | None = None
+    ) -> ConfigFlowResult:
         data: dict[str, Any] = {}
         if bindkey:
             data["bindkey"] = bindkey

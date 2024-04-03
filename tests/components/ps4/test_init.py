@@ -1,4 +1,5 @@
 """Tests for the PS4 Integration."""
+
 from unittest.mock import MagicMock, patch
 
 from homeassistant import config_entries, data_entry_flow
@@ -121,10 +122,13 @@ async def test_ps4_integration_setup(hass: HomeAssistant) -> None:
 async def test_creating_entry_sets_up_media_player(hass: HomeAssistant) -> None:
     """Test setting up PS4 loads the media player."""
     mock_flow = "homeassistant.components.ps4.PlayStation4FlowHandler.async_step_user"
-    with patch(
-        "homeassistant.components.ps4.media_player.async_setup_entry",
-        return_value=True,
-    ) as mock_setup, patch(mock_flow, return_value=MOCK_FLOW_RESULT):
+    with (
+        patch(
+            "homeassistant.components.ps4.media_player.async_setup_entry",
+            return_value=True,
+        ) as mock_setup,
+        patch(mock_flow, return_value=MOCK_FLOW_RESULT),
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
@@ -155,12 +159,15 @@ async def test_config_flow_entry_migrate(
     assert mock_e_entry.entity_id == mock_entity_id
     assert mock_e_entry.unique_id == MOCK_UNIQUE_ID
 
-    with patch(
-        "homeassistant.util.location.async_detect_location_info",
-        return_value=MOCK_LOCATION,
-    ), patch(
-        "homeassistant.helpers.entity_registry.async_get",
-        return_value=entity_registry,
+    with (
+        patch(
+            "homeassistant.util.location.async_detect_location_info",
+            return_value=MOCK_LOCATION,
+        ),
+        patch(
+            "homeassistant.helpers.entity_registry.async_get",
+            return_value=entity_registry,
+        ),
     ):
         await ps4.async_migrate_entry(hass, mock_entry)
 
@@ -204,9 +211,10 @@ def test_games_reformat_to_dict(
 ) -> None:
     """Test old data format is converted to new format."""
     patch_load_json_object.return_value = MOCK_GAMES_DATA_OLD_STR_FORMAT
-    with patch(
-        "homeassistant.components.ps4.save_json", side_effect=MagicMock()
-    ), patch("os.path.isfile", return_value=True):
+    with (
+        patch("homeassistant.components.ps4.save_json", side_effect=MagicMock()),
+        patch("os.path.isfile", return_value=True),
+    ):
         mock_games = ps4.load_games(hass, MOCK_ENTRY_ID)
 
     # New format is a nested dict.
@@ -225,9 +233,10 @@ def test_games_reformat_to_dict(
 def test_load_games(hass: HomeAssistant, patch_load_json_object: MagicMock) -> None:
     """Test that games are loaded correctly."""
     patch_load_json_object.return_value = MOCK_GAMES
-    with patch(
-        "homeassistant.components.ps4.save_json", side_effect=MagicMock()
-    ), patch("os.path.isfile", return_value=True):
+    with (
+        patch("homeassistant.components.ps4.save_json", side_effect=MagicMock()),
+        patch("os.path.isfile", return_value=True),
+    ):
         mock_games = ps4.load_games(hass, MOCK_ENTRY_ID)
 
     assert isinstance(mock_games, dict)
@@ -245,9 +254,10 @@ def test_loading_games_returns_dict(
 ) -> None:
     """Test that loading games always returns a dict."""
     patch_load_json_object.side_effect = HomeAssistantError
-    with patch(
-        "homeassistant.components.ps4.save_json", side_effect=MagicMock()
-    ), patch("os.path.isfile", return_value=True):
+    with (
+        patch("homeassistant.components.ps4.save_json", side_effect=MagicMock()),
+        patch("os.path.isfile", return_value=True),
+    ):
         mock_games = ps4.load_games(hass, MOCK_ENTRY_ID)
 
     assert isinstance(mock_games, dict)

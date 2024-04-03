@@ -1,4 +1,5 @@
 """Test SkyBell config flow."""
+
 from unittest.mock import patch
 
 from aioskybell import exceptions

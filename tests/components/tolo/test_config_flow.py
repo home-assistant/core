@@ -1,8 +1,9 @@
 """Tests for the TOLO Sauna config flow."""
+
 from unittest.mock import Mock, patch
 
 import pytest
-from tololib.errors import ResponseTimedOutError
+from tololib import ToloCommunicationError
 
 from homeassistant.components import dhcp
 from homeassistant.components.tolo.const import DOMAIN
@@ -37,7 +38,7 @@ def coordinator_toloclient() -> Mock:
 
 async def test_user_with_timed_out_host(hass: HomeAssistant, toloclient: Mock) -> None:
     """Test a user initiated config flow with provided host which times out."""
-    toloclient().get_status_info.side_effect = ResponseTimedOutError()
+    toloclient().get_status.side_effect = ToloCommunicationError
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -61,7 +62,7 @@ async def test_user_walkthrough(
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    toloclient().get_status_info.side_effect = lambda *args, **kwargs: None
+    toloclient().get_status.side_effect = lambda *args, **kwargs: None
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -72,7 +73,7 @@ async def test_user_walkthrough(
     assert result2["step_id"] == "user"
     assert result2["errors"] == {"base": "cannot_connect"}
 
-    toloclient().get_status_info.side_effect = lambda *args, **kwargs: object()
+    toloclient().get_status.side_effect = lambda *args, **kwargs: object()
 
     result3 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -88,7 +89,7 @@ async def test_dhcp(
     hass: HomeAssistant, toloclient: Mock, coordinator_toloclient: Mock
 ) -> None:
     """Test starting a flow from discovery."""
-    toloclient().get_status_info.side_effect = lambda *args, **kwargs: object()
+    toloclient().get_status.side_effect = lambda *args, **kwargs: object()
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_DHCP}, data=MOCK_DHCP_DATA
@@ -109,7 +110,7 @@ async def test_dhcp(
 
 async def test_dhcp_invalid_device(hass: HomeAssistant, toloclient: Mock) -> None:
     """Test starting a flow from discovery."""
-    toloclient().get_status_info.side_effect = lambda *args, **kwargs: None
+    toloclient().get_status.side_effect = lambda *args, **kwargs: None
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_DHCP}, data=MOCK_DHCP_DATA

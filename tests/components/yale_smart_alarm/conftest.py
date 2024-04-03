@@ -1,4 +1,5 @@
 """Fixtures for the Yale Smart Living integration."""
+
 from __future__ import annotations
 
 import json

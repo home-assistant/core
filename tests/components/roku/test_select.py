@@ -1,4 +1,5 @@
 """Tests for the Roku select platform."""
+
 from unittest.mock import MagicMock
 
 import pytest
@@ -17,7 +18,7 @@ from homeassistant.components.select import (
     ATTR_OPTIONS,
     DOMAIN as SELECT_DOMAIN,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_ICON, SERVICE_SELECT_OPTION
+from homeassistant.const import ATTR_ENTITY_ID, SERVICE_SELECT_OPTION
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -49,12 +50,11 @@ async def test_application_state(
 
     state = hass.states.get("select.my_roku_3_application")
     assert state
-    assert state.attributes.get(ATTR_ICON) == "mdi:application"
     assert state.attributes.get(ATTR_OPTIONS) == [
         "Home",
         "Amazon Video on Demand",
         "Free FrameChannel Service",
-        "MLB.TV" + "\u00AE",
+        "MLB.TV" + "\u00ae",
         "Mediafly",
         "Netflix",
         "Pandora",
@@ -174,7 +174,6 @@ async def test_channel_state(
 
     state = hass.states.get("select.58_onn_roku_tv_channel")
     assert state
-    assert state.attributes.get(ATTR_ICON) == "mdi:television"
     assert state.attributes.get(ATTR_OPTIONS) == [
         "99.1",
         "QVC (1.3)",

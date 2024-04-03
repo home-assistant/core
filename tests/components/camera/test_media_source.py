@@ -1,4 +1,5 @@
 """Test camera media source."""
+
 from unittest.mock import PropertyMock, patch
 
 import pytest
@@ -123,9 +124,12 @@ async def test_resolving_errors(hass: HomeAssistant, mock_camera_hls) -> None:
         )
     assert str(exc_info.value) == "Could not resolve media item: camera.non_existing"
 
-    with pytest.raises(media_source.Unresolvable) as exc_info, patch(
-        "homeassistant.components.camera.Camera.frontend_stream_type",
-        new_callable=PropertyMock(return_value=StreamType.WEB_RTC),
+    with (
+        pytest.raises(media_source.Unresolvable) as exc_info,
+        patch(
+            "homeassistant.components.camera.Camera.frontend_stream_type",
+            new_callable=PropertyMock(return_value=StreamType.WEB_RTC),
+        ),
     ):
         await media_source.async_resolve_media(
             hass, "media-source://camera/camera.demo_camera", None

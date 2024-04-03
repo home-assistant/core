@@ -1,4 +1,5 @@
 """Test the Tesla Wall Connector config flow."""
+
 from unittest.mock import patch
 
 from tesla_wall_connector.exceptions import WallConnectorConnectionError

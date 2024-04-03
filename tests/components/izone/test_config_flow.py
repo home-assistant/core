@@ -1,4 +1,5 @@
 """Tests for iZone."""
+
 from unittest.mock import Mock, patch
 
 import pytest
@@ -30,12 +31,15 @@ def _mock_start_discovery(hass, mock_disco):
 async def test_not_found(hass: HomeAssistant, mock_disco) -> None:
     """Test not finding iZone controller."""
 
-    with patch(
-        "homeassistant.components.izone.config_flow.async_start_discovery_service"
-    ) as start_disco, patch(
-        "homeassistant.components.izone.config_flow.async_stop_discovery_service",
-        return_value=None,
-    ) as stop_disco:
+    with (
+        patch(
+            "homeassistant.components.izone.config_flow.async_start_discovery_service"
+        ) as start_disco,
+        patch(
+            "homeassistant.components.izone.config_flow.async_stop_discovery_service",
+            return_value=None,
+        ) as stop_disco,
+    ):
         start_disco.side_effect = _mock_start_discovery(hass, mock_disco)
         result = await hass.config_entries.flow.async_init(
             IZONE, context={"source": config_entries.SOURCE_USER}
@@ -56,14 +60,18 @@ async def test_found(hass: HomeAssistant, mock_disco) -> None:
     """Test not finding iZone controller."""
     mock_disco.pi_disco.controllers["blah"] = object()
 
-    with patch(
-        "homeassistant.components.izone.climate.async_setup_entry",
-        return_value=True,
-    ) as mock_setup, patch(
-        "homeassistant.components.izone.config_flow.async_start_discovery_service"
-    ) as start_disco, patch(
-        "homeassistant.components.izone.async_start_discovery_service",
-        return_value=None,
+    with (
+        patch(
+            "homeassistant.components.izone.climate.async_setup_entry",
+            return_value=True,
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.izone.config_flow.async_start_discovery_service"
+        ) as start_disco,
+        patch(
+            "homeassistant.components.izone.async_start_discovery_service",
+            return_value=None,
+        ),
     ):
         start_disco.side_effect = _mock_start_discovery(hass, mock_disco)
         result = await hass.config_entries.flow.async_init(

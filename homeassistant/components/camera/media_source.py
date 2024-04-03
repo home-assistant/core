@@ -1,4 +1,5 @@
 """Expose cameras as media sources."""
+
 from __future__ import annotations
 
 import asyncio

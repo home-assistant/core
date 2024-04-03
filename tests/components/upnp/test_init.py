@@ -1,4 +1,5 @@
 """Test UPnP/IGD setup process."""
+
 from __future__ import annotations
 
 import copy
@@ -131,12 +132,15 @@ async def test_async_setup_udn_mismatch(
         await callback(test_discovery, ssdp.SsdpChange.ALIVE)
         return MagicMock()
 
-    with patch(
-        "homeassistant.components.ssdp.async_register_callback",
-        side_effect=register_callback,
-    ), patch(
-        "homeassistant.components.ssdp.async_get_discovery_info_by_st",
-        return_value=[test_discovery],
+    with (
+        patch(
+            "homeassistant.components.ssdp.async_register_callback",
+            side_effect=register_callback,
+        ),
+        patch(
+            "homeassistant.components.ssdp.async_get_discovery_info_by_st",
+            return_value=[test_discovery],
+        ),
     ):
         # Load config_entry.
         entry.add_to_hass(hass)

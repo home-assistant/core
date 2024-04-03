@@ -1,4 +1,5 @@
 """Support for Verizon FiOS Quantum Gateways."""
+
 from __future__ import annotations
 
 import logging

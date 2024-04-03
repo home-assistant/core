@@ -1,4 +1,5 @@
 """Statistics helper."""
+
 from __future__ import annotations
 
 from collections import defaultdict
@@ -2038,7 +2039,7 @@ def _fast_build_sum_list(
     ]
 
 
-def _sorted_statistics_to_dict(  # noqa: C901
+def _sorted_statistics_to_dict(
     hass: HomeAssistant,
     session: Session,
     stats: Sequence[Row[Any]],
@@ -2062,7 +2063,7 @@ def _sorted_statistics_to_dict(  # noqa: C901
     seen_statistic_ids: set[str] = set()
     key_func = itemgetter(metadata_id_idx)
     for meta_id, group in groupby(stats, key_func):
-        stats_list = stats_by_meta_id[meta_id] = list(group)
+        stats_by_meta_id[meta_id] = list(group)
         seen_statistic_ids.add(metadata[meta_id]["statistic_id"])
 
     # Set all statistic IDs to empty lists in result set to maintain the order
