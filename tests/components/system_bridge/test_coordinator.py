@@ -1,7 +1,7 @@
 """Test the System Bridge integration."""
 
 import asyncio
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 from systembridgeconnector.exceptions import (
     AuthenticationException,
@@ -119,9 +119,10 @@ async def test_setup_timeout(
 
 async def test_wait_timeout(
     hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_coordinator_data_wait: AsyncMock,
     mock_version: MagicMock,
     mock_websocket_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test wait timeout."""
     # Stop the listener from returning any data to trigger a timeout
@@ -134,9 +135,10 @@ async def test_wait_timeout(
 
 async def test_not_ready(
     hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_coordinator_data_wait: AsyncMock,
     mock_version: MagicMock,
     mock_websocket_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test not ready."""
     mock_websocket_client.listen.side_effect = mock_data_listener_bad

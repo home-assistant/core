@@ -34,6 +34,8 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from .const import DOMAIN, MODULES, SCAN_INTERVAL
 from .data import SystemBridgeData
 
+INITIAL_DATA_WAIT = 10
+
 
 class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData]):
     """Class to manage fetching System Bridge data from single endpoint."""
@@ -215,7 +217,7 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
 
         try:
             # Wait for initial data
-            async with asyncio.timeout(10):
+            async with asyncio.timeout(INITIAL_DATA_WAIT):
                 while not self.is_ready:
                     self.logger.debug(
                         "Waiting for initial data from %s",

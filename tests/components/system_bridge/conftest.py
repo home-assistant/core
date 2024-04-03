@@ -72,6 +72,16 @@ def mock_setup_notify_platform() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
+def mock_coordinator_data_wait() -> Generator[AsyncMock, None, None]:
+    """Patch the initial data wait time."""
+    with patch(
+        "homeassistant.components.system_bridge.coordinator.INITIAL_DATA_WAIT",
+        return_value=0,
+    ) as mock_data_wait:
+        yield mock_data_wait
+
+
+@pytest.fixture
 def mock_version() -> Generator[AsyncMock, None, None]:
     """Return a mocked Version class."""
     with patch(
