@@ -358,30 +358,36 @@ class HomeAssistantSkyConnectConfigFlow(ConfigFlow, domain=DOMAIN):
         assert self._usb_info is not None
         assert self._hw_variant is not None
 
-        await self.hass.config_entries.flow.async_init(
-            ZHA_DOMAIN,
-            context={"source": "hardware"},
-            data={
-                "name": self._hw_variant.full_name,
-                "port": {
-                    "path": self._usb_info.device,
-                    "baudrate": 115200,
-                    "flow_control": "hardware",
+        if user_input is not None:
+            await self.hass.config_entries.flow.async_init(
+                ZHA_DOMAIN,
+                context={"source": "hardware"},
+                data={
+                    "name": self._hw_variant.full_name,
+                    "port": {
+                        "path": self._usb_info.device,
+                        "baudrate": 115200,
+                        "flow_control": "hardware",
+                    },
+                    "radio_type": "ezsp",
                 },
-                "radio_type": "ezsp",
-            },
-        )
+            )
 
-        return self.async_create_entry(
-            title=self._hw_variant.full_name,
-            data={
-                "vid": self._usb_info.vid,
-                "pid": self._usb_info.pid,
-                "serial_number": self._usb_info.serial_number,
-                "manufacturer": self._usb_info.manufacturer,
-                "description": self._usb_info.description,
-                "device": self._usb_info.device,
-            },
+            return self.async_create_entry(
+                title=self._hw_variant.full_name,
+                data={
+                    "vid": self._usb_info.vid,
+                    "pid": self._usb_info.pid,
+                    "serial_number": self._usb_info.serial_number,
+                    "manufacturer": self._usb_info.manufacturer,
+                    "description": self._usb_info.description,
+                    "device": self._usb_info.device,
+                },
+            )
+
+        return self.async_show_form(
+            step_id="confirm_zigbee",
+            description_placeholders=self.context["description_placeholders"],
         )
 
     async def async_step_pick_firmware_thread(
@@ -521,18 +527,23 @@ class HomeAssistantSkyConnectConfigFlow(ConfigFlow, domain=DOMAIN):
         assert self._usb_info is not None
         assert self._hw_variant is not None
 
-        # OTBR discovery is done via hassio
+        if user_input is not None:
+            # OTBR discovery is done automatically via hassio
+            return self.async_create_entry(
+                title=self._hw_variant.full_name,
+                data={
+                    "vid": self._usb_info.vid,
+                    "pid": self._usb_info.pid,
+                    "serial_number": self._usb_info.serial_number,
+                    "manufacturer": self._usb_info.manufacturer,
+                    "description": self._usb_info.description,
+                    "device": self._usb_info.device,
+                },
+            )
 
-        return self.async_create_entry(
-            title=self._hw_variant.full_name,
-            data={
-                "vid": self._usb_info.vid,
-                "pid": self._usb_info.pid,
-                "serial_number": self._usb_info.serial_number,
-                "manufacturer": self._usb_info.manufacturer,
-                "description": self._usb_info.description,
-                "device": self._usb_info.device,
-            },
+        return self.async_show_form(
+            step_id="confirm_otbr",
+            description_placeholders=self.context["description_placeholders"],
         )
 
 
