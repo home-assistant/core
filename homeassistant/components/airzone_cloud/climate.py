@@ -11,11 +11,14 @@ from aioairzone_cloud.const import (
     API_PARAMS,
     API_POWER,
     API_SETPOINT,
+    API_SP_AIR_COOL,
+    API_SP_AIR_HEAT,
     API_SPEED_CONF,
     API_UNITS,
     API_VALUE,
     AZD_ACTION,
     AZD_AIDOOS,
+    AZD_DOUBLE_SET_POINT,
     AZD_GROUPS,
     AZD_HUMIDITY,
     AZD_INSTALLATIONS,
@@ -29,6 +32,8 @@ from aioairzone_cloud.const import (
     AZD_SPEEDS,
     AZD_TEMP,
     AZD_TEMP_SET,
+    AZD_TEMP_SET_COOL_AIR,
+    AZD_TEMP_SET_HOT_AIR,
     AZD_TEMP_SET_MAX,
     AZD_TEMP_SET_MIN,
     AZD_TEMP_STEP,
@@ -37,6 +42,8 @@ from aioairzone_cloud.const import (
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
+    ATTR_TARGET_TEMP_HIGH,
+    ATTR_TARGET_TEMP_LOW,
     FAN_AUTO,
     FAN_HIGH,
     FAN_LOW,
@@ -171,6 +178,21 @@ class AirzoneClimate(AirzoneEntity, ClimateEntity):
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _enable_turn_on_off_backwards_compatibility = False
 
+    def _init_attributes(self) -> None:
+        """Init common climate device attributes."""
+        self._attr_target_temperature_step = self.get_airzone_value(AZD_TEMP_STEP)
+
+        self._attr_hvac_modes = [
+            HVAC_MODE_LIB_TO_HASS[mode] for mode in self.get_airzone_value(AZD_MODES)
+        ]
+        if HVACMode.OFF not in self._attr_hvac_modes:
+            self._attr_hvac_modes += [HVACMode.OFF]
+
+        if self.get_airzone_value(AZD_DOUBLE_SET_POINT):
+            self._attr_supported_features |= (
+                ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+            )
+
     @callback
     def _handle_coordinator_update(self) -> None:
         """Update attributes when the coordinator updates."""
@@ -193,7 +215,15 @@ class AirzoneClimate(AirzoneEntity, ClimateEntity):
             self._attr_hvac_mode = HVACMode.OFF
         self._attr_max_temp = self.get_airzone_value(AZD_TEMP_SET_MAX)
         self._attr_min_temp = self.get_airzone_value(AZD_TEMP_SET_MIN)
-        self._attr_target_temperature = self.get_airzone_value(AZD_TEMP_SET)
+        if self.supported_features & ClimateEntityFeature.TARGET_TEMPERATURE_RANGE:
+            self._attr_target_temperature_high = self.get_airzone_value(
+                AZD_TEMP_SET_COOL_AIR
+            )
+            self._attr_target_temperature_low = self.get_airzone_value(
+                AZD_TEMP_SET_HOT_AIR
+            )
+        else:
+            self._attr_target_temperature = self.get_airzone_value(AZD_TEMP_SET)
 
 
 class AirzoneDeviceClimate(AirzoneClimate):
@@ -229,6 +259,19 @@ class AirzoneDeviceClimate(AirzoneClimate):
         if ATTR_TEMPERATURE in kwargs:
             params[API_SETPOINT] = {
                 API_VALUE: kwargs[ATTR_TEMPERATURE],
+                API_OPTS: {
+                    API_UNITS: TemperatureUnit.CELSIUS.value,
+                },
+            }
+        if ATTR_TARGET_TEMP_LOW in kwargs and ATTR_TARGET_TEMP_HIGH in kwargs:
+            params[API_SP_AIR_COOL] = {
+                API_VALUE: kwargs[ATTR_TARGET_TEMP_HIGH],
+                API_OPTS: {
+                    API_UNITS: TemperatureUnit.CELSIUS.value,
+                },
+            }
+            params[API_SP_AIR_HEAT] = {
+                API_VALUE: kwargs[ATTR_TARGET_TEMP_LOW],
                 API_OPTS: {
                     API_UNITS: TemperatureUnit.CELSIUS.value,
                 },
@@ -311,12 +354,7 @@ class AirzoneAidooClimate(AirzoneAidooEntity, AirzoneDeviceClimate):
         super().__init__(coordinator, aidoo_id, aidoo_data)
 
         self._attr_unique_id = aidoo_id
-        self._attr_target_temperature_step = self.get_airzone_value(AZD_TEMP_STEP)
-        self._attr_hvac_modes = [
-            HVAC_MODE_LIB_TO_HASS[mode] for mode in self.get_airzone_value(AZD_MODES)
-        ]
-        if HVACMode.OFF not in self._attr_hvac_modes:
-            self._attr_hvac_modes += [HVACMode.OFF]
+        self._init_attributes()
         if (
             self.get_airzone_value(AZD_SPEED) is not None
             and self.get_airzone_value(AZD_SPEEDS) is not None
@@ -402,12 +440,7 @@ class AirzoneGroupClimate(AirzoneGroupEntity, AirzoneDeviceGroupClimate):
         super().__init__(coordinator, group_id, group_data)
 
         self._attr_unique_id = group_id
-        self._attr_target_temperature_step = self.get_airzone_value(AZD_TEMP_STEP)
-        self._attr_hvac_modes = [
-            HVAC_MODE_LIB_TO_HASS[mode] for mode in self.get_airzone_value(AZD_MODES)
-        ]
-        if HVACMode.OFF not in self._attr_hvac_modes:
-            self._attr_hvac_modes += [HVACMode.OFF]
+        self._init_attributes()
 
         self._async_update_attrs()
 
@@ -425,12 +458,7 @@ class AirzoneInstallationClimate(AirzoneInstallationEntity, AirzoneDeviceGroupCl
         super().__init__(coordinator, inst_id, inst_data)
 
         self._attr_unique_id = inst_id
-        self._attr_target_temperature_step = self.get_airzone_value(AZD_TEMP_STEP)
-        self._attr_hvac_modes = [
-            HVAC_MODE_LIB_TO_HASS[mode] for mode in self.get_airzone_value(AZD_MODES)
-        ]
-        if HVACMode.OFF not in self._attr_hvac_modes:
-            self._attr_hvac_modes += [HVACMode.OFF]
+        self._init_attributes()
 
         self._async_update_attrs()
 
@@ -448,12 +476,7 @@ class AirzoneZoneClimate(AirzoneZoneEntity, AirzoneDeviceClimate):
         super().__init__(coordinator, system_zone_id, zone_data)
 
         self._attr_unique_id = system_zone_id
-        self._attr_target_temperature_step = self.get_airzone_value(AZD_TEMP_STEP)
-        self._attr_hvac_modes = [
-            HVAC_MODE_LIB_TO_HASS[mode] for mode in self.get_airzone_value(AZD_MODES)
-        ]
-        if HVACMode.OFF not in self._attr_hvac_modes:
-            self._attr_hvac_modes += [HVACMode.OFF]
+        self._init_attributes()
 
         self._async_update_attrs()
 
