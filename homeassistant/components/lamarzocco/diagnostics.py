@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import asdict
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
@@ -25,8 +26,10 @@ async def async_get_config_entry_diagnostics(
     # collect all data sources
     data = {}
     data["model"] = device.model
-    data["config"] = device.config
-    data["firmware"] = device.firmware
-    data["statistics"] = device.statistics
+    data["config"] = asdict(device.config)
+    data["firmware"] = [
+        {key: asdict(firmware)} for key, firmware in device.firmware.items()
+    ]
+    data["statistics"] = asdict(device.statistics)
 
     return async_redact_data(data, TO_REDACT)

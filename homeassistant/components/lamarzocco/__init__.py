@@ -61,8 +61,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             client=get_async_client(hass),
         )
 
-    bluetooth_client: LaMarzoccoBluetoothClient | None = None
     # initialize Bluetooth
+    bluetooth_client: LaMarzoccoBluetoothClient | None = None
     if entry.options.get(CONF_USE_BLUETOOTH, True):
 
         def bluetooth_configured() -> bool:
