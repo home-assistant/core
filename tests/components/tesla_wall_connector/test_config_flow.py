@@ -98,7 +98,7 @@ async def test_form_already_configured(
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] == "abort"
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "already_configured"
 
     # Test config entry got updated with latest IP
@@ -120,7 +120,7 @@ async def test_dhcp_can_finish(
         ),
     )
     await hass.async_block_till_done()
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
@@ -154,7 +154,7 @@ async def test_dhcp_already_exists(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -178,5 +178,5 @@ async def test_dhcp_error_from_wall_connector(
         )
         await hass.async_block_till_done()
 
-        assert result["type"] == "abort"
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "cannot_connect"
