@@ -59,7 +59,7 @@ async def __do_sucessful_machine_selection_step(
 
     assert result3["type"] is FlowResultType.CREATE_ENTRY
 
-    assert result3["title"] == mock_device_info.serial_number
+    assert result3["title"] == "GS3"
     assert result3["data"] == {
         **USER_INPUT,
         CONF_HOST: "192.168.1.1",
@@ -307,7 +307,7 @@ async def test_bluetooth_discovery(
 
     assert result3["type"] is FlowResultType.CREATE_ENTRY
 
-    assert result3["title"] == mock_lamarzocco.serial_number
+    assert result3["title"] == "GS3"
     assert result3["data"] == {
         **USER_INPUT,
         CONF_HOST: "192.168.1.1",
@@ -372,7 +372,7 @@ async def test_bluetooth_discovery_errors(
 
     assert result3["type"] is FlowResultType.CREATE_ENTRY
 
-    assert result3["title"] == mock_lamarzocco.serial_number
+    assert result3["title"] == "GS3"
     assert result3["data"] == {
         **USER_INPUT,
         CONF_HOST: "192.168.1.1",

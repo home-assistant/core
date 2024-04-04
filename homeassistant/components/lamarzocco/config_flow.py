@@ -154,7 +154,7 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
 
             if not errors:
                 return self.async_create_entry(
-                    title=serial_number,
+                    title=selected_device.name,
                     data={
                         **self._config,
                         CONF_NAME: selected_device.name,
