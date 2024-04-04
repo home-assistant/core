@@ -228,6 +228,7 @@ async def test_play_media_music_library_playlist(
     """Test that playlists can be found by id or title."""
     soco_mock = soco_factory.mock_list.get("192.168.42.2")
     soco_mock.music_library.get_playlists.return_value = _mock_playlists
+
     await hass.services.async_call(
         MP_DOMAIN,
         SERVICE_PLAY_MEDIA,
