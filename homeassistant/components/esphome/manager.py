@@ -349,7 +349,9 @@ class ESPHomeManager:
         hass = self.hass
         assert self.entry_data.device_info is not None
         if (
-            self.entry_data.device_info.voice_assistant_feature_flags_compat
+            self.entry_data.device_info.voice_assistant_feature_flags_compat(
+                self.entry_data.api_version
+            )
             & VoiceAssistantFeature.API_AUDIO
         ):
             self.voice_assistant_pipeline = VoiceAssistantAPIPipeline(
@@ -494,7 +496,7 @@ class ESPHomeManager:
                 )
             )
 
-        flags = device_info.voice_assistant_feature_flags_compat
+        flags = device_info.voice_assistant_feature_flags_compat(api_version)
         if flags:
             if flags & VoiceAssistantFeature.API_AUDIO:
                 entry_data.disconnect_callbacks.add(

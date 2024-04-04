@@ -138,7 +138,9 @@ class VoiceAssistantPipeline:
                 data_to_send = {"url": url}
 
                 if (
-                    self.device_info.voice_assistant_feature_flags_compat
+                    self.device_info.voice_assistant_feature_flags_compat(
+                        self.entry_data.api_version
+                    )
                     & VoiceAssistantFeature.SPEAKER
                 ):
                     media_id = tts_output["media_id"]
@@ -186,7 +188,9 @@ class VoiceAssistantPipeline:
             audio_settings = VoiceAssistantAudioSettings()
 
         if (
-            self.device_info.voice_assistant_feature_flags_compat
+            self.device_info.voice_assistant_feature_flags_compat(
+                self.entry_data.api_version
+            )
             & VoiceAssistantFeature.SPEAKER
         ):
             tts_audio_output = "wav"
