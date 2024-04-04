@@ -371,9 +371,10 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):  # pylint: disable=has
         # Remove add-ons that are no longer installed from device registry
         supervisor_addon_devices = {
             list(device.identifiers)[0][1]
-            for device in self.dev_reg.devices.values()
-            if self.entry_id in device.config_entries
-            and device.model == SupervisorEntityModel.ADDON
+            for device in self.dev_reg.devices.get_devices_for_config_entry_id(
+                self.entry_id
+            )
+            if device.model == SupervisorEntityModel.ADDON
         }
         if stale_addons := supervisor_addon_devices - set(new_data[DATA_KEY_ADDONS]):
             async_remove_addons_from_dev_reg(self.dev_reg, stale_addons)
