@@ -360,6 +360,11 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
                 },
                 slug_validator=translation_key_validator,
             ),
+            vol.Optional("conversation"): {
+                vol.Required("agent"): {
+                    vol.Required("done"): translation_value_validator,
+                },
+            },
         }
     )
 
