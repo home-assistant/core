@@ -5,7 +5,6 @@ from __future__ import annotations
 from http import HTTPStatus
 import os
 import re
-import threading
 
 import requests
 import voluptuous as vol
@@ -89,7 +88,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
         return False
 
-    def download_file(service: ServiceCall) -> None:
+    async def download_file(service: ServiceCall) -> None:
         """Start thread to download file specified in the URL."""
 
         def do_download() -> None:
@@ -195,7 +194,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 if final_path and os.path.isfile(final_path):
                     os.remove(final_path)
 
-        threading.Thread(target=do_download).start()
+        await hass.async_add_executor_job(do_download)
 
     async_register_admin_service(
         hass,
