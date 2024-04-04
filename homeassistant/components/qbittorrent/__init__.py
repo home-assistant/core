@@ -16,7 +16,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, SERVICE_GET_TORRENTS, STATE_ATTR_TORRENT_INFO, TORRENT_FILTER
@@ -24,6 +24,8 @@ from .coordinator import QBittorrentDataCoordinator
 from .helpers import format_torrents, setup_client
 
 _LOGGER = logging.getLogger(__name__)
+
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 PLATFORMS = [Platform.SENSOR]
 
