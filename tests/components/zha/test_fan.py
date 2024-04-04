@@ -647,17 +647,17 @@ async def test_fan_ikea(
     ),
     [
         (None, STATE_OFF, None, None),
-        ({"fan_mode": 0}, STATE_OFF, 0, None),
-        ({"fan_mode": 1}, STATE_ON, 10, PRESET_MODE_AUTO),
-        ({"fan_mode": 10}, STATE_ON, 20, "Speed 1"),
-        ({"fan_mode": 15}, STATE_ON, 30, "Speed 1.5"),
-        ({"fan_mode": 20}, STATE_ON, 40, "Speed 2"),
-        ({"fan_mode": 25}, STATE_ON, 50, "Speed 2.5"),
-        ({"fan_mode": 30}, STATE_ON, 60, "Speed 3"),
-        ({"fan_mode": 35}, STATE_ON, 70, "Speed 3.5"),
-        ({"fan_mode": 40}, STATE_ON, 80, "Speed 4"),
-        ({"fan_mode": 45}, STATE_ON, 90, "Speed 4.5"),
-        ({"fan_mode": 50}, STATE_ON, 100, "Speed 5"),
+        ({"fan_mode": 0, "fan_speed": 0}, STATE_OFF, 0, None),
+        ({"fan_mode": 1, "fan_speed": 6}, STATE_ON, 60, PRESET_MODE_AUTO),
+        ({"fan_mode": 2, "fan_speed": 2}, STATE_ON, 20, None),
+        ({"fan_mode": 3, "fan_speed": 3}, STATE_ON, 30, None),
+        ({"fan_mode": 4, "fan_speed": 4}, STATE_ON, 40, None),
+        ({"fan_mode": 5, "fan_speed": 5}, STATE_ON, 50, None),
+        ({"fan_mode": 6, "fan_speed": 6}, STATE_ON, 60, None),
+        ({"fan_mode": 7, "fan_speed": 7}, STATE_ON, 70, None),
+        ({"fan_mode": 8, "fan_speed": 8}, STATE_ON, 80, None),
+        ({"fan_mode": 9, "fan_speed": 9}, STATE_ON, 90, None),
+        ({"fan_mode": 10, "fan_speed": 10}, STATE_ON, 100, None),
     ],
 )
 async def test_fan_ikea_init(
@@ -691,7 +691,7 @@ async def test_fan_ikea_update_entity(
 ) -> None:
     """Test ZHA fan platform."""
     cluster = zigpy_device_ikea.endpoints.get(1).ikea_airpurifier
-    cluster.PLUGGED_ATTR_READS = {"fan_mode": 0}
+    cluster.PLUGGED_ATTR_READS = {"fan_mode": 0, "fan_speed": 0}
 
     zha_device = await zha_device_joined_restored(zigpy_device_ikea)
     entity_id = find_entity_id(Platform.FAN, zha_device, hass)
@@ -713,22 +713,22 @@ async def test_fan_ikea_update_entity(
     )
     assert hass.states.get(entity_id).state == STATE_OFF
     if zha_device_joined_restored.name == "zha_device_joined":
-        assert cluster.read_attributes.await_count == 4
+        assert cluster.read_attributes.await_count == 5
     else:
-        assert cluster.read_attributes.await_count == 7
+        assert cluster.read_attributes.await_count == 8
 
-    cluster.PLUGGED_ATTR_READS = {"fan_mode": 1}
+    cluster.PLUGGED_ATTR_READS = {"fan_mode": 1, "fan_speed": 6}
     await hass.services.async_call(
         "homeassistant", "update_entity", {"entity_id": entity_id}, blocking=True
     )
     assert hass.states.get(entity_id).state == STATE_ON
-    assert hass.states.get(entity_id).attributes[ATTR_PERCENTAGE] == 10
+    assert hass.states.get(entity_id).attributes[ATTR_PERCENTAGE] == 60
     assert hass.states.get(entity_id).attributes[ATTR_PRESET_MODE] is PRESET_MODE_AUTO
     assert hass.states.get(entity_id).attributes[ATTR_PERCENTAGE_STEP] == 100 / 10
     if zha_device_joined_restored.name == "zha_device_joined":
-        assert cluster.read_attributes.await_count == 5
+        assert cluster.read_attributes.await_count == 7
     else:
-        assert cluster.read_attributes.await_count == 8
+        assert cluster.read_attributes.await_count == 10
 
 
 @pytest.fixture

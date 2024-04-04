@@ -401,6 +401,11 @@ class IkeaAirPurifierClusterHandler(ClusterHandler):
         return self.cluster.get("fan_mode")
 
     @property
+    def fan_speed(self) -> int | None:
+        """Return current fan speed."""
+        return self.cluster.get("fan_speed")
+
+    @property
     def fan_mode_sequence(self) -> int | None:
         """Return possible fan mode speeds."""
         return self.cluster.get("fan_mode_sequence")
@@ -412,6 +417,7 @@ class IkeaAirPurifierClusterHandler(ClusterHandler):
     async def async_update(self) -> None:
         """Retrieve latest state."""
         await self.get_attribute_value("fan_mode", from_cache=False)
+        await self.get_attribute_value("fan_speed", from_cache=False)
 
     @callback
     def attribute_updated(self, attrid: int, value: Any, _: Any) -> None:
@@ -420,7 +426,7 @@ class IkeaAirPurifierClusterHandler(ClusterHandler):
         self.debug(
             "Attribute report '%s'[%s] = %s", self.cluster.name, attr_name, value
         )
-        if attr_name == "fan_mode":
+        if attr_name in ("fan_mode", "fan_speed"):
             self.async_send_signal(
                 f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", attrid, attr_name, value
             )
