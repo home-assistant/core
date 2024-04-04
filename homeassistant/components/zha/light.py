@@ -51,10 +51,7 @@ class Light(light.LightEntity, ZHAEntity):
         super().__init__(entity_data)
         self._attr_supported_color_modes: set[ColorMode] = set()
         for color_mode in self.entity_data.entity.supported_color_modes:
-            if (
-                color_mode is not ColorMode.BRIGHTNESS
-                and color_mode is not ColorMode.ONOFF
-            ):
+            if color_mode not in (ColorMode.BRIGHTNESS.value, ColorMode.ONOFF.value):
                 self._attr_supported_color_modes.add(ColorMode(color_mode))
         self._attr_supported_features = LightEntityFeature(
             self.entity_data.entity.supported_features
