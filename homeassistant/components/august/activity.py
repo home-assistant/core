@@ -31,7 +31,7 @@ INITIAL_LOCK_RESYNC_TIME = 60
 
 # If there is a storm of activity (ie lock, unlock, door open, door close, etc)
 # we want to debounce the updates so we don't hammer the activity api too much.
-ACTIVITY_DEBOUNCE_COOLDOWN = 3
+ACTIVITY_DEBOUNCE_COOLDOWN = 4
 
 
 @callback
