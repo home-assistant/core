@@ -274,14 +274,52 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         fails. Additionally logging is handled by config entry setup
         to ensure that multiple retries do not cause log spam.
         """
-        await self._async_refresh(
-            log_failures=False, raise_on_auth_failed=True, raise_on_entry_error=True
-        )
-        if self.last_update_success:
-            return
+        if await self._handle_async_setup():
+            await self._async_refresh(
+                log_failures=False, raise_on_auth_failed=True, raise_on_entry_error=True
+            )
+            if self.last_update_success:
+                return
         ex = ConfigEntryNotReady()
         ex.__cause__ = self.last_exception
         raise ex
+
+    async def _handle_async_setup(self) -> bool:
+        """Error handling for _asnyc_setup."""
+        try:
+            await self._asnyc_setup()
+        except (
+            TimeoutError,
+            requests.exceptions.Timeout,
+            aiohttp.ClientError,
+            requests.exceptions.RequestException,
+            urllib.error.URLError,
+            UpdateFailed,
+        ) as err:
+            self.last_exception = err
+
+        except (ConfigEntryError, ConfigEntryAuthFailed):
+            raise
+
+        except NotImplementedError as err:
+            self.last_exception = err
+            raise err
+
+        except Exception as err:  # pylint: disable=broad-except
+            self.last_exception = err
+            self.logger.exception(
+                "Unexpected error fetching %s data: %s", self.name, err
+            )
+        else:
+            return True
+        return False
+
+    async def _asnyc_setup(self) -> None:
+        """Prepare the coordinator for the first refresh.
+
+        Can be overwritten by integrations to setup their coordinators,
+        or resources that only need to be loaded once.
+        """
 
     async def async_refresh(self) -> None:
         """Refresh data and log errors."""
