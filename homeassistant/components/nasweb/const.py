@@ -1,6 +1,9 @@
 """Constants for the NASweb integration."""
 
 DOMAIN = "nasweb"
+DOMAIN_DISPLAY_NAME = "NASweb"
+ISSUE_INVALID_AUTHENTICATION = "invalid_authentication"
+ISSUE_INTERNAL_ERROR = "internal_error"
 MANUFACTURER = "chomtech.pl"
 NASWEB_CONFIG_URL = "https://{host}/page"
 NASWEB_SCHEMA_IMG_URL = (
