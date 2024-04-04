@@ -54,11 +54,13 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
         self.title = entry.title
         self.unsub: Callable | None = None
 
+        self.registered = False
         self.websocket_client = WebSocketClient(
-            entry.data[CONF_HOST],
-            entry.data[CONF_PORT],
-            entry.data[CONF_TOKEN],
+            api_host=entry.data[CONF_HOST],
+            api_port=entry.data[CONF_PORT],
+            token=entry.data[CONF_TOKEN],
             session=async_get_clientsession(hass),
+            can_close_session=False,
         )
 
         self._host = entry.data[CONF_HOST]
@@ -72,16 +74,23 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
 
         self.data = SystemBridgeData()
 
-    @property
-    def is_ready(self) -> bool:
-        """Return if the data is ready."""
-        if self.data is None:
-            return False
-        for module in MODULES:
-            if getattr(self.data, module) is None:
-                self.logger.debug("%s - Module %s is None", self.title, module)
-                return False
-        return True
+    async def check_websocket_connected(self) -> None:
+        """Check if WebSocket is connected."""
+        if not self.websocket_client.connected:
+            await self.websocket_client.connect()
+            self.registered = False
+
+    async def close_websocket(self) -> None:
+        """Close WebSocket connection."""
+        await self.websocket_client.close()
+
+    async def clean_disconnect(self) -> None:
+        """Clean disconnect WebSocket."""
+        if self.unsub:
+            self.unsub()
+            self.unsub = None
+        self.last_update_success = False
+        self.async_update_listeners()
 
     async def async_get_data(
         self,
@@ -146,39 +155,26 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
         try:
             await self.websocket_client.listen(callback=self.async_handle_module)
         except AuthenticationException as exception:
-            self.last_update_success = False
             self.logger.error(
                 "Authentication failed while listening for %s: %s",
                 self.title,
                 exception,
             )
-            if self.unsub:
-                self.unsub()
-                self.unsub = None
-            self.last_update_success = False
-            self.async_update_listeners()
+            await self.clean_disconnect()
         except (ConnectionClosedException, ConnectionResetError) as exception:
             self.logger.debug(
                 "[_listen_for_data] Websocket connection closed for %s. Will retry: %s",
                 self.title,
                 exception,
             )
-            if self.unsub:
-                self.unsub()
-                self.unsub = None
-            self.last_update_success = False
-            self.async_update_listeners()
+            await self.clean_disconnect()
         except ConnectionErrorException as exception:
             self.logger.debug(
                 "[_listen_for_data] Connection error occurred for %s. Will retry: %s",
                 self.title,
                 exception,
             )
-            if self.unsub:
-                self.unsub()
-                self.unsub = None
-            self.last_update_success = False
-            self.async_update_listeners()
+            await self.clean_disconnect()
 
     async def _async_update_data(self) -> SystemBridgeData:
         """Update System Bridge data from WebSocket."""
@@ -186,7 +182,8 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
             "[_async_update_data] WebSocket Connected: %s",
             self.websocket_client.connected,
         )
-        if not self.websocket_client.connected:
+
+        if not self.registered:
             try:
                 self.hass.async_create_background_task(
                     self._listen_for_data(),
@@ -196,6 +193,7 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
                 await self.websocket_client.register_data_listener(
                     RegisterDataListener(modules=MODULES)
                 )
+                self.registered = True
 
                 self.last_update_success = True
                 self.async_update_listeners()
@@ -226,13 +224,10 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
                 self.last_update_success = False
                 self.async_update_listeners()
 
-            async def close_websocket(_) -> None:
-                """Close WebSocket connection."""
-                await self.websocket_client.close(True)
-
             # Clean disconnect WebSocket on Home Assistant shutdown
             self.unsub = self.hass.bus.async_listen_once(
-                EVENT_HOMEASSISTANT_STOP, close_websocket
+                EVENT_HOMEASSISTANT_STOP,
+                lambda _: self.close_websocket(),
             )
 
         self.logger.debug("[_async_update_data] Done")
