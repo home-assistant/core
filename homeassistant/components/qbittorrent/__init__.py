@@ -17,6 +17,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, SERVICE_GET_TORRENTS, STATE_ATTR_TORRENT_INFO, TORRENT_FILTER
 from .coordinator import QBittorrentDataCoordinator
@@ -25,6 +26,44 @@ from .helpers import format_torrents, setup_client
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.SENSOR]
+
+CONF_ENTRY = "entry"
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up qBittorrent services."""
+
+    async def handle_get_torrents(service_call: ServiceCall):
+        device_registry = dr.async_get(hass)
+        device_entry = device_registry.async_get(service_call.data[ATTR_DEVICE_ID])
+
+        if device_entry is None:
+            return
+
+        entry_id = None
+
+        for key, value in device_entry.identifiers:
+            if key == DOMAIN:
+                entry_id = value
+                break
+        else:
+            return
+
+        coordinator: QBittorrentDataCoordinator = hass.data[DOMAIN][entry_id]
+        items = await coordinator.get_torrents(service_call.data[TORRENT_FILTER])
+        info = format_torrents(items)
+        return {
+            STATE_ATTR_TORRENT_INFO: info,
+        }
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_GET_TORRENTS,
+        handle_get_torrents,
+        supports_response=SupportsResponse.ONLY,
+    )
+
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
@@ -48,29 +87,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = coordinator
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
-
-    async def handle_get_torrents(service_call: ServiceCall):
-        device_registry = dr.async_get(hass)
-        device_entry = device_registry.async_get(service_call.data[ATTR_DEVICE_ID])
-
-        if device_entry is None:
-            return
-
-        coordinator: QBittorrentDataCoordinator = hass.data[DOMAIN][
-            config_entry.entry_id
-        ]
-        items = await coordinator.get_torrents(service_call.data[TORRENT_FILTER])
-        info = format_torrents(items)
-        return {
-            STATE_ATTR_TORRENT_INFO: info,
-        }
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_GET_TORRENTS,
-        handle_get_torrents,
-        supports_response=SupportsResponse.ONLY,
-    )
 
     return True
 
