@@ -641,7 +641,6 @@ def _insert_statistics(
     try:
         stat = table.from_stats(metadata_id, statistic)
         session.add(stat)
-        return stat
     except SQLAlchemyError:
         _LOGGER.exception(
             "Unexpected exception when inserting statistics %s:%s ",
@@ -649,6 +648,7 @@ def _insert_statistics(
             statistic,
         )
         return None
+    return stat
 
 
 def _update_statistics(
@@ -2039,7 +2039,7 @@ def _fast_build_sum_list(
     ]
 
 
-def _sorted_statistics_to_dict(  # noqa: C901
+def _sorted_statistics_to_dict(
     hass: HomeAssistant,
     session: Session,
     stats: Sequence[Row[Any]],

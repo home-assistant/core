@@ -18,23 +18,26 @@ async def test_form(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
-    with patch(
-        "opengarage.OpenGarage.update_state",
-        return_value={"name": "Name of the device", "mac": "unique"},
-    ), patch(
-        "homeassistant.components.opengarage.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "opengarage.OpenGarage.update_state",
+            return_value={"name": "Name of the device", "mac": "unique"},
+        ),
+        patch(
+            "homeassistant.components.opengarage.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {"host": "http://1.1.1.1", "device_key": "AfsasdnfkjDD"},
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Name of the device"
     assert result2["data"] == {
         "host": "http://1.1.1.1",
@@ -60,7 +63,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
             {"host": "http://1.1.1.1", "device_key": "AfsasdnfkjDD"},
         )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
@@ -79,7 +82,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
             {"host": "http://1.1.1.1", "device_key": "AfsasdnfkjDD"},
         )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
@@ -98,7 +101,7 @@ async def test_form_unknown_error(hass: HomeAssistant) -> None:
             {"host": "http://1.1.1.1", "device_key": "AfsasdnfkjDD"},
         )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
 
 
@@ -129,5 +132,5 @@ async def test_flow_entry_already_exists(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"

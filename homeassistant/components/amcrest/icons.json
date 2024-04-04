@@ -1,0 +1,15 @@
+{
+  "services": {
+    "enable_recording": "mdi:record-rec",
+    "disable_recording": "mdi:stop",
+    "enable_audio": "mdi:volume-high",
+    "disable_audio": "mdi:volume-off",
+    "enable_motion_recording": "mdi:motion-sensor",
+    "disable_motion_recording": "mdi:motion-sensor-off",
+    "goto_preset": "mdi:pan",
+    "set_color_bw": "mdi:palette",
+    "start_tour": "mdi:panorama",
+    "stop_tour": "mdi:panorama-outline",
+    "ptz_control": "mdi:pan"
+  }
+}

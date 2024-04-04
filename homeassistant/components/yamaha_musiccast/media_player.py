@@ -676,7 +676,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
             return [self]
         entities = self.get_all_mc_entities()
         clients = [entity for entity in entities if entity.is_part_of_group(self)]
-        return [self] + clients
+        return [self, *clients]
 
     @property
     def musiccast_zone_entity(self) -> MusicCastMediaPlayer:
@@ -927,4 +927,4 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
     @callback
     def async_schedule_check_client_list(self):
         """Schedule async_check_client_list."""
-        self.hass.create_task(self.async_check_client_list())
+        self.hass.async_create_task(self.async_check_client_list(), eager_start=True)

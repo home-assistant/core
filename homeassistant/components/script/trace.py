@@ -40,7 +40,7 @@ def trace_script(
     except Exception as ex:
         if item_id:
             trace.set_error(ex)
-        raise ex
+        raise
     finally:
         if item_id:
             trace.finished()

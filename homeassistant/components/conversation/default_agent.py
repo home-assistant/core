@@ -24,7 +24,7 @@ from hassil.util import merge_dict
 from home_assistant_intents import ErrorKey, get_intents, get_languages
 import yaml
 
-from homeassistant import core, setup
+from homeassistant import core
 from homeassistant.components.homeassistant.exposed_entities import (
     async_listen_entity_updates,
     async_should_expose,
@@ -34,19 +34,22 @@ from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
     entity_registry as er,
+    floor_registry as fr,
     intent,
     start,
     template,
     translation,
 )
+from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import (
     EventStateChangedData,
     async_track_state_added_domain,
 )
 from homeassistant.util.json import JsonObjectType, json_loads_object
 
-from .agent import AbstractConversationAgent, ConversationInput, ConversationResult
 from .const import DEFAULT_EXPOSED_ATTRIBUTES, DOMAIN
+from .entity import ConversationEntity
+from .models import ConversationInput, ConversationResult
 
 _LOGGER = logging.getLogger(__name__)
 _DEFAULT_ERROR_TEXT = "Sorry, I couldn't understand that"
@@ -58,6 +61,14 @@ TRIGGER_CALLBACK_TYPE = Callable[
 ]
 METADATA_CUSTOM_SENTENCE = "hass_custom_sentence"
 METADATA_CUSTOM_FILE = "hass_custom_file"
+
+DATA_DEFAULT_ENTITY = "conversation_default_entity"
+
+
+@core.callback
+def async_get_default_agent(hass: core.HomeAssistant) -> DefaultAgent:
+    """Get the default agent."""
+    return hass.data[DATA_DEFAULT_ENTITY]
 
 
 def json_load(fp: IO[str]) -> JsonObjectType:
@@ -108,9 +119,16 @@ def _get_language_variations(language: str) -> Iterable[str]:
         yield lang
 
 
-@core.callback
-def async_setup(hass: core.HomeAssistant) -> None:
+async def async_setup_default_agent(
+    hass: core.HomeAssistant,
+    entity_component: EntityComponent[ConversationEntity],
+    config_intents: dict[str, Any],
+) -> None:
     """Set up entity registry listener for the default agent."""
+    entity = DefaultAgent(hass, config_intents)
+    await entity_component.async_add_entities([entity])
+    hass.data[DATA_DEFAULT_ENTITY] = entity
+
     entity_registry = er.async_get(hass)
     for entity_id in entity_registry.entities:
         async_should_expose(hass, DOMAIN, entity_id)
@@ -130,55 +148,75 @@ def async_setup(hass: core.HomeAssistant) -> None:
     start.async_at_started(hass, async_hass_started)
 
 
-class DefaultAgent(AbstractConversationAgent):
+class DefaultAgent(ConversationEntity):
     """Default agent for conversation agent."""
 
-    def __init__(self, hass: core.HomeAssistant) -> None:
+    _attr_name = "Home Assistant"
+
+    def __init__(
+        self, hass: core.HomeAssistant, config_intents: dict[str, Any]
+    ) -> None:
         """Initialize the default agent."""
         self.hass = hass
         self._lang_intents: dict[str, LanguageIntents] = {}
         self._lang_lock: dict[str, asyncio.Lock] = defaultdict(asyncio.Lock)
 
         # intent -> [sentences]
-        self._config_intents: dict[str, Any] = {}
+        self._config_intents: dict[str, Any] = config_intents
         self._slot_lists: dict[str, SlotList] | None = None
 
         # Sentences that will trigger a callback (skipping intent recognition)
         self._trigger_sentences: list[TriggerData] = []
         self._trigger_intents: Intents | None = None
+        self._unsub_clear_slot_list: list[Callable[[], None]] | None = None
 
     @property
     def supported_languages(self) -> list[str]:
         """Return a list of supported languages."""
         return get_languages()
 
-    async def async_initialize(self, config_intents: dict[str, Any] | None) -> None:
-        """Initialize the default agent."""
-        if "intent" not in self.hass.config.components:
-            await setup.async_setup_component(self.hass, "intent", {})
+    @core.callback
+    def _filter_entity_registry_changes(self, event_data: dict[str, Any]) -> bool:
+        """Filter entity registry changed events."""
+        return event_data["action"] == "update" and any(
+            field in event_data["changes"] for field in _ENTITY_REGISTRY_UPDATE_FIELDS
+        )
 
-        # Intents from config may only contains sentences for HA config's language
-        if config_intents:
-            self._config_intents = config_intents
+    @core.callback
+    def _filter_state_changes(self, event_data: dict[str, Any]) -> bool:
+        """Filter state changed events."""
+        return not event_data["old_state"] or not event_data["new_state"]
 
-        self.hass.bus.async_listen(
-            ar.EVENT_AREA_REGISTRY_UPDATED,
-            self._async_handle_area_registry_changed,
-            run_immediately=True,
-        )
-        self.hass.bus.async_listen(
-            er.EVENT_ENTITY_REGISTRY_UPDATED,
-            self._async_handle_entity_registry_changed,
-            run_immediately=True,
-        )
-        self.hass.bus.async_listen(
-            EVENT_STATE_CHANGED,
-            self._async_handle_state_changed,
-            run_immediately=True,
-        )
-        async_listen_entity_updates(
-            self.hass, DOMAIN, self._async_exposed_entities_updated
-        )
+    @core.callback
+    def _listen_clear_slot_list(self) -> None:
+        """Listen for changes that can invalidate slot list."""
+        assert self._unsub_clear_slot_list is None
+
+        self._unsub_clear_slot_list = [
+            self.hass.bus.async_listen(
+                ar.EVENT_AREA_REGISTRY_UPDATED,
+                self._async_clear_slot_list,
+                run_immediately=True,
+            ),
+            self.hass.bus.async_listen(
+                fr.EVENT_FLOOR_REGISTRY_UPDATED,
+                self._async_clear_slot_list,
+                run_immediately=True,
+            ),
+            self.hass.bus.async_listen(
+                er.EVENT_ENTITY_REGISTRY_UPDATED,
+                self._async_clear_slot_list,
+                event_filter=self._filter_entity_registry_changes,
+                run_immediately=True,
+            ),
+            self.hass.bus.async_listen(
+                EVENT_STATE_CHANGED,
+                self._async_clear_slot_list,
+                event_filter=self._filter_state_changes,
+                run_immediately=True,
+            ),
+            async_listen_entity_updates(self.hass, DOMAIN, self._async_clear_slot_list),
+        ]
 
     async def async_recognize(
         self, user_input: ConversationInput
@@ -537,6 +575,9 @@ class DefaultAgent(AbstractConversationAgent):
         if lang_intents is None:
             # No intents loaded
             _LOGGER.warning("No intents were loaded for language: %s", language)
+            return
+
+        self._make_slot_lists()
 
     async def async_get_or_load_intents(self, language: str) -> LanguageIntents | None:
         """Load all intents of a language with lock."""
@@ -696,37 +737,17 @@ class DefaultAgent(AbstractConversationAgent):
         return lang_intents
 
     @core.callback
-    def _async_handle_area_registry_changed(
-        self, event: core.Event[ar.EventAreaRegistryUpdatedData]
+    def _async_clear_slot_list(
+        self, event: core.Event[dict[str, Any]] | None = None
     ) -> None:
-        """Clear area area cache when the area registry has changed."""
+        """Clear slot lists when a registry has changed."""
         self._slot_lists = None
+        assert self._unsub_clear_slot_list is not None
+        for unsub in self._unsub_clear_slot_list:
+            unsub()
+        self._unsub_clear_slot_list = None
 
     @core.callback
-    def _async_handle_entity_registry_changed(
-        self, event: core.Event[er.EventEntityRegistryUpdatedData]
-    ) -> None:
-        """Clear names list cache when an entity registry entry has changed."""
-        if event.data["action"] != "update" or not any(
-            field in event.data["changes"] for field in _ENTITY_REGISTRY_UPDATE_FIELDS
-        ):
-            return
-        self._slot_lists = None
-
-    @core.callback
-    def _async_handle_state_changed(
-        self, event: core.Event[EventStateChangedData]
-    ) -> None:
-        """Clear names list cache when a state is added or removed from the state machine."""
-        if event.data["old_state"] and event.data["new_state"]:
-            return
-        self._slot_lists = None
-
-    @core.callback
-    def _async_exposed_entities_updated(self) -> None:
-        """Handle updated preferences."""
-        self._slot_lists = None
-
     def _make_slot_lists(self) -> dict[str, SlotList]:
         """Create slot lists with areas and entity names/aliases."""
         if self._slot_lists is not None:
@@ -773,6 +794,8 @@ class DefaultAgent(AbstractConversationAgent):
             # Default name
             entity_names.append((state.name, state.name, context))
 
+        _LOGGER.debug("Exposed entities: %s", entity_names)
+
         # Expose all areas.
         #
         # We pass in area id here with the expectation that no two areas will
@@ -788,13 +811,28 @@ class DefaultAgent(AbstractConversationAgent):
 
                     area_names.append((alias, area.id))
 
-        _LOGGER.debug("Exposed entities: %s", entity_names)
+        # Expose all floors.
+        #
+        # We pass in floor id here with the expectation that no two floors will
+        # share the same name or alias.
+        floors = fr.async_get(self.hass)
+        floor_names = []
+        for floor in floors.async_list_floors():
+            floor_names.append((floor.name, floor.floor_id))
+            if floor.aliases:
+                for alias in floor.aliases:
+                    if not alias.strip():
+                        continue
+
+                    floor_names.append((alias, floor.floor_id))
 
         self._slot_lists = {
             "area": TextSlotList.from_tuples(area_names, allow_template=False),
             "name": TextSlotList.from_tuples(entity_names, allow_template=False),
+            "floor": TextSlotList.from_tuples(floor_names, allow_template=False),
         }
 
+        self._listen_clear_slot_list()
         return self._slot_lists
 
     def _make_intent_context(
@@ -953,6 +991,10 @@ def _get_unmatched_response(result: RecognizeResult) -> tuple[ErrorKey, dict[str
         # area only
         return ErrorKey.NO_AREA, {"area": unmatched_area}
 
+    if unmatched_floor := unmatched_text.get("floor"):
+        # floor only
+        return ErrorKey.NO_FLOOR, {"floor": unmatched_floor}
+
     # Area may still have matched
     matched_area: str | None = None
     if matched_area_entity := result.entities.get("area"):
@@ -998,6 +1040,13 @@ def _get_no_states_matched_response(
             return ErrorKey.NO_DOMAIN_IN_AREA, {
                 "domain": domain,
                 "area": no_states_error.area,
+            }
+
+        if no_states_error.floor:
+            # domain in floor
+            return ErrorKey.NO_DOMAIN_IN_FLOOR, {
+                "domain": domain,
+                "floor": no_states_error.floor,
             }
 
         # domain only

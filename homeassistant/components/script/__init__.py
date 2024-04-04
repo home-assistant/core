@@ -5,8 +5,9 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 import asyncio
 from dataclasses import dataclass
+from functools import cached_property
 import logging
-from typing import TYPE_CHECKING, Any, cast
+from typing import Any, cast
 
 import voluptuous as vol
 
@@ -73,12 +74,6 @@ from .const import (
 )
 from .helpers import async_get_blueprints
 from .trace import trace_script
-
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
-
 
 SCRIPT_SERVICE_SCHEMA = vol.Schema(dict)
 SCRIPT_TURN_ONOFF_SCHEMA = make_entity_service_schema(
@@ -159,6 +154,30 @@ def areas_in_script(hass: HomeAssistant, entity_id: str) -> list[str]:
 
 
 @callback
+def scripts_with_floor(hass: HomeAssistant, floor_id: str) -> list[str]:
+    """Return all scripts that reference the floor."""
+    return _scripts_with_x(hass, floor_id, "referenced_floors")
+
+
+@callback
+def floors_in_script(hass: HomeAssistant, entity_id: str) -> list[str]:
+    """Return all floors in a script."""
+    return _x_in_script(hass, entity_id, "referenced_floors")
+
+
+@callback
+def scripts_with_label(hass: HomeAssistant, label_id: str) -> list[str]:
+    """Return all scripts that reference the label."""
+    return _scripts_with_x(hass, label_id, "referenced_labels")
+
+
+@callback
+def labels_in_script(hass: HomeAssistant, entity_id: str) -> list[str]:
+    """Return all labels in a script."""
+    return _x_in_script(hass, entity_id, "referenced_labels")
+
+
+@callback
 def scripts_with_blueprint(hass: HomeAssistant, blueprint_path: str) -> list[str]:
     """Return all scripts that reference the blueprint."""
     if DOMAIN not in hass.data:
@@ -199,8 +218,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     await _async_process_config(hass, config, component)
 
     # Add some default blueprints to blueprints/script, does nothing
-    # if blueprints/script already exists
-    await async_get_blueprints(hass).async_populate()
+    # if blueprints/script already exists but still has to create
+    # an executor job to check if the folder exists so we run it in a
+    # separate task to avoid waiting for it to finish setting up
+    # since a tracked task will be waited at the end of startup
+    hass.async_create_task(
+        async_get_blueprints(hass).async_populate(), eager_start=True
+    )
 
     async def reload_service(service: ServiceCall) -> None:
         """Call a service to reload scripts."""
@@ -391,6 +415,16 @@ class BaseScriptEntity(ToggleEntity, ABC):
 
     @cached_property
     @abstractmethod
+    def referenced_labels(self) -> set[str]:
+        """Return a set of referenced labels."""
+
+    @cached_property
+    @abstractmethod
+    def referenced_floors(self) -> set[str]:
+        """Return a set of referenced floors."""
+
+    @cached_property
+    @abstractmethod
     def referenced_areas(self) -> set[str]:
         """Return a set of referenced areas."""
 
@@ -413,7 +447,7 @@ class BaseScriptEntity(ToggleEntity, ABC):
 class UnavailableScriptEntity(BaseScriptEntity):
     """A non-functional script entity with its state set to unavailable.
 
-    This class is instatiated when an script fails to validate.
+    This class is instantiated when an script fails to validate.
     """
 
     _attr_should_poll = False
@@ -433,6 +467,16 @@ class UnavailableScriptEntity(BaseScriptEntity):
     def name(self) -> str:
         """Return the name of the entity."""
         return self._name
+
+    @cached_property
+    def referenced_labels(self) -> set[str]:
+        """Return a set of referenced labels."""
+        return set()
+
+    @cached_property
+    def referenced_floors(self) -> set[str]:
+        """Return a set of referenced floors."""
+        return set()
 
     @cached_property
     def referenced_areas(self) -> set[str]:
@@ -516,6 +560,16 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
     def is_on(self):
         """Return true if script is on."""
         return self.script.is_running
+
+    @cached_property
+    def referenced_labels(self) -> set[str]:
+        """Return a set of referenced labels."""
+        return self.script.referenced_labels
+
+    @cached_property
+    def referenced_floors(self) -> set[str]:
+        """Return a set of referenced floors."""
+        return self.script.referenced_floors
 
     @cached_property
     def referenced_areas(self) -> set[str]:

@@ -41,8 +41,8 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     )
     try:
         await acc.login()
-    except (ClientError, TimeoutError, Aladdin.ConnectionError) as ex:
-        raise ex
+    except (ClientError, TimeoutError, Aladdin.ConnectionError):
+        raise
 
     except Aladdin.InvalidPasswordError as ex:
         raise InvalidAuth from ex

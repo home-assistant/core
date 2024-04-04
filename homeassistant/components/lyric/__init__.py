@@ -77,7 +77,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         try:
             async with asyncio.timeout(60):
                 await lyric.get_locations()
-            return lyric
         except LyricAuthenticationException as exception:
             # Attempt to refresh the token before failing.
             # Honeywell appear to have issues keeping tokens saved.
@@ -87,6 +86,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             raise ConfigEntryAuthFailed from exception
         except (LyricException, ClientResponseError) as exception:
             raise UpdateFailed(exception) from exception
+        return lyric
 
     coordinator = DataUpdateCoordinator[Lyric](
         hass,
