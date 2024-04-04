@@ -7,7 +7,7 @@ import logging
 import time
 from typing import Any
 
-from aiohttp.web import Request
+from aiohttp.web import Request, Response
 from webio_api import Output as NASwebOutput, WebioAPI
 from webio_api.const import KEY_DEVICE_SERIAL, KEY_OUTPUTS, KEY_TYPE, TYPE_STATUS_UPDATE
 
@@ -57,7 +57,7 @@ class NotificationCoordinator:
 
     async def handle_webhook_request(
         self, hass: HomeAssistant, webhook_id: str, request: Request
-    ) -> None:
+    ) -> Response | None:
         """Handle webhook request from Push API."""
         if not self.has_coordinators():
             return None
@@ -72,7 +72,7 @@ class NotificationCoordinator:
             _LOGGER.warning("Received notification for not registered nasweb")
             return None
         nasweb_coordinator.handle_push_notification(notification)
-        return None
+        return Response(body='{"response": "ok"}', content_type="application/json")
 
 
 class NASwebCoordinator(DataUpdateCoordinator):
