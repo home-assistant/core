@@ -245,7 +245,10 @@ class SonosSpeaker:
         if new_alarms := [
             alarm.alarm_id for alarm in self.alarms if alarm.zone.uid == self.soco.uid
         ]:
+            _LOGGER.info("Dispatching SONOS_CREATE_ALARM")
             dispatches.append((SONOS_CREATE_ALARM, self, new_alarms))
+        else:
+            _LOGGER.info("Not Dispatching SONOS_CREATE_ALARM %s",self.alarms)
 
         dispatches.append((SONOS_CREATE_SWITCHES, self))
         dispatches.append((SONOS_CREATE_MEDIA_PLAYER, self))
