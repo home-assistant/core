@@ -22,6 +22,16 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   },
+  "issues": {
+    "invalid_authentication": {
+      "title": "[%key:common::config_flow::error::invalid_auth%]",
+      "description": "{domain_name}[{device_name}]: Invalid username/password. Most likely user changed password or was removed. Delete this entry and create new one with correct username/password."
+    },
+    "internal_error": {
+      "title": "Internal Error",
+      "description": "{domain_name}[{device_name}]: Something isn't right with device internal configuration. Try restarting device and HomeAssistant. If Issue persist contact support: support@chomtech.eu"
+    }
+  },
   "entity": {
     "switch": {
       "switch_output": {

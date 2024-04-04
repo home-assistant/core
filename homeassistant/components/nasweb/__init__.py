@@ -4,14 +4,23 @@ from __future__ import annotations
 import logging
 
 from webio_api import WebioAPI
+from webio_api.api_client import AuthError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
 
-from .const import DOMAIN, MANUFACTURER, NASWEB_CONFIG_URL
+from .config_flow import MissingNASwebData
+from .const import (
+    DOMAIN,
+    DOMAIN_DISPLAY_NAME,
+    ISSUE_INTERNAL_ERROR,
+    ISSUE_INVALID_AUTHENTICATION,
+    MANUFACTURER,
+    NASWEB_CONFIG_URL,
+)
 from .coordinator import NASwebCoordinator
 from .nasweb_data import NASwebData
 
@@ -32,30 +41,64 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     webio_api = WebioAPI(
         entry.data[CONF_HOST], entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD]
     )
-    if not await webio_api.check_connection():
-        raise ConfigEntryNotReady(f"[{entry.data[CONF_HOST]}] Check connection failed")
-    if not await webio_api.refresh_device_info():
-        _LOGGER.error("[%s] Refresh device info failed", entry.data[CONF_HOST])
-        return False
-    webio_serial = webio_api.get_serial_number()
-    if webio_serial is None:
-        _LOGGER.error("[%s] Serial number not available", entry.data[CONF_HOST])
-        return False
+    try:
+        if not await webio_api.check_connection():
+            raise ConfigEntryNotReady(
+                f"[{entry.data[CONF_HOST]}] Check connection failed"
+            )
+        if not await webio_api.refresh_device_info():
+            _LOGGER.error("[%s] Refresh device info failed", entry.data[CONF_HOST])
+            raise MissingNASwebData
+        webio_serial = webio_api.get_serial_number()
+        if webio_serial is None:
+            _LOGGER.error("[%s] Serial number not available", entry.data[CONF_HOST])
+            raise MissingNASwebData
 
-    coordinator = NASwebCoordinator(
-        hass, webio_api, name=f"NASweb[{webio_api.get_name()}]"
-    )
-    nasweb_data.entries_coordinators[entry.entry_id] = coordinator
-    nasweb_data.notify_coordinator.add_coordinator(webio_serial, coordinator)
+        coordinator = NASwebCoordinator(
+            hass, webio_api, name=f"NASweb[{webio_api.get_name()}]"
+        )
+        nasweb_data.entries_coordinators[entry.entry_id] = coordinator
+        nasweb_data.notify_coordinator.add_coordinator(webio_serial, coordinator)
 
-    webhook_url = nasweb_data.get_webhook_url(hass)
-    if webhook_url is None:
-        _LOGGER.error("Cannot pass Home Assistant url to NASweb device")
+        webhook_url = nasweb_data.get_webhook_url(hass)
+        if webhook_url is None:
+            _LOGGER.error("Cannot pass Home Assistant url to NASweb device")
+            raise MissingNASwebData
+        if not await webio_api.status_subscription(webhook_url, True):
+            _LOGGER.error("Failed to subscribe for status updates from webio")
+            raise MissingNASwebData
+    except AuthError:
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            ISSUE_INVALID_AUTHENTICATION,
+            is_fixable=False,
+            is_persistent=False,
+            severity=ir.IssueSeverity.ERROR,
+            translation_key=ISSUE_INVALID_AUTHENTICATION,
+            translation_placeholders={
+                "domain_name": DOMAIN_DISPLAY_NAME,
+                "device_name": entry.title,
+            },
+        )
         return False
-    if not await webio_api.status_subscription(webhook_url, True):
-        _LOGGER.error("Failed to subscribe for status updates from webio")
+    except MissingNASwebData:
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            ISSUE_INTERNAL_ERROR,
+            is_fixable=False,
+            is_persistent=False,
+            severity=ir.IssueSeverity.ERROR,
+            translation_key=ISSUE_INTERNAL_ERROR,
+            translation_placeholders={
+                "domain_name": DOMAIN_DISPLAY_NAME,
+                "device_name": entry.title,
+            },
+        )
         return False
-
+    ir.async_delete_issue(hass, DOMAIN, ISSUE_INVALID_AUTHENTICATION)
+    ir.async_delete_issue(hass, DOMAIN, ISSUE_INTERNAL_ERROR)
     if not await nasweb_data.notify_coordinator.check_connection(webio_serial):
         _LOGGER.error(
             "Wasn't able to confirm connection with webio. Check form data and try again"
@@ -77,6 +120,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        ir.async_delete_issue(hass, DOMAIN, ISSUE_INVALID_AUTHENTICATION)
+        ir.async_delete_issue(hass, DOMAIN, ISSUE_INTERNAL_ERROR)
         nasweb_data: NASwebData = hass.data[DOMAIN]
         coordinator: NASwebCoordinator = nasweb_data.entries_coordinators.pop(
             entry.entry_id
