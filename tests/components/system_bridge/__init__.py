@@ -1,20 +1,19 @@
 """Tests for the System Bridge integration."""
 
 from collections.abc import Awaitable, Callable
-from dataclasses import asdict
 from ipaddress import ip_address
 from typing import Any
 
-from systembridgeconnector.const import TYPE_DATA_UPDATE
-from systembridgemodels.const import MODEL_SYSTEM
-from systembridgemodels.modules import System
+from systembridgeconnector.const import EventType
+from systembridgemodels.fixtures.modules.system import FIXTURE_SYSTEM
+from systembridgemodels.modules import Module, ModulesData
 from systembridgemodels.response import Response
 
 from homeassistant.components import zeroconf
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN
 
-FIXTURE_MAC_ADDRESS = "aa:bb:cc:dd:ee:ff"
-FIXTURE_UUID = "e91bf575-56f3-4c83-8f42-70ac17adcd33"
+FIXTURE_MAC_ADDRESS = FIXTURE_SYSTEM.mac_address
+FIXTURE_UUID = FIXTURE_SYSTEM.uuid
 
 FIXTURE_AUTH_INPUT = {CONF_TOKEN: "abc-123-def-456-ghi"}
 
@@ -60,47 +59,25 @@ FIXTURE_ZEROCONF_BAD = zeroconf.ZeroconfServiceInfo(
     },
 )
 
-
-FIXTURE_SYSTEM = System(
-    boot_time=1,
-    fqdn="",
-    hostname="1.1.1.1",
-    ip_address_4="1.1.1.1",
-    mac_address=FIXTURE_MAC_ADDRESS,
-    platform="",
-    platform_version="",
-    uptime=1,
-    uuid=FIXTURE_UUID,
-    version="",
-    version_latest="",
-    version_newer_available=False,
-    users=[],
-)
-
-FIXTURE_DATA_RESPONSE = Response(
-    id="1234",
-    type=TYPE_DATA_UPDATE,
-    subtype=None,
-    message="Data received",
-    module=MODEL_SYSTEM,
-    data=asdict(FIXTURE_SYSTEM),
+FIXTURE_DATA_RESPONSE = ModulesData(
+    system=FIXTURE_SYSTEM,
 )
 
 FIXTURE_DATA_RESPONSE_BAD = Response(
     id="1234",
-    type=TYPE_DATA_UPDATE,
+    type=EventType.DATA_UPDATE,
     subtype=None,
     message="Data received",
-    module=MODEL_SYSTEM,
+    module=Module.SYSTEM,
     data={},
 )
 
 FIXTURE_DATA_RESPONSE_BAD = Response(
     id="1234",
-    type=TYPE_DATA_UPDATE,
+    type=EventType.DATA_UPDATE,
     subtype=None,
     message="Data received",
-    module=MODEL_SYSTEM,
+    module=Module.SYSTEM,
     data={},
 )
 
@@ -113,4 +90,4 @@ async def mock_data_listener(
     """Mock websocket data listener."""
     if callback is not None:
         # Simulate data received from the websocket
-        await callback(MODEL_SYSTEM, FIXTURE_SYSTEM)
+        await callback(Module.SYSTEM, FIXTURE_SYSTEM)
