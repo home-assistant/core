@@ -880,7 +880,7 @@ hole==0.8.0
 holidays==0.46
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240403.1
+home-assistant-frontend==20240404.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.4.3
@@ -1180,7 +1180,7 @@ openerz-api==0.3.0
 openhomedevice==2.2.0
 
 # homeassistant.components.opower
-opower==0.4.2
+opower==0.4.3
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
