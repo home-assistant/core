@@ -496,13 +496,9 @@ class IBeaconCoordinator:
         for device in self._dev_reg.devices.get_devices_for_config_entry_id(
             self._entry.entry_id
         ):
-            unique_id = None
-            for identifier in device.identifiers:
-                if identifier[0] == DOMAIN:
-                    unique_id = identifier[1]
-                    break
-            if not unique_id:
+            if not (identifier := next(iter(device.identifiers), None)):
                 continue
+            unique_id = identifier[1]
             # iBeacons with a fixed MAC address
             if unique_id.count("_") == 3:
                 uuid, major, minor, address = unique_id.split("_")
