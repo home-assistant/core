@@ -348,7 +348,7 @@ class HomeAssistantSkyConnectConfigFlow(ConfigFlow, domain=DOMAIN):
         fw_flasher_manager = get_zigbee_flasher_addon_manager(self.hass)
         await fw_flasher_manager.async_uninstall_addon_waiting()
 
-        return self.async_show_progress_done(next_step_id="step_confirm_zigbee")
+        return self.async_show_progress_done(next_step_id="confirm_zigbee")
 
     async def async_step_confirm_zigbee(
         self, user_input: dict[str, Any] | None = None
@@ -402,11 +402,11 @@ class HomeAssistantSkyConnectConfigFlow(ConfigFlow, domain=DOMAIN):
             return await self.async_step_install_otbr_addon()
 
         if addon_info.state == AddonState.NOT_RUNNING:
-            return await self.async_step_run_otbr_addon()
+            return await self.async_step_start_otbr_addon()
 
         # If the addon is already installed and running, fail
         return self.async_abort(
-            reason="addon_already_running",
+            reason="otbr_addon_already_running",
             description_placeholders={
                 **self.context["description_placeholders"],
                 "addon_name": otbr_manager.addon_name,
@@ -447,12 +447,12 @@ class HomeAssistantSkyConnectConfigFlow(ConfigFlow, domain=DOMAIN):
         finally:
             self.install_task = None
 
-        return self.async_show_progress_done(next_step_id="run_otbr_addon")
+        return self.async_show_progress_done(next_step_id="start_otbr_addon")
 
-    async def async_step_run_otbr_addon(
+    async def async_step_start_otbr_addon(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Configure the OTBR to point to the SkyConnect."""
+        """Configure OTBR to point to the SkyConnect and run the addon."""
         otbr_manager = get_otbr_addon_manager(self.hass)
         addon_info = await self._async_get_addon_info(otbr_manager)
 
@@ -511,7 +511,7 @@ class HomeAssistantSkyConnectConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Show completion dialog for OTBR."""
-        return self.async_show_progress_done(next_step_id="step_confirm_otbr")
+        return self.async_show_progress_done(next_step_id="confirm_otbr")
 
     async def async_step_confirm_otbr(
         self, user_input: dict[str, Any] | None = None

@@ -90,6 +90,38 @@
           "pick_firmware_thread": "Use as a Thread border router",
           "pick_firmware_zigbee": "Use as a Zigbee coordinator"
         }
+      },
+      "install_zigbee_flasher_addon": {
+        "title": "Installing flasher",
+        "description": "Installing the Silicon Labs Flasher add-on."
+      },
+      "run_zigbee_flasher_addon": {
+        "title": "Flashing Zigbee firmware",
+        "description": "Installhing Zigbee firmware. This will take about a minute."
+      },
+      "zigbee_flasher_failed": {
+        "title": "Zigbee flashing failed",
+        "description": "The Zigbee firmware flashing process was unsuccessful. Ensure no other software is trying to communicate with the {model} and try again."
+      },
+      "confirm_zigbee": {
+        "title": "Zigbee setup complete",
+        "description": "Your {model} is now a Zigbee coordinator and will be shown as discovered by the Zigbee Home Automation integration once you exit."
+      },
+      "install_otbr_addon": {
+        "title": "Installing Open Thread Border Router add-on",
+        "description": "The OpenThread Border Router (OTBR) add-on is being installed."
+      },
+      "start_otbr_addon": {
+        "title": "Starting Open Thread Border Router add-on",
+        "description": "The Open Thread Border Router (OTBR) add-on is now starting."
+      },
+      "otbr_failed": {
+        "title": "Failed to setup Open Thread Border Router",
+        "description": "The OTBR addon installation was unsuccessful. Ensure no other software is trying to communicate with the {model}, you have access to the internet and can install other addons, and try again."
+      },
+      "confirm_otbr": {
+        "title": "Open Thread Border Router setup complete",
+        "description": "Your {model} is now an Open Thread Border Router and will be shown as discovered by the OTBR integration once you exit."
       }
     },
     "abort": {
