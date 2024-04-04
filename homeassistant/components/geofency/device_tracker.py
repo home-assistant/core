@@ -42,7 +42,6 @@ async def async_setup_entry(
             config_entry.entry_id
         )
         for identifier in device.identifiers
-        if identifier[0] == GF_DOMAIN
     }
 
     if dev_ids:
