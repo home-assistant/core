@@ -180,63 +180,6 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
             self.last_update_success = False
             self.async_update_listeners()
 
-    async def _setup_websocket(self) -> None:
-        """Use WebSocket for updates."""
-        try:
-            self.hass.async_create_background_task(
-                self._listen_for_data(),
-                name="System Bridge WebSocket Listener",
-            )
-
-            await self.websocket_client.register_data_listener(
-                RegisterDataListener(modules=MODULES)
-            )
-
-            self.last_update_success = True
-            self.async_update_listeners()
-        except AuthenticationException as exception:
-            self.logger.error(
-                "Authentication failed at setup for %s: %s", self.title, exception
-            )
-            if self.unsub:
-                self.unsub()
-                self.unsub = None
-            self.last_update_success = False
-            self.async_update_listeners()
-            raise ConfigEntryAuthFailed(
-                translation_domain=DOMAIN,
-                translation_key="authentication_failed",
-                translation_placeholders={
-                    "title": self.title,
-                    "host": self._host,
-                },
-            ) from exception
-        except ConnectionErrorException as exception:
-            self.logger.warning(
-                "Connection error occurred for %s. Will retry: %s",
-                self.title,
-                exception,
-            )
-            self.last_update_success = False
-            self.async_update_listeners()
-        except TimeoutError as exception:
-            self.logger.warning(
-                "Timed out waiting for %s. Will retry: %s",
-                self.title,
-                exception,
-            )
-            self.last_update_success = False
-            self.async_update_listeners()
-
-        async def close_websocket(_) -> None:
-            """Close WebSocket connection."""
-            await self.websocket_client.close(True)
-
-        # Clean disconnect WebSocket on Home Assistant shutdown
-        self.unsub = self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STOP, close_websocket
-        )
-
     async def _async_update_data(self) -> SystemBridgeData:
         """Update System Bridge data from WebSocket."""
         self.logger.debug(
@@ -244,7 +187,53 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
             self.websocket_client.connected,
         )
         if not self.websocket_client.connected:
-            await self._setup_websocket()
+            try:
+                self.hass.async_create_background_task(
+                    self._listen_for_data(),
+                    name="System Bridge WebSocket Listener",
+                )
+
+                await self.websocket_client.register_data_listener(
+                    RegisterDataListener(modules=MODULES)
+                )
+
+                self.last_update_success = True
+                self.async_update_listeners()
+            except AuthenticationException as exception:
+                self.logger.error(
+                    "Authentication failed at setup for %s: %s", self.title, exception
+                )
+                if self.unsub:
+                    self.unsub()
+                    self.unsub = None
+                self.last_update_success = False
+                self.async_update_listeners()
+                raise ConfigEntryAuthFailed from exception
+            except (ConnectionClosedException, ConnectionErrorException) as exception:
+                self.logger.warning(
+                    "Connection error occurred for %s. Will retry: %s",
+                    self.title,
+                    exception,
+                )
+                self.last_update_success = False
+                self.async_update_listeners()
+            except TimeoutError as exception:
+                self.logger.warning(
+                    "Timed out waiting for %s. Will retry: %s",
+                    self.title,
+                    exception,
+                )
+                self.last_update_success = False
+                self.async_update_listeners()
+
+            async def close_websocket(_) -> None:
+                """Close WebSocket connection."""
+                await self.websocket_client.close(True)
+
+            # Clean disconnect WebSocket on Home Assistant shutdown
+            self.unsub = self.hass.bus.async_listen_once(
+                EVENT_HOMEASSISTANT_STOP, close_websocket
+            )
 
         self.logger.debug("[_async_update_data] Done")
 
