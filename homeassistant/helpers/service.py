@@ -537,16 +537,16 @@ def async_extract_referenced_entity_ids(  # noqa: C901
             for device_entry in dev_reg.devices.get_devices_for_label(label_id):
                 selected.referenced_devices.add(device_entry.id)
 
-        # Find areas for targeted labels
-        for area_entry in area_reg.areas.values():
-            if area_entry.labels.intersection(selector.label_ids):
+            for area_entry in area_reg.areas.get_areas_for_label(label_id):
                 selected.referenced_areas.add(area_entry.id)
 
     # Find areas for targeted floors
     if selector.floor_ids:
-        for area_entry in area_reg.areas.values():
-            if area_entry.id and area_entry.floor_id in selector.floor_ids:
-                selected.referenced_areas.add(area_entry.id)
+        selected.referenced_areas.update(
+            area_entry.id
+            for floor_id in selector.floor_ids
+            for area_entry in area_reg.areas.get_areas_for_floor(floor_id)
+        )
 
     # Find devices for targeted areas
     selected.referenced_devices.update(selector.device_ids)
