@@ -2288,6 +2288,7 @@ async def test_additional_data_in_core_config(
 ) -> None:
     """Test that we can handle additional data in core configuration."""
     config = ha.Config(hass, "/test/ha-config")
+    config.async_initialize()
     hass_storage[ha.CORE_STORAGE_KEY] = {
         "version": 1,
         "data": {"location_name": "Test Name", "additional_valid_key": "value"},
@@ -2301,6 +2302,7 @@ async def test_incorrect_internal_external_url(
 ) -> None:
     """Test that we warn when detecting invalid internal/external url."""
     config = ha.Config(hass, "/test/ha-config")
+    config.async_initialize()
 
     hass_storage[ha.CORE_STORAGE_KEY] = {
         "version": 1,
@@ -2314,6 +2316,7 @@ async def test_incorrect_internal_external_url(
     assert "Invalid internal_url set" not in caplog.text
 
     config = ha.Config(hass, "/test/ha-config")
+    config.async_initialize()
 
     hass_storage[ha.CORE_STORAGE_KEY] = {
         "version": 1,
