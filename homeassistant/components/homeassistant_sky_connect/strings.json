@@ -77,17 +77,18 @@
     }
   },
   "config": {
+    "flow_title": "{model}",
     "step": {
       "confirm": {
-        "title": "Set up the SkyConnect",
-        "description": "The SkyConnect can be used as either a Thread border router or a Zigbee coordinator. In the next step, you will choose which firmware will be configured."
+        "title": "Set up the {model}",
+        "description": "The {model} can be used as either a Thread border router or a Zigbee coordinator. In the next step, you will choose which firmware will be configured."
       },
       "pick_firmware": {
         "title": "Pick your firmware",
-        "description": "The SkyConnect can be used as a Thread border router or a Zigbee coordinator.",
+        "description": "The {model} can be used as a Thread border router or a Zigbee coordinator.",
         "menu_options": {
-          "pick_firmware_thread": "Set up as a Thread border router",
-          "pick_firmware_zigbee": "Set up as a Zigbee coordinator"
+          "pick_firmware_thread": "Use as a Thread border router",
+          "pick_firmware_zigbee": "Use as a Zigbee coordinator"
         }
       }
     }

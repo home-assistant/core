@@ -139,6 +139,7 @@ class HomeAssistantSkyConnectConfigFlow(ConfigFlow, domain=DOMAIN):
 
         assert description is not None
         self._hw_variant = HardwareVariant.from_usb_product_name(description)
+        self.context["title_placeholders"] = {"model": self._hw_variant.full_name}
 
         return await self.async_step_confirm()
 
@@ -157,7 +158,10 @@ class HomeAssistantSkyConnectConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             return await self.async_step_pick_firmware()
 
-        return self.async_show_form(step_id="confirm")
+        return self.async_show_form(
+            step_id="confirm",
+            description_placeholders=self.context["title_placeholders"],
+        )
 
     async def async_step_pick_firmware(
         self, user_input: dict[str, Any] | None = None
@@ -183,11 +187,12 @@ class HomeAssistantSkyConnectConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(
                 reason="unsupported_firmware",
                 description_placeholders={
+                    **self.context["title_placeholders"],
                     "firmware_type": (
                         self._current_firmware_type.name
                         if self._current_firmware_type is not None
                         else "unknown"
-                    )
+                    ),
                 },
             )
 
@@ -197,6 +202,7 @@ class HomeAssistantSkyConnectConfigFlow(ConfigFlow, domain=DOMAIN):
                 STEP_PICK_FIRMWARE_THREAD,
                 STEP_PICK_FIRMWARE_ZIGBEE,
             ],
+            description_placeholders=self.context["title_placeholders"],
         )
 
     async def async_step_pick_firmware_thread(
