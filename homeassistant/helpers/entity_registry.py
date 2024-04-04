@@ -776,15 +776,6 @@ class EntityRegistry(BaseRegistry):
         unit_of_measurement: str | None | UndefinedType = UNDEFINED,
     ) -> RegistryEntry:
         """Get entity. Create if it doesn't exist."""
-        _validate_item(
-            self.hass,
-            domain,
-            platform,
-            disabled_by=disabled_by,
-            entity_category=entity_category,
-            hidden_by=hidden_by,
-            unique_id=unique_id,
-        )
         config_entry_id: str | None | UndefinedType = UNDEFINED
         if not config_entry:
             config_entry_id = None
@@ -810,6 +801,16 @@ class EntityRegistry(BaseRegistry):
                 translation_key=translation_key,
                 unit_of_measurement=unit_of_measurement,
             )
+
+        _validate_item(
+            self.hass,
+            domain,
+            platform,
+            disabled_by=disabled_by,
+            entity_category=entity_category,
+            hidden_by=hidden_by,
+            unique_id=unique_id,
+        )
 
         entity_registry_id: str | None = None
         deleted_entity = self.deleted_entities.pop((domain, platform, unique_id), None)
@@ -989,16 +990,6 @@ class EntityRegistry(BaseRegistry):
         new_values: dict[str, Any] = {}  # Dict with new key/value pairs
         old_values: dict[str, Any] = {}  # Dict with old key/value pairs
 
-        _validate_item(
-            self.hass,
-            old.domain,
-            old.platform,
-            disabled_by=disabled_by,
-            entity_category=entity_category,
-            hidden_by=hidden_by,
-            unique_id=new_unique_id,
-        )
-
         for attr_name, value in (
             ("aliases", aliases),
             ("area_id", area_id),
@@ -1026,6 +1017,18 @@ class EntityRegistry(BaseRegistry):
             if value is not UNDEFINED and value != getattr(old, attr_name):
                 new_values[attr_name] = value
                 old_values[attr_name] = getattr(old, attr_name)
+
+        # Only validate if data has changed
+        if new_values or new_unique_id is not UNDEFINED:
+            _validate_item(
+                self.hass,
+                old.domain,
+                old.platform,
+                disabled_by=disabled_by,
+                entity_category=entity_category,
+                hidden_by=hidden_by,
+                unique_id=new_unique_id,
+            )
 
         if new_entity_id is not UNDEFINED and new_entity_id != old.entity_id:
             if not self._entity_id_available(new_entity_id, None):
