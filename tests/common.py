@@ -671,7 +671,7 @@ def mock_device_registry(
     fixture instead.
     """
     registry = dr.DeviceRegistry(hass)
-    registry.devices = dr.DeviceRegistryItems()
+    registry.devices = dr.ActiveDeviceRegistryItems()
     registry._device_data = registry.devices.data
     if mock_entries is None:
         mock_entries = {}
