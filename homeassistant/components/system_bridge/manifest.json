@@ -11,7 +11,7 @@
   "loggers": ["systembridgeconnector"],
   "quality_scale": "silver",
   "requirements": [
-    "systembridgeconnector==4.1.0.dev0",
+    "systembridgeconnector==4.1.0.dev1",
     "systembridgemodels==4.1.0"
   ],
   "zeroconf": ["_system-bridge._tcp.local."]
