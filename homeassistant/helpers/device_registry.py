@@ -1008,7 +1008,7 @@ class DeviceRegistry(BaseRegistry):
     def async_clear_config_entry(self, config_entry_id: str) -> None:
         """Clear config entry from registry entries."""
         now_time = time.time()
-        for device in list(self.devices.values()):
+        for device in self.devices.get_devices_for_config_entry_id(config_entry_id):
             self.async_update_device(device.id, remove_config_entry_id=config_entry_id)
         for deleted_device in list(self.deleted_devices.values()):
             config_entries = deleted_device.config_entries
