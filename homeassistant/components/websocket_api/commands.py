@@ -21,6 +21,7 @@ from homeassistant.const import (
 from homeassistant.core import (
     Context,
     Event,
+    EventStateChangedData,
     HomeAssistant,
     ServiceResponse,
     State,
@@ -36,7 +37,6 @@ from homeassistant.exceptions import (
 from homeassistant.helpers import config_validation as cv, entity, template
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import (
-    EventStateChangedData,
     TrackTemplate,
     TrackTemplateResult,
     async_track_template_result,
