@@ -63,9 +63,11 @@ PLATFORM_SCHEMA = vol.Schema(
 class NotifyDeviceClass(StrEnum):
     """Device class for notify entities."""
 
+    API_MESSAGE = "api_message"
     DIRECT_MESSAGE = "direct_message"
     DISPLAY = "display"
     EMAIL = "email"
+    SMS = "sms"
 
 
 DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.Coerce(NotifyDeviceClass))
