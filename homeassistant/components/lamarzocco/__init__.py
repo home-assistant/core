@@ -160,6 +160,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.config_entries.async_update_entry(
             entry,
             data=v2_data,
+            title=device.name,
         )
         _LOGGER.debug("Migrated La Marzocco config entry to version 2")
     return True
