@@ -165,7 +165,7 @@ async def test_reauthentication(hass: HomeAssistant) -> None:
         data=old_entry.data,
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
     assert result["step_id"] == "reauth_confirm"
 
@@ -179,7 +179,7 @@ async def test_reauthentication(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "abort"
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
 
 
@@ -202,7 +202,7 @@ async def test_reauthentication_failure(hass: HomeAssistant) -> None:
         data=old_entry.data,
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
     assert result["step_id"] == "reauth_confirm"
 
@@ -217,7 +217,7 @@ async def test_reauthentication_failure(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result2["step_id"] == "reauth_confirm"
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result2["errors"]["base"] == "invalid_auth"
 
 
@@ -240,7 +240,7 @@ async def test_reauthentication_cannot_connect(hass: HomeAssistant) -> None:
         data=old_entry.data,
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
     assert result["step_id"] == "reauth_confirm"
 
@@ -255,7 +255,7 @@ async def test_reauthentication_cannot_connect(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result2["step_id"] == "reauth_confirm"
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result2["errors"]["base"] == "cannot_connect"
 
 
@@ -278,7 +278,7 @@ async def test_reauthentication_unknown_failure(hass: HomeAssistant) -> None:
         data=old_entry.data,
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
     assert result["step_id"] == "reauth_confirm"
 
@@ -293,5 +293,5 @@ async def test_reauthentication_unknown_failure(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result2["step_id"] == "reauth_confirm"
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result2["errors"]["base"] == "unknown"

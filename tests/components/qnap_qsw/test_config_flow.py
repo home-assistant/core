@@ -103,7 +103,7 @@ async def test_form_duplicated_id(hass: HomeAssistant) -> None:
             DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
         )
 
-        assert result["type"] == "abort"
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "already_configured"
 
 
@@ -121,7 +121,7 @@ async def test_form_unique_id_error(hass: HomeAssistant) -> None:
             DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
         )
 
-        assert result["type"] == "abort"
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "invalid_id"
 
 
@@ -194,7 +194,7 @@ async def test_dhcp_flow(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result2["type"] == "create_entry"
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["data"] == {
         CONF_USERNAME: TEST_USERNAME,
         CONF_PASSWORD: TEST_PASSWORD,

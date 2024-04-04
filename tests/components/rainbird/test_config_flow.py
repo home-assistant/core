@@ -102,7 +102,7 @@ async def test_controller_flow(
     """Test the controller is setup correctly."""
 
     result = await complete_flow(hass)
-    assert result.get("type") == "create_entry"
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert result.get("title") == HOST
     assert "result" in result
     assert dict(result["result"].data) == expected_config_entry
@@ -291,7 +291,7 @@ async def test_options_flow(hass: HomeAssistant, mock_setup: Mock) -> None:
 
     # Setup config flow
     result = await complete_flow(hass)
-    assert result.get("type") == "create_entry"
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert result.get("title") == HOST
     assert "result" in result
     assert result["result"].data == CONFIG_ENTRY_DATA

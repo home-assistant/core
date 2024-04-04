@@ -13,6 +13,7 @@ from __future__ import annotations
 from collections.abc import Callable, Hashable, Iterable, KeysView, Mapping
 from datetime import datetime, timedelta
 from enum import StrEnum
+from functools import cached_property
 import logging
 import time
 from typing import TYPE_CHECKING, Any, Literal, NotRequired, TypedDict, TypeVar, cast
@@ -20,7 +21,6 @@ from typing import TYPE_CHECKING, Any, Literal, NotRequired, TypedDict, TypeVar,
 import attr
 import voluptuous as vol
 
-from homeassistant.backports.functools import cached_property
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_FRIENDLY_NAME,
@@ -513,11 +513,13 @@ class EntityRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
 class EntityRegistryItems(BaseRegistryItems[RegistryEntry]):
     """Container for entity registry items, maps entity_id -> entry.
 
-    Maintains four additional indexes:
+    Maintains six additional indexes:
     - id -> entry
     - (domain, platform, unique_id) -> entity_id
-    - config_entry_id -> list[key]
-    - device_id -> list[key]
+    - config_entry_id -> dict[key, True]
+    - device_id -> dict[key, True]
+    - area_id -> dict[key, True]
+    - label -> dict[key, True]
     """
 
     def __init__(self) -> None:
@@ -528,6 +530,7 @@ class EntityRegistryItems(BaseRegistryItems[RegistryEntry]):
         self._config_entry_id_index: dict[str, dict[str, Literal[True]]] = {}
         self._device_id_index: dict[str, dict[str, Literal[True]]] = {}
         self._area_id_index: dict[str, dict[str, Literal[True]]] = {}
+        self._labels_index: dict[str, dict[str, Literal[True]]] = {}
 
     def _index_entry(self, key: str, entry: RegistryEntry) -> None:
         """Index an entry."""
@@ -541,6 +544,8 @@ class EntityRegistryItems(BaseRegistryItems[RegistryEntry]):
             self._device_id_index.setdefault(device_id, {})[key] = True
         if (area_id := entry.area_id) is not None:
             self._area_id_index.setdefault(area_id, {})[key] = True
+        for label in entry.labels:
+            self._labels_index.setdefault(label, {})[key] = True
 
     def _unindex_entry(
         self, key: str, replacement_entry: RegistryEntry | None = None
@@ -555,6 +560,9 @@ class EntityRegistryItems(BaseRegistryItems[RegistryEntry]):
             self._unindex_entry_value(key, device_id, self._device_id_index)
         if area_id := entry.area_id:
             self._unindex_entry_value(key, area_id, self._area_id_index)
+        if labels := entry.labels:
+            for label in labels:
+                self._unindex_entry_value(key, label, self._labels_index)
 
     def get_device_ids(self) -> KeysView[str]:
         """Return device ids."""
@@ -592,6 +600,11 @@ class EntityRegistryItems(BaseRegistryItems[RegistryEntry]):
         """Get entries for area."""
         data = self.data
         return [data[key] for key in self._area_id_index.get(area_id, ())]
+
+    def get_entries_for_label(self, label: str) -> list[RegistryEntry]:
+        """Get entries for label."""
+        data = self.data
+        return [data[key] for key in self._labels_index.get(label, ())]
 
 
 def _validate_item(
@@ -1386,7 +1399,7 @@ def async_entries_for_label(
     registry: EntityRegistry, label_id: str
 ) -> list[RegistryEntry]:
     """Return entries that match a label."""
-    return [entry for entry in registry.entities.values() if label_id in entry.labels]
+    return registry.entities.get_entries_for_label(label_id)
 
 
 @callback

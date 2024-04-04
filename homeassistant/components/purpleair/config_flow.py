@@ -115,8 +115,9 @@ def async_get_remove_sensor_options(
     device_registry = dr.async_get(hass)
     return [
         SelectOptionDict(value=device_entry.id, label=cast(str, device_entry.name))
-        for device_entry in device_registry.devices.values()
-        if config_entry.entry_id in device_entry.config_entries
+        for device_entry in device_registry.devices.get_devices_for_config_entry_id(
+            config_entry.entry_id
+        )
     ]
 
 

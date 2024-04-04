@@ -23,6 +23,7 @@ from dataclasses import dataclass
 import datetime
 import enum
 import functools
+from functools import cached_property
 import inspect
 import logging
 import os
@@ -116,14 +117,10 @@ from .util.unit_system import (
 
 # Typing imports that create a circular dependency
 if TYPE_CHECKING:
-    from functools import cached_property
-
     from .auth import AuthManager
     from .components.http import ApiConfig, HomeAssistantHTTP
     from .config_entries import ConfigEntries
     from .helpers.entity import StateInfo
-else:
-    from .backports.functools import cached_property
 
 STOPPING_STAGE_SHUTDOWN_TIMEOUT = 20
 STOP_STAGE_SHUTDOWN_TIMEOUT = 100
@@ -162,6 +159,14 @@ class ConfigSource(enum.StrEnum):
     DISCOVERED = "discovered"
     STORAGE = "storage"
     YAML = "yaml"
+
+
+class EventStateChangedData(TypedDict):
+    """EventStateChanged data."""
+
+    entity_id: str
+    old_state: State | None
+    new_state: State | None
 
 
 # SOURCE_* are deprecated as of Home Assistant 2022.2, use ConfigSource instead
@@ -440,8 +445,7 @@ class HomeAssistant:
         """Set the current state."""
         self.state = state
         for prop in ("is_running", "is_stopping"):
-            with suppress(AttributeError):
-                delattr(self, prop)
+            self.__dict__.pop(prop, None)
 
     def start(self) -> int:
         """Start Home Assistant.
@@ -2023,9 +2027,14 @@ class StateMachine:
             return False
 
         old_state.expire()
+        state_changed_data: EventStateChangedData = {
+            "entity_id": entity_id,
+            "old_state": old_state,
+            "new_state": None,
+        }
         self._bus._async_fire(  # pylint: disable=protected-access
             EVENT_STATE_CHANGED,
-            {"entity_id": entity_id, "old_state": old_state, "new_state": None},
+            state_changed_data,
             context=context,
         )
         return True
@@ -2174,9 +2183,14 @@ class StateMachine:
         if old_state is not None:
             old_state.expire()
         self._states[entity_id] = state
+        state_changed_data: EventStateChangedData = {
+            "entity_id": entity_id,
+            "old_state": old_state,
+            "new_state": state,
+        }
         self._bus._async_fire(  # pylint: disable=protected-access
             EVENT_STATE_CHANGED,
-            {"entity_id": entity_id, "old_state": old_state, "new_state": state},
+            state_changed_data,
             context=context,
             time_fired=timestamp,
         )
