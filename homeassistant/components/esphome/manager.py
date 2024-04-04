@@ -393,8 +393,8 @@ class ESPHomeManager:
     async def _handle_audio(self, data: bytes) -> None:
         if self.voice_assistant_pipeline is None:
             return
-
-        self.voice_assistant_pipeline.queue.put_nowait(data)
+        assert isinstance(self.voice_assistant_pipeline, VoiceAssistantAPIPipeline)
+        self.voice_assistant_pipeline.receive_audio_bytes(data)
 
     async def on_connect(self) -> None:
         """Subscribe to states and list entities on successful API login."""

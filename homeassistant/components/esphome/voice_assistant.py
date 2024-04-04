@@ -418,10 +418,16 @@ class VoiceAssistantAPIPipeline(VoiceAssistantPipeline):
         """Initialize the pipeline."""
         super().__init__(hass, entry_data, handle_event, handle_finished)
         self.api_client = api_client
+        self.started = True
 
     def send_audio_bytes(self, data: bytes) -> None:
         """Send bytes to the device via the API."""
         self.api_client.send_voice_assistant_audio(data)
+
+    @callback
+    def receive_audio_bytes(self, data: bytes) -> None:
+        """Receive audio bytes from the device."""
+        self.queue.put_nowait(data)
 
     @callback
     def stop(self) -> None:
