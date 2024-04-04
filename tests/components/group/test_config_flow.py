@@ -484,20 +484,20 @@ LIGHT_ATTRS = [
 ]
 LOCK_ATTRS = [{"supported_features": 1}, {}]
 MEDIA_PLAYER_ATTRS = [{"supported_features": 0}, {}]
-SENSOR_ATTRS = [{"icon": "mdi:calculator"}, {"max_entity_id": "sensor.input_two"}]
+SENSOR_ATTRS = [{"icon": "mdi:calculator"}, {"max_entity_id": "sensor.input_one"}]
 
 
 @pytest.mark.parametrize(
     ("domain", "extra_user_input", "input_states", "group_state", "extra_attributes"),
     [
-        ("binary_sensor", {"all": True}, ["on", "off"], "off", [{}, {}]),
+        ("binary_sensor", {"all": True}, ["on", "off"], "on", [{}, {}]),
         ("cover", {}, ["open", "closed"], "open", COVER_ATTRS),
         ("event", {}, ["", ""], "unknown", EVENT_ATTRS),
         ("fan", {}, ["on", "off"], "on", FAN_ATTRS),
         ("light", {}, ["on", "off"], "on", LIGHT_ATTRS),
         ("lock", {}, ["unlocked", "locked"], "unlocked", LOCK_ATTRS),
         ("media_player", {}, ["on", "off"], "on", MEDIA_PLAYER_ATTRS),
-        ("sensor", {"type": "max"}, ["10", "20"], "20.0", SENSOR_ATTRS),
+        ("sensor", {"type": "max"}, ["10", "20"], "10.0", SENSOR_ATTRS),
         ("switch", {}, ["on", "off"], "on", [{}, {}]),
     ],
 )
