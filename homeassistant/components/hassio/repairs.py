@@ -22,7 +22,7 @@ from .const import (
 from .handler import async_apply_suggestion
 from .issues import Issue, Suggestion
 
-SUGGESTION_CONFIRMATION_REQUIRED = {"system_execute_reboot"}
+SUGGESTION_CONFIRMATION_REQUIRED = {"system_adopt_data_disk", "system_execute_reboot"}
 
 EXTRA_PLACEHOLDERS = {
     "issue_mount_mount_failed": {
