@@ -113,8 +113,12 @@ class HMThermostat(HMDevice, ClimateEntity):
     @property
     def preset_modes(self):
         """Return a list of available preset modes."""
-        return [HM_PRESET_MAP[mode] for mode in self._hmdevice.ACTIONNODE if mode in HM_PRESET_MAP]
-    
+        return [
+            HM_PRESET_MAP[mode]
+            for mode in self._hmdevice.ACTIONNODE
+            if mode in HM_PRESET_MAP
+        ]
+
     @property
     def current_humidity(self):
         """Return the current humidity."""
