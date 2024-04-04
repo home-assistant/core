@@ -6,12 +6,13 @@ import asyncio
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from contextlib import suppress
 from copy import deepcopy
+from functools import cached_property
 import inspect
 from json import JSONDecodeError, JSONEncoder
 import logging
 import os
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Generic, TypeVar
+from typing import Any, Generic, TypeVar
 
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_FINAL_WRITE,
@@ -33,12 +34,6 @@ import homeassistant.util.dt as dt_util
 from homeassistant.util.file import WriteError
 
 from . import json as json_helper
-
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from ..backports.functools import cached_property
-
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-warn-return-any
 # mypy: no-check-untyped-defs

@@ -7,9 +7,10 @@ import collections
 from contextlib import suppress
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from functools import cached_property
 import logging
 from random import SystemRandom
-from typing import TYPE_CHECKING, Final, final
+from typing import Final, final
 
 from aiohttp import hdrs, web
 import httpx
@@ -34,12 +35,6 @@ from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.typing import UNDEFINED, ConfigType, UndefinedType
 
 from .const import DOMAIN, IMAGE_TIMEOUT
-
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
-
 
 _LOGGER = logging.getLogger(__name__)
 

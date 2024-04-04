@@ -3,8 +3,8 @@
 from unittest.mock import AsyncMock, call, patch, sentinel
 
 import pytest
-import zigpy.profiles.zha as zha
-import zigpy.zcl.clusters.security as security
+from zigpy.profiles import zha
+from zigpy.zcl.clusters import security
 import zigpy.zcl.foundation as zcl_f
 
 from homeassistant.components.alarm_control_panel import DOMAIN as ALARM_DOMAIN

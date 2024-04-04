@@ -11,13 +11,12 @@ from zhaquirks import (
     PROFILE_ID,
 )
 from zigpy.const import SIG_EP_PROFILE
-import zigpy.profiles.zha as zha
+from zigpy.profiles import zha
 from zigpy.quirks import CustomCluster, CustomDevice
 from zigpy.quirks.v2 import CustomDeviceV2, add_to_registry_v2
 import zigpy.types as t
-import zigpy.zcl.clusters.general as general
+from zigpy.zcl.clusters import general, security
 from zigpy.zcl.clusters.manufacturer_specific import ManufacturerSpecificCluster
-import zigpy.zcl.clusters.security as security
 
 from homeassistant.components.zha.select import AqaraMotionSensitivities
 from homeassistant.const import STATE_UNKNOWN, EntityCategory, Platform

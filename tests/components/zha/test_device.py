@@ -9,7 +9,7 @@ from unittest.mock import patch
 import pytest
 import zigpy.profiles.zha
 import zigpy.types
-import zigpy.zcl.clusters.general as general
+from zigpy.zcl.clusters import general
 import zigpy.zdo.types as zdo_t
 
 from homeassistant.components.zha.core.const import (

@@ -24,7 +24,7 @@ from hassil.util import merge_dict
 from home_assistant_intents import ErrorKey, get_intents, get_languages
 import yaml
 
-from homeassistant import core, setup
+from homeassistant import core
 from homeassistant.components.homeassistant.exposed_entities import (
     async_listen_entity_updates,
     async_should_expose,
@@ -40,6 +40,7 @@ from homeassistant.helpers import (
     template,
     translation,
 )
+from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import (
     EventStateChangedData,
     async_track_state_added_domain,
@@ -47,7 +48,8 @@ from homeassistant.helpers.event import (
 from homeassistant.util.json import JsonObjectType, json_loads_object
 
 from .const import DEFAULT_EXPOSED_ATTRIBUTES, DOMAIN
-from .models import AbstractConversationAgent, ConversationInput, ConversationResult
+from .entity import ConversationEntity
+from .models import ConversationInput, ConversationResult
 
 _LOGGER = logging.getLogger(__name__)
 _DEFAULT_ERROR_TEXT = "Sorry, I couldn't understand that"
@@ -59,6 +61,14 @@ TRIGGER_CALLBACK_TYPE = Callable[
 ]
 METADATA_CUSTOM_SENTENCE = "hass_custom_sentence"
 METADATA_CUSTOM_FILE = "hass_custom_file"
+
+DATA_DEFAULT_ENTITY = "conversation_default_entity"
+
+
+@core.callback
+def async_get_default_agent(hass: core.HomeAssistant) -> DefaultAgent:
+    """Get the default agent."""
+    return hass.data[DATA_DEFAULT_ENTITY]
 
 
 def json_load(fp: IO[str]) -> JsonObjectType:
@@ -109,9 +119,16 @@ def _get_language_variations(language: str) -> Iterable[str]:
         yield lang
 
 
-@core.callback
-def async_setup(hass: core.HomeAssistant) -> None:
+async def async_setup_default_agent(
+    hass: core.HomeAssistant,
+    entity_component: EntityComponent[ConversationEntity],
+    config_intents: dict[str, Any],
+) -> None:
     """Set up entity registry listener for the default agent."""
+    entity = DefaultAgent(hass, config_intents)
+    await entity_component.async_add_entities([entity])
+    hass.data[DATA_DEFAULT_ENTITY] = entity
+
     entity_registry = er.async_get(hass)
     for entity_id in entity_registry.entities:
         async_should_expose(hass, DOMAIN, entity_id)
@@ -131,17 +148,21 @@ def async_setup(hass: core.HomeAssistant) -> None:
     start.async_at_started(hass, async_hass_started)
 
 
-class DefaultAgent(AbstractConversationAgent):
+class DefaultAgent(ConversationEntity):
     """Default agent for conversation agent."""
 
-    def __init__(self, hass: core.HomeAssistant) -> None:
+    _attr_name = "Home Assistant"
+
+    def __init__(
+        self, hass: core.HomeAssistant, config_intents: dict[str, Any]
+    ) -> None:
         """Initialize the default agent."""
         self.hass = hass
         self._lang_intents: dict[str, LanguageIntents] = {}
         self._lang_lock: dict[str, asyncio.Lock] = defaultdict(asyncio.Lock)
 
         # intent -> [sentences]
-        self._config_intents: dict[str, Any] = {}
+        self._config_intents: dict[str, Any] = config_intents
         self._slot_lists: dict[str, SlotList] | None = None
 
         # Sentences that will trigger a callback (skipping intent recognition)
@@ -153,15 +174,6 @@ class DefaultAgent(AbstractConversationAgent):
     def supported_languages(self) -> list[str]:
         """Return a list of supported languages."""
         return get_languages()
-
-    async def async_initialize(self, config_intents: dict[str, Any] | None) -> None:
-        """Initialize the default agent."""
-        if "intent" not in self.hass.config.components:
-            await setup.async_setup_component(self.hass, "intent", {})
-
-        # Intents from config may only contains sentences for HA config's language
-        if config_intents:
-            self._config_intents = config_intents
 
     @core.callback
     def _filter_entity_registry_changes(self, event_data: dict[str, Any]) -> bool:

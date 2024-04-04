@@ -5,10 +5,9 @@ from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
 from zigpy.application import ControllerApplication
-import zigpy.profiles.zha as zha
+from zigpy.profiles import zha
 import zigpy.types
-import zigpy.zcl.clusters.general as general
-import zigpy.zcl.clusters.lighting as lighting
+from zigpy.zcl.clusters import general, lighting
 import zigpy.zdo.types
 
 from homeassistant.components.zha.core.gateway import ZHAGateway

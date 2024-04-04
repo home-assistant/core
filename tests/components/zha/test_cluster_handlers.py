@@ -19,7 +19,7 @@ import zigpy.zcl.clusters
 from zigpy.zcl.clusters import CLUSTERS_BY_ID
 import zigpy.zdo.types as zdo_t
 
-import homeassistant.components.zha.core.cluster_handlers as cluster_handlers
+from homeassistant.components.zha.core import cluster_handlers, registries
 from homeassistant.components.zha.core.cluster_handlers.lighting import (
     ColorClusterHandler,
 )
@@ -27,7 +27,6 @@ import homeassistant.components.zha.core.const as zha_const
 from homeassistant.components.zha.core.device import ZHADevice
 from homeassistant.components.zha.core.endpoint import Endpoint
 from homeassistant.components.zha.core.helpers import get_zha_gateway
-import homeassistant.components.zha.core.registries as registries
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 

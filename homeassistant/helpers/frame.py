@@ -7,20 +7,16 @@ from collections.abc import Callable
 from contextlib import suppress
 from dataclasses import dataclass
 import functools
+from functools import cached_property
 import linecache
 import logging
 import sys
 from types import FrameType
-from typing import TYPE_CHECKING, Any, TypeVar, cast
+from typing import Any, TypeVar, cast
 
 from homeassistant.core import HomeAssistant, async_get_hass
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import async_suggest_report_issue
-
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
 
 _LOGGER = logging.getLogger(__name__)
 
