@@ -95,9 +95,7 @@ async def async_migrator(
     return config
 
 
-def get_internal_store_manager(
-    hass: HomeAssistant, config_dir: str | None = None
-) -> _StoreManager:
+def get_internal_store_manager(hass: HomeAssistant) -> _StoreManager:
     """Get the store manager.
 
     This function is not part of the API and should only be
@@ -105,7 +103,7 @@ def get_internal_store_manager(
     guaranteed to be stable.
     """
     if STORAGE_MANAGER not in hass.data:
-        manager = _StoreManager(hass, config_dir or hass.config.config_dir)
+        manager = _StoreManager(hass)
         hass.data[STORAGE_MANAGER] = manager
     return hass.data[STORAGE_MANAGER]
 
@@ -116,13 +114,13 @@ class _StoreManager:
     The store manager is used to cache and manage storage files.
     """
 
-    def __init__(self, hass: HomeAssistant, config_dir: str) -> None:
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize storage manager class."""
         self._hass = hass
         self._invalidated: set[str] = set()
         self._files: set[str] | None = None
         self._data_preload: dict[str, json_util.JsonValueType] = {}
-        self._storage_path: Path = Path(config_dir).joinpath(STORAGE_DIR)
+        self._storage_path: Path = Path(hass.config.config_dir).joinpath(STORAGE_DIR)
         self._cancel_cleanup: asyncio.TimerHandle | None = None
 
     async def async_initialize(self) -> None:
@@ -251,7 +249,6 @@ class Store(Generic[_T]):
         encoder: type[JSONEncoder] | None = None,
         minor_version: int = 1,
         read_only: bool = False,
-        config_dir: str | None = None,
     ) -> None:
         """Initialize storage class."""
         self.version = version
@@ -268,7 +265,7 @@ class Store(Generic[_T]):
         self._atomic_writes = atomic_writes
         self._read_only = read_only
         self._next_write_time = 0.0
-        self._manager = get_internal_store_manager(hass, config_dir)
+        self._manager = get_internal_store_manager(hass)
 
     @cached_property
     def path(self):
