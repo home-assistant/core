@@ -85,10 +85,7 @@ class AugustSubscriberMixin:
 
         if self._subscriptions:
             return
-
-        if self._unsub_interval:
-            self._unsub_interval()
-            self._unsub_interval = None
+        self._async_cancel_update_interval()
 
     @callback
     def async_signal_device_id_update(self, device_id: str) -> None:
