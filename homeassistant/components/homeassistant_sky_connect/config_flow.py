@@ -164,11 +164,11 @@ class HomeAssistantSkyConnectConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Pick Thread or Zigbee firmware."""
         assert self._usb_info is not None
-        assert self._current_firmware_type is not None
 
         self._current_firmware_type = await probe_silabs_firmware_type(
             self._usb_info.device,
-            probe_order=(
+            probe_methods=(
+                # We probe in order of frequency: Zigbee, Thread, then multi-PAN
                 ApplicationType.GECKO_BOOTLOADER,
                 ApplicationType.EZSP,
                 ApplicationType.SPINEL,
@@ -182,7 +182,13 @@ class HomeAssistantSkyConnectConfigFlow(ConfigFlow, domain=DOMAIN):
         ):
             return self.async_abort(
                 reason="unsupported_firmware",
-                description_placeholders={"firmware_type": self._current_firmware_type},
+                description_placeholders={
+                    "firmware_type": (
+                        self._current_firmware_type.name
+                        if self._current_firmware_type is not None
+                        else "unknown"
+                    )
+                },
             )
 
         return self.async_show_menu(
