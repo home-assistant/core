@@ -20,8 +20,13 @@ beolink_expand:
     device:
       integration: bang_olufsen
   fields:
+    all_discovered:
+      required: false
+      example: false
+      selector:
+        boolean:
     beolink_jids:
-      required: true
+      required: false
       example: >-
         [
           1111.2222222.33333333@products.bang-olufsen.com,
