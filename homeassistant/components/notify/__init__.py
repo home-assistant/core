@@ -4,13 +4,12 @@ from __future__ import annotations
 
 from datetime import timedelta
 from enum import StrEnum
-from functools import partial
+from functools import cached_property, partial
 import logging
 from typing import Any, final, override
 
 import voluptuous as vol
 
-from homeassistant.backports.functools import cached_property
 import homeassistant.components.persistent_notification as pn
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_PLATFORM, STATE_UNAVAILABLE
@@ -172,7 +171,7 @@ class NotifyEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_
         return self.device_class is not None
 
     @cached_property
-    @override  # type: ignore[override]
+    @override
     def device_class(self) -> NotifyDeviceClass | None:
         """Return the class of this entity."""
         if hasattr(self, "_attr_device_class"):
@@ -183,7 +182,7 @@ class NotifyEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_
 
     @cached_property
     @final
-    @override  # type: ignore[override]
+    @override
     def state(self) -> str | None:
         """Return the entity state."""
         return self.__last_notified_isoformat
