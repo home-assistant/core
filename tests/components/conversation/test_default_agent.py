@@ -823,7 +823,7 @@ async def test_empty_aliases(
     area_kitchen = area_registry.async_get_or_create("kitchen_id")
     area_kitchen = area_registry.async_update(area_kitchen.id, name="kitchen")
     area_kitchen = area_registry.async_update(
-        area_kitchen.id, aliases={" "}, floor_id=floor_1
+        area_kitchen.id, aliases={" "}, floor_id=floor_1.floor_id
     )
 
     entry = MockConfigEntry()
