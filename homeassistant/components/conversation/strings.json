@@ -38,7 +38,9 @@
       }
     }
   },
-  "domain": {
-    "done": "Done"
+  "conversation": {
+    "agent": {
+      "done": "Done"
+    }
   }
 }
