@@ -13,6 +13,7 @@ from __future__ import annotations
 from collections.abc import Callable, Iterable, KeysView, Mapping
 from datetime import datetime, timedelta
 from enum import StrEnum
+from functools import cached_property
 import logging
 import time
 from typing import TYPE_CHECKING, Any, Literal, NotRequired, TypedDict, TypeVar, cast
@@ -20,7 +21,6 @@ from typing import TYPE_CHECKING, Any, Literal, NotRequired, TypedDict, TypeVar,
 import attr
 import voluptuous as vol
 
-from homeassistant.backports.functools import cached_property
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_FRIENDLY_NAME,

@@ -23,6 +23,7 @@ from dataclasses import dataclass
 import datetime
 import enum
 import functools
+from functools import cached_property
 import inspect
 import logging
 import os
@@ -116,14 +117,10 @@ from .util.unit_system import (
 
 # Typing imports that create a circular dependency
 if TYPE_CHECKING:
-    from functools import cached_property
-
     from .auth import AuthManager
     from .components.http import ApiConfig, HomeAssistantHTTP
     from .config_entries import ConfigEntries
     from .helpers.entity import StateInfo
-else:
-    from .backports.functools import cached_property
 
 STOPPING_STAGE_SHUTDOWN_TIMEOUT = 20
 STOP_STAGE_SHUTDOWN_TIMEOUT = 100
