@@ -405,6 +405,7 @@ class HomeAssistant:
         self.services = ServiceRegistry(self)
         self.states = StateMachine(self.bus, self.loop)
         self.config = Config(self, config_dir)
+        self.config.async_initialize()
         self.components = loader.Components(self)
         self.helpers = loader.Helpers(self)
         self.state: CoreState = CoreState.not_running
@@ -2600,11 +2601,11 @@ class ServiceRegistry:
 class Config:
     """Configuration settings for Home Assistant."""
 
+    _store: Config._ConfigStore
+
     def __init__(self, hass: HomeAssistant, config_dir: str) -> None:
         """Initialize a new config object."""
         self.hass = hass
-
-        self._store = self._ConfigStore(self.hass, config_dir)
 
         self.latitude: float = 0
         self.longitude: float = 0
@@ -2655,6 +2656,13 @@ class Config:
 
         # If Home Assistant is running in safe mode
         self.safe_mode: bool = False
+
+    def async_initialize(self) -> None:
+        """Finish initializing a config object.
+
+        This must be called before the config object is used.
+        """
+        self._store = self._ConfigStore(self.hass)
 
     def distance(self, lat: float, lon: float) -> float | None:
         """Calculate distance from Home Assistant.
@@ -2862,7 +2870,6 @@ class Config:
             "country": self.country,
             "language": self.language,
         }
-
         await self._store.async_save(data)
 
     # Circular dependency prevents us from generating the class at top level
@@ -2872,7 +2879,7 @@ class Config:
     class _ConfigStore(Store[dict[str, Any]]):
         """Class to help storing Config data."""
 
-        def __init__(self, hass: HomeAssistant, config_dir: str) -> None:
+        def __init__(self, hass: HomeAssistant) -> None:
             """Initialize storage class."""
             super().__init__(
                 hass,
@@ -2881,7 +2888,6 @@ class Config:
                 private=True,
                 atomic_writes=True,
                 minor_version=CORE_STORAGE_MINOR_VERSION,
-                config_dir=config_dir,
             )
             self._original_unit_system: str | None = None  # from old store 1.1
 
