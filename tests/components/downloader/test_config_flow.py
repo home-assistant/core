@@ -30,13 +30,13 @@ async def test_user_form(hass: HomeAssistant) -> None:
             result["flow_id"],
             user_input=CONFIG,
         )
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
 
         with patch(
             "homeassistant.components.downloader.config_flow.DownloaderConfigFlow._validate_input",
             side_effect=DirectoryDoesNotExist,
         ):
-            assert result["type"] == FlowResultType.FORM
+            assert result["type"] is FlowResultType.FORM
             assert result["step_id"] == "user"
             assert result["errors"] == {"base": "cannot_connect"}
 
@@ -54,7 +54,7 @@ async def test_user_form(hass: HomeAssistant) -> None:
             user_input=CONFIG,
         )
 
-        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == "Downloader"
         assert result["data"] == {"download_dir": "download_dir"}
 
@@ -73,7 +73,7 @@ async def test_single_instance_allowed(
         DOMAIN, context={"source": source}
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
 
 
@@ -95,7 +95,7 @@ async def test_import_flow_success(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == "Downloader"
         assert result["data"] == {}
         assert result["options"] == {}

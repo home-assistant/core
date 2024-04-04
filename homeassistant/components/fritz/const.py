@@ -65,6 +65,8 @@ SWITCH_TYPE_PORTFORWARD = "PortForward"
 SWITCH_TYPE_PROFILE = "Profile"
 SWITCH_TYPE_WIFINETWORK = "WiFiNetwork"
 
+BUTTON_TYPE_WOL = "WakeOnLan"
+
 UPTIME_DEVIATION = 5
 
 FRITZ_EXCEPTIONS = (
@@ -79,3 +81,5 @@ FRITZ_EXCEPTIONS = (
 FRITZ_AUTH_EXCEPTIONS = (FritzAuthorizationError, FritzSecurityError)
 
 WIFI_STANDARD = {1: "2.4Ghz", 2: "5Ghz", 3: "5Ghz", 4: "Guest"}
+
+CONNECTION_TYPE_LAN = "LAN"

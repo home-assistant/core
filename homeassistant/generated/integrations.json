@@ -3759,7 +3759,7 @@
           "integration_type": "device",
           "config_flow": true,
           "iot_class": "assumed_state",
-          "name": "Motionblinds BLE"
+          "name": "Motionblinds Bluetooth"
         }
       }
     },
@@ -6477,7 +6477,8 @@
     "uptime": {
       "integration_type": "service",
       "config_flow": true,
-      "iot_class": "local_push"
+      "iot_class": "local_push",
+      "single_config_entry": true
     },
     "uptimerobot": {
       "name": "UptimeRobot",
