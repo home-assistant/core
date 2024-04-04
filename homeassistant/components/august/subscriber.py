@@ -51,9 +51,10 @@ class AugustSubscriberMixin:
 
     @callback
     def _async_cancel_update_interval(self, _: Event | None = None) -> None:
-        self._stop_interval = None
+        """Cancel the scheduled update."""
         if self._unsub_interval:
             self._unsub_interval()
+            self._unsub_interval = None
 
     @callback
     def _async_setup_listeners(self) -> None:
@@ -66,11 +67,12 @@ class AugustSubscriberMixin:
             name="august refresh",
         )
 
-        self._stop_interval = self._hass.bus.async_listen(
-            EVENT_HOMEASSISTANT_STOP,
-            self._async_cancel_update_interval,
-            run_immediately=True,
-        )
+        if not self._stop_interval:
+            self._stop_interval = self._hass.bus.async_listen(
+                EVENT_HOMEASSISTANT_STOP,
+                self._async_cancel_update_interval,
+                run_immediately=True,
+            )
 
     @callback
     def async_unsubscribe_device_id(
@@ -87,9 +89,6 @@ class AugustSubscriberMixin:
         if self._unsub_interval:
             self._unsub_interval()
             self._unsub_interval = None
-        if self._stop_interval:
-            self._stop_interval()
-            self._stop_interval = None
 
     @callback
     def async_signal_device_id_update(self, device_id: str) -> None:
