@@ -8,5 +8,10 @@
         }
       }
     }
+  },
+  "services": {
+    "seen": "mdi:email-open-outline",
+    "move": "mdi:email-arrow-right-outline",
+    "delete": "mdi:trash-can-outline"
   }
 }

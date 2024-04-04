@@ -4,10 +4,11 @@ from unittest.mock import patch
 
 from anova_wifi import AnovaApi, InvalidLogin
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components.anova.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from . import CONF_INPUT
 
@@ -43,7 +44,7 @@ async def test_flow_wrong_login(hass: HomeAssistant) -> None:
             result["flow_id"],
             user_input=CONF_INPUT,
         )
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["errors"] == {"base": "invalid_auth"}
 
 
@@ -61,5 +62,5 @@ async def test_flow_unknown_error(hass: HomeAssistant) -> None:
             result["flow_id"],
             user_input=CONF_INPUT,
         )
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["errors"] == {"base": "unknown"}

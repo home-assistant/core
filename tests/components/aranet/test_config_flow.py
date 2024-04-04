@@ -24,13 +24,13 @@ async def test_async_step_bluetooth_valid_device(hass: HomeAssistant) -> None:
         context={"source": config_entries.SOURCE_BLUETOOTH},
         data=VALID_DATA_SERVICE_INFO,
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "bluetooth_confirm"
     with patch("homeassistant.components.aranet.async_setup_entry", return_value=True):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={}
         )
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Aranet4 12345"
     assert result2["data"] == {}
     assert result2["result"].unique_id == "aa:bb:cc:dd:ee:ff"
@@ -43,7 +43,7 @@ async def test_async_step_bluetooth_not_aranet4(hass: HomeAssistant) -> None:
         context={"source": config_entries.SOURCE_BLUETOOTH},
         data=NOT_ARANET4_SERVICE_INFO,
     )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
 
 
 async def test_async_step_bluetooth_devices_already_setup(hass: HomeAssistant) -> None:
@@ -59,7 +59,7 @@ async def test_async_step_bluetooth_devices_already_setup(hass: HomeAssistant) -
         context={"source": config_entries.SOURCE_BLUETOOTH},
         data=VALID_DATA_SERVICE_INFO,
     )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -70,7 +70,7 @@ async def test_async_step_bluetooth_already_in_progress(hass: HomeAssistant) -> 
         context={"source": config_entries.SOURCE_BLUETOOTH},
         data=VALID_DATA_SERVICE_INFO,
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "bluetooth_confirm"
 
     result = await hass.config_entries.flow.async_init(
@@ -78,7 +78,7 @@ async def test_async_step_bluetooth_already_in_progress(hass: HomeAssistant) -> 
         context={"source": config_entries.SOURCE_BLUETOOTH},
         data=VALID_DATA_SERVICE_INFO,
     )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_in_progress"
 
 
@@ -91,7 +91,7 @@ async def test_async_step_user_takes_precedence_over_discovery(
         context={"source": config_entries.SOURCE_BLUETOOTH},
         data=VALID_DATA_SERVICE_INFO,
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "bluetooth_confirm"
 
     with patch(
@@ -102,14 +102,14 @@ async def test_async_step_user_takes_precedence_over_discovery(
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
         )
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
 
     with patch("homeassistant.components.aranet.async_setup_entry", return_value=True):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={"address": "aa:bb:cc:dd:ee:ff"},
         )
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Aranet4 12345"
     assert result2["data"] == {}
     assert result2["result"].unique_id == "aa:bb:cc:dd:ee:ff"
@@ -124,7 +124,7 @@ async def test_async_step_user_no_devices_found(hass: HomeAssistant) -> None:
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
     )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_devices_found"
 
 
@@ -138,7 +138,7 @@ async def test_async_step_user_only_other_devices_found(hass: HomeAssistant) -> 
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
         )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_devices_found"
 
 
@@ -152,14 +152,14 @@ async def test_async_step_user_with_found_devices(hass: HomeAssistant) -> None:
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
         )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     with patch("homeassistant.components.aranet.async_setup_entry", return_value=True):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={"address": "aa:bb:cc:dd:ee:ff"},
         )
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Aranet4 12345"
     assert result2["data"] == {}
     assert result2["result"].unique_id == "aa:bb:cc:dd:ee:ff"
@@ -175,7 +175,7 @@ async def test_async_step_user_device_added_between_steps(hass: HomeAssistant) -
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
         )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     entry = MockConfigEntry(
@@ -189,7 +189,7 @@ async def test_async_step_user_device_added_between_steps(hass: HomeAssistant) -
             result["flow_id"],
             user_input={"address": "aa:bb:cc:dd:ee:ff"},
         )
-    assert result2["type"] == FlowResultType.ABORT
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "already_configured"
 
 
@@ -211,7 +211,7 @@ async def test_async_step_user_with_found_devices_already_setup(
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
         )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_devices_found"
 
 
@@ -225,14 +225,14 @@ async def test_async_step_user_old_firmware(hass: HomeAssistant) -> None:
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
         )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     with patch("homeassistant.components.aranet.async_setup_entry", return_value=True):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={"address": "aa:bb:cc:dd:ee:ff"},
         )
-    assert result2["type"] == FlowResultType.ABORT
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "outdated_version"
 
 
@@ -246,12 +246,12 @@ async def test_async_step_user_integrations_disabled(hass: HomeAssistant) -> Non
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
         )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     with patch("homeassistant.components.aranet.async_setup_entry", return_value=True):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={"address": "aa:bb:cc:dd:ee:ff"},
         )
-    assert result2["type"] == FlowResultType.ABORT
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "integrations_disabled"

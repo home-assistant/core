@@ -6,7 +6,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.config import YAML_CONFIG_FILE
-import homeassistant.scripts.check_config as check_config
+from homeassistant.scripts import check_config
 
 from tests.common import get_test_config_dir
 
@@ -135,6 +135,7 @@ def test_secrets(mock_is_file, event_loop, mock_hass_config_yaml: None) -> None:
         "server_port": 8123,
         "ssl_profile": "modern",
         "use_x_frame_options": True,
+        "server_host": ["0.0.0.0", "::"],
     }
     assert res["secret_cache"] == {
         get_test_config_dir("secrets.yaml"): {"http_pw": "http://google.com"}

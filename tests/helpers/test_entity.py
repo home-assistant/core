@@ -5,6 +5,7 @@ from collections.abc import Iterable
 import dataclasses
 from datetime import timedelta
 from enum import IntFlag
+from functools import cached_property
 import logging
 import threading
 from typing import Any
@@ -15,7 +16,6 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
 
-from homeassistant.backports.functools import cached_property
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_DEVICE_CLASS,
