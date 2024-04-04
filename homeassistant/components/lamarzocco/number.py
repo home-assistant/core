@@ -194,13 +194,11 @@ async def async_setup_entry(
 ) -> None:
     """Set up number entities."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
-    entities: list[NumberEntity] = []
-
-    entities.extend(
+    entities: list[NumberEntity] = [
         LaMarzoccoNumberEntity(coordinator, description)
         for description in ENTITIES
         if description.supported_fn(coordinator)
-    )
+    ]
 
     for description in KEY_ENTITIES:
         if description.supported_fn(coordinator):
