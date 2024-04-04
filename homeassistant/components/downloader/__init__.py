@@ -79,6 +79,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Listen for download events to download files."""
     download_path = entry.data[CONF_DOWNLOAD_DIR]
 
+    # If path is relative, we assume relative to Home Assistant config dir
+    if not os.path.isabs(download_path):
+        download_path = hass.config.path(download_path)
+
     if not await hass.async_add_executor_job(os.path.isdir, download_path):
         _LOGGER.error(
             "Download path %s does not exist. File Downloader not active", download_path
