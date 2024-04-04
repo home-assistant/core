@@ -248,7 +248,7 @@ class SonosSpeaker:
             _LOGGER.info("Dispatching SONOS_CREATE_ALARM")
             dispatches.append((SONOS_CREATE_ALARM, self, new_alarms))
         else:
-            _LOGGER.info("Not Dispatching SONOS_CREATE_ALARM %s",self.alarms)
+            _LOGGER.info("Not Dispatching SONOS_CREATE_ALARM %s", self.alarms)
 
         dispatches.append((SONOS_CREATE_SWITCHES, self))
         dispatches.append((SONOS_CREATE_MEDIA_PLAYER, self))
