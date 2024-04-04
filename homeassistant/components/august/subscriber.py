@@ -50,8 +50,15 @@ class AugustSubscriberMixin:
         self._hass.async_create_task(self._async_refresh(now), eager_start=True)
 
     @callback
+    def _async_cancel_update_interval(self, _: Event | None = None) -> None:
+        self._stop_interval = None
+        if self._unsub_interval:
+            self._unsub_interval()
+
+    @callback
     def _async_setup_listeners(self) -> None:
         """Create interval and stop listeners."""
+        self._async_cancel_update_interval()
         self._unsub_interval = async_track_time_interval(
             self._hass,
             self._async_scheduled_refresh,
@@ -59,15 +66,9 @@ class AugustSubscriberMixin:
             name="august refresh",
         )
 
-        @callback
-        def _async_cancel_update_interval(_: Event) -> None:
-            self._stop_interval = None
-            if self._unsub_interval:
-                self._unsub_interval()
-
         self._stop_interval = self._hass.bus.async_listen(
             EVENT_HOMEASSISTANT_STOP,
-            _async_cancel_update_interval,
+            self._async_cancel_update_interval,
             run_immediately=True,
         )
 
