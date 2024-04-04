@@ -12,6 +12,7 @@ from homeassistant.const import ATTR_ASSUMED_STATE, ATTR_ENTITY_ID, STATE_ON
 from homeassistant.core import (
     CALLBACK_TYPE,
     Event,
+    EventStateChangedData,
     HomeAssistant,
     State,
     callback,
@@ -20,10 +21,7 @@ from homeassistant.core import (
 from homeassistant.helpers import start
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.event import (
-    EventStateChangedData,
-    async_track_state_change_event,
-)
+from homeassistant.helpers.event import async_track_state_change_event
 
 from .const import ATTR_AUTO, ATTR_ORDER, DOMAIN, GROUP_ORDER, REG_KEY
 from .registry import GroupIntegrationRegistry

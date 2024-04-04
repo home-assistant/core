@@ -59,7 +59,8 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
                         DOMAIN,
                         {"coordinator": self, "entities": self.config[platform_domain]},
                         hass_config,
-                    )
+                    ),
+                    eager_start=True,
                 )
 
     async def _attach_triggers(self, start_event=None) -> None:

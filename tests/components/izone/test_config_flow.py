@@ -4,9 +4,10 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components.izone.const import DISPATCH_CONTROLLER_DISCOVERED, IZONE
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 
 @pytest.fixture
@@ -46,10 +47,10 @@ async def test_not_found(hass: HomeAssistant, mock_disco) -> None:
         )
 
         # Confirmation form
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
 
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
 
         await hass.async_block_till_done()
 
@@ -79,10 +80,10 @@ async def test_found(hass: HomeAssistant, mock_disco) -> None:
         )
 
         # Confirmation form
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
 
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
 
         await hass.async_block_till_done()
 
