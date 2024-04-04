@@ -28,6 +28,7 @@ async def test_entity_registry(
     hass: HomeAssistant, async_autosetup_sonos, entity_registry: er.EntityRegistry
 ) -> None:
     """Test sonos device with alarm registered in the device registry."""
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert "media_player.zone_a" in entity_registry.entities
     assert "switch.sonos_alarm_14" in entity_registry.entities
     assert "switch.zone_a_status_light" in entity_registry.entities
@@ -147,6 +148,7 @@ async def test_alarm_create_delete(
     two_alarms = copy(alarm_clock_extended.ListAlarms.return_value)
 
     await async_setup_sonos()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert "switch.sonos_alarm_14" in entity_registry.entities
     assert "switch.sonos_alarm_15" not in entity_registry.entities
