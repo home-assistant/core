@@ -32,7 +32,6 @@ async def async_setup_entry(
         identifier[1]
         for device in dev_reg.devices.get_devices_for_config_entry_id(entry.entry_id)
         for identifier in device.identifiers
-        if identifier[0] == OT_DOMAIN
     }
 
     entities = []
