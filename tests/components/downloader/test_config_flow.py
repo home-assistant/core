@@ -31,7 +31,7 @@ async def test_user_form(hass: HomeAssistant) -> None:
         )
         assert result["type"] is FlowResultType.FORM
 
-        with patch("os.path.isabs", return_value=False):
+        with patch("os.path.isdir", return_value=False):
             assert result["type"] is FlowResultType.FORM
             assert result["step_id"] == "user"
             assert result["errors"] == {"base": "cannot_connect"}
