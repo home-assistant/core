@@ -185,7 +185,7 @@ aio-georss-gdacs==0.9
 aioairq==0.3.2
 
 # homeassistant.components.airzone_cloud
-aioairzone-cloud==0.4.6
+aioairzone-cloud==0.4.7
 
 # homeassistant.components.airzone
 aioairzone==0.7.6
@@ -392,7 +392,7 @@ aiotankerkoenig==0.4.1
 aiotractive==0.5.6
 
 # homeassistant.components.unifi
-aiounifi==73
+aiounifi==74
 
 # homeassistant.components.vlc_telnet
 aiovlc==0.1.0
@@ -871,7 +871,7 @@ fixerio==1.0.0a0
 fjaraskupan==2.3.0
 
 # homeassistant.components.flexit_bacnet
-flexit_bacnet==2.1.0
+flexit_bacnet==2.2.1
 
 # homeassistant.components.flipr
 flipr-api==1.5.1
@@ -1078,13 +1078,13 @@ hole==0.8.0
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.45
+holidays==0.46
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240402.0
+home-assistant-frontend==20240403.1
 
 # homeassistant.components.conversation
-home-assistant-intents==2024.3.29
+home-assistant-intents==2024.4.3
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2
@@ -2466,7 +2466,7 @@ rocketchat-API==0.6.1
 rokuecp==0.19.2
 
 # homeassistant.components.romy
-romy==0.0.9
+romy==0.0.10
 
 # homeassistant.components.roomba
 roombapy==1.8.1
@@ -2581,7 +2581,7 @@ solaredge-local==0.2.3
 solaredge==0.0.2
 
 # homeassistant.components.solax
-solax==0.3.2
+solax==3.1.0
 
 # homeassistant.components.somfy_mylink
 somfy-mylink-synergy==1.0.6
@@ -2660,6 +2660,9 @@ synology-srm==0.2.0
 
 # homeassistant.components.system_bridge
 systembridgeconnector==4.0.3
+
+# homeassistant.components.system_bridge
+systembridgemodels==4.0.4
 
 # homeassistant.components.tailscale
 tailscale==0.6.0
@@ -2905,7 +2908,7 @@ yalesmartalarmclient==0.3.9
 yalexs-ble==2.4.2
 
 # homeassistant.components.august
-yalexs==2.0.0
+yalexs==3.0.1
 
 # homeassistant.components.yeelight
 yeelight==0.7.14

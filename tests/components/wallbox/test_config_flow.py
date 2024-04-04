@@ -5,7 +5,7 @@ import json
 
 import requests_mock
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components.wallbox import config_flow
 from homeassistant.components.wallbox.const import (
     CHARGER_ADDED_ENERGY_KEY,
@@ -18,6 +18,7 @@ from homeassistant.components.wallbox.const import (
     DOMAIN,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from . import (
     authorisation_response,
@@ -47,7 +48,7 @@ async def test_show_set_form(hass: HomeAssistant) -> None:
     flow.hass = hass
     result = await flow.async_step_user(user_input=None)
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
 
@@ -77,7 +78,7 @@ async def test_form_cannot_authenticate(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
@@ -107,7 +108,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
@@ -175,7 +176,7 @@ async def test_form_reauth(hass: HomeAssistant, entry: MockConfigEntry) -> None:
             },
         )
 
-    assert result2["type"] == "abort"
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
 
     await hass.config_entries.async_unload(entry.entry_id)
@@ -215,7 +216,7 @@ async def test_form_reauth_invalid(hass: HomeAssistant, entry: MockConfigEntry) 
             },
         )
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "reauth_invalid"}
 
     await hass.config_entries.async_unload(entry.entry_id)
