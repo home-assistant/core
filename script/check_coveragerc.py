@@ -32,7 +32,7 @@ def main():
         # Turn off all .coveragerc ignoring
         replace_all(COVERAGERC, "omit =", "omit_disabled =")
 
-        # Run tests in parallel for speed
+        # Run tests
         pytest.main(
             [
                 "-qq",
