@@ -33,7 +33,7 @@ async def test_user_form(hass: HomeAssistant) -> None:
         assert result["type"] is FlowResultType.FORM
 
         with patch(
-            "homeassistant.components.downloader.config_flow.DownloaderConfigFlow._validate_input",
+            "os.path.isabs",
             side_effect=DirectoryDoesNotExist,
         ):
             assert result["type"] is FlowResultType.FORM
@@ -45,14 +45,15 @@ async def test_user_form(hass: HomeAssistant) -> None:
             "homeassistant.components.downloader.async_setup_entry", return_value=True
         ),
         patch(
-            "homeassistant.components.downloader.config_flow.DownloaderConfigFlow._validate_input",
-            return_value=None,
+            "os.path.isdir",
+            return_value=True,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input=CONFIG,
         )
+        await hass.async_block_till_done()
 
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == "Downloader"
@@ -84,18 +85,17 @@ async def test_import_flow_success(hass: HomeAssistant) -> None:
             "homeassistant.components.downloader.async_setup_entry", return_value=True
         ),
         patch(
-            "homeassistant.components.downloader.config_flow.DownloaderConfigFlow._validate_input",
-            return_value=None,
+            "os.path.isdir",
+            return_value=True,
         ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
-            data={},
+            data=CONFIG,
         )
         await hass.async_block_till_done()
 
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == "Downloader"
-        assert result["data"] == {}
-        assert result["options"] == {}
+        assert result["data"] == CONFIG
