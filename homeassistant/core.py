@@ -2589,7 +2589,7 @@ class Config:
         """Initialize a new config object."""
         self.hass = hass
 
-        self._store = self._ConfigStore(self.hass, config_dir)
+        self._store: Config._ConfigStore | None = None
 
         self.latitude: float = 0
         self.longitude: float = 0
@@ -2798,7 +2798,7 @@ class Config:
 
     async def async_load(self) -> None:
         """Load [homeassistant] core config."""
-        if not (data := await self._store.async_load()):
+        if not (data := await self._get_store().async_load()):
             return
 
         # In 2021.9 we fixed validation to disallow a path (because that's never
@@ -2830,6 +2830,12 @@ class Config:
             language=data.get("language"),
         )
 
+    def _get_store(self) -> Config._ConfigStore:
+        """Return the store object."""
+        if self._store is None:
+            self._store = self._ConfigStore(self.hass)
+        return self._store
+
     async def _async_store(self) -> None:
         """Store [homeassistant] core config."""
         data = {
@@ -2847,8 +2853,7 @@ class Config:
             "country": self.country,
             "language": self.language,
         }
-
-        await self._store.async_save(data)
+        await self._get_store().async_save(data)
 
     # Circular dependency prevents us from generating the class at top level
     # pylint: disable-next=import-outside-toplevel
@@ -2857,7 +2862,7 @@ class Config:
     class _ConfigStore(Store[dict[str, Any]]):
         """Class to help storing Config data."""
 
-        def __init__(self, hass: HomeAssistant, config_dir: str) -> None:
+        def __init__(self, hass: HomeAssistant) -> None:
             """Initialize storage class."""
             super().__init__(
                 hass,
@@ -2866,7 +2871,6 @@ class Config:
                 private=True,
                 atomic_writes=True,
                 minor_version=CORE_STORAGE_MINOR_VERSION,
-                config_dir=config_dir,
             )
             self._original_unit_system: str | None = None  # from old store 1.1
 
