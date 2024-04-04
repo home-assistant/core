@@ -83,7 +83,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not os.path.isabs(download_path):
         download_path = hass.config.path(download_path)
 
-    if not os.path.isdir(download_path):
+    if not await hass.async_add_executor_job(os.path.isdir, download_path):
         _LOGGER.error(
             "Download path %s does not exist. File Downloader not active", download_path
         )
