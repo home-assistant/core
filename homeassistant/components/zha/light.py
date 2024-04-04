@@ -49,10 +49,12 @@ class Light(light.LightEntity, ZHAEntity):
     def __init__(self, entity_data: Any) -> None:
         """Initialize the ZHA light."""
         super().__init__(entity_data)
-        self._attr_supported_color_modes: set[ColorMode] = set()
+        color_modes: set[ColorMode] = set()
         for color_mode in self.entity_data.entity.supported_color_modes:
             if color_mode not in (ColorMode.BRIGHTNESS.value, ColorMode.ONOFF.value):
-                self._attr_supported_color_modes.add(ColorMode(color_mode))
+                color_modes.add(ColorMode(color_mode))
+        if color_modes:
+            self._attr_supported_color_modes = color_modes
         self._attr_supported_features = LightEntityFeature(
             self.entity_data.entity.supported_features
         )
