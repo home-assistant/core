@@ -3,7 +3,7 @@
   "name": "NASweb",
   "codeowners": ["@nasWebio"],
   "config_flow": true,
-  "dependencies": ["http"],
+  "dependencies": ["webhook"],
   "documentation": "https://www.home-assistant.io/integrations/nasweb",
   "homekit": {},
   "integration_type": "hub",
