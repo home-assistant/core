@@ -1,4 +1,5 @@
 """Event parser and human readable log generator."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -145,9 +146,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def _process_logbook_platform(
-    hass: HomeAssistant, domain: str, platform: Any
-) -> None:
+@callback
+def _process_logbook_platform(hass: HomeAssistant, domain: str, platform: Any) -> None:
     """Process a logbook platform."""
     logbook_config: LogbookConfig = hass.data[DOMAIN]
     external_events = logbook_config.external_events

@@ -1,4 +1,5 @@
 """Tests for the Roku Media Player platform."""
+
 from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
@@ -189,7 +190,8 @@ async def test_supported_features(
     # Features supported for Rokus
     state = hass.states.get(MAIN_ENTITY_ID)
     assert (
-        MediaPlayerEntityFeature.PREVIOUS_TRACK
+        state.attributes.get("supported_features")
+        == MediaPlayerEntityFeature.PREVIOUS_TRACK
         | MediaPlayerEntityFeature.NEXT_TRACK
         | MediaPlayerEntityFeature.VOLUME_STEP
         | MediaPlayerEntityFeature.VOLUME_MUTE
@@ -200,7 +202,6 @@ async def test_supported_features(
         | MediaPlayerEntityFeature.TURN_ON
         | MediaPlayerEntityFeature.TURN_OFF
         | MediaPlayerEntityFeature.BROWSE_MEDIA
-        == state.attributes.get("supported_features")
     )
 
 
@@ -214,7 +215,8 @@ async def test_tv_supported_features(
     state = hass.states.get(TV_ENTITY_ID)
     assert state
     assert (
-        MediaPlayerEntityFeature.PREVIOUS_TRACK
+        state.attributes.get("supported_features")
+        == MediaPlayerEntityFeature.PREVIOUS_TRACK
         | MediaPlayerEntityFeature.NEXT_TRACK
         | MediaPlayerEntityFeature.VOLUME_STEP
         | MediaPlayerEntityFeature.VOLUME_MUTE
@@ -225,7 +227,6 @@ async def test_tv_supported_features(
         | MediaPlayerEntityFeature.TURN_ON
         | MediaPlayerEntityFeature.TURN_OFF
         | MediaPlayerEntityFeature.BROWSE_MEDIA
-        == state.attributes.get("supported_features")
     )
 
 

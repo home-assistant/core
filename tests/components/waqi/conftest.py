@@ -1,4 +1,5 @@
 """Common fixtures for the World Air Quality Index (WAQI) tests."""
+
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 

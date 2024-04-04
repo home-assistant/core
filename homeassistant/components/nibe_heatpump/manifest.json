@@ -5,5 +5,5 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/nibe_heatpump",
   "iot_class": "local_polling",
-  "requirements": ["nibe==2.7.0"]
+  "requirements": ["nibe==2.8.0"]
 }

@@ -1,4 +1,5 @@
 """The sensor tests for the nut platform."""
+
 from unittest.mock import patch
 
 import pytest
@@ -14,7 +15,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .util import _get_mock_pynutclient, async_init_integration
+from .util import _get_mock_nutclient, async_init_integration
 
 from tests.common import MockConfigEntry
 
@@ -99,12 +100,12 @@ async def test_state_sensors(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
 
-    mock_pynut = _get_mock_pynutclient(
+    mock_pynut = _get_mock_nutclient(
         list_ups={"ups1": "UPS 1"}, list_vars={"ups.status": "OL"}
     )
 
     with patch(
-        "homeassistant.components.nut.PyNUTClient",
+        "homeassistant.components.nut.AIONUTClient",
         return_value=mock_pynut,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
@@ -124,12 +125,12 @@ async def test_unknown_state_sensors(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
 
-    mock_pynut = _get_mock_pynutclient(
+    mock_pynut = _get_mock_nutclient(
         list_ups={"ups1": "UPS 1"}, list_vars={"ups.status": "OQ"}
     )
 
     with patch(
-        "homeassistant.components.nut.PyNUTClient",
+        "homeassistant.components.nut.AIONUTClient",
         return_value=mock_pynut,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
@@ -154,12 +155,12 @@ async def test_stale_options(hass: HomeAssistant) -> None:
     )
     config_entry.add_to_hass(hass)
 
-    mock_pynut = _get_mock_pynutclient(
+    mock_pynut = _get_mock_nutclient(
         list_ups={"ups1": "UPS 1"}, list_vars={"battery.charge": "10"}
     )
 
     with patch(
-        "homeassistant.components.nut.PyNUTClient",
+        "homeassistant.components.nut.AIONUTClient",
         return_value=mock_pynut,
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)

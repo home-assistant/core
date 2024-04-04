@@ -1,4 +1,5 @@
 """Config flow for flume integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -10,14 +11,15 @@ from pyflume import FlumeAuth, FlumeDeviceList
 from requests.exceptions import RequestException
 import voluptuous as vol
 
-from homeassistant import config_entries, core, exceptions
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
     CONF_PASSWORD,
     CONF_USERNAME,
 )
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 from .const import BASE_TOKEN_FILENAME, DOMAIN
 
@@ -39,7 +41,7 @@ DATA_SCHEMA = vol.Schema(
 
 
 def _validate_input(
-    hass: core.HomeAssistant, data: dict[str, Any], clear_token_file: bool
+    hass: HomeAssistant, data: dict[str, Any], clear_token_file: bool
 ) -> FlumeDeviceList:
     """Validate in the executor."""
     flume_token_full_path = hass.config.path(
@@ -60,7 +62,7 @@ def _validate_input(
 
 
 async def validate_input(
-    hass: core.HomeAssistant, data: dict[str, Any], clear_token_file: bool = False
+    hass: HomeAssistant, data: dict[str, Any], clear_token_file: bool = False
 ) -> dict[str, Any]:
     """Validate the user input allows us to connect.
 
@@ -82,7 +84,7 @@ async def validate_input(
     return {"title": data[CONF_USERNAME]}
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class FlumeConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for flume."""
 
     VERSION = 1
@@ -93,7 +95,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
@@ -112,14 +114,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle reauth."""
         self._reauth_unique_id = self.context["unique_id"]
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle reauth input."""
         errors: dict[str, str] = {}
         existing_entry = await self.async_set_unique_id(self._reauth_unique_id)
@@ -153,9 +157,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
-class CannotConnect(exceptions.HomeAssistantError):
+class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""
 
 
-class InvalidAuth(exceptions.HomeAssistantError):
+class InvalidAuth(HomeAssistantError):
     """Error to indicate there is invalid auth."""

@@ -1,4 +1,5 @@
 """Test the Z-Wave JS diagnostics."""
+
 import copy
 from unittest.mock import patch
 

@@ -1,4 +1,5 @@
 """Diagnostics support for GIOS."""
+
 from __future__ import annotations
 
 from dataclasses import asdict

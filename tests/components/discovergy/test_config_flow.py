@@ -1,14 +1,15 @@
 """Test the Discovergy config flow."""
+
 from unittest.mock import AsyncMock, patch
 
 from pydiscovergy.error import DiscovergyClientError, HTTPError, InvalidLogin
 import pytest
 
-from homeassistant import data_entry_flow
 from homeassistant.components.discovergy.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
@@ -18,7 +19,7 @@ async def test_form(hass: HomeAssistant, discovergy: AsyncMock) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
     with patch(
@@ -34,7 +35,7 @@ async def test_form(hass: HomeAssistant, discovergy: AsyncMock) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "test@example.com"
     assert result2["data"] == {
         CONF_EMAIL: "test@example.com",
@@ -55,7 +56,7 @@ async def test_reauth(
         data=None,
     )
 
-    assert init_result["type"] == data_entry_flow.FlowResultType.FORM
+    assert init_result["type"] is FlowResultType.FORM
     assert init_result["step_id"] == "reauth"
 
     with patch(
@@ -71,7 +72,7 @@ async def test_reauth(
         )
         await hass.async_block_till_done()
 
-        assert configure_result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert configure_result["type"] is FlowResultType.ABORT
         assert configure_result["reason"] == "reauth_successful"
         assert len(mock_setup_entry.mock_calls) == 1
 
@@ -99,7 +100,7 @@ async def test_form_fail(
         },
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": message}
 
@@ -113,6 +114,6 @@ async def test_form_fail(
         },
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "test@example.com"
     assert "errors" not in result

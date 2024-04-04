@@ -1,4 +1,5 @@
 """Support for control of Elk-M1 connected thermostats."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -79,6 +80,8 @@ class ElkThermostat(ElkEntity, ClimateEntity):
         ClimateEntityFeature.FAN_MODE
         | ClimateEntityFeature.AUX_HEAT
         | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
     _attr_min_temp = 1
     _attr_max_temp = 99
@@ -87,6 +90,7 @@ class ElkThermostat(ElkEntity, ClimateEntity):
     _attr_target_temperature_step = 1
     _attr_fan_modes = [FAN_AUTO, FAN_ON]
     _element: Thermostat
+    _enable_turn_on_off_backwards_compatibility = False
 
     @property
     def temperature_unit(self) -> str:

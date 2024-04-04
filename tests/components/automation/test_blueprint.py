@@ -1,4 +1,5 @@
 """Test built-in blueprints."""
+
 import asyncio
 import contextlib
 from datetime import timedelta
@@ -47,7 +48,7 @@ async def test_notify_leaving_zone(
 ) -> None:
     """Test notifying leaving a zone blueprint."""
     config_entry = MockConfigEntry(domain="fake_integration", data={})
-    config_entry.state = config_entries.ConfigEntryState.LOADED
+    config_entry.mock_state(hass, config_entries.ConfigEntryState.LOADED)
     config_entry.add_to_hass(hass)
 
     device = device_registry.async_get_or_create(

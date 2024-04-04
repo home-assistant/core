@@ -1,4 +1,5 @@
 """Number platform for Enphase Envoy solar energy monitor."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
@@ -25,33 +26,19 @@ from .coordinator import EnphaseUpdateCoordinator
 from .entity import EnvoyBaseEntity
 
 
-@dataclass(frozen=True)
-class EnvoyRelayRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class EnvoyRelayNumberEntityDescription(NumberEntityDescription):
+    """Describes an Envoy Dry Contact Relay number entity."""
 
     value_fn: Callable[[EnvoyDryContactSettings], float]
 
 
-@dataclass(frozen=True)
-class EnvoyRelayNumberEntityDescription(
-    NumberEntityDescription, EnvoyRelayRequiredKeysMixin
-):
-    """Describes an Envoy Dry Contact Relay number entity."""
-
-
-@dataclass(frozen=True)
-class EnvoyStorageSettingsRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class EnvoyStorageSettingsNumberEntityDescription(NumberEntityDescription):
+    """Describes an Envoy storage mode number entity."""
 
     value_fn: Callable[[EnvoyStorageSettings], float]
     update_fn: Callable[[Envoy, float], Awaitable[dict[str, Any]]]
-
-
-@dataclass(frozen=True)
-class EnvoyStorageSettingsNumberEntityDescription(
-    NumberEntityDescription, EnvoyStorageSettingsRequiredKeysMixin
-):
-    """Describes an Envoy storage mode number entity."""
 
 
 RELAY_ENTITIES = (

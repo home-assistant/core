@@ -1,4 +1,5 @@
 """Support for Honeywell Lyric sensor platform."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -41,36 +42,22 @@ LYRIC_SETPOINT_STATUS_NAMES = {
     PRESET_VACATION_HOLD: "Holiday",
 }
 
-
-@dataclass(frozen=True)
-class LyricSensorEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class LyricSensorEntityDescription(SensorEntityDescription):
+    """Class describing Honeywell Lyric sensor entities."""
 
     value_fn: Callable[[LyricDevice], StateType | datetime]
     suitable_fn: Callable[[LyricDevice], bool]
 
 
-@dataclass(frozen=True)
-class LyricSensorEntityDescription(
-    SensorEntityDescription, LyricSensorEntityDescriptionMixin
-):
-    """Class describing Honeywell Lyric sensor entities."""
-
 
 @dataclass
-class LyricSensorAccessoryEntityDescriptionMixin:
-    """Mixin for required keys."""
+class LyricSensorAccessoryEntityDescription(SensorEntityDescription):
+    """Class describing Honeywell Lyric room sensor entities."""
 
     value_fn: Callable[[LyricRoom, LyricAccessories], StateType | datetime]
     suitable_fn: Callable[[LyricRoom, LyricAccessories], bool]
-
-
-@dataclass
-class LyricSensorAccessoryEntityDescription(
-    SensorEntityDescription, LyricSensorAccessoryEntityDescriptionMixin
-):
-    """Class describing Honeywell Lyric room sensor entities."""
-
+    
 
 DEVICE_SENSORS: list[LyricSensorEntityDescription] = [
     LyricSensorEntityDescription(
@@ -121,7 +108,6 @@ DEVICE_SENSORS: list[LyricSensorEntityDescription] = [
     LyricSensorEntityDescription(
         key="setpoint_status",
         translation_key="setpoint_status",
-        icon="mdi:thermostat",
         value_fn=lambda device: get_setpoint_status(
             device.changeableValues.thermostatSetpointStatus,
             device.changeableValues.nextPeriodTime,
@@ -178,57 +164,37 @@ async def async_setup_entry(
     coordinator: DataUpdateCoordinator[Lyric] = hass.data[DOMAIN][entry.entry_id]
     entities: list[SensorEntity] = []
 
-    for location in coordinator.data.locations:
-        for device in location.devices:
-            entities.extend(__create_device_entities(device, location, coordinator))
-            entities.extend(__create_accessory_entities(device, location, coordinator))
-
-    async_add_entities(entities)
-
-
-def __create_device_entities(
-    device: LyricDevice,
-    location: LyricLocation,
-    coordinator: DataUpdateCoordinator[Lyric],
-):
     entities = []
-    for device_sensor in DEVICE_SENSORS:
-        if device_sensor.suitable_fn(device):
-            entities.append(
-                LyricSensor(
-                    coordinator,
-                    device_sensor,
-                    location,
-                    device,
-                )
-            )
 
-    return entities
-
-
-def __create_accessory_entities(
-    device: LyricDevice,
-    location: LyricLocation,
-    coordinator: DataUpdateCoordinator[Lyric],
-):
-    entities = []
-    for room in coordinator.data.rooms_dict.get(device.macID, {}).values():
+    entities.append(
+        LyricSensor(
+            coordinator,
+            device_sensor,
+            location,
+            device,
+        )
+        for location in coordinator.data.locations
+        for device in location.devices
+        for device_sensor in DEVICE_SENSORS
+        if device_sensor.suitable_fn(device)
+    )
+   
+    entities.append(
+        LyricAccessorySensor((
+            coordinator,
+            device_sensor,
+            location,
+            device,
+        )
+        for room in coordinator.data.rooms_dict.get(device.macID, {}).values()
         for accessory in room.accessories:
-            for accessory_sensor in ACCESSORY_SENSORS:
-                if accessory_sensor.suitable_fn(room, accessory):
-                    entities.append(
-                        LyricAccessorySensor(
-                            coordinator,
-                            accessory_sensor,
-                            location,
-                            device,
-                            room,
-                            accessory,
-                        )
-                    )
-
-    return entities
-
+        for location in coordinator.data.locations
+        for device in location.devices
+        for accessory_sensor in ACCESSORY_SENSORS:
+        if accessory_sensor.suitable_fn(room, accessory)
+    )   
+    
+    async_add_entities(entities)
 
 class LyricSensor(LyricDeviceEntity, SensorEntity):
     """Define a Honeywell Lyric sensor."""

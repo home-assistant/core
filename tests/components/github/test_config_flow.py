@@ -1,4 +1,5 @@
 """Test the GitHub config flow."""
+
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiogithubapi import GitHubException
@@ -59,8 +60,10 @@ async def test_full_user_flow_implementation(
     )
 
     assert result["step_id"] == "device"
-    assert result["type"] == FlowResultType.SHOW_PROGRESS
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
 
+    # Wait for the task to start before configuring
+    await hass.async_block_till_done()
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     result = await hass.config_entries.flow.async_configure(
@@ -71,7 +74,7 @@ async def test_full_user_flow_implementation(
     )
 
     assert result["title"] == ""
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert "data" in result
     assert result["data"][CONF_ACCESS_TOKEN] == MOCK_ACCESS_TOKEN
     assert "options" in result
@@ -91,7 +94,7 @@ async def test_flow_with_registration_failure(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
     )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result.get("reason") == "could_not_register"
 
 
@@ -120,11 +123,11 @@ async def test_flow_with_activation_failure(
         context={"source": config_entries.SOURCE_USER},
     )
     assert result["step_id"] == "device"
-    assert result["type"] == FlowResultType.SHOW_PROGRESS
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
     await hass.async_block_till_done()
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "could_not_register"
 
 
@@ -154,7 +157,7 @@ async def test_flow_with_remove_while_activating(
         context={"source": config_entries.SOURCE_USER},
     )
     assert result["step_id"] == "device"
-    assert result["type"] == FlowResultType.SHOW_PROGRESS
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
 
     assert hass.config_entries.flow.async_get(result["flow_id"])
 
@@ -178,7 +181,7 @@ async def test_already_configured(
         context={"source": config_entries.SOURCE_USER},
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result.get("reason") == "already_configured"
 
 
@@ -260,17 +263,20 @@ async def test_options_flow(
     mock_setup_entry: None,
 ) -> None:
     """Test options flow."""
-    mock_config_entry.options = {
-        CONF_REPOSITORIES: ["homeassistant/core", "homeassistant/architecture"]
-    }
     mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        options={
+            CONF_REPOSITORIES: ["homeassistant/core", "homeassistant/architecture"]
+        },
+    )
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(

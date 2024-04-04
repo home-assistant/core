@@ -1,4 +1,5 @@
 """Support for the Nettigo Air Monitor service."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -74,16 +75,11 @@ PARALLEL_UPDATES = 1
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
-class NAMSensorRequiredKeysMixin:
-    """Class for NAM entity required keys."""
+@dataclass(frozen=True, kw_only=True)
+class NAMSensorEntityDescription(SensorEntityDescription):
+    """NAM sensor entity description."""
 
     value: Callable[[NAMSensors], StateType | datetime]
-
-
-@dataclass(frozen=True)
-class NAMSensorEntityDescription(SensorEntityDescription, NAMSensorRequiredKeysMixin):
-    """NAM sensor entity description."""
 
 
 SENSORS: tuple[NAMSensorEntityDescription, ...] = (
@@ -180,13 +176,11 @@ SENSORS: tuple[NAMSensorEntityDescription, ...] = (
     NAMSensorEntityDescription(
         key=ATTR_PMSX003_CAQI,
         translation_key="pmsx003_caqi",
-        icon="mdi:air-filter",
         value=lambda sensors: sensors.pms_caqi,
     ),
     NAMSensorEntityDescription(
         key=ATTR_PMSX003_CAQI_LEVEL,
         translation_key="pmsx003_caqi_level",
-        icon="mdi:air-filter",
         device_class=SensorDeviceClass.ENUM,
         options=["very_low", "low", "medium", "high", "very_high"],
         value=lambda sensors: sensors.pms_caqi_level,
@@ -221,13 +215,11 @@ SENSORS: tuple[NAMSensorEntityDescription, ...] = (
     NAMSensorEntityDescription(
         key=ATTR_SDS011_CAQI,
         translation_key="sds011_caqi",
-        icon="mdi:air-filter",
         value=lambda sensors: sensors.sds011_caqi,
     ),
     NAMSensorEntityDescription(
         key=ATTR_SDS011_CAQI_LEVEL,
         translation_key="sds011_caqi_level",
-        icon="mdi:air-filter",
         device_class=SensorDeviceClass.ENUM,
         options=["very_low", "low", "medium", "high", "very_high"],
         value=lambda sensors: sensors.sds011_caqi_level,
@@ -271,13 +263,11 @@ SENSORS: tuple[NAMSensorEntityDescription, ...] = (
     NAMSensorEntityDescription(
         key=ATTR_SPS30_CAQI,
         translation_key="sps30_caqi",
-        icon="mdi:air-filter",
         value=lambda sensors: sensors.sps30_caqi,
     ),
     NAMSensorEntityDescription(
         key=ATTR_SPS30_CAQI_LEVEL,
         translation_key="sps30_caqi_level",
-        icon="mdi:air-filter",
         device_class=SensorDeviceClass.ENUM,
         options=["very_low", "low", "medium", "high", "very_high"],
         value=lambda sensors: sensors.sps30_caqi_level,
@@ -314,7 +304,6 @@ SENSORS: tuple[NAMSensorEntityDescription, ...] = (
         translation_key="sps30_pm4",
         suggested_display_precision=0,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        icon="mdi:molecule",
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda sensors: sensors.sps30_p4,
     ),
@@ -378,12 +367,11 @@ async def async_setup_entry(
             )
             ent_reg.async_update_entity(entity_id, new_unique_id=new_unique_id)
 
-    sensors: list[NAMSensor] = []
-    for description in SENSORS:
-        if getattr(coordinator.data, description.key) is not None:
-            sensors.append(NAMSensor(coordinator, description))
-
-    async_add_entities(sensors, False)
+    async_add_entities(
+        NAMSensor(coordinator, description)
+        for description in SENSORS
+        if getattr(coordinator.data, description.key) is not None
+    )
 
 
 class NAMSensor(CoordinatorEntity[NAMDataUpdateCoordinator], SensorEntity):

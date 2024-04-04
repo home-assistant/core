@@ -1,4 +1,5 @@
 """Tests for the ONVIF integration."""
+
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from onvif.exceptions import ONVIFError
@@ -26,7 +27,7 @@ HOST = "1.2.3.4"
 PORT = 80
 USERNAME = "admin"
 PASSWORD = "12345"
-MAC = "aa:bb:cc:dd:ee"
+MAC = "aa:bb:cc:dd:ee:ff"
 SERIAL_NUMBER = "ABCDEFGHIJK"
 MANUFACTURER = "TestManufacturer"
 MODEL = "TestModel"
@@ -124,6 +125,7 @@ def setup_mock_onvif_camera(
 def setup_mock_device(mock_device, capabilities=None):
     """Prepare mock ONVIFDevice."""
     mock_device.async_setup = AsyncMock(return_value=True)
+    mock_device.port = 80
     mock_device.available = True
     mock_device.name = NAME
     mock_device.info = DeviceInfo(
@@ -185,13 +187,15 @@ async def setup_onvif_integration(
     )
     config_entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.onvif.config_flow.get_device"
-    ) as mock_onvif_camera, patch(
-        "homeassistant.components.onvif.config_flow.wsdiscovery"
-    ) as mock_discovery, patch(
-        "homeassistant.components.onvif.ONVIFDevice"
-    ) as mock_device:
+    with (
+        patch(
+            "homeassistant.components.onvif.config_flow.get_device"
+        ) as mock_onvif_camera,
+        patch(
+            "homeassistant.components.onvif.config_flow.wsdiscovery"
+        ) as mock_discovery,
+        patch("homeassistant.components.onvif.ONVIFDevice") as mock_device,
+    ):
         setup_mock_onvif_camera(mock_onvif_camera, two_profiles=True)
         # no discovery
         mock_discovery.return_value = []

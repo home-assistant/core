@@ -43,7 +43,7 @@
   "dose_k2": 1023,
   "dose_k3": 1023,
   "dose_k4": 1023,
-  "dose_k5": 1023,
+  "dose_hot_water": 1023,
   "prebrewing_ton_k1": 3,
   "prebrewing_toff_k1": 5,
   "prebrewing_ton_k2": 3,
@@ -52,11 +52,8 @@
   "prebrewing_toff_k3": 5,
   "prebrewing_ton_k4": 3,
   "prebrewing_toff_k4": 5,
-  "prebrewing_ton_k5": 3,
-  "prebrewing_toff_k5": 5,
   "preinfusion_k1": 4,
   "preinfusion_k2": 4,
   "preinfusion_k3": 4,
-  "preinfusion_k4": 4,
-  "preinfusion_k5": 4
+  "preinfusion_k4": 4
 }

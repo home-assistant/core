@@ -1,4 +1,5 @@
 """Locks on Zigbee Home Automation networks."""
+
 import functools
 from typing import Any
 

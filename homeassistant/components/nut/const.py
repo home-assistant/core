@@ -1,4 +1,5 @@
 """The nut component."""
+
 from __future__ import annotations
 
 from homeassistant.const import Platform
@@ -39,6 +40,8 @@ STATE_TYPES = {
     "BOOST": "Boosting Voltage",
     "FSD": "Forced Shutdown",
     "ALARM": "Alarm",
+    "HE": "ECO Mode",
+    "TEST": "Battery Testing",
 }
 
 COMMAND_BEEPER_DISABLE = "beeper.disable"

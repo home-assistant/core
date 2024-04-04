@@ -1,4 +1,5 @@
 """AdGuard Home base entity."""
+
 from __future__ import annotations
 
 from adguardhome import AdGuardHome, AdGuardHomeError
@@ -43,7 +44,7 @@ class AdGuardHomeEntity(Entity):
 
     async def _adguard_update(self) -> None:
         """Update AdGuard Home entity."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @property
     def device_info(self) -> DeviceInfo:

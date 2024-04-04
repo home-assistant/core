@@ -1,4 +1,5 @@
 """Code to set up a device tracker platform using a config entry."""
+
 from __future__ import annotations
 
 import asyncio
@@ -49,28 +50,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         LOGGER, DOMAIN, hass
     )
     component.register_shutdown()
-
-    # Clean up old devices created by device tracker entities in the past.
-    # Can be removed after 2022.6
-    ent_reg = er.async_get(hass)
-    dev_reg = dr.async_get(hass)
-
-    devices_with_trackers = set()
-    devices_with_non_trackers = set()
-
-    for entity in ent_reg.entities.values():
-        if entity.device_id is None:
-            continue
-
-        if entity.domain == DOMAIN:
-            devices_with_trackers.add(entity.device_id)
-        else:
-            devices_with_non_trackers.add(entity.device_id)
-
-    for device_id in devices_with_trackers - devices_with_non_trackers:
-        for entity in er.async_entries_for_device(ent_reg, device_id, True):
-            ent_reg.async_update_entity(entity.entity_id, device_id=None)
-        dev_reg.async_remove_device(device_id)
 
     return await component.async_setup_entry(entry)
 

@@ -1,10 +1,40 @@
 {
   "entity": {
     "binary_sensor": {
-      "mop_attached": {
+      "water_mop_attached": {
         "default": "mdi:water-off",
         "state": {
           "on": "mdi:water"
+        }
+      }
+    },
+    "button": {
+      "relocate": {
+        "default": "mdi:map-marker-question"
+      },
+      "reset_lifespan_brush": {
+        "default": "mdi:broom"
+      },
+      "reset_lifespan_filter": {
+        "default": "mdi:air-filter"
+      },
+      "reset_lifespan_side_brush": {
+        "default": "mdi:broom"
+      }
+    },
+    "event": {
+      "last_job": {
+        "default": "mdi:history"
+      }
+    },
+    "number": {
+      "clean_count": {
+        "default": "mdi:counter"
+      },
+      "volume": {
+        "default": "mdi:volume-high",
+        "state": {
+          "0": "mdi:volume-off"
         }
       }
     },
@@ -52,6 +82,38 @@
       },
       "work_mode": {
         "default": "mdi:cog"
+      }
+    },
+    "switch": {
+      "advanced_mode": {
+        "default": "mdi:tune"
+      },
+      "border_switch": {
+        "default": "mdi:land-fields"
+      },
+      "carpet_auto_fan_boost": {
+        "default": "mdi:fan-auto"
+      },
+      "child_lock": {
+        "default": "mdi:teddy-bear"
+      },
+      "clean_preference": {
+        "default": "mdi:broom"
+      },
+      "cross_map_border_warning": {
+        "default": "mdi:border-none-variant"
+      },
+      "continuous_cleaning": {
+        "default": "mdi:refresh-auto"
+      },
+      "move_up_warning": {
+        "default": "mdi:arrow-up-bold-box-outline"
+      },
+      "safe_protect": {
+        "default": "mdi:shield-half-full"
+      },
+      "true_detect": {
+        "default": "mdi:laser-pointer"
       }
     }
   }

@@ -1,0 +1,41 @@
+# serializer version: 1
+# name: test_light_attributes_state_update
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'brightness': None,
+      'color_mode': None,
+      'friendly_name': 'Foyer Sconces',
+      'homeworks_address': '[02:08:01:01]',
+      'supported_color_modes': list([
+        <ColorMode.BRIGHTNESS: 'brightness'>,
+      ]),
+      'supported_features': <LightEntityFeature: 0>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'light.foyer_sconces',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_light_attributes_state_update.1
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'brightness': 127,
+      'color_mode': <ColorMode.BRIGHTNESS: 'brightness'>,
+      'friendly_name': 'Foyer Sconces',
+      'homeworks_address': '[02:08:01:01]',
+      'supported_color_modes': list([
+        <ColorMode.BRIGHTNESS: 'brightness'>,
+      ]),
+      'supported_features': <LightEntityFeature: 0>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'light.foyer_sconces',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---

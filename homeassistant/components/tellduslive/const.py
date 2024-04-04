@@ -1,4 +1,5 @@
 """Consts used by TelldusLive."""
+
 from datetime import timedelta
 
 APPLICATION_NAME = "Home Assistant"

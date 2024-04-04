@@ -1,4 +1,5 @@
 """Philips Hue scene platform tests for V2 bridge/api."""
+
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er

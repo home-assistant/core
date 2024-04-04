@@ -1,4 +1,5 @@
 """Files to interact with a the ESPHome dashboard."""
+
 from __future__ import annotations
 
 import asyncio
@@ -102,7 +103,7 @@ class ESPHomeDashboardManager:
             await dashboard.async_shutdown()
 
         self._cancel_shutdown = hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STOP, on_hass_stop
+            EVENT_HOMEASSISTANT_STOP, on_hass_stop, run_immediately=True
         )
 
         new_data = {"info": {"addon_slug": addon_slug, "host": host, "port": port}}
@@ -158,7 +159,7 @@ async def async_set_dashboard_info(
     await manager.async_set_dashboard_info(addon_slug, host, port)
 
 
-class ESPHomeDashboard(DataUpdateCoordinator[dict[str, ConfiguredDevice]]):
+class ESPHomeDashboard(DataUpdateCoordinator[dict[str, ConfiguredDevice]]):  # pylint: disable=hass-enforce-coordinator-module
     """Class to interact with the ESPHome dashboard."""
 
     def __init__(

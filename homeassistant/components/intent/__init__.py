@@ -1,4 +1,5 @@
 """The Intent integration."""
+
 from __future__ import annotations
 
 import logging
@@ -9,15 +10,23 @@ import voluptuous as vol
 
 from homeassistant.components import http
 from homeassistant.components.cover import (
+    ATTR_POSITION,
     DOMAIN as COVER_DOMAIN,
     SERVICE_CLOSE_COVER,
     SERVICE_OPEN_COVER,
+    SERVICE_SET_COVER_POSITION,
 )
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.lock import (
     DOMAIN as LOCK_DOMAIN,
     SERVICE_LOCK,
     SERVICE_UNLOCK,
+)
+from homeassistant.components.valve import (
+    DOMAIN as VALVE_DOMAIN,
+    SERVICE_CLOSE_VALVE,
+    SERVICE_OPEN_VALVE,
+    SERVICE_SET_VALVE_POSITION,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -69,6 +78,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass,
         NevermindIntentHandler(),
     )
+    intent.async_register(hass, SetPositionIntentHandler())
 
     return True
 
@@ -81,16 +91,18 @@ class IntentPlatformProtocol(Protocol):
 
 
 class OnOffIntentHandler(intent.ServiceIntentHandler):
-    """Intent handler for on/off that handles covers too."""
+    """Intent handler for on/off that also supports covers, valves, locks, etc."""
 
-    async def async_call_service(self, intent_obj: intent.Intent, state: State) -> None:
-        """Call service on entity with special case for covers."""
+    async def async_call_service(
+        self, domain: str, service: str, intent_obj: intent.Intent, state: State
+    ) -> None:
+        """Call service on entity with handling for special cases."""
         hass = intent_obj.hass
 
         if state.domain == COVER_DOMAIN:
             # on = open
             # off = close
-            if self.service == SERVICE_TURN_ON:
+            if service == SERVICE_TURN_ON:
                 service_name = SERVICE_OPEN_COVER
             else:
                 service_name = SERVICE_CLOSE_COVER
@@ -111,7 +123,7 @@ class OnOffIntentHandler(intent.ServiceIntentHandler):
         if state.domain == LOCK_DOMAIN:
             # on = lock
             # off = unlock
-            if self.service == SERVICE_TURN_ON:
+            if service == SERVICE_TURN_ON:
                 service_name = SERVICE_LOCK
             else:
                 service_name = SERVICE_UNLOCK
@@ -129,13 +141,34 @@ class OnOffIntentHandler(intent.ServiceIntentHandler):
             )
             return
 
-        if not hass.services.has_service(state.domain, self.service):
+        if state.domain == VALVE_DOMAIN:
+            # on = opened
+            # off = closed
+            if service == SERVICE_TURN_ON:
+                service_name = SERVICE_OPEN_VALVE
+            else:
+                service_name = SERVICE_CLOSE_VALVE
+
+            await self._run_then_background(
+                hass.async_create_task(
+                    hass.services.async_call(
+                        VALVE_DOMAIN,
+                        service_name,
+                        {ATTR_ENTITY_ID: state.entity_id},
+                        context=intent_obj.context,
+                        blocking=True,
+                    )
+                )
+            )
+            return
+
+        if not hass.services.has_service(state.domain, service):
             raise intent.IntentHandleError(
-                f"Service {self.service} does not support entity {state.entity_id}"
+                f"Service {service} does not support entity {state.entity_id}"
             )
 
         # Fall back to homeassistant.turn_on/off
-        await super().async_call_service(intent_obj, state)
+        await super().async_call_service(domain, service, intent_obj, state)
 
 
 class GetStateIntentHandler(intent.IntentHandler):
@@ -155,16 +188,18 @@ class GetStateIntentHandler(intent.IntentHandler):
         slots = self.async_validate_slots(intent_obj.slots)
 
         # Entity name to match
-        name: str | None = slots.get("name", {}).get("value")
+        name_slot = slots.get("name", {})
+        entity_name: str | None = name_slot.get("value")
+        entity_text: str | None = name_slot.get("text")
 
         # Look up area first to fail early
-        area_name = slots.get("area", {}).get("value")
+        area_slot = slots.get("area", {})
+        area_id = area_slot.get("value")
+        area_name = area_slot.get("text")
         area: ar.AreaEntry | None = None
-        if area_name is not None:
+        if area_id is not None:
             areas = ar.async_get(hass)
-            area = areas.async_get_area(area_name) or areas.async_get_area_by_name(
-                area_name
-            )
+            area = areas.async_get_area(area_id)
             if area is None:
                 raise intent.IntentHandleError(f"No area named {area_name}")
 
@@ -186,7 +221,7 @@ class GetStateIntentHandler(intent.IntentHandler):
         states = list(
             intent.async_match_states(
                 hass,
-                name=name,
+                name=entity_name,
                 area=area,
                 domains=domains,
                 device_classes=device_classes,
@@ -197,12 +232,19 @@ class GetStateIntentHandler(intent.IntentHandler):
         _LOGGER.debug(
             "Found %s state(s) that matched: name=%s, area=%s, domains=%s, device_classes=%s, assistant=%s",
             len(states),
-            name,
+            entity_name,
             area,
             domains,
             device_classes,
             intent_obj.assistant,
         )
+
+        if entity_name and (len(states) > 1):
+            # Multiple entities matched for the same name
+            raise intent.DuplicateNamesMatchedError(
+                name=entity_text or entity_name,
+                area=area_name or area_id,
+            )
 
         # Create response
         response = intent_obj.create_response()
@@ -260,6 +302,29 @@ class NevermindIntentHandler(intent.IntentHandler):
         return intent_obj.create_response()
 
 
+class SetPositionIntentHandler(intent.DynamicServiceIntentHandler):
+    """Intent handler for setting positions."""
+
+    def __init__(self) -> None:
+        """Create set position handler."""
+        super().__init__(
+            intent.INTENT_SET_POSITION,
+            extra_slots={ATTR_POSITION: vol.All(vol.Range(min=0, max=100))},
+        )
+
+    def get_domain_and_service(
+        self, intent_obj: intent.Intent, state: State
+    ) -> tuple[str, str]:
+        """Get the domain and service name to call."""
+        if state.domain == COVER_DOMAIN:
+            return (COVER_DOMAIN, SERVICE_SET_COVER_POSITION)
+
+        if state.domain == VALVE_DOMAIN:
+            return (VALVE_DOMAIN, SERVICE_SET_VALVE_POSITION)
+
+        raise intent.IntentHandleError(f"Domain not supported: {state.domain}")
+
+
 async def _async_process_intent(
     hass: HomeAssistant, domain: str, platform: IntentPlatformProtocol
 ) -> None:
@@ -283,7 +348,7 @@ class IntentHandleView(http.HomeAssistantView):
     )
     async def post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
         """Handle intent with name/data."""
-        hass: HomeAssistant = request.app["hass"]
+        hass = request.app[http.KEY_HASS]
         language = hass.config.language
 
         try:
