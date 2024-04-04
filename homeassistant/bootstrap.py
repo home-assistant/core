@@ -23,7 +23,14 @@ import cryptography.hazmat.backends.openssl.backend  # noqa: F401
 import voluptuous as vol
 import yarl
 
-from . import config as conf_util, config_entries, core, loader, requirements
+from . import (
+    block_async_io,
+    config as conf_util,
+    config_entries,
+    core,
+    loader,
+    requirements,
+)
 
 # Pre-import frontend deps which have no requirements here to avoid
 # loading them at run time and blocking the event loop. We do this ahead
@@ -92,6 +99,11 @@ from .setup import (
 from .util.async_ import create_eager_task
 from .util.logging import async_activate_log_queue_handler
 from .util.package import async_get_user_site, is_virtual_env
+
+with contextlib.suppress(ImportError):
+    # Ensure anyio backend is imported to avoid it being imported in the event loop
+    from anyio._backends import _asyncio  # noqa: F401
+
 
 if TYPE_CHECKING:
     from .runner import RuntimeConfig
@@ -255,6 +267,8 @@ async def async_setup_hass(
     _LOGGER.info("Config directory: %s", runtime_config.config_dir)
 
     loader.async_setup(hass)
+    block_async_io.enable()
+
     config_dict = None
     basic_setup_success = False
 

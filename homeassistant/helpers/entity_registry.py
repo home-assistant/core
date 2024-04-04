@@ -10,8 +10,7 @@ timer.
 
 from __future__ import annotations
 
-from collections import UserDict
-from collections.abc import Callable, Iterable, KeysView, Mapping, ValuesView
+from collections.abc import Callable, Iterable, KeysView, Mapping
 from datetime import datetime, timedelta
 from enum import StrEnum
 import logging
@@ -53,7 +52,7 @@ from homeassistant.util.read_only_dict import ReadOnlyDict
 from . import device_registry as dr, storage
 from .device_registry import EVENT_DEVICE_REGISTRY_UPDATED
 from .json import JSON_DUMP, find_paths_unserializable_data, json_bytes, json_fragment
-from .registry import BaseRegistry
+from .registry import BaseRegistry, BaseRegistryItems
 from .typing import UNDEFINED, UndefinedType
 
 if TYPE_CHECKING:
@@ -243,7 +242,6 @@ class RegistryEntry:
         try:
             dict_repr = self._as_display_dict
             json_repr: bytes | None = json_bytes(dict_repr) if dict_repr else None
-            return json_repr
         except (ValueError, TypeError):
             _LOGGER.error(
                 "Unable to serialize entry %s to JSON. Bad data found at %s",
@@ -252,8 +250,8 @@ class RegistryEntry:
                     find_paths_unserializable_data(dict_repr, dump=JSON_DUMP)
                 ),
             )
-
-        return None
+            return None
+        return json_repr
 
     @cached_property
     def as_partial_dict(self) -> dict[str, Any]:
@@ -511,14 +509,16 @@ class EntityRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
         return data
 
 
-class EntityRegistryItems(UserDict[str, RegistryEntry]):
+class EntityRegistryItems(BaseRegistryItems[RegistryEntry]):
     """Container for entity registry items, maps entity_id -> entry.
 
-    Maintains four additional indexes:
+    Maintains six additional indexes:
     - id -> entry
     - (domain, platform, unique_id) -> entity_id
-    - config_entry_id -> list[key]
-    - device_id -> list[key]
+    - config_entry_id -> dict[key, True]
+    - device_id -> dict[key, True]
+    - area_id -> dict[key, True]
+    - label -> dict[key, True]
     """
 
     def __init__(self) -> None:
@@ -529,17 +529,10 @@ class EntityRegistryItems(UserDict[str, RegistryEntry]):
         self._config_entry_id_index: dict[str, dict[str, Literal[True]]] = {}
         self._device_id_index: dict[str, dict[str, Literal[True]]] = {}
         self._area_id_index: dict[str, dict[str, Literal[True]]] = {}
+        self._labels_index: dict[str, dict[str, Literal[True]]] = {}
 
-    def values(self) -> ValuesView[RegistryEntry]:
-        """Return the underlying values to avoid __iter__ overhead."""
-        return self.data.values()
-
-    def __setitem__(self, key: str, entry: RegistryEntry) -> None:
-        """Add an item."""
-        data = self.data
-        if key in data:
-            self._unindex_entry(key)
-        data[key] = entry
+    def _index_entry(self, key: str, entry: RegistryEntry) -> None:
+        """Index an entry."""
         self._entry_ids[entry.id] = entry
         self._index[(entry.domain, entry.platform, entry.unique_id)] = entry.entity_id
         # python has no ordered set, so we use a dict with True values
@@ -550,22 +543,12 @@ class EntityRegistryItems(UserDict[str, RegistryEntry]):
             self._device_id_index.setdefault(device_id, {})[key] = True
         if (area_id := entry.area_id) is not None:
             self._area_id_index.setdefault(area_id, {})[key] = True
+        for label in entry.labels:
+            self._labels_index.setdefault(label, {})[key] = True
 
-    def _unindex_entry_value(
-        self, key: str, value: str, index: dict[str, dict[str, Literal[True]]]
+    def _unindex_entry(
+        self, key: str, replacement_entry: RegistryEntry | None = None
     ) -> None:
-        """Unindex an entry value.
-
-        key is the entry key
-        value is the value to unindex such as config_entry_id or device_id.
-        index is the index to unindex from.
-        """
-        entries = index[value]
-        del entries[key]
-        if not entries:
-            del index[value]
-
-    def _unindex_entry(self, key: str) -> None:
         """Unindex an entry."""
         entry = self.data[key]
         del self._entry_ids[entry.id]
@@ -576,11 +559,9 @@ class EntityRegistryItems(UserDict[str, RegistryEntry]):
             self._unindex_entry_value(key, device_id, self._device_id_index)
         if area_id := entry.area_id:
             self._unindex_entry_value(key, area_id, self._area_id_index)
-
-    def __delitem__(self, key: str) -> None:
-        """Remove an item."""
-        self._unindex_entry(key)
-        super().__delitem__(key)
+        if labels := entry.labels:
+            for label in labels:
+                self._unindex_entry_value(key, label, self._labels_index)
 
     def get_device_ids(self) -> KeysView[str]:
         """Return device ids."""
@@ -618,6 +599,11 @@ class EntityRegistryItems(UserDict[str, RegistryEntry]):
         """Get entries for area."""
         data = self.data
         return [data[key] for key in self._area_id_index.get(area_id, ())]
+
+    def get_entries_for_label(self, label: str) -> list[RegistryEntry]:
+        """Get entries for label."""
+        data = self.data
+        return [data[key] for key in self._labels_index.get(label, ())]
 
 
 class EntityRegistry(BaseRegistry):
@@ -1344,7 +1330,7 @@ def async_entries_for_label(
     registry: EntityRegistry, label_id: str
 ) -> list[RegistryEntry]:
     """Return entries that match a label."""
-    return [entry for entry in registry.entities.values() if label_id in entry.labels]
+    return registry.entities.get_entries_for_label(label_id)
 
 
 @callback

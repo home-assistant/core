@@ -1408,6 +1408,12 @@ def floor_id(hass: HomeAssistant, lookup_value: Any) -> str | None:
     floor_registry = fr.async_get(hass)
     if floor := floor_registry.async_get_floor_by_name(str(lookup_value)):
         return floor.floor_id
+
+    if aid := area_id(hass, lookup_value):
+        area_reg = area_registry.async_get(hass)
+        if area := area_reg.async_get_area(aid):
+            return area.floor_id
+
     return None
 
 
@@ -1416,6 +1422,16 @@ def floor_name(hass: HomeAssistant, lookup_value: str) -> str | None:
     floor_registry = fr.async_get(hass)
     if floor := floor_registry.async_get_floor(lookup_value):
         return floor.name
+
+    if aid := area_id(hass, lookup_value):
+        area_reg = area_registry.async_get(hass)
+        if (
+            (area := area_reg.async_get_area(aid))
+            and area.floor_id
+            and (floor := floor_registry.async_get_floor(area.floor_id))
+        ):
+            return floor.name
+
     return None
 
 
@@ -2559,9 +2575,9 @@ def make_logging_undefined(
         def _fail_with_undefined_error(self, *args, **kwargs):
             try:
                 return super()._fail_with_undefined_error(*args, **kwargs)
-            except self._undefined_exception as ex:
+            except self._undefined_exception:
                 _log_fn(logging.ERROR, self._undefined_message)
-                raise ex
+                raise
 
         def __str__(self) -> str:
             """Log undefined __str___."""

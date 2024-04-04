@@ -115,7 +115,7 @@ async def setup_device(
         )
         _LOGGER.debug(err)
         await mqtt_client.async_release()
-        raise err
+        raise
     coordinator = RoborockDataUpdateCoordinator(
         hass, device, networking, product_info, mqtt_client
     )

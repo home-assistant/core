@@ -271,7 +271,8 @@
       "name": "Home Assistant Analytics Insights",
       "integration_type": "service",
       "config_flow": true,
-      "iot_class": "cloud_polling"
+      "iot_class": "cloud_polling",
+      "single_config_entry": true
     },
     "android_ip_webcam": {
       "name": "Android IP Webcam",
@@ -1571,6 +1572,11 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "energenie_power_sockets": {
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "energie_vanons": {
       "name": "Energie VanOns",
       "integration_type": "virtual",
@@ -1660,6 +1666,12 @@
           "config_flow": false,
           "iot_class": "local_polling",
           "name": "eQ-3 MAX!"
+        },
+        "eq3btsmart": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "local_polling",
+          "name": "eQ-3 Bluetooth Smart Thermostats"
         }
       }
     },
@@ -3720,7 +3732,8 @@
     "moon": {
       "integration_type": "service",
       "config_flow": true,
-      "iot_class": "calculated"
+      "iot_class": "calculated",
+      "single_config_entry": true
     },
     "mopeka": {
       "name": "Mopeka",
@@ -3741,7 +3754,7 @@
           "integration_type": "device",
           "config_flow": true,
           "iot_class": "assumed_state",
-          "name": "Motionblinds BLE"
+          "name": "Motionblinds Bluetooth"
         }
       }
     },
@@ -3808,7 +3821,8 @@
       "name": "Mullvad VPN",
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "cloud_polling"
+      "iot_class": "cloud_polling",
+      "single_config_entry": true
     },
     "mutesync": {
       "name": "mutesync",
@@ -3997,7 +4011,8 @@
       "name": "NINA",
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "cloud_polling"
+      "iot_class": "cloud_polling",
+      "single_config_entry": true
     },
     "nissan_leaf": {
       "name": "Nissan Leaf",
@@ -6457,7 +6472,8 @@
     "uptime": {
       "integration_type": "service",
       "config_flow": true,
-      "iot_class": "local_push"
+      "iot_class": "local_push",
+      "single_config_entry": true
     },
     "uptimerobot": {
       "name": "UptimeRobot",
@@ -7170,6 +7186,7 @@
     "demo",
     "derivative",
     "emulated_roku",
+    "energenie_power_sockets",
     "filesize",
     "garages_amsterdam",
     "generic",

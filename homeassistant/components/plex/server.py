@@ -97,6 +97,7 @@ class PlexServer:
             cooldown=DEBOUNCE_TIMEOUT,
             immediate=True,
             function=self._async_update_platforms,
+            background=True,
         ).async_call
         self.thumbnail_cache = {}
 

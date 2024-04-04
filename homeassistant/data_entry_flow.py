@@ -489,8 +489,8 @@ class FlowManager(abc.ABC, Generic[_FlowResultT, _HandlerT]):
         flow.async_cancel_progress_task()
         try:
             flow.async_remove()
-        except Exception as err:  # pylint: disable=broad-except
-            _LOGGER.exception("Error removing %s flow: %s", flow.handler, err)
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Error removing %s flow", flow.handler)
 
     async def _async_handle_step(
         self,
