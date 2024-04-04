@@ -14,6 +14,7 @@ from homeassistant.components.hassio import (
     AddonInfo,
     AddonManager,
     AddonState,
+    is_hassio,
 )
 from homeassistant.components.homeassistant_hardware import silabs_multiprotocol_addon
 from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon import (
@@ -139,7 +140,13 @@ class HomeAssistantSkyConnectConfigFlow(ConfigFlow, domain=DOMAIN):
 
         assert description is not None
         self._hw_variant = HardwareVariant.from_usb_product_name(description)
-        self.context["title_placeholders"] = {"model": self._hw_variant.full_name}
+
+        self.context["description_placeholders"] = {
+            "model": self._hw_variant.full_name,
+            "firmware_type": "unknown",
+            "docs_web_flasher_url": "https://skyconnect.home-assistant.io/firmware-update/",
+        }
+        self.context["title_placeholders"] = self.context["description_placeholders"]
 
         return await self.async_step_confirm()
 
@@ -160,7 +167,7 @@ class HomeAssistantSkyConnectConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="confirm",
-            description_placeholders=self.context["title_placeholders"],
+            description_placeholders=self.context["description_placeholders"],
         )
 
     async def async_step_pick_firmware(
@@ -180,20 +187,18 @@ class HomeAssistantSkyConnectConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
         )
 
+        if self._current_firmware_type is not None:
+            self.context["description_placeholders"]["firmware_type"] = (
+                self._current_firmware_type.name
+            )
+
         if self._current_firmware_type not in (
             ApplicationType.EZSP,
             ApplicationType.SPINEL,
         ):
             return self.async_abort(
                 reason="unsupported_firmware",
-                description_placeholders={
-                    **self.context["title_placeholders"],
-                    "firmware_type": (
-                        self._current_firmware_type.name
-                        if self._current_firmware_type is not None
-                        else "unknown"
-                    ),
-                },
+                description_placeholders=self.context["description_placeholders"],
             )
 
         return self.async_show_menu(
@@ -202,13 +207,19 @@ class HomeAssistantSkyConnectConfigFlow(ConfigFlow, domain=DOMAIN):
                 STEP_PICK_FIRMWARE_THREAD,
                 STEP_PICK_FIRMWARE_ZIGBEE,
             ],
-            description_placeholders=self.context["title_placeholders"],
+            description_placeholders=self.context["description_placeholders"],
         )
 
     async def async_step_pick_firmware_thread(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Pick Thread firmware."""
+        if not is_hassio(self.hass):
+            return self.async_abort(
+                reason="not_hassio",
+                description_placeholders=self.context["description_placeholders"],
+            )
+
         raise NotImplementedError
 
     async def async_step_pick_firmware_zigbee(
@@ -217,6 +228,12 @@ class HomeAssistantSkyConnectConfigFlow(ConfigFlow, domain=DOMAIN):
         """Pick Zigbee firmware."""
         if self._current_firmware_type == ApplicationType.EZSP:
             return await self.async_step_confirm_zigbee()
+
+        if not is_hassio(self.hass):
+            return self.async_abort(
+                reason="not_hassio",
+                description_placeholders=self.context["description_placeholders"],
+            )
 
         # Only flash new firmware if we need to
         fw_flasher_manager = get_zigbee_flasher_addon_manager(self.hass)
@@ -231,7 +248,10 @@ class HomeAssistantSkyConnectConfigFlow(ConfigFlow, domain=DOMAIN):
         # If the addon is already installed and running, fail
         return self.async_abort(
             reason="addon_already_running",
-            description_placeholders={"addon_name": fw_flasher_manager.addon_name},
+            description_placeholders={
+                **self.context["description_placeholders"],
+                "addon_name": fw_flasher_manager.addon_name,
+            },
         )
 
     async def async_step_install_zigbee_flasher_addon(
@@ -253,7 +273,10 @@ class HomeAssistantSkyConnectConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_show_progress(
                 step_id="install_zigbee_flasher_addon",
                 progress_action="install_addon",
-                description_placeholders={"addon_name": fw_flasher_manager.addon_name},
+                description_placeholders={
+                    **self.context["description_placeholders"],
+                    "addon_name": fw_flasher_manager.addon_name,
+                },
                 progress_task=self.install_task,
             )
 
@@ -300,7 +323,10 @@ class HomeAssistantSkyConnectConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_show_progress(
                 step_id="start_zigbee_flasher_addon",
                 progress_action="start_zigbee_flasher_addon",
-                description_placeholders={"addon_name": fw_flasher_manager.addon_name},
+                description_placeholders={
+                    **self.context["description_placeholders"],
+                    "addon_name": fw_flasher_manager.addon_name,
+                },
                 progress_task=self.start_task,
             )
 
@@ -321,7 +347,10 @@ class HomeAssistantSkyConnectConfigFlow(ConfigFlow, domain=DOMAIN):
         fw_flasher_manager = get_zigbee_flasher_addon_manager(self.hass)
         return self.async_abort(
             reason="addon_start_failed",
-            description_placeholders={"addon_name": fw_flasher_manager.addon_name},
+            description_placeholders={
+                **self.context["description_placeholders"],
+                "addon_name": fw_flasher_manager.addon_name,
+            },
         )
 
     async def async_step_zigbee_flashing_complete(
