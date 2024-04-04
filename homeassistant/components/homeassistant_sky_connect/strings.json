@@ -99,6 +99,7 @@
       "addon_set_config_failed": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::abort::addon_set_config_failed%]",
       "addon_start_failed": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::abort::addon_start_failed%]",
       "not_hassio": "Firmware for the {model} can only be automatically installed in Home Assistant OS with an addon. Please install the requested firmware manually using [the web flasher]({docs_web_flasher_url}).",
+      "not_hassio_thread": "Running the {model} as a Thread border router requires firmware to be installed and for the OpenThread Border Router software to be running. Please install the requested firmware manually using [the web flasher]({docs_web_flasher_url}) and set up OTBR.",
       "zha_migration_failed": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::abort::zha_migration_failed%]"
     }
   }

@@ -210,18 +210,6 @@ class HomeAssistantSkyConnectConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders=self.context["description_placeholders"],
         )
 
-    async def async_step_pick_firmware_thread(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Pick Thread firmware."""
-        if not is_hassio(self.hass):
-            return self.async_abort(
-                reason="not_hassio",
-                description_placeholders=self.context["description_placeholders"],
-            )
-
-        raise NotImplementedError
-
     async def async_step_pick_firmware_zigbee(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -383,6 +371,157 @@ class HomeAssistantSkyConnectConfigFlow(ConfigFlow, domain=DOMAIN):
                 "radio_type": "ezsp",
             },
         )
+
+        return self.async_create_entry(
+            title=self._hw_variant.full_name,
+            data={
+                "vid": self._usb_info.vid,
+                "pid": self._usb_info.pid,
+                "serial_number": self._usb_info.serial_number,
+                "manufacturer": self._usb_info.manufacturer,
+                "description": self._usb_info.description,
+                "device": self._usb_info.device,
+            },
+        )
+
+    async def async_step_pick_firmware_thread(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Pick Thread firmware."""
+        # We install the OTBR addon no matter what, since it is required to use Thread
+        if not is_hassio(self.hass):
+            return self.async_abort(
+                reason="not_hassio_thread",
+                description_placeholders=self.context["description_placeholders"],
+            )
+
+        otbr_manager = get_otbr_addon_manager(self.hass)
+        addon_info = await self._async_get_addon_info(otbr_manager)
+
+        if addon_info.state == AddonState.NOT_INSTALLED:
+            return await self.async_step_install_otbr_addon()
+
+        if addon_info.state == AddonState.NOT_RUNNING:
+            return await self.async_step_run_otbr_addon()
+
+        # If the addon is already installed and running, fail
+        return self.async_abort(
+            reason="addon_already_running",
+            description_placeholders={
+                **self.context["description_placeholders"],
+                "addon_name": otbr_manager.addon_name,
+            },
+        )
+
+    async def async_step_install_otbr_addon(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Show progress dialog for installing the OTBR addon."""
+        otbr_manager = get_otbr_addon_manager(self.hass)
+        addon_info = await self._async_get_addon_info(otbr_manager)
+
+        _LOGGER.debug("Flasher addon state: %s", addon_info)
+
+        if not self.install_task:
+            self.install_task = self.hass.async_create_task(
+                otbr_manager.async_install_addon_waiting(),
+                "SiLabs Flasher addon install",
+            )
+
+        if not self.install_task.done():
+            return self.async_show_progress(
+                step_id="install_otbr_addon",
+                progress_action="install_addon",
+                description_placeholders={
+                    **self.context["description_placeholders"],
+                    "addon_name": otbr_manager.addon_name,
+                },
+                progress_task=self.install_task,
+            )
+
+        try:
+            await self.install_task
+        except AddonError as err:
+            _LOGGER.error(err)
+            return self.async_show_progress_done(next_step_id="install_failed")
+        finally:
+            self.install_task = None
+
+        return self.async_show_progress_done(next_step_id="run_otbr_addon")
+
+    async def async_step_run_otbr_addon(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Configure the OTBR to point to the SkyConnect."""
+        otbr_manager = get_otbr_addon_manager(self.hass)
+        addon_info = await self._async_get_addon_info(otbr_manager)
+
+        assert self._usb_info is not None
+        new_addon_config = {
+            **addon_info.options,
+            "device": self._usb_info.device,
+            "baudrate": 460800,
+            "flow_control": True,
+            "autoflash_firmware": True,
+        }
+
+        _LOGGER.debug("Reconfiguring OTBR addon with %s", new_addon_config)
+        await self._async_set_addon_config(new_addon_config, otbr_manager)
+
+        if not self.start_task:
+            self.start_task = self.hass.async_create_task(
+                otbr_manager.async_start_addon_waiting()
+            )
+
+        if not self.start_task.done():
+            return self.async_show_progress(
+                step_id="start_otbr_addon",
+                progress_action="start_otbr_addon",
+                description_placeholders={
+                    **self.context["description_placeholders"],
+                    "addon_name": otbr_manager.addon_name,
+                },
+                progress_task=self.start_task,
+            )
+
+        try:
+            await self.start_task
+        except (AddonError, AbortFlow) as err:
+            _LOGGER.error(err)
+            return self.async_show_progress_done(next_step_id="otbr_failed")
+        finally:
+            self.start_task = None
+
+        return self.async_show_progress_done(next_step_id="otbr_complete")
+
+    async def async_step_otbr_failed(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """OTBR add-on start failed."""
+        otbr_manager = get_otbr_addon_manager(self.hass)
+        return self.async_abort(
+            reason="addon_start_failed",
+            description_placeholders={
+                **self.context["description_placeholders"],
+                "addon_name": otbr_manager.addon_name,
+            },
+        )
+
+    async def async_step_otbr_complete(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Show completion dialog for OTBR."""
+        return self.async_show_progress_done(next_step_id="step_confirm_otbr")
+
+    async def async_step_confirm_otbr(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm a discovery."""
+        self._set_confirm_only()
+        assert self._usb_info is not None
+        assert self._hw_variant is not None
+
+        # OTBR discovery is done via hassio
 
         return self.async_create_entry(
             title=self._hw_variant.full_name,
