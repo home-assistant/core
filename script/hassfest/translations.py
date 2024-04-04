@@ -360,6 +360,9 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
                 },
                 slug_validator=translation_key_validator,
             ),
+            vol.Optional("domain"): cv.schema_with_slug_keys(
+                str, slug_validator=translation_key_validator
+            ),
         }
     )
 
