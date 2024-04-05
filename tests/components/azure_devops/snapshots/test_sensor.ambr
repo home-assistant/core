@@ -542,7 +542,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <SensorDeviceClass.DATE: 'date'>,
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'CI latest build finish time',
     'platform': 'azure_devops',
@@ -556,7 +556,7 @@
 # name: test_sensors[sensor.testproject_ci_latest_build_finish_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'date',
+      'device_class': 'timestamp',
       'friendly_name': 'testproject CI latest build finish time',
     }),
     'context': <ANY>,
@@ -635,7 +635,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <SensorDeviceClass.DATE: 'date'>,
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'CI latest build queue time',
     'platform': 'azure_devops',
@@ -649,7 +649,7 @@
 # name: test_sensors[sensor.testproject_ci_latest_build_queue_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'date',
+      'device_class': 'timestamp',
       'friendly_name': 'testproject CI latest build queue time',
     }),
     'context': <ANY>,
@@ -866,7 +866,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <SensorDeviceClass.DATE: 'date'>,
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'CI latest build start time',
     'platform': 'azure_devops',
@@ -880,7 +880,7 @@
 # name: test_sensors[sensor.testproject_ci_latest_build_start_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'date',
+      'device_class': 'timestamp',
       'friendly_name': 'testproject CI latest build start time',
     }),
     'context': <ANY>,
@@ -1248,7 +1248,7 @@
 # name: test_sensors_missing_data[sensor.testproject_ci_latest_build_finish_time-state-missing-data]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'date',
+      'device_class': 'timestamp',
       'friendly_name': 'testproject CI latest build finish time',
     }),
     'context': <ANY>,
@@ -1275,7 +1275,7 @@
 # name: test_sensors_missing_data[sensor.testproject_ci_latest_build_queue_time-state-missing-data]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'date',
+      'device_class': 'timestamp',
       'friendly_name': 'testproject CI latest build queue time',
     }),
     'context': <ANY>,
@@ -1341,7 +1341,7 @@
 # name: test_sensors_missing_data[sensor.testproject_ci_latest_build_start_time-state-missing-data]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'date',
+      'device_class': 'timestamp',
       'friendly_name': 'testproject CI latest build start time',
     }),
     'context': <ANY>,
