@@ -624,3 +624,161 @@
     'state': '1',
   })
 # ---
+# name: test_sensors_missing_data[sensor.testproject_ci_build_finish_time-state-missing-data]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'date',
+      'friendly_name': 'testproject CI build finish time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.testproject_ci_build_finish_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors_missing_data[sensor.testproject_ci_build_id-state-missing-data]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'testproject CI build id',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.testproject_ci_build_id',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '6789',
+  })
+# ---
+# name: test_sensors_missing_data[sensor.testproject_ci_build_queue_time-state-missing-data]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'date',
+      'friendly_name': 'testproject CI build queue time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.testproject_ci_build_queue_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors_missing_data[sensor.testproject_ci_build_reason-state-missing-data]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'testproject CI build reason',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.testproject_ci_build_reason',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors_missing_data[sensor.testproject_ci_build_result-state-missing-data]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'testproject CI build result',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.testproject_ci_build_result',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors_missing_data[sensor.testproject_ci_build_source_branch-state-missing-data]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'testproject CI build source branch',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.testproject_ci_build_source_branch',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors_missing_data[sensor.testproject_ci_build_source_version-state-missing-data]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'testproject CI build source version',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.testproject_ci_build_source_version',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors_missing_data[sensor.testproject_ci_build_start_time-state-missing-data]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'date',
+      'friendly_name': 'testproject CI build start time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.testproject_ci_build_start_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors_missing_data[sensor.testproject_ci_build_status-state-missing-data]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'testproject CI build status',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.testproject_ci_build_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors_missing_data[sensor.testproject_ci_build_url-state-missing-data]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'testproject CI build url',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.testproject_ci_build_url',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors_missing_data[sensor.testproject_ci_latest_build-state-missing-data]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'definition_id': 9876,
+      'definition_name': 'CI',
+      'finish_time': None,
+      'friendly_name': 'testproject CI latest build',
+      'id': 6789,
+      'queue_time': None,
+      'reason': None,
+      'result': None,
+      'source_branch': None,
+      'source_version': None,
+      'start_time': None,
+      'status': None,
+      'url': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.testproject_ci_latest_build',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---

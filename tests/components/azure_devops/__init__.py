@@ -68,6 +68,16 @@ DEVOPS_BUILD = DevOpsBuild(
     links=None,
 )
 
+DEVOPS_BUILD_MISSING_DATA = DevOpsBuild(
+    build_id=6789,
+    definition=DEVOPS_BUILD_DEFINITION,
+    project=DEVOPS_PROJECT,
+)
+
+DEVOPS_BUILD_MISSING_PROJECT_DEFINITION = DevOpsBuild(
+    build_id=9876,
+)
+
 
 async def setup_integration(
     hass: HomeAssistant,
