@@ -1998,7 +1998,7 @@ pynetgear==0.10.10
 pynetio==0.1.9.1
 
 # homeassistant.components.nobo_hub
-pynobo==1.8.0
+pynobo==1.8.1
 
 # homeassistant.components.nuki
 pynuki==1.6.3
