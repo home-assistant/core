@@ -8,6 +8,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from yalexs.pubnub_async import AugustPubNub
 
+from homeassistant.components.august.activity import INITIAL_LOCK_RESYNC_TIME
 from homeassistant.components.lock import (
     DOMAIN as LOCK_DOMAIN,
     STATE_JAMMED,
@@ -233,7 +234,7 @@ async def test_one_lock_operation_pubnub_connected(
         == STATE_UNKNOWN
     )
 
-    freezer.tick(60)
+    freezer.tick(INITIAL_LOCK_RESYNC_TIME)
 
     pubnub.message(
         pubnub,
@@ -245,7 +246,7 @@ async def test_one_lock_operation_pubnub_connected(
             },
         ),
     )
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await hass.async_block_till_done()
 
     lock_online_with_doorsense_name = hass.states.get("lock.online_with_doorsense_name")
     assert lock_online_with_doorsense_name.state == STATE_UNLOCKED

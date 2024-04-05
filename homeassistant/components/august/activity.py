@@ -151,22 +151,28 @@ class ActivityStream(AugustSubscriberMixin):
         # api does not update right away and we need to poll
         # it again. Sometimes the lock operator or a doorbell
         # will not show up in the activity stream right away.
-        job = self._update_debounce_jobs[house_id]
         # Only do additional polls if we are past
         # the initial lock resync time so avoid a storm
         # of activity at setup.
         if (
-            self._start_time
-            and monotonic() - self._start_time > INITIAL_LOCK_RESYNC_TIME
+            not self._start_time
+            or monotonic() - self._start_time < INITIAL_LOCK_RESYNC_TIME
         ):
-            for step in (1, 2):
-                future_updates.append(
-                    async_call_later(
-                        self._hass,
-                        (step * ACTIVITY_DEBOUNCE_COOLDOWN) + 0.1,
-                        job,
-                    )
+            _LOGGER.debug(
+                "Skipping additional updates because we are in the initial lock resync time"
+            )
+            return
+
+        _LOGGER.debug("Scheduling additional updates for house id %s", house_id)
+        job = self._update_debounce_jobs[house_id]
+        for step in (1, 2):
+            future_updates.append(
+                async_call_later(
+                    self._hass,
+                    (step * ACTIVITY_DEBOUNCE_COOLDOWN) + 0.1,
+                    job,
                 )
+            )
 
     async def _async_update_house_id(self, house_id: str) -> None:
         """Update device activities for a house."""
