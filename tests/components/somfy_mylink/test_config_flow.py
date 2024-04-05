@@ -24,7 +24,7 @@ async def test_form_user(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     with (
@@ -47,7 +47,7 @@ async def test_form_user(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "create_entry"
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "MyLink 1.1.1.1"
     assert result2["data"] == {
         CONF_HOST: "1.1.1.1",
@@ -68,7 +68,7 @@ async def test_form_user_already_configured(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     with (
@@ -91,7 +91,7 @@ async def test_form_user_already_configured(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "abort"
+    assert result2["type"] is FlowResultType.ABORT
     assert len(mock_setup_entry.mock_calls) == 0
 
 
@@ -118,7 +118,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
@@ -141,7 +141,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
@@ -164,7 +164,7 @@ async def test_form_unknown_error(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
 
 
@@ -272,7 +272,7 @@ async def test_form_user_already_configured_from_dhcp(hass: HomeAssistant) -> No
 
         await hass.async_block_till_done()
 
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert len(mock_setup_entry.mock_calls) == 0
 
 
@@ -293,7 +293,7 @@ async def test_already_configured_with_ignored(hass: HomeAssistant) -> None:
             hostname="somfy_eeff",
         ),
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
 
 
 async def test_dhcp_discovery(hass: HomeAssistant) -> None:
@@ -308,7 +308,7 @@ async def test_dhcp_discovery(hass: HomeAssistant) -> None:
             hostname="somfy_eeff",
         ),
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     with (
@@ -331,7 +331,7 @@ async def test_dhcp_discovery(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "create_entry"
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "MyLink 1.1.1.1"
     assert result2["data"] == {
         CONF_HOST: "1.1.1.1",

@@ -296,7 +296,7 @@ class RpcUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
             await self.coordinator.async_shutdown_device_and_start_reauth()
         else:
             self._ota_in_progress = True
-            LOGGER.info("OTA update call for %s successful", self.coordinator.name)
+            LOGGER.debug("OTA update call for %s successful", self.coordinator.name)
 
 
 class RpcSleepingUpdateEntity(

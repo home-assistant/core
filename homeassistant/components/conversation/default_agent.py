@@ -41,10 +41,7 @@ from homeassistant.helpers import (
     translation,
 )
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.event import (
-    EventStateChangedData,
-    async_track_state_added_domain,
-)
+from homeassistant.helpers.event import async_track_state_added_domain
 from homeassistant.util.json import JsonObjectType, json_loads_object
 
 from .const import DEFAULT_EXPOSED_ATTRIBUTES, DOMAIN
@@ -134,7 +131,9 @@ async def async_setup_default_agent(
         async_should_expose(hass, DOMAIN, entity_id)
 
     @core.callback
-    def async_entity_state_listener(event: core.Event[EventStateChangedData]) -> None:
+    def async_entity_state_listener(
+        event: core.Event[core.EventStateChangedData],
+    ) -> None:
         """Set expose flag on new entities."""
         async_should_expose(hass, DOMAIN, event.data["entity_id"])
 
@@ -269,20 +268,38 @@ class DefaultAgent(ConversationEntity):
                 for trigger_id, trigger_result in result.matched_triggers.items()
             ]
 
-            # Use last non-empty result as response.
+            # Use first non-empty result as response.
             #
             # There may be multiple copies of a trigger running when editing in
             # the UI, so it's critical that we filter out empty responses here.
             response_text: str | None = None
+            response_set_by_trigger = False
             for trigger_future in asyncio.as_completed(trigger_callbacks):
-                if trigger_response := await trigger_future:
-                    response_text = trigger_response
-                    break
+                trigger_response = await trigger_future
+                if trigger_response is None:
+                    continue
+
+                response_text = trigger_response
+                response_set_by_trigger = True
+                break
 
             # Convert to conversation result
             response = intent.IntentResponse(language=language)
             response.response_type = intent.IntentResponseType.ACTION_DONE
-            response.async_set_speech(response_text or "Done")
+
+            if response_set_by_trigger:
+                # Response was explicitly set to empty
+                response_text = response_text or ""
+            elif not response_text:
+                # Use translated acknowledgment for pipeline language
+                translations = await translation.async_get_translations(
+                    self.hass, language, DOMAIN, [DOMAIN]
+                )
+                response_text = translations.get(
+                    f"component.{DOMAIN}.agent.done", "Done"
+                )
+
+            response.async_set_speech(response_text)
 
             return ConversationResult(response=response)
 

@@ -9,6 +9,7 @@ from collections.abc import Callable, Coroutine, Iterable, Mapping, MutableMappi
 import dataclasses
 from enum import Enum, IntFlag, auto
 import functools as ft
+from functools import cached_property
 import logging
 import math
 from operator import attrgetter
@@ -73,11 +74,7 @@ from .event import (
 from .typing import UNDEFINED, StateType, UndefinedType
 
 if TYPE_CHECKING:
-    from functools import cached_property
-
     from .entity_platform import EntityPlatform
-else:
-    from homeassistant.backports.functools import cached_property
 
 _T = TypeVar("_T")
 
@@ -1131,7 +1128,16 @@ class Entity(
             ):
                 if not self.__capabilities_updated_at_reported:
                     time_now = hass.loop.time()
-                    capabilities_updated_at = self.__capabilities_updated_at
+                    # _Entity__capabilities_updated_at is because of name mangling
+                    if not (
+                        capabilities_updated_at := getattr(
+                            self, "_Entity__capabilities_updated_at", None
+                        )
+                    ):
+                        self.__capabilities_updated_at = deque(
+                            maxlen=CAPABILITIES_UPDATE_LIMIT + 1
+                        )
+                        capabilities_updated_at = self.__capabilities_updated_at
                     capabilities_updated_at.append(time_now)
                     while time_now - capabilities_updated_at[0] > 3600:
                         capabilities_updated_at.popleft()
@@ -1444,8 +1450,6 @@ class Entity(
                 )
             )
             self._async_subscribe_device_updates()
-
-        self.__capabilities_updated_at = deque(maxlen=CAPABILITIES_UPDATE_LIMIT + 1)
 
     async def async_internal_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass.

@@ -41,7 +41,7 @@ async def test_form(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -50,7 +50,7 @@ async def test_form(
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] == "create_entry"
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "JELLYFIN-SERVER"
     assert result2["data"] == {
         CONF_CLIENT_DEVICE_ID: "TEST-UUID",
@@ -75,7 +75,7 @@ async def test_form_cannot_connect(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     mock_client.auth.connect_to_address.return_value = await async_load_json_fixture(
@@ -88,7 +88,7 @@ async def test_form_cannot_connect(
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
     assert len(mock_client.auth.connect_to_address.mock_calls) == 1
@@ -104,7 +104,7 @@ async def test_form_invalid_auth(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     mock_client.auth.login.return_value = await async_load_json_fixture(
@@ -117,7 +117,7 @@ async def test_form_invalid_auth(
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
 
     assert len(mock_client.auth.connect_to_address.mock_calls) == 1
@@ -131,7 +131,7 @@ async def test_form_exception(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     mock_client.auth.connect_to_address.side_effect = Exception("UnknownException")
@@ -142,7 +142,7 @@ async def test_form_exception(
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
 
     assert len(mock_client.auth.connect_to_address.mock_calls) == 1
@@ -158,7 +158,7 @@ async def test_form_persists_device_id_on_error(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     mock_client_device_id.return_value = "TEST-UUID-1"
@@ -172,7 +172,7 @@ async def test_form_persists_device_id_on_error(
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
 
     mock_client_device_id.return_value = "TEST-UUID-2"
@@ -187,7 +187,7 @@ async def test_form_persists_device_id_on_error(
     await hass.async_block_till_done()
 
     assert result3
-    assert result3["type"] == "create_entry"
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["data"] == {
         CONF_CLIENT_DEVICE_ID: "TEST-UUID-1",
         CONF_URL: TEST_URL,
@@ -291,7 +291,7 @@ async def test_reauth_cannot_connect(
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
     assert len(mock_client.auth.connect_to_address.mock_calls) == 1
@@ -354,7 +354,7 @@ async def test_reauth_invalid(
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
 
     assert len(mock_client.auth.connect_to_address.mock_calls) == 1
@@ -417,7 +417,7 @@ async def test_reauth_exception(
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
 
     assert len(mock_client.auth.connect_to_address.mock_calls) == 1

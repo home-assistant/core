@@ -32,7 +32,7 @@ async def test_form(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     with (
@@ -50,7 +50,7 @@ async def test_form(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "create_entry"
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == CONFIG[CONF_PORT]
     assert result2["data"] == {
         CONF_PORT: CONFIG[CONF_PORT],
@@ -73,7 +73,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
             result["flow_id"], CONFIG
         )
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
@@ -91,7 +91,7 @@ async def test_generic_exception(hass: HomeAssistant) -> None:
             result["flow_id"], CONFIG
         )
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
 
 

@@ -35,6 +35,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import (
     Event,
+    EventStateChangedData,
     HomeAssistant,
     ServiceCall,
     State,
@@ -48,10 +49,7 @@ from homeassistant.helpers import (
     service,
 )
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.event import (
-    EventStateChangedData,
-    async_track_state_change_event,
-)
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType

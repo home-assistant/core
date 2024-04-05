@@ -24,6 +24,7 @@ from homeassistant.const import (
 from homeassistant.core import (
     CALLBACK_TYPE,
     Event,
+    EventStateChangedData,
     HomeAssistant,
     State,
     callback,
@@ -31,7 +32,6 @@ from homeassistant.core import (
     valid_entity_id,
 )
 from homeassistant.helpers.event import (
-    EventStateChangedData,
     async_track_point_in_utc_time,
     async_track_state_change_event,
 )
