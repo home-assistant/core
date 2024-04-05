@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name        = "homeassistant"
-version     = "2024.4.0"
+version     = "2024.4.1"
 license     = {text = "Apache-2.0"}
 description = "Open-source home automation platform running on Python 3."
 readme      = "README.rst"
@@ -513,8 +513,6 @@ filterwarnings = [
     "ignore:invalid escape sequence:SyntaxWarning:.*stringcase",
     # https://github.com/pyudev/pyudev/pull/466 - >=0.24.0
     "ignore:invalid escape sequence:SyntaxWarning:.*pyudev.monitor",
-    # https://github.com/xeniter/romy/pull/1 - >=0.0.8
-    "ignore:with timeout\\(\\) is deprecated, use async with timeout\\(\\) instead:DeprecationWarning:romy.utils",
     # https://github.com/grahamwetzler/smart-meter-texas/pull/143 - >0.5.3
     "ignore:ssl.OP_NO_SSL\\*/ssl.OP_NO_TLS\\* options are deprecated:DeprecationWarning:smart_meter_texas",
     # https://github.com/mvantellingen/python-zeep/pull/1364 - >4.2.1

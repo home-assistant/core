@@ -164,7 +164,7 @@ aio-georss-gdacs==0.9
 aioairq==0.3.2
 
 # homeassistant.components.airzone_cloud
-aioairzone-cloud==0.4.6
+aioairzone-cloud==0.4.7
 
 # homeassistant.components.airzone
 aioairzone==0.7.6
@@ -876,7 +876,7 @@ hole==0.8.0
 holidays==0.46
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240403.1
+home-assistant-frontend==20240404.1
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.4.3
@@ -1088,7 +1088,7 @@ mutesync==0.0.1
 mypermobil==0.1.8
 
 # homeassistant.components.myuplink
-myuplink==0.5.0
+myuplink==0.6.0
 
 # homeassistant.components.keenetic_ndms2
 ndms2-client==0.1.2
@@ -1176,7 +1176,7 @@ openerz-api==0.3.0
 openhomedevice==2.2.0
 
 # homeassistant.components.opower
-opower==0.4.2
+opower==0.4.3
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
@@ -1893,7 +1893,7 @@ ring-doorbell[listen]==0.8.9
 rokuecp==0.19.2
 
 # homeassistant.components.romy
-romy==0.0.7
+romy==0.0.10
 
 # homeassistant.components.roomba
 roombapy==1.8.1
@@ -2049,6 +2049,9 @@ switchbot-api==2.0.0
 # homeassistant.components.system_bridge
 systembridgeconnector==4.0.3
 
+# homeassistant.components.system_bridge
+systembridgemodels==4.0.4
+
 # homeassistant.components.tailscale
 tailscale==0.6.0
 
@@ -2185,7 +2188,7 @@ wallbox==0.6.0
 watchdog==2.3.1
 
 # homeassistant.components.weatherflow_cloud
-weatherflow4py==0.2.17
+weatherflow4py==0.2.20
 
 # homeassistant.components.webmin
 webmin-xmlrpc==0.0.2
