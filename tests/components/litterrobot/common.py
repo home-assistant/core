@@ -33,6 +33,7 @@ ROBOT_4_DATA = {
     "wifiRssi": -53.0,
     "unitPowerType": "AC",
     "catWeight": 12.0,
+    "displayCode": "DC_MODE_IDLE",
     "unitTimezone": "America/New_York",
     "unitTime": None,
     "cleanCycleWaitTime": 15,
