@@ -4,21 +4,35 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
+from datetime import datetime
 import logging
 from typing import Any
 
 from aioazuredevops.builds import DevOpsBuild
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
+from homeassistant.util import dt as dt_util
 
 from . import AzureDevOpsDeviceEntity, AzureDevOpsEntityDescription
 from .const import CONF_ORG, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def parse_datetime(value: str | None) -> datetime | None:
+    """Parse datetime string."""
+    if value is None:
+        return None
+
+    return dt_util.parse_datetime(value)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -29,7 +43,7 @@ class AzureDevOpsSensorEntityDescription(
 
     build_key: int
     attrs: Callable[[DevOpsBuild], dict[str, Any]] | None
-    value: Callable[[DevOpsBuild], StateType]
+    value: Callable[[DevOpsBuild], datetime | StateType]
 
 
 async def async_setup_entry(
@@ -183,35 +197,38 @@ async def async_setup_entry(
                 key=f"{build_sensor_key_base}_queue_time",
                 translation_key="queue_time",
                 translation_placeholders={"definition_name": build.definition.name},
+                device_class=SensorDeviceClass.DATE,
                 entity_registry_enabled_default=False,
                 entity_registry_visible_default=False,
                 attrs=None,
                 build_key=key,
                 organization=entry.data[CONF_ORG],
                 project=project,
-                value=lambda build: build.queue_time,
+                value=lambda build: parse_datetime(build.queue_time),
             ),
             AzureDevOpsSensorEntityDescription(
                 key=f"{build_sensor_key_base}_start_time",
                 translation_key="start_time",
                 translation_placeholders={"definition_name": build.definition.name},
+                device_class=SensorDeviceClass.DATE,
                 entity_registry_visible_default=False,
                 attrs=None,
                 build_key=key,
                 organization=entry.data[CONF_ORG],
                 project=project,
-                value=lambda build: build.start_time,
+                value=lambda build: parse_datetime(build.start_time),
             ),
             AzureDevOpsSensorEntityDescription(
                 key=f"{build_sensor_key_base}_finish_time",
                 translation_key="finish_time",
                 translation_placeholders={"definition_name": build.definition.name},
+                device_class=SensorDeviceClass.DATE,
                 entity_registry_visible_default=False,
                 attrs=None,
                 build_key=key,
                 organization=entry.data[CONF_ORG],
                 project=project,
-                value=lambda build: build.finish_time,
+                value=lambda build: parse_datetime(build.finish_time),
             ),
             AzureDevOpsSensorEntityDescription(
                 key=f"{build_sensor_key_base}_url",
@@ -242,7 +259,7 @@ class AzureDevOpsSensor(AzureDevOpsDeviceEntity, SensorEntity):
     entity_description: AzureDevOpsSensorEntityDescription
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> datetime | StateType:
         """Return the state."""
         build: DevOpsBuild = self.coordinator.data[self.entity_description.build_key]
         return self.entity_description.value(build)
