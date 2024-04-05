@@ -4,7 +4,6 @@ from dataclasses import dataclass
 from typing import Any
 
 from lmcloud.const import FirmwareType
-from lmcloud.lm_device import LaMarzoccoDevice
 
 from homeassistant.components.update import (
     UpdateDeviceClass,
@@ -66,7 +65,7 @@ async def async_setup_entry(
 
 
 class LaMarzoccoUpdateEntity(
-    LaMarzoccoEntity[LaMarzoccoDevice],
+    LaMarzoccoEntity,
     UpdateEntity,
 ):
     """Entity representing the update state."""

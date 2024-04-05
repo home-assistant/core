@@ -2,7 +2,6 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Generic
 
 from lmcloud.const import BoilerType, PhysicalKey
 from lmcloud.lm_machine import LaMarzoccoMachine
@@ -19,21 +18,20 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import _DeviceT
 from .entity import LaMarzoccoEntity, LaMarzoccoEntityDescription
 
 
 @dataclass(frozen=True, kw_only=True)
 class LaMarzoccoSensorEntityDescription(
-    LaMarzoccoEntityDescription, SensorEntityDescription, Generic[_DeviceT]
+    LaMarzoccoEntityDescription, SensorEntityDescription
 ):
     """Description of a La Marzocco sensor."""
 
-    value_fn: Callable[[_DeviceT], float | int]
+    value_fn: Callable[[LaMarzoccoMachine], float | int]
 
 
 ENTITIES: tuple[LaMarzoccoSensorEntityDescription, ...] = (
-    LaMarzoccoSensorEntityDescription[LaMarzoccoMachine](
+    LaMarzoccoSensorEntityDescription(
         key="drink_stats_coffee",
         translation_key="drink_stats_coffee",
         native_unit_of_measurement="drinks",
@@ -42,7 +40,7 @@ ENTITIES: tuple[LaMarzoccoSensorEntityDescription, ...] = (
         available_fn=lambda device: len(device.statistics.drink_stats) > 0,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    LaMarzoccoSensorEntityDescription[LaMarzoccoMachine](
+    LaMarzoccoSensorEntityDescription(
         key="drink_stats_flushing",
         translation_key="drink_stats_flushing",
         native_unit_of_measurement="drinks",
@@ -51,7 +49,7 @@ ENTITIES: tuple[LaMarzoccoSensorEntityDescription, ...] = (
         available_fn=lambda device: len(device.statistics.drink_stats) > 0,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    LaMarzoccoSensorEntityDescription[LaMarzoccoMachine](
+    LaMarzoccoSensorEntityDescription(
         key="shot_timer",
         translation_key="shot_timer",
         native_unit_of_measurement=UnitOfTime.SECONDS,
@@ -62,7 +60,7 @@ ENTITIES: tuple[LaMarzoccoSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         supported_fn=lambda coordinator: coordinator.local_connection_configured,
     ),
-    LaMarzoccoSensorEntityDescription[LaMarzoccoMachine](
+    LaMarzoccoSensorEntityDescription(
         key="current_temp_coffee",
         translation_key="current_temp_coffee",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -73,7 +71,7 @@ ENTITIES: tuple[LaMarzoccoSensorEntityDescription, ...] = (
             BoilerType.COFFEE
         ].current_temperature,
     ),
-    LaMarzoccoSensorEntityDescription[LaMarzoccoMachine](
+    LaMarzoccoSensorEntityDescription(
         key="current_temp_steam",
         translation_key="current_temp_steam",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,

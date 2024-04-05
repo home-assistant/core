@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any, Generic
+from typing import Any
 
 from lmcloud.const import MachineModel, PrebrewMode, SteamLevel
 from lmcloud.lm_machine import LaMarzoccoMachine
@@ -15,8 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import _DeviceT
-from .entity import LaMarzoccoEntity, LaMarzoccoEntityDescription, _ConfigT
+from .entity import LaMarzoccoEntity, LaMarzoccoEntityDescription
 
 PBREWBREW_MODE_HA_TO_LM = {
     "disabled": PrebrewMode.DISABLED,
@@ -29,16 +28,15 @@ PBREWBREW_MODE_HA_TO_LM = {
 class LaMarzoccoSelectEntityDescription(
     LaMarzoccoEntityDescription,
     SelectEntityDescription,
-    Generic[_DeviceT, _ConfigT],
 ):
     """Description of a La Marzocco select entity."""
 
-    current_option_fn: Callable[[_ConfigT], str]
-    select_option_fn: Callable[[_DeviceT, str], Coroutine[Any, Any, bool]]
+    current_option_fn: Callable[[LaMarzoccoMachineConfig], str]
+    select_option_fn: Callable[[LaMarzoccoMachine, str], Coroutine[Any, Any, bool]]
 
 
 ENTITIES: tuple[LaMarzoccoSelectEntityDescription, ...] = (
-    LaMarzoccoSelectEntityDescription[LaMarzoccoMachine, LaMarzoccoMachineConfig](
+    LaMarzoccoSelectEntityDescription(
         key="steam_temp_select",
         translation_key="steam_temp_select",
         options=["126", "128", "131"],
@@ -49,7 +47,7 @@ ENTITIES: tuple[LaMarzoccoSelectEntityDescription, ...] = (
         supported_fn=lambda coordinator: coordinator.device.model
         == MachineModel.LINEA_MICRA,
     ),
-    LaMarzoccoSelectEntityDescription[LaMarzoccoMachine, LaMarzoccoMachineConfig](
+    LaMarzoccoSelectEntityDescription(
         key="prebrew_infusion_select",
         translation_key="prebrew_infusion_select",
         entity_category=EntityCategory.CONFIG,

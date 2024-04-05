@@ -24,7 +24,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.httpx_client import get_async_client
 
 from .const import CONF_USE_BLUETOOTH, DOMAIN
-from .coordinator import LaMarzoccoMachineUpdateCoordinator
+from .coordinator import LaMarzoccoUpdateCoordinator
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -96,7 +96,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 address_or_ble_device=entry.data[CONF_MAC],
             )
 
-    coordinator = LaMarzoccoMachineUpdateCoordinator(
+    coordinator = LaMarzoccoUpdateCoordinator(
         hass=hass,
         local_client=local_client,
         cloud_client=cloud_client,

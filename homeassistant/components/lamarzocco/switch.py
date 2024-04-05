@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any, Generic
+from typing import Any
 
 from lmcloud.const import BoilerType
 from lmcloud.lm_machine import LaMarzoccoMachine
@@ -14,36 +14,30 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import LaMarzoccoMachineUpdateCoordinator, _DeviceT
-from .entity import (
-    LaMarzoccoBaseEntity,
-    LaMarzoccoEntity,
-    LaMarzoccoEntityDescription,
-    _ConfigT,
-)
+from .coordinator import LaMarzoccoUpdateCoordinator
+from .entity import LaMarzoccoBaseEntity, LaMarzoccoEntity, LaMarzoccoEntityDescription
 
 
 @dataclass(frozen=True, kw_only=True)
 class LaMarzoccoSwitchEntityDescription(
     LaMarzoccoEntityDescription,
     SwitchEntityDescription,
-    Generic[_DeviceT, _ConfigT],
 ):
     """Description of a La Marzocco Switch."""
 
-    control_fn: Callable[[_DeviceT, bool], Coroutine[Any, Any, bool]]
-    is_on_fn: Callable[[_ConfigT], bool]
+    control_fn: Callable[[LaMarzoccoMachine, bool], Coroutine[Any, Any, bool]]
+    is_on_fn: Callable[[LaMarzoccoMachineConfig], bool]
 
 
 ENTITIES: tuple[LaMarzoccoSwitchEntityDescription, ...] = (
-    LaMarzoccoSwitchEntityDescription[LaMarzoccoMachine, LaMarzoccoMachineConfig](
+    LaMarzoccoSwitchEntityDescription(
         key="main",
         translation_key="main",
         name=None,
         control_fn=lambda machine, state: machine.set_power(state),
         is_on_fn=lambda config: config.turned_on,
     ),
-    LaMarzoccoSwitchEntityDescription[LaMarzoccoMachine, LaMarzoccoMachineConfig](
+    LaMarzoccoSwitchEntityDescription(
         key="steam_boiler_enable",
         translation_key="steam_boiler",
         control_fn=lambda machine, state: machine.set_steam(state),
@@ -99,12 +93,12 @@ class LaMarzoccoSwitchEntity(LaMarzoccoEntity, SwitchEntity):
 class LaMarzoccoAutoOnOffSwitchEntity(LaMarzoccoBaseEntity, SwitchEntity):
     """Switch representing espresso machine auto on/off."""
 
-    coordinator: LaMarzoccoMachineUpdateCoordinator
+    coordinator: LaMarzoccoUpdateCoordinator
     _attr_translation_key = "auto_on_off"
 
     def __init__(
         self,
-        coordinator: LaMarzoccoMachineUpdateCoordinator,
+        coordinator: LaMarzoccoUpdateCoordinator,
         identifier: str,
     ) -> None:
         """Initialize the switch."""

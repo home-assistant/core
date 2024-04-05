@@ -145,7 +145,7 @@ async def test_bluetooth_is_set_from_discovery(
             return_value=[service_info],
         ) as discovery,
         patch(
-            "homeassistant.components.lamarzocco.coordinator.LaMarzoccoMachineUpdateCoordinator._init_device"
+            "homeassistant.components.lamarzocco.coordinator.LaMarzoccoMachine"
         ) as init_device,
     ):
         await async_init_integration(hass, mock_config_entry)
