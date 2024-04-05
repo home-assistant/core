@@ -1,7 +1,7 @@
 """Tests for the nut integration."""
 
 import json
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from homeassistant.components.nut.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
@@ -10,25 +10,25 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry, load_fixture
 
 
-def _get_mock_pynutclient(
+def _get_mock_nutclient(
     list_vars=None,
     list_ups=None,
     list_commands_return_value=None,
     list_commands_side_effect=None,
     run_command=None,
 ):
-    pynutclient = MagicMock()
-    type(pynutclient).list_ups = MagicMock(return_value=list_ups)
-    type(pynutclient).list_vars = MagicMock(return_value=list_vars)
+    nutclient = MagicMock()
+    type(nutclient).list_ups = AsyncMock(return_value=list_ups)
+    type(nutclient).list_vars = AsyncMock(return_value=list_vars)
     if list_commands_return_value is None:
         list_commands_return_value = {}
-    type(pynutclient).list_commands = MagicMock(
+    type(nutclient).list_commands = AsyncMock(
         return_value=list_commands_return_value, side_effect=list_commands_side_effect
     )
     if run_command is None:
-        run_command = MagicMock()
-    type(pynutclient).run_command = run_command
-    return pynutclient
+        run_command = AsyncMock()
+    type(nutclient).run_command = run_command
+    return nutclient
 
 
 async def async_init_integration(
@@ -52,7 +52,7 @@ async def async_init_integration(
         if list_vars is None:
             list_vars = json.loads(load_fixture(ups_fixture))
 
-    mock_pynut = _get_mock_pynutclient(
+    mock_pynut = _get_mock_nutclient(
         list_ups=list_ups,
         list_vars=list_vars,
         list_commands_return_value=list_commands_return_value,
@@ -61,7 +61,7 @@ async def async_init_integration(
     )
 
     with patch(
-        "homeassistant.components.nut.PyNUTClient",
+        "homeassistant.components.nut.AIONUTClient",
         return_value=mock_pynut,
     ):
         entry = MockConfigEntry(

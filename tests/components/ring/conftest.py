@@ -96,7 +96,7 @@ def requests_mock_fixture():
             re.compile(
                 r"https:\/\/api\.ring\.com\/clients_api\/doorbots\/\d+\/history"
             ),
-            text=load_fixture("doorbots.json", "ring"),
+            text=load_fixture("doorbot_history.json", "ring"),
         )
         # Mocks the response for getting the health of a device
         mock.get(
@@ -115,11 +115,31 @@ def requests_mock_fixture():
             status_code=200,
             json={"url": "http://127.0.0.1/foo"},
         )
+        mock.get(
+            "https://api.ring.com/groups/v1/locations/mock-location-id/groups",
+            text=load_fixture("groups.json", "ring"),
+        )
+        # Mocks the response for getting the history of the intercom
+        mock.get(
+            "https://api.ring.com/clients_api/doorbots/185036587/history",
+            text=load_fixture("intercom_history.json", "ring"),
+        )
         # Mocks the response for setting properties in settings (i.e. motion_detection)
         mock.patch(
             re.compile(
                 r"https:\/\/api\.ring\.com\/devices\/v1\/devices\/\d+\/settings"
             ),
             text="ok",
+        )
+        # Mocks the open door command for intercom devices
+        mock.put(
+            "https://api.ring.com/commands/v1/devices/185036587/device_rpc",
+            status_code=200,
+            text="{}",
+        )
+        # Mocks the response for getting the history of the intercom
+        mock.get(
+            "https://api.ring.com/clients_api/doorbots/185036587/history",
+            text=load_fixture("intercom_history.json", "ring"),
         )
         yield mock

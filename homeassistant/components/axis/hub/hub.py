@@ -6,9 +6,9 @@ from typing import Any
 
 import axis
 from axis.errors import Unauthorized
+from axis.interfaces.mqtt import mqtt_json_to_event
+from axis.models.mqtt import ClientState
 from axis.stream_manager import Signal, State
-from axis.vapix.interfaces.mqtt import mqtt_json_to_event
-from axis.vapix.models.mqtt import ClientState
 
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt import DOMAIN as MQTT_DOMAIN
@@ -22,6 +22,7 @@ from homeassistant.setup import async_when_setup
 
 from ..const import ATTR_MANUFACTURER, DOMAIN as AXIS_DOMAIN
 from .config import AxisConfig
+from .entity_loader import AxisEntityLoader
 
 
 class AxisHub:
@@ -33,6 +34,7 @@ class AxisHub:
         """Initialize the device."""
         self.hass = hass
         self.config = AxisConfig.from_config_entry(config_entry)
+        self.entity_loader = AxisEntityLoader(self)
         self.api = api
 
         self.available = True
@@ -114,7 +116,7 @@ class AxisHub:
         if status.status.state == ClientState.ACTIVE:
             self.config.entry.async_on_unload(
                 await mqtt.async_subscribe(
-                    hass, f"{self.api.vapix.serial_number}/#", self.mqtt_message
+                    hass, f"{status.config.device_topic_prefix}/#", self.mqtt_message
                 )
             )
 
@@ -122,7 +124,8 @@ class AxisHub:
     def mqtt_message(self, message: ReceiveMessage) -> None:
         """Receive Axis MQTT message."""
         self.disconnect_from_stream()
-
+        if message.topic.endswith("event/connection"):
+            return
         event = mqtt_json_to_event(message.payload)
         self.api.event.handler(event)
 
@@ -131,6 +134,8 @@ class AxisHub:
     @callback
     def setup(self) -> None:
         """Set up the device events."""
+        self.entity_loader.initialize_platforms()
+
         self.api.stream.connection_status_callback.append(
             self.connection_status_callback
         )

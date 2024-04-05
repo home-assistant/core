@@ -84,7 +84,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         if not coordinator.last_update_success:
             return
 
-        hass.async_create_task(async_update_alerts())
+        hass.async_create_task(async_update_alerts(), eager_start=True)
 
     coordinator = AlertUpdateCoordinator(hass)
     coordinator.async_add_listener(async_schedule_update_alerts)
@@ -98,11 +98,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             function=coordinator.async_refresh,
         )
 
-        async def _component_loaded(_: Event) -> None:
-            await refresh_debouncer.async_call()
+        @callback
+        def _component_loaded(_: Event) -> None:
+            refresh_debouncer.async_schedule_call()
 
         await coordinator.async_refresh()
-        hass.bus.async_listen(EVENT_COMPONENT_LOADED, _component_loaded)
+        hass.bus.async_listen(
+            EVENT_COMPONENT_LOADED, _component_loaded, run_immediately=True
+        )
 
     async_at_start(hass, initial_refresh)
 

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 import logging
 from typing import Any, Self
 
@@ -35,6 +35,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import (
     Event,
+    EventStateChangedData,
     HomeAssistant,
     ServiceCall,
     State,
@@ -48,10 +49,7 @@ from homeassistant.helpers import (
     service,
 )
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.event import (
-    EventStateChangedData,
-    async_track_state_change_event,
-)
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
@@ -134,7 +132,7 @@ async def async_add_user_device_tracker(
 
         await coll.async_update_item(
             person[CONF_ID],
-            {CONF_DEVICE_TRACKERS: device_trackers + [device_tracker_entity_id]},
+            {CONF_DEVICE_TRACKERS: [*device_trackers, device_tracker_entity_id]},
         )
         break
 
@@ -248,11 +246,11 @@ class PersonStorageCollection(collection.DictStorageCollection):
         )
 
     @callback
-    def _entity_registry_filter(self, event: Event) -> bool:
+    def _entity_registry_filter(self, event_data: Mapping[str, Any]) -> bool:
         """Filter entity registry events."""
         return (
-            event.data["action"] == "remove"
-            and split_entity_id(event.data[ATTR_ENTITY_ID])[0] == "device_tracker"
+            event_data["action"] == "remove"
+            and split_entity_id(event_data[ATTR_ENTITY_ID])[0] == "device_tracker"
         )
 
     async def _entity_registry_updated(self, event: Event) -> None:

@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 from datetime import date, timedelta
+from functools import cached_property
 import logging
-from typing import TYPE_CHECKING, final
+from typing import final
 
 import voluptuous as vol
 
@@ -21,12 +22,6 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, SERVICE_SET_VALUE
-
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
-
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
@@ -110,7 +105,7 @@ class DateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def set_value(self, value: date) -> None:
         """Change the date."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_set_value(self, value: date) -> None:
         """Change the date."""
