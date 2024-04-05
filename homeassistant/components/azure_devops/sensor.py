@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 import logging
 from typing import Any
@@ -28,7 +28,7 @@ class AzureDevOpsSensorEntityDescription(
     """Class describing Azure DevOps sensor entities."""
 
     build_key: int
-    attrs: Callable[[DevOpsBuild], Any]
+    attrs: Callable[[DevOpsBuild], dict[str, Any]] | None
     value: Callable[[DevOpsBuild], StateType]
 
 
@@ -109,7 +109,10 @@ class AzureDevOpsSensor(AzureDevOpsDeviceEntity, SensorEntity):
         return self.entity_description.value(build)
 
     @property
-    def extra_state_attributes(self) -> dict[str, Any]:
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return the state attributes of the entity."""
+        if self.entity_description.attrs is None:
+            return None
+
         build: DevOpsBuild = self.coordinator.data[self.entity_description.build_key]
         return self.entity_description.attrs(build)
