@@ -871,6 +871,21 @@ class multi_select:
         return selected
 
 
+class password:
+    """Password validator providing an anonymous password."""
+
+    def __init__(self, pswd: str) -> None:
+        """Initialize password validator."""
+        self.anonymous = "******"
+        self._password = pswd
+
+    def __call__(self, pswd: str) -> str:
+        """Return old password if input is known, else return new password."""
+        if pswd == self.anonymous:
+            return self._password
+        return pswd
+
+
 def _deprecated_or_removed(
     key: str,
     replacement_key: str | None,
@@ -1059,6 +1074,9 @@ def custom_serializer(schema: Any) -> Any:
 
     if isinstance(schema, multi_select):
         return {"type": "multi_select", "options": schema.options}
+
+    if isinstance(schema, password):
+        return {"type": "password", "string": schema.anonymous}
 
     if isinstance(schema, selector.Selector):
         return schema.serialize()
