@@ -150,7 +150,10 @@ class WazeConfigFlow(ConfigFlow, domain=DOMAIN):
             ):
                 if self._entry:
                     return self.async_update_reload_and_abort(
-                        self._entry, data=user_input, reason="reconfigure_successful"
+                        self._entry,
+                        title=user_input[CONF_NAME],
+                        data=user_input,
+                        reason="reconfigure_successful",
                     )
                 return self.async_create_entry(
                     title=user_input.get(CONF_NAME, DEFAULT_NAME),
