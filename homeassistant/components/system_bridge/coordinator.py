@@ -134,14 +134,14 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
             await self.clean_disconnect()
         except (ConnectionClosedException, ConnectionResetError) as exception:
             self.logger.debug(
-                "[_listen_for_data] Websocket connection closed for %s. Will retry: %s",
+                "[_listen_for_data] Websocket connection closed for %s: %s",
                 self.title,
                 exception,
             )
             await self.clean_disconnect()
         except ConnectionErrorException as exception:
             self.logger.debug(
-                "[_listen_for_data] Connection error occurred for %s. Will retry: %s",
+                "[_listen_for_data] Connection error occurred for %s: %s",
                 self.title,
                 exception,
             )
@@ -173,14 +173,14 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
                 raise ConfigEntryAuthFailed from exception
             except (ConnectionClosedException, ConnectionErrorException) as exception:
                 self.logger.warning(
-                    "Connection error occurred for %s. Will retry: %s",
+                    "Connection error occurred for %s: %s",
                     self.title,
                     exception,
                 )
                 await self.clean_disconnect()
             except TimeoutError as exception:
                 self.logger.warning(
-                    "Timed out waiting for %s. Will retry: %s",
+                    "Timed out waiting for %s: %s",
                     self.title,
                     exception,
                 )
