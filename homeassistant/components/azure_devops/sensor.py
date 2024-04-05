@@ -27,23 +27,129 @@ from .const import CONF_ORG, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
+@dataclass(frozen=True, kw_only=True)
+class AzureDevOpsBaseBuildSensorEntityDescription(SensorEntityDescription):
+    """Class describing Azure DevOps base build sensor entities."""
+
+    attrs: Callable[[DevOpsBuild], dict[str, Any]] | None
+    value: Callable[[DevOpsBuild], datetime | StateType]
+
+
+@dataclass(frozen=True, kw_only=True)
+class AzureDevOpsBuildSensorEntityDescription(
+    AzureDevOpsEntityDescription,
+    AzureDevOpsBaseBuildSensorEntityDescription,
+):
+    """Class describing Azure DevOps build sensor entities."""
+
+    item_key: int = 0
+
+
+BASE_BUILD_SENSOR_DESCRIPTIONS: tuple[
+    AzureDevOpsBaseBuildSensorEntityDescription, ...
+] = (
+    AzureDevOpsBaseBuildSensorEntityDescription(
+        key="latest_build",
+        translation_key="latest_build",
+        attrs=lambda build: {
+            "definition_id": (build.definition.build_id if build.definition else None),
+            "definition_name": (build.definition.name if build.definition else None),
+            "id": build.build_id,
+            "reason": build.reason,
+            "result": build.result,
+            "source_branch": build.source_branch,
+            "source_version": build.source_version,
+            "status": build.status,
+            "url": build.links.web if build.links else None,
+            "queue_time": build.queue_time,
+            "start_time": build.start_time,
+            "finish_time": build.finish_time,
+        },
+        value=lambda build: build.build_number,
+    ),
+    AzureDevOpsBaseBuildSensorEntityDescription(
+        key="build_id",
+        translation_key="build_id",
+        entity_registry_visible_default=False,
+        attrs=None,
+        value=lambda build: build.build_id,
+    ),
+    AzureDevOpsBaseBuildSensorEntityDescription(
+        key="reason",
+        translation_key="reason",
+        entity_registry_visible_default=False,
+        attrs=None,
+        value=lambda build: build.reason,
+    ),
+    AzureDevOpsBaseBuildSensorEntityDescription(
+        key="result",
+        translation_key="result",
+        entity_registry_visible_default=False,
+        attrs=None,
+        value=lambda build: build.result,
+    ),
+    AzureDevOpsBaseBuildSensorEntityDescription(
+        key="source_branch",
+        translation_key="source_branch",
+        entity_registry_enabled_default=False,
+        entity_registry_visible_default=False,
+        attrs=None,
+        value=lambda build: build.source_branch,
+    ),
+    AzureDevOpsBaseBuildSensorEntityDescription(
+        key="source_version",
+        translation_key="source_version",
+        entity_registry_visible_default=False,
+        attrs=None,
+        value=lambda build: build.source_version,
+    ),
+    AzureDevOpsBaseBuildSensorEntityDescription(
+        key="status",
+        translation_key="status",
+        entity_registry_visible_default=False,
+        attrs=None,
+        value=lambda build: build.status,
+    ),
+    AzureDevOpsBaseBuildSensorEntityDescription(
+        key="queue_time",
+        translation_key="queue_time",
+        device_class=SensorDeviceClass.DATE,
+        entity_registry_enabled_default=False,
+        entity_registry_visible_default=False,
+        attrs=None,
+        value=lambda build: parse_datetime(build.queue_time),
+    ),
+    AzureDevOpsBaseBuildSensorEntityDescription(
+        key="start_time",
+        translation_key="start_time",
+        device_class=SensorDeviceClass.DATE,
+        entity_registry_visible_default=False,
+        attrs=None,
+        value=lambda build: parse_datetime(build.start_time),
+    ),
+    AzureDevOpsBaseBuildSensorEntityDescription(
+        key="finish_time",
+        translation_key="finish_time",
+        device_class=SensorDeviceClass.DATE,
+        entity_registry_visible_default=False,
+        attrs=None,
+        value=lambda build: parse_datetime(build.finish_time),
+    ),
+    AzureDevOpsBaseBuildSensorEntityDescription(
+        key="url",
+        translation_key="url",
+        attrs=None,
+        value=lambda build: build.links.web if build.links else None,
+    ),
+)
+
+
 def parse_datetime(value: str | None) -> datetime | None:
     """Parse datetime string."""
     if value is None:
         return None
 
     return dt_util.parse_datetime(value)
-
-
-@dataclass(frozen=True, kw_only=True)
-class AzureDevOpsSensorEntityDescription(
-    AzureDevOpsEntityDescription, SensorEntityDescription
-):
-    """Class describing Azure DevOps sensor entities."""
-
-    build_key: int
-    attrs: Callable[[DevOpsBuild], dict[str, Any]] | None
-    value: Callable[[DevOpsBuild], datetime | StateType]
 
 
 async def async_setup_entry(
@@ -53,14 +159,15 @@ async def async_setup_entry(
 ) -> None:
     """Set up Azure DevOps sensor based on a config entry."""
     coordinator, project = hass.data[DOMAIN][entry.entry_id]
-    initial_data: list[DevOpsBuild] = coordinator.data
+    initial_builds: list[DevOpsBuild] = coordinator.data
 
-    sensors: list[AzureDevOpsSensor] = []
+    sensors: list[AzureDevOpsBuildSensor] = []
 
-    for key, build in enumerate(initial_data):
+    # Add build sensors
+    for key, build in enumerate(initial_builds):
         if build.project is None or build.definition is None:
             _LOGGER.warning(
-                "Skipping build %s as it is missing project or definition: %s",
+                "Skipping build %s as it is missing a project or definition: %s",
                 key,
                 build,
             )
@@ -70,152 +177,25 @@ async def async_setup_entry(
             f"{build.project.project_id}_{build.definition.build_id}"
         )
 
-        descriptions: list[AzureDevOpsSensorEntityDescription] = [
-            AzureDevOpsSensorEntityDescription(
-                key=f"{build_sensor_key_base}_latest_build",
-                translation_key="latest_build",
+        descriptions: list[AzureDevOpsBuildSensorEntityDescription] = [
+            AzureDevOpsBuildSensorEntityDescription(
+                key=f"{build_sensor_key_base}_{description.key}",
+                translation_key=description.translation_key,
                 translation_placeholders={"definition_name": build.definition.name},
-                attrs=lambda build: {
-                    "definition_id": (
-                        build.definition.build_id if build.definition else None
-                    ),
-                    "definition_name": (
-                        build.definition.name if build.definition else None
-                    ),
-                    "id": build.build_id,
-                    "reason": build.reason,
-                    "result": build.result,
-                    "source_branch": build.source_branch,
-                    "source_version": build.source_version,
-                    "status": build.status,
-                    "url": build.links.web if build.links else None,
-                    "queue_time": build.queue_time,
-                    "start_time": build.start_time,
-                    "finish_time": build.finish_time,
-                },
-                build_key=key,
+                device_class=description.device_class,
+                entity_registry_enabled_default=description.entity_registry_enabled_default,
+                entity_registry_visible_default=description.entity_registry_visible_default,
                 organization=entry.data[CONF_ORG],
                 project=project,
-                value=lambda build: build.build_number,
-            ),
-            AzureDevOpsSensorEntityDescription(
-                key=f"{build_sensor_key_base}_build_id",
-                translation_key="build_id",
-                translation_placeholders={"definition_name": build.definition.name},
-                entity_registry_visible_default=False,
-                attrs=None,
-                build_key=key,
-                organization=entry.data[CONF_ORG],
-                project=project,
-                value=lambda build: build.build_id,
-            ),
-            AzureDevOpsSensorEntityDescription(
-                key=f"{build_sensor_key_base}_reason",
-                translation_key="reason",
-                translation_placeholders={"definition_name": build.definition.name},
-                entity_registry_visible_default=False,
-                attrs=None,
-                build_key=key,
-                organization=entry.data[CONF_ORG],
-                project=project,
-                value=lambda build: build.reason,
-            ),
-            AzureDevOpsSensorEntityDescription(
-                key=f"{build_sensor_key_base}_result",
-                translation_key="result",
-                translation_placeholders={"definition_name": build.definition.name},
-                entity_registry_visible_default=False,
-                attrs=None,
-                build_key=key,
-                organization=entry.data[CONF_ORG],
-                project=project,
-                value=lambda build: build.result,
-            ),
-            AzureDevOpsSensorEntityDescription(
-                key=f"{build_sensor_key_base}_source_branch",
-                translation_key="source_branch",
-                translation_placeholders={"definition_name": build.definition.name},
-                entity_registry_enabled_default=False,
-                entity_registry_visible_default=False,
-                attrs=None,
-                build_key=key,
-                organization=entry.data[CONF_ORG],
-                project=project,
-                value=lambda build: build.source_branch,
-            ),
-            AzureDevOpsSensorEntityDescription(
-                key=f"{build_sensor_key_base}_source_version",
-                translation_key="source_version",
-                translation_placeholders={"definition_name": build.definition.name},
-                entity_registry_visible_default=False,
-                attrs=None,
-                build_key=key,
-                organization=entry.data[CONF_ORG],
-                project=project,
-                value=lambda build: build.source_version,
-            ),
-            AzureDevOpsSensorEntityDescription(
-                key=f"{build_sensor_key_base}_status",
-                translation_key="status",
-                translation_placeholders={"definition_name": build.definition.name},
-                entity_registry_visible_default=False,
-                attrs=None,
-                build_key=key,
-                organization=entry.data[CONF_ORG],
-                project=project,
-                value=lambda build: build.status,
-            ),
-            AzureDevOpsSensorEntityDescription(
-                key=f"{build_sensor_key_base}_queue_time",
-                translation_key="queue_time",
-                translation_placeholders={"definition_name": build.definition.name},
-                device_class=SensorDeviceClass.DATE,
-                entity_registry_enabled_default=False,
-                entity_registry_visible_default=False,
-                attrs=None,
-                build_key=key,
-                organization=entry.data[CONF_ORG],
-                project=project,
-                value=lambda build: parse_datetime(build.queue_time),
-            ),
-            AzureDevOpsSensorEntityDescription(
-                key=f"{build_sensor_key_base}_start_time",
-                translation_key="start_time",
-                translation_placeholders={"definition_name": build.definition.name},
-                device_class=SensorDeviceClass.DATE,
-                entity_registry_visible_default=False,
-                attrs=None,
-                build_key=key,
-                organization=entry.data[CONF_ORG],
-                project=project,
-                value=lambda build: parse_datetime(build.start_time),
-            ),
-            AzureDevOpsSensorEntityDescription(
-                key=f"{build_sensor_key_base}_finish_time",
-                translation_key="finish_time",
-                translation_placeholders={"definition_name": build.definition.name},
-                device_class=SensorDeviceClass.DATE,
-                entity_registry_visible_default=False,
-                attrs=None,
-                build_key=key,
-                organization=entry.data[CONF_ORG],
-                project=project,
-                value=lambda build: parse_datetime(build.finish_time),
-            ),
-            AzureDevOpsSensorEntityDescription(
-                key=f"{build_sensor_key_base}_url",
-                translation_key="url",
-                translation_placeholders={"definition_name": build.definition.name},
-                attrs=None,
-                build_key=key,
-                organization=entry.data[CONF_ORG],
-                project=project,
-                value=lambda build: build.links.web if build.links else None,
-            ),
+                item_key=key,
+                attrs=description.attrs,
+                value=description.value,
+            )
+            for description in BASE_BUILD_SENSOR_DESCRIPTIONS
         ]
 
         sensors.extend(
-            AzureDevOpsSensor(
+            AzureDevOpsBuildSensor(
                 coordinator,
                 description,
             )
@@ -225,16 +205,29 @@ async def async_setup_entry(
     async_add_entities(sensors, True)
 
 
-class AzureDevOpsSensor(AzureDevOpsDeviceEntity, SensorEntity):
-    """Define a Azure DevOps sensor."""
+class AzureDevOpsBuildSensor(AzureDevOpsDeviceEntity, SensorEntity):
+    """Define a Azure DevOps build sensor."""
 
-    entity_description: AzureDevOpsSensorEntityDescription
+    entity_description: AzureDevOpsBuildSensorEntityDescription
+
+    def _get_item(self) -> DevOpsBuild | None:
+        """Get the item from the coordinator."""
+        # If the item key is out of range, return None
+        if self.entity_description.item_key > len(self.coordinator.data):
+            _LOGGER.warning(
+                "Entity %s is out of range for the coordinator data",
+                self.entity_description.item_key,
+            )
+            return None
+
+        return self.coordinator.data[self.entity_description.item_key]
 
     @property
     def native_value(self) -> datetime | StateType:
         """Return the state."""
-        build: DevOpsBuild = self.coordinator.data[self.entity_description.build_key]
-        return self.entity_description.value(build)
+        if item := self._get_item():
+            return self.entity_description.value(item)
+        return None
 
     @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
@@ -242,5 +235,6 @@ class AzureDevOpsSensor(AzureDevOpsDeviceEntity, SensorEntity):
         if self.entity_description.attrs is None:
             return None
 
-        build: DevOpsBuild = self.coordinator.data[self.entity_description.build_key]
-        return self.entity_description.attrs(build)
+        if item := self._get_item():
+            return self.entity_description.attrs(item)
+        return None
