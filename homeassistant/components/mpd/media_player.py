@@ -26,7 +26,7 @@ from homeassistant.components.media_player import (
     RepeatMode,
     async_process_play_media_url,
 )
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT
+from homeassistant.const import CONF_UNIQUE_ID, CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -63,6 +63,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
 
@@ -78,8 +79,9 @@ async def async_setup_platform(
     port = config.get(CONF_PORT)
     name = config.get(CONF_NAME)
     password = config.get(CONF_PASSWORD)
+    unique_id = config.get(CONF_UNIQUE_ID)
 
-    entity = MpdDevice(host, port, password, name)
+    entity = MpdDevice(host, port, password, name, unique_id)
     async_add_entities([entity], True)
 
 
@@ -88,12 +90,13 @@ class MpdDevice(MediaPlayerEntity):
 
     _attr_media_content_type = MediaType.MUSIC
 
-    def __init__(self, server, port, password, name):
+    def __init__(self, server, port, password, name, unique_id):
         """Initialize the MPD device."""
         self.server = server
         self.port = port
         self._name = name
         self.password = password
+        self._attr_unique_id = f"mpd_{unique_id}"
 
         self._status = {}
         self._currentsong = None
