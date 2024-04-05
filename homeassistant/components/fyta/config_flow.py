@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+from datetime import datetime
 import logging
 from typing import Any
 
@@ -62,4 +64,55 @@ class FytaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
+        )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> config_entries.ConfigFlowResult:
+        """Handle flow upon an API authentication error."""
+        self._entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])  # pylint: disable=attribute-defined-outside-init
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> config_entries.ConfigFlowResult:
+        """Handle reauthorization flow."""
+        errors = {}
+        assert self._entry is not None
+
+        if user_input:
+            fyta = FytaConnector(user_input[CONF_USERNAME], user_input[CONF_PASSWORD])
+            credentials: dict[str, str | datetime] = {}
+
+            try:
+                credentials = await fyta.login()
+                await fyta.client.close()
+            except FytaConnectionError:
+                errors["base"] = "cannot_connect"
+            except FytaAuthentificationError:
+                errors["base"] = "invalid_auth"
+            except FytaPasswordError:
+                errors["base"] = "invalid_auth"
+                errors[CONF_PASSWORD] = "password_error"
+            except Exception:  # pylint: disable=broad-except
+                errors["base"] = "unknown"
+            else:
+                user_input |= credentials
+
+                self.hass.config_entries.async_update_entry(
+                    self._entry,
+                    data={**self._entry.data, **user_input},
+                )
+                await self.hass.config_entries.async_reload(self._entry.entry_id)
+                return self.async_abort(reason="reauth_successful")
+
+        data_schema = self.add_suggested_values_to_schema(
+            DATA_SCHEMA,
+            {CONF_USERNAME: self._entry.data[CONF_USERNAME], **(user_input or {})},
+        )
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=data_schema,
+            description_placeholders={"FYTA username": self._entry.data[CONF_USERNAME]},
+            errors=errors,
         )
