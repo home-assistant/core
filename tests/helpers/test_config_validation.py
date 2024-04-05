@@ -586,20 +586,6 @@ def test_string_with_no_html() -> None:
         schema(value)
 
 
-def test_string_with_no_placeholders_in_single_quotes() -> None:
-    """Test string with no placeholders in single quotes."""
-    schema = vol.Schema(cv.string_no_single_quoted_placeholders)
-
-    with pytest.raises(vol.Invalid):
-        schema("This has '{placeholder}' in single quotes")
-
-    for value in (
-        'This has "{placeholder}" in double quotes',
-        "Simple {placeholder}" "No placeholder",
-    ):
-        schema(value)
-
-
 def test_temperature_unit() -> None:
     """Test temperature unit validation."""
     schema = vol.Schema(cv.temperature_unit)

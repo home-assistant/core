@@ -646,16 +646,6 @@ def string_with_no_html(value: Any) -> str:
     return str(value)
 
 
-def string_no_single_quoted_placeholders(value: str) -> str:
-    """Validate that the value does not contain placeholders inside single quotes."""
-    regex = re.compile(r"'{\w+}'")
-    if regex.search(value):
-        raise vol.Invalid(
-            "the string should not contain placeholders inside single quotes"
-        )
-    return value
-
-
 def temperature_unit(value: Any) -> UnitOfTemperature:
     """Validate and transform temperature unit."""
     value = str(value).upper()

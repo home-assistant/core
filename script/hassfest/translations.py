@@ -132,10 +132,20 @@ def translation_value_validator(value: Any) -> str:
     - prevents combined translations
     """
     value = cv.string_with_no_html(value)
-    value = cv.string_no_single_quoted_placeholders(value)
+    value = string_no_single_quoted_placeholders(value)
     if RE_COMBINED_REFERENCE.search(value):
         raise vol.Invalid("the string should not contain combined translations")
     return str(value)
+
+
+def string_no_single_quoted_placeholders(value: str) -> str:
+    """Validate that the value does not contain placeholders inside single quotes."""
+    regex = re.compile(r"'{\w+}'")
+    if regex.search(value):
+        raise vol.Invalid(
+            "the string should not contain placeholders inside single quotes"
+        )
+    return value
 
 
 def gen_data_entry_schema(
