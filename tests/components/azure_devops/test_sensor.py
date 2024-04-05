@@ -19,16 +19,16 @@ from tests.common import MockConfigEntry
 BASE_ENTITY_ID = "sensor.testproject_ci"
 SENSOR_KEYS = [
     "latest_build",
-    "build_id",
-    "build_reason",
-    "build_result",
-    "build_source_branch",
-    "build_source_version",
-    "build_status",
-    "build_queue_time",
-    "build_start_time",
-    "build_finish_time",
-    "build_url",
+    "latest_build_id",
+    "latest_build_reason",
+    "latest_build_result",
+    "latest_build_source_branch",
+    "latest_build_source_version",
+    "latest_build_status",
+    "latest_build_queue_time",
+    "latest_build_start_time",
+    "latest_build_finish_time",
+    "latest_build_url",
 ]
 
 
