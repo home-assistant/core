@@ -36,15 +36,18 @@ async def async_setup_entry(
     )
 
     if not list_devices:
-        _LOGGER.error("DIO Chacon failed to setup because of an error")
+        _LOGGER.info(
+            "DIO Chacon did not setup lights because there are no devices of this type on this account %s",
+            config_entry.title,
+        )
         return
 
-    cover_list = []
+    device_list = []
 
     _LOGGER.debug("List of devices %s", list_devices)
 
     for device in list_devices.values():
-        cover_list.append(
+        device_list.append(
             DioChaconShade(
                 dio_chacon_client,
                 device["id"],
@@ -55,7 +58,7 @@ async def async_setup_entry(
             )
         )
 
-        _LOGGER.debug(
+        _LOGGER.info(
             "Adding DIO Chacon LIGHT with id %s, name %s, is_on %s, and connected %s",
             device["id"],
             device["name"],
@@ -63,7 +66,7 @@ async def async_setup_entry(
             device["connected"],
         )
 
-    async_add_entities(cover_list)
+    async_add_entities(device_list)
 
 
 class DioChaconShade(RestoreEntity, LightEntity):
@@ -147,7 +150,9 @@ class DioChaconShade(RestoreEntity, LightEntity):
     async def async_update(self) -> None:
         """Get the latest data from the Dio Chacon API and update the states."""
         _LOGGER.debug(
-            "Launching reload of cover device state for id : %s", self._target_id
+            "Launching reload of light device state for id %s, and name %s",
+            self._target_id,
+            self._attr_name,
         )
         data = await self.dio_chacon_client.get_status_details([self._target_id])
         details = data[self._target_id]
