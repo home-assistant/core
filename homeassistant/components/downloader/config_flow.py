@@ -55,8 +55,7 @@ class DownloaderConfigFlow(ConfigFlow, domain=DOMAIN):
             await self._validate_input(user_input)
         except DirectoryDoesNotExist:
             return self.async_abort(reason="directory_does_not_exist")
-        else:
-            return self.async_create_entry(title=DEFAULT_NAME, data=user_input)
+        return self.async_create_entry(title=DEFAULT_NAME, data=user_input)
 
     async def _validate_input(self, user_input: dict[str, Any]) -> None:
         """Validate the user input if the directory exists."""
