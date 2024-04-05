@@ -272,7 +272,10 @@ def async_track_state_change(
         return async_track_state_change_event(hass, entity_ids, state_change_listener)
 
     return hass.bus.async_listen(
-        EVENT_STATE_CHANGED, state_change_dispatcher, event_filter=state_change_filter
+        EVENT_STATE_CHANGED,
+        state_change_dispatcher,
+        event_filter=state_change_filter,
+        run_immediately=False,
     )
 
 
