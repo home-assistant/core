@@ -32,37 +32,37 @@
   "entity": {
     "sensor": {
       "build_id": {
-        "name": "{definition_name} build id"
+        "name": "{definition_name} latest build id"
       },
       "finish_time": {
-        "name": "{definition_name} build finish time"
+        "name": "{definition_name} latest build finish time"
       },
       "latest_build": {
         "name": "{definition_name} latest build"
       },
       "queue_time": {
-        "name": "{definition_name} build queue time"
+        "name": "{definition_name} latest build queue time"
       },
       "reason": {
-        "name": "{definition_name} build reason"
+        "name": "{definition_name} latest build reason"
       },
       "result": {
-        "name": "{definition_name} build result"
+        "name": "{definition_name} latest build result"
       },
       "source_branch": {
-        "name": "{definition_name} build source branch"
+        "name": "{definition_name} latest build source branch"
       },
       "source_version": {
-        "name": "{definition_name} build source version"
+        "name": "{definition_name} latest build source version"
       },
       "start_time": {
-        "name": "{definition_name} build start time"
+        "name": "{definition_name} latest build start time"
       },
       "status": {
-        "name": "{definition_name} build status"
+        "name": "{definition_name} latest build status"
       },
       "url": {
-        "name": "{definition_name} build url"
+        "name": "{definition_name} latest build url"
       }
     }
   }
