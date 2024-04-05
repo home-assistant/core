@@ -210,24 +210,12 @@ class AzureDevOpsBuildSensor(AzureDevOpsDeviceEntity, SensorEntity):
 
     entity_description: AzureDevOpsBuildSensorEntityDescription
 
-    def _get_item(self) -> DevOpsBuild | None:
-        """Get the item from the coordinator."""
-        # If the item key is out of range, return None
-        if self.entity_description.item_key > len(self.coordinator.data):
-            _LOGGER.warning(
-                "Entity %s is out of range for the coordinator data",
-                self.entity_description.item_key,
-            )
-            return None
-
-        return self.coordinator.data[self.entity_description.item_key]
-
     @property
     def native_value(self) -> datetime | StateType:
         """Return the state."""
-        if item := self._get_item():
-            return self.entity_description.value(item)
-        return None
+        return self.entity_description.value(
+            self.coordinator.data[self.entity_description.item_key]
+        )
 
     @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
@@ -235,6 +223,6 @@ class AzureDevOpsBuildSensor(AzureDevOpsDeviceEntity, SensorEntity):
         if self.entity_description.attrs is None:
             return None
 
-        if item := self._get_item():
-            return self.entity_description.attrs(item)
-        return None
+        return self.entity_description.attrs(
+            self.coordinator.data[self.entity_description.item_key]
+        )
