@@ -30,6 +30,10 @@
     "internal_error": {
       "title": "Internal Error",
       "description": "{domain_name}[{device_name}]: Something isn't right with device internal configuration. Try restarting device and HomeAssistant. If Issue persist contact support: support@chomtech.eu"
+    },
+    "no_status_update": {
+      "title": "No status update",
+      "description": "{domain_name}[{device_name}]: Did not received status update in expected time window. Make sure Home Assistant Internal URL is reachable from NASweb device. If Issue persist contact support: support@chomtech.eu"
     }
   },
   "entity": {

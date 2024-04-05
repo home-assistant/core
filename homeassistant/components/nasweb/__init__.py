@@ -18,6 +18,7 @@ from .const import (
     DOMAIN_DISPLAY_NAME,
     ISSUE_INTERNAL_ERROR,
     ISSUE_INVALID_AUTHENTICATION,
+    ISSUE_NO_STATUS_UPDATE,
     MANUFACTURER,
     NASWEB_CONFIG_URL,
 )
@@ -100,11 +101,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     ir.async_delete_issue(hass, DOMAIN, ISSUE_INVALID_AUTHENTICATION)
     ir.async_delete_issue(hass, DOMAIN, ISSUE_INTERNAL_ERROR)
     if not await nasweb_data.notify_coordinator.check_connection(webio_serial):
-        _LOGGER.error(
-            "Wasn't able to confirm connection with webio. Check form data and try again"
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            ISSUE_NO_STATUS_UPDATE,
+            is_fixable=False,
+            is_persistent=False,
+            severity=ir.IssueSeverity.ERROR,
+            translation_key=ISSUE_NO_STATUS_UPDATE,
+            translation_placeholders={
+                "domain_name": DOMAIN_DISPLAY_NAME,
+                "device_name": entry.title,
+            },
         )
         return False
-
+    ir.async_delete_issue(hass, DOMAIN, ISSUE_NO_STATUS_UPDATE)
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
@@ -122,6 +133,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         ir.async_delete_issue(hass, DOMAIN, ISSUE_INVALID_AUTHENTICATION)
         ir.async_delete_issue(hass, DOMAIN, ISSUE_INTERNAL_ERROR)
+        ir.async_delete_issue(hass, DOMAIN, ISSUE_NO_STATUS_UPDATE)
         nasweb_data: NASwebData = hass.data[DOMAIN]
         coordinator: NASwebCoordinator = nasweb_data.entries_coordinators.pop(
             entry.entry_id
