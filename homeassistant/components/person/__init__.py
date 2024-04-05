@@ -411,8 +411,6 @@ class Person(
     _entity_component_unrecorded_attributes = frozenset({ATTR_DEVICE_TRACKERS})
 
     _attr_should_poll = False
-    _attr_state: str | None = None
-    device_trackers: list[str] = []
     editable: bool
 
     def __init__(self, config: dict[str, Any]) -> None:
@@ -423,6 +421,8 @@ class Person(
         self._gps_accuracy: float | None = None
         self._source: str | None = None
         self._unsub_track_device: Callable[[], None] | None = None
+        self._attr_state: str | None = None
+        self.device_trackers: list[str] = []
 
         self._attr_unique_id = config[CONF_ID]
         self._set_attrs_from_config()
