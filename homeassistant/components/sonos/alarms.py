@@ -76,10 +76,11 @@ class SonosAlarms(SonosHouseholdCoordinator):
     def update_cache(self, soco: SoCo, update_id: int | None = None) -> bool:
         """Update cache of known alarms and return if cache has changed."""
         _LOGGER.info(
-            "PR - update_cache before update %d %s %s",
+            "PR - update_cache before update %d %s %s %s",
             len(self.alarms),
             self.alarms.last_id,
             self.alarms.last_alarm_list_version,
+            soco.alarmClock.ListAlarms(),
         )
         self.alarms.update(soco)
         _LOGGER.info(
