@@ -31,10 +31,14 @@ async def test_user_form(hass: HomeAssistant) -> None:
         )
         assert result["type"] is FlowResultType.FORM
 
-        with patch("os.path.isdir", return_value=False):
-            assert result["type"] is FlowResultType.FORM
-            assert result["step_id"] == "user"
-            assert result["errors"] == {"base": "cannot_connect"}
+    with patch("os.path.isdir", return_value=False):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONFIG,
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+        assert result["errors"] == {"base": "directory_does_not_exist"}
 
     with (
         patch(
@@ -95,8 +99,6 @@ async def test_import_flow_success(hass: HomeAssistant) -> None:
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == "Downloader"
         assert result["data"] == CONFIG
-        assert result["data"] == {}
-        assert result["options"] == {}
 
 
 async def test_import_flow_directory_not_found(hass: HomeAssistant) -> None:
