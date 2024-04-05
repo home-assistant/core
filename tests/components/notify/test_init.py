@@ -14,7 +14,6 @@ from homeassistant.components import notify
 from homeassistant.components.notify import (
     DOMAIN,
     SERVICE_SEND_MESSAGE,
-    NotifyDeviceClass,
     NotifyEntity,
     NotifyEntityDescription,
 )
@@ -47,8 +46,6 @@ TEST_KWARGS = {"message": "Test message"}
 
 class MockNotifyEntity(MockEntity, NotifyEntity):
     """Mock Email notitier entity to use in tests."""
-
-    _attr_device_class = NotifyDeviceClass.DIRECT_MESSAGE
 
     send_message_mock_calls = MagicMock()
 
@@ -188,29 +185,19 @@ async def test_name(hass: HomeAssistant, config_flow_fixture: None) -> None:
         ),
     )
 
-    # Unnamed notify entity without device class -> no name
+    # Unnamed notify entity -> no name
     entity1 = NotifyEntity()
     entity1.entity_id = "notify.test1"
 
-    # Unnamed notify entity with device class but has_entity_name False -> no name
+    # Unnamed notify entity and has_entity_name True -> unnamed
     entity2 = NotifyEntity()
-    entity2.entity_id = "notify.test2"
-    entity2._attr_device_class = NotifyDeviceClass.DIRECT_MESSAGE
+    entity2.entity_id = "notify.test3"
+    entity2._attr_has_entity_name = True
 
-    # Unnamed notify entity with device class and has_entity_name True -> named
+    # Named notify entity and has_entity_name True -> named
     entity3 = NotifyEntity()
-    entity3.entity_id = "notify.test3"
-    entity3._attr_device_class = NotifyDeviceClass.DISPLAY
-    entity3._attr_has_entity_name = True
-
-    # Named notify entity with device class and has_entity_name True -> named
-    entity4 = NotifyEntity()
-    entity4.entity_id = "notify.test4"
-    entity4.entity_description = NotifyEntityDescription(
-        "test",
-        NotifyDeviceClass.DIRECT_MESSAGE,
-        has_entity_name=True,
-    )
+    entity3.entity_id = "notify.test4"
+    entity3.entity_description = NotifyEntityDescription("test", has_entity_name=True)
 
     async def async_setup_entry_platform(
         hass: HomeAssistant,
@@ -218,7 +205,7 @@ async def test_name(hass: HomeAssistant, config_flow_fixture: None) -> None:
         async_add_entities: AddEntitiesCallback,
     ) -> None:
         """Set up test notify entity platform via config entry."""
-        async_add_entities([entity1, entity2, entity3, entity4])
+        async_add_entities([entity1, entity2, entity3])
 
     mock_platform(
         hass,
@@ -237,21 +224,11 @@ async def test_name(hass: HomeAssistant, config_flow_fixture: None) -> None:
 
     state = hass.states.get(entity2.entity_id)
     assert state
-    assert state.attributes == {"device_class": "direct_message"}
+    assert state.attributes == {}
 
     state = hass.states.get(entity3.entity_id)
     assert state
-    assert state.attributes == {
-        "device_class": "display",
-        "friendly_name": "Display notifier",
-    }
-
-    state = hass.states.get(entity4.entity_id)
-    assert state
-    assert state.attributes == {
-        "device_class": "direct_message",
-        "friendly_name": "Direct message notifier",
-    }
+    assert state.attributes == {}
 
 
 class MockNotifyPlatform(MockPlatform):

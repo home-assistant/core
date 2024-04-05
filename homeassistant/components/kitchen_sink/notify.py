@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from homeassistant.components import persistent_notification
-from homeassistant.components.notify import NotifyDeviceClass, NotifyEntity
+from homeassistant.components.notify import NotifyEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -24,13 +24,6 @@ async def async_setup_entry(
                 unique_id="just_notify_me",
                 device_name="MyBox",
                 entity_name="Personal notifier",
-                device_class=NotifyDeviceClass.DIRECT_MESSAGE,
-            ),
-            DemoNotify(
-                unique_id="notify_with_data",
-                device_name="MyAVR",
-                entity_name="LCD",
-                device_class=NotifyDeviceClass.DISPLAY,
             ),
         ]
     )
@@ -47,7 +40,6 @@ class DemoNotify(NotifyEntity):
         unique_id: str,
         device_name: str,
         entity_name: str | None,
-        device_class=NotifyDeviceClass,
     ) -> None:
         """Initialize the Demo button entity."""
         self._attr_unique_id = unique_id
@@ -56,7 +48,6 @@ class DemoNotify(NotifyEntity):
             name=device_name,
         )
         self._attr_name = entity_name
-        self._attr_device_class = device_class
 
     def send_message(
         self,

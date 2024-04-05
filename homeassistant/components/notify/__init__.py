@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from enum import StrEnum
 from functools import cached_property, partial
 import logging
 from typing import Any, final, override
@@ -58,18 +57,6 @@ PLATFORM_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-
-class NotifyDeviceClass(StrEnum):
-    """Device class for notify entities."""
-
-    API_MESSAGE = "api_message"
-    DIRECT_MESSAGE = "direct_message"
-    DISPLAY = "display"
-    EMAIL = "email"
-    SMS = "sms"
-
-
-DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.Coerce(NotifyDeviceClass))
 
 SERVICE_SEND_MESSAGE_SCHEMA = cv.make_entity_service_schema(
     {
@@ -133,13 +120,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 class NotifyEntityDescription(EntityDescription, frozen_or_thawed=True):
     """A class that describes button entities."""
 
-    device_class: NotifyDeviceClass | None = None
-
-
-CACHED_PROPERTIES_WITH_ATTR_ = {
-    "device_class",
-}
-
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
@@ -153,12 +133,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await component.async_unload_entry(entry)
 
 
-class NotifyEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
+class NotifyEntity(RestoreEntity):
     """Representation of a notify entity."""
 
     entity_description: NotifyEntityDescription
     _attr_should_poll = False
-    _attr_device_class: NotifyDeviceClass | None
+    _attr_device_class: None
     _attr_state: None = None
     _attr_supported_features: None
     __last_notified_isoformat: str | None = None
@@ -169,16 +149,6 @@ class NotifyEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_
         For buttons this is True if the entity has a device class.
         """
         return self.device_class is not None
-
-    @cached_property
-    @override
-    def device_class(self) -> NotifyDeviceClass | None:
-        """Return the class of this entity."""
-        if hasattr(self, "_attr_device_class"):
-            return self._attr_device_class
-        if hasattr(self, "entity_description"):
-            return self.entity_description.device_class
-        return None
 
     @cached_property
     @final

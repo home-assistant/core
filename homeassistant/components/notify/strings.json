@@ -3,21 +3,6 @@
   "entity_component": {
     "_": {
       "name": "[%key:component::notify::title%]"
-    },
-    "api_message": {
-      "name": "API message"
-    },
-    "direct_message": {
-      "name": "Direct message notifier"
-    },
-    "display": {
-      "name": "Display notifier"
-    },
-    "email": {
-      "name": "Email"
-    },
-    "sms": {
-      "name": "SMS"
     }
   },
   "services": {
