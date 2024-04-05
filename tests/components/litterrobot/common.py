@@ -67,7 +67,7 @@ ROBOT_4_DATA = {
     "isDFIResetPending": False,
     "DFINumberOfCycles": 104,
     "DFILevelPercent": 76,
-    "isDFIFull": True,
+    "isDFIFull": False,
     "DFIFullCounter": 3,
     "DFITriggerCount": 42,
     "litterLevel": 460,
