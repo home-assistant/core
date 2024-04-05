@@ -107,7 +107,6 @@ class _KeyedEventTracker(Generic[_TypedDictT]):
         ],
         bool,
     ]
-    run_immediately: bool
 
 
 @dataclass(slots=True)
@@ -339,7 +338,6 @@ _KEYED_TRACK_STATE_CHANGE = _KeyedEventTracker(
     event_type=EVENT_STATE_CHANGED,
     dispatcher_callable=_async_dispatch_entity_id_event,
     filter_callable=_async_state_change_filter,
-    run_immediately=False,
 )
 
 
@@ -417,7 +415,7 @@ def _async_track_event(
             tracker.event_type,
             ft.partial(tracker.dispatcher_callable, hass, callbacks),
             event_filter=ft.partial(tracker.filter_callable, hass, callbacks),
-            run_immediately=tracker.run_immediately,
+            run_immediately=True,
         )
 
     job = HassJob(action, f"track {tracker.event_type} event {keys}", job_type=job_type)
@@ -471,7 +469,6 @@ _KEYED_TRACK_ENTITY_REGISTRY_UPDATED = _KeyedEventTracker(
     event_type=EVENT_ENTITY_REGISTRY_UPDATED,
     dispatcher_callable=_async_dispatch_old_entity_id_or_entity_id_event,
     filter_callable=_async_entity_registry_updated_filter,
-    run_immediately=True,
 )
 
 
@@ -530,7 +527,6 @@ _KEYED_TRACK_DEVICE_REGISTRY_UPDATED = _KeyedEventTracker(
     event_type=EVENT_DEVICE_REGISTRY_UPDATED,
     dispatcher_callable=_async_dispatch_device_id_event,
     filter_callable=_async_device_registry_updated_filter,
-    run_immediately=True,
 )
 
 
@@ -599,7 +595,6 @@ _KEYED_TRACK_STATE_ADDED_DOMAIN = _KeyedEventTracker(
     event_type=EVENT_STATE_CHANGED,
     dispatcher_callable=_async_dispatch_domain_event,
     filter_callable=_async_domain_added_filter,
-    run_immediately=False,
 )
 
 
@@ -635,7 +630,6 @@ _KEYED_TRACK_STATE_REMOVED_DOMAIN = _KeyedEventTracker(
     event_type=EVENT_STATE_CHANGED,
     dispatcher_callable=_async_dispatch_domain_event,
     filter_callable=_async_domain_removed_filter,
-    run_immediately=False,
 )
 
 
