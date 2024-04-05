@@ -130,13 +130,8 @@ class ZHAFirmwareUpdateEntity(
     def _get_cluster_version(self) -> str | None:
         """Synchronize current file version with the cluster."""
 
-        device = self._ota_cluster_handler._endpoint.device  # pylint: disable=protected-access
-
         if self._ota_cluster_handler.current_file_version is not None:
             return f"0x{self._ota_cluster_handler.current_file_version:08x}"
-
-        if device.sw_version is not None:
-            return device.sw_version
 
         return None
 

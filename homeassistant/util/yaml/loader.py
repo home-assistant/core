@@ -8,7 +8,7 @@ from io import StringIO, TextIOWrapper
 import logging
 import os
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, TextIO, TypeVar, overload
+from typing import Any, TextIO, TypeVar, overload
 
 import yaml
 
@@ -22,17 +22,13 @@ except ImportError:
         SafeLoader as FastestAvailableSafeLoader,
     )
 
+from functools import cached_property
+
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.frame import report
 
 from .const import SECRET_YAML
 from .objects import Input, NodeDictClass, NodeListClass, NodeStrClass
-
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
-
 
 # mypy: allow-untyped-calls, no-warn-return-any
 
