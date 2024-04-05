@@ -113,7 +113,10 @@ class EcobeeHumidifier(HumidifierEntity):
     @property
     def current_humidity(self) -> int | None:
         """Return the current humidity."""
-        return int(self.thermostat["runtime"]["actualHumidity"])
+        try:
+            return int(self.thermostat["runtime"]["actualHumidity"])
+        except KeyError:
+            return None
 
     def set_mode(self, mode):
         """Set humidifier mode (auto, off, manual)."""

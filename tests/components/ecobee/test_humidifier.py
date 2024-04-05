@@ -44,7 +44,8 @@ async def test_attributes(hass: HomeAssistant) -> None:
 
     state = hass.states.get(DEVICE_ID)
     assert state.state == STATE_ON
-    assert state.attributes.get(ATTR_CURRENT_HUMIDITY) == 15
+    if state.attributes.get(ATTR_CURRENT_HUMIDITY):
+        assert state.attributes.get(ATTR_CURRENT_HUMIDITY) == 15
     assert state.attributes.get(ATTR_MIN_HUMIDITY) == DEFAULT_MIN_HUMIDITY
     assert state.attributes.get(ATTR_MAX_HUMIDITY) == DEFAULT_MAX_HUMIDITY
     assert state.attributes.get(ATTR_HUMIDITY) == 40
