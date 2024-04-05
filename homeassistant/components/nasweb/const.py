@@ -2,6 +2,7 @@
 
 DOMAIN = "nasweb"
 DOMAIN_DISPLAY_NAME = "NASweb"
+ISSUE_NO_STATUS_UPDATE = "no_status_update"
 ISSUE_INVALID_AUTHENTICATION = "invalid_authentication"
 ISSUE_INTERNAL_ERROR = "internal_error"
 MANUFACTURER = "chomtech.pl"
