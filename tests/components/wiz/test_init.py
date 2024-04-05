@@ -3,8 +3,8 @@
 import datetime
 from unittest.mock import AsyncMock, patch
 
-from homeassistant import config_entries
 from homeassistant.components.wiz.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_FRIENDLY_NAME, CONF_HOST, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -28,21 +28,21 @@ async def test_setup_retry(hass: HomeAssistant) -> None:
     bulb = _mocked_wizlight(None, None, FAKE_SOCKET)
     bulb.getMac = AsyncMock(side_effect=OSError)
     _, entry = await async_setup_integration(hass, wizlight=bulb)
-    assert entry.state is config_entries.ConfigEntryState.SETUP_RETRY
+    assert entry.state is ConfigEntryState.SETUP_RETRY
     bulb.getMac = AsyncMock(return_value=FAKE_MAC)
 
     with _patch_discovery(), _patch_wizlight(device=bulb):
         await hass.async_block_till_done()
         async_fire_time_changed(hass, utcnow() + datetime.timedelta(minutes=15))
         await hass.async_block_till_done()
-    assert entry.state is config_entries.ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
 
 async def test_cleanup_on_shutdown(hass: HomeAssistant) -> None:
     """Test the socket is cleaned up on shutdown."""
     bulb = _mocked_wizlight(None, None, FAKE_SOCKET)
     _, entry = await async_setup_integration(hass, wizlight=bulb)
-    assert entry.state is config_entries.ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
     bulb.async_close.assert_called_once()
@@ -64,7 +64,7 @@ async def test_cleanup_on_failed_first_update(hass: HomeAssistant) -> None:
     ):
         await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
         await hass.async_block_till_done()
-    assert entry.state is config_entries.ConfigEntryState.SETUP_RETRY
+    assert entry.state is ConfigEntryState.SETUP_RETRY
     bulb.async_close.assert_called_once()
 
 
@@ -73,14 +73,14 @@ async def test_wrong_device_now_has_our_ip(hass: HomeAssistant) -> None:
     bulb = _mocked_wizlight(None, None, FAKE_SOCKET)
     bulb.mac = "dddddddddddd"
     _, entry = await async_setup_integration(hass, wizlight=bulb)
-    assert entry.state is config_entries.ConfigEntryState.SETUP_RETRY
+    assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_reload_on_title_change(hass: HomeAssistant) -> None:
     """Test the integration gets reloaded when the title is updated."""
     bulb = _mocked_wizlight(None, None, FAKE_SOCKET)
     _, entry = await async_setup_integration(hass, wizlight=bulb)
-    assert entry.state is config_entries.ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
     await hass.async_block_till_done()
 
     with _patch_discovery(), _patch_wizlight(device=bulb):

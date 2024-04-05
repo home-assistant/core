@@ -4,7 +4,7 @@ import pytest
 from pytest_unordered import unordered
 import voluptuous_serialize
 
-import homeassistant.components.automation as automation
+from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.humidifier import DOMAIN, const, device_condition
 from homeassistant.const import ATTR_MODE, STATE_OFF, STATE_ON, EntityCategory

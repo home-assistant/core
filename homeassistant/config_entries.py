@@ -13,11 +13,11 @@ from collections.abc import (
     Mapping,
     ValuesView,
 )
-import contextlib
 from contextvars import ContextVar
 from copy import deepcopy
 from enum import Enum, StrEnum
 import functools
+from functools import cached_property
 import logging
 from random import randint
 from types import MappingProxyType
@@ -70,8 +70,6 @@ from .util.async_ import create_eager_task
 from .util.decorator import Registry
 
 if TYPE_CHECKING:
-    from functools import cached_property
-
     from .components.bluetooth import BluetoothServiceInfoBleak
     from .components.dhcp import DhcpServiceInfo
     from .components.hassio import HassioServiceInfo
@@ -79,8 +77,6 @@ if TYPE_CHECKING:
     from .components.usb import UsbServiceInfo
     from .components.zeroconf import ZeroconfServiceInfo
     from .helpers.service_info.mqtt import MqttServiceInfo
-else:
-    from .backports.functools import cached_property
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -243,7 +239,14 @@ class OperationNotAllowed(ConfigError):
 
 UpdateListenerType = Callable[[HomeAssistant, "ConfigEntry"], Coroutine[Any, Any, None]]
 
-FROZEN_CONFIG_ENTRY_ATTRS = {"entry_id", "domain", "state", "reason"}
+FROZEN_CONFIG_ENTRY_ATTRS = {
+    "entry_id",
+    "domain",
+    "state",
+    "reason",
+    "error_reason_translation_key",
+    "error_reason_translation_placeholders",
+}
 UPDATE_ENTRY_CONFIG_ENTRY_ATTRS = {
     "unique_id",
     "title",
@@ -274,6 +277,8 @@ class ConfigEntry:
     unique_id: str | None
     state: ConfigEntryState
     reason: str | None
+    error_reason_translation_key: str | None
+    error_reason_translation_placeholders: dict[str, Any] | None
     pref_disable_new_entities: bool
     pref_disable_polling: bool
     version: int
@@ -369,6 +374,8 @@ class ConfigEntry:
 
         # Reason why config entry is in a failed state
         _setter(self, "reason", None)
+        _setter(self, "error_reason_translation_key", None)
+        _setter(self, "error_reason_translation_placeholders", None)
 
         # Function to cancel a scheduled retry
         self._async_cancel_retry_setup: Callable[[], Any] | None = None
@@ -452,8 +459,7 @@ class ConfigEntry:
 
     def clear_cache(self) -> None:
         """Clear cached properties."""
-        with contextlib.suppress(AttributeError):
-            delattr(self, "as_json_fragment")
+        self.__dict__.pop("as_json_fragment", None)
 
     @cached_property
     def as_json_fragment(self) -> json_fragment:
@@ -472,6 +478,8 @@ class ConfigEntry:
             "pref_disable_polling": self.pref_disable_polling,
             "disabled_by": self.disabled_by,
             "reason": self.reason,
+            "error_reason_translation_key": self.error_reason_translation_key,
+            "error_reason_translation_placeholders": self.error_reason_translation_placeholders,
         }
         return json_fragment(json_bytes(json_repr))
 
@@ -543,6 +551,8 @@ class ConfigEntry:
             setup_phase = SetupPhases.CONFIG_ENTRY_PLATFORM_SETUP
 
         error_reason = None
+        error_reason_translation_key = None
+        error_reason_translation_placeholders = None
 
         try:
             with async_start_setup(
@@ -557,6 +567,8 @@ class ConfigEntry:
                 result = False
         except ConfigEntryError as exc:
             error_reason = str(exc) or "Unknown fatal config entry error"
+            error_reason_translation_key = exc.translation_key
+            error_reason_translation_placeholders = exc.translation_placeholders
             _LOGGER.exception(
                 "Error setting up entry %s for %s: %s",
                 self.title,
@@ -569,6 +581,8 @@ class ConfigEntry:
             message = str(exc)
             auth_base_message = "could not authenticate"
             error_reason = message or auth_base_message
+            error_reason_translation_key = exc.translation_key
+            error_reason_translation_placeholders = exc.translation_placeholders
             auth_message = (
                 f"{auth_base_message}: {message}" if message else auth_base_message
             )
@@ -583,7 +597,15 @@ class ConfigEntry:
             result = False
         except ConfigEntryNotReady as exc:
             message = str(exc)
-            self._async_set_state(hass, ConfigEntryState.SETUP_RETRY, message or None)
+            error_reason_translation_key = exc.translation_key
+            error_reason_translation_placeholders = exc.translation_placeholders
+            self._async_set_state(
+                hass,
+                ConfigEntryState.SETUP_RETRY,
+                message or None,
+                error_reason_translation_key,
+                error_reason_translation_placeholders,
+            )
             wait_time = 2 ** min(self._tries, 4) * 5 + (
                 randint(RANDOM_MICROSECOND_MIN, RANDOM_MICROSECOND_MAX) / 1000000
             )
@@ -644,7 +666,13 @@ class ConfigEntry:
         if result:
             self._async_set_state(hass, ConfigEntryState.LOADED, None)
         else:
-            self._async_set_state(hass, ConfigEntryState.SETUP_ERROR, error_reason)
+            self._async_set_state(
+                hass,
+                ConfigEntryState.SETUP_ERROR,
+                error_reason,
+                error_reason_translation_key,
+                error_reason_translation_placeholders,
+            )
 
     @callback
     def _async_setup_again(self, hass: HomeAssistant, *_: Any) -> None:
@@ -730,8 +758,6 @@ class ConfigEntry:
                 self._async_set_state(hass, ConfigEntryState.NOT_LOADED, None)
 
             await self._async_process_on_unload(hass)
-
-            return result
         except Exception as exc:  # pylint: disable=broad-except
             _LOGGER.exception(
                 "Error unloading entry %s for %s", self.title, integration.domain
@@ -741,6 +767,7 @@ class ConfigEntry:
                     hass, ConfigEntryState.FAILED_UNLOAD, str(exc) or "Unknown error"
                 )
             return False
+        return result
 
     async def async_remove(self, hass: HomeAssistant) -> None:
         """Invoke remove callback on component."""
@@ -771,7 +798,12 @@ class ConfigEntry:
 
     @callback
     def _async_set_state(
-        self, hass: HomeAssistant, state: ConfigEntryState, reason: str | None
+        self,
+        hass: HomeAssistant,
+        state: ConfigEntryState,
+        reason: str | None,
+        error_reason_translation_key: str | None = None,
+        error_reason_translation_placeholders: dict[str, str] | None = None,
     ) -> None:
         """Set the state of the config entry."""
         if state not in NO_RESET_TRIES_STATES:
@@ -779,6 +811,12 @@ class ConfigEntry:
         _setter = object.__setattr__
         _setter(self, "state", state)
         _setter(self, "reason", reason)
+        _setter(self, "error_reason_translation_key", error_reason_translation_key)
+        _setter(
+            self,
+            "error_reason_translation_placeholders",
+            error_reason_translation_placeholders,
+        )
         self.clear_cache()
         async_dispatcher_send(
             hass, SIGNAL_CONFIG_ENTRY_CHANGED, ConfigEntryChange.UPDATED, self
@@ -828,12 +866,12 @@ class ConfigEntry:
             if result:
                 # pylint: disable-next=protected-access
                 hass.config_entries._async_schedule_save()
-            return result
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception(
                 "Error migrating entry %s for %s", self.title, self.domain
             )
             return False
+        return result
 
     def add_update_listener(self, listener: UpdateListenerType) -> CALLBACK_TYPE:
         """Listen for when entry is updated.
@@ -1029,7 +1067,7 @@ class ConfigEntry:
         task = hass.async_create_task(
             target, f"{name} {self.title} {self.domain} {self.entry_id}", eager_start
         )
-        if task.done():
+        if eager_start and task.done():
             return task
         self._tasks.add(task)
         task.add_done_callback(self._tasks.remove)

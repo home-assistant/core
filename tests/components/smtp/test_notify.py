@@ -7,7 +7,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant import config as hass_config
-import homeassistant.components.notify as notify
+from homeassistant.components import notify
 from homeassistant.components.smtp.const import DOMAIN
 from homeassistant.components.smtp.notify import MailNotificationService
 from homeassistant.const import SERVICE_RELOAD

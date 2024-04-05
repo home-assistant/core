@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-from collections import OrderedDict
 from collections.abc import AsyncGenerator, Generator, Mapping, Sequence
 from contextlib import asynccontextmanager, contextmanager
 from datetime import UTC, datetime, timedelta
@@ -649,7 +648,9 @@ def mock_area_registry(
     fixture instead.
     """
     registry = ar.AreaRegistry(hass)
-    registry.areas = mock_entries or OrderedDict()
+    registry.areas = ar.AreaRegistryItems()
+    for key, entry in mock_entries.items():
+        registry.areas[key] = entry
 
     hass.data[ar.DATA_REGISTRY] = registry
     return registry
@@ -671,7 +672,7 @@ def mock_device_registry(
     fixture instead.
     """
     registry = dr.DeviceRegistry(hass)
-    registry.devices = dr.DeviceRegistryItems()
+    registry.devices = dr.ActiveDeviceRegistryItems()
     registry._device_data = registry.devices.data
     if mock_entries is None:
         mock_entries = {}
@@ -1461,7 +1462,10 @@ def mock_integration(
 
 
 def mock_platform(
-    hass: HomeAssistant, platform_path: str, module: Mock | MockPlatform | None = None
+    hass: HomeAssistant,
+    platform_path: str,
+    module: Mock | MockPlatform | None = None,
+    built_in=True,
 ) -> None:
     """Mock a platform.
 
@@ -1472,7 +1476,7 @@ def mock_platform(
     module_cache = hass.data[loader.DATA_COMPONENTS]
 
     if domain not in integration_cache:
-        mock_integration(hass, MockModule(domain))
+        mock_integration(hass, MockModule(domain), built_in=built_in)
 
     integration_cache[domain]._top_level_files.add(f"{platform_name}.py")
     _LOGGER.info("Adding mock integration platform: %s", platform_path)
@@ -1665,6 +1669,7 @@ def setup_test_component_platform(
     domain: str,
     entities: Sequence[Entity],
     from_config_entry: bool = False,
+    built_in: bool = True,
 ) -> MockPlatform:
     """Mock a test component platform for tests."""
 
@@ -1695,9 +1700,5 @@ def setup_test_component_platform(
         platform.async_setup_entry = _async_setup_entry
         platform.async_setup_platform = None
 
-    mock_platform(
-        hass,
-        f"test.{domain}",
-        platform,
-    )
+    mock_platform(hass, f"test.{domain}", platform, built_in=built_in)
     return platform

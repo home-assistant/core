@@ -189,7 +189,7 @@ async def test_abort_calls_async_remove_with_exception(
     with caplog.at_level(logging.ERROR):
         await manager.async_init("test")
 
-    assert "Error removing test flow: error" in caplog.text
+    assert "Error removing test flow" in caplog.text
 
     TestFlow.async_remove.assert_called_once()
 
@@ -269,8 +269,7 @@ async def test_finish_callback_change_result_type(hass: HomeAssistant) -> None:
                     return flow.async_show_form(
                         step_id="init", data_schema=vol.Schema({"count": int})
                     )
-                else:
-                    result["result"] = result["data"]["count"]
+                result["result"] = result["data"]["count"]
             return result
 
     manager = FlowManager(hass)

@@ -376,6 +376,10 @@ class Pipeline:
         This function was added in HA Core 2023.10, previous versions will raise
         if there are unexpected items in the serialized data.
         """
+        # Migrate to new value for conversation agent
+        if data["conversation_engine"] == conversation.OLD_HOME_ASSISTANT_AGENT:
+            data["conversation_engine"] = conversation.HOME_ASSISTANT_AGENT
+
         return cls(
             conversation_engine=data["conversation_engine"],
             conversation_language=data["conversation_language"],
