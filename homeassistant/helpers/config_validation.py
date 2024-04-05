@@ -1855,6 +1855,12 @@ def determine_script_action(action: dict[str, Any]) -> str:
     """Determine action type."""
     if not (actions := ACTIONS_SET.intersection(action)):
         raise ValueError("Unable to determine action")
+    if len(actions) > 1:
+        # Ambiguous action, select the first one in the
+        # order of the ACTIONS_MAP
+        for action_key, _script_action in ACTIONS_MAP.items():
+            if action_key in actions:
+                return _script_action
     return ACTIONS_MAP[actions.pop()]
 
 
