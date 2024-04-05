@@ -19,7 +19,7 @@ TO_REDACT = {
 }
 
 
-class DiagnosticData(TypedDict):
+class DiagnosticsData(TypedDict):
     """Diagnostic data for La Marzocco."""
 
     model: str
@@ -35,11 +35,11 @@ async def async_get_config_entry_diagnostics(
     coordinator: LaMarzoccoUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     device = coordinator.device
     # collect all data sources
-    diagnostic_data = DiagnosticData(
+    diagnostics_data = DiagnosticsData(
         model=device.model,
         config=asdict(device.config),
         firmware=[{key: asdict(firmware)} for key, firmware in device.firmware.items()],
         statistics=asdict(device.statistics),
     )
 
-    return async_redact_data(diagnostic_data, TO_REDACT)
+    return async_redact_data(diagnostics_data, TO_REDACT)
