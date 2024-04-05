@@ -103,10 +103,7 @@ async def test_import_flow_success(hass: HomeAssistant) -> None:
 
 async def test_import_flow_directory_not_found(hass: HomeAssistant) -> None:
     """Test import flow."""
-    with patch(
-        "os.path.isdir",
-        return_value=False,
-    ):
+    with patch("os.path.isdir", return_value=False):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
