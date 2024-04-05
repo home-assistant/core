@@ -43,14 +43,26 @@ def test_is_invalid() -> None:
 
 def test_is_local() -> None:
     """Test local addresses."""
+    # RFC 1918 space
     assert network_util.is_local(ip_address("192.168.0.1"))
+    # loopback
     assert network_util.is_local(ip_address("127.0.0.1"))
+    assert network_util.is_local(ip_address("::ffff:127.0.0.1"))
+    assert network_util.is_local(ip_address("::1"))
+    # IPv6 ULA
     assert network_util.is_local(ip_address("fd12:3456:789a:1::1"))
+    # IPv6 link-local
     assert network_util.is_local(ip_address("fe80::1234:5678:abcd"))
+    # mapped ipv4-to-ipv6
     assert network_util.is_local(ip_address("::ffff:192.168.0.1"))
+    # Documentation/TEST-NET2 IP space, marked as Globally Reachable: False by IANA
+    assert network_util.is_local(ip_address("198.51.100.1"))
+    assert network_util.is_local(ip_address("2001:DB8:FA1::1"))
+    # AS112 space, marked as Globally Reachable: True by IANA
+    assert not network_util.is_local(ip_address("192.175.48.1"))
+    assert not network_util.is_local(ip_address("2620:4f:8000::1"))
+    # random globally routable IP space
     assert not network_util.is_local(ip_address("208.5.4.2"))
-    assert not network_util.is_local(ip_address("198.51.100.1"))
-    assert not network_util.is_local(ip_address("2001:DB8:FA1::1"))
     assert not network_util.is_local(ip_address("::ffff:208.5.4.2"))
 
 
