@@ -60,7 +60,7 @@ from .const import (
     SLOPE_STEEP,
 )
 from .device import RachioPerson
-from .entity import RachioDevice, RachioHoseTimerDevice
+from .entity import RachioDevice, RachioHoseTimerEntity
 from .webhooks import (
     SUBTYPE_RAIN_DELAY_OFF,
     SUBTYPE_RAIN_DELAY_ON,
@@ -537,7 +537,7 @@ class RachioSchedule(RachioSwitch):
         )
 
 
-class RachioValve(RachioHoseTimerDevice, SwitchEntity):
+class RachioValve(RachioHoseTimerEntity, SwitchEntity):
     """Representation of one smart hose timer valve."""
 
     _attr_name = None

@@ -51,13 +51,13 @@ class RachioDevice(Entity):
         )
 
 
-class RachioHoseTimerDevice(CoordinatorEntity[RachioUpdateCoordinator]):
-    """Base class for smart hose timer devices."""
+class RachioHoseTimerEntity(CoordinatorEntity[RachioUpdateCoordinator]):
+    """Base class for smart hose timer entities."""
 
     _attr_has_entity_name = True
 
     def __init__(self, data, coordinator: RachioUpdateCoordinator) -> None:
-        """Initialize a Rachio smart hose timer device."""
+        """Initialize a Rachio smart hose timer entity."""
         super().__init__(coordinator)
         self.id = data[KEY_ID]
         self._name = data[KEY_NAME]
@@ -73,7 +73,7 @@ class RachioHoseTimerDevice(CoordinatorEntity[RachioUpdateCoordinator]):
 
     @property
     def available(self) -> bool:
-        """Return if the device is available."""
+        """Return if the entity is available."""
         return (
             super().available
             and self.coordinator.data[self.id][KEY_STATE][KEY_REPORTED_STATE][
