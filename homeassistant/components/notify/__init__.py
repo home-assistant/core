@@ -182,16 +182,10 @@ class NotifyEntity(RestoreEntity):
         self.async_write_ha_state()
         await self.async_send_message(**kwargs)
 
-    def send_message(
-        self,
-        message: str,
-    ) -> None:
+    def send_message(self, message: str) -> None:
         """Send a message."""
         raise NotImplementedError
 
-    async def async_send_message(
-        self,
-        message: str,
-    ) -> None:
+    async def async_send_message(self, message: str) -> None:
         """Send a message."""
         await self.hass.async_add_executor_job(partial(self.send_message, message))
