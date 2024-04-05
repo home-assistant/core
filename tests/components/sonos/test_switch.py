@@ -1,5 +1,6 @@
 """Tests for the Sonos Alarm switch platform."""
 
+import asyncio
 from copy import copy
 from datetime import timedelta
 from unittest.mock import patch
@@ -28,6 +29,7 @@ async def test_entity_registry(
     hass: HomeAssistant, async_autosetup_sonos, entity_registry: er.EntityRegistry
 ) -> None:
     """Test sonos device with alarm registered in the device registry."""
+    await asyncio.sleep(0.5)
     await hass.async_block_till_done(wait_background_tasks=True)
     assert "media_player.zone_a" in entity_registry.entities
     assert "switch.sonos_alarm_14" in entity_registry.entities
@@ -48,6 +50,7 @@ async def test_switch_attributes(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test for correct Sonos switch states."""
+    await asyncio.sleep(0.5)
     await hass.async_block_till_done(wait_background_tasks=True)
     alarm = entity_registry.entities["switch.sonos_alarm_14"]
     alarm_state = hass.states.get(alarm.entity_id)
@@ -124,6 +127,7 @@ async def test_switch_attributes(
 
     # Trigger subscription callback for speaker discovery
     await fire_zgs_event()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     status_light_state = hass.states.get(status_light.entity_id)
     assert status_light_state.state == STATE_ON
@@ -148,6 +152,7 @@ async def test_alarm_create_delete(
 
     await async_setup_sonos()
     await hass.async_block_till_done(wait_background_tasks=True)
+    await asyncio.sleep(0.5)
 
     assert "switch.sonos_alarm_14" in entity_registry.entities
     assert "switch.sonos_alarm_15" not in entity_registry.entities
