@@ -104,13 +104,6 @@ BASE_BUILD_SENSOR_DESCRIPTIONS: tuple[
         value=lambda build: build.source_version,
     ),
     AzureDevOpsBaseBuildSensorEntityDescription(
-        key="status",
-        translation_key="status",
-        entity_registry_visible_default=False,
-        attrs=None,
-        value=lambda build: build.status,
-    ),
-    AzureDevOpsBaseBuildSensorEntityDescription(
         key="queue_time",
         translation_key="queue_time",
         device_class=SensorDeviceClass.DATE,

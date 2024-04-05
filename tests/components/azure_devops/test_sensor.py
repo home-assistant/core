@@ -24,7 +24,6 @@ SENSOR_KEYS = [
     "latest_build_result",
     "latest_build_source_branch",
     "latest_build_source_version",
-    "latest_build_status",
     "latest_build_queue_time",
     "latest_build_start_time",
     "latest_build_finish_time",

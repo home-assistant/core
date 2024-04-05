@@ -58,9 +58,6 @@
       "start_time": {
         "name": "{definition_name} latest build start time"
       },
-      "status": {
-        "name": "{definition_name} latest build status"
-      },
       "url": {
         "name": "{definition_name} latest build url"
       }
