@@ -926,7 +926,7 @@ def _add_state_and_state_changed_event(
     session.add(
         Events(
             event_id=event_id,
-            event_type=EVENT_STATE_CHANGED,
+            event_type=str(EVENT_STATE_CHANGED),
             event_data="{}",
             origin="LOCAL",
             time_fired_ts=dt_util.utc_to_timestamp(timestamp),

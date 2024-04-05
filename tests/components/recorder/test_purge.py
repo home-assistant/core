@@ -1036,7 +1036,7 @@ async def test_purge_without_state_attributes_filtered_states_to_empty(
             session.add(
                 Events(
                     event_id=event_id,
-                    event_type=EVENT_STATE_CHANGED,
+                    event_type=str(EVENT_STATE_CHANGED),
                     event_data="{}",
                     origin="LOCAL",
                     time_fired_ts=dt_util.utc_to_timestamp(timestamp),
@@ -1045,7 +1045,7 @@ async def test_purge_without_state_attributes_filtered_states_to_empty(
             session.add(
                 Events(
                     event_id=event_id + 1,
-                    event_type=EVENT_THEMES_UPDATED,
+                    event_type=str(EVENT_THEMES_UPDATED),
                     event_data="{}",
                     origin="LOCAL",
                     time_fired_ts=dt_util.utc_to_timestamp(timestamp),
