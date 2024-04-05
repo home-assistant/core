@@ -299,7 +299,7 @@ async def test_setup_entry_wait_usb(hass: HomeAssistant) -> None:
         return_value=False,
     ) as mock_is_plugged_in:
         await hass.config_entries.async_setup(config_entry.entry_id)
-        assert config_entry.state == ConfigEntryState.LOADED
+        assert config_entry.state is ConfigEntryState.LOADED
         assert len(hass.config_entries.async_entries(DOMAIN)) == 1
         # USB discovery starts, config entry should be removed
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
@@ -340,7 +340,7 @@ async def test_setup_entry_addon_info_fails(
     ):
         assert not await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
-        assert config_entry.state == ConfigEntryState.SETUP_RETRY
+        assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_setup_entry_addon_not_running(
@@ -373,5 +373,5 @@ async def test_setup_entry_addon_not_running(
     ):
         assert not await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
-        assert config_entry.state == ConfigEntryState.SETUP_RETRY
+        assert config_entry.state is ConfigEntryState.SETUP_RETRY
         start_addon.assert_called_once()

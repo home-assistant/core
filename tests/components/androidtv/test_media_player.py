@@ -591,7 +591,7 @@ async def test_setup_fail(
 
         await async_update_entity(hass, entity_id)
         state = hass.states.get(entity_id)
-        assert config_entry.state == ConfigEntryState.SETUP_RETRY
+        assert config_entry.state is ConfigEntryState.SETUP_RETRY
         assert state is None
 
 
