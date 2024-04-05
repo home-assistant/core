@@ -5,6 +5,7 @@ from __future__ import annotations
 from http import HTTPStatus
 import os
 import re
+import threading
 
 import requests
 import voluptuous as vol
@@ -42,6 +43,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if DOMAIN not in config:
         return True
 
+    hass.async_create_task(_async_import_config(hass, config), eager_start=True)
+    return True
+
+
+async def _async_import_config(hass: HomeAssistant, config: ConfigType) -> None:
+    """Import the Downloader component from the YAML file."""
+
     import_result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_IMPORT},
@@ -71,7 +79,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             "integration_title": "Downloader",
         },
     )
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -88,7 +95,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
         return False
 
-    async def download_file(service: ServiceCall) -> None:
+    def download_file(service: ServiceCall) -> None:
         """Start thread to download file specified in the URL."""
 
         def do_download() -> None:
@@ -194,7 +201,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 if final_path and os.path.isfile(final_path):
                     os.remove(final_path)
 
-        await hass.async_add_executor_job(do_download)
+        threading.Thread(target=do_download).start()
 
     async_register_admin_service(
         hass,
