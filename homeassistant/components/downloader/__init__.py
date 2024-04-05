@@ -11,7 +11,11 @@ import requests
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    HomeAssistant,
+    ServiceCall,
+)
 from homeassistant.data_entry_flow import FlowResultType
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
@@ -58,22 +62,35 @@ async def _async_import_config(hass: HomeAssistant, config: ConfigType) -> None:
         },
     )
 
-    translation_key = "deprecated_yaml"
     if (
         import_result["type"] == FlowResultType.ABORT
-        and import_result["reason"] == "import_failed"
+        and import_result["reason"] != "single_instance_allowed"
     ):
-        translation_key = "import_failed"
+        async_create_issue(
+            hass,
+            DOMAIN,
+            f"deprecated_yaml_{DOMAIN}",
+            breaks_in_ha_version="2024.9.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=IssueSeverity.WARNING,
+            translation_key="directory_does_not_exist",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "Downloader",
+                "url": "/config/integrations/dashboard/add?domain=downloader",
+            },
+        )
 
     async_create_issue(
         hass,
-        DOMAIN,
+        HOMEASSISTANT_DOMAIN,
         f"deprecated_yaml_{DOMAIN}",
         breaks_in_ha_version="2024.10.0",
         is_fixable=False,
         issue_domain=DOMAIN,
         severity=IssueSeverity.WARNING,
-        translation_key=translation_key,
+        translation_key="deprecated_yaml",
         translation_placeholders={
             "domain": DOMAIN,
             "integration_title": "Downloader",
