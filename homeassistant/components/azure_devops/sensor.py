@@ -99,34 +99,6 @@ async def async_setup_entry(
                 value=lambda build: build.build_number,
             ),
             AzureDevOpsSensorEntityDescription(
-                key=f"{build_sensor_key_base}_definition_id",
-                translation_key="definition_id",
-                translation_placeholders={"definition_name": build.definition.name},
-                entity_registry_enabled_default=False,
-                entity_registry_visible_default=False,
-                attrs=None,
-                build_key=key,
-                organization=entry.data[CONF_ORG],
-                project=project,
-                value=lambda build: (
-                    build.definition.build_id if build.definition else None
-                ),
-            ),
-            AzureDevOpsSensorEntityDescription(
-                key=f"{build_sensor_key_base}_definition_name",
-                translation_key="definition_name",
-                translation_placeholders={"definition_name": build.definition.name},
-                entity_registry_enabled_default=False,
-                entity_registry_visible_default=False,
-                attrs=None,
-                build_key=key,
-                organization=entry.data[CONF_ORG],
-                project=project,
-                value=lambda build: (
-                    build.definition.name if build.definition else None
-                ),
-            ),
-            AzureDevOpsSensorEntityDescription(
                 key=f"{build_sensor_key_base}_build_id",
                 translation_key="build_id",
                 translation_placeholders={"definition_name": build.definition.name},
