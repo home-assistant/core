@@ -93,6 +93,7 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
             self.unsub = None
         self.last_update_success = False
         self.async_update_listeners()
+        self.registered = False
 
     async def async_get_data(
         self,
