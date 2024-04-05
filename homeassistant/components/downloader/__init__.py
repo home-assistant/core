@@ -43,6 +43,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if DOMAIN not in config:
         return True
 
+    hass.async_create_task(_async_import_config(hass, config), eager_start=True)
+    return True
+
+
+async def _async_import_config(hass: HomeAssistant, config: ConfigType) -> None:
+    """Import the Downloader component from the YAML file."""
+
     import_result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_IMPORT},
@@ -62,7 +69,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass,
         DOMAIN,
         f"deprecated_yaml_{DOMAIN}",
-        breaks_in_ha_version="2024.9.0",
+        breaks_in_ha_version="2024.10.0",
         is_fixable=False,
         issue_domain=DOMAIN,
         severity=IssueSeverity.WARNING,
@@ -72,7 +79,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             "integration_title": "Downloader",
         },
     )
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
