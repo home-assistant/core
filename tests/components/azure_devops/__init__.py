@@ -43,7 +43,7 @@ DEVOPS_PROJECT = DevOpsProject(
 
 DEVOPS_BUILD_DEFINITION = DevOpsBuildDefinition(
     build_id=9876,
-    name="Test Build",
+    name="CI",
     url=f"https://dev.azure.com/{ORGANIZATION}/{PROJECT}/_apis/build/definitions/1",
     path="",
     build_type="build",
