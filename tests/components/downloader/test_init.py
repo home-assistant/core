@@ -9,6 +9,7 @@ from homeassistant.components.downloader import (
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -30,7 +31,7 @@ async def test_initialization(hass: HomeAssistant) -> None:
     assert config_entry.state is ConfigEntryState.LOADED
 
 
-async def test_import(hass: HomeAssistant) -> None:
+async def test_import(hass: HomeAssistant, issue_registry: ir.IssueRegistry) -> None:
     """Test the import of the downloader component."""
     with patch("os.path.isdir", return_value=True):
         assert await async_setup_component(
@@ -49,3 +50,4 @@ async def test_import(hass: HomeAssistant) -> None:
     assert config_entry.data == {CONF_DOWNLOAD_DIR: "/test_dir"}
     assert config_entry.state is ConfigEntryState.LOADED
     assert hass.services.has_service(DOMAIN, SERVICE_DOWNLOAD_FILE)
+    assert len(issue_registry.issues) == 1
