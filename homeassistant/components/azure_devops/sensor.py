@@ -106,7 +106,7 @@ BASE_BUILD_SENSOR_DESCRIPTIONS: tuple[
     AzureDevOpsBaseBuildSensorEntityDescription(
         key="queue_time",
         translation_key="queue_time",
-        device_class=SensorDeviceClass.DATE,
+        device_class=SensorDeviceClass.TIMESTAMP,
         entity_registry_enabled_default=False,
         entity_registry_visible_default=False,
         attrs=None,
@@ -115,7 +115,7 @@ BASE_BUILD_SENSOR_DESCRIPTIONS: tuple[
     AzureDevOpsBaseBuildSensorEntityDescription(
         key="start_time",
         translation_key="start_time",
-        device_class=SensorDeviceClass.DATE,
+        device_class=SensorDeviceClass.TIMESTAMP,
         entity_registry_visible_default=False,
         attrs=None,
         value=lambda build: parse_datetime(build.start_time),
