@@ -72,6 +72,11 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
 
     async def check_websocket_connected(self) -> None:
         """Check if WebSocket is connected."""
+        self.logger.debug(
+            "[check_websocket_connected] WebSocket connected: %s",
+            self.websocket_client.connected,
+        )
+
         if not self.websocket_client.connected:
             self.registered = False
             await self.websocket_client.connect()
@@ -144,11 +149,6 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
 
     async def _async_update_data(self) -> SystemBridgeData:
         """Update System Bridge data from WebSocket."""
-        self.logger.debug(
-            "[_async_update_data] WebSocket Connected: %s",
-            self.websocket_client.connected,
-        )
-
         if not self.registered:
             try:
                 await self.check_websocket_connected()
