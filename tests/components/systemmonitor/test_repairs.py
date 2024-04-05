@@ -94,7 +94,7 @@ async def test_migrate_process_sensor(
     assert resp.status == HTTPStatus.OK
     data = await resp.json()
 
-    assert data["type"] is FlowResultType.CREATE_ENTRY
+    assert data["type"] == FlowResultType.CREATE_ENTRY
     await hass.async_block_till_done()
 
     state = hass.states.get("binary_sensor.system_monitor_process_python3")
@@ -192,5 +192,5 @@ async def test_other_fixable_issues(
     assert resp.status == HTTPStatus.OK
     data = await resp.json()
 
-    assert data["type"] is FlowResultType.CREATE_ENTRY
+    assert data["type"] == FlowResultType.CREATE_ENTRY
     await hass.async_block_till_done()
