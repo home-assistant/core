@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from asyncio import Task
 from collections.abc import Callable
 from datetime import timedelta
 import logging
@@ -50,7 +51,7 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
         self.title = entry.title
         self.unsub: Callable | None = None
 
-        self.registered = False
+        self.listen_task: Task | None = None
         self.websocket_client = WebSocketClient(
             api_host=entry.data[CONF_HOST],
             api_port=entry.data[CONF_PORT],
@@ -78,13 +79,15 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
         )
 
         if not self.websocket_client.connected:
-            self.registered = False
             await self.websocket_client.connect()
 
     async def close_websocket(self) -> None:
         """Close WebSocket connection."""
         await self.websocket_client.close()
-        self.registered = False
+        if self.listen_task is not None:
+            self.listen_task.cancel(
+                msg="WebSocket closed on Home Assistant shutdown",
+            )
 
     async def clean_disconnect(self) -> None:
         """Clean disconnect WebSocket."""
@@ -93,7 +96,10 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
             self.unsub = None
         self.last_update_success = False
         self.async_update_listeners()
-        self.registered = False
+        if self.listen_task is not None:
+            self.listen_task.cancel(
+                msg="WebSocket disconnected",
+            )
 
     async def async_get_data(
         self,
@@ -150,11 +156,11 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
 
     async def _async_update_data(self) -> SystemBridgeData:
         """Update System Bridge data from WebSocket."""
-        if not self.registered or not self.websocket_client.connected:
+        if self.listen_task is None or not self.websocket_client.connected:
             try:
                 await self.check_websocket_connected()
 
-                self.hass.async_create_background_task(
+                self.listen_task = self.hass.async_create_background_task(
                     self._listen_for_data(),
                     name="System Bridge WebSocket Listener",
                 )
@@ -162,7 +168,6 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
                 await self.websocket_client.register_data_listener(
                     RegisterDataListener(modules=MODULES)
                 )
-                self.registered = True
 
                 self.last_update_success = True
                 self.async_update_listeners()
