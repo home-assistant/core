@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 from dataclasses import asdict
-from typing import Any
+from typing import Any, TypedDict
+
+from lmcloud.const import FirmwareType
 
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.config_entries import ConfigEntry
@@ -17,6 +19,15 @@ TO_REDACT = {
 }
 
 
+class DiagnosticData(TypedDict):
+    """Diagnostic data for La Marzocco."""
+
+    model: str
+    config: dict[str, Any]
+    firmware: list[dict[FirmwareType, dict[str, Any]]]
+    statistics: dict[str, Any]
+
+
 async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: ConfigEntry
 ) -> dict[str, Any]:
@@ -24,12 +35,11 @@ async def async_get_config_entry_diagnostics(
     coordinator: LaMarzoccoUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     device = coordinator.device
     # collect all data sources
-    data = {}
-    data["model"] = device.model
-    data["config"] = asdict(device.config)
-    data["firmware"] = [
-        {key: asdict(firmware)} for key, firmware in device.firmware.items()
-    ]
-    data["statistics"] = asdict(device.statistics)
+    diagnostic_data = DiagnosticData(
+        model=device.model,
+        config=asdict(device.config),
+        firmware=[{key: asdict(firmware)} for key, firmware in device.firmware.items()],
+        statistics=asdict(device.statistics),
+    )
 
-    return async_redact_data(data, TO_REDACT)
+    return async_redact_data(diagnostic_data, TO_REDACT)
