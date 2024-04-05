@@ -156,7 +156,7 @@ async def test_new_dashboard_fix_reauth(
                 "unique_id": mock_config_entry.unique_id,
             },
         )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     assert len(mock_get_encryption_key.mock_calls) == 0
 
