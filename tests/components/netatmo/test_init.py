@@ -9,9 +9,9 @@ from pyatmo.const import ALL_SCOPES
 import pytest
 from syrupy import SnapshotAssertion
 
-from homeassistant import config_entries
 from homeassistant.components import cloud
 from homeassistant.components.netatmo import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_WEBHOOK_ID, Platform
 from homeassistant.core import CoreState, HomeAssistant
 import homeassistant.helpers.device_registry as dr
@@ -82,7 +82,7 @@ async def test_setup_component(
     mock_impl.assert_called_once()
     mock_webhook.assert_called_once()
 
-    assert config_entry.state is config_entries.ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
     assert hass.config_entries.async_entries(DOMAIN)
     assert len(hass.states.async_all()) > 0
 
@@ -425,7 +425,7 @@ async def test_setup_component_invalid_token_scope(hass: HomeAssistant) -> None:
     mock_impl.assert_called_once()
     mock_webhook.assert_not_called()
 
-    assert config_entry.state is config_entries.ConfigEntryState.SETUP_ERROR
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
     assert hass.config_entries.async_entries(DOMAIN)
 
     notifications = async_get_persistent_notifications(hass)
@@ -479,7 +479,7 @@ async def test_setup_component_invalid_token(
     mock_impl.assert_called_once()
     mock_webhook.assert_not_called()
 
-    assert config_entry.state is config_entries.ConfigEntryState.SETUP_ERROR
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
     assert hass.config_entries.async_entries(DOMAIN)
     notifications = async_get_persistent_notifications(hass)
     assert len(notifications) > 0
