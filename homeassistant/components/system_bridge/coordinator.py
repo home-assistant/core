@@ -149,10 +149,10 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
             self.websocket_client.connected,
         )
 
-        await self.check_websocket_connected()
-
         if not self.registered:
             try:
+                await self.check_websocket_connected()
+
                 self.hass.async_create_background_task(
                     self._listen_for_data(),
                     name="System Bridge WebSocket Listener",
