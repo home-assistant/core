@@ -17,6 +17,7 @@ from contextvars import ContextVar
 from copy import deepcopy
 from enum import Enum, StrEnum
 import functools
+from functools import cached_property
 import logging
 from random import randint
 from types import MappingProxyType
@@ -69,8 +70,6 @@ from .util.async_ import create_eager_task
 from .util.decorator import Registry
 
 if TYPE_CHECKING:
-    from functools import cached_property
-
     from .components.bluetooth import BluetoothServiceInfoBleak
     from .components.dhcp import DhcpServiceInfo
     from .components.hassio import HassioServiceInfo
@@ -78,8 +77,6 @@ if TYPE_CHECKING:
     from .components.usb import UsbServiceInfo
     from .components.zeroconf import ZeroconfServiceInfo
     from .helpers.service_info.mqtt import MqttServiceInfo
-else:
-    from .backports.functools import cached_property
 
 
 _LOGGER = logging.getLogger(__name__)

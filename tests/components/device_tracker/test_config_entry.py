@@ -336,14 +336,14 @@ async def test_load_unload_entry(
 ) -> None:
     """Test loading and unloading a config entry with a device tracker entity."""
     config_entry = await create_mock_platform(hass, config_entry, [tracker_entity])
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     state = hass.states.get(entity_id)
     assert state
 
     assert await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
 
     state = hass.states.get(entity_id)
     assert not state
@@ -436,7 +436,7 @@ async def test_tracker_entity_state(
 ) -> None:
     """Test tracker entity state and state attributes."""
     config_entry = await create_mock_platform(hass, config_entry, [tracker_entity])
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
     hass.states.async_set(
         "zone.home",
         "0",
@@ -482,7 +482,7 @@ async def test_scanner_entity_state(
     )
 
     config_entry = await create_mock_platform(hass, config_entry, [scanner_entity])
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     entity_state = hass.states.get(entity_id)
     assert entity_state

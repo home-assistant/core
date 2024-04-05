@@ -296,7 +296,7 @@ async def test_integration_unloaded(hass: HomeAssistant, auth, setup_platform) -
     assert entry.state is ConfigEntryState.LOADED
 
     assert await hass.config_entries.async_unload(entry.entry_id)
-    assert entry.state == ConfigEntryState.NOT_LOADED
+    assert entry.state is ConfigEntryState.NOT_LOADED
 
     # No devices returned
     browse = await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}")
@@ -1166,10 +1166,10 @@ async def test_media_store_persistence(
     await hass.async_block_till_done()
 
     # Unload the integration.
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
     assert await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
 
     # Now rebuild the entire integration and verify that all persisted storage
     # can be re-loaded from disk.

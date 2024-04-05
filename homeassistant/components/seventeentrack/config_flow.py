@@ -9,8 +9,7 @@ from py17track import Client as SeventeenTrackClient
 from py17track.errors import SeventeenTrackError
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.config_entries import ConfigFlowResult
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
@@ -47,7 +46,7 @@ USER_SCHEMA = vol.Schema(
 )
 
 
-class SeventeenTrackConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class SeventeenTrackConfigFlow(ConfigFlow, domain=DOMAIN):
     """17track config flow."""
 
     VERSION = 1
@@ -55,7 +54,7 @@ class SeventeenTrackConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
+        config_entry: ConfigEntry,
     ) -> SchemaOptionsFlowHandler:
         """Get options flow for this handler."""
         return SchemaOptionsFlowHandler(config_entry, OPTIONS_FLOW)
