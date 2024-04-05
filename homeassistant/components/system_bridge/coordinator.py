@@ -149,7 +149,7 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
 
     async def _async_update_data(self) -> SystemBridgeData:
         """Update System Bridge data from WebSocket."""
-        if not self.registered:
+        if not self.registered or not self.websocket_client.connected:
             try:
                 await self.check_websocket_connected()
 
