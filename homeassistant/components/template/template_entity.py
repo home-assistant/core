@@ -4,9 +4,10 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 import contextlib
+from functools import cached_property
 import itertools
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 import voluptuous as vol
 
@@ -22,6 +23,7 @@ from homeassistant.core import (
     CALLBACK_TYPE,
     Context,
     Event,
+    EventStateChangedData,
     HomeAssistant,
     State,
     callback,
@@ -31,7 +33,6 @@ from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import (
-    EventStateChangedData,
     TrackTemplate,
     TrackTemplateResult,
     TrackTemplateResultInfo,
@@ -57,11 +58,6 @@ from .const import (
     CONF_AVAILABILITY_TEMPLATE,
     CONF_PICTURE,
 )
-
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
 
 _LOGGER = logging.getLogger(__name__)
 
