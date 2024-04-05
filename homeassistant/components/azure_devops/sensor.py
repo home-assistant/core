@@ -169,6 +169,17 @@ async def async_setup_entry(
                 value=lambda build: build.source_version,
             ),
             AzureDevOpsSensorEntityDescription(
+                key=f"{build_sensor_key_base}_status",
+                translation_key="status",
+                translation_placeholders={"definition_name": build.definition.name},
+                entity_registry_visible_default=False,
+                attrs=None,
+                build_key=key,
+                organization=entry.data[CONF_ORG],
+                project=project,
+                value=lambda build: build.status,
+            ),
+            AzureDevOpsSensorEntityDescription(
                 key=f"{build_sensor_key_base}_queue_time",
                 translation_key="queue_time",
                 translation_placeholders={"definition_name": build.definition.name},

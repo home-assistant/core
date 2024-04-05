@@ -35,13 +35,13 @@
         "name": "{definition_name} build id"
       },
       "finish_time": {
-        "name": "{definition_name} finish time"
+        "name": "{definition_name} build finish time"
       },
       "latest_build": {
         "name": "{definition_name} latest build"
       },
       "queue_time": {
-        "name": "{definition_name} queue time"
+        "name": "{definition_name} build queue time"
       },
       "reason": {
         "name": "{definition_name} build reason"
@@ -50,13 +50,19 @@
         "name": "{definition_name} build result"
       },
       "source_branch": {
-        "name": "{definition_name} source branch"
+        "name": "{definition_name} build source branch"
       },
       "source_version": {
-        "name": "{definition_name} source version"
+        "name": "{definition_name} build source version"
       },
       "start_time": {
-        "name": "{definition_name} start time"
+        "name": "{definition_name} build start time"
+      },
+      "status": {
+        "name": "{definition_name} build status"
+      },
+      "url": {
+        "name": "{definition_name} build url"
       }
     }
   }
