@@ -79,17 +79,17 @@ class Thermostat(ZHAEntity, ClimateEntity):
     @property
     def hvac_action(self) -> HVACAction | None:
         """Return the current HVAC action."""
-        return self.entity_data.entity.hvac_action
+        return HVACAction(self.entity_data.entity.hvac_action)
 
     @property
     def hvac_mode(self) -> HVACMode | None:
         """Return HVAC operation mode."""
-        return self.entity_data.entity.hvac_mode
+        return HVACMode(self.entity_data.entity.hvac_mode)
 
-    @property
+    @functools.cached_property
     def hvac_modes(self) -> list[HVACMode]:
         """Return the list of available HVAC operation modes."""
-        return self.entity_data.entity.hvac_modes
+        return [HVACMode(mode) for mode in self.entity_data.entity.hvac_modes]
 
     @property
     def preset_mode(self) -> str:
