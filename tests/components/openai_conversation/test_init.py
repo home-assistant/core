@@ -26,6 +26,7 @@ from homeassistant.setup import async_setup_component
 from tests.common import MockConfigEntry
 
 
+@pytest.mark.parametrize("agent_id", [(None, "conversation.openai")])
 async def test_default_prompt(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -33,12 +34,16 @@ async def test_default_prompt(
     area_registry: ar.AreaRegistry,
     device_registry: dr.DeviceRegistry,
     snapshot: SnapshotAssertion,
+    agent_id: str,
 ) -> None:
     """Test that the default prompt works."""
     entry = MockConfigEntry(title=None)
     entry.add_to_hass(hass)
     for i in range(3):
         area_registry.async_create(f"{i}Empty Area")
+
+    if agent_id is None:
+        agent_id = mock_config_entry.entry_id
 
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
@@ -133,7 +138,7 @@ async def test_default_prompt(
         ),
     ) as mock_create:
         result = await conversation.async_converse(
-            hass, "hello", None, Context(), agent_id=mock_config_entry.entry_id
+            hass, "hello", None, Context(), agent_id=agent_id
         )
 
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
