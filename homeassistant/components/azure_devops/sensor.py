@@ -123,7 +123,7 @@ BASE_BUILD_SENSOR_DESCRIPTIONS: tuple[
     AzureDevOpsBaseBuildSensorEntityDescription(
         key="finish_time",
         translation_key="finish_time",
-        device_class=SensorDeviceClass.DATE,
+        device_class=SensorDeviceClass.TIMESTAMP,
         entity_registry_visible_default=False,
         attrs=None,
         value=lambda build: parse_datetime(build.finish_time),
