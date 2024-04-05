@@ -28,27 +28,19 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True, kw_only=True)
-class AzureDevOpsBaseBuildSensorEntityDescription(SensorEntityDescription):
+class AzureDevOpsBuildSensorEntityDescription(
+    AzureDevOpsEntityDescription, SensorEntityDescription
+):
     """Class describing Azure DevOps base build sensor entities."""
 
     attrs: Callable[[DevOpsBuild], dict[str, Any]] | None
     value: Callable[[DevOpsBuild], datetime | StateType]
 
-
-@dataclass(frozen=True, kw_only=True)
-class AzureDevOpsBuildSensorEntityDescription(
-    AzureDevOpsEntityDescription,
-    AzureDevOpsBaseBuildSensorEntityDescription,
-):
-    """Class describing Azure DevOps build sensor entities."""
-
     item_key: int = 0
 
 
-BASE_BUILD_SENSOR_DESCRIPTIONS: tuple[
-    AzureDevOpsBaseBuildSensorEntityDescription, ...
-] = (
-    AzureDevOpsBaseBuildSensorEntityDescription(
+BASE_BUILD_SENSOR_DESCRIPTIONS: tuple[AzureDevOpsBuildSensorEntityDescription, ...] = (
+    AzureDevOpsBuildSensorEntityDescription(
         key="latest_build",
         translation_key="latest_build",
         attrs=lambda build: {
@@ -67,28 +59,28 @@ BASE_BUILD_SENSOR_DESCRIPTIONS: tuple[
         },
         value=lambda build: build.build_number,
     ),
-    AzureDevOpsBaseBuildSensorEntityDescription(
+    AzureDevOpsBuildSensorEntityDescription(
         key="build_id",
         translation_key="build_id",
         entity_registry_visible_default=False,
         attrs=None,
         value=lambda build: build.build_id,
     ),
-    AzureDevOpsBaseBuildSensorEntityDescription(
+    AzureDevOpsBuildSensorEntityDescription(
         key="reason",
         translation_key="reason",
         entity_registry_visible_default=False,
         attrs=None,
         value=lambda build: build.reason,
     ),
-    AzureDevOpsBaseBuildSensorEntityDescription(
+    AzureDevOpsBuildSensorEntityDescription(
         key="result",
         translation_key="result",
         entity_registry_visible_default=False,
         attrs=None,
         value=lambda build: build.result,
     ),
-    AzureDevOpsBaseBuildSensorEntityDescription(
+    AzureDevOpsBuildSensorEntityDescription(
         key="source_branch",
         translation_key="source_branch",
         entity_registry_enabled_default=False,
@@ -96,14 +88,14 @@ BASE_BUILD_SENSOR_DESCRIPTIONS: tuple[
         attrs=None,
         value=lambda build: build.source_branch,
     ),
-    AzureDevOpsBaseBuildSensorEntityDescription(
+    AzureDevOpsBuildSensorEntityDescription(
         key="source_version",
         translation_key="source_version",
         entity_registry_visible_default=False,
         attrs=None,
         value=lambda build: build.source_version,
     ),
-    AzureDevOpsBaseBuildSensorEntityDescription(
+    AzureDevOpsBuildSensorEntityDescription(
         key="queue_time",
         translation_key="queue_time",
         device_class=SensorDeviceClass.TIMESTAMP,
@@ -112,7 +104,7 @@ BASE_BUILD_SENSOR_DESCRIPTIONS: tuple[
         attrs=None,
         value=lambda build: parse_datetime(build.queue_time),
     ),
-    AzureDevOpsBaseBuildSensorEntityDescription(
+    AzureDevOpsBuildSensorEntityDescription(
         key="start_time",
         translation_key="start_time",
         device_class=SensorDeviceClass.TIMESTAMP,
@@ -120,7 +112,7 @@ BASE_BUILD_SENSOR_DESCRIPTIONS: tuple[
         attrs=None,
         value=lambda build: parse_datetime(build.start_time),
     ),
-    AzureDevOpsBaseBuildSensorEntityDescription(
+    AzureDevOpsBuildSensorEntityDescription(
         key="finish_time",
         translation_key="finish_time",
         device_class=SensorDeviceClass.TIMESTAMP,
@@ -128,7 +120,7 @@ BASE_BUILD_SENSOR_DESCRIPTIONS: tuple[
         attrs=None,
         value=lambda build: parse_datetime(build.finish_time),
     ),
-    AzureDevOpsBaseBuildSensorEntityDescription(
+    AzureDevOpsBuildSensorEntityDescription(
         key="url",
         translation_key="url",
         attrs=None,
