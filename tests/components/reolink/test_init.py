@@ -68,7 +68,7 @@ async def test_failures_parametrized(
     """Test outcomes when changing errors."""
     setattr(reolink_connect, attr, value)
     assert await hass.config_entries.async_setup(config_entry.entry_id) is (
-        expected == ConfigEntryState.LOADED
+        expected is ConfigEntryState.LOADED
     )
     await hass.async_block_till_done()
 
@@ -88,7 +88,7 @@ async def test_firmware_error_twice(
         assert await hass.config_entries.async_setup(config_entry.entry_id) is True
     await hass.async_block_till_done()
 
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     entity_id = f"{Platform.UPDATE}.{TEST_NVR_NAME}_firmware"
     assert hass.states.is_state(entity_id, STATE_OFF)

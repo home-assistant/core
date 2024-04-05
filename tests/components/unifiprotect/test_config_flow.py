@@ -18,6 +18,7 @@ from homeassistant.components.unifiprotect.const import (
     CONF_OVERRIDE_CHOST,
     DOMAIN,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -307,7 +308,7 @@ async def test_form_options(hass: HomeAssistant, ufp_client: ProtectApiClient) -
 
         await hass.config_entries.async_setup(mock_config.entry_id)
         await hass.async_block_till_done()
-        assert mock_config.state == config_entries.ConfigEntryState.LOADED
+        assert mock_config.state is ConfigEntryState.LOADED
 
         result = await hass.config_entries.options.async_init(mock_config.entry_id)
         assert result["type"] is FlowResultType.FORM
