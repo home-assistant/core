@@ -9,6 +9,7 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.components import zeroconf
 from homeassistant.components.blebox import config_flow
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -203,7 +204,7 @@ async def test_async_setup_entry(hass: HomeAssistant, valid_feature_mock) -> Non
     await hass.async_block_till_done()
 
     assert hass.config_entries.async_entries() == [config]
-    assert config.state is config_entries.ConfigEntryState.LOADED
+    assert config.state is ConfigEntryState.LOADED
 
 
 async def test_async_remove_entry(hass: HomeAssistant, valid_feature_mock) -> None:
@@ -219,7 +220,7 @@ async def test_async_remove_entry(hass: HomeAssistant, valid_feature_mock) -> No
     await hass.async_block_till_done()
 
     assert hass.config_entries.async_entries() == []
-    assert config.state is config_entries.ConfigEntryState.NOT_LOADED
+    assert config.state is ConfigEntryState.NOT_LOADED
 
 
 async def test_flow_with_zeroconf(hass: HomeAssistant) -> None:

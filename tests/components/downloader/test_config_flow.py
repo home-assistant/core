@@ -95,3 +95,21 @@ async def test_import_flow_success(hass: HomeAssistant) -> None:
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == "Downloader"
         assert result["data"] == CONFIG
+        assert result["data"] == {}
+        assert result["options"] == {}
+
+
+async def test_import_flow_directory_not_found(hass: HomeAssistant) -> None:
+    """Test import flow."""
+    with patch("os.path.isdir", return_value=False):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={
+                CONF_DOWNLOAD_DIR: "download_dir",
+            },
+        )
+        await hass.async_block_till_done()
+
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "directory_does_not_exist"
