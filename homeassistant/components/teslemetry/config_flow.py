@@ -91,9 +91,8 @@ class TeslemetryConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._entry,
                 data=user_input,
             )
-            self.hass.async_create_task(
-                self.hass.config_entries.async_reload(self._entry.entry_id)
-            )
+            await self.hass.config_entries.async_reload(self._entry.entry_id)
+
             return self.async_abort(reason="reauth_successful")
 
         return self.async_show_form(
