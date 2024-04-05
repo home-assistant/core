@@ -2,11 +2,11 @@
 
 from unittest.mock import patch
 
-from homeassistant import data_entry_flow
 from homeassistant.components.poolsense.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 
 async def test_show_form(hass: HomeAssistant) -> None:
@@ -15,7 +15,7 @@ async def test_show_form(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
 
@@ -31,7 +31,7 @@ async def test_invalid_credentials(hass: HomeAssistant) -> None:
             data={CONF_EMAIL: "test-email", CONF_PASSWORD: "test-password"},
         )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_auth"}
 
 
@@ -50,7 +50,7 @@ async def test_valid_credentials(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "test-email"
 
     assert len(mock_setup_entry.mock_calls) == 1

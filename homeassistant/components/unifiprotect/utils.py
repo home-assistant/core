@@ -145,7 +145,8 @@ def async_create_api_client(
         override_connection_host=entry.options.get(CONF_OVERRIDE_CHOST, False),
         ignore_stats=not entry.options.get(CONF_ALL_UPDATES, False),
         ignore_unadopted=False,
-        cache_dir=Path(hass.config.path(STORAGE_DIR, "unifiprotect_cache")),
+        cache_dir=Path(hass.config.path(STORAGE_DIR, "unifiprotect")),
+        config_dir=Path(hass.config.path(STORAGE_DIR, "unifiprotect")),
     )
 
 

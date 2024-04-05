@@ -8,7 +8,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant import setup
-import homeassistant.components.automation as automation
+from homeassistant.components import automation
 from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
 

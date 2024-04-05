@@ -7,10 +7,10 @@ from zigpy.exceptions import DeliveryError
 from zigpy.ota import OtaImageWithMetadata
 import zigpy.ota.image as firmware
 from zigpy.ota.providers import BaseOtaImageMetadata
-import zigpy.profiles.zha as zha
+from zigpy.profiles import zha
 import zigpy.types as t
-import zigpy.zcl.clusters.general as general
-import zigpy.zcl.foundation as foundation
+from zigpy.zcl import foundation
+from zigpy.zcl.clusters import general
 
 from homeassistant.components.homeassistant import (
     DOMAIN as HA_DOMAIN,
