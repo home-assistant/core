@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from enum import StrEnum
-from functools import lru_cache, partial
+from functools import cached_property, lru_cache, partial
 import logging
 import time
 from typing import TYPE_CHECKING, Any, Literal, TypedDict, TypeVar, cast
@@ -12,7 +12,6 @@ from typing import TYPE_CHECKING, Any, Literal, TypedDict, TypeVar, cast
 import attr
 from yarl import URL
 
-from homeassistant.backports.functools import cached_property
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback, get_release_channel
 from homeassistant.exceptions import HomeAssistantError
@@ -1008,7 +1007,7 @@ class DeviceRegistry(BaseRegistry):
     def async_clear_config_entry(self, config_entry_id: str) -> None:
         """Clear config entry from registry entries."""
         now_time = time.time()
-        for device in list(self.devices.values()):
+        for device in self.devices.get_devices_for_config_entry_id(config_entry_id):
             self.async_update_device(device.id, remove_config_entry_id=config_entry_id)
         for deleted_device in list(self.deleted_devices.values()):
             config_entries = deleted_device.config_entries

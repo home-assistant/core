@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
+from functools import cached_property
 from typing import TYPE_CHECKING, Any, cast
 
 from sqlalchemy.engine.row import Row
@@ -19,11 +20,6 @@ from homeassistant.const import ATTR_ICON, EVENT_STATE_CHANGED
 from homeassistant.core import Context, Event, State, callback
 from homeassistant.util.json import json_loads
 from homeassistant.util.ulid import ulid_to_bytes
-
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
 
 
 @dataclass(slots=True)
