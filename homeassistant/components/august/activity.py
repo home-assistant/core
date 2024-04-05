@@ -159,7 +159,7 @@ class ActivityStream(AugustSubscriberMixin):
             or monotonic() - self._start_time < INITIAL_LOCK_RESYNC_TIME
         ):
             _LOGGER.debug(
-                "Skipping additional updates because we are in the initial lock resync time"
+                "Skipping additional updates due to ongoing initial lock resync time"
             )
             return
 
