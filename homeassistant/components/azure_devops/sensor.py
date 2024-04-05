@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+import logging
 from typing import Any
 
 from aioazuredevops.builds import DevOpsBuild
@@ -16,6 +17,8 @@ from homeassistant.helpers.typing import StateType
 
 from . import AzureDevOpsDeviceEntity, AzureDevOpsEntityDescription
 from .const import CONF_ORG, DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -30,16 +33,32 @@ class AzureDevOpsSensorEntityDescription(
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Azure DevOps sensor based on a config entry."""
     coordinator, project = hass.data[DOMAIN][entry.entry_id]
+    initial_data: list[DevOpsBuild] = coordinator.data
 
-    sensors = [
-        AzureDevOpsSensor(
-            coordinator,
+    sensors: list[AzureDevOpsSensor] = []
+
+    for key, build in enumerate(initial_data):
+        if build.project is None or build.definition is None:
+            _LOGGER.warning(
+                "Skipping build %s as it is missing project or definition: %s",
+                key,
+                build,
+            )
+            continue
+
+        build_sensor_key_base = (
+            f"{build.project.project_id}_{build.definition.build_id}"
+        )
+
+        descriptions: list[AzureDevOpsSensorEntityDescription] = [
             AzureDevOpsSensorEntityDescription(
-                key=f"{build.project.project_id}_{build.definition.build_id}_latest_build",
+                key=f"{build_sensor_key_base}_latest_build",
                 translation_key="latest_build",
                 translation_placeholders={"definition_name": build.definition.name},
                 attrs=lambda build: {
@@ -65,9 +84,15 @@ async def async_setup_entry(
                 project=project,
                 value=lambda build: build.build_number,
             ),
+        ]
+
+        sensors.extend(
+            AzureDevOpsSensor(
+                coordinator,
+                description,
+            )
+            for description in descriptions
         )
-        for key, build in enumerate(coordinator.data)
-    ]
 
     async_add_entities(sensors, True)
 
