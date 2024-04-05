@@ -94,6 +94,7 @@ async def test_migrate_process_sensor(
     assert resp.status == HTTPStatus.OK
     data = await resp.json()
 
+    # Cannot use identity `is` check here as the value is parsed from JSON
     assert data["type"] == FlowResultType.CREATE_ENTRY.value
     await hass.async_block_till_done()
 
@@ -192,5 +193,6 @@ async def test_other_fixable_issues(
     assert resp.status == HTTPStatus.OK
     data = await resp.json()
 
+    # Cannot use identity `is` check here as the value is parsed from JSON
     assert data["type"] == FlowResultType.CREATE_ENTRY.value
     await hass.async_block_till_done()
