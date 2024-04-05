@@ -75,12 +75,23 @@ class SonosAlarms(SonosHouseholdCoordinator):
     @soco_error()
     def update_cache(self, soco: SoCo, update_id: int | None = None) -> bool:
         """Update cache of known alarms and return if cache has changed."""
-        _LOGGER.info("PR - update_cache before update %d", len(self.alarms))
+        _LOGGER.info(
+            "PR - update_cache before update %d %s %s",
+            len(self.alarms),
+            self.alarms.last_id,
+            self.alarms.last_alarm_list_version,
+        )
         self.alarms.update(soco)
-        _LOGGER.info("PR - update_cache after update %d", len(self.alarms))
+        _LOGGER.info(
+            "PR - update_cache after update %d %s %s",
+            len(self.alarms),
+            self.alarms.last_id,
+            self.alarms.last_alarm_list_version,
+        )
 
         if update_id and self.alarms.last_id < update_id:
             # Skip updates if latest query result is outdated or lagging
+            _LOGGER.info("PR - Skip Update 1 %d", len(self.alarms))
             return False
 
         if (
@@ -88,6 +99,7 @@ class SonosAlarms(SonosHouseholdCoordinator):
             and self.alarms.last_id <= self.last_processed_event_id
         ):
             # Skip updates already processed
+            _LOGGER.info("PR - Skip Update 2 %d", len(self.alarms))
             return False
 
         _LOGGER.info(
