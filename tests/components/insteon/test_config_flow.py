@@ -30,6 +30,7 @@ from homeassistant.components.insteon.const import (
     CONF_X10,
     DOMAIN,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_ADDRESS,
     CONF_DEVICE,
@@ -136,7 +137,7 @@ async def test_fail_on_existing(hass: HomeAssistant) -> None:
         options={},
     )
     config_entry.add_to_hass(hass)
-    assert config_entry.state is config_entries.ConfigEntryState.NOT_LOADED
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
