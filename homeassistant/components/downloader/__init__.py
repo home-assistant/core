@@ -47,7 +47,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if DOMAIN not in config:
         return True
 
-    hass.async_create_task(_async_import_config(hass, config), eager_start=True)
+    hass.async_create_task(_async_import_config(hass, config))
     return True
 
 
