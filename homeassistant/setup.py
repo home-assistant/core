@@ -455,7 +455,7 @@ async def _async_setup_component(  # noqa: C901
     if domain in hass.data[DATA_SETUP]:
         hass.data[DATA_SETUP].pop(domain)
 
-    hass.bus.async_fire(EVENT_COMPONENT_LOADED, {ATTR_COMPONENT: domain})
+    hass.bus.async_fire(EVENT_COMPONENT_LOADED, EventComponentLoaded(component=domain))
 
     return True
 
@@ -503,6 +503,12 @@ async def async_prepare_setup_platform(
         except ImportError as exc:
             log_error(f"Unable to import the component ({exc}).")
             return None
+
+    if not integration.platforms_exists((domain,)):
+        log_error(
+            f"Platform not found (No module named '{integration.pkg_path}.{domain}')"
+        )
+        return None
 
     try:
         platform = await integration.async_get_platform(domain)

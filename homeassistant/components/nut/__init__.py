@@ -265,9 +265,7 @@ class PyNUTData:
         manufacturer = _manufacturer_from_status(self._status)
         model = _model_from_status(self._status)
         firmware = _firmware_from_status(self._status)
-        device_info = NUTDeviceInfo(manufacturer, model, firmware)
-
-        return device_info
+        return NUTDeviceInfo(manufacturer, model, firmware)
 
     async def _async_get_status(self) -> dict[str, str]:
         """Get the ups status from NUT."""

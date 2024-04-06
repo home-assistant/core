@@ -198,12 +198,10 @@ def async_create_catching_coro(
     target: target coroutine.
     """
     trace = traceback.extract_stack()
-    wrapped_target = catch_log_coro_exception(
+    return catch_log_coro_exception(
         target,
         lambda: "Exception in {} called from\n {}".format(
             target.__name__,
             "".join(traceback.format_list(trace[:-1])),
         ),
     )
-
-    return wrapped_target
