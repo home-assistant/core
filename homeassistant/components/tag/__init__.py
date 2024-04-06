@@ -147,10 +147,10 @@ async def async_scan_tag(
 
     if tag_id in storage_collection.data:
         await storage_collection.async_update_item(
-            tag_id, {LAST_SCANNED: dt_util.utcnow(), DEVICE_ID: device_id}
+            tag_id, {LAST_SCANNED: dt_util.utcnow(), DEVICE_ID: device_id or ""}
         )
     else:
         await storage_collection.async_create_item(
-            {TAG_ID: tag_id, LAST_SCANNED: dt_util.utcnow(), DEVICE_ID: device_id}
+            {TAG_ID: tag_id, LAST_SCANNED: dt_util.utcnow(), DEVICE_ID: device_id or ""}
         )
     _LOGGER.debug("Tag: %s scanned by device: %s", tag_id, device_id)
