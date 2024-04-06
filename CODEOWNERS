@@ -316,8 +316,8 @@ build.json @home-assistant/supervisor
 /tests/components/discovergy/ @jpbede
 /homeassistant/components/dlink/ @tkdrob
 /tests/components/dlink/ @tkdrob
-/homeassistant/components/dlna_dmr/ @StevenLooman @chishm
-/tests/components/dlna_dmr/ @StevenLooman @chishm
+/homeassistant/components/dlna_dmr/ @chishm
+/tests/components/dlna_dmr/ @chishm
 /homeassistant/components/dlna_dms/ @chishm
 /tests/components/dlna_dms/ @chishm
 /homeassistant/components/dnsip/ @gjohansson-ST
