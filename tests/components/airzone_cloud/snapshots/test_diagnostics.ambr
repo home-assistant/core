@@ -287,7 +287,12 @@
           'id': 'dhw1',
           'installation': 'installation1',
           'is-connected': True,
-          'name': 'DHW',
+          'name': 'Airzone Cloud DHW',
+          'operation': 0,
+          'operations': list([
+            0,
+            1,
+          ]),
           'power': False,
           'problems': False,
           'temperature': 45.5,
