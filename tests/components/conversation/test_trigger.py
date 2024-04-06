@@ -104,6 +104,36 @@ async def test_response(hass: HomeAssistant, setup_comp) -> None:
     assert service_response["response"]["speech"]["plain"]["speech"] == response
 
 
+async def test_empty_response(hass: HomeAssistant, setup_comp) -> None:
+    """Test the conversation response action with an empty response."""
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": {
+                "trigger": {
+                    "platform": "conversation",
+                    "command": ["Open the pod bay door Hal"],
+                },
+                "action": {
+                    "set_conversation_response": "",
+                },
+            }
+        },
+    )
+
+    service_response = await hass.services.async_call(
+        "conversation",
+        "process",
+        {
+            "text": "Open the pod bay door Hal",
+        },
+        blocking=True,
+        return_response=True,
+    )
+    assert service_response["response"]["speech"]["plain"]["speech"] == ""
+
+
 async def test_response_same_sentence(hass: HomeAssistant, calls, setup_comp) -> None:
     """Test the conversation response action with multiple triggers using the same sentence."""
     assert await async_setup_component(

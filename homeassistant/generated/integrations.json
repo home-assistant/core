@@ -1299,7 +1299,8 @@
     "downloader": {
       "name": "Downloader",
       "integration_type": "hub",
-      "config_flow": true
+      "config_flow": true,
+      "single_config_entry": true
     },
     "dremel_3d_printer": {
       "name": "Dremel 3D Printer",
@@ -1760,7 +1761,8 @@
       "name": "Fast.com",
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "cloud_polling"
+      "iot_class": "cloud_polling",
+      "single_config_entry": true
     },
     "feedreader": {
       "name": "Feedreader",
@@ -3754,7 +3756,7 @@
           "integration_type": "device",
           "config_flow": true,
           "iot_class": "assumed_state",
-          "name": "Motionblinds BLE"
+          "name": "Motionblinds Bluetooth"
         }
       }
     },

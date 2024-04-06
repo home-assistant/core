@@ -30,8 +30,7 @@ async def get_client(aiohttp_client, validator):
             return b""
 
     TestView().register(app[KEY_HASS], app, app.router)
-    client = await aiohttp_client(app)
-    return client
+    return await aiohttp_client(app)
 
 
 async def test_validator(aiohttp_client: ClientSessionGenerator) -> None:
