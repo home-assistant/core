@@ -74,11 +74,6 @@ class JewishCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
                     if _key != CONF_NAME
                 ):
                     return self.async_abort(reason="already_configured")
-
-                if entry.data[CONF_NAME] == user_input[CONF_NAME]:
-                    errors[CONF_NAME] = "name_exists"
-                    break
-
             try:
                 return self.async_create_entry(
                     title=user_input[CONF_NAME], data=user_input
