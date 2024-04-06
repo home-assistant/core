@@ -30,7 +30,12 @@ from homeassistant.const import CONF_ID, CONF_NAME, CONF_UNIQUE_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from .helpers import async_get_zha_device_proxy, get_zha_data, get_zha_gateway
+from .helpers import (
+    ZHADeviceProxy,
+    async_get_zha_device_proxy,
+    get_zha_data,
+    get_zha_gateway,
+)
 
 KEYS_TO_REDACT = {
     ATTR_IEEE,
@@ -106,9 +111,11 @@ async def async_get_device_diagnostics(
     hass: HomeAssistant, config_entry: ConfigEntry, device: dr.DeviceEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a device."""
-    zha_device: Device = async_get_zha_device_proxy(hass, device.id).device
-    device_info: dict[str, Any] = zha_device.zha_device_info
-    device_info[CLUSTER_DETAILS] = get_endpoint_cluster_attr_data(zha_device)
+    zha_device_proxy: ZHADeviceProxy = async_get_zha_device_proxy(hass, device.id)
+    device_info: dict[str, Any] = zha_device_proxy.zha_device_info
+    device_info[CLUSTER_DETAILS] = get_endpoint_cluster_attr_data(
+        zha_device_proxy.device
+    )
     return async_redact_data(device_info, KEYS_TO_REDACT)
 
 
