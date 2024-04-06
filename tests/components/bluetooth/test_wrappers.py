@@ -383,7 +383,7 @@ async def test_passing_subclassed_str_as_address(
     _, cancel_hci0, cancel_hci1 = _generate_scanners_with_fake_devices(hass)
 
     class SubclassedStr(str):
-        pass
+        __slots__ = ()
 
     address = SubclassedStr("00:00:00:00:00:01")
     client = bleak.BleakClient(address)

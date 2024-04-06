@@ -17,6 +17,8 @@ class NodeListClass(list):
 class NodeStrClass(str):
     """Wrapper class to be able to add attributes on a string."""
 
+    __slots__ = ()
+
     def __voluptuous_compile__(self, schema: vol.Schema) -> Any:
         """Needed because vol.Schema.compile does not handle str subclasses."""
         return _compile_scalar(self)
