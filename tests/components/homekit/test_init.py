@@ -126,7 +126,7 @@ async def test_bridge_with_triggers(
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
 
-        assert entry.state == ConfigEntryState.LOADED
+        assert entry.state is ConfigEntryState.LOADED
         await hass.config_entries.async_unload(entry.entry_id)
         await hass.async_block_till_done()
 

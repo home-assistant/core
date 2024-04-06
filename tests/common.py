@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-from collections import OrderedDict
 from collections.abc import AsyncGenerator, Generator, Mapping, Sequence
 from contextlib import asynccontextmanager, contextmanager
 from datetime import UTC, datetime, timedelta
@@ -359,7 +358,9 @@ async def async_test_home_assistant(
         """Clear global instance."""
         INSTANCES.remove(hass)
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, clear_instance)
+    hass.bus.async_listen_once(
+        EVENT_HOMEASSISTANT_CLOSE, clear_instance, run_immediately=False
+    )
 
     yield hass
 
@@ -649,7 +650,9 @@ def mock_area_registry(
     fixture instead.
     """
     registry = ar.AreaRegistry(hass)
-    registry.areas = mock_entries or OrderedDict()
+    registry.areas = ar.AreaRegistryItems()
+    for key, entry in mock_entries.items():
+        registry.areas[key] = entry
 
     hass.data[ar.DATA_REGISTRY] = registry
     return registry
@@ -671,7 +674,7 @@ def mock_device_registry(
     fixture instead.
     """
     registry = dr.DeviceRegistry(hass)
-    registry.devices = dr.DeviceRegistryItems()
+    registry.devices = dr.ActiveDeviceRegistryItems()
     registry._device_data = registry.devices.data
     if mock_entries is None:
         mock_entries = {}

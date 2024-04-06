@@ -109,7 +109,7 @@ def get_node_from_device_entry(
     if server_info is None:
         raise RuntimeError("Matter server information is not available")
 
-    node = next(
+    return next(
         (
             node
             for node in matter_client.get_nodes()
@@ -118,5 +118,3 @@ def get_node_from_device_entry(
         ),
         None,
     )
-
-    return node

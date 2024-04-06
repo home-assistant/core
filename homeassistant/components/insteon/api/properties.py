@@ -139,8 +139,7 @@ def property_to_dict(prop):
     modified = value == prop.new_value
     if prop.value_type in [ToggleMode, RelayMode] or prop.name == RAMP_RATE_IN_SEC:
         value = str(value).lower()
-    prop_dict = {"name": prop.name, "value": value, "modified": modified}
-    return prop_dict
+    return {"name": prop.name, "value": value, "modified": modified}
 
 
 def update_property(device, prop_name, value):

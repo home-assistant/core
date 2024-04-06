@@ -49,7 +49,7 @@ async def test_config_entry_reload(hass: HomeAssistant) -> None:
     )
     await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
 
 
 async def test_config_entry_retry_later(hass: HomeAssistant) -> None:
@@ -65,7 +65,7 @@ async def test_config_entry_retry_later(hass: HomeAssistant) -> None:
     ):
         await async_setup_component(hass, steamist.DOMAIN, {steamist.DOMAIN: {}})
         await hass.async_block_till_done()
-    assert config_entry.state == ConfigEntryState.SETUP_RETRY
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_config_entry_fills_unique_id_with_directed_discovery(
@@ -101,7 +101,7 @@ async def test_config_entry_fills_unique_id_with_directed_discovery(
     ):
         await async_setup_component(hass, steamist.DOMAIN, {steamist.DOMAIN: {}})
         await hass.async_block_till_done()
-        assert config_entry.state == ConfigEntryState.LOADED
+        assert config_entry.state is ConfigEntryState.LOADED
 
     assert config_entry.unique_id == FORMATTED_MAC_ADDRESS
     assert config_entry.data[CONF_NAME] == DEVICE_NAME

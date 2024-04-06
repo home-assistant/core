@@ -329,8 +329,7 @@ def _validate_currency(data: Any) -> Any:
         return cv.currency(data)
     except vol.InInvalid:
         with suppress(vol.InInvalid):
-            currency = cv.historic_currency(data)
-            return currency
+            return cv.historic_currency(data)
         raise
 
 
