@@ -358,6 +358,59 @@ async def test_api_call_service_with_data(
     assert state["attributes"] == {"data": 1}
 
 
+@pytest.mark.parametrize(
+    ("supports_response", "requested_response", "expected_success"),
+    [
+        (ha.SupportsResponse.ONLY, True, True),
+        (ha.SupportsResponse.ONLY, False, False),
+        (ha.SupportsResponse.OPTIONAL, True, True),
+        (ha.SupportsResponse.OPTIONAL, False, True),
+        (ha.SupportsResponse.NONE, True, False),
+        (ha.SupportsResponse.NONE, False, True),
+    ],
+)
+async def test_api_call_service_returns_response_requested_response(
+    hass: HomeAssistant,
+    mock_api_client: TestClient,
+    supports_response: ha.SupportsResponse,
+    requested_response: bool,
+    expected_success: bool,
+) -> None:
+    """Test if the API allows us to call a service."""
+    test_value = []
+
+    @ha.callback
+    def listener(service_call):
+        """Record that our service got called."""
+        test_value.append(1)
+        return {}
+
+    hass.services.async_register(
+        "test_domain", "test_service", listener, supports_response=supports_response
+    )
+
+    await mock_api_client.post(
+        "/api/services/test_domain/test_service"
+        + ("?return_response" if requested_response else "")
+    )
+    await hass.async_block_till_done()
+    assert len(test_value) == (1 if expected_success else 0)
+
+    await mock_api_client.post(
+        "/api/services/test_domain/test_service",
+        json={"return_response": requested_response},
+    )
+    await hass.async_block_till_done()
+    assert len(test_value) == (2 if expected_success else 0)
+
+    await mock_api_client.post(
+        "/api/services/test_domain/test_service",
+        json={"return_response": True} if requested_response else None,
+    )
+    await hass.async_block_till_done()
+    assert len(test_value) == (3 if expected_success else 0)
+
+
 async def test_api_call_service_client_closed(
     hass: HomeAssistant, mock_api_client: TestClient
 ) -> None:
