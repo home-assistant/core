@@ -302,6 +302,7 @@ SENSOR_DESCRIPTIONS = (
         key=TYPE_LIGHTNING_DISTANCE,
         translation_key="lightning_strikes_distance",
         native_unit_of_measurement=UnitOfLength.MILES,
+        device_class=SensorDeviceClass.DISTANCE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
