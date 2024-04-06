@@ -44,6 +44,7 @@ async def test_full_flow(
     hass: HomeAssistant,
     mock_vilfo_client: AsyncMock,
     mock_setup_entry: AsyncMock,
+    mock_is_valid_host: AsyncMock,
     user_input: dict[str, Any],
     expected_unique_id: str,
     mac: str | None,
@@ -77,6 +78,7 @@ async def test_full_flow(
 async def test_form_invalid_auth(
     hass: HomeAssistant,
     mock_vilfo_client: AsyncMock,
+    mock_is_valid_host: AsyncMock,
     mock_setup_entry: AsyncMock,
 ) -> None:
     """Test we handle invalid auth."""
@@ -118,6 +120,7 @@ async def test_form_invalid_auth(
 async def test_form_exceptions(
     hass: HomeAssistant,
     mock_vilfo_client: AsyncMock,
+    mock_is_valid_host: AsyncMock,
     mock_setup_entry: AsyncMock,
     side_effect: Exception,
     error: str,
@@ -147,8 +150,12 @@ async def test_form_exceptions(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_form_wrong_host(hass: HomeAssistant) -> None:
+async def test_form_wrong_host(
+    hass: HomeAssistant,
+    mock_is_valid_host: AsyncMock,
+) -> None:
     """Test we handle wrong host errors."""
+    mock_is_valid_host.return_value = False
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
@@ -166,6 +173,7 @@ async def test_form_already_configured(
     mock_vilfo_client: AsyncMock,
     mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    mock_is_valid_host: AsyncMock,
 ) -> None:
     """Test that we handle already configured exceptions appropriately."""
     mock_config_entry.add_to_hass(hass)

@@ -38,6 +38,16 @@ def mock_vilfo_client() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
+def mock_is_valid_host() -> Generator[AsyncMock, None, None]:
+    """Mock is_valid_host."""
+    with patch(
+        "homeassistant.components.vilfo.config_flow.is_host_valid",
+        return_value=True,
+    ) as mock_is_valid_host:
+        yield mock_is_valid_host
+
+
+@pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Mock a config entry."""
     return MockConfigEntry(
