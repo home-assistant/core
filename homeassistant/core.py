@@ -1674,7 +1674,11 @@ class State:
         # the recorder or websocket_api so we do not need to
         # generate it lazily.
         self.last_updated_timestamp = (
-            last_updated_timestamp or self.last_updated.timestamp()
+            # We round to 6 decimal places to match the precision
+            # of .timestamp()
+            round(last_updated_timestamp, 6)
+            if last_updated_timestamp
+            else self.last_updated.timestamp()
         )
 
     @cached_property
