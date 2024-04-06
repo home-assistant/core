@@ -30,7 +30,6 @@ from homeassistant.components.homeassistant.exposed_entities import (
     async_should_expose,
 )
 from homeassistant.const import EVENT_STATE_CHANGED, MATCH_ALL
-from homeassistant.core import EventStateChangedData
 from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
@@ -133,7 +132,7 @@ async def async_setup_default_agent(
 
     @core.callback
     def async_entity_state_listener(
-        event: core.Event[EventStateChangedData],
+        event: core.Event[core.EventStateChangedData],
     ) -> None:
         """Set expose flag on new entities."""
         async_should_expose(hass, DOMAIN, event.data["entity_id"])
@@ -185,7 +184,7 @@ class DefaultAgent(ConversationEntity):
         )
 
     @core.callback
-    def _filter_state_changes(self, event_data: EventStateChangedData) -> bool:
+    def _filter_state_changes(self, event_data: core.EventStateChangedData) -> bool:
         """Filter state changed events."""
         return not event_data["old_state"] or not event_data["new_state"]
 
