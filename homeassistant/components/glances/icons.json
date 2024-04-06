@@ -10,6 +10,12 @@
       "disk_free": {
         "default": "mdi:harddisk"
       },
+      "diskio_read": {
+        "default": "mdi:harddisk"
+      },
+      "diskio_write": {
+        "default": "mdi:harddisk"
+      },
       "memory_usage": {
         "default": "mdi:memory"
       },
