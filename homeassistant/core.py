@@ -1673,13 +1673,12 @@ class State:
         # last_updated_timestamp will nearly always be called by
         # the recorder or websocket_api so we do not need to
         # generate it lazily.
-        self.last_updated_timestamp = (
+        if last_updated_timestamp is not None:
             # We round to 6 decimal places to match the precision
             # of .timestamp()
-            round(last_updated_timestamp, 6)
-            if last_updated_timestamp
-            else self.last_updated.timestamp()
-        )
+            self.last_updated_timestamp = round(last_updated_timestamp, 6)
+        else:
+            self.last_updated_timestamp = self.last_updated.timestamp()
 
     @cached_property
     def name(self) -> str:
