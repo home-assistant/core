@@ -16,6 +16,9 @@
           'flag': 1,
           'name': 'Downstairs',
           'rooms': dict({
+            16: 'Example room 1',
+            17: 'Example room 2',
+            18: 'Example room 3',
           }),
         }),
       ]),

@@ -135,6 +135,7 @@ async def create_coordinator_maps(
         if map_flag != cur_map:
             # Only change the map and sleep if we have multiple maps.
             await coord.api.send_command(RoborockCommand.LOAD_MULTI_MAP, [map_flag])
+            coord.current_map = map_flag
             # We cannot get the map until the roborock servers fully process the
             # map change.
             await asyncio.sleep(MAP_SLEEP)
@@ -157,4 +158,5 @@ async def create_coordinator_maps(
         # does not change the end user's app.
         # Only needs to happen when we changed maps above.
         await coord.cloud_api.send_command(RoborockCommand.LOAD_MULTI_MAP, [cur_map])
+        coord.current_map = cur_map
     return entities
