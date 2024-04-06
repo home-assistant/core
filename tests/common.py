@@ -358,7 +358,9 @@ async def async_test_home_assistant(
         """Clear global instance."""
         INSTANCES.remove(hass)
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, clear_instance)
+    hass.bus.async_listen_once(
+        EVENT_HOMEASSISTANT_CLOSE, clear_instance, run_immediately=False
+    )
 
     yield hass
 
