@@ -1080,7 +1080,7 @@ class ConfigEntry:
         hass: HomeAssistant,
         target: Coroutine[Any, Any, _R],
         name: str,
-        eager_start: bool = False,
+        eager_start: bool = True,
     ) -> asyncio.Task[_R]:
         """Create a background task tied to the config entry lifecycle.
 
