@@ -37,13 +37,13 @@
   },
   "exceptions": {
     "copy_failed": {
-      "message": "Copying the message failed with '{error}'."
+      "message": "Copying the message failed with \"{error}\"."
     },
     "delete_failed": {
-      "message": "Marking the the message for deletion failed with '{error}'."
+      "message": "Marking the the message for deletion failed with \"{error}\"."
     },
     "expunge_failed": {
-      "message": "Expungling the the message failed with '{error}'."
+      "message": "Expunging the the message failed with \"{error}\"."
     },
     "invalid_entry": {
       "message": "No valid IMAP entry was found."
@@ -58,7 +58,7 @@
       "message": "The IMAP server failed to connect: {error}."
     },
     "seen_failed": {
-      "message": "Marking message as seen failed with '{error}'."
+      "message": "Marking message as seen failed with \"{error}\"."
     }
   },
   "options": {

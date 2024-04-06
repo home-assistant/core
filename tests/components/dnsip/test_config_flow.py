@@ -17,6 +17,7 @@ from homeassistant.components.dnsip.const import (
     CONF_RESOLVER_IPV6,
     DOMAIN,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -227,7 +228,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
         "resolver_ipv6": "2001:4860:4860::8888",
     }
 
-    assert entry.state == config_entries.ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
 
 async def test_options_flow_empty_return(hass: HomeAssistant) -> None:

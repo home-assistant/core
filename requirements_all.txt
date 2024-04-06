@@ -185,7 +185,7 @@ aio-georss-gdacs==0.9
 aioairq==0.3.2
 
 # homeassistant.components.airzone_cloud
-aioairzone-cloud==0.4.7
+aioairzone-cloud==0.5.0
 
 # homeassistant.components.airzone
 aioairzone==0.7.6
@@ -514,7 +514,7 @@ aurorapy==0.2.7
 # avion==0.10
 
 # homeassistant.components.axis
-axis==60
+axis==61
 
 # homeassistant.components.azure_event_hub
 azure-eventhub==5.11.1
@@ -949,7 +949,7 @@ gios==3.2.2
 gitterpy==0.1.7
 
 # homeassistant.components.glances
-glances-api==0.5.0
+glances-api==0.6.0
 
 # homeassistant.components.goalzero
 goalzero==0.2.2
@@ -1950,7 +1950,7 @@ pylibrespot-java==0.1.1
 pylitejet==0.6.2
 
 # homeassistant.components.litterrobot
-pylitterbot==2023.4.9
+pylitterbot==2023.4.11
 
 # homeassistant.components.lutron_caseta
 pylutron-caseta==0.20.0
@@ -1998,7 +1998,7 @@ pynetgear==0.10.10
 pynetio==0.1.9.1
 
 # homeassistant.components.nobo_hub
-pynobo==1.8.0
+pynobo==1.8.1
 
 # homeassistant.components.nuki
 pynuki==1.6.3
@@ -2197,7 +2197,7 @@ pytfiac==0.4
 pythinkingcleaner==0.0.3
 
 # homeassistant.components.motionmount
-python-MotionMount==0.3.1
+python-MotionMount==1.0.0
 
 # homeassistant.components.awair
 python-awair==0.2.4
@@ -2451,7 +2451,7 @@ rfk101py==0.0.1
 rflink==0.0.66
 
 # homeassistant.components.ring
-ring-doorbell[listen]==0.8.9
+ring-doorbell[listen]==0.8.10
 
 # homeassistant.components.fleetgo
 ritassist==0.9.2
