@@ -28,7 +28,6 @@ PREFIX = """# Sorted by hassfest.
 source = homeassistant
 omit =
     homeassistant/__main__.py
-    homeassistant/helpers/backports/*
     homeassistant/helpers/signal.py
     homeassistant/scripts/__init__.py
     homeassistant/scripts/check_config.py
