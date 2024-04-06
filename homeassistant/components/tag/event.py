@@ -41,7 +41,7 @@ async def async_setup_platform(
         if change_type == collection.CHANGE_ADDED:
             # When tags are added to storage
             entities[updated_config[TAG_ID]] = TagEvent(
-                updated_config[CONF_NAME],
+                updated_config.get(CONF_NAME, DEFAULT_NAME),
                 updated_config[TAG_ID],
                 updated_config.get(LAST_SCANNED, ""),
             )
