@@ -1,0 +1,49 @@
+{
+  "devices": {
+    "a455b61e52394b2db5081ce025a430f3": {
+      "binary_sensors": {
+        "plugwise_notification": false
+      },
+      "dev_class": "gateway",
+      "firmware": "4.4.2",
+      "hardware": "AME Smile 2.0 board",
+      "location": "a455b61e52394b2db5081ce025a430f3",
+      "mac_address": "012345670001",
+      "model": "Gateway",
+      "name": "Smile P1",
+      "vendor": "Plugwise"
+    },
+    "ba4de7613517478da82dd9b6abea36af": {
+      "available": true,
+      "dev_class": "smartmeter",
+      "location": "a455b61e52394b2db5081ce025a430f3",
+      "model": "KFM5KAIFA-METER",
+      "name": "P1",
+      "sensors": {
+        "electricity_consumed_off_peak_cumulative": 17643.423,
+        "electricity_consumed_off_peak_interval": 15,
+        "electricity_consumed_off_peak_point": 486,
+        "electricity_consumed_peak_cumulative": 13966.608,
+        "electricity_consumed_peak_interval": 0,
+        "electricity_consumed_peak_point": 0,
+        "electricity_phase_one_consumed": 486,
+        "electricity_phase_one_produced": 0,
+        "electricity_produced_off_peak_cumulative": 0.0,
+        "electricity_produced_off_peak_interval": 0,
+        "electricity_produced_off_peak_point": 0,
+        "electricity_produced_peak_cumulative": 0.0,
+        "electricity_produced_peak_interval": 0,
+        "electricity_produced_peak_point": 0,
+        "net_electricity_cumulative": 31610.031,
+        "net_electricity_point": 486
+      },
+      "vendor": "SHENZHEN KAIFA TECHNOLOGY \uff08CHENGDU\uff09 CO., LTD."
+    }
+  },
+  "gateway": {
+    "gateway_id": "a455b61e52394b2db5081ce025a430f3",
+    "item_count": 31,
+    "notifications": {},
+    "smile_name": "Smile P1"
+  }
+}

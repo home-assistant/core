@@ -1432,9 +1432,9 @@ async def test_override_restored_entities(
     component = EntityComponent(_LOGGER, DOMAIN, hass)
     await component.async_setup({})
 
-    await component.async_add_entities(
-        [MockEntity(unique_id="1234", state="on", entity_id="test_domain.world")], True
-    )
+    ent = MockEntity(unique_id="1234", entity_id="test_domain.world")
+    ent._attr_state = "on"
+    await component.async_add_entities([ent], True)
 
     state = hass.states.get("test_domain.world")
     assert state.state == "on"
@@ -1711,7 +1711,7 @@ async def test_register_entity_service_limited_to_matching_platforms(
     }
 
 
-@pytest.mark.parametrize("update_before_add", (True, False))
+@pytest.mark.parametrize("update_before_add", [True, False])
 async def test_invalid_entity_id(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture, update_before_add: bool
 ) -> None:
@@ -1738,7 +1738,7 @@ class MockBlockingEntity(MockEntity):
         await asyncio.sleep(1000)
 
 
-@pytest.mark.parametrize("update_before_add", (True, False))
+@pytest.mark.parametrize("update_before_add", [True, False])
 async def test_setup_entry_with_entities_that_block_forever(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
@@ -1761,8 +1761,9 @@ async def test_setup_entry_with_entities_that_block_forever(
         hass, platform_name=config_entry.domain, platform=platform
     )
 
-    with patch.object(entity_platform, "SLOW_ADD_ENTITY_MAX_WAIT", 0.01), patch.object(
-        entity_platform, "SLOW_ADD_MIN_TIMEOUT", 0.01
+    with (
+        patch.object(entity_platform, "SLOW_ADD_ENTITY_MAX_WAIT", 0.01),
+        patch.object(entity_platform, "SLOW_ADD_MIN_TIMEOUT", 0.01),
     ):
         assert await platform.async_setup_entry(config_entry)
         await hass.async_block_till_done()
@@ -1784,7 +1785,7 @@ class MockCancellingEntity(MockEntity):
         raise asyncio.CancelledError
 
 
-@pytest.mark.parametrize("update_before_add", (True, False))
+@pytest.mark.parametrize("update_before_add", [True, False])
 async def test_cancellation_is_not_blocked(
     hass: HomeAssistant,
     update_before_add: bool,
@@ -1813,7 +1814,7 @@ async def test_cancellation_is_not_blocked(
     assert full_name not in hass.config.components
 
 
-@pytest.mark.parametrize("update_before_add", (True, False))
+@pytest.mark.parametrize("update_before_add", [True, False])
 async def test_two_platforms_add_same_entity(
     hass: HomeAssistant, update_before_add: bool
 ) -> None:
@@ -1868,14 +1869,14 @@ class SlowEntity(MockEntity):
 
 @pytest.mark.parametrize(
     ("has_entity_name", "entity_name", "expected_entity_id"),
-    (
+    [
         (False, "Entity Blu", "test_domain.entity_blu"),
         (False, None, "test_domain.test_qwer"),  # Set to <platform>_<unique_id>
         (True, "Entity Blu", "test_domain.device_bla_entity_blu"),
         (True, None, "test_domain.device_bla"),
-    ),
+    ],
 )
-@pytest.mark.parametrize("update_before_add", (True, False))
+@pytest.mark.parametrize("update_before_add", [True, False])
 async def test_entity_name_influences_entity_id(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -1921,15 +1922,15 @@ async def test_entity_name_influences_entity_id(
 
 @pytest.mark.parametrize(
     ("language", "has_entity_name", "expected_entity_id"),
-    (
+    [
         ("en", False, "test_domain.test_qwer"),  # Set to <platform>_<unique_id>
         ("en", True, "test_domain.device_bla_english_name"),
         ("sv", True, "test_domain.device_bla_swedish_name"),
         # Chinese uses english for entity_id
         ("cn", True, "test_domain.device_bla_english_name"),
-    ),
+    ],
 )
-@pytest.mark.parametrize("update_before_add", (True, False))
+@pytest.mark.parametrize("update_before_add", [True, False])
 async def test_translated_entity_name_influences_entity_id(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -1998,7 +1999,7 @@ async def test_translated_entity_name_influences_entity_id(
 
 @pytest.mark.parametrize(
     ("language", "has_entity_name", "device_class", "expected_entity_id"),
-    (
+    [
         ("en", False, None, "test_domain.test_qwer"),  # Set to <platform>_<unique_id>
         (
             "en",
@@ -2010,7 +2011,7 @@ async def test_translated_entity_name_influences_entity_id(
         ("sv", True, "test_class", "test_domain.device_bla_swedish_cls"),
         # Chinese uses english for entity_id
         ("cn", True, "test_class", "test_domain.device_bla_english_cls"),
-    ),
+    ],
 )
 async def test_translated_device_class_name_influences_entity_id(
     hass: HomeAssistant,

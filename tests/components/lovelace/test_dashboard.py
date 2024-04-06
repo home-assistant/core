@@ -181,7 +181,7 @@ async def test_lovelace_from_yaml(
     assert len(events) == 1
 
 
-@pytest.mark.parametrize("url_path", ("test-panel", "test-panel-no-sidebar"))
+@pytest.mark.parametrize("url_path", ["test-panel", "test-panel-no-sidebar"])
 async def test_dashboard_from_yaml(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator, url_path
 ) -> None:

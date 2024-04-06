@@ -15,9 +15,8 @@ import zigpy.profiles.zha
 import zigpy.types
 from zigpy.types.named import EUI64
 import zigpy.util
-import zigpy.zcl.clusters.general as general
+from zigpy.zcl.clusters import general, security
 from zigpy.zcl.clusters.general import Groups
-import zigpy.zcl.clusters.security as security
 import zigpy.zdo.types as zdo_types
 
 from homeassistant.components.websocket_api import const
@@ -303,7 +302,7 @@ async def test_update_zha_config(
     app_controller: ControllerApplication,
 ) -> None:
     """Test updating ZHA custom configuration."""
-    configuration: dict = deepcopy(CONFIG_WITH_ALARM_OPTIONS)
+    configuration: dict = deepcopy(BASE_CUSTOM_CONFIGURATION)
     configuration["data"]["zha_options"]["default_light_transition"] = 10
 
     with patch(
@@ -318,8 +317,8 @@ async def test_update_zha_config(
 
     await zha_client.send_json({ID: 6, TYPE: "zha/configuration"})
     msg = await zha_client.receive_json()
-    configuration = msg["result"]
-    assert configuration == configuration
+    test_configuration = msg["result"]
+    assert test_configuration == configuration
 
     await hass.config_entries.async_unload(config_entry.entry_id)
 
@@ -499,7 +498,7 @@ async def app_controller(
 
 @pytest.mark.parametrize(
     ("params", "duration", "node"),
-    (
+    [
         ({}, 60, None),
         ({ATTR_DURATION: 30}, 30, None),
         (
@@ -512,7 +511,7 @@ async def app_controller(
             60,
             zigpy.types.EUI64.convert("aa:bb:cc:dd:aa:bb:cc:d1"),
         ),
-    ),
+    ],
 )
 async def test_permit_ha12(
     hass: HomeAssistant,
@@ -743,7 +742,7 @@ async def test_ws_permit_with_install_code_fail(
 
 @pytest.mark.parametrize(
     ("params", "duration", "node"),
-    (
+    [
         ({}, 60, None),
         ({ATTR_DURATION: 30}, 30, None),
         (
@@ -756,7 +755,7 @@ async def test_ws_permit_with_install_code_fail(
             60,
             zigpy.types.EUI64.convert("aa:bb:cc:dd:aa:bb:cc:d1"),
         ),
-    ),
+    ],
 )
 async def test_ws_permit_ha12(
     app_controller: ControllerApplication, zha_client, params, duration, node

@@ -349,8 +349,7 @@ def get_start_time() -> datetime:
     now = dt_util.utcnow()
     current_period_minutes = now.minute - now.minute % 5
     current_period = now.replace(minute=current_period_minutes, second=0, microsecond=0)
-    last_period = current_period - timedelta(minutes=5)
-    return last_period
+    return current_period - timedelta(minutes=5)
 
 
 def _compile_hourly_statistics_summary_mean_stmt(
@@ -641,7 +640,6 @@ def _insert_statistics(
     try:
         stat = table.from_stats(metadata_id, statistic)
         session.add(stat)
-        return stat
     except SQLAlchemyError:
         _LOGGER.exception(
             "Unexpected exception when inserting statistics %s:%s ",
@@ -649,6 +647,7 @@ def _insert_statistics(
             statistic,
         )
         return None
+    return stat
 
 
 def _update_statistics(
@@ -2039,7 +2038,7 @@ def _fast_build_sum_list(
     ]
 
 
-def _sorted_statistics_to_dict(  # noqa: C901
+def _sorted_statistics_to_dict(
     hass: HomeAssistant,
     session: Session,
     stats: Sequence[Row[Any]],

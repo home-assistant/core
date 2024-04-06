@@ -168,9 +168,9 @@ async def async_setup_entry(
             for player in players:
                 hass.async_create_task(_discovered_player(player))
 
-        hass.data[DOMAIN][config_entry.entry_id][
-            PLAYER_DISCOVERY_UNSUB
-        ] = async_call_later(hass, DISCOVERY_INTERVAL, _discovery)
+        hass.data[DOMAIN][config_entry.entry_id][PLAYER_DISCOVERY_UNSUB] = (
+            async_call_later(hass, DISCOVERY_INTERVAL, _discovery)
+        )
 
     _LOGGER.debug("Adding player discovery job for LMS server: %s", host)
     config_entry.async_create_background_task(
@@ -258,13 +258,11 @@ class SqueezeBoxEntity(MediaPlayerEntity):
     @property
     def extra_state_attributes(self):
         """Return device-specific attributes."""
-        squeezebox_attr = {
+        return {
             attr: getattr(self, attr)
             for attr in ATTR_TO_PROPERTY
             if getattr(self, attr) is not None
         }
-
-        return squeezebox_attr
 
     @callback
     def rediscovered(self, unique_id, connected):

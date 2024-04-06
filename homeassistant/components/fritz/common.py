@@ -311,6 +311,17 @@ class FritzBoxTools(
                 )
         return unregister_entity_updates
 
+    def _entity_states_update(self) -> dict:
+        """Run registered entity update calls."""
+        entity_states = {}
+        for key in list(self._entity_update_functions):
+            if (update_fn := self._entity_update_functions.get(key)) is not None:
+                _LOGGER.debug("update entity %s", key)
+                entity_states[key] = update_fn(
+                    self.fritz_status, self.data["entity_states"].get(key)
+                )
+        return entity_states
+
     async def _async_update_data(self) -> UpdateCoordinatorDataType:
         """Update FritzboxTools data."""
         entity_data: UpdateCoordinatorDataType = {
@@ -319,15 +330,9 @@ class FritzBoxTools(
         }
         try:
             await self.async_scan_devices()
-            for key in list(self._entity_update_functions):
-                _LOGGER.debug("update entity %s", key)
-                entity_data["entity_states"][
-                    key
-                ] = await self.hass.async_add_executor_job(
-                    self._entity_update_functions[key],
-                    self.fritz_status,
-                    self.data["entity_states"].get(key),
-                )
+            entity_data["entity_states"] = await self.hass.async_add_executor_job(
+                self._entity_states_update
+            )
             if self.has_call_deflections:
                 entity_data[
                     "call_deflections"
@@ -342,21 +347,21 @@ class FritzBoxTools(
     def unique_id(self) -> str:
         """Return unique id."""
         if not self._unique_id:
-            raise ClassSetupMissing()
+            raise ClassSetupMissing
         return self._unique_id
 
     @property
     def model(self) -> str:
         """Return device model."""
         if not self._model:
-            raise ClassSetupMissing()
+            raise ClassSetupMissing
         return self._model
 
     @property
     def current_firmware(self) -> str:
         """Return current SW version."""
         if not self._current_firmware:
-            raise ClassSetupMissing()
+            raise ClassSetupMissing
         return self._current_firmware
 
     @property
@@ -378,7 +383,7 @@ class FritzBoxTools(
     def mac(self) -> str:
         """Return device Mac address."""
         if not self._unique_id:
-            raise ClassSetupMissing()
+            raise ClassSetupMissing
         return dr.format_mac(self._unique_id)
 
     @property
@@ -789,24 +794,26 @@ class AvmWrapper(FritzBoxTools):  # pylint: disable=hass-enforce-coordinator-mod
                     **kwargs,
                 )
             )
-            return result
         except FritzSecurityError:
             _LOGGER.exception(
                 "Authorization Error: Please check the provided credentials and"
                 " verify that you can log into the web interface"
             )
+            return {}
         except FRITZ_EXCEPTIONS:
             _LOGGER.exception(
                 "Service/Action Error: cannot execute service %s with action %s",
                 service_name,
                 action_name,
             )
+            return {}
         except FritzConnectionException:
             _LOGGER.exception(
                 "Connection Error: Please check the device is properly configured"
                 " for remote login"
             )
-        return {}
+            return {}
+        return result
 
     async def async_get_upnp_configuration(self) -> dict[str, Any]:
         """Call X_AVM-DE_UPnP service."""
@@ -921,6 +928,16 @@ class AvmWrapper(FritzBoxTools):  # pylint: disable=hass-enforce-coordinator-mod
             NewDisallow="0" if turn_on else "1",
         )
 
+    async def async_wake_on_lan(self, mac_address: str) -> dict[str, Any]:
+        """Call X_AVM-DE_WakeOnLANByMACAddress service."""
+
+        return await self._async_service_call(
+            "Hosts",
+            "1",
+            "X_AVM-DE_WakeOnLANByMACAddress",
+            NewMACAddress=mac_address,
+        )
+
 
 @dataclass
 class FritzData:
@@ -928,6 +945,7 @@ class FritzData:
 
     tracked: dict = field(default_factory=dict)
     profile_switches: dict = field(default_factory=dict)
+    wol_buttons: dict = field(default_factory=dict)
 
 
 class FritzDeviceBase(update_coordinator.CoordinatorEntity[AvmWrapper]):
@@ -966,7 +984,7 @@ class FritzDeviceBase(update_coordinator.CoordinatorEntity[AvmWrapper]):
 
     async def async_process_update(self) -> None:
         """Update device."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_on_demand_update(self) -> None:
         """Update state."""

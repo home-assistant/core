@@ -37,7 +37,7 @@ from homeassistant.const import (
     URL_API_TEMPLATE,
 )
 import homeassistant.core as ha
-from homeassistant.core import Event, HomeAssistant
+from homeassistant.core import Event, EventStateChangedData, HomeAssistant
 from homeassistant.exceptions import (
     InvalidEntityFormatError,
     InvalidStateError,
@@ -46,7 +46,6 @@ from homeassistant.exceptions import (
     Unauthorized,
 )
 from homeassistant.helpers import config_validation as cv, template
-from homeassistant.helpers.event import EventStateChangedData
 from homeassistant.helpers.json import json_dumps, json_fragment
 from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.helpers.typing import ConfigType
@@ -137,7 +136,7 @@ class APIEventStream(HomeAssistantView):
 
         restrict: list[str] | None = None
         if restrict_str := request.query.get("restrict"):
-            restrict = restrict_str.split(",") + [EVENT_HOMEASSISTANT_STOP]
+            restrict = [*restrict_str.split(","), EVENT_HOMEASSISTANT_STOP]
 
         async def forward_events(event: Event) -> None:
             """Forward events to the open request."""
@@ -413,7 +412,7 @@ class APIDomainServicesView(HomeAssistantView):
                 )
             )
         except (vol.Invalid, ServiceNotFound) as ex:
-            raise HTTPBadRequest() from ex
+            raise HTTPBadRequest from ex
         finally:
             cancel_listen()
 

@@ -343,6 +343,12 @@ ZEROCONF = {
             },
         },
         {
+            "domain": "axis",
+            "properties": {
+                "macaddress": "e82725*",
+            },
+        },
+        {
             "domain": "doorbird",
             "properties": {
                 "macaddress": "1ccae3*",
@@ -571,6 +577,11 @@ ZEROCONF = {
             "properties": {
                 "SYSTYPE": "ra2select*",
             },
+        },
+    ],
+    "_matter._tcp.local.": [
+        {
+            "domain": "matter",
         },
     ],
     "_mediaremotetv._tcp.local.": [

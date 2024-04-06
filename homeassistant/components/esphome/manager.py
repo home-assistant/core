@@ -30,19 +30,23 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_DEVICE_ID,
     CONF_MODE,
-    EVENT_HOMEASSISTANT_STOP,
+    EVENT_HOMEASSISTANT_CLOSE,
     EVENT_LOGGING_CHANGED,
 )
-from homeassistant.core import Event, HomeAssistant, ServiceCall, State, callback
+from homeassistant.core import (
+    Event,
+    EventStateChangedData,
+    HomeAssistant,
+    ServiceCall,
+    State,
+    callback,
+)
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.device_registry import format_mac
-from homeassistant.helpers.event import (
-    EventStateChangedData,
-    async_track_state_change_event,
-)
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.issue_registry import (
     IssueSeverity,
     async_create_issue,
@@ -170,7 +174,7 @@ class ESPHomeManager:
         self.entry_data = entry_data
 
     async def on_stop(self, event: Event) -> None:
-        """Cleanup the socket client on HA stop."""
+        """Cleanup the socket client on HA close."""
         await cleanup_instance(self.hass, self.entry)
 
     @property
@@ -542,9 +546,12 @@ class ESPHomeManager:
         # the callback twice when shutting down Home Assistant.
         # "Unable to remove unknown listener
         # <function EventBus.async_listen_once.<locals>.onetime_listener>"
+        # We only close the connection at the last possible moment
+        # when the CLOSE event is fired so anything using a Bluetooth
+        # proxy has a chance to shut down properly.
         entry_data.cleanup_callbacks.append(
             hass.bus.async_listen(
-                EVENT_HOMEASSISTANT_STOP, self.on_stop, run_immediately=True
+                EVENT_HOMEASSISTANT_CLOSE, self.on_stop, run_immediately=True
             )
         )
         entry_data.cleanup_callbacks.append(

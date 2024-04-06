@@ -37,7 +37,7 @@ async def test_full_flow(
             "redirect_uri": "https://example.com/auth/external/callback",
         },
     )
-    assert result["type"] == FlowResultType.EXTERNAL_STEP
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
     assert result["url"] == (
         f"{MICROBEES_AUTH_URI}?"
         f"response_type=code&client_id={CLIENT_ID}&"
@@ -71,7 +71,7 @@ async def test_full_flow(
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert len(mock_setup.mock_calls) == 1
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "test@microbees.com"
     assert "result" in result
     assert result["result"].unique_id == 54321
@@ -101,7 +101,7 @@ async def test_config_non_unique_profile(
         },
     )
 
-    assert result["type"] == FlowResultType.EXTERNAL_STEP
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
     assert result["url"] == (
         f"{MICROBEES_AUTH_URI}?"
         f"response_type=code&client_id={CLIENT_ID}&"
@@ -129,7 +129,7 @@ async def test_config_non_unique_profile(
     )
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -152,7 +152,7 @@ async def test_config_reauth_profile(
         },
         data=config_entry.data,
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
@@ -190,7 +190,7 @@ async def test_config_reauth_profile(
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
     assert result
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
 
 
@@ -213,7 +213,7 @@ async def test_config_reauth_wrong_account(
         },
         data=config_entry.data,
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
@@ -251,7 +251,7 @@ async def test_config_reauth_wrong_account(
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
     assert result
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "wrong_account"
 
 
@@ -274,7 +274,7 @@ async def test_config_flow_with_invalid_credentials(
         },
     )
 
-    assert result["type"] == FlowResultType.EXTERNAL_STEP
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
     assert result["url"] == (
         f"{MICROBEES_AUTH_URI}?"
         f"response_type=code&client_id={CLIENT_ID}&"
@@ -299,7 +299,7 @@ async def test_config_flow_with_invalid_credentials(
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
     assert result
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "oauth_error"
 
 
@@ -334,7 +334,7 @@ async def test_unexpected_exceptions(
             "redirect_uri": "https://example.com/auth/external/callback",
         },
     )
-    assert result["type"] == FlowResultType.EXTERNAL_STEP
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
     assert result["url"] == (
         f"{MICROBEES_AUTH_URI}?"
         f"response_type=code&client_id={CLIENT_ID}&"
@@ -362,5 +362,5 @@ async def test_unexpected_exceptions(
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
     assert result
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == error
