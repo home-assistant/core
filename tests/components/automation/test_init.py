@@ -2512,7 +2512,9 @@ async def test_recursive_automation_starting_script(
         hass.services.async_register(
             "test", "automation_started", async_service_handler
         )
-        hass.bus.async_listen("automation_triggered", async_automation_triggered)
+        hass.bus.async_listen(
+            "automation_triggered", async_automation_triggered, run_immediately=False
+        )
 
         hass.bus.async_fire("trigger_automation")
         await asyncio.wait_for(script_done_event.wait(), 10)
