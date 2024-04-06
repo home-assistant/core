@@ -556,7 +556,7 @@ class HomeAssistant:
             target = cast(Callable[[*_Ts], Any], target)
         self.loop.call_soon_threadsafe(
             functools.partial(
-                self.async_add_hass_job, HassJob(target), *args, eager_start=True
+                self._async_add_hass_job, HassJob(target), *args, eager_start=True
             )
         )
 
@@ -628,7 +628,7 @@ class HomeAssistant:
         # https://github.com/home-assistant/core/pull/71960
         if TYPE_CHECKING:
             target = cast(Callable[[*_Ts], Coroutine[Any, Any, _R] | _R], target)
-        return self.async_add_hass_job(HassJob(target), *args, eager_start=eager_start)
+        return self._async_add_hass_job(HassJob(target), *args, eager_start=eager_start)
 
     @overload
     @callback
@@ -652,6 +652,58 @@ class HomeAssistant:
 
     @callback
     def async_add_hass_job(
+        self,
+        hassjob: HassJob[..., Coroutine[Any, Any, _R] | _R],
+        *args: Any,
+        eager_start: bool = False,
+        background: bool = False,
+    ) -> asyncio.Future[_R] | None:
+        """Add a HassJob from within the event loop.
+
+        If eager_start is True, coroutine functions will be scheduled eagerly.
+        If background is True, the task will created as a background task.
+
+        This method must be run in the event loop.
+        hassjob: HassJob to call.
+        args: parameters for method to call.
+        """
+        # late import to avoid circular imports
+        from .helpers import frame  # pylint: disable=import-outside-toplevel
+
+        frame.report(
+            "calls `async_add_hass_job`, which is deprecated and will be removed in Home "
+            "Assistant 2025.5; Please review "
+            "https://developers.home-assistant.io/blog/2024/04/06/deprecate_add_hass_job"
+            " for replacement options",
+            error_if_core=False,
+        )
+
+        return self._async_add_hass_job(
+            hassjob, *args, eager_start=eager_start, background=background
+        )
+
+    @overload
+    @callback
+    def _async_add_hass_job(
+        self,
+        hassjob: HassJob[..., Coroutine[Any, Any, _R]],
+        *args: Any,
+        eager_start: bool = False,
+        background: bool = False,
+    ) -> asyncio.Future[_R] | None: ...
+
+    @overload
+    @callback
+    def _async_add_hass_job(
+        self,
+        hassjob: HassJob[..., Coroutine[Any, Any, _R] | _R],
+        *args: Any,
+        eager_start: bool = False,
+        background: bool = False,
+    ) -> asyncio.Future[_R] | None: ...
+
+    @callback
+    def _async_add_hass_job(
         self,
         hassjob: HassJob[..., Coroutine[Any, Any, _R] | _R],
         *args: Any,
@@ -840,7 +892,7 @@ class HomeAssistant:
             hassjob.target(*args)
             return None
 
-        return self.async_add_hass_job(
+        return self._async_add_hass_job(
             hassjob, *args, eager_start=True, background=background
         )
 
@@ -1457,7 +1509,8 @@ class EventBus:
                 except Exception:  # pylint: disable=broad-except
                     _LOGGER.exception("Error running job: %s", job)
             else:
-                self._hass.async_add_hass_job(job, event)
+                # pylint: disable-next=protected-access
+                self._hass._async_add_hass_job(job, event)
 
     def listen(
         self,
