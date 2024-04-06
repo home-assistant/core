@@ -7,6 +7,7 @@ from unittest.mock import patch
 import pytest
 from roborock import RoborockException
 from roborock.roborock_typing import RoborockCommand
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.roborock import DOMAIN
 from homeassistant.components.roborock.const import GET_MAPS_SERVICE_NAME
@@ -158,8 +159,11 @@ async def test_failed_user_command(
 
 
 async def test_get_maps(
-    hass: HomeAssistant, bypass_api_fixture, setup_entry: MockConfigEntry
-):
+    hass: HomeAssistant,
+    bypass_api_fixture,
+    setup_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+) -> None:
     """Test that the service for maps correctly outputs rooms with the right name."""
     response = await hass.services.async_call(
         DOMAIN,
@@ -168,4 +172,4 @@ async def test_get_maps(
         blocking=True,
         return_response=True,
     )
-    assert response[ENTITY_ID]["maps"][0]["rooms"][17] == "Example room 2"
+    assert response == snapshot
