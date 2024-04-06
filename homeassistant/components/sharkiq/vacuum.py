@@ -267,11 +267,10 @@ class SharkVacuumEntity(CoordinatorEntity[SharkIqUpdateCoordinator], StateVacuum
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return a dictionary of device state attributes specific to sharkiq."""
-        data = {
+        return {
             ATTR_ERROR_CODE: self.error_code,
             ATTR_ERROR_MSG: self.sharkiq.error_text,
             ATTR_LOW_LIGHT: self.low_light,
             ATTR_RECHARGE_RESUME: self.recharge_resume,
             ATTR_ROOMS: self.available_rooms,
         }
-        return data

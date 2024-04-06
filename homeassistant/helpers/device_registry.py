@@ -1259,7 +1259,9 @@ def async_setup_cleanup(hass: HomeAssistant, dev_reg: DeviceRegistry) -> None:
         """Cancel debounced cleanup."""
         debounced_cleanup.async_cancel()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _on_homeassistant_stop)
+    hass.bus.async_listen_once(
+        EVENT_HOMEASSISTANT_STOP, _on_homeassistant_stop, run_immediately=True
+    )
 
 
 def _normalize_connections(connections: set[tuple[str, str]]) -> set[tuple[str, str]]:
