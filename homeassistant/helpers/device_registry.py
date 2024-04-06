@@ -551,7 +551,7 @@ class ActiveDeviceRegistryItems(DeviceRegistryItems[DeviceEntry]):
         ]
 
 
-class DeviceRegistry(BaseRegistry):
+class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
     """Class to hold a registry of devices."""
 
     devices: ActiveDeviceRegistryItems
