@@ -21,12 +21,8 @@ class ColorExtractorConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-
-        if user_input is not None:
+        if user_input:
             return self.async_create_entry(title=DEFAULT_NAME, data={})
-
         return self.async_show_form(step_id="user")
 
     async def async_step_import(self, user_input: dict[str, Any]) -> ConfigFlowResult:
