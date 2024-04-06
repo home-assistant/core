@@ -204,7 +204,7 @@ async def test_return_response_error(hass: HomeAssistant, websocket_client) -> N
     assert msg["id"] == 8
     assert msg["type"] == const.TYPE_RESULT
     assert not msg["success"]
-    assert msg["error"]["code"] == "unknown_error"
+    assert msg["error"]["code"] == "service_validation_error"
 
 
 @pytest.mark.parametrize("command", ["call_service", "call_service_action"])
@@ -1997,7 +1997,7 @@ async def test_render_template_with_timeout(
         {
             "id": 5,
             "type": "render_template",
-            "timeout": 0.000001,
+            "timeout": 0.0000001,
             "template": slow_template_str,
         }
     )
