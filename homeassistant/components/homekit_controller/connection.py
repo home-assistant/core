@@ -362,7 +362,7 @@ class HKDevice:
 
     def device_info_for_accessory(self, accessory: Accessory) -> DeviceInfo:
         """Build a DeviceInfo for a given accessory."""
-        identifiers = {
+        identifiers: set[tuple[str, str]] = {
             (
                 IDENTIFIER_ACCESSORY_ID,
                 f"{self.unique_id}:aid:{accessory.aid}",
@@ -373,12 +373,7 @@ class HKDevice:
             identifiers.add((IDENTIFIER_SERIAL_NUMBER, accessory.serial_number))
 
         device_info = DeviceInfo(
-            identifiers={
-                (
-                    IDENTIFIER_ACCESSORY_ID,
-                    f"{self.unique_id}:aid:{accessory.aid}",
-                )
-            },
+            identifiers=identifiers,
             name=accessory.name,
             manufacturer=accessory.manufacturer,
             model=accessory.model,

@@ -15,6 +15,10 @@
         'hw_version': '0.1',
         'identifiers': list([
           list([
+            'homekit_controller:serial-number',
+            '1234',
+          ]),
+          list([
             'homekit_controller:accessory-id',
             '00:00:00:00:00:00:aid:1',
           ]),
@@ -611,6 +615,10 @@
         'hw_version': '2.0.0',
         'identifiers': list([
           list([
+            'homekit_controller:serial-number',
+            'A0000A000000000A',
+          ]),
+          list([
             'homekit_controller:accessory-id',
             '00:00:00:00:00:00:aid:1',
           ]),
@@ -686,6 +694,10 @@
           list([
             'homekit_controller:accessory-id',
             '00:00:00:00:00:00:aid:4',
+          ]),
+          list([
+            'homekit_controller:serial-number',
+            'A0000A000000000D',
           ]),
         ]),
         'is_new': False,
@@ -924,6 +936,10 @@
         'entry_type': None,
         'hw_version': '1.0.0',
         'identifiers': list([
+          list([
+            'homekit_controller:serial-number',
+            'A0000A000000000B',
+          ]),
           list([
             'homekit_controller:accessory-id',
             '00:00:00:00:00:00:aid:2',
@@ -1165,6 +1181,10 @@
         'entry_type': None,
         'hw_version': '1.0.0',
         'identifiers': list([
+          list([
+            'homekit_controller:serial-number',
+            'A0000A000000000C',
+          ]),
           list([
             'homekit_controller:accessory-id',
             '00:00:00:00:00:00:aid:3',
@@ -1411,6 +1431,10 @@
         'hw_version': '1.0',
         'identifiers': list([
           list([
+            'homekit_controller:serial-number',
+            '00aa00000a0',
+          ]),
+          list([
             'homekit_controller:accessory-id',
             '00:00:00:00:00:00:aid:1',
           ]),
@@ -1617,6 +1641,10 @@
         'hw_version': '1.0',
         'identifiers': list([
           list([
+            'homekit_controller:serial-number',
+            '158d0007c59c6a',
+          ]),
+          list([
             'homekit_controller:accessory-id',
             '00:00:00:00:00:00:aid:33',
           ]),
@@ -1783,6 +1811,10 @@
           list([
             'homekit_controller:accessory-id',
             '00:00:00:00:00:00:aid:1',
+          ]),
+          list([
+            'homekit_controller:serial-number',
+            '0000000123456789',
           ]),
         ]),
         'is_new': False,
@@ -2056,6 +2088,10 @@
         'hw_version': '1.0',
         'identifiers': list([
           list([
+            'homekit_controller:serial-number',
+            '111a1111a1a111',
+          ]),
+          list([
             'homekit_controller:accessory-id',
             '00:00:00:00:00:00:aid:1',
           ]),
@@ -2178,6 +2214,10 @@
         'entry_type': None,
         'hw_version': '',
         'identifiers': list([
+          list([
+            'homekit_controller:serial-number',
+            '00A0000000000',
+          ]),
           list([
             'homekit_controller:accessory-id',
             '00:00:00:00:00:00:aid:1',
@@ -2663,6 +2703,10 @@
         'hw_version': '',
         'identifiers': list([
           list([
+            'homekit_controller:serial-number',
+            '1020301376',
+          ]),
+          list([
             'homekit_controller:accessory-id',
             '00:00:00:00:00:00:aid:1',
           ]),
@@ -3092,6 +3136,10 @@
         'hw_version': '',
         'identifiers': list([
           list([
+            'homekit_controller:serial-number',
+            'AB3C',
+          ]),
+          list([
             'homekit_controller:accessory-id',
             '00:00:00:00:00:00:aid:4',
           ]),
@@ -3253,6 +3301,10 @@
           list([
             'homekit_controller:accessory-id',
             '00:00:00:00:00:00:aid:1',
+          ]),
+          list([
+            'homekit_controller:serial-number',
+            '123456789012',
           ]),
         ]),
         'is_new': False,
@@ -3705,6 +3757,10 @@
         'hw_version': '',
         'identifiers': list([
           list([
+            'homekit_controller:serial-number',
+            'AB1C',
+          ]),
+          list([
             'homekit_controller:accessory-id',
             '00:00:00:00:00:00:aid:2',
           ]),
@@ -3866,6 +3922,10 @@
           list([
             'homekit_controller:accessory-id',
             '00:00:00:00:00:00:aid:3',
+          ]),
+          list([
+            'homekit_controller:serial-number',
+            'AB2C',
           ]),
         ]),
         'is_new': False,
@@ -4029,6 +4089,10 @@
           list([
             'homekit_controller:accessory-id',
             '00:00:00:00:00:00:aid:1',
+          ]),
+          list([
+            'homekit_controller:serial-number',
+            '123456789012',
           ]),
         ]),
         'is_new': False,
@@ -4485,6 +4549,10 @@
         'hw_version': '',
         'identifiers': list([
           list([
+            'homekit_controller:serial-number',
+            'AB3C',
+          ]),
+          list([
             'homekit_controller:accessory-id',
             '00:00:00:00:00:00:aid:4',
           ]),
@@ -4601,6 +4669,10 @@
           list([
             'homekit_controller:accessory-id',
             '00:00:00:00:00:00:aid:1',
+          ]),
+          list([
+            'homekit_controller:serial-number',
+            '123456789012',
           ]),
         ]),
         'is_new': False,
@@ -4880,6 +4952,10 @@
         'hw_version': '',
         'identifiers': list([
           list([
+            'homekit_controller:serial-number',
+            'AB1C',
+          ]),
+          list([
             'homekit_controller:accessory-id',
             '00:00:00:00:00:00:aid:2',
           ]),
@@ -5042,6 +5118,10 @@
             'homekit_controller:accessory-id',
             '00:00:00:00:00:00:aid:3',
           ]),
+          list([
+            'homekit_controller:serial-number',
+            'AB2C',
+          ]),
         ]),
         'is_new': False,
         'labels': list([
@@ -5201,6 +5281,10 @@
         'entry_type': None,
         'hw_version': '',
         'identifiers': list([
+          list([
+            'homekit_controller:serial-number',
+            '123456789016',
+          ]),
           list([
             'homekit_controller:accessory-id',
             '00:00:00:00:00:00:aid:1',
@@ -5672,6 +5756,10 @@
             'homekit_controller:accessory-id',
             '00:00:00:00:00:00:aid:1',
           ]),
+          list([
+            'homekit_controller:serial-number',
+            '111111111111',
+          ]),
         ]),
         'is_new': False,
         'labels': list([
@@ -5957,6 +6045,10 @@
         'entry_type': None,
         'hw_version': '1.0.0',
         'identifiers': list([
+          list([
+            'homekit_controller:serial-number',
+            'AA00A0A00000',
+          ]),
           list([
             'homekit_controller:accessory-id',
             '00:00:00:00:00:00:aid:1',
@@ -6314,6 +6406,10 @@
         'hw_version': '1.0.0',
         'identifiers': list([
           list([
+            'homekit_controller:serial-number',
+            'AA00A0A00000',
+          ]),
+          list([
             'homekit_controller:accessory-id',
             '00:00:00:00:00:00:aid:1',
           ]),
@@ -6652,6 +6748,10 @@
         'hw_version': '',
         'identifiers': list([
           list([
+            'homekit_controller:serial-number',
+            'C718B3-1',
+          ]),
+          list([
             'homekit_controller:accessory-id',
             '00:00:00:00:00:00:aid:1',
           ]),
@@ -6853,6 +6953,10 @@
         'hw_version': '',
         'identifiers': list([
           list([
+            'homekit_controller:serial-number',
+            'C718B3-2',
+          ]),
+          list([
             'homekit_controller:accessory-id',
             '00:00:00:00:00:00:aid:2',
           ]),
@@ -6969,6 +7073,10 @@
         'entry_type': None,
         'hw_version': '1.0.0',
         'identifiers': list([
+          list([
+            'homekit_controller:serial-number',
+            'cover.family_door_north',
+          ]),
           list([
             'homekit_controller:accessory-id',
             '00:00:00:00:00:00:aid:123016423',
@@ -7134,6 +7242,10 @@
             'homekit_controller:accessory-id',
             '00:00:00:00:00:00:aid:1',
           ]),
+          list([
+            'homekit_controller:serial-number',
+            'homekit.bridge',
+          ]),
         ]),
         'is_new': False,
         'labels': list([
@@ -7206,6 +7318,10 @@
           list([
             'homekit_controller:accessory-id',
             '00:00:00:00:00:00:aid:878448248',
+          ]),
+          list([
+            'homekit_controller:serial-number',
+            'cover.kitchen_window',
           ]),
         ]),
         'is_new': False,
@@ -7372,6 +7488,10 @@
             'homekit_controller:accessory-id',
             '00:00:00:00:00:00:aid:766313939',
           ]),
+          list([
+            'homekit_controller:serial-number',
+            'fan.ceiling_fan',
+          ]),
         ]),
         'is_new': False,
         'labels': list([
@@ -7492,6 +7612,10 @@
             'homekit_controller:accessory-id',
             '00:00:00:00:00:00:aid:1',
           ]),
+          list([
+            'homekit_controller:serial-number',
+            'homekit.bridge',
+          ]),
         ]),
         'is_new': False,
         'labels': list([
@@ -7564,6 +7688,10 @@
           list([
             'homekit_controller:accessory-id',
             '00:00:00:00:00:00:aid:1256851357',
+          ]),
+          list([
+            'homekit_controller:serial-number',
+            'fan.living_room_fan',
           ]),
         ]),
         'is_new': False,
@@ -7689,6 +7817,10 @@
           list([
             'homekit_controller:accessory-id',
             '00:00:00:00:00:00:aid:1233851541',
+          ]),
+          list([
+            'homekit_controller:serial-number',
+            'climate.89_living_room',
           ]),
         ]),
         'is_new': False,
@@ -8012,6 +8144,10 @@
             'homekit_controller:accessory-id',
             '00:00:00:00:00:00:aid:1',
           ]),
+          list([
+            'homekit_controller:serial-number',
+            'homekit.bridge',
+          ]),
         ]),
         'is_new': False,
         'labels': list([
@@ -8089,6 +8225,10 @@
             'homekit_controller:accessory-id',
             '00:00:00:00:00:00:aid:1',
           ]),
+          list([
+            'homekit_controller:serial-number',
+            'homekit.bridge',
+          ]),
         ]),
         'is_new': False,
         'labels': list([
@@ -8161,6 +8301,10 @@
           list([
             'homekit_controller:accessory-id',
             '00:00:00:00:00:00:aid:3982136094',
+          ]),
+          list([
+            'homekit_controller:serial-number',
+            'light.laundry_smoke_ed78',
           ]),
         ]),
         'is_new': False,
@@ -8332,6 +8476,10 @@
         'hw_version': '1.0.0',
         'identifiers': list([
           list([
+            'homekit_controller:serial-number',
+            'cover.family_door_north',
+          ]),
+          list([
             'homekit_controller:accessory-id',
             '00:00:00:00:00:00:aid:123016423',
           ]),
@@ -8496,6 +8644,10 @@
             'homekit_controller:accessory-id',
             '00:00:00:00:00:00:aid:1',
           ]),
+          list([
+            'homekit_controller:serial-number',
+            'homekit.bridge',
+          ]),
         ]),
         'is_new': False,
         'labels': list([
@@ -8568,6 +8720,10 @@
           list([
             'homekit_controller:accessory-id',
             '00:00:00:00:00:00:aid:878448248',
+          ]),
+          list([
+            'homekit_controller:serial-number',
+            'cover.kitchen_window',
           ]),
         ]),
         'is_new': False,
@@ -8734,6 +8890,10 @@
             'homekit_controller:accessory-id',
             '00:00:00:00:00:00:aid:766313939',
           ]),
+          list([
+            'homekit_controller:serial-number',
+            'fan.ceiling_fan',
+          ]),
         ]),
         'is_new': False,
         'labels': list([
@@ -8854,6 +9014,10 @@
             'homekit_controller:accessory-id',
             '00:00:00:00:00:00:aid:1',
           ]),
+          list([
+            'homekit_controller:serial-number',
+            'homekit.bridge',
+          ]),
         ]),
         'is_new': False,
         'labels': list([
@@ -8926,6 +9090,10 @@
           list([
             'homekit_controller:accessory-id',
             '00:00:00:00:00:00:aid:1256851357',
+          ]),
+          list([
+            'homekit_controller:serial-number',
+            'fan.living_room_fan',
           ]),
         ]),
         'is_new': False,
@@ -9053,6 +9221,10 @@
             'homekit_controller:accessory-id',
             '00:00:00:00:00:00:aid:1',
           ]),
+          list([
+            'homekit_controller:serial-number',
+            'homekit.bridge',
+          ]),
         ]),
         'is_new': False,
         'labels': list([
@@ -9125,6 +9297,10 @@
           list([
             'homekit_controller:accessory-id',
             '00:00:00:00:00:00:aid:1256851357',
+          ]),
+          list([
+            'homekit_controller:serial-number',
+            'fan.living_room_fan',
           ]),
         ]),
         'is_new': False,
@@ -9251,6 +9427,10 @@
           list([
             'homekit_controller:accessory-id',
             '00:00:00:00:00:00:aid:1233851541',
+          ]),
+          list([
+            'homekit_controller:serial-number',
+            'climate.89_living_room',
           ]),
         ]),
         'is_new': False,
@@ -9583,6 +9763,10 @@
             'homekit_controller:accessory-id',
             '00:00:00:00:00:00:aid:1',
           ]),
+          list([
+            'homekit_controller:serial-number',
+            'homekit.bridge',
+          ]),
         ]),
         'is_new': False,
         'labels': list([
@@ -9660,6 +9844,10 @@
             'homekit_controller:accessory-id',
             '00:00:00:00:00:00:aid:1',
           ]),
+          list([
+            'homekit_controller:serial-number',
+            'homekit.bridge',
+          ]),
         ]),
         'is_new': False,
         'labels': list([
@@ -9732,6 +9920,10 @@
           list([
             'homekit_controller:accessory-id',
             '00:00:00:00:00:00:aid:293334836',
+          ]),
+          list([
+            'homekit_controller:serial-number',
+            'humidifier.humidifier_182a',
           ]),
         ]),
         'is_new': False,
@@ -9913,6 +10105,10 @@
             'homekit_controller:accessory-id',
             '00:00:00:00:00:00:aid:1',
           ]),
+          list([
+            'homekit_controller:serial-number',
+            'homekit.bridge',
+          ]),
         ]),
         'is_new': False,
         'labels': list([
@@ -9985,6 +10181,10 @@
           list([
             'homekit_controller:accessory-id',
             '00:00:00:00:00:00:aid:293334836',
+          ]),
+          list([
+            'homekit_controller:serial-number',
+            'humidifier.humidifier_182a',
           ]),
         ]),
         'is_new': False,
@@ -10166,6 +10366,10 @@
             'homekit_controller:accessory-id',
             '00:00:00:00:00:00:aid:1',
           ]),
+          list([
+            'homekit_controller:serial-number',
+            'homekit.bridge',
+          ]),
         ]),
         'is_new': False,
         'labels': list([
@@ -10238,6 +10442,10 @@
           list([
             'homekit_controller:accessory-id',
             '00:00:00:00:00:00:aid:3982136094',
+          ]),
+          list([
+            'homekit_controller:serial-number',
+            'light.laundry_smoke_ed78',
           ]),
         ]),
         'is_new': False,
@@ -10625,6 +10833,10 @@
             'homekit_controller:accessory-id',
             '00:00:00:00:00:00:aid:6623462395276914',
           ]),
+          list([
+            'homekit_controller:serial-number',
+            '6623462395276914',
+          ]),
         ]),
         'is_new': False,
         'labels': list([
@@ -10760,6 +10972,10 @@
           list([
             'homekit_controller:accessory-id',
             '00:00:00:00:00:00:aid:6623462395276939',
+          ]),
+          list([
+            'homekit_controller:serial-number',
+            '6623462395276939',
           ]),
         ]),
         'is_new': False,
@@ -10897,6 +11113,10 @@
             'homekit_controller:accessory-id',
             '00:00:00:00:00:00:aid:6623462403113447',
           ]),
+          list([
+            'homekit_controller:serial-number',
+            '6623462403113447',
+          ]),
         ]),
         'is_new': False,
         'labels': list([
@@ -11029,6 +11249,10 @@
         'entry_type': None,
         'hw_version': '',
         'identifiers': list([
+          list([
+            'homekit_controller:serial-number',
+            '6623462403233419',
+          ]),
           list([
             'homekit_controller:accessory-id',
             '00:00:00:00:00:00:aid:6623462403233419',
@@ -11168,6 +11392,10 @@
           list([
             'homekit_controller:accessory-id',
             '00:00:00:00:00:00:aid:6623462412411853',
+          ]),
+          list([
+            'homekit_controller:serial-number',
+            '6623462412411853',
           ]),
         ]),
         'is_new': False,
@@ -11315,6 +11543,10 @@
             'homekit_controller:accessory-id',
             '00:00:00:00:00:00:aid:6623462412413293',
           ]),
+          list([
+            'homekit_controller:serial-number',
+            '6623462412413293',
+          ]),
         ]),
         'is_new': False,
         'labels': list([
@@ -11460,6 +11692,10 @@
           list([
             'homekit_controller:accessory-id',
             '00:00:00:00:00:00:aid:6623462389072572',
+          ]),
+          list([
+            'homekit_controller:serial-number',
+            '6623462389072572',
           ]),
         ]),
         'is_new': False,
@@ -11776,6 +12012,10 @@
             'homekit_controller:accessory-id',
             '00:00:00:00:00:00:aid:6623462378982941',
           ]),
+          list([
+            'homekit_controller:serial-number',
+            '6623462378982941',
+          ]),
         ]),
         'is_new': False,
         'labels': list([
@@ -11895,6 +12135,10 @@
         'entry_type': None,
         'hw_version': '',
         'identifiers': list([
+          list([
+            'homekit_controller:serial-number',
+            '6623462378983942',
+          ]),
           list([
             'homekit_controller:accessory-id',
             '00:00:00:00:00:00:aid:6623462378983942',
@@ -12019,6 +12263,10 @@
         'hw_version': '',
         'identifiers': list([
           list([
+            'homekit_controller:serial-number',
+            '6623462379122122',
+          ]),
+          list([
             'homekit_controller:accessory-id',
             '00:00:00:00:00:00:aid:6623462379122122',
           ]),
@@ -12141,6 +12389,10 @@
         'entry_type': None,
         'hw_version': '',
         'identifiers': list([
+          list([
+            'homekit_controller:serial-number',
+            '6623462379123707',
+          ]),
           list([
             'homekit_controller:accessory-id',
             '00:00:00:00:00:00:aid:6623462379123707',
@@ -12265,6 +12517,10 @@
         'hw_version': '',
         'identifiers': list([
           list([
+            'homekit_controller:serial-number',
+            '6623462383114163',
+          ]),
+          list([
             'homekit_controller:accessory-id',
             '00:00:00:00:00:00:aid:6623462383114163',
           ]),
@@ -12387,6 +12643,10 @@
         'entry_type': None,
         'hw_version': '',
         'identifiers': list([
+          list([
+            'homekit_controller:serial-number',
+            '6623462383114193',
+          ]),
           list([
             'homekit_controller:accessory-id',
             '00:00:00:00:00:00:aid:6623462383114193',
@@ -12511,6 +12771,10 @@
         'hw_version': '',
         'identifiers': list([
           list([
+            'homekit_controller:serial-number',
+            '6623462385996792',
+          ]),
+          list([
             'homekit_controller:accessory-id',
             '00:00:00:00:00:00:aid:6623462385996792',
           ]),
@@ -12634,6 +12898,10 @@
         'hw_version': '',
         'identifiers': list([
           list([
+            'homekit_controller:serial-number',
+            '123456',
+          ]),
+          list([
             'homekit_controller:accessory-id',
             '00:00:00:00:00:00:aid:1',
           ]),
@@ -12710,6 +12978,10 @@
         'entry_type': None,
         'hw_version': '',
         'identifiers': list([
+          list([
+            'homekit_controller:serial-number',
+            'AAAA011111111111',
+          ]),
           list([
             'homekit_controller:accessory-id',
             '00:00:00:00:00:00:aid:1',
@@ -12852,6 +13124,10 @@
         'entry_type': None,
         'hw_version': '',
         'identifiers': list([
+          list([
+            'homekit_controller:serial-number',
+            'EUCP03190xxxxx48',
+          ]),
           list([
             'homekit_controller:accessory-id',
             '00:00:00:00:00:00:aid:1',
@@ -13015,6 +13291,10 @@
         'entry_type': None,
         'hw_version': '',
         'identifiers': list([
+          list([
+            'homekit_controller:serial-number',
+            'CNNT061751001372',
+          ]),
           list([
             'homekit_controller:accessory-id',
             '00:00:00:00:00:00:aid:1',
@@ -13220,6 +13500,10 @@
           list([
             'homekit_controller:accessory-id',
             '00:00:00:00:00:00:aid:1',
+          ]),
+          list([
+            'homekit_controller:serial-number',
+            'XXXXXXXX',
           ]),
         ]),
         'is_new': False,
@@ -13501,6 +13785,10 @@
             'homekit_controller:accessory-id',
             '00:00:00:00:00:00:aid:1',
           ]),
+          list([
+            'homekit_controller:serial-number',
+            '999AAAAAA999',
+          ]),
         ]),
         'is_new': False,
         'labels': list([
@@ -13680,6 +13968,10 @@
             'homekit_controller:accessory-id',
             '00:00:00:00:00:00:aid:21474836482',
           ]),
+          list([
+            'homekit_controller:serial-number',
+            '39024290',
+          ]),
         ]),
         'is_new': False,
         'labels': list([
@@ -13797,6 +14089,10 @@
         'hw_version': '',
         'identifiers': list([
           list([
+            'homekit_controller:serial-number',
+            '12344331',
+          ]),
+          list([
             'homekit_controller:accessory-id',
             '00:00:00:00:00:00:aid:1',
           ]),
@@ -13873,6 +14169,10 @@
         'entry_type': None,
         'hw_version': '4.0.0',
         'identifiers': list([
+          list([
+            'homekit_controller:serial-number',
+            'HH41234',
+          ]),
           list([
             'homekit_controller:accessory-id',
             '00:00:00:00:00:00:aid:1',
@@ -14154,6 +14454,10 @@
             'homekit_controller:accessory-id',
             '00:00:00:00:00:00:aid:1',
           ]),
+          list([
+            'homekit_controller:serial-number',
+            'BB1121',
+          ]),
         ]),
         'is_new': False,
         'labels': list([
@@ -14277,6 +14581,10 @@
         'entry_type': None,
         'hw_version': '',
         'identifiers': list([
+          list([
+            'homekit_controller:serial-number',
+            'AAAAAAA000',
+          ]),
           list([
             'homekit_controller:accessory-id',
             '00:00:00:00:00:00:aid:1',
@@ -14606,6 +14914,10 @@
         'hw_version': '1.2.4',
         'identifiers': list([
           list([
+            'homekit_controller:serial-number',
+            'AAAA011111111111',
+          ]),
+          list([
             'homekit_controller:accessory-id',
             '00:00:00:00:00:00:aid:1',
           ]),
@@ -14875,6 +15187,10 @@
         'entry_type': None,
         'hw_version': '',
         'identifiers': list([
+          list([
+            'homekit_controller:serial-number',
+            'g738658',
+          ]),
           list([
             'homekit_controller:accessory-id',
             '00:00:00:00:00:00:aid:1',
@@ -15168,6 +15484,10 @@
         'hw_version': '0',
         'identifiers': list([
           list([
+            'homekit_controller:serial-number',
+            '1234',
+          ]),
+          list([
             'homekit_controller:accessory-id',
             '00:00:00:00:00:00:aid:1',
           ]),
@@ -15329,6 +15649,10 @@
           list([
             'homekit_controller:accessory-id',
             '00:00:00:00:00:00:aid:1',
+          ]),
+          list([
+            'homekit_controller:serial-number',
+            'AAAAAAAAAAAAA',
           ]),
         ]),
         'is_new': False,
@@ -15627,6 +15951,10 @@
         'entry_type': None,
         'hw_version': '1',
         'identifiers': list([
+          list([
+            'homekit_controller:serial-number',
+            '00aa0000aa0a',
+          ]),
           list([
             'homekit_controller:accessory-id',
             '00:00:00:00:00:00:aid:1',
@@ -17169,6 +17497,10 @@
         'hw_version': '1.3.0',
         'identifiers': list([
           list([
+            'homekit_controller:serial-number',
+            'AAAAAAA000',
+          ]),
+          list([
             'homekit_controller:accessory-id',
             '00:00:00:00:00:00:aid:1',
           ]),
@@ -17286,6 +17618,10 @@
         'entry_type': None,
         'hw_version': '',
         'identifiers': list([
+          list([
+            'homekit_controller:serial-number',
+            '1234567890abcd',
+          ]),
           list([
             'homekit_controller:accessory-id',
             '00:00:00:00:00:00:aid:1',
@@ -17462,6 +17798,10 @@
         'hw_version': '',
         'identifiers': list([
           list([
+            'homekit_controller:serial-number',
+            'a1a11a1',
+          ]),
+          list([
             'homekit_controller:accessory-id',
             '00:00:00:00:00:00:aid:1',
           ]),
@@ -17534,6 +17874,10 @@
         'entry_type': None,
         'hw_version': '',
         'identifiers': list([
+          list([
+            'homekit_controller:serial-number',
+            'a11b111',
+          ]),
           list([
             'homekit_controller:accessory-id',
             '00:00:00:00:00:00:aid:2',
@@ -17743,6 +18087,10 @@
         'hw_version': '',
         'identifiers': list([
           list([
+            'homekit_controller:serial-number',
+            '1111111a114a111a',
+          ]),
+          list([
             'homekit_controller:accessory-id',
             '00:00:00:00:00:00:aid:3',
           ]),
@@ -17862,6 +18210,10 @@
         'entry_type': None,
         'hw_version': '0.1',
         'identifiers': list([
+          list([
+            'homekit_controller:serial-number',
+            'AM01121849000327',
+          ]),
           list([
             'homekit_controller:accessory-id',
             '00:00:00:00:00:00:aid:1',
@@ -18166,6 +18518,10 @@
         'entry_type': None,
         'hw_version': '1.0.3',
         'identifiers': list([
+          list([
+            'homekit_controller:serial-number',
+            'EU0121203xxxxx07',
+          ]),
           list([
             'homekit_controller:accessory-id',
             '00:00:00:00:00:00:aid:1',
