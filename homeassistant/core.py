@@ -1642,6 +1642,7 @@ class State:
         context: Context | None = None,
         validate_entity_id: bool | None = True,
         state_info: StateInfo | None = None,
+        last_updated_timestamp: float | None = None,
     ) -> None:
         """Initialize a new state."""
         state = str(state)
@@ -1669,6 +1670,8 @@ class State:
         self.context = context or Context()
         self.state_info = state_info
         self.domain, self.object_id = split_entity_id(self.entity_id)
+        if last_updated_timestamp:
+            self.__dict__["last_updated_timestamp"] = last_updated_timestamp
 
     @cached_property
     def name(self) -> str:
@@ -2184,6 +2187,7 @@ class StateMachine:
             context,
             old_state is None,
             state_info,
+            timestamp,
         )
         if old_state is not None:
             old_state.expire()
