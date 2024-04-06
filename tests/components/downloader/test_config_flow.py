@@ -21,15 +21,11 @@ async def test_user_form(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    with patch(
-        "homeassistant.components.downloader.async_setup_entry",
-        return_value=True,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input=CONFIG,
-        )
-        assert result["type"] is FlowResultType.FORM
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=CONFIG,
+    )
+    assert result["type"] is FlowResultType.FORM
 
     with patch("os.path.isdir", return_value=False):
         result = await hass.config_entries.flow.async_configure(
