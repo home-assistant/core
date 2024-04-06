@@ -81,10 +81,7 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
     async def validate_enocean_conf(self, user_input) -> bool:
         """Return True if the user_input contains a valid dongle path."""
         dongle_path = user_input[CONF_DEVICE]
-        path_is_valid = await self.hass.async_add_executor_job(
-            dongle.validate_path, dongle_path
-        )
-        return path_is_valid
+        return await self.hass.async_add_executor_job(dongle.validate_path, dongle_path)
 
     def create_enocean_entry(self, user_input):
         """Create an entry for the provided configuration."""

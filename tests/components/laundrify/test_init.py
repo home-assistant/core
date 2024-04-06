@@ -20,7 +20,7 @@ async def test_setup_entry_api_unauthorized(
     await hass.async_block_till_done()
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    assert config_entry.state == ConfigEntryState.SETUP_ERROR
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
     assert not hass.data.get(DOMAIN)
 
 
@@ -35,7 +35,7 @@ async def test_setup_entry_api_cannot_connect(
     await hass.async_block_till_done()
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    assert config_entry.state == ConfigEntryState.SETUP_RETRY
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
     assert not hass.data.get(DOMAIN)
 
 
@@ -46,7 +46,7 @@ async def test_setup_entry_successful(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
 
 async def test_setup_entry_unload(hass: HomeAssistant) -> None:
@@ -56,4 +56,4 @@ async def test_setup_entry_unload(hass: HomeAssistant) -> None:
     await hass.config_entries.async_unload(config_entry.entry_id)
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert config_entry.state is ConfigEntryState.NOT_LOADED

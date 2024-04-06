@@ -66,19 +66,6 @@ def _get_color(file_handler) -> tuple:
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Color extractor component."""
 
-    if DOMAIN in config:
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": SOURCE_IMPORT}, data={}
-            )
-        )
-
-    return True
-
-
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Load a config entry."""
-
     async def async_handle_service(service_call: ServiceCall) -> None:
         """Decide which color_extractor method to call based on service."""
         service_data = dict(service_call.data)
@@ -169,4 +156,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _file = _get_file(file_path)
         return _get_color(_file)
 
+    if DOMAIN in config:
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": SOURCE_IMPORT}, data={}
+            )
+        )
+
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Load a config entry."""
     return True
