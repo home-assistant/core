@@ -240,7 +240,7 @@ class DefaultAgent(ConversationEntity):
         slot_lists = self._make_slot_lists()
         intent_context = self._make_intent_context(user_input)
 
-        result = await self.hass.async_add_executor_job(
+        return await self.hass.async_add_executor_job(
             self._recognize,
             user_input,
             lang_intents,
@@ -248,8 +248,6 @@ class DefaultAgent(ConversationEntity):
             intent_context,
             language,
         )
-
-        return result
 
     async def async_process(self, user_input: ConversationInput) -> ConversationResult:
         """Process a sentence."""
@@ -901,8 +899,7 @@ class DefaultAgent(ConversationEntity):
         # Force rebuild on next use
         self._trigger_intents = None
 
-        unregister = functools.partial(self._unregister_trigger, trigger_data)
-        return unregister
+        return functools.partial(self._unregister_trigger, trigger_data)
 
     def _rebuild_trigger_intents(self) -> None:
         """Rebuild the HassIL intents object from the current trigger sentences."""

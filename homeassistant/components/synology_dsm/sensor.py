@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from typing import cast
 
 from synology_dsm.api.core.utilization import SynoCoreUtilization
 from synology_dsm.api.dsm.information import SynoDSMInformation
@@ -387,8 +388,10 @@ class SynoDSMStorageSensor(SynologyDSMDeviceEntity, SynoDSMSensor):
     @property
     def native_value(self) -> StateType:
         """Return the state."""
-        attr = getattr(self._api.storage, self.entity_description.key)(self._device_id)
-        return attr  # type: ignore[no-any-return]
+        return cast(
+            StateType,
+            getattr(self._api.storage, self.entity_description.key)(self._device_id),
+        )
 
 
 class SynoDSMInfoSensor(SynoDSMSensor):
