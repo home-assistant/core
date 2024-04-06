@@ -2329,14 +2329,20 @@ class ServiceRegistry:
         return service.lower() in self._services.get(domain.lower(), [])
 
     def supports_response(self, domain: str, service: str) -> SupportsResponse:
-        """Return whether or not the service supports response data.
+        """Return whether the service supports response data.
 
         This exists so that callers can return more helpful error messages given
-        the context. Will return NONE if the service does not exist as there is
+        the context. Will return NONE if the service or domain do not exist as there is
         other error handling when calling the service if it does not exist.
         """
-        if not (handler := self._services[domain.lower()][service.lower()]):
+        try:
+            handler = self._services[domain.lower()][service.lower()]
+        except KeyError:
             return SupportsResponse.NONE
+
+        if not handler:
+            return SupportsResponse.NONE
+
         return handler.supports_response
 
     def register(
