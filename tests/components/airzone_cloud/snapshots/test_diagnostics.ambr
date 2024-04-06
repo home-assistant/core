@@ -292,8 +292,10 @@
           'operations': list([
             0,
             1,
+            2,
           ]),
           'power': False,
+          'power-mode': False,
           'problems': False,
           'temperature': 45.5,
           'temperature-setpoint': 48,
