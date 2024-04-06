@@ -287,13 +287,13 @@ jobs:
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v4.1.2
-      - name: Set up Python ${{ needs.base.outputs.default_python_version }}
+      - name: Set up Python ${{ needs.base.outputs.python_version }}
         id: python
         uses: actions/setup-python@v5.0.0
         with:
-          python-version: ${{ needs.base.outputs.default_python_version }}
+          python-version: ${{ needs.base.outputs.python_version }}
           check-latest: true
-      - name: Restore full Python ${{ needs.base.outputs.default_python_version }} virtual environment
+      - name: Restore full Python ${{ needs.base.outputs.python_version }} virtual environment
         id: cache-venv
         uses: actions/cache/restore@v4.0.2
         with:
