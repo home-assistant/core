@@ -1,6 +1,7 @@
 """Recorder entity registry helper."""
 
 import logging
+from typing import TYPE_CHECKING
 
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
@@ -21,7 +22,8 @@ def async_setup(hass: HomeAssistant) -> None:
         event: Event[er.EventEntityRegistryUpdatedData],
     ) -> None:
         instance = get_instance(hass)
-        assert event.data["action"] == "update" and "old_entity_id" in event.data
+        if TYPE_CHECKING:
+            assert event.data["action"] == "update" and "old_entity_id" in event.data
         old_entity_id = event.data["old_entity_id"]
         new_entity_id = event.data["entity_id"]
         instance.async_update_statistics_metadata(
