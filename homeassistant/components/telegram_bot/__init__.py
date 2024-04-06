@@ -983,10 +983,9 @@ class TelegramNotificationService:
         """Remove bot from chat."""
         chat_id = self._get_target_chat_ids(chat_id)[0]
         _LOGGER.debug("Leave from chat ID %s", chat_id)
-        leaved = await self._send_msg(
+        return await self._send_msg(
             self.bot.leave_chat, "Error leaving chat", None, chat_id
         )
-        return leaved
 
 
 class BaseTelegramBotEntity:

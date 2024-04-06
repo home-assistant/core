@@ -558,8 +558,7 @@ async def get_tracker(hass: HomeAssistant, config: ConfigType) -> DeviceTracker:
         track_new = defaults.get(CONF_TRACK_NEW, DEFAULT_TRACK_NEW)
 
     devices = await async_load_config(yaml_path, hass, consider_home)
-    tracker = DeviceTracker(hass, consider_home, track_new, defaults, devices)
-    return tracker
+    return DeviceTracker(hass, consider_home, track_new, defaults, devices)
 
 
 class DeviceTracker:
