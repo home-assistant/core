@@ -93,6 +93,7 @@ async def async_get_config_entry_diagnostics(
                 "zigpy_znp": version("zigpy_znp"),
                 "zigpy_zigate": version("zigpy-zigate"),
                 "zhaquirks": version("zha-quirks"),
+                "zha": version("zha"),
             },
             "devices": [
                 {
