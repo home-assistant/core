@@ -174,6 +174,8 @@ async def handle_webhook(
         async_dispatcher_send(hass, SIGNAL_WEBHOOK, data, data.get("hook_id"))
     hass.bus.async_fire(EVENT_RECEIVED, data)
 
+    return None
+
 
 class MinutPointClient:
     """Get the latest data and update the states."""

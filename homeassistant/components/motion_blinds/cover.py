@@ -380,7 +380,7 @@ class MotionTiltOnlyDevice(MotionTiltDevice):
     @property
     def current_cover_position(self) -> None:
         """Return current position of cover."""
-        return None
+        return
 
     @property
     def is_closed(self) -> bool | None:

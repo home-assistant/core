@@ -29,7 +29,7 @@ FAKE_UPDATED_TOKEN = "fake-updated-token"
 @pytest.fixture
 def subscriber() -> FakeSubscriber | None:
     """Disable default subscriber since tests use their own patch."""
-    return None
+    return
 
 
 # This tests needs to be adjusted to remove lingering tasks

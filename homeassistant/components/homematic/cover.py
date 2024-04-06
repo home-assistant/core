@@ -131,7 +131,7 @@ class HMGarage(HMCover):
         None is unknown, 0 is closed, 100 is fully open.
         """
         # Garage covers do not support position; always return None
-        return None
+        return
 
     @property
     def is_closed(self) -> bool:

@@ -164,12 +164,12 @@ class TadoDeviceTrackerEntity(TrackerEntity):
     @property
     def latitude(self) -> None:
         """Return latitude value of the device."""
-        return None
+        return
 
     @property
     def longitude(self) -> None:
         """Return longitude value of the device."""
-        return None
+        return
 
     @property
     def source_type(self) -> SourceType:

@@ -84,9 +84,9 @@ class MockConnection:
         """Mock close."""
 
     @property
-    def server(self):
+    def server(self) -> None:
         """Mock server."""
-        return None
+        return
 
 
 class MockWSConnection:
@@ -113,6 +113,6 @@ class MockWSConnection:
         """Mock close."""
 
     @property
-    def server(self):
+    def server(self) -> None:
         """Mock server."""
-        return None
+        return

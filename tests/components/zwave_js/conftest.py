@@ -24,7 +24,7 @@ from tests.common import MockConfigEntry, load_fixture
 @pytest.fixture(name="addon_info_side_effect")
 def addon_info_side_effect_fixture() -> Any | None:
     """Return the add-on info side effect."""
-    return None
+    return
 
 
 @pytest.fixture(name="addon_info")
@@ -48,7 +48,7 @@ def mock_addon_info(addon_info_side_effect: Any | None) -> Generator[AsyncMock]:
 @pytest.fixture(name="addon_store_info_side_effect")
 def addon_store_info_side_effect_fixture() -> Any | None:
     """Return the add-on store info side effect."""
-    return None
+    return
 
 
 @pytest.fixture(name="addon_store_info")
@@ -223,7 +223,7 @@ def stop_addon_fixture() -> Generator[AsyncMock]:
 @pytest.fixture(name="restart_addon_side_effect")
 def restart_addon_side_effect_fixture() -> Any | None:
     """Return the restart add-on options side effect."""
-    return None
+    return
 
 
 @pytest.fixture(name="restart_addon")

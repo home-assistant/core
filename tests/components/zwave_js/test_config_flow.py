@@ -86,7 +86,7 @@ def discovery_info_fixture() -> dict[str, Any]:
 @pytest.fixture(name="discovery_info_side_effect")
 def discovery_info_side_effect_fixture() -> Any | None:
     """Return the discovery info from the supervisor."""
-    return None
+    return
 
 
 @pytest.fixture(name="get_addon_discovery_info")
@@ -105,7 +105,7 @@ def mock_get_addon_discovery_info(
 @pytest.fixture(name="server_version_side_effect")
 def server_version_side_effect_fixture() -> Any | None:
     """Return the server version side effect."""
-    return None
+    return
 
 
 @pytest.fixture(name="get_server_version", autouse=True)

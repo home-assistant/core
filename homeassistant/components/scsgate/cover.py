@@ -85,7 +85,7 @@ class SCSGateCover(CoverEntity):
     @property
     def is_closed(self) -> None:
         """Return if the cover is closed."""
-        return None
+        return
 
     def open_cover(self, **kwargs: Any) -> None:
         """Move the cover."""

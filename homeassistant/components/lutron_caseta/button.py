@@ -87,6 +87,6 @@ class LutronCasetaButton(LutronCasetaDevice, ButtonEntity):
         await self._smartbridge.tap_button(self.device_id)
 
     @property
-    def serial(self):
+    def serial(self) -> int | None:
         """Buttons shouldn't have serial numbers, Return None."""
         return None

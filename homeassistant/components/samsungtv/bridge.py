@@ -323,7 +323,7 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
 
     async def async_device_info(self) -> dict[str, Any] | None:
         """Try to gather infos of this device."""
-        return None
+        return
 
     def _notify_reauth_callback(self) -> None:
         """Notify access denied callback."""
