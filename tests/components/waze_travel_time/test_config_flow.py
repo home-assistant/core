@@ -85,6 +85,7 @@ async def test_reconfigure(hass: HomeAssistant) -> None:
         },
     )
     assert user_step_result["type"] is FlowResultType.ABORT
+    assert user_step_result["reason"] == "reconfigure_successful"
     await hass.async_block_till_done()
 
     entry = hass.config_entries.async_entries(DOMAIN)[0]
