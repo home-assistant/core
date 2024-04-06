@@ -8,13 +8,12 @@ import voluptuous as vol
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt import valid_publish_topic
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, EVENT_STATE_CHANGED
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import (
     INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA,
     convert_include_exclude_filter,
 )
-from homeassistant.helpers.event import EventStateChangedData
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.helpers.start import async_at_start
 from homeassistant.helpers.typing import ConfigType
