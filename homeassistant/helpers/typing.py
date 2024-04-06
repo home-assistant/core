@@ -18,7 +18,6 @@ _DataT = TypeVar("_DataT")
 
 GPSType = tuple[float, float]
 ConfigType = dict[str, Any]
-ContextType = homeassistant.core.Context
 DiscoveryInfoType = dict[str, Any]
 ServiceDataType = dict[str, Any]
 StateType = str | int | float | None
@@ -42,6 +41,9 @@ UNDEFINED = UndefinedType._singleton  # pylint: disable=protected-access
 # They are kept in order not to break custom integrations
 # that may rely on them.
 # Deprecated as of 2024.5 use types from homeassistant.core instead.
+_DEPRECATED_ContextType = DeprecatedAlias(
+    homeassistant.core.Context, "homeassistant.core.Context", "2025.5"
+)
 _DEPRECATED_EventType = DeprecatedAlias(
     homeassistant.core.Event, "homeassistant.core.Event", "2025.5"
 )
