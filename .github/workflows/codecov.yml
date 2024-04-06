@@ -27,6 +27,38 @@ env:
 
     Next time this workflow runs, it will automatically update the branch under the same PR, or recreate the branch or PR if they have been deleted.
 
+  CACHE_VERSION: 5
+  UV_CACHE_VERSION: 1
+  MYPY_CACHE_VERSION: 8
+  HA_SHORT_VERSION: "2024.5"
+  DEFAULT_PYTHON: "3.12"
+  ALL_PYTHON_VERSIONS: "['3.12']"
+  # 10.3 is the oldest supported version
+  # - 10.3.32 is the version currently shipped with Synology (as of 17 Feb 2022)
+  # 10.6 is the current long-term-support
+  # - 10.6.10 is the version currently shipped with the Add-on (as of 31 Jan 2023)
+  # 10.10 is the latest short-term-support
+  # - 10.10.3 is the latest (as of 6 Feb 2023)
+  # 10.11 is the latest long-term-support
+  # - 10.11.2 is the version currently shipped with Synology (as of 11 Oct 2023)
+  # mysql 8.0.32 does not always behave the same as MariaDB
+  # and some queries that work on MariaDB do not work on MySQL
+  MARIADB_VERSIONS: "['mariadb:10.3.32','mariadb:10.6.10','mariadb:10.10.3','mariadb:10.11.2','mysql:8.0.32']"
+  # 12 is the oldest supported version
+  # - 12.14 is the latest (as of 9 Feb 2023)
+  # 15 is the latest version
+  # - 15.2 is the latest (as of 9 Feb 2023)
+  POSTGRESQL_VERSIONS: "['postgres:12.14','postgres:15.2']"
+  PRE_COMMIT_CACHE: ~/.cache/pre-commit
+  UV_CACHE_DIR: /tmp/uv-cache
+  SQLALCHEMY_WARN_20: 1
+  PYTHONASYNCIODEBUG: 1
+  HASS_CI: 1
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   info:
     # This is a duplicate of the 'info' job in ci.yaml
