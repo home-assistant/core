@@ -179,6 +179,7 @@ class LogEntry:
         self,
         record: logging.LogRecord,
         paths_re: re.Pattern,
+        formatter: logging.Formatter | None = None,
         figure_out_source: bool = False,
     ) -> None:
         """Initialize a log entry."""
@@ -192,7 +193,9 @@ class LogEntry:
         self.root_cause: tuple[str, int, str] | None = None
         extracted_tb: list[tuple[FrameType, int]] | None = None
         if record.exc_info:
-            self.exception = "".join(traceback.format_exception(*record.exc_info))
+            if formatter and record.exc_text is None:
+                record.exc_text = formatter.formatException(record.exc_info)
+            self.exception = record.exc_text or ""
             if extracted := list(traceback.walk_tb(record.exc_info[2])):
                 # Last line of traceback contains the root cause of the exception
                 extracted_tb = extracted
@@ -281,7 +284,9 @@ class LogErrorHandler(logging.Handler):
         default upper limit is set to 50 (older entries are discarded) but can
         be changed if needed.
         """
-        entry = LogEntry(record, self.paths_re, figure_out_source=True)
+        entry = LogEntry(
+            record, self.paths_re, formatter=self.formatter, figure_out_source=True
+        )
         self.records.add_entry(entry)
         if self.fire_event:
             self.hass.bus.fire(EVENT_SYSTEM_LOG, entry.to_dict())
