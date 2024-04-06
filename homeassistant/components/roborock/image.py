@@ -74,12 +74,21 @@ class RoborockMap(RoborockCoordinatedEntity, ImageEntity, RestoreEntity):
         self._attr_image_last_updated = dt_util.utcnow()
         self.map_flag = map_flag
         if create_map:
-            self.cached_map = self._create_image(starting_map)
+            try:
+                self.cached_map = self._create_image(starting_map)
+            except HomeAssistantError:
+                # If we failed to update the image on init, we set cached_map to None so that we are unavailable and can try again later.
+                self.cached_map = b""
         else:
             # Map was cached - so we can load it directly.
             self.cached_map = starting_map
         self._attr_entity_category = EntityCategory.DIAGNOSTIC
         self._roborock_storage = roborock_storage
+
+    @property
+    def available(self):
+        """Determines if the entity is available."""
+        return self.cached_map == b""
 
     @property
     def is_selected(self) -> bool:
@@ -88,7 +97,7 @@ class RoborockMap(RoborockCoordinatedEntity, ImageEntity, RestoreEntity):
 
     def is_map_valid(self) -> bool:
         """Update this map if it is the current active map, and the vacuum is cleaning."""
-        return (
+        return self.cached_map == b"" or (
             self.is_selected
             and self.image_last_updated is not None
             and self.coordinator.roborock_device_info.props.status is not None
@@ -110,8 +119,9 @@ class RoborockMap(RoborockCoordinatedEntity, ImageEntity, RestoreEntity):
         if self.is_map_valid():
             map_data: bytes = await self.cloud_api.get_map_v1()
             self.cached_map = self._create_image(map_data)
-            await self._roborock_storage.async_save_map(
-                self._attr_name, self.cached_map
+            self.coordinator.config_entry.async_create_task(
+                self.hass,
+                self._roborock_storage.async_save_map(self._attr_name, self.cached_map),
             )
         return self.cached_map
 
@@ -136,7 +146,6 @@ async def create_coordinator_maps(
     Only one map can be loaded at a time per device.
     """
     entities = []
-    assert coord.config_entry is not None
     roborock_storage = await get_roborock_storage(hass, coord.config_entry.entry_id)
     cur_map = coord.current_map
     # This won't be None at this point as the coordinator will have run first.
@@ -177,7 +186,7 @@ async def create_coordinator_maps(
             create_map,
         )
         entities.append(roborock_map)
-        if create_map:
+        if create_map and roborock_map.cached_map != b"":
             storage_updates.append(
                 roborock_storage.async_save_map(map_name, roborock_map.cached_map)
             )

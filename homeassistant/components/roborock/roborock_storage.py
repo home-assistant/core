@@ -1,6 +1,5 @@
 """Roborock storage."""
 
-import asyncio
 import dataclasses
 import logging
 import os
@@ -19,10 +18,6 @@ async def get_roborock_storage(hass: HomeAssistant, entry_id: str):
     """Get a roborock storage object for a given config entry."""
     map_path = hass.config.path(MAP_PATH)
 
-    def mkdir() -> None:
-        os.makedirs(map_path, exist_ok=True)
-
-    await hass.async_add_executor_job(mkdir)
     return RoborockStorage(hass, map_path, entry_id)
 
 
@@ -91,6 +86,7 @@ class RoborockStorage:
         if not self._should_update(map_entry, content):
             return None
         filename = self._get_map_filename(map_name)
+        self._data[map_name] = RoborockMapEntry(map_name, content, time.time())
 
         def save_map(filename: str, content: bytes) -> None:
             os.makedirs(os.path.dirname(filename), exist_ok=True)
@@ -102,26 +98,21 @@ class RoborockStorage:
             await self._hass.async_add_executor_job(save_map, filename, content)
         except OSError as err:
             _LOGGER.error("Unable to write map file: %s %s", filename, err)
-        else:
-            self._data[map_name] = RoborockMapEntry(map_name, content, time.time())
+            # We don't want the _data dict to be updated with incorrect information.
+            if map_entry is not None:
+                self._data[map_name] = map_entry
 
     async def async_remove_maps(self, entry_id: str) -> None:
         """Remove all maps associated with a config entry."""
 
-        def remove_map(filename: str) -> None:
-            _LOGGER.debug("Removing map from disk store: %s", filename)
-            os.remove(filename)
+        def remove_maps(entry_id: str) -> None:
+            directory = self._hass.config.path(f"{MAP_PATH}/{entry_id}")
+            try:
+                for filename in os.listdir(directory):
+                    file_path = os.path.join(directory, filename)
+                    _LOGGER.debug("Removing map from disk store: %s", file_path)
+                    os.remove(file_path)
+            except OSError as err:
+                _LOGGER.error("Unable to remove map files for: %s %s", entry_id, err)
 
-        try:
-            await asyncio.gather(
-                *(
-                    self._hass.async_add_executor_job(
-                        remove_map, self._get_map_filename(file)
-                    )
-                    for file in os.listdir(
-                        self._hass.config.path(f"{MAP_PATH}/{entry_id}")
-                    )
-                )
-            )
-        except OSError as err:
-            _LOGGER.error("Unable to remove map files for: %s %s", entry_id, err)
+        await self._hass.async_add_executor_job(remove_maps, entry_id)

@@ -11,6 +11,7 @@ from roborock.exceptions import RoborockException
 from roborock.local_api import RoborockLocalClient
 from roborock.roborock_typing import DeviceProp
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_CONNECTIONS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -27,6 +28,8 @@ _LOGGER = logging.getLogger(__name__)
 
 class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
     """Class to manage fetching data from the API."""
+
+    config_entry: ConfigEntry
 
     def __init__(
         self,
