@@ -55,6 +55,7 @@ from homeassistant.exceptions import (
     InvalidStateError,
     MaxLengthExceeded,
     ServiceNotFound,
+    ServiceValidationError,
 )
 from homeassistant.helpers.json import json_dumps
 from homeassistant.setup import async_setup_component
@@ -1789,8 +1790,9 @@ async def test_services_call_return_response_requires_blocking(
     hass: HomeAssistant,
 ) -> None:
     """Test that non-blocking service calls cannot ask for response data."""
+    await async_setup_component(hass, "homeassistant", {})
     async_mock_service(hass, "test_domain", "test_service")
-    with pytest.raises(ValueError, match="when blocking=False"):
+    with pytest.raises(ServiceValidationError, match="when blocking=False") as exc:
         await hass.services.async_call(
             "test_domain",
             "test_service",
@@ -1798,6 +1800,7 @@ async def test_services_call_return_response_requires_blocking(
             blocking=False,
             return_response=True,
         )
+    assert str(exc.value) == "Invalid argument return_response=True when blocking=False"
 
 
 @pytest.mark.parametrize(
@@ -1814,6 +1817,7 @@ async def test_serviceregistry_return_response_invalid(
     hass: HomeAssistant, response_data: Any, expected_error: str
 ) -> None:
     """Test service call response data must be json serializable objects."""
+    await async_setup_component(hass, "homeassistant", {})
 
     def service_handler(call: ServiceCall) -> ServiceResponse:
         """Service handler coroutine."""
@@ -1826,7 +1830,7 @@ async def test_serviceregistry_return_response_invalid(
         service_handler,
         supports_response=SupportsResponse.ONLY,
     )
-    with pytest.raises(HomeAssistantError, match=expected_error):
+    with pytest.raises(ServiceValidationError, match=expected_error):
         await hass.services.async_call(
             "test_domain",
             "test_service",
@@ -1851,6 +1855,7 @@ async def test_serviceregistry_return_response_arguments(
     expected_error: str,
 ) -> None:
     """Test service call response data invalid arguments."""
+    await async_setup_component(hass, "homeassistant", {})
 
     hass.services.async_register(
         "test_domain",
@@ -1859,7 +1864,7 @@ async def test_serviceregistry_return_response_arguments(
         supports_response=supports_response,
     )
 
-    with pytest.raises(ValueError, match=expected_error):
+    with pytest.raises(ServiceValidationError, match=expected_error):
         await hass.services.async_call(
             "test_domain",
             "test_service",

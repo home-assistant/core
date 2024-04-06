@@ -191,6 +191,18 @@
     },
     "service_not_found": {
       "message": "Service {domain}.{service} not found."
+    },
+    "service_not_supports_reponse": {
+      "message": "Invalid argument return_response=True when handler does not support responses."
+    },
+    "service_lacks_response_request": {
+      "message": "Service call requires responses but caller did not ask for responses."
+    },
+    "service_reponse_invalid": {
+      "message": "Service response data expected a dictionary, was {response_data_type}."
+    },
+    "service_should_be_blocking": {
+      "message": "Invalid argument return_response=True when blocking=False."
     }
   }
 }
