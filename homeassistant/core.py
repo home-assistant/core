@@ -719,7 +719,7 @@ class HomeAssistant:
         self,
         target: Coroutine[Any, Any, _R],
         name: str | None = None,
-        eager_start: bool = False,
+        eager_start: bool = True,
     ) -> asyncio.Task[_R]:
         """Create a task from within the event loop.
 
@@ -742,7 +742,7 @@ class HomeAssistant:
 
     @callback
     def async_create_background_task(
-        self, target: Coroutine[Any, Any, _R], name: str, eager_start: bool = False
+        self, target: Coroutine[Any, Any, _R], name: str, eager_start: bool = True
     ) -> asyncio.Task[_R]:
         """Create a task from within the event loop.
 

@@ -448,7 +448,7 @@ class ImapPushDataUpdateCoordinator(ImapDataUpdateCoordinator):
     async def async_start(self) -> None:
         """Start coordinator."""
         self._push_wait_task = self.hass.async_create_background_task(
-            self._async_wait_push_loop(), "Wait for IMAP data push"
+            self._async_wait_push_loop(), "Wait for IMAP data push", eager_start=False
         )
 
     async def _async_wait_push_loop(self) -> None:

@@ -43,7 +43,7 @@
       "message": "Marking the the message for deletion failed with \"{error}\"."
     },
     "expunge_failed": {
-      "message": "Expungling the the message failed with \"{error}\"."
+      "message": "Expunging the the message failed with \"{error}\"."
     },
     "invalid_entry": {
       "message": "No valid IMAP entry was found."
