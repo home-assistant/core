@@ -175,14 +175,16 @@ class DefaultAgent(ConversationEntity):
         return get_languages()
 
     @core.callback
-    def _filter_entity_registry_changes(self, event_data: dict[str, Any]) -> bool:
+    def _filter_entity_registry_changes(
+        self, event_data: er.EventEntityRegistryUpdatedData
+    ) -> bool:
         """Filter entity registry changed events."""
         return event_data["action"] == "update" and any(
             field in event_data["changes"] for field in _ENTITY_REGISTRY_UPDATE_FIELDS
         )
 
     @core.callback
-    def _filter_state_changes(self, event_data: dict[str, Any]) -> bool:
+    def _filter_state_changes(self, event_data: core.EventStateChangedData) -> bool:
         """Filter state changed events."""
         return not event_data["old_state"] or not event_data["new_state"]
 
@@ -752,9 +754,7 @@ class DefaultAgent(ConversationEntity):
         return lang_intents
 
     @core.callback
-    def _async_clear_slot_list(
-        self, event: core.Event[dict[str, Any]] | None = None
-    ) -> None:
+    def _async_clear_slot_list(self, event: core.Event[Any] | None = None) -> None:
         """Clear slot lists when a registry has changed."""
         self._slot_lists = None
         assert self._unsub_clear_slot_list is not None

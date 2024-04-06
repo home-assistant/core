@@ -185,7 +185,7 @@ aio-georss-gdacs==0.9
 aioairq==0.3.2
 
 # homeassistant.components.airzone_cloud
-aioairzone-cloud==0.4.7
+aioairzone-cloud==0.5.0
 
 # homeassistant.components.airzone
 aioairzone==0.7.6
@@ -949,7 +949,7 @@ gios==3.2.2
 gitterpy==0.1.7
 
 # homeassistant.components.glances
-glances-api==0.5.0
+glances-api==0.6.0
 
 # homeassistant.components.goalzero
 goalzero==0.2.2
@@ -1950,7 +1950,7 @@ pylibrespot-java==0.1.1
 pylitejet==0.6.2
 
 # homeassistant.components.litterrobot
-pylitterbot==2023.4.9
+pylitterbot==2023.4.11
 
 # homeassistant.components.lutron_caseta
 pylutron-caseta==0.20.0
