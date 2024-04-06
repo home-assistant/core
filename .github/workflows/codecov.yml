@@ -287,19 +287,19 @@ jobs:
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v4.1.2
-      - name: Set up Python ${{ needs.base.outputs.python_version }}
+      - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
         uses: actions/setup-python@v5.0.0
         with:
-          python-version: ${{ needs.base.outputs.python_version }}
+          python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
-      - name: Restore full Python ${{ needs.base.outputs.python_version }} virtual environment
+      - name: Restore full Python ${{ env.DEFAULT_PYTHON }} virtual environment
         id: cache-venv
         uses: actions/cache/restore@v4.0.2
         with:
           path: venv
           fail-on-cache-miss: true
-          key: ${{ runner.os }}-${{ needs.base.outputs.default_python_version }}-${{ needs.base.outputs.python_cache_key }}
+          key: ${{ runner.os }}-${{ env.DEFAULT_PYTHON }}-${{ needs.info.outputs.python_cache_key }}
       - name: Run pytest followed by coveragerc prune
         run: |
           . venv/bin/activate
