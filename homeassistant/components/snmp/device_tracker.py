@@ -62,7 +62,7 @@ async def async_get_scanner(
 ) -> SnmpScanner | None:
     """Validate the configuration and return an SNMP scanner."""
     scanner = SnmpScanner(config[DOMAIN])
-    await scanner.test_device_readable()
+    await scanner.async_test_device_readable()
 
     return scanner if scanner.success_init else None
 
@@ -72,10 +72,10 @@ class SnmpScanner(DeviceScanner):
 
     def __init__(self, config):
         """Initialize the scanner and test the target device."""
-        host = config.get(CONF_HOST)
+        host = config[CONF_HOST]
         port = DEFAULT_PORT
-        community = config.get(CONF_COMMUNITY)
-        baseoid = config.get(CONF_BASEOID)
+        community = config[CONF_COMMUNITY]
+        baseoid = config[CONF_BASEOID]
         version = DEFAULT_VERSION
         username = community
         authkey = config.get(CONF_AUTH_KEY)
@@ -125,9 +125,9 @@ class SnmpScanner(DeviceScanner):
         self.last_results = []
         self.success_init = False
 
-    async def test_device_readable(self):
+    async def async_test_device_readable(self):
         """Make a one-off read to check if the target device is reachable and readable."""
-        data = await self.get_snmp_data()
+        data = await self.async_get_snmp_data()
         self.success_init = data is not None
 
     async def async_scan_devices(self):
@@ -148,13 +148,13 @@ class SnmpScanner(DeviceScanner):
         if not self.success_init:
             return False
 
-        if not (data := await self.get_snmp_data()):
+        if not (data := await self.async_get_snmp_data()):
             return False
 
         self.last_results = data
         return True
 
-    async def get_snmp_data(self):
+    async def async_get_snmp_data(self):
         """Fetch MAC addresses from access point via SNMP."""
         devices = []
 
@@ -177,10 +177,10 @@ class SnmpScanner(DeviceScanner):
                 )
                 return
 
-            for _, val in res:  # oid, value
+            for _oid, value in res:
                 if not isEndOfMib(res):
                     try:
-                        mac = binascii.hexlify(val.asOctets()).decode("utf-8")
+                        mac = binascii.hexlify(value.asOctets()).decode("utf-8")
                     except AttributeError:
                         continue
                     _LOGGER.debug("Found MAC address: %s", mac)
