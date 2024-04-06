@@ -281,7 +281,9 @@ jobs:
   prune-coveragerc-check:
     name: Check and prune .coveragerc
     runs-on: ubuntu-22.04
-    needs: base
+    needs:
+      - info
+      - base
     outputs:
       changes: ${{ steps.detect.outputs.changes }}
     steps:
