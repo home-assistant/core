@@ -25,10 +25,7 @@ from .const import ATTR_PATH, ATTR_URL, DOMAIN, SERVICE_TURN_ON
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = vol.Schema(
-    {vol.Optional(DOMAIN): {}},
-    extra=vol.ALLOW_EXTRA,
-)
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 # Extend the existing light.turn_on service schema
 SERVICE_SCHEMA = vol.All(
@@ -155,13 +152,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         _file = _get_file(file_path)
         return _get_color(_file)
-
-    if DOMAIN in config:
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": SOURCE_IMPORT}, data={}
-            )
-        )
 
     return True
 
