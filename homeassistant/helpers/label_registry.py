@@ -36,7 +36,7 @@ class _LabelStoreData(TypedDict):
 
 
 class LabelRegistryStoreData(TypedDict):
-    """Store data type for LAbelRegistry."""
+    """Store data type for LabelRegistry."""
 
     labels: list[_LabelStoreData]
 
