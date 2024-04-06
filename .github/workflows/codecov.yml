@@ -301,7 +301,7 @@ jobs:
         with:
           path: venv
           fail-on-cache-miss: true
-          key: ${{ runner.os }}-${{ env.DEFAULT_PYTHON }}-${{ needs.info.outputs.python_cache_key }}
+          key: ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{ needs.info.outputs.python_cache_key }}
       - name: Run pytest followed by coveragerc prune
         run: |
           . venv/bin/activate
