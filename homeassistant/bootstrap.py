@@ -574,7 +574,7 @@ def async_enable_logging(
                 err_log_path, when="midnight", backupCount=log_rotate_days
             )
         else:
-            err_handler = logging.handlers.RotatingFileHandler(
+            err_handler = _RotatingFileHandlerWithoutShouldRollOver(
                 err_log_path, backupCount=1
             )
 
@@ -596,6 +596,19 @@ def async_enable_logging(
         _LOGGER.error("Unable to set up error log %s (access denied)", err_log_path)
 
     async_activate_log_queue_handler(hass)
+
+
+class _RotatingFileHandlerWithoutShouldRollOver(logging.handlers.RotatingFileHandler):
+    """RotatingFileHandler that does not check if it should roll over on every log."""
+
+    def shouldRollover(self, record: logging.LogRecord) -> bool:
+        """Never roll over.
+
+        The shouldRollover check is expensive because it has to stat
+        the log file for every log record. Since we do not set maxBytes
+        the result of this check is always False.
+        """
+        return False
 
 
 async def async_mount_local_lib_path(config_dir: str) -> str:
