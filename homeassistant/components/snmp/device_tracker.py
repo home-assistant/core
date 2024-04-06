@@ -62,7 +62,7 @@ async def async_get_scanner(
 ) -> SnmpScanner | None:
     """Validate the configuration and return an SNMP scanner."""
     scanner = SnmpScanner(config[DOMAIN])
-    await scanner.async_test_device_readable()
+    await scanner.async_init()
 
     return scanner if scanner.success_init else None
 
@@ -125,7 +125,7 @@ class SnmpScanner(DeviceScanner):
         self.last_results = []
         self.success_init = False
 
-    async def async_test_device_readable(self):
+    async def async_init(self):
         """Make a one-off read to check if the target device is reachable and readable."""
         data = await self.async_get_snmp_data()
         self.success_init = data is not None
