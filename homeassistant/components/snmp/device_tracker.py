@@ -73,11 +73,8 @@ class SnmpScanner(DeviceScanner):
     def __init__(self, config):
         """Initialize the scanner and test the target device."""
         host = config[CONF_HOST]
-        port = DEFAULT_PORT
         community = config[CONF_COMMUNITY]
         baseoid = config[CONF_BASEOID]
-        version = DEFAULT_VERSION
-        username = community
         authkey = config.get(CONF_AUTH_KEY)
         authproto = DEFAULT_AUTH_PROTOCOL
         privkey = config.get(CONF_PRIV_KEY)
@@ -85,11 +82,13 @@ class SnmpScanner(DeviceScanner):
 
         try:
             # Try IPv4 first.
-            target = UdpTransportTarget((host, port), timeout=DEFAULT_TIMEOUT)
+            target = UdpTransportTarget((host, DEFAULT_PORT), timeout=DEFAULT_TIMEOUT)
         except PySnmpError:
             # Then try IPv6.
             try:
-                target = Udp6TransportTarget((host, port), timeout=DEFAULT_TIMEOUT)
+                target = Udp6TransportTarget(
+                    (host, DEFAULT_PORT), timeout=DEFAULT_TIMEOUT
+                )
             except PySnmpError as err:
                 _LOGGER.error("Invalid SNMP host: %s", err)
                 return
@@ -103,7 +102,7 @@ class SnmpScanner(DeviceScanner):
             request_args = [
                 SnmpEngine(),
                 UsmUserData(
-                    username,
+                    community,
                     authKey=authkey or None,
                     privKey=privkey or None,
                     authProtocol=authproto,
@@ -115,7 +114,7 @@ class SnmpScanner(DeviceScanner):
         else:
             request_args = [
                 SnmpEngine(),
-                CommunityData(community, mpModel=SNMP_VERSIONS[version]),
+                CommunityData(community, mpModel=SNMP_VERSIONS[DEFAULT_VERSION]),
                 target,
                 ContextData(),
             ]
