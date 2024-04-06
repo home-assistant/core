@@ -719,7 +719,7 @@ class HomeAssistant:
         self,
         target: Coroutine[Any, Any, _R],
         name: str | None = None,
-        eager_start: bool = False,
+        eager_start: bool = True,
     ) -> asyncio.Task[_R]:
         """Create a task from within the event loop.
 
@@ -742,7 +742,7 @@ class HomeAssistant:
 
     @callback
     def async_create_background_task(
-        self, target: Coroutine[Any, Any, _R], name: str, eager_start: bool = False
+        self, target: Coroutine[Any, Any, _R], name: str, eager_start: bool = True
     ) -> asyncio.Task[_R]:
         """Create a task from within the event loop.
 
@@ -1485,7 +1485,7 @@ class EventBus:
         event_type: str,
         listener: Callable[[Event[_DataT]], Coroutine[Any, Any, None] | None],
         event_filter: Callable[[_DataT], bool] | None = None,
-        run_immediately: bool = False,
+        run_immediately: bool = True,
     ) -> CALLBACK_TYPE:
         """Listen for all events or events of a specific type.
 
@@ -1558,7 +1558,7 @@ class EventBus:
         self,
         event_type: str,
         listener: Callable[[Event[Any]], Coroutine[Any, Any, None] | None],
-        run_immediately: bool = False,
+        run_immediately: bool = True,
     ) -> CALLBACK_TYPE:
         """Listen once for event of a specific type.
 
@@ -1680,11 +1680,15 @@ class State:
     @cached_property
     def last_changed_timestamp(self) -> float:
         """Timestamp of last change."""
+        if self.last_changed == self.last_updated:
+            return self.last_updated_timestamp
         return self.last_changed.timestamp()
 
     @cached_property
     def last_reported_timestamp(self) -> float:
         """Timestamp of last report."""
+        if self.last_reported == self.last_updated:
+            return self.last_updated_timestamp
         return self.last_reported.timestamp()
 
     @cached_property

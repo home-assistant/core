@@ -93,11 +93,9 @@ class LocalSource(MediaSource):
         else:
             source_dir_id, location = None, ""
 
-        result = await self.hass.async_add_executor_job(
+        return await self.hass.async_add_executor_job(
             self._browse_media, source_dir_id, location
         )
-
-        return result
 
     def _browse_media(
         self, source_dir_id: str | None, location: str

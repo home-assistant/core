@@ -133,10 +133,9 @@ async def async_get_image(
         else:
             extra_cmd += " " + size_cmd
 
-    image = await asyncio.shield(
+    return await asyncio.shield(
         ffmpeg.get_image(input_source, output_format=output_format, extra_cmd=extra_cmd)
     )
-    return image
 
 
 class FFmpegManager:

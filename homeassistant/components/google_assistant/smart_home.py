@@ -139,9 +139,7 @@ async def async_devices_sync(
     await data.config.async_connect_agent_user(agent_user_id)
 
     devices = await async_devices_sync_response(hass, data.config, agent_user_id)
-    response = create_sync_response(agent_user_id, devices)
-
-    return response
+    return create_sync_response(agent_user_id, devices)
 
 
 @HANDLERS.register("action.devices.QUERY")
