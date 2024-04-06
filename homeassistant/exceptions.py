@@ -277,11 +277,13 @@ class MaxLengthExceeded(HomeAssistantError):
         self, value: EventType[Any] | str, property_name: str, max_length: int
     ) -> None:
         """Initialize error."""
+        if TYPE_CHECKING:
+            value = str(value)
         super().__init__(
             translation_domain="homeassistant",
             translation_key="max_length_exceeded",
             translation_placeholders={
-                "value": str(value),
+                "value": value,
                 "property_name": property_name,
                 "max_length": str(max_length),
             },

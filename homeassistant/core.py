@@ -1247,7 +1247,7 @@ class Event(Generic[_DataT]):
         as it will mutate the cached version.
         """
         return {
-            "event_type": str(self.event_type),
+            "event_type": self.event_type,
             "data": self.data,
             "origin": self.origin.value,
             "time_fired": self.time_fired.isoformat(),

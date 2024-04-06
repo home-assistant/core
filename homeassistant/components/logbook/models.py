@@ -112,7 +112,7 @@ class EventAsRow:
     icon: str | None = None
     context_user_id_bin: bytes | None = None
     context_parent_id_bin: bytes | None = None
-    event_type: str | None = None
+    event_type: EventType[Any] | str | None = None
     state: str | None = None
     context_only: None = None
 
@@ -125,7 +125,7 @@ def async_event_to_row(event: Event) -> EventAsRow:
         return EventAsRow(
             data=event.data,
             context=event.context,
-            event_type=str(event.event_type),
+            event_type=event.event_type,
             context_id_bin=ulid_to_bytes(context.id),
             context_user_id_bin=uuid_hex_to_bytes_or_none(context.user_id),
             context_parent_id_bin=ulid_to_bytes_or_none(context.parent_id),

@@ -11,7 +11,6 @@ from typing import TYPE_CHECKING, Any, Final
 
 import orjson
 
-from homeassistant.util.event_type import EventType
 from homeassistant.util.file import write_utf8_file, write_utf8_file_atomic
 from homeassistant.util.json import (  # noqa: F401
     JSON_DECODE_EXCEPTIONS,
@@ -38,8 +37,6 @@ class JSONEncoder(json.JSONEncoder):
             return list(o)
         if hasattr(o, "as_dict"):
             return o.as_dict()
-        if isinstance(o, EventType):
-            return o.name
 
         return json.JSONEncoder.default(self, o)
 
