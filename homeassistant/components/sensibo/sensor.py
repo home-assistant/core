@@ -311,8 +311,7 @@ class SensiboDeviceSensor(SensiboDeviceBaseEntity, SensorEntity):
     @property
     def native_value(self) -> StateType | datetime:
         """Return value of sensor."""
-        state = self.entity_description.value_fn(self.device_data)
-        return state
+        return self.entity_description.value_fn(self.device_data)
 
     @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
