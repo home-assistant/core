@@ -20,7 +20,6 @@ async def test_user_form(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input=CONFIG,
@@ -50,7 +49,6 @@ async def test_user_form(hass: HomeAssistant) -> None:
             user_input=CONFIG,
         )
         await hass.async_block_till_done()
-
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == "Downloader"
         assert result["data"] == {"download_dir": "download_dir"}
@@ -63,7 +61,6 @@ async def test_single_instance_allowed(
 ) -> None:
     """Test we abort if already setup."""
     mock_config_entry = MockConfigEntry(domain=DOMAIN)
-
     mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
@@ -91,7 +88,6 @@ async def test_import_flow_success(hass: HomeAssistant) -> None:
             data=CONFIG,
         )
         await hass.async_block_till_done()
-
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == "Downloader"
         assert result["data"] == CONFIG
@@ -108,6 +104,5 @@ async def test_import_flow_directory_not_found(hass: HomeAssistant) -> None:
             },
         )
         await hass.async_block_till_done()
-
         assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "directory_does_not_exist"
