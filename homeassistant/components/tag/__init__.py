@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 import logging
 import uuid
 
@@ -27,6 +26,7 @@ STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 
 TAG_DATA: HassKey[TagStorageCollection] = HassKey(DOMAIN)
+TAGS_ENTITIES = "tags_entities"
 
 CREATE_FIELDS = {
     vol.Optional(TAG_ID): cv.string,
@@ -39,6 +39,7 @@ UPDATE_FIELDS = {
     vol.Optional(CONF_NAME): vol.All(str, vol.Length(min=1)),
     vol.Optional("description"): cv.string,
     vol.Optional(LAST_SCANNED): cv.datetime,
+    vol.Optional(DEVICE_ID): cv.string,
 }
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
@@ -106,37 +107,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         storage_collection, DOMAIN, DOMAIN, CREATE_FIELDS, UPDATE_FIELDS
     ).async_setup(hass)
 
-    async def tag_change_listener(
-        change_type: str, item_id: str, updated_config: dict
-    ) -> None:
-        """Tag event listener."""
-        # New tags
-        if change_type == collection.CHANGE_ADDED:
-            pass
-        # Changed tags
-        if change_type == collection.CHANGE_UPDATED:
-            pass
-        # Deleted tags
-        if change_type == collection.CHANGE_REMOVED:
-            pass
-
-    storage_collection.async_add_listener(tag_change_listener)
-
-    load_coroutines = []
-    for tags in storage_collection.async_items():
-        for tag_data in tags.values():
-            _config = {CONF_NAME: tag_data[CONF_NAME], TAG_ID: tag_data[TAG_ID]}
-            load_coroutines.append(
-                discovery.async_load_platform(
-                    hass,
-                    Platform.SENSOR,
-                    DOMAIN,
-                    _config,
-                    config,
-                )
-            )
-
-    await asyncio.gather(*load_coroutines)
+    await hass.async_create_task(
+        discovery.async_load_platform(
+            hass,
+            Platform.EVENT,
+            DOMAIN,
+            {},
+            config,
+        )
+    )
 
     return True
 
@@ -166,10 +145,10 @@ async def async_scan_tag(
 
     if tag_id in storage_collection.data:
         await storage_collection.async_update_item(
-            tag_id, {LAST_SCANNED: dt_util.utcnow()}
+            tag_id, {LAST_SCANNED: dt_util.utcnow(), DEVICE_ID: device_id}
         )
     else:
         await storage_collection.async_create_item(
-            {TAG_ID: tag_id, LAST_SCANNED: dt_util.utcnow()}
+            {TAG_ID: tag_id, LAST_SCANNED: dt_util.utcnow(), DEVICE_ID: device_id}
         )
     _LOGGER.debug("Tag: %s scanned by device: %s", tag_id, device_id)
