@@ -184,7 +184,7 @@ class DefaultAgent(ConversationEntity):
         )
 
     @core.callback
-    def _filter_state_changes(self, event_data: EventStateChangedData) -> bool:
+    def _filter_state_changes(self, event_data: core.EventStateChangedData) -> bool:
         """Filter state changed events."""
         return not event_data["old_state"] or not event_data["new_state"]
 
