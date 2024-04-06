@@ -349,8 +349,7 @@ def get_start_time() -> datetime:
     now = dt_util.utcnow()
     current_period_minutes = now.minute - now.minute % 5
     current_period = now.replace(minute=current_period_minutes, second=0, microsecond=0)
-    last_period = current_period - timedelta(minutes=5)
-    return last_period
+    return current_period - timedelta(minutes=5)
 
 
 def _compile_hourly_statistics_summary_mean_stmt(

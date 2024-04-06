@@ -105,7 +105,7 @@ async def test_image_entity(
         await hass.config_entries.async_setup(entry.entry_id)
 
     await hass.async_block_till_done()
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     # test image entity is generated as expected
     states = hass.states.async_all(IMAGE_DOMAIN)
@@ -155,7 +155,7 @@ async def test_image_update(
         await hass.config_entries.async_setup(entry.entry_id)
 
     await hass.async_block_till_done()
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     client = await hass_client()
     resp = await client.get("/api/image_proxy/image.mock_title_guestwifi")
@@ -191,7 +191,7 @@ async def test_image_update_unavailable(
         await hass.config_entries.async_setup(entry.entry_id)
 
     await hass.async_block_till_done()
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     state = hass.states.get("image.mock_title_guestwifi")
     assert state

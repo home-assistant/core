@@ -3361,9 +3361,11 @@ async def test_report_state_listener_restrictions(hass: HomeAssistant) -> None:
         """Mock filter."""
         return False
 
-    # run_immediately not set
+    # run_immediately set to False
     with pytest.raises(HomeAssistantError):
-        hass.bus.async_listen(EVENT_STATE_REPORTED, listener, event_filter=filter)
+        hass.bus.async_listen(
+            EVENT_STATE_REPORTED, listener, event_filter=filter, run_immediately=False
+        )
 
     # no filter
     with pytest.raises(HomeAssistantError):

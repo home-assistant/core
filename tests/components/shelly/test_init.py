@@ -163,7 +163,7 @@ async def test_device_connection_error(
     )
 
     entry = await init_integration(hass, gen)
-    assert entry.state == ConfigEntryState.SETUP_RETRY
+    assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
 @pytest.mark.parametrize("gen", [1, 2, 3])
@@ -183,7 +183,7 @@ async def test_mac_mismatch_error(
     )
 
     entry = await init_integration(hass, gen)
-    assert entry.state == ConfigEntryState.SETUP_RETRY
+    assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
 @pytest.mark.parametrize("gen", [1, 2, 3])
@@ -203,7 +203,7 @@ async def test_device_auth_error(
     )
 
     entry = await init_integration(hass, gen)
-    assert entry.state == ConfigEntryState.SETUP_ERROR
+    assert entry.state is ConfigEntryState.SETUP_ERROR
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
