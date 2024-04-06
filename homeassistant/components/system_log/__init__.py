@@ -7,6 +7,7 @@ import logging
 import re
 import sys
 import traceback
+from types import FrameType
 from typing import Any, cast
 
 import voluptuous as vol
@@ -18,7 +19,7 @@ from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-KeyType = tuple[str, tuple[str, int], str | None]
+KeyType = tuple[str, tuple[str, int], tuple[str, int, str] | None]
 
 CONF_MAX_ENTRIES = "max_entries"
 CONF_FIRE_EVENT = "fire_event"
@@ -65,16 +66,18 @@ SERVICE_WRITE_SCHEMA = vol.Schema(
 def _figure_out_source(
     record: logging.LogRecord,
     paths_re: re.Pattern[str],
-    extracted_tb: traceback.StackSummary | None = None,
+    extracted_tb: list[tuple[FrameType, int]] | None = None,
 ) -> tuple[str, int]:
     """Figure out where a log message came from."""
     # If a stack trace exists, extract file names from the entire call stack.
     # The other case is when a regular "log" is made (without an attached
     # exception). In that case, just use the file where the log was made from.
     if record.exc_info:
+        source: list[tuple[FrameType, int]] = extracted_tb or list(
+            traceback.walk_tb(record.exc_info[2])
+        )
         stack = [
-            (x[0], x[1])
-            for x in (extracted_tb or traceback.extract_tb(record.exc_info[2]))
+            (tb_frame.f_code.co_filename, tb_line_no) for tb_frame, tb_line_no in source
         ]
         for i, (filename, _) in enumerate(stack):
             # Slice the stack to the first frame that matches
@@ -186,14 +189,19 @@ class LogEntry:
         # This must be manually tested when changing the code.
         self.message = deque([_safe_get_message(record)], maxlen=5)
         self.exception = ""
-        self.root_cause: str | None = None
-        extracted_tb: traceback.StackSummary | None = None
+        self.root_cause: tuple[str, int, str] | None = None
+        extracted_tb: list[tuple[FrameType, int]] | None = None
         if record.exc_info:
             self.exception = "".join(traceback.format_exception(*record.exc_info))
-            if extracted := traceback.extract_tb(record.exc_info[2]):
+            if extracted := list(traceback.walk_tb(record.exc_info[2])):
                 # Last line of traceback contains the root cause of the exception
                 extracted_tb = extracted
-                self.root_cause = str(extracted[-1])
+                tb_frame, tb_line_no = extracted[-1]
+                self.root_cause = (
+                    tb_frame.f_code.co_filename,
+                    tb_line_no,
+                    tb_frame.f_code.co_name,
+                )
         if figure_out_source:
             self.source = _figure_out_source(record, paths_re, extracted_tb)
         else:
