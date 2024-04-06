@@ -1,6 +1,9 @@
 """Constants for the 17track.net component."""
 
 from datetime import timedelta
+import logging
+
+LOGGER = logging.getLogger(__package__)
 
 ATTR_DESTINATION_COUNTRY = "destination_country"
 ATTR_INFO_TEXT = "info_text"

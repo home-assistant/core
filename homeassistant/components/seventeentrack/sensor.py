@@ -2,53 +2,40 @@
 
 from __future__ import annotations
 
-import logging
+from typing import Any
 
-from py17track.errors import SeventeenTrackError
-from py17track.package import Package
 import voluptuous as vol
 
 from homeassistant.components import persistent_notification
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import (
-    ATTR_FRIENDLY_NAME,
-    ATTR_LOCATION,
-    CONF_PASSWORD,
-    CONF_USERNAME,
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorEntity,
+    SensorEntityDescription,
 )
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import config_validation as cv, entity, entity_registry as er
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
-from homeassistant.util import Throttle, slugify
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import SeventeenTrackCoordinator
 from .const import (
-    ATTR_DESTINATION_COUNTRY,
-    ATTR_INFO_TEXT,
-    ATTR_ORIGIN_COUNTRY,
-    ATTR_PACKAGE_TYPE,
     ATTR_PACKAGES,
-    ATTR_STATUS,
-    ATTR_TIMESTAMP,
-    ATTR_TRACKING_INFO_LANGUAGE,
-    ATTR_TRACKING_NUMBER,
     ATTRIBUTION,
     CONF_SHOW_ARCHIVED,
     CONF_SHOW_DELIVERED,
-    DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     ENTITY_ID_TEMPLATE,
+    LOGGER,
     NOTIFICATION_DELIVERED_MESSAGE,
     NOTIFICATION_DELIVERED_TITLE,
     UNIQUE_ID_TEMPLATE,
     VALUE_DELIVERED,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -60,6 +47,37 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 ISSUE_PLACEHOLDER = {"url": "/config/integrations/dashboard/add?domain=seventeentrack"}
+
+SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="delivered",
+        name="Delivered",
+    ),
+    SensorEntityDescription(
+        key="expired",
+        name="Expired",
+    ),
+    SensorEntityDescription(
+        key="in_transit",
+        name="In Transit",
+    ),
+    SensorEntityDescription(
+        key="not_found",
+        name="Not Found",
+    ),
+    SensorEntityDescription(
+        key="ready_to_be_picked_up",
+        name="Ready To Be Picked Up",
+    ),
+    SensorEntityDescription(
+        key="returned",
+        name="Returned",
+    ),
+    SensorEntityDescription(
+        key="undelivered",
+        name="Undelivered",
+    ),
+)
 
 
 async def async_setup_platform(
@@ -111,242 +129,167 @@ async def async_setup_entry(
 ) -> None:
     """Set up a 17Track sensor entry."""
 
-    client = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator: SeventeenTrackCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-    data = SeventeenTrackData(
-        client,
-        async_add_entities,
-        DEFAULT_SCAN_INTERVAL,
-        config_entry.options[CONF_SHOW_ARCHIVED],
-        config_entry.options[CONF_SHOW_DELIVERED],
-        str(hass.config.time_zone),
+    @callback
+    def _async_create_remove_entities():
+        for package in coordinator.data.old_packages:
+            remove_entity(hass, coordinator.account_id, package.tracking_number)
+
+        async_add_entities(
+            SeventeenTrackPackageSensor(coordinator, t_number)
+            for t_number, p_data in coordinator.data.new_packages.items()
+            if not (not coordinator.show_delivered and p_data.status == "Delivered")
+        )
+
+        for tracking_number, package_data in coordinator.data.new_packages.items():
+            if (
+                package_data.status == VALUE_DELIVERED
+                and not coordinator.show_delivered
+            ):
+                notify_delivered(
+                    hass,
+                    package_data.friendly_name,
+                    tracking_number,
+                )
+
+    async_add_entities(
+        SeventeenTrackSummarySensor(description, coordinator)
+        for description in SENSOR_TYPES
     )
-    await data.async_update()
+
+    _async_create_remove_entities()
+
+    config_entry.async_on_unload(
+        coordinator.async_add_listener(_async_create_remove_entities)
+    )
 
 
-class SeventeenTrackSummarySensor(SensorEntity):
+class SeventeenTrackSummarySensor(
+    CoordinatorEntity[SeventeenTrackCoordinator], SensorEntity
+):
     """Define a summary sensor."""
 
     _attr_attribution = ATTRIBUTION
     _attr_icon = "mdi:package"
     _attr_native_unit_of_measurement = "packages"
 
-    def __init__(self, data, status, initial_state) -> None:
-        """Initialize."""
+    def __init__(
+        self,
+        description: SensorEntityDescription,
+        coordinator: SeventeenTrackCoordinator,
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator)
+        self.entity_description = description
         self._attr_extra_state_attributes = {}
-        self._data = data
-        self._state = initial_state
-        self._status = status
-        self._attr_name = f"Seventeentrack Packages {status}"
-        self._attr_unique_id = f"summary_{data.account_id}_{slugify(status)}"
+        self._attr_name = f"Seventeentrack Packages {description.name}"
+        self._attr_unique_id = f"summary_{coordinator.account_id}_{description.key}"
 
     @property
     def available(self) -> bool:
         """Return whether the entity is available."""
-        return self._state is not None
+        return (
+            self.coordinator.data.summary[self.entity_description.key]["quantity"]
+            is not None
+        )
 
     @property
     def native_value(self) -> StateType:
-        """Return the state."""
-        return self._state
+        """Return the state of the sensor."""
+        return self.coordinator.data.summary[self.entity_description.key]["quantity"]
 
-    async def async_update(self) -> None:
-        """Update the sensor."""
-        await self._data.async_update()
-
-        package_data = []
-        for package in self._data.packages.values():
-            if package.status != self._status:
-                continue
-
-            package_data.append(
-                {
-                    ATTR_FRIENDLY_NAME: package.friendly_name,
-                    ATTR_INFO_TEXT: package.info_text,
-                    ATTR_TIMESTAMP: package.timestamp,
-                    ATTR_STATUS: package.status,
-                    ATTR_LOCATION: package.location,
-                    ATTR_TRACKING_NUMBER: package.tracking_number,
-                }
-            )
-
-        self._attr_extra_state_attributes[ATTR_PACKAGES] = (
-            package_data if package_data else None
-        )
-
-        self._state = self._data.summary.get(self._status)
+    @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Return the state attributes."""
+        return {
+            ATTR_PACKAGES: self.coordinator.data.summary[self.entity_description.key][
+                "packages"
+            ]
+        }
 
 
-class SeventeenTrackPackageSensor(SensorEntity):
+class SeventeenTrackPackageSensor(
+    CoordinatorEntity[SeventeenTrackCoordinator], SensorEntity
+):
     """Define an individual package sensor."""
 
     _attr_attribution = ATTRIBUTION
     _attr_icon = "mdi:package"
 
-    def __init__(self, data, package) -> None:
-        """Initialize."""
-        self._attr_extra_state_attributes = {
-            ATTR_DESTINATION_COUNTRY: package.destination_country,
-            ATTR_INFO_TEXT: package.info_text,
-            ATTR_TIMESTAMP: package.timestamp,
-            ATTR_LOCATION: package.location,
-            ATTR_ORIGIN_COUNTRY: package.origin_country,
-            ATTR_PACKAGE_TYPE: package.package_type,
-            ATTR_TRACKING_INFO_LANGUAGE: package.tracking_info_language,
-            ATTR_TRACKING_NUMBER: package.tracking_number,
-        }
-        self._data = data
-        self._friendly_name = package.friendly_name
-        self._state = package.status
-        self._tracking_number = package.tracking_number
-        self.entity_id = ENTITY_ID_TEMPLATE.format(self._tracking_number)
+    def __init__(
+        self,
+        coordinator: SeventeenTrackCoordinator,
+        tracking_number: str,
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator)
+        self._attr_extra_state_attributes = {}
+        self._tracking_number = tracking_number
+        self.entity_id = ENTITY_ID_TEMPLATE.format(tracking_number)
         self._attr_unique_id = UNIQUE_ID_TEMPLATE.format(
-            data.account_id, self._tracking_number
+            coordinator.account_id, tracking_number
         )
 
     @property
     def available(self) -> bool:
         """Return whether the entity is available."""
-        return self._data.packages.get(self._tracking_number) is not None
+        package_data = self.coordinator.data.current_packages.get(
+            self._tracking_number, {}
+        )
+        return package_data.get("package") is not None
 
     @property
     def name(self) -> str:
         """Return the name."""
-        if not (name := self._friendly_name):
+        package_data = self.coordinator.data.current_packages.get(
+            self._tracking_number, {}
+        )
+        package = package_data.get("package")
+        if package is None or not (name := package.friendly_name):
             name = self._tracking_number
         return f"Seventeentrack Package: {name}"
 
     @property
     def native_value(self) -> StateType:
         """Return the state."""
-        return self._state
-
-    async def async_update(self) -> None:
-        """Update the sensor."""
-        await self._data.async_update()
-
-        if not self.available:
-            # Entity cannot be removed while its being added
-            async_call_later(self.hass, 1, self._remove)
-            return
-
-        package = self._data.packages.get(self._tracking_number, None)
-
-        # If the user has elected to not see delivered packages and one gets
-        # delivered, post a notification:
-        if package.status == VALUE_DELIVERED and not self._data.show_delivered:
-            self._notify_delivered()
-            # Entity cannot be removed while its being added
-            async_call_later(self.hass, 1, self._remove)
-            return
-
-        self._attr_extra_state_attributes.update(
-            {
-                ATTR_INFO_TEXT: package.info_text,
-                ATTR_TIMESTAMP: package.timestamp,
-                ATTR_LOCATION: package.location,
-            }
+        package_data = self.coordinator.data.current_packages.get(
+            self._tracking_number, {}
         )
-        self._state = package.status
-        self._friendly_name = package.friendly_name
+        return package_data["package"].status
 
-    async def _remove(self, *_):
-        """Remove entity itself."""
-        await self.async_remove(force_remove=True)
-
-        reg = er.async_get(self.hass)
-        entity_id = reg.async_get_entity_id(
-            "sensor",
-            "seventeentrack",
-            UNIQUE_ID_TEMPLATE.format(self._data.account_id, self._tracking_number),
+    @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Return the state attributes."""
+        package_data = self.coordinator.data.current_packages.get(
+            self._tracking_number, {}
         )
-        if entity_id:
-            reg.async_remove(entity_id)
-
-    def _notify_delivered(self):
-        """Notify when package is delivered."""
-        _LOGGER.info("Package delivered: %s", self._tracking_number)
-
-        identification = (
-            self._friendly_name if self._friendly_name else self._tracking_number
-        )
-        message = NOTIFICATION_DELIVERED_MESSAGE.format(
-            identification, self._tracking_number
-        )
-        title = NOTIFICATION_DELIVERED_TITLE.format(identification)
-        notification_id = NOTIFICATION_DELIVERED_TITLE.format(self._tracking_number)
-
-        persistent_notification.create(
-            self.hass, message, title=title, notification_id=notification_id
-        )
+        return package_data["extra"]
 
 
-class SeventeenTrackData:
-    """Define a data handler for 17track.net."""
+def remove_entity(hass: HomeAssistant, account_id: str, tracking_number: str) -> bool:
+    """Remove entity itself."""
+    reg = er.async_get(hass)
+    entity_id = reg.async_get_entity_id(
+        "sensor",
+        "seventeentrack",
+        UNIQUE_ID_TEMPLATE.format(account_id, tracking_number),
+    )
+    if entity_id:
+        reg.async_remove(entity_id)
+        return True
+    return False
 
-    def __init__(
-        self,
-        client,
-        async_add_entities,
-        scan_interval,
-        show_archived,
-        show_delivered,
-        timezone,
-    ) -> None:
-        """Initialize."""
-        self._async_add_entities = async_add_entities
-        self._client = client
-        self._scan_interval = scan_interval
-        self._show_archived = show_archived
-        self.account_id = client.profile.account_id
-        self.packages: dict[str, Package] = {}
-        self.show_delivered = show_delivered
-        self.timezone = timezone
-        self.summary: dict[str, int] = {}
-        self.async_update = Throttle(self._scan_interval)(self._async_update)
-        self.first_update = True
 
-    async def _async_update(self):
-        """Get updated data from 17track.net."""
-        entities: list[entity.Entity] = []
+def notify_delivered(hass: HomeAssistant, friendly_name: str, tracking_number: str):
+    """Notify when package is delivered."""
+    LOGGER.info("Package delivered: %s", tracking_number)
 
-        try:
-            packages = await self._client.profile.packages(
-                show_archived=self._show_archived, tz=self.timezone
-            )
-            _LOGGER.debug("New package data received: %s", packages)
+    identification = friendly_name if friendly_name else tracking_number
+    message = NOTIFICATION_DELIVERED_MESSAGE.format(identification, tracking_number)
+    title = NOTIFICATION_DELIVERED_TITLE.format(identification)
+    notification_id = NOTIFICATION_DELIVERED_TITLE.format(tracking_number)
 
-            new_packages = {p.tracking_number: p for p in packages}
-
-            to_add = set(new_packages) - set(self.packages)
-
-            _LOGGER.debug("Will add new tracking numbers: %s", to_add)
-            if to_add:
-                entities.extend(
-                    SeventeenTrackPackageSensor(self, new_packages[tracking_number])
-                    for tracking_number in to_add
-                )
-
-            self.packages = new_packages
-        except SeventeenTrackError as err:
-            _LOGGER.error("There was an error retrieving packages: %s", err)
-
-        try:
-            self.summary = await self._client.profile.summary(
-                show_archived=self._show_archived
-            )
-            _LOGGER.debug("New summary data received: %s", self.summary)
-
-            # creating summary sensors on first update
-            if self.first_update:
-                self.first_update = False
-                entities.extend(
-                    SeventeenTrackSummarySensor(self, status, quantity)
-                    for status, quantity in self.summary.items()
-                )
-
-        except SeventeenTrackError as err:
-            _LOGGER.error("There was an error retrieving the summary: %s", err)
-            self.summary = {}
-
-        self._async_add_entities(entities, True)
+    persistent_notification.create(
+        hass, message, title=title, notification_id=notification_id
+    )
