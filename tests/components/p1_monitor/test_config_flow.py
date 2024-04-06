@@ -17,7 +17,7 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "user"
 
     with (
@@ -33,7 +33,7 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
             user_input={CONF_HOST: "example.com"},
         )
 
-    assert result2.get("type") == FlowResultType.CREATE_ENTRY
+    assert result2.get("type") is FlowResultType.CREATE_ENTRY
     assert result2.get("title") == "P1 Monitor"
     assert result2.get("data") == {CONF_HOST: "example.com"}
 
@@ -53,5 +53,5 @@ async def test_api_error(hass: HomeAssistant) -> None:
             data={CONF_HOST: "example.com"},
         )
 
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("errors") == {"base": "cannot_connect"}

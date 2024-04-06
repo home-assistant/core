@@ -673,7 +673,7 @@ async def test_addon_options_changed(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
     assert entry.data["usb_path"] == new_device
     assert entry.data["s0_legacy_key"] == new_s0_legacy_key
     assert entry.data["s2_access_control_key"] == new_s2_access_control_key

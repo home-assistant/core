@@ -588,6 +588,46 @@ async def test_async_get_hass_can_be_called(hass: HomeAssistant) -> None:
     my_job_create_task.join()
 
 
+async def test_async_add_executor_job_background(hass: HomeAssistant) -> None:
+    """Test running an executor job in the background."""
+    calls = []
+
+    def job():
+        time.sleep(0.01)
+        calls.append(1)
+
+    async def _async_add_executor_job():
+        await hass.async_add_executor_job(job)
+
+    task = hass.async_create_background_task(
+        _async_add_executor_job(), "background", eager_start=True
+    )
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert len(calls) == 1
+    await task
+
+
+async def test_async_add_executor_job(hass: HomeAssistant) -> None:
+    """Test running an executor job."""
+    calls = []
+
+    def job():
+        time.sleep(0.01)
+        calls.append(1)
+
+    async def _async_add_executor_job():
+        await hass.async_add_executor_job(job)
+
+    task = hass.async_create_task(
+        _async_add_executor_job(), "background", eager_start=True
+    )
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    await task
+
+
 async def test_stage_shutdown(hass: HomeAssistant) -> None:
     """Simulate a shutdown, test calling stuff."""
     test_stop = async_capture_events(hass, EVENT_HOMEASSISTANT_STOP)
@@ -2248,6 +2288,7 @@ async def test_additional_data_in_core_config(
 ) -> None:
     """Test that we can handle additional data in core configuration."""
     config = ha.Config(hass, "/test/ha-config")
+    config.async_initialize()
     hass_storage[ha.CORE_STORAGE_KEY] = {
         "version": 1,
         "data": {"location_name": "Test Name", "additional_valid_key": "value"},
@@ -2261,6 +2302,7 @@ async def test_incorrect_internal_external_url(
 ) -> None:
     """Test that we warn when detecting invalid internal/external url."""
     config = ha.Config(hass, "/test/ha-config")
+    config.async_initialize()
 
     hass_storage[ha.CORE_STORAGE_KEY] = {
         "version": 1,
@@ -2274,6 +2316,7 @@ async def test_incorrect_internal_external_url(
     assert "Invalid internal_url set" not in caplog.text
 
     config = ha.Config(hass, "/test/ha-config")
+    config.async_initialize()
 
     hass_storage[ha.CORE_STORAGE_KEY] = {
         "version": 1,
@@ -3318,9 +3361,11 @@ async def test_report_state_listener_restrictions(hass: HomeAssistant) -> None:
         """Mock filter."""
         return False
 
-    # run_immediately not set
+    # run_immediately set to False
     with pytest.raises(HomeAssistantError):
-        hass.bus.async_listen(EVENT_STATE_REPORTED, listener, event_filter=filter)
+        hass.bus.async_listen(
+            EVENT_STATE_REPORTED, listener, event_filter=filter, run_immediately=False
+        )
 
     # no filter
     with pytest.raises(HomeAssistantError):

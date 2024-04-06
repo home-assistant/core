@@ -1,6 +1,6 @@
 {
   "services": {
-    "start": "mdi:start",
+    "start": "mdi:play",
     "pause": "mdi:pause",
     "cancel": "mdi:cancel",
     "finish": "mdi:check",

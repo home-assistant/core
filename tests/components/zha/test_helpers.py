@@ -6,11 +6,10 @@ from unittest.mock import patch
 
 import pytest
 import voluptuous_serialize
-import zigpy.profiles.zha as zha
+from zigpy.profiles import zha
 from zigpy.quirks.v2.homeassistant import UnitOfPower as QuirksUnitOfPower
 from zigpy.types.basic import uint16_t
-import zigpy.zcl.clusters.general as general
-import zigpy.zcl.clusters.lighting as lighting
+from zigpy.zcl.clusters import general, lighting
 
 from homeassistant.components.zha.core.helpers import (
     cluster_command_schema_to_vol_schema,
