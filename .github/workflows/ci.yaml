@@ -433,8 +433,6 @@ jobs:
 
   base:
     name: Prepare dependencies
-    outputs:
-      python_version: ${{ steps.python.outputs.python-version }}
     runs-on: ubuntu-22.04
     needs: info
     timeout-minutes: 60
