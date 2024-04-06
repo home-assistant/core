@@ -1997,7 +1997,7 @@ async def test_render_template_with_timeout(
         {
             "id": 5,
             "type": "render_template",
-            "timeout": 0.0000001,
+            "timeout": 0.000001,
             "template": slow_template_str,
         }
     )
