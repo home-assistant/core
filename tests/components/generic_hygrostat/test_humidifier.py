@@ -1,4 +1,5 @@
 """The tests for the generic_hygrostat."""
+
 import datetime
 
 from freezegun import freeze_time
@@ -39,7 +40,9 @@ from tests.common import (
     assert_setup_component,
     async_fire_time_changed,
     mock_restore_cache,
+    setup_test_component_platform,
 )
+from tests.components.switch.common import MockSwitch
 
 ENTITY = "humidifier.test"
 ENT_SENSOR = "sensor.test"
@@ -126,12 +129,11 @@ async def test_humidifier_input_boolean(hass: HomeAssistant, setup_comp_1) -> No
 
 
 async def test_humidifier_switch(
-    hass: HomeAssistant, setup_comp_1, enable_custom_integrations: None
+    hass: HomeAssistant, setup_comp_1, mock_switch_entities: list[MockSwitch]
 ) -> None:
     """Test humidifier switching test switch."""
-    platform = getattr(hass.components, "test.switch")
-    platform.init()
-    switch_1 = platform.ENTITIES[1]
+    setup_test_component_platform(hass, switch.DOMAIN, mock_switch_entities)
+    switch_1 = mock_switch_entities[1]
     assert await async_setup_component(
         hass, switch.DOMAIN, {"switch": {"platform": "test"}}
     )
@@ -466,6 +468,35 @@ async def test_sensor_bad_value(hass: HomeAssistant, setup_comp_2) -> None:
     await hass.async_block_till_done()
 
     assert hass.states.get(ENTITY).state == STATE_UNAVAILABLE
+
+
+async def test_sensor_bad_value_twice(
+    hass: HomeAssistant, setup_comp_2, caplog
+) -> None:
+    """Test sensor that the second bad value is not logged as warning."""
+    assert hass.states.get(ENTITY).state == STATE_ON
+
+    _setup_sensor(hass, "forty")
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY).state == STATE_UNAVAILABLE
+    assert [
+        rec.levelname
+        for rec in caplog.records
+        if "Unable to update from sensor" in rec.message
+    ] == ["WARNING"]
+
+    caplog.clear()
+
+    _setup_sensor(hass, "fifty")
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY).state == STATE_UNAVAILABLE
+    assert [
+        rec.levelname
+        for rec in caplog.records
+        if "Unable to update from sensor" in rec.message
+    ] == ["DEBUG"]
 
 
 async def test_set_target_humidity_humidifier_on(

@@ -1,4 +1,5 @@
 """Base entity Ambient Weather Station Service."""
+
 from __future__ import annotations
 
 from aioambient.util import get_public_device_id

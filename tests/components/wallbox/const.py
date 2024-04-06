@@ -1,7 +1,9 @@
 """Provides constants for Wallbox component tests."""
+
 JWT = "jwt"
 USER_ID = "user_id"
 TTL = "ttl"
+REFRESH_TOKEN_TTL = "refresh_token_ttl"
 ERROR = "error"
 STATUS = "status"
 

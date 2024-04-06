@@ -1,4 +1,5 @@
 """Testing for ScreenLogic diagnostics."""
+
 from unittest.mock import DEFAULT, patch
 
 from screenlogicpy import ScreenLogicGateway
@@ -34,17 +35,20 @@ async def test_diagnostics(
         config_entry_id=mock_config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, MOCK_ADAPTER_MAC)},
     )
-    with patch(
-        GATEWAY_DISCOVERY_IMPORT_PATH,
-        return_value={},
-    ), patch.multiple(
-        ScreenLogicGateway,
-        async_connect=lambda *args, **kwargs: stub_async_connect(
-            DATA_FULL_CHEM, *args, **kwargs
+    with (
+        patch(
+            GATEWAY_DISCOVERY_IMPORT_PATH,
+            return_value={},
         ),
-        is_connected=True,
-        _async_connected_request=DEFAULT,
-        get_debug=lambda self: {},
+        patch.multiple(
+            ScreenLogicGateway,
+            async_connect=lambda *args, **kwargs: stub_async_connect(
+                DATA_FULL_CHEM, *args, **kwargs
+            ),
+            is_connected=True,
+            _async_connected_request=DEFAULT,
+            get_debug=lambda self: {},
+        ),
     ):
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()

@@ -1,4 +1,5 @@
 """Support for Arduino-compatible Microcontrollers through Firmata."""
+
 import asyncio
 from copy import copy
 import logging

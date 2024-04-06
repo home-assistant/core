@@ -1,4 +1,5 @@
 """Test the repairs websocket API."""
+
 from typing import Any
 
 import pytest

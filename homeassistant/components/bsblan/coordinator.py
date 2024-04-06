@@ -1,4 +1,5 @@
 """DataUpdateCoordinator for the BSB-Lan integration."""
+
 from __future__ import annotations
 
 from datetime import timedelta

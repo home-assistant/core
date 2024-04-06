@@ -1,4 +1,5 @@
 """Logging utilities."""
+
 from __future__ import annotations
 
 import asyncio
@@ -138,15 +139,13 @@ def _callback_wrapper(
 @overload
 def catch_log_exception(
     func: Callable[[*_Ts], Coroutine[Any, Any, Any]], format_err: Callable[[*_Ts], Any]
-) -> Callable[[*_Ts], Coroutine[Any, Any, None]]:
-    ...
+) -> Callable[[*_Ts], Coroutine[Any, Any, None]]: ...
 
 
 @overload
 def catch_log_exception(
     func: Callable[[*_Ts], Any], format_err: Callable[[*_Ts], Any]
-) -> Callable[[*_Ts], None] | Callable[[*_Ts], Coroutine[Any, Any, None]]:
-    ...
+) -> Callable[[*_Ts], None] | Callable[[*_Ts], Coroutine[Any, Any, None]]: ...
 
 
 def catch_log_exception(
@@ -199,12 +198,10 @@ def async_create_catching_coro(
     target: target coroutine.
     """
     trace = traceback.extract_stack()
-    wrapped_target = catch_log_coro_exception(
+    return catch_log_coro_exception(
         target,
         lambda: "Exception in {} called from\n {}".format(
             target.__name__,
             "".join(traceback.format_list(trace[:-1])),
         ),
     )
-
-    return wrapped_target

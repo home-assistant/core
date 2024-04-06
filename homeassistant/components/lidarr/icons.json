@@ -1,0 +1,15 @@
+{
+  "entity": {
+    "sensor": {
+      "disk_space": {
+        "default": "mdi:harddisk"
+      },
+      "queue": {
+        "default": "mdi:download"
+      },
+      "wanted": {
+        "default": "mdi:music"
+      }
+    }
+  }
+}

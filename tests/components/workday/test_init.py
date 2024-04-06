@@ -1,11 +1,12 @@
 """Test Workday component setup process."""
+
 from __future__ import annotations
 
 from datetime import datetime
 
 from freezegun.api import FrozenDateTimeFactory
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.util.dt import UTC
 
@@ -34,7 +35,7 @@ async def test_update_options(
     freezer.move_to(datetime(2023, 4, 12, 12, tzinfo=UTC))  # Monday
 
     entry = await init_integration(hass, TEST_CONFIG_WITH_PROVINCE)
-    assert entry.state == config_entries.ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
     assert entry.update_listeners is not None
     state = hass.states.get("binary_sensor.workday_sensor")
     assert state.state == "on"
@@ -46,6 +47,6 @@ async def test_update_options(
     await hass.async_block_till_done()
 
     entry_check = hass.config_entries.async_get_entry("1")
-    assert entry_check.state == config_entries.ConfigEntryState.LOADED
+    assert entry_check.state is ConfigEntryState.LOADED
     state = hass.states.get("binary_sensor.workday_sensor")
     assert state.state == "off"

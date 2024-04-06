@@ -1,4 +1,5 @@
 """Test Matter lights."""
+
 from unittest.mock import MagicMock, call
 
 from chip.clusters import Objects as clusters

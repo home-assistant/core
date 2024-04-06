@@ -1,10 +1,10 @@
 """The config flow tests for the forked_daapd media player platform."""
+
 from ipaddress import ip_address
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from homeassistant import data_entry_flow
 from homeassistant.components import zeroconf
 from homeassistant.components.forked_daapd.const import (
     CONF_LIBRESPOT_JAVA_PORT,
@@ -17,6 +17,7 @@ from homeassistant.components.forked_daapd.media_player import async_setup_entry
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import PlatformNotReady
 
 from tests.common import MockConfigEntry
@@ -62,19 +63,22 @@ async def test_show_form(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
 
 async def test_config_flow(hass: HomeAssistant, config_entry) -> None:
     """Test that the user step works."""
-    with patch(
-        "homeassistant.components.forked_daapd.config_flow.ForkedDaapdAPI.test_connection",
-        new=AsyncMock(),
-    ) as mock_test_connection, patch(
-        "homeassistant.components.forked_daapd.media_player.ForkedDaapdAPI.get_request",
-        autospec=True,
-    ) as mock_get_request:
+    with (
+        patch(
+            "homeassistant.components.forked_daapd.config_flow.ForkedDaapdAPI.test_connection",
+            new=AsyncMock(),
+        ) as mock_test_connection,
+        patch(
+            "homeassistant.components.forked_daapd.media_player.ForkedDaapdAPI.get_request",
+            autospec=True,
+        ) as mock_get_request,
+    ):
         mock_get_request.return_value = SAMPLE_CONFIG
         mock_test_connection.return_value = ["ok", "My Music on myhost"]
         config_data = config_entry.data
@@ -82,7 +86,7 @@ async def test_config_flow(hass: HomeAssistant, config_entry) -> None:
             DOMAIN, context={"source": SOURCE_USER}, data=config_data
         )
         await hass.async_block_till_done()
-        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == "My Music on myhost"
         assert result["data"][CONF_HOST] == config_data[CONF_HOST]
         assert result["data"][CONF_PORT] == config_data[CONF_PORT]
@@ -95,7 +99,7 @@ async def test_config_flow(hass: HomeAssistant, config_entry) -> None:
             data=config_entry.data,
         )
         await hass.async_block_till_done()
-        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
 
 
 async def test_zeroconf_updates_title(hass: HomeAssistant, config_entry) -> None:
@@ -116,7 +120,7 @@ async def test_zeroconf_updates_title(hass: HomeAssistant, config_entry) -> None
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info
     )
     await hass.async_block_till_done()
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert config_entry.title == "zeroconf_test"
     assert len(hass.config_entries.async_entries(DOMAIN)) == 2
 
@@ -132,7 +136,7 @@ async def test_config_flow_no_websocket(hass: HomeAssistant, config_entry) -> No
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=config_entry.data
         )
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
 
 
 async def test_config_flow_zeroconf_invalid(hass: HomeAssistant) -> None:
@@ -150,7 +154,7 @@ async def test_config_flow_zeroconf_invalid(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info
     )  # doesn't create the entry, tries to show form but gets abort
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "not_forked_daapd"
     # test with forked-daapd version < 27
     discovery_info = zeroconf.ZeroconfServiceInfo(
@@ -165,7 +169,7 @@ async def test_config_flow_zeroconf_invalid(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info
     )  # doesn't create the entry, tries to show form but gets abort
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "not_forked_daapd"
     # test with verbose mtd-version from Firefly
     discovery_info = zeroconf.ZeroconfServiceInfo(
@@ -180,7 +184,7 @@ async def test_config_flow_zeroconf_invalid(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info
     )  # doesn't create the entry, tries to show form but gets abort
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "not_forked_daapd"
     # test with svn mtd-version from Firefly
     discovery_info = zeroconf.ZeroconfServiceInfo(
@@ -195,7 +199,7 @@ async def test_config_flow_zeroconf_invalid(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info
     )  # doesn't create the entry, tries to show form but gets abort
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "not_forked_daapd"
 
 
@@ -217,7 +221,7 @@ async def test_config_flow_zeroconf_valid(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
 
 
 async def test_options_flow(hass: HomeAssistant, config_entry) -> None:
@@ -233,7 +237,7 @@ async def test_options_flow(hass: HomeAssistant, config_entry) -> None:
         await hass.async_block_till_done()
 
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
 
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
@@ -244,7 +248,7 @@ async def test_options_flow(hass: HomeAssistant, config_entry) -> None:
                 CONF_MAX_PLAYLISTS: 8,
             },
         )
-        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_async_setup_entry_not_ready(hass: HomeAssistant, config_entry) -> None:

@@ -17,6 +17,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'A. O. Smith',
     'model': 'HPTS-50 200 202172000',
     'name': 'My water heater',

@@ -1,4 +1,5 @@
 """Offer MQTT listening automation rules."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -98,7 +99,6 @@ async def async_attach_trigger(
         "Attaching MQTT trigger for topic: '%s', payload: '%s'", topic, wanted_payload
     )
 
-    remove = await mqtt.async_subscribe(
+    return await mqtt.async_subscribe(
         hass, topic, mqtt_automation_listener, encoding=encoding, qos=qos
     )
-    return remove

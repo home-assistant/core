@@ -1,4 +1,5 @@
 """The sensor entity for the Youless integration."""
+
 from __future__ import annotations
 
 from youless_api import YoulessAPI

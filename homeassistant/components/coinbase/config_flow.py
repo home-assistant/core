@@ -1,4 +1,5 @@
 """Config flow for Coinbase integration."""
+
 from __future__ import annotations
 
 import logging
@@ -8,10 +9,15 @@ from coinbase.wallet.client import Client
 from coinbase.wallet.error import AuthenticationError
 import voluptuous as vol
 
-from homeassistant import config_entries, core, exceptions
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_API_KEY, CONF_API_TOKEN
-from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 
 from . import get_accounts
@@ -44,11 +50,10 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 def get_user_from_client(api_key, api_token):
     """Get the user name from Coinbase API credentials."""
     client = Client(api_key, api_token)
-    user = client.get_current_user()
-    return user
+    return client.get_current_user()
 
 
-async def validate_api(hass: core.HomeAssistant, data):
+async def validate_api(hass: HomeAssistant, data):
     """Validate the credentials."""
 
     try:
@@ -72,9 +77,7 @@ async def validate_api(hass: core.HomeAssistant, data):
     return {"title": user["name"]}
 
 
-async def validate_options(
-    hass: core.HomeAssistant, config_entry: config_entries.ConfigEntry, options
-):
+async def validate_options(hass: HomeAssistant, config_entry: ConfigEntry, options):
     """Validate the requested resources are provided by API."""
 
     client = hass.data[DOMAIN][config_entry.entry_id].client
@@ -100,14 +103,14 @@ async def validate_options(
     return True
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class CoinbaseConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Coinbase."""
 
     VERSION = 1
 
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is None:
@@ -139,22 +142,22 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
+        config_entry: ConfigEntry,
     ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
         return OptionsFlowHandler(config_entry)
 
 
-class OptionsFlowHandler(config_entries.OptionsFlow):
+class OptionsFlowHandler(OptionsFlow):
     """Handle a option flow for Coinbase."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+    def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
         self.config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage the options."""
 
         errors = {}
@@ -216,29 +219,29 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         )
 
 
-class CannotConnect(exceptions.HomeAssistantError):
+class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""
 
 
-class InvalidAuth(exceptions.HomeAssistantError):
+class InvalidAuth(HomeAssistantError):
     """Error to indicate there is invalid auth."""
 
 
-class InvalidSecret(exceptions.HomeAssistantError):
+class InvalidSecret(HomeAssistantError):
     """Error to indicate auth failed due to invalid secret."""
 
 
-class InvalidKey(exceptions.HomeAssistantError):
+class InvalidKey(HomeAssistantError):
     """Error to indicate auth failed due to invalid key."""
 
 
-class AlreadyConfigured(exceptions.HomeAssistantError):
+class AlreadyConfigured(HomeAssistantError):
     """Error to indicate Coinbase API Key is already configured."""
 
 
-class CurrencyUnavailable(exceptions.HomeAssistantError):
+class CurrencyUnavailable(HomeAssistantError):
     """Error to indicate the requested currency resource is not provided by the API."""
 
 
-class ExchangeRateUnavailable(exceptions.HomeAssistantError):
+class ExchangeRateUnavailable(HomeAssistantError):
     """Error to indicate the requested exchange rate resource is not provided by the API."""

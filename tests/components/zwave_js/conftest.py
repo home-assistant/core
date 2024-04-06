@@ -1,4 +1,5 @@
 """Provide common Z-Wave JS fixtures."""
+
 import asyncio
 import copy
 import io
@@ -965,8 +966,7 @@ def aeotec_radiator_thermostat_fixture(client, aeotec_radiator_thermostat_state)
 def nortek_thermostat_added_event_fixture(client):
     """Mock a Nortek thermostat node added event."""
     event_data = json.loads(load_fixture("zwave_js/nortek_thermostat_added_event.json"))
-    event = Event("node added", event_data)
-    return event
+    return Event("node added", event_data)
 
 
 @pytest.fixture(name="nortek_thermostat_removed_event")
@@ -975,8 +975,7 @@ def nortek_thermostat_removed_event_fixture(client):
     event_data = json.loads(
         load_fixture("zwave_js/nortek_thermostat_removed_event.json")
     )
-    event = Event("node removed", event_data)
-    return event
+    return Event("node removed", event_data)
 
 
 @pytest.fixture(name="integration")

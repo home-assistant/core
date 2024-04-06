@@ -1,4 +1,5 @@
 """Test Smart Home HTTP endpoints."""
+
 from http import HTTPStatus
 import json
 import logging
@@ -22,12 +23,11 @@ async def do_http_discovery(config, hass, hass_client):
     http_client = await hass_client()
 
     request = get_new_request("Alexa.Discovery", "Discover")
-    response = await http_client.post(
+    return await http_client.post(
         smart_home.SMART_HOME_HTTP_ENDPOINT,
         data=json.dumps(request),
         headers={"content-type": CONTENT_TYPE_JSON},
     )
-    return response
 
 
 @pytest.mark.parametrize(

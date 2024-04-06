@@ -1,5 +1,4 @@
 """Tests for the Shelly integration."""
-from __future__ import annotations
 
 from collections.abc import Mapping
 from copy import deepcopy
@@ -21,7 +20,11 @@ from homeassistant.components.shelly.const import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
+from homeassistant.helpers.device_registry import (
+    CONNECTION_NETWORK_MAC,
+    DeviceRegistry,
+    format_mac,
+)
 from homeassistant.helpers.entity_registry import async_get
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -85,14 +88,16 @@ async def mock_rest_update(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     seconds=REST_SENSORS_UPDATE_INTERVAL,
-):
+) -> None:
     """Move time to create REST sensors update event."""
     freezer.tick(timedelta(seconds=seconds))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
 
-async def mock_polling_rpc_update(hass: HomeAssistant, freezer: FrozenDateTimeFactory):
+async def mock_polling_rpc_update(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
     """Move time to create polling RPC sensors update event."""
     freezer.tick(timedelta(seconds=RPC_SENSORS_POLLING_INTERVAL))
     async_fire_time_changed(hass)
@@ -121,6 +126,18 @@ def register_entity(
     return f"{domain}.{object_id}"
 
 
+def get_entity(
+    hass: HomeAssistant,
+    domain: str,
+    unique_id: str,
+) -> str | None:
+    """Get Shelly entity."""
+    entity_registry = async_get(hass)
+    return entity_registry.async_get_entity_id(
+        domain, DOMAIN, f"{MOCK_MAC}-{unique_id}"
+    )
+
+
 def get_entity_state(hass: HomeAssistant, entity_id: str) -> str:
     """Return entity state."""
     entity = hass.states.get(entity_id)
@@ -128,7 +145,7 @@ def get_entity_state(hass: HomeAssistant, entity_id: str) -> str:
     return entity.state
 
 
-def register_device(device_reg, config_entry: ConfigEntry):
+def register_device(device_reg: DeviceRegistry, config_entry: ConfigEntry) -> None:
     """Register Shelly device."""
     device_reg.async_get_or_create(
         config_entry_id=config_entry.entry_id,

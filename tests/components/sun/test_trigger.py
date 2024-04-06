@@ -1,11 +1,11 @@
 """The tests for the sun automation."""
+
 from datetime import datetime
 
 from freezegun import freeze_time
 import pytest
 
-from homeassistant.components import sun
-import homeassistant.components.automation as automation
+from homeassistant.components import automation, sun
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ENTITY_MATCH_ALL,

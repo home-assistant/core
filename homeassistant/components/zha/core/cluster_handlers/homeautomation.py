@@ -1,4 +1,5 @@
 """Home automation cluster handlers module for Zigbee Home Automation."""
+
 from __future__ import annotations
 
 import enum

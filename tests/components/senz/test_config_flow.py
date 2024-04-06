@@ -1,4 +1,5 @@
 """Test the SENZ config flow."""
+
 from unittest.mock import patch
 
 from aiosenz import AUTHORIZATION_ENDPOINT, TOKEN_ENDPOINT

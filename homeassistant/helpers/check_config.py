@@ -1,4 +1,5 @@
 """Helper to check the configuration file."""
+
 from __future__ import annotations
 
 from collections import OrderedDict
@@ -11,7 +12,6 @@ import voluptuous as vol
 
 from homeassistant import loader
 from homeassistant.config import (  # type: ignore[attr-defined]
-    CONF_CORE,
     CONF_PACKAGES,
     CORE_CONFIG_SCHEMA,
     YAML_CONFIG_FILE,
@@ -22,7 +22,7 @@ from homeassistant.config import (  # type: ignore[attr-defined]
     load_yaml_config_file,
     merge_packages_config,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HA_DOMAIN, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.requirements import (
     RequirementsNotFound,
@@ -96,13 +96,13 @@ async def async_check_ha_config_file(  # noqa: C901
     def _pack_error(
         hass: HomeAssistant,
         package: str,
-        component: str,
+        component: str | None,
         config: ConfigType,
         message: str,
     ) -> None:
         """Handle errors from packages."""
         message = f"Setup of package '{package}' failed: {message}"
-        domain = f"homeassistant.packages.{package}.{component}"
+        domain = f"homeassistant.packages.{package}{'.' + component if component is not None else ''}"
         pack_config = core_config[CONF_PACKAGES].get(package, config)
         result.add_warning(message, domain, pack_config)
 
@@ -157,22 +157,22 @@ async def async_check_ha_config_file(  # noqa: C901
         return result.add_error(f"Error loading {config_path}: {err}")
 
     # Extract and validate core [homeassistant] config
+    core_config = config.pop(HA_DOMAIN, {})
     try:
-        core_config = config.pop(CONF_CORE, {})
         core_config = CORE_CONFIG_SCHEMA(core_config)
-        result[CONF_CORE] = core_config
+        result[HA_DOMAIN] = core_config
+
+        # Merge packages
+        await merge_packages_config(
+            hass, config, core_config.get(CONF_PACKAGES, {}), _pack_error
+        )
     except vol.Invalid as err:
         result.add_error(
-            format_schema_error(hass, err, CONF_CORE, core_config),
-            CONF_CORE,
+            format_schema_error(hass, err, HA_DOMAIN, core_config),
+            HA_DOMAIN,
             core_config,
         )
         core_config = {}
-
-    # Merge packages
-    await merge_packages_config(
-        hass, config, core_config.get(CONF_PACKAGES, {}), _pack_error
-    )
     core_config.pop(CONF_PACKAGES, None)
 
     # Filter out repeating config sections
@@ -191,22 +191,23 @@ async def async_check_ha_config_file(  # noqa: C901
             continue
 
         try:
-            component = integration.get_component()
+            component = await integration.async_get_component()
         except ImportError as ex:
             result.add_warning(f"Component error: {domain} - {ex}")
             continue
 
         # Check if the integration has a custom config validator
         config_validator = None
-        try:
-            config_validator = integration.get_platform("config")
-        except ImportError as err:
-            # Filter out import error of the config platform.
-            # If the config platform contains bad imports, make sure
-            # that still fails.
-            if err.name != f"{integration.pkg_path}.config":
-                result.add_error(f"Error importing config platform {domain}: {err}")
-                continue
+        if integration.platforms_exists(("config",)):
+            try:
+                config_validator = await integration.async_get_platform("config")
+            except ImportError as err:
+                # Filter out import error of the config platform.
+                # If the config platform contains bad imports, make sure
+                # that still fails.
+                if err.name != f"{integration.pkg_path}.config":
+                    result.add_error(f"Error importing config platform {domain}: {err}")
+                    continue
 
         if config_validator is not None and hasattr(
             config_validator, "async_validate_config"
@@ -270,7 +271,7 @@ async def async_check_ha_config_file(  # noqa: C901
                 p_integration = await async_get_integration_with_requirements(
                     hass, p_name
                 )
-                platform = p_integration.get_platform(domain)
+                platform = await p_integration.async_get_platform(domain)
             except loader.IntegrationNotFound as ex:
                 # We get this error if an integration is not found. In recovery mode and
                 # safe mode, this currently happens for all custom integrations. Don't

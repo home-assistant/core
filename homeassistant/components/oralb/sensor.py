@@ -1,4 +1,5 @@
 """Support for OralB sensors."""
+
 from __future__ import annotations
 
 from oralb_ble import OralBSensor, SensorUpdate
@@ -38,23 +39,31 @@ SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
     ),
     OralBSensor.SECTOR: SensorEntityDescription(
         key=OralBSensor.SECTOR,
+        translation_key="sector",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     OralBSensor.NUMBER_OF_SECTORS: SensorEntityDescription(
         key=OralBSensor.NUMBER_OF_SECTORS,
+        translation_key="number_of_sectors",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     OralBSensor.SECTOR_TIMER: SensorEntityDescription(
         key=OralBSensor.SECTOR_TIMER,
+        translation_key="sector_timer",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
     OralBSensor.TOOTHBRUSH_STATE: SensorEntityDescription(
-        key=OralBSensor.TOOTHBRUSH_STATE
+        key=OralBSensor.TOOTHBRUSH_STATE,
+        name=None,
     ),
-    OralBSensor.PRESSURE: SensorEntityDescription(key=OralBSensor.PRESSURE),
+    OralBSensor.PRESSURE: SensorEntityDescription(
+        key=OralBSensor.PRESSURE,
+        translation_key="pressure",
+    ),
     OralBSensor.MODE: SensorEntityDescription(
         key=OralBSensor.MODE,
+        translation_key="mode",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     OralBSensor.SIGNAL_STRENGTH: SensorEntityDescription(
@@ -94,10 +103,7 @@ def sensor_update_to_bluetooth_data_update(
             device_key_to_bluetooth_entity_key(device_key): sensor_values.native_value
             for device_key, sensor_values in sensor_update.entity_values.items()
         },
-        entity_names={
-            device_key_to_bluetooth_entity_key(device_key): sensor_values.name
-            for device_key, sensor_values in sensor_update.entity_values.items()
-        },
+        entity_names={},
     )
 
 

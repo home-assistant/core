@@ -1,4 +1,5 @@
 """Support for getting temperature from TEMPer devices."""
+
 from __future__ import annotations
 
 import logging
