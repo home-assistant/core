@@ -13,7 +13,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import LAST_SCANNED, TAGS, TagStorageCollection
-from .const import DEVICE_ID, DOMAIN, EVENT_TAG_SCANNED, TAG_ID
+from .const import DEFAULT_NAME, DEVICE_ID, DOMAIN, EVENT_TAG_SCANNED, TAG_ID
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -76,7 +76,7 @@ async def async_setup_platform(
 
     for tags in storage_collection.async_items():
         entities[tags[TAG_ID]] = TagEvent(
-            tags[CONF_NAME], tags[TAG_ID], tags.get(LAST_SCANNED, "")
+            tags.get(CONF_NAME, DEFAULT_NAME), tags[TAG_ID], tags.get(LAST_SCANNED, "")
         )
 
     async_add_entities(entities.values())
