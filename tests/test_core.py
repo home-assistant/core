@@ -327,7 +327,7 @@ async def test_async_create_task_schedule_coroutine() -> None:
     async def job():
         pass
 
-    ha.HomeAssistant.async_create_task(hass, job())
+    ha.HomeAssistant.async_create_task(hass, job(), eager_start=False)
     assert len(hass.loop.call_soon.mock_calls) == 0
     assert len(hass.loop.create_task.mock_calls) == 1
     assert len(hass.add_job.mock_calls) == 0
@@ -353,7 +353,9 @@ async def test_async_create_task_schedule_coroutine_with_name() -> None:
     async def job():
         pass
 
-    task = ha.HomeAssistant.async_create_task(hass, job(), "named task")
+    task = ha.HomeAssistant.async_create_task(
+        hass, job(), "named task", eager_start=False
+    )
     assert len(hass.loop.call_soon.mock_calls) == 0
     assert len(hass.loop.create_task.mock_calls) == 1
     assert len(hass.add_job.mock_calls) == 0
