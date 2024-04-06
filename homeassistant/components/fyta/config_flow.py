@@ -13,7 +13,7 @@ from fyta_cli.fyta_exceptions import (
 )
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
 from .const import DOMAIN
@@ -26,14 +26,14 @@ DATA_SCHEMA = vol.Schema(
 )
 
 
-class FytaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class FytaConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Fyta."""
 
     VERSION = 1
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.ConfigFlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
 
         errors = {}

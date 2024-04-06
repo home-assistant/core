@@ -494,6 +494,6 @@ def zgs_event_fixture(hass: HomeAssistant, soco: SoCo, zgs_discovery: str):
         subscription: SonosMockSubscribe = soco.zoneGroupTopology.subscribe.return_value
         sub_callback = await subscription.wait_for_callback_to_be_set()
         sub_callback(event)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     return _wrapper

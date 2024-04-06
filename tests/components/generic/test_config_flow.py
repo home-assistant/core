@@ -27,6 +27,7 @@ from homeassistant.components.stream import (
     CONF_USE_WALLCLOCK_AS_TIMESTAMPS,
 )
 from homeassistant.components.stream.worker import StreamWorkerError
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_AUTHENTICATION,
     CONF_NAME,
@@ -804,11 +805,11 @@ async def test_unload_entry(hass: HomeAssistant, fakeimg_png) -> None:
 
     await hass.config_entries.async_setup(mock_entry.entry_id)
     await hass.async_block_till_done()
-    assert mock_entry.state is config_entries.ConfigEntryState.LOADED
+    assert mock_entry.state is ConfigEntryState.LOADED
 
     await hass.config_entries.async_unload(mock_entry.entry_id)
     await hass.async_block_till_done()
-    assert mock_entry.state is config_entries.ConfigEntryState.NOT_LOADED
+    assert mock_entry.state is ConfigEntryState.NOT_LOADED
 
 
 async def test_reload_on_title_change(hass: HomeAssistant) -> None:
@@ -823,7 +824,7 @@ async def test_reload_on_title_change(hass: HomeAssistant) -> None:
 
     await hass.config_entries.async_setup(mock_entry.entry_id)
     await hass.async_block_till_done()
-    assert mock_entry.state is config_entries.ConfigEntryState.LOADED
+    assert mock_entry.state is ConfigEntryState.LOADED
     assert hass.states.get("camera.my_title").attributes["friendly_name"] == "My Title"
 
     hass.config_entries.async_update_entry(mock_entry, title="New Title")

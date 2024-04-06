@@ -6,6 +6,7 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components import dynalite
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_PORT
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -21,9 +22,9 @@ from tests.common import MockConfigEntry
 @pytest.mark.parametrize(
     ("first_con", "second_con", "exp_type", "exp_result", "exp_reason"),
     [
-        (True, True, "create_entry", config_entries.ConfigEntryState.LOADED, ""),
+        (True, True, "create_entry", ConfigEntryState.LOADED, ""),
         (False, False, "abort", None, "cannot_connect"),
-        (True, False, "create_entry", config_entries.ConfigEntryState.SETUP_RETRY, ""),
+        (True, False, "create_entry", ConfigEntryState.SETUP_RETRY, ""),
     ],
 )
 async def test_flow(
@@ -138,7 +139,7 @@ async def test_two_entries(hass: HomeAssistant) -> None:
             data={dynalite.CONF_HOST: host2},
         )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["result"].state == config_entries.ConfigEntryState.LOADED
+    assert result["result"].state is ConfigEntryState.LOADED
 
 
 async def test_setup_user(hass):
@@ -163,7 +164,7 @@ async def test_setup_user(hass):
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["result"].state == config_entries.ConfigEntryState.LOADED
+    assert result["result"].state is ConfigEntryState.LOADED
     assert result["title"] == host
     assert result["data"] == {
         "host": host,
