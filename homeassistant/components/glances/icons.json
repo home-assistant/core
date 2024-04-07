@@ -54,6 +54,15 @@
       },
       "uptime": {
         "default": "mdi:clock-time-eight-outline"
+      },
+      "temperature": {
+        "default": "mdi:thermometer"
+      },
+      "gpu_processor_usage": {
+        "default": "mdi:expansion-card"
+      },
+      "gpu_memory_usage": {
+        "default": "mdi:memory"
       }
     }
   }
