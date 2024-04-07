@@ -40,7 +40,34 @@ async def test_entry_diagnostics(
 ) -> None:
     """Test config entry diagnostics."""
     await setup_with_selected_platforms(hass, config_entry, ENVOY_PLATFORMS)
-
-    assert await get_diagnostics_for_config_entry(
+    diagnostics = await get_diagnostics_for_config_entry(
         hass, hass_client, config_entry
-    ) == snapshot(exclude=limit_diagnostic_attrs)
+    )
+
+    assert diagnostics
+
+    # do not use snapshot compare on overall diagnostics as snapshot file content order varies
+    # test the individual items of the diagnostics report to avoid false snapshot compare assertions
+    assert diagnostics["config_entry"] == snapshot(
+        name="config_entry", exclude=limit_diagnostic_attrs
+    )
+    assert diagnostics["envoy_properties"] == snapshot(
+        name="envoy_properties", exclude=limit_diagnostic_attrs
+    )
+    assert diagnostics["raw_data"] == snapshot(
+        name="raw_data", exclude=limit_diagnostic_attrs
+    )
+    assert diagnostics["envoy_model_data"] == snapshot(
+        name="envoy_model_data", exclude=limit_diagnostic_attrs
+    )
+
+    for devices in diagnostics["envoy_entities_by_device"]:
+        for entity in devices["entities"]:
+            assert entity["entity"] == snapshot(
+                name=f"{entity["entity"]["entity_id"]}-entry",
+                exclude=limit_diagnostic_attrs,
+            )
+            assert entity["state"] == snapshot(
+                name=f"{entity["entity"]["entity_id"]}-state",
+                exclude=limit_diagnostic_attrs,
+            )
