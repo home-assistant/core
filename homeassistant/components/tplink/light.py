@@ -29,7 +29,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import legacy_device_id
 from .const import DOMAIN
 from .coordinator import TPLinkDataUpdateCoordinator
-from .entity import CoordinatedTPLinkEntity, async_exception_wrap_refresh_after
+from .entity import CoordinatedTPLinkEntity, async_refresh_after
 from .models import TPLinkData
 
 _LOGGER = logging.getLogger(__name__)
@@ -256,7 +256,7 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
             return
         await self.device.turn_on(transition=transition)
 
-    @async_exception_wrap_refresh_after
+    @async_refresh_after
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         brightness, transition = self._async_extract_brightness_transition(**kwargs)
@@ -269,7 +269,7 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
         else:
             await self._async_turn_on_with_brightness(brightness, transition)
 
-    @async_exception_wrap_refresh_after
+    @async_refresh_after
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         if (transition := kwargs.get(ATTR_TRANSITION)) is not None:
@@ -329,7 +329,7 @@ class TPLinkSmartLightStrip(TPLinkSmartBulb):
         else:
             self._attr_effect_list = None
 
-    @async_exception_wrap_refresh_after
+    @async_refresh_after
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         brightness, transition = self._async_extract_brightness_transition(**kwargs)

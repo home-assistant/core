@@ -207,17 +207,30 @@ async def test_strip_unique_ids(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    ("exception_type", "reauth_expected"),
+    ("exception_type", "msg", "reauth_expected"),
     [
-        (AuthenticationException, True),
-        (TimeoutException, False),
-        (SmartDeviceException, False),
+        (
+            AuthenticationException,
+            "Device authentication error async_turn_on: test error",
+            True,
+        ),
+        (
+            TimeoutException,
+            "Timeout communicating with the device async_turn_on: test error",
+            False,
+        ),
+        (
+            SmartDeviceException,
+            "Unable to communicate with the device async_turn_on: test error",
+            False,
+        ),
     ],
     ids=["Authentication", "Timeout", "Other"],
 )
 async def test_plug_errors_when_turned_on(
     hass: HomeAssistant,
     exception_type,
+    msg,
     reauth_expected,
 ) -> None:
     """Tests the plug wraps errors correctly."""
@@ -226,7 +239,7 @@ async def test_plug_errors_when_turned_on(
     )
     already_migrated_config_entry.add_to_hass(hass)
     plug = _mocked_plug()
-    plug.turn_on.side_effect = exception_type
+    plug.turn_on.side_effect = exception_type("test error")
 
     with _patch_discovery(device=plug), _patch_connect(device=plug):
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
@@ -238,7 +251,7 @@ async def test_plug_errors_when_turned_on(
         already_migrated_config_entry.async_get_active_flows(hass, {SOURCE_REAUTH})
     )
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError, match=msg):
         await hass.services.async_call(
             SWITCH_DOMAIN, "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
         )

@@ -736,17 +736,30 @@ async def test_smart_strip_custom_sequence_effect(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    ("exception_type", "reauth_expected"),
+    ("exception_type", "msg", "reauth_expected"),
     [
-        (AuthenticationException, True),
-        (TimeoutException, False),
-        (SmartDeviceException, False),
+        (
+            AuthenticationException,
+            "Device authentication error async_turn_on: test error",
+            True,
+        ),
+        (
+            TimeoutException,
+            "Timeout communicating with the device async_turn_on: test error",
+            False,
+        ),
+        (
+            SmartDeviceException,
+            "Unable to communicate with the device async_turn_on: test error",
+            False,
+        ),
     ],
     ids=["Authentication", "Timeout", "Other"],
 )
 async def test_light_errors_when_turned_on(
     hass: HomeAssistant,
     exception_type,
+    msg,
     reauth_expected,
 ) -> None:
     """Tests the light wraps errors correctly."""
@@ -755,7 +768,7 @@ async def test_light_errors_when_turned_on(
     )
     already_migrated_config_entry.add_to_hass(hass)
     bulb = _mocked_bulb()
-    bulb.turn_on.side_effect = exception_type
+    bulb.turn_on.side_effect = exception_type(msg)
 
     with _patch_discovery(device=bulb), _patch_connect(device=bulb):
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
@@ -767,7 +780,7 @@ async def test_light_errors_when_turned_on(
         already_migrated_config_entry.async_get_active_flows(hass, {SOURCE_REAUTH})
     )
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError, match=msg):
         await hass.services.async_call(
             LIGHT_DOMAIN, "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
         )

@@ -16,7 +16,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import legacy_device_id
 from .const import DOMAIN
 from .coordinator import TPLinkDataUpdateCoordinator
-from .entity import CoordinatedTPLinkEntity, async_exception_wrap_refresh_after
+from .entity import CoordinatedTPLinkEntity, async_refresh_after
 from .models import TPLinkData
 
 _LOGGER = logging.getLogger(__name__)
@@ -67,12 +67,12 @@ class SmartPlugLedSwitch(CoordinatedTPLinkEntity, SwitchEntity):
         self._attr_unique_id = f"{device.mac}_led"
         self._async_update_attrs()
 
-    @async_exception_wrap_refresh_after
+    @async_refresh_after
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the LED switch on."""
         await self.device.set_led(True)
 
-    @async_exception_wrap_refresh_after
+    @async_refresh_after
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the LED switch off."""
         await self.device.set_led(False)
@@ -105,12 +105,12 @@ class SmartPlugSwitch(CoordinatedTPLinkEntity, SwitchEntity):
         self._attr_unique_id = legacy_device_id(device)
         self._async_update_attrs()
 
-    @async_exception_wrap_refresh_after
+    @async_refresh_after
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self.device.turn_on()
 
-    @async_exception_wrap_refresh_after
+    @async_refresh_after
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self.device.turn_off()
@@ -142,12 +142,12 @@ class SmartPlugSwitchChild(SmartPlugSwitch):
         self._attr_unique_id = legacy_device_id(plug)
         self._attr_name = plug.alias
 
-    @async_exception_wrap_refresh_after
+    @async_refresh_after
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the child switch on."""
         await self._plug.turn_on()
 
-    @async_exception_wrap_refresh_after
+    @async_refresh_after
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the child switch off."""
         await self._plug.turn_off()

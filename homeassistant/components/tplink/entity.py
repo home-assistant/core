@@ -24,7 +24,7 @@ _T = TypeVar("_T", bound="CoordinatedTPLinkEntity")
 _P = ParamSpec("_P")
 
 
-def async_exception_wrap_refresh_after(
+def async_refresh_after(
     func: Callable[Concatenate[_T, _P], Awaitable[None]],
 ) -> Callable[Concatenate[_T, _P], Coroutine[Any, Any, None]]:
     """Define a wrapper to raise HA errors and refresh after."""
@@ -33,17 +33,35 @@ def async_exception_wrap_refresh_after(
         try:
             await func(self, *args, **kwargs)
         except AuthenticationException as ex:
-            if self.coordinator.config_entry:
-                self.hass.loop.call_soon(
-                    self.coordinator.config_entry.async_start_reauth, self.hass
-                )
-            raise HomeAssistantError(ex) from ex
+            self.hass.loop.call_soon(
+                self.coordinator.config_entry.async_start_reauth, self.hass
+            )
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="device_authentication",
+                translation_placeholders={
+                    "func": func.__name__,
+                    "exc": str(ex),
+                },
+            ) from ex
         except TimeoutException as ex:
-            msg = f"Timeout communicating with the device {func}: {ex}"
-            raise HomeAssistantError(msg) from ex
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="device_timeout",
+                translation_placeholders={
+                    "func": func.__name__,
+                    "exc": str(ex),
+                },
+            ) from ex
         except SmartDeviceException as ex:
-            msg = f"Unable to communicate with the device {func}: {ex}"
-            raise HomeAssistantError(msg) from ex
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="device_error",
+                translation_placeholders={
+                    "func": func.__name__,
+                    "exc": str(ex),
+                },
+            ) from ex
         await self.coordinator.async_request_refresh()
 
     return _async_wrap
