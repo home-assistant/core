@@ -68,14 +68,14 @@ class FytaConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
-    ) -> config_entries.ConfigFlowResult:
+    ) -> ConfigFlowResult:
         """Handle flow upon an API authentication error."""
         self._entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])  # pylint: disable=attribute-defined-outside-init
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.ConfigFlowResult:
+    ) -> ConfigFlowResult:
         """Handle reauthorization flow."""
         errors = {}
         assert self._entry is not None
