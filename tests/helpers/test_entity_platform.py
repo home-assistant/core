@@ -99,7 +99,7 @@ async def test_polling_check_works_if_entity_add_fails(
     broken_poll_ent.async_update = AsyncMock(side_effect=Exception("Broken"))
 
     await component.async_add_entities(
-        [working_poll_ent, broken_poll_ent], update_before_add=True
+        [broken_poll_ent, working_poll_ent], update_before_add=True
     )
 
     working_poll_ent.async_update.reset_mock()
