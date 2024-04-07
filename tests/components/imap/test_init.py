@@ -34,7 +34,6 @@ from .const import (
     TEST_FETCH_RESPONSE_TEXT_OTHER,
     TEST_FETCH_RESPONSE_TEXT_PLAIN,
     TEST_FETCH_RESPONSE_TEXT_PLAIN_ALT,
-    TEST_MESSAGE_DATA,
     TEST_SEARCH_RESPONSE,
 )
 from .test_config_flow import MOCK_CONFIG
@@ -144,7 +143,6 @@ async def test_receiving_message_successfully(
 
     config = MOCK_CONFIG.copy()
     config[CONF_CHARSET] = charset
-    config["message_data"] = TEST_MESSAGE_DATA
     config_entry = MockConfigEntry(domain=DOMAIN, data=config)
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
