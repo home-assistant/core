@@ -562,7 +562,7 @@ async def test_if_fires_on_state_change_legacy(
                         "service": "test.automation",
                         "data_template": {
                             "some": (
-                                "turn_off  {{ trigger.platform }}"
+                                "turn_off {{ trigger.platform }}"
                                 " - {{ trigger.entity_id }}"
                                 " - {{ trigger.from_state.state }}"
                                 " - {{ trigger.to_state.state }}"
