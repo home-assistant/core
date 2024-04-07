@@ -25,6 +25,22 @@ STORAGE_KEY = "core.label_registry"
 STORAGE_VERSION_MAJOR = 1
 
 
+class _LabelStoreData(TypedDict):
+    """Data type for individual label. Used in LabelRegistryStoreData."""
+
+    color: str | None
+    description: str | None
+    icon: str | None
+    label_id: str
+    name: str
+
+
+class LabelRegistryStoreData(TypedDict):
+    """Store data type for LabelRegistry."""
+
+    labels: list[_LabelStoreData]
+
+
 class EventLabelRegistryUpdatedData(TypedDict):
     """Event data for when the label registry is updated."""
 
@@ -45,7 +61,7 @@ class LabelEntry(NormalizedNameBaseRegistryEntry):
     icon: str | None = None
 
 
-class LabelRegistry(BaseRegistry):
+class LabelRegistry(BaseRegistry[LabelRegistryStoreData]):
     """Class to hold a registry of labels."""
 
     labels: NormalizedNameBaseRegistryItems[LabelEntry]
@@ -54,7 +70,7 @@ class LabelRegistry(BaseRegistry):
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the label registry."""
         self.hass = hass
-        self._store: Store[dict[str, list[dict[str, str | None]]]] = Store(
+        self._store = Store(
             hass,
             STORAGE_VERSION_MAJOR,
             STORAGE_KEY,
@@ -189,10 +205,6 @@ class LabelRegistry(BaseRegistry):
 
         if data is not None:
             for label in data["labels"]:
-                # Check if the necessary keys are present
-                if label["label_id"] is None or label["name"] is None:
-                    continue
-
                 normalized_name = normalize_name(label["name"])
                 labels[label["label_id"]] = LabelEntry(
                     color=label["color"],
@@ -207,7 +219,7 @@ class LabelRegistry(BaseRegistry):
         self._label_data = labels.data
 
     @callback
-    def _data_to_save(self) -> dict[str, list[dict[str, str | None]]]:
+    def _data_to_save(self) -> LabelRegistryStoreData:
         """Return data of label registry to store in a file."""
         return {
             "labels": [

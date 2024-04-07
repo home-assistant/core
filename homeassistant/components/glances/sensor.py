@@ -14,6 +14,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     REVOLUTIONS_PER_MINUTE,
+    UnitOfDataRate,
     UnitOfInformation,
     UnitOfTemperature,
 )
@@ -55,6 +56,24 @@ SENSOR_TYPES = {
         translation_key="disk_free",
         native_unit_of_measurement=UnitOfInformation.GIBIBYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ("diskio", "read"): GlancesSensorEntityDescription(
+        key="read",
+        type="diskio",
+        translation_key="diskio_read",
+        native_unit_of_measurement=UnitOfDataRate.BYTES_PER_SECOND,
+        suggested_unit_of_measurement=UnitOfDataRate.MEGABYTES_PER_SECOND,
+        device_class=SensorDeviceClass.DATA_RATE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ("diskio", "write"): GlancesSensorEntityDescription(
+        key="write",
+        type="diskio",
+        translation_key="diskio_write",
+        native_unit_of_measurement=UnitOfDataRate.BYTES_PER_SECOND,
+        suggested_unit_of_measurement=UnitOfDataRate.MEGABYTES_PER_SECOND,
+        device_class=SensorDeviceClass.DATA_RATE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     ("mem", "memory_use_percent"): GlancesSensorEntityDescription(
@@ -230,7 +249,7 @@ async def async_setup_entry(
     entities: list[GlancesSensor] = []
 
     for sensor_type, sensors in coordinator.data.items():
-        if sensor_type in ["fs", "sensors", "raid"]:
+        if sensor_type in ["fs", "diskio", "sensors", "raid"]:
             entities.extend(
                 GlancesSensor(
                     coordinator,
