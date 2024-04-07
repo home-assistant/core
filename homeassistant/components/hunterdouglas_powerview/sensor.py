@@ -153,5 +153,6 @@ class PowerViewSensor(ShadeEntity, SensorEntity):
 
     async def async_update(self) -> None:
         """Refresh sensor entity."""
-        await self.entity_description.update_fn(self._shade)
+        async with self.coordinator.radio_operation_lock:
+            await self.entity_description.update_fn(self._shade)
         self.async_write_ha_state()

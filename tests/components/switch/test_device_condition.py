@@ -6,7 +6,7 @@ from freezegun import freeze_time
 import pytest
 from pytest_unordered import unordered
 
-import homeassistant.components.automation as automation
+from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.switch import DOMAIN
 from homeassistant.const import STATE_OFF, STATE_ON, EntityCategory

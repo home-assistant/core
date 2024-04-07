@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-from collections import OrderedDict
 from collections.abc import AsyncGenerator, Generator, Mapping, Sequence
 from contextlib import asynccontextmanager, contextmanager
 from datetime import UTC, datetime, timedelta
@@ -359,7 +358,9 @@ async def async_test_home_assistant(
         """Clear global instance."""
         INSTANCES.remove(hass)
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, clear_instance)
+    hass.bus.async_listen_once(
+        EVENT_HOMEASSISTANT_CLOSE, clear_instance, run_immediately=False
+    )
 
     yield hass
 
@@ -649,7 +650,9 @@ def mock_area_registry(
     fixture instead.
     """
     registry = ar.AreaRegistry(hass)
-    registry.areas = mock_entries or OrderedDict()
+    registry.areas = ar.AreaRegistryItems()
+    for key, entry in mock_entries.items():
+        registry.areas[key] = entry
 
     hass.data[ar.DATA_REGISTRY] = registry
     return registry
@@ -671,7 +674,7 @@ def mock_device_registry(
     fixture instead.
     """
     registry = dr.DeviceRegistry(hass)
-    registry.devices = dr.DeviceRegistryItems()
+    registry.devices = dr.ActiveDeviceRegistryItems()
     registry._device_data = registry.devices.data
     if mock_entries is None:
         mock_entries = {}
@@ -1461,7 +1464,10 @@ def mock_integration(
 
 
 def mock_platform(
-    hass: HomeAssistant, platform_path: str, module: Mock | MockPlatform | None = None
+    hass: HomeAssistant,
+    platform_path: str,
+    module: Mock | MockPlatform | None = None,
+    built_in=True,
 ) -> None:
     """Mock a platform.
 
@@ -1472,7 +1478,7 @@ def mock_platform(
     module_cache = hass.data[loader.DATA_COMPONENTS]
 
     if domain not in integration_cache:
-        mock_integration(hass, MockModule(domain))
+        mock_integration(hass, MockModule(domain), built_in=built_in)
 
     integration_cache[domain]._top_level_files.add(f"{platform_name}.py")
     _LOGGER.info("Adding mock integration platform: %s", platform_path)
@@ -1636,6 +1642,40 @@ def import_and_test_deprecated_constant(
     assert constant_name in module.__all__
 
 
+def import_and_test_deprecated_alias(
+    caplog: pytest.LogCaptureFixture,
+    module: ModuleType,
+    alias_name: str,
+    replacement: Any,
+    breaks_in_ha_version: str,
+) -> None:
+    """Import and test deprecated alias replaced by a value.
+
+    - Import deprecated alias
+    - Assert value is the same as the replacement
+    - Assert a warning is logged
+    - Assert the deprecated alias is included in the modules.__dir__()
+    - Assert the deprecated alias is included in the modules.__all__()
+    """
+    replacement_name = f"{replacement.__module__}.{replacement.__name__}"
+    value = import_deprecated_constant(module, alias_name)
+    assert value == replacement
+    assert (
+        module.__name__,
+        logging.WARNING,
+        (
+            f"{alias_name} was used from test_constant_deprecation,"
+            f" this is a deprecated alias which will be removed in HA Core {breaks_in_ha_version}. "
+            f"Use {replacement_name} instead, please report "
+            "it to the author of the 'test_constant_deprecation' custom integration"
+        ),
+    ) in caplog.record_tuples
+
+    # verify deprecated alias is included in dir()
+    assert alias_name in dir(module)
+    assert alias_name in module.__all__
+
+
 def help_test_all(module: ModuleType) -> None:
     """Test module.__all__ is correctly set."""
     assert set(module.__all__) == {
@@ -1665,6 +1705,7 @@ def setup_test_component_platform(
     domain: str,
     entities: Sequence[Entity],
     from_config_entry: bool = False,
+    built_in: bool = True,
 ) -> MockPlatform:
     """Mock a test component platform for tests."""
 
@@ -1695,9 +1736,5 @@ def setup_test_component_platform(
         platform.async_setup_entry = _async_setup_entry
         platform.async_setup_platform = None
 
-    mock_platform(
-        hass,
-        f"test.{domain}",
-        platform,
-    )
+    mock_platform(hass, f"test.{domain}", platform, built_in=built_in)
     return platform

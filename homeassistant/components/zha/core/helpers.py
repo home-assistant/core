@@ -102,9 +102,9 @@ async def safe_read(
             only_cache=only_cache,
             manufacturer=manufacturer,
         )
-        return result
     except Exception:  # pylint: disable=broad-except
         return {}
+    return result
 
 
 async def get_matched_clusters(

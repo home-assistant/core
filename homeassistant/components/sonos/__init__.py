@@ -230,7 +230,8 @@ class SonosDiscoveryManager:
                 return
 
             self.hass.async_create_task(
-                self.async_add_speakers(zones_to_add, subscription, soco.uid)
+                self.async_add_speakers(zones_to_add, subscription, soco.uid),
+                eager_start=True,
             )
 
         async def async_subscription_failed(now: datetime.datetime) -> None:

@@ -428,6 +428,8 @@ async def test_media_view(
 
     # success
     dsm_with_photos.photos.download_item = AsyncMock(return_value=b"xxxx")
-    tempfile.tempdir = tmp_path
-    result = await view.get(request, "mocked_syno_dsm_entry", "10_1298753/filename.jpg")
-    assert isinstance(result, web.Response)
+    with patch.object(tempfile, "tempdir", tmp_path):
+        result = await view.get(
+            request, "mocked_syno_dsm_entry", "10_1298753/filename.jpg"
+        )
+        assert isinstance(result, web.Response)
