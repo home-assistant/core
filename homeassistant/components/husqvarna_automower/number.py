@@ -42,7 +42,7 @@ NUMBER_TYPES: tuple[AutomowerNumberEntityDescription, ...] = (
         native_max_value=9,
         value_fn=lambda data: data.cutting_height,
         set_value_fn=lambda session, mower_id, cheight: session.set_cutting_height(
-            mower_id, cheight
+            mower_id, int(cheight)
         ),
     ),
 )
