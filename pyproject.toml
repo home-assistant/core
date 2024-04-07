@@ -634,7 +634,7 @@ select = [
     "N805", # First argument of a method should be named self
     "N815", # Variable {name} in class scope should not be mixedCase
     "PERF", # Perflint
-    "PGH004", # Use specific rule codes when using noqa
+    "PGH", # pygrep-hooks
     "PIE", # flake8-pie
     "PL", # pylint
     "PT", # flake8-pytest-style
