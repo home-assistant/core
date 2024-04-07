@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from py17track.package import Package
 import voluptuous as vol
 
 from homeassistant.components import persistent_notification
@@ -98,11 +99,12 @@ async def async_setup_entry(
 
     @callback
     def _async_create_remove_entities():
-        for package in coordinator.data.old_packages:
-            remove_entity(hass, coordinator.account_id, package.tracking_number)
+        remove_packages(hass, coordinator.account_id, coordinator.data.old_packages)
 
         async_add_entities(
-            SeventeenTrackPackageSensor(coordinator, t_number)
+            SeventeenTrackPackageSensor(
+                coordinator, t_number, p_data.friendly_name, p_data.status
+            )
             for t_number, p_data in coordinator.data.new_packages.items()
             if not (not coordinator.show_delivered and p_data.status == "Delivered")
         )
@@ -147,7 +149,6 @@ class SeventeenTrackSummarySensor(
         """Initialize the sensor."""
         super().__init__(coordinator)
         self._status = status
-        self._attr_extra_state_attributes = {}
         self._attr_name = f"Seventeentrack Packages {self._status}"
         self._attr_unique_id = f"summary_{coordinator.account_id}_{self._status}"
 
@@ -179,15 +180,19 @@ class SeventeenTrackPackageSensor(
         self,
         coordinator: SeventeenTrackCoordinator,
         tracking_number: str,
+        friendly_name: str | None = None,
+        status: str | None = None,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
-        self._attr_extra_state_attributes = {}
         self._tracking_number = tracking_number
+        self._status = status
         self.entity_id = ENTITY_ID_TEMPLATE.format(tracking_number)
         self._attr_unique_id = UNIQUE_ID_TEMPLATE.format(
             coordinator.account_id, tracking_number
         )
+        name = friendly_name if friendly_name else tracking_number
+        self._name = f"Seventeentrack Package: {name}"
 
     @property
     def available(self) -> bool:
@@ -197,48 +202,37 @@ class SeventeenTrackPackageSensor(
     @property
     def name(self) -> str:
         """Return the name."""
-        package_data = self.coordinator.data.current_packages.get(
-            self._tracking_number, {}
-        )
-        package = package_data.get("package")
-        if package is None or not (name := package.friendly_name):
-            name = self._tracking_number
-        return f"Seventeentrack Package: {name}"
+        return self._name
 
     @property
     def native_value(self) -> StateType:
         """Return the state."""
-        package_data = self.coordinator.data.current_packages.get(
-            self._tracking_number, {}
-        )
-        return package_data["package"].status
+        return self._status
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
-        package_data = self.coordinator.data.current_packages.get(
-            self._tracking_number, {}
-        )
-        return package_data["extra"]
+        return self.coordinator.data.current_packages[self._tracking_number]["extra"]
 
 
-def remove_entity(hass: HomeAssistant, account_id: str, tracking_number: str) -> bool:
+def remove_packages(
+    hass: HomeAssistant, account_id: str, packages: set[Package]
+) -> None:
     """Remove entity itself."""
     reg = er.async_get(hass)
-    entity_id = reg.async_get_entity_id(
-        "sensor",
-        "seventeentrack",
-        UNIQUE_ID_TEMPLATE.format(account_id, tracking_number),
-    )
-    if entity_id:
-        reg.async_remove(entity_id)
-        return True
-    return False
+    for package in packages:
+        entity_id = reg.async_get_entity_id(
+            "sensor",
+            "seventeentrack",
+            UNIQUE_ID_TEMPLATE.format(account_id, package.tracking_number),
+        )
+        if entity_id:
+            reg.async_remove(entity_id)
 
 
 def notify_delivered(hass: HomeAssistant, friendly_name: str, tracking_number: str):
     """Notify when package is delivered."""
-    LOGGER.info("Package delivered: %s", tracking_number)
+    LOGGER.debug("Package delivered: %s", tracking_number)
 
     identification = friendly_name if friendly_name else tracking_number
     message = NOTIFICATION_DELIVERED_MESSAGE.format(identification, tracking_number)

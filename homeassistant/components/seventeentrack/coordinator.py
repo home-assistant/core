@@ -1,5 +1,6 @@
 """Coordinator for 17Track."""
 
+from dataclasses import dataclass
 from typing import Any
 
 from py17track import Client as SeventeenTrackClient
@@ -29,6 +30,7 @@ from .const import (
 )
 
 
+@dataclass
 class SeventeenTrackData:
     """Class for handling the data retrieval."""
 
@@ -45,9 +47,7 @@ class SeventeenTrackCoordinator(DataUpdateCoordinator[SeventeenTrackData]):
 
     config_entry: ConfigEntry
 
-    def __init__(
-        self, hass: HomeAssistant, client: SeventeenTrackClient
-    ) -> None:
+    def __init__(self, hass: HomeAssistant, client: SeventeenTrackClient) -> None:
         """Initialize."""
         super().__init__(
             hass,
@@ -56,7 +56,7 @@ class SeventeenTrackCoordinator(DataUpdateCoordinator[SeventeenTrackData]):
             update_interval=DEFAULT_SCAN_INTERVAL,
         )
         self._show_archived = self.config_entry.options[CONF_SHOW_ARCHIVED]
-        self._show_delivered = entry.options[CONF_SHOW_DELIVERED]
+        self._show_delivered = self.config_entry.options[CONF_SHOW_DELIVERED]
         self._client = client
         self._account_id = client.profile.account_id
         self._packages: set[Package] = set()
@@ -67,23 +67,29 @@ class SeventeenTrackCoordinator(DataUpdateCoordinator[SeventeenTrackData]):
         """Fetch data from 17Track API."""
 
         data = SeventeenTrackData()
+        summary = {}
+        current_packages = set()
 
         try:
             summary = await self._client.profile.summary(
                 show_archived=self._show_archived
             )
-            for status, quantity in summary.items():
-                data.summary[slugify(status)] = {
-                    "quantity": quantity,
-                    "packages": [],
-                }
 
         except SeventeenTrackError as err:
             LOGGER.error("There was an error retrieving the summary: %s", err)
 
-        current_packages = set(
-            await self._client.profile.packages(show_archived=self._show_archived)
-        )
+        for status, quantity in summary.items():
+            data.summary[slugify(status)] = {
+                "quantity": quantity,
+                "packages": [],
+            }
+
+        try:
+            current_packages = set(
+                await self._client.profile.packages(show_archived=self._show_archived)
+            )
+        except SeventeenTrackError as err:
+            LOGGER.error("There was an error retrieving the packages: %s", err)
 
         # Packages in new_packages but not in self._packages
         packages_to_add = current_packages - self._packages
