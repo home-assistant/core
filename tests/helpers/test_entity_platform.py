@@ -88,9 +88,10 @@ async def test_polling_check_works_if_entity_add_fails(
     class MockEntityNeedsSelfHassInShouldPoll(MockEntity):
         """Mock entity that needs self.hass in should_poll."""
 
+        @property
         def should_poll(self) -> bool:
             """Return True if entity has to be polled."""
-            return self.hass is not None
+            return self.hass.data is not None
 
     working_poll_ent = MockEntityNeedsSelfHassInShouldPoll(should_poll=True)
     working_poll_ent.async_update = AsyncMock()
