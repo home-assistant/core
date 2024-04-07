@@ -3,6 +3,7 @@
 Set of helper classes to handle timeouts of tasks with advanced options
 like zones and freezing of timeouts.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -179,7 +180,7 @@ class _GlobalTaskContext:
 
         # Timeout on exit
         if exc_type is asyncio.CancelledError and self.state == _State.TIMEOUT:
-            raise asyncio.TimeoutError
+            raise TimeoutError
 
         self._state = _State.EXIT
         self._wait_zone.set()
@@ -294,7 +295,7 @@ class _ZoneTaskContext:
 
         # Timeout on exit
         if exc_type is asyncio.CancelledError and self.state == _State.TIMEOUT:
-            raise asyncio.TimeoutError
+            raise TimeoutError
 
         self._state = _State.EXIT
         return None
@@ -471,8 +472,7 @@ class TimeoutManager:
 
         # Global Zone
         if zone_name == ZONE_GLOBAL:
-            task = _GlobalTaskContext(self, current_task, timeout, cool_down)
-            return task
+            return _GlobalTaskContext(self, current_task, timeout, cool_down)
 
         # Zone Handling
         if zone_name in self.zones:

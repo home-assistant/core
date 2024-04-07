@@ -4,7 +4,11 @@ from unittest.mock import patch
 
 from aiohttp import ClientConnectionError
 import pytest
-from tesla_fleet_api.exceptions import InvalidToken, PaymentRequired, TeslaFleetError
+from tesla_fleet_api.exceptions import (
+    InvalidToken,
+    SubscriptionRequired,
+    TeslaFleetError,
+)
 
 from homeassistant import config_entries
 from homeassistant.components.teslemetry.const import DOMAIN
@@ -32,7 +36,7 @@ async def test_form(
     result1 = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result1["type"] == FlowResultType.FORM
+    assert result1["type"] is FlowResultType.FORM
     assert not result1["errors"]
 
     with patch(
@@ -46,7 +50,7 @@ async def test_form(
         await hass.async_block_till_done()
         assert len(mock_setup_entry.mock_calls) == 1
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["data"] == CONFIG
 
 
@@ -54,7 +58,7 @@ async def test_form(
     ("side_effect", "error"),
     [
         (InvalidToken, {CONF_ACCESS_TOKEN: "invalid_access_token"}),
-        (PaymentRequired, {"base": "subscription_required"}),
+        (SubscriptionRequired, {"base": "subscription_required"}),
         (ClientConnectionError, {"base": "cannot_connect"}),
         (TeslaFleetError, {"base": "unknown"}),
     ],
@@ -72,7 +76,7 @@ async def test_form_errors(hass: HomeAssistant, side_effect, error, mock_test) -
         CONFIG,
     )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == error
 
     # Complete the flow
@@ -81,4 +85,4 @@ async def test_form_errors(hass: HomeAssistant, side_effect, error, mock_test) -
         result2["flow_id"],
         CONFIG,
     )
-    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["type"] is FlowResultType.CREATE_ENTRY

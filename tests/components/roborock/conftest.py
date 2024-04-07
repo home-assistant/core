@@ -1,4 +1,5 @@
 """Global fixtures for Roborock integration."""
+
 from unittest.mock import patch
 
 import pytest
@@ -29,38 +30,50 @@ from tests.common import MockConfigEntry
 @pytest.fixture(name="bypass_api_fixture")
 def bypass_api_fixture() -> None:
     """Skip calls to the API."""
-    with patch(
-        "homeassistant.components.roborock.RoborockMqttClient.async_connect"
-    ), patch(
-        "homeassistant.components.roborock.RoborockMqttClient._send_command"
-    ), patch(
-        "homeassistant.components.roborock.RoborockApiClient.get_home_data",
-        return_value=HOME_DATA,
-    ), patch(
-        "homeassistant.components.roborock.RoborockMqttClient.get_networking",
-        return_value=NETWORK_INFO,
-    ), patch(
-        "homeassistant.components.roborock.coordinator.RoborockLocalClient.get_prop",
-        return_value=PROP,
-    ), patch(
-        "homeassistant.components.roborock.coordinator.RoborockMqttClient.get_multi_maps_list",
-        return_value=MULTI_MAP_LIST,
-    ), patch(
-        "homeassistant.components.roborock.image.RoborockMapDataParser.parse",
-        return_value=MAP_DATA,
-    ), patch(
-        "homeassistant.components.roborock.coordinator.RoborockLocalClient.send_message"
-    ), patch(
-        "homeassistant.components.roborock.RoborockMqttClient._wait_response"
-    ), patch(
-        "homeassistant.components.roborock.coordinator.RoborockLocalClient._wait_response"
-    ), patch(
-        "roborock.api.AttributeCache.async_value",
-    ), patch(
-        "roborock.api.AttributeCache.value",
-    ), patch(
-        "homeassistant.components.roborock.image.MAP_SLEEP",
-        0,
+    with (
+        patch("homeassistant.components.roborock.RoborockMqttClient.async_connect"),
+        patch("homeassistant.components.roborock.RoborockMqttClient._send_command"),
+        patch(
+            "homeassistant.components.roborock.RoborockApiClient.get_home_data",
+            return_value=HOME_DATA,
+        ),
+        patch(
+            "homeassistant.components.roborock.RoborockMqttClient.get_networking",
+            return_value=NETWORK_INFO,
+        ),
+        patch(
+            "homeassistant.components.roborock.coordinator.RoborockLocalClient.get_prop",
+            return_value=PROP,
+        ),
+        patch(
+            "homeassistant.components.roborock.coordinator.RoborockMqttClient.get_multi_maps_list",
+            return_value=MULTI_MAP_LIST,
+        ),
+        patch(
+            "homeassistant.components.roborock.coordinator.RoborockLocalClient.get_multi_maps_list",
+            return_value=MULTI_MAP_LIST,
+        ),
+        patch(
+            "homeassistant.components.roborock.image.RoborockMapDataParser.parse",
+            return_value=MAP_DATA,
+        ),
+        patch(
+            "homeassistant.components.roborock.coordinator.RoborockLocalClient.send_message"
+        ),
+        patch("homeassistant.components.roborock.RoborockMqttClient._wait_response"),
+        patch(
+            "homeassistant.components.roborock.coordinator.RoborockLocalClient._wait_response"
+        ),
+        patch(
+            "roborock.api.AttributeCache.async_value",
+        ),
+        patch(
+            "roborock.api.AttributeCache.value",
+        ),
+        patch(
+            "homeassistant.components.roborock.image.MAP_SLEEP",
+            0,
+        ),
     ):
         yield
 

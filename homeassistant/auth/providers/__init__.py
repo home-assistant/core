@@ -1,8 +1,8 @@
 """Auth providers for Home Assistant."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
-import importlib
 import logging
 import types
 from typing import Any
@@ -13,14 +13,14 @@ from voluptuous.humanize import humanize_error
 from homeassistant import data_entry_flow, requirements
 from homeassistant.const import CONF_ID, CONF_NAME, CONF_TYPE
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.importlib import async_import_module
 from homeassistant.util import dt as dt_util
 from homeassistant.util.decorator import Registry
 
 from ..auth_store import AuthStore
 from ..const import MFA_SESSION_EXPIRATION
-from ..models import Credentials, RefreshToken, User, UserMeta
+from ..models import AuthFlowResult, Credentials, RefreshToken, User, UserMeta
 
 _LOGGER = logging.getLogger(__name__)
 DATA_REQS = "auth_prov_reqs_processed"
@@ -157,7 +157,9 @@ async def load_auth_provider_module(
 ) -> types.ModuleType:
     """Load an auth provider."""
     try:
-        module = importlib.import_module(f"homeassistant.auth.providers.{provider}")
+        module = await async_import_module(
+            hass, f"homeassistant.auth.providers.{provider}"
+        )
     except ImportError as err:
         _LOGGER.error("Unable to load auth provider %s: %s", provider, err)
         raise HomeAssistantError(
@@ -181,8 +183,10 @@ async def load_auth_provider_module(
     return module
 
 
-class LoginFlow(data_entry_flow.FlowHandler):
+class LoginFlow(data_entry_flow.FlowHandler[AuthFlowResult, tuple[str, str]]):
     """Handler for the login flow."""
+
+    _flow_result = AuthFlowResult
 
     def __init__(self, auth_provider: AuthProvider) -> None:
         """Initialize the login flow."""
@@ -197,7 +201,7 @@ class LoginFlow(data_entry_flow.FlowHandler):
 
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
-    ) -> FlowResult:
+    ) -> AuthFlowResult:
         """Handle the first step of login flow.
 
         Return self.async_show_form(step_id='init') if user_input is None.
@@ -207,7 +211,7 @@ class LoginFlow(data_entry_flow.FlowHandler):
 
     async def async_step_select_mfa_module(
         self, user_input: dict[str, str] | None = None
-    ) -> FlowResult:
+    ) -> AuthFlowResult:
         """Handle the step of select mfa module."""
         errors = {}
 
@@ -232,7 +236,7 @@ class LoginFlow(data_entry_flow.FlowHandler):
 
     async def async_step_mfa(
         self, user_input: dict[str, str] | None = None
-    ) -> FlowResult:
+    ) -> AuthFlowResult:
         """Handle the step of mfa validation."""
         assert self.credential
         assert self.user
@@ -282,6 +286,6 @@ class LoginFlow(data_entry_flow.FlowHandler):
             errors=errors,
         )
 
-    async def async_finish(self, flow_result: Any) -> FlowResult:
+    async def async_finish(self, flow_result: Any) -> AuthFlowResult:
         """Handle the pass of login flow."""
         return self.async_create_entry(data=flow_result)

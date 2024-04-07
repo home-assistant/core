@@ -1,6 +1,7 @@
 """Tests for Shelly coordinator."""
+
 from datetime import timedelta
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 from aioshelly.const import MODEL_BULB, MODEL_BUTTON1
 from aioshelly.exceptions import (
@@ -9,6 +10,7 @@ from aioshelly.exceptions import (
     InvalidAuthError,
 )
 from freezegun.api import FrozenDateTimeFactory
+import pytest
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
@@ -26,7 +28,7 @@ from homeassistant.components.shelly.const import (
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import ATTR_DEVICE_ID, STATE_ON, STATE_UNAVAILABLE
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
     async_entries_for_config_entry,
@@ -54,7 +56,10 @@ DEVICE_BLOCK_ID = 4
 
 
 async def test_block_reload_on_cfg_change(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory, mock_block_device, monkeypatch
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_block_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test block reload on config change."""
     await init_integration(hass, 1)
@@ -62,6 +67,18 @@ async def test_block_reload_on_cfg_change(
     monkeypatch.setattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "cfgChanged", 1)
     mock_block_device.mock_update()
     await hass.async_block_till_done()
+
+    # Make sure cfgChanged with None is ignored
+    monkeypatch.setattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "cfgChanged", None)
+    mock_block_device.mock_update()
+    await hass.async_block_till_done()
+
+    # Wait for debouncer
+    freezer.tick(timedelta(seconds=ENTRY_RELOAD_COOLDOWN))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("switch.test_name_channel_1") is not None
 
     # Generate config change from switch to light
     monkeypatch.setitem(
@@ -82,7 +99,10 @@ async def test_block_reload_on_cfg_change(
 
 
 async def test_block_no_reload_on_bulb_changes(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory, mock_block_device, monkeypatch
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_block_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test block no reload on bulb mode/effect change."""
     await init_integration(hass, 1, model=MODEL_BULB)
@@ -126,7 +146,10 @@ async def test_block_no_reload_on_bulb_changes(
 
 
 async def test_block_polling_auth_error(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory, mock_block_device, monkeypatch
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_block_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test block device polling authentication error."""
     monkeypatch.setattr(
@@ -136,14 +159,14 @@ async def test_block_polling_auth_error(
     )
     entry = await init_integration(hass, 1)
 
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     # Move time to generate polling
     freezer.tick(timedelta(seconds=UPDATE_PERIOD_MULTIPLIER * 15))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
@@ -158,7 +181,10 @@ async def test_block_polling_auth_error(
 
 
 async def test_block_rest_update_auth_error(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory, mock_block_device, monkeypatch
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_block_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test block REST update authentication error."""
     register_entity(hass, BINARY_SENSOR_DOMAIN, "test_name_cloud", "cloud")
@@ -172,11 +198,11 @@ async def test_block_rest_update_auth_error(
         AsyncMock(side_effect=InvalidAuthError),
     )
 
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     await mock_rest_update(hass, freezer)
 
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
@@ -191,7 +217,10 @@ async def test_block_rest_update_auth_error(
 
 
 async def test_block_firmware_unsupported(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory, mock_block_device, monkeypatch
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_block_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test block device polling authentication error."""
     monkeypatch.setattr(
@@ -212,7 +241,10 @@ async def test_block_firmware_unsupported(
 
 
 async def test_block_polling_connection_error(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory, mock_block_device, monkeypatch
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_block_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test block device polling connection error."""
     monkeypatch.setattr(
@@ -233,7 +265,10 @@ async def test_block_polling_connection_error(
 
 
 async def test_block_rest_update_connection_error(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory, mock_block_device, monkeypatch
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_block_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test block REST update connection error."""
     entity_id = register_entity(hass, BINARY_SENSOR_DOMAIN, "test_name_cloud", "cloud")
@@ -255,7 +290,7 @@ async def test_block_rest_update_connection_error(
 
 
 async def test_block_sleeping_device_no_periodic_updates(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory, mock_block_device
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, mock_block_device: Mock
 ) -> None:
     """Test block sleeping device no periodic updates."""
     entity_id = f"{SENSOR_DOMAIN}.test_name_temperature"
@@ -277,8 +312,7 @@ async def test_block_sleeping_device_no_periodic_updates(
 
 async def test_block_device_push_updates_failure(
     hass: HomeAssistant,
-    mock_block_device,
-    monkeypatch,
+    mock_block_device: Mock,
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test block device with push updates failure."""
@@ -303,7 +337,10 @@ async def test_block_device_push_updates_failure(
 
 
 async def test_block_button_click_event(
-    hass: HomeAssistant, mock_block_device, events, monkeypatch
+    hass: HomeAssistant,
+    mock_block_device: Mock,
+    events: list[Event],
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test block click event for Shelly button."""
     monkeypatch.setattr(mock_block_device.blocks[RELAY_BLOCK_ID], "sensor_ids", {})
@@ -346,7 +383,10 @@ async def test_block_button_click_event(
 
 
 async def test_rpc_reload_on_cfg_change(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory, mock_rpc_device, monkeypatch
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test RPC reload on config change."""
     await init_integration(hass, 2)
@@ -388,7 +428,10 @@ async def test_rpc_reload_on_cfg_change(
 
 
 async def test_rpc_reload_with_invalid_auth(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory, mock_rpc_device, monkeypatch
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test RPC when InvalidAuthError is raising during config entry reload."""
     with patch(
@@ -425,7 +468,7 @@ async def test_rpc_reload_with_invalid_auth(
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
@@ -440,7 +483,10 @@ async def test_rpc_reload_with_invalid_auth(
 
 
 async def test_rpc_click_event(
-    hass: HomeAssistant, mock_rpc_device, events, monkeypatch
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    events: list[Event],
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test RPC click event."""
     entry = await init_integration(hass, 2)
@@ -477,7 +523,10 @@ async def test_rpc_click_event(
 
 
 async def test_rpc_update_entry_sleep_period(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory, mock_rpc_device, monkeypatch
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test RPC update entry sleep period."""
     entry = await init_integration(hass, 2, sleep_period=600)
@@ -505,7 +554,7 @@ async def test_rpc_update_entry_sleep_period(
 
 
 async def test_rpc_sleeping_device_no_periodic_updates(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory, mock_rpc_device, monkeypatch
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, mock_rpc_device: Mock
 ) -> None:
     """Test RPC sleeping device no periodic updates."""
     entity_id = f"{SENSOR_DOMAIN}.test_name_temperature"
@@ -533,7 +582,7 @@ async def test_rpc_sleeping_device_no_periodic_updates(
 
 
 async def test_rpc_firmware_unsupported(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory, mock_rpc_device, monkeypatch
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, mock_rpc_device: Mock
 ) -> None:
     """Test RPC update entry unsupported firmware."""
     entry = await init_integration(hass, 2)
@@ -554,7 +603,10 @@ async def test_rpc_firmware_unsupported(
 
 
 async def test_rpc_reconnect_auth_error(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory, mock_rpc_device, monkeypatch
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test RPC reconnect authentication error."""
     entry = await init_integration(hass, 2)
@@ -568,14 +620,14 @@ async def test_rpc_reconnect_auth_error(
         ),
     )
 
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     # Move time to generate reconnect
     freezer.tick(timedelta(seconds=RPC_RECONNECT_INTERVAL))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
@@ -590,7 +642,10 @@ async def test_rpc_reconnect_auth_error(
 
 
 async def test_rpc_polling_auth_error(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory, mock_rpc_device, monkeypatch
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test RPC polling authentication error."""
     register_entity(hass, SENSOR_DOMAIN, "test_name_rssi", "wifi-rssi")
@@ -604,11 +659,11 @@ async def test_rpc_polling_auth_error(
         ),
     )
 
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     await mock_polling_rpc_update(hass, freezer)
 
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
@@ -623,7 +678,10 @@ async def test_rpc_polling_auth_error(
 
 
 async def test_rpc_reconnect_error(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory, mock_rpc_device, monkeypatch
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test RPC reconnect error."""
     await init_integration(hass, 2)
@@ -648,7 +706,10 @@ async def test_rpc_reconnect_error(
 
 
 async def test_rpc_polling_connection_error(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory, mock_rpc_device, monkeypatch
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test RPC polling connection error."""
     entity_id = register_entity(hass, SENSOR_DOMAIN, "test_name_rssi", "wifi-rssi")
@@ -670,7 +731,10 @@ async def test_rpc_polling_connection_error(
 
 
 async def test_rpc_polling_disconnected(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory, mock_rpc_device, monkeypatch
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test RPC polling device disconnected."""
     entity_id = register_entity(hass, SENSOR_DOMAIN, "test_name_rssi", "wifi-rssi")
@@ -686,7 +750,7 @@ async def test_rpc_polling_disconnected(
 
 
 async def test_rpc_update_entry_fw_ver(
-    hass: HomeAssistant, mock_rpc_device, monkeypatch
+    hass: HomeAssistant, mock_rpc_device: Mock, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test RPC update entry firmware version."""
     entry = await init_integration(hass, 2, sleep_period=600)

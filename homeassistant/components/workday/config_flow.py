@@ -1,6 +1,8 @@
 """Adds config flow for Workday integration."""
+
 from __future__ import annotations
 
+from functools import partial
 from typing import Any
 
 from holidays import HolidayBase, country_holidays, list_supported_countries
@@ -9,11 +11,12 @@ import voluptuous as vol
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
+    ConfigFlowResult,
     OptionsFlowWithConfigEntry,
 )
 from homeassistant.const import CONF_COUNTRY, CONF_LANGUAGE, CONF_NAME
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import AbortFlow, FlowResult
+from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.selector import (
     CountrySelector,
@@ -63,9 +66,7 @@ def add_province_and_language_to_schema(
     _country = country_holidays(country=country)
     if country_default_language := (_country.default_language):
         selectable_languages = _country.supported_languages
-        new_selectable_languages = []
-        for lang in selectable_languages:
-            new_selectable_languages.append(lang[:2])
+        new_selectable_languages = [lang[:2] for lang in selectable_languages]
         language_schema = {
             vol.Optional(
                 CONF_LANGUAGE, default=country_default_language
@@ -141,17 +142,6 @@ def validate_custom_dates(user_input: dict[str, Any]) -> None:
             raise RemoveDatesError("Incorrect date or name")
 
 
-DATA_SCHEMA_SETUP = vol.Schema(
-    {
-        vol.Required(CONF_NAME, default=DEFAULT_NAME): TextSelector(),
-        vol.Optional(CONF_COUNTRY): CountrySelector(
-            CountrySelectorConfig(
-                countries=list(list_supported_countries(include_aliases=False)),
-            )
-        ),
-    }
-)
-
 DATA_SCHEMA_OPT = vol.Schema(
     {
         vol.Optional(CONF_WORKDAYS, default=DEFAULT_WORKDAYS): SelectSelector(
@@ -210,22 +200,35 @@ class WorkdayConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the user initial step."""
         errors: dict[str, str] = {}
+
+        supported_countries = await self.hass.async_add_executor_job(
+            partial(list_supported_countries, include_aliases=False)
+        )
 
         if user_input is not None:
             self.data = user_input
             return await self.async_step_options()
         return self.async_show_form(
             step_id="user",
-            data_schema=DATA_SCHEMA_SETUP,
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_NAME, default=DEFAULT_NAME): TextSelector(),
+                    vol.Optional(CONF_COUNTRY): CountrySelector(
+                        CountrySelectorConfig(
+                            countries=list(supported_countries),
+                        )
+                    ),
+                }
+            ),
             errors=errors,
         )
 
     async def async_step_options(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle remaining flow."""
         errors: dict[str, str] = {}
         if user_input is not None:
@@ -287,7 +290,7 @@ class WorkdayOptionsFlowHandler(OptionsFlowWithConfigEntry):
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage Workday options."""
         errors: dict[str, str] = {}
 

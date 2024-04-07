@@ -1,4 +1,5 @@
 """Support for Meteo-France weather service."""
+
 import logging
 import time
 
@@ -214,11 +215,6 @@ class MeteoFranceWeather(
                     }
                 )
         return forecast_data
-
-    @property
-    def forecast(self) -> list[Forecast]:
-        """Return the forecast array."""
-        return self._forecast(self._mode)
 
     async def async_forecast_daily(self) -> list[Forecast]:
         """Return the daily forecast in native units."""

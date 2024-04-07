@@ -1,10 +1,12 @@
 """Tests for the TP-Link component."""
+
 from __future__ import annotations
 
 import copy
 from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from kasa.exceptions import AuthenticationException
 import pytest
 
@@ -17,7 +19,6 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
     CONF_USERNAME,
-    EVENT_HOMEASSISTANT_STARTED,
     STATE_ON,
     STATE_UNAVAILABLE,
 )
@@ -41,43 +42,45 @@ from . import (
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-async def test_configuring_tplink_causes_discovery(hass: HomeAssistant) -> None:
+async def test_configuring_tplink_causes_discovery(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
     """Test that specifying empty config does discovery."""
-    with patch("homeassistant.components.tplink.Discover.discover") as discover, patch(
-        "homeassistant.components.tplink.Discover.discover_single"
+    with (
+        patch("homeassistant.components.tplink.Discover.discover") as discover,
+        patch("homeassistant.components.tplink.Discover.discover_single"),
     ):
         discover.return_value = {MagicMock(): MagicMock()}
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
+        # call_count will differ based on number of broadcast addresses
         call_count = len(discover.mock_calls)
         assert discover.mock_calls
 
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
-        await hass.async_block_till_done()
+        freezer.tick(tplink.DISCOVERY_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
         assert len(discover.mock_calls) == call_count * 2
 
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=15))
-        await hass.async_block_till_done()
+        freezer.tick(tplink.DISCOVERY_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
         assert len(discover.mock_calls) == call_count * 3
-
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=30))
-        await hass.async_block_till_done()
-        assert len(discover.mock_calls) == call_count * 4
 
 
 async def test_config_entry_reload(hass: HomeAssistant) -> None:
     """Test that a config entry can be reloaded."""
     already_migrated_config_entry = MockConfigEntry(
-        domain=DOMAIN, data={}, unique_id=MAC_ADDRESS
+        domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
     )
     already_migrated_config_entry.add_to_hass(hass)
     with _patch_discovery(), _patch_single_discovery(), _patch_connect():
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
         await hass.async_block_till_done()
-        assert already_migrated_config_entry.state == ConfigEntryState.LOADED
+        assert already_migrated_config_entry.state is ConfigEntryState.LOADED
         await hass.config_entries.async_unload(already_migrated_config_entry.entry_id)
         await hass.async_block_till_done()
-        assert already_migrated_config_entry.state == ConfigEntryState.NOT_LOADED
+        assert already_migrated_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
 async def test_config_entry_retry(hass: HomeAssistant) -> None:
@@ -86,12 +89,14 @@ async def test_config_entry_retry(hass: HomeAssistant) -> None:
         domain=DOMAIN, data={CONF_HOST: IP_ADDRESS}, unique_id=MAC_ADDRESS
     )
     already_migrated_config_entry.add_to_hass(hass)
-    with _patch_discovery(no_device=True), _patch_single_discovery(
-        no_device=True
-    ), _patch_connect(no_device=True):
+    with (
+        _patch_discovery(no_device=True),
+        _patch_single_discovery(no_device=True),
+        _patch_connect(no_device=True),
+    ):
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
         await hass.async_block_till_done()
-        assert already_migrated_config_entry.state == ConfigEntryState.SETUP_RETRY
+        assert already_migrated_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_dimmer_switch_unique_id_fix_original_entity_still_exists(
@@ -118,9 +123,11 @@ async def test_dimmer_switch_unique_id_fix_original_entity_still_exists(
         original_name="Rollout dimmer",
     )
 
-    with _patch_discovery(device=dimmer), _patch_single_discovery(
-        device=dimmer
-    ), _patch_connect(device=dimmer):
+    with (
+        _patch_discovery(device=dimmer),
+        _patch_single_discovery(device=dimmer),
+        _patch_connect(device=dimmer),
+    ):
         await setup.async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
 
@@ -147,7 +154,7 @@ async def test_config_entry_wrong_mac_Address(
     with _patch_discovery(), _patch_single_discovery(), _patch_connect():
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
         await hass.async_block_till_done()
-        assert already_migrated_config_entry.state == ConfigEntryState.SETUP_RETRY
+        assert already_migrated_config_entry.state is ConfigEntryState.SETUP_RETRY
 
     assert (
         "Unexpected device found at 127.0.0.1; expected aa:bb:cc:dd:ee:f0, found aa:bb:cc:dd:ee:ff"
@@ -264,7 +271,9 @@ async def test_config_entry_errors(
 
 async def test_plug_auth_fails(hass: HomeAssistant) -> None:
     """Test a smart plug auth failure."""
-    config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=MAC_ADDRESS)
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
+    )
     config_entry.add_to_hass(hass)
     plug = _mocked_plug()
     with _patch_discovery(device=plug), _patch_connect(device=plug):

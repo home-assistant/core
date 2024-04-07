@@ -1,4 +1,5 @@
 """Test the Developer Credentials integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Generator
@@ -25,6 +26,7 @@ from homeassistant.const import (
     CONF_NAME,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.setup import async_setup_component
 
@@ -162,7 +164,7 @@ class OAuthFixture:
         )
 
         result = await self.hass.config_entries.flow.async_configure(result["flow_id"])
-        assert result.get("type") == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result.get("type") is FlowResultType.CREATE_ENTRY
         assert result.get("title") == self.title
         assert "data" in result
         assert "token" in result["data"]
@@ -419,7 +421,7 @@ async def test_config_flow_no_credentials(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         TEST_DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result.get("type") == data_entry_flow.FlowResultType.ABORT
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "missing_credentials"
 
 
@@ -446,7 +448,7 @@ async def test_config_flow_other_domain(
     result = await hass.config_entries.flow.async_init(
         TEST_DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result.get("type") == data_entry_flow.FlowResultType.ABORT
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "missing_credentials"
 
 
@@ -469,7 +471,7 @@ async def test_config_flow(
     result = await hass.config_entries.flow.async_init(
         TEST_DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result.get("type") == data_entry_flow.FlowResultType.EXTERNAL_STEP
+    assert result.get("type") is FlowResultType.EXTERNAL_STEP
     result = await oauth_fixture.complete_external_step(result)
     assert (
         result["data"].get("auth_implementation") == "fake_integration_some_client_id"
@@ -534,14 +536,14 @@ async def test_config_flow_multiple_entries(
     result = await hass.config_entries.flow.async_init(
         TEST_DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result.get("type") == data_entry_flow.FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "pick_implementation"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={"implementation": "fake_integration_some_client_id2"},
     )
-    assert result.get("type") == data_entry_flow.FlowResultType.EXTERNAL_STEP
+    assert result.get("type") is FlowResultType.EXTERNAL_STEP
     oauth_fixture.client_id = CLIENT_ID + "2"
     oauth_fixture.title = CLIENT_ID + "2"
     result = await oauth_fixture.complete_external_step(result)
@@ -571,7 +573,7 @@ async def test_config_flow_create_delete_credential(
     result = await hass.config_entries.flow.async_init(
         TEST_DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result.get("type") == data_entry_flow.FlowResultType.ABORT
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "missing_credentials"
 
 
@@ -588,7 +590,7 @@ async def test_config_flow_with_config_credential(
     result = await hass.config_entries.flow.async_init(
         TEST_DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result.get("type") == data_entry_flow.FlowResultType.EXTERNAL_STEP
+    assert result.get("type") is FlowResultType.EXTERNAL_STEP
     oauth_fixture.title = DEFAULT_IMPORT_NAME
     result = await oauth_fixture.complete_external_step(result)
     # Uses the imported auth domain for compatibility
@@ -606,7 +608,7 @@ async def test_import_without_setup(hass: HomeAssistant, config_credential) -> N
     result = await hass.config_entries.flow.async_init(
         TEST_DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result.get("type") == data_entry_flow.FlowResultType.ABORT
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "missing_configuration"
 
 
@@ -635,7 +637,7 @@ async def test_websocket_without_platform(
     result = await hass.config_entries.flow.async_init(
         TEST_DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result.get("type") == data_entry_flow.FlowResultType.ABORT
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "missing_configuration"
 
 
@@ -710,7 +712,7 @@ async def test_platform_with_auth_implementation(
     result = await hass.config_entries.flow.async_init(
         TEST_DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result.get("type") == data_entry_flow.FlowResultType.EXTERNAL_STEP
+    assert result.get("type") is FlowResultType.EXTERNAL_STEP
     oauth_fixture.title = DEFAULT_IMPORT_NAME
     result = await oauth_fixture.complete_external_step(result)
     # Uses the imported auth domain for compatibility
@@ -768,7 +770,7 @@ async def test_name(
     result = await hass.config_entries.flow.async_init(
         TEST_DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result.get("type") == data_entry_flow.FlowResultType.EXTERNAL_STEP
+    assert result.get("type") is FlowResultType.EXTERNAL_STEP
     oauth_fixture.title = NAME
     result = await oauth_fixture.complete_external_step(result)
     assert (

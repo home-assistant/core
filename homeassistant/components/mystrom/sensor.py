@@ -1,4 +1,5 @@
 """Support for myStrom sensors of switches/plugs."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -30,6 +31,13 @@ class MyStromSwitchSensorEntityDescription(SensorEntityDescription):
 
 SENSOR_TYPES: tuple[MyStromSwitchSensorEntityDescription, ...] = (
     MyStromSwitchSensorEntityDescription(
+        key="avg_consumption",
+        translation_key="avg_consumption",
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        value_fn=lambda device: device.consumedWs,
+    ),
+    MyStromSwitchSensorEntityDescription(
         key="consumption",
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -51,13 +59,12 @@ async def async_setup_entry(
 ) -> None:
     """Set up the myStrom entities."""
     device: MyStromSwitch = hass.data[DOMAIN][entry.entry_id].device
-    sensors = []
 
-    for description in SENSOR_TYPES:
-        if description.value_fn(device) is not None:
-            sensors.append(MyStromSwitchSensor(device, entry.title, description))
-
-    async_add_entities(sensors)
+    async_add_entities(
+        MyStromSwitchSensor(device, entry.title, description)
+        for description in SENSOR_TYPES
+        if description.value_fn(device) is not None
+    )
 
 
 class MyStromSwitchSensor(SensorEntity):

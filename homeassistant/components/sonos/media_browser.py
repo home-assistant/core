@@ -1,4 +1,5 @@
 """Support for media browsing."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -6,6 +7,7 @@ from contextlib import suppress
 from functools import partial
 import logging
 from typing import cast
+import urllib.parse
 
 from soco.data_structures import DidlObject
 from soco.ms_data_structures import MusicServiceItem
@@ -59,12 +61,14 @@ def get_thumbnail_url_full(
             media_content_id,
             media_content_type,
         )
-        return getattr(item, "album_art_uri", None)
+        return urllib.parse.unquote(getattr(item, "album_art_uri", ""))
 
-    return get_browse_image_url(
-        media_content_type,
-        media_content_id,
-        media_image_id,
+    return urllib.parse.unquote(
+        get_browse_image_url(
+            media_content_type,
+            media_content_id,
+            media_image_id,
+        )
     )
 
 
@@ -165,6 +169,7 @@ def build_item_response(
         payload["idstring"] = "A:ALBUMARTIST/" + "/".join(
             payload["idstring"].split("/")[2:]
         )
+        payload["idstring"] = urllib.parse.unquote(payload["idstring"])
 
     try:
         search_type = MEDIA_TYPES_TO_SONOS[payload["search_type"]]
@@ -200,7 +205,7 @@ def build_item_response(
 
     if not title:
         try:
-            title = payload["idstring"].split("/")[1]
+            title = urllib.parse.unquote(payload["idstring"].split("/")[1])
         except IndexError:
             title = LIBRARY_TITLES_MAPPING[payload["idstring"]]
 
@@ -492,10 +497,23 @@ def get_media(
     """Fetch media/album."""
     search_type = MEDIA_TYPES_TO_SONOS.get(search_type, search_type)
 
+    if search_type == "playlists":
+        # Format is S:TITLE or S:ITEM_ID
+        splits = item_id.split(":")
+        title = splits[1] if len(splits) > 1 else None
+        return next(
+            (
+                p
+                for p in media_library.get_playlists()
+                if (item_id == p.item_id or title == p.title)
+            ),
+            None,
+        )
+
     if not item_id.startswith("A:ALBUM") and search_type == SONOS_ALBUM:
         item_id = "A:ALBUMARTIST/" + "/".join(item_id.split("/")[2:])
 
-    search_term = item_id.split("/")[-1]
+    search_term = urllib.parse.unquote(item_id.split("/")[-1])
     matches = media_library.get_music_library_information(
         search_type, search_term=search_term, full_album_art_uri=True
     )

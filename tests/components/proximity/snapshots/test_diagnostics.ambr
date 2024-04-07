@@ -41,8 +41,8 @@
         ]),
       }),
       'proximity': dict({
-        'dir_of_travel': 'unknown',
-        'dist_to_zone': 2219,
+        'dir_of_travel': None,
+        'dist_to_zone': 2218752,
         'nearest': 'test1',
       }),
       'tracked_states': dict({

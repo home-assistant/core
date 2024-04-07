@@ -1,7 +1,9 @@
 """Support for Generic Modbus Thermostats."""
+
 from __future__ import annotations
 
 from datetime import datetime
+import logging
 import struct
 from typing import Any, cast
 
@@ -16,6 +18,11 @@ from homeassistant.components.climate import (
     FAN_OFF,
     FAN_ON,
     FAN_TOP,
+    SWING_BOTH,
+    SWING_HORIZONTAL,
+    SWING_OFF,
+    SWING_ON,
+    SWING_VERTICAL,
     ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
@@ -27,6 +34,7 @@ from homeassistant.const import (
     CONF_TEMPERATURE_UNIT,
     PRECISION_TENTHS,
     PRECISION_WHOLE,
+    STATE_UNKNOWN,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
@@ -66,6 +74,13 @@ from .const import (
     CONF_MAX_TEMP,
     CONF_MIN_TEMP,
     CONF_STEP,
+    CONF_SWING_MODE_REGISTER,
+    CONF_SWING_MODE_SWING_BOTH,
+    CONF_SWING_MODE_SWING_HORIZ,
+    CONF_SWING_MODE_SWING_OFF,
+    CONF_SWING_MODE_SWING_ON,
+    CONF_SWING_MODE_SWING_VERT,
+    CONF_SWING_MODE_VALUES,
     CONF_TARGET_TEMP,
     CONF_TARGET_TEMP_WRITE_REGISTERS,
     CONF_WRITE_REGISTERS,
@@ -73,7 +88,20 @@ from .const import (
 )
 from .modbus import ModbusHub
 
+_LOGGER = logging.getLogger(__name__)
+
 PARALLEL_UPDATES = 1
+
+HVACMODE_TO_TARG_TEMP_REG_INDEX_ARRAY = {
+    HVACMode.AUTO: 0,
+    HVACMode.COOL: 1,
+    HVACMode.DRY: 2,
+    HVACMode.FAN_ONLY: 3,
+    HVACMode.HEAT: 4,
+    HVACMode.HEAT_COOL: 5,
+    HVACMode.OFF: 6,
+    None: 0,
+}
 
 
 async def async_setup_platform(
@@ -117,7 +145,6 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
             CONF_TARGET_TEMP_WRITE_REGISTERS
         ]
         self._unit = config[CONF_TEMPERATURE_UNIT]
-
         self._attr_current_temperature = None
         self._attr_target_temperature = None
         self._attr_temperature_unit = (
@@ -157,7 +184,6 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
                     for value in values:
                         self._hvac_mode_mapping.append((value, hvac_mode))
                     self._attr_hvac_modes.append(hvac_mode)
-
         else:
             # No HVAC modes defined
             self._hvac_mode_register = None
@@ -194,10 +220,34 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
                     self._attr_fan_modes.append(fan_mode)
 
         else:
-            # No HVAC modes defined
+            # No FAN modes defined
             self._fan_mode_register = None
             self._attr_fan_mode = FAN_AUTO
             self._attr_fan_modes = [FAN_AUTO]
+
+        # No SWING modes defined
+        self._swing_mode_register = None
+        if CONF_SWING_MODE_REGISTER in config:
+            self._attr_supported_features = (
+                self._attr_supported_features | ClimateEntityFeature.SWING_MODE
+            )
+            mode_config = config[CONF_SWING_MODE_REGISTER]
+            self._swing_mode_register = mode_config[CONF_ADDRESS]
+            self._attr_swing_modes = cast(list[str], [])
+            self._attr_swing_mode = None
+            self._swing_mode_modbus_mapping: list[tuple[int, str]] = []
+            mode_value_config = mode_config[CONF_SWING_MODE_VALUES]
+            for swing_mode_kw, swing_mode in (
+                (CONF_SWING_MODE_SWING_ON, SWING_ON),
+                (CONF_SWING_MODE_SWING_OFF, SWING_OFF),
+                (CONF_SWING_MODE_SWING_HORIZ, SWING_HORIZONTAL),
+                (CONF_SWING_MODE_SWING_VERT, SWING_VERTICAL),
+                (CONF_SWING_MODE_SWING_BOTH, SWING_BOTH),
+            ):
+                if swing_mode_kw in mode_value_config:
+                    value = mode_value_config[swing_mode_kw]
+                    self._swing_mode_modbus_mapping.append((value, swing_mode))
+                    self._attr_swing_modes.append(swing_mode)
 
         if CONF_HVAC_ONOFF_REGISTER in config:
             self._hvac_onoff_register = config[CONF_HVAC_ONOFF_REGISTER]
@@ -277,6 +327,29 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
 
         await self.async_update()
 
+    async def async_set_swing_mode(self, swing_mode: str) -> None:
+        """Set new target swing mode."""
+        if self._swing_mode_register:
+            # Write a value to the mode register for the desired mode.
+            for value, smode in self._swing_mode_modbus_mapping:
+                if swing_mode == smode:
+                    if isinstance(self._swing_mode_register, list):
+                        await self._hub.async_pb_call(
+                            self._slave,
+                            self._swing_mode_register[0],
+                            [value],
+                            CALL_TYPE_WRITE_REGISTERS,
+                        )
+                    else:
+                        await self._hub.async_pb_call(
+                            self._slave,
+                            self._swing_mode_register,
+                            value,
+                            CALL_TYPE_WRITE_REGISTER,
+                        )
+                    break
+        await self.async_update()
+
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         target_temperature = (
@@ -305,21 +378,27 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
             if self._target_temperature_write_registers:
                 result = await self._hub.async_pb_call(
                     self._slave,
-                    self._target_temperature_register,
+                    self._target_temperature_register[
+                        HVACMODE_TO_TARG_TEMP_REG_INDEX_ARRAY[self._attr_hvac_mode]
+                    ],
                     [int(float(registers[0]))],
                     CALL_TYPE_WRITE_REGISTERS,
                 )
             else:
                 result = await self._hub.async_pb_call(
                     self._slave,
-                    self._target_temperature_register,
+                    self._target_temperature_register[
+                        HVACMODE_TO_TARG_TEMP_REG_INDEX_ARRAY[self._attr_hvac_mode]
+                    ],
                     int(float(registers[0])),
                     CALL_TYPE_WRITE_REGISTER,
                 )
         else:
             result = await self._hub.async_pb_call(
                 self._slave,
-                self._target_temperature_register,
+                self._target_temperature_register[
+                    HVACMODE_TO_TARG_TEMP_REG_INDEX_ARRAY[self._attr_hvac_mode]
+                ],
                 [int(float(i)) for i in registers],
                 CALL_TYPE_WRITE_REGISTERS,
             )
@@ -332,12 +411,15 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
         # async_track_time_interval
 
         self._attr_target_temperature = await self._async_read_register(
-            CALL_TYPE_REGISTER_HOLDING, self._target_temperature_register
+            CALL_TYPE_REGISTER_HOLDING,
+            self._target_temperature_register[
+                HVACMODE_TO_TARG_TEMP_REG_INDEX_ARRAY[self._attr_hvac_mode]
+            ],
         )
+
         self._attr_current_temperature = await self._async_read_register(
             self._input_type, self._address
         )
-
         # Read the HVAC mode register if defined
         if self._hvac_mode_register is not None:
             hvac_mode = await self._async_read_register(
@@ -364,7 +446,29 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
 
             # Translate the value received
             if fan_mode is not None:
-                self._attr_fan_mode = self._fan_mode_mapping_from_modbus[int(fan_mode)]
+                self._attr_fan_mode = self._fan_mode_mapping_from_modbus.get(
+                    int(fan_mode), self._attr_fan_mode
+                )
+
+        # Read the Swing mode register if defined
+        if self._swing_mode_register:
+            swing_mode = await self._async_read_register(
+                CALL_TYPE_REGISTER_HOLDING,
+                self._swing_mode_register
+                if isinstance(self._swing_mode_register, int)
+                else self._swing_mode_register[0],
+                raw=True,
+            )
+
+            self._attr_swing_mode = STATE_UNKNOWN
+            for value, smode in self._swing_mode_modbus_mapping:
+                if swing_mode == value:
+                    self._attr_swing_mode = smode
+                    break
+
+            if self._attr_swing_mode is STATE_UNKNOWN:
+                _err = f"{self.name}: No answer received from Swing mode register. State is Unknown"
+                _LOGGER.error(_err)
 
         # Read the on/off register if defined. If the value in this
         # register is "OFF", it will take precedence over the value

@@ -1,4 +1,5 @@
 """The swiss_public_transport component."""
+
 import logging
 
 from opendata_transport import OpendataTransport
@@ -41,13 +42,10 @@ async def async_setup_entry(
             f"Timeout while connecting for entry '{start} {destination}'"
         ) from e
     except OpendataTransportError as e:
-        _LOGGER.error(
-            "Setup failed for entry '%s %s', check at http://transport.opendata.ch/examples/stationboard.html if your station names are valid",
-            start,
-            destination,
-        )
         raise ConfigEntryError(
-            f"Setup failed for entry '{start} {destination}' with invalid data"
+            f"Setup failed for entry '{start} {destination}' with invalid data, check "
+            "at http://transport.opendata.ch/examples/stationboard.html if your "
+            "station names are valid"
         ) from e
 
     coordinator = SwissPublicTransportDataUpdateCoordinator(hass, opendata)
@@ -107,8 +105,9 @@ async def async_migrate_entry(
             )
 
         # Set a valid unique id for config entries
-        config_entry.minor_version = 2
-        hass.config_entries.async_update_entry(config_entry, unique_id=new_unique_id)
+        hass.config_entries.async_update_entry(
+            config_entry, unique_id=new_unique_id, minor_version=2
+        )
 
     _LOGGER.debug(
         "Migration to version %s.%s successful",

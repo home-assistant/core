@@ -1,4 +1,5 @@
 """Config flow for TP-Link Omada integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -9,19 +10,18 @@ from typing import Any, NamedTuple
 from urllib.parse import urlsplit
 
 from aiohttp import CookieJar
+from tplink_omada_client import OmadaClient, OmadaSite
 from tplink_omada_client.exceptions import (
     ConnectionFailed,
     LoginFailed,
     OmadaClientException,
     UnsupportedControllerVersion,
 )
-from tplink_omada_client.omadaclient import OmadaClient, OmadaSite
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import (
     async_create_clientsession,
@@ -92,7 +92,7 @@ async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> HubInfo:
     return HubInfo(controller_id, name, sites)
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class TpLinkOmadaConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for TP-Link Omada."""
 
     VERSION = 1
@@ -105,7 +105,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
 
         errors: dict[str, str] = {}
@@ -130,7 +130,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_site(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle step to select site to manage."""
 
         if user_input is None:
@@ -159,14 +159,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(title=display_name, data=self._omada_opts)
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
         self._omada_opts = dict(entry_data)
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Dialog that informs the user that reauth is required."""
 
         errors: dict[str, str] = {}

@@ -1,4 +1,5 @@
 """Support for displaying weather info from Ecobee API."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -171,7 +172,7 @@ class EcobeeWeather(WeatherEntity):
 
         forecasts: list[Forecast] = []
         date = dt_util.utcnow()
-        for day in range(0, 5):
+        for day in range(5):
             forecast = _process_forecast(self.weather["forecasts"][day])
             if forecast is None:
                 continue
@@ -182,11 +183,6 @@ class EcobeeWeather(WeatherEntity):
         if forecasts:
             return forecasts
         return None
-
-    @property
-    def forecast(self) -> list[Forecast] | None:
-        """Return the forecast array."""
-        return self._forecast()
 
     async def async_forecast_daily(self) -> list[Forecast] | None:
         """Return the daily forecast in native units."""

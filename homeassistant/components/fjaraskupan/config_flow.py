@@ -1,4 +1,5 @@
 """Config flow for Fjäråskupan integration."""
+
 from __future__ import annotations
 
 from fjaraskupan import device_filter

@@ -34,7 +34,7 @@
       'data': dict({
         'conversation_id': None,
         'device_id': None,
-        'engine': 'homeassistant',
+        'engine': 'conversation.home_assistant',
         'intent_input': 'test transcript',
         'language': 'en',
       }),
@@ -123,7 +123,7 @@
       'data': dict({
         'conversation_id': None,
         'device_id': None,
-        'engine': 'homeassistant',
+        'engine': 'conversation.home_assistant',
         'intent_input': 'test transcript',
         'language': 'en-US',
       }),
@@ -212,7 +212,7 @@
       'data': dict({
         'conversation_id': None,
         'device_id': None,
-        'engine': 'homeassistant',
+        'engine': 'conversation.home_assistant',
         'intent_input': 'test transcript',
         'language': 'en-US',
       }),
@@ -294,6 +294,7 @@
         'wake_word_output': dict({
           'timestamp': 2000,
           'wake_word_id': 'test_ww',
+          'wake_word_phrase': 'Test Wake Word',
         }),
       }),
       'type': <PipelineEventType.WAKE_WORD_END: 'wake_word-end'>,
@@ -324,7 +325,7 @@
       'data': dict({
         'conversation_id': None,
         'device_id': None,
-        'engine': 'homeassistant',
+        'engine': 'conversation.home_assistant',
         'intent_input': 'test transcript',
         'language': 'en',
       }),

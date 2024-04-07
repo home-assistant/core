@@ -1,4 +1,5 @@
 """Test VoIP protocol."""
+
 import asyncio
 import io
 import time
@@ -94,15 +95,19 @@ async def test_pipeline(
         assert media_source_id == _MEDIA_ID
         return ("wav", _empty_wav())
 
-    with patch(
-        "homeassistant.components.assist_pipeline.vad.WebRtcVad.is_speech",
-        new=is_speech,
-    ), patch(
-        "homeassistant.components.voip.voip.async_pipeline_from_audio_stream",
-        new=async_pipeline_from_audio_stream,
-    ), patch(
-        "homeassistant.components.voip.voip.tts.async_get_media_source_audio",
-        new=async_get_media_source_audio,
+    with (
+        patch(
+            "homeassistant.components.assist_pipeline.vad.WebRtcVad.is_speech",
+            new=is_speech,
+        ),
+        patch(
+            "homeassistant.components.voip.voip.async_pipeline_from_audio_stream",
+            new=async_pipeline_from_audio_stream,
+        ),
+        patch(
+            "homeassistant.components.voip.voip.tts.async_get_media_source_audio",
+            new=async_get_media_source_audio,
+        ),
     ):
         rtp_protocol = voip.voip.PipelineRtpDatagramProtocol(
             hass,
@@ -149,12 +154,15 @@ async def test_pipeline_timeout(hass: HomeAssistant, voip_device: VoIPDevice) ->
     async def async_pipeline_from_audio_stream(*args, **kwargs):
         await asyncio.sleep(10)
 
-    with patch(
-        "homeassistant.components.voip.voip.async_pipeline_from_audio_stream",
-        new=async_pipeline_from_audio_stream,
-    ), patch(
-        "homeassistant.components.voip.voip.PipelineRtpDatagramProtocol._wait_for_speech",
-        return_value=True,
+    with (
+        patch(
+            "homeassistant.components.voip.voip.async_pipeline_from_audio_stream",
+            new=async_pipeline_from_audio_stream,
+        ),
+        patch(
+            "homeassistant.components.voip.voip.PipelineRtpDatagramProtocol._wait_for_speech",
+            return_value=True,
+        ),
     ):
         rtp_protocol = voip.voip.PipelineRtpDatagramProtocol(
             hass,
@@ -287,15 +295,19 @@ async def test_tts_timeout(
         # Should time out immediately
         return ("wav", _empty_wav())
 
-    with patch(
-        "homeassistant.components.assist_pipeline.vad.WebRtcVad.is_speech",
-        new=is_speech,
-    ), patch(
-        "homeassistant.components.voip.voip.async_pipeline_from_audio_stream",
-        new=async_pipeline_from_audio_stream,
-    ), patch(
-        "homeassistant.components.voip.voip.tts.async_get_media_source_audio",
-        new=async_get_media_source_audio,
+    with (
+        patch(
+            "homeassistant.components.assist_pipeline.vad.WebRtcVad.is_speech",
+            new=is_speech,
+        ),
+        patch(
+            "homeassistant.components.voip.voip.async_pipeline_from_audio_stream",
+            new=async_pipeline_from_audio_stream,
+        ),
+        patch(
+            "homeassistant.components.voip.voip.tts.async_get_media_source_audio",
+            new=async_get_media_source_audio,
+        ),
     ):
         rtp_protocol = voip.voip.PipelineRtpDatagramProtocol(
             hass,
@@ -319,7 +331,7 @@ async def test_tts_timeout(
 
         async def send_tts(*args, **kwargs):
             # Call original then end test successfully
-            with pytest.raises(asyncio.TimeoutError):
+            with pytest.raises(TimeoutError):
                 await original_send_tts(*args, **kwargs)
 
             done.set()
@@ -388,15 +400,19 @@ async def test_tts_wrong_extension(
         # Should fail because it's not "wav"
         return ("mp3", b"")
 
-    with patch(
-        "homeassistant.components.assist_pipeline.vad.WebRtcVad.is_speech",
-        new=is_speech,
-    ), patch(
-        "homeassistant.components.voip.voip.async_pipeline_from_audio_stream",
-        new=async_pipeline_from_audio_stream,
-    ), patch(
-        "homeassistant.components.voip.voip.tts.async_get_media_source_audio",
-        new=async_get_media_source_audio,
+    with (
+        patch(
+            "homeassistant.components.assist_pipeline.vad.WebRtcVad.is_speech",
+            new=is_speech,
+        ),
+        patch(
+            "homeassistant.components.voip.voip.async_pipeline_from_audio_stream",
+            new=async_pipeline_from_audio_stream,
+        ),
+        patch(
+            "homeassistant.components.voip.voip.tts.async_get_media_source_audio",
+            new=async_get_media_source_audio,
+        ),
     ):
         rtp_protocol = voip.voip.PipelineRtpDatagramProtocol(
             hass,
@@ -486,15 +502,19 @@ async def test_tts_wrong_wav_format(
 
             return ("wav", wav_io.getvalue())
 
-    with patch(
-        "homeassistant.components.assist_pipeline.vad.WebRtcVad.is_speech",
-        new=is_speech,
-    ), patch(
-        "homeassistant.components.voip.voip.async_pipeline_from_audio_stream",
-        new=async_pipeline_from_audio_stream,
-    ), patch(
-        "homeassistant.components.voip.voip.tts.async_get_media_source_audio",
-        new=async_get_media_source_audio,
+    with (
+        patch(
+            "homeassistant.components.assist_pipeline.vad.WebRtcVad.is_speech",
+            new=is_speech,
+        ),
+        patch(
+            "homeassistant.components.voip.voip.async_pipeline_from_audio_stream",
+            new=async_pipeline_from_audio_stream,
+        ),
+        patch(
+            "homeassistant.components.voip.voip.tts.async_get_media_source_audio",
+            new=async_get_media_source_audio,
+        ),
     ):
         rtp_protocol = voip.voip.PipelineRtpDatagramProtocol(
             hass,
@@ -568,15 +588,19 @@ async def test_empty_tts_output(
             )
         )
 
-    with patch(
-        "homeassistant.components.assist_pipeline.vad.WebRtcVad.is_speech",
-        new=is_speech,
-    ), patch(
-        "homeassistant.components.voip.voip.async_pipeline_from_audio_stream",
-        new=async_pipeline_from_audio_stream,
-    ), patch(
-        "homeassistant.components.voip.voip.PipelineRtpDatagramProtocol._send_tts",
-    ) as mock_send_tts:
+    with (
+        patch(
+            "homeassistant.components.assist_pipeline.vad.WebRtcVad.is_speech",
+            new=is_speech,
+        ),
+        patch(
+            "homeassistant.components.voip.voip.async_pipeline_from_audio_stream",
+            new=async_pipeline_from_audio_stream,
+        ),
+        patch(
+            "homeassistant.components.voip.voip.PipelineRtpDatagramProtocol._send_tts",
+        ) as mock_send_tts,
+    ):
         rtp_protocol = voip.voip.PipelineRtpDatagramProtocol(
             hass,
             hass.config.language,

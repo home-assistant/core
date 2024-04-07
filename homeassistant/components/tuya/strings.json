@@ -19,7 +19,9 @@
     },
     "error": {
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "login_error": "Login error ({code}): {msg}",
+      "login_error": "Login error ({code}): {msg}"
+    },
+    "abort": {
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },

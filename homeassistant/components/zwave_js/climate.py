@@ -1,4 +1,5 @@
 """Representation of Z-Wave thermostats."""
+
 from __future__ import annotations
 
 from typing import Any, cast
@@ -139,10 +140,19 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         self._hvac_modes: dict[HVACMode, int | None] = {}
         self._hvac_presets: dict[str, int | None] = {}
         self._unit_value: ZwaveValue | None = None
+        self._last_hvac_mode_id_before_off: int | None = None
 
         self._current_mode = self.get_zwave_value(
             THERMOSTAT_MODE_PROPERTY, command_class=CommandClass.THERMOSTAT_MODE
         )
+        self._supports_resume: bool = bool(
+            self._current_mode
+            and (
+                str(ThermostatMode.RESUME_ON.value)
+                in self._current_mode.metadata.states
+            )
+        )
+
         self._setpoint_values: dict[ThermostatSetpointType, ZwaveValue | None] = {}
         for enum in ThermostatSetpointType:
             self._setpoint_values[enum] = self.get_zwave_value(
@@ -196,13 +206,9 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
             self._attr_supported_features |= ClimateEntityFeature.PRESET_MODE
         if HVACMode.OFF in self._hvac_modes:
             self._attr_supported_features |= ClimateEntityFeature.TURN_OFF
-
             # We can only support turn on if we are able to turn the device off,
             # otherwise the device can be considered always on
-            if len(self._hvac_modes) == 2 or any(
-                mode in self._hvac_modes
-                for mode in (HVACMode.HEAT, HVACMode.COOL, HVACMode.HEAT_COOL)
-            ):
+            if len(self._hvac_modes) > 1:
                 self._attr_supported_features |= ClimateEntityFeature.TURN_ON
         # If any setpoint value exists, we can assume temperature
         # can be set
@@ -496,7 +502,53 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
             # Thermostat(valve) has no support for setting a mode, so we make it a no-op
             return
 
+        # When turning the HVAC off from an on state, store the last HVAC mode ID so we
+        # can set it again when turning the device back on.
+        if hvac_mode == HVACMode.OFF and self._current_mode.value != ThermostatMode.OFF:
+            self._last_hvac_mode_id_before_off = self._current_mode.value
         await self._async_set_value(self._current_mode, hvac_mode_id)
+
+    async def async_turn_off(self) -> None:
+        """Turn the entity off."""
+        await self.async_set_hvac_mode(HVACMode.OFF)
+
+    async def async_turn_on(self) -> None:
+        """Turn the entity on."""
+        # If current mode is not off, do nothing
+        if self.hvac_mode != HVACMode.OFF:
+            return
+
+        # We can safely assert here because this function can only be called if the
+        # device can be turned off and on which would require the device to have the
+        # current mode Z-Wave Value
+        assert self._current_mode
+
+        # If the device supports resume, use resume to get to the right mode
+        if self._supports_resume:
+            await self._async_set_value(self._current_mode, ThermostatMode.RESUME_ON)
+            return
+
+        # If we have an HVAC mode ID from before the device was turned off, set it to
+        # that mode
+        if self._last_hvac_mode_id_before_off is not None:
+            await self._async_set_value(
+                self._current_mode, self._last_hvac_mode_id_before_off
+            )
+            self._last_hvac_mode_id_before_off = None
+            return
+
+        # Attempt to set the device to the first available mode among heat_cool, heat,
+        # and cool to mirror previous behavior. If none of those are available, set it
+        # to the first available mode that is not off.
+        try:
+            hvac_mode = next(
+                mode
+                for mode in (HVACMode.HEAT_COOL, HVACMode.HEAT, HVACMode.COOL)
+                if mode in self._hvac_modes
+            )
+        except StopIteration:
+            hvac_mode = next(mode for mode in self._hvac_modes if mode != HVACMode.OFF)
+        await self.async_set_hvac_mode(hvac_mode)
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new target preset mode."""

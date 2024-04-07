@@ -1,4 +1,5 @@
 """Helpers for mobile_app."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
@@ -103,8 +104,7 @@ def _convert_legacy_encryption_key(key: str) -> bytes:
     keylen = SecretBox.KEY_SIZE
     key_bytes = key.encode("utf-8")
     key_bytes = key_bytes[:keylen]
-    key_bytes = key_bytes.ljust(keylen, b"\0")
-    return key_bytes
+    return key_bytes.ljust(keylen, b"\0")
 
 
 def decrypt_payload_legacy(key: str, ciphertext: bytes) -> JsonValueType | None:
@@ -140,16 +140,6 @@ def error_response(
         status=status,
         headers=headers,
     )
-
-
-def supports_encryption() -> bool:
-    """Test if we support encryption."""
-    try:
-        import nacl  # noqa: F401 pylint: disable=import-outside-toplevel
-
-        return True
-    except OSError:
-        return False
 
 
 def safe_registration(registration: dict) -> dict:

@@ -1,5 +1,5 @@
 """Test the baf config flow."""
-import asyncio
+
 from ipaddress import ip_address
 from unittest.mock import patch
 
@@ -30,20 +30,23 @@ async def test_form_user(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
-    with _patch_device_config_flow(), patch(
-        "homeassistant.components.baf.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        _patch_device_config_flow(),
+        patch(
+            "homeassistant.components.baf.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_IP_ADDRESS: "127.0.0.1"},
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == MOCK_NAME
     assert result2["data"] == {CONF_IP_ADDRESS: "127.0.0.1"}
     assert len(mock_setup_entry.mock_calls) == 1
@@ -55,13 +58,13 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with _patch_device_config_flow(asyncio.TimeoutError):
+    with _patch_device_config_flow(TimeoutError):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_IP_ADDRESS: "127.0.0.1"},
         )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {CONF_IP_ADDRESS: "cannot_connect"}
 
 
@@ -77,7 +80,7 @@ async def test_form_unknown_exception(hass: HomeAssistant) -> None:
             {CONF_IP_ADDRESS: "127.0.0.1"},
         )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
 
 
@@ -97,7 +100,7 @@ async def test_zeroconf_discovery(hass: HomeAssistant) -> None:
             type="mock_type",
         ),
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
     with patch(
@@ -110,7 +113,7 @@ async def test_zeroconf_discovery(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "create_entry"
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "My Fan"
     assert result2["data"] == {CONF_IP_ADDRESS: "127.0.0.1"}
     assert len(mock_setup_entry.mock_calls) == 1
@@ -135,7 +138,7 @@ async def test_zeroconf_updates_existing_ip(hass: HomeAssistant) -> None:
             type="mock_type",
         ),
     )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert entry.data[CONF_IP_ADDRESS] == "127.0.0.1"
 
@@ -155,7 +158,7 @@ async def test_zeroconf_rejects_ipv6(hass: HomeAssistant) -> None:
             type="mock_type",
         ),
     )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "ipv6_not_supported"
 
 
@@ -174,25 +177,28 @@ async def test_user_flow_is_not_blocked_by_discovery(hass: HomeAssistant) -> Non
             type="mock_type",
         ),
     )
-    assert discovery_result["type"] == FlowResultType.FORM
+    assert discovery_result["type"] is FlowResultType.FORM
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
-    with _patch_device_config_flow(), patch(
-        "homeassistant.components.baf.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        _patch_device_config_flow(),
+        patch(
+            "homeassistant.components.baf.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_IP_ADDRESS: "127.0.0.1"},
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == MOCK_NAME
     assert result2["data"] == {CONF_IP_ADDRESS: "127.0.0.1"}
     assert len(mock_setup_entry.mock_calls) == 1

@@ -1,4 +1,5 @@
 """Support for Canary devices."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -139,10 +140,8 @@ async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> Non
 
 def _get_canary_api_instance(entry: ConfigEntry) -> Api:
     """Initialize a new instance of CanaryApi."""
-    canary = Api(
+    return Api(
         entry.data[CONF_USERNAME],
         entry.data[CONF_PASSWORD],
         entry.options.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
     )
-
-    return canary

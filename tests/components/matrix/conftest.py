@@ -1,4 +1,5 @@
 """Define fixtures available for all tests."""
+
 from __future__ import annotations
 
 import re
@@ -83,14 +84,12 @@ class _MockAsyncClient(AsyncClient):
             return RoomResolveAliasResponse(
                 room_alias=room_alias, room_id=room_id, servers=[TEST_HOMESERVER]
             )
-        else:
-            return RoomResolveAliasError(message=f"Could not resolve {room_alias}")
+        return RoomResolveAliasError(message=f"Could not resolve {room_alias}")
 
     async def join(self, room_id: RoomID):
         if room_id in TEST_JOINABLE_ROOMS.values():
             return JoinResponse(room_id=room_id)
-        else:
-            return JoinError(message="Not allowed to join this room.")
+        return JoinError(message="Not allowed to join this room.")
 
     async def login(self, *args, **kwargs):
         if kwargs.get("password") == TEST_PASSWORD or kwargs.get("token") == TEST_TOKEN:
@@ -100,9 +99,8 @@ class _MockAsyncClient(AsyncClient):
                 device_id="test_device",
                 user_id=TEST_MXID,
             )
-        else:
-            self.access_token = ""
-            return LoginError(message="LoginError", status_code="status_code")
+        self.access_token = ""
+        return LoginError(message="LoginError", status_code="status_code")
 
     async def logout(self, *args, **kwargs):
         self.access_token = ""
@@ -114,19 +112,17 @@ class _MockAsyncClient(AsyncClient):
             return WhoamiResponse(
                 user_id=TEST_MXID, device_id=TEST_DEVICE_ID, is_guest=False
             )
-        else:
-            self.access_token = ""
-            return WhoamiError(
-                message="Invalid access token passed.", status_code="M_UNKNOWN_TOKEN"
-            )
+        self.access_token = ""
+        return WhoamiError(
+            message="Invalid access token passed.", status_code="M_UNKNOWN_TOKEN"
+        )
 
     async def room_send(self, *args, **kwargs):
         if not self.logged_in:
             raise LocalProtocolError
         if kwargs["room_id"] not in TEST_JOINABLE_ROOMS.values():
             return ErrorResponse(message="Cannot send a message in this room.")
-        else:
-            return Response()
+        return Response()
 
     async def sync(self, *args, **kwargs):
         return None

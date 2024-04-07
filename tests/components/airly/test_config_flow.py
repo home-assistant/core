@@ -1,13 +1,14 @@
 """Define tests for the Airly config flow."""
+
 from http import HTTPStatus
 
 from airly.exceptions import AirlyError
 
-from homeassistant import data_entry_flow
 from homeassistant.components.airly.const import CONF_USE_NEAREST, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from . import API_NEAREST_URL, API_POINT_URL
 
@@ -28,7 +29,7 @@ async def test_show_form(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
 
@@ -82,7 +83,7 @@ async def test_invalid_location_for_point_and_nearest(
             DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
         )
 
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "wrong_location"
 
 
@@ -97,7 +98,7 @@ async def test_duplicate_error(
         DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
     )
 
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -112,7 +113,7 @@ async def test_create_entry(
             DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
         )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == CONFIG[CONF_NAME]
     assert result["data"][CONF_LATITUDE] == CONFIG[CONF_LATITUDE]
     assert result["data"][CONF_LONGITUDE] == CONFIG[CONF_LONGITUDE]
@@ -136,7 +137,7 @@ async def test_create_entry_with_nearest_method(
             DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
         )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == CONFIG[CONF_NAME]
     assert result["data"][CONF_LATITUDE] == CONFIG[CONF_LATITUDE]
     assert result["data"][CONF_LONGITUDE] == CONFIG[CONF_LONGITUDE]

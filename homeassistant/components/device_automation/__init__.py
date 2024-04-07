@@ -1,4 +1,5 @@
 """Helpers for device automations."""
+
 from __future__ import annotations
 
 import asyncio
@@ -133,8 +134,7 @@ async def async_get_device_automation_platform(
     hass: HomeAssistant,
     domain: str,
     automation_type: Literal[DeviceAutomationType.TRIGGER],
-) -> DeviceAutomationTriggerProtocol:
-    ...
+) -> DeviceAutomationTriggerProtocol: ...
 
 
 @overload
@@ -142,8 +142,7 @@ async def async_get_device_automation_platform(
     hass: HomeAssistant,
     domain: str,
     automation_type: Literal[DeviceAutomationType.CONDITION],
-) -> DeviceAutomationConditionProtocol:
-    ...
+) -> DeviceAutomationConditionProtocol: ...
 
 
 @overload
@@ -151,15 +150,13 @@ async def async_get_device_automation_platform(
     hass: HomeAssistant,
     domain: str,
     automation_type: Literal[DeviceAutomationType.ACTION],
-) -> DeviceAutomationActionProtocol:
-    ...
+) -> DeviceAutomationActionProtocol: ...
 
 
 @overload
 async def async_get_device_automation_platform(
     hass: HomeAssistant, domain: str, automation_type: DeviceAutomationType
-) -> DeviceAutomationPlatformType:
-    ...
+) -> DeviceAutomationPlatformType: ...
 
 
 async def async_get_device_automation_platform(
@@ -172,7 +169,7 @@ async def async_get_device_automation_platform(
     platform_name = automation_type.value.section
     try:
         integration = await async_get_integration_with_requirements(hass, domain)
-        platform = integration.get_platform(platform_name)
+        platform = await integration.async_get_platform(platform_name)
     except IntegrationNotFound as err:
         raise InvalidDeviceAutomationConfig(
             f"Integration '{domain}' not found"
@@ -249,8 +246,7 @@ async def async_get_device_automations(
 
     for device_id in match_device_ids:
         for entry in entity_registry.entities.get_entries_for_device_id(device_id):
-            if not entry.disabled_by:
-                device_entities_domains.setdefault(device_id, set()).add(entry.domain)
+            device_entities_domains.setdefault(device_id, set()).add(entry.domain)
 
     for device_id in match_device_ids:
         combined_results[device_id] = []

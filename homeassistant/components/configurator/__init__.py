@@ -5,6 +5,7 @@ This will return a request id that has to be used for future calls.
 A callback has to be provided to `request_config` which will be called when
 the user has submitted configuration information.
 """
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -14,7 +15,12 @@ import functools as ft
 from typing import Any
 
 from homeassistant.const import ATTR_ENTITY_PICTURE, ATTR_FRIENDLY_NAME
-from homeassistant.core import HomeAssistant, ServiceCall, callback as async_callback
+from homeassistant.core import (
+    HassJob,
+    HomeAssistant,
+    ServiceCall,
+    callback as async_callback,
+)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.event import async_call_later
@@ -244,7 +250,9 @@ class Configurator:
 
         # field validation goes here?
         if callback and (
-            job := self.hass.async_add_job(callback, call.data.get(ATTR_FIELDS, {}))
+            job := self.hass.async_run_hass_job(
+                HassJob(callback), call.data.get(ATTR_FIELDS, {})
+            )
         ):
             await job
 

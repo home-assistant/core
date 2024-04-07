@@ -1,4 +1,5 @@
 """The Synology DSM component."""
+
 from __future__ import annotations
 
 import logging

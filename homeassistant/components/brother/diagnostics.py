@@ -1,4 +1,5 @@
 """Diagnostics support for Brother."""
+
 from __future__ import annotations
 
 from dataclasses import asdict
@@ -19,9 +20,9 @@ async def async_get_config_entry_diagnostics(
         config_entry.entry_id
     ]
 
-    diagnostics_data = {
+    return {
         "info": dict(config_entry.data),
         "data": asdict(coordinator.data),
+        "model": coordinator.brother.model,
+        "firmware": coordinator.brother.firmware,
     }
-
-    return diagnostics_data

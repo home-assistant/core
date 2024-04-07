@@ -1,7 +1,7 @@
 """Support for Openhome Devices."""
+
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Awaitable, Callable, Coroutine
 import functools
 import logging
@@ -76,7 +76,7 @@ def catch_request_errors() -> (
         [_FuncType[_OpenhomeDeviceT, _P, _R]], _ReturnFuncType[_OpenhomeDeviceT, _P, _R]
     ]
 ):
-    """Catch asyncio.TimeoutError, aiohttp.ClientError, UpnpError errors."""
+    """Catch TimeoutError, aiohttp.ClientError, UpnpError errors."""
 
     def call_wrapper(
         func: _FuncType[_OpenhomeDeviceT, _P, _R],
@@ -87,10 +87,10 @@ def catch_request_errors() -> (
         async def wrapper(
             self: _OpenhomeDeviceT, *args: _P.args, **kwargs: _P.kwargs
         ) -> _R | None:
-            """Catch asyncio.TimeoutError, aiohttp.ClientError, UpnpError errors."""
+            """Catch TimeoutError, aiohttp.ClientError, UpnpError errors."""
             try:
                 return await func(self, *args, **kwargs)
-            except (asyncio.TimeoutError, aiohttp.ClientError, UpnpError):
+            except (TimeoutError, aiohttp.ClientError, UpnpError):
                 _LOGGER.error("Error during call %s", func.__name__)
             return None
 
@@ -186,7 +186,7 @@ class OpenhomeDevice(MediaPlayerEntity):
                 self._attr_state = MediaPlayerState.PLAYING
 
             self._attr_available = True
-        except (asyncio.TimeoutError, aiohttp.ClientError, UpnpError):
+        except (TimeoutError, aiohttp.ClientError, UpnpError):
             self._attr_available = False
 
     @catch_request_errors()

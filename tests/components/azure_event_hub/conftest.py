@@ -1,4 +1,5 @@
 """Test fixtures for AEH."""
+
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
@@ -51,7 +52,7 @@ async def mock_entry_fixture(hass, filter_schema, mock_create_batch, mock_send_b
     assert await async_setup_component(
         hass, DOMAIN, {DOMAIN: {CONF_FILTER: filter_schema}}
     )
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     # Clear the component_loaded event from the queue.
     async_fire_time_changed(
@@ -69,7 +70,7 @@ async def mock_entry_fixture(hass, filter_schema, mock_create_batch, mock_send_b
 @pytest.fixture(name="entry_with_one_event")
 async def mock_entry_with_one_event(hass, entry):
     """Use the entry and add a single test event to the queue."""
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
     hass.states.async_set("sensor.test", STATE_ON)
     return entry
 

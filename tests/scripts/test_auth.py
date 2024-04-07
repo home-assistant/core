@@ -1,4 +1,6 @@
 """Test the auth script to manage local users."""
+
+import logging
 from typing import Any
 from unittest.mock import Mock, patch
 
@@ -9,6 +11,15 @@ from homeassistant.core import HomeAssistant
 from homeassistant.scripts import auth as script_auth
 
 from tests.common import register_auth_provider
+
+
+@pytest.fixture(autouse=True)
+def reset_log_level():
+    """Reset log level after each test case."""
+    logger = logging.getLogger("homeassistant.core")
+    orig_level = logger.level
+    yield
+    logger.setLevel(orig_level)
 
 
 @pytest.fixture

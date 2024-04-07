@@ -1,4 +1,5 @@
 """Constants for Blink."""
+
 from homeassistant.const import Platform
 
 DOMAIN = "blink"

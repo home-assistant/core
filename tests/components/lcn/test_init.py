@@ -1,4 +1,5 @@
 """Test init of LCN integration."""
+
 from unittest.mock import patch
 
 from pypck.connection import (
@@ -19,12 +20,12 @@ from .conftest import MockPchkConnectionManager, setup_component
 async def test_async_setup_entry(hass: HomeAssistant, entry, lcn_connection) -> None:
     """Test a successful setup entry and unload of entry."""
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.state == ConfigEntryState.NOT_LOADED
+    assert entry.state is ConfigEntryState.NOT_LOADED
     assert not hass.data.get(DOMAIN)
 
 
@@ -35,7 +36,7 @@ async def test_async_setup_multiple_entries(hass: HomeAssistant, entry, entry2) 
             config_entry.add_to_hass(hass)
             await hass.config_entries.async_setup(config_entry.entry_id)
             await hass.async_block_till_done()
-            assert config_entry.state == ConfigEntryState.LOADED
+            assert config_entry.state is ConfigEntryState.LOADED
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 2
 
@@ -43,7 +44,7 @@ async def test_async_setup_multiple_entries(hass: HomeAssistant, entry, entry2) 
         assert await hass.config_entries.async_unload(config_entry.entry_id)
         await hass.async_block_till_done()
 
-        assert config_entry.state == ConfigEntryState.NOT_LOADED
+        assert config_entry.state is ConfigEntryState.NOT_LOADED
 
     assert not hass.data.get(DOMAIN)
 
@@ -95,7 +96,7 @@ async def test_async_setup_entry_raises_authentication_error(
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    assert entry.state == ConfigEntryState.SETUP_ERROR
+    assert entry.state is ConfigEntryState.SETUP_ERROR
 
 
 async def test_async_setup_entry_raises_license_error(
@@ -109,7 +110,7 @@ async def test_async_setup_entry_raises_license_error(
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    assert entry.state == ConfigEntryState.SETUP_ERROR
+    assert entry.state is ConfigEntryState.SETUP_ERROR
 
 
 async def test_async_setup_entry_raises_timeout_error(
@@ -121,14 +122,15 @@ async def test_async_setup_entry_raises_timeout_error(
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    assert entry.state == ConfigEntryState.SETUP_ERROR
+    assert entry.state is ConfigEntryState.SETUP_ERROR
 
 
 async def test_async_setup_from_configuration_yaml(hass: HomeAssistant) -> None:
     """Test a successful setup using data from configuration.yaml."""
-    with patch(
-        "pypck.connection.PchkConnectionManager", MockPchkConnectionManager
-    ), patch("homeassistant.components.lcn.async_setup_entry") as async_setup_entry:
+    with (
+        patch("pypck.connection.PchkConnectionManager", MockPchkConnectionManager),
+        patch("homeassistant.components.lcn.async_setup_entry") as async_setup_entry,
+    ):
         await setup_component(hass)
 
         assert async_setup_entry.await_count == 2

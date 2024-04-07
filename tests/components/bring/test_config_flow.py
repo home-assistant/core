@@ -1,12 +1,13 @@
 """Test the Bring! config flow."""
-from unittest.mock import AsyncMock, Mock
 
-import pytest
-from python_bring_api.exceptions import (
+from unittest.mock import AsyncMock
+
+from bring_api.exceptions import (
     BringAuthException,
     BringParseException,
     BringRequestException,
 )
+import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.bring.const import DOMAIN
@@ -25,13 +26,13 @@ MOCK_DATA_STEP = {
 
 
 async def test_form(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_bring_client: Mock
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_bring_client: AsyncMock
 ) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     result = await hass.config_entries.flow.async_init(
@@ -43,7 +44,7 @@ async def test_form(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCK_DATA_STEP["email"]
     assert result["data"] == MOCK_DATA_STEP
     assert len(mock_setup_entry.mock_calls) == 1
@@ -59,7 +60,7 @@ async def test_form(
     ],
 )
 async def test_flow_user_init_data_unknown_error_and_recover(
-    hass: HomeAssistant, mock_bring_client: Mock, raise_error, text_error
+    hass: HomeAssistant, mock_bring_client: AsyncMock, raise_error, text_error
 ) -> None:
     """Test unknown errors."""
     mock_bring_client.login.side_effect = raise_error
@@ -72,7 +73,7 @@ async def test_flow_user_init_data_unknown_error_and_recover(
         user_input=MOCK_DATA_STEP,
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"]["base"] == text_error
 
     # Recover
@@ -85,14 +86,16 @@ async def test_flow_user_init_data_unknown_error_and_recover(
         user_input=MOCK_DATA_STEP,
     )
 
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].title == MOCK_DATA_STEP["email"]
 
     assert result["data"] == MOCK_DATA_STEP
 
 
 async def test_flow_user_init_data_already_configured(
-    hass: HomeAssistant, mock_bring_client: Mock, bring_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_bring_client: AsyncMock,
+    bring_config_entry: MockConfigEntry,
 ) -> None:
     """Test we abort user data set when entry is already configured."""
 
@@ -107,5 +110,5 @@ async def test_flow_user_init_data_already_configured(
         user_input=MOCK_DATA_STEP,
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"

@@ -1,4 +1,5 @@
 """Statistics helper for sensor."""
+
 from __future__ import annotations
 
 from collections import defaultdict
@@ -148,7 +149,8 @@ def _equivalent_units(units: set[str | None]) -> bool:
     if len(units) == 1:
         return True
     units = {
-        EQUIVALENT_UNITS[unit] if unit in EQUIVALENT_UNITS else unit for unit in units
+        EQUIVALENT_UNITS[unit] if unit in EQUIVALENT_UNITS else unit  # noqa: SIM401
+        for unit in units
     }
     return len(units) == 1
 
