@@ -185,13 +185,13 @@ async def test_report_state_unsets_authorized_on_error(
     config = get_default_config(hass)
     await state_report.async_enable_proactive_mode(hass, config)
 
+    config._store.set_authorized.assert_not_called()
+
     hass.states.async_set(
         "binary_sensor.test_contact",
         "off",
         {"friendly_name": "Test Contact Sensor", "device_class": "door"},
     )
-
-    config._store.set_authorized.assert_not_called()
 
     # To trigger event listener
     await hass.async_block_till_done()
@@ -215,15 +215,15 @@ async def test_report_state_unsets_authorized_on_access_token_error(
 
     await state_report.async_enable_proactive_mode(hass, config)
 
-    hass.states.async_set(
-        "binary_sensor.test_contact",
-        "off",
-        {"friendly_name": "Test Contact Sensor", "device_class": "door"},
-    )
-
     config._store.set_authorized.assert_not_called()
 
     with patch.object(config, "async_get_access_token", AsyncMock(side_effect=exc)):
+        hass.states.async_set(
+            "binary_sensor.test_contact",
+            "off",
+            {"friendly_name": "Test Contact Sensor", "device_class": "door"},
+        )
+
         # To trigger event listener
         await hass.async_block_till_done()
         config._store.set_authorized.assert_called_once_with(False)
