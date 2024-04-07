@@ -8,6 +8,7 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
 from soco import SoCo
+from soco.alarms import Alarms
 from soco.events_base import Event as SonosEvent
 
 from homeassistant.components import ssdp, zeroconf
@@ -122,6 +123,8 @@ def async_setup_sonos(hass, config_entry, fire_zgs_event):
 
     async def _wrapper():
         config_entry.add_to_hass(hass)
+        sonos_alarms = Alarms()
+        sonos_alarms.last_alarm_list_version = "RINCON_test:0"
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done(wait_background_tasks=True)
         await fire_zgs_event()
