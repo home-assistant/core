@@ -271,24 +271,31 @@ async def async_enable_proactive_mode(
 
     checker = await create_checker(hass, DOMAIN, extra_significant_check)
 
-    async def _async_entity_state_listener(
-        event_: Event[EventStateChangedData],
-    ) -> None:
+    @callback
+    def _async_entity_state_filter(data: EventStateChangedData) -> bool:
         if not hass.is_running:
-            return
+            return False
 
-        data = event_.data
         if not (new_state := data["new_state"]):
-            return
+            return False
 
         if new_state.domain not in ENTITY_ADAPTERS:
-            return
+            return False
 
         changed_entity = data["entity_id"]
         if not smart_home_config.should_expose(changed_entity):
             _LOGGER.debug("Not exposing %s because filtered by config", changed_entity)
-            return
+            return False
+
+        return True
+
+    async def _async_entity_state_listener(
+        event_: Event[EventStateChangedData],
+    ) -> None:
+        data = event_.data
         new_state = data["new_state"]
+        if TYPE_CHECKING:
+            assert new_state is not None
 
         alexa_changed_entity: AlexaEntity = ENTITY_ADAPTERS[new_state.domain](
             hass, smart_home_config, new_state
@@ -334,7 +341,8 @@ async def async_enable_proactive_mode(
     return hass.bus.async_listen(
         EVENT_STATE_CHANGED,
         _async_entity_state_listener,
-        run_immediately=True,
+        event_filter=_async_entity_state_filter,
+        run_immediately=False,
     )
 
 
