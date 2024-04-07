@@ -26,6 +26,10 @@
         "data": {
           "candle_lighting_minutes_before_sunset": "Minutes before sunset for candle lighthing",
           "havdalah_minutes_after_sunset": "Minutes after sunset for Havdalah"
+        },
+        "data_description": {
+          "candle_lighting_minutes_before_sunset": "Defaults to 20 minutes as this is the majority, Use 40 minutes if located in Jerusalem",
+          "havdalah_minutes_after_sunset": "Setting this to 0 means 36 minutes as fixed degrees (8.5°) will be used instead"
         }
       }
     }
