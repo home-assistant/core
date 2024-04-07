@@ -11,7 +11,7 @@ from homeassistant.components.sensor.const import SensorStateClass
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
-from .const import TEST_FETCH_RESPONSE_TEXT_PLAIN, TEST_SEARCH_RESPONSE
+from .const import TEST_FETCH_RESPONSE_TEXT_PLAIN,TEST_MESSAGE_DATA, TEST_SEARCH_RESPONSE
 from .test_config_flow import MOCK_CONFIG
 
 from tests.common import MockConfigEntry, async_capture_events, async_fire_time_changed
