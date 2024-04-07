@@ -86,13 +86,13 @@ def async_enable_report_state(
         data = event.data
         new_state = data["new_state"]
         if TYPE_CHECKING:
-            assert new_state is not None
-        if not (
-            entity := async_get_google_entity_if_supported_cached(
-                hass, google_config, new_state
-            )
-        ):
-            return
+            assert new_state is not None  # verified in filter
+        entity = async_get_google_entity_if_supported_cached(
+            hass, google_config, new_state
+        )
+        if TYPE_CHECKING:
+            assert entity is not None  # verified in filter
+
         # We only trigger notifications on changes in the state value, not attributes.
         # This is mainly designed for our event entity types
         # We need to synchronize notifications using a `SYNC` response,
