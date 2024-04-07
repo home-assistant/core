@@ -197,7 +197,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.services.async_register(DOMAIN, "delete", async_delete, SERVICE_DELETE_SCHEMA)
 
     async def async_fetch(call: ServiceCall) -> ServiceResponse:
-        """Process mark as seen service call."""
+        """Process fetch email service and return content."""
         entry_id: str = call.data[CONF_ENTRY]
         uid: str = call.data[CONF_UID]
         _LOGGER.debug(
