@@ -134,6 +134,7 @@ class Thermostat(ZHAEntity, ClimateEntity):
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set fan mode."""
         await self.entity_data.entity.async_set_fan_mode(fan_mode)
+        self.async_write_ha_state()
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target operation mode."""
