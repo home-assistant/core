@@ -625,7 +625,13 @@ async def test_if_fires_on_state_change_with_for(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "turn_off {{ trigger.platform }} - {{ trigger.entity_id }} - {{ trigger.from_state.state }} - {{ trigger.to_state.state }} - {{ trigger.for }}"
+                            "some": (
+                                "turn_off {{ trigger.platform }}"
+                                " - {{ trigger.entity_id }}"
+                                " - {{ trigger.from_state.state }}"
+                                " - {{ trigger.to_state.state }}"
+                                " - {{ trigger.for }}"
+                            )
                         },
                     },
                 }

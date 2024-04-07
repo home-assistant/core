@@ -127,7 +127,11 @@ async def test_sunset_trigger_with_offset(hass: HomeAssistant, calls) -> None:
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "{{ trigger.platform }} - {{ trigger.event }} - {{ trigger.offset }}"
+                            "some": (
+                                "{{ trigger.platform }}"
+                                " - {{ trigger.event }}"
+                                " - {{ trigger.offset }}"
+                            )
                         },
                     },
                 }

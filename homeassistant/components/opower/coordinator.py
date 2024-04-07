@@ -159,7 +159,10 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
                     )
                 )
 
-            name_prefix = f"Opower {self.api.utility.subdomain()} {account.meter_type.name.lower()} {account.utility_account_id}"
+            name_prefix = (
+                f"Opower {self.api.utility.subdomain()} "
+                f"{account.meter_type.name.lower()} {account.utility_account_id}"
+            )
             cost_metadata = StatisticMetaData(
                 has_mean=False,
                 has_sum=True,

@@ -55,7 +55,14 @@ async def test_if_fires_on_entity_change(hass: HomeAssistant, calls) -> None:
                 "action": {
                     "service": "test.automation",
                     "data_template": {
-                        "some": "{{ trigger.platform }} - {{ trigger.entity_id }} - {{ trigger.from_state.state }} - {{ trigger.to_state.state }} - {{ trigger.for }} - {{ trigger.id }}"
+                        "some": (
+                            "{{ trigger.platform }}"
+                            " - {{ trigger.entity_id }}"
+                            " - {{ trigger.from_state.state }}"
+                            " - {{ trigger.to_state.state }}"
+                            " - {{ trigger.for }}"
+                            " - {{ trigger.id }}"
+                        )
                     },
                 },
             }
@@ -1059,7 +1066,12 @@ async def test_wait_template_with_trigger(hass: HomeAssistant, calls) -> None:
                     {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "{{ trigger.platform }} - {{ trigger.entity_id }} - {{ trigger.from_state.state }} - {{ trigger.to_state.state }}"
+                            "some": (
+                                "{{ trigger.platform }}"
+                                " - {{ trigger.entity_id }}"
+                                " - {{ trigger.from_state.state }}"
+                                " - {{ trigger.to_state.state }}"
+                            )
                         },
                     },
                 ],

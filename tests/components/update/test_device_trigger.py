@@ -214,7 +214,13 @@ async def test_if_fires_on_state_change(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "update_available {{ trigger.platform }} - {{ trigger.entity_id }} - {{ trigger.from_state.state }} - {{ trigger.to_state.state }} - {{ trigger.for }}"
+                            "some": (
+                                "update_available {{ trigger.platform }}"
+                                " - {{ trigger.entity_id }}"
+                                " - {{ trigger.from_state.state }}"
+                                " - {{ trigger.to_state.state }}"
+                                " - {{ trigger.for }}"
+                            )
                         },
                     },
                 },
@@ -229,7 +235,13 @@ async def test_if_fires_on_state_change(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "no_update {{ trigger.platform }} - {{ trigger.entity_id }} - {{ trigger.from_state.state }} - {{ trigger.to_state.state }} - {{ trigger.for }}"
+                            "some": (
+                                "no_update {{ trigger.platform }}"
+                                " - {{ trigger.entity_id }}"
+                                " - {{ trigger.from_state.state }}"
+                                " - {{ trigger.to_state.state }}"
+                                " - {{ trigger.for }}"
+                            )
                         },
                     },
                 },
@@ -296,7 +308,13 @@ async def test_if_fires_on_state_change_legacy(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "no_update {{ trigger.platform }} - {{ trigger.entity_id }} - {{ trigger.from_state.state }} - {{ trigger.to_state.state }} - {{ trigger.for }}"
+                            "some": (
+                                "no_update {{ trigger.platform }}"
+                                " - {{ trigger.entity_id }}"
+                                " - {{ trigger.from_state.state }}"
+                                " - {{ trigger.to_state.state }}"
+                                " - {{ trigger.for }}"
+                            )
                         },
                     },
                 },
@@ -356,7 +374,13 @@ async def test_if_fires_on_state_change_with_for(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "turn_off {{ trigger.platform }} - {{ trigger.entity_id }} - {{ trigger.from_state.state }} - {{ trigger.to_state.state }} - {{ trigger.for }}"
+                            "some": (
+                                "turn_off {{ trigger.platform }}"
+                                " - {{ trigger.entity_id }}"
+                                " - {{ trigger.from_state.state }}"
+                                " - {{ trigger.to_state.state }}"
+                                " - {{ trigger.for }}"
+                            )
                         },
                     },
                 }
