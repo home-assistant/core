@@ -291,4 +291,6 @@ TEST_FETCH_RESPONSE_NO_SUBJECT_TO_FROM = (
     ],
 )
 
+TEST_MESSAGE_DATA = ["date", "text", "sender", "subject", "headers"]
+
 RESPONSE_BAD = ("BAD", [])
