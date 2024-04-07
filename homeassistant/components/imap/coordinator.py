@@ -48,6 +48,7 @@ from .const import (
     CONF_SSL_CIPHER_LIST,
     DEFAULT_MAX_MESSAGE_SIZE,
     DOMAIN,
+    CONF_MESSAGE_DATA
 )
 from .errors import InvalidAuth, InvalidFolder
 
@@ -260,13 +261,10 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int | None]):
                 "search": self.config_entry.data[CONF_SEARCH],
                 "folder": self.config_entry.data[CONF_FOLDER],
                 "initial": initial,
-                "date": message.date,
-                "text": message.text,
-                "sender": message.sender,
-                "subject": message.subject,
-                "headers": message.headers,
                 "uid": last_message_uid,
             }
+            for message_data in self.config_entry.data[CONF_MESSAGE_DATA]:
+                data[message_data] = getattr(message, message_data)
             if self.custom_event_template is not None:
                 try:
                     data["custom"] = self.custom_event_template.async_render(
@@ -289,11 +287,12 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int | None]):
                         last_message_uid,
                         err,
                     )
-            data["text"] = message.text[
-                : self.config_entry.data.get(
-                    CONF_MAX_MESSAGE_SIZE, DEFAULT_MAX_MESSAGE_SIZE
-                )
-            ]
+            if "text" in self.config_entry.data[CONF_MESSAGE_DATA]:
+                data["text"] = message.text[
+                    : self.config_entry.data.get(
+                        CONF_MAX_MESSAGE_SIZE, DEFAULT_MAX_MESSAGE_SIZE
+                    )
+                ]
             self._update_diagnostics(data)
             if (size := len(json_bytes(data))) > MAX_EVENT_DATA_BYTES:
                 _LOGGER.warning(
@@ -448,7 +447,7 @@ class ImapPushDataUpdateCoordinator(ImapDataUpdateCoordinator):
     async def async_start(self) -> None:
         """Start coordinator."""
         self._push_wait_task = self.hass.async_create_background_task(
-            self._async_wait_push_loop(), "Wait for IMAP data push", eager_start=False
+            self._async_wait_push_loop(), "Wait for IMAP data push"
         )
 
     async def _async_wait_push_loop(self) -> None:
