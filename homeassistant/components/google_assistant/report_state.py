@@ -38,7 +38,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @callback
-def async_enable_report_state(  # noqa: C901
+def async_enable_report_state(
     hass: HomeAssistant, google_config: AbstractConfig
 ) -> CALLBACK_TYPE:
     """Enable state and notification reporting."""
@@ -71,23 +71,14 @@ def async_enable_report_state(  # noqa: C901
 
     @callback
     def _async_entity_state_filter(data: EventStateChangedData) -> bool:
-        nonlocal unsub_pending, checker
-
-        if not hass.is_running:
-            return False
-
-        if not (new_state := data["new_state"]):
-            return False
-
-        if not google_config.should_expose(new_state):
-            return False
-
-        if not (
-            async_get_google_entity_if_supported_cached(hass, google_config, new_state)
-        ):
-            return False
-
-        return True
+        return bool(
+            hass.is_running
+            and (new_state := data["new_state"])
+            and google_config.should_expose(new_state)
+            and async_get_google_entity_if_supported_cached(
+                hass, google_config, new_state
+            )
+        )
 
     async def _async_entity_state_listener(event: Event[EventStateChangedData]) -> None:
         """Handle state changes."""
