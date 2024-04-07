@@ -11,11 +11,7 @@ from homeassistant.components.sensor.const import SensorStateClass
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
-from .const import (
-    TEST_FETCH_RESPONSE_TEXT_PLAIN,
-    TEST_MESSAGE_DATA,
-    TEST_SEARCH_RESPONSE,
-)
+from .const import TEST_FETCH_RESPONSE_TEXT_PLAIN, TEST_SEARCH_RESPONSE
 from .test_config_flow import MOCK_CONFIG
 
 from tests.common import MockConfigEntry, async_capture_events, async_fire_time_changed
@@ -37,7 +33,6 @@ async def test_entry_diagnostics(
     template = "{{ 4 * 4 }}"
     config = MOCK_CONFIG.copy()
     config["custom_event_data_template"] = template
-    config["message_data"] = TEST_MESSAGE_DATA
     config_entry = MockConfigEntry(domain=imap.DOMAIN, data=config)
 
     config_entry.add_to_hass(hass)
