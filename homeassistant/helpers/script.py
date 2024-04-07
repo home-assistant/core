@@ -938,7 +938,11 @@ class _ScriptRun:
                                 self._script.name,
                                 REPEAT_TERMINATE_ITERATIONS,
                             )
-                            break
+                            raise _AbortScript(
+                                f"While condition {repeat[CONF_WHILE]} "
+                                f"terminated because it looping more "
+                                f"than {REPEAT_TERMINATE_ITERATIONS} times"
+                            )
 
                 await async_run_sequence(iteration)
 
@@ -978,7 +982,11 @@ class _ScriptRun:
                             self._script.name,
                             REPEAT_TERMINATE_ITERATIONS,
                         )
-                        break
+                        raise _AbortScript(
+                            f"Util condition {repeat[CONF_UNTIL]} "
+                            f"terminated because it looping more "
+                            f"than {REPEAT_TERMINATE_ITERATIONS} times"
+                        )
 
                 # If the user creates an script with a tight loop,
                 # yield to the event loop so the system stays responsive
