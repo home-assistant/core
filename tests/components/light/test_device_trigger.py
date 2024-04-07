@@ -23,6 +23,14 @@ from tests.common import (
     async_mock_service,
 )
 
+DATA_TEMPLATE_ATTRIBUTES = (
+    "{{ trigger.platform }}"
+    " - {{ trigger.entity_id }}"
+    " - {{ trigger.from_state.state }}"
+    " - {{ trigger.to_state.state }}"
+    " - {{ trigger.for }}"
+)
+
 
 @pytest.fixture(autouse=True, name="stub_blueprint_populate")
 def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
@@ -212,13 +220,7 @@ async def test_if_fires_on_state_change(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": (
-                                "turn_on {{ trigger.platform }}"
-                                " - {{ trigger.entity_id }}"
-                                " - {{ trigger.from_state.state }}"
-                                " - {{ trigger.to_state.state }}"
-                                " - {{ trigger.for }}"
-                            )
+                            "some": "turn_on " + DATA_TEMPLATE_ATTRIBUTES
                         },
                     },
                 },
@@ -233,13 +235,7 @@ async def test_if_fires_on_state_change(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": (
-                                "turn_off {{ trigger.platform }}"
-                                " - {{ trigger.entity_id }}"
-                                " - {{ trigger.from_state.state }}"
-                                " - {{ trigger.to_state.state }}"
-                                " - {{ trigger.for }}"
-                            )
+                            "some": "turn_off " + DATA_TEMPLATE_ATTRIBUTES
                         },
                     },
                 },
@@ -254,13 +250,7 @@ async def test_if_fires_on_state_change(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": (
-                                "turn_on_or_off {{ trigger.platform }}"
-                                " - {{ trigger.entity_id }}"
-                                " - {{ trigger.from_state.state }}"
-                                " - {{ trigger.to_state.state }}"
-                                " - {{ trigger.for }}"
-                            )
+                            "some": "turn_on_or_off " + DATA_TEMPLATE_ATTRIBUTES
                         },
                     },
                 },
@@ -323,13 +313,7 @@ async def test_if_fires_on_state_change_legacy(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": (
-                                "turn_on {{ trigger.platform }}"
-                                " - {{ trigger.entity_id }}"
-                                " - {{ trigger.from_state.state }}"
-                                " - {{ trigger.to_state.state }}"
-                                " - {{ trigger.for }}"
-                            )
+                            "some": "turn_on " + DATA_TEMPLATE_ATTRIBUTES
                         },
                     },
                 },
@@ -384,13 +368,7 @@ async def test_if_fires_on_state_change_with_for(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": (
-                                "turn_off {{ trigger.platform }}"
-                                " - {{ trigger.entity_id }}"
-                                " - {{ trigger.from_state.state }}"
-                                " - {{ trigger.to_state.state }}"
-                                " - {{ trigger.for }}"
-                            )
+                            "some": "turn_off " + DATA_TEMPLATE_ATTRIBUTES
                         },
                     },
                 }
