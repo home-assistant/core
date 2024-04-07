@@ -914,10 +914,6 @@ class _ScriptRun:
                     break
 
                 if iteration > 1:
-                    # If the user creates a script with a tight loop,
-                    # yield to the event loop so the system stays
-                    # responsive while all the cpu time is consumed.
-                    await asyncio.sleep(0)
                     if iteration >= REPEAT_WARN_ITERATIONS:
                         if not warned_too_many_loops:
                             warned_too_many_loops = True
@@ -943,6 +939,11 @@ class _ScriptRun:
                                 f"terminated because it looped more "
                                 f"than {REPEAT_TERMINATE_ITERATIONS} times"
                             )
+
+                    # If the user creates a script with a tight loop,
+                    # yield to the event loop so the system stays
+                    # responsive while all the cpu time is consumed.
+                    await asyncio.sleep(0)
 
                 await async_run_sequence(iteration)
 
