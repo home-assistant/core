@@ -40,6 +40,7 @@ from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 import homeassistant.util.dt as dt_util
 from homeassistant.util.enum import try_parse_enum
+from homeassistant.util.event_type import EventType
 
 from . import migration, statistics
 from .const import (
@@ -173,7 +174,7 @@ class Recorder(threading.Thread):
         db_max_retries: int,
         db_retry_wait: int,
         entity_filter: Callable[[str], bool],
-        exclude_event_types: set[str],
+        exclude_event_types: set[EventType[Any] | str],
     ) -> None:
         """Initialize the recorder."""
         threading.Thread.__init__(self, name="Recorder")
