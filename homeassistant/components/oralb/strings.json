@@ -18,5 +18,24 @@
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "sector": {
+        "name": "Sector"
+      },
+      "number_of_sectors": {
+        "name": "Number of sectors"
+      },
+      "sector_timer": {
+        "name": "Sector timer"
+      },
+      "pressure": {
+        "name": "Pressure"
+      },
+      "mode": {
+        "name": "Brushing mode"
+      }
+    }
   }
 }

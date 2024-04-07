@@ -1,11 +1,14 @@
 """The lock tests for the august platform."""
+
 import datetime
 from unittest.mock import Mock
 
 from aiohttp import ClientResponseError
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from yalexs.pubnub_async import AugustPubNub
 
+from homeassistant.components.august.activity import INITIAL_LOCK_RESYNC_TIME
 from homeassistant.components.lock import (
     DOMAIN as LOCK_DOMAIN,
     STATE_JAMMED,
@@ -154,7 +157,9 @@ async def test_one_lock_operation(
 
 
 async def test_one_lock_operation_pubnub_connected(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test lock and unlock operations are async when pubnub is connected."""
     lock_one = await _mock_doorsense_enabled_august_lock_detail(hass)
@@ -228,6 +233,23 @@ async def test_one_lock_operation_pubnub_connected(
         hass.states.get("sensor.online_with_doorsense_name_operator").state
         == STATE_UNKNOWN
     )
+
+    freezer.tick(INITIAL_LOCK_RESYNC_TIME)
+
+    pubnub.message(
+        pubnub,
+        Mock(
+            channel=lock_one.pubsub_channel,
+            timetoken=(dt_util.utcnow().timestamp() + 2) * 10000000,
+            message={
+                "status": "kAugLockState_Unlocked",
+            },
+        ),
+    )
+    await hass.async_block_till_done()
+
+    lock_online_with_doorsense_name = hass.states.get("lock.online_with_doorsense_name")
+    assert lock_online_with_doorsense_name.state == STATE_UNLOCKED
 
 
 async def test_lock_jammed(hass: HomeAssistant) -> None:

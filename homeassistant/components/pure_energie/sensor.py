@@ -1,4 +1,5 @@
 """Support for Pure Energie sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -22,18 +23,11 @@ from . import PureEnergieData, PureEnergieDataUpdateCoordinator
 from .const import DOMAIN
 
 
-@dataclass(frozen=True)
-class PureEnergieSensorEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class PureEnergieSensorEntityDescription(SensorEntityDescription):
+    """Describes a Pure Energie sensor entity."""
 
     value_fn: Callable[[PureEnergieData], int | float]
-
-
-@dataclass(frozen=True)
-class PureEnergieSensorEntityDescription(
-    SensorEntityDescription, PureEnergieSensorEntityDescriptionMixin
-):
-    """Describes a Pure Energie sensor entity."""
 
 
 SENSORS: tuple[PureEnergieSensorEntityDescription, ...] = (

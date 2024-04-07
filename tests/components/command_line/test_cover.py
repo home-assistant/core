@@ -1,4 +1,5 @@
 """The tests the cover command line platform."""
+
 from __future__ import annotations
 
 import asyncio
@@ -30,16 +31,15 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 import homeassistant.util.dt as dt_util
 
+from . import mock_asyncio_subprocess_run
+
 from tests.common import async_fire_time_changed
 
 
 async def test_no_poll_when_cover_has_no_command_state(hass: HomeAssistant) -> None:
     """Test that the cover does not polls when there's no state command."""
 
-    with patch(
-        "homeassistant.components.command_line.utils.subprocess.check_output",
-        return_value=b"50\n",
-    ) as check_output:
+    with mock_asyncio_subprocess_run(b"50\n") as mock_subprocess_run:
         assert await setup.async_setup_component(
             hass,
             COVER_DOMAIN,
@@ -51,7 +51,7 @@ async def test_no_poll_when_cover_has_no_command_state(hass: HomeAssistant) -> N
         )
         async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
         await hass.async_block_till_done()
-        assert not check_output.called
+        assert not mock_subprocess_run.called
 
 
 @pytest.mark.parametrize(
@@ -74,17 +74,13 @@ async def test_poll_when_cover_has_command_state(
 ) -> None:
     """Test that the cover polls when there's a state  command."""
 
-    with patch(
-        "homeassistant.components.command_line.utils.subprocess.check_output",
-        return_value=b"50\n",
-    ) as check_output:
+    with mock_asyncio_subprocess_run(b"50\n") as mock_subprocess_run:
         async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
         await hass.async_block_till_done()
-        check_output.assert_called_once_with(
+        mock_subprocess_run.assert_called_once_with(
             "echo state",
-            shell=True,  # noqa: S604 # shell by design
-            timeout=15,
             close_fds=False,
+            stdout=-1,
         )
 
 
@@ -269,7 +265,7 @@ async def test_updating_to_often(
         not in caplog.text
     )
     async_fire_time_changed(hass, dt_util.now() + timedelta(seconds=11))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert called
     called.clear()
 
@@ -286,7 +282,7 @@ async def test_updating_to_often(
     wait_till_event.set()
 
     # Finish processing update
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert called
     assert (
         "Updating Command Line Cover Test took longer than the scheduled update interval"
@@ -331,7 +327,7 @@ async def test_updating_manually(
         await hass.async_block_till_done()
 
     async_fire_time_changed(hass, dt_util.now() + timedelta(seconds=10))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert called
     called.clear()
 
@@ -371,7 +367,7 @@ async def test_availability(
     hass.states.async_set("sensor.input1", "on")
     freezer.tick(timedelta(minutes=1))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     entity_state = hass.states.get("cover.test")
     assert entity_state
@@ -379,14 +375,56 @@ async def test_availability(
 
     hass.states.async_set("sensor.input1", "off")
     await hass.async_block_till_done()
-    with patch(
-        "homeassistant.components.command_line.utils.subprocess.check_output",
-        return_value=b"50\n",
-    ):
+    with mock_asyncio_subprocess_run(b"50\n"):
         freezer.tick(timedelta(minutes=1))
         async_fire_time_changed(hass)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     entity_state = hass.states.get("cover.test")
     assert entity_state
     assert entity_state.state == STATE_UNAVAILABLE
+
+
+async def test_icon_template(hass: HomeAssistant) -> None:
+    """Test with state value."""
+    with tempfile.TemporaryDirectory() as tempdirname:
+        path = os.path.join(tempdirname, "cover_status_icon")
+        await setup.async_setup_component(
+            hass,
+            DOMAIN,
+            {
+                "command_line": [
+                    {
+                        "cover": {
+                            "command_state": f"cat {path}",
+                            "command_open": f"echo 100 > {path}",
+                            "command_close": f"echo 0 > {path}",
+                            "command_stop": f"echo 0 > {path}",
+                            "name": "Test",
+                            "icon": "{% if this.state=='open' %} mdi:open {% else %} mdi:closed {% endif %}",
+                        }
+                    }
+                ]
+            },
+        )
+        await hass.async_block_till_done()
+
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_CLOSE_COVER,
+            {ATTR_ENTITY_ID: "cover.test"},
+            blocking=True,
+        )
+        entity_state = hass.states.get("cover.test")
+        assert entity_state
+        assert entity_state.attributes.get("icon") == "mdi:closed"
+
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_OPEN_COVER,
+            {ATTR_ENTITY_ID: "cover.test"},
+            blocking=True,
+        )
+        entity_state = hass.states.get("cover.test")
+        assert entity_state
+        assert entity_state.attributes.get("icon") == "mdi:open"

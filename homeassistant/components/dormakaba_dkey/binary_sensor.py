@@ -1,4 +1,5 @@
 """Dormakaba dKey integration binary sensor platform."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -22,18 +23,11 @@ from .entity import DormakabaDkeyEntity
 from .models import DormakabaDkeyData
 
 
-@dataclass(frozen=True)
-class DormakabaDkeyBinarySensorDescriptionMixin:
-    """Class for keys required by Dormakaba dKey binary sensor entity."""
+@dataclass(frozen=True, kw_only=True)
+class DormakabaDkeyBinarySensorDescription(BinarySensorEntityDescription):
+    """Describes Dormakaba dKey binary sensor entity."""
 
     is_on: Callable[[Notifications], bool]
-
-
-@dataclass(frozen=True)
-class DormakabaDkeyBinarySensorDescription(
-    BinarySensorEntityDescription, DormakabaDkeyBinarySensorDescriptionMixin
-):
-    """Describes Dormakaba dKey binary sensor entity."""
 
 
 BINARY_SENSOR_DESCRIPTIONS = (

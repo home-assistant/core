@@ -1,4 +1,5 @@
 """Support for Verisure locks."""
+
 from __future__ import annotations
 
 import asyncio

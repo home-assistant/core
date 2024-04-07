@@ -1,4 +1,5 @@
 """Support for Vallox ventilation unit numbers."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -44,9 +45,7 @@ class ValloxNumberEntity(ValloxEntity, NumberEntity):
     def native_value(self) -> float | None:
         """Return the value reported by the sensor."""
         if (
-            value := self.coordinator.data.get_metric(
-                self.entity_description.metric_key
-            )
+            value := self.coordinator.data.get(self.entity_description.metric_key)
         ) is None:
             return None
 
@@ -60,16 +59,11 @@ class ValloxNumberEntity(ValloxEntity, NumberEntity):
         await self.coordinator.async_request_refresh()
 
 
-@dataclass(frozen=True)
-class ValloxMetricMixin:
-    """Holds Vallox metric key."""
+@dataclass(frozen=True, kw_only=True)
+class ValloxNumberEntityDescription(NumberEntityDescription):
+    """Describes Vallox number entity."""
 
     metric_key: str
-
-
-@dataclass(frozen=True)
-class ValloxNumberEntityDescription(NumberEntityDescription, ValloxMetricMixin):
-    """Describes Vallox number entity."""
 
 
 NUMBER_ENTITIES: tuple[ValloxNumberEntityDescription, ...] = (
@@ -79,7 +73,6 @@ NUMBER_ENTITIES: tuple[ValloxNumberEntityDescription, ...] = (
         metric_key="A_CYC_HOME_AIR_TEMP_TARGET",
         device_class=NumberDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        icon="mdi:thermometer",
         native_min_value=5.0,
         native_max_value=25.0,
         native_step=1.0,
@@ -90,7 +83,6 @@ NUMBER_ENTITIES: tuple[ValloxNumberEntityDescription, ...] = (
         metric_key="A_CYC_AWAY_AIR_TEMP_TARGET",
         device_class=NumberDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        icon="mdi:thermometer",
         native_min_value=5.0,
         native_max_value=25.0,
         native_step=1.0,
@@ -101,7 +93,6 @@ NUMBER_ENTITIES: tuple[ValloxNumberEntityDescription, ...] = (
         metric_key="A_CYC_BOOST_AIR_TEMP_TARGET",
         device_class=NumberDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        icon="mdi:thermometer",
         native_min_value=5.0,
         native_max_value=25.0,
         native_step=1.0,
@@ -116,10 +107,8 @@ async def async_setup_entry(
     data = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
-        [
-            ValloxNumberEntity(
-                data["name"], data["coordinator"], description, data["client"]
-            )
-            for description in NUMBER_ENTITIES
-        ]
+        ValloxNumberEntity(
+            data["name"], data["coordinator"], description, data["client"]
+        )
+        for description in NUMBER_ENTITIES
     )

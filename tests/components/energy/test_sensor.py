@@ -1,4 +1,5 @@
 """Test the Energy sensors."""
+
 import copy
 from datetime import timedelta
 from typing import Any
@@ -424,7 +425,7 @@ async def test_cost_sensor_price_entity_total(
         hass.states.async_set(
             usage_sensor_entity_id,
             initial_energy,
-            {**energy_attributes, **{"last_reset": last_reset}},
+            {**energy_attributes, "last_reset": last_reset},
         )
     hass.states.async_set("sensor.energy_price", "1")
 
@@ -443,7 +444,7 @@ async def test_cost_sensor_price_entity_total(
         hass.states.async_set(
             usage_sensor_entity_id,
             "0",
-            {**energy_attributes, **{"last_reset": last_reset}},
+            {**energy_attributes, "last_reset": last_reset},
         )
         await hass.async_block_till_done()
 
@@ -465,7 +466,7 @@ async def test_cost_sensor_price_entity_total(
     hass.states.async_set(
         usage_sensor_entity_id,
         "10",
-        {**energy_attributes, **{"last_reset": last_reset}},
+        {**energy_attributes, "last_reset": last_reset},
     )
     await hass.async_block_till_done()
     state = hass.states.get(cost_sensor_entity_id)
@@ -492,7 +493,7 @@ async def test_cost_sensor_price_entity_total(
     hass.states.async_set(
         usage_sensor_entity_id,
         "14.5",
-        {**energy_attributes, **{"last_reset": last_reset}},
+        {**energy_attributes, "last_reset": last_reset},
     )
     await hass.async_block_till_done()
     state = hass.states.get(cost_sensor_entity_id)
@@ -510,7 +511,7 @@ async def test_cost_sensor_price_entity_total(
     hass.states.async_set(
         usage_sensor_entity_id,
         "14",
-        {**energy_attributes, **{"last_reset": last_reset}},
+        {**energy_attributes, "last_reset": last_reset},
     )
     await hass.async_block_till_done()
     state = hass.states.get(cost_sensor_entity_id)
@@ -523,7 +524,7 @@ async def test_cost_sensor_price_entity_total(
     hass.states.async_set(
         usage_sensor_entity_id,
         "4",
-        {**energy_attributes, **{"last_reset": last_reset}},
+        {**energy_attributes, "last_reset": last_reset},
     )
     await hass.async_block_till_done()
     state = hass.states.get(cost_sensor_entity_id)
@@ -536,7 +537,7 @@ async def test_cost_sensor_price_entity_total(
     hass.states.async_set(
         usage_sensor_entity_id,
         "10",
-        {**energy_attributes, **{"last_reset": last_reset}},
+        {**energy_attributes, "last_reset": last_reset},
     )
     await hass.async_block_till_done()
     state = hass.states.get(cost_sensor_entity_id)
@@ -987,7 +988,7 @@ async def test_cost_sensor_handle_late_price_sensor(
 
 @pytest.mark.parametrize(
     "unit",
-    (UnitOfVolume.CUBIC_FEET, UnitOfVolume.CUBIC_METERS),
+    [UnitOfVolume.CUBIC_FEET, UnitOfVolume.CUBIC_METERS],
 )
 async def test_cost_sensor_handle_gas(
     setup_integration, hass: HomeAssistant, hass_storage: dict[str, Any], unit
@@ -1085,12 +1086,12 @@ async def test_cost_sensor_handle_gas_kwh(
 
 @pytest.mark.parametrize(
     ("unit_system", "usage_unit", "growth"),
-    (
+    [
         # 1 cubic foot = 7.47 gl, 100 ft3 growth @ 0.5/ft3:
         (US_CUSTOMARY_SYSTEM, UnitOfVolume.CUBIC_FEET, 374.025974025974),
         (US_CUSTOMARY_SYSTEM, UnitOfVolume.GALLONS, 50.0),
         (METRIC_SYSTEM, UnitOfVolume.CUBIC_METERS, 50.0),
-    ),
+    ],
 )
 async def test_cost_sensor_handle_water(
     setup_integration,

@@ -1,4 +1,5 @@
 """Support for OpenWRT (luci) routers."""
+
 from __future__ import annotations
 
 import logging
@@ -70,11 +71,10 @@ class LuciDeviceScanner(DeviceScanner):
 
     def get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""
-        name = next(
+        return next(
             (result.hostname for result in self.last_results if result.mac == device),
             None,
         )
-        return name
 
     def get_extra_attributes(self, device):
         """Get extra attributes of a device.
@@ -95,14 +95,11 @@ class LuciDeviceScanner(DeviceScanner):
 
         _LOGGER.debug("Luci get_all_connected_devices returned: %s", result)
 
-        last_results = []
-        for device in result:
-            if (
-                not hasattr(self.router.router.owrt_version, "release")
-                or not self.router.router.owrt_version.release
-                or self.router.router.owrt_version.release[0] < 19
-                or device.reachable
-            ):
-                last_results.append(device)
-
-        self.last_results = last_results
+        self.last_results = [
+            device
+            for device in result
+            if not hasattr(self.router.router.owrt_version, "release")
+            or not self.router.router.owrt_version.release
+            or self.router.router.owrt_version.release[0] < 19
+            or device.reachable
+        ]

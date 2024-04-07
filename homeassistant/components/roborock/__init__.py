@@ -1,4 +1,5 @@
 """The Roborock component."""
+
 from __future__ import annotations
 
 import asyncio
@@ -86,12 +87,10 @@ def build_setup_functions(
     product_info: dict[str, HomeDataProduct],
 ) -> list[Coroutine[Any, Any, RoborockDataUpdateCoordinator | None]]:
     """Create a list of setup functions that can later be called asynchronously."""
-    setup_functions = []
-    for device in device_map.values():
-        setup_functions.append(
-            setup_device(hass, user_data, device, product_info[device.product_id])
-        )
-    return setup_functions
+    return [
+        setup_device(hass, user_data, device, product_info[device.product_id])
+        for device in device_map.values()
+    ]
 
 
 async def setup_device(
@@ -115,7 +114,8 @@ async def setup_device(
             device.name,
         )
         _LOGGER.debug(err)
-        raise err
+        await mqtt_client.async_release()
+        raise
     coordinator = RoborockDataUpdateCoordinator(
         hass, device, networking, product_info, mqtt_client
     )
@@ -123,8 +123,14 @@ async def setup_device(
     await coordinator.verify_api()
     coordinator.api.is_available = True
     try:
+        await coordinator.get_maps()
+    except RoborockException as err:
+        _LOGGER.warning("Failed to get map data")
+        _LOGGER.debug(err)
+    try:
         await coordinator.async_config_entry_first_refresh()
     except ConfigEntryNotReady as ex:
+        await coordinator.release()
         if isinstance(coordinator.api, RoborockMqttClient):
             _LOGGER.warning(
                 "Not setting up %s because the we failed to get data for the first time using the online client. "
@@ -153,14 +159,10 @@ async def setup_device(
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Handle removal of an entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        await asyncio.gather(
-            *(
-                coordinator.release()
-                for coordinator in hass.data[DOMAIN][entry.entry_id].values()
-            )
-        )
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        release_tasks = set()
+        for coordinator in hass.data[DOMAIN][entry.entry_id].values():
+            release_tasks.add(coordinator.release())
         hass.data[DOMAIN].pop(entry.entry_id)
-
+        await asyncio.gather(*release_tasks)
     return unload_ok

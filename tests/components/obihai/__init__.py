@@ -12,7 +12,7 @@ USER_INPUT = {
 DHCP_SERVICE_INFO = dhcp.DhcpServiceInfo(
     hostname="obi200",
     ip="192.168.1.100",
-    macaddress="9CADEF000000",
+    macaddress="9cadef000000",
 )
 
 

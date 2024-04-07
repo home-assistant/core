@@ -1,4 +1,5 @@
 """Test ZHA device switch."""
+
 from datetime import timedelta
 import logging
 import time
@@ -8,7 +9,7 @@ from unittest.mock import patch
 import pytest
 import zigpy.profiles.zha
 import zigpy.types
-import zigpy.zcl.clusters.general as general
+from zigpy.zcl.clusters import general
 import zigpy.zdo.types as zdo_t
 
 from homeassistant.components.zha.core.const import (
@@ -114,8 +115,7 @@ async def ota_zha_device(zha_device_restored, zigpy_device_mock):
         "test model",
     )
 
-    zha_device = await zha_device_restored(zigpy_dev)
-    return zha_device
+    return await zha_device_restored(zigpy_dev)
 
 
 def _send_time_changed(hass, seconds):
@@ -266,7 +266,7 @@ async def test_ota_sw_version(hass: HomeAssistant, ota_zha_device) -> None:
 
 @pytest.mark.parametrize(
     ("device", "last_seen_delta", "is_available"),
-    (
+    [
         ("zigpy_device", 0, True),
         (
             "zigpy_device",
@@ -304,7 +304,7 @@ async def test_ota_sw_version(hass: HomeAssistant, ota_zha_device) -> None:
             CONF_DEFAULT_CONSIDER_UNAVAILABLE_BATTERY + 2,
             False,
         ),
-    ),
+    ],
 )
 async def test_device_restore_availability(
     hass: HomeAssistant,

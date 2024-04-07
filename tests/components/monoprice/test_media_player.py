@@ -1,4 +1,5 @@
 """The tests for Monoprice Media player platform."""
+
 from collections import defaultdict
 from unittest.mock import patch
 
@@ -182,7 +183,7 @@ async def test_service_calls_with_entity_id(hass: HomeAssistant) -> None:
     # Restoring other media player to its previous state
     # The zone should not be restored
     await _call_monoprice_service(hass, SERVICE_RESTORE, {"entity_id": ZONE_2_ID})
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     # Checking that values were not (!) restored
     state = hass.states.get(ZONE_1_ID)
@@ -192,7 +193,7 @@ async def test_service_calls_with_entity_id(hass: HomeAssistant) -> None:
 
     # Restoring media player to its previous state
     await _call_monoprice_service(hass, SERVICE_RESTORE, {"entity_id": ZONE_1_ID})
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(ZONE_1_ID)
 
@@ -225,7 +226,7 @@ async def test_service_calls_with_all_entities(hass: HomeAssistant) -> None:
 
     # Restoring media player to its previous state
     await _call_monoprice_service(hass, SERVICE_RESTORE, {"entity_id": "all"})
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(ZONE_1_ID)
 
@@ -258,7 +259,7 @@ async def test_service_calls_without_relevant_entities(hass: HomeAssistant) -> N
 
     # Restoring media player to its previous state
     await _call_monoprice_service(hass, SERVICE_RESTORE, {"entity_id": "light.demo"})
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(ZONE_1_ID)
 
@@ -272,7 +273,7 @@ async def test_restore_without_snapshort(hass: HomeAssistant) -> None:
 
     with patch.object(MockMonoprice, "restore_zone") as method_call:
         await _call_monoprice_service(hass, SERVICE_RESTORE, {"entity_id": ZONE_1_ID})
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         assert not method_call.called
 
@@ -294,7 +295,7 @@ async def test_update(hass: HomeAssistant) -> None:
     monoprice.set_volume(11, 38)
 
     await async_update_entity(hass, ZONE_1_ID)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(ZONE_1_ID)
 
@@ -320,7 +321,7 @@ async def test_failed_update(hass: HomeAssistant) -> None:
 
     with patch.object(MockMonoprice, "zone_status", side_effect=SerialException):
         await async_update_entity(hass, ZONE_1_ID)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(ZONE_1_ID)
 
@@ -346,7 +347,7 @@ async def test_empty_update(hass: HomeAssistant) -> None:
 
     with patch.object(MockMonoprice, "zone_status", return_value=None):
         await async_update_entity(hass, ZONE_1_ID)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(ZONE_1_ID)
 
@@ -417,7 +418,7 @@ async def test_unknown_source(hass: HomeAssistant) -> None:
     monoprice.set_source(11, 5)
 
     await async_update_entity(hass, ZONE_1_ID)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(ZONE_1_ID)
 

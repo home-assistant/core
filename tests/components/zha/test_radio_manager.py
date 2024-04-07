@@ -10,11 +10,11 @@ import zigpy.config
 from zigpy.config import CONF_DEVICE_PATH
 import zigpy.types
 
-from homeassistant import config_entries
 from homeassistant.components.usb import UsbServiceInfo
 from homeassistant.components.zha import radio_manager
 from homeassistant.components.zha.core.const import DOMAIN, RadioType
 from homeassistant.components.zha.radio_manager import ProbeResult, ZhaRadioManager
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -224,7 +224,7 @@ async def test_migrate_matching_port_config_entry_not_loaded(
         title="Test",
     )
     config_entry.add_to_hass(hass)
-    config_entry.state = config_entries.ConfigEntryState.SETUP_IN_PROGRESS
+    config_entry.mock_state(hass, ConfigEntryState.SETUP_IN_PROGRESS)
 
     migration_data = {
         "new_discovery_info": {
@@ -284,7 +284,7 @@ async def test_migrate_matching_port_retry(
         title="Test",
     )
     config_entry.add_to_hass(hass)
-    config_entry.state = config_entries.ConfigEntryState.SETUP_IN_PROGRESS
+    config_entry.mock_state(hass, ConfigEntryState.SETUP_IN_PROGRESS)
 
     migration_data = {
         "new_discovery_info": {
@@ -389,7 +389,7 @@ async def test_migrate_initiate_failure(
         title="Test",
     )
     config_entry.add_to_hass(hass)
-    config_entry.state = config_entries.ConfigEntryState.SETUP_IN_PROGRESS
+    config_entry.mock_state(hass, ConfigEntryState.SETUP_IN_PROGRESS)
 
     migration_data = {
         "new_discovery_info": {
@@ -436,12 +436,15 @@ def zha_radio_manager(hass: HomeAssistant) -> ZhaRadioManager:
 
 async def test_detect_radio_type_success(radio_manager: ZhaRadioManager) -> None:
     """Test radio type detection, success."""
-    with patch(
-        "bellows.zigbee.application.ControllerApplication.probe", return_value=False
-    ), patch(
-        # Intentionally probe only the second radio type
-        "zigpy_znp.zigbee.application.ControllerApplication.probe",
-        return_value=True,
+    with (
+        patch(
+            "bellows.zigbee.application.ControllerApplication.probe", return_value=False
+        ),
+        patch(
+            # Intentionally probe only the second radio type
+            "zigpy_znp.zigbee.application.ControllerApplication.probe",
+            return_value=True,
+        ),
     ):
         assert (
             await radio_manager.detect_radio_type() == ProbeResult.RADIO_TYPE_DETECTED
@@ -453,11 +456,12 @@ async def test_detect_radio_type_failure_wrong_firmware(
     radio_manager: ZhaRadioManager,
 ) -> None:
     """Test radio type detection, wrong firmware."""
-    with patch(
-        "homeassistant.components.zha.radio_manager.AUTOPROBE_RADIOS", ()
-    ), patch(
-        "homeassistant.components.zha.radio_manager.repairs.wrong_silabs_firmware.warn_on_wrong_silabs_firmware",
-        return_value=True,
+    with (
+        patch("homeassistant.components.zha.radio_manager.AUTOPROBE_RADIOS", ()),
+        patch(
+            "homeassistant.components.zha.radio_manager.repairs.wrong_silabs_firmware.warn_on_wrong_silabs_firmware",
+            return_value=True,
+        ),
     ):
         assert (
             await radio_manager.detect_radio_type()
@@ -470,11 +474,12 @@ async def test_detect_radio_type_failure_no_detect(
     radio_manager: ZhaRadioManager,
 ) -> None:
     """Test radio type detection, no firmware detected."""
-    with patch(
-        "homeassistant.components.zha.radio_manager.AUTOPROBE_RADIOS", ()
-    ), patch(
-        "homeassistant.components.zha.radio_manager.repairs.wrong_silabs_firmware.warn_on_wrong_silabs_firmware",
-        return_value=False,
+    with (
+        patch("homeassistant.components.zha.radio_manager.AUTOPROBE_RADIOS", ()),
+        patch(
+            "homeassistant.components.zha.radio_manager.repairs.wrong_silabs_firmware.warn_on_wrong_silabs_firmware",
+            return_value=False,
+        ),
     ):
         assert await radio_manager.detect_radio_type() == ProbeResult.PROBING_FAILED
         assert radio_manager.radio_type is None

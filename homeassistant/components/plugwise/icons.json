@@ -64,16 +64,38 @@
     },
     "select": {
       "dhw_mode": {
-        "default": "mdi:shower"
+        "default": "mdi:shower",
+        "state": {
+          "comfort": "mdi:sofa",
+          "eco": "mdi:leaf",
+          "off": "mdi:circle-off-outline",
+          "boost": "mdi:rocket-launch",
+          "auto": "mdi:auto-mode"
+        }
       },
       "gateway_mode": {
-        "default": "mdi:cog-outline"
+        "default": "mdi:cog-outline",
+        "state": {
+          "away": "mdi:pause",
+          "full": "mdi:home",
+          "vacation": "mdi:beach"
+        }
       },
       "regulation_mode": {
-        "default": "mdi:hvac"
+        "default": "mdi:hvac",
+        "state": {
+          "bleeding_hot": "mdi:fire-circle",
+          "bleeding_cold": "mdi:water-circle",
+          "off": "mdi:circle-off-outline",
+          "heating": "mdi:radiator",
+          "cooling": "mdi:snowflake"
+        }
       },
       "select_schedule": {
-        "default": "mdi:calendar-clock"
+        "default": "mdi:calendar-clock",
+        "state": {
+          "off": "mdi:circle-off-outline"
+        }
       }
     },
     "sensor": {

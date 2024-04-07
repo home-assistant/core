@@ -1,4 +1,5 @@
 """Test Google report state."""
+
 from datetime import datetime, timedelta
 from http import HTTPStatus
 from unittest.mock import AsyncMock, patch
@@ -26,9 +27,12 @@ async def test_report_state(
         "event.doorbell", "unknown", attributes={"device_class": "doorbell"}
     )
 
-    with patch.object(
-        BASIC_CONFIG, "async_report_state_all", AsyncMock()
-    ) as mock_report, patch.object(report_state, "INITIAL_REPORT_DELAY", 0):
+    with (
+        patch.object(
+            BASIC_CONFIG, "async_report_state_all", AsyncMock()
+        ) as mock_report,
+        patch.object(report_state, "INITIAL_REPORT_DELAY", 0),
+    ):
         unsub = report_state.async_enable_report_state(hass, BASIC_CONFIG)
 
         async_fire_time_changed(hass, utcnow())
@@ -73,10 +77,15 @@ async def test_report_state(
         }
 
     # Test that if serialize returns same value, we don't send
-    with patch(
-        "homeassistant.components.google_assistant.helpers.GoogleEntity.query_serialize",
-        return_value={"same": "info"},
-    ), patch.object(BASIC_CONFIG, "async_report_state_all", AsyncMock()) as mock_report:
+    with (
+        patch(
+            "homeassistant.components.google_assistant.helpers.GoogleEntity.query_serialize",
+            return_value={"same": "info"},
+        ),
+        patch.object(
+            BASIC_CONFIG, "async_report_state_all", AsyncMock()
+        ) as mock_report,
+    ):
         # New state, so reported
         hass.states.async_set("light.double_report", "on")
         await hass.async_block_till_done()
@@ -106,11 +115,14 @@ async def test_report_state(
     assert len(mock_report.mock_calls) == 0
 
     # Test that entities that we can't query don't report a state
-    with patch.object(
-        BASIC_CONFIG, "async_report_state_all", AsyncMock()
-    ) as mock_report, patch(
-        "homeassistant.components.google_assistant.helpers.GoogleEntity.query_serialize",
-        side_effect=error.SmartHomeError("mock-error", "mock-msg"),
+    with (
+        patch.object(
+            BASIC_CONFIG, "async_report_state_all", AsyncMock()
+        ) as mock_report,
+        patch(
+            "homeassistant.components.google_assistant.helpers.GoogleEntity.query_serialize",
+            side_effect=error.SmartHomeError("mock-error", "mock-msg"),
+        ),
     ):
         hass.states.async_set("light.kitchen", "off")
         async_fire_time_changed(
@@ -147,9 +159,10 @@ async def test_report_notifications(
         "event.doorbell", "unknown", attributes={"device_class": "doorbell"}
     )
 
-    with patch.object(
-        config, "async_report_state_all", AsyncMock()
-    ) as mock_report, patch.object(report_state, "INITIAL_REPORT_DELAY", 0):
+    with (
+        patch.object(config, "async_report_state_all", AsyncMock()) as mock_report,
+        patch.object(report_state, "INITIAL_REPORT_DELAY", 0),
+    ):
         report_state.async_enable_report_state(hass, config)
 
         async_fire_time_changed(
@@ -242,9 +255,12 @@ async def test_report_notifications(
 
     # Test disconnecting agent user
     caplog.clear()
-    with patch.object(
-        config, "async_report_state", return_value=HTTPStatus.NOT_FOUND
-    ) as mock_report_state, patch.object(config, "async_disconnect_agent_user"):
+    with (
+        patch.object(
+            config, "async_report_state", return_value=HTTPStatus.NOT_FOUND
+        ) as mock_report_state,
+        patch.object(config, "async_disconnect_agent_user"),
+    ):
         event_time = datetime.fromisoformat("2023-08-01T01:03:57+00:00")
         epoc_event_time = event_time.timestamp()
         hass.states.async_set(

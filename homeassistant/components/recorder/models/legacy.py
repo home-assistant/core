@@ -1,4 +1,5 @@
 """Models for Recorder."""
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -47,6 +48,7 @@ class LegacyLazyStatePreSchema31(State):
         self.state = self._row.state or ""
         self._attributes: dict[str, Any] | None = None
         self._last_changed: datetime | None = start_time
+        self._last_reported: datetime | None = start_time
         self._last_updated: datetime | None = start_time
         self._context: Context | None = None
         self.attr_cache = attr_cache
@@ -91,6 +93,18 @@ class LegacyLazyStatePreSchema31(State):
     def last_changed(self, value: datetime) -> None:
         """Set last changed datetime."""
         self._last_changed = value
+
+    @property
+    def last_reported(self) -> datetime:
+        """Last reported datetime."""
+        if self._last_reported is None:
+            self._last_reported = self.last_updated
+        return self._last_reported
+
+    @last_reported.setter
+    def last_reported(self, value: datetime) -> None:
+        """Set last reported datetime."""
+        self._last_reported = value
 
     @property
     def last_updated(self) -> datetime:
@@ -195,6 +209,7 @@ class LegacyLazyState(State):
         self._last_changed_ts: float | None = (
             self._row.last_changed_ts or self._last_updated_ts
         )
+        self._last_reported_ts: float | None = self._last_updated_ts
         self._context: Context | None = None
         self.attr_cache = attr_cache
 
@@ -234,6 +249,17 @@ class LegacyLazyState(State):
     def last_changed(self, value: datetime) -> None:
         """Set last changed datetime."""
         self._last_changed_ts = process_timestamp(value).timestamp()
+
+    @property
+    def last_reported(self) -> datetime:
+        """Last reported datetime."""
+        assert self._last_reported_ts is not None
+        return dt_util.utc_from_timestamp(self._last_reported_ts)
+
+    @last_reported.setter
+    def last_reported(self, value: datetime) -> None:
+        """Set last reported datetime."""
+        self._last_reported_ts = process_timestamp(value).timestamp()
 
     @property
     def last_updated(self) -> datetime:

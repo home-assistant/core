@@ -8,6 +8,7 @@ can't change the hash without causing breakages for HA users.
 
 This module generates and stores them in a HA storage.
 """
+
 from __future__ import annotations
 
 from collections.abc import Generator

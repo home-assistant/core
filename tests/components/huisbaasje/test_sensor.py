@@ -1,4 +1,5 @@
 """Test cases for the sensors of the Huisbaasje integration."""
+
 from unittest.mock import patch
 
 from homeassistant.components import huisbaasje
@@ -9,7 +10,6 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
-    ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_ID,
     CONF_PASSWORD,
@@ -28,14 +28,18 @@ from tests.common import MockConfigEntry
 
 async def test_setup_entry(hass: HomeAssistant) -> None:
     """Test for successfully loading sensor states."""
-    with patch(
-        "energyflip.EnergyFlip.authenticate", return_value=None
-    ) as mock_authenticate, patch(
-        "energyflip.EnergyFlip.is_authenticated", return_value=True
-    ) as mock_is_authenticated, patch(
-        "energyflip.EnergyFlip.current_measurements",
-        return_value=MOCK_CURRENT_MEASUREMENTS,
-    ) as mock_current_measurements:
+    with (
+        patch(
+            "energyflip.EnergyFlip.authenticate", return_value=None
+        ) as mock_authenticate,
+        patch(
+            "energyflip.EnergyFlip.is_authenticated", return_value=True
+        ) as mock_is_authenticated,
+        patch(
+            "energyflip.EnergyFlip.current_measurements",
+            return_value=MOCK_CURRENT_MEASUREMENTS,
+        ) as mock_current_measurements,
+    ):
         hass.config.components.add(huisbaasje.DOMAIN)
         config_entry = MockConfigEntry(
             version=1,
@@ -59,7 +63,6 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
         assert (
             current_power.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.POWER
         )
-        assert current_power.attributes.get(ATTR_ICON) == "mdi:lightning-bolt"
         assert (
             current_power.attributes.get(ATTR_STATE_CLASS)
             is SensorStateClass.MEASUREMENT
@@ -74,7 +77,6 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
             current_power_in.attributes.get(ATTR_DEVICE_CLASS)
             == SensorDeviceClass.POWER
         )
-        assert current_power_in.attributes.get(ATTR_ICON) == "mdi:lightning-bolt"
         assert (
             current_power_in.attributes.get(ATTR_STATE_CLASS)
             is SensorStateClass.MEASUREMENT
@@ -90,7 +92,6 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
             current_power_in_low.attributes.get(ATTR_DEVICE_CLASS)
             == SensorDeviceClass.POWER
         )
-        assert current_power_in_low.attributes.get(ATTR_ICON) == "mdi:lightning-bolt"
         assert (
             current_power_in_low.attributes.get(ATTR_STATE_CLASS)
             is SensorStateClass.MEASUREMENT
@@ -106,7 +107,6 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
             current_power_out.attributes.get(ATTR_DEVICE_CLASS)
             == SensorDeviceClass.POWER
         )
-        assert current_power_out.attributes.get(ATTR_ICON) == "mdi:lightning-bolt"
         assert (
             current_power_out.attributes.get(ATTR_STATE_CLASS)
             is SensorStateClass.MEASUREMENT
@@ -122,7 +122,6 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
             current_power_out_low.attributes.get(ATTR_DEVICE_CLASS)
             == SensorDeviceClass.POWER
         )
-        assert current_power_out_low.attributes.get(ATTR_ICON) == "mdi:lightning-bolt"
         assert (
             current_power_out_low.attributes.get(ATTR_STATE_CLASS)
             is SensorStateClass.MEASUREMENT
@@ -139,10 +138,6 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
         assert (
             energy_consumption_peak_today.attributes.get(ATTR_DEVICE_CLASS)
             == SensorDeviceClass.ENERGY
-        )
-        assert (
-            energy_consumption_peak_today.attributes.get(ATTR_ICON)
-            == "mdi:lightning-bolt"
         )
         assert (
             energy_consumption_peak_today.attributes.get(ATTR_STATE_CLASS)
@@ -162,10 +157,6 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
             == SensorDeviceClass.ENERGY
         )
         assert (
-            energy_consumption_off_peak_today.attributes.get(ATTR_ICON)
-            == "mdi:lightning-bolt"
-        )
-        assert (
             energy_consumption_off_peak_today.attributes.get(ATTR_STATE_CLASS)
             is SensorStateClass.TOTAL_INCREASING
         )
@@ -181,10 +172,6 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
         assert (
             energy_production_peak_today.attributes.get(ATTR_DEVICE_CLASS)
             == SensorDeviceClass.ENERGY
-        )
-        assert (
-            energy_production_peak_today.attributes.get(ATTR_ICON)
-            == "mdi:lightning-bolt"
         )
         assert (
             energy_production_peak_today.attributes.get(ATTR_STATE_CLASS)
@@ -204,10 +191,6 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
             == SensorDeviceClass.ENERGY
         )
         assert (
-            energy_production_off_peak_today.attributes.get(ATTR_ICON)
-            == "mdi:lightning-bolt"
-        )
-        assert (
             energy_production_off_peak_today.attributes.get(ATTR_STATE_CLASS)
             is SensorStateClass.TOTAL_INCREASING
         )
@@ -221,7 +204,6 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
         assert (
             energy_today.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
         )
-        assert energy_today.attributes.get(ATTR_ICON) == "mdi:lightning-bolt"
         assert energy_today.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.TOTAL
         assert (
             energy_today.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
@@ -234,7 +216,6 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
             energy_this_week.attributes.get(ATTR_DEVICE_CLASS)
             == SensorDeviceClass.ENERGY
         )
-        assert energy_this_week.attributes.get(ATTR_ICON) == "mdi:lightning-bolt"
         assert (
             energy_this_week.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.TOTAL
         )
@@ -249,7 +230,6 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
             energy_this_month.attributes.get(ATTR_DEVICE_CLASS)
             == SensorDeviceClass.ENERGY
         )
-        assert energy_this_month.attributes.get(ATTR_ICON) == "mdi:lightning-bolt"
         assert (
             energy_this_month.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.TOTAL
         )
@@ -264,7 +244,6 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
             energy_this_year.attributes.get(ATTR_DEVICE_CLASS)
             == SensorDeviceClass.ENERGY
         )
-        assert energy_this_year.attributes.get(ATTR_ICON) == "mdi:lightning-bolt"
         assert (
             energy_this_year.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.TOTAL
         )
@@ -276,7 +255,6 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
         current_gas = hass.states.get("sensor.current_gas")
         assert current_gas.state == "0.0"
         assert current_gas.attributes.get(ATTR_DEVICE_CLASS) is None
-        assert current_gas.attributes.get(ATTR_ICON) == "mdi:fire"
         assert (
             current_gas.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
         )
@@ -288,7 +266,6 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
         gas_today = hass.states.get("sensor.gas_today")
         assert gas_today.state == "1.1"
         assert gas_today.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.GAS
-        assert gas_today.attributes.get(ATTR_ICON) == "mdi:counter"
         assert (
             gas_today.attributes.get(ATTR_STATE_CLASS)
             is SensorStateClass.TOTAL_INCREASING
@@ -301,7 +278,6 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
         gas_this_week = hass.states.get("sensor.gas_this_week")
         assert gas_this_week.state == "5.6"
         assert gas_this_week.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.GAS
-        assert gas_this_week.attributes.get(ATTR_ICON) == "mdi:counter"
         assert (
             gas_this_week.attributes.get(ATTR_STATE_CLASS)
             is SensorStateClass.TOTAL_INCREASING
@@ -314,7 +290,6 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
         gas_this_month = hass.states.get("sensor.gas_this_month")
         assert gas_this_month.state == "39.1"
         assert gas_this_month.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.GAS
-        assert gas_this_month.attributes.get(ATTR_ICON) == "mdi:counter"
         assert (
             gas_this_month.attributes.get(ATTR_STATE_CLASS)
             is SensorStateClass.TOTAL_INCREASING
@@ -327,7 +302,6 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
         gas_this_year = hass.states.get("sensor.gas_this_year")
         assert gas_this_year.state == "116.7"
         assert gas_this_year.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.GAS
-        assert gas_this_year.attributes.get(ATTR_ICON) == "mdi:counter"
         assert (
             gas_this_year.attributes.get(ATTR_STATE_CLASS)
             is SensorStateClass.TOTAL_INCREASING
@@ -345,14 +319,18 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
 
 async def test_setup_entry_absent_measurement(hass: HomeAssistant) -> None:
     """Test for successfully loading sensor states when response does not contain all measurements."""
-    with patch(
-        "energyflip.EnergyFlip.authenticate", return_value=None
-    ) as mock_authenticate, patch(
-        "energyflip.EnergyFlip.is_authenticated", return_value=True
-    ) as mock_is_authenticated, patch(
-        "energyflip.EnergyFlip.current_measurements",
-        return_value=MOCK_LIMITED_CURRENT_MEASUREMENTS,
-    ) as mock_current_measurements:
+    with (
+        patch(
+            "energyflip.EnergyFlip.authenticate", return_value=None
+        ) as mock_authenticate,
+        patch(
+            "energyflip.EnergyFlip.is_authenticated", return_value=True
+        ) as mock_is_authenticated,
+        patch(
+            "energyflip.EnergyFlip.current_measurements",
+            return_value=MOCK_LIMITED_CURRENT_MEASUREMENTS,
+        ) as mock_current_measurements,
+    ):
         hass.config.components.add(huisbaasje.DOMAIN)
         config_entry = MockConfigEntry(
             version=1,

@@ -1,15 +1,15 @@
 """Config flow for Ambiclimate."""
+
 import logging
 from typing import Any
 
 from aiohttp import web
 import ambiclimate
 
-from homeassistant import config_entries
-from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.http import KEY_HASS, HomeAssistantView
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.network import get_url
 from homeassistant.helpers.storage import Store
@@ -44,7 +44,7 @@ def register_flow_implementation(
     }
 
 
-class AmbiclimateFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class AmbiclimateFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 1
@@ -56,7 +56,7 @@ class AmbiclimateFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle external yaml configuration."""
         self._async_abort_entries_match()
 
@@ -70,7 +70,7 @@ class AmbiclimateFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_auth(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow start."""
         self._async_abort_entries_match()
 
@@ -91,7 +91,7 @@ class AmbiclimateFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_code(self, code: str | None = None) -> FlowResult:
+    async def async_step_code(self, code: str | None = None) -> ConfigFlowResult:
         """Received code for authentication."""
         self._async_abort_entries_match()
 
@@ -151,7 +151,7 @@ class AmbiclimateAuthCallbackView(HomeAssistantView):
         """Receive authorization token."""
         if (code := request.query.get("code")) is None:
             return "No code"
-        hass = request.app["hass"]
+        hass = request.app[KEY_HASS]
         hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN, context={"source": "code"}, data=code

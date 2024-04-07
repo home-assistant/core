@@ -1,4 +1,5 @@
 """The met_eireann component."""
+
 from datetime import timedelta
 import logging
 from types import MappingProxyType

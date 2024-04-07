@@ -1,4 +1,5 @@
 """Percentage util functions."""
+
 from __future__ import annotations
 
 from typing import TypeVar
@@ -80,7 +81,7 @@ def ranged_value_to_percentage(
 
 
 def percentage_to_ranged_value(
-    low_high_range: tuple[float, float], percentage: int
+    low_high_range: tuple[float, float], percentage: float
 ) -> float:
     """Given a range of low and high values convert a percentage to a single value.
 

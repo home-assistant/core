@@ -1,4 +1,5 @@
 """Fixtures for Minecraft Server integration tests."""
+
 import pytest
 
 from homeassistant.components.minecraft_server.api import MinecraftServerType

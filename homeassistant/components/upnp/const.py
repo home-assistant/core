@@ -1,4 +1,5 @@
 """Constants for the IGD component."""
+
 from datetime import timedelta
 import logging
 

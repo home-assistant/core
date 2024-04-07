@@ -1,4 +1,5 @@
 """Support for 1-Wire binary sensors."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -143,6 +144,8 @@ class OneWireBinarySensor(OneWireEntity, BinarySensorEntity):
     entity_description: OneWireBinarySensorEntityDescription
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return true if sensor is on."""
+        if self._state is None:
+            return None
         return bool(self._state)

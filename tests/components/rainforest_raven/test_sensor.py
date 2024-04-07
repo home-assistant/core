@@ -1,4 +1,5 @@
 """Tests for the Rainforest RAVEn sensors."""
+
 import pytest
 
 from homeassistant.core import HomeAssistant

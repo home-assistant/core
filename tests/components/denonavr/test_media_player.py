@@ -1,4 +1,5 @@
 """The tests for the denonavr media player platform."""
+
 from unittest.mock import patch
 
 import pytest
@@ -40,11 +41,12 @@ ENTITY_ID = f"{media_player.DOMAIN}.{TEST_NAME}"
 @pytest.fixture(name="client")
 def client_fixture():
     """Patch of client library for tests."""
-    with patch(
-        "homeassistant.components.denonavr.receiver.DenonAVR",
-        autospec=True,
-    ) as mock_client_class, patch(
-        "homeassistant.components.denonavr.config_flow.denonavr.async_discover"
+    with (
+        patch(
+            "homeassistant.components.denonavr.receiver.DenonAVR",
+            autospec=True,
+        ) as mock_client_class,
+        patch("homeassistant.components.denonavr.config_flow.denonavr.async_discover"),
     ):
         mock_client_class.return_value.name = TEST_NAME
         mock_client_class.return_value.model_name = TEST_MODEL

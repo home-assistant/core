@@ -1,9 +1,11 @@
 """Component to allow setting date/time as platforms."""
+
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
+from functools import cached_property
 import logging
-from typing import TYPE_CHECKING, final
+from typing import final
 
 import voluptuous as vol
 
@@ -20,11 +22,6 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
 from .const import ATTR_DATETIME, DOMAIN, SERVICE_SET_VALUE
-
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
@@ -125,7 +122,7 @@ class DateTimeEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def set_value(self, value: datetime) -> None:
         """Change the date/time."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_set_value(self, value: datetime) -> None:
         """Change the date/time."""

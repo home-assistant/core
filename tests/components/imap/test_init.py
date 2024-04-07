@@ -1,4 +1,5 @@
 """Test the imap entry initialization."""
+
 import asyncio
 from datetime import datetime, timedelta, timezone
 from typing import Any
@@ -13,6 +14,7 @@ from homeassistant.components.imap.errors import InvalidAuth, InvalidFolder
 from homeassistant.components.sensor.const import SensorStateClass
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.util.dt import utcnow
 
 from .const import (
@@ -163,6 +165,7 @@ async def test_receiving_message_successfully(
     assert data["folder"] == "INBOX"
     assert data["sender"] == "john.doe@example.com"
     assert data["subject"] == "Test subject"
+    assert data["uid"] == "1"
     assert "Test body" in data["text"]
     assert (
         valid_date
@@ -212,6 +215,7 @@ async def test_receiving_message_with_invalid_encoding(
     assert data["sender"] == "john.doe@example.com"
     assert data["subject"] == "Test subject"
     assert data["text"] == TEST_BADLY_ENCODED_CONTENT
+    assert data["uid"] == "1"
 
 
 @pytest.mark.parametrize("imap_search", [TEST_SEARCH_RESPONSE])
@@ -250,6 +254,7 @@ async def test_receiving_message_no_subject_to_from(
     assert data["text"] == "Test body\r\n"
     assert data["headers"]["Return-Path"] == ("<john.doe@example.com>",)
     assert data["headers"]["Delivered-To"] == ("notify@example.com",)
+    assert data["uid"] == "1"
 
 
 @pytest.mark.parametrize("imap_has_capability", [True, False], ids=["push", "poll"])
@@ -776,3 +781,139 @@ async def test_enforce_polling(
         mock_imap_protocol.wait_server_push.assert_not_called()
     else:
         mock_imap_protocol.assert_has_calls([call.wait_server_push])
+
+
+@pytest.mark.parametrize(
+    ("imap_search", "imap_fetch"),
+    [(TEST_SEARCH_RESPONSE, TEST_FETCH_RESPONSE_TEXT_PLAIN)],
+)
+@pytest.mark.parametrize("imap_has_capability", [True, False], ids=["push", "poll"])
+async def test_services(hass: HomeAssistant, mock_imap_protocol: MagicMock) -> None:
+    """Test receiving a message successfully."""
+    event_called = async_capture_events(hass, "imap_content")
+
+    config = MOCK_CONFIG.copy()
+    config_entry = MockConfigEntry(domain=DOMAIN, data=config)
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    # Make sure we have had one update (when polling)
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=5))
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.imap_email_email_com")
+    # we should have received one message
+    assert state is not None
+    assert state.state == "1"
+    assert state.attributes["state_class"] == SensorStateClass.MEASUREMENT
+
+    # we should have received one event
+    assert len(event_called) == 1
+    data: dict[str, Any] = event_called[0].data
+    assert data["server"] == "imap.server.com"
+    assert data["username"] == "email@email.com"
+    assert data["search"] == "UnSeen UnDeleted"
+    assert data["folder"] == "INBOX"
+    assert data["sender"] == "john.doe@example.com"
+    assert data["subject"] == "Test subject"
+    assert data["uid"] == "1"
+    assert data["entry_id"] == config_entry.entry_id
+
+    # Test seen service
+    data = {"entry": config_entry.entry_id, "uid": "1"}
+    await hass.services.async_call(DOMAIN, "seen", data, blocking=True)
+    mock_imap_protocol.store.assert_called_with("1", "+FLAGS (\\Seen)")
+    mock_imap_protocol.store.reset_mock()
+
+    # Test move service
+    data = {
+        "entry": config_entry.entry_id,
+        "uid": "1",
+        "seen": True,
+        "target_folder": "Trash",
+    }
+    await hass.services.async_call(DOMAIN, "move", data, blocking=True)
+    mock_imap_protocol.store.assert_has_calls(
+        [call("1", "+FLAGS (\\Seen)"), call("1", "+FLAGS (\\Deleted)")]
+    )
+    mock_imap_protocol.copy.assert_called_with("1", "Trash")
+    mock_imap_protocol.protocol.expunge.assert_called_once()
+    mock_imap_protocol.store.reset_mock()
+    mock_imap_protocol.copy.reset_mock()
+    mock_imap_protocol.protocol.expunge.reset_mock()
+
+    # Test delete service
+    data = {"entry": config_entry.entry_id, "uid": "1"}
+    await hass.services.async_call(DOMAIN, "delete", data, blocking=True)
+    mock_imap_protocol.store.assert_called_with("1", "+FLAGS (\\Deleted)")
+    mock_imap_protocol.protocol.expunge.assert_called_once()
+
+    # Test with invalid entry_id
+    data = {"entry": "invalid", "uid": "1"}
+    with pytest.raises(ServiceValidationError) as exc:
+        await hass.services.async_call(DOMAIN, "seen", data, blocking=True)
+    assert exc.value.translation_domain == DOMAIN
+    assert exc.value.translation_key == "invalid_entry"
+
+    # Test processing imap client failures
+    exceptions = {
+        "invalid_auth": {"exc": InvalidAuth(), "translation_placeholders": None},
+        "invalid_folder": {"exc": InvalidFolder(), "translation_placeholders": None},
+        "imap_server_fail": {
+            "exc": AioImapException("Bla"),
+            "translation_placeholders": {"error": "Bla"},
+        },
+    }
+    for translation_key, attrs in exceptions.items():
+        with patch(
+            "homeassistant.components.imap.connect_to_server", side_effect=attrs["exc"]
+        ):
+            data = {"entry": config_entry.entry_id, "uid": "1"}
+            with pytest.raises(ServiceValidationError) as exc:
+                await hass.services.async_call(DOMAIN, "seen", data, blocking=True)
+            assert exc.value.translation_domain == DOMAIN
+            assert exc.value.translation_key == translation_key
+            assert (
+                exc.value.translation_placeholders == attrs["translation_placeholders"]
+            )
+
+    # Test unexpected errors with storing a flag during a service call
+    service_calls = {
+        "seen": {"entry": config_entry.entry_id, "uid": "1"},
+        "move": {
+            "entry": config_entry.entry_id,
+            "uid": "1",
+            "seen": False,
+            "target_folder": "Trash",
+        },
+        "delete": {"entry": config_entry.entry_id, "uid": "1"},
+    }
+    store_error_translation_key = {
+        "seen": "seen_failed",
+        "move": "copy_failed",
+        "delete": "delete_failed",
+    }
+    for service, data in service_calls.items():
+        with (
+            pytest.raises(ServiceValidationError) as exc,
+            patch.object(
+                mock_imap_protocol, "store", side_effect=AioImapException("Bla")
+            ),
+        ):
+            await hass.services.async_call(DOMAIN, service, data, blocking=True)
+        assert exc.value.translation_domain == DOMAIN
+        assert exc.value.translation_key == "imap_server_fail"
+        assert exc.value.translation_placeholders == {"error": "Bla"}
+        # Test with bad responses on store command
+        with (
+            pytest.raises(ServiceValidationError) as exc,
+            patch.object(
+                mock_imap_protocol, "store", return_value=Response("BAD", [b"Bla"])
+            ),
+            patch.object(
+                mock_imap_protocol, "copy", return_value=Response("BAD", [b"Bla"])
+            ),
+        ):
+            await hass.services.async_call(DOMAIN, service, data, blocking=True)
+        assert exc.value.translation_domain == DOMAIN
+        assert exc.value.translation_key == store_error_translation_key[service]
+        assert exc.value.translation_placeholders == {"error": "Bla"}

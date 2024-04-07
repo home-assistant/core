@@ -1,11 +1,12 @@
 """The tests for Humidifier device triggers."""
+
 import datetime
 
 import pytest
 from pytest_unordered import unordered
 import voluptuous_serialize
 
-import homeassistant.components.automation as automation
+from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.humidifier import DOMAIN, const, device_trigger
 from homeassistant.const import (
@@ -102,12 +103,12 @@ async def test_get_triggers(
 
 @pytest.mark.parametrize(
     ("hidden_by", "entity_category"),
-    (
+    [
         (RegistryEntryHider.INTEGRATION, None),
         (RegistryEntryHider.USER, None),
         (None, EntityCategory.CONFIG),
         (None, EntityCategory.DIAGNOSTIC),
-    ),
+    ],
 )
 async def test_get_triggers_hidden_auxiliary(
     hass: HomeAssistant,

@@ -1,4 +1,5 @@
 """Offer persistent_notifications triggered automation rules."""
+
 from __future__ import annotations
 
 import logging

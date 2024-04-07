@@ -1,11 +1,12 @@
 """Component to interface with binary sensors."""
+
 from __future__ import annotations
 
 from datetime import timedelta
 from enum import StrEnum
-from functools import partial
+from functools import cached_property, partial
 import logging
-from typing import TYPE_CHECKING, Literal, final
+from typing import Literal, final
 
 import voluptuous as vol
 
@@ -26,11 +27,6 @@ from homeassistant.helpers.deprecation import (
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
-
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -1,4 +1,5 @@
 """Shared class to maintain Plex server instances."""
+
 from __future__ import annotations
 
 import logging
@@ -96,6 +97,7 @@ class PlexServer:
             cooldown=DEBOUNCE_TIMEOUT,
             immediate=True,
             function=self._async_update_platforms,
+            background=True,
         ).async_call
         self.thumbnail_cache = {}
 
@@ -481,9 +483,9 @@ class PlexServer:
                     continue
 
                 process_device("session", player)
-                available_clients[player.machineIdentifier][
-                    "session"
-                ] = self.active_sessions[unique_id]
+                available_clients[player.machineIdentifier]["session"] = (
+                    self.active_sessions[unique_id]
+                )
 
         for device in devices:
             process_device("PMS", device)

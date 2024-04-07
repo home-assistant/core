@@ -1,4 +1,5 @@
 """The tests for the Modbus sensor component."""
+
 import copy
 from dataclasses import dataclass
 from datetime import timedelta
@@ -10,7 +11,14 @@ from pymodbus.exceptions import ModbusException
 import pytest
 
 from homeassistant.components.modbus.const import MODBUS_DOMAIN as DOMAIN, TCP
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_TYPE
+from homeassistant.const import (
+    CONF_ADDRESS,
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PORT,
+    CONF_SENSORS,
+    CONF_TYPE,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -42,19 +50,24 @@ class ReadResult:
 @pytest.fixture(name="mock_pymodbus")
 def mock_pymodbus_fixture():
     """Mock pymodbus."""
-    mock_pb = mock.MagicMock()
-    with mock.patch(
-        "homeassistant.components.modbus.modbus.ModbusTcpClient",
-        return_value=mock_pb,
-        autospec=True,
-    ), mock.patch(
-        "homeassistant.components.modbus.modbus.ModbusSerialClient",
-        return_value=mock_pb,
-        autospec=True,
-    ), mock.patch(
-        "homeassistant.components.modbus.modbus.ModbusUdpClient",
-        return_value=mock_pb,
-        autospec=True,
+    mock_pb = mock.AsyncMock()
+    mock_pb.close = mock.MagicMock()
+    with (
+        mock.patch(
+            "homeassistant.components.modbus.modbus.AsyncModbusTcpClient",
+            return_value=mock_pb,
+            autospec=True,
+        ),
+        mock.patch(
+            "homeassistant.components.modbus.modbus.AsyncModbusSerialClient",
+            return_value=mock_pb,
+            autospec=True,
+        ),
+        mock.patch(
+            "homeassistant.components.modbus.modbus.AsyncModbusUdpClient",
+            return_value=mock_pb,
+            autospec=True,
+        ),
     ):
         yield mock_pb
 
@@ -100,13 +113,20 @@ async def mock_modbus_fixture(
                 CONF_HOST: TEST_MODBUS_HOST,
                 CONF_PORT: TEST_PORT_TCP,
                 CONF_NAME: TEST_MODBUS_NAME,
+                CONF_SENSORS: [
+                    {
+                        CONF_NAME: "dummy",
+                        CONF_ADDRESS: 9999,
+                    }
+                ],
                 **conf,
             }
         ]
     }
-    mock_pb = mock.MagicMock()
+    mock_pb = mock.AsyncMock()
+    mock_pb.close = mock.MagicMock()
     with mock.patch(
-        "homeassistant.components.modbus.modbus.ModbusTcpClient",
+        "homeassistant.components.modbus.modbus.AsyncModbusTcpClient",
         return_value=mock_pb,
         autospec=True,
     ):

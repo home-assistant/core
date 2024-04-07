@@ -1,4 +1,5 @@
 """Diagnostics support for Tractive."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -19,12 +20,10 @@ async def async_get_config_entry_diagnostics(
     """Return diagnostics for a config entry."""
     trackables = hass.data[DOMAIN][config_entry.entry_id][TRACKABLES]
 
-    diagnostics_data = async_redact_data(
+    return async_redact_data(
         {
             "config_entry": config_entry.as_dict(),
             "trackables": [item.trackable for item in trackables],
         },
         TO_REDACT,
     )
-
-    return diagnostics_data

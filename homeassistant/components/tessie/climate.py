@@ -1,4 +1,5 @@
 """Climate platform for Tessie integration."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -11,6 +12,7 @@ from tessie_api import (
 )
 
 from homeassistant.components.climate import (
+    ATTR_HVAC_MODE,
     ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
@@ -112,9 +114,12 @@ class TessieClimateEntity(TessieEntity, ClimateEntity):
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the climate temperature."""
-        temp = kwargs[ATTR_TEMPERATURE]
-        await self.run(set_temperature, temperature=temp)
-        self.set(("climate_state_driver_temp_setting", temp))
+        if mode := kwargs.get(ATTR_HVAC_MODE):
+            await self.async_set_hvac_mode(mode)
+
+        if temp := kwargs.get(ATTR_TEMPERATURE):
+            await self.run(set_temperature, temperature=temp)
+            self.set(("climate_state_driver_temp_setting", temp))
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the climate mode and state."""

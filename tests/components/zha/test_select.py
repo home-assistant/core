@@ -1,4 +1,5 @@
 """Test ZHA select entities."""
+
 from unittest.mock import call, patch
 
 import pytest
@@ -10,12 +11,12 @@ from zhaquirks import (
     PROFILE_ID,
 )
 from zigpy.const import SIG_EP_PROFILE
-import zigpy.profiles.zha as zha
+from zigpy.profiles import zha
 from zigpy.quirks import CustomCluster, CustomDevice
+from zigpy.quirks.v2 import CustomDeviceV2, add_to_registry_v2
 import zigpy.types as t
-import zigpy.zcl.clusters.general as general
+from zigpy.zcl.clusters import general, security
 from zigpy.zcl.clusters.manufacturer_specific import ManufacturerSpecificCluster
-import zigpy.zcl.clusters.security as security
 
 from homeassistant.components.zha.select import AqaraMotionSensitivities
 from homeassistant.const import STATE_UNKNOWN, EntityCategory, Platform
@@ -71,7 +72,7 @@ async def siren(hass, zigpy_device_mock, zha_device_joined_restored):
 async def light(hass, zigpy_device_mock):
     """Siren fixture."""
 
-    zigpy_device = zigpy_device_mock(
+    return zigpy_device_mock(
         {
             1: {
                 SIG_EP_PROFILE: zha.PROFILE_ID,
@@ -86,8 +87,6 @@ async def light(hass, zigpy_device_mock):
         },
         node_descriptor=b"\x02@\x84_\x11\x7fd\x00\x00,d\x00\x00",
     )
-
-    return zigpy_device
 
 
 @pytest.fixture
@@ -349,13 +348,19 @@ class MotionSensitivityQuirk(CustomDevice):
         ep_attribute = "opple_cluster"
         attributes = {
             0x010C: ("motion_sensitivity", t.uint8_t, True),
+            0x020C: ("motion_sensitivity_disabled", t.uint8_t, True),
         }
 
         def __init__(self, *args, **kwargs):
             """Initialize."""
             super().__init__(*args, **kwargs)
             # populate cache to create config entity
-            self._attr_cache.update({0x010C: AqaraMotionSensitivities.Medium})
+            self._attr_cache.update(
+                {
+                    0x010C: AqaraMotionSensitivities.Medium,
+                    0x020C: AqaraMotionSensitivities.Medium,
+                }
+            )
 
     replacement = {
         ENDPOINTS: {
@@ -413,3 +418,78 @@ async def test_on_off_select_attribute_report(
         hass, cluster, {"motion_sensitivity": AqaraMotionSensitivities.Low}
     )
     assert hass.states.get(entity_id).state == AqaraMotionSensitivities.Low.name
+
+
+(
+    add_to_registry_v2("Fake_Manufacturer", "Fake_Model")
+    .replaces(MotionSensitivityQuirk.OppleCluster)
+    .enum(
+        "motion_sensitivity",
+        AqaraMotionSensitivities,
+        MotionSensitivityQuirk.OppleCluster.cluster_id,
+    )
+    .enum(
+        "motion_sensitivity_disabled",
+        AqaraMotionSensitivities,
+        MotionSensitivityQuirk.OppleCluster.cluster_id,
+        translation_key="motion_sensitivity",
+        initially_disabled=True,
+    )
+)
+
+
+@pytest.fixture
+async def zigpy_device_aqara_sensor_v2(
+    hass: HomeAssistant, zigpy_device_mock, zha_device_joined_restored
+):
+    """Device tracker zigpy Aqara motion sensor device."""
+
+    zigpy_device = zigpy_device_mock(
+        {
+            1: {
+                SIG_EP_INPUT: [
+                    general.Basic.cluster_id,
+                    MotionSensitivityQuirk.OppleCluster.cluster_id,
+                ],
+                SIG_EP_OUTPUT: [],
+                SIG_EP_TYPE: zha.DeviceType.OCCUPANCY_SENSOR,
+            }
+        },
+        manufacturer="Fake_Manufacturer",
+        model="Fake_Model",
+    )
+
+    zha_device = await zha_device_joined_restored(zigpy_device)
+    return zha_device, zigpy_device.endpoints[1].opple_cluster
+
+
+async def test_on_off_select_attribute_report_v2(
+    hass: HomeAssistant, zigpy_device_aqara_sensor_v2
+) -> None:
+    """Test ZHA attribute report parsing for select platform."""
+
+    zha_device, cluster = zigpy_device_aqara_sensor_v2
+    assert isinstance(zha_device.device, CustomDeviceV2)
+    entity_id = find_entity_id(
+        Platform.SELECT, zha_device, hass, qualifier="motion_sensitivity"
+    )
+    assert entity_id is not None
+
+    # allow traffic to flow through the gateway and device
+    await async_enable_traffic(hass, [zha_device])
+
+    # test that the state is in default medium state
+    assert hass.states.get(entity_id).state == AqaraMotionSensitivities.Medium.name
+
+    # send attribute report from device
+    await send_attributes_report(
+        hass, cluster, {"motion_sensitivity": AqaraMotionSensitivities.Low}
+    )
+    assert hass.states.get(entity_id).state == AqaraMotionSensitivities.Low.name
+
+    entity_registry = er.async_get(hass)
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry
+    assert entity_entry.entity_category == EntityCategory.CONFIG
+    assert entity_entry.disabled is False
+    assert entity_entry.translation_key == "motion_sensitivity"

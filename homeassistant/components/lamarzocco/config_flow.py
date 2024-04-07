@@ -1,4 +1,5 @@
 """Config flow for La Marzocco integration."""
+
 from collections.abc import Mapping
 import logging
 from typing import Any
@@ -7,9 +8,22 @@ from lmcloud import LMCloud as LaMarzoccoClient
 from lmcloud.exceptions import AuthFail, RequestNotSuccessful
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.components.bluetooth import BluetoothServiceInfo
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+    OptionsFlowWithConfigEntry,
+)
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_MAC,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+)
+from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import (
     SelectOptionDict,
@@ -18,7 +32,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
 )
 
-from .const import CONF_MACHINE, DOMAIN
+from .const import CONF_MACHINE, CONF_USE_BLUETOOTH, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,10 +46,11 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
         self.reauth_entry: ConfigEntry | None = None
         self._config: dict[str, Any] = {}
         self._machines: list[tuple[str, str]] = []
+        self._discovered: dict[str, str] = {}
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
 
         errors = {}
@@ -47,6 +62,7 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
             data = {
                 **data,
                 **user_input,
+                **self._discovered,
             }
 
             lm = LaMarzoccoClient()
@@ -71,6 +87,18 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
                         self.reauth_entry.entry_id
                     )
                     return self.async_abort(reason="reauth_successful")
+                if self._discovered:
+                    serials = [machine[0] for machine in self._machines]
+                    if self._discovered[CONF_MACHINE] not in serials:
+                        errors["base"] = "machine_not_found"
+                    else:
+                        self._config = data
+                        return self.async_show_form(
+                            step_id="machine_selection",
+                            data_schema=vol.Schema(
+                                {vol.Optional(CONF_HOST): cv.string}
+                            ),
+                        )
 
             if not errors:
                 self._config = data
@@ -89,13 +117,16 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_machine_selection(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Let user select machine to connect to."""
         errors: dict[str, str] = {}
         if user_input:
-            serial_number = user_input[CONF_MACHINE]
-            await self.async_set_unique_id(serial_number)
-            self._abort_if_unique_id_configured()
+            if not self._discovered:
+                serial_number = user_input[CONF_MACHINE]
+                await self.async_set_unique_id(serial_number)
+                self._abort_if_unique_id_configured()
+            else:
+                serial_number = self._discovered[CONF_MACHINE]
 
             # validate local connection if host is provided
             if user_input.get(CONF_HOST):
@@ -141,7 +172,33 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_bluetooth(
+        self, discovery_info: BluetoothServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle a flow initialized by discovery over Bluetooth."""
+        address = discovery_info.address
+        name = discovery_info.name
+
+        _LOGGER.debug(
+            "Discovered La Marzocco machine %s through Bluetooth at address %s",
+            name,
+            address,
+        )
+
+        self._discovered[CONF_NAME] = name
+        self._discovered[CONF_MAC] = address
+
+        serial = name.split("_")[1]
+        self._discovered[CONF_MACHINE] = serial
+
+        await self.async_set_unique_id(serial)
+        self._abort_if_unique_id_configured()
+
+        return await self.async_step_user()
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
         self.reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
@@ -150,7 +207,7 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Dialog that informs the user that reauth is required."""
         if not user_input:
             return self.async_show_form(
@@ -163,3 +220,36 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         return await self.async_step_user(user_input)
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> OptionsFlow:
+        """Create the options flow."""
+        return LmOptionsFlowHandler(config_entry)
+
+
+class LmOptionsFlowHandler(OptionsFlowWithConfigEntry):
+    """Handles options flow for the component."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage the options for the custom component."""
+        if user_input:
+            return self.async_create_entry(title="", data=user_input)
+
+        options_schema = vol.Schema(
+            {
+                vol.Optional(
+                    CONF_USE_BLUETOOTH,
+                    default=self.options.get(CONF_USE_BLUETOOTH, True),
+                ): cv.boolean,
+            }
+        )
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=options_schema,
+        )

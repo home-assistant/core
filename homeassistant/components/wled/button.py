@@ -1,4 +1,5 @@
 """Support for WLED button."""
+
 from __future__ import annotations
 
 from homeassistant.components.button import ButtonDeviceClass, ButtonEntity

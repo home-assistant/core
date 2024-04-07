@@ -1,4 +1,5 @@
 """The test for the Facebook notify module."""
+
 import base64
 from http import HTTPStatus
 import logging

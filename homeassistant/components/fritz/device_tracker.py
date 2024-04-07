@@ -1,4 +1,5 @@
 """Support for FRITZ!Box devices."""
+
 from __future__ import annotations
 
 import datetime

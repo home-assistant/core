@@ -1,4 +1,5 @@
 """Support for Calendar event device sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Iterable
@@ -187,6 +188,11 @@ def _validate_rrule(value: Any) -> str:
         raise vol.Invalid(f"Invalid frequency for rule: {value}")
 
     return str(value)
+
+
+def _empty_as_none(value: str | None) -> str | None:
+    """Convert any empty string values to None."""
+    return value or None
 
 
 CREATE_EVENT_SERVICE = "create_event"
@@ -497,7 +503,7 @@ class CalendarEntity(Entity):
     @property
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @final
     @property
@@ -593,11 +599,11 @@ class CalendarEntity(Entity):
         end_date: datetime.datetime,
     ) -> list[CalendarEvent]:
         """Return calendar events within a datetime range."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_create_event(self, **kwargs: Any) -> None:
         """Add a new event to calendar."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_delete_event(
         self,
@@ -606,7 +612,7 @@ class CalendarEntity(Entity):
         recurrence_range: str | None = None,
     ) -> None:
         """Delete an event on the calendar."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_update_event(
         self,
@@ -616,7 +622,7 @@ class CalendarEntity(Entity):
         recurrence_range: str | None = None,
     ) -> None:
         """Delete an event on the calendar."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
 
 class CalendarEventView(http.HomeAssistantView):
@@ -652,7 +658,7 @@ class CalendarEventView(http.HomeAssistantView):
 
         try:
             calendar_event_list = await entity.async_get_events(
-                request.app["hass"],
+                request.app[http.KEY_HASS],
                 dt_util.as_local(start_date),
                 dt_util.as_local(end_date),
             )
@@ -682,11 +688,12 @@ class CalendarListView(http.HomeAssistantView):
 
     async def get(self, request: web.Request) -> web.Response:
         """Retrieve calendar list."""
-        hass = request.app["hass"]
+        hass = request.app[http.KEY_HASS]
         calendar_list: list[dict[str, str]] = []
 
         for entity in self.component.entities:
             state = hass.states.get(entity.entity_id)
+            assert state
             calendar_list.append({"name": state.name, "entity_id": entity.entity_id})
 
         return self.json(sorted(calendar_list, key=lambda x: cast(str, x["name"])))
@@ -733,7 +740,9 @@ async def handle_calendar_event_create(
         vol.Required("type"): "calendar/event/delete",
         vol.Required("entity_id"): cv.entity_id,
         vol.Required(EVENT_UID): cv.string,
-        vol.Optional(EVENT_RECURRENCE_ID): cv.string,
+        vol.Optional(EVENT_RECURRENCE_ID): vol.Any(
+            vol.All(cv.string, _empty_as_none), None
+        ),
         vol.Optional(EVENT_RECURRENCE_RANGE): cv.string,
     }
 )
@@ -777,7 +786,9 @@ async def handle_calendar_event_delete(
         vol.Required("type"): "calendar/event/update",
         vol.Required("entity_id"): cv.entity_id,
         vol.Required(EVENT_UID): cv.string,
-        vol.Optional(EVENT_RECURRENCE_ID): cv.string,
+        vol.Optional(EVENT_RECURRENCE_ID): vol.Any(
+            vol.All(cv.string, _empty_as_none), None
+        ),
         vol.Optional(EVENT_RECURRENCE_RANGE): cv.string,
         vol.Required(CONF_EVENT): WEBSOCKET_EVENT_SCHEMA,
     }

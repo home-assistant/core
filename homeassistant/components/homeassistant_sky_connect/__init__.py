@@ -1,4 +1,5 @@
 """The Home Assistant SkyConnect integration."""
+
 from __future__ import annotations
 
 from homeassistant.components import usb
@@ -7,12 +8,13 @@ from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon 
     get_zigbee_socket,
     multi_pan_addon_using_device,
 )
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_HARDWARE, ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
+from homeassistant.helpers import discovery_flow
 
 from .const import DOMAIN
-from .util import get_usb_service_info
+from .util import get_hardware_variant, get_usb_service_info
 
 
 async def _async_usb_scan_done(hass: HomeAssistant, entry: ConfigEntry) -> None:
@@ -28,7 +30,9 @@ async def _async_usb_scan_done(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
     if not usb.async_is_plugged_in(hass, matcher):
         # The USB dongle is not plugged in, remove the config entry
-        hass.async_create_task(hass.config_entries.async_remove(entry.entry_id))
+        hass.async_create_task(
+            hass.config_entries.async_remove(entry.entry_id), eager_start=True
+        )
         return
 
     usb_dev = entry.data["device"]
@@ -44,16 +48,18 @@ async def _async_usb_scan_done(hass: HomeAssistant, entry: ConfigEntry) -> None:
         )
         return
 
+    hw_variant = get_hardware_variant(entry)
     hw_discovery_data = {
-        "name": "SkyConnect Multiprotocol",
+        "name": f"{hw_variant.short_name} Multiprotocol",
         "port": {
             "path": get_zigbee_socket(),
         },
         "radio_type": "ezsp",
     }
-    await hass.config_entries.flow.async_init(
+    discovery_flow.async_create_flow(
+        hass,
         "zha",
-        context={"source": "hardware"},
+        context={"source": SOURCE_HARDWARE},
         data=hw_discovery_data,
     )
 
@@ -69,7 +75,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     @callback
     def async_usb_scan_done() -> None:
         """Handle usb discovery started."""
-        hass.async_create_task(_async_usb_scan_done(hass, entry))
+        hass.async_create_task(_async_usb_scan_done(hass, entry), eager_start=True)
 
     unsub_usb = usb.async_register_initial_scan_callback(hass, async_usb_scan_done)
     entry.async_on_unload(unsub_usb)
