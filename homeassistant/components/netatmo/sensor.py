@@ -4,10 +4,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import logging
-from typing import cast
 
 import pyatmo
-from pyatmo import DeviceType
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -45,7 +43,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import (
     CONF_URL_ENERGY,
     CONF_URL_PUBLIC_WEATHER,
-    CONF_URL_WEATHER,
     CONF_WEATHER_AREAS,
     DATA_HANDLER,
     DOMAIN,
@@ -56,7 +53,12 @@ from .const import (
     SIGNAL_NAME,
 )
 from .data_handler import HOME, PUBLIC, NetatmoDataHandler, NetatmoDevice, NetatmoRoom
-from .entity import NetatmoBaseEntity, NetatmoModuleEntity, NetatmoRoomEntity
+from .entity import (
+    NetatmoBaseEntity,
+    NetatmoModuleEntity,
+    NetatmoRoomEntity,
+    NetatmoWeatherModuleEntity,
+)
 from .helper import NetatmoArea
 
 _LOGGER = logging.getLogger(__name__)
@@ -219,6 +221,7 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.WIND_SPEED,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    # Deprecated in 2024.5, will be removed in 2024.11
     NetatmoSensorEntityDescription(
         key="reachable",
         name="Reachability",
@@ -397,11 +400,10 @@ async def async_setup_entry(
     await add_public_entities(False)
 
 
-class NetatmoWeatherSensor(NetatmoModuleEntity, SensorEntity):
+class NetatmoWeatherSensor(NetatmoWeatherModuleEntity, SensorEntity):
     """Implementation of a Netatmo weather/home coach sensor."""
 
     entity_description: NetatmoSensorEntityDescription
-    _attr_configuration_url = CONF_URL_WEATHER
 
     def __init__(
         self,
@@ -411,33 +413,7 @@ class NetatmoWeatherSensor(NetatmoModuleEntity, SensorEntity):
         """Initialize the sensor."""
         super().__init__(netatmo_device)
         self.entity_description = description
-        category = getattr(self.device.device_category, "name")
-        self._publishers.extend(
-            [
-                {
-                    "name": category,
-                    SIGNAL_NAME: category,
-                },
-            ]
-        )
         self._attr_unique_id = f"{self.device.entity_id}-{description.key}"
-
-        if hasattr(self.device, "place"):
-            place = cast(pyatmo.modules.base_class.Place, getattr(self.device, "place"))
-            if hasattr(place, "location") and place.location is not None:
-                self._attr_extra_state_attributes.update(
-                    {
-                        ATTR_LATITUDE: place.location.latitude,
-                        ATTR_LONGITUDE: place.location.longitude,
-                    }
-                )
-
-    @property
-    def device_type(self) -> DeviceType:
-        """Return the Netatmo device type."""
-        if "." not in self.device.device_type:
-            return super().device_type
-        return DeviceType(self.device.device_type.partition(".")[2])
 
     @callback
     def async_update_callback(self) -> None:
