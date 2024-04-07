@@ -26,7 +26,6 @@ from tests.typing import ClientSessionGenerator
 @pytest.mark.parametrize("imap_search", [TEST_SEARCH_RESPONSE])
 @pytest.mark.parametrize("imap_fetch", [TEST_FETCH_RESPONSE_TEXT_PLAIN])
 @pytest.mark.parametrize("imap_has_capability", [True, False], ids=["push", "poll"])
-@pytest.mark.parametrize("message_data", [TEST_MESSAGE_DATA])
 async def test_entry_diagnostics(
     hass: HomeAssistant,
     mock_imap_protocol: MagicMock,
