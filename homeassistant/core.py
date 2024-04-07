@@ -382,7 +382,7 @@ class HomeAssistant:
     http: HomeAssistantHTTP = None  # type: ignore[assignment]
     config_entries: ConfigEntries = None  # type: ignore[assignment]
 
-    def __new__(cls, config_dir: str) -> HomeAssistant:
+    def __new__(cls, config_dir: str) -> Self:
         """Set the _hass thread local data."""
         hass = super().__new__(cls)
         _hass.hass = hass
@@ -720,7 +720,7 @@ class HomeAssistant:
         self,
         target: Coroutine[Any, Any, _R],
         name: str | None = None,
-        eager_start: bool = False,
+        eager_start: bool = True,
     ) -> asyncio.Task[_R]:
         """Create a task from within the event loop.
 
@@ -743,7 +743,7 @@ class HomeAssistant:
 
     @callback
     def async_create_background_task(
-        self, target: Coroutine[Any, Any, _R], name: str, eager_start: bool = False
+        self, target: Coroutine[Any, Any, _R], name: str, eager_start: bool = True
     ) -> asyncio.Task[_R]:
         """Create a task from within the event loop.
 
@@ -1169,9 +1169,9 @@ class Context:
         self.parent_id = parent_id
         self.origin_event: Event[Any] | None = None
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         """Compare contexts."""
-        return bool(self.__class__ == other.__class__ and self.id == other.id)
+        return isinstance(other, Context) and self.id == other.id
 
     @cached_property
     def _as_dict(self) -> dict[str, str | None]:

@@ -219,6 +219,12 @@
       "last_rain": {
         "name": "Last rain"
       },
+      "last_lightning_strike": {
+        "name": "Last Lightning strike"
+      },
+      "last_lightning_strike_distance": {
+        "name": "Last Lightning strike distance"
+      },
       "lightning_strikes_per_day": {
         "name": "Lightning strikes per day"
       },

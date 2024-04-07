@@ -587,7 +587,7 @@ class PipelineRun:
                 self.audio_settings.noise_suppression_level,
             )
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         """Compare pipeline runs by id."""
         if isinstance(other, PipelineRun):
             return self.id == other.id
