@@ -331,7 +331,8 @@ async def test_if_not_fires_because_fail(
                     "data_template": {
                         "some": (
                             "{{ trigger.platform }}"
-                            " - {{ trigger.entity_id }} - {{ trigger.from_state.state }}"
+                            " - {{ trigger.entity_id }}"
+                            " - {{ trigger.from_state.state }}"
                             " - {{ trigger.to_state.state }}"
                             " - {{ trigger.for }}"
                         )
@@ -542,7 +543,8 @@ async def test_if_fires_on_change_with_for_advanced(
                         "some": (
                             "{{ trigger.platform }}"
                             " - {{ trigger.entity_id }}"
-                            " - {{ trigger.from_state.state }} - {{ trigger.to_state.state }}"
+                            " - {{ trigger.from_state.state }}"
+                            " - {{ trigger.to_state.state }}"
                             " - {{ trigger.for }}"
                         )
                     },
