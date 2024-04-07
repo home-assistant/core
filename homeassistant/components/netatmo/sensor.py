@@ -7,6 +7,7 @@ import logging
 from typing import cast
 
 import pyatmo
+from pyatmo import DeviceType
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -430,6 +431,13 @@ class NetatmoWeatherSensor(NetatmoModuleEntity, SensorEntity):
                         ATTR_LONGITUDE: place.location.longitude,
                     }
                 )
+
+    @property
+    def device_type(self) -> DeviceType:
+        """Return the Netatmo device type."""
+        if "." not in self.device.device_type:
+            return super().device_type
+        return DeviceType(self.device.device_type.partition(".")[2])
 
     @callback
     def async_update_callback(self) -> None:

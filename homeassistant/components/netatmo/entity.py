@@ -7,10 +7,7 @@ from typing import Any
 
 from pyatmo import DeviceType, Home, Module, Room
 from pyatmo.modules.base_class import NetatmoBase
-from pyatmo.modules.device_types import (
-    DEVICE_DESCRIPTION_MAP,
-    DeviceType as NetatmoDeviceType,
-)
+from pyatmo.modules.device_types import DEVICE_DESCRIPTION_MAP
 
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
@@ -107,11 +104,7 @@ class NetatmoDeviceEntity(NetatmoBaseEntity):
     @property
     def device_description(self) -> tuple[str, str]:
         """Return the model of this device."""
-        if "." in self.device_type:
-            netatmo_device = NetatmoDeviceType(self.device_type.partition(".")[2])
-        else:
-            netatmo_device = getattr(NetatmoDeviceType, self.device_type)
-        return DEVICE_DESCRIPTION_MAP[netatmo_device]
+        return DEVICE_DESCRIPTION_MAP[self.device_type]
 
     @property
     def home(self) -> Home:
