@@ -129,7 +129,7 @@ class Thermostat(ZHAEntity, ClimateEntity):
     @property
     def min_temp(self) -> float:
         """Return the minimum temperature."""
-        return self.entity_data.entity.max_temp
+        return self.entity_data.entity.min_temp
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set fan mode."""
