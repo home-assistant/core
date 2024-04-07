@@ -913,32 +913,30 @@ class _ScriptRun:
                     _LOGGER.warning("Error in 'while' evaluation:\n%s", ex)
                     break
 
+                if iteration > 1:
+                    # If the user creates an automation loops forever, yield to the event loop
+                    # so they have a chance to terminate the script and fix their automation.
+                    await asyncio.sleep(0)
+                    if iteration >= REPEAT_WARN_ITERATIONS:
+                        if not warned_too_many_loops:
+                            warned_too_many_loops = True
+                            _LOGGER.warning(
+                                "While condition %s in script `%s` is looping more than %s times",
+                                repeat[CONF_WHILE],
+                                self._script.name,
+                                REPEAT_WARN_ITERATIONS,
+                            )
+
+                        if iteration >= REPEAT_TERMINATE_ITERATIONS:
+                            _LOGGER.critical(
+                                "While condition %s in script `%s` terminated because it looping more than %s times",
+                                repeat[CONF_WHILE],
+                                self._script.name,
+                                REPEAT_TERMINATE_ITERATIONS,
+                            )
+                            break
+
                 await async_run_sequence(iteration)
-                # If the user creates an automation loops forever, yield to the event loop
-                # so they have a chance to terminate the script and fix their automation.
-                if iteration == 0:
-                    continue
-
-                if iteration >= REPEAT_WARN_ITERATIONS:
-                    if not warned_too_many_loops:
-                        warned_too_many_loops = True
-                        _LOGGER.warning(
-                            "While condition %s in script `%s` is looping more than %s times",
-                            repeat[CONF_WHILE],
-                            self._script.name,
-                            REPEAT_WARN_ITERATIONS,
-                        )
-
-                    if iteration >= REPEAT_TERMINATE_ITERATIONS:
-                        _LOGGER.critical(
-                            "While condition %s in script `%s` terminated because it looping more than %s times",
-                            repeat[CONF_WHILE],
-                            self._script.name,
-                            REPEAT_TERMINATE_ITERATIONS,
-                        )
-                        break
-
-                await asyncio.sleep(0)
 
         elif CONF_UNTIL in repeat:
             conditions = [
