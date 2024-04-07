@@ -33,17 +33,17 @@ from .const import (
     CONF_CHARSET,
     CONF_CUSTOM_EVENT_DATA_TEMPLATE,
     CONF_ENABLE_PUSH,
+    CONF_EVENT_MESSAGE_DATA,
     CONF_FOLDER,
     CONF_MAX_MESSAGE_SIZE,
-    CONF_MESSAGE_DATA,
     CONF_SEARCH,
     CONF_SERVER,
     CONF_SSL_CIPHER_LIST,
     DEFAULT_MAX_MESSAGE_SIZE,
-    DEFAULT_MESSAGE_DATA,
     DEFAULT_PORT,
     DOMAIN,
     MAX_MESSAGE_SIZE_LIMIT,
+    MESSAGE_DATA_OPTIONS,
 )
 from .coordinator import connect_to_server
 from .errors import InvalidAuth, InvalidFolder
@@ -57,6 +57,13 @@ CIPHER_SELECTOR = SelectSelector(
     )
 )
 TEMPLATE_SELECTOR = TemplateSelector(TemplateSelectorConfig())
+EVENT_MESSAGE_DATA_SELECTOR = SelectSelector(
+    SelectSelectorConfig(
+        options=MESSAGE_DATA_OPTIONS,
+        translation_key=CONF_EVENT_MESSAGE_DATA,
+        multiple=True,
+    )
+)
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -67,9 +74,8 @@ CONFIG_SCHEMA = vol.Schema(
         vol.Optional(CONF_CHARSET, default="utf-8"): str,
         vol.Optional(CONF_FOLDER, default="INBOX"): str,
         vol.Optional(CONF_SEARCH, default="UnSeen UnDeleted"): str,
-        vol.Optional(CONF_MESSAGE_DATA, default=DEFAULT_MESSAGE_DATA): cv.multi_select(
-            dict(zip(DEFAULT_MESSAGE_DATA, DEFAULT_MESSAGE_DATA))
-        ),
+        # The default for new entries is to not include text and headers
+        vol.Optional(CONF_EVENT_MESSAGE_DATA, default=[]): cv.ensure_list,
     }
 )
 CONFIG_SCHEMA_ADVANCED = {
@@ -83,9 +89,10 @@ OPTIONS_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_FOLDER, default="INBOX"): str,
         vol.Optional(CONF_SEARCH, default="UnSeen UnDeleted"): str,
-        vol.Optional(CONF_MESSAGE_DATA, default=DEFAULT_MESSAGE_DATA): cv.multi_select(
-            dict(zip(DEFAULT_MESSAGE_DATA, DEFAULT_MESSAGE_DATA))
-        ),
+        # The default for older entries is to include text and headers
+        vol.Optional(
+            CONF_EVENT_MESSAGE_DATA, default=MESSAGE_DATA_OPTIONS
+        ): EVENT_MESSAGE_DATA_SELECTOR,
     }
 )
 

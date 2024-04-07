@@ -29,25 +29,13 @@ MOCK_CONFIG = {
     "charset": "utf-8",
     "folder": "INBOX",
     "search": "UnSeen UnDeleted",
-    "message_data": [
-        "date",
-        "text",
-        "sender",
-        "subject",
-        "headers",
-    ],
+    "event_message_data": ["text", "headers"],
 }
 
 MOCK_OPTIONS = {
     "folder": "INBOX",
     "search": "UnSeen UnDeleted",
-    "message_data": [
-        "date",
-        "text",
-        "sender",
-        "subject",
-        "headers",
-    ],
+    "event_message_data": ["text", "headers"],
 }
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
