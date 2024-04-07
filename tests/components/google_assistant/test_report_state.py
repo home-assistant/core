@@ -272,6 +272,14 @@ async def test_report_notifications(
             hass, datetime.fromisoformat("2023-08-01T01:04:00+00:00")
         )
         await hass.async_block_till_done()
+        async_fire_time_changed(
+            hass, utcnow() + timedelta(seconds=report_state.REPORT_STATE_WINDOW)
+        )
+        await hass.async_block_till_done()
+        async_fire_time_changed(
+            hass, utcnow() + timedelta(seconds=report_state.REPORT_STATE_WINDOW)
+        )
+        await hass.async_block_till_done()
         assert len(mock_report_state.mock_calls) == 2
         for call in mock_report_state.mock_calls:
             if "notifications" in call[1][0]["devices"]:
