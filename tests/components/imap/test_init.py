@@ -136,7 +136,6 @@ async def test_entry_startup_fails(
 )
 @pytest.mark.parametrize("imap_has_capability", [True, False], ids=["push", "poll"])
 @pytest.mark.parametrize("charset", ["utf-8", "us-ascii"], ids=["utf-8", "us-ascii"])
-@pytest.mark.parametrize("message_data", TEST_MESSAGE_DATA)
 async def test_receiving_message_successfully(
     hass: HomeAssistant, mock_imap_protocol: MagicMock, valid_date: bool, charset: str
 ) -> None:
