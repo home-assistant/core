@@ -7,11 +7,7 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.components import persistent_notification
-from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
-    SensorEntity,
-    SensorEntityDescription,
-)
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
@@ -47,37 +43,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 ISSUE_PLACEHOLDER = {"url": "/config/integrations/dashboard/add?domain=seventeentrack"}
-
-SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
-    SensorEntityDescription(
-        key="delivered",
-        name="Delivered",
-    ),
-    SensorEntityDescription(
-        key="expired",
-        name="Expired",
-    ),
-    SensorEntityDescription(
-        key="in_transit",
-        name="In Transit",
-    ),
-    SensorEntityDescription(
-        key="not_found",
-        name="Not Found",
-    ),
-    SensorEntityDescription(
-        key="ready_to_be_picked_up",
-        name="Ready To Be Picked Up",
-    ),
-    SensorEntityDescription(
-        key="returned",
-        name="Returned",
-    ),
-    SensorEntityDescription(
-        key="undelivered",
-        name="Undelivered",
-    ),
-)
 
 
 async def async_setup_platform(
@@ -154,8 +119,8 @@ async def async_setup_entry(
                 )
 
     async_add_entities(
-        SeventeenTrackSummarySensor(description, coordinator)
-        for description in SENSOR_TYPES
+        SeventeenTrackSummarySensor(status, coordinator)
+        for status in coordinator.data.summary
     )
 
     _async_create_remove_entities()
@@ -176,37 +141,30 @@ class SeventeenTrackSummarySensor(
 
     def __init__(
         self,
-        description: SensorEntityDescription,
+        status: str,
         coordinator: SeventeenTrackCoordinator,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
-        self.entity_description = description
+        self._status = status
         self._attr_extra_state_attributes = {}
-        self._attr_name = f"Seventeentrack Packages {description.name}"
-        self._attr_unique_id = f"summary_{coordinator.account_id}_{description.key}"
+        self._attr_name = f"Seventeentrack Packages {self._status}"
+        self._attr_unique_id = f"summary_{coordinator.account_id}_{self._status}"
 
     @property
     def available(self) -> bool:
         """Return whether the entity is available."""
-        return (
-            self.coordinator.data.summary[self.entity_description.key]["quantity"]
-            is not None
-        )
+        return self.coordinator.data.summary[self._status]["quantity"] is not None
 
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        return self.coordinator.data.summary[self.entity_description.key]["quantity"]
+        return self.coordinator.data.summary[self._status]["quantity"]
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
-        return {
-            ATTR_PACKAGES: self.coordinator.data.summary[self.entity_description.key][
-                "packages"
-            ]
-        }
+        return {ATTR_PACKAGES: self.coordinator.data.summary[self._status]["packages"]}
 
 
 class SeventeenTrackPackageSensor(
