@@ -1,4 +1,5 @@
 """Stub file for event_type. Provide overload for type checking."""
+# ruff: noqa: PYI021  # Allow docstrings
 
 from collections.abc import Mapping
 from typing import Any, Generic
