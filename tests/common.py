@@ -1527,12 +1527,12 @@ class _HA_ANY:
 
     _other = _SENTINEL
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         """Test equal."""
         self._other = other
         return True
 
-    def __ne__(self, other: Any) -> bool:
+    def __ne__(self, other: object) -> bool:
         """Test not equal."""
         self._other = other
         return False

@@ -187,9 +187,7 @@ def parse_datetime(dt_str: str, *, raise_on_error: Literal[True]) -> dt.datetime
 
 
 @overload
-def parse_datetime(
-    dt_str: str, *, raise_on_error: Literal[False] | bool
-) -> dt.datetime | None: ...
+def parse_datetime(dt_str: str, *, raise_on_error: bool) -> dt.datetime | None: ...
 
 
 def parse_datetime(dt_str: str, *, raise_on_error: bool = False) -> dt.datetime | None:

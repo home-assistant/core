@@ -638,6 +638,7 @@ select = [
     "PIE", # flake8-pie
     "PL", # pylint
     "PT", # flake8-pytest-style
+    "PYI", # flake8-pyi
     "RET", # flake8-return
     "RSE", # flake8-raise
     "RUF005", # Consider iterable unpacking instead of concatenation
@@ -719,6 +720,9 @@ ignore = [
 
     # temporarily disabled
     "PT019",
+    "PYI041",
+    "PYI036",
+    "PYI024",
     "RET503",
     "RET502",
     "RET501",
