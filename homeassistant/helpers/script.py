@@ -914,7 +914,7 @@ class _ScriptRun:
                     break
 
                 if iteration > 1:
-                    if iteration >= REPEAT_WARN_ITERATIONS:
+                    if iteration > REPEAT_WARN_ITERATIONS:
                         if not warned_too_many_loops:
                             warned_too_many_loops = True
                             _LOGGER.warning(
@@ -924,7 +924,7 @@ class _ScriptRun:
                                 REPEAT_WARN_ITERATIONS,
                             )
 
-                        if iteration >= REPEAT_TERMINATE_ITERATIONS:
+                        if iteration > REPEAT_TERMINATE_ITERATIONS:
                             _LOGGER.critical(
                                 "While condition %s in script `%s` "
                                 "terminated because it looped %s times",
