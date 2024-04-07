@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 import logging
 from typing import Any, cast
 
-from prayer_times_calculator import PrayerTimesCalculator, exceptions
+from prayer_times_calculator_offline import PrayerTimesCalculator, exceptions
 from requests.exceptions import ConnectionError as ConnError
 
 from homeassistant.config_entries import ConfigEntry
