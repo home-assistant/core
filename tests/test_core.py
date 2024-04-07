@@ -3236,6 +3236,23 @@ async def test_async_add_job_deprecated(
     ) in caplog.text
 
 
+async def test_async_add_hass_job_deprecated(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test async_add_hass_job warns about its deprecation."""
+
+    async def _test():
+        pass
+
+    hass.async_add_hass_job(HassJob(_test))
+    assert (
+        "Detected code that calls `async_add_hass_job`, which is deprecated "
+        "and will be removed in Home Assistant 2025.5; Please review "
+        "https://developers.home-assistant.io/blog/2024/04/06/deprecate_add_hass_job"
+        " for replacement options"
+    ) in caplog.text
+
+
 async def test_eventbus_lazy_object_creation(hass: HomeAssistant) -> None:
     """Test we don't create unneeded objects when firing events."""
     calls = []
