@@ -276,7 +276,7 @@ def _parse_yaml_python(
 
 
 def _parse_yaml(
-    loader: type[FastSafeLoader] | type[PythonSafeLoader],
+    loader: type[FastSafeLoader | PythonSafeLoader],
     content: str | TextIO,
     secrets: Secrets | None = None,
 ) -> JSON_TYPE:
