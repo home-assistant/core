@@ -38,6 +38,7 @@ async def test_entry_diagnostics(
     template = "{{ 4 * 4 }}"
     config = MOCK_CONFIG.copy()
     config["custom_event_data_template"] = template
+    config["message_data"] = TEST_MESSAGE_DATA
     config_entry = MockConfigEntry(domain=imap.DOMAIN, data=config)
 
     config_entry.add_to_hass(hass)
