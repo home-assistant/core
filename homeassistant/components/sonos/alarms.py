@@ -30,12 +30,6 @@ class SonosAlarms(SonosHouseholdCoordinator):
         super().__init__(*args)
         self.alarms: Alarms = Alarms()
         self.created_alarm_ids: set[str] = set()
-        _LOGGER.info(
-            "PR - __init__ %d %s %s",
-            len(self.alarms),
-            self.alarms.last_id,
-            self.alarms.last_alarm_list_version,
-        )
 
     def __iter__(self) -> Iterator:
         """Return an iterator for the known alarms."""
@@ -49,13 +43,6 @@ class SonosAlarms(SonosHouseholdCoordinator):
         self, soco: SoCo, update_id: int | None = None
     ) -> None:
         """Create and update alarms entities, return success."""
-        _LOGGER.info(
-            "PR - async_update_entities %d %s %s %s",
-            len(self.alarms),
-            self.alarms.last_id,
-            self.alarms.last_alarm_list_version,
-            soco.alarmClock.ListAlarms(),
-        )
         updated = await self.hass.async_add_executor_job(
             self.update_cache, soco, update_id
         )
@@ -76,12 +63,6 @@ class SonosAlarms(SonosHouseholdCoordinator):
         self, event: SonosEvent, speaker: SonosSpeaker
     ) -> None:
         """Process the event payload in an async lock and update entities."""
-        _LOGGER.info(
-            "PR - async_update_entities %d %s %s",
-            len(self.alarms),
-            self.alarms.last_id,
-            self.alarms.last_alarm_list_version,
-        )
         event_id = event.variables["alarm_list_version"].split(":")[-1]
         event_id = int(event_id)
         async with self.cache_update_lock:
@@ -94,24 +75,10 @@ class SonosAlarms(SonosHouseholdCoordinator):
     @soco_error()
     def update_cache(self, soco: SoCo, update_id: int | None = None) -> bool:
         """Update cache of known alarms and return if cache has changed."""
-        _LOGGER.info(
-            "PR - update_cache before update %d %s %s %s",
-            len(self.alarms),
-            self.alarms.last_id,
-            self.alarms.last_alarm_list_version,
-            soco.alarmClock.ListAlarms(),
-        )
         self.alarms.update(soco)
-        _LOGGER.info(
-            "PR - update_cache after update %d %s %s",
-            len(self.alarms),
-            self.alarms.last_id,
-            self.alarms.last_alarm_list_version,
-        )
 
         if update_id and self.alarms.last_id < update_id:
             # Skip updates if latest query result is outdated or lagging
-            _LOGGER.info("PR - Skip Update 1 %d", len(self.alarms))
             return False
 
         if (
@@ -119,10 +86,9 @@ class SonosAlarms(SonosHouseholdCoordinator):
             and self.alarms.last_id <= self.last_processed_event_id
         ):
             # Skip updates already processed
-            _LOGGER.info("PR - Skip Update 2 %d", len(self.alarms))
             return False
 
-        _LOGGER.info(
+        _LOGGER.debug(
             "Updating processed event %s from %s (was %s)",
             self.alarms.last_id,
             soco,
