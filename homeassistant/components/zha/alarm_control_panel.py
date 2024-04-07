@@ -64,27 +64,27 @@ class ZHAAlarmControlPanel(ZHAEntity, AlarmControlPanelEntity):
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
-        self.entity_data.entity.async_alarm_disarm(code)
+        await self.entity_data.entity.async_alarm_disarm(code)
         self.async_write_ha_state()
 
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
-        self.entity_data.entity.async_alarm_arm_home(code)
+        await self.entity_data.entity.async_alarm_arm_home(code)
         self.async_write_ha_state()
 
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
-        self.entity_data.entity.async_alarm_arm_away(code)
+        await self.entity_data.entity.async_alarm_arm_away(code)
         self.async_write_ha_state()
 
     async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm night command."""
-        self.entity_data.entity.async_alarm_arm_night(code)
+        await self.entity_data.entity.async_alarm_arm_night(code)
         self.async_write_ha_state()
 
     async def async_alarm_trigger(self, code: str | None = None) -> None:
         """Send alarm trigger command."""
-        self.entity_data.entity.async_alarm_trigger(code)
+        await self.entity_data.entity.async_alarm_trigger(code)
         self.async_write_ha_state()
 
     @property
