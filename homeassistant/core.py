@@ -102,6 +102,7 @@ from .util.async_ import (
     run_callback_threadsafe,
     shutdown_run_callback_threadsafe,
 )
+from .util.event_type import EventType
 from .util.executor import InterruptibleThreadPoolExecutor
 from .util.json import JsonObjectType
 from .util.read_only_dict import ReadOnlyDict
@@ -1268,7 +1269,7 @@ class Event(Generic[_DataT]):
 
     def __init__(
         self,
-        event_type: str,
+        event_type: EventType[_DataT] | str,
         data: _DataT | None = None,
         origin: EventOrigin = EventOrigin.local,
         time_fired_timestamp: float | None = None,
@@ -1342,7 +1343,7 @@ class Event(Generic[_DataT]):
 
 
 def _event_repr(
-    event_type: str, origin: EventOrigin, data: Mapping[str, Any] | None
+    event_type: EventType[_DataT] | str, origin: EventOrigin, data: _DataT | None
 ) -> str:
     """Return the representation."""
     if data:
@@ -1359,13 +1360,13 @@ _FilterableJobType = tuple[
 
 
 @dataclass(slots=True)
-class _OneTimeListener:
+class _OneTimeListener(Generic[_DataT]):
     hass: HomeAssistant
-    listener_job: HassJob[[Event], Coroutine[Any, Any, None] | None]
+    listener_job: HassJob[[Event[_DataT]], Coroutine[Any, Any, None] | None]
     remove: CALLBACK_TYPE | None = None
 
     @callback
-    def __call__(self, event: Event) -> None:
+    def __call__(self, event: Event[_DataT]) -> None:
         """Remove listener from event bus and then fire listener."""
         if not self.remove:
             # If the listener was already removed, we don't need to do anything
@@ -1393,7 +1394,7 @@ class EventBus:
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize a new event bus."""
-        self._listeners: dict[str, list[_FilterableJobType[Any]]] = {}
+        self._listeners: dict[EventType[Any] | str, list[_FilterableJobType[Any]]] = {}
         self._match_all_listeners: list[_FilterableJobType[Any]] = []
         self._listeners[MATCH_ALL] = self._match_all_listeners
         self._hass = hass
@@ -1408,7 +1409,7 @@ class EventBus:
         self._debug = _LOGGER.isEnabledFor(logging.DEBUG)
 
     @callback
-    def async_listeners(self) -> dict[str, int]:
+    def async_listeners(self) -> dict[EventType[Any] | str, int]:
         """Return dictionary with events and the number of listeners.
 
         This method must be run in the event loop.
@@ -1416,14 +1417,14 @@ class EventBus:
         return {key: len(listeners) for key, listeners in self._listeners.items()}
 
     @property
-    def listeners(self) -> dict[str, int]:
+    def listeners(self) -> dict[EventType[Any] | str, int]:
         """Return dictionary with events and the number of listeners."""
         return run_callback_threadsafe(self._hass.loop, self.async_listeners).result()
 
     def fire(
         self,
-        event_type: str,
-        event_data: Mapping[str, Any] | None = None,
+        event_type: EventType[_DataT] | str,
+        event_data: _DataT | None = None,
         origin: EventOrigin = EventOrigin.local,
         context: Context | None = None,
     ) -> None:
@@ -1435,8 +1436,8 @@ class EventBus:
     @callback
     def async_fire(
         self,
-        event_type: str,
-        event_data: Mapping[str, Any] | None = None,
+        event_type: EventType[_DataT] | str,
+        event_data: _DataT | None = None,
         origin: EventOrigin = EventOrigin.local,
         context: Context | None = None,
         time_fired: float | None = None,
@@ -1454,8 +1455,8 @@ class EventBus:
     @callback
     def _async_fire(
         self,
-        event_type: str,
-        event_data: Mapping[str, Any] | None = None,
+        event_type: EventType[_DataT] | str,
+        event_data: _DataT | None = None,
         origin: EventOrigin = EventOrigin.local,
         context: Context | None = None,
         time_fired: float | None = None,
@@ -1483,7 +1484,7 @@ class EventBus:
         if not listeners:
             return
 
-        event: Event | None = None
+        event: Event[_DataT] | None = None
 
         for job, event_filter, run_immediately in listeners:
             if event_filter is not None:
@@ -1514,8 +1515,8 @@ class EventBus:
 
     def listen(
         self,
-        event_type: str,
-        listener: Callable[[Event[Any]], Coroutine[Any, Any, None] | None],
+        event_type: EventType[_DataT] | str,
+        listener: Callable[[Event[_DataT]], Coroutine[Any, Any, None] | None],
     ) -> CALLBACK_TYPE:
         """Listen for all events or events of a specific type.
 
@@ -1535,7 +1536,7 @@ class EventBus:
     @callback
     def async_listen(
         self,
-        event_type: str,
+        event_type: EventType[_DataT] | str,
         listener: Callable[[Event[_DataT]], Coroutine[Any, Any, None] | None],
         event_filter: Callable[[_DataT], bool] | None = None,
         run_immediately: bool = True,
@@ -1577,7 +1578,9 @@ class EventBus:
 
     @callback
     def _async_listen_filterable_job(
-        self, event_type: str, filterable_job: _FilterableJobType[Any]
+        self,
+        event_type: EventType[_DataT] | str,
+        filterable_job: _FilterableJobType[_DataT],
     ) -> CALLBACK_TYPE:
         self._listeners.setdefault(event_type, []).append(filterable_job)
         return functools.partial(
@@ -1586,8 +1589,8 @@ class EventBus:
 
     def listen_once(
         self,
-        event_type: str,
-        listener: Callable[[Event[Any]], Coroutine[Any, Any, None] | None],
+        event_type: EventType[_DataT] | str,
+        listener: Callable[[Event[_DataT]], Coroutine[Any, Any, None] | None],
     ) -> CALLBACK_TYPE:
         """Listen once for event of a specific type.
 
@@ -1609,8 +1612,8 @@ class EventBus:
     @callback
     def async_listen_once(
         self,
-        event_type: str,
-        listener: Callable[[Event[Any]], Coroutine[Any, Any, None] | None],
+        event_type: EventType[_DataT] | str,
+        listener: Callable[[Event[_DataT]], Coroutine[Any, Any, None] | None],
         run_immediately: bool = True,
     ) -> CALLBACK_TYPE:
         """Listen once for event of a specific type.
@@ -1622,7 +1625,9 @@ class EventBus:
 
         This method must be run in the event loop.
         """
-        one_time_listener = _OneTimeListener(self._hass, HassJob(listener))
+        one_time_listener: _OneTimeListener[_DataT] = _OneTimeListener(
+            self._hass, HassJob(listener)
+        )
         remove = self._async_listen_filterable_job(
             event_type,
             (
@@ -1640,7 +1645,9 @@ class EventBus:
 
     @callback
     def _async_remove_listener(
-        self, event_type: str, filterable_job: _FilterableJobType
+        self,
+        event_type: EventType[_DataT] | str,
+        filterable_job: _FilterableJobType[_DataT],
     ) -> None:
         """Remove a listener of a specific event_type.
 
