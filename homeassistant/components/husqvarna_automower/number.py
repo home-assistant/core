@@ -1,11 +1,13 @@
 """Creates the number entities for the mower."""
 
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 import logging
+from typing import Any
 
 from aioautomower.exceptions import ApiException
 from aioautomower.model import MowerAttributes
+from aioautomower.session import AutomowerSession
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -27,6 +29,7 @@ class AutomowerNumberEntityDescription(NumberEntityDescription):
 
     exists_fn: Callable[[MowerAttributes], bool] = lambda _: True
     value_fn: Callable[[MowerAttributes], int]
+    set_value_fn: Callable[[AutomowerSession, str, float], Awaitable[Any]]
 
 
 NUMBER_TYPES: tuple[AutomowerNumberEntityDescription, ...] = (
@@ -38,6 +41,9 @@ NUMBER_TYPES: tuple[AutomowerNumberEntityDescription, ...] = (
         native_min_value=1,
         native_max_value=9,
         value_fn=lambda data: data.cutting_height,
+        set_value_fn=lambda session, mower_id, cheight: session.set_cutting_height(
+            mower_id, cheight
+        ),
     ),
 )
 
@@ -77,9 +83,11 @@ class AutomowerNumberEntity(AutomowerBaseEntity, NumberEntity):
         return self.entity_description.value_fn(self.mower_attributes)
 
     async def async_set_native_value(self, value: float) -> None:
-        """Change the value."""
+        """Change to new number value."""
         try:
-            await self.coordinator.api.set_cutting_height(self.mower_id, value)
+            await self.entity_description.set_value_fn(
+                self.coordinator.api, self.mower_id, value
+            )
         except ApiException as exception:
             raise HomeAssistantError(
                 f"Command couldn't be sent to the command queue: {exception}"
