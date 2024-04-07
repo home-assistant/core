@@ -48,6 +48,23 @@ def version_validator(value: Any) -> str:
     return value
 
 
+def unique_input_validator(inputs: Any) -> Any:
+    """Validate the inputs don't have duplicate keys under different sections."""
+    allinputs = set()
+    for key, value in inputs.items():
+        if value and CONF_INPUT in value:
+            for key in value[CONF_INPUT]:
+                if key in allinputs:
+                    raise vol.Invalid(f"Duplicate use of input key {key} in blueprint.")
+                allinputs.add(key)
+        else:
+            if key in allinputs:
+                raise vol.Invalid(f"Duplicate use of input key {key} in blueprint.")
+            allinputs.add(key)
+
+    return inputs
+
+
 @callback
 def is_blueprint_config(config: Any) -> bool:
     """Return if it is a blueprint config."""
@@ -96,13 +113,16 @@ BLUEPRINT_SCHEMA = vol.Schema(
                 vol.Optional(CONF_HOMEASSISTANT): {
                     vol.Optional(CONF_MIN_VERSION): version_validator
                 },
-                vol.Optional(CONF_INPUT, default=dict): {
-                    str: vol.Any(
-                        None,
-                        BLUEPRINT_INPUT_SCHEMA,
-                        BLUEPRINT_INPUT_SECTION_SCHEMA,
-                    )
-                },
+                vol.Optional(CONF_INPUT, default=dict): vol.All(
+                    {
+                        str: vol.Any(
+                            None,
+                            BLUEPRINT_INPUT_SCHEMA,
+                            BLUEPRINT_INPUT_SECTION_SCHEMA,
+                        )
+                    },
+                    unique_input_validator,
+                ),
             }
         ),
     },
