@@ -28,6 +28,7 @@ from typing import (
     Literal,
     NoReturn,
     ParamSpec,
+    Self,
     TypeVar,
     cast,
     overload,
@@ -310,7 +311,7 @@ class TupleWrapper(tuple, ResultWrapper):
 
     # This is all magic to be allowed to subclass a tuple.
 
-    def __new__(cls, value: tuple, *, render_result: str | None = None) -> TupleWrapper:
+    def __new__(cls, value: tuple, *, render_result: str | None = None) -> Self:
         """Create a new tuple class."""
         return super().__new__(cls, tuple(value))
 
@@ -1102,7 +1103,7 @@ class TemplateStateBase(State):
             return f"{state} {unit}"
         return state
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         """Ensure we collect on equality check."""
         self._collect_state()
         return self._state.__eq__(other)
