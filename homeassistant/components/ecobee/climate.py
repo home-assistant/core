@@ -543,7 +543,10 @@ class Thermostat(ClimateEntity):
     @property
     def current_humidity(self) -> int | None:
         """Return the current humidity."""
-        return self.thermostat["runtime"]["actualHumidity"]
+        try:
+            return int(self.thermostat["runtime"]["actualHumidity"])
+        except KeyError:
+            return None
 
     @property
     def hvac_action(self):

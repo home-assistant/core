@@ -17,6 +17,7 @@ from homeassistant.components.wallbox.const import (
     CHARGER_MAX_CHARGING_CURRENT_KEY,
     DOMAIN,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -145,7 +146,7 @@ async def test_form_validate_input(hass: HomeAssistant) -> None:
 async def test_form_reauth(hass: HomeAssistant, entry: MockConfigEntry) -> None:
     """Test we handle reauth flow."""
     await setup_integration(hass, entry)
-    assert entry.state == config_entries.ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     with requests_mock.Mocker() as mock_request:
         mock_request.get(
@@ -185,7 +186,7 @@ async def test_form_reauth(hass: HomeAssistant, entry: MockConfigEntry) -> None:
 async def test_form_reauth_invalid(hass: HomeAssistant, entry: MockConfigEntry) -> None:
     """Test we handle reauth invalid flow."""
     await setup_integration(hass, entry)
-    assert entry.state == config_entries.ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     with requests_mock.Mocker() as mock_request:
         mock_request.get(

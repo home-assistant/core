@@ -551,7 +551,7 @@ class ActiveDeviceRegistryItems(DeviceRegistryItems[DeviceEntry]):
         ]
 
 
-class DeviceRegistry(BaseRegistry):
+class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
     """Class to hold a registry of devices."""
 
     devices: ActiveDeviceRegistryItems
@@ -1007,7 +1007,7 @@ class DeviceRegistry(BaseRegistry):
     def async_clear_config_entry(self, config_entry_id: str) -> None:
         """Clear config entry from registry entries."""
         now_time = time.time()
-        for device in list(self.devices.values()):
+        for device in self.devices.get_devices_for_config_entry_id(config_entry_id):
             self.async_update_device(device.id, remove_config_entry_id=config_entry_id)
         for deleted_device in list(self.deleted_devices.values()):
             config_entries = deleted_device.config_entries
@@ -1259,7 +1259,9 @@ def async_setup_cleanup(hass: HomeAssistant, dev_reg: DeviceRegistry) -> None:
         """Cancel debounced cleanup."""
         debounced_cleanup.async_cancel()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _on_homeassistant_stop)
+    hass.bus.async_listen_once(
+        EVENT_HOMEASSISTANT_STOP, _on_homeassistant_stop, run_immediately=True
+    )
 
 
 def _normalize_connections(connections: set[tuple[str, str]]) -> set[tuple[str, str]]:

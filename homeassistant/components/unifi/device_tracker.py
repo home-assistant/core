@@ -359,6 +359,4 @@ class UnifiScannerEntity(UnifiEntity[HandlerT, ApiItemT], ScannerEntity):
         if self.is_connected:
             attributes_to_check = CLIENT_CONNECTED_ALL_ATTRIBUTES
 
-        attributes = {k: raw[k] for k in attributes_to_check if k in raw}
-
-        return attributes
+        return {k: raw[k] for k in attributes_to_check if k in raw}

@@ -53,7 +53,7 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
     entries = hass.config_entries.async_entries(DOMAIN)
     assert entries
     assert len(entries) == 1
-    assert entries[0].state == ConfigEntryState.LOADED
+    assert entries[0].state is ConfigEntryState.LOADED
 
     with patch(
         "homeassistant.components.linear_garage_door.coordinator.Linear.close",
@@ -61,4 +61,4 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
     ):
         await hass.config_entries.async_unload(entries[0].entry_id)
         await hass.async_block_till_done()
-    assert entries[0].state == ConfigEntryState.NOT_LOADED
+    assert entries[0].state is ConfigEntryState.NOT_LOADED

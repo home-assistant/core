@@ -327,7 +327,7 @@ async def test_async_create_task_schedule_coroutine() -> None:
     async def job():
         pass
 
-    ha.HomeAssistant.async_create_task(hass, job())
+    ha.HomeAssistant.async_create_task(hass, job(), eager_start=False)
     assert len(hass.loop.call_soon.mock_calls) == 0
     assert len(hass.loop.create_task.mock_calls) == 1
     assert len(hass.add_job.mock_calls) == 0
@@ -353,7 +353,9 @@ async def test_async_create_task_schedule_coroutine_with_name() -> None:
     async def job():
         pass
 
-    task = ha.HomeAssistant.async_create_task(hass, job(), "named task")
+    task = ha.HomeAssistant.async_create_task(
+        hass, job(), "named task", eager_start=False
+    )
     assert len(hass.loop.call_soon.mock_calls) == 0
     assert len(hass.loop.create_task.mock_calls) == 1
     assert len(hass.add_job.mock_calls) == 0
@@ -2288,6 +2290,7 @@ async def test_additional_data_in_core_config(
 ) -> None:
     """Test that we can handle additional data in core configuration."""
     config = ha.Config(hass, "/test/ha-config")
+    config.async_initialize()
     hass_storage[ha.CORE_STORAGE_KEY] = {
         "version": 1,
         "data": {"location_name": "Test Name", "additional_valid_key": "value"},
@@ -2301,6 +2304,7 @@ async def test_incorrect_internal_external_url(
 ) -> None:
     """Test that we warn when detecting invalid internal/external url."""
     config = ha.Config(hass, "/test/ha-config")
+    config.async_initialize()
 
     hass_storage[ha.CORE_STORAGE_KEY] = {
         "version": 1,
@@ -2314,6 +2318,7 @@ async def test_incorrect_internal_external_url(
     assert "Invalid internal_url set" not in caplog.text
 
     config = ha.Config(hass, "/test/ha-config")
+    config.async_initialize()
 
     hass_storage[ha.CORE_STORAGE_KEY] = {
         "version": 1,
@@ -3358,9 +3363,11 @@ async def test_report_state_listener_restrictions(hass: HomeAssistant) -> None:
         """Mock filter."""
         return False
 
-    # run_immediately not set
+    # run_immediately set to False
     with pytest.raises(HomeAssistantError):
-        hass.bus.async_listen(EVENT_STATE_REPORTED, listener, event_filter=filter)
+        hass.bus.async_listen(
+            EVENT_STATE_REPORTED, listener, event_filter=filter, run_immediately=False
+        )
 
     # no filter
     with pytest.raises(HomeAssistantError):
