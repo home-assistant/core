@@ -20,8 +20,7 @@ import zoneinfo
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components import calendar
-import homeassistant.components.automation as automation
+from homeassistant.components import automation, calendar
 from homeassistant.components.calendar.trigger import EVENT_END, EVENT_START
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF
 from homeassistant.core import HomeAssistant

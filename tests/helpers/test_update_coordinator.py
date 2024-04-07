@@ -63,14 +63,13 @@ def get_crd(
         calls += 1
         return calls
 
-    crd = update_coordinator.DataUpdateCoordinator[int](
+    return update_coordinator.DataUpdateCoordinator[int](
         hass,
         _LOGGER,
         name="test",
         update_method=refresh,
         update_interval=update_interval,
     )
-    return crd
 
 
 DEFAULT_UPDATE_INTERVAL = timedelta(seconds=10)

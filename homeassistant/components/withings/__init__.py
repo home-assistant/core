@@ -16,14 +16,9 @@ from aiohttp.hdrs import METH_POST
 from aiohttp.web import Request, Response
 from aiowithings import NotificationCategory, WithingsClient
 from aiowithings.util import to_enum
-import voluptuous as vol
 from yarl import URL
 
 from homeassistant.components import cloud
-from homeassistant.components.application_credentials import (
-    ClientCredential,
-    async_import_client_credential,
-)
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.webhook import (
     async_generate_id as webhook_generate_id,
@@ -34,25 +29,20 @@ from homeassistant.components.webhook import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
-    CONF_CLIENT_ID,
-    CONF_CLIENT_SECRET,
     CONF_TOKEN,
     CONF_WEBHOOK_ID,
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
-from homeassistant.helpers import config_validation as cv
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import (
     OAuth2Session,
     async_get_config_entry_implementation,
 )
 from homeassistant.helpers.event import async_call_later
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
-from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_PROFILES, CONF_USE_WEBHOOK, DEFAULT_TITLE, DOMAIN, LOGGER
+from .const import DEFAULT_TITLE, DOMAIN, LOGGER
 from .coordinator import (
     WithingsActivityDataUpdateCoordinator,
     WithingsBedPresenceDataUpdateCoordinator,
@@ -65,65 +55,9 @@ from .coordinator import (
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.CALENDAR, Platform.SENSOR]
 
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.All(
-            cv.deprecated(CONF_PROFILES),
-            cv.deprecated(CONF_CLIENT_ID),
-            cv.deprecated(CONF_CLIENT_SECRET),
-            vol.Schema(
-                {
-                    vol.Optional(CONF_CLIENT_ID): vol.All(cv.string, vol.Length(min=1)),
-                    vol.Optional(CONF_CLIENT_SECRET): vol.All(
-                        cv.string, vol.Length(min=1)
-                    ),
-                    vol.Optional(CONF_USE_WEBHOOK): cv.boolean,
-                    vol.Optional(CONF_PROFILES): vol.All(
-                        cv.ensure_list,
-                        vol.Unique(),
-                        vol.Length(min=1),
-                        [vol.All(cv.string, vol.Length(min=1))],
-                    ),
-                }
-            ),
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
 SUBSCRIBE_DELAY = timedelta(seconds=5)
 UNSUBSCRIBE_DELAY = timedelta(seconds=1)
 CONF_CLOUDHOOK_URL = "cloudhook_url"
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Withings component."""
-
-    if conf := config.get(DOMAIN):
-        async_create_issue(
-            hass,
-            HOMEASSISTANT_DOMAIN,
-            f"deprecated_yaml_{DOMAIN}",
-            breaks_in_ha_version="2024.4.0",
-            is_fixable=False,
-            issue_domain=DOMAIN,
-            severity=IssueSeverity.WARNING,
-            translation_key="deprecated_yaml",
-            translation_placeholders={
-                "domain": DOMAIN,
-                "integration_title": "Withings",
-            },
-        )
-        if CONF_CLIENT_ID in conf:
-            await async_import_client_credential(
-                hass,
-                DOMAIN,
-                ClientCredential(
-                    conf[CONF_CLIENT_ID],
-                    conf[CONF_CLIENT_SECRET],
-                ),
-            )
-
-    return True
 
 
 @dataclass(slots=True)

@@ -87,7 +87,7 @@ def test_get_significant_states_minimal_response(hass_history) -> None:
         entity_states = states[entity_id]
         for state_idx in range(1, len(entity_states)):
             input_state = entity_states[state_idx]
-            orig_last_changed = orig_last_changed = json.dumps(
+            orig_last_changed = json.dumps(
                 process_timestamp(input_state.last_changed),
                 cls=JSONEncoder,
             ).replace('"', "")
@@ -162,13 +162,11 @@ def test_get_significant_states_without_initial(hass_history) -> None:
     one_with_microsecond = zero + timedelta(seconds=1, microseconds=1)
     one_and_half = zero + timedelta(seconds=1.5)
     for entity_id in states:
-        states[entity_id] = list(
-            filter(
-                lambda s: s.last_changed != one
-                and s.last_changed != one_with_microsecond,
-                states[entity_id],
-            )
-        )
+        states[entity_id] = [
+            s
+            for s in states[entity_id]
+            if s.last_changed not in (one, one_with_microsecond)
+        ]
     del states["media_player.test2"]
 
     hist = get_significant_states(

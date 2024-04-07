@@ -125,7 +125,7 @@ async def test_site_cannot_update(
 
     future_time = utcnow() + timedelta(minutes=20)
     async_fire_time_changed(hass, future_time)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     weather = hass.states.get("weather.met_office_wavertree_daily")
     assert weather.state == STATE_UNAVAILABLE
@@ -162,19 +162,6 @@ async def test_one_weather_site_running(
     assert weather.attributes.get("wind_speed") == 14.48
     assert weather.attributes.get("wind_bearing") == "SSE"
     assert weather.attributes.get("humidity") == 50
-
-    # Also has Forecasts added - again, just pick out 1 entry to check
-    # ensures that daily filters out multiple results per day
-    assert len(weather.attributes.get("forecast")) == 4
-
-    assert (
-        weather.attributes.get("forecast")[3]["datetime"] == "2020-04-29T12:00:00+00:00"
-    )
-    assert weather.attributes.get("forecast")[3]["condition"] == "rainy"
-    assert weather.attributes.get("forecast")[3]["precipitation_probability"] == 59
-    assert weather.attributes.get("forecast")[3]["temperature"] == 13
-    assert weather.attributes.get("forecast")[3]["wind_speed"] == 20.92
-    assert weather.attributes.get("forecast")[3]["wind_bearing"] == "SE"
 
 
 @pytest.mark.freeze_time(datetime.datetime(2020, 4, 25, 12, tzinfo=datetime.UTC))
@@ -230,19 +217,6 @@ async def test_two_weather_sites_running(
     assert weather.attributes.get("wind_bearing") == "SSE"
     assert weather.attributes.get("humidity") == 50
 
-    # Also has Forecasts added - again, just pick out 1 entry to check
-    # ensures that daily filters out multiple results per day
-    assert len(weather.attributes.get("forecast")) == 4
-
-    assert (
-        weather.attributes.get("forecast")[3]["datetime"] == "2020-04-29T12:00:00+00:00"
-    )
-    assert weather.attributes.get("forecast")[3]["condition"] == "rainy"
-    assert weather.attributes.get("forecast")[3]["precipitation_probability"] == 59
-    assert weather.attributes.get("forecast")[3]["temperature"] == 13
-    assert weather.attributes.get("forecast")[3]["wind_speed"] == 20.92
-    assert weather.attributes.get("forecast")[3]["wind_bearing"] == "SE"
-
     # King's Lynn daily weather platform expected results
     weather = hass.states.get("weather.met_office_king_s_lynn_daily")
     assert weather
@@ -253,19 +227,6 @@ async def test_two_weather_sites_running(
     assert weather.attributes.get("wind_speed_unit") == "km/h"
     assert weather.attributes.get("wind_bearing") == "ESE"
     assert weather.attributes.get("humidity") == 75
-
-    # All should have Forecast added - again, just picking out 1 entry to check
-    # ensures daily filters out multiple results per day
-    assert len(weather.attributes.get("forecast")) == 4
-
-    assert (
-        weather.attributes.get("forecast")[2]["datetime"] == "2020-04-28T12:00:00+00:00"
-    )
-    assert weather.attributes.get("forecast")[2]["condition"] == "cloudy"
-    assert weather.attributes.get("forecast")[2]["precipitation_probability"] == 14
-    assert weather.attributes.get("forecast")[2]["temperature"] == 11
-    assert weather.attributes.get("forecast")[2]["wind_speed"] == 11.27
-    assert weather.attributes.get("forecast")[2]["wind_bearing"] == "ESE"
 
 
 @pytest.mark.freeze_time(datetime.datetime(2020, 4, 25, 12, tzinfo=datetime.UTC))
@@ -336,7 +297,7 @@ async def test_forecast_service(
     # Trigger data refetch
     freezer.tick(DEFAULT_SCAN_INTERVAL + timedelta(seconds=1))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert wavertree_data["wavertree_daily_mock"].call_count == 2
     assert wavertree_data["wavertree_hourly_mock"].call_count == 1
@@ -363,7 +324,7 @@ async def test_forecast_service(
 
     freezer.tick(DEFAULT_SCAN_INTERVAL + timedelta(seconds=1))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     response = await hass.services.async_call(
         WEATHER_DOMAIN,
@@ -451,7 +412,7 @@ async def test_forecast_subscription(
 
     freezer.tick(DEFAULT_SCAN_INTERVAL + timedelta(seconds=1))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     msg = await client.receive_json()
 
     assert msg["id"] == subscription_id
@@ -469,6 +430,6 @@ async def test_forecast_subscription(
     )
     freezer.tick(timedelta(seconds=1))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     msg = await client.receive_json()
     assert msg["success"]

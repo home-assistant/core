@@ -1,0 +1,13 @@
+send_command:
+  fields:
+    controller_id:
+      required: true
+      example: "lutron_homeworks"
+      selector:
+        text:
+    command:
+      required: true
+      example: "KBP, [02:08:02:01], 1"
+      selector:
+        text:
+          multiple: true

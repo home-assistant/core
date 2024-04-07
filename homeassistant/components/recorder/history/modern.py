@@ -27,6 +27,7 @@ from homeassistant.core import HomeAssistant, State, split_entity_id
 import homeassistant.util.dt as dt_util
 
 from ... import recorder
+from ..const import LAST_REPORTED_SCHEMA_VERSION
 from ..db_schema import SHARED_ATTR_OR_LEGACY_ATTRIBUTES, StateAttributes, States
 from ..filters import Filters
 from ..models import (
@@ -173,8 +174,7 @@ def _significant_states_stmt(
             StateAttributes, States.attributes_id == StateAttributes.attributes_id
         )
     if not include_start_time_state or not run_start_ts:
-        stmt = stmt.order_by(States.metadata_id, States.last_updated_ts)
-        return stmt
+        return stmt.order_by(States.metadata_id, States.last_updated_ts)
     unioned_subquery = union_all(
         _select_from_subquery(
             _get_start_time_state_stmt(
@@ -327,9 +327,10 @@ def _state_changed_during_period_stmt(
     limit: int | None,
     include_start_time_state: bool,
     run_start_ts: float | None,
+    include_last_reported: bool,
 ) -> Select | CompoundSelect:
     stmt = (
-        _stmt_and_join_attributes(no_attributes, False, True)
+        _stmt_and_join_attributes(no_attributes, False, include_last_reported)
         .filter(
             (
                 (States.last_changed_ts == States.last_updated_ts)
@@ -361,22 +362,22 @@ def _state_changed_during_period_stmt(
                     single_metadata_id,
                     no_attributes,
                     False,
-                    True,
+                    include_last_reported,
                 ).subquery(),
                 no_attributes,
                 False,
-                True,
+                include_last_reported,
             ),
             _select_from_subquery(
                 stmt.subquery(),
                 no_attributes,
                 False,
-                True,
+                include_last_reported,
             ),
         ).subquery(),
         no_attributes,
         False,
-        True,
+        include_last_reported,
     )
 
 
@@ -391,6 +392,9 @@ def state_changes_during_period(
     include_start_time_state: bool = True,
 ) -> MutableMapping[str, list[State]]:
     """Return states changes during UTC period start_time - end_time."""
+    has_last_reported = (
+        recorder.get_instance(hass).schema_version >= LAST_REPORTED_SCHEMA_VERSION
+    )
     if not entity_id:
         raise ValueError("entity_id must be provided")
     entity_ids = [entity_id.lower()]
@@ -423,12 +427,14 @@ def state_changes_during_period(
                 limit,
                 include_start_time_state,
                 run_start_ts,
+                has_last_reported,
             ),
             track_on=[
                 bool(end_time_ts),
                 no_attributes,
                 bool(limit),
                 include_start_time_state,
+                has_last_reported,
             ],
         )
         return cast(
@@ -475,10 +481,10 @@ def _get_last_state_changes_single_stmt(metadata_id: int) -> Select:
 
 
 def _get_last_state_changes_multiple_stmt(
-    number_of_states: int, metadata_id: int
+    number_of_states: int, metadata_id: int, include_last_reported: bool
 ) -> Select:
     return (
-        _stmt_and_join_attributes(False, False, True)
+        _stmt_and_join_attributes(False, False, include_last_reported)
         .where(
             States.state_id
             == (
@@ -500,6 +506,9 @@ def get_last_state_changes(
     hass: HomeAssistant, number_of_states: int, entity_id: str
 ) -> MutableMapping[str, list[State]]:
     """Return the last number_of_states."""
+    has_last_reported = (
+        recorder.get_instance(hass).schema_version >= LAST_REPORTED_SCHEMA_VERSION
+    )
     entity_id_lower = entity_id.lower()
     entity_ids = [entity_id_lower]
 
@@ -524,8 +533,9 @@ def get_last_state_changes(
         else:
             stmt = lambda_stmt(
                 lambda: _get_last_state_changes_multiple_stmt(
-                    number_of_states, metadata_id
+                    number_of_states, metadata_id, has_last_reported
                 ),
+                track_on=[has_last_reported],
             )
         states = list(execute_stmt_lambda_element(session, stmt, orm_rows=False))
         return cast(

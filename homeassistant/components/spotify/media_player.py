@@ -101,8 +101,6 @@ def spotify_exception_handler(
         # pylint: disable=protected-access
         try:
             result = func(self, *args, **kwargs)
-            self._attr_available = True
-            return result
         except requests.RequestException:
             self._attr_available = False
             return None
@@ -111,6 +109,8 @@ def spotify_exception_handler(
             if exc.reason == "NO_ACTIVE_DEVICE":
                 raise HomeAssistantError("No active playback device found") from None
             raise HomeAssistantError(f"Spotify error: {exc.reason}") from exc
+        self._attr_available = True
+        return result
 
     return wrapper
 
