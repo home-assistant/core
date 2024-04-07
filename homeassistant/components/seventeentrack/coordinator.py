@@ -46,7 +46,7 @@ class SeventeenTrackCoordinator(DataUpdateCoordinator[SeventeenTrackData]):
     config_entry: ConfigEntry
 
     def __init__(
-        self, hass: HomeAssistant, client: SeventeenTrackClient, entry: ConfigEntry
+        self, hass: HomeAssistant, client: SeventeenTrackClient
     ) -> None:
         """Initialize."""
         super().__init__(
@@ -55,7 +55,7 @@ class SeventeenTrackCoordinator(DataUpdateCoordinator[SeventeenTrackData]):
             name=DOMAIN,
             update_interval=DEFAULT_SCAN_INTERVAL,
         )
-        self._show_archived = entry.options[CONF_SHOW_ARCHIVED]
+        self._show_archived = self.config_entry.options[CONF_SHOW_ARCHIVED]
         self._show_delivered = entry.options[CONF_SHOW_DELIVERED]
         self._client = client
         self._account_id = client.profile.account_id
