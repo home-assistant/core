@@ -1,7 +1,7 @@
 """Constants for the imap integration."""
 
 from typing import Final
-import logging
+
 DOMAIN: Final = "imap"
 
 CONF_SERVER: Final = "server"
@@ -21,5 +21,3 @@ DEFAULT_MAX_MESSAGE_SIZE = 2048
 DEFAULT_MESSAGE_DATA = ["date", "text", "sender", "subject", "headers"]
 
 MAX_MESSAGE_SIZE_LIMIT = 30000
-
-LOGGER = logging.getLogger(__package__)
