@@ -215,4 +215,12 @@ HA_SENSOR_DATA: dict[str, Any] = {
         },
     },
     "uptime": "3 days, 10:25:20",
+    "gpu": {
+        "NVIDIA GeForce RTX 3080 (GPU 0)": {
+            "temperature": 51,
+            "mem": 8.41064453125,
+            "proc": 26,
+            "fan_speed": 0,
+        }
+    },
 }
