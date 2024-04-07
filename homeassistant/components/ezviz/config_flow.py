@@ -70,14 +70,12 @@ def _validate_and_create_auth(data: dict) -> dict[str, Any]:
 
     ezviz_token = ezviz_client.login()
 
-    auth_data = {
+    return {
         CONF_SESSION_ID: ezviz_token[CONF_SESSION_ID],
         CONF_RFSESSION_ID: ezviz_token[CONF_RFSESSION_ID],
         CONF_URL: ezviz_token["api_url"],
         CONF_TYPE: ATTR_TYPE_CLOUD,
     }
-
-    return auth_data
 
 
 def _test_camera_rtsp_creds(data: dict) -> None:

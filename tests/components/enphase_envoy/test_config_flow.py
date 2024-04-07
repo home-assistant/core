@@ -11,6 +11,7 @@ from homeassistant import config_entries
 from homeassistant.components import zeroconf
 from homeassistant.components.enphase_envoy.const import DOMAIN, PLATFORMS
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 
 @pytest.mark.parametrize(
@@ -27,7 +28,7 @@ async def test_form(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -39,7 +40,7 @@ async def test_form(
         },
     )
     await hass.async_block_till_done()
-    assert result2["type"] == "create_entry"
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Envoy 1234"
     assert result2["data"] == {
         "host": "1.1.1.1",
@@ -63,7 +64,7 @@ async def test_user_no_serial_number(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -75,7 +76,7 @@ async def test_user_no_serial_number(
         },
     )
     await hass.async_block_till_done()
-    assert result2["type"] == "create_entry"
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Envoy"
     assert result2["data"] == {
         "host": "1.1.1.1",
@@ -99,7 +100,7 @@ async def test_user_fetching_serial_fails(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -111,7 +112,7 @@ async def test_user_fetching_serial_fails(
         },
     )
     await hass.async_block_till_done()
-    assert result2["type"] == "create_entry"
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Envoy"
     assert result2["data"] == {
         "host": "1.1.1.1",
@@ -150,7 +151,7 @@ async def test_form_invalid_auth(
         },
     )
     await hass.async_block_till_done()
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
@@ -181,7 +182,7 @@ async def test_form_cannot_connect(
         },
     )
     await hass.async_block_till_done()
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
@@ -212,7 +213,7 @@ async def test_form_unknown_error(
         },
     )
     await hass.async_block_till_done()
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
 
 
@@ -248,7 +249,7 @@ async def test_zeroconf_pre_token_firmware(
             type="mock_type",
         ),
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     assert _get_schema_default(result["data_schema"].schema, "username") == "installer"
@@ -262,7 +263,7 @@ async def test_zeroconf_pre_token_firmware(
         },
     )
     await hass.async_block_till_done()
-    assert result2["type"] == "create_entry"
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Envoy 1234"
     assert result2["result"].unique_id == "1234"
     assert result2["data"] == {
@@ -297,7 +298,7 @@ async def test_zeroconf_token_firmware(
             type="mock_type",
         ),
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert _get_schema_default(result["data_schema"].schema, "username") == ""
 
@@ -310,7 +311,7 @@ async def test_zeroconf_token_firmware(
         },
     )
     await hass.async_block_till_done()
-    assert result2["type"] == "create_entry"
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Envoy 1234"
     assert result2["result"].unique_id == "1234"
     assert result2["data"] == {
@@ -347,7 +348,7 @@ async def test_form_host_already_exists(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     # existing config
@@ -364,7 +365,7 @@ async def test_form_host_already_exists(
             "password": "wrong-password",
         },
     )
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
 
     # still original config after failure
@@ -382,7 +383,7 @@ async def test_form_host_already_exists(
         },
     )
     await hass.async_block_till_done()
-    assert result3["type"] == "abort"
+    assert result3["type"] is FlowResultType.ABORT
     assert result3["reason"] == "reauth_successful"
 
     # updated config with new ip and changed pw
@@ -416,7 +417,7 @@ async def test_zeroconf_serial_already_exists(
         ),
     )
     await hass.async_block_till_done()
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
     assert config_entry.data["host"] == "4.4.4.4"
@@ -447,7 +448,7 @@ async def test_zeroconf_serial_already_exists_ignores_ipv6(
         ),
     )
     await hass.async_block_till_done()
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "not_ipv4_address"
 
     assert config_entry.data["host"] == "1.1.1.1"
@@ -479,7 +480,7 @@ async def test_zeroconf_host_already_exists(
         ),
     )
     await hass.async_block_till_done()
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
     assert config_entry.unique_id == "1234"
@@ -513,7 +514,7 @@ async def test_reauth(
         },
     )
     await hass.async_block_till_done()
-    assert result2["type"] == "abort"
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
 
 

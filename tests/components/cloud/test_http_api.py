@@ -231,6 +231,7 @@ async def test_login_view_create_pipeline(
     }
 
     assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "assist_pipeline", {})
     assert await async_setup_component(hass, DOMAIN, {"cloud": {}})
     await hass.async_block_till_done()
 
@@ -270,6 +271,7 @@ async def test_login_view_create_pipeline_fail(
     }
 
     assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "assist_pipeline", {})
     assert await async_setup_component(hass, DOMAIN, {"cloud": {}})
     await hass.async_block_till_done()
 

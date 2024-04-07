@@ -167,8 +167,7 @@ class ChannelsPlayer(MediaPlayerEntity):
     @property
     def source_list(self):
         """List of favorite channels."""
-        sources = [channel["name"] for channel in self.favorite_channels]
-        return sources
+        return [channel["name"] for channel in self.favorite_channels]
 
     @property
     def is_volume_muted(self):
