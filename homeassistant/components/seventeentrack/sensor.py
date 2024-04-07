@@ -192,10 +192,7 @@ class SeventeenTrackPackageSensor(
     @property
     def available(self) -> bool:
         """Return whether the entity is available."""
-        package_data = self.coordinator.data.current_packages.get(
-            self._tracking_number, {}
-        )
-        return package_data.get("package") is not None
+        return self._tracking_number in self.coordinator.data.current_packages
 
     @property
     def name(self) -> str:
