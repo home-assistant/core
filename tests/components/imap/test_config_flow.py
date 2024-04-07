@@ -28,6 +28,13 @@ MOCK_CONFIG = {
     "port": 993,
     "charset": "utf-8",
     "folder": "INBOX",
+    "message_data": [
+        "date",
+        "text",
+        "sender",
+        "subject",
+        "headers",
+    ],
     "search": "UnSeen UnDeleted",
 }
 
