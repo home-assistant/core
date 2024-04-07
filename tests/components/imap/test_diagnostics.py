@@ -71,6 +71,13 @@ async def test_entry_diagnostics(
         "port": 993,
         "charset": "utf-8",
         "folder": "INBOX",
+        "message_data": [
+            "date",
+            "text",
+            "sender",
+            "subject",
+            "headers",
+        ],
         "search": "UnSeen UnDeleted",
         "custom_event_data_template": "{{ 4 * 4 }}",
     }
