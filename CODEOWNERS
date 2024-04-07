@@ -316,8 +316,8 @@ build.json @home-assistant/supervisor
 /tests/components/discovergy/ @jpbede
 /homeassistant/components/dlink/ @tkdrob
 /tests/components/dlink/ @tkdrob
-/homeassistant/components/dlna_dmr/ @StevenLooman @chishm
-/tests/components/dlna_dmr/ @StevenLooman @chishm
+/homeassistant/components/dlna_dmr/ @chishm
+/tests/components/dlna_dmr/ @chishm
 /homeassistant/components/dlna_dms/ @chishm
 /tests/components/dlna_dms/ @chishm
 /homeassistant/components/dnsip/ @gjohansson-ST
@@ -1177,8 +1177,8 @@ build.json @home-assistant/supervisor
 /tests/components/ruuvitag_ble/ @akx
 /homeassistant/components/rympro/ @OnFreund @elad-bar @maorcc
 /tests/components/rympro/ @OnFreund @elad-bar @maorcc
-/homeassistant/components/sabnzbd/ @shaiu
-/tests/components/sabnzbd/ @shaiu
+/homeassistant/components/sabnzbd/ @shaiu @jpbede
+/tests/components/sabnzbd/ @shaiu @jpbede
 /homeassistant/components/saj/ @fredericvl
 /homeassistant/components/samsungtv/ @chemelli74 @epenet
 /tests/components/samsungtv/ @chemelli74 @epenet
