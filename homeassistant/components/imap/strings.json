@@ -40,10 +40,10 @@
       "message": "Copying the message failed with \"{error}\"."
     },
     "delete_failed": {
-      "message": "Marking the the message for deletion failed with \"{error}\"."
+      "message": "Marking the message for deletion failed with \"{error}\"."
     },
     "expunge_failed": {
-      "message": "Expunging the the message failed with \"{error}\"."
+      "message": "Expunging the message failed with \"{error}\"."
     },
     "invalid_entry": {
       "message": "No valid IMAP entry was found."
