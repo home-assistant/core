@@ -47,9 +47,7 @@ def _async_at_core_state(
         if unsub:
             unsub()
 
-    unsub = hass.bus.async_listen_once(
-        event_type, _matched_event, run_immediately=False
-    )
+    unsub = hass.bus.async_listen_once(event_type, _matched_event, run_immediately=True)
     return cancel
 
 

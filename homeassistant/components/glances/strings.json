@@ -41,6 +41,12 @@
       "disk_free": {
         "name": "{sensor_label} disk free"
       },
+      "diskio_read": {
+        "name": "{sensor_label} disk read"
+      },
+      "diskio_write": {
+        "name": "{sensor_label} disk write"
+      },
       "memory_usage": {
         "name": "Memory usage"
       },

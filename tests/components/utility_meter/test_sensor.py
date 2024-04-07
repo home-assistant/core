@@ -1206,7 +1206,7 @@ async def test_delta_values(
         await hass.async_block_till_done()
 
     state = hass.states.get("sensor.energy_bill")
-    assert state.attributes.get("status") == PAUSED
+    assert state.attributes.get("status") == COLLECTING
 
     now += timedelta(seconds=30)
     with freeze_time(now):
@@ -1249,7 +1249,7 @@ async def test_delta_values(
     state = hass.states.get("sensor.energy_bill")
     assert state is not None
 
-    assert state.state == "9"
+    assert state.state == "10"
 
 
 @pytest.mark.parametrize(
@@ -1316,7 +1316,7 @@ async def test_non_periodically_resetting(
         await hass.async_block_till_done()
 
     state = hass.states.get("sensor.energy_bill")
-    assert state.attributes.get("status") == PAUSED
+    assert state.attributes.get("status") == COLLECTING
 
     now += timedelta(seconds=30)
     with freeze_time(now):
