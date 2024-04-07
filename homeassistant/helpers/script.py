@@ -940,7 +940,7 @@ class _ScriptRun:
                             )
                             raise _AbortScript(
                                 f"While condition {repeat[CONF_WHILE]} "
-                                f"terminated because it looping more "
+                                f"terminated because it looped more "
                                 f"than {REPEAT_TERMINATE_ITERATIONS} times"
                             )
 
@@ -984,7 +984,7 @@ class _ScriptRun:
                         )
                         raise _AbortScript(
                             f"Util condition {repeat[CONF_UNTIL]} "
-                            f"terminated because it looping more "
+                            f"terminated because it looped more "
                             f"than {REPEAT_TERMINATE_ITERATIONS} times"
                         )
 
