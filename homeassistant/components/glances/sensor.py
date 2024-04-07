@@ -248,6 +248,7 @@ SENSOR_TYPES = {
         translation_key="gpu_processor_usage",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
     ),
     ("gpu", "temperature"): GlancesSensorEntityDescription(
         key="temperature",
