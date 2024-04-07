@@ -38,7 +38,9 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @callback
-def async_enable_report_state(hass: HomeAssistant, google_config: AbstractConfig):
+def async_enable_report_state(  # noqa: C901
+    hass: HomeAssistant, google_config: AbstractConfig
+) -> CALLBACK_TYPE:
     """Enable state and notification reporting."""
     checker = None
     unsub_pending: CALLBACK_TYPE | None = None
@@ -49,26 +51,16 @@ def async_enable_report_state(hass: HomeAssistant, google_config: AbstractConfig
         nonlocal pending
         nonlocal unsub_pending
 
-        import pprint
-
-        pprint.pprint(["report_states", pending])
-
         pending.append({})
 
         # We will report all batches except last one because those are finalized.
         while len(pending) > 1:
-            import pprint
-
-            val = pending.popleft()
-            pprint.pprint(["REPORT", val])
-
-            await google_config.async_report_state_all({"devices": {"states": val}})
+            await google_config.async_report_state_all(
+                {"devices": {"states": pending.popleft()}}
+            )
 
         # If things got queued up in last batch while we were reporting, schedule ourselves again
         if pending[0]:
-            import pprint
-
-            pprint.pprint(["pending", pending, "reschedule"])
             unsub_pending = async_call_later(
                 hass, REPORT_STATE_WINDOW, report_states_job
             )
@@ -78,7 +70,7 @@ def async_enable_report_state(hass: HomeAssistant, google_config: AbstractConfig
     report_states_job = HassJob(report_states)
 
     @callback
-    def _async_entity_state_filter(data: EventStateChangedData) -> None:
+    def _async_entity_state_filter(data: EventStateChangedData) -> bool:
         nonlocal unsub_pending, checker
 
         if not hass.is_running:
@@ -104,9 +96,12 @@ def async_enable_report_state(hass: HomeAssistant, google_config: AbstractConfig
         new_state = data["new_state"]
         if TYPE_CHECKING:
             assert new_state is not None
-        entity = async_get_google_entity_if_supported_cached(
-            hass, google_config, new_state
-        )
+        if not (
+            entity := async_get_google_entity_if_supported_cached(
+                hass, google_config, new_state
+            )
+        ):
+            return
         # We only trigger notifications on changes in the state value, not attributes.
         # This is mainly designed for our event entity types
         # We need to synchronize notifications using a `SYNC` response,
@@ -153,15 +148,9 @@ def async_enable_report_state(hass: HomeAssistant, google_config: AbstractConfig
         pending[-1][changed_entity] = entity_data
 
         if unsub_pending is None:
-            import pprint
-
-            pprint.pprint(["unsub_pending", unsub_pending])
             unsub_pending = async_call_later(
                 hass, REPORT_STATE_WINDOW, report_states_job
             )
-            import pprint
-
-            pprint.pprint(["unsub_pending", unsub_pending])
 
     @callback
     def extra_significant_check(
