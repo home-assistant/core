@@ -3248,7 +3248,7 @@ async def test_async_add_hass_job_deprecated(
     assert (
         "Detected code that calls `async_add_hass_job`, which is deprecated "
         "and will be removed in Home Assistant 2025.5; Please review "
-        "https://developers.home-assistant.io/blog/2024/04/06/deprecate_add_hass_job"
+        "https://developers.home-assistant.io/blog/2024/04/07/deprecate_add_hass_job"
         " for replacement options"
     ) in caplog.text
 
