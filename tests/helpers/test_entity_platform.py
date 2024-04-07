@@ -85,9 +85,16 @@ async def test_polling_check_works_if_entity_add_fails(
     component = EntityComponent(_LOGGER, DOMAIN, hass, timedelta(seconds=20))
     await component.async_setup({})
 
-    working_poll_ent = MockEntity(should_poll=True)
+    class MockEntityNeedsSelfHassInShouldPoll(MockEntity):
+        """Mock entity that needs self.hass in should_poll."""
+
+        def should_poll(self) -> bool:
+            """Return True if entity has to be polled."""
+            return self.hass is not None
+
+    working_poll_ent = MockEntityNeedsSelfHassInShouldPoll(should_poll=True)
     working_poll_ent.async_update = AsyncMock()
-    broken_poll_ent = MockEntity(should_poll=True)
+    broken_poll_ent = MockEntityNeedsSelfHassInShouldPoll(should_poll=True)
     broken_poll_ent.async_update = AsyncMock(side_effect=Exception("Broken"))
 
     await component.async_add_entities(
