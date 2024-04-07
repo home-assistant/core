@@ -1,31 +1,19 @@
 """Tests for number platform."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from aioautomower.exceptions import ApiException
 import pytest
+from syrupy import SnapshotAssertion
 
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 
 from tests.common import MockConfigEntry
-
-
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_number_states(
-    hass: HomeAssistant,
-    mock_automower_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test number state."""
-    entity_id = "number.test_mower_1_cutting_height"
-    await setup_integration(hass, mock_config_entry)
-    state = hass.states.get(entity_id)
-    await hass.async_block_till_done()
-    state = hass.states.get(entity_id)
-    assert state.state == "4"
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -61,3 +49,29 @@ async def test_number_commands(
         == "Command couldn't be sent to the command queue: Test error"
     )
     assert len(mocked_method.mock_calls) == 2
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_snapshot_number(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_automower_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test states of the number entity."""
+    with patch(
+        "homeassistant.components.husqvarna_automower.PLATFORMS",
+        [Platform.NUMBER],
+    ):
+        await setup_integration(hass, mock_config_entry)
+        entity_entries = er.async_entries_for_config_entry(
+            entity_registry, mock_config_entry.entry_id
+        )
+
+        assert entity_entries
+        for entity_entry in entity_entries:
+            assert hass.states.get(entity_entry.entity_id) == snapshot(
+                name=f"{entity_entry.entity_id}-state"
+            )
+            assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
