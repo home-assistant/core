@@ -125,13 +125,13 @@ class HMGarage(HMCover):
     _attr_device_class = CoverDeviceClass.GARAGE
 
     @property
-    def current_cover_position(self) -> None:
+    def current_cover_position(self) -> int | None:
         """Return current position of cover.
 
         None is unknown, 0 is closed, 100 is fully open.
         """
         # Garage covers do not support position; always return None
-        return
+        return None
 
     @property
     def is_closed(self) -> bool:
