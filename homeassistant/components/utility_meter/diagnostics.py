@@ -24,7 +24,6 @@ async def async_get_config_entry_diagnostics(
             {
                 "name": sensor.name,
                 "entity_id": sensor.entity_id,
-                "next_reset": sensor.next_reset,
                 "extra_attributes": sensor.extra_state_attributes,
                 "last_sensor_data": restored_last_extra_data,
             }

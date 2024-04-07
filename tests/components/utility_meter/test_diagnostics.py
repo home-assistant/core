@@ -2,6 +2,7 @@
 
 from aiohttp.test_utils import TestClient
 from freezegun import freeze_time
+from syrupy import SnapshotAssertion
 
 from homeassistant.auth.models import Credentials
 from homeassistant.components.utility_meter.const import DOMAIN
@@ -43,6 +44,11 @@ def _get_test_client_generator(
     return auth_client
 
 
+def limit_diagnostic_attrs(prop, path) -> bool:
+    """Mark attributes to exclude from diagnostic snapshot."""
+    return prop in {"entry_id"}
+
+
 @freeze_time("2024-04-06 00:00:00+00:00")
 async def test_diagnostics(
     hass: HomeAssistant,
@@ -50,6 +56,7 @@ async def test_diagnostics(
     hass_admin_user: MockUser,
     hass_admin_credential: Credentials,
     socket_enabled: None,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test generating diagnostics for a config entry."""
 
@@ -117,65 +124,4 @@ async def test_diagnostics(
         hass, _get_test_client_generator(hass, aiohttp_client, new_token), config_entry
     )
 
-    assert diag == {
-        "config_entry": {
-            "data": {},
-            "disabled_by": None,
-            "domain": "utility_meter",
-            "entry_id": config_entry.entry_id,
-            "minor_version": 1,
-            "options": {
-                "cycle": "monthly",
-                "delta_values": False,
-                "name": "Energy Bill",
-                "net_consumption": False,
-                "offset": 0,
-                "periodically_resetting": True,
-                "source": "sensor.input1",
-                "tariffs": [
-                    "tariff0",
-                    "tariff1",
-                ],
-            },
-            "pref_disable_new_entities": False,
-            "pref_disable_polling": False,
-            "source": "user",
-            "title": "Energy Bill",
-            "unique_id": None,
-            "version": 2,
-        },
-        "tariff_sensors": [
-            {
-                "entity_id": "sensor.energy_bill_tariff0",
-                "extra_attributes": {
-                    "cron pattern": "0 0 1 * *",
-                    "last_period": "0",
-                    "last_reset": last_reset,
-                    "last_valid_state": "None",
-                    "meter_period": "monthly",
-                    "source": "sensor.input1",
-                    "status": "collecting",
-                    "tariff": "tariff0",
-                },
-                "last_sensor_data": None,
-                "name": "Energy Bill tariff0",
-                "next_reset": "2024-05-01T00:00:00-07:00",
-            },
-            {
-                "entity_id": "sensor.energy_bill_tariff1",
-                "extra_attributes": {
-                    "cron pattern": "0 0 1 * *",
-                    "last_period": "0",
-                    "last_reset": last_reset,
-                    "last_valid_state": "None",
-                    "meter_period": "monthly",
-                    "source": "sensor.input1",
-                    "status": "paused",
-                    "tariff": "tariff1",
-                },
-                "last_sensor_data": None,
-                "name": "Energy Bill tariff1",
-                "next_reset": "2024-05-01T00:00:00-07:00",
-            },
-        ],
-    }
+    assert diag == snapshot(exclude=limit_diagnostic_attrs)
