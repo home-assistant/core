@@ -5,8 +5,9 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 import asyncio
 from dataclasses import dataclass
+from functools import cached_property
 import logging
-from typing import TYPE_CHECKING, Any, cast
+from typing import Any, cast
 
 import voluptuous as vol
 
@@ -73,12 +74,6 @@ from .const import (
 )
 from .helpers import async_get_blueprints
 from .trace import trace_script
-
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
-
 
 SCRIPT_SERVICE_SCHEMA = vol.Schema(dict)
 SCRIPT_TURN_ONOFF_SCHEMA = make_entity_service_schema(
@@ -223,8 +218,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     await _async_process_config(hass, config, component)
 
     # Add some default blueprints to blueprints/script, does nothing
-    # if blueprints/script already exists
-    await async_get_blueprints(hass).async_populate()
+    # if blueprints/script already exists but still has to create
+    # an executor job to check if the folder exists so we run it in a
+    # separate task to avoid waiting for it to finish setting up
+    # since a tracked task will be waited at the end of startup
+    hass.async_create_task(
+        async_get_blueprints(hass).async_populate(), eager_start=True
+    )
 
     async def reload_service(service: ServiceCall) -> None:
         """Call a service to reload scripts."""

@@ -41,6 +41,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 API_CONTROL_DEVICE = "control_device"
+API_SET_AUTO_SHUTDOWN = "set_auto_shutdown"
 API_SET_LIGHT = "set_light"
 LIGHT1_ID = "light"
 LIGHT2_ID = "light2"
@@ -340,7 +341,7 @@ class SwitcherWaterHeaterSwitchEntity(SwitcherBaseSwitchEntity):
 
     async def async_set_auto_off_service(self, auto_off: timedelta) -> None:
         """Use for handling setting device auto-off service calls."""
-        await self._async_call_api("set_auto_shutdown", auto_off)
+        await self._async_call_api(API_SET_AUTO_SHUTDOWN, auto_off)
         self.async_write_ha_state()
 
     async def async_turn_on_with_timer_service(self, timer_minutes: int) -> None:

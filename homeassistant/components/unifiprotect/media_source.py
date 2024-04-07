@@ -419,9 +419,7 @@ class ProtectMediaSource(MediaSource):
 
         if camera is not None:
             title = f"{camera.display_name} > {title}"
-        title = f"{data.api.bootstrap.nvr.display_name} > {title}"
-
-        return title
+        return f"{data.api.bootstrap.nvr.display_name} > {title}"
 
     async def _build_event(
         self,
@@ -868,7 +866,7 @@ class ProtectMediaSource(MediaSource):
     async def _build_console(self, data: ProtectData) -> BrowseMediaSource:
         """Build media source for a single UniFi Protect NVR."""
 
-        base = BrowseMediaSource(
+        return BrowseMediaSource(
             domain=DOMAIN,
             identifier=f"{data.api.bootstrap.nvr.id}:browse",
             media_class=MediaClass.DIRECTORY,
@@ -879,8 +877,6 @@ class ProtectMediaSource(MediaSource):
             children_media_class=MediaClass.VIDEO,
             children=await self._build_cameras(data),
         )
-
-        return base
 
     async def _build_sources(self) -> BrowseMediaSource:
         """Return all media source for all UniFi Protect NVRs."""

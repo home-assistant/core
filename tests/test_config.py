@@ -39,8 +39,11 @@ from homeassistant.core import (
     HomeAssistantError,
 )
 from homeassistant.exceptions import ConfigValidationError
-from homeassistant.helpers import config_validation as cv, issue_registry as ir
-import homeassistant.helpers.check_config as check_config
+from homeassistant.helpers import (
+    check_config,
+    config_validation as cv,
+    issue_registry as ir,
+)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import Integration, async_get_integration
@@ -2039,12 +2042,12 @@ async def test_core_config_schema_legacy_template(
     await config_util.async_process_ha_core_config(hass, config)
 
     issue_registry = ir.async_get(hass)
-    for issue_id in {"legacy_templates_true", "legacy_templates_false"}:
+    for issue_id in ("legacy_templates_true", "legacy_templates_false"):
         issue = issue_registry.async_get_issue("homeassistant", issue_id)
         assert issue if issue_id == expected_issue else not issue
 
     await config_util.async_process_ha_core_config(hass, {})
-    for issue_id in {"legacy_templates_true", "legacy_templates_false"}:
+    for issue_id in ("legacy_templates_true", "legacy_templates_false"):
         assert not issue_registry.async_get_issue("homeassistant", issue_id)
 
 

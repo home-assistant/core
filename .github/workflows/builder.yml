@@ -51,6 +51,30 @@ jobs:
         with:
           ignore-dev: true
 
+      - name: Fail if translations files are checked in
+        run: |
+          if [ -n "$(find homeassistant/components/*/translations -type f)" ]; then
+              echo "Translations files are checked in, please remove the following files:"
+              find homeassistant/components/*/translations -type f
+              exit 1
+          fi
+
+      - name: Download Translations
+        run: python3 -m script.translations download
+        env:
+          LOKALISE_TOKEN: ${{ secrets.LOKALISE_TOKEN }}
+
+      - name: Archive translations
+        shell: bash
+        run: find ./homeassistant/components/*/translations -name "*.json" | tar zcvf translations.tar.gz -T -
+
+      - name: Upload translations
+        uses: actions/upload-artifact@v4.3.1
+        with:
+          name: translations
+          path: translations.tar.gz
+          if-no-files-found: error
+
   build_base:
     name: Build ${{ matrix.arch }} base core image
     if: github.repository_owner == 'home-assistant'
@@ -105,7 +129,7 @@ jobs:
           python3 -m pip install "$(grep '^uv' < requirements_test.txt)"
           uv pip install packaging tomli
           uv pip install .
-          version="$(python3 script/version_bump.py nightly)"
+          python3 script/version_bump.py nightly --set-nightly-version "${{ needs.init.outputs.version }}"
 
           if [[ "$(ls home_assistant_frontend*.whl)" =~ ^home_assistant_frontend-(.*)-py3-none-any.whl$ ]]; then
             echo "Found frontend wheel, setting version to: ${BASH_REMATCH[1]}"
@@ -159,10 +183,15 @@ jobs:
           # are not available.
           sed -i "s|aiohttp-zlib-ng|aiohttp-zlib-ng\[isal\]|g" requirements_all.txt
 
-      - name: Download Translations
-        run: python3 -m script.translations download
-        env:
-          LOKALISE_TOKEN: ${{ secrets.LOKALISE_TOKEN }}
+      - name: Download translations
+        uses: actions/download-artifact@v4.1.4
+        with:
+          name: translations
+
+      - name: Extract translations
+        run: |
+          tar xvf translations.tar.gz
+          rm translations.tar.gz
 
       - name: Write meta info file
         shell: bash
@@ -185,17 +214,6 @@ jobs:
             --cosign \
             --target /data \
             --generic ${{ needs.init.outputs.version }}
-
-      - name: Archive translations
-        shell: bash
-        run: find ./homeassistant/components/*/translations -name "*.json" | tar zcvf translations.tar.gz -T -
-
-      - name: Upload translations
-        uses: actions/upload-artifact@v3
-        with:
-          name: translations
-          path: translations.tar.gz
-          if-no-files-found: error
 
   build_machine:
     name: Build ${{ matrix.machine }} machine core image
@@ -448,10 +466,15 @@ jobs:
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
 
-      - name: Download Translations
-        run: python3 -m script.translations download
-        env:
-          LOKALISE_TOKEN: ${{ secrets.LOKALISE_TOKEN }}
+      - name: Download translations
+        uses: actions/download-artifact@v4.1.4
+        with:
+          name: translations
+
+      - name: Extract translations
+        run: |
+          tar xvf translations.tar.gz
+          rm translations.tar.gz
 
       - name: Build package
         shell: bash

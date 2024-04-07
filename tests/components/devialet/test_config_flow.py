@@ -31,7 +31,7 @@ async def test_show_user_form(hass: HomeAssistant) -> None:
     )
 
     assert result["step_id"] == "user"
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
 
 
 async def test_cannot_connect(
@@ -49,7 +49,7 @@ async def test_cannot_connect(
         data=user_input,
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
 
@@ -67,7 +67,7 @@ async def test_user_device_exists_abort(
         data=user_input,
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -82,7 +82,7 @@ async def test_full_user_flow_implementation(
         context={CONF_SOURCE: SOURCE_USER},
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     user_input = MOCK_USER_INPUT.copy()
@@ -94,7 +94,7 @@ async def test_full_user_flow_implementation(
             user_input=user_input,
         )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == NAME
 
     assert result["data"]
@@ -111,7 +111,7 @@ async def test_zeroconf_devialet(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=MOCK_ZEROCONF_DATA
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
 
     with patch(
         "homeassistant.components.devialet.async_setup_entry",
@@ -123,7 +123,7 @@ async def test_zeroconf_devialet(
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "create_entry"
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Livingroom"
     assert result2["data"] == {
         CONF_HOST: HOST,
@@ -140,7 +140,7 @@ async def test_async_step_confirm(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=MOCK_ZEROCONF_DATA
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "confirm"
 
     aioclient_mock.get(
@@ -150,6 +150,6 @@ async def test_async_step_confirm(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=MOCK_USER_INPUT.copy()
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "confirm"
     assert result["errors"] == {"base": "cannot_connect"}
