@@ -903,7 +903,7 @@ freesms==0.2.0
 fritzconnection[qr]==1.13.2
 
 # homeassistant.components.fyta
-fyta_cli==0.3.3
+fyta_cli==0.3.5
 
 # homeassistant.components.google_translate
 gTTS==2.2.4
@@ -2805,7 +2805,7 @@ vallox-websocket-api==5.1.1
 vehicle==2.2.1
 
 # homeassistant.components.velbus
-velbus-aio==2024.4.0
+velbus-aio==2024.4.1
 
 # homeassistant.components.venstar
 venstarcolortouch==0.19
