@@ -43,12 +43,12 @@ from .const import (
     CONF_CUSTOM_EVENT_DATA_TEMPLATE,
     CONF_FOLDER,
     CONF_MAX_MESSAGE_SIZE,
+    CONF_MESSAGE_DATA,
     CONF_SEARCH,
     CONF_SERVER,
     CONF_SSL_CIPHER_LIST,
     DEFAULT_MAX_MESSAGE_SIZE,
     DOMAIN,
-    CONF_MESSAGE_DATA
 )
 from .errors import InvalidAuth, InvalidFolder
 
