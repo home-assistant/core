@@ -995,6 +995,207 @@
     'state': 'unavailable',
   })
 # ---
+# name: test_sensor_states[sensor.0_0_0_0_nvidia_geforce_rtx_3080_gpu_0_fan_speed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.0_0_0_0_nvidia_geforce_rtx_3080_gpu_0_fan_speed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'NVIDIA GeForce RTX 3080 (GPU 0) fan speed',
+    'platform': 'glances',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'fan_speed',
+    'unique_id': 'test-NVIDIA GeForce RTX 3080 (GPU 0)-fan_speed',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensor_states[sensor.0_0_0_0_nvidia_geforce_rtx_3080_gpu_0_fan_speed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': '0.0.0.0 NVIDIA GeForce RTX 3080 (GPU 0) fan speed',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.0_0_0_0_nvidia_geforce_rtx_3080_gpu_0_fan_speed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_sensor_states[sensor.0_0_0_0_nvidia_geforce_rtx_3080_gpu_0_memory_usage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.0_0_0_0_nvidia_geforce_rtx_3080_gpu_0_memory_usage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'NVIDIA GeForce RTX 3080 (GPU 0) memory usage',
+    'platform': 'glances',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'gpu_memory_usage',
+    'unique_id': 'test-NVIDIA GeForce RTX 3080 (GPU 0)-mem',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensor_states[sensor.0_0_0_0_nvidia_geforce_rtx_3080_gpu_0_memory_usage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': '0.0.0.0 NVIDIA GeForce RTX 3080 (GPU 0) memory usage',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.0_0_0_0_nvidia_geforce_rtx_3080_gpu_0_memory_usage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '8.41064453125',
+  })
+# ---
+# name: test_sensor_states[sensor.0_0_0_0_nvidia_geforce_rtx_3080_gpu_0_processor_usage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.0_0_0_0_nvidia_geforce_rtx_3080_gpu_0_processor_usage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'NVIDIA GeForce RTX 3080 (GPU 0) processor usage',
+    'platform': 'glances',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'gpu_processor_usage',
+    'unique_id': 'test-NVIDIA GeForce RTX 3080 (GPU 0)-proc',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensor_states[sensor.0_0_0_0_nvidia_geforce_rtx_3080_gpu_0_processor_usage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': '0.0.0.0 NVIDIA GeForce RTX 3080 (GPU 0) processor usage',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.0_0_0_0_nvidia_geforce_rtx_3080_gpu_0_processor_usage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '26',
+  })
+# ---
+# name: test_sensor_states[sensor.0_0_0_0_nvidia_geforce_rtx_3080_gpu_0_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.0_0_0_0_nvidia_geforce_rtx_3080_gpu_0_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'NVIDIA GeForce RTX 3080 (GPU 0) temperature',
+    'platform': 'glances',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'temperature',
+    'unique_id': 'test-NVIDIA GeForce RTX 3080 (GPU 0)-temperature',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_sensor_states[sensor.0_0_0_0_nvidia_geforce_rtx_3080_gpu_0_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': '0.0.0.0 NVIDIA GeForce RTX 3080 (GPU 0) temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.0_0_0_0_nvidia_geforce_rtx_3080_gpu_0_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '51',
+  })
+# ---
 # name: test_sensor_states[sensor.0_0_0_0_nvme0n1_disk_read-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
