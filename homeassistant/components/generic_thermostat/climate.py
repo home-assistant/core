@@ -61,11 +61,10 @@ from homeassistant.helpers.event import (
     async_track_time_interval,
 )
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
-from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DOMAIN, PLATFORMS
+from . import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -133,7 +132,7 @@ async def async_setup_platform(
 ) -> None:
     """Set up the generic thermostat platform."""
 
-    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
+    # await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
 
     name: str = config[CONF_NAME]
     heater_entity_id: str = config[CONF_HEATER]
@@ -147,14 +146,11 @@ async def async_setup_platform(
     hot_tolerance: float = config[CONF_HOT_TOLERANCE]
     keep_alive: timedelta | None = config.get(CONF_KEEP_ALIVE)
     initial_hvac_mode: HVACMode | None = config.get(CONF_INITIAL_HVAC_MODE)
-    presets: dict[str, float] = {
-        key: config[value] for key, value in CONF_PRESETS.items() if value in config
-    }
     precision: float | None = config.get(CONF_PRECISION)
     target_temperature_step: float | None = config.get(CONF_TEMP_STEP)
-    unit = hass.config.units.temperature_unit
     unique_id: str | None = config.get(CONF_UNIQUE_ID)
 
+    # TODO: THIS MESSES UP THE TEST CASES
     import_result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_IMPORT},
@@ -162,79 +158,70 @@ async def async_setup_platform(
             CONF_NAME: name,
             CONF_HEATER: heater_entity_id,
             CONF_SENSOR: sensor_entity_id,
-            CONF_MIN_TEMP: min_temp,
             CONF_UNIQUE_ID: unique_id,
+            CONF_MIN_TEMP: min_temp,
+            CONF_MAX_TEMP: max_temp,
+            CONF_AC_MODE: ac_mode,
+            CONF_MIN_DUR: min_cycle_duration,
+            CONF_COLD_TOLERANCE: cold_tolerance,
+            CONF_HOT_TOLERANCE: hot_tolerance,
+            CONF_KEEP_ALIVE: keep_alive,
+            CONF_INITIAL_HVAC_MODE: initial_hvac_mode,
+            CONF_PRECISION: precision,
+            CONF_TEMP_STEP: target_temperature_step,
+            CONF_TARGET_TEMP: target_temp,
+            **{
+                CONF_PRESETS[p]: config.get(CONF_PRESETS[p])
+                for p in CONF_PRESETS
+                if config.get(CONF_PRESETS[p]) is not None
+            },
         },
     )
 
-    translation_key = "deprecated_yaml_import_device_tracker"
+    translation_key = "deprecated_yaml_import"
     if import_result.get("type") == FlowResultType.ABORT:
         translation_key = "import_aborted"
         if import_result.get("reason") == "import_failed":
             translation_key = "import_failed"
-        if import_result.get("reason") == "import_failed_invalid_auth":
-            translation_key = "import_failed_invalid_auth"
 
     async_create_issue(
         hass,
         DOMAIN,
-        "deprecated_yaml_import_device_tracker",
+        "deprecated_yaml_import",
         breaks_in_ha_version="2024.10.0",
         is_fixable=False,
         severity=IssueSeverity.WARNING,
         translation_key=translation_key,
+        translation_placeholders={"name": name},
     )
-
-    async_add_entities(
-        [
-            GenericThermostat(
-                name,
-                heater_entity_id,
-                sensor_entity_id,
-                min_temp,
-                max_temp,
-                target_temp,
-                ac_mode,
-                min_cycle_duration,
-                cold_tolerance,
-                hot_tolerance,
-                keep_alive,
-                initial_hvac_mode,
-                presets,
-                precision,
-                target_temperature_step,
-                unit,
-                unique_id,
-            )
-        ]
-    )
+    # TODO: THIS MESSES UP THE TEST CASES
 
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the generic thermostat platform."""
-    name = entry.data.get(CONF_NAME)
-    heater_entity_id = entry.data.get(CONF_HEATER)
-    sensor_entity_id = entry.data.get(CONF_SENSOR)
-    min_temp = entry.data.get(CONF_MIN_TEMP)
-    max_temp = entry.data.get(CONF_MAX_TEMP)
-    target_temp = entry.data.get(CONF_TARGET_TEMP)
-    ac_mode = entry.data.get(CONF_AC_MODE)
-    min_cycle_duration = entry.data.get(CONF_MIN_DUR)
-    cold_tolerance = entry.data.get(CONF_COLD_TOLERANCE)
-    hot_tolerance = entry.data.get(CONF_HOT_TOLERANCE)
-    keep_alive = entry.data.get(CONF_KEEP_ALIVE)
-    initial_hvac_mode = entry.data.get(CONF_INITIAL_HVAC_MODE)
-    presets = {
+    name: str = entry.data.get(CONF_NAME, DEFAULT_NAME)
+    heater_entity_id: str = entry.data[CONF_HEATER]
+    sensor_entity_id: str = entry.data[CONF_SENSOR]
+    min_temp: float | None = entry.data.get(CONF_MIN_TEMP)
+    max_temp: float | None = entry.data.get(CONF_MAX_TEMP)
+    target_temp: float | None = entry.data.get(CONF_TARGET_TEMP)
+    ac_mode: bool | None = entry.data.get(CONF_AC_MODE)
+    min_cycle_duration: timedelta | None = entry.data.get(CONF_MIN_DUR)
+    cold_tolerance: float = entry.data.get(CONF_COLD_TOLERANCE, DEFAULT_TOLERANCE)
+    hot_tolerance: float = entry.data.get(CONF_HOT_TOLERANCE, DEFAULT_TOLERANCE)
+    keep_alive: timedelta | None = entry.data.get(CONF_KEEP_ALIVE)
+    initial_hvac_mode: HVACMode | None = entry.data.get(CONF_INITIAL_HVAC_MODE)
+    presets: dict[str, float] = {
         key: entry.data[value]
         for key, value in CONF_PRESETS.items()
         if value in entry.data
     }
-    precision = entry.data.get(CONF_PRECISION)
-    target_temperature_step = entry.data.get(CONF_TEMP_STEP)
-    unit = hass.config.units.temperature_unit
-    unique_id = f"{DOMAIN}-{entry.entry_id}-{sensor_entity_id}"
+    precision: float | None = entry.data.get(CONF_PRECISION)
+    target_temperature_step: float | None = entry.data.get(CONF_TEMP_STEP)
+    unit: UnitOfTemperature = hass.config.units.temperature_unit
+    unique_id: str | None = f"{DOMAIN}-{entry.entry_id}-{sensor_entity_id}"
 
     async_add_entities(
         [

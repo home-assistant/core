@@ -7,24 +7,18 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components.climate import HVACMode
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     PRESET_ACTIVITY,
     PRESET_AWAY,
     PRESET_COMFORT,
     PRESET_ECO,
     PRESET_HOME,
     PRESET_SLEEP,
+    HVACMode,
 )
-from homeassistant.components.generic_thermostat.climate import CONF_PRESETS
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
-from homeassistant.const import (
-    CONF_UNIQUE_ID,
-    PRECISION_HALVES,
-    PRECISION_TENTHS,
-    PRECISION_WHOLE,
-)
+from homeassistant.const import PRECISION_HALVES, PRECISION_TENTHS, PRECISION_WHOLE
 from homeassistant.core import callback
 from homeassistant.helpers import selector
 from homeassistant.helpers.schema_config_entry_flow import (
@@ -32,6 +26,7 @@ from homeassistant.helpers.schema_config_entry_flow import (
     SchemaOptionsFlowHandler,
 )
 
+from .climate import CONF_PRESETS
 from .const import (
     CONF_AC_MODE,
     CONF_COLD_TOLERANCE,
@@ -65,13 +60,25 @@ OPTIONS_SCHEMA = vol.Schema(
         vol.Optional(CONF_MAX_TEMP): selector.NumberSelector(
             selector.NumberSelectorConfig(mode=selector.NumberSelectorMode.BOX)
         ),
-        vol.Optional(CONF_MIN_TEMP, default=DEFAULT_MIN_TEMP): float,
+        vol.Optional(CONF_MIN_TEMP, default=DEFAULT_MIN_TEMP): selector.NumberSelector(
+            selector.NumberSelectorConfig(mode=selector.NumberSelectorMode.BOX)
+        ),
         vol.Optional(CONF_MIN_DUR): selector.DurationSelector(
             selector.DurationSelectorConfig()
         ),
-        vol.Optional(CONF_COLD_TOLERANCE, default=DEFAULT_TOLERANCE): float,
-        vol.Optional(CONF_HOT_TOLERANCE, default=DEFAULT_TOLERANCE): float,
-        vol.Optional(CONF_TARGET_TEMP): float,
+        vol.Optional(
+            CONF_COLD_TOLERANCE, default=DEFAULT_TOLERANCE
+        ): selector.NumberSelector(
+            selector.NumberSelectorConfig(mode=selector.NumberSelectorMode.BOX)
+        ),
+        vol.Optional(
+            CONF_HOT_TOLERANCE, default=DEFAULT_TOLERANCE
+        ): selector.NumberSelector(
+            selector.NumberSelectorConfig(mode=selector.NumberSelectorMode.BOX)
+        ),
+        vol.Optional(CONF_TARGET_TEMP): selector.NumberSelector(
+            selector.NumberSelectorConfig(mode=selector.NumberSelectorMode.BOX)
+        ),
         vol.Optional(CONF_KEEP_ALIVE): selector.DurationSelector(
             selector.DurationSelectorConfig()
         ),
@@ -129,7 +136,9 @@ class GenericThermostatConfigFlow(ConfigFlow, domain=DOMAIN):
         return SchemaOptionsFlowHandler(config_entry, OPTIONS_FLOW)
 
     async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
+        self,
+        user_input: dict[str, Any] | None = None,
+        options: dict[str, Any] | None = None,
     ) -> ConfigFlowResult:
         """Handle the form."""
         if user_input is None:
@@ -150,30 +159,43 @@ class GenericThermostatConfigFlow(ConfigFlow, domain=DOMAIN):
                     }
                 ),
             )
-        return self.async_create_entry(title=DEFAULT_NAME, data=user_input)
+
+        self._async_abort_entries_match(
+            {
+                CONF_HEATER: user_input[CONF_HEATER],
+                CONF_SENSOR: user_input[CONF_SENSOR],
+            }
+        )
+        return self.async_create_entry(
+            title=user_input[CONF_NAME], data=user_input, options=options
+        )
 
     async def async_step_import(
         self, import_config: dict[str, Any]
     ) -> ConfigFlowResult:
-        """Import a config entry."""
-        _LOGGER.debug("Importing Tado from configuration.yaml")
-        self._async_abort_entries_match(
-            {
-                CONF_HEATER: import_config[CONF_HEATER],
-                CONF_SENSOR: import_config[CONF_SENSOR],
-                CONF_UNIQUE_ID: import_config[CONF_UNIQUE_ID],
-            }
-        )
-
-        await self.async_set_unique_id(import_config[CONF_UNIQUE_ID])
-        self._abort_if_unique_id_configured()
-
-        return self.async_create_entry(
-            title=import_config[CONF_NAME],
-            data={
-                CONF_NAME: import_config[CONF_NAME],
-                CONF_HEATER: import_config[CONF_HEATER],
-                CONF_SENSOR: import_config[CONF_SENSOR],
-                CONF_UNIQUE_ID: import_config[CONF_UNIQUE_ID],
+        """Import a config entry from a configuration.yaml."""
+        _LOGGER.debug("Importing Generic Thermostat from configuration.yaml")
+        data: dict[str, Any] = {
+            CONF_NAME: import_config[CONF_NAME],
+            CONF_HEATER: import_config[CONF_HEATER],
+            CONF_SENSOR: import_config[CONF_SENSOR],
+        }
+        options: dict[str, Any] = {
+            CONF_MIN_TEMP: import_config[CONF_MIN_TEMP],
+            CONF_MAX_TEMP: import_config[CONF_MAX_TEMP],
+            CONF_AC_MODE: import_config[CONF_AC_MODE],
+            CONF_MIN_DUR: import_config[CONF_MIN_DUR],
+            CONF_COLD_TOLERANCE: import_config[CONF_COLD_TOLERANCE],
+            CONF_HOT_TOLERANCE: import_config[CONF_HOT_TOLERANCE],
+            CONF_KEEP_ALIVE: import_config[CONF_KEEP_ALIVE],
+            CONF_INITIAL_HVAC_MODE: import_config[CONF_INITIAL_HVAC_MODE],
+            CONF_PRECISION: str(import_config[CONF_PRECISION]),
+            CONF_TEMP_STEP: str(import_config[CONF_TEMP_STEP]),
+            CONF_TARGET_TEMP: import_config[CONF_TARGET_TEMP],
+            **{
+                CONF_PRESETS[p]: import_config.get(CONF_PRESETS[p])
+                for p in CONF_PRESETS
+                if import_config.get(CONF_PRESETS[p]) is not None
             },
-        )
+        }
+        return await self.async_step_user(user_input=data, options=options)
