@@ -14,7 +14,7 @@ from tesla_fleet_api.exceptions import (
 )
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -27,14 +27,14 @@ DESCRIPTION_PLACEHOLDERS = {
 }
 
 
-class TeslemetryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class TeslemetryConfigFlow(ConfigFlow, domain=DOMAIN):
     """Config Teslemetry API connection."""
 
     VERSION = 1
 
     async def async_step_user(
         self, user_input: Mapping[str, Any] | None = None
-    ) -> config_entries.ConfigFlowResult:
+    ) -> ConfigFlowResult:
         """Get configuration from the user."""
         errors: dict[str, str] = {}
         if user_input:

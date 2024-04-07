@@ -129,7 +129,7 @@ async def setup_gateway(
 ) -> BaseAsyncGateway | None:
     """Set up the Gateway for the given ConfigEntry."""
 
-    ready_gateway = await _get_gateway(
+    return await _get_gateway(
         hass,
         gateway_type=entry.data[CONF_GATEWAY_TYPE],
         device=entry.data[CONF_DEVICE],
@@ -144,7 +144,6 @@ async def setup_gateway(
         topic_out_prefix=entry.data.get(CONF_TOPIC_OUT_PREFIX),
         retain=entry.data.get(CONF_RETAIN, False),
     )
-    return ready_gateway
 
 
 async def _get_gateway(

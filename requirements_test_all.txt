@@ -164,7 +164,7 @@ aio-georss-gdacs==0.9
 aioairq==0.3.2
 
 # homeassistant.components.airzone_cloud
-aioairzone-cloud==0.4.7
+aioairzone-cloud==0.5.1
 
 # homeassistant.components.airzone
 aioairzone==0.7.6
@@ -261,10 +261,10 @@ aiokafka==0.10.0
 aiolifx-effects==0.3.2
 
 # homeassistant.components.lifx
-aiolifx-themes==0.4.10
+aiolifx-themes==0.4.15
 
 # homeassistant.components.lifx
-aiolifx==1.0.0
+aiolifx==1.0.2
 
 # homeassistant.components.livisi
 aiolivisi==0.0.19
@@ -454,7 +454,7 @@ auroranoaa==0.0.3
 aurorapy==0.2.7
 
 # homeassistant.components.axis
-axis==60
+axis==61
 
 # homeassistant.components.azure_event_hub
 azure-eventhub==5.11.1
@@ -521,7 +521,7 @@ bring-api==0.5.7
 broadlink==0.18.3
 
 # homeassistant.components.brother
-brother==4.0.2
+brother==4.1.0
 
 # homeassistant.components.brottsplatskartan
 brottsplatskartan==1.0.5
@@ -775,7 +775,7 @@ getmac==0.9.4
 gios==3.2.2
 
 # homeassistant.components.glances
-glances-api==0.5.0
+glances-api==0.6.0
 
 # homeassistant.components.goalzero
 goalzero==0.2.2
@@ -852,7 +852,7 @@ habitipy==0.2.0
 habluetooth==2.4.2
 
 # homeassistant.components.cloud
-hass-nabucasa==0.80.0
+hass-nabucasa==0.78.0
 
 # homeassistant.components.conversation
 hassil==1.6.1
@@ -1516,7 +1516,7 @@ pylibrespot-java==0.1.1
 pylitejet==0.6.2
 
 # homeassistant.components.litterrobot
-pylitterbot==2023.4.9
+pylitterbot==2023.4.11
 
 # homeassistant.components.lutron_caseta
 pylutron-caseta==0.20.0
@@ -1552,7 +1552,7 @@ pymysensors==0.24.0
 pynetgear==0.10.10
 
 # homeassistant.components.nobo_hub
-pynobo==1.8.0
+pynobo==1.8.1
 
 # homeassistant.components.nuki
 pynuki==1.6.3
@@ -1712,7 +1712,7 @@ pytautulli==23.1.1
 pytedee-async==0.2.17
 
 # homeassistant.components.motionmount
-python-MotionMount==0.3.1
+python-MotionMount==1.0.0
 
 # homeassistant.components.awair
 python-awair==0.2.4
@@ -1894,7 +1894,7 @@ reolink-aio==0.8.9
 rflink==0.0.66
 
 # homeassistant.components.ring
-ring-doorbell[listen]==0.8.9
+ring-doorbell[listen]==0.8.10
 
 # homeassistant.components.roku
 rokuecp==0.19.2
@@ -2161,7 +2161,7 @@ vallox-websocket-api==5.1.1
 vehicle==2.2.1
 
 # homeassistant.components.velbus
-velbus-aio==2024.4.0
+velbus-aio==2024.4.1
 
 # homeassistant.components.venstar
 venstarcolortouch==0.19
@@ -2231,7 +2231,7 @@ xiaomi-ble==0.28.0
 xknx==2.12.2
 
 # homeassistant.components.knx
-xknxproject==3.7.0
+xknxproject==3.7.1
 
 # homeassistant.components.bluesound
 # homeassistant.components.fritz
