@@ -472,8 +472,7 @@ class TimeoutManager:
 
         # Global Zone
         if zone_name == ZONE_GLOBAL:
-            task = _GlobalTaskContext(self, current_task, timeout, cool_down)
-            return task
+            return _GlobalTaskContext(self, current_task, timeout, cool_down)
 
         # Zone Handling
         if zone_name in self.zones:

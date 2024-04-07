@@ -237,8 +237,7 @@ def async_create_preview_sensor(
 ) -> SensorTemplate:
     """Create a preview sensor."""
     validated_config = SENSOR_SCHEMA(config | {CONF_NAME: name})
-    entity = SensorTemplate(hass, validated_config, None)
-    return entity
+    return SensorTemplate(hass, validated_config, None)
 
 
 class SensorTemplate(TemplateEntity, SensorEntity):
