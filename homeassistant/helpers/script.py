@@ -918,7 +918,7 @@ class _ScriptRun:
                         if not warned_too_many_loops:
                             warned_too_many_loops = True
                             _LOGGER.warning(
-                                "While condition %s in script `%s`" " looped %s times",
+                                "While condition %s in script `%s` looped %s times",
                                 repeat[CONF_WHILE],
                                 self._script.name,
                                 REPEAT_WARN_ITERATIONS,
@@ -965,7 +965,7 @@ class _ScriptRun:
                     if not warned_too_many_loops:
                         warned_too_many_loops = True
                         _LOGGER.warning(
-                            "Until condition %s in script `%s`" " looped %s times",
+                            "Until condition %s in script `%s` looped %s times",
                             repeat[CONF_UNTIL],
                             self._script.name,
                             REPEAT_WARN_ITERATIONS,
