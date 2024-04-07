@@ -51,10 +51,6 @@ class SwitchBotCloudLock(SwitchBotCloudEntity, LockEntity):
 
         await self.send_command(LockCommands.UNLOCK)
         self._attr_is_locked = False
-        # if self._device.is_night_latch_enabled():
-        #     self._last_run_success = await self._device.unlock_without_unlatch()
-        # else:
-        #     self._last_run_success = await self._device.unlock()
         self.async_write_ha_state()
 
     async def async_open(self, **kwargs: Any) -> None:
