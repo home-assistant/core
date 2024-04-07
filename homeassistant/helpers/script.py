@@ -914,8 +914,8 @@ class _ScriptRun:
                     break
 
                 if iteration > 1:
-                    # If the user creates an automation loops forever, yield to the event loop
-                    # so they have a chance to terminate the script and fix their automation.
+                    # If the user creates an script with a tight loop, yield to the event loop
+                    # so the system stays responsive while all the cpu time is consumed.
                     await asyncio.sleep(0)
                     if iteration >= REPEAT_WARN_ITERATIONS:
                         if not warned_too_many_loops:
@@ -973,8 +973,8 @@ class _ScriptRun:
                         )
                         break
 
-                # If the user creates an automation loops forever, yield to the event loop
-                # so they have a chance to terminate the script and fix their automation.
+                # If the user creates an script with a tight loop, yield to the event loop
+                # so the system stays responsive while all the cpu time is consumed.
                 await asyncio.sleep(0)
 
         if saved_repeat_vars:
