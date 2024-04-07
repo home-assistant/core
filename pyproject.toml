@@ -720,7 +720,6 @@ ignore = [
     # temporarily disabled
     "PT019",
     "RET503",
-    "RET502",
     "RET501",
     "TRY002",
     "TRY301"

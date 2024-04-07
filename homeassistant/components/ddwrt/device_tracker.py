@@ -152,7 +152,7 @@ class DdWrtDeviceScanner(DeviceScanner):
             )
         except requests.exceptions.Timeout:
             _LOGGER.exception("Connection to the router timed out")
-            return
+            return None
         if response.status_code == HTTPStatus.OK:
             return _parse_ddwrt_response(response.text)
         if response.status_code == HTTPStatus.UNAUTHORIZED:
@@ -160,7 +160,7 @@ class DdWrtDeviceScanner(DeviceScanner):
             _LOGGER.exception(
                 "Failed to authenticate, check your username and password"
             )
-            return
+            return None
         _LOGGER.error("Invalid response from DD-WRT: %s", response)
 
 

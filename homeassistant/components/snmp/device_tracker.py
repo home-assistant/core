@@ -107,14 +107,14 @@ class SnmpScanner(DeviceScanner):
 
         if errindication:
             _LOGGER.error("SNMPLIB error: %s", errindication)
-            return
+            return None
         if errstatus:
             _LOGGER.error(
                 "SNMP error: %s at %s",
                 errstatus.prettyPrint(),
                 errindex and restable[int(errindex) - 1][0] or "?",
             )
-            return
+            return None
 
         for resrow in restable:
             for _, val in resrow:

@@ -369,7 +369,7 @@ class SQLSensor(ManualTriggerSensorEntity):
             )
             sess.rollback()
             sess.close()
-            return
+            return None
 
         for res in result.mappings():
             _LOGGER.debug("Query %s result in %s", self._query, res.items())

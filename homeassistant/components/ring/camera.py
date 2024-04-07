@@ -116,7 +116,7 @@ class RingCam(RingEntity, Camera):
     async def handle_async_mjpeg_stream(self, request):
         """Generate an HTTP MJPEG stream from the camera."""
         if self._video_url is None:
-            return
+            return None
 
         stream = CameraMjpeg(self._ffmpeg_manager.binary)
         await stream.open_camera(self._video_url)

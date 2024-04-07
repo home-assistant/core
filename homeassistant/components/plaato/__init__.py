@@ -194,7 +194,7 @@ async def handle_webhook(hass, webhook_id, request):
         data = WEBHOOK_SCHEMA(await request.json())
     except vol.MultipleInvalid as error:
         _LOGGER.warning("An error occurred when parsing webhook data <%s>", error)
-        return
+        return None
 
     device_id = _device_id(data)
     sensor_data = PlaatoAirlock.from_web_hook(data)

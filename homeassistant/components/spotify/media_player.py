@@ -378,7 +378,7 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
                 raise ValueError(
                     f"Media type {media_type} is not supported when enqueue is ADD"
                 )
-            return self.data.client.add_to_queue(media_id, kwargs.get("device_id"))
+            self.data.client.add_to_queue(media_id, kwargs.get("device_id"))
 
         self.data.client.start_playback(**kwargs)
 
