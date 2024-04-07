@@ -286,18 +286,7 @@ class SynoApi:
 
     async def async_update(self) -> None:
         """Update function for updating API information."""
-        try:
-            await self._update()
-        except SYNOLOGY_CONNECTION_EXCEPTIONS as err:
-            LOGGER.debug(
-                "Connection error during update of '%s' with exception: %s",
-                self._entry.unique_id,
-                err,
-            )
-            LOGGER.warning(
-                "Connection error during update, fallback by reloading the entry"
-            )
-            await self._hass.config_entries.async_reload(self._entry.entry_id)
+        await self._update()
 
     async def _update(self) -> None:
         """Update function for updating API information."""

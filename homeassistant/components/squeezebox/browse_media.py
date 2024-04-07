@@ -170,8 +170,7 @@ async def library_payload(hass, player):
         else:
             library_info["children"].append(item)
 
-    response = BrowseMedia(**library_info)
-    return response
+    return BrowseMedia(**library_info)
 
 
 def media_source_content_filter(item: BrowseMedia) -> bool:

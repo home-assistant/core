@@ -1163,7 +1163,7 @@ class CoordinatorWeatherEntity(
         assert coordinator.config_entry is not None
         getattr(self, f"_handle_{forecast_type}_forecast_coordinator_update")()
         coordinator.config_entry.async_create_task(
-            self.hass, self.async_update_listeners((forecast_type,))
+            self.hass, self.async_update_listeners((forecast_type,)), eager_start=False
         )
 
     @callback
@@ -1273,5 +1273,5 @@ class SingleCoordinatorWeatherEntity(
         super()._handle_coordinator_update()
         assert self.coordinator.config_entry
         self.coordinator.config_entry.async_create_task(
-            self.hass, self.async_update_listeners(None)
+            self.hass, self.async_update_listeners(None), eager_start=False
         )

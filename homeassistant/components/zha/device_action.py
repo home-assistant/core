@@ -136,8 +136,7 @@ async def async_validate_action_config(
 ) -> ConfigType:
     """Validate config."""
     schema = ACTION_SCHEMA_MAP.get(config[CONF_TYPE], DEFAULT_ACTION_SCHEMA)
-    config = schema(config)
-    return config
+    return schema(config)
 
 
 async def async_get_actions(
