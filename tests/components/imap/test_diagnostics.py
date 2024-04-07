@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
 from .const import (
-    TEST_FETCH_RESPONSE_TEXT_PLAIN, 
+    TEST_FETCH_RESPONSE_TEXT_PLAIN,
     TEST_MESSAGE_DATA,
     TEST_SEARCH_RESPONSE,
 )
