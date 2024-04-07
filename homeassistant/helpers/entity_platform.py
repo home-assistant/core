@@ -42,7 +42,6 @@ from . import (
     service,
     translation,
 )
-from .entity import EntityPlatformState
 from .entity_registry import EntityRegistry, RegistryEntryDisabler, RegistryEntryHider
 from .event import async_call_later, async_track_time_interval
 from .issue_registry import IssueSeverity, async_create_issue
@@ -633,8 +632,8 @@ class EntityPlatform:
             (self.config_entry and self.config_entry.pref_disable_polling)
             or self._async_unsub_polling is not None
             or not any(
-                # pylint: disable=protected-access
-                entity._platform_state is EntityPlatformState.ADDED
+                entity.entity_id
+                and entity.entity_id in self.entities
                 and entity.should_poll
                 for entity in entities
             )
