@@ -45,11 +45,4 @@ class FytaPlantEntity(CoordinatorEntity[FytaCoordinator]):
     @property
     def available(self) -> bool:
         """Test if entity is available."""
-        if self.plant_id not in self.coordinator.data:
-            return False
-        if self.entity_description.key.count("status") > 0:
-            # FYTA status scale is 1 to 5, set unavailable if different status is reported
-            value = self.plant[self.entity_description.key]
-            if value is None or value < 1 or value > 5:
-                return False
-        return super().available
+        return super().available and self.plant_id in self.coordinator.data

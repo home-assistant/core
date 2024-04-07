@@ -46,35 +46,35 @@ SENSORS: Final[list[FytaSensorEntityDescription]] = [
         translation_key="plant_status",
         device_class=SensorDeviceClass.ENUM,
         options=PLANT_STATUS_LIST,
-        value_fn=lambda value: PLANT_STATUS[value],
+        value_fn=lambda value: PLANT_STATUS.get(value),  # pylint: disable=unnecessary-lambda
     ),
     FytaSensorEntityDescription(
         key="temperature_status",
         translation_key="temperature_status",
         device_class=SensorDeviceClass.ENUM,
         options=PLANT_STATUS_LIST,
-        value_fn=lambda value: PLANT_STATUS[value],
+        value_fn=lambda value: PLANT_STATUS.get(value),  # pylint: disable=unnecessary-lambda
     ),
     FytaSensorEntityDescription(
         key="light_status",
         translation_key="light_status",
         device_class=SensorDeviceClass.ENUM,
         options=PLANT_STATUS_LIST,
-        value_fn=lambda value: PLANT_STATUS[value],
+        value_fn=lambda value: PLANT_STATUS.get(value),  # pylint: disable=unnecessary-lambda
     ),
     FytaSensorEntityDescription(
         key="moisture_status",
         translation_key="moisture_status",
         device_class=SensorDeviceClass.ENUM,
         options=PLANT_STATUS_LIST,
-        value_fn=lambda value: PLANT_STATUS[value],
+        value_fn=lambda value: PLANT_STATUS.get(value),  # pylint: disable=unnecessary-lambda
     ),
     FytaSensorEntityDescription(
         key="salinity_status",
         translation_key="salinity_status",
         device_class=SensorDeviceClass.ENUM,
         options=PLANT_STATUS_LIST,
-        value_fn=lambda value: PLANT_STATUS[value],
+        value_fn=lambda value: PLANT_STATUS.get(value),  # pylint: disable=unnecessary-lambda
     ),
     FytaSensorEntityDescription(
         key="temperature",
