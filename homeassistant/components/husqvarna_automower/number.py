@@ -40,6 +40,7 @@ NUMBER_TYPES: tuple[AutomowerNumberEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         native_min_value=1,
         native_max_value=9,
+        exists_fn=lambda data: data.cutting_height is not None,
         value_fn=lambda data: data.cutting_height,
         set_value_fn=lambda session, mower_id, cheight: session.set_cutting_height(
             mower_id, int(cheight)
