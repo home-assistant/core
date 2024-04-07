@@ -1170,7 +1170,7 @@ class Context:
 
     def __eq__(self, other: object) -> bool:
         """Compare contexts."""
-        return bool(type(other) is Context and self.id == other.id)
+        return isinstance(other, Context) and self.id == other.id
 
     @cached_property
     def _as_dict(self) -> dict[str, str | None]:

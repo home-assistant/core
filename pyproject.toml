@@ -720,9 +720,9 @@ ignore = [
 
     # temporarily disabled
     "PT019",
-    "PYI041",
+    "PYI024", # Use typing.NamedTuple instead of collections.namedtuple
     "PYI036",
-    "PYI024",
+    "PYI041",
     "RET503",
     "RET502",
     "RET501",
