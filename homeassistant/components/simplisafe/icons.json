@@ -2,6 +2,8 @@
   "services": {
     "remove_pin": "mdi:alarm-panel-outline",
     "set_pin": "mdi:alarm-panel",
-    "set_system_properties": "mdi:cog"
+    "set_system_properties": "mdi:cog",
+    "capture_motion_clip": "mdi:video",
+    "capture_motion_image": "mdi:camera-image"
   }
 }
