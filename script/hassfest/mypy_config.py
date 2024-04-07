@@ -32,7 +32,7 @@ HEADER: Final = """
 
 GENERAL_SETTINGS: Final[dict[str, str]] = {
     "python_version": ".".join(str(x) for x in REQUIRED_PYTHON_VER[:2]),
-    "plugins": ", ".join(["pydantic.mypy"]),
+    "plugins": "pydantic.mypy",
     "show_error_codes": "true",
     "follow_imports": "silent",
     # Enable some checks globally.
@@ -43,20 +43,8 @@ GENERAL_SETTINGS: Final[dict[str, str]] = {
     "warn_redundant_casts": "true",
     "warn_unused_configs": "true",
     "warn_unused_ignores": "true",
-    "enable_error_code": ", ".join(
-        [
-            "ignore-without-code",
-            "redundant-self",
-            "truthy-iterable",
-        ]
-    ),
-    "disable_error_code": ", ".join(
-        [
-            "annotation-unchecked",
-            "import-not-found",
-            "import-untyped",
-        ]
-    ),
+    "enable_error_code": "ignore-without-code, redundant-self, truthy-iterable",
+    "disable_error_code": "annotation-unchecked, import-not-found, import-untyped",
     # Impractical in real code
     # E.g. this breaks passthrough ParamSpec typing with Concatenate
     "extra_checks": "false",

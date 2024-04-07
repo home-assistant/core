@@ -545,8 +545,7 @@ async def test_if_state_above(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "{{ trigger.%s }}"
-                            % "}} - {{ trigger.".join(("platform", "event.event_type"))
+                            "some": "{{ trigger.platform }} - {{ trigger.event.event_type }}"
                         },
                     },
                 }
@@ -612,8 +611,7 @@ async def test_if_state_above_legacy(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "{{ trigger.%s }}"
-                            % "}} - {{ trigger.".join(("platform", "event.event_type"))
+                            "some": "{{ trigger.platform }} - {{ trigger.event.event_type }}"
                         },
                     },
                 }
@@ -679,8 +677,7 @@ async def test_if_state_below(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "{{ trigger.%s }}"
-                            % "}} - {{ trigger.".join(("platform", "event.event_type"))
+                            "some": "{{ trigger.platform }} - {{ trigger.event.event_type }}"
                         },
                     },
                 }
@@ -747,8 +744,7 @@ async def test_if_state_between(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "{{ trigger.%s }}"
-                            % "}} - {{ trigger.".join(("platform", "event.event_type"))
+                            "some": "{{ trigger.platform }} - {{ trigger.event.event_type }}"
                         },
                     },
                 }

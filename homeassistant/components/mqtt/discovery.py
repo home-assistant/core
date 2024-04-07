@@ -268,7 +268,7 @@ async def async_start(  # noqa: C901
                             availability_conf[CONF_TOPIC] = f"{topic[:-1]}{base}"
 
         # If present, the node_id will be included in the discovered object id
-        discovery_id = " ".join((node_id, object_id)) if node_id else object_id
+        discovery_id = f"{node_id} {object_id}" if node_id else object_id
         discovery_hash = (component, discovery_id)
 
         if discovery_payload:
