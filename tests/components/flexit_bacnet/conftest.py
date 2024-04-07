@@ -22,7 +22,7 @@ async def flow_id(hass: HomeAssistant) -> str:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     return result["flow_id"]

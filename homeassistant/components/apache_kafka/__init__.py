@@ -19,10 +19,9 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import Event, HomeAssistant
+from homeassistant.core import Event, EventStateChangedData, HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import FILTER_SCHEMA, EntityFilter
-from homeassistant.helpers.event import EventStateChangedData
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import ssl as ssl_util
 

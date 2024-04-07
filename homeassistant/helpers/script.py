@@ -9,11 +9,11 @@ from contextvars import ContextVar
 from copy import copy
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from functools import partial
+from functools import cached_property, partial
 import itertools
 import logging
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any, Literal, TypedDict, TypeVar, cast
+from typing import Any, Literal, TypedDict, TypeVar, cast
 
 import async_interrupt
 import voluptuous as vol
@@ -106,12 +106,6 @@ from .trace import (
 )
 from .trigger import async_initialize_triggers, async_validate_trigger_config
 from .typing import UNDEFINED, ConfigType, UndefinedType
-
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
-
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
 
@@ -823,8 +817,7 @@ class _ScriptRun:
 
             return True
 
-        result = traced_test_conditions(self._hass, self._variables)
-        return result
+        return traced_test_conditions(self._hass, self._variables)
 
     @async_trace_path("repeat")
     async def _async_repeat_step(self):  # noqa: C901

@@ -300,7 +300,7 @@ class KodiConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @callback
     def _get_data(self):
-        data = {
+        return {
             CONF_NAME: self._name,
             CONF_HOST: self._host,
             CONF_PORT: self._port,
@@ -310,8 +310,6 @@ class KodiConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_SSL: self._ssl,
             CONF_TIMEOUT: DEFAULT_TIMEOUT,
         }
-
-        return data
 
 
 class CannotConnect(HomeAssistantError):

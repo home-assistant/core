@@ -102,7 +102,7 @@ class EgardiaAlarm(alarm.AlarmControlPanelEntity):
 
     def lookupstatusfromcode(self, statuscode):
         """Look at the rs_codes and returns the status from the code."""
-        status = next(
+        return next(
             (
                 status_group.upper()
                 for status_group, codes in self._rs_codes.items()
@@ -111,7 +111,6 @@ class EgardiaAlarm(alarm.AlarmControlPanelEntity):
             ),
             "UNKNOWN",
         )
-        return status
 
     def parsestatus(self, status):
         """Parse the status."""

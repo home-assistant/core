@@ -48,7 +48,7 @@ async def test_user_flow(
             CONF_PORT: 1234,
         },
     )
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Main controller"
     assert result["data"] == {}
     assert result["options"] == {
@@ -82,7 +82,7 @@ async def test_user_flow_already_exists(
             CONF_PORT: 1234,
         },
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "duplicated_host_port"}
 
@@ -94,7 +94,7 @@ async def test_user_flow_already_exists(
             CONF_PORT: 1234,
         },
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "duplicated_controller_id"}
 
@@ -125,7 +125,7 @@ async def test_user_flow_cannot_connect(
             CONF_PORT: 1234,
         },
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error}
     assert result["step_id"] == "user"
 
@@ -185,19 +185,19 @@ async def test_import_flow(
             ],
         },
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "import_controller_name"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_NAME: "Main controller"}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "import_finish"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={}
     )
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Main controller"
     assert result["data"] == {}
     assert result["options"] == {
@@ -241,7 +241,7 @@ async def test_import_flow_already_exists(
         context={"source": SOURCE_IMPORT},
         data={"host": "192.168.0.1", "port": 1234, CONF_DIMMERS: [], CONF_KEYPADS: []},
     )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert len(issue_registry.issues) == 1
 
@@ -256,13 +256,13 @@ async def test_import_flow_controller_id_exists(
         context={"source": SOURCE_IMPORT},
         data={"host": "192.168.0.2", "port": 1234, CONF_DIMMERS: [], CONF_KEYPADS: []},
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "import_controller_name"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_NAME: "Main controller"}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "import_controller_name"
     assert result["errors"] == {"base": "duplicated_controller_id"}
 
@@ -277,7 +277,7 @@ async def test_reconfigure_flow(
         DOMAIN,
         context={"source": SOURCE_RECONFIGURE, "entry_id": mock_config_entry.entry_id},
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
 
     result = await hass.config_entries.flow.async_configure(
@@ -288,7 +288,7 @@ async def test_reconfigure_flow(
         },
     )
     await hass.async_block_till_done()
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert mock_config_entry.options == {
         "controller_id": "main_controller",
@@ -345,7 +345,7 @@ async def test_reconfigure_flow_flow_duplicate(
         DOMAIN,
         context={"source": SOURCE_RECONFIGURE, "entry_id": entry1.entry_id},
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
 
     result = await hass.config_entries.flow.async_configure(
@@ -355,7 +355,7 @@ async def test_reconfigure_flow_flow_duplicate(
             CONF_PORT: 1234,
         },
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
     assert result["errors"] == {"base": "duplicated_host_port"}
 
@@ -370,7 +370,7 @@ async def test_reconfigure_flow_flow_no_change(
         DOMAIN,
         context={"source": SOURCE_RECONFIGURE, "entry_id": mock_config_entry.entry_id},
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
 
     result = await hass.config_entries.flow.async_configure(
@@ -380,7 +380,7 @@ async def test_reconfigure_flow_flow_no_change(
             CONF_PORT: 1234,
         },
     )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert mock_config_entry.options == {
         "controller_id": "main_controller",
@@ -422,14 +422,14 @@ async def test_options_add_light_flow(
     result = await hass.config_entries.options.async_init(
         mock_empty_config_entry.entry_id
     )
-    assert result["type"] == FlowResultType.MENU
+    assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         {"next_step_id": "add_light"},
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "add_light"
 
     result = await hass.config_entries.options.async_configure(
@@ -440,7 +440,7 @@ async def test_options_add_light_flow(
             CONF_RATE: 2.0,
         },
     )
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         "controller_id": "main_controller",
         "dimmers": [
@@ -469,14 +469,14 @@ async def test_options_add_remove_light_flow(
     assert hass.states.async_entity_ids("light") == unordered(["light.foyer_sconces"])
 
     result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
-    assert result["type"] == FlowResultType.MENU
+    assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         {"next_step_id": "add_light"},
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "add_light"
 
     result = await hass.config_entries.options.async_configure(
@@ -487,7 +487,7 @@ async def test_options_add_remove_light_flow(
             CONF_RATE: 2.0,
         },
     )
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         "controller_id": "main_controller",
         "dimmers": [
@@ -523,14 +523,14 @@ async def test_options_add_remove_light_flow(
 
     # Now remove the original light
     result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
-    assert result["type"] == FlowResultType.MENU
+    assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         {"next_step_id": "remove_light"},
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "remove_light"
     assert result["data_schema"].schema["index"].options == {
         "0": "Foyer Sconces ([02:08:01:01])",
@@ -540,7 +540,7 @@ async def test_options_add_remove_light_flow(
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input={CONF_INDEX: ["0"]}
     )
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         "controller_id": "main_controller",
         "dimmers": [
@@ -583,14 +583,14 @@ async def test_options_add_remove_keypad_flow(
     await hass.async_block_till_done()
 
     result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
-    assert result["type"] == FlowResultType.MENU
+    assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         {"next_step_id": "add_keypad"},
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "add_keypad"
 
     result = await hass.config_entries.options.async_configure(
@@ -600,7 +600,7 @@ async def test_options_add_remove_keypad_flow(
             CONF_NAME: "Hall Keypad",
         },
     )
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         "controller_id": "main_controller",
         "dimmers": [
@@ -631,14 +631,14 @@ async def test_options_add_remove_keypad_flow(
 
     # Now remove the original keypad
     result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
-    assert result["type"] == FlowResultType.MENU
+    assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         {"next_step_id": "remove_keypad"},
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "remove_keypad"
     assert result["data_schema"].schema["index"].options == {
         "0": "Foyer Keypad ([02:08:02:01])",
@@ -648,7 +648,7 @@ async def test_options_add_remove_keypad_flow(
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input={CONF_INDEX: ["0"]}
     )
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         "controller_id": "main_controller",
         "dimmers": [
@@ -670,14 +670,14 @@ async def test_options_add_keypad_with_error(
     await hass.async_block_till_done()
 
     result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
-    assert result["type"] == FlowResultType.MENU
+    assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         {"next_step_id": "add_keypad"},
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "add_keypad"
 
     # Try an invalid address
@@ -688,7 +688,7 @@ async def test_options_add_keypad_with_error(
             CONF_NAME: "Hall Keypad",
         },
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "add_keypad"
     assert result["errors"] == {"base": "invalid_addr"}
 
@@ -700,7 +700,7 @@ async def test_options_add_keypad_with_error(
             CONF_NAME: "Hall Keypad",
         },
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "add_keypad"
     assert result["errors"] == {"base": "duplicated_addr"}
 
@@ -712,7 +712,7 @@ async def test_options_add_keypad_with_error(
             CONF_NAME: "Hall Keypad",
         },
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "add_keypad"
     assert result["errors"] == {"base": "duplicated_addr"}
 
@@ -727,13 +727,13 @@ async def test_options_edit_light_no_lights_flow(
     assert hass.states.async_entity_ids("light") == unordered(["light.foyer_sconces"])
 
     result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
-    assert result["type"] == FlowResultType.MENU
+    assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], {"next_step_id": "select_edit_light"}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "select_edit_light"
     assert result["data_schema"].schema["index"].container == {
         "0": "Foyer Sconces ([02:08:01:01])"
@@ -743,7 +743,7 @@ async def test_options_edit_light_no_lights_flow(
         result["flow_id"],
         {"index": "0"},
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "edit_light"
 
     result = await hass.config_entries.options.async_configure(
@@ -751,7 +751,7 @@ async def test_options_edit_light_no_lights_flow(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         "controller_id": "main_controller",
         "dimmers": [{"addr": "[02:08:01:01]", "name": "Foyer Sconces", "rate": 3.0}],
@@ -795,13 +795,13 @@ async def test_options_edit_light_flow_empty(
     result = await hass.config_entries.options.async_init(
         mock_empty_config_entry.entry_id
     )
-    assert result["type"] == FlowResultType.MENU
+    assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], {"next_step_id": "select_edit_light"}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "select_edit_light"
     assert result["data_schema"].schema["index"].container == {}
 
@@ -817,13 +817,13 @@ async def test_options_add_button_flow(
     assert len(hass.states.async_entity_ids(BUTTON_DOMAIN)) == 3
 
     result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
-    assert result["type"] == FlowResultType.MENU
+    assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], {"next_step_id": "select_edit_keypad"}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "select_edit_keypad"
     assert result["data_schema"].schema["index"].container == {
         "0": "Foyer Keypad ([02:08:02:01])"
@@ -833,14 +833,14 @@ async def test_options_add_button_flow(
         result["flow_id"],
         {"index": "0"},
     )
-    assert result["type"] == FlowResultType.MENU
+    assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "edit_keypad"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], {"next_step_id": "add_button"}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "add_button"
 
     result = await hass.config_entries.options.async_configure(
@@ -854,7 +854,7 @@ async def test_options_add_button_flow(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         "controller_id": "main_controller",
         "dimmers": [{"addr": "[02:08:01:01]", "name": "Foyer Sconces", "rate": 1.0}],
@@ -902,13 +902,13 @@ async def test_options_add_button_flow_duplicate(
     assert len(hass.states.async_entity_ids(BUTTON_DOMAIN)) == 3
 
     result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
-    assert result["type"] == FlowResultType.MENU
+    assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], {"next_step_id": "select_edit_keypad"}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "select_edit_keypad"
     assert result["data_schema"].schema["index"].container == {
         "0": "Foyer Keypad ([02:08:02:01])"
@@ -918,14 +918,14 @@ async def test_options_add_button_flow_duplicate(
         result["flow_id"],
         {"index": "0"},
     )
-    assert result["type"] == FlowResultType.MENU
+    assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "edit_keypad"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], {"next_step_id": "add_button"}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "add_button"
 
     result = await hass.config_entries.options.async_configure(
@@ -937,7 +937,7 @@ async def test_options_add_button_flow_duplicate(
         },
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "duplicated_number"}
 
 
@@ -952,13 +952,13 @@ async def test_options_edit_button_flow(
     assert len(hass.states.async_entity_ids(BUTTON_DOMAIN)) == 3
 
     result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
-    assert result["type"] == FlowResultType.MENU
+    assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], {"next_step_id": "select_edit_keypad"}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "select_edit_keypad"
     assert result["data_schema"].schema["index"].container == {
         "0": "Foyer Keypad ([02:08:02:01])"
@@ -968,13 +968,13 @@ async def test_options_edit_button_flow(
         result["flow_id"],
         {"index": "0"},
     )
-    assert result["type"] == FlowResultType.MENU
+    assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "edit_keypad"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], {"next_step_id": "select_edit_button"}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "select_edit_button"
     assert result["data_schema"].schema["index"].container == {
         "0": "Morning (1)",
@@ -986,7 +986,7 @@ async def test_options_edit_button_flow(
         result["flow_id"],
         {"index": "0"},
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "edit_button"
 
     result = await hass.config_entries.options.async_configure(
@@ -998,7 +998,7 @@ async def test_options_edit_button_flow(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         "controller_id": "main_controller",
         "dimmers": [{"addr": "[02:08:01:01]", "name": "Foyer Sconces", "rate": 1.0}],
@@ -1039,13 +1039,13 @@ async def test_options_remove_button_flow(
     assert len(hass.states.async_entity_ids(BUTTON_DOMAIN)) == 3
 
     result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
-    assert result["type"] == FlowResultType.MENU
+    assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], {"next_step_id": "select_edit_keypad"}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "select_edit_keypad"
     assert result["data_schema"].schema["index"].container == {
         "0": "Foyer Keypad ([02:08:02:01])"
@@ -1055,14 +1055,14 @@ async def test_options_remove_button_flow(
         result["flow_id"],
         {"index": "0"},
     )
-    assert result["type"] == FlowResultType.MENU
+    assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "edit_keypad"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], {"next_step_id": "remove_button"}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "remove_button"
     assert result["data_schema"].schema["index"].options == {
         "0": "Morning (1)",
@@ -1074,7 +1074,7 @@ async def test_options_remove_button_flow(
         result["flow_id"], user_input={CONF_INDEX: ["0"]}
     )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         "controller_id": "main_controller",
         "dimmers": [{"addr": "[02:08:01:01]", "name": "Foyer Sconces", "rate": 1.0}],

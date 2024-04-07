@@ -67,7 +67,8 @@ async def async_setup_entry(
 
         for shade in pv_entry.shade_data.values():
             _LOGGER.debug("Initial refresh of shade: %s", shade.name)
-            await shade.refresh(suppress_timeout=True)  # default 15 second timeout
+            async with coordinator.radio_operation_lock:
+                await shade.refresh(suppress_timeout=True)  # default 15 second timeout
 
     entities: list[ShadeEntity] = []
     for shade in pv_entry.shade_data.values():
@@ -207,7 +208,8 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
     async def _async_execute_move(self, move: ShadePosition) -> None:
         """Execute a move that can affect multiple positions."""
         _LOGGER.debug("Move request %s: %s", self.name, move)
-        response = await self._shade.move(move)
+        async with self.coordinator.radio_operation_lock:
+            response = await self._shade.move(move)
         _LOGGER.debug("Move response %s: %s", self.name, response)
 
         # Process the response from the hub (including new positions)
@@ -318,7 +320,10 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
             # error if are already have one in flight
             return
         # suppress timeouts caused by hub nightly reboot
-        await self._shade.refresh(suppress_timeout=True)  # default 15 second timeout
+        async with self.coordinator.radio_operation_lock:
+            await self._shade.refresh(
+                suppress_timeout=True
+            )  # default 15 second timeout
         _LOGGER.debug("Process update %s: %s", self.name, self._shade.current_position)
         self._async_update_shade_data(self._shade.current_position)
 
