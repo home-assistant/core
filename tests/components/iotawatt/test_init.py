@@ -1,4 +1,5 @@
 """Test init."""
+
 import httpx
 
 from homeassistant.config_entries import ConfigEntryState
@@ -23,7 +24,7 @@ async def test_setup_connection_failed(
     mock_iotawatt.connect.side_effect = httpx.ConnectError("")
     assert await async_setup_component(hass, "iotawatt", {})
     await hass.async_block_till_done()
-    assert entry.state == ConfigEntryState.SETUP_RETRY
+    assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_setup_auth_failed(hass: HomeAssistant, mock_iotawatt, entry) -> None:
@@ -31,4 +32,4 @@ async def test_setup_auth_failed(hass: HomeAssistant, mock_iotawatt, entry) -> N
     mock_iotawatt.connect.return_value = False
     assert await async_setup_component(hass, "iotawatt", {})
     await hass.async_block_till_done()
-    assert entry.state == ConfigEntryState.SETUP_RETRY
+    assert entry.state is ConfigEntryState.SETUP_RETRY

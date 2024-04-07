@@ -1,4 +1,5 @@
 """Lights on Zigbee Home Automation networks."""
+
 from __future__ import annotations
 
 from collections import Counter
@@ -146,11 +147,10 @@ class BaseLight(LogMixin, light.LightEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return state attributes."""
-        attributes = {
+        return {
             "off_with_transition": self._off_with_transition,
             "off_brightness": self._off_brightness,
         }
-        return attributes
 
     @property
     def is_on(self) -> bool:
@@ -1185,7 +1185,7 @@ class LightGroup(BaseLight, ZhaGroupEntity):
         self._zha_config_enhanced_light_transition = False
 
         self._attr_color_mode = ColorMode.UNKNOWN
-        self._attr_supported_color_modes = set()
+        self._attr_supported_color_modes = {ColorMode.ONOFF}
 
     # remove this when all ZHA platforms and base entities are updated
     @property
@@ -1285,6 +1285,19 @@ class LightGroup(BaseLight, ZhaGroupEntity):
             effects_count = Counter(itertools.chain(all_effects))
             self._attr_effect = effects_count.most_common(1)[0][0]
 
+        supported_color_modes = {ColorMode.ONOFF}
+        all_supported_color_modes: list[set[ColorMode]] = list(
+            helpers.find_state_attributes(states, light.ATTR_SUPPORTED_COLOR_MODES)
+        )
+        if all_supported_color_modes:
+            # Merge all color modes.
+            supported_color_modes = filter_supported_color_modes(
+                set().union(*all_supported_color_modes)
+            )
+
+        self._attr_supported_color_modes = supported_color_modes
+
+        self._attr_color_mode = ColorMode.UNKNOWN
         all_color_modes = list(
             helpers.find_state_attributes(on_states, light.ATTR_COLOR_MODE)
         )
@@ -1292,24 +1305,25 @@ class LightGroup(BaseLight, ZhaGroupEntity):
             # Report the most common color mode, select brightness and onoff last
             color_mode_count = Counter(itertools.chain(all_color_modes))
             if ColorMode.ONOFF in color_mode_count:
-                color_mode_count[ColorMode.ONOFF] = -1
+                if ColorMode.ONOFF in supported_color_modes:
+                    color_mode_count[ColorMode.ONOFF] = -1
+                else:
+                    color_mode_count.pop(ColorMode.ONOFF)
             if ColorMode.BRIGHTNESS in color_mode_count:
-                color_mode_count[ColorMode.BRIGHTNESS] = 0
-            self._attr_color_mode = color_mode_count.most_common(1)[0][0]
+                if ColorMode.BRIGHTNESS in supported_color_modes:
+                    color_mode_count[ColorMode.BRIGHTNESS] = 0
+                else:
+                    color_mode_count.pop(ColorMode.BRIGHTNESS)
+            if color_mode_count:
+                self._attr_color_mode = color_mode_count.most_common(1)[0][0]
+            else:
+                self._attr_color_mode = next(iter(supported_color_modes))
+
             if self._attr_color_mode == ColorMode.HS and (
                 color_mode_count[ColorMode.HS] != len(self._group.members)
                 or self._zha_config_always_prefer_xy_color_mode
             ):  # switch to XY if all members do not support HS
                 self._attr_color_mode = ColorMode.XY
-
-        all_supported_color_modes: list[set[ColorMode]] = list(
-            helpers.find_state_attributes(states, light.ATTR_SUPPORTED_COLOR_MODES)
-        )
-        if all_supported_color_modes:
-            # Merge all color modes.
-            self._attr_supported_color_modes = filter_supported_color_modes(
-                set().union(*all_supported_color_modes)
-            )
 
         self._attr_supported_features = LightEntityFeature(0)
         for support in helpers.find_state_attributes(states, ATTR_SUPPORTED_FEATURES):

@@ -1,4 +1,5 @@
 """Virtual gateway for Zigbee Home Automation."""
+
 from __future__ import annotations
 
 import asyncio
@@ -29,7 +30,7 @@ from zigpy.state import State
 from zigpy.types.named import EUI64
 
 from homeassistant import __path__ as HOMEASSISTANT_PATH
-from homeassistant.components.system_log import LogEntry, _figure_out_source
+from homeassistant.components.system_log import LogEntry
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -132,9 +133,9 @@ class ZHAGateway:
         self._groups: dict[int, ZHAGroup] = {}
         self.application_controller: ControllerApplication = None
         self.coordinator_zha_device: ZHADevice = None  # type: ignore[assignment]
-        self._device_registry: collections.defaultdict[
-            EUI64, list[EntityReference]
-        ] = collections.defaultdict(list)
+        self._device_registry: collections.defaultdict[EUI64, list[EntityReference]] = (
+            collections.defaultdict(list)
+        )
         self._log_levels: dict[str, dict[str, int]] = {
             DEBUG_LEVEL_ORIGINAL: async_capture_log_levels(),
             DEBUG_LEVEL_CURRENT: async_capture_log_levels(),
@@ -451,9 +452,9 @@ class ZHAGateway:
         self, device: ZHADevice, entity_refs: list[EntityReference] | None
     ) -> None:
         if entity_refs is not None:
-            remove_tasks: list[asyncio.Future[Any]] = []
-            for entity_ref in entity_refs:
-                remove_tasks.append(entity_ref.remove_future)
+            remove_tasks: list[asyncio.Future[Any]] = [
+                entity_ref.remove_future for entity_ref in entity_refs
+            ]
             if remove_tasks:
                 await asyncio.wait(remove_tasks)
 
@@ -782,9 +783,7 @@ class ZHAGateway:
             _LOGGER.debug("Group: 0x%04x could not be found", group_id)
             return
         if group.members:
-            tasks = []
-            for member in group.members:
-                tasks.append(member.async_remove_from_group())
+            tasks = [member.async_remove_from_group() for member in group.members]
             if tasks:
                 await asyncio.gather(*tasks)
         self.application_controller.groups.pop(group_id)
@@ -870,10 +869,12 @@ class LogRelayHandler(logging.Handler):
 
     def emit(self, record: LogRecord) -> None:
         """Relay log message via dispatcher."""
-        if record.levelno >= logging.WARN:
-            entry = LogEntry(record, _figure_out_source(record, self.paths_re))
-        else:
-            entry = LogEntry(record, (record.pathname, record.lineno))
+        entry = LogEntry(
+            record,
+            self.paths_re,
+            formatter=self.formatter,
+            figure_out_source=record.levelno >= logging.WARNING,
+        )
         async_dispatcher_send(
             self.hass,
             ZHA_GW_MSG,

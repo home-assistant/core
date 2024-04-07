@@ -1,4 +1,5 @@
 """Tests for Shelly coordinator."""
+
 from datetime import timedelta
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -66,6 +67,18 @@ async def test_block_reload_on_cfg_change(
     monkeypatch.setattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "cfgChanged", 1)
     mock_block_device.mock_update()
     await hass.async_block_till_done()
+
+    # Make sure cfgChanged with None is ignored
+    monkeypatch.setattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "cfgChanged", None)
+    mock_block_device.mock_update()
+    await hass.async_block_till_done()
+
+    # Wait for debouncer
+    freezer.tick(timedelta(seconds=ENTRY_RELOAD_COOLDOWN))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("switch.test_name_channel_1") is not None
 
     # Generate config change from switch to light
     monkeypatch.setitem(
@@ -146,14 +159,14 @@ async def test_block_polling_auth_error(
     )
     entry = await init_integration(hass, 1)
 
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     # Move time to generate polling
     freezer.tick(timedelta(seconds=UPDATE_PERIOD_MULTIPLIER * 15))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
@@ -185,11 +198,11 @@ async def test_block_rest_update_auth_error(
         AsyncMock(side_effect=InvalidAuthError),
     )
 
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     await mock_rest_update(hass, freezer)
 
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
@@ -455,7 +468,7 @@ async def test_rpc_reload_with_invalid_auth(
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
@@ -607,14 +620,14 @@ async def test_rpc_reconnect_auth_error(
         ),
     )
 
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     # Move time to generate reconnect
     freezer.tick(timedelta(seconds=RPC_RECONNECT_INTERVAL))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
@@ -646,11 +659,11 @@ async def test_rpc_polling_auth_error(
         ),
     )
 
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     await mock_polling_rpc_update(hass, freezer)
 
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1

@@ -1,4 +1,4 @@
-""""Unit tests for the Lupusec config flow."""
+"""Unit tests for the Lupusec config flow."""
 
 from json import JSONDecodeError
 from unittest.mock import patch
@@ -45,22 +45,25 @@ async def test_form_valid_input(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.lupusec.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry, patch(
-        "homeassistant.components.lupusec.config_flow.lupupy.Lupusec",
-    ) as mock_initialize_lupusec:
+    with (
+        patch(
+            "homeassistant.components.lupusec.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+        patch(
+            "homeassistant.components.lupusec.config_flow.lupupy.Lupusec",
+        ) as mock_initialize_lupusec,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             MOCK_DATA_STEP,
         )
     await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == MOCK_DATA_STEP[CONF_HOST]
     assert result2["data"] == MOCK_DATA_STEP
     assert len(mock_setup_entry.mock_calls) == 1
@@ -82,7 +85,7 @@ async def test_flow_user_init_data_error_and_recover(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     with patch(
@@ -95,18 +98,21 @@ async def test_flow_user_init_data_error_and_recover(
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": text_error}
 
     assert len(mock_initialize_lupusec.mock_calls) == 1
 
     # Recover
-    with patch(
-        "homeassistant.components.lupusec.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry, patch(
-        "homeassistant.components.lupusec.config_flow.lupupy.Lupusec",
-    ) as mock_initialize_lupusec:
+    with (
+        patch(
+            "homeassistant.components.lupusec.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+        patch(
+            "homeassistant.components.lupusec.config_flow.lupupy.Lupusec",
+        ) as mock_initialize_lupusec,
+    ):
         result3 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             MOCK_DATA_STEP,
@@ -114,7 +120,7 @@ async def test_flow_user_init_data_error_and_recover(
 
     await hass.async_block_till_done()
 
-    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == MOCK_DATA_STEP[CONF_HOST]
     assert result3["data"] == MOCK_DATA_STEP
     assert len(mock_setup_entry.mock_calls) == 1
@@ -135,7 +141,7 @@ async def test_flow_user_init_data_already_configured(hass: HomeAssistant) -> No
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -145,7 +151,7 @@ async def test_flow_user_init_data_already_configured(hass: HomeAssistant) -> No
 
     await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.ABORT
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "already_configured"
 
 
@@ -160,12 +166,15 @@ async def test_flow_source_import(
     hass: HomeAssistant, mock_import_step, mock_title
 ) -> None:
     """Test configuration import from YAML."""
-    with patch(
-        "homeassistant.components.lupusec.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry, patch(
-        "homeassistant.components.lupusec.config_flow.lupupy.Lupusec",
-    ) as mock_initialize_lupusec:
+    with (
+        patch(
+            "homeassistant.components.lupusec.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+        patch(
+            "homeassistant.components.lupusec.config_flow.lupupy.Lupusec",
+        ) as mock_initialize_lupusec,
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
@@ -174,7 +183,7 @@ async def test_flow_source_import(
 
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == mock_title
     assert result["data"] == MOCK_DATA_STEP
     assert len(mock_setup_entry.mock_calls) == 1
@@ -205,7 +214,7 @@ async def test_flow_source_import_error_and_recover(
         )
 
     await hass.async_block_till_done()
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == text_error
     assert len(mock_initialize_lupusec.mock_calls) == 1
 
@@ -227,5 +236,5 @@ async def test_flow_source_import_already_configured(hass: HomeAssistant) -> Non
         data=MOCK_IMPORT_STEP,
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"

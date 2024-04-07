@@ -1,4 +1,5 @@
 """Component for interacting with a Lutron RadioRA 2 system."""
+
 from dataclasses import dataclass
 import logging
 

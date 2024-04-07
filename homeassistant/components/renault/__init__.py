@@ -1,4 +1,5 @@
 """Support for Renault devices."""
+
 import aiohttp
 from renault_api.gigya.exceptions import GigyaException
 
@@ -20,16 +21,16 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             config_entry.data[CONF_USERNAME], config_entry.data[CONF_PASSWORD]
         )
     except (aiohttp.ClientConnectionError, GigyaException) as exc:
-        raise ConfigEntryNotReady() from exc
+        raise ConfigEntryNotReady from exc
 
     if not login_success:
-        raise ConfigEntryAuthFailed()
+        raise ConfigEntryAuthFailed
 
     hass.data.setdefault(DOMAIN, {})
     try:
         await renault_hub.async_initialise(config_entry)
     except aiohttp.ClientError as exc:
-        raise ConfigEntryNotReady() from exc
+        raise ConfigEntryNotReady from exc
 
     hass.data[DOMAIN][config_entry.entry_id] = renault_hub
 

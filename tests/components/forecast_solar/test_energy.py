@@ -1,4 +1,5 @@
 """Test forecast solar energy platform."""
+
 from datetime import UTC, datetime
 from unittest.mock import MagicMock
 
@@ -24,7 +25,7 @@ async def test_energy_solar_forecast(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert mock_config_entry.state == ConfigEntryState.LOADED
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
     assert await energy.async_get_solar_forecast(hass, mock_config_entry.entry_id) == {
         "wh_hours": {

@@ -6,6 +6,11 @@
       }
     }
   },
+  "device": {
+    "n_ch_power_strip": {
+      "name": "Power strip with {number_of_sockets} sockets"
+    }
+  },
   "issues": {
     "bad_psu": {
       "title": "The power supply is not stable",

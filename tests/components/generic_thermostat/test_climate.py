@@ -1,4 +1,5 @@
 """The tests for the generic_thermostat."""
+
 import datetime
 from unittest.mock import patch
 
@@ -14,6 +15,7 @@ from homeassistant.components.climate import (
     PRESET_ACTIVITY,
     PRESET_AWAY,
     PRESET_COMFORT,
+    PRESET_ECO,
     PRESET_HOME,
     PRESET_NONE,
     PRESET_SLEEP,
@@ -53,8 +55,10 @@ from tests.common import (
     async_mock_service,
     get_fixture_path,
     mock_restore_cache,
+    setup_test_component_platform,
 )
 from tests.components.climate import common
+from tests.components.switch.common import MockSwitch
 
 ENTITY = "climate.test"
 ENT_SENSOR = "sensor.test"
@@ -138,12 +142,11 @@ async def test_heater_input_boolean(hass: HomeAssistant, setup_comp_1) -> None:
 
 
 async def test_heater_switch(
-    hass: HomeAssistant, setup_comp_1, enable_custom_integrations: None
+    hass: HomeAssistant, setup_comp_1, mock_switch_entities: list[MockSwitch]
 ) -> None:
     """Test heater switching test switch."""
-    platform = getattr(hass.components, "test.switch")
-    platform.init()
-    switch_1 = platform.ENTITIES[1]
+    setup_test_component_platform(hass, switch.DOMAIN, mock_switch_entities)
+    switch_1 = mock_switch_entities[1]
     assert await async_setup_component(
         hass, switch.DOMAIN, {"switch": {"platform": "test"}}
     )
@@ -225,6 +228,7 @@ async def setup_comp_2(hass):
                 "sleep_temp": 17,
                 "home_temp": 19,
                 "comfort_temp": 20,
+                "eco_temp": 18,
                 "activity_temp": 21,
                 "initial_hvac_mode": HVACMode.HEAT,
             }
@@ -312,6 +316,7 @@ async def test_set_target_temp(hass: HomeAssistant, setup_comp_2) -> None:
         (PRESET_NONE, 23),
         (PRESET_AWAY, 16),
         (PRESET_COMFORT, 20),
+        (PRESET_ECO, 18),
         (PRESET_HOME, 19),
         (PRESET_SLEEP, 17),
         (PRESET_ACTIVITY, 21),
@@ -331,6 +336,7 @@ async def test_set_away_mode(hass: HomeAssistant, setup_comp_2, preset, temp) ->
         (PRESET_NONE, 23),
         (PRESET_AWAY, 16),
         (PRESET_COMFORT, 20),
+        (PRESET_ECO, 18),
         (PRESET_HOME, 19),
         (PRESET_SLEEP, 17),
         (PRESET_ACTIVITY, 21),
@@ -358,6 +364,7 @@ async def test_set_away_mode_and_restore_prev_temp(
         (PRESET_NONE, 23),
         (PRESET_AWAY, 16),
         (PRESET_COMFORT, 20),
+        (PRESET_ECO, 18),
         (PRESET_HOME, 19),
         (PRESET_SLEEP, 17),
         (PRESET_ACTIVITY, 21),
@@ -749,8 +756,9 @@ async def test_no_state_change_when_operation_mode_off_2(
     assert len(calls) == 0
 
 
-@pytest.fixture
-async def setup_comp_4(hass):
+async def _setup_thermostat_with_min_cycle_duration(
+    hass: HomeAssistant, ac_mode: bool, initial_hvac_mode: HVACMode
+):
     """Initialize components."""
     hass.config.temperature_unit = UnitOfTemperature.CELSIUS
     assert await async_setup_component(
@@ -764,102 +772,141 @@ async def setup_comp_4(hass):
                 "hot_tolerance": 0.3,
                 "heater": ENT_SWITCH,
                 "target_sensor": ENT_SENSOR,
-                "ac_mode": True,
+                "ac_mode": ac_mode,
                 "min_cycle_duration": datetime.timedelta(minutes=10),
-                "initial_hvac_mode": HVACMode.COOL,
+                "initial_hvac_mode": initial_hvac_mode,
             }
         },
     )
     await hass.async_block_till_done()
 
 
-async def test_temp_change_ac_trigger_on_not_long_enough(
-    hass: HomeAssistant, setup_comp_4
+@pytest.mark.parametrize(
+    (
+        "ac_mode",
+        "initial_hvac_mode",
+        "initial_switch_state",
+        "sensor_temperature",
+        "target_temperature",
+    ),
+    [
+        (True, HVACMode.COOL, False, 30, 25),
+        (True, HVACMode.COOL, True, 25, 30),
+        (False, HVACMode.HEAT, True, 25, 30),
+        (False, HVACMode.HEAT, False, 30, 25),
+    ],
+)
+async def test_heating_cooling_switch_does_not_toggle_when_within_min_cycle_duration(
+    hass: HomeAssistant,
+    ac_mode: bool,
+    initial_hvac_mode: HVACMode,
+    initial_switch_state: bool,
+    sensor_temperature: int,
+    target_temperature: int,
 ) -> None:
-    """Test if temperature change turn ac on."""
-    calls = _setup_switch(hass, False)
-    await common.async_set_temperature(hass, 25)
-    _setup_sensor(hass, 30)
+    """Test if heating/cooling does not toggle when inside minimum cycle."""
+    # Given
+    await _setup_thermostat_with_min_cycle_duration(hass, ac_mode, initial_hvac_mode)
+    calls = _setup_switch(hass, initial_switch_state)
+
+    # When
+    await common.async_set_temperature(hass, target_temperature)
+    _setup_sensor(hass, sensor_temperature)
     await hass.async_block_till_done()
+
+    # Then
     assert len(calls) == 0
 
 
-async def test_temp_change_ac_trigger_on_long_enough(
-    hass: HomeAssistant, setup_comp_4
+@pytest.mark.parametrize(
+    (
+        "ac_mode",
+        "initial_hvac_mode",
+        "initial_switch_state",
+        "sensor_temperature",
+        "target_temperature",
+        "expected_triggered_service_call",
+    ),
+    [
+        (True, HVACMode.COOL, False, 30, 25, SERVICE_TURN_ON),
+        (True, HVACMode.COOL, True, 25, 30, SERVICE_TURN_OFF),
+        (False, HVACMode.HEAT, False, 25, 30, SERVICE_TURN_ON),
+        (False, HVACMode.HEAT, True, 30, 25, SERVICE_TURN_OFF),
+    ],
+)
+async def test_heating_cooling_switch_toggles_when_outside_min_cycle_duration(
+    hass: HomeAssistant,
+    ac_mode: bool,
+    initial_hvac_mode: HVACMode,
+    initial_switch_state: bool,
+    sensor_temperature: int,
+    target_temperature: int,
+    expected_triggered_service_call: str,
 ) -> None:
-    """Test if temperature change turn ac on."""
+    """Test if heating/cooling toggles when outside minimum cycle."""
+    # Given
+    await _setup_thermostat_with_min_cycle_duration(hass, ac_mode, initial_hvac_mode)
     fake_changed = datetime.datetime(1970, 11, 11, 11, 11, 11, tzinfo=dt_util.UTC)
     with freeze_time(fake_changed):
-        calls = _setup_switch(hass, False)
-    await common.async_set_temperature(hass, 25)
-    _setup_sensor(hass, 30)
+        calls = _setup_switch(hass, initial_switch_state)
+
+    # When
+    await common.async_set_temperature(hass, target_temperature)
+    _setup_sensor(hass, sensor_temperature)
     await hass.async_block_till_done()
+
+    # Then
     assert len(calls) == 1
     call = calls[0]
     assert call.domain == HASS_DOMAIN
-    assert call.service == SERVICE_TURN_ON
+    assert call.service == expected_triggered_service_call
     assert call.data["entity_id"] == ENT_SWITCH
 
 
-async def test_temp_change_ac_trigger_off_not_long_enough(
-    hass: HomeAssistant, setup_comp_4
+@pytest.mark.parametrize(
+    (
+        "ac_mode",
+        "initial_hvac_mode",
+        "initial_switch_state",
+        "sensor_temperature",
+        "target_temperature",
+        "changed_hvac_mode",
+        "expected_triggered_service_call",
+    ),
+    [
+        (True, HVACMode.COOL, False, 30, 25, HVACMode.HEAT, SERVICE_TURN_ON),
+        (True, HVACMode.COOL, True, 25, 30, HVACMode.OFF, SERVICE_TURN_OFF),
+        (False, HVACMode.HEAT, False, 25, 30, HVACMode.HEAT, SERVICE_TURN_ON),
+        (False, HVACMode.HEAT, True, 30, 25, HVACMode.OFF, SERVICE_TURN_OFF),
+    ],
+)
+async def test_hvac_mode_change_toggles_heating_cooling_switch_even_when_within_min_cycle_duration(
+    hass: HomeAssistant,
+    ac_mode: bool,
+    initial_hvac_mode: HVACMode,
+    initial_switch_state: bool,
+    sensor_temperature: int,
+    target_temperature: int,
+    changed_hvac_mode: HVACMode,
+    expected_triggered_service_call: str,
 ) -> None:
-    """Test if temperature change turn ac on."""
-    calls = _setup_switch(hass, True)
-    await common.async_set_temperature(hass, 30)
-    _setup_sensor(hass, 25)
+    """Test if mode change toggles heating/cooling despite minimum cycle."""
+    # Given
+    await _setup_thermostat_with_min_cycle_duration(hass, ac_mode, initial_hvac_mode)
+    calls = _setup_switch(hass, initial_switch_state)
+
+    # When
+    await common.async_set_temperature(hass, target_temperature)
+    _setup_sensor(hass, sensor_temperature)
     await hass.async_block_till_done()
+
+    # Then
     assert len(calls) == 0
-
-
-async def test_temp_change_ac_trigger_off_long_enough(
-    hass: HomeAssistant, setup_comp_4
-) -> None:
-    """Test if temperature change turn ac on."""
-    fake_changed = datetime.datetime(1970, 11, 11, 11, 11, 11, tzinfo=dt_util.UTC)
-    with freeze_time(fake_changed):
-        calls = _setup_switch(hass, True)
-    await common.async_set_temperature(hass, 30)
-    _setup_sensor(hass, 25)
-    await hass.async_block_till_done()
-    assert len(calls) == 1
-    call = calls[0]
-    assert call.domain == HASS_DOMAIN
-    assert call.service == SERVICE_TURN_OFF
-    assert call.data["entity_id"] == ENT_SWITCH
-
-
-async def test_mode_change_ac_trigger_off_not_long_enough(
-    hass: HomeAssistant, setup_comp_4
-) -> None:
-    """Test if mode change turns ac off despite minimum cycle."""
-    calls = _setup_switch(hass, True)
-    await common.async_set_temperature(hass, 30)
-    _setup_sensor(hass, 25)
-    await hass.async_block_till_done()
-    assert len(calls) == 0
-    await common.async_set_hvac_mode(hass, HVACMode.OFF)
-    assert len(calls) == 1
-    call = calls[0]
-    assert call.domain == "homeassistant"
-    assert call.service == SERVICE_TURN_OFF
-    assert call.data["entity_id"] == ENT_SWITCH
-
-
-async def test_mode_change_ac_trigger_on_not_long_enough(
-    hass: HomeAssistant, setup_comp_4
-) -> None:
-    """Test if mode change turns ac on despite minimum cycle."""
-    calls = _setup_switch(hass, False)
-    await common.async_set_temperature(hass, 25)
-    _setup_sensor(hass, 30)
-    await hass.async_block_till_done()
-    assert len(calls) == 0
-    await common.async_set_hvac_mode(hass, HVACMode.HEAT)
+    await common.async_set_hvac_mode(hass, changed_hvac_mode)
     assert len(calls) == 1
     call = calls[0]
     assert call.domain == "homeassistant"
-    assert call.service == SERVICE_TURN_ON
+    assert call.service == expected_triggered_service_call
     assert call.data["entity_id"] == ENT_SWITCH
 
 
@@ -967,119 +1014,6 @@ async def test_mode_change_ac_trigger_on_not_long_enough_2(
     calls = _setup_switch(hass, False)
     await common.async_set_temperature(hass, 25)
     _setup_sensor(hass, 30)
-    await hass.async_block_till_done()
-    assert len(calls) == 0
-    await common.async_set_hvac_mode(hass, HVACMode.HEAT)
-    assert len(calls) == 1
-    call = calls[0]
-    assert call.domain == "homeassistant"
-    assert call.service == SERVICE_TURN_ON
-    assert call.data["entity_id"] == ENT_SWITCH
-
-
-@pytest.fixture
-async def setup_comp_6(hass):
-    """Initialize components."""
-    hass.config.temperature_unit = UnitOfTemperature.CELSIUS
-    assert await async_setup_component(
-        hass,
-        DOMAIN,
-        {
-            "climate": {
-                "platform": "generic_thermostat",
-                "name": "test",
-                "cold_tolerance": 0.3,
-                "hot_tolerance": 0.3,
-                "heater": ENT_SWITCH,
-                "target_sensor": ENT_SENSOR,
-                "min_cycle_duration": datetime.timedelta(minutes=10),
-                "initial_hvac_mode": HVACMode.HEAT,
-            }
-        },
-    )
-    await hass.async_block_till_done()
-
-
-async def test_temp_change_heater_trigger_off_not_long_enough(
-    hass: HomeAssistant, setup_comp_6
-) -> None:
-    """Test if temp change doesn't turn heater off because of time."""
-    calls = _setup_switch(hass, True)
-    await common.async_set_temperature(hass, 25)
-    _setup_sensor(hass, 30)
-    await hass.async_block_till_done()
-    assert len(calls) == 0
-
-
-async def test_temp_change_heater_trigger_on_not_long_enough(
-    hass: HomeAssistant, setup_comp_6
-) -> None:
-    """Test if temp change doesn't turn heater on because of time."""
-    calls = _setup_switch(hass, False)
-    await common.async_set_temperature(hass, 30)
-    _setup_sensor(hass, 25)
-    await hass.async_block_till_done()
-    assert len(calls) == 0
-
-
-async def test_temp_change_heater_trigger_on_long_enough(
-    hass: HomeAssistant, setup_comp_6
-) -> None:
-    """Test if temperature change turn heater on after min cycle."""
-    fake_changed = datetime.datetime(1970, 11, 11, 11, 11, 11, tzinfo=dt_util.UTC)
-    with freeze_time(fake_changed):
-        calls = _setup_switch(hass, False)
-    await common.async_set_temperature(hass, 30)
-    _setup_sensor(hass, 25)
-    await hass.async_block_till_done()
-    assert len(calls) == 1
-    call = calls[0]
-    assert call.domain == HASS_DOMAIN
-    assert call.service == SERVICE_TURN_ON
-    assert call.data["entity_id"] == ENT_SWITCH
-
-
-async def test_temp_change_heater_trigger_off_long_enough(
-    hass: HomeAssistant, setup_comp_6
-) -> None:
-    """Test if temperature change turn heater off after min cycle."""
-    fake_changed = datetime.datetime(1970, 11, 11, 11, 11, 11, tzinfo=dt_util.UTC)
-    with freeze_time(fake_changed):
-        calls = _setup_switch(hass, True)
-    await common.async_set_temperature(hass, 25)
-    _setup_sensor(hass, 30)
-    await hass.async_block_till_done()
-    assert len(calls) == 1
-    call = calls[0]
-    assert call.domain == HASS_DOMAIN
-    assert call.service == SERVICE_TURN_OFF
-    assert call.data["entity_id"] == ENT_SWITCH
-
-
-async def test_mode_change_heater_trigger_off_not_long_enough(
-    hass: HomeAssistant, setup_comp_6
-) -> None:
-    """Test if mode change turns heater off despite minimum cycle."""
-    calls = _setup_switch(hass, True)
-    await common.async_set_temperature(hass, 25)
-    _setup_sensor(hass, 30)
-    await hass.async_block_till_done()
-    assert len(calls) == 0
-    await common.async_set_hvac_mode(hass, HVACMode.OFF)
-    assert len(calls) == 1
-    call = calls[0]
-    assert call.domain == "homeassistant"
-    assert call.service == SERVICE_TURN_OFF
-    assert call.data["entity_id"] == ENT_SWITCH
-
-
-async def test_mode_change_heater_trigger_on_not_long_enough(
-    hass: HomeAssistant, setup_comp_6
-) -> None:
-    """Test if mode change turns heater on despite minimum cycle."""
-    calls = _setup_switch(hass, False)
-    await common.async_set_temperature(hass, 30)
-    _setup_sensor(hass, 25)
     await hass.async_block_till_done()
     assert len(calls) == 0
     await common.async_set_hvac_mode(hass, HVACMode.HEAT)

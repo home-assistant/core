@@ -1,15 +1,17 @@
 """Component for handling incoming events as a platform."""
+
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 from enum import StrEnum
+from functools import cached_property
 import logging
-from typing import TYPE_CHECKING, Any, Self, final
+from typing import Any, Self, final
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.config_validation import (  # noqa: F401
+from homeassistant.helpers.config_validation import (
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
 )
@@ -20,12 +22,6 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
 from .const import ATTR_EVENT_TYPE, ATTR_EVENT_TYPES, DOMAIN
-
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
-
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
@@ -146,7 +142,7 @@ class EventEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_)
             and self.entity_description.event_types is not None
         ):
             return self.entity_description.event_types
-        raise AttributeError()
+        raise AttributeError
 
     @final
     def _trigger_event(

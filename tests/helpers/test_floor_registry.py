@@ -1,4 +1,5 @@
 """Tests for the floor registry."""
+
 import re
 from typing import Any
 
@@ -133,7 +134,7 @@ async def test_update_floor(
     assert floor.name == "First floor"
     assert floor.icon is None
     assert floor.aliases == set()
-    assert floor.level == 0
+    assert floor.level is None
 
     updated_floor = floor_registry.async_update(
         floor.floor_id,

@@ -1,4 +1,5 @@
 """Wrapper for media_source around async_upnp_client's DmsDevice ."""
+
 from __future__ import annotations
 
 import asyncio
@@ -6,6 +7,7 @@ from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from enum import StrEnum
 import functools
+from functools import cached_property
 from typing import Any, TypeVar, cast
 
 from async_upnp_client.aiohttp import AiohttpSessionRequester
@@ -16,7 +18,6 @@ from async_upnp_client.exceptions import UpnpActionError, UpnpConnectionError, U
 from async_upnp_client.profiles.dlna import ContentDirectoryErrorCode, DmsDevice
 from didl_lite import didl_lite
 
-from homeassistant.backports.functools import cached_property
 from homeassistant.components import ssdp
 from homeassistant.components.media_player import BrowseError, MediaClass
 from homeassistant.components.media_source.error import Unresolvable
@@ -515,7 +516,7 @@ class DmsDeviceSource:
             if isinstance(child, didl_lite.DidlObject)
         ]
 
-        media_source = BrowseMediaSource(
+        return BrowseMediaSource(
             domain=DOMAIN,
             identifier=self._make_identifier(Action.SEARCH, query),
             media_class=MediaClass.DIRECTORY,
@@ -525,8 +526,6 @@ class DmsDeviceSource:
             can_expand=True,
             children=children,
         )
-
-        return media_source
 
     def _didl_to_play_media(self, item: didl_lite.DidlObject) -> DidlPlayMedia:
         """Return the first playable resource from a DIDL-Lite object."""
@@ -582,7 +581,7 @@ class DmsDeviceSource:
         mime_type = _resource_mime_type(item.res[0]) if item.res else None
         media_content_type = mime_type or item.upnp_class
 
-        media_source = BrowseMediaSource(
+        return BrowseMediaSource(
             domain=DOMAIN,
             identifier=self._make_identifier(Action.OBJECT, item.id),
             media_class=MEDIA_CLASS_MAP.get(item.upnp_class, ""),
@@ -593,8 +592,6 @@ class DmsDeviceSource:
             children=children,
             thumbnail=self._didl_thumbnail_url(item),
         )
-
-        return media_source
 
     def _didl_thumbnail_url(self, item: didl_lite.DidlObject) -> str | None:
         """Return absolute URL of a thumbnail for a DIDL-Lite object.

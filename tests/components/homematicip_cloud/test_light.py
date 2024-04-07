@@ -1,4 +1,5 @@
 """Tests for HomematicIP Cloud light."""
+
 from homematicip.base.enums import RGBColorState
 
 from homeassistant.components.homematicip_cloud import DOMAIN as HMIPC_DOMAIN

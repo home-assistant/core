@@ -1,9 +1,11 @@
 """Support for Open-Meteo."""
+
 from __future__ import annotations
 
 from open_meteo import (
     DailyParameters,
     Forecast,
+    HourlyParameters,
     OpenMeteo,
     OpenMeteoError,
     PrecipitationUnit,
@@ -43,6 +45,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     DailyParameters.WEATHER_CODE,
                     DailyParameters.WIND_DIRECTION_10M_DOMINANT,
                     DailyParameters.WIND_SPEED_10M_MAX,
+                ],
+                hourly=[
+                    HourlyParameters.PRECIPITATION,
+                    HourlyParameters.TEMPERATURE_2M,
+                    HourlyParameters.WEATHER_CODE,
                 ],
                 precipitation_unit=PrecipitationUnit.MILLIMETERS,
                 temperature_unit=TemperatureUnit.CELSIUS,

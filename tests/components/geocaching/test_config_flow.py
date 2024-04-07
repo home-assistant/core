@@ -1,4 +1,5 @@
 """Test the Geocaching config flow."""
+
 from http import HTTPStatus
 from unittest.mock import MagicMock
 
@@ -60,7 +61,7 @@ async def test_full_flow(
         },
     )
 
-    assert result.get("type") == FlowResultType.EXTERNAL_STEP
+    assert result.get("type") is FlowResultType.EXTERNAL_STEP
     assert result.get("step_id") == "auth"
     assert result.get("url") == (
         f"{CURRENT_ENVIRONMENT_URLS['authorize_url']}?response_type=code&client_id={CLIENT_ID}"
@@ -155,7 +156,7 @@ async def test_oauth_error(
             "redirect_uri": REDIRECT_URI,
         },
     )
-    assert result.get("type") == FlowResultType.EXTERNAL_STEP
+    assert result.get("type") is FlowResultType.EXTERNAL_STEP
 
     client = await hass_client_no_auth()
     resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
@@ -175,7 +176,7 @@ async def test_oauth_error(
     )
 
     result2 = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert result2.get("type") == FlowResultType.ABORT
+    assert result2.get("type") is FlowResultType.ABORT
     assert result2.get("reason") == "oauth_error"
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0

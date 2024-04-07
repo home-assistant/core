@@ -1,4 +1,5 @@
 """Conftest for the KNX integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -278,4 +279,3 @@ def load_knxproj(hass_storage):
         "version": 1,
         "data": FIXTURE_PROJECT_DATA,
     }
-    return

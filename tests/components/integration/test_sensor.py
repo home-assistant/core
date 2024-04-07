@@ -1,4 +1,5 @@
 """The tests for the integration sensor platform."""
+
 from datetime import timedelta
 
 from freezegun import freeze_time
@@ -562,7 +563,7 @@ async def test_units(hass: HomeAssistant) -> None:
 
     # When source state goes to None / Unknown, expect an early exit without
     # changes to the state or unit_of_measurement
-    hass.states.async_set(entity_id, None, None)
+    hass.states.async_set(entity_id, None, {"unit_of_measurement": UnitOfPower.WATT})
     await hass.async_block_till_done()
 
     new_state = hass.states.get("sensor.integration")
@@ -628,8 +629,17 @@ async def test_device_class(hass: HomeAssistant, method) -> None:
     assert state.attributes.get("device_class") == SensorDeviceClass.ENERGY
 
 
-@pytest.mark.parametrize("method", ["trapezoidal", "left", "right"])
-async def test_calc_errors(hass: HomeAssistant, method) -> None:
+@pytest.mark.parametrize(
+    ("method", "expected_states"),
+    [
+        ("trapezoidal", [STATE_UNKNOWN, "0.500", "0.500"]),
+        ("left", [STATE_UNKNOWN, "0.000", "1.000"]),
+        ("right", ["0.000", "1.000", "1.000"]),
+    ],
+)
+async def test_calc_errors(
+    hass: HomeAssistant, method: str, expected_states: list[str]
+) -> None:
     """Test integration sensor units using a power source."""
     config = {
         "sensor": {
@@ -648,9 +658,9 @@ async def test_calc_errors(hass: HomeAssistant, method) -> None:
     hass.states.async_set(entity_id, None, {})
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.integration")
     # With the source sensor in a None state, the Reimann sensor should be
     # unknown
+    state = hass.states.get("sensor.integration")
     assert state is not None
     assert state.state == STATE_UNKNOWN
 
@@ -664,7 +674,7 @@ async def test_calc_errors(hass: HomeAssistant, method) -> None:
 
     state = hass.states.get("sensor.integration")
     assert state is not None
-    assert state.state == STATE_UNKNOWN if method != "right" else "0.000"
+    assert state.state == expected_states[0]
 
     # With the source sensor updated successfully, the Reimann sensor
     # should have a zero (known) value.
@@ -676,7 +686,18 @@ async def test_calc_errors(hass: HomeAssistant, method) -> None:
 
     state = hass.states.get("sensor.integration")
     assert state is not None
-    assert round(float(state.state)) == 0 if method != "right" else 1
+    assert state.state == expected_states[1]
+
+    # Set the source sensor back to a non numeric state
+    now += timedelta(seconds=3600)
+    with freeze_time(now):
+        hass.states.async_set(entity_id, "unexpected", {"device_class": None})
+        await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.integration")
+    assert state is not None
+    assert state.state == expected_states[2]
 
 
 async def test_device_id(

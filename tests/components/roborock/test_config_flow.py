@@ -1,4 +1,5 @@
 """Test Roborock config flow."""
+
 from copy import deepcopy
 from unittest.mock import patch
 
@@ -32,7 +33,7 @@ async def test_config_flow_success(
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
         with patch(
             "homeassistant.components.roborock.config_flow.RoborockApiClient.request_code"
@@ -41,7 +42,7 @@ async def test_config_flow_success(
                 result["flow_id"], {CONF_USERNAME: USER_EMAIL}
             )
 
-            assert result["type"] == FlowResultType.FORM
+            assert result["type"] is FlowResultType.FORM
             assert result["step_id"] == "code"
             assert result["errors"] == {}
         with patch(
@@ -52,7 +53,7 @@ async def test_config_flow_success(
                 result["flow_id"], user_input={CONF_ENTRY_CODE: "123456"}
             )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == USER_EMAIL
     assert result["data"] == MOCK_CONFIG
     assert result["result"]
@@ -85,7 +86,7 @@ async def test_config_flow_failures_request_code(
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
         with patch(
             "homeassistant.components.roborock.config_flow.RoborockApiClient.request_code",
@@ -94,7 +95,7 @@ async def test_config_flow_failures_request_code(
             result = await hass.config_entries.flow.async_configure(
                 result["flow_id"], {CONF_USERNAME: USER_EMAIL}
             )
-            assert result["type"] == FlowResultType.FORM
+            assert result["type"] is FlowResultType.FORM
             assert result["errors"] == request_code_errors
         # Recover from error
         with patch(
@@ -104,7 +105,7 @@ async def test_config_flow_failures_request_code(
                 result["flow_id"], {CONF_USERNAME: USER_EMAIL}
             )
 
-            assert result["type"] == FlowResultType.FORM
+            assert result["type"] is FlowResultType.FORM
             assert result["step_id"] == "code"
             assert result["errors"] == {}
         with patch(
@@ -115,7 +116,7 @@ async def test_config_flow_failures_request_code(
                 result["flow_id"], user_input={CONF_ENTRY_CODE: "123456"}
             )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == USER_EMAIL
     assert result["data"] == MOCK_CONFIG
     assert result["result"]
@@ -146,7 +147,7 @@ async def test_config_flow_failures_code_login(
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
         with patch(
             "homeassistant.components.roborock.config_flow.RoborockApiClient.request_code"
@@ -155,7 +156,7 @@ async def test_config_flow_failures_code_login(
                 result["flow_id"], {CONF_USERNAME: USER_EMAIL}
             )
 
-            assert result["type"] == FlowResultType.FORM
+            assert result["type"] is FlowResultType.FORM
             assert result["step_id"] == "code"
             assert result["errors"] == {}
         # Raise exception for invalid code
@@ -166,7 +167,7 @@ async def test_config_flow_failures_code_login(
             result = await hass.config_entries.flow.async_configure(
                 result["flow_id"], user_input={CONF_ENTRY_CODE: "123456"}
             )
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["errors"] == code_login_errors
         with patch(
             "homeassistant.components.roborock.config_flow.RoborockApiClient.code_login",
@@ -176,7 +177,7 @@ async def test_config_flow_failures_code_login(
                 result["flow_id"], user_input={CONF_ENTRY_CODE: "123456"}
             )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == USER_EMAIL
     assert result["data"] == MOCK_CONFIG
     assert result["result"]
@@ -204,7 +205,7 @@ async def test_reauth_flow(
         )
     # Enter a new code
     assert result["step_id"] == "code"
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     new_user_data = deepcopy(USER_DATA)
     new_user_data.rriot.s = "new_password_hash"
     with patch(
@@ -214,6 +215,6 @@ async def test_reauth_flow(
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_ENTRY_CODE: "123456"}
         )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert mock_roborock_entry.data["user_data"]["rriot"]["s"] == "new_password_hash"

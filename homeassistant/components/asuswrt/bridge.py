@@ -1,4 +1,5 @@
 """aioasuswrt and pyasuswrt bridge classes."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -253,7 +254,7 @@ class AsusWrtLegacyBridge(AsusWrtBridge):
     async def async_get_available_sensors(self) -> dict[str, dict[str, Any]]:
         """Return a dictionary of available sensors for this bridge."""
         sensors_temperatures = await self._get_available_temperature_sensors()
-        sensors_types = {
+        return {
             SENSORS_TYPE_BYTES: {
                 KEY_SENSORS: SENSORS_BYTES,
                 KEY_METHOD: self._get_bytes,
@@ -271,7 +272,6 @@ class AsusWrtLegacyBridge(AsusWrtBridge):
                 KEY_METHOD: self._get_temperatures,
             },
         }
-        return sensors_types
 
     async def _get_available_temperature_sensors(self) -> list[str]:
         """Check which temperature information is available on the router."""
@@ -350,7 +350,7 @@ class AsusWrtHttpBridge(AsusWrtBridge):
         """Return a dictionary of available sensors for this bridge."""
         sensors_temperatures = await self._get_available_temperature_sensors()
         sensors_loadavg = await self._get_loadavg_sensors_availability()
-        sensors_types = {
+        return {
             SENSORS_TYPE_BYTES: {
                 KEY_SENSORS: SENSORS_BYTES,
                 KEY_METHOD: self._get_bytes,
@@ -368,7 +368,6 @@ class AsusWrtHttpBridge(AsusWrtBridge):
                 KEY_METHOD: self._get_temperatures,
             },
         }
-        return sensors_types
 
     async def _get_available_temperature_sensors(self) -> list[str]:
         """Check which temperature information is available on the router."""

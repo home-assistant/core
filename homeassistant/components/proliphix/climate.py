@@ -1,4 +1,5 @@
 """Support for Proliphix NT10e Thermostats."""
+
 from __future__ import annotations
 
 from typing import Any

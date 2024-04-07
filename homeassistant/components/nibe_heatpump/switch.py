@@ -1,4 +1,5 @@
 """The Nibe Heat Pump switch."""
+
 from __future__ import annotations
 
 from typing import Any

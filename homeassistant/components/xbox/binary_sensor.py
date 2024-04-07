@@ -1,4 +1,5 @@
 """Xbox friends binary sensors."""
+
 from __future__ import annotations
 
 from functools import partial

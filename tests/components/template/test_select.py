@@ -1,4 +1,5 @@
 """The tests for the Template select platform."""
+
 from homeassistant import setup
 from homeassistant.components.input_select import (
     ATTR_OPTION as INPUT_SELECT_ATTR_OPTION,

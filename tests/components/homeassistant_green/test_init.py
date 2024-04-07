@@ -1,4 +1,5 @@
 """Test the Home Assistant Green integration."""
+
 from unittest.mock import patch
 
 from homeassistant.components.hassio import DOMAIN as HASSIO_DOMAIN
@@ -104,4 +105,4 @@ async def test_setup_entry_wait_hassio(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert len(mock_get_os_info.mock_calls) == 1
-    assert config_entry.state == ConfigEntryState.SETUP_RETRY
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY

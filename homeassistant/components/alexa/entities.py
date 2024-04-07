@@ -1,4 +1,5 @@
 """Alexa entity adapters."""
+
 from __future__ import annotations
 
 from collections.abc import Generator, Iterable
@@ -383,10 +384,8 @@ def async_get_entities(
         try:
             alexa_entity = ENTITY_ADAPTERS[state.domain](hass, config, state)
             interfaces = list(alexa_entity.interfaces())
-        except Exception as exc:  # pylint: disable=broad-except
-            _LOGGER.exception(
-                "Unable to serialize %s for discovery: %s", state.entity_id, exc
-            )
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Unable to serialize %s for discovery", state.entity_id)
         else:
             if not interfaces:
                 continue

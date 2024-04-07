@@ -1,4 +1,5 @@
 """Test the Velux config flow."""
+
 from __future__ import annotations
 
 from copy import deepcopy
@@ -8,11 +9,11 @@ from unittest.mock import patch
 import pytest
 from pyvlx import PyVLXException
 
-from homeassistant import data_entry_flow
 from homeassistant.components.velux import DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
@@ -44,7 +45,7 @@ async def test_user_success(hass: HomeAssistant) -> None:
         client_mock.return_value.disconnect.assert_called_once()
         client_mock.return_value.connect.assert_called_once()
 
-        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == DUMMY_DATA[CONF_HOST]
         assert result["data"] == DUMMY_DATA
 
@@ -63,7 +64,7 @@ async def test_user_errors(
 
         connect_mock.assert_called_once()
 
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
         assert result["errors"] == {"base": error_name}
 
@@ -76,7 +77,7 @@ async def test_import_valid_config(hass: HomeAssistant) -> None:
             context={"source": SOURCE_IMPORT},
             data=DUMMY_DATA,
         )
-        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == DUMMY_DATA[CONF_HOST]
         assert result["data"] == DUMMY_DATA
 
@@ -96,7 +97,7 @@ async def test_flow_duplicate_entry(hass: HomeAssistant, flow_source: str) -> No
             context={"source": flow_source},
             data=DUMMY_DATA,
         )
-        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "already_configured"
 
 
@@ -114,5 +115,5 @@ async def test_import_errors(
             context={"source": SOURCE_IMPORT},
             data=DUMMY_DATA,
         )
-        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == error_name

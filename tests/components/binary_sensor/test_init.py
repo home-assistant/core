@@ -1,4 +1,5 @@
 """The tests for the Binary sensor component."""
+
 from collections.abc import Generator
 from unittest import mock
 
@@ -10,6 +11,8 @@ from homeassistant.const import STATE_OFF, STATE_ON, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from .common import MockBinarySensor
+
 from tests.common import (
     MockConfigEntry,
     MockModule,
@@ -20,7 +23,6 @@ from tests.common import (
     mock_integration,
     mock_platform,
 )
-from tests.testing_config.custom_components.test.binary_sensor import MockBinarySensor
 
 TEST_DOMAIN = "test"
 

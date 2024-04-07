@@ -1,8 +1,10 @@
 """Event parser and human readable log generator."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
+from functools import cached_property
 from typing import TYPE_CHECKING, Any, cast
 
 from sqlalchemy.engine.row import Row
@@ -18,11 +20,6 @@ from homeassistant.const import ATTR_ICON, EVENT_STATE_CHANGED
 from homeassistant.core import Context, Event, State, callback
 from homeassistant.util.json import json_loads
 from homeassistant.util.ulid import ulid_to_bytes
-
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
 
 
 @dataclass(slots=True)
@@ -50,7 +47,7 @@ class LazyEventPartialState:
         self._event_data_cache = event_data_cache
         # We need to explicitly check for the row is EventAsRow as the unhappy path
         # to fetch row.data for Row is very expensive
-        if type(row) is EventAsRow:  # noqa: E721
+        if type(row) is EventAsRow:
             # If its an EventAsRow we can avoid the whole
             # json decode process as we already have the data
             self.data = row.data

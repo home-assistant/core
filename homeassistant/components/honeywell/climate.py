@@ -1,4 +1,5 @@
 """Support for Honeywell (US) Total Connect Comfort climate systems."""
+
 from __future__ import annotations
 
 import datetime
@@ -34,7 +35,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -168,6 +169,7 @@ class HoneywellUSThermostat(ClimateEntity):
             manufacturer="Honeywell",
         )
 
+        self._attr_translation_placeholders = {"name": device.name}
         self._attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
         if device.temperature_unit == "C":
             self._attr_temperature_unit = UnitOfTemperature.CELSIUS
@@ -356,7 +358,7 @@ class HoneywellUSThermostat(ClimateEntity):
             else:
                 if mode == "cool":
                     await self._device.set_setpoint_cool(temperature)
-                if mode == "heat":
+                if mode in ["heat", "emheat"]:
                     await self._device.set_setpoint_heat(temperature)
 
         except UnexpectedResponse as err:
@@ -479,6 +481,16 @@ class HoneywellUSThermostat(ClimateEntity):
 
     async def async_turn_aux_heat_on(self) -> None:
         """Turn auxiliary heater on."""
+        ir.async_create_issue(
+            self.hass,
+            DOMAIN,
+            "service_deprecation",
+            breaks_in_ha_version="2024.10.0",
+            is_fixable=True,
+            is_persistent=True,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="service_deprecation",
+        )
         try:
             await self._device.set_system_mode("emheat")
         except SomeComfortError as err:
@@ -488,6 +500,18 @@ class HoneywellUSThermostat(ClimateEntity):
 
     async def async_turn_aux_heat_off(self) -> None:
         """Turn auxiliary heater off."""
+
+        ir.async_create_issue(
+            self.hass,
+            DOMAIN,
+            "service_deprecation",
+            breaks_in_ha_version="2024.10.0",
+            is_fixable=True,
+            is_persistent=True,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="service_deprecation",
+        )
+
         try:
             if HVACMode.HEAT in self.hvac_modes:
                 await self.async_set_hvac_mode(HVACMode.HEAT)

@@ -1,4 +1,5 @@
 """Tankerkoenig sensor integration."""
+
 from __future__ import annotations
 
 import logging
@@ -64,6 +65,19 @@ class FuelPriceSensor(TankerkoenigCoordinatorEntity, SensorEntity):
     _attr_attribution = ATTRIBUTION
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_native_unit_of_measurement = CURRENCY_EURO
+    _unrecorded_attributes = frozenset(
+        {
+            ATTR_BRAND,
+            ATTR_CITY,
+            ATTR_HOUSE_NUMBER,
+            ATTR_POSTCODE,
+            ATTR_STATION_NAME,
+            ATTR_STREET,
+            ATTRIBUTION,
+            ATTR_LATITUDE,
+            ATTR_LONGITUDE,
+        }
+    )
 
     def __init__(
         self,

@@ -1,4 +1,5 @@
 """The Hyperion component."""
+
 from __future__ import annotations
 
 import asyncio
@@ -32,7 +33,7 @@ from .const import (
     SIGNAL_INSTANCE_REMOVE,
 )
 
-PLATFORMS = [Platform.CAMERA, Platform.LIGHT, Platform.SWITCH]
+PLATFORMS = [Platform.CAMERA, Platform.LIGHT, Platform.SENSOR, Platform.SWITCH]
 
 _LOGGER = logging.getLogger(__name__)
 

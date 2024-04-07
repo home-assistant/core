@@ -1,4 +1,5 @@
 """Switch integration microBees."""
+
 from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
@@ -12,6 +13,7 @@ from .coordinator import MicroBeesUpdateCoordinator
 from .entity import MicroBeesActuatorEntity
 
 SOCKET_TRANSLATIONS = {46: "socket_it", 38: "socket_eu"}
+SWITCH_PRODUCT_IDS = {25, 26, 27, 35, 38, 46, 63, 64, 65, 86}
 
 
 async def async_setup_entry(
@@ -19,13 +21,13 @@ async def async_setup_entry(
 ) -> None:
     """Config entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id].coordinator
-    switches = []
-    for bee_id, bee in coordinator.data.bees.items():
-        if bee.productID in (25, 26, 27, 35, 38, 46, 63, 64, 65, 86):
-            for switch in bee.actuators:
-                switches.append(MBSwitch(coordinator, bee_id, switch.id))
 
-    async_add_entities(switches)
+    async_add_entities(
+        MBSwitch(coordinator, bee_id, switch.id)
+        for bee_id, bee in coordinator.data.bees.items()
+        if bee.productID in SWITCH_PRODUCT_IDS
+        for switch in bee.actuators
+    )
 
 
 class MBSwitch(MicroBeesActuatorEntity, SwitchEntity):

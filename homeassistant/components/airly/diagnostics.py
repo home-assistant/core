@@ -1,4 +1,5 @@
 """Diagnostics support for Airly."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -25,9 +26,7 @@ async def async_get_config_entry_diagnostics(
     """Return diagnostics for a config entry."""
     coordinator: AirlyDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-    diagnostics_data = {
+    return {
         "config_entry": async_redact_data(config_entry.as_dict(), TO_REDACT),
         "coordinator_data": coordinator.data,
     }
-
-    return diagnostics_data

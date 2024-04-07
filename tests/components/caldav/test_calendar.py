@@ -1,4 +1,5 @@
 """The tests for the webdav calendar component."""
+
 from collections.abc import Awaitable, Callable
 import datetime
 from http import HTTPStatus

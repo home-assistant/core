@@ -1,4 +1,5 @@
 """Configuration for Flexit Nordic (BACnet) tests."""
+
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
@@ -21,7 +22,7 @@ async def flow_id(hass: HomeAssistant) -> str:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     return result["flow_id"]
@@ -31,12 +32,15 @@ async def flow_id(hass: HomeAssistant) -> str:
 def mock_flexit_bacnet() -> Generator[AsyncMock, None, None]:
     """Mock data from the device."""
     flexit_bacnet = AsyncMock(spec=FlexitBACnet)
-    with patch(
-        "homeassistant.components.flexit_bacnet.config_flow.FlexitBACnet",
-        return_value=flexit_bacnet,
-    ), patch(
-        "homeassistant.components.flexit_bacnet.coordinator.FlexitBACnet",
-        return_value=flexit_bacnet,
+    with (
+        patch(
+            "homeassistant.components.flexit_bacnet.config_flow.FlexitBACnet",
+            return_value=flexit_bacnet,
+        ),
+        patch(
+            "homeassistant.components.flexit_bacnet.coordinator.FlexitBACnet",
+            return_value=flexit_bacnet,
+        ),
     ):
         flexit_bacnet.serial_number = "0000-0001"
         flexit_bacnet.device_name = "Device Name"
@@ -60,6 +64,7 @@ def mock_flexit_bacnet() -> Generator[AsyncMock, None, None]:
         flexit_bacnet.heat_exchanger_efficiency = 81
         flexit_bacnet.heat_exchanger_speed = 100
         flexit_bacnet.air_filter_polluted = False
+        flexit_bacnet.air_filter_exchange_interval = 8784
         flexit_bacnet.electric_heater = True
 
         # Mock fan setpoints

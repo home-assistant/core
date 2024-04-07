@@ -1,4 +1,5 @@
 """Tests for the Freebox config flow."""
+
 from ipaddress import ip_address
 from unittest.mock import Mock, patch
 
@@ -8,12 +9,12 @@ from freebox_api.exceptions import (
     InvalidTokenError,
 )
 
-from homeassistant import data_entry_flow
 from homeassistant.components import zeroconf
 from homeassistant.components.freebox.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from .const import MOCK_HOST, MOCK_PORT
 
@@ -45,7 +46,7 @@ async def test_user(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     # test with all provided
@@ -54,7 +55,7 @@ async def test_user(hass: HomeAssistant) -> None:
         context={"source": SOURCE_USER},
         data={CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT},
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "link"
 
 
@@ -65,7 +66,7 @@ async def test_zeroconf(hass: HomeAssistant) -> None:
         context={"source": SOURCE_ZEROCONF},
         data=MOCK_ZEROCONF_DATA,
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "link"
 
 
@@ -82,7 +83,7 @@ async def internal_test_link(hass: HomeAssistant) -> None:
         )
 
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["result"].unique_id == MOCK_HOST
         assert result["title"] == MOCK_HOST
         assert result["data"][CONF_HOST] == MOCK_HOST
@@ -111,7 +112,7 @@ async def test_link_bridge_mode_error(
         data={CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT},
     )
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -129,7 +130,7 @@ async def test_abort_if_already_setup(hass: HomeAssistant) -> None:
         context={"source": SOURCE_USER},
         data={CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT},
     )
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -146,7 +147,7 @@ async def test_on_link_failed(hass: HomeAssistant) -> None:
         side_effect=AuthorizationError(),
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["errors"] == {"base": "register_failed"}
 
     with patch(
@@ -154,7 +155,7 @@ async def test_on_link_failed(hass: HomeAssistant) -> None:
         side_effect=HttpRequestError(),
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["errors"] == {"base": "cannot_connect"}
 
     with patch(
@@ -162,5 +163,5 @@ async def test_on_link_failed(hass: HomeAssistant) -> None:
         side_effect=InvalidTokenError(),
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["errors"] == {"base": "unknown"}
