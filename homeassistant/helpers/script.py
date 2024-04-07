@@ -280,6 +280,9 @@ STATIC_VALIDATION_ACTION_TYPES = (
     cv.SCRIPT_ACTION_WAIT_TEMPLATE,
 )
 
+REPEAT_WARN_ITERATIONS = 10000
+REPEAT_TERMINATE_ITERATIONS = 100000
+
 
 async def async_validate_actions_config(
     hass: HomeAssistant, actions: list[ConfigType]
@@ -839,6 +842,7 @@ class _ScriptRun:
 
         # pylint: disable-next=protected-access
         script = self._script._get_repeat_script(self._step)
+        warned_too_many_loops = False
 
         async def async_run_sequence(iteration, extra_msg=""):
             self._log("Repeating %s: Iteration %i%s", description, iteration, extra_msg)
@@ -910,6 +914,31 @@ class _ScriptRun:
                     break
 
                 await async_run_sequence(iteration)
+                # If the user creates an automation loops forever, yield to the event loop
+                # so they have a chance to terminate the script and fix their automation.
+                if iteration == 0:
+                    continue
+
+                if iteration >= REPEAT_WARN_ITERATIONS:
+                    if not warned_too_many_loops:
+                        warned_too_many_loops = True
+                        _LOGGER.warning(
+                            "While condition %s in script `%s` is looping more than %s times",
+                            repeat[CONF_WHILE],
+                            self._script.name,
+                            REPEAT_WARN_ITERATIONS,
+                        )
+
+                    if iteration >= REPEAT_TERMINATE_ITERATIONS:
+                        _LOGGER.critical(
+                            "While condition %s in script `%s` terminated because it looping more than %s times",
+                            repeat[CONF_WHILE],
+                            self._script.name,
+                            REPEAT_TERMINATE_ITERATIONS,
+                        )
+                        break
+
+                await asyncio.sleep(0)
 
         elif CONF_UNTIL in repeat:
             conditions = [
@@ -926,6 +955,29 @@ class _ScriptRun:
                 except exceptions.ConditionError as ex:
                     _LOGGER.warning("Error in 'until' evaluation:\n%s", ex)
                     break
+
+                if iteration >= REPEAT_WARN_ITERATIONS:
+                    if not warned_too_many_loops:
+                        warned_too_many_loops = True
+                        _LOGGER.warning(
+                            "Until condition %s in script `%s` is looping more than %s times",
+                            repeat[CONF_UNTIL],
+                            self._script.name,
+                            REPEAT_WARN_ITERATIONS,
+                        )
+
+                    if iteration >= REPEAT_TERMINATE_ITERATIONS:
+                        _LOGGER.critical(
+                            "Until condition %s in script `%s` terminated because it looping more than %s times",
+                            repeat[CONF_UNTIL],
+                            self._script.name,
+                            REPEAT_TERMINATE_ITERATIONS,
+                        )
+                        break
+
+                # If the user creates an automation loops forever, yield to the event loop
+                # so they have a chance to terminate the script and fix their automation.
+                await asyncio.sleep(0)
 
         if saved_repeat_vars:
             self._variables["repeat"] = saved_repeat_vars
