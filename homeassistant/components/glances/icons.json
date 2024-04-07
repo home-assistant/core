@@ -60,6 +60,12 @@
       },
       "gpu_memory_usage": {
         "default": "mdi:memory"
+      },
+      "network_rx": {
+        "default": "mdi:transmission-tower"
+      },
+      "network_tx": {
+        "default": "mdi:transmission-tower"
       }
     }
   }
