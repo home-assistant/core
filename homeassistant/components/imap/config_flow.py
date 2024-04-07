@@ -67,6 +67,9 @@ CONFIG_SCHEMA = vol.Schema(
         vol.Optional(CONF_CHARSET, default="utf-8"): str,
         vol.Optional(CONF_FOLDER, default="INBOX"): str,
         vol.Optional(CONF_SEARCH, default="UnSeen UnDeleted"): str,
+        vol.Optional(CONF_MESSAGE_DATA, default=DEFAULT_MESSAGE_DATA): cv.multi_select(
+            dict(zip(DEFAULT_MESSAGE_DATA, DEFAULT_MESSAGE_DATA))
+        ),
     }
 )
 CONFIG_SCHEMA_ADVANCED = {
@@ -80,6 +83,9 @@ OPTIONS_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_FOLDER, default="INBOX"): str,
         vol.Optional(CONF_SEARCH, default="UnSeen UnDeleted"): str,
+        vol.Optional(CONF_MESSAGE_DATA, default=DEFAULT_MESSAGE_DATA): cv.multi_select(
+            dict(zip(DEFAULT_MESSAGE_DATA, DEFAULT_MESSAGE_DATA))
+        ),
     }
 )
 
@@ -90,9 +96,6 @@ OPTIONS_SCHEMA_ADVANCED = {
         vol.Range(min=DEFAULT_MAX_MESSAGE_SIZE, max=MAX_MESSAGE_SIZE_LIMIT),
     ),
     vol.Optional(CONF_ENABLE_PUSH, default=True): BOOLEAN_SELECTOR,
-    vol.Optional(CONF_MESSAGE_DATA, default=DEFAULT_MESSAGE_DATA): cv.multi_select(
-        dict(zip(DEFAULT_MESSAGE_DATA, DEFAULT_MESSAGE_DATA))
-    ),
 }
 
 
