@@ -90,7 +90,9 @@ OPTIONS_SCHEMA_ADVANCED = {
         vol.Range(min=DEFAULT_MAX_MESSAGE_SIZE, max=MAX_MESSAGE_SIZE_LIMIT),
     ),
     vol.Optional(CONF_ENABLE_PUSH, default=True): BOOLEAN_SELECTOR,
-    vol.Optional(CONF_MESSAGE_DATA, default=DEFAULT_MESSAGE_DATA): cv.multi_select(dict(zip(DEFAULT_MESSAGE_DATA, DEFAULT_MESSAGE_DATA))),
+    vol.Optional(CONF_MESSAGE_DATA, default=DEFAULT_MESSAGE_DATA): cv.multi_select(
+        dict(zip(DEFAULT_MESSAGE_DATA, DEFAULT_MESSAGE_DATA))
+    ),
 }
 
 
