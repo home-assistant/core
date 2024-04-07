@@ -633,9 +633,9 @@ class EntityPlatform:
             or self._async_unsub_polling is not None
             or not any(
                 # Entity may have failed to add or called add_to_platform_abort
-                # so we check if the entity is in the platform entities before
-                # checking if it should poll should `should_poll` may need to
-                # check `self.hass` which will be None if the entity did not add
+                # so we check if the entity is in self.entities before
+                # checking `entity.should_poll` since `should_poll` may need to
+                # check `self.hass` which will be `None` if the entity did not add
                 entity.entity_id
                 and entity.entity_id in self.entities
                 and entity.should_poll
