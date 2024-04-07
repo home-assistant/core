@@ -27,6 +27,11 @@
           "off": "mdi:pump-off"
         }
       }
+    },
+    "switch": {
+      "temperature_range": {
+        "default": "mdi:thermometer-lines"
+      }
     }
   }
 }
