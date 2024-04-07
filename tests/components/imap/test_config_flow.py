@@ -28,6 +28,7 @@ MOCK_CONFIG = {
     "port": 993,
     "charset": "utf-8",
     "folder": "INBOX",
+    "search": "UnSeen UnDeleted",
     "message_data": [
         "date",
         "text",
@@ -35,12 +36,18 @@ MOCK_CONFIG = {
         "subject",
         "headers",
     ],
-    "search": "UnSeen UnDeleted",
 }
 
 MOCK_OPTIONS = {
     "folder": "INBOX",
     "search": "UnSeen UnDeleted",
+    "message_data": [
+        "date",
+        "text",
+        "sender",
+        "subject",
+        "headers",
+    ],
 }
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
