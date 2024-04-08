@@ -10,6 +10,7 @@ from typing import Literal, TypedDict, cast
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.util import slugify
 
+from ..util.event_type import EventType
 from .normalized_name_base_registry import (
     NormalizedNameBaseRegistryEntry,
     NormalizedNameBaseRegistryItems,
@@ -20,7 +21,9 @@ from .storage import Store
 from .typing import UNDEFINED, UndefinedType
 
 DATA_REGISTRY = "label_registry"
-EVENT_LABEL_REGISTRY_UPDATED = "label_registry_updated"
+EVENT_LABEL_REGISTRY_UPDATED: EventType[EventLabelRegistryUpdatedData] = EventType(
+    "label_registry_updated"
+)
 STORAGE_KEY = "core.label_registry"
 STORAGE_VERSION_MAJOR = 1
 

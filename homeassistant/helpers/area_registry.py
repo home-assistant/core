@@ -9,6 +9,7 @@ from typing import Any, Literal, TypedDict, cast
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.util import slugify
 
+from ..util.event_type import EventType
 from . import device_registry as dr, entity_registry as er
 from .normalized_name_base_registry import (
     NormalizedNameBaseRegistryEntry,
@@ -20,7 +21,9 @@ from .storage import Store
 from .typing import UNDEFINED, UndefinedType
 
 DATA_REGISTRY = "area_registry"
-EVENT_AREA_REGISTRY_UPDATED = "area_registry_updated"
+EVENT_AREA_REGISTRY_UPDATED: EventType[EventAreaRegistryUpdatedData] = EventType(
+    "area_registry_updated"
+)
 STORAGE_KEY = "core.area_registry"
 STORAGE_VERSION_MAJOR = 1
 STORAGE_VERSION_MINOR = 6
@@ -219,7 +222,8 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
         self.areas[area.id] = area
         self.async_schedule_save()
         self.hass.bus.async_fire(
-            EVENT_AREA_REGISTRY_UPDATED, {"action": "create", "area_id": area.id}
+            EVENT_AREA_REGISTRY_UPDATED,
+            EventAreaRegistryUpdatedData(action="create", area_id=area.id),
         )
         return area
 
@@ -234,7 +238,8 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
         del self.areas[area_id]
 
         self.hass.bus.async_fire(
-            EVENT_AREA_REGISTRY_UPDATED, {"action": "remove", "area_id": area_id}
+            EVENT_AREA_REGISTRY_UPDATED,
+            EventAreaRegistryUpdatedData(action="remove", area_id=area_id),
         )
 
         self.async_schedule_save()
@@ -262,7 +267,8 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
             picture=picture,
         )
         self.hass.bus.async_fire(
-            EVENT_AREA_REGISTRY_UPDATED, {"action": "update", "area_id": area_id}
+            EVENT_AREA_REGISTRY_UPDATED,
+            EventAreaRegistryUpdatedData(action="update", area_id=area_id),
         )
         return updated
 
