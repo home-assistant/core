@@ -26,6 +26,7 @@ from .const import (
 )
 
 DEFAULT_RETRIES = 2
+MAX_RESULTS = 12
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,7 +40,7 @@ def sort_ips(ips: list, querytype: str) -> list:
         ips = [IPv6Address(ip) for ip in ips]
     else:
         ips = [IPv4Address(ip) for ip in ips]
-    return [str(ip) for ip in sorted(ips)]
+    return [str(ip) for ip in sorted(ips)][:MAX_RESULTS]
 
 
 async def async_setup_entry(
