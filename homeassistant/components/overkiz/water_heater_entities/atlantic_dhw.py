@@ -1,4 +1,4 @@
-"""Support for Atlantic Pass APC DHW."""
+"""Support for AtlanticDomesticHotWaterProductionMBLComponent."""
 
 from typing import Any, cast
 
