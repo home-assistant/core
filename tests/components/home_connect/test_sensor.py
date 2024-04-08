@@ -1,11 +1,9 @@
 """Tests for home_connect sensor entities."""
 
 from collections.abc import Awaitable, Callable, Generator
-from datetime import datetime
 from typing import Any
 from unittest.mock import MagicMock, Mock
 
-from dateutil.parser import parse
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
@@ -20,7 +18,6 @@ TEST_HC_APP = "Dishwasher"
 
 
 EVENT_PROG_DELAYED_START = {
-    "BSH.Common.Option.RemainingProgramTime": {},
     "BSH.Common.Status.OperationState": {
         "value": "BSH.Common.EnumType.OperationState.Delayed"
     },
@@ -91,7 +88,6 @@ async def test_sensors(
 # Appliance program sequence with a delayed start.
 PROGRAM_SEQUENCE_EVENTS = (
     EVENT_PROG_DELAYED_START,
-    EVENT_PROG_REMAIN_NO_VALUE,
     EVENT_PROG_RUN,
     EVENT_PROG_UPDATE_1,
     EVENT_PROG_UPDATE_2,
@@ -102,7 +98,6 @@ PROGRAM_SEQUENCE_EVENTS = (
 ENTITY_ID_STATES = {
     "sensor.dishwasher_operation_state": (
         "Delayed",
-        "Delayed",
         "Run",
         "Run",
         "Run",
@@ -110,14 +105,12 @@ ENTITY_ID_STATES = {
     ),
     "sensor.dishwasher_remaining_program_time": (
         "unavailable",
-        "unavailable",
         "2021-01-09T12:00:00+00:00",
         "2021-01-09T12:00:00+00:00",
         "2021-01-09T12:00:20+00:00",
         "unavailable",
     ),
     "sensor.dishwasher_program_progress": (
-        "unavailable",
         "unavailable",
         "60",
         "80",
@@ -163,10 +156,28 @@ async def test_event_sensors(
         assert hass.states.is_state(entity_id, state)
 
 
+# Program sequence for SensorDeviceClass.TIMESTAMP edge cases.
+PROGRAM_SEQUENCE_EDGE_CASE = [
+    EVENT_PROG_REMAIN_NO_VALUE,
+    EVENT_PROG_RUN,
+    EVENT_PROG_END,
+    EVENT_PROG_END,
+]
+
+# Expected state at each sequence.
+ENTITY_ID_EDGE_CASE_STATES = [
+    "unavailable",
+    "2021-01-09T12:00:01+00:00",
+    "unavailable",
+    "unavailable",
+]
+
+
 @pytest.mark.parametrize("appliance", [TEST_HC_APP], indirect=True)
 async def test_remaining_prog_time_edge_cases(
-    appliance,
-    bypass_throttle,
+    appliance: Mock,
+    freezer: FrozenDateTimeFactory,
+    bypass_throttle: Generator[None, Any, None],
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[], Awaitable[bool]],
@@ -176,14 +187,19 @@ async def test_remaining_prog_time_edge_cases(
     """Run program sequence to test edge cases for the remaining_prog_time entity."""
     get_appliances.return_value = [appliance]
     entity_id = "sensor.dishwasher_remaining_program_time"
+    time_to_freeze = "2021-01-09 12:00:00+00:00"
+    freezer.move_to(time_to_freeze)
 
     assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup()
     assert config_entry.state == ConfigEntryState.LOADED
 
-    for event, state in zip(PROGRAM_SEQUENCE_EVENTS, ENTITY_ID_STATES[entity_id]):
+    for (
+        event,
+        expected_state,
+    ) in zip(PROGRAM_SEQUENCE_EDGE_CASE, ENTITY_ID_EDGE_CASE_STATES):
         appliance.status.update(event)
         await async_update_entity(hass, entity_id)
         await hass.async_block_till_done()
-        state = hass.states.get(entity_id)
-        assert state.state == "unavailable" or isinstance(parse(state.state), datetime)
+        freezer.tick()
+        assert hass.states.is_state(entity_id, expected_state)

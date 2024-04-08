@@ -223,7 +223,7 @@ async def test_update_throttle(
 
     assert await integration_setup()
     assert config_entry.state == ConfigEntryState.LOADED
-    assert not get_appliances.called
+    assert get_appliances.call_count == 0
 
 
 async def test_http_error(
