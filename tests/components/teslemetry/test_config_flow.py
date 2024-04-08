@@ -160,22 +160,15 @@ async def test_reauth_errors(
         data=CONFIG,
     )
 
-    # Test Error
-    for side_effect, error in (
-        (InvalidToken, {CONF_ACCESS_TOKEN: "invalid_access_token"}),
-        (SubscriptionRequired, {"base": "subscription_required"}),
-        (ClientConnectionError, {"base": "cannot_connect"}),
-        (TeslaFleetError, {"base": "unknown"}),
-    ):
-        mock_test.side_effect = side_effect
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            CONFIG,
-        )
-        await hass.async_block_till_done()
+    mock_test.side_effect = side_effect
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        CONFIG,
+    )
+    await hass.async_block_till_done()
 
-        assert result2["type"] is FlowResultType.FORM
-        assert result2["errors"] == error
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == error
 
     # Complete the flow
     mock_test.side_effect = None
