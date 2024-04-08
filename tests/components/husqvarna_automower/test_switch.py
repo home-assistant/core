@@ -1,6 +1,5 @@
 """Tests for switch platform."""
 
-from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
 from aioautomower.exceptions import ApiException
@@ -11,6 +10,7 @@ import pytest
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.husqvarna_automower.const import DOMAIN
+from homeassistant.components.husqvarna_automower.coordinator import SCAN_INTERVAL
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -45,7 +45,7 @@ async def test_switch_states(
         values[TEST_MOWER_ID].mower.state = state
         values[TEST_MOWER_ID].planner.restricted_reason = restricted_reson
         mock_automower_client.get_status.return_value = values
-        freezer.tick(timedelta(minutes=5))
+        freezer.tick(SCAN_INTERVAL)
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
         state = hass.states.get("switch.test_mower_1_enable_schedule")
