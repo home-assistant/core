@@ -313,5 +313,5 @@ def _async_perform_action_on_non_local(
         # it should never happen that we don't have a transport
         transport.close()
 
-    # Anyway we need to raise an exception to stop processing the request
+    # We need to raise an exception to stop processing the request
     raise HTTPBadRequest

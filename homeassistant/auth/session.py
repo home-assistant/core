@@ -23,7 +23,7 @@ if TYPE_CHECKING:
 
 
 TEMP_TIMEOUT = timedelta(minutes=5)
-TEMP_TIMEOUT_SECONDS = timedelta(minutes=5).total_seconds()
+TEMP_TIMEOUT_SECONDS = TEMP_TIMEOUT.total_seconds()
 
 SESSION_ID = "id"
 STORAGE_VERSION = 1
@@ -58,7 +58,7 @@ class SessionManager:
             hass, STORAGE_VERSION, STORAGE_KEY, private=True, atomic_writes=True
         )
         self._key: str | None = None
-        self._refresh_token_revoce_callbacks: dict[str, CALLBACK_TYPE] = {}
+        self._refresh_token_revoke_callbacks: dict[str, CALLBACK_TYPE] = {}
 
     @property
     def key(self) -> str:
@@ -106,7 +106,7 @@ class SessionManager:
     @callback
     def _async_register_revoke_token_callback(self, refresh_token_id: str) -> None:
         """Register a callback to revoke all sessions for a refresh token."""
-        if refresh_token_id in self._refresh_token_revoce_callbacks:
+        if refresh_token_id in self._refresh_token_revoke_callbacks:
             return
 
         @callback
@@ -119,7 +119,7 @@ class SessionManager:
             }
             self._async_schedule_save()
 
-        self._refresh_token_revoce_callbacks[refresh_token_id] = (
+        self._refresh_token_revoke_callbacks[refresh_token_id] = (
             self._auth.async_register_revoke_token_callback(
                 refresh_token_id, async_invalidate_auth_sessions
             )
