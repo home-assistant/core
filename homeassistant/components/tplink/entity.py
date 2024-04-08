@@ -33,9 +33,7 @@ def async_refresh_after(
         try:
             await func(self, *args, **kwargs)
         except AuthenticationException as ex:
-            self.hass.loop.call_soon(
-                self.coordinator.config_entry.async_start_reauth, self.hass
-            )
+            self.coordinator.config_entry.async_start_reauth(self.hass)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="device_authentication",
