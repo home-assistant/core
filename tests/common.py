@@ -299,7 +299,6 @@ async def async_test_home_assistant(
     hass.bus.async_listen_once(
         EVENT_HOMEASSISTANT_STOP,
         hass.config_entries._async_shutdown,
-        run_immediately=True,
     )
 
     # Load the registries
@@ -358,9 +357,7 @@ async def async_test_home_assistant(
         await asyncio.sleep(0)  # Give aiohttp one loop iteration to close
         INSTANCES.remove(hass)
 
-    hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_CLOSE, clear_instance, run_immediately=True
-    )
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, clear_instance)
 
     yield hass
 

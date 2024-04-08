@@ -276,7 +276,6 @@ def async_track_state_change(
         EVENT_STATE_CHANGED,
         state_change_dispatcher,
         event_filter=state_change_filter,
-        run_immediately=True,
     )
 
 
