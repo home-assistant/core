@@ -50,6 +50,7 @@ from homeassistant.util import slugify, uuid as uuid_util
 from homeassistant.util.json import format_unserializable_data
 from homeassistant.util.read_only_dict import ReadOnlyDict
 
+from ..util.event_type import EventType
 from . import device_registry as dr, storage
 from .device_registry import EVENT_DEVICE_REGISTRY_UPDATED
 from .json import JSON_DUMP, find_paths_unserializable_data, json_bytes, json_fragment
@@ -62,7 +63,9 @@ if TYPE_CHECKING:
 T = TypeVar("T")
 
 DATA_REGISTRY = "entity_registry"
-EVENT_ENTITY_REGISTRY_UPDATED = "entity_registry_updated"
+EVENT_ENTITY_REGISTRY_UPDATED: EventType[EventEntityRegistryUpdatedData] = EventType(
+    "entity_registry_updated"
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -876,7 +879,10 @@ class EntityRegistry(BaseRegistry):
         self.async_schedule_save()
 
         self.hass.bus.async_fire(
-            EVENT_ENTITY_REGISTRY_UPDATED, {"action": "create", "entity_id": entity_id}
+            EVENT_ENTITY_REGISTRY_UPDATED,
+            _EventEntityRegistryUpdatedData_CreateRemove(
+                action="create", entity_id=entity_id
+            ),
         )
 
         return entry
@@ -898,7 +904,10 @@ class EntityRegistry(BaseRegistry):
             unique_id=entity.unique_id,
         )
         self.hass.bus.async_fire(
-            EVENT_ENTITY_REGISTRY_UPDATED, {"action": "remove", "entity_id": entity_id}
+            EVENT_ENTITY_REGISTRY_UPDATED,
+            _EventEntityRegistryUpdatedData_CreateRemove(
+                action="remove", entity_id=entity_id
+            ),
         )
         self.async_schedule_save()
 
@@ -1077,7 +1086,7 @@ class EntityRegistry(BaseRegistry):
 
         self.async_schedule_save()
 
-        data: dict[str, str | dict[str, Any]] = {
+        data: _EventEntityRegistryUpdatedData_Update = {
             "action": "update",
             "entity_id": entity_id,
             "changes": old_values,
@@ -1526,7 +1535,7 @@ def _async_setup_entity_restore(hass: HomeAssistant, registry: EntityRegistry) -
         return bool(event_data["action"] == "remove")
 
     @callback
-    def cleanup_restored_states(event: Event) -> None:
+    def cleanup_restored_states(event: Event[EventEntityRegistryUpdatedData]) -> None:
         """Clean up restored states."""
         state = hass.states.get(event.data["entity_id"])
 
