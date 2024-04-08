@@ -30,6 +30,7 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfPrecipitationDepth,
     UnitOfPressure,
+    UnitOfRadiationDose,
     UnitOfSoundPressure,
     UnitOfSpeed,
     UnitOfTemperature,
@@ -318,6 +319,18 @@ class SensorDeviceClass(StrEnum):
     - `Pa`, `hPa`, `kPa`
     - `inHg`
     - `psi`
+    """
+
+    RADIATION_DOSE = "radiation_dose"
+    """Radiation dose.
+
+    Unit of measurement: `Sv`, `mSv`, `μSv`, `nSv`
+    """
+
+    RADIATION_DOSE_RATE = "radiation_dose_rate"
+    """Radiation dose rate.
+
+    Unit of measurement: `Sv/h`, `mSv/h`, `μSv/h`, `nSv/h`
     """
 
     REACTIVE_POWER = "reactive_power"
