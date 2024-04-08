@@ -1,5 +1,6 @@
 """Common fixtures for testing greeneye_monitor."""
 
+from collections.abc import Generator
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -98,7 +99,7 @@ def assert_sensor_registered(
 
 
 @pytest.fixture
-def monitors() -> AsyncMock:
+def monitors() -> Generator[AsyncMock, None, None]:
     """Provide a mock greeneye.Monitors object that has listeners and can add new monitors."""
     with patch("greeneye.Monitors", autospec=True) as mock_monitors:
         mock = mock_monitors.return_value
