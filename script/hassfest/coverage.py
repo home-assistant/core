@@ -160,7 +160,11 @@ def generate(integrations: dict[str, Integration], config: Config) -> None:
             elif section == "components" and line != "\n":
                 components.append(line)
 
-    content = f"{CORE_PREFIX}{"".join(sorted(core))}\n{COMPONENTS_PREFIX}{"".join(sorted(components))}\n\n{SUFFIX}"
+    content = (
+        f"{CORE_PREFIX}{"".join(sorted(core))}\n"
+        f"{COMPONENTS_PREFIX}{"".join(sorted(components))}\n"
+        f"\n{SUFFIX}"
+    )
 
     with coverage_path.open("w") as fp:
         fp.write(content)
