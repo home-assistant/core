@@ -15,7 +15,10 @@ if [ ! -f "$SETTINGS_FILE" ]; then
 fi
 
 mkdir -p config
-python3 -m pip install uv
+if ! [ -x "$(command -v uv)" ]; then
+  echo 'UV is not installed. Trying to install it now.'
+  python3 -m pip install uv
+fi
 
 if [ ! -n "$VIRTUAL_ENV" ];then
   uv venv venv
