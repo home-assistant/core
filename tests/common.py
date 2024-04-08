@@ -353,13 +353,13 @@ async def async_test_home_assistant(
 
     hass.set_state(CoreState.running)
 
-    @callback
-    def clear_instance(event):
+    async def clear_instance(event):
         """Clear global instance."""
+        await asyncio.sleep(0)  # Give aiohttp one loop iteration to close
         INSTANCES.remove(hass)
 
     hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_CLOSE, clear_instance, run_immediately=False
+        EVENT_HOMEASSISTANT_CLOSE, clear_instance, run_immediately=True
     )
 
     yield hass
