@@ -681,7 +681,10 @@ async def test_message_is_truncated(
 @pytest.mark.parametrize("imap_has_capability", [True, False], ids=["push", "poll"])
 @pytest.mark.parametrize("event_message_data", [[], ["text"],["text", "headers"]])
 async def test_message_data(
-    hass: HomeAssistant, mock_imap_protocol: MagicMock, caplog: pytest.LogCaptureFixture, event_message_data: list
+    hass: HomeAssistant,
+    mock_imap_protocol: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+    event_message_data: list
 ) -> None:
     """Test with different message data."""
     event_called = async_capture_events(hass, "imap_content")
