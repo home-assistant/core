@@ -3384,3 +3384,30 @@ async def test_report_state_listener_restrictions(hass: HomeAssistant) -> None:
 
     # Both filter and run_immediately
     hass.bus.async_listen(EVENT_STATE_REPORTED, listener, event_filter=filter)
+
+
+@pytest.mark.parametrize(
+    "run_immediately",
+    [True, False],
+)
+@pytest.mark.parametrize(
+    "method",
+    ["async_listen", "async_listen_once"],
+)
+async def test_async_listen_with_run_immediately_deprecated(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    run_immediately: bool,
+    method: str,
+) -> None:
+    """Test async_add_job warns about its deprecation."""
+
+    async def _test(event: ha.Event):
+        pass
+
+    func = getattr(hass.bus, method)
+    func(EVENT_HOMEASSISTANT_START, _test, run_immediately=run_immediately)
+    assert (
+        f"Detected code that calls `{method}` with run_immediately, which is "
+        "deprecated and will be removed in Assistant 2025.5."
+    ) in caplog.text
