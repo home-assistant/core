@@ -454,7 +454,7 @@ auroranoaa==0.0.3
 aurorapy==0.2.7
 
 # homeassistant.components.axis
-axis==60
+axis==61
 
 # homeassistant.components.azure_event_hub
 azure-eventhub==5.11.1
@@ -520,7 +520,7 @@ bring-api==0.5.7
 broadlink==0.18.3
 
 # homeassistant.components.brother
-brother==4.0.2
+brother==4.1.0
 
 # homeassistant.components.brottsplatskartan
 brottsplatskartan==1.0.5
@@ -731,7 +731,7 @@ freebox-api==1.1.0
 fritzconnection[qr]==1.13.2
 
 # homeassistant.components.fyta
-fyta_cli==0.3.3
+fyta_cli==0.3.5
 
 # homeassistant.components.google_translate
 gTTS==2.2.4
@@ -848,7 +848,7 @@ habitipy==0.2.0
 habluetooth==2.4.2
 
 # homeassistant.components.cloud
-hass-nabucasa==0.79.0
+hass-nabucasa==0.78.0
 
 # homeassistant.components.conversation
 hassil==1.6.1
@@ -1509,7 +1509,7 @@ pylibrespot-java==0.1.1
 pylitejet==0.6.2
 
 # homeassistant.components.litterrobot
-pylitterbot==2023.4.9
+pylitterbot==2023.4.11
 
 # homeassistant.components.lutron_caseta
 pylutron-caseta==0.20.0
@@ -1545,7 +1545,7 @@ pymysensors==0.24.0
 pynetgear==0.10.10
 
 # homeassistant.components.nobo_hub
-pynobo==1.8.0
+pynobo==1.8.1
 
 # homeassistant.components.nuki
 pynuki==1.6.3
@@ -2154,7 +2154,7 @@ vallox-websocket-api==5.1.1
 vehicle==2.2.1
 
 # homeassistant.components.velbus
-velbus-aio==2024.4.0
+velbus-aio==2024.4.1
 
 # homeassistant.components.venstar
 venstarcolortouch==0.19
@@ -2224,7 +2224,7 @@ xiaomi-ble==0.28.0
 xknx==2.12.2
 
 # homeassistant.components.knx
-xknxproject==3.7.0
+xknxproject==3.7.1
 
 # homeassistant.components.bluesound
 # homeassistant.components.fritz
@@ -2248,7 +2248,7 @@ yalexs==2.0.0
 yeelight==0.7.14
 
 # homeassistant.components.yolink
-yolink-api==0.4.1
+yolink-api==0.4.2
 
 # homeassistant.components.youless
 youless-api==1.0.1

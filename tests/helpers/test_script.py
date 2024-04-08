@@ -2837,6 +2837,58 @@ async def test_repeat_nested(
     assert_action_trace(expected_trace)
 
 
+@pytest.mark.parametrize(
+    ("condition", "check"), [("while", "above"), ("until", "below")]
+)
+async def test_repeat_limits(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, condition: str, check: str
+) -> None:
+    """Test limits on repeats prevent the system from hanging."""
+    event = "test_event"
+    events = async_capture_events(hass, event)
+    hass.states.async_set("sensor.test", "0.5")
+
+    sequence = {
+        "repeat": {
+            "sequence": [
+                {
+                    "event": event,
+                },
+            ],
+        }
+    }
+    sequence["repeat"][condition] = {
+        "condition": "numeric_state",
+        "entity_id": "sensor.test",
+        check: "0",
+    }
+
+    with (
+        patch.object(script, "REPEAT_WARN_ITERATIONS", 5),
+        patch.object(script, "REPEAT_TERMINATE_ITERATIONS", 10),
+    ):
+        script_obj = script.Script(
+            hass, cv.SCRIPT_SCHEMA(sequence), f"Test {condition}", "test_domain"
+        )
+
+        caplog.clear()
+        caplog.set_level(logging.WARNING)
+
+        hass.async_create_task(script_obj.async_run(context=Context()))
+        await asyncio.wait_for(hass.async_block_till_done(), 1)
+
+    title_condition = condition.title()
+
+    assert f"{title_condition} condition" in caplog.text
+    assert f"in script `Test {condition}` looped 5 times" in caplog.text
+    assert (
+        f"script `Test {condition}` terminated because it looped 10 times"
+        in caplog.text
+    )
+
+    assert len(events) == 10
+
+
 async def test_choose_warning(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
