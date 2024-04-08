@@ -1221,12 +1221,16 @@ def async_setup_cleanup(hass: HomeAssistant, dev_reg: DeviceRegistry) -> None:
     )
 
     @callback
-    def _async_entity_registry_changed(event: Event) -> None:
+    def _async_entity_registry_changed(
+        event: Event[entity_registry.EventEntityRegistryUpdatedData],
+    ) -> None:
         """Handle entity updated or removed dispatch."""
         debounced_cleanup.async_schedule_call()
 
     @callback
-    def entity_registry_changed_filter(event_data: Mapping[str, Any]) -> bool:
+    def entity_registry_changed_filter(
+        event_data: entity_registry.EventEntityRegistryUpdatedData,
+    ) -> bool:
         """Handle entity updated or removed filter."""
         if (
             event_data["action"] == "update"
