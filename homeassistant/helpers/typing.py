@@ -3,7 +3,7 @@
 from collections.abc import Mapping
 from enum import Enum
 from functools import partial
-from typing import Any
+from typing import Any, Never
 
 import homeassistant.core
 
@@ -20,6 +20,7 @@ DiscoveryInfoType = dict[str, Any]
 ServiceDataType = dict[str, Any]
 StateType = str | int | float | None
 TemplateVarsType = Mapping[str, Any] | None
+NoEventData = Mapping[str, Never]
 
 # Custom type for recorder Queries
 QueryType = Any
