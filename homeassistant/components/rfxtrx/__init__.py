@@ -281,7 +281,7 @@ async def async_setup_internal(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
     entry.async_on_unload(
         hass.bus.async_listen(
-            dr.EVENT_DEVICE_REGISTRY_UPDATED, _updated_device, run_immediately=False
+            dr.EVENT_DEVICE_REGISTRY_UPDATED, _updated_device, run_immediately=True
         )
     )
 
