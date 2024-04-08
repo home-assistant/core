@@ -69,6 +69,11 @@
             "cuttingHeight": 50
           },
           {
+            "workAreaId": 654321,
+            "name": "Back lawn",
+            "cuttingHeight": 25
+          },
+          {
             "workAreaId": 0,
             "name": "",
             "cuttingHeight": 50

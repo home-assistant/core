@@ -95,6 +95,10 @@
         'cutting_height': 50,
         'name': 'Front lawn',
       }),
+      '654321': dict({
+        'cutting_height': 25,
+        'name': 'Back lawn',
+      }),
     }),
   })
 # ---
