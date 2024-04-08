@@ -38,6 +38,7 @@ from homeassistant.exceptions import TemplateError
 from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import run_callback_threadsafe
+from homeassistant.util.event_type import EventType
 
 from .device_registry import (
     EVENT_DEVICE_REGISTRY_UPDATED,
@@ -90,7 +91,7 @@ class _KeyedEventTracker(Generic[_TypedDictT]):
 
     listeners_key: str
     callbacks_key: str
-    event_type: str
+    event_type: EventType[_TypedDictT] | str
     dispatcher_callable: Callable[
         [
             HomeAssistant,

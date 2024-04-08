@@ -1414,7 +1414,7 @@ pyevilgenius==2.0.0
 pyezviz==0.2.1.2
 
 # homeassistant.components.fibaro
-pyfibaro==0.7.6
+pyfibaro==0.7.7
 
 # homeassistant.components.fido
 pyfido==2.1.2
@@ -1590,7 +1590,7 @@ pyotgw==2.1.3
 pyotp==2.8.0
 
 # homeassistant.components.overkiz
-pyoverkiz==1.13.9
+pyoverkiz==1.13.10
 
 # homeassistant.components.openweathermap
 pyowm==3.2.0
