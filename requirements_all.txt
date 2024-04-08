@@ -62,6 +62,9 @@ PyFlume==0.6.5
 # homeassistant.components.fronius
 PyFronius==0.7.3
 
+# homeassistant.components.pyload
+PyLoadAPI==1.0.0
+
 # homeassistant.components.mvglive
 PyMVGLive==1.1.4
 
