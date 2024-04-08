@@ -1,26 +1,30 @@
 """Test the integration init functionality."""
 
-from collections.abc import Awaitable, Callable
-from datetime import timedelta
-from unittest.mock import MagicMock, patch
+from collections.abc import Awaitable, Callable, Generator
+from typing import Any
+from unittest.mock import MagicMock, Mock
 
-from homeconnect.api import HomeConnectAppliance
 import pytest
 from requests import HTTPError
+import requests_mock
 
-from homeassistant.components.home_connect.api import ConfigEntryAuth
-from homeassistant.components.home_connect.const import DOMAIN
+from homeassistant.components.home_connect.const import DOMAIN, OAUTH2_TOKEN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-from homeassistant.util.dt import utcnow
 
-from .conftest import MOCK_APPLIANCES_PROPERTIES
+from .conftest import (
+    CLIENT_ID,
+    CLIENT_SECRET,
+    FAKE_ACCESS_TOKEN,
+    FAKE_REFRESH_TOKEN,
+    SERVER_ACCESS_TOKEN,
+    get_all_appliances,
+)
 
-from tests.common import MockConfigEntry, async_fire_time_changed
-
-MOCK_APPLIANCE_DISHWASHER_PROPERTIES = MOCK_APPLIANCES_PROPERTIES["Dishwasher"]
+from tests.common import MockConfigEntry
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 SERVICE_KV_CALL_PARAMS = [
     {
@@ -102,9 +106,92 @@ SERVICE_PROGRAM_CALL_PARAMS = [
     },
 ]
 
+SERVICE_APPLIANCE_METHOD_MAPPING = {
+    "set_option_active": "set_options_active_program",
+    "set_option_selected": "set_options_selected_program",
+    "change_setting": "set_setting",
+    "pause_program": "execute_command",
+    "resume_program": "execute_command",
+    "select_program": "select_program",
+    "start_program": "start_program",
+}
+
+
+async def test_api_setup(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[], Awaitable[bool]],
+    setup_credentials: None,
+    get_appliances: MagicMock,
+) -> None:
+    """Test setup and unload."""
+    get_appliances.side_effect = get_all_appliances
+    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert await integration_setup()
+    assert config_entry.state == ConfigEntryState.LOADED
+
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state == ConfigEntryState.NOT_LOADED
+
+
+async def test_exception_handling(
+    bypass_throttle: Generator[None, Any, None],
+    hass: HomeAssistant,
+    integration_setup: Callable[[], Awaitable[bool]],
+    config_entry: MockConfigEntry,
+    setup_credentials: None,
+    get_appliances: MagicMock,
+    problematic_appliance: Mock,
+) -> None:
+    """Test exception handling."""
+    get_appliances.return_value = [problematic_appliance]
+    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert await integration_setup()
+    assert config_entry.state == ConfigEntryState.LOADED
+
+
+@pytest.mark.parametrize("token_expiration_time", [12345])
+async def test_token_refresh_success(
+    bypass_throttle: Generator[None, Any, None],
+    integration_setup: Callable[[], Awaitable[bool]],
+    config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+    requests_mock: requests_mock.Mocker,
+    setup_credentials: None,
+) -> None:
+    """Test where token is expired and the refresh attempt succeeds."""
+
+    assert config_entry.data["token"]["access_token"] == FAKE_ACCESS_TOKEN
+
+    requests_mock.post(OAUTH2_TOKEN, json=SERVER_ACCESS_TOKEN)
+    requests_mock.get("/api/homeappliances", json={"data": {"homeappliances": []}})
+
+    aioclient_mock.post(
+        OAUTH2_TOKEN,
+        json=SERVER_ACCESS_TOKEN,
+    )
+    assert await integration_setup()
+    assert config_entry.state == ConfigEntryState.LOADED
+
+    # Verify token request
+    assert aioclient_mock.call_count == 1
+    assert aioclient_mock.mock_calls[0][2] == {
+        "client_id": CLIENT_ID,
+        "client_secret": CLIENT_SECRET,
+        "grant_type": "refresh_token",
+        "refresh_token": FAKE_REFRESH_TOKEN,
+    }
+
+    # Verify updated token
+    assert (
+        config_entry.data["token"]["access_token"]
+        == SERVER_ACCESS_TOKEN["access_token"]
+    )
+
 
 async def test_setup(
-    config_entry_auth,
     hass: HomeAssistant,
     integration_setup: Callable[[], Awaitable[bool]],
     config_entry: MockConfigEntry,
@@ -122,85 +209,91 @@ async def test_setup(
     assert config_entry.state == ConfigEntryState.NOT_LOADED
 
 
-@patch.object(ConfigEntryAuth, "get_devices")
 async def test_update_throttle(
-    get_devices,
+    appliance: Mock,
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[], Awaitable[bool]],
     setup_credentials: None,
     platforms: list[Platform],
+    get_appliances: MagicMock,
 ) -> None:
     """Test to check Throttle functionality."""
     assert config_entry.state == ConfigEntryState.NOT_LOADED
 
     assert await integration_setup()
-    assert get_devices.call_count == 0
     assert config_entry.state == ConfigEntryState.LOADED
+    assert not get_appliances.called
 
 
-@patch.object(
-    ConfigEntryAuth, "get_devices", side_effect=HTTPError(response=MagicMock())
-)
 async def test_http_error(
-    get_devices,
-    bypass_throttle,
+    bypass_throttle: Generator[None, Any, None],
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[], Awaitable[bool]],
     setup_credentials: None,
+    get_appliances: MagicMock,
 ) -> None:
     """Test HTTP errors during setup integration."""
+    get_appliances.side_effect = HTTPError(response=MagicMock())
     assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup()
-    assert get_devices.call_count == 1
     assert config_entry.state == ConfigEntryState.LOADED
+    assert get_appliances.called
 
 
+@pytest.mark.parametrize(
+    "service_call",
+    SERVICE_KV_CALL_PARAMS + SERVICE_COMMAND_CALL_PARAMS + SERVICE_PROGRAM_CALL_PARAMS,
+)
 async def test_services(
-    bypass_throttle,
-    config_entry_auth_devices,
+    service_call: list[dict[str, Any]],
+    bypass_throttle: Generator[None, Any, None],
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[], Awaitable[bool]],
     setup_credentials: None,
+    get_appliances: MagicMock,
+    appliance: Mock,
 ) -> None:
     """Create and test services."""
-    appliance = MagicMock(
-        autospec=HomeConnectAppliance, **MOCK_APPLIANCE_DISHWASHER_PROPERTIES
-    )
+    get_appliances.return_value = [appliance]
     assert config_entry.state == ConfigEntryState.NOT_LOADED
-
-    future = utcnow() + timedelta(minutes=80)
-    async_fire_time_changed(hass, future)
-    await hass.async_block_till_done()
     assert await integration_setup()
-
     assert config_entry.state == ConfigEntryState.LOADED
+
     device_registry = dr.async_get(hass)
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        identifiers={(DOMAIN, MOCK_APPLIANCE_DISHWASHER_PROPERTIES["haId"])},
+        identifiers={(DOMAIN, appliance.haId)},
     )
-    with patch(
-        "homeassistant.components.home_connect._get_appliance_by_device_id"
-    ) as service_call_tracking:
-        service_call_tracking.return_value = appliance
-        service_calls = (
-            SERVICE_KV_CALL_PARAMS
-            + SERVICE_PROGRAM_CALL_PARAMS
-            + SERVICE_COMMAND_CALL_PARAMS
-        )
-        for service_call in service_calls:
-            service_call["service_data"]["device_id"] = device_entry.id
-            await hass.services.async_call(**service_call)
-            await hass.async_block_till_done()
 
-        assert service_call_tracking.call_count == len(service_calls)
-
-    # _get_appliance_by_device_id tests
+    service_name = service_call["service"]
+    service_call["service_data"]["device_id"] = device_entry.id
     await hass.services.async_call(**service_call)
     await hass.async_block_till_done()
+    assert (
+        getattr(appliance, SERVICE_APPLIANCE_METHOD_MAPPING[service_name]).call_count
+        == 1
+    )
+
+
+async def test_services_exception(
+    bypass_throttle: Generator[None, Any, None],
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[], Awaitable[bool]],
+    setup_credentials: None,
+    get_appliances: MagicMock,
+    appliance: Mock,
+) -> None:
+    """Raise a ValueError when device id does not match."""
+    get_appliances.return_value = [appliance]
+    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert await integration_setup()
+    assert config_entry.state == ConfigEntryState.LOADED
+
+    service_call = SERVICE_KV_CALL_PARAMS[0]
 
     with pytest.raises(ValueError):
         service_call["service_data"]["device_id"] = "DOES_NOT_EXISTS"

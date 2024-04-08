@@ -3,14 +3,7 @@
 from collections.abc import Awaitable, Callable, Generator
 import time
 from typing import Any
-from unittest.mock import (
-    CallableMixin,
-    MagicMock,
-    Mock,
-    NonCallableMock,
-    PropertyMock,
-    patch,
-)
+from unittest.mock import MagicMock, Mock, PropertyMock, patch
 
 from homeconnect.api import HomeConnectAppliance, HomeConnectError
 import pytest
@@ -20,14 +13,8 @@ from homeassistant.components.application_credentials import (
     async_import_client_credential,
 )
 from homeassistant.components.home_connect import update_all_devices
-from homeassistant.components.home_connect.api import Dishwasher
-from homeassistant.components.home_connect.const import (
-    ATTR_AMBIENT,
-    ATTR_DESC,
-    ATTR_DEVICE,
-    DOMAIN,
-)
-from homeassistant.const import CONF_DEVICE, CONF_ENTITIES, Platform
+from homeassistant.components.home_connect.const import DOMAIN
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -52,49 +39,6 @@ SERVER_ACCESS_TOKEN = {
     "type": "Bearer",
     "expires_in": 60,
 }
-
-
-class MockConfigEntryAuth(CallableMixin, NonCallableMock):
-    """Mock ConfigEntryAuth for __init__."""
-
-    _devices = []
-
-    @property
-    def devices(self):
-        """Devices property."""
-        return self._devices
-
-    @devices.setter
-    def devices(self, value):
-        self._devices = value
-
-    def get_devices(self):
-        """Stub get_devices."""
-        return self._get_dishwasher()
-
-    def get_appliances(self):
-        """Stub get_appliances."""
-        return []
-
-    def _get_dishwasher(self):
-        appliance = MagicMock(
-            autospec=HomeConnectAppliance, **MOCK_APPLIANCES_PROPERTIES["Dishwasher"]
-        )
-        appliance.name = MOCK_APPLIANCES_PROPERTIES["Dishwasher"]["name"]
-        device = MagicMock(autospec=Dishwasher, hass=self.hass, appliance=appliance)
-        devices = [
-            {
-                CONF_DEVICE: device,
-                CONF_ENTITIES: {
-                    "light": {
-                        ATTR_DEVICE: device,
-                        ATTR_DESC: "AmbientLight",
-                        ATTR_AMBIENT: True,
-                    }
-                },
-            }
-        ]
-        self.devices = devices
 
 
 @pytest.fixture(name="token_expiration_time")
@@ -208,15 +152,14 @@ def mock_appliance(request) -> Mock:
 
 
 @pytest.fixture(name="problematic_appliance")
-def mock_problematic_appliance(
-    appliance_name: str = "Washer",
-) -> Generator[Mock, None, None]:
+def mock_problematic_appliance() -> Mock:
     """Fixture to mock a problematic Appliance."""
+    app = "Washer"
     mock = Mock(
         spec=HomeConnectAppliance,
-        **MOCK_APPLIANCES_PROPERTIES.get(appliance_name),
+        **MOCK_APPLIANCES_PROPERTIES.get(app),
     )
-    mock.name = appliance_name
+    mock.name = app
     setattr(mock, "status", {})
     mock.get_programs_active.side_effect = HomeConnectError
     mock.get_programs_available.side_effect = HomeConnectError
@@ -226,34 +169,10 @@ def mock_problematic_appliance(
     mock.get_settings.side_effect = HomeConnectError
     mock.set_setting.side_effect = HomeConnectError
 
-    with patch(
-        "homeconnect.api.HomeConnectAppliance",
-        return_value=mock,
-    ):
-        yield mock
+    return mock
 
 
-@pytest.fixture(name="config_entry_auth")
-def mock_config_entry_auth():
-    """Fixture to mock the ConfigEntryAuth class."""
-    with patch(
-        "homeassistant.components.home_connect.api.ConfigEntryAuth",
-        autospec=MockConfigEntryAuth,
-    ):
-        yield
-
-
-@pytest.fixture(name="config_entry_auth_devices")
-def mock_config_entry_auth_devices():
-    """Fixture to mock ConfigEntryAuth class with another class."""
-    with patch(
-        "homeassistant.components.home_connect.api.ConfigEntryAuth",
-        new_callable=MockConfigEntryAuth,
-    ):
-        yield
-
-
-def get_appliances():
+def get_all_appliances():
     """Return a list of `HomeConnectAppliance` instances for all appliances."""
 
     appliances = {}
@@ -271,7 +190,7 @@ def get_appliances():
         api_status = load_json_object_fixture("home_connect/status.json")
         api_settings = load_json_object_fixture("home_connect/settings.json")
 
-        haId = home_appliance["haId"]
+        ha_id = home_appliance["haId"]
         ha_type = home_appliance["type"]
 
         appliance = MagicMock(spec=HomeConnectAppliance, **home_appliance)
@@ -311,6 +230,6 @@ def get_appliances():
             )
         )
 
-        appliances[haId] = appliance
+        appliances[ha_id] = appliance
 
     return list(appliances.values())
