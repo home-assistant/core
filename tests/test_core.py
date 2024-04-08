@@ -93,7 +93,7 @@ async def test_async_add_hass_job_schedule_callback() -> None:
     hass = MagicMock()
     job = MagicMock()
 
-    ha.HomeAssistant.async_add_hass_job(hass, ha.HassJob(ha.callback(job)))
+    ha.HomeAssistant._async_add_hass_job(hass, ha.HassJob(ha.callback(job)))
     assert len(hass.loop.call_soon.mock_calls) == 1
     assert len(hass.loop.create_task.mock_calls) == 0
     assert len(hass.add_job.mock_calls) == 0
@@ -107,7 +107,7 @@ async def test_async_add_hass_job_eager_start_coro_suspends(
     async def job_that_suspends():
         await asyncio.sleep(0)
 
-    task = hass.async_add_hass_job(
+    task = hass._async_add_hass_job(
         ha.HassJob(ha.callback(job_that_suspends)), eager_start=True
     )
     assert not task.done()
@@ -137,7 +137,7 @@ async def test_async_add_hass_job_background(hass: HomeAssistant) -> None:
     async def job_that_suspends():
         await asyncio.sleep(0)
 
-    task = hass.async_add_hass_job(
+    task = hass._async_add_hass_job(
         ha.HassJob(ha.callback(job_that_suspends)), background=True
     )
     assert not task.done()
@@ -167,7 +167,7 @@ async def test_async_add_hass_job_eager_background(hass: HomeAssistant) -> None:
     async def job_that_suspends():
         await asyncio.sleep(0)
 
-    task = hass.async_add_hass_job(
+    task = hass._async_add_hass_job(
         ha.HassJob(ha.callback(job_that_suspends)), background=True
     )
     assert not task.done()
@@ -232,7 +232,7 @@ async def test_async_add_hass_job_coro_named(hass: HomeAssistant) -> None:
     job = ha.HassJob(mycoro, "named coro")
     assert "named coro" in str(job)
     assert job.name == "named coro"
-    task = ha.HomeAssistant.async_add_hass_job(hass, job)
+    task = ha.HomeAssistant._async_add_hass_job(hass, job)
     assert "named coro" in str(task)
 
 
@@ -245,7 +245,7 @@ async def test_async_add_hass_job_eager_start(hass: HomeAssistant) -> None:
     job = ha.HassJob(mycoro, "named coro")
     assert "named coro" in str(job)
     assert job.name == "named coro"
-    task = ha.HomeAssistant.async_add_hass_job(hass, job, eager_start=True)
+    task = ha.HomeAssistant._async_add_hass_job(hass, job, eager_start=True)
     assert "named coro" in str(task)
 
 
@@ -255,7 +255,7 @@ async def test_async_add_hass_job_schedule_partial_callback() -> None:
     job = MagicMock()
     partial = functools.partial(ha.callback(job))
 
-    ha.HomeAssistant.async_add_hass_job(hass, ha.HassJob(partial))
+    ha.HomeAssistant._async_add_hass_job(hass, ha.HassJob(partial))
     assert len(hass.loop.call_soon.mock_calls) == 1
     assert len(hass.loop.create_task.mock_calls) == 0
     assert len(hass.add_job.mock_calls) == 0
@@ -268,7 +268,7 @@ async def test_async_add_hass_job_schedule_coroutinefunction() -> None:
     async def job():
         pass
 
-    ha.HomeAssistant.async_add_hass_job(hass, ha.HassJob(job))
+    ha.HomeAssistant._async_add_hass_job(hass, ha.HassJob(job))
     assert len(hass.loop.call_soon.mock_calls) == 0
     assert len(hass.loop.create_task.mock_calls) == 1
     assert len(hass.add_job.mock_calls) == 0
@@ -285,7 +285,7 @@ async def test_async_add_hass_job_schedule_corofunction_eager_start() -> None:
         "homeassistant.core.create_eager_task", wraps=create_eager_task
     ) as mock_create_eager_task:
         hass_job = ha.HassJob(job)
-        task = ha.HomeAssistant.async_add_hass_job(hass, hass_job, eager_start=True)
+        task = ha.HomeAssistant._async_add_hass_job(hass, hass_job, eager_start=True)
         assert len(hass.loop.call_soon.mock_calls) == 0
         assert len(hass.add_job.mock_calls) == 0
         assert mock_create_eager_task.mock_calls
@@ -301,7 +301,7 @@ async def test_async_add_hass_job_schedule_partial_coroutinefunction() -> None:
 
     partial = functools.partial(job)
 
-    ha.HomeAssistant.async_add_hass_job(hass, ha.HassJob(partial))
+    ha.HomeAssistant._async_add_hass_job(hass, ha.HassJob(partial))
     assert len(hass.loop.call_soon.mock_calls) == 0
     assert len(hass.loop.create_task.mock_calls) == 1
     assert len(hass.add_job.mock_calls) == 0
@@ -314,7 +314,7 @@ async def test_async_add_job_add_hass_threaded_job_to_pool() -> None:
     def job():
         pass
 
-    ha.HomeAssistant.async_add_hass_job(hass, ha.HassJob(job))
+    ha.HomeAssistant._async_add_hass_job(hass, ha.HassJob(job))
     assert len(hass.loop.call_soon.mock_calls) == 0
     assert len(hass.loop.create_task.mock_calls) == 0
     assert len(hass.loop.run_in_executor.mock_calls) == 2
@@ -383,7 +383,7 @@ async def test_async_run_eager_hass_job_calls_coro_function() -> None:
         pass
 
     ha.HomeAssistant.async_run_hass_job(hass, ha.HassJob(job))
-    assert len(hass.async_add_hass_job.mock_calls) == 1
+    assert len(hass._async_add_hass_job.mock_calls) == 1
 
 
 async def test_async_run_hass_job_calls_callback() -> None:
@@ -409,7 +409,7 @@ async def test_async_run_hass_job_delegates_non_async() -> None:
 
     ha.HomeAssistant.async_run_hass_job(hass, ha.HassJob(job))
     assert len(calls) == 0
-    assert len(hass.async_add_hass_job.mock_calls) == 1
+    assert len(hass._async_add_hass_job.mock_calls) == 1
 
 
 async def test_async_get_hass_can_be_called(hass: HomeAssistant) -> None:
@@ -3232,6 +3232,23 @@ async def test_async_add_job_deprecated(
         "Detected code that calls `async_add_job`, which is deprecated "
         "and will be removed in Home Assistant 2025.4; Please review "
         "https://developers.home-assistant.io/blog/2024/03/13/deprecate_add_run_job"
+        " for replacement options"
+    ) in caplog.text
+
+
+async def test_async_add_hass_job_deprecated(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test async_add_hass_job warns about its deprecation."""
+
+    async def _test():
+        pass
+
+    hass.async_add_hass_job(HassJob(_test))
+    assert (
+        "Detected code that calls `async_add_hass_job`, which is deprecated "
+        "and will be removed in Home Assistant 2025.5; Please review "
+        "https://developers.home-assistant.io/blog/2024/04/07/deprecate_add_hass_job"
         " for replacement options"
     ) in caplog.text
 
