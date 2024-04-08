@@ -26,10 +26,9 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 @pytest.fixture
 def mock_config_entry(hass: HomeAssistant, mock_arve: MagicMock) -> MockConfigEntry:
     """Return the default mocked config entry."""
-    entry = MockConfigEntry(
+    return MockConfigEntry(
         title="Arve", domain=DOMAIN, data=USER_INPUT, unique_id=mock_arve.customer_id
     )
-    return entry
 
 
 @pytest.fixture
