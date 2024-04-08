@@ -74,9 +74,7 @@ async def async_create_device(hass: HomeAssistant, location: str) -> Device:
 
     # Create profile wrapper.
     igd_device = IgdDevice(upnp_device, None)
-    device = Device(hass, igd_device)
-
-    return device
+    return Device(hass, igd_device)
 
 
 class Device:
@@ -86,9 +84,9 @@ class Device:
         """Initialize UPnP/IGD device."""
         self.hass = hass
         self._igd_device = igd_device
-        self.coordinator: DataUpdateCoordinator[
-            dict[str, str | datetime | int | float | None]
-        ] | None = None
+        self.coordinator: (
+            DataUpdateCoordinator[dict[str, str | datetime | int | float | None]] | None
+        ) = None
         self.original_udn: str | None = None
 
     async def async_get_mac_address(self) -> str | None:

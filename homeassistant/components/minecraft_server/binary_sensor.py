@@ -1,6 +1,5 @@
 """The Minecraft Server binary sensor platform."""
 
-
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,

@@ -94,7 +94,7 @@ async def test_setup_multiple(
         await hass.config_entries.async_setup(mock_config.entry_id)
         await hass.async_block_till_done()
 
-        assert mock_config.state == ConfigEntryState.LOADED
+        assert mock_config.state is ConfigEntryState.LOADED
         assert ufp.api.update.called
         assert mock_config.unique_id == ufp.api.bootstrap.nvr.mac
 
@@ -158,7 +158,7 @@ async def test_setup_cloud_account(
 
     await hass.config_entries.async_setup(ufp.entry.entry_id)
     await hass.async_block_till_done()
-    assert ufp.entry.state == ConfigEntryState.LOADED
+    assert ufp.entry.state is ConfigEntryState.LOADED
 
     await ws_client.send_json({"id": 1, "type": "repairs/list_issues"})
     msg = await ws_client.receive_json()
@@ -239,9 +239,12 @@ async def test_setup_starts_discovery(
     hass: HomeAssistant, ufp_config_entry: ConfigEntry, ufp_client: ProtectApiClient
 ) -> None:
     """Test setting up will start discovery."""
-    with _patch_discovery(), patch(
-        "homeassistant.components.unifiprotect.utils.ProtectApiClient"
-    ) as mock_api:
+    with (
+        _patch_discovery(),
+        patch(
+            "homeassistant.components.unifiprotect.utils.ProtectApiClient"
+        ) as mock_api,
+    ):
         ufp_config_entry.add_to_hass(hass)
         mock_api.return_value = ufp_client
         ufp = MockUFPFixture(ufp_config_entry, ufp_client)

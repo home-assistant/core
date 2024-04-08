@@ -194,7 +194,7 @@ def _map_error_to_schema_errors(
 class FlowManager(abc.ABC, Generic[_FlowResultT, _HandlerT]):
     """Manage all the flows that are in progress."""
 
-    _flow_result: Callable[..., _FlowResultT] = FlowResult  # type: ignore[assignment]
+    _flow_result: type[_FlowResultT] = FlowResult  # type: ignore[assignment]
 
     def __init__(
         self,
@@ -489,8 +489,8 @@ class FlowManager(abc.ABC, Generic[_FlowResultT, _HandlerT]):
         flow.async_cancel_progress_task()
         try:
             flow.async_remove()
-        except Exception as err:  # pylint: disable=broad-except
-            _LOGGER.exception("Error removing %s flow: %s", flow.handler, err)
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Error removing %s flow", flow.handler)
 
     async def _async_handle_step(
         self,
@@ -615,7 +615,7 @@ class FlowManager(abc.ABC, Generic[_FlowResultT, _HandlerT]):
 class FlowHandler(Generic[_FlowResultT, _HandlerT]):
     """Handle a data entry flow."""
 
-    _flow_result: Callable[..., _FlowResultT] = FlowResult  # type: ignore[assignment]
+    _flow_result: type[_FlowResultT] = FlowResult  # type: ignore[assignment]
 
     # Set by flow manager
     cur_step: _FlowResultT | None = None

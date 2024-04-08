@@ -76,9 +76,9 @@ async def device_scan(
             return None
         try:
             ip_address(identifier)
-            return [identifier]
         except ValueError:
             return None
+        return [identifier]
 
     # If we have an address, only probe that address to avoid
     # broadcast traffic on the network

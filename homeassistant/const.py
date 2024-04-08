@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from enum import StrEnum
 from functools import partial
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
 from .helpers.deprecation import (
     DeprecatedConstant,
@@ -13,17 +13,22 @@ from .helpers.deprecation import (
     check_if_deprecated_constant,
     dir_with_deprecated_constants,
 )
+from .util.event_type import EventType
+from .util.signal_type import SignalType
+
+if TYPE_CHECKING:
+    from .core import EventStateChangedData
 
 APPLICATION_NAME: Final = "HomeAssistant"
 MAJOR_VERSION: Final = 2024
-MINOR_VERSION: Final = 4
+MINOR_VERSION: Final = 5
 PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
-REQUIRED_PYTHON_VER: Final[tuple[int, int, int]] = (3, 11, 0)
+REQUIRED_PYTHON_VER: Final[tuple[int, int, int]] = (3, 12, 0)
 REQUIRED_NEXT_PYTHON_VER: Final[tuple[int, int, int]] = (3, 12, 0)
 # Truthy date string triggers showing related deprecation warning messages.
-REQUIRED_NEXT_PYTHON_HA_RELEASE: Final = "2024.4"
+REQUIRED_NEXT_PYTHON_HA_RELEASE: Final = ""
 
 # Format for platform files
 PLATFORM_FORMAT: Final = "{platform}.{domain}"
@@ -305,7 +310,7 @@ EVENT_LOGBOOK_ENTRY: Final = "logbook_entry"
 EVENT_LOGGING_CHANGED: Final = "logging_changed"
 EVENT_SERVICE_REGISTERED: Final = "service_registered"
 EVENT_SERVICE_REMOVED: Final = "service_removed"
-EVENT_STATE_CHANGED: Final = "state_changed"
+EVENT_STATE_CHANGED: EventType[EventStateChangedData] = EventType("state_changed")
 EVENT_STATE_REPORTED: Final = "state_reported"
 EVENT_THEMES_UPDATED: Final = "themes_updated"
 EVENT_PANELS_UPDATED: Final = "panels_updated"
@@ -1609,7 +1614,9 @@ CAST_APP_ID_HOMEASSISTANT_LOVELACE: Final = "A078F6B0"
 # User used by Supervisor
 HASSIO_USER_NAME = "Supervisor"
 
-SIGNAL_BOOTSTRAP_INTEGRATIONS = "bootstrap_integrations"
+SIGNAL_BOOTSTRAP_INTEGRATIONS: SignalType[dict[str, float]] = SignalType(
+    "bootstrap_integrations"
+)
 
 
 # hass.data key for logging information.

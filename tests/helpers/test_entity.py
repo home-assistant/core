@@ -5,6 +5,7 @@ from collections.abc import Iterable
 import dataclasses
 from datetime import timedelta
 from enum import IntFlag
+from functools import cached_property
 import logging
 import threading
 from typing import Any
@@ -15,7 +16,6 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
 
-from homeassistant.backports.functools import cached_property
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_DEVICE_CLASS,
@@ -741,12 +741,13 @@ async def test_disabled_in_entity_registry(hass: HomeAssistant) -> None:
 
 async def test_capability_attrs(hass: HomeAssistant) -> None:
     """Test we still include capabilities even when unavailable."""
-    with patch.object(
-        entity.Entity, "available", PropertyMock(return_value=False)
-    ), patch.object(
-        entity.Entity,
-        "capability_attributes",
-        PropertyMock(return_value={"always": "there"}),
+    with (
+        patch.object(entity.Entity, "available", PropertyMock(return_value=False)),
+        patch.object(
+            entity.Entity,
+            "capability_attributes",
+            PropertyMock(return_value={"always": "there"}),
+        ),
     ):
         ent = entity.Entity()
         ent.hass = hass
@@ -1328,11 +1329,15 @@ async def test_entity_name_translation_placeholder_errors(
 
     caplog.clear()
 
-    with patch(
-        "homeassistant.helpers.entity_platform.translation.async_get_translations",
-        side_effect=async_get_translations,
-    ), patch(
-        "homeassistant.helpers.entity.get_release_channel", return_value=release_channel
+    with (
+        patch(
+            "homeassistant.helpers.entity_platform.translation.async_get_translations",
+            side_effect=async_get_translations,
+        ),
+        patch(
+            "homeassistant.helpers.entity.get_release_channel",
+            return_value=release_channel,
+        ),
     ):
         await entity_platform.async_setup_entry(config_entry)
 
