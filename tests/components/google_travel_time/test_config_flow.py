@@ -52,6 +52,53 @@ async def test_minimum_fields(hass: HomeAssistant) -> None:
     }
 
 
+@pytest.mark.parametrize(
+    ("data", "options"),
+    [
+        (
+            MOCK_CONFIG,
+            {
+                CONF_MODE: "driving",
+                CONF_UNITS: UNITS_IMPERIAL,
+            },
+        )
+    ],
+)
+@pytest.mark.usefixtures("validate_config_entry", "bypass_setup")
+async def test_reconfigure(hass: HomeAssistant, mock_config) -> None:
+    """Test reconfigure flow."""
+    reconfigure_result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_RECONFIGURE,
+            "entry_id": mock_config.entry_id,
+        },
+    )
+    assert reconfigure_result["type"] is FlowResultType.FORM
+    assert reconfigure_result["step_id"] == "user"
+
+    user_step_result = await hass.config_entries.flow.async_configure(
+        reconfigure_result["flow_id"],
+        {
+            CONF_NAME: "test",
+            CONF_API_KEY: "api_key2",
+            CONF_ORIGIN: "location3",
+            CONF_DESTINATION: "location4",
+        },
+    )
+    assert user_step_result["type"] is FlowResultType.ABORT
+    assert user_step_result["reason"] == "reconfigure_successful"
+    await hass.async_block_till_done()
+
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    assert entry.data == {
+        CONF_NAME: "test",
+        CONF_API_KEY: "api_key2",
+        CONF_ORIGIN: "location3",
+        CONF_DESTINATION: "location4",
+    }
+
+
 @pytest.mark.usefixtures("invalidate_config_entry")
 async def test_invalid_config_entry(hass: HomeAssistant) -> None:
     """Test we get the form."""
