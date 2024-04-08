@@ -10,7 +10,12 @@ import voluptuous as vol
 from homeassistant.components import persistent_notification
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    ATTR_FRIENDLY_NAME,
+    ATTR_LOCATION,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+)
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_validation as cv, entity_registry as er
@@ -21,7 +26,15 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import SeventeenTrackCoordinator
 from .const import (
+    ATTR_DESTINATION_COUNTRY,
+    ATTR_INFO_TEXT,
+    ATTR_ORIGIN_COUNTRY,
+    ATTR_PACKAGE_TYPE,
     ATTR_PACKAGES,
+    ATTR_STATUS,
+    ATTR_TIMESTAMP,
+    ATTR_TRACKING_INFO_LANGUAGE,
+    ATTR_TRACKING_NUMBER,
     ATTRIBUTION,
     CONF_SHOW_ARCHIVED,
     CONF_SHOW_DELIVERED,
@@ -99,20 +112,39 @@ async def async_setup_entry(
 
     @callback
     def _async_create_remove_entities():
-        remove_packages(hass, coordinator.account_id, coordinator.data.old_packages)
+        old_packages = coordinator.data.current_packages - set(
+            coordinator.data.live_packages.values()
+        )
+        packages_to_add = (
+            set(coordinator.data.live_packages.values())
+            - coordinator.data.current_packages
+        )
+
+        coordinator.data.current_packages = (
+            coordinator.data.current_packages | packages_to_add
+        ) - old_packages
+
+        remove_packages(hass, coordinator.account_id, old_packages)
 
         async_add_entities(
             SeventeenTrackPackageSensor(
-                coordinator, t_number, p_data.friendly_name, p_data.status
+                coordinator,
+                tracking_number,
+                package_data.friendly_name,
+                package_data.status,
             )
-            for t_number, p_data in coordinator.data.new_packages.items()
-            if not (not coordinator.show_delivered and p_data.status == "Delivered")
+            for tracking_number, package_data in coordinator.data.live_packages.items()
+            if package_data in packages_to_add
+            and not (
+                not coordinator.show_delivered and package_data.status == "Delivered"
+            )
         )
 
-        for tracking_number, package_data in coordinator.data.new_packages.items():
+        for tracking_number, package_data in coordinator.data.live_packages.items():
             if (
                 package_data.status == VALUE_DELIVERED
                 and not coordinator.show_delivered
+                and package_data in packages_to_add
             ):
                 notify_delivered(
                     hass,
@@ -149,13 +181,13 @@ class SeventeenTrackSummarySensor(
         """Initialize the sensor."""
         super().__init__(coordinator)
         self._status = status
-        self._attr_name = f"Seventeentrack Packages {self._status}"
+        self._attr_name = f"Seventeentrack Packages {status}"
         self._attr_unique_id = f"summary_{coordinator.account_id}_{self._status}"
 
     @property
     def available(self) -> bool:
         """Return whether the entity is available."""
-        return self.coordinator.data.summary[self._status]["quantity"] is not None
+        return self._status in self.coordinator.data.summary
 
     @property
     def native_value(self) -> StateType:
@@ -165,7 +197,20 @@ class SeventeenTrackSummarySensor(
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
-        return {ATTR_PACKAGES: self.coordinator.data.summary[self._status]["packages"]}
+        packages = self.coordinator.data.summary[self._status]["packages"]
+        return {
+            ATTR_PACKAGES: [
+                {
+                    ATTR_TRACKING_NUMBER: package.tracking_number,
+                    ATTR_LOCATION: package.location,
+                    ATTR_STATUS: package.status,
+                    ATTR_TIMESTAMP: package.timestamp,
+                    ATTR_INFO_TEXT: package.info_text,
+                    ATTR_FRIENDLY_NAME: package.friendly_name,
+                }
+                for package in packages
+            ]
+        }
 
 
 class SeventeenTrackPackageSensor(
@@ -197,7 +242,7 @@ class SeventeenTrackPackageSensor(
     @property
     def available(self) -> bool:
         """Return whether the entity is available."""
-        return self._tracking_number in self.coordinator.data.current_packages
+        return self._tracking_number in self.coordinator.data.live_packages
 
     @property
     def name(self) -> str:
@@ -212,7 +257,17 @@ class SeventeenTrackPackageSensor(
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
-        return self.coordinator.data.current_packages[self._tracking_number]["extra"]
+        package = self.coordinator.data.live_packages[self._tracking_number]
+        return {
+            ATTR_DESTINATION_COUNTRY: package.destination_country,
+            ATTR_INFO_TEXT: package.info_text,
+            ATTR_TIMESTAMP: package.timestamp,
+            ATTR_LOCATION: package.location,
+            ATTR_ORIGIN_COUNTRY: package.origin_country,
+            ATTR_PACKAGE_TYPE: package.package_type,
+            ATTR_TRACKING_INFO_LANGUAGE: package.tracking_info_language,
+            ATTR_TRACKING_NUMBER: package.tracking_number,
+        }
 
 
 def remove_packages(

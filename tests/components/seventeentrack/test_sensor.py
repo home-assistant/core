@@ -75,7 +75,7 @@ async def test_add_package(
     mock_seventeentrack.return_value.profile.packages.return_value = [package]
 
     await init_integration(hass, mock_config_entry)
-    assert hass.states.get("sensor.seventeentrack_package_456") is not None
+    assert hass.states.get("sensor.seventeentrack_package_456")
     assert len(hass.states.async_entity_ids()) == DEFAULT_SUMMARY_LENGTH + 1
 
     package2 = get_package(
