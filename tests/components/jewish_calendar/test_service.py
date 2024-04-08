@@ -46,6 +46,31 @@ async def test_get_gregorian_date(
     assert result == {"date": expected}
 
 
+async def test_get_gregorian_date_range(hass: HomeAssistant) -> None:
+    """Tests get_gregorian_date_range with various inputs."""
+    await setup_config_entry(hass, {CONF_LANGUAGE: "hebrew"})
+
+    result = await hass.services.async_call(
+        DOMAIN,
+        "get_gregorian_date_range",
+        {"date": "2024-04-04", "number_of_days": 7},
+        blocking=True,
+        return_response=True,
+    )
+
+    assert result == {
+        "dates": [
+            {"date": "2024-04-04"},
+            {"date": "2024-04-05"},
+            {"date": "2024-04-06"},
+            {"date": "2024-04-07"},
+            {"date": "2024-04-08"},
+            {"date": "2024-04-09"},
+            {"date": "2024-04-10"},
+        ]
+    }
+
+
 @freeze_time("2020-01-01")  # Hebrew year 5780.
 @pytest.mark.parametrize(
     ("input", "expected"),

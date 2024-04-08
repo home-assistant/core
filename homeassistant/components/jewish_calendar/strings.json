@@ -57,6 +57,32 @@
         }
       }
     },
+    "get_gregorian_date_range": {
+      "name": "Get Gregorian Date Range",
+      "description": "Returns Hebrew Calendar information for a range of Gregorian dates.  Pass one or more include_* parameters to specify which fields to return.",
+      "fields": {
+        "date": {
+          "name": "Date",
+          "description": "The first day to return.  If you pass a date with a time, it will be evaluated relative to sunset, returning the following day if after sunset (not candle lighting). Defaults to today (relative to midnight, not sunset)."
+        },
+        "number_of_days": {
+          "name": "Number of Days",
+          "description": "The number of days to return, including 'date'."
+        },
+        "include_hebrew_date_info": {
+          "name": "Include Hebrew Date Info",
+          "description": "True to return Hebrew year, month, day, and related calendar information."
+        },
+        "include_holiday_info": {
+          "name": "Include Holiday Info",
+          "description": "True to return information about the holiday that falls on this date, if any."
+        },
+        "include_zmanim": {
+          "name": "Include Zmanim",
+          "description": "True to return the day's zmanim timestamps."
+        }
+      }
+    },
     "get_hebrew_date": {
       "name": "Get Hebrew Date",
       "description": "Returns Hebrew Calendar information for a given Hebrew date.  Pass one or more include_* parameters to specify which fields to return.",

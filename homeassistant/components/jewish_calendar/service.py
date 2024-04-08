@@ -79,6 +79,21 @@ class JewishCalendarServices:
         )
         hass.services.async_register(
             DOMAIN,
+            "get_gregorian_date_range",
+            self.get_gregorian_date_range,
+            schema=vol.Schema(
+                {
+                    vol.Optional("date"): cv.datetime,
+                    vol.Required("number_of_days"): vol.All(
+                        vol.Coerce(int), vol.Range(min=1)
+                    ),
+                    **OUTPUT_SCHEMA,
+                }
+            ),
+            supports_response=SupportsResponse.ONLY,
+        )
+        hass.services.async_register(
+            DOMAIN,
             "get_hebrew_date",
             self.get_hebrew_date,
             schema=vol.Schema(
@@ -147,6 +162,23 @@ class JewishCalendarServices:
             ),
             call,
         )
+
+    async def get_gregorian_date_range(self, call: ServiceCall) -> ServiceResponse:
+        """Service call that returns Hebrew date info for a range of Gregorian dates."""
+        start = self.resolve_date_param(call)
+        return {
+            "dates": [
+                self._build_response(
+                    HDate(
+                        start + dt.timedelta(days=i),
+                        diaspora=self._diaspora,
+                        hebrew=self._hebrew,
+                    ),
+                    call,
+                )
+                for i in range(call.data["number_of_days"])
+            ]
+        }
 
     async def get_hebrew_date(self, call: ServiceCall) -> ServiceResponse:
         """Service call that returns Hebrew date info for a Hebrew date."""
