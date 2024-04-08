@@ -169,9 +169,7 @@ async def _async_get_instance(hass: HomeAssistant, **zcargs: Any) -> HaAsyncZero
 
     # Wait to the close event to shutdown zeroconf to give
     # integrations time to send a good bye message
-    hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_CLOSE, _async_stop_zeroconf, run_immediately=True
-    )
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, _async_stop_zeroconf)
     hass.data[DOMAIN] = aio_zc
 
     return aio_zc
@@ -248,9 +246,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async def _async_zeroconf_hass_stop(_event: Event) -> None:
         await discovery.async_stop()
 
-    hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STOP, _async_zeroconf_hass_stop, run_immediately=True
-    )
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_zeroconf_hass_stop)
     async_when_setup_or_start(hass, "frontend", _async_zeroconf_hass_start)
 
     return True
@@ -432,6 +428,7 @@ class ZeroconfDiscovery:
                     zeroconf, async_service_info, service_type, name
                 ),
                 name=f"zeroconf lookup {name}.{service_type}",
+                eager_start=False,
             )
 
     async def _async_lookup_and_process_service_update(

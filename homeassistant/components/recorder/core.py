@@ -40,6 +40,7 @@ from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 import homeassistant.util.dt as dt_util
 from homeassistant.util.enum import try_parse_enum
+from homeassistant.util.event_type import EventType
 
 from . import migration, statistics
 from .const import (
@@ -173,7 +174,7 @@ class Recorder(threading.Thread):
         db_max_retries: int,
         db_retry_wait: int,
         entity_filter: Callable[[str], bool],
-        exclude_event_types: set[str],
+        exclude_event_types: set[EventType[Any] | str],
     ) -> None:
         """Initialize the recorder."""
         threading.Thread.__init__(self, name="Recorder")
@@ -332,7 +333,6 @@ class Recorder(threading.Thread):
         self._event_listener = self.hass.bus.async_listen(
             MATCH_ALL,
             _event_listener,
-            run_immediately=True,
         )
         self._queue_watcher = async_track_time_interval(
             self.hass,
@@ -477,12 +477,8 @@ class Recorder(threading.Thread):
     def async_register(self) -> None:
         """Post connection initialize."""
         bus = self.hass.bus
-        bus.async_listen_once(
-            EVENT_HOMEASSISTANT_CLOSE, self._async_close, run_immediately=True
-        )
-        bus.async_listen_once(
-            EVENT_HOMEASSISTANT_FINAL_WRITE, self._async_shutdown, run_immediately=True
-        )
+        bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, self._async_close)
+        bus.async_listen_once(EVENT_HOMEASSISTANT_FINAL_WRITE, self._async_shutdown)
         async_at_started(self.hass, self._async_hass_started)
 
     @callback

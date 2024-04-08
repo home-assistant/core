@@ -242,7 +242,6 @@ async def test_favorites_sensor(
 
     # Trigger subscription callback for speaker discovery
     await fire_zgs_event()
-    await hass.async_block_till_done(wait_background_tasks=True)
 
     favorites_updated_event = SonosMockEvent(
         soco, service, {"favorites_update_id": "2", "container_update_i_ds": "FV:2,2"}

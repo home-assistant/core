@@ -269,8 +269,7 @@ async def test_finish_callback_change_result_type(hass: HomeAssistant) -> None:
                     return flow.async_show_form(
                         step_id="init", data_schema=vol.Schema({"count": int})
                     )
-                else:
-                    result["result"] = result["data"]["count"]
+                result["result"] = result["data"]["count"]
             return result
 
     manager = FlowManager(hass)
@@ -400,7 +399,6 @@ async def test_show_progress(hass: HomeAssistant, manager) -> None:
     hass.bus.async_listen(
         data_entry_flow.EVENT_DATA_ENTRY_FLOW_PROGRESSED,
         capture_events,
-        run_immediately=True,
     )
 
     result = await manager.async_init("test")
@@ -480,7 +478,6 @@ async def test_show_progress_error(hass: HomeAssistant, manager) -> None:
     hass.bus.async_listen(
         data_entry_flow.EVENT_DATA_ENTRY_FLOW_PROGRESSED,
         capture_events,
-        run_immediately=True,
     )
 
     result = await manager.async_init("test")

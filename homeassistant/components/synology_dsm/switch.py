@@ -98,7 +98,7 @@ class SynoDSMSurveillanceHomeModeToggle(
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return bool(self._api.surveillance_station)
+        return bool(self._api.surveillance_station) and super().available
 
     @property
     def device_info(self) -> DeviceInfo:
