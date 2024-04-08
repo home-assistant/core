@@ -48,7 +48,7 @@ class TeslemetryConfigFlow(ConfigFlow, domain=DOMAIN):
         except ClientConnectionError:
             return {"base": "cannot_connect"}
         except TeslaFleetError as e:
-            LOGGER.error(str(e))
+            LOGGER.error(e)
             return {"base": "unknown"}
         return {}
 
@@ -84,16 +84,13 @@ class TeslemetryConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle users reauth credentials."""
 
         assert self._entry
-        errors: dict[str, str] | None = None
+        errors: dict[str, str] = {}
 
         if user_input and not (errors := await self.async_auth(user_input)):
-            self.hass.config_entries.async_update_entry(
+            self.async_update_reload_and_abort(
                 self._entry,
                 data=user_input,
             )
-            await self.hass.config_entries.async_reload(self._entry.entry_id)
-
-            return self.async_abort(reason="reauth_successful")
 
         return self.async_show_form(
             step_id="reauth_confirm",
