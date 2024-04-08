@@ -1249,6 +1249,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/sms/ @ocalvo
 /homeassistant/components/snapcast/ @luar123
 /tests/components/snapcast/ @luar123
+/homeassistant/components/snmp/ @nmaggioni
+/tests/components/snmp/ @nmaggioni
 /homeassistant/components/snooz/ @AustinBrunkhorst
 /tests/components/snooz/ @AustinBrunkhorst
 /homeassistant/components/solaredge/ @frenck
