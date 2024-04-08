@@ -1,10 +1,11 @@
 """The Coordinator for aWATTar."""
+
 from __future__ import annotations
 
 from datetime import timedelta
 from typing import NamedTuple
 
-from awattar import AsyncAwattarClient, AwattarConnectionError, MarketItem
+from awattar import AsyncAwattarClient, AwattarConnectionError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_COUNTRY_CODE
@@ -21,7 +22,6 @@ SCAN_INTERVAL = timedelta(hours=1)
 class AwattarData(NamedTuple):
     """Class for defining data in dict."""
 
-    energy: MarketItem
     awattar: AsyncAwattarClient
 
 
@@ -51,11 +51,11 @@ class AwattarDataUpdateCoordinator(DataUpdateCoordinator[AwattarData]):
             now = dt_util.now()
             start = now.replace(minute=0, second=0, microsecond=0)
             LOGGER.debug(f"Updating from {start} ...")
-            energy = await self.awattar.request(
+            await self.awattar.request(
                 start_time=start, end_time=start + timedelta(days=2)
             )
 
         except AwattarConnectionError as err:
             raise UpdateFailed("Error communicating with aWATTar API") from err
 
-        return AwattarData(energy=energy, awattar=self.awattar)
+        return AwattarData(awattar=self.awattar)

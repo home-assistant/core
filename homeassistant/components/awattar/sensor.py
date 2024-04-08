@@ -1,4 +1,5 @@
 """Support for aWATTar sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -185,7 +186,6 @@ class AwattarSensorEntity(
                     f"{coordinator.config_entry.entry_id}",
                 )
             },
-            configuration_url="https://www.awattar.at",
             manufacturer="aWATTar",
             name="Energy market price",
         )

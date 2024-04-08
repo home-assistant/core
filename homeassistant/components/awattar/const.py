@@ -1,4 +1,5 @@
 """Constants for the aWATTar integration."""
+
 from __future__ import annotations
 
 import logging

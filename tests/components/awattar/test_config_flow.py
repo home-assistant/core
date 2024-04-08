@@ -1,4 +1,5 @@
 """Test the aWATTar config flow."""
+
 from unittest.mock import MagicMock
 
 from homeassistant.components.awattar.const import DOMAIN
