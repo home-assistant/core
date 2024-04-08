@@ -37,6 +37,7 @@
         "title": "Configure options",
         "data": {
           "scan_interval": "How often to poll Risco (in seconds)",
+          "concurrency": "Maximum concurrent requests (advanced - only change this if you know what you're doing)",
           "code_arm_required": "Require PIN to arm",
           "code_disarm_required": "Require PIN to disarm"
         }

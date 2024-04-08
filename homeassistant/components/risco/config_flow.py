@@ -35,6 +35,7 @@ from .const import (
     CONF_CODE_ARM_REQUIRED,
     CONF_CODE_DISARM_REQUIRED,
     CONF_COMMUNICATION_DELAY,
+    CONF_CONCURRENCY,
     CONF_HA_STATES_TO_RISCO,
     CONF_RISCO_STATES_TO_HA,
     DEFAULT_OPTIONS,
@@ -229,6 +230,9 @@ class RiscoOptionsFlowHandler(OptionsFlow):
             {
                 vol.Required(
                     CONF_SCAN_INTERVAL, default=self._data[CONF_SCAN_INTERVAL]
+                ): int,
+                vol.Required(
+                    CONF_CONCURRENCY, default=self._data[CONF_CONCURRENCY]
                 ): int,
                 vol.Required(
                     CONF_CODE_ARM_REQUIRED, default=self._data[CONF_CODE_ARM_REQUIRED]
