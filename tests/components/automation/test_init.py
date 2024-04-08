@@ -2506,6 +2506,7 @@ async def test_recursive_automation_starting_script(
         async def async_automation_triggered(event):
             """Listen to automation_triggered event from the automation integration."""
             automation_triggered.append(event)
+            await asyncio.sleep(0)  # Yield to allow other tasks to run
             hass.states.async_set("sensor.test", str(len(automation_triggered)))
 
         hass.services.async_register("test", "script_done", async_service_handler)
@@ -2513,7 +2514,7 @@ async def test_recursive_automation_starting_script(
             "test", "automation_started", async_service_handler
         )
         hass.bus.async_listen(
-            "automation_triggered", async_automation_triggered, run_immediately=False
+            "automation_triggered", async_automation_triggered, run_immediately=True
         )
 
         hass.bus.async_fire("trigger_automation")

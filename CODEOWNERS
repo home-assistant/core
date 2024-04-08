@@ -1285,8 +1285,8 @@ build.json @home-assistant/supervisor
 /tests/components/sonarr/ @ctalkington
 /homeassistant/components/songpal/ @rytilahti @shenxn
 /tests/components/songpal/ @rytilahti @shenxn
-/homeassistant/components/sonos/ @jjlawren
-/tests/components/sonos/ @jjlawren
+/homeassistant/components/sonos/ @jjlawren @peterager
+/tests/components/sonos/ @jjlawren @peterager
 /homeassistant/components/soundtouch/ @kroimon
 /tests/components/soundtouch/ @kroimon
 /homeassistant/components/spaceapi/ @fabaff
