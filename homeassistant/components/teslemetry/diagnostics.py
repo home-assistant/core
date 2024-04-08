@@ -32,12 +32,12 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, config_entry: ConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    vehicles = hass.data[DOMAIN][config_entry.entry_id].vehicles.map(
-        lambda x: x.coordinator.data
-    )
-    energysites = hass.data[DOMAIN][config_entry.entry_id].energysites.map(
-        lambda x: x.coordinator.data
-    )
+    vehicles = [
+        x.coordinator.data for x in hass.data[DOMAIN][config_entry.entry_id].vehicles
+    ]
+    energysites = [
+        x.coordinator.data for x in hass.data[DOMAIN][config_entry.entry_id].energysites
+    ]
 
     # Return only the relevant children
     return {
