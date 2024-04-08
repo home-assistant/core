@@ -219,9 +219,7 @@ class MatrixBot:
                 loop_sleep_time=1_000,
             )  # milliseconds.
 
-        self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_START, handle_startup, run_immediately=True
-        )
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, handle_startup)
 
     def _load_commands(self, commands: list[ConfigCommand]) -> None:
         for command in commands:

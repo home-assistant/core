@@ -683,7 +683,6 @@ class EntityRegistry(BaseRegistry):
         self.hass.bus.async_listen(
             EVENT_DEVICE_REGISTRY_UPDATED,
             self.async_device_modified,
-            run_immediately=True,
         )
 
     @callback
@@ -1492,7 +1491,6 @@ def _async_setup_cleanup(hass: HomeAssistant, registry: EntityRegistry) -> None:
         event_type=lr.EVENT_LABEL_REGISTRY_UPDATED,
         event_filter=_removed_from_registry_filter,
         listener=_handle_label_registry_update,
-        run_immediately=True,
     )
 
     @callback
@@ -1506,7 +1504,6 @@ def _async_setup_cleanup(hass: HomeAssistant, registry: EntityRegistry) -> None:
         event_type=cr.EVENT_CATEGORY_REGISTRY_UPDATED,
         event_filter=_removed_from_registry_filter,
         listener=_handle_category_registry_update,
-        run_immediately=True,
     )
 
     @callback
@@ -1525,9 +1522,7 @@ def _async_setup_cleanup(hass: HomeAssistant, registry: EntityRegistry) -> None:
         """Cancel cleanup."""
         cancel()
 
-    hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STOP, _on_homeassistant_stop, run_immediately=True
-    )
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _on_homeassistant_stop)
 
 
 @callback
@@ -1553,7 +1548,6 @@ def _async_setup_entity_restore(hass: HomeAssistant, registry: EntityRegistry) -
         EVENT_ENTITY_REGISTRY_UPDATED,
         cleanup_restored_states,
         event_filter=cleanup_restored_states_filter,
-        run_immediately=True,
     )
 
     if hass.is_running:
@@ -1570,9 +1564,7 @@ def _async_setup_entity_restore(hass: HomeAssistant, registry: EntityRegistry) -
 
             entry.write_unavailable_state(hass)
 
-    hass.bus.async_listen(
-        EVENT_HOMEASSISTANT_START, _write_unavailable_states, run_immediately=True
-    )
+    hass.bus.async_listen(EVENT_HOMEASSISTANT_START, _write_unavailable_states)
 
 
 async def async_migrate_entries(

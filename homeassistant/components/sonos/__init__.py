@@ -577,7 +577,6 @@ class SonosDiscoveryManager:
             self.hass.bus.async_listen_once(
                 EVENT_HOMEASSISTANT_STOP,
                 self._async_stop_event_listener,
-                run_immediately=True,
             )
         )
         _LOGGER.debug("Adding discovery job")
@@ -586,7 +585,6 @@ class SonosDiscoveryManager:
                 self.hass.bus.async_listen_once(
                     EVENT_HOMEASSISTANT_STOP,
                     self._stop_manual_heartbeat,
-                    run_immediately=True,
                 )
             )
             await self.async_poll_manual_hosts()
