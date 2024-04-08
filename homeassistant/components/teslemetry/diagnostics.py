@@ -25,7 +25,7 @@ VEHICLE_REDACT = [
     "drive_state_native_longitude",
 ]
 
-ENERGY_REDACT = ["din", "vin"]
+ENERGY_REDACT = ["vin"]
 
 
 async def async_get_config_entry_diagnostics(
