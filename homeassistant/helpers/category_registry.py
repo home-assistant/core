@@ -8,9 +8,9 @@ from dataclasses import dataclass, field
 from typing import Literal, TypedDict, cast
 
 from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.util.event_type import EventType
 from homeassistant.util.ulid import ulid_now
 
-from ..util.event_type import EventType
 from .registry import BaseRegistry
 from .storage import Store
 from .typing import UNDEFINED, UndefinedType

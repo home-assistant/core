@@ -9,8 +9,8 @@ from typing import Literal, TypedDict, cast
 
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.util import slugify
+from homeassistant.util.event_type import EventType
 
-from ..util.event_type import EventType
 from .normalized_name_base_registry import (
     NormalizedNameBaseRegistryEntry,
     NormalizedNameBaseRegistryItems,
