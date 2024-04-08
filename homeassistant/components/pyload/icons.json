@@ -1,0 +1,26 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "download": {
+        "default": "mdi:play"
+      },
+      "captcha": {
+        "default": "mdi:barcode-scan"
+      }
+    },
+    "sensor": {
+      "speed": {
+        "default": "mdi:speedometer"
+      },
+      "active": {
+        "default": "mdi:cloud-download"
+      },
+      "queue": {
+        "default": "mdi:cloud-clock"
+      },
+      "total": {
+        "default": "mdi:cloud-alert"
+      }
+    }
+  }
+}

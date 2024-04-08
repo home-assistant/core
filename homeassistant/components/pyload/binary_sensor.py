@@ -5,17 +5,16 @@ from __future__ import annotations
 from enum import StrEnum
 import logging
 
-from homeassistant.components.sensor import (
-    SensorDeviceClass,
-    SensorEntity,
-    SensorEntityDescription,
+from homeassistant.components.binary_sensor import (
+    BinarySensorDeviceClass,
+    BinarySensorEntity,
+    BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_URL, UnitOfDataRate
+from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -24,35 +23,22 @@ from .coordinator import PyLoadCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 
-class PyLoadSensorEntity(StrEnum):
-    """PyLoad Sensor Entities."""
+class PyLoadBinarySensorEntity(StrEnum):
+    """PyLoad Status Sensor Entities."""
 
-    ACTIVE = "active"
-    QUEUE = "queue"
-    TOTAL = "total"
-    SPEED = "speed"
+    DOWNLOAD = "download"
+    CAPTCHA = "captcha"
 
 
-SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
-    PyLoadSensorEntity.ACTIVE: SensorEntityDescription(
-        key=PyLoadSensorEntity.ACTIVE,
-        translation_key=PyLoadSensorEntity.ACTIVE,
+SENSOR_DESCRIPTIONS: dict[str, BinarySensorEntityDescription] = {
+    PyLoadBinarySensorEntity.DOWNLOAD: BinarySensorEntityDescription(
+        key=PyLoadBinarySensorEntity.DOWNLOAD,
+        translation_key=PyLoadBinarySensorEntity.DOWNLOAD,
+        device_class=BinarySensorDeviceClass.RUNNING,
     ),
-    PyLoadSensorEntity.QUEUE: SensorEntityDescription(
-        key=PyLoadSensorEntity.QUEUE,
-        translation_key=PyLoadSensorEntity.QUEUE,
-    ),
-    PyLoadSensorEntity.TOTAL: SensorEntityDescription(
-        key=PyLoadSensorEntity.TOTAL,
-        translation_key=PyLoadSensorEntity.TOTAL,
-    ),
-    PyLoadSensorEntity.SPEED: SensorEntityDescription(
-        key=PyLoadSensorEntity.SPEED,
-        translation_key=PyLoadSensorEntity.SPEED,
-        device_class=SensorDeviceClass.DATA_RATE,
-        native_unit_of_measurement=UnitOfDataRate.BYTES_PER_SECOND,
-        suggested_unit_of_measurement=UnitOfDataRate.MEBIBYTES_PER_SECOND,
-        suggested_display_precision=1,
+    PyLoadBinarySensorEntity.CAPTCHA: BinarySensorEntityDescription(
+        key=PyLoadBinarySensorEntity.CAPTCHA,
+        translation_key=PyLoadBinarySensorEntity.CAPTCHA,
     ),
 }
 
@@ -66,21 +52,21 @@ async def async_setup_entry(
     await coordinator.async_config_entry_first_refresh()
 
     async_add_entities(
-        PyLoadSensor(coordinator, description, entry)
+        PyLoadBinarySensor(coordinator, description, entry)
         for description in SENSOR_DESCRIPTIONS.values()
     )
 
 
-class PyLoadSensor(CoordinatorEntity, SensorEntity):
+class PyLoadBinarySensor(CoordinatorEntity, BinarySensorEntity):
     """Representation of a pyLoad sensor."""
 
     _attr_has_entity_name = True
-    entity_description: SensorEntityDescription
+    entity_description: BinarySensorEntityDescription
 
     def __init__(
         self,
         coordinator: PyLoadCoordinator,
-        entity_description: SensorEntityDescription,
+        entity_description: BinarySensorEntityDescription,
         entry: ConfigEntry,
     ) -> None:
         """Initialize the sensor."""
@@ -96,6 +82,6 @@ class PyLoadSensor(CoordinatorEntity, SensorEntity):
         )
 
     @property
-    def native_value(self) -> StateType:
+    def is_on(self) -> bool | None:
         """Return the state of the device."""
         return self.coordinator.data[self.entity_description.key]
