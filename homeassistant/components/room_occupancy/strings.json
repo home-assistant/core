@@ -4,7 +4,7 @@
       "user": {
         "data": {
           "name": "Name of the sensor",
-          "timeout": "Timeout in seconds",
+          "timeout": "Timeout in minutes",
           "entities_toggle": "these entities can toggle the sensor to on",
           "entities_keep": "these entitites can keep the sensor on",
           "active_states": "states that are considered as true"

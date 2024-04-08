@@ -28,6 +28,7 @@ async def async_setup_entry(
 ) -> None:
     """Add entity."""
     _LOGGER.debug("binary_sensor.py async_setup_entry triggered!")
+    _LOGGER.debug("entry: %s", entry.as_dict())
     async_add_entities(
         [
             RoomOccupancyBinarySensor(
@@ -42,21 +43,37 @@ class RoomOccupancyBinarySensor(BinarySensorEntity):
     """Representation of a room occupancy binary sensor."""
 
     _attr_should_poll = False
+    _attr_has_entity_name = True
+    _attr_device_class = BinarySensorDeviceClass.OCCUPANCY
 
     def __init__(self, hass: HomeAssistant, config) -> None:
         """Init."""
+        _LOGGER.debug("Init triggered, config: %s", config.as_dict())
         data = config.as_dict()["data"]
-        _LOGGER.debug(data)
+        _LOGGER.debug("data: %s", data)
         self.hass = hass
+        _LOGGER.debug("hass: %s", hass)
         self.attr = {
             CONF_TIMEOUT: data[CONF_TIMEOUT],
             CONF_ENTITIES_TOGGLE: data[CONF_ENTITIES_TOGGLE],
             CONF_ENTITIES_KEEP: data[CONF_ENTITIES_KEEP],
             CONF_ACTIVE_STATES: data[CONF_ACTIVE_STATES],
+            "device_class": BinarySensorDeviceClass.OCCUPANCY,
+            "friendly_name": data[CONF_NAME],
         }
+        _LOGGER.debug("attr: %s", self.attr)
         self._state = STATE_OFF
-        self._name = data[CONF_NAME]
+        _LOGGER.debug("state: %s", self._state)
+        self._name = data[CONF_NAME]  # + " Occupancy"
+        _LOGGER.debug("name: %s", self._name)
         self._timeout_handle: Optional[Callable[[], None]] = None
+        self.entity_id = (
+            "binary_sensor." + self._name.lower().replace(" ", "_") + "_occupancy"
+        )
+        _LOGGER.debug("entity_id: %s", self.entity_id)
+        self._attr_device_class = BinarySensorDeviceClass.OCCUPANCY
+        _LOGGER.debug("device_class: %s", self._attr_device_class)
+        _LOGGER.debug("self: %s", self)
 
         eventHelper.async_track_state_change(
             self.hass,
@@ -64,17 +81,18 @@ class RoomOccupancyBinarySensor(BinarySensorEntity):
             self.async_update,
         )
 
-    async def async_update(self, entity, old_state, new_state) -> None:
+    async def async_update(self, entity=None, old_state=None, new_state=None) -> None:
         """Fetch new state data for the sensor."""
         _LOGGER.debug("update triggered for %s!", self.entity_id)
         found = self.check_states()
         if found:
-            # if self._state != STATE_ON:
             self._state = STATE_ON
+            # self._attr_is_on = STATE_ON
             self.hass.states.async_set(
-                "binary_sensor." + self._name, self._state, self.attr
+                entity_id=self.entity_id,
+                new_state=self._state,
+                attributes=self.attr,
             )
-            # Cancel the previous timeout if it exists
             if self._timeout_handle is not None:
                 _LOGGER.debug("cancelling previous timeout: %s", self._timeout_handle)
                 self._timeout_handle()
@@ -83,18 +101,20 @@ class RoomOccupancyBinarySensor(BinarySensorEntity):
                 )
         elif self._state != STATE_OFF:
             _LOGGER.debug("state is off, setting a timeout")
-            # Set a new timeout
             self._timeout_handle = eventHelper.async_call_later(
                 self.hass, self.attr[CONF_TIMEOUT], self.timeout_func
             )
             _LOGGER.debug("timeout set: %s", self._timeout_handle)
 
-    async def timeout_func(self, *args):
+    async def timeout_func(self, *args) -> None:
         """Set the state to off after the timeout."""
         _LOGGER.debug("timeout reached, setting state to off")
         self._state = STATE_OFF
+        # self._attr_is_on = STATE_OFF
         self.hass.states.async_set(
-            "binary_sensor." + self._name, self._state, self.attr
+            entity_id=self.entity_id,
+            new_state=self._state,
+            attributes=self.attr,
         )
         self._timeout_handle = None
 
@@ -116,15 +136,15 @@ class RoomOccupancyBinarySensor(BinarySensorEntity):
     @property
     def name(self) -> str:
         """Return the name of the sensor."""
+        _LOGGER.debug("name triggered, returned %s", self._name)
         return self._name
-
-    @property
-    def is_on(self) -> bool:
-        """Return the state of the sensor."""
-        _LOGGER.debug("is_on triggered, returned %s", self._state)
-        return bool(self._state)
 
     @property
     def device_class(self) -> BinarySensorDeviceClass:
         """Return the device class of the sensor."""
         return BinarySensorDeviceClass.OCCUPANCY
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        return f"{self.entity_id}P"
