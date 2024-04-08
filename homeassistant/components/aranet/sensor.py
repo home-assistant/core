@@ -24,11 +24,14 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     ATTR_NAME,
+    ATTR_MANUFACTURER,
     ATTR_SW_VERSION,
     CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
     EntityCategory,
     UnitOfPressure,
+    UnitOfRadiationDose,
+    UnitOfRadiationDoseRate,
     UnitOfTemperature,
     UnitOfTime,
 )
@@ -37,7 +40,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from .const import DOMAIN, ARANET_MANUFACTURER_NAME
 
 
 @dataclass(frozen=True)
@@ -48,6 +51,7 @@ class AranetSensorEntityDescription(SensorEntityDescription):
     # Restrict the type to satisfy the type checker and catch attempts
     # to use UNDEFINED in the entity descriptions.
     name: str | None = None
+    scale: int = 1
 
 
 SENSOR_DESCRIPTIONS = {
@@ -78,6 +82,24 @@ SENSOR_DESCRIPTIONS = {
         device_class=SensorDeviceClass.CO2,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
+    ),
+    "radiation_rate": AranetSensorEntityDescription(
+        key="radiation_rate",
+        name="Radiation Dose Rate",
+        device_class=SensorDeviceClass.RADIATION_DOSE_RATE,
+        native_unit_of_measurement=UnitOfRadiationDoseRate.USV,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
+        scale=0.001,
+    ),
+    "radiation_total": AranetSensorEntityDescription(
+        key="radiation_total",
+        name="Radiation Total Dose",
+        device_class=SensorDeviceClass.RADIATION_DOSE,
+        native_unit_of_measurement=UnitOfRadiationDose.MSV,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=4,
+        scale=0.000001,
     ),
     "battery": AranetSensorEntityDescription(
         key="battery",
@@ -115,6 +137,7 @@ def _sensor_device_info_to_hass(
     hass_device_info = DeviceInfo({})
     if adv.readings and adv.readings.name:
         hass_device_info[ATTR_NAME] = adv.readings.name
+        hass_device_info[ATTR_MANUFACTURER] = ARANET_MANUFACTURER_NAME
     if adv.manufacturer_data:
         hass_device_info[ATTR_SW_VERSION] = str(adv.manufacturer_data.version)
     return hass_device_info
@@ -132,6 +155,7 @@ def sensor_update_to_bluetooth_data_update(
         val = getattr(adv.readings, key)
         if val == -1:
             continue
+        val *= desc.scale
         data[tag] = val
         names[tag] = desc.name
         descs[tag] = desc
