@@ -3,7 +3,7 @@
 from collections.abc import Mapping
 from enum import Enum
 from functools import partial
-from typing import Any, TypeVar
+from typing import Any
 
 import homeassistant.core
 
@@ -13,8 +13,6 @@ from .deprecation import (
     check_if_deprecated_constant,
     dir_with_deprecated_constants,
 )
-
-_DataT = TypeVar("_DataT")
 
 GPSType = tuple[float, float]
 ConfigType = dict[str, Any]
