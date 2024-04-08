@@ -97,7 +97,7 @@ async def test_plex_update(
         },
         blocking=True,
     )
-    assert apply_mock.called_once
+    assert apply_mock.call_count == 1
 
     # Failed upgrade request
     requests_mock.put("/updater/apply", status_code=500)

@@ -684,7 +684,7 @@ def get_metadata_with_session(
     session: Session,
     *,
     statistic_ids: set[str] | None = None,
-    statistic_type: Literal["mean"] | Literal["sum"] | None = None,
+    statistic_type: Literal["mean", "sum"] | None = None,
     statistic_source: str | None = None,
 ) -> dict[str, tuple[int, StatisticMetaData]]:
     """Fetch meta data.
@@ -705,7 +705,7 @@ def get_metadata(
     hass: HomeAssistant,
     *,
     statistic_ids: set[str] | None = None,
-    statistic_type: Literal["mean"] | Literal["sum"] | None = None,
+    statistic_type: Literal["mean", "sum"] | None = None,
     statistic_source: str | None = None,
 ) -> dict[str, tuple[int, StatisticMetaData]]:
     """Return metadata for statistic_ids."""
@@ -753,7 +753,7 @@ def update_statistics_metadata(
 async def async_list_statistic_ids(
     hass: HomeAssistant,
     statistic_ids: set[str] | None = None,
-    statistic_type: Literal["mean"] | Literal["sum"] | None = None,
+    statistic_type: Literal["mean", "sum"] | None = None,
 ) -> list[dict]:
     """Return all statistic_ids (or filtered one) and unit of measurement.
 
@@ -823,7 +823,7 @@ def _flatten_list_statistic_ids_metadata_result(
 def list_statistic_ids(
     hass: HomeAssistant,
     statistic_ids: set[str] | None = None,
-    statistic_type: Literal["mean"] | Literal["sum"] | None = None,
+    statistic_type: Literal["mean", "sum"] | None = None,
 ) -> list[dict]:
     """Return all statistic_ids (or filtered one) and unit of measurement.
 

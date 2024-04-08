@@ -1,8 +1,10 @@
 """Managers for each table."""
 
-from typing import TYPE_CHECKING, Generic, TypeVar
+from typing import TYPE_CHECKING, Any, Generic, TypeVar
 
 from lru import LRU
+
+from homeassistant.util.event_type import EventType
 
 if TYPE_CHECKING:
     from ..core import Recorder
@@ -13,7 +15,7 @@ _DataT = TypeVar("_DataT")
 class BaseTableManager(Generic[_DataT]):
     """Base class for table managers."""
 
-    _id_map: "LRU[str, int]"
+    _id_map: "LRU[EventType[Any] | str, int]"
 
     def __init__(self, recorder: "Recorder") -> None:
         """Initialize the table manager.
@@ -24,7 +26,7 @@ class BaseTableManager(Generic[_DataT]):
         """
         self.active = False
         self.recorder = recorder
-        self._pending: dict[str, _DataT] = {}
+        self._pending: dict[EventType[Any] | str, _DataT] = {}
 
     def get_from_cache(self, data: str) -> int | None:
         """Resolve data to the id without accessing the underlying database.
@@ -34,7 +36,7 @@ class BaseTableManager(Generic[_DataT]):
         """
         return self._id_map.get(data)
 
-    def get_pending(self, shared_data: str) -> _DataT | None:
+    def get_pending(self, shared_data: EventType[Any] | str) -> _DataT | None:
         """Get pending data that have not be assigned ids yet.
 
         This call is not thread-safe and must be called from the
