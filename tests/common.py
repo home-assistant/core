@@ -586,12 +586,12 @@ def json_round_trip(obj: Any) -> Any:
 def mock_state_change_event(
     hass: HomeAssistant, new_state: State, old_state: State | None = None
 ) -> None:
-    """Mock state change envent."""
-    event_data = {"entity_id": new_state.entity_id, "new_state": new_state}
-
-    if old_state:
-        event_data["old_state"] = old_state
-
+    """Mock state change event."""
+    event_data = {
+        "entity_id": new_state.entity_id,
+        "new_state": new_state,
+        "old_state": old_state,
+    }
     hass.bus.fire(EVENT_STATE_CHANGED, event_data, context=new_state.context)
 
 
