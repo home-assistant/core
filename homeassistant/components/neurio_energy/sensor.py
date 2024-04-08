@@ -128,7 +128,6 @@ class NeurioData:
             )
         except (requests.exceptions.RequestException, ValueError, KeyError):
             _LOGGER.warning("Could not update daily power usage")
-            return
 
         for result in history:
             kwh += result["consumptionEnergy"] / 3600000

@@ -162,9 +162,9 @@ class AirMonitorV1(AirMonitorB1):
                 _LOGGER.error("Got exception while fetching the state: %s", ex)
 
     @property
-    def unit_of_measurement(self) -> str:
+    def unit_of_measurement(self) -> str | None:
         """Return the unit of measurement."""
-        return ""
+        return None
 
 
 class AirMonitorCGDN1(XiaomiMiioEntity, AirQualityEntity):

@@ -9,7 +9,6 @@ The tests below exercise both cases during integration setup.
 """
 
 import time
-from typing import Any
 from unittest.mock import patch
 
 from google_nest_sdm.google_nest_subscriber import GoogleNestSubscriber

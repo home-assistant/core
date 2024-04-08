@@ -5,7 +5,6 @@ from collections.abc import Generator
 import copy
 import io
 import json
-from typing import Any
 from unittest.mock import DEFAULT, AsyncMock, patch
 
 import pytest
@@ -14,6 +13,7 @@ from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.node import Node
 from zwave_js_server.version import VersionInfo
 
+from homeassistant.components.hassio.handler import HassioAPIError
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_fixture
