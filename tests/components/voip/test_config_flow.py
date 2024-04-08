@@ -16,7 +16,7 @@ async def test_form_user(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         voip.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert not result["errors"]
 
     with patch(
@@ -41,7 +41,7 @@ async def test_single_instance(
     result = await hass.config_entries.flow.async_init(
         voip.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
 
 

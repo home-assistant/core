@@ -30,7 +30,7 @@ async def test_form_user(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     with (
@@ -113,7 +113,7 @@ async def test_zeroconf_discovery(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "create_entry"
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "My Fan"
     assert result2["data"] == {CONF_IP_ADDRESS: "127.0.0.1"}
     assert len(mock_setup_entry.mock_calls) == 1
@@ -182,7 +182,7 @@ async def test_user_flow_is_not_blocked_by_discovery(hass: HomeAssistant) -> Non
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     with (

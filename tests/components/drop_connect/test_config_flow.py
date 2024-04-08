@@ -24,7 +24,7 @@ async def test_mqtt_setup(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) -> N
         data=discovery_info,
     )
     assert result is not None
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "confirm"
 
     result = await hass.config_entries.flow.async_configure(
@@ -61,7 +61,7 @@ async def test_duplicate(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) -> No
         data=discovery_info,
     )
     assert result is not None
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "confirm"
 
     result = await hass.config_entries.flow.async_configure(
@@ -78,7 +78,7 @@ async def test_duplicate(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) -> No
         data=discovery_info,
     )
     assert result is not None
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "invalid_discovery_info"
 
 
@@ -100,7 +100,7 @@ async def test_mqtt_setup_incomplete_payload(
         data=discovery_info,
     )
     assert result is not None
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "invalid_discovery_info"
 
 
@@ -122,7 +122,7 @@ async def test_mqtt_setup_bad_json(
         data=discovery_info,
     )
     assert result is not None
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "invalid_discovery_info"
 
 
@@ -144,7 +144,7 @@ async def test_mqtt_setup_bad_topic(
         data=discovery_info,
     )
     assert result is not None
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "invalid_discovery_info"
 
 
@@ -166,7 +166,7 @@ async def test_mqtt_setup_no_payload(
         data=discovery_info,
     )
     assert result is not None
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "invalid_discovery_info"
 
 
@@ -175,5 +175,5 @@ async def test_user_setup(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         "drop_connect", context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "not_supported"

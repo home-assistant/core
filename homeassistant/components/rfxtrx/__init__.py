@@ -25,7 +25,10 @@ from homeassistant.const import (
 from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import (
+    DeviceInfo,
+    EventDeviceRegistryUpdatedData,
+)
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -259,7 +262,7 @@ async def async_setup_internal(hass: HomeAssistant, entry: ConfigEntry) -> None:
         devices.pop(device_id)
 
     @callback
-    def _updated_device(event: Event) -> None:
+    def _updated_device(event: Event[EventDeviceRegistryUpdatedData]) -> None:
         if event.data["action"] != "remove":
             return
         device_entry = device_registry.deleted_devices[event.data["device_id"]]
@@ -277,7 +280,9 @@ async def async_setup_internal(hass: HomeAssistant, entry: ConfigEntry) -> None:
     hass.data[DOMAIN][DATA_RFXOBJECT] = rfx_object
 
     entry.async_on_unload(
-        hass.bus.async_listen(dr.EVENT_DEVICE_REGISTRY_UPDATED, _updated_device)
+        hass.bus.async_listen(
+            dr.EVENT_DEVICE_REGISTRY_UPDATED, _updated_device, run_immediately=False
+        )
     )
 
     def _shutdown_rfxtrx(event: Event) -> None:
