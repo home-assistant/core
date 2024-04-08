@@ -684,7 +684,7 @@ async def test_message_data(
     hass: HomeAssistant,
     mock_imap_protocol: MagicMock,
     caplog: pytest.LogCaptureFixture,
-    event_message_data: list
+    event_message_data: list,
 ) -> None:
     """Test with different message data."""
     event_called = async_capture_events(hass, "imap_content")
