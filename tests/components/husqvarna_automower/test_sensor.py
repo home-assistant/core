@@ -10,6 +10,7 @@ import pytest
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.husqvarna_automower.const import DOMAIN
+from homeassistant.components.husqvarna_automower.coordinator import SCAN_INTERVAL
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -41,7 +42,7 @@ async def test_sensor_unknown_states(
 
     values[TEST_MOWER_ID].mower.mode = MowerModes.UNKNOWN
     mock_automower_client.get_status.return_value = values
-    freezer.tick(timedelta(minutes=5))
+    freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     state = hass.states.get("sensor.test_mower_1_mode")
@@ -112,7 +113,7 @@ async def test_error_sensor(
     ]:
         values[TEST_MOWER_ID].mower.error_key = state
         mock_automower_client.get_status.return_value = values
-        freezer.tick(timedelta(minutes=5))
+        freezer.tick(timedelta(minutes=8))
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
         state = hass.states.get("sensor.test_mower_1_error")
