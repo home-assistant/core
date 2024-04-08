@@ -924,6 +924,8 @@ class Recorder(threading.Thread):
             _LOGGER.exception("Unhandled database error while processing task %s", task)
         except SQLAlchemyError:
             _LOGGER.exception("SQLAlchemyError error processing task %s", task)
+        else:
+            return
 
         # Reset the session if an SQLAlchemyError (including DatabaseError)
         # happens to rollback and recover
