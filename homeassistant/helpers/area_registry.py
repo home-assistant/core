@@ -26,6 +26,24 @@ STORAGE_VERSION_MAJOR = 1
 STORAGE_VERSION_MINOR = 6
 
 
+class _AreaStoreData(TypedDict):
+    """Data type for individual area. Used in AreasRegistryStoreData."""
+
+    aliases: list[str]
+    floor_id: str | None
+    icon: str | None
+    id: str
+    labels: list[str]
+    name: str
+    picture: str | None
+
+
+class AreasRegistryStoreData(TypedDict):
+    """Store data type for AreaRegistry."""
+
+    areas: list[_AreaStoreData]
+
+
 class EventAreaRegistryUpdatedData(TypedDict):
     """EventAreaRegistryUpdated data."""
 
@@ -45,7 +63,7 @@ class AreaEntry(NormalizedNameBaseRegistryEntry):
     picture: str | None
 
 
-class AreaRegistryStore(Store[dict[str, list[dict[str, Any]]]]):
+class AreaRegistryStore(Store[AreasRegistryStoreData]):
     """Store area registry data."""
 
     async def _async_migrate_func(
@@ -53,7 +71,7 @@ class AreaRegistryStore(Store[dict[str, list[dict[str, Any]]]]):
         old_major_version: int,
         old_minor_version: int,
         old_data: dict[str, list[dict[str, Any]]],
-    ) -> dict[str, Any]:
+    ) -> AreasRegistryStoreData:
         """Migrate to the new version."""
         if old_major_version < 2:
             if old_minor_version < 2:
@@ -84,7 +102,7 @@ class AreaRegistryStore(Store[dict[str, list[dict[str, Any]]]]):
 
         if old_major_version > 1:
             raise NotImplementedError
-        return old_data
+        return old_data  # type: ignore[return-value]
 
 
 class AreaRegistryItems(NormalizedNameBaseRegistryItems[AreaEntry]):
@@ -126,7 +144,7 @@ class AreaRegistryItems(NormalizedNameBaseRegistryItems[AreaEntry]):
         return [data[key] for key in self._floors_index.get(floor, ())]
 
 
-class AreaRegistry(BaseRegistry):
+class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
     """Class to hold a registry of areas."""
 
     areas: AreaRegistryItems
@@ -314,24 +332,22 @@ class AreaRegistry(BaseRegistry):
         self._area_data = areas.data
 
     @callback
-    def _data_to_save(self) -> dict[str, list[dict[str, Any]]]:
+    def _data_to_save(self) -> AreasRegistryStoreData:
         """Return data of area registry to store in a file."""
-        data = {}
-
-        data["areas"] = [
-            {
-                "aliases": list(entry.aliases),
-                "floor_id": entry.floor_id,
-                "icon": entry.icon,
-                "id": entry.id,
-                "labels": list(entry.labels),
-                "name": entry.name,
-                "picture": entry.picture,
-            }
-            for entry in self.areas.values()
-        ]
-
-        return data
+        return {
+            "areas": [
+                {
+                    "aliases": list(entry.aliases),
+                    "floor_id": entry.floor_id,
+                    "icon": entry.icon,
+                    "id": entry.id,
+                    "labels": list(entry.labels),
+                    "name": entry.name,
+                    "picture": entry.picture,
+                }
+                for entry in self.areas.values()
+            ]
+        }
 
     def _generate_area_id(self, name: str) -> str:
         """Generate area ID."""

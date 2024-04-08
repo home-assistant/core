@@ -85,9 +85,7 @@ async def setup_mock_component(hass: HomeAssistant, mock_entry: MockConfigEntry)
 
     entries = async_entries_for_config_entry(async_get_er(hass), mock_entry.entry_id)
     assert len(entries) == 1
-    entity_id = entries[0].entity_id
-
-    return entity_id
+    return entries[0].entity_id
 
 
 async def get_attrs(hass: HomeAssistant, entity_id: str) -> Mapping[str, Any]:

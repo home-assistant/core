@@ -353,12 +353,14 @@ async def async_test_home_assistant(
 
     hass.set_state(CoreState.running)
 
-    @callback
-    def clear_instance(event):
+    async def clear_instance(event):
         """Clear global instance."""
+        await asyncio.sleep(0)  # Give aiohttp one loop iteration to close
         INSTANCES.remove(hass)
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, clear_instance)
+    hass.bus.async_listen_once(
+        EVENT_HOMEASSISTANT_CLOSE, clear_instance, run_immediately=True
+    )
 
     yield hass
 
@@ -1525,12 +1527,12 @@ class _HA_ANY:
 
     _other = _SENTINEL
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         """Test equal."""
         self._other = other
         return True
 
-    def __ne__(self, other: Any) -> bool:
+    def __ne__(self, other: object) -> bool:
         """Test not equal."""
         self._other = other
         return False
@@ -1638,6 +1640,40 @@ def import_and_test_deprecated_constant(
     # verify deprecated constant is included in dir()
     assert constant_name in dir(module)
     assert constant_name in module.__all__
+
+
+def import_and_test_deprecated_alias(
+    caplog: pytest.LogCaptureFixture,
+    module: ModuleType,
+    alias_name: str,
+    replacement: Any,
+    breaks_in_ha_version: str,
+) -> None:
+    """Import and test deprecated alias replaced by a value.
+
+    - Import deprecated alias
+    - Assert value is the same as the replacement
+    - Assert a warning is logged
+    - Assert the deprecated alias is included in the modules.__dir__()
+    - Assert the deprecated alias is included in the modules.__all__()
+    """
+    replacement_name = f"{replacement.__module__}.{replacement.__name__}"
+    value = import_deprecated_constant(module, alias_name)
+    assert value == replacement
+    assert (
+        module.__name__,
+        logging.WARNING,
+        (
+            f"{alias_name} was used from test_constant_deprecation,"
+            f" this is a deprecated alias which will be removed in HA Core {breaks_in_ha_version}. "
+            f"Use {replacement_name} instead, please report "
+            "it to the author of the 'test_constant_deprecation' custom integration"
+        ),
+    ) in caplog.record_tuples
+
+    # verify deprecated alias is included in dir()
+    assert alias_name in dir(module)
+    assert alias_name in module.__all__
 
 
 def help_test_all(module: ModuleType) -> None:
