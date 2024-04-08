@@ -66,7 +66,7 @@ async def test_update_data_reauthenticate_on_access_denied(hass: HomeAssistant) 
 
         async_fire_time_changed(hass, utcnow() + datetime.timedelta(minutes=1))
         await hass.async_block_till_done()
-        assert config_entry.state == ConfigEntryState.LOADED
+        assert config_entry.state is ConfigEntryState.LOADED
 
         flows = hass.config_entries.flow.async_progress(DOMAIN)
         assert len(flows) == 1

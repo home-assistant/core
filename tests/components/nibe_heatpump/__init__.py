@@ -64,7 +64,7 @@ async def async_add_entry(hass: HomeAssistant, data: dict[str, Any]) -> MockConf
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
     return entry
 
 

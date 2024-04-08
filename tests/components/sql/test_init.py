@@ -7,11 +7,11 @@ from unittest.mock import patch
 import pytest
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.recorder.util import get_instance
 from homeassistant.components.sql import validate_sql_select
 from homeassistant.components.sql.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -21,17 +21,17 @@ from . import YAML_CONFIG_INVALID, YAML_CONFIG_NO_DB, init_integration
 async def test_setup_entry(recorder_mock: Recorder, hass: HomeAssistant) -> None:
     """Test setup entry."""
     config_entry = await init_integration(hass)
-    assert config_entry.state == config_entries.ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
 
 async def test_unload_entry(recorder_mock: Recorder, hass: HomeAssistant) -> None:
     """Test unload an entry."""
     config_entry = await init_integration(hass)
-    assert config_entry.state == config_entries.ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     assert await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
-    assert config_entry.state is config_entries.ConfigEntryState.NOT_LOADED
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
 
 
 async def test_setup_config(recorder_mock: Recorder, hass: HomeAssistant) -> None:
