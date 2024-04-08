@@ -16,12 +16,6 @@ from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from .. import OverkizDataUpdateCoordinator
 from ..entity import OverkizEntity
 
-OVERKIZ_TO_OPERATION_MODE: dict[str, str] = {
-    STATE_PERFORMANCE: OverkizCommandParam.PERFORMANCE,
-    STATE_ECO: OverkizCommandParam.MANUAL_ECO_ACTIVE,
-    OverkizCommandParam.MANUAL: OverkizCommandParam.MANUAL_ECO_INACTIVE,
-}
-
 
 class AtlanticDomesticHotWaterProductionMBLComponent(OverkizEntity, WaterHeaterEntity):
     """Representation of AtlanticDomesticHotWaterProductionMBLComponent (modbuslink)."""
@@ -33,7 +27,11 @@ class AtlanticDomesticHotWaterProductionMBLComponent(OverkizEntity, WaterHeaterE
         | WaterHeaterEntityFeature.AWAY_MODE
         | WaterHeaterEntityFeature.ON_OFF
     )
-    _attr_operation_list = [*OVERKIZ_TO_OPERATION_MODE.keys()]
+    _attr_operation_list = [
+        OverkizCommandParam.PERFORMANCE,
+        OverkizCommandParam.ECO,
+        OverkizCommandParam.MANUAL,
+    ]
 
     def __init__(
         self, device_url: str, coordinator: OverkizDataUpdateCoordinator
