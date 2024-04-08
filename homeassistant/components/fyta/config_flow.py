@@ -15,7 +15,7 @@ from fyta_cli.fyta_exceptions import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
 from .const import DOMAIN
@@ -32,6 +32,7 @@ class FytaConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Fyta."""
 
     VERSION = 1
+    _entry: ConfigEntry | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -70,7 +71,7 @@ class FytaConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle flow upon an API authentication error."""
-        self._entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])  # pylint: disable=attribute-defined-outside-init
+        self._entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -104,7 +105,7 @@ class FytaConfigFlow(ConfigFlow, domain=DOMAIN):
                     data={**self._entry.data, **user_input},
                 )
                 await self.hass.config_entries.async_reload(self._entry.entry_id)
-                return self.async_abort(reason="reauth_successful")
+                return self.async_update_reload_and_abort(self._entry)
 
         data_schema = self.add_suggested_values_to_schema(
             DATA_SCHEMA,
