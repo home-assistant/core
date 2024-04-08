@@ -5,10 +5,11 @@ from __future__ import annotations
 from collections.abc import Iterable
 import dataclasses
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Literal, TypedDict, cast
+from typing import Literal, TypedDict, cast
 
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.util import slugify
+from homeassistant.util.event_type import EventType
 
 from .normalized_name_base_registry import (
     NormalizedNameBaseRegistryEntry,
@@ -20,9 +21,27 @@ from .storage import Store
 from .typing import UNDEFINED, UndefinedType
 
 DATA_REGISTRY = "floor_registry"
-EVENT_FLOOR_REGISTRY_UPDATED = "floor_registry_updated"
+EVENT_FLOOR_REGISTRY_UPDATED: EventType[EventFloorRegistryUpdatedData] = EventType(
+    "floor_registry_updated"
+)
 STORAGE_KEY = "core.floor_registry"
 STORAGE_VERSION_MAJOR = 1
+
+
+class _FloorStoreData(TypedDict):
+    """Data type for individual floor. Used in FloorRegistryStoreData."""
+
+    aliases: list[str]
+    floor_id: str
+    icon: str | None
+    level: int | None
+    name: str
+
+
+class FloorRegistryStoreData(TypedDict):
+    """Store data type for FloorRegistry."""
+
+    floors: list[_FloorStoreData]
 
 
 class EventFloorRegistryUpdatedData(TypedDict):
@@ -45,7 +64,7 @@ class FloorEntry(NormalizedNameBaseRegistryEntry):
     level: int | None = None
 
 
-class FloorRegistry(BaseRegistry):
+class FloorRegistry(BaseRegistry[FloorRegistryStoreData]):
     """Class to hold a registry of floors."""
 
     floors: NormalizedNameBaseRegistryItems[FloorEntry]
@@ -54,13 +73,11 @@ class FloorRegistry(BaseRegistry):
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the floor registry."""
         self.hass = hass
-        self._store: Store[dict[str, list[dict[str, str | int | list[str] | None]]]] = (
-            Store(
-                hass,
-                STORAGE_VERSION_MAJOR,
-                STORAGE_KEY,
-                atomic_writes=True,
-            )
+        self._store = Store(
+            hass,
+            STORAGE_VERSION_MAJOR,
+            STORAGE_KEY,
+            atomic_writes=True,
         )
 
     @callback
@@ -190,13 +207,6 @@ class FloorRegistry(BaseRegistry):
 
         if data is not None:
             for floor in data["floors"]:
-                if TYPE_CHECKING:
-                    assert isinstance(floor["aliases"], list)
-                    assert isinstance(floor["icon"], str)
-                    assert isinstance(floor["level"], int)
-                    assert isinstance(floor["name"], str)
-                    assert isinstance(floor["floor_id"], str)
-
                 normalized_name = normalize_name(floor["name"])
                 floors[floor["floor_id"]] = FloorEntry(
                     aliases=set(floor["aliases"]),
@@ -211,7 +221,7 @@ class FloorRegistry(BaseRegistry):
         self._floor_data = floors.data
 
     @callback
-    def _data_to_save(self) -> dict[str, list[dict[str, str | int | list[str] | None]]]:
+    def _data_to_save(self) -> FloorRegistryStoreData:
         """Return data of floor registry to store in a file."""
         return {
             "floors": [

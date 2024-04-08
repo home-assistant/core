@@ -111,7 +111,7 @@ async def test_state_changed_event_sends_message(
         "last_updated": now.isoformat(),
         "state": "on",
     }
-    event["event_data"] = {"new_state": new_state, "entity_id": e_id}
+    event["event_data"] = {"new_state": new_state, "entity_id": e_id, "old_state": None}
 
     # Verify that the message received was that expected
     result = json.loads(msg)

@@ -24,6 +24,7 @@ REMOVED = 2
 RE_REFERENCE = r"\[\%key:(.+)\%\]"
 RE_TRANSLATION_KEY = re.compile(r"^(?!.+[_-]{2})(?![_-])[a-z0-9-_]+(?<![_-])$")
 RE_COMBINED_REFERENCE = re.compile(r"(.+\[%)|(%\].+)")
+RE_PLACEHOLDER_IN_SINGLE_QUOTES = re.compile(r"'{\w+}'")
 
 # Only allow translation of integration names if they contain non-brand names
 ALLOW_NAME_TRANSLATION = {
@@ -128,12 +129,23 @@ def translation_value_validator(value: Any) -> str:
     """Validate that the value is a valid translation.
 
     - prevents string with HTML
+    - prevents strings with single quoted placeholders
     - prevents combined translations
     """
     value = cv.string_with_no_html(value)
+    value = string_no_single_quoted_placeholders(value)
     if RE_COMBINED_REFERENCE.search(value):
         raise vol.Invalid("the string should not contain combined translations")
     return str(value)
+
+
+def string_no_single_quoted_placeholders(value: str) -> str:
+    """Validate that the value does not contain placeholders inside single quotes."""
+    if RE_PLACEHOLDER_IN_SINGLE_QUOTES.search(value):
+        raise vol.Invalid(
+            "the string should not contain placeholders inside single quotes"
+        )
+    return value
 
 
 def gen_data_entry_schema(
