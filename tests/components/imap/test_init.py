@@ -679,7 +679,7 @@ async def test_message_is_truncated(
     "imap_fetch", [(TEST_FETCH_RESPONSE_TEXT_PLAIN)], ids=["plain"]
 )
 @pytest.mark.parametrize("imap_has_capability", [True, False], ids=["push", "poll"])
-@pytest.mark.parametrize("event_message_data", [[], ["text"],["text", "headers"]])
+@pytest.mark.parametrize("event_message_data", [[], ["text"], ["text", "headers"]])
 async def test_message_data(
     hass: HomeAssistant,
     mock_imap_protocol: MagicMock,
