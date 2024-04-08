@@ -31,7 +31,6 @@ async def test_sensors(
 ) -> None:
     """Test the Arve sensors."""
     await async_init_integration(hass, mock_config_entry)
-    await hass.async_block_till_done()
 
     for sensor in SENSORS:
         state = hass.states.get(f"sensor.test_sensor_{sensor}")
