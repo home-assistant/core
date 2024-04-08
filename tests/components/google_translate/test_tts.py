@@ -73,6 +73,8 @@ async def setup_fixture(
     else:
         raise RuntimeError("Invalid setup fixture")
 
+    await hass.async_block_till_done()
+
 
 @pytest.fixture(name="config")
 def config_fixture() -> dict[str, Any]:

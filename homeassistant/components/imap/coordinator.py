@@ -1,4 +1,4 @@
-"""Coordinator for imag integration."""
+"""Coordinator for imap integration."""
 
 from __future__ import annotations
 
@@ -254,6 +254,7 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int | None]):
                 initial = False
             self._last_message_id = message_id
             data = {
+                "entry_id": self.config_entry.entry_id,
                 "server": self.config_entry.data[CONF_SERVER],
                 "username": self.config_entry.data[CONF_USERNAME],
                 "search": self.config_entry.data[CONF_SEARCH],
@@ -398,8 +399,6 @@ class ImapPollingDataUpdateCoordinator(ImapDataUpdateCoordinator):
         """Update the number of unread emails."""
         try:
             messages = await self._async_fetch_number_of_messages()
-            self.auth_errors = 0
-            return messages
         except (
             AioImapException,
             UpdateFailed,
@@ -426,6 +425,9 @@ class ImapPollingDataUpdateCoordinator(ImapDataUpdateCoordinator):
             self.async_set_update_error(ex)
             raise ConfigEntryAuthFailed from ex
 
+        self.auth_errors = 0
+        return messages
+
 
 class ImapPushDataUpdateCoordinator(ImapDataUpdateCoordinator):
     """Class for imap client."""
@@ -446,7 +448,7 @@ class ImapPushDataUpdateCoordinator(ImapDataUpdateCoordinator):
     async def async_start(self) -> None:
         """Start coordinator."""
         self._push_wait_task = self.hass.async_create_background_task(
-            self._async_wait_push_loop(), "Wait for IMAP data push"
+            self._async_wait_push_loop(), "Wait for IMAP data push", eager_start=False
         )
 
     async def _async_wait_push_loop(self) -> None:

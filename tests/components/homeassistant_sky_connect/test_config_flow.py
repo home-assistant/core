@@ -75,7 +75,7 @@ async def test_config_flow(
         "description": usb_data.description,
     }
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == title
     assert result["data"] == expected_data
     assert result["options"] == {}
@@ -123,7 +123,7 @@ async def test_config_flow_multiple_entries(
             DOMAIN, context={"source": "usb"}, data=usb_data
         )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize(
@@ -172,7 +172,7 @@ async def test_config_flow_update_device(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert len(mock_setup_entry.mock_calls) == 1
     assert len(mock_unload_entry.mock_calls) == 1
@@ -221,7 +221,7 @@ async def test_option_flow_install_multi_pan_addon(
         side_effect=Mock(return_value=True),
     ):
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "addon_not_installed"
 
     result = await hass.config_entries.options.async_configure(
@@ -230,7 +230,7 @@ async def test_option_flow_install_multi_pan_addon(
             "enable_multi_pan": True,
         },
     )
-    assert result["type"] == FlowResultType.SHOW_PROGRESS
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "install_addon"
     assert result["progress_action"] == "install_addon"
 
@@ -238,7 +238,7 @@ async def test_option_flow_install_multi_pan_addon(
     install_addon.assert_called_once_with(hass, "core_silabs_multiprotocol")
 
     result = await hass.config_entries.options.async_configure(result["flow_id"])
-    assert result["type"] == FlowResultType.SHOW_PROGRESS
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "start_addon"
     set_addon_options.assert_called_once_with(
         hass,
@@ -257,7 +257,7 @@ async def test_option_flow_install_multi_pan_addon(
     start_addon.assert_called_once_with(hass, "core_silabs_multiprotocol")
 
     result = await hass.config_entries.options.async_configure(result["flow_id"])
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 def mock_detect_radio_type(radio_type=RadioType.ezsp, ret=True):
@@ -329,7 +329,7 @@ async def test_option_flow_install_multi_pan_addon_zha(
         side_effect=Mock(return_value=True),
     ):
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "addon_not_installed"
 
     result = await hass.config_entries.options.async_configure(
@@ -338,7 +338,7 @@ async def test_option_flow_install_multi_pan_addon_zha(
             "enable_multi_pan": True,
         },
     )
-    assert result["type"] == FlowResultType.SHOW_PROGRESS
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "install_addon"
     assert result["progress_action"] == "install_addon"
 
@@ -346,7 +346,7 @@ async def test_option_flow_install_multi_pan_addon_zha(
     install_addon.assert_called_once_with(hass, "core_silabs_multiprotocol")
 
     result = await hass.config_entries.options.async_configure(result["flow_id"])
-    assert result["type"] == FlowResultType.SHOW_PROGRESS
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "start_addon"
     set_addon_options.assert_called_once_with(
         hass,
@@ -374,4 +374,4 @@ async def test_option_flow_install_multi_pan_addon_zha(
     start_addon.assert_called_once_with(hass, "core_silabs_multiprotocol")
 
     result = await hass.config_entries.options.async_configure(result["flow_id"])
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY

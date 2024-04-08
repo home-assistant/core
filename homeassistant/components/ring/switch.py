@@ -62,7 +62,7 @@ class SirenSwitch(BaseRingSwitch):
 
     _attr_translation_key = "siren"
 
-    def __init__(self, device: RingGeneric, coordinator: RingDataCoordinator) -> None:
+    def __init__(self, device, coordinator: RingDataCoordinator) -> None:
         """Initialize the switch for a device with a siren."""
         super().__init__(device, coordinator, "siren")
         self._no_updates_until = dt_util.utcnow()

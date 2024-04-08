@@ -47,7 +47,7 @@ async def test_import_config(
     )
     await hass.async_block_till_done()
 
-    assert result.get("type") == FlowResultType.CREATE_ENTRY
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert (
         result.get("title")
         == "San Francisco Muni F - Market & Wharves Market St & 7th St (Outbound)"
@@ -64,7 +64,7 @@ async def test_import_config(
     )
     await hass.async_block_till_done()
 
-    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "already_configured"
 
 
@@ -100,7 +100,7 @@ async def test_import_config_invalid(
     )
     await hass.async_block_till_done()
 
-    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == expected_reason
 
 
@@ -112,7 +112,7 @@ async def test_user_config(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "agency"
 
     # Select agency
@@ -124,7 +124,7 @@ async def test_user_config(
     )
     await hass.async_block_till_done()
 
-    assert result.get("type") == "form"
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "route"
 
     # Select route
@@ -136,7 +136,7 @@ async def test_user_config(
     )
     await hass.async_block_till_done()
 
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "stop"
 
     # Select stop
@@ -148,7 +148,7 @@ async def test_user_config(
     )
     await hass.async_block_till_done()
 
-    assert result.get("type") == FlowResultType.CREATE_ENTRY
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert result.get("data") == {
         "agency": "sf-muni",
         "route": "F",
