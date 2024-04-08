@@ -29,6 +29,7 @@ source = homeassistant
 omit =
     homeassistant/__main__.py
     homeassistant/helpers/signal.py
+    homeassistant/helpers/backports/aiohttp_resolver.py
     homeassistant/scripts/__init__.py
     homeassistant/scripts/check_config.py
     homeassistant/scripts/ensure_config.py
