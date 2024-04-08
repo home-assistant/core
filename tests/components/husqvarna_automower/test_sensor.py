@@ -1,6 +1,5 @@
 """Tests for sensor platform."""
 
-from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
 from aioautomower.model import MowerModes
@@ -113,7 +112,7 @@ async def test_error_sensor(
     ]:
         values[TEST_MOWER_ID].mower.error_key = state
         mock_automower_client.get_status.return_value = values
-        freezer.tick(timedelta(minutes=8))
+        freezer.tick(SCAN_INTERVAL)
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
         state = hass.states.get("sensor.test_mower_1_error")
