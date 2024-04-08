@@ -20,13 +20,13 @@
         'total_pack_energy': 40727,
         'wall_connectors': dict({
           'abd-123': dict({
-            'din': '**REDACTED**',
+            'din': 'abd-123',
             'wall_connector_fault_state': 2,
             'wall_connector_power': 0,
             'wall_connector_state': 2,
           }),
           'bcd-234': dict({
-            'din': '**REDACTED**',
+            'din': 'bcd-234',
             'wall_connector_fault_state': 2,
             'wall_connector_power': 0,
             'wall_connector_state': 2,
