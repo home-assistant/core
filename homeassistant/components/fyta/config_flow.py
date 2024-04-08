@@ -69,7 +69,6 @@ class FytaConfigFlow(ConfigFlow, domain=DOMAIN):
             self._async_abort_entries_match({CONF_USERNAME: user_input[CONF_USERNAME]})
 
             if not (errors := await self.async_auth(user_input)):
-                user_input |= self.credentials
                 return self.async_create_entry(
                     title=user_input[CONF_USERNAME], data=user_input
                 )
@@ -93,8 +92,6 @@ class FytaConfigFlow(ConfigFlow, domain=DOMAIN):
         assert self._entry is not None
 
         if user_input and not (errors := await self.async_auth(user_input)):
-            user_input |= self.credentials
-
             return self.async_update_reload_and_abort(
                 self._entry, data={**self._entry.data, **user_input}
             )
