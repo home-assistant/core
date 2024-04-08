@@ -1539,7 +1539,7 @@ class EventBus:
         event_type: EventType[_DataT] | str,
         listener: Callable[[Event[_DataT]], Coroutine[Any, Any, None] | None],
         event_filter: Callable[[_DataT], bool] | None = None,
-        run_immediately: bool = True,
+        run_immediately: bool | None = None,
     ) -> CALLBACK_TYPE:
         """Listen for all events or events of a specific type.
 
@@ -1556,6 +1556,17 @@ class EventBus:
 
         This method must be run in the event loop.
         """
+        if run_immediately in (True, False):
+            # late import to avoid circular imports
+            from .helpers import frame  # pylint: disable=import-outside-toplevel
+
+            frame.report(
+                "calls `async_listen` with run_immediately, which is"
+                " deprecated and will be removed in Assistant 2025.4",
+                error_if_core=False,
+            )
+
+        run_immediately = True
         if event_filter is not None and not is_callback_check_partial(event_filter):
             raise HomeAssistantError(f"Event filter {event_filter} is not a callback")
         if event_type == EVENT_STATE_REPORTED:
@@ -1614,7 +1625,7 @@ class EventBus:
         self,
         event_type: EventType[_DataT] | str,
         listener: Callable[[Event[_DataT]], Coroutine[Any, Any, None] | None],
-        run_immediately: bool = True,
+        run_immediately: bool | None = None,
     ) -> CALLBACK_TYPE:
         """Listen once for event of a specific type.
 
@@ -1625,6 +1636,17 @@ class EventBus:
 
         This method must be run in the event loop.
         """
+        if run_immediately in (True, False):
+            # late import to avoid circular imports
+            from .helpers import frame  # pylint: disable=import-outside-toplevel
+
+            frame.report(
+                "calls `async_listen_once` with run_immediately, which is "
+                "deprecated and will be removed in Assistant 2025.4",
+                error_if_core=False,
+            )
+
+        run_immediately = True
         one_time_listener: _OneTimeListener[_DataT] = _OneTimeListener(
             self._hass, HassJob(listener)
         )
