@@ -109,47 +109,41 @@ async def async_setup_entry(
     """Set up a 17Track sensor entry."""
 
     coordinator: SeventeenTrackCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    current_packages: set[Package] = set()
 
     @callback
     def _async_create_remove_entities():
-        old_packages = coordinator.data.current_packages - set(
-            coordinator.data.live_packages.values()
-        )
+        old_packages = current_packages - set(coordinator.data.live_packages.values())
         packages_to_add = (
-            set(coordinator.data.live_packages.values())
-            - coordinator.data.current_packages
+            set(coordinator.data.live_packages.values()) - current_packages
         )
 
-        coordinator.data.current_packages = (
-            coordinator.data.current_packages | packages_to_add
-        ) - old_packages
+        current_packages.update((current_packages | packages_to_add) - old_packages)
 
         remove_packages(hass, coordinator.account_id, old_packages)
 
         async_add_entities(
             SeventeenTrackPackageSensor(
                 coordinator,
-                tracking_number,
+                package_data.tracking_number,
                 package_data.friendly_name,
                 package_data.status,
             )
-            for tracking_number, package_data in coordinator.data.live_packages.items()
-            if package_data in packages_to_add
-            and not (
+            for package_data in packages_to_add
+            if not (
                 not coordinator.show_delivered and package_data.status == "Delivered"
             )
         )
 
-        for tracking_number, package_data in coordinator.data.live_packages.items():
+        for package_data in packages_to_add:
             if (
                 package_data.status == VALUE_DELIVERED
                 and not coordinator.show_delivered
-                and package_data in packages_to_add
             ):
                 notify_delivered(
                     hass,
                     package_data.friendly_name,
-                    tracking_number,
+                    package_data.tracking_number,
                 )
 
     async_add_entities(
