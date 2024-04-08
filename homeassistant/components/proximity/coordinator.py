@@ -15,7 +15,13 @@ from homeassistant.const import (
     CONF_ZONE,
     UnitOfLength,
 )
-from homeassistant.core import Event, HomeAssistant, State, callback
+from homeassistant.core import (
+    Event,
+    EventStateChangedData,
+    HomeAssistant,
+    State,
+    callback,
+)
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
@@ -100,10 +106,14 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
         self.entity_mapping[tracked_entity_id].append(entity_id)
 
     async def async_check_proximity_state_change(
-        self, entity: str, old_state: State | None, new_state: State | None
+        self,
+        event: Event[EventStateChangedData],
     ) -> None:
         """Fetch and process state change event."""
-        self.state_change_data = StateChangedData(entity, old_state, new_state)
+        data = event.data
+        self.state_change_data = StateChangedData(
+            data["entity_id"], data["old_state"], data["new_state"]
+        )
         await self.async_refresh()
 
     async def async_check_tracked_entity_change(

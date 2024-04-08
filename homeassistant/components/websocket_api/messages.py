@@ -15,9 +15,8 @@ from homeassistant.const import (
     COMPRESSED_STATE_LAST_UPDATED,
     COMPRESSED_STATE_STATE,
 )
-from homeassistant.core import Event, State
+from homeassistant.core import Event, EventStateChangedData, State
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.event import EventStateChangedData
 from homeassistant.helpers.json import (
     JSON_DUMP,
     find_paths_unserializable_data,

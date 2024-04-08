@@ -6,10 +6,9 @@ import abc
 from collections.abc import Callable, Iterable
 from contextlib import suppress
 from datetime import timedelta
-from functools import partial
+from functools import cached_property, partial
 import logging
 from typing import (
-    TYPE_CHECKING,
     Any,
     Final,
     Generic,
@@ -83,12 +82,6 @@ from .const import (
     WeatherEntityFeature,
 )
 from .websocket_api import async_setup as async_setup_ws_api
-
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -1170,7 +1163,7 @@ class CoordinatorWeatherEntity(
         assert coordinator.config_entry is not None
         getattr(self, f"_handle_{forecast_type}_forecast_coordinator_update")()
         coordinator.config_entry.async_create_task(
-            self.hass, self.async_update_listeners((forecast_type,))
+            self.hass, self.async_update_listeners((forecast_type,)), eager_start=False
         )
 
     @callback
@@ -1280,5 +1273,5 @@ class SingleCoordinatorWeatherEntity(
         super()._handle_coordinator_update()
         assert self.coordinator.config_entry
         self.coordinator.config_entry.async_create_task(
-            self.hass, self.async_update_listeners(None)
+            self.hass, self.async_update_listeners(None), eager_start=False
         )

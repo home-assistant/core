@@ -715,6 +715,7 @@ class Statistics(Base, StatisticsBase):
             "start_ts",
             unique=True,
         ),
+        _DEFAULT_TABLE_ARGS,
     )
     __tablename__ = TABLE_STATISTICS
 
@@ -732,6 +733,7 @@ class StatisticsShortTerm(Base, StatisticsBase):
             "start_ts",
             unique=True,
         ),
+        _DEFAULT_TABLE_ARGS,
     )
     __tablename__ = TABLE_STATISTICS_SHORT_TERM
 
@@ -760,7 +762,10 @@ class StatisticsMeta(Base):
 class RecorderRuns(Base):
     """Representation of recorder run."""
 
-    __table_args__ = (Index("ix_recorder_runs_start_end", "start", "end"),)
+    __table_args__ = (
+        Index("ix_recorder_runs_start_end", "start", "end"),
+        _DEFAULT_TABLE_ARGS,
+    )
     __tablename__ = TABLE_RECORDER_RUNS
     run_id: Mapped[int] = mapped_column(Integer, Identity(), primary_key=True)
     start: Mapped[datetime] = mapped_column(DATETIME_TYPE, default=dt_util.utcnow)
@@ -789,6 +794,7 @@ class MigrationChanges(Base):
     """Representation of migration changes."""
 
     __tablename__ = TABLE_MIGRATION_CHANGES
+    __table_args__ = (_DEFAULT_TABLE_ARGS,)
 
     migration_id: Mapped[str] = mapped_column(String(255), primary_key=True)
     version: Mapped[int] = mapped_column(SmallInteger)
@@ -798,6 +804,8 @@ class SchemaChanges(Base):
     """Representation of schema version changes."""
 
     __tablename__ = TABLE_SCHEMA_CHANGES
+    __table_args__ = (_DEFAULT_TABLE_ARGS,)
+
     change_id: Mapped[int] = mapped_column(Integer, Identity(), primary_key=True)
     schema_version: Mapped[int | None] = mapped_column(Integer)
     changed: Mapped[datetime] = mapped_column(DATETIME_TYPE, default=dt_util.utcnow)
@@ -816,6 +824,8 @@ class StatisticsRuns(Base):
     """Representation of statistics run."""
 
     __tablename__ = TABLE_STATISTICS_RUNS
+    __table_args__ = (_DEFAULT_TABLE_ARGS,)
+
     run_id: Mapped[int] = mapped_column(Integer, Identity(), primary_key=True)
     start: Mapped[datetime] = mapped_column(DATETIME_TYPE, index=True)
 

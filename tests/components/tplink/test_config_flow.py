@@ -15,6 +15,7 @@ from homeassistant.components.tplink import (
     SmartDeviceException,
 )
 from homeassistant.components.tplink.const import CONF_DEVICE_CONFIG
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_ALIAS,
     CONF_DEVICE,
@@ -770,7 +771,7 @@ async def test_integration_discovery_with_ip_change(
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert mock_config_entry.state == config_entries.ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 0
@@ -803,7 +804,7 @@ async def test_integration_discovery_with_ip_change(
     mock_connect["connect"].return_value = bulb
     await hass.config_entries.async_reload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-    assert mock_config_entry.state == config_entries.ConfigEntryState.LOADED
+    assert mock_config_entry.state is ConfigEntryState.LOADED
     # Check that init set the new host correctly before calling connect
     assert config.host == "127.0.0.1"
     config.host = "127.0.0.2"
@@ -822,7 +823,7 @@ async def test_dhcp_discovery_with_ip_change(
     with patch("homeassistant.components.tplink.Discover.discover", return_value={}):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
-    assert mock_config_entry.state == config_entries.ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 0
@@ -851,7 +852,7 @@ async def test_reauth(
     mock_added_config_entry.async_start_reauth(hass)
     await hass.async_block_till_done()
 
-    assert mock_added_config_entry.state == config_entries.ConfigEntryState.LOADED
+    assert mock_added_config_entry.state is ConfigEntryState.LOADED
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
     [result] = flows
@@ -888,7 +889,7 @@ async def test_reauth_update_from_discovery(
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert mock_config_entry.state == config_entries.ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
@@ -924,7 +925,7 @@ async def test_reauth_update_from_discovery_with_ip_change(
     with patch("homeassistant.components.tplink.Discover.discover", return_value={}):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
-    assert mock_config_entry.state == config_entries.ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
@@ -967,7 +968,7 @@ async def test_reauth_no_update_if_config_and_ip_the_same(
     )
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-    assert mock_config_entry.state is config_entries.ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
@@ -1013,7 +1014,7 @@ async def test_reauth_errors(
     mock_added_config_entry.async_start_reauth(hass)
     await hass.async_block_till_done()
 
-    assert mock_added_config_entry.state is config_entries.ConfigEntryState.LOADED
+    assert mock_added_config_entry.state is ConfigEntryState.LOADED
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
     [result] = flows
@@ -1155,8 +1156,8 @@ async def test_reauth_update_other_flows(
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert mock_config_entry2.state == config_entries.ConfigEntryState.SETUP_ERROR
-    assert mock_config_entry.state == config_entries.ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry2.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
     mock_connect["connect"].side_effect = default_side_effect
 
     await hass.async_block_till_done()

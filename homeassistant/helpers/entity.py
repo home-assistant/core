@@ -9,6 +9,7 @@ from collections.abc import Callable, Coroutine, Iterable, Mapping, MutableMappi
 import dataclasses
 from enum import Enum, IntFlag, auto
 import functools as ft
+from functools import cached_property
 import logging
 import math
 from operator import attrgetter
@@ -73,11 +74,7 @@ from .event import (
 from .typing import UNDEFINED, StateType, UndefinedType
 
 if TYPE_CHECKING:
-    from functools import cached_property
-
     from .entity_platform import EntityPlatform
-else:
-    from homeassistant.backports.functools import cached_property
 
 _T = TypeVar("_T")
 
@@ -1095,7 +1092,7 @@ class Entity(
     @callback
     def _async_write_ha_state(self) -> None:
         """Write the state to the state machine."""
-        if self._platform_state == EntityPlatformState.REMOVED:
+        if self._platform_state is EntityPlatformState.REMOVED:
             # Polling returned after the entity has already been removed
             return
 
@@ -1237,6 +1234,7 @@ class Entity(
             self.hass.async_create_task(
                 self.async_update_ha_state(force_refresh),
                 f"Entity schedule update ha state {self.entity_id}",
+                eager_start=True,
             )
         else:
             self.async_write_ha_state()
@@ -1307,7 +1305,7 @@ class Entity(
         parallel_updates: asyncio.Semaphore | None,
     ) -> None:
         """Start adding an entity to a platform."""
-        if self._platform_state != EntityPlatformState.NOT_ADDED:
+        if self._platform_state is not EntityPlatformState.NOT_ADDED:
             raise HomeAssistantError(
                 f"Entity '{self.entity_id}' cannot be added a second time to an entity"
                 " platform"
@@ -1574,7 +1572,7 @@ class Entity(
 
         If the entity is not added to a platform it's not safe to call _stringify_state.
         """
-        if self._platform_state != EntityPlatformState.ADDED:
+        if self._platform_state is not EntityPlatformState.ADDED:
             return f"<entity unknown.unknown={STATE_UNKNOWN}>"
         return f"<entity {self.entity_id}={self._stringify_state(self.available)}>"
 

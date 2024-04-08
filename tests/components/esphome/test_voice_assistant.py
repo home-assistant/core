@@ -49,8 +49,7 @@ def voice_assistant_udp_pipeline(
             assert server is not None
             server.close()
 
-        server = VoiceAssistantUDPPipeline(hass, entry_data, Mock(), handle_finished)
-        return server
+        return VoiceAssistantUDPPipeline(hass, entry_data, Mock(), handle_finished)
 
     return _voice_assistant_udp_server
 
