@@ -7,8 +7,8 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import CONF_SIP_DOMAIN, CONF_SIP_SERVER, DOMAIN
 from .notify import SIPCallNotificationService
@@ -31,7 +31,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
 
@@ -74,7 +74,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return "invalid_auth"
 
             # Some other problem
-            logging.warning("sipcall verification failed: %s", str(e))
+            _LOGGER.warning("Entry verification for sipcall failed: %s", str(e))
 
             # To not block the user in this case, we let them add the entry nevertheless
             return None
