@@ -4,7 +4,7 @@ from datetime import timedelta
 from unittest.mock import patch
 
 from freezegun import freeze_time
-from prayer_times_calculator.exceptions import InvalidResponseError
+from prayer_times_calculator_offline.exceptions import InvalidResponseError
 import pytest
 
 from homeassistant.components import islamic_prayer_times
@@ -37,7 +37,7 @@ async def test_successful_config_entry(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
 
     with patch(
-        "prayer_times_calculator.PrayerTimesCalculator.fetch_prayer_times",
+        "prayer_times_calculator_offline.PrayerTimesCalculator.fetch_prayer_times",
         return_value=PRAYER_TIMES,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
@@ -57,7 +57,7 @@ async def test_setup_failed(hass: HomeAssistant) -> None:
 
     # test request error raising ConfigEntryNotReady
     with patch(
-        "prayer_times_calculator.PrayerTimesCalculator.fetch_prayer_times",
+        "prayer_times_calculator_offline.PrayerTimesCalculator.fetch_prayer_times",
         side_effect=InvalidResponseError(),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
@@ -74,7 +74,7 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
 
     with patch(
-        "prayer_times_calculator.PrayerTimesCalculator.fetch_prayer_times",
+        "prayer_times_calculator_offline.PrayerTimesCalculator.fetch_prayer_times",
         return_value=PRAYER_TIMES,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
@@ -91,7 +91,7 @@ async def test_options_listener(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "prayer_times_calculator.PrayerTimesCalculator.fetch_prayer_times",
+            "prayer_times_calculator_offline.PrayerTimesCalculator.fetch_prayer_times",
             return_value=PRAYER_TIMES,
         ) as mock_fetch_prayer_times,
         freeze_time(NOW),
@@ -114,7 +114,7 @@ async def test_update_failed(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "prayer_times_calculator.PrayerTimesCalculator.fetch_prayer_times",
+            "prayer_times_calculator_offline.PrayerTimesCalculator.fetch_prayer_times",
             return_value=PRAYER_TIMES,
         ),
         freeze_time(NOW),
@@ -125,7 +125,7 @@ async def test_update_failed(hass: HomeAssistant) -> None:
         assert entry.state is ConfigEntryState.LOADED
 
     with patch(
-        "prayer_times_calculator.PrayerTimesCalculator.fetch_prayer_times"
+        "prayer_times_calculator_offline.PrayerTimesCalculator.fetch_prayer_times"
     ) as FetchPrayerTimes:
         FetchPrayerTimes.side_effect = [
             InvalidResponseError,
@@ -184,7 +184,7 @@ async def test_migrate_unique_id(
 
     with (
         patch(
-            "prayer_times_calculator.PrayerTimesCalculator.fetch_prayer_times",
+            "prayer_times_calculator_offline.PrayerTimesCalculator.fetch_prayer_times",
             return_value=PRAYER_TIMES,
         ),
         freeze_time(NOW),
@@ -207,7 +207,7 @@ async def test_migration_from_1_1_to_1_2(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "prayer_times_calculator.PrayerTimesCalculator.fetch_prayer_times",
+            "prayer_times_calculator_offline.PrayerTimesCalculator.fetch_prayer_times",
             return_value=PRAYER_TIMES,
         ),
         freeze_time(NOW),

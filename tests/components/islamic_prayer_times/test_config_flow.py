@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from prayer_times_calculator import InvalidResponseError
+from prayer_times_calculator_offline import InvalidResponseError
 import pytest
 from requests.exceptions import ConnectionError as ConnError
 

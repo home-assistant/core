@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from prayer_times_calculator import InvalidResponseError, PrayerTimesCalculator
+from prayer_times_calculator_offline import InvalidResponseError, PrayerTimesCalculator
 from requests.exceptions import ConnectionError as ConnError
 import voluptuous as vol
 
