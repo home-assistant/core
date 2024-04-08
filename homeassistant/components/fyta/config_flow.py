@@ -100,12 +100,7 @@ class FytaConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 user_input |= credentials
 
-                self.hass.config_entries.async_update_entry(
-                    self._entry,
-                    data={**self._entry.data, **user_input},
-                )
-                await self.hass.config_entries.async_reload(self._entry.entry_id)
-                return self.async_update_reload_and_abort(self._entry)
+                return self.async_update_reload_and_abort(self._entry, data={**self._entry.data, **user_input})
 
         data_schema = self.add_suggested_values_to_schema(
             DATA_SCHEMA,
