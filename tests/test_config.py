@@ -381,7 +381,6 @@ async def mock_custom_validator_integrations_with_docs(
 class ConfigTestClass(NodeDictClass):
     """Test class for config with wrapper."""
 
-    __dict__ = {"__config_file__": "configuration.yaml", "__line__": 140}
     __line__ = 140
     __config_file__ = "configuration.yaml"
 
