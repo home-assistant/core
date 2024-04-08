@@ -1,4 +1,5 @@
 """Test config flow for Twitch."""
+
 from unittest.mock import patch
 
 import pytest
@@ -66,7 +67,7 @@ async def test_full_flow(
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "channel123"
     assert "result" in result
     assert "token" in result["result"].data
@@ -97,7 +98,7 @@ async def test_already_configured(
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-        assert result["type"] == FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "already_configured"
 
 
@@ -120,7 +121,7 @@ async def test_reauth(
         },
         data=config_entry.data,
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
@@ -129,7 +130,7 @@ async def test_reauth(
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
 
 
@@ -194,7 +195,7 @@ async def test_reauth_wrong_account(
         },
         data=config_entry.data,
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
@@ -203,7 +204,7 @@ async def test_reauth_wrong_account(
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "wrong_account"
 
 
@@ -228,7 +229,7 @@ async def test_import(
             "channels": ["channel123"],
         },
     )
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "channel123"
     assert "result" in result
     assert "token" in result["result"].data
@@ -260,7 +261,7 @@ async def test_import_invalid_token(
             "channels": ["channel123"],
         },
     )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "invalid_token"
     issue_registry = ir.async_get(hass)
     assert len(issue_registry.issues) == 1
@@ -289,7 +290,7 @@ async def test_import_already_imported(
             "channels": ["channel123"],
         },
     )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     issue_registry = ir.async_get(hass)
     assert len(issue_registry.issues) == 1

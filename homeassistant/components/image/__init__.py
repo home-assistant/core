@@ -1,4 +1,5 @@
 """The image integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -6,17 +7,18 @@ import collections
 from contextlib import suppress
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from functools import cached_property
 import logging
 from random import SystemRandom
-from typing import TYPE_CHECKING, Final, final
+from typing import Final, final
 
 from aiohttp import hdrs, web
 import httpx
 
-from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
+from homeassistant.components.http import KEY_AUTHENTICATED, KEY_HASS, HomeAssistantView
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.const import CONTENT_TYPE_MULTIPART, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
@@ -24,17 +26,14 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 )
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.event import (
+    async_track_state_change_event,
+    async_track_time_interval,
+)
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.typing import UNDEFINED, ConfigType, UndefinedType
 
-from .const import DOMAIN, IMAGE_TIMEOUT  # noqa: F401
-
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
-
+from .const import DOMAIN, IMAGE_TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,6 +47,10 @@ TOKEN_CHANGE_INTERVAL: Final = timedelta(minutes=5)
 _RND: Final = SystemRandom()
 
 GET_IMAGE_TIMEOUT: Final = 10
+
+FRAME_BOUNDARY = "frame-boundary"
+FRAME_SEPARATOR = bytes(f"\r\n--{FRAME_BOUNDARY}\r\n", "utf-8")
+LAST_FRAME_MARKER = bytes(f"\r\n--{FRAME_BOUNDARY}--\r\n", "utf-8")
 
 
 class ImageEntityDescription(EntityDescription, frozen_or_thawed=True):
@@ -75,12 +78,11 @@ def valid_image_content_type(content_type: str | None) -> str:
 
 async def _async_get_image(image_entity: ImageEntity, timeout: int) -> Image:
     """Fetch image from an image entity."""
-    with suppress(asyncio.CancelledError, asyncio.TimeoutError, ImageContentTypeError):
+    with suppress(asyncio.CancelledError, TimeoutError, ImageContentTypeError):
         async with asyncio.timeout(timeout):
             if image_bytes := await image_entity.async_image():
                 content_type = valid_image_content_type(image_entity.content_type)
-                image = Image(content_type, image_bytes)
-                return image
+                return Image(content_type, image_bytes)
 
     raise HomeAssistantError("Unable to get image")
 
@@ -92,6 +94,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     hass.http.register_view(ImageView(component))
+    hass.http.register_view(ImageStreamView(component))
 
     await component.async_setup(config)
 
@@ -180,7 +183,7 @@ class ImageEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def image(self) -> bytes | None:
         """Return bytes of image."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def _fetch_url(self, url: str) -> httpx.Response | None:
         """Fetch a URL."""
@@ -189,7 +192,6 @@ class ImageEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 url, timeout=GET_IMAGE_TIMEOUT, follow_redirects=True
             )
             response.raise_for_status()
-            return response
         except httpx.TimeoutException:
             _LOGGER.error("%s: Timeout getting image from %s", self.entity_id, url)
             return None
@@ -201,6 +203,7 @@ class ImageEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 err,
             )
             return None
+        return response
 
     async def _async_load_image_from_url(self, url: str) -> Image | None:
         """Load an image by url."""
@@ -268,7 +271,7 @@ class ImageView(HomeAssistantView):
     async def get(self, request: web.Request, entity_id: str) -> web.StreamResponse:
         """Start a GET request."""
         if (image_entity := self.component.get_entity(entity_id)) is None:
-            raise web.HTTPNotFound()
+            raise web.HTTPNotFound
 
         authenticated = (
             request[KEY_AUTHENTICATED]
@@ -279,9 +282,9 @@ class ImageView(HomeAssistantView):
             # Attempt with invalid bearer token, raise unauthorized
             # so ban middleware can handle it.
             if hdrs.AUTHORIZATION in request.headers:
-                raise web.HTTPUnauthorized()
+                raise web.HTTPUnauthorized
             # Invalid sigAuth or image entity access token
-            raise web.HTTPForbidden()
+            raise web.HTTPForbidden
 
         return await self.handle(request, image_entity)
 
@@ -292,6 +295,91 @@ class ImageView(HomeAssistantView):
         try:
             image = await _async_get_image(image_entity, IMAGE_TIMEOUT)
         except (HomeAssistantError, ValueError) as ex:
-            raise web.HTTPInternalServerError() from ex
+            raise web.HTTPInternalServerError from ex
 
         return web.Response(body=image.content, content_type=image.content_type)
+
+
+async def async_get_still_stream(
+    request: web.Request,
+    image_entity: ImageEntity,
+) -> web.StreamResponse:
+    """Generate an HTTP multipart stream from the Image."""
+    response = web.StreamResponse()
+    response.content_type = CONTENT_TYPE_MULTIPART.format(FRAME_BOUNDARY)
+    await response.prepare(request)
+
+    async def _write_frame() -> bool:
+        img_bytes = await image_entity.async_image()
+        if img_bytes is None:
+            await response.write(LAST_FRAME_MARKER)
+            return False
+        frame = bytearray(FRAME_SEPARATOR)
+        header = bytes(
+            f"Content-Type: {image_entity.content_type}\r\n"
+            f"Content-Length: {len(img_bytes)}\r\n\r\n",
+            "utf-8",
+        )
+        frame.extend(header)
+        frame.extend(img_bytes)
+        # Chrome shows the n-1 frame so send the frame twice
+        # https://issues.chromium.org/issues/41199053
+        # https://issues.chromium.org/issues/40791855
+        # While this results in additional bandwidth usage,
+        # given the low frequency of image updates, it is acceptable.
+        frame.extend(frame)
+        await response.write(frame)
+        return True
+
+    event = asyncio.Event()
+    timed_out = False
+
+    @callback
+    def _async_image_state_update(_event: Event[EventStateChangedData]) -> None:
+        """Write image to stream."""
+        event.set()
+
+    @callback
+    def _async_timeout_reached() -> None:
+        """Handle timeout."""
+        nonlocal timed_out
+        timed_out = True
+        event.set()
+
+    hass = request.app[KEY_HASS]
+    loop = hass.loop
+    remove = async_track_state_change_event(
+        hass,
+        image_entity.entity_id,
+        _async_image_state_update,
+    )
+    timeout_handle = None
+    try:
+        while True:
+            if not await _write_frame():
+                return response
+            # Ensure that an image is sent at least every 55 seconds
+            # Otherwise some devices go blank
+            timeout_handle = loop.call_later(55, _async_timeout_reached)
+            await event.wait()
+            event.clear()
+            if not timed_out:
+                timeout_handle.cancel()
+            timed_out = False
+    finally:
+        if timeout_handle:
+            timeout_handle.cancel()
+        remove()
+
+
+class ImageStreamView(ImageView):
+    """Image View to serve an multipart stream."""
+
+    url = "/api/image_proxy_stream/{entity_id}"
+    name = "api:image:stream"
+
+    async def handle(
+        self, request: web.Request, image_entity: ImageEntity
+    ) -> web.StreamResponse:
+        """Serve image stream."""
+        return await async_get_still_stream(request, image_entity)

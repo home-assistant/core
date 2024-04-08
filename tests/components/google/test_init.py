@@ -1,4 +1,5 @@
 """The tests for the Google Calendar component."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
@@ -115,7 +116,7 @@ async def test_unload_entry(
     assert entry.state is ConfigEntryState.LOADED
 
     assert await hass.config_entries.async_unload(entry.entry_id)
-    assert entry.state == ConfigEntryState.NOT_LOADED
+    assert entry.state is ConfigEntryState.NOT_LOADED
 
 
 @pytest.mark.parametrize(
@@ -815,7 +816,7 @@ async def test_calendar_yaml_update(
     assert await component_setup()
 
     mock_calendars_yaml().read.assert_called()
-    mock_calendars_yaml().write.called is expect_write_calls
+    assert mock_calendars_yaml().write.called is expect_write_calls
 
     state = hass.states.get(TEST_API_ENTITY)
     assert state
@@ -958,4 +959,4 @@ async def test_remove_entry(
     assert entry.state is ConfigEntryState.LOADED
 
     assert await hass.config_entries.async_remove(entry.entry_id)
-    assert entry.state == ConfigEntryState.NOT_LOADED
+    assert entry.state is ConfigEntryState.NOT_LOADED

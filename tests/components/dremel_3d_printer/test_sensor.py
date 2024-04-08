@@ -1,4 +1,5 @@
 """Sensor tests for the Dremel 3D Printer integration."""
+
 from datetime import datetime
 from unittest.mock import AsyncMock
 

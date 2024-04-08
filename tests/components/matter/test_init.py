@@ -1,4 +1,5 @@
 """Test the Matter integration init."""
+
 from __future__ import annotations
 
 import asyncio
@@ -67,7 +68,7 @@ async def test_entry_setup_unload(
     await hass.async_block_till_done()
 
     assert matter_client.connect.call_count == 1
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
     entity_state = hass.states.get("light.mock_onoff_light")
     assert entity_state
     assert entity_state.state != STATE_UNAVAILABLE
@@ -75,7 +76,7 @@ async def test_entry_setup_unload(
     await hass.config_entries.async_unload(entry.entry_id)
 
     assert matter_client.disconnect.call_count == 1
-    assert entry.state == ConfigEntryState.NOT_LOADED
+    assert entry.state is ConfigEntryState.NOT_LOADED
     entity_state = hass.states.get("light.mock_onoff_light")
     assert entity_state
     assert entity_state.state == STATE_UNAVAILABLE
@@ -209,12 +210,12 @@ async def test_listen_failure_config_entry_loaded(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     listen_block.set()
     await hass.async_block_till_done()
 
-    assert entry.state == ConfigEntryState.SETUP_RETRY
+    assert entry.state is ConfigEntryState.SETUP_RETRY
     assert matter_client.disconnect.call_count == 1
 
 

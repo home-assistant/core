@@ -1,4 +1,5 @@
 """Device tracker support for OPNSense routers."""
+
 from __future__ import annotations
 
 from homeassistant.components.device_tracker import DeviceScanner
@@ -13,10 +14,9 @@ async def async_get_scanner(
 ) -> OPNSenseDeviceScanner:
     """Configure the OPNSense device_tracker."""
     interface_client = hass.data[OPNSENSE_DATA]["interfaces"]
-    scanner = OPNSenseDeviceScanner(
+    return OPNSenseDeviceScanner(
         interface_client, hass.data[OPNSENSE_DATA][CONF_TRACKER_INTERFACE]
     )
-    return scanner
 
 
 class OPNSenseDeviceScanner(DeviceScanner):
@@ -32,9 +32,7 @@ class OPNSenseDeviceScanner(DeviceScanner):
         """Create dict with mac address keys from list of devices."""
         out_devices = {}
         for device in devices:
-            if not self.interfaces:
-                out_devices[device["mac"]] = device
-            elif device["intf_description"] in self.interfaces:
+            if not self.interfaces or device["intf_description"] in self.interfaces:
                 out_devices[device["mac"]] = device
         return out_devices
 
@@ -47,8 +45,7 @@ class OPNSenseDeviceScanner(DeviceScanner):
         """Return the name of the given device or None if we don't know."""
         if device not in self.last_results:
             return None
-        hostname = self.last_results[device].get("hostname") or None
-        return hostname
+        return self.last_results[device].get("hostname") or None
 
     def update_info(self):
         """Ensure the information from the OPNSense router is up to date.

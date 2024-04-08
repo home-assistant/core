@@ -3,8 +3,9 @@
 import voluptuous as vol
 from yolink.client_request import ClientRequest
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 
 from .const import (
@@ -19,7 +20,7 @@ from .const import (
 SERVICE_PLAY_ON_SPEAKER_HUB = "play_on_speaker_hub"
 
 
-def async_register_services(hass: HomeAssistant, entry: ConfigEntry) -> None:
+def async_register_services(hass: HomeAssistant) -> None:
     """Register services for YoLink integration."""
 
     async def handle_speaker_hub_play_call(service_call: ServiceCall) -> None:
@@ -28,6 +29,16 @@ def async_register_services(hass: HomeAssistant, entry: ConfigEntry) -> None:
         device_registry = dr.async_get(hass)
         device_entry = device_registry.async_get(service_data[ATTR_TARGET_DEVICE])
         if device_entry is not None:
+            for entry_id in device_entry.config_entries:
+                if (entry := hass.config_entries.async_get_entry(entry_id)) is None:
+                    continue
+                if entry.domain == DOMAIN:
+                    break
+            if entry is None or entry.state == ConfigEntryState.NOT_LOADED:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_config_entry",
+                )
             home_store = hass.data[DOMAIN][entry.entry_id]
             for identifier in device_entry.identifiers:
                 if (

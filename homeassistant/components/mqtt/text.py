@@ -1,4 +1,5 @@
 """Support for MQTT text platform."""
+
 from __future__ import annotations
 
 from collections.abc import Callable

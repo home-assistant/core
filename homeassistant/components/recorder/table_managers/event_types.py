@@ -1,13 +1,15 @@
 """Support managing EventTypes."""
+
 from __future__ import annotations
 
 from collections.abc import Iterable
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from lru import LRU
 from sqlalchemy.orm.session import Session
 
 from homeassistant.core import Event
+from homeassistant.util.event_type import EventType
 
 from ..db_schema import EventTypes
 from ..queries import find_event_type_ids
@@ -28,7 +30,9 @@ class EventTypeManager(BaseLRUTableManager[EventTypes]):
     def __init__(self, recorder: Recorder) -> None:
         """Initialize the event type manager."""
         super().__init__(recorder, CACHE_SIZE)
-        self._non_existent_event_types: LRU[str, None] = LRU(CACHE_SIZE)
+        self._non_existent_event_types: LRU[EventType[Any] | str, None] = LRU(
+            CACHE_SIZE
+        )
 
     def load(self, events: list[Event], session: Session) -> None:
         """Load the event_type to event_type_ids mapping into memory.
@@ -43,7 +47,10 @@ class EventTypeManager(BaseLRUTableManager[EventTypes]):
         )
 
     def get(
-        self, event_type: str, session: Session, from_recorder: bool = False
+        self,
+        event_type: EventType[Any] | str,
+        session: Session,
+        from_recorder: bool = False,
     ) -> int | None:
         """Resolve event_type to the event_type_id.
 
@@ -53,16 +60,19 @@ class EventTypeManager(BaseLRUTableManager[EventTypes]):
         return self.get_many((event_type,), session)[event_type]
 
     def get_many(
-        self, event_types: Iterable[str], session: Session, from_recorder: bool = False
-    ) -> dict[str, int | None]:
+        self,
+        event_types: Iterable[EventType[Any] | str],
+        session: Session,
+        from_recorder: bool = False,
+    ) -> dict[EventType[Any] | str, int | None]:
         """Resolve event_types to event_type_ids.
 
         This call is not thread-safe and must be called from the
         recorder thread.
         """
-        results: dict[str, int | None] = {}
-        missing: list[str] = []
-        non_existent: list[str] = []
+        results: dict[EventType[Any] | str, int | None] = {}
+        missing: list[EventType[Any] | str] = []
+        non_existent: list[EventType[Any] | str] = []
 
         for event_type in event_types:
             if (event_type_id := self._id_map.get(event_type)) is None:
@@ -122,7 +132,7 @@ class EventTypeManager(BaseLRUTableManager[EventTypes]):
             self.clear_non_existent(event_type)
         self._pending.clear()
 
-    def clear_non_existent(self, event_type: str) -> None:
+    def clear_non_existent(self, event_type: EventType[Any] | str) -> None:
         """Clear a non-existent event type from the cache.
 
         This call is not thread-safe and must be called from the

@@ -1,4 +1,5 @@
 """Test sensor of Nettigo Air Monitor integration."""
+
 from datetime import timedelta
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -241,7 +242,7 @@ async def test_sensor(hass: HomeAssistant, entity_registry: er.EntityRegistry) -
         "high",
         "very_high",
     ]
-    assert state.attributes.get(ATTR_ICON) == "mdi:air-filter"
+    assert state.attributes.get(ATTR_ICON) is None
 
     entry = entity_registry.async_get(
         "sensor.nettigo_air_monitor_pmsx003_common_air_quality_index_level"
@@ -255,7 +256,7 @@ async def test_sensor(hass: HomeAssistant, entity_registry: er.EntityRegistry) -
     )
     assert state
     assert state.state == "19"
-    assert state.attributes.get(ATTR_ICON) == "mdi:air-filter"
+    assert state.attributes.get(ATTR_ICON) is None
 
     entry = entity_registry.async_get(
         "sensor.nettigo_air_monitor_pmsx003_common_air_quality_index"
@@ -324,7 +325,7 @@ async def test_sensor(hass: HomeAssistant, entity_registry: er.EntityRegistry) -
     )
     assert state
     assert state.state == "19"
-    assert state.attributes.get(ATTR_ICON) == "mdi:air-filter"
+    assert state.attributes.get(ATTR_ICON) is None
 
     entry = entity_registry.async_get(
         "sensor.nettigo_air_monitor_sds011_common_air_quality_index"
@@ -345,7 +346,7 @@ async def test_sensor(hass: HomeAssistant, entity_registry: er.EntityRegistry) -
         "high",
         "very_high",
     ]
-    assert state.attributes.get(ATTR_ICON) == "mdi:air-filter"
+    assert state.attributes.get(ATTR_ICON) is None
 
     entry = entity_registry.async_get(
         "sensor.nettigo_air_monitor_sds011_common_air_quality_index_level"
@@ -371,7 +372,7 @@ async def test_sensor(hass: HomeAssistant, entity_registry: er.EntityRegistry) -
     state = hass.states.get("sensor.nettigo_air_monitor_sps30_common_air_quality_index")
     assert state
     assert state.state == "54"
-    assert state.attributes.get(ATTR_ICON) == "mdi:air-filter"
+    assert state.attributes.get(ATTR_ICON) is None
 
     entry = entity_registry.async_get(
         "sensor.nettigo_air_monitor_sps30_common_air_quality_index"
@@ -392,7 +393,7 @@ async def test_sensor(hass: HomeAssistant, entity_registry: er.EntityRegistry) -
         "high",
         "very_high",
     ]
-    assert state.attributes.get(ATTR_ICON) == "mdi:air-filter"
+    assert state.attributes.get(ATTR_ICON) is None
 
     entry = entity_registry.async_get(
         "sensor.nettigo_air_monitor_sps30_common_air_quality_index_level"
@@ -451,7 +452,7 @@ async def test_sensor(hass: HomeAssistant, entity_registry: er.EntityRegistry) -
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
     )
-    assert state.attributes.get(ATTR_ICON) == "mdi:molecule"
+    assert state.attributes.get(ATTR_ICON) is None
 
     entry = entity_registry.async_get("sensor.nettigo_air_monitor_sps30_pm4")
     assert entry
@@ -487,7 +488,7 @@ async def test_sensor_disabled(
 
     # Test enabling entity
     updated_entry = entity_registry.async_update_entity(
-        entry.entity_id, **{"disabled_by": None}
+        entry.entity_id, disabled_by=None
     )
 
     assert updated_entry != entry
@@ -506,9 +507,12 @@ async def test_incompleta_data_after_device_restart(hass: HomeAssistant) -> None
 
     future = utcnow() + timedelta(minutes=6)
     update_response = Mock(json=AsyncMock(return_value=INCOMPLETE_NAM_DATA))
-    with patch("homeassistant.components.nam.NettigoAirMonitor.initialize"), patch(
-        "homeassistant.components.nam.NettigoAirMonitor._async_http_request",
-        return_value=update_response,
+    with (
+        patch("homeassistant.components.nam.NettigoAirMonitor.initialize"),
+        patch(
+            "homeassistant.components.nam.NettigoAirMonitor._async_http_request",
+            return_value=update_response,
+        ),
     ):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
@@ -528,9 +532,12 @@ async def test_availability(hass: HomeAssistant) -> None:
     assert state.state == "7.6"
 
     future = utcnow() + timedelta(minutes=6)
-    with patch("homeassistant.components.nam.NettigoAirMonitor.initialize"), patch(
-        "homeassistant.components.nam.NettigoAirMonitor._async_http_request",
-        side_effect=ApiError("API Error"),
+    with (
+        patch("homeassistant.components.nam.NettigoAirMonitor.initialize"),
+        patch(
+            "homeassistant.components.nam.NettigoAirMonitor._async_http_request",
+            side_effect=ApiError("API Error"),
+        ),
     ):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
@@ -541,9 +548,12 @@ async def test_availability(hass: HomeAssistant) -> None:
 
     future = utcnow() + timedelta(minutes=12)
     update_response = Mock(json=AsyncMock(return_value=nam_data))
-    with patch("homeassistant.components.nam.NettigoAirMonitor.initialize"), patch(
-        "homeassistant.components.nam.NettigoAirMonitor._async_http_request",
-        return_value=update_response,
+    with (
+        patch("homeassistant.components.nam.NettigoAirMonitor.initialize"),
+        patch(
+            "homeassistant.components.nam.NettigoAirMonitor._async_http_request",
+            return_value=update_response,
+        ),
     ):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
@@ -561,10 +571,13 @@ async def test_manual_update_entity(hass: HomeAssistant) -> None:
     await async_setup_component(hass, "homeassistant", {})
 
     update_response = Mock(json=AsyncMock(return_value=nam_data))
-    with patch("homeassistant.components.nam.NettigoAirMonitor.initialize"), patch(
-        "homeassistant.components.nam.NettigoAirMonitor._async_http_request",
-        return_value=update_response,
-    ) as mock_get_data:
+    with (
+        patch("homeassistant.components.nam.NettigoAirMonitor.initialize"),
+        patch(
+            "homeassistant.components.nam.NettigoAirMonitor._async_http_request",
+            return_value=update_response,
+        ) as mock_get_data,
+    ):
         await hass.services.async_call(
             "homeassistant",
             "update_entity",

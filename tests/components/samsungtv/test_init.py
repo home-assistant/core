@@ -1,7 +1,9 @@
 """Tests for the Samsung TV Integration."""
-from unittest.mock import Mock, patch
+
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from samsungtvws.async_remote import SamsungTVWSAsyncRemote
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.media_player import DOMAIN, MediaPlayerEntityFeature
@@ -74,23 +76,26 @@ async def test_setup(hass: HomeAssistant) -> None:
 
 async def test_setup_without_port_device_offline(hass: HomeAssistant) -> None:
     """Test import from yaml when the device is offline."""
-    with patch(
-        "homeassistant.components.samsungtv.bridge.Remote", side_effect=OSError
-    ), patch(
-        "homeassistant.components.samsungtv.bridge.SamsungTVEncryptedWSAsyncRemote.start_listening",
-        side_effect=OSError,
-    ), patch(
-        "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncRemote.open",
-        side_effect=OSError,
-    ), patch(
-        "homeassistant.components.samsungtv.bridge.SamsungTVWSBridge.async_device_info",
-        return_value=None,
+    with (
+        patch("homeassistant.components.samsungtv.bridge.Remote", side_effect=OSError),
+        patch(
+            "homeassistant.components.samsungtv.bridge.SamsungTVEncryptedWSAsyncRemote.start_listening",
+            side_effect=OSError,
+        ),
+        patch(
+            "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncRemote.open",
+            side_effect=OSError,
+        ),
+        patch(
+            "homeassistant.components.samsungtv.bridge.SamsungTVWSBridge.async_device_info",
+            return_value=None,
+        ),
     ):
         await setup_samsungtv_entry(hass, MOCK_CONFIG)
 
     config_entries_domain = hass.config_entries.async_entries(SAMSUNGTV_DOMAIN)
     assert len(config_entries_domain) == 1
-    assert config_entries_domain[0].state == ConfigEntryState.SETUP_RETRY
+    assert config_entries_domain[0].state is ConfigEntryState.SETUP_RETRY
 
 
 @pytest.mark.usefixtures("remotews", "remoteencws_failing", "rest_api")
@@ -100,7 +105,7 @@ async def test_setup_without_port_device_online(hass: HomeAssistant) -> None:
 
     config_entries_domain = hass.config_entries.async_entries(SAMSUNGTV_DOMAIN)
     assert len(config_entries_domain) == 1
-    assert config_entries_domain[0].data[CONF_MAC] == "aa:bb:ww:ii:ff:ii"
+    assert config_entries_domain[0].data[CONF_MAC] == "aa:bb:aa:aa:aa:aa"
 
 
 @pytest.mark.usefixtures("remotews", "remoteencws_failing")
@@ -161,7 +166,7 @@ async def test_reauth_triggered_encrypted(hass: HomeAssistant) -> None:
     del encrypted_entry_data[CONF_SESSION_ID]
 
     entry = await setup_samsungtv_entry(hass, encrypted_entry_data)
-    assert entry.state == ConfigEntryState.SETUP_ERROR
+    assert entry.state is ConfigEntryState.SETUP_ERROR
     flows_in_progress = [
         flow
         for flow in hass.config_entries.flow.async_progress()
@@ -181,3 +186,33 @@ async def test_update_imported_legacy_without_method(hass: HomeAssistant) -> Non
     assert len(entries) == 1
     assert entries[0].data[CONF_METHOD] == METHOD_LEGACY
     assert entries[0].data[CONF_PORT] == LEGACY_PORT
+
+
+@pytest.mark.usefixtures("remotews", "rest_api")
+async def test_incorrectly_formatted_mac_fixed(hass: HomeAssistant) -> None:
+    """Test incorrectly formatted mac is corrected."""
+    with patch(
+        "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncRemote"
+    ) as remote_class:
+        remote = Mock(SamsungTVWSAsyncRemote)
+        remote.__aenter__ = AsyncMock(return_value=remote)
+        remote.__aexit__ = AsyncMock()
+        remote.token = "123456789"
+        remote_class.return_value = remote
+
+        await setup_samsungtv_entry(
+            hass,
+            {
+                CONF_HOST: "fake_host",
+                CONF_NAME: "fake",
+                CONF_PORT: 8001,
+                CONF_TOKEN: "123456789",
+                CONF_METHOD: METHOD_WEBSOCKET,
+                CONF_MAC: "aabbaaaaaaaa",
+            },
+        )
+        await hass.async_block_till_done()
+
+        config_entries = hass.config_entries.async_entries(SAMSUNGTV_DOMAIN)
+        assert len(config_entries) == 1
+        assert config_entries[0].data[CONF_MAC] == "aa:bb:aa:aa:aa:aa"

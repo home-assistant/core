@@ -1,4 +1,5 @@
 """Support for MQTT events."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -38,6 +39,7 @@ from .mixins import (
 )
 from .models import (
     MqttValueTemplate,
+    MqttValueTemplateException,
     PayloadSentinel,
     ReceiveMessage,
     ReceivePayloadType,
@@ -131,12 +133,15 @@ class MqttEvent(MqttEntity, EventEntity):
                 return
             event_attributes: dict[str, Any] = {}
             event_type: str
-            payload = self._template(msg.payload, PayloadSentinel.DEFAULT)
+            try:
+                payload = self._template(msg.payload, PayloadSentinel.DEFAULT)
+            except MqttValueTemplateException as exc:
+                _LOGGER.warning(exc)
+                return
             if (
                 not payload
                 or payload is PayloadSentinel.DEFAULT
-                or payload == PAYLOAD_NONE
-                or payload == PAYLOAD_EMPTY_JSON
+                or payload in (PAYLOAD_NONE, PAYLOAD_EMPTY_JSON)
             ):
                 _LOGGER.debug(
                     "Ignoring empty payload '%s' after rendering for topic %s",

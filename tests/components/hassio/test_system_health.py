@@ -1,4 +1,5 @@
 """Test hassio system health."""
+
 import asyncio
 import os
 from unittest.mock import patch
@@ -28,8 +29,8 @@ async def test_hassio_system_health(
     )
 
     hass.config.components.add("hassio")
-    with patch.dict(os.environ, MOCK_ENVIRON):
-        assert await async_setup_component(hass, "system_health", {})
+    assert await async_setup_component(hass, "system_health", {})
+    await hass.async_block_till_done()
 
     hass.data["hassio_info"] = {
         "channel": "stable",
@@ -50,7 +51,8 @@ async def test_hassio_system_health(
         "addons": [{"name": "Awesome Addon", "version": "1.0.0"}],
     }
 
-    info = await get_system_health_info(hass, "hassio")
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        info = await get_system_health_info(hass, "hassio")
 
     for key, val in info.items():
         if asyncio.iscoroutine(val):
@@ -87,8 +89,8 @@ async def test_hassio_system_health_with_issues(
     )
 
     hass.config.components.add("hassio")
-    with patch.dict(os.environ, MOCK_ENVIRON):
-        assert await async_setup_component(hass, "system_health", {})
+    assert await async_setup_component(hass, "system_health", {})
+    await hass.async_block_till_done()
 
     hass.data["hassio_info"] = {"channel": "stable"}
     hass.data["hassio_host_info"] = {}
@@ -98,7 +100,8 @@ async def test_hassio_system_health_with_issues(
         "supported": False,
     }
 
-    info = await get_system_health_info(hass, "hassio")
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        info = await get_system_health_info(hass, "hassio")
 
     for key, val in info.items():
         if asyncio.iscoroutine(val):

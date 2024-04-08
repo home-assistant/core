@@ -36,6 +36,18 @@ COMMANDS = {
     "lens_control": const.REMOTE_LENS_CONTROL,
     "setting_memory": const.REMOTE_SETTING_MEMORY,
     "gamma_settings": const.REMOTE_GAMMA_SETTINGS,
+    "hdmi_1": const.REMOTE_HDMI_1,
+    "hdmi_2": const.REMOTE_HDMI_2,
+    "mode_1": const.REMOTE_MODE_1,
+    "mode_2": const.REMOTE_MODE_2,
+    "mode_3": const.REMOTE_MODE_3,
+    "lens_ap": const.REMOTE_LENS_AP,
+    "gamma": const.REMOTE_GAMMA,
+    "color_temp": const.REMOTE_COLOR_TEMP,
+    "natural": const.REMOTE_NATURAL,
+    "cinema": const.REMOTE_CINEMA,
+    "anamo": const.REMOTE_ANAMO,
+    "3d_format": const.REMOTE_3D_FORMAT,
 }
 
 _LOGGER = logging.getLogger(__name__)

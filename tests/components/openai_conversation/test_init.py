@@ -1,4 +1,5 @@
 """Tests for the OpenAI integration."""
+
 from unittest.mock import AsyncMock, patch
 
 from httpx import Response
@@ -168,11 +169,14 @@ async def test_template_error(
             "prompt": "talk like a {% if True %}smarthome{% else %}pirate please.",
         },
     )
-    with patch(
-        "openai.resources.models.AsyncModels.list",
-    ), patch(
-        "openai.resources.chat.completions.AsyncCompletions.create",
-        new_callable=AsyncMock,
+    with (
+        patch(
+            "openai.resources.models.AsyncModels.list",
+        ),
+        patch(
+            "openai.resources.chat.completions.AsyncCompletions.create",
+            new_callable=AsyncMock,
+        ),
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
@@ -190,7 +194,7 @@ async def test_conversation_agent(
     mock_init_component,
 ) -> None:
     """Test OpenAIAgent."""
-    agent = await conversation._get_agent_manager(hass).async_get_agent(
+    agent = conversation.get_agent_manager(hass).async_get_agent(
         mock_config_entry.entry_id
     )
     assert agent.supported_languages == "*"
@@ -313,12 +317,17 @@ async def test_generate_image_service_error(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test generate image service handles errors."""
-    with patch(
-        "openai.resources.images.AsyncImages.generate",
-        side_effect=RateLimitError(
-            response=Response(status_code=None, request=""), body=None, message="Reason"
+    with (
+        patch(
+            "openai.resources.images.AsyncImages.generate",
+            side_effect=RateLimitError(
+                response=Response(status_code=None, request=""),
+                body=None,
+                message="Reason",
+            ),
         ),
-    ), pytest.raises(HomeAssistantError, match="Error generating image: Reason"):
+        pytest.raises(HomeAssistantError, match="Error generating image: Reason"),
+    ):
         await hass.services.async_call(
             "openai_conversation",
             "generate_image",

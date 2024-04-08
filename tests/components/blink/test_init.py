@@ -1,8 +1,9 @@
 """Test the Blink init."""
-import asyncio
-from unittest.mock import AsyncMock, MagicMock
+
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohttp import ClientError
+from blinkpy.auth import LoginError
 import pytest
 
 from homeassistant.components.blink.const import (
@@ -23,7 +24,7 @@ PIN = "1234"
 
 @pytest.mark.parametrize(
     ("the_error", "available"),
-    [(ClientError, False), (asyncio.TimeoutError, False), (None, False)],
+    [(ClientError, False), (TimeoutError, False), (None, False)],
 )
 async def test_setup_not_ready(
     hass: HomeAssistant,
@@ -53,9 +54,16 @@ async def test_setup_not_ready_authkey_required(
     """Test setup failed because 2FA is needed to connect to the Blink system."""
 
     mock_blink_auth_api.check_key_required = MagicMock(return_value=True)
+    mock_blink_auth_api.send_auth_key = AsyncMock(return_value=False)
 
     mock_config_entry.add_to_hass(hass)
-    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    with patch(
+        "homeassistant.components.blink.config_flow.Auth.startup",
+        side_effect=LoginError,
+    ):
+        assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
@@ -86,10 +94,10 @@ async def test_migrate_V0(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test migration script version 0."""
-
-    mock_config_entry.version = 0
-
     mock_config_entry.add_to_hass(hass)
+
+    hass.config_entries.async_update_entry(mock_config_entry, version=0)
+
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
@@ -105,11 +113,14 @@ async def test_migrate(
     version,
 ) -> None:
     """Test migration scripts."""
-
-    mock_config_entry.version = version
-    mock_config_entry.data = {**mock_config_entry.data, "login_response": "Blah"}
-
     mock_config_entry.add_to_hass(hass)
+
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        version=version,
+        data={**mock_config_entry.data, "login_response": "Blah"},
+    )
+
     assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)

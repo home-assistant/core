@@ -1,15 +1,17 @@
 """Test config flow."""
+
 from unittest.mock import patch
 
 from aiomusiccast import MusicCastConnectionException
 import pytest
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components import ssdp
 from homeassistant.components.yamaha_musiccast.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
@@ -17,14 +19,16 @@ from tests.common import MockConfigEntry
 @pytest.fixture(autouse=True)
 async def silent_ssdp_scanner(hass):
     """Start SSDP component and get Scanner, prevent actual SSDP traffic."""
-    with patch(
-        "homeassistant.components.ssdp.Scanner._async_start_ssdp_listeners"
-    ), patch("homeassistant.components.ssdp.Scanner._async_stop_ssdp_listeners"), patch(
-        "homeassistant.components.ssdp.Scanner.async_scan"
-    ), patch(
-        "homeassistant.components.ssdp.Server._async_start_upnp_servers",
-    ), patch(
-        "homeassistant.components.ssdp.Server._async_stop_upnp_servers",
+    with (
+        patch("homeassistant.components.ssdp.Scanner._async_start_ssdp_listeners"),
+        patch("homeassistant.components.ssdp.Scanner._async_stop_ssdp_listeners"),
+        patch("homeassistant.components.ssdp.Scanner.async_scan"),
+        patch(
+            "homeassistant.components.ssdp.Server._async_start_upnp_servers",
+        ),
+        patch(
+            "homeassistant.components.ssdp.Server._async_stop_upnp_servers",
+        ),
     ):
         yield
 
@@ -132,13 +136,13 @@ async def test_user_input_device_not_found(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {"host": "none"},
     )
-    assert result2["type"] == data_entry_flow.FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
@@ -150,13 +154,13 @@ async def test_user_input_non_yamaha_device_found(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {"host": "127.0.0.1"},
     )
 
-    assert result2["type"] == data_entry_flow.FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "no_musiccast_device"}
 
 
@@ -180,7 +184,7 @@ async def test_user_input_device_already_existing(
         {"host": "192.168.188.18"},
     )
 
-    assert result2["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "already_configured"
 
 
@@ -192,13 +196,13 @@ async def test_user_input_unknown_error(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {"host": "127.0.0.1"},
     )
 
-    assert result2["type"] == data_entry_flow.FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
 
 
@@ -213,13 +217,13 @@ async def test_user_input_device_found(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {"host": "127.0.0.1"},
     )
 
-    assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert isinstance(result2["result"], ConfigEntry)
     assert result2["data"] == {
         "host": "127.0.0.1",
@@ -239,13 +243,13 @@ async def test_user_input_device_found_no_ssdp(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {"host": "127.0.0.1"},
     )
 
-    assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert isinstance(result2["result"], ConfigEntry)
     assert result2["data"] == {
         "host": "127.0.0.1",
@@ -275,7 +279,7 @@ async def test_ssdp_discovery_failed(
         ),
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "yxc_control_url_missing"
 
 
@@ -297,7 +301,7 @@ async def test_ssdp_discovery_successful_add_device(
         ),
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
     assert result["step_id"] == "confirm"
 
@@ -306,7 +310,7 @@ async def test_ssdp_discovery_successful_add_device(
         {},
     )
 
-    assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert isinstance(result2["result"], ConfigEntry)
     assert result2["data"] == {
         "host": "127.0.0.1",
@@ -338,7 +342,7 @@ async def test_ssdp_discovery_existing_device_update(
             },
         ),
     )
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert mock_entry.data[CONF_HOST] == "127.0.0.1"
     assert mock_entry.data["upnp_description"] == "http://127.0.0.1/desc.xml"

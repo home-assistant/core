@@ -1,4 +1,5 @@
 """Support for Voice mailboxes."""
+
 from __future__ import annotations
 
 import asyncio
@@ -19,6 +20,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.setup import async_prepare_setup_platform
 
@@ -61,6 +63,23 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             _LOGGER.error("Unknown mailbox platform specified")
             return
 
+        if p_type not in ["asterisk_cdr", "asterisk_mbox", "demo"]:
+            # Asterisk integration will raise a repair issue themselves
+            # For demo we don't create one
+            async_create_issue(
+                hass,
+                DOMAIN,
+                f"deprecated_mailbox_{p_type}",
+                breaks_in_ha_version="2024.9.0",
+                is_fixable=False,
+                issue_domain=DOMAIN,
+                severity=IssueSeverity.WARNING,
+                translation_key="deprecated_mailbox_integration",
+                translation_placeholders={
+                    "integration_domain": p_type,
+                },
+            )
+
         _LOGGER.info("Setting up %s.%s", DOMAIN, p_type)
         mailbox = None
         try:
@@ -91,14 +110,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         component.register_shutdown()
         await component.async_add_entities([mailbox_entity])
 
-    setup_tasks = [
-        asyncio.create_task(async_setup_platform(p_type, p_config))
-        for p_type, p_config in config_per_platform(config, DOMAIN)
-        if p_type is not None
-    ]
-
-    if setup_tasks:
-        await asyncio.wait(setup_tasks)
+    for p_type, p_config in config_per_platform(config, DOMAIN):
+        if p_type is not None:
+            hass.async_create_task(
+                async_setup_platform(p_type, p_config), eager_start=True
+            )
 
     async def async_platform_discovered(
         platform: str, info: DiscoveryInfoType | None
@@ -161,7 +177,7 @@ class Mailbox:
     @property
     def media_type(self) -> str:
         """Return the supported media type."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @property
     def can_delete(self) -> bool:
@@ -175,15 +191,15 @@ class Mailbox:
 
     async def async_get_media(self, msgid: str) -> bytes:
         """Return the media blob for the msgid."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_get_messages(self) -> list[dict[str, Any]]:
         """Return a list of the current messages."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_delete(self, msgid: str) -> bool:
         """Delete the specified messages."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
 
 class StreamError(Exception):
@@ -213,16 +229,16 @@ class MailboxPlatformsView(MailboxView):
 
     async def get(self, request: web.Request) -> web.Response:
         """Retrieve list of platforms."""
-        platforms: list[dict[str, Any]] = []
-        for mailbox in self.mailboxes:
-            platforms.append(
+        return self.json(
+            [
                 {
                     "name": mailbox.name,
                     "has_media": mailbox.has_media,
                     "can_delete": mailbox.can_delete,
                 }
-            )
-        return self.json(platforms)
+                for mailbox in self.mailboxes
+            ]
+        )
 
 
 class MailboxMessageView(MailboxView):
@@ -262,7 +278,7 @@ class MailboxMediaView(MailboxView):
         """Retrieve media."""
         mailbox = self.get_mailbox(platform)
 
-        with suppress(asyncio.CancelledError, asyncio.TimeoutError):
+        with suppress(asyncio.CancelledError, TimeoutError):
             async with asyncio.timeout(10):
                 try:
                     stream = await mailbox.async_get_media(msgid)

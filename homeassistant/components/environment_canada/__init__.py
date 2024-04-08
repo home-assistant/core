@@ -1,4 +1,5 @@
 """The Environment Canada (EC) component."""
+
 from datetime import timedelta
 import logging
 import xml.etree.ElementTree as et
@@ -99,7 +100,7 @@ def device_info(config_entry: ConfigEntry) -> DeviceInfo:
     )
 
 
-class ECDataUpdateCoordinator(DataUpdateCoordinator):
+class ECDataUpdateCoordinator(DataUpdateCoordinator):  # pylint: disable=hass-enforce-coordinator-module
     """Class to manage fetching EC data."""
 
     def __init__(self, hass, ec_data, name, update_interval):

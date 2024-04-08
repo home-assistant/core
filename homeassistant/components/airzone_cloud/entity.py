@@ -1,4 +1,5 @@
 """Entity classes for the Airzone Cloud integration."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -10,6 +11,7 @@ from aioairzone_cloud.const import (
     AZD_AVAILABLE,
     AZD_FIRMWARE,
     AZD_GROUPS,
+    AZD_HOT_WATERS,
     AZD_INSTALLATIONS,
     AZD_NAME,
     AZD_SYSTEM_ID,
@@ -127,6 +129,47 @@ class AirzoneGroupEntity(AirzoneEntity):
             await self.coordinator.airzone.api_set_group_id_params(
                 self.group_id, params
             )
+        except AirzoneCloudError as error:
+            raise HomeAssistantError(
+                f"Failed to set {self.entity_id} params: {error}"
+            ) from error
+
+        self.coordinator.async_set_updated_data(self.coordinator.airzone.data())
+
+
+class AirzoneHotWaterEntity(AirzoneEntity):
+    """Define an Airzone Cloud Hot Water entity."""
+
+    def __init__(
+        self,
+        coordinator: AirzoneUpdateCoordinator,
+        dhw_id: str,
+        dhw_data: dict[str, Any],
+    ) -> None:
+        """Initialize."""
+        super().__init__(coordinator)
+
+        self.dhw_id = dhw_id
+
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, dhw_id)},
+            manufacturer=MANUFACTURER,
+            name=dhw_data[AZD_NAME],
+            via_device=(DOMAIN, dhw_data[AZD_WEBSERVER]),
+        )
+
+    def get_airzone_value(self, key: str) -> Any:
+        """Return DHW value by key."""
+        value = None
+        if dhw := self.coordinator.data[AZD_HOT_WATERS].get(self.dhw_id):
+            value = dhw.get(key)
+        return value
+
+    async def _async_update_params(self, params: dict[str, Any]) -> None:
+        """Send DHW parameters to Cloud API."""
+        _LOGGER.debug("dhw=%s: update_params=%s", self.entity_id, params)
+        try:
+            await self.coordinator.airzone.api_set_dhw_id_params(self.dhw_id, params)
         except AirzoneCloudError as error:
             raise HomeAssistantError(
                 f"Failed to set {self.entity_id} params: {error}"

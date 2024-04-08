@@ -1,7 +1,7 @@
 """Config flow for Control4 integration."""
+
 from __future__ import annotations
 
-from asyncio import TimeoutError as asyncioTimeoutError
 import logging
 
 from aiohttp.client_exceptions import ClientError
@@ -10,7 +10,7 @@ from pyControl4.director import C4Director
 from pyControl4.error_handling import NotFound, Unauthorized
 import voluptuous as vol
 
-from homeassistant import config_entries, exceptions
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -18,6 +18,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 
@@ -67,9 +68,9 @@ class Control4Validator:
             self.director_bearer_token = (
                 await account.getDirectorBearerToken(self.controller_unique_id)
             )["token"]
-            return True
         except (Unauthorized, NotFound):
             return False
+        return True
 
     async def connect_to_director(self) -> bool:
         """Test if we can connect to the local Control4 Director."""
@@ -81,13 +82,13 @@ class Control4Validator:
                 self.host, self.director_bearer_token, director_session
             )
             await director.getAllItemInfo()
-            return True
-        except (Unauthorized, ClientError, asyncioTimeoutError):
+        except (Unauthorized, ClientError, TimeoutError):
             _LOGGER.error("Failed to connect to the Control4 controller")
             return False
+        return True
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class Control4ConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Control4."""
 
     VERSION = 1
@@ -138,16 +139,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
+        config_entry: ConfigEntry,
     ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
         return OptionsFlowHandler(config_entry)
 
 
-class OptionsFlowHandler(config_entries.OptionsFlow):
+class OptionsFlowHandler(OptionsFlow):
     """Handle a option flow for Control4."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+    def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
         self.config_entry = config_entry
 
@@ -169,9 +170,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         return self.async_show_form(step_id="init", data_schema=data_schema)
 
 
-class CannotConnect(exceptions.HomeAssistantError):
+class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""
 
 
-class InvalidAuth(exceptions.HomeAssistantError):
+class InvalidAuth(HomeAssistantError):
     """Error to indicate there is invalid auth."""

@@ -1,4 +1,5 @@
 """The lock tests for the august platform."""
+
 from homeassistant.components.climate import HVACMode
 from homeassistant.core import HomeAssistant
 
@@ -29,7 +30,7 @@ async def test_climate_zones(hass: HomeAssistant) -> None:
         "min_temp": 12.8,
         "preset_mode": "None",
         "preset_modes": ["None", "Home", "Away", "Sleep"],
-        "supported_features": 31,
+        "supported_features": 415,
         "target_temp_high": 26.1,
         "target_temp_low": 17.2,
         "target_temp_step": 1.0,
@@ -61,7 +62,7 @@ async def test_climate_zones(hass: HomeAssistant) -> None:
         "min_temp": 12.8,
         "preset_mode": "None",
         "preset_modes": ["None", "Home", "Away", "Sleep"],
-        "supported_features": 31,
+        "supported_features": 415,
         "target_temp_high": 26.1,
         "target_temp_low": 17.2,
         "target_temp_step": 1.0,

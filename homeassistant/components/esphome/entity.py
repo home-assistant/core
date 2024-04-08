@@ -1,12 +1,14 @@
 """Support for esphome entities."""
+
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable, Coroutine
 import functools
 import math
-from typing import TYPE_CHECKING, Any, Generic, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Concatenate, Generic, ParamSpec, TypeVar, cast
 
 from aioesphomeapi import (
+    APIConnectionError,
     EntityCategory as EsphomeEntityCategory,
     EntityInfo,
     EntityState,
@@ -17,11 +19,11 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -32,9 +34,53 @@ from .entry_data import RuntimeEntryData
 from .enum_mapper import EsphomeEnumMapper
 
 _R = TypeVar("_R")
+_P = ParamSpec("_P")
 _InfoT = TypeVar("_InfoT", bound=EntityInfo)
 _EntityT = TypeVar("_EntityT", bound="EsphomeEntity[Any,Any]")
 _StateT = TypeVar("_StateT", bound=EntityState)
+
+
+@callback
+def async_static_info_updated(
+    hass: HomeAssistant,
+    entry_data: RuntimeEntryData,
+    platform: entity_platform.EntityPlatform,
+    async_add_entities: AddEntitiesCallback,
+    info_type: type[_InfoT],
+    entity_type: type[_EntityT],
+    state_type: type[_StateT],
+    infos: list[EntityInfo],
+) -> None:
+    """Update entities of this platform when entities are listed."""
+    current_infos = entry_data.info[info_type]
+    new_infos: dict[int, EntityInfo] = {}
+    add_entities: list[_EntityT] = []
+
+    for info in infos:
+        if not current_infos.pop(info.key, None):
+            # Create new entity
+            entity = entity_type(entry_data, platform.domain, info, state_type)
+            add_entities.append(entity)
+        new_infos[info.key] = info
+
+    # Anything still in current_infos is now gone
+    if current_infos:
+        device_info = entry_data.device_info
+        if TYPE_CHECKING:
+            assert device_info is not None
+        entry_data.async_remove_entities(
+            hass, current_infos.values(), device_info.mac_address
+        )
+
+    # Then update the actual info
+    entry_data.info[info_type] = new_infos
+
+    if new_infos:
+        entry_data.async_update_entity_infos(new_infos.values())
+
+    if add_entities:
+        # Add entities to Home Assistant
+        async_add_entities(add_entities)
 
 
 async def platform_async_setup_entry(
@@ -55,39 +101,21 @@ async def platform_async_setup_entry(
     entry_data.info[info_type] = {}
     entry_data.state.setdefault(state_type, {})
     platform = entity_platform.async_get_current_platform()
-
-    @callback
-    def async_list_entities(infos: list[EntityInfo]) -> None:
-        """Update entities of this platform when entities are listed."""
-        current_infos = entry_data.info[info_type]
-        new_infos: dict[int, EntityInfo] = {}
-        add_entities: list[_EntityT] = []
-
-        for info in infos:
-            if not current_infos.pop(info.key, None):
-                # Create new entity
-                entity = entity_type(entry_data, platform.domain, info, state_type)
-                add_entities.append(entity)
-            new_infos[info.key] = info
-
-        # Anything still in current_infos is now gone
-        if current_infos:
-            hass.async_create_task(
-                entry_data.async_remove_entities(current_infos.values())
-            )
-
-        # Then update the actual info
-        entry_data.info[info_type] = new_infos
-
-        if new_infos:
-            entry_data.async_update_entity_infos(new_infos.values())
-
-        if add_entities:
-            # Add entities to Home Assistant
-            async_add_entities(add_entities)
-
+    on_static_info_update = functools.partial(
+        async_static_info_updated,
+        hass,
+        entry_data,
+        platform,
+        async_add_entities,
+        info_type,
+        entity_type,
+        state_type,
+    )
     entry_data.cleanup_callbacks.append(
-        entry_data.async_register_static_info_callback(info_type, async_list_entities)
+        entry_data.async_register_static_info_callback(
+            info_type,
+            on_static_info_update,
+        )
     )
 
 
@@ -115,17 +143,37 @@ def esphome_state_property(
     return _wrapper
 
 
+def convert_api_error_ha_error(
+    func: Callable[Concatenate[_EntityT, _P], Awaitable[None]],
+) -> Callable[Concatenate[_EntityT, _P], Coroutine[Any, Any, None]]:
+    """Decorate ESPHome command calls that send commands/make changes to the device.
+
+    A decorator that wraps the passed in function, catches APIConnectionError errors,
+    and raises a HomeAssistant error instead.
+    """
+
+    async def handler(self: _EntityT, *args: _P.args, **kwargs: _P.kwargs) -> None:
+        try:
+            return await func(self, *args, **kwargs)
+        except APIConnectionError as error:
+            raise HomeAssistantError(
+                f"Error communicating with device: {error}"
+            ) from error
+
+    return handler
+
+
 ICON_SCHEMA = vol.Schema(cv.icon)
 
 
-ENTITY_CATEGORIES: EsphomeEnumMapper[
-    EsphomeEntityCategory, EntityCategory | None
-] = EsphomeEnumMapper(
-    {
-        EsphomeEntityCategory.NONE: None,
-        EsphomeEntityCategory.CONFIG: EntityCategory.CONFIG,
-        EsphomeEntityCategory.DIAGNOSTIC: EntityCategory.DIAGNOSTIC,
-    }
+ENTITY_CATEGORIES: EsphomeEnumMapper[EsphomeEntityCategory, EntityCategory | None] = (
+    EsphomeEnumMapper(
+        {
+            EsphomeEntityCategory.NONE: None,
+            EsphomeEntityCategory.CONFIG: EntityCategory.CONFIG,
+            EsphomeEntityCategory.DIAGNOSTIC: EntityCategory.DIAGNOSTIC,
+        }
+    )
 )
 
 
@@ -179,31 +227,19 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         entry_data = self._entry_data
-        hass = self.hass
-        key = self._key
-        static_info = self._static_info
-
         self.async_on_remove(
-            entry_data.async_register_key_static_info_remove_callback(
-                static_info,
-                functools.partial(self.async_remove, force_remove=True),
-            )
-        )
-        self.async_on_remove(
-            async_dispatcher_connect(
-                hass,
-                entry_data.signal_device_updated,
+            entry_data.async_subscribe_device_updated(
                 self._on_device_update,
             )
         )
         self.async_on_remove(
             entry_data.async_subscribe_state_update(
-                self._state_type, key, self._on_state_update
+                self._state_type, self._key, self._on_state_update
             )
         )
         self.async_on_remove(
             entry_data.async_register_key_static_info_updated_callback(
-                static_info, self._on_static_info_update
+                self._static_info, self._on_static_info_update
             )
         )
         self._update_state_from_entry_data()

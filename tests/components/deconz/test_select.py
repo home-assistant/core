@@ -1,4 +1,5 @@
 """deCONZ select platform tests."""
+
 from unittest.mock import patch
 
 from pydeconz.models.sensor.presence import (

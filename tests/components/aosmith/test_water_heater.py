@@ -25,6 +25,7 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
@@ -49,6 +50,20 @@ async def test_state(
     hass: HomeAssistant, init_integration: MockConfigEntry, snapshot: SnapshotAssertion
 ) -> None:
     """Test the state of the water heater entity."""
+    state = hass.states.get("water_heater.my_water_heater")
+    assert state == snapshot
+
+
+@pytest.mark.parametrize(
+    ("get_devices_fixture_heat_pump"),
+    [
+        False,
+    ],
+)
+async def test_state_non_heat_pump(
+    hass: HomeAssistant, init_integration: MockConfigEntry, snapshot: SnapshotAssertion
+) -> None:
+    """Test the state of the water heater entity for a non heat pump device."""
     state = hass.states.get("water_heater.my_water_heater")
     assert state == snapshot
 
@@ -98,6 +113,24 @@ async def test_set_operation_mode(
     mock_client.update_mode.assert_called_once_with("junctionId", aosmith_mode)
 
 
+async def test_unsupported_operation_mode(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test setting the operation mode with an unsupported mode."""
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            WATER_HEATER_DOMAIN,
+            SERVICE_SET_OPERATION_MODE,
+            {
+                ATTR_ENTITY_ID: "water_heater.my_water_heater",
+                ATTR_OPERATION_MODE: "unsupported_mode",
+            },
+            blocking=True,
+        )
+
+
 async def test_set_temperature(
     hass: HomeAssistant,
     mock_client: MagicMock,
@@ -115,10 +148,12 @@ async def test_set_temperature(
 
 
 @pytest.mark.parametrize(
-    ("hass_away_mode", "aosmith_mode"),
+    ("get_devices_fixture_heat_pump", "hass_away_mode", "aosmith_mode"),
     [
-        (True, OperationMode.VACATION),
-        (False, OperationMode.HYBRID),
+        (True, True, OperationMode.VACATION),
+        (True, False, OperationMode.HYBRID),
+        (False, True, OperationMode.VACATION),
+        (False, False, OperationMode.ELECTRIC),
     ],
 )
 async def test_away_mode(

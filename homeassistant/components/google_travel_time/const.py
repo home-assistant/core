@@ -1,4 +1,5 @@
 """Constants for Google Travel Time."""
+
 DOMAIN = "google_travel_time"
 
 ATTRIBUTION = "Powered by Google"

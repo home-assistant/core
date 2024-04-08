@@ -1,4 +1,5 @@
 """The test for the Trafikverket Camera coordinator."""
+
 from __future__ import annotations
 
 from unittest.mock import patch
@@ -11,10 +12,9 @@ from pytrafikverket.exceptions import (
     UnknownError,
 )
 
-from homeassistant import config_entries
 from homeassistant.components.trafikverket_camera.const import DOMAIN
 from homeassistant.components.trafikverket_camera.coordinator import CameraData
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import UpdateFailed
@@ -64,22 +64,22 @@ async def test_coordinator(
         (
             InvalidAuthentication,
             ConfigEntryAuthFailed,
-            config_entries.ConfigEntryState.SETUP_ERROR,
+            ConfigEntryState.SETUP_ERROR,
         ),
         (
             NoCameraFound,
             UpdateFailed,
-            config_entries.ConfigEntryState.SETUP_RETRY,
+            ConfigEntryState.SETUP_RETRY,
         ),
         (
             MultipleCamerasFound,
             UpdateFailed,
-            config_entries.ConfigEntryState.SETUP_RETRY,
+            ConfigEntryState.SETUP_RETRY,
         ),
         (
             UnknownError,
             UpdateFailed,
-            config_entries.ConfigEntryState.SETUP_RETRY,
+            ConfigEntryState.SETUP_RETRY,
         ),
     ],
 )
@@ -151,4 +151,4 @@ async def test_coordinator_failed_get_image(
     mock_data.assert_called_once()
     state = hass.states.get("camera.test_camera")
     assert state is None
-    assert entry.state is config_entries.ConfigEntryState.SETUP_RETRY
+    assert entry.state is ConfigEntryState.SETUP_RETRY

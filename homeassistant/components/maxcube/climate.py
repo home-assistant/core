@@ -1,8 +1,8 @@
 """Support for MAX! Thermostats via MAX! Cube."""
+
 from __future__ import annotations
 
 import logging
-import socket
 from typing import Any
 
 from maxcube.device import (
@@ -54,13 +54,13 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Iterate through all MAX! Devices and add thermostats."""
-    devices = []
-    for handler in hass.data[DATA_KEY].values():
-        for device in handler.cube.devices:
-            if device.is_thermostat() or device.is_wallthermostat():
-                devices.append(MaxCubeClimate(handler, device))
 
-    add_entities(devices)
+    add_entities(
+        MaxCubeClimate(handler, device)
+        for handler in hass.data[DATA_KEY].values()
+        for device in handler.cube.devices
+        if device.is_thermostat() or device.is_wallthermostat()
+    )
 
 
 class MaxCubeClimate(ClimateEntity):
@@ -68,8 +68,12 @@ class MaxCubeClimate(ClimateEntity):
 
     _attr_hvac_modes = [HVACMode.OFF, HVACMode.AUTO, HVACMode.HEAT]
     _attr_supported_features = (
-        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.PRESET_MODE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, handler, device):
         """Initialize MAX! Cube ClimateEntity."""
@@ -148,7 +152,7 @@ class MaxCubeClimate(ClimateEntity):
         with self._cubehandle.mutex:
             try:
                 self._cubehandle.cube.set_temperature_mode(self._device, temp, mode)
-            except (socket.timeout, OSError):
+            except (TimeoutError, OSError):
                 _LOGGER.error("Setting HVAC mode failed")
 
     @property

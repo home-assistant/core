@@ -1,6 +1,5 @@
 """Tests for the for the BMW Connected Drive integration."""
 
-
 from bimmer_connected.const import REMOTE_SERVICE_BASE_URL, VEHICLE_CHARGING_BASE_URL
 import respx
 

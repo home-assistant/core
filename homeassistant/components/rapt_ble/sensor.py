@@ -1,4 +1,5 @@
 """Support for RAPT Pill hydrometers."""
+
 from __future__ import annotations
 
 from rapt_ble import DeviceClass, DeviceKey, SensorUpdate, Units

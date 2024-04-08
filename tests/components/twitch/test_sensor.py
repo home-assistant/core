@@ -1,4 +1,5 @@
 """The tests for an update of the Twitch component."""
+
 from datetime import datetime
 
 import pytest

@@ -1,7 +1,7 @@
 """Tests for the oncue component."""
+
 from __future__ import annotations
 
-import asyncio
 from unittest.mock import patch
 
 from aiooncue import LoginFailedException
@@ -29,10 +29,10 @@ async def test_config_entry_reload(hass: HomeAssistant) -> None:
     with _patch_login_and_data():
         await async_setup_component(hass, oncue.DOMAIN, {oncue.DOMAIN: {}})
         await hass.async_block_till_done()
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
     await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
 
 
 async def test_config_entry_login_error(hass: HomeAssistant) -> None:
@@ -49,7 +49,7 @@ async def test_config_entry_login_error(hass: HomeAssistant) -> None:
     ):
         await async_setup_component(hass, oncue.DOMAIN, {oncue.DOMAIN: {}})
         await hass.async_block_till_done()
-    assert config_entry.state == ConfigEntryState.SETUP_ERROR
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
 async def test_config_entry_retry_later(hass: HomeAssistant) -> None:
@@ -62,8 +62,8 @@ async def test_config_entry_retry_later(hass: HomeAssistant) -> None:
     config_entry.add_to_hass(hass)
     with patch(
         "homeassistant.components.oncue.Oncue.async_login",
-        side_effect=asyncio.TimeoutError,
+        side_effect=TimeoutError,
     ):
         await async_setup_component(hass, oncue.DOMAIN, {oncue.DOMAIN: {}})
         await hass.async_block_till_done()
-    assert config_entry.state == ConfigEntryState.SETUP_RETRY
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY

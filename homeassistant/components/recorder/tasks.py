@@ -1,4 +1,5 @@
 """Support for recording details."""
+
 from __future__ import annotations
 
 import abc
@@ -11,6 +12,7 @@ import threading
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.helpers.typing import UndefinedType
+from homeassistant.util.event_type import EventType
 
 from . import entity_registry, purge, statistics
 from .const import DOMAIN
@@ -458,7 +460,7 @@ class EventIdMigrationTask(RecorderTask):
 class RefreshEventTypesTask(RecorderTask):
     """An object to insert into the recorder queue to refresh event types."""
 
-    event_types: list[str]
+    event_types: list[EventType[Any] | str]
 
     def run(self, instance: Recorder) -> None:
         """Refresh event types."""

@@ -106,7 +106,7 @@
   },
   "exceptions": {
     "integration_not_found": {
-      "message": "Integration '{target}' not found in registry"
+      "message": "Integration \"{target}\" not found in registry"
     },
     "no_path": {
       "message": "Can't write to directory {target}, no access to path!"

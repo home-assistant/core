@@ -1,4 +1,5 @@
 """Support for Anova Sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -42,30 +43,31 @@ SENSOR_DESCRIPTIONS: list[SensorEntityDescription] = [
         key="cook_time",
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfTime.SECONDS,
-        icon="mdi:clock-outline",
         translation_key="cook_time",
         device_class=SensorDeviceClass.DURATION,
         value_fn=lambda data: data.cook_time,
     ),
     AnovaSensorEntityDescription(
-        key="state", translation_key="state", value_fn=lambda data: data.state
+        key="state",
+        translation_key="state",
+        value_fn=lambda data: data.state,
     ),
     AnovaSensorEntityDescription(
-        key="mode", translation_key="mode", value_fn=lambda data: data.mode
+        key="mode",
+        translation_key="mode",
+        value_fn=lambda data: data.mode,
     ),
     AnovaSensorEntityDescription(
         key="target_temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:thermometer",
         translation_key="target_temperature",
         value_fn=lambda data: data.target_temperature,
     ),
     AnovaSensorEntityDescription(
         key="cook_time_remaining",
         native_unit_of_measurement=UnitOfTime.SECONDS,
-        icon="mdi:clock-outline",
         translation_key="cook_time_remaining",
         device_class=SensorDeviceClass.DURATION,
         value_fn=lambda data: data.cook_time_remaining,
@@ -75,7 +77,6 @@ SENSOR_DESCRIPTIONS: list[SensorEntityDescription] = [
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:thermometer",
         translation_key="heater_temperature",
         value_fn=lambda data: data.heater_temperature,
     ),
@@ -84,7 +85,6 @@ SENSOR_DESCRIPTIONS: list[SensorEntityDescription] = [
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:thermometer",
         translation_key="triac_temperature",
         value_fn=lambda data: data.triac_temperature,
     ),
@@ -93,7 +93,6 @@ SENSOR_DESCRIPTIONS: list[SensorEntityDescription] = [
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:thermometer",
         translation_key="water_temperature",
         value_fn=lambda data: data.water_temperature,
     ),

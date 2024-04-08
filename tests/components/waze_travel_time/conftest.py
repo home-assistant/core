@@ -1,16 +1,30 @@
 """Fixtures for Waze Travel Time tests."""
+
 from unittest.mock import patch
 
 import pytest
-from pywaze.route_calculator import WRCError
+from pywaze.route_calculator import CalcRoutesResponse, WRCError
 
 
 @pytest.fixture(name="mock_update")
 def mock_update_fixture():
     """Mock an update to the sensor."""
     with patch(
-        "pywaze.route_calculator.WazeRouteCalculator.calc_all_routes_info",
-        return_value={"My route": (150, 300)},
+        "pywaze.route_calculator.WazeRouteCalculator.calc_routes",
+        return_value=[
+            CalcRoutesResponse(
+                distance=300,
+                duration=150,
+                name="E1337 - Teststreet",
+                street_names=["E1337", "IncludeThis", "Teststreet"],
+            ),
+            CalcRoutesResponse(
+                distance=500,
+                duration=600,
+                name="E0815 - Otherstreet",
+                street_names=["E0815", "ExcludeThis", "Otherstreet"],
+            ),
+        ],
     ) as mock_wrc:
         yield mock_wrc
 

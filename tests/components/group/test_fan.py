@@ -1,4 +1,5 @@
 """The tests for the group fan platform."""
+
 import asyncio
 from unittest.mock import patch
 
@@ -386,7 +387,7 @@ async def test_state_missing_entity_id(hass: HomeAssistant, setup_comp) -> None:
 
 async def test_setup_before_started(hass: HomeAssistant) -> None:
     """Test we can setup before starting."""
-    hass.state = CoreState.stopped
+    hass.set_state(CoreState.stopped)
     assert await async_setup_component(hass, DOMAIN, CONFIG_MISSING_FAN)
 
     await hass.async_block_till_done()

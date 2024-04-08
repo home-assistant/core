@@ -5,7 +5,8 @@
   "postCreateCommand": "script/setup",
   "postStartCommand": "script/bootstrap",
   "containerEnv": { "DEVCONTAINER": "1" },
-  "appPort": ["8123:8123"],
+  // Port 5683 udp is used by Shelly integration
+  "appPort": ["8123:8123", "5683:5683/udp"],
   "runArgs": ["-e", "GIT_EDITOR=code --wait"],
   "customizations": {
     "vscode": {
@@ -20,6 +21,7 @@
       ],
       // Please keep this file in sync with settings in home-assistant/.vscode/settings.default.json
       "settings": {
+        "python.experiments.optOutFrom": ["pythonTestAdapter"],
         "python.pythonPath": "/usr/local/bin/python",
         "python.testing.pytestArgs": ["--no-cov"],
         "editor.formatOnPaste": false,
