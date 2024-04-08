@@ -427,6 +427,8 @@ class VoiceAssistantAPIPipeline(VoiceAssistantPipeline):
     @callback
     def receive_audio_bytes(self, data: bytes) -> None:
         """Receive audio bytes from the device."""
+        if not self.is_running:
+            return
         self.queue.put_nowait(data)
 
     @callback
