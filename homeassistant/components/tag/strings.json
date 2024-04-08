@@ -1,3 +1,17 @@
 {
-  "title": "Tag"
+  "title": "Tag",
+  "entity": {
+    "event": {
+      "tag": {
+        "state_attributes": {
+          "tag_id": {
+            "name": "Tag ID"
+          },
+          "device_id": {
+            "name": "Device ID"
+          }
+        }
+      }
+    }
+  }
 }

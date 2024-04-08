@@ -87,6 +87,7 @@ class TagEvent(EventEntity):
 
     _unrecorded_attributes = frozenset({TAG_ID})
     _attr_event_types = [EVENT_TAG_SCANNED]
+    _attr_translation_key = DOMAIN
 
     def __init__(self, name: str, tag_id: str, last_scanned: str) -> None:
         """Initialize the Tag event."""

@@ -1,0 +1,9 @@
+{
+  "entity": {
+    "event": {
+      "tag": {
+        "default": "mdi:tag"
+      }
+    }
+  }
+}
