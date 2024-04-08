@@ -455,6 +455,12 @@
         }
       }
     },
+    "arve": {
+      "name": "Arve",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "arwn": {
       "name": "Ambient Radio Weather Network",
       "integration_type": "hub",
