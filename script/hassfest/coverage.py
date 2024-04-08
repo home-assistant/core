@@ -20,25 +20,17 @@ DONT_IGNORE = (
     "scene.py",
 )
 
-PREFIX = """# Sorted by hassfest.
+CORE_PREFIX = """# Sorted by hassfest.
 #
 # To sort, run python3 -m script.hassfest -p coverage
 
 [run]
 source = homeassistant
 omit =
-    homeassistant/__main__.py
-    homeassistant/helpers/signal.py
-    homeassistant/helpers/backports/aiohttp_resolver.py
-    homeassistant/scripts/__init__.py
-    homeassistant/scripts/check_config.py
-    homeassistant/scripts/ensure_config.py
-    homeassistant/scripts/benchmark/__init__.py
-    homeassistant/scripts/macos/__init__.py
-
-    # omit pieces of code that rely on external devices being present
 """
-
+COMPONENTS_PREFIX = (
+    "    # omit pieces of code that rely on external devices being present\n"
+)
 SUFFIX = """[report]
 # Regexes for lines to exclude from consideration
 exclude_lines =
@@ -142,23 +134,25 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
 def generate(integrations: dict[str, Integration], config: Config) -> None:
     """Sort coverage."""
     coverage_path = config.root / ".coveragerc"
-    lines = []
-    start = False
+    core = []
+    components = []
+    section = "header"
 
     with coverage_path.open("rt") as fp:
         for line in fp:
-            if (
-                not start
-                and line
-                == "    # omit pieces of code that rely on external devices being present\n"
-            ):
-                start = True
-            elif line == "[report]\n":
+            if line == "[report]\n":
                 break
-            elif start and line != "\n":
-                lines.append(line)
 
-    content = f"{PREFIX}{"".join(sorted(lines))}\n\n{SUFFIX}"
+            if section != "core" and line == "omit =\n":
+                section = "core"
+            elif section != "components" and line == COMPONENTS_PREFIX:
+                section = "components"
+            elif section == "core" and line != "\n":
+                core.append(line)
+            elif section == "components" and line != "\n":
+                components.append(line)
+
+    content = f"{CORE_PREFIX}{"".join(sorted(core))}\n{COMPONENTS_PREFIX}{"".join(sorted(components))}\n\n{SUFFIX}"
 
     with coverage_path.open("w") as fp:
         fp.write(content)
