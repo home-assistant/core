@@ -112,13 +112,15 @@ async def test_reauth(hass: HomeAssistant, mock_test) -> None:
     assert result1["step_id"] == "reauth_confirm"
     assert not result1["errors"]
 
+    NEW_CONFIG = {CONF_ACCESS_TOKEN: "newtoken"}
+
     with patch(
         "homeassistant.components.teslemetry.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result1["flow_id"],
-            CONFIG,
+            NEW_CONFIG,
         )
         await hass.async_block_till_done()
         assert len(mock_setup_entry.mock_calls) == 1
@@ -126,7 +128,7 @@ async def test_reauth(hass: HomeAssistant, mock_test) -> None:
 
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
-    assert mock_entry.data == CONFIG
+    assert mock_entry.data == NEW_CONFIG
 
 
 @pytest.mark.parametrize(
