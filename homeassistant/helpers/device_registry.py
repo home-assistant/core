@@ -19,6 +19,7 @@ from homeassistant.loader import async_suggest_report_issue
 from homeassistant.util.json import format_unserializable_data
 import homeassistant.util.uuid as uuid_util
 
+from ..util.event_type import EventType
 from . import storage, translation
 from .debounce import Debouncer
 from .deprecation import (
@@ -40,7 +41,9 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 
 DATA_REGISTRY = "device_registry"
-EVENT_DEVICE_REGISTRY_UPDATED = "device_registry_updated"
+EVENT_DEVICE_REGISTRY_UPDATED: EventType[EventDeviceRegistryUpdatedData] = EventType(
+    "device_registry_updated"
+)
 STORAGE_KEY = "core.device_registry"
 STORAGE_VERSION_MAJOR = 1
 STORAGE_VERSION_MINOR = 5
@@ -908,12 +911,11 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
 
         self.async_schedule_save()
 
-        data: dict[str, Any] = {
-            "action": "create" if old.is_new else "update",
-            "device_id": new.id,
-        }
-        if not old.is_new:
-            data["changes"] = old_values
+        data: EventDeviceRegistryUpdatedData
+        if old.is_new:
+            data = {"action": "create", "device_id": new.id}
+        else:
+            data = {"action": "update", "device_id": new.id, "changes": old_values}
 
         self.hass.bus.async_fire(EVENT_DEVICE_REGISTRY_UPDATED, data)
 
@@ -934,7 +936,10 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             if other_device.via_device_id == device_id:
                 self.async_update_device(other_device.id, via_device_id=None)
         self.hass.bus.async_fire(
-            EVENT_DEVICE_REGISTRY_UPDATED, {"action": "remove", "device_id": device_id}
+            EVENT_DEVICE_REGISTRY_UPDATED,
+            _EventDeviceRegistryUpdatedData_CreateRemove(
+                action="remove", device_id=device_id
+            ),
         )
         self.async_schedule_save()
 
