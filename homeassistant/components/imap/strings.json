@@ -40,10 +40,13 @@
       "message": "Copying the message failed with \"{error}\"."
     },
     "delete_failed": {
-      "message": "Marking the the message for deletion failed with \"{error}\"."
+      "message": "Marking the message for deletion failed with \"{error}\"."
     },
     "expunge_failed": {
-      "message": "Expunging the the message failed with \"{error}\"."
+      "message": "Expunging the message failed with \"{error}\"."
+    },
+    "fetch_failed": {
+      "message": "Fetching the message text failed with \"{error}\"."
     },
     "invalid_entry": {
       "message": "No valid IMAP entry was found."
@@ -99,6 +102,20 @@
     }
   },
   "services": {
+    "fetch": {
+      "name": "Fetch message",
+      "description": "Fetch the email message from the server.",
+      "fields": {
+        "entry": {
+          "name": "Entry",
+          "description": "The IMAP config entry."
+        },
+        "uid": {
+          "name": "UID",
+          "description": "The email identifier (UID)."
+        }
+      }
+    },
     "seen": {
       "name": "Mark message as seen",
       "description": "Mark an email as seen.",

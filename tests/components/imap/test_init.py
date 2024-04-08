@@ -847,6 +847,17 @@ async def test_services(hass: HomeAssistant, mock_imap_protocol: MagicMock) -> N
     mock_imap_protocol.store.assert_called_with("1", "+FLAGS (\\Deleted)")
     mock_imap_protocol.protocol.expunge.assert_called_once()
 
+    # Test fetch service
+    data = {"entry": config_entry.entry_id, "uid": "1"}
+    response = await hass.services.async_call(
+        DOMAIN, "fetch", data, blocking=True, return_response=True
+    )
+    mock_imap_protocol.fetch.assert_called_with("1", "BODY.PEEK[]")
+    assert response["text"] == "Test body\r\n"
+    assert response["sender"] == "john.doe@example.com"
+    assert response["subject"] == "Test subject"
+    assert response["uid"] == "1"
+
     # Test with invalid entry_id
     data = {"entry": "invalid", "uid": "1"}
     with pytest.raises(ServiceValidationError) as exc:
@@ -877,43 +888,53 @@ async def test_services(hass: HomeAssistant, mock_imap_protocol: MagicMock) -> N
             )
 
     # Test unexpected errors with storing a flag during a service call
-    service_calls = {
-        "seen": {"entry": config_entry.entry_id, "uid": "1"},
-        "move": {
-            "entry": config_entry.entry_id,
-            "uid": "1",
-            "seen": False,
-            "target_folder": "Trash",
-        },
-        "delete": {"entry": config_entry.entry_id, "uid": "1"},
+    service_calls_response = {
+        "seen": ({"entry": config_entry.entry_id, "uid": "1"}, False),
+        "move": (
+            {
+                "entry": config_entry.entry_id,
+                "uid": "1",
+                "seen": False,
+                "target_folder": "Trash",
+            },
+            False,
+        ),
+        "delete": ({"entry": config_entry.entry_id, "uid": "1"}, False),
+        "fetch": ({"entry": config_entry.entry_id, "uid": "1"}, True),
     }
-    store_error_translation_key = {
-        "seen": "seen_failed",
-        "move": "copy_failed",
-        "delete": "delete_failed",
+    patch_error_translation_key = {
+        "seen": ("store", "seen_failed"),
+        "move": ("copy", "copy_failed"),
+        "delete": ("store", "delete_failed"),
+        "fetch": ("fetch", "fetch_failed"),
     }
-    for service, data in service_calls.items():
+    for service, (data, response) in service_calls_response.items():
         with (
             pytest.raises(ServiceValidationError) as exc,
             patch.object(
-                mock_imap_protocol, "store", side_effect=AioImapException("Bla")
+                mock_imap_protocol,
+                patch_error_translation_key[service][0],
+                side_effect=AioImapException("Bla"),
             ),
         ):
-            await hass.services.async_call(DOMAIN, service, data, blocking=True)
+            await hass.services.async_call(
+                DOMAIN, service, data, blocking=True, return_response=response
+            )
         assert exc.value.translation_domain == DOMAIN
         assert exc.value.translation_key == "imap_server_fail"
         assert exc.value.translation_placeholders == {"error": "Bla"}
-        # Test with bad responses on store command
+        # Test with bad responses
         with (
             pytest.raises(ServiceValidationError) as exc,
             patch.object(
-                mock_imap_protocol, "store", return_value=Response("BAD", [b"Bla"])
-            ),
-            patch.object(
-                mock_imap_protocol, "copy", return_value=Response("BAD", [b"Bla"])
+                mock_imap_protocol,
+                patch_error_translation_key[service][0],
+                return_value=Response("BAD", [b"Bla"]),
             ),
         ):
-            await hass.services.async_call(DOMAIN, service, data, blocking=True)
+            await hass.services.async_call(
+                DOMAIN, service, data, blocking=True, return_response=response
+            )
         assert exc.value.translation_domain == DOMAIN
-        assert exc.value.translation_key == store_error_translation_key[service]
+        assert exc.value.translation_key == patch_error_translation_key[service][1]
         assert exc.value.translation_placeholders == {"error": "Bla"}
