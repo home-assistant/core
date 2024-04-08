@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from enum import StrEnum
 from functools import partial
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
 from .helpers.deprecation import (
     DeprecatedConstant,
@@ -13,7 +13,11 @@ from .helpers.deprecation import (
     check_if_deprecated_constant,
     dir_with_deprecated_constants,
 )
+from .util.event_type import EventType
 from .util.signal_type import SignalType
+
+if TYPE_CHECKING:
+    from .core import EventStateChangedData
 
 APPLICATION_NAME: Final = "HomeAssistant"
 MAJOR_VERSION: Final = 2024
@@ -306,7 +310,7 @@ EVENT_LOGBOOK_ENTRY: Final = "logbook_entry"
 EVENT_LOGGING_CHANGED: Final = "logging_changed"
 EVENT_SERVICE_REGISTERED: Final = "service_registered"
 EVENT_SERVICE_REMOVED: Final = "service_removed"
-EVENT_STATE_CHANGED: Final = "state_changed"
+EVENT_STATE_CHANGED: EventType[EventStateChangedData] = EventType("state_changed")
 EVENT_STATE_REPORTED: Final = "state_reported"
 EVENT_THEMES_UPDATED: Final = "themes_updated"
 EVENT_PANELS_UPDATED: Final = "panels_updated"

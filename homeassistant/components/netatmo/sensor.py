@@ -7,6 +7,7 @@ import logging
 from typing import cast
 
 import pyatmo
+from pyatmo import DeviceType
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -31,7 +32,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import async_entries_for_config_entry
+from homeassistant.helpers.device_registry import (
+    DeviceInfo,
+    async_entries_for_config_entry,
+)
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -52,7 +56,7 @@ from .const import (
     SIGNAL_NAME,
 )
 from .data_handler import HOME, PUBLIC, NetatmoDataHandler, NetatmoDevice, NetatmoRoom
-from .entity import NetatmoBaseEntity
+from .entity import NetatmoBaseEntity, NetatmoModuleEntity, NetatmoRoomEntity
 from .helper import NetatmoArea
 
 _LOGGER = logging.getLogger(__name__)
@@ -305,11 +309,9 @@ async def async_setup_entry(
             netatmo_device.device.name,
         )
         async_add_entities(
-            [
-                NetatmoSensor(netatmo_device, description)
-                for description in SENSOR_TYPES
-                if description.key in netatmo_device.device.features
-            ]
+            NetatmoSensor(netatmo_device, description)
+            for description in SENSOR_TYPES
+            if description.key in netatmo_device.device.features
         )
 
     entry.async_on_unload(
@@ -395,11 +397,11 @@ async def async_setup_entry(
     await add_public_entities(False)
 
 
-class NetatmoWeatherSensor(NetatmoBaseEntity, SensorEntity):
+class NetatmoWeatherSensor(NetatmoModuleEntity, SensorEntity):
     """Implementation of a Netatmo weather/home coach sensor."""
 
-    _attr_has_entity_name = True
     entity_description: NetatmoSensorEntityDescription
+    _attr_configuration_url = CONF_URL_WEATHER
 
     def __init__(
         self,
@@ -407,16 +409,9 @@ class NetatmoWeatherSensor(NetatmoBaseEntity, SensorEntity):
         description: NetatmoSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(netatmo_device.data_handler)
+        super().__init__(netatmo_device)
         self.entity_description = description
-
-        self._module = netatmo_device.device
-        self._id = self._module.entity_id
-        self._station_id = (
-            self._module.bridge if self._module.bridge is not None else self._id
-        )
-        self._device_name = self._module.name
-        category = getattr(self._module.device_category, "name")
+        category = getattr(self.device.device_category, "name")
         self._publishers.extend(
             [
                 {
@@ -425,16 +420,10 @@ class NetatmoWeatherSensor(NetatmoBaseEntity, SensorEntity):
                 },
             ]
         )
+        self._attr_unique_id = f"{self.device.entity_id}-{description.key}"
 
-        self._attr_name = f"{description.name}"
-        self._model = self._module.device_type
-        self._config_url = CONF_URL_WEATHER
-        self._attr_unique_id = f"{self._id}-{description.key}"
-
-        if hasattr(self._module, "place"):
-            place = cast(
-                pyatmo.modules.base_class.Place, getattr(self._module, "place")
-            )
+        if hasattr(self.device, "place"):
+            place = cast(pyatmo.modules.base_class.Place, getattr(self.device, "place"))
             if hasattr(place, "location") and place.location is not None:
                 self._attr_extra_state_attributes.update(
                     {
@@ -443,12 +432,19 @@ class NetatmoWeatherSensor(NetatmoBaseEntity, SensorEntity):
                     }
                 )
 
+    @property
+    def device_type(self) -> DeviceType:
+        """Return the Netatmo device type."""
+        if "." not in self.device.device_type:
+            return super().device_type
+        return DeviceType(self.device.device_type.partition(".")[2])
+
     @callback
     def async_update_callback(self) -> None:
         """Update the entity's state."""
         if (
-            not self._module.reachable
-            or (state := getattr(self._module, self.entity_description.netatmo_name))
+            not self.device.reachable
+            or (state := getattr(self.device, self.entity_description.netatmo_name))
             is None
         ):
             if self.available:
@@ -474,21 +470,17 @@ class NetatmoWeatherSensor(NetatmoBaseEntity, SensorEntity):
         self.async_write_ha_state()
 
 
-class NetatmoClimateBatterySensor(NetatmoBaseEntity, SensorEntity):
+class NetatmoClimateBatterySensor(NetatmoModuleEntity, SensorEntity):
     """Implementation of a Netatmo sensor."""
 
     entity_description: NetatmoSensorEntityDescription
+    device: pyatmo.modules.NRV
+    _attr_configuration_url = CONF_URL_ENERGY
 
-    def __init__(
-        self,
-        netatmo_device: NetatmoDevice,
-    ) -> None:
+    def __init__(self, netatmo_device: NetatmoDevice) -> None:
         """Initialize the sensor."""
-        super().__init__(netatmo_device.data_handler)
+        super().__init__(netatmo_device)
         self.entity_description = BATTERY_SENSOR_DESCRIPTION
-
-        self._module = cast(pyatmo.modules.NRV, netatmo_device.device)
-        self._id = netatmo_device.parent_id
 
         self._publishers.extend(
             [
@@ -500,31 +492,32 @@ class NetatmoClimateBatterySensor(NetatmoBaseEntity, SensorEntity):
             ]
         )
 
-        self._attr_name = f"{self._module.name} {self.entity_description.name}"
-        self._room_id = self._module.room_id
-        self._model = getattr(self._module.device_type, "value")
-        self._config_url = CONF_URL_ENERGY
-
-        self._attr_unique_id = (
-            f"{self._id}-{self._module.entity_id}-{self.entity_description.key}"
+        self._attr_unique_id = f"{netatmo_device.parent_id}-{self.device.entity_id}-{self.entity_description.key}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, netatmo_device.parent_id)},
+            name=netatmo_device.device.name,
+            manufacturer=self.device_description[0],
+            model=self.device_description[1],
+            configuration_url=self._attr_configuration_url,
         )
 
     @callback
     def async_update_callback(self) -> None:
         """Update the entity's state."""
-        if not self._module.reachable:
+        if not self.device.reachable:
             if self.available:
                 self._attr_available = False
             return
 
         self._attr_available = True
-        self._attr_native_value = self._module.battery
+        self._attr_native_value = self.device.battery
 
 
-class NetatmoSensor(NetatmoBaseEntity, SensorEntity):
+class NetatmoSensor(NetatmoModuleEntity, SensorEntity):
     """Implementation of a Netatmo sensor."""
 
     entity_description: NetatmoSensorEntityDescription
+    _attr_configuration_url = CONF_URL_ENERGY
 
     def __init__(
         self,
@@ -532,40 +525,32 @@ class NetatmoSensor(NetatmoBaseEntity, SensorEntity):
         description: NetatmoSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(netatmo_device.data_handler)
+        super().__init__(netatmo_device)
         self.entity_description = description
-
-        self._module = netatmo_device.device
-        self._id = self._module.entity_id
 
         self._publishers.extend(
             [
                 {
                     "name": HOME,
-                    "home_id": netatmo_device.device.home.entity_id,
+                    "home_id": self.home.entity_id,
                     SIGNAL_NAME: netatmo_device.signal_name,
                 },
             ]
         )
 
-        self._attr_name = f"{self._module.name} {self.entity_description.name}"
-        self._room_id = self._module.room_id
-        self._model = getattr(self._module.device_type, "value")
-        self._config_url = CONF_URL_ENERGY
-
         self._attr_unique_id = (
-            f"{self._id}-{self._module.entity_id}-{self.entity_description.key}"
+            f"{self.device.entity_id}-{self.device.entity_id}-{description.key}"
         )
 
     @callback
     def async_update_callback(self) -> None:
         """Update the entity's state."""
-        if not self._module.reachable:
+        if not self.device.reachable:
             if self.available:
                 self._attr_available = False
             return
 
-        if (state := getattr(self._module, self.entity_description.key)) is None:
+        if (state := getattr(self.device, self.entity_description.key)) is None:
             return
 
         self._attr_available = True
@@ -609,7 +594,7 @@ def process_wifi(strength: int) -> str:
     return "Full"
 
 
-class NetatmoRoomSensor(NetatmoBaseEntity, SensorEntity):
+class NetatmoRoomSensor(NetatmoRoomEntity, SensorEntity):
     """Implementation of a Netatmo room sensor."""
 
     entity_description: NetatmoSensorEntityDescription
@@ -620,37 +605,27 @@ class NetatmoRoomSensor(NetatmoBaseEntity, SensorEntity):
         description: NetatmoSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(netatmo_room.data_handler)
+        super().__init__(netatmo_room)
         self.entity_description = description
-
-        self._room = netatmo_room.room
-        self._id = self._room.entity_id
 
         self._publishers.extend(
             [
                 {
                     "name": HOME,
-                    "home_id": netatmo_room.room.home.entity_id,
+                    "home_id": self.home.entity_id,
                     SIGNAL_NAME: netatmo_room.signal_name,
                 },
             ]
         )
 
-        self._attr_name = f"{self._room.name} {self.entity_description.name}"
-        self._room_id = self._room.entity_id
-        self._config_url = CONF_URL_ENERGY
-
-        assert self._room.climate_type
-        self._model = self._room.climate_type
-
         self._attr_unique_id = (
-            f"{self._id}-{self._room.entity_id}-{self.entity_description.key}"
+            f"{self.device.entity_id}-{self.device.entity_id}-{description.key}"
         )
 
     @callback
     def async_update_callback(self) -> None:
         """Update the entity's state."""
-        if (state := getattr(self._room, self.entity_description.key)) is None:
+        if (state := getattr(self.device, self.entity_description.key)) is None:
             return
 
         self._attr_native_value = state
@@ -661,7 +636,6 @@ class NetatmoRoomSensor(NetatmoBaseEntity, SensorEntity):
 class NetatmoPublicSensor(NetatmoBaseEntity, SensorEntity):
     """Represent a single sensor in a Netatmo."""
 
-    _attr_has_entity_name = True
     entity_description: NetatmoSensorEntityDescription
 
     def __init__(
@@ -691,33 +665,31 @@ class NetatmoPublicSensor(NetatmoBaseEntity, SensorEntity):
 
         self.area = area
         self._mode = area.mode
-        self._area_name = area.area_name
-        self._id = self._area_name
-        self._device_name = f"{self._area_name}"
-        self._attr_name = f"{description.name}"
         self._show_on_map = area.show_on_map
-        self._config_url = CONF_URL_PUBLIC_WEATHER
-        self._attr_unique_id = (
-            f"{self._device_name.replace(' ', '-')}-{description.key}"
-        )
-        self._model = PUBLIC
+        self._attr_unique_id = f"{area.area_name.replace(' ', '-')}-{description.key}"
 
         self._attr_extra_state_attributes.update(
             {
-                ATTR_LATITUDE: (self.area.lat_ne + self.area.lat_sw) / 2,
-                ATTR_LONGITUDE: (self.area.lon_ne + self.area.lon_sw) / 2,
+                ATTR_LATITUDE: (area.lat_ne + area.lat_sw) / 2,
+                ATTR_LONGITUDE: (area.lon_ne + area.lon_sw) / 2,
             }
+        )
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, area.area_name)},
+            name=area.area_name,
+            model="Public Weather station",
+            manufacturer="Netatmo",
+            configuration_url=CONF_URL_PUBLIC_WEATHER,
         )
 
     async def async_added_to_hass(self) -> None:
         """Entity created."""
         await super().async_added_to_hass()
 
-        assert self.device_info and "name" in self.device_info
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"netatmo-config-{self.device_info['name']}",
+                f"netatmo-config-{self.area.area_name}",
                 self.async_config_update_callback,
             )
         )
@@ -776,7 +748,7 @@ class NetatmoPublicSensor(NetatmoBaseEntity, SensorEntity):
                 _LOGGER.error(
                     "No station provides %s data in the area %s",
                     self.entity_description.key,
-                    self._area_name,
+                    self.area.area_name,
                 )
 
             self._attr_available = False
