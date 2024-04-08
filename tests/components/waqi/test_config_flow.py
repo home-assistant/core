@@ -52,14 +52,17 @@ async def test_full_map_flow(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
 
-    with patch(
-        "aiowaqi.WAQIClient.authenticate",
-    ), patch(
-        "aiowaqi.WAQIClient.get_by_ip",
-        return_value=WAQIAirQuality.from_dict(
-            json.loads(load_fixture("waqi/air_quality_sensor.json"))
+    with (
+        patch(
+            "aiowaqi.WAQIClient.authenticate",
+        ),
+        patch(
+            "aiowaqi.WAQIClient.get_by_ip",
+            return_value=WAQIAirQuality.from_dict(
+                json.loads(load_fixture("waqi/air_quality_sensor.json"))
+            ),
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -68,20 +71,24 @@ async def test_full_map_flow(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == method
 
-    with patch(
-        "aiowaqi.WAQIClient.authenticate",
-    ), patch(
-        "aiowaqi.WAQIClient.get_by_coordinates",
-        return_value=WAQIAirQuality.from_dict(
-            json.loads(load_fixture("waqi/air_quality_sensor.json"))
+    with (
+        patch(
+            "aiowaqi.WAQIClient.authenticate",
         ),
-    ), patch(
-        "aiowaqi.WAQIClient.get_by_station_number",
-        return_value=WAQIAirQuality.from_dict(
-            json.loads(load_fixture("waqi/air_quality_sensor.json"))
+        patch(
+            "aiowaqi.WAQIClient.get_by_coordinates",
+            return_value=WAQIAirQuality.from_dict(
+                json.loads(load_fixture("waqi/air_quality_sensor.json"))
+            ),
+        ),
+        patch(
+            "aiowaqi.WAQIClient.get_by_station_number",
+            return_value=WAQIAirQuality.from_dict(
+                json.loads(load_fixture("waqi/air_quality_sensor.json"))
+            ),
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -90,7 +97,7 @@ async def test_full_map_flow(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "de Jongweg, Utrecht"
     assert result["data"] == {
         CONF_API_KEY: "asd",
@@ -115,27 +122,13 @@ async def test_flow_errors(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "aiowaqi.WAQIClient.authenticate",
-    ), patch(
-        "aiowaqi.WAQIClient.get_by_ip",
-        side_effect=exception,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_API_KEY: "asd", CONF_METHOD: CONF_MAP},
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] == FlowResultType.FORM
-    assert result["errors"] == {"base": error}
-
-    with patch(
-        "aiowaqi.WAQIClient.authenticate",
-    ), patch(
-        "aiowaqi.WAQIClient.get_by_ip",
-        return_value=WAQIAirQuality.from_dict(
-            json.loads(load_fixture("waqi/air_quality_sensor.json"))
+    with (
+        patch(
+            "aiowaqi.WAQIClient.authenticate",
+        ),
+        patch(
+            "aiowaqi.WAQIClient.get_by_ip",
+            side_effect=exception,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -144,15 +137,38 @@ async def test_flow_errors(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": error}
+
+    with (
+        patch(
+            "aiowaqi.WAQIClient.authenticate",
+        ),
+        patch(
+            "aiowaqi.WAQIClient.get_by_ip",
+            return_value=WAQIAirQuality.from_dict(
+                json.loads(load_fixture("waqi/air_quality_sensor.json"))
+            ),
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_API_KEY: "asd", CONF_METHOD: CONF_MAP},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "map"
 
-    with patch(
-        "aiowaqi.WAQIClient.authenticate",
-    ), patch(
-        "aiowaqi.WAQIClient.get_by_coordinates",
-        return_value=WAQIAirQuality.from_dict(
-            json.loads(load_fixture("waqi/air_quality_sensor.json"))
+    with (
+        patch(
+            "aiowaqi.WAQIClient.authenticate",
+        ),
+        patch(
+            "aiowaqi.WAQIClient.get_by_coordinates",
+            return_value=WAQIAirQuality.from_dict(
+                json.loads(load_fixture("waqi/air_quality_sensor.json"))
+            ),
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -163,7 +179,7 @@ async def test_flow_errors(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize(
@@ -215,14 +231,17 @@ async def test_error_in_second_step(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
 
-    with patch(
-        "aiowaqi.WAQIClient.authenticate",
-    ), patch(
-        "aiowaqi.WAQIClient.get_by_ip",
-        return_value=WAQIAirQuality.from_dict(
-            json.loads(load_fixture("waqi/air_quality_sensor.json"))
+    with (
+        patch(
+            "aiowaqi.WAQIClient.authenticate",
+        ),
+        patch(
+            "aiowaqi.WAQIClient.get_by_ip",
+            return_value=WAQIAirQuality.from_dict(
+                json.loads(load_fixture("waqi/air_quality_sensor.json"))
+            ),
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -231,13 +250,15 @@ async def test_error_in_second_step(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == method
 
-    with patch(
-        "aiowaqi.WAQIClient.authenticate",
-    ), patch("aiowaqi.WAQIClient.get_by_coordinates", side_effect=exception), patch(
-        "aiowaqi.WAQIClient.get_by_station_number", side_effect=exception
+    with (
+        patch(
+            "aiowaqi.WAQIClient.authenticate",
+        ),
+        patch("aiowaqi.WAQIClient.get_by_coordinates", side_effect=exception),
+        patch("aiowaqi.WAQIClient.get_by_station_number", side_effect=exception),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -245,20 +266,24 @@ async def test_error_in_second_step(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error}
 
-    with patch(
-        "aiowaqi.WAQIClient.authenticate",
-    ), patch(
-        "aiowaqi.WAQIClient.get_by_coordinates",
-        return_value=WAQIAirQuality.from_dict(
-            json.loads(load_fixture("waqi/air_quality_sensor.json"))
+    with (
+        patch(
+            "aiowaqi.WAQIClient.authenticate",
         ),
-    ), patch(
-        "aiowaqi.WAQIClient.get_by_station_number",
-        return_value=WAQIAirQuality.from_dict(
-            json.loads(load_fixture("waqi/air_quality_sensor.json"))
+        patch(
+            "aiowaqi.WAQIClient.get_by_coordinates",
+            return_value=WAQIAirQuality.from_dict(
+                json.loads(load_fixture("waqi/air_quality_sensor.json"))
+            ),
+        ),
+        patch(
+            "aiowaqi.WAQIClient.get_by_station_number",
+            return_value=WAQIAirQuality.from_dict(
+                json.loads(load_fixture("waqi/air_quality_sensor.json"))
+            ),
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -267,7 +292,7 @@ async def test_error_in_second_step(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "de Jongweg, Utrecht"
     assert result["data"] == {
         CONF_API_KEY: "asd",

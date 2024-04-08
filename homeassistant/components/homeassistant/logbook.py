@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from typing import Any
 
 from homeassistant.components.logbook import (
     LOGBOOK_ENTRY_ICON,
@@ -11,10 +12,11 @@ from homeassistant.components.logbook import (
 )
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.util.event_type import EventType
 
 from . import DOMAIN
 
-EVENT_TO_NAME = {
+EVENT_TO_NAME: dict[EventType[Any] | str, str] = {
     EVENT_HOMEASSISTANT_STOP: "stopped",
     EVENT_HOMEASSISTANT_START: "started",
 }

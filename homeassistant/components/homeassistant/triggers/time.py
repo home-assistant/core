@@ -16,6 +16,7 @@ from homeassistant.const import (
 from homeassistant.core import (
     CALLBACK_TYPE,
     Event,
+    EventStateChangedData,
     HassJob,
     HomeAssistant,
     State,
@@ -23,7 +24,6 @@ from homeassistant.core import (
 )
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import (
-    EventStateChangedData,
     async_track_point_in_time,
     async_track_state_change_event,
     async_track_time_change,
@@ -76,7 +76,6 @@ async def async_attach_trigger(
                     "entity_id": entity_id,
                 }
             },
-            eager_start=True,
         )
 
     @callback

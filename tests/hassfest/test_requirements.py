@@ -11,7 +11,7 @@ from script.hassfest.requirements import validate_requirements_format
 @pytest.fixture
 def integration():
     """Fixture for hassfest integration model."""
-    integration = Integration(
+    return Integration(
         path=Path("homeassistant/components/test"),
         _manifest={
             "domain": "test",
@@ -21,7 +21,6 @@ def integration():
             "requirements": [],
         },
     )
-    return integration
 
 
 def test_validate_requirements_format_with_space(integration: Integration) -> None:

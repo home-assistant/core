@@ -17,20 +17,23 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "user"
 
-    with patch(
-        "homeassistant.components.p1_monitor.config_flow.P1Monitor.smartmeter"
-    ) as mock_p1monitor, patch(
-        "homeassistant.components.p1_monitor.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.p1_monitor.config_flow.P1Monitor.smartmeter"
+        ) as mock_p1monitor,
+        patch(
+            "homeassistant.components.p1_monitor.async_setup_entry", return_value=True
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={CONF_HOST: "example.com"},
         )
 
-    assert result2.get("type") == FlowResultType.CREATE_ENTRY
+    assert result2.get("type") is FlowResultType.CREATE_ENTRY
     assert result2.get("title") == "P1 Monitor"
     assert result2.get("data") == {CONF_HOST: "example.com"}
 
@@ -50,5 +53,5 @@ async def test_api_error(hass: HomeAssistant) -> None:
             data={CONF_HOST: "example.com"},
         )
 
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("errors") == {"base": "cannot_connect"}

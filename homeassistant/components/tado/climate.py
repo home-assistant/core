@@ -206,7 +206,7 @@ def create_climate_entity(
         cool_max_temp = float(cool_temperatures["celsius"]["max"])
         cool_step = cool_temperatures["celsius"].get("step", PRECISION_TENTHS)
 
-    entity = TadoClimate(
+    return TadoClimate(
         tado,
         name,
         zone_id,
@@ -222,7 +222,6 @@ def create_climate_entity(
         cool_step,
         supported_fan_modes,
     )
-    return entity
 
 
 class TadoClimate(TadoZoneEntity, ClimateEntity):
@@ -401,7 +400,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
 
     def set_timer(
         self,
-        temperature: float | None = None,
+        temperature: float,
         time_period: int | None = None,
         requested_overlay: str | None = None,
     ):
@@ -418,7 +417,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         """Set offset on the entity."""
 
         _LOGGER.debug(
-            "Setting temperature offset for device %s setting to (%d)",
+            "Setting temperature offset for device %s setting to (%.1f)",
             self._device_id,
             offset,
         )
@@ -485,12 +484,12 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return temperature offset."""
         state_attr: dict[str, Any] = self._tado_zone_temp_offset
-        state_attr[
-            HA_TERMINATION_TYPE
-        ] = self._tado_zone_data.default_overlay_termination_type
-        state_attr[
-            HA_TERMINATION_DURATION
-        ] = self._tado_zone_data.default_overlay_termination_duration
+        state_attr[HA_TERMINATION_TYPE] = (
+            self._tado_zone_data.default_overlay_termination_type
+        )
+        state_attr[HA_TERMINATION_DURATION] = (
+            self._tado_zone_data.default_overlay_termination_duration
+        )
         return state_attr
 
     def set_swing_mode(self, swing_mode: str) -> None:

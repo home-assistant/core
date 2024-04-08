@@ -11,15 +11,7 @@ import functools as ft
 import logging
 from random import randint
 import time
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Concatenate,
-    Generic,
-    ParamSpec,
-    TypedDict,
-    TypeVar,
-)
+from typing import TYPE_CHECKING, Any, Concatenate, Generic, ParamSpec, TypeVar
 
 import attr
 
@@ -33,6 +25,8 @@ from homeassistant.const import (
 from homeassistant.core import (
     CALLBACK_TYPE,
     Event,
+    # Explicit reexport of 'EventStateChangedData' for backwards compatibility
+    EventStateChangedData as EventStateChangedData,  # noqa: PLC0414
     HassJob,
     HassJobType,
     HomeAssistant,
@@ -44,6 +38,7 @@ from homeassistant.exceptions import TemplateError
 from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import run_callback_threadsafe
+from homeassistant.util.event_type import EventType
 
 from .device_registry import (
     EVENT_DEVICE_REGISTRY_UPDATED,
@@ -96,7 +91,7 @@ class _KeyedEventTracker(Generic[_TypedDictT]):
 
     listeners_key: str
     callbacks_key: str
-    event_type: str
+    event_type: EventType[_TypedDictT] | str
     dispatcher_callable: Callable[
         [
             HomeAssistant,
@@ -109,11 +104,10 @@ class _KeyedEventTracker(Generic[_TypedDictT]):
         [
             HomeAssistant,
             dict[str, list[HassJob[[Event[_TypedDictT]], Any]]],
-            Event[_TypedDictT],
+            _TypedDictT,
         ],
         bool,
     ]
-    run_immediately: bool
 
 
 @dataclass(slots=True)
@@ -141,7 +135,7 @@ class TrackTemplate:
 
     template: Template
     variables: TemplateVarsType
-    rate_limit: timedelta | None = None
+    rate_limit: float | None = None
 
 
 @dataclass(slots=True)
@@ -161,14 +155,6 @@ class TrackTemplateResult:
     template: Template
     last_result: Any
     result: Any
-
-
-class EventStateChangedData(TypedDict):
-    """EventStateChanged data."""
-
-    entity_id: str
-    old_state: State | None
-    new_state: State | None
 
 
 def threaded_listener_factory(
@@ -237,11 +223,11 @@ def async_track_state_change(
     job = HassJob(action, f"track state change {entity_ids} {from_state} {to_state}")
 
     @callback
-    def state_change_filter(event: Event[EventStateChangedData]) -> bool:
+    def state_change_filter(event_data: EventStateChangedData) -> bool:
         """Handle specific state changes."""
         if from_state is not None:
             old_state_str: str | None = None
-            if (old_state := event.data["old_state"]) is not None:
+            if (old_state := event_data["old_state"]) is not None:
                 old_state_str = old_state.state
 
             if not match_from_state(old_state_str):
@@ -249,7 +235,7 @@ def async_track_state_change(
 
         if to_state is not None:
             new_state_str: str | None = None
-            if (new_state := event.data["new_state"]) is not None:
+            if (new_state := event_data["new_state"]) is not None:
                 new_state_str = new_state.state
 
             if not match_to_state(new_state_str):
@@ -270,7 +256,7 @@ def async_track_state_change(
     @callback
     def state_change_listener(event: Event[EventStateChangedData]) -> None:
         """Handle specific state changes."""
-        if not state_change_filter(event):
+        if not state_change_filter(event.data):
             return
 
         state_change_dispatcher(event)
@@ -287,7 +273,10 @@ def async_track_state_change(
         return async_track_state_change_event(hass, entity_ids, state_change_listener)
 
     return hass.bus.async_listen(
-        EVENT_STATE_CHANGED, state_change_dispatcher, event_filter=state_change_filter
+        EVENT_STATE_CHANGED,
+        state_change_dispatcher,
+        event_filter=state_change_filter,
+        run_immediately=True,
     )
 
 
@@ -328,7 +317,7 @@ def _async_dispatch_entity_id_event(
         return
     for job in callbacks_list.copy():
         try:
-            hass.async_run_hass_job(job, event, eager_start=True)
+            hass.async_run_hass_job(job, event)
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception(
                 "Error while dispatching event for %s to %s",
@@ -341,10 +330,10 @@ def _async_dispatch_entity_id_event(
 def _async_state_change_filter(
     hass: HomeAssistant,
     callbacks: dict[str, list[HassJob[[Event[EventStateChangedData]], Any]]],
-    event: Event[EventStateChangedData],
+    event_data: EventStateChangedData,
 ) -> bool:
     """Filter state changes by entity_id."""
-    return event.data["entity_id"] in callbacks
+    return event_data["entity_id"] in callbacks
 
 
 _KEYED_TRACK_STATE_CHANGE = _KeyedEventTracker(
@@ -353,7 +342,6 @@ _KEYED_TRACK_STATE_CHANGE = _KeyedEventTracker(
     event_type=EVENT_STATE_CHANGED,
     dispatcher_callable=_async_dispatch_entity_id_event,
     filter_callable=_async_state_change_filter,
-    run_immediately=False,
 )
 
 
@@ -431,7 +419,7 @@ def _async_track_event(
             tracker.event_type,
             ft.partial(tracker.dispatcher_callable, hass, callbacks),
             event_filter=ft.partial(tracker.filter_callable, hass, callbacks),
-            run_immediately=tracker.run_immediately,
+            run_immediately=True,
         )
 
     job = HassJob(action, f"track {tracker.event_type} event {keys}", job_type=job_type)
@@ -473,10 +461,10 @@ def _async_dispatch_old_entity_id_or_entity_id_event(
 def _async_entity_registry_updated_filter(
     hass: HomeAssistant,
     callbacks: dict[str, list[HassJob[[Event[EventEntityRegistryUpdatedData]], Any]]],
-    event: Event[EventEntityRegistryUpdatedData],
+    event_data: EventEntityRegistryUpdatedData,
 ) -> bool:
     """Filter entity registry updates by entity_id."""
-    return event.data.get("old_entity_id", event.data["entity_id"]) in callbacks
+    return event_data.get("old_entity_id", event_data["entity_id"]) in callbacks
 
 
 _KEYED_TRACK_ENTITY_REGISTRY_UPDATED = _KeyedEventTracker(
@@ -485,7 +473,6 @@ _KEYED_TRACK_ENTITY_REGISTRY_UPDATED = _KeyedEventTracker(
     event_type=EVENT_ENTITY_REGISTRY_UPDATED,
     dispatcher_callable=_async_dispatch_old_entity_id_or_entity_id_event,
     filter_callable=_async_entity_registry_updated_filter,
-    run_immediately=True,
 )
 
 
@@ -512,10 +499,10 @@ def async_track_entity_registry_updated_event(
 def _async_device_registry_updated_filter(
     hass: HomeAssistant,
     callbacks: dict[str, list[HassJob[[Event[EventDeviceRegistryUpdatedData]], Any]]],
-    event: Event[EventDeviceRegistryUpdatedData],
+    event_data: EventDeviceRegistryUpdatedData,
 ) -> bool:
     """Filter device registry updates by device_id."""
-    return event.data["device_id"] in callbacks
+    return event_data["device_id"] in callbacks
 
 
 @callback
@@ -544,7 +531,6 @@ _KEYED_TRACK_DEVICE_REGISTRY_UPDATED = _KeyedEventTracker(
     event_type=EVENT_DEVICE_REGISTRY_UPDATED,
     dispatcher_callable=_async_dispatch_device_id_event,
     filter_callable=_async_device_registry_updated_filter,
-    run_immediately=True,
 )
 
 
@@ -585,12 +571,12 @@ def _async_dispatch_domain_event(
 def _async_domain_added_filter(
     hass: HomeAssistant,
     callbacks: dict[str, list[HassJob[[Event[EventStateChangedData]], Any]]],
-    event: Event[EventStateChangedData],
+    event_data: EventStateChangedData,
 ) -> bool:
     """Filter state changes by entity_id."""
-    return event.data["old_state"] is None and (
+    return event_data["old_state"] is None and (
         MATCH_ALL in callbacks
-        or split_entity_id(event.data["entity_id"])[0] in callbacks
+        or split_entity_id(event_data["entity_id"])[0] in callbacks
     )
 
 
@@ -613,7 +599,6 @@ _KEYED_TRACK_STATE_ADDED_DOMAIN = _KeyedEventTracker(
     event_type=EVENT_STATE_CHANGED,
     dispatcher_callable=_async_dispatch_domain_event,
     filter_callable=_async_domain_added_filter,
-    run_immediately=False,
 )
 
 
@@ -634,12 +619,12 @@ def _async_track_state_added_domain(
 def _async_domain_removed_filter(
     hass: HomeAssistant,
     callbacks: dict[str, list[HassJob[[Event[EventStateChangedData]], Any]]],
-    event: Event[EventStateChangedData],
+    event_data: EventStateChangedData,
 ) -> bool:
     """Filter state changes by entity_id."""
-    return event.data["new_state"] is None and (
+    return event_data["new_state"] is None and (
         MATCH_ALL in callbacks
-        or split_entity_id(event.data["entity_id"])[0] in callbacks
+        or split_entity_id(event_data["entity_id"])[0] in callbacks
     )
 
 
@@ -649,7 +634,6 @@ _KEYED_TRACK_STATE_REMOVED_DOMAIN = _KeyedEventTracker(
     event_type=EVENT_STATE_CHANGED,
     dispatcher_callable=_async_dispatch_domain_event,
     filter_callable=_async_domain_removed_filter,
-    run_immediately=False,
 )
 
 
@@ -1077,7 +1061,7 @@ class TrackTemplateResultInfo:
     def _render_template_if_ready(
         self,
         track_template_: TrackTemplate,
-        now: datetime,
+        now: float,
         event: Event[EventStateChangedData] | None,
     ) -> bool | TrackTemplateResult:
         """Re-render the template if conditions match.
@@ -1185,7 +1169,7 @@ class TrackTemplateResultInfo:
         """
         updates: list[TrackTemplateResult] = []
         info_changed = False
-        now = event.time_fired if not replayed and event else dt_util.utcnow()
+        now = event.time_fired_timestamp if not replayed and event else time.time()
 
         block_updates = False
         super_template = self._track_templates[0] if self._has_super_template else None
@@ -1599,7 +1583,7 @@ class _TrackTimeInterval:
             self._track_job,
             hass.loop.time() + self.seconds,
         )
-        hass.async_run_hass_job(self._run_job, now, eager_start=True, background=True)
+        hass.async_run_hass_job(self._run_job, now, background=True)
 
     @callback
     def async_cancel(self) -> None:
@@ -1684,7 +1668,7 @@ class SunListener:
         """Handle solar event."""
         self._unsub_sun = None
         self._listen_next_sun_event()
-        self.hass.async_run_hass_job(self.job, eager_start=True, background=True)
+        self.hass.async_run_hass_job(self.job, background=True)
 
     @callback
     def _handle_config_event(self, _event: Any) -> None:
@@ -1770,9 +1754,7 @@ class _TrackUTCTimeChange:
         # time when the timer was scheduled
         utc_now = time_tracker_utcnow()
         localized_now = dt_util.as_local(utc_now) if self.local else utc_now
-        hass.async_run_hass_job(
-            self.job, localized_now, eager_start=True, background=True
-        )
+        hass.async_run_hass_job(self.job, localized_now, background=True)
         if TYPE_CHECKING:
             assert self._pattern_time_change_listener_job is not None
         self._cancel_callback = async_track_point_in_utc_time(
@@ -1929,7 +1911,7 @@ def _rate_limit_for_event(
     event: Event[EventStateChangedData],
     info: RenderInfo,
     track_template_: TrackTemplate,
-) -> timedelta | None:
+) -> float | None:
     """Determine the rate limit for an event."""
     # Specifically referenced entities are excluded
     # from the rate limit
@@ -1939,7 +1921,7 @@ def _rate_limit_for_event(
     if track_template_.rate_limit is not None:
         return track_template_.rate_limit
 
-    rate_limit: timedelta | None = info.rate_limit
+    rate_limit: float | None = info.rate_limit
     return rate_limit
 
 
