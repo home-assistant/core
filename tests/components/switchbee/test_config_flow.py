@@ -29,7 +29,7 @@ async def test_form(hass: HomeAssistant, test_cucode_in_coordinator_data) -> Non
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     with (

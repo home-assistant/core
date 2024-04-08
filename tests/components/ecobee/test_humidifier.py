@@ -7,6 +7,7 @@ import pytest
 from homeassistant.components.ecobee.humidifier import MODE_MANUAL, MODE_OFF
 from homeassistant.components.humidifier import (
     ATTR_AVAILABLE_MODES,
+    ATTR_CURRENT_HUMIDITY,
     ATTR_HUMIDITY,
     ATTR_MAX_HUMIDITY,
     ATTR_MIN_HUMIDITY,
@@ -43,6 +44,8 @@ async def test_attributes(hass: HomeAssistant) -> None:
 
     state = hass.states.get(DEVICE_ID)
     assert state.state == STATE_ON
+    if state.attributes.get(ATTR_CURRENT_HUMIDITY):
+        assert state.attributes.get(ATTR_CURRENT_HUMIDITY) == 15
     assert state.attributes.get(ATTR_MIN_HUMIDITY) == DEFAULT_MIN_HUMIDITY
     assert state.attributes.get(ATTR_MAX_HUMIDITY) == DEFAULT_MAX_HUMIDITY
     assert state.attributes.get(ATTR_HUMIDITY) == 40

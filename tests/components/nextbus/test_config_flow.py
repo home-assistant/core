@@ -124,7 +124,7 @@ async def test_user_config(
     )
     await hass.async_block_till_done()
 
-    assert result.get("type") == "form"
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "route"
 
     # Select route

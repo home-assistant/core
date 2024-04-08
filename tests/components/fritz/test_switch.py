@@ -172,7 +172,7 @@ async def test_switch_setup(
     expected_wifi_names: list[str],
     fc_class_mock,
     fh_class_mock,
-):
+) -> None:
     """Test setup of Fritz!Tools switches."""
 
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
@@ -180,7 +180,7 @@ async def test_switch_setup(
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     switches = hass.states.async_all(Platform.SWITCH)
     assert len(switches) == 3
