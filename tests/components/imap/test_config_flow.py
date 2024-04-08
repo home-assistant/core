@@ -506,7 +506,7 @@ async def test_config_flow_with_cipherlist_and_ssl_verify(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-@pytest.mark.parametrize("event_message_data", [[], ["headers"], ["text","headers"]])
+@pytest.mark.parametrize("event_message_data", [[], ["headers"], ["text", "headers"]])
 async def test_config_flow_with_event_message_data(
     hass: HomeAssistant, mock_setup_entry: AsyncMock, event_message_data: list
 ) -> None:
