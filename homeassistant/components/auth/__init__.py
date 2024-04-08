@@ -209,7 +209,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     await login_flow.async_setup(hass, store_result)
     await mfa_setup_flow.async_setup(hass)
 
-    async def create_temporary_strict_connection_url(
+    @callback
+    def create_temporary_strict_connection_url(
         _: ServiceCall,
     ) -> ServiceResponse:
         """Create a strict connection url and return it."""

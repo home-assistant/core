@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from datetime import datetime, timedelta
 import secrets
-from typing import TYPE_CHECKING, TypedDict
+from typing import TYPE_CHECKING, Final, TypedDict
 
 from aiohttp.web import Request
 from aiohttp_session import Session, get_session, new_session
@@ -30,12 +29,13 @@ STORAGE_VERSION = 1
 STORAGE_KEY = "auth.session"
 
 
-@dataclass
 class StrictConnectionTempSessionData:
-    """Session data for accessing unauthorized resources for a short period of time, when strict connection is enabled."""
+    """Data for accessing unauthorized resources for a short period of time."""
 
-    cancel_remove: CALLBACK_TYPE
-    absolute_expiry: datetime = dt_util.utcnow() + TEMP_TIMEOUT
+    def __init__(self, cancel_remove: CALLBACK_TYPE) -> None:
+        """Initialize the temp session data."""
+        self.cancel_remove: Final[CALLBACK_TYPE] = cancel_remove
+        self.absolute_expiry: Final[datetime] = dt_util.utcnow() + TEMP_TIMEOUT
 
 
 class StoreData(TypedDict):

@@ -62,12 +62,13 @@ class HomeAssistantCookieStorage(EncryptedCookieStorage):
                     "utf-8"
                 )
             )
-            return Session(None, data=data, new=False, max_age=self.max_age)
-        except (InvalidToken, *JSON_DECODE_EXCEPTIONS):
+        except (InvalidToken, TypeError, *JSON_DECODE_EXCEPTIONS):
             _LOGGER.warning(
                 "Cannot decrypt/parse cookie value, create a new fresh session"
             )
-            return Session(None, data=None, new=True, max_age=self.max_age)
+            data = None
+
+        return Session(None, data=data, new=data is None, max_age=self.max_age)
 
     async def load_session(self, request: Request) -> Session:
         """Load session."""
