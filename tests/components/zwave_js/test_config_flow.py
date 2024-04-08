@@ -86,7 +86,7 @@ def discovery_info_fixture() -> dict[str, Any]:
 @pytest.fixture(name="discovery_info_side_effect")
 def discovery_info_side_effect_fixture() -> Any | None:
     """Return the discovery info from the supervisor."""
-    return None  # noqa: RET501
+    return None
 
 
 @pytest.fixture(name="get_addon_discovery_info")
