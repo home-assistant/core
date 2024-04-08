@@ -87,7 +87,6 @@ class RoomOccupancyBinarySensor(BinarySensorEntity):
         found = self.check_states()
         if found:
             self._state = STATE_ON
-            # self._attr_is_on = STATE_ON
             self.hass.states.async_set(
                 entity_id=self.entity_id,
                 new_state=self._state,
@@ -110,7 +109,6 @@ class RoomOccupancyBinarySensor(BinarySensorEntity):
         """Set the state to off after the timeout."""
         _LOGGER.debug("timeout reached, setting state to off")
         self._state = STATE_OFF
-        # self._attr_is_on = STATE_OFF
         self.hass.states.async_set(
             entity_id=self.entity_id,
             new_state=self._state,
