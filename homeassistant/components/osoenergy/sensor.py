@@ -1,4 +1,5 @@
 """Support for OSO Energy sensors."""
+
 from collections.abc import Callable
 from dataclasses import dataclass
 
@@ -28,10 +29,9 @@ def _get_local_hour(utc_hour: int):
     now_local = dt_util.now()
     utc_time = now.replace(hour=utc_hour, minute=0, second=0, microsecond=0)
     local_hour = dt_util.as_local(utc_time)
-    local_hour = local_hour.replace(
+    return local_hour.replace(
         year=now_local.year, month=now_local.month, day=now_local.day
     )
-    return local_hour
 
 
 def _convert_profile_to_local(values):
@@ -161,6 +161,7 @@ class OSOEnergySensor(OSOEnergyEntity[OSOEnergySensorData], SensorEntity):
         device: OSOEnergySensorData,
     ) -> None:
         """Initialize the OSO Energy sensor."""
+        self.device = None
         super().__init__(instance, device)
 
         device_id = device.device_id
