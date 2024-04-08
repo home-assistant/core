@@ -47,10 +47,10 @@ from homeassistant.core import (
 from homeassistant.exceptions import MaxLengthExceeded
 from homeassistant.loader import async_suggest_report_issue
 from homeassistant.util import slugify, uuid as uuid_util
+from homeassistant.util.event_type import EventType
 from homeassistant.util.json import format_unserializable_data
 from homeassistant.util.read_only_dict import ReadOnlyDict
 
-from ..util.event_type import EventType
 from . import device_registry as dr, storage
 from .device_registry import EVENT_DEVICE_REGISTRY_UPDATED
 from .json import JSON_DUMP, find_paths_unserializable_data, json_bytes, json_fragment
