@@ -136,6 +136,7 @@ _P = ParamSpec("_P")
 _Ts = TypeVarTuple("_Ts")
 # Internal; not helpers.typing.UNDEFINED due to circular dependency
 _UNDEF: dict[Any, Any] = {}
+_SENTINEL = object()
 _CallableT = TypeVar("_CallableT", bound=Callable[..., Any])
 _DataT = TypeVar("_DataT", bound=Mapping[str, Any], default=Mapping[str, Any])
 CALLBACK_TYPE = Callable[[], None]
@@ -1532,7 +1533,7 @@ class EventBus:
         event_type: EventType[_DataT] | str,
         listener: Callable[[Event[_DataT]], Coroutine[Any, Any, None] | None],
         event_filter: Callable[[_DataT], bool] | None = None,
-        run_immediately: bool | None = None,
+        run_immediately: bool | object = _SENTINEL,
     ) -> CALLBACK_TYPE:
         """Listen for all events or events of a specific type.
 
@@ -1612,7 +1613,7 @@ class EventBus:
         self,
         event_type: EventType[_DataT] | str,
         listener: Callable[[Event[_DataT]], Coroutine[Any, Any, None] | None],
-        run_immediately: bool | None = None,
+        run_immediately: bool | object = _SENTINEL,
     ) -> CALLBACK_TYPE:
         """Listen once for event of a specific type.
 
