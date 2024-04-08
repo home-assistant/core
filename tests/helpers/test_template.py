@@ -1176,7 +1176,7 @@ def test_as_datetime(hass: HomeAssistant, input) -> None:
 )
 def test_as_datetime_from_timestamp(
     hass: HomeAssistant,
-    input: int | float,
+    input: float,
     output: str,
 ) -> None:
     """Test converting a UNIX timestamp to a date object."""
