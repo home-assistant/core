@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from ipaddress import IPv4Address, IPv6Address
 import logging
 
 import aiodns
@@ -35,14 +36,10 @@ def sort_ips(ips: list, querytype: str) -> list:
     """Join IPs into a single string."""
 
     if querytype == "AAAA":
-        return sorted(
-            ips,
-            key=lambda ip: [int(hextet, 16) for hextet in ip.split(":") if hextet],
-        )
-    return sorted(
-        ips,
-        key=lambda ip: [int(octet) for octet in ip.split(".")],
-    )
+        ips = [IPv6Address(ip) for ip in ips]
+    else:
+        ips = [IPv4Address(ip) for ip in ips]
+    return [str(ip) for ip in sorted(ips)]
 
 
 async def async_setup_entry(

@@ -58,8 +58,10 @@ async def test_sensor(hass: HomeAssistant) -> None:
 
     assert state1.state == "1.1.1.1"
     assert state1.attributes["IPs"] == ["1.1.1.1", "1.2.3.4"]
-    assert state2.state == "2001:db8:77::dead:beef"
+    assert state2.state == "2001:db8::77:dead:beef"
     assert state2.attributes["IPs"] == [
+        "2001:db8::77:dead:beef",
+        "2001:db8:66::dead:beef",
         "2001:db8:77::dead:beef",
         "2001:db8:77::face:b00c",
     ]

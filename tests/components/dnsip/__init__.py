@@ -27,9 +27,11 @@ class RetrieveDNS:
         if self.error:
             raise self.error
         if qtype == "AAAA":
-            results = [QueryResult(), QueryResult()]
+            results = [QueryResult(), QueryResult(), QueryResult(), QueryResult()]
             results[0].host = "2001:db8:77::face:b00c"
             results[1].host = "2001:db8:77::dead:beef"
+            results[2].host = "2001:db8::77:dead:beef"
+            results[3].host = "2001:db8:66::dead:beef"
         else:
             results = [QueryResult(), QueryResult()]
             results[1].host = "1.1.1.1"
