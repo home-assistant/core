@@ -166,9 +166,7 @@ async def _async_start_adapter_discovery(
         """Shutdown debouncer."""
         discovery_debouncer.async_shutdown()
 
-    hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STOP, _async_shutdown_debouncer, run_immediately=True
-    )
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_shutdown_debouncer)
 
     async def _async_call_debouncer(now: datetime.datetime) -> None:
         """Call the debouncer at a later time."""
@@ -201,7 +199,6 @@ async def _async_start_adapter_discovery(
     hass.bus.async_listen_once(
         EVENT_HOMEASSISTANT_STOP,
         hass_callback(lambda event: cancel()),
-        run_immediately=True,
     )
 
 
