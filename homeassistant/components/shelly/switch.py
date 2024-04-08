@@ -136,12 +136,14 @@ def async_setup_rpc_entry(
             continue
 
         if coordinator.model == MODEL_WALL_DISPLAY:
-            if not is_rpc_thermostat_internal_actuator(coordinator.device.status):
-                # Wall Display relay is not used as the thermostat actuator,
-                # we need to remove a climate entity
+            if f"thermostat:{id_}" not in coordinator.device.status:
+                # There is no thermostat in the status, we need to remove a climate
+                # entity
                 unique_id = f"{coordinator.mac}-thermostat:{id_}"
                 async_remove_shelly_entity(hass, "climate", unique_id)
-            else:
+            elif is_rpc_thermostat_internal_actuator(coordinator.device.status):
+                # The internal relay is an actuator, skip this ID so as not to create
+                # a switch entity
                 continue
 
         switch_ids.append(id_)
