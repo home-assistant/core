@@ -33,35 +33,46 @@ class FytaConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
     _entry: ConfigEntry | None = None
+    credentials: dict[str, str | datetime] = {}
+
+    async def async_auth(self, user_input: Mapping[str, Any]) -> dict[str, str]:
+        """Reusable Auth Helper."""
+        credentials: dict[str, str | datetime] = {}
+        fyta = FytaConnector(user_input[CONF_USERNAME], user_input[CONF_PASSWORD])
+
+        try:
+            credentials = await fyta.login()
+        except FytaConnectionError:
+            return {"base": "cannot_connect"}
+        except FytaAuthentificationError:
+            return {"base": "invalid_auth"}
+        except FytaPasswordError:
+            return {"base": "invalid_auth", CONF_PASSWORD: "password_error"}
+        except Exception as e:  # pylint: disable=broad-except
+            _LOGGER.error(e)
+            return {"base": "unknown"}
+        finally:
+            await fyta.client.close()
+
+        if isinstance(credentials["expiration"], datetime):
+            credentials["expiration"] = credentials["expiration"].isoformat()
+        self.credentials = credentials
+
+        return {}
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-
         errors = {}
         if user_input:
             self._async_abort_entries_match({CONF_USERNAME: user_input[CONF_USERNAME]})
 
-            fyta = FytaConnector(user_input[CONF_USERNAME], user_input[CONF_PASSWORD])
-
-            try:
-                await fyta.login()
-            except FytaConnectionError:
-                errors["base"] = "cannot_connect"
-            except FytaAuthentificationError:
-                errors["base"] = "invalid_auth"
-            except FytaPasswordError:
-                errors["base"] = "invalid_auth"
-                errors[CONF_PASSWORD] = "password_error"
-            except Exception:  # pylint: disable=broad-except
-                errors["base"] = "unknown"
-            else:
+            if not (errors := await self.async_auth(user_input)):
+                user_input |= self.credentials
                 return self.async_create_entry(
                     title=user_input[CONF_USERNAME], data=user_input
                 )
-            finally:
-                await fyta.client.close()
 
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
@@ -81,26 +92,12 @@ class FytaConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
         assert self._entry is not None
 
-        if user_input:
-            fyta = FytaConnector(user_input[CONF_USERNAME], user_input[CONF_PASSWORD])
-            credentials: dict[str, str | datetime] = {}
+        if user_input and not (errors := await self.async_auth(user_input)):
+            user_input |= self.credentials
 
-            try:
-                credentials = await fyta.login()
-                await fyta.client.close()
-            except FytaConnectionError:
-                errors["base"] = "cannot_connect"
-            except FytaAuthentificationError:
-                errors["base"] = "invalid_auth"
-            except FytaPasswordError:
-                errors["base"] = "invalid_auth"
-                errors[CONF_PASSWORD] = "password_error"
-            except Exception:  # pylint: disable=broad-except
-                errors["base"] = "unknown"
-            else:
-                user_input |= credentials
-
-                return self.async_update_reload_and_abort(self._entry, data={**self._entry.data, **user_input})
+            return self.async_update_reload_and_abort(
+                self._entry, data={**self._entry.data, **user_input}
+            )
 
         data_schema = self.add_suggested_values_to_schema(
             DATA_SCHEMA,
