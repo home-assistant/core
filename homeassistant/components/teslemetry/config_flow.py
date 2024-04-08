@@ -87,7 +87,7 @@ class TeslemetryConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input and not (errors := await self.async_auth(user_input)):
-            self.async_update_reload_and_abort(
+            return self.async_update_reload_and_abort(
                 self._entry,
                 data=user_input,
             )

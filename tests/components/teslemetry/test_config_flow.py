@@ -20,6 +20,8 @@ from .const import CONFIG
 
 from tests.common import MockConfigEntry
 
+BAD_CONFIG = {CONF_ACCESS_TOKEN: "bad_access_token"}
+
 
 @pytest.fixture(autouse=True)
 def mock_test():
@@ -95,7 +97,7 @@ async def test_reauth(hass: HomeAssistant, mock_test) -> None:
 
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
-        data=CONFIG,
+        data=BAD_CONFIG,
     )
     mock_entry.add_to_hass(hass)
 
@@ -105,14 +107,12 @@ async def test_reauth(hass: HomeAssistant, mock_test) -> None:
             "source": config_entries.SOURCE_REAUTH,
             "entry_id": mock_entry.entry_id,
         },
-        data=CONFIG,
+        data=BAD_CONFIG,
     )
 
     assert result1["type"] is FlowResultType.FORM
     assert result1["step_id"] == "reauth_confirm"
     assert not result1["errors"]
-
-    NEW_CONFIG = {CONF_ACCESS_TOKEN: "newtoken"}
 
     with patch(
         "homeassistant.components.teslemetry.async_setup_entry",
@@ -120,7 +120,7 @@ async def test_reauth(hass: HomeAssistant, mock_test) -> None:
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result1["flow_id"],
-            NEW_CONFIG,
+            CONFIG,
         )
         await hass.async_block_till_done()
         assert len(mock_setup_entry.mock_calls) == 1
@@ -128,7 +128,7 @@ async def test_reauth(hass: HomeAssistant, mock_test) -> None:
 
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
-    assert mock_entry.data == NEW_CONFIG
+    assert mock_entry.data == CONFIG
 
 
 @pytest.mark.parametrize(
@@ -148,7 +148,7 @@ async def test_reauth_errors(
     # Start the reauth
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
-        data=CONFIG,
+        data=BAD_CONFIG,
     )
     mock_entry.add_to_hass(hass)
 
@@ -159,13 +159,13 @@ async def test_reauth_errors(
             "unique_id": mock_entry.unique_id,
             "entry_id": mock_entry.entry_id,
         },
-        data=CONFIG,
+        data=BAD_CONFIG,
     )
 
     mock_test.side_effect = side_effect
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        CONFIG,
+        BAD_CONFIG,
     )
     await hass.async_block_till_done()
 
