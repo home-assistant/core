@@ -36,13 +36,13 @@ def mock_config_entry(hass: HomeAssistant, mock_arve: MagicMock) -> MockConfigEn
 def mock_arve():
     """Return a mocked Arve client."""
 
-    with patch(
-        "homeassistant.components.arve.coordinator.Arve", autospec=True
-    ) as arve_mock, patch(
-        "homeassistant.components.arve.config_flow.Arve", new=arve_mock
+    with (
+        patch(
+            "homeassistant.components.arve.coordinator.Arve", autospec=True
+        ) as arve_mock,
+        patch("homeassistant.components.arve.config_flow.Arve", new=arve_mock),
     ):
         arve = arve_mock.return_value
-        arve.device_sn = "test-serial-number"
         arve.customer_id = 12345
 
         arve.get_customer_id.return_value = ArveCustomer(12345)

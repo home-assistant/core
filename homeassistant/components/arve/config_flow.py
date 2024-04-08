@@ -8,8 +8,7 @@ from typing import Any
 from asyncarve import Arve, ArveConnectionError, ArveCustomer
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.config_entries import ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_CLIENT_SECRET
 
 from .const import DOMAIN
@@ -17,7 +16,7 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-class ArveConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class ArveConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Arve."""
 
     async def async_step_user(
