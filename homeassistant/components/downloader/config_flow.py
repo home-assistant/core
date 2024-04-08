@@ -25,14 +25,11 @@ class DownloaderConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
 
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-
         if user_input is not None:
             try:
                 await self._validate_input(user_input)
             except DirectoryDoesNotExist:
-                errors["base"] = "cannot_connect"
+                errors["base"] = "directory_does_not_exist"
             else:
                 return self.async_create_entry(title=DEFAULT_NAME, data=user_input)
 
@@ -46,12 +43,13 @@ class DownloaderConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
+    async def async_step_import(self, user_input: dict[str, Any]) -> ConfigFlowResult:
         """Handle a flow initiated by configuration file."""
-
-        return await self.async_step_user(user_input)
+        try:
+            await self._validate_input(user_input)
+        except DirectoryDoesNotExist:
+            return self.async_abort(reason="directory_does_not_exist")
+        return self.async_create_entry(title=DEFAULT_NAME, data=user_input)
 
     async def _validate_input(self, user_input: dict[str, Any]) -> None:
         """Validate the user input if the directory exists."""

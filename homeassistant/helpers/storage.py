@@ -479,7 +479,9 @@ class Store(Generic[_T]):
         """Ensure that we write if we quit before delay has passed."""
         if self._unsub_final_write_listener is None:
             self._unsub_final_write_listener = self.hass.bus.async_listen_once(
-                EVENT_HOMEASSISTANT_FINAL_WRITE, self._async_callback_final_write
+                EVENT_HOMEASSISTANT_FINAL_WRITE,
+                self._async_callback_final_write,
+                run_immediately=True,
             )
 
     @callback

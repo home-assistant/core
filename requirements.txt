@@ -3,6 +3,7 @@
 -c homeassistant/package_constraints.txt
 
 # Home Assistant Core
+aiodns==3.2.0
 aiohttp==3.9.3
 aiohttp_cors==0.7.0
 aiohttp-fast-url-dispatcher==0.3.0
@@ -16,7 +17,7 @@ bcrypt==4.1.2
 certifi>=2021.5.30
 ciso8601==2.3.1
 fnv-hash-fast==0.5.0
-hass-nabucasa==0.80.0
+hass-nabucasa==0.78.0
 httpx==0.27.0
 home-assistant-bluetooth==1.12.0
 ifaddr==0.2.0
@@ -34,7 +35,7 @@ python-slugify==8.0.4
 PyYAML==6.0.1
 requests==2.31.0
 SQLAlchemy==2.0.29
-typing-extensions>=4.10.0,<5.0
+typing-extensions>=4.11.0,<5.0
 ulid-transform==0.9.0
 urllib3>=1.26.5,<2
 voluptuous==0.13.1

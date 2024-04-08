@@ -38,6 +38,7 @@ from homeassistant.exceptions import TemplateError
 from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import run_callback_threadsafe
+from homeassistant.util.event_type import EventType
 
 from .device_registry import (
     EVENT_DEVICE_REGISTRY_UPDATED,
@@ -90,7 +91,7 @@ class _KeyedEventTracker(Generic[_TypedDictT]):
 
     listeners_key: str
     callbacks_key: str
-    event_type: str
+    event_type: EventType[_TypedDictT] | str
     dispatcher_callable: Callable[
         [
             HomeAssistant,
@@ -272,7 +273,10 @@ def async_track_state_change(
         return async_track_state_change_event(hass, entity_ids, state_change_listener)
 
     return hass.bus.async_listen(
-        EVENT_STATE_CHANGED, state_change_dispatcher, event_filter=state_change_filter
+        EVENT_STATE_CHANGED,
+        state_change_dispatcher,
+        event_filter=state_change_filter,
+        run_immediately=True,
     )
 
 

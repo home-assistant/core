@@ -52,6 +52,6 @@ class RingDoorButton(RingEntity, ButtonEntity):
         self._attr_unique_id = f"{device.id}-{description.key}"
 
     @exception_wrap
-    def press(self) -> None:
+    def press(self):
         """Open the door."""
         self._device.open_door()

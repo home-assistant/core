@@ -174,8 +174,7 @@ def _significant_states_stmt(
             StateAttributes, States.attributes_id == StateAttributes.attributes_id
         )
     if not include_start_time_state or not run_start_ts:
-        stmt = stmt.order_by(States.metadata_id, States.last_updated_ts)
-        return stmt
+        return stmt.order_by(States.metadata_id, States.last_updated_ts)
     unioned_subquery = union_all(
         _select_from_subquery(
             _get_start_time_state_stmt(
