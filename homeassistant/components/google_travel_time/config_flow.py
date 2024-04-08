@@ -51,12 +51,17 @@ from .const import (
 )
 from .helpers import InvalidApiKeyException, UnknownException, validate_config_entry
 
-CONFIG_SCHEMA = vol.Schema(
+RECONFIGURE_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Required(CONF_API_KEY): cv.string,
         vol.Required(CONF_DESTINATION): cv.string,
         vol.Required(CONF_ORIGIN): cv.string,
+    }
+)
+
+CONFIG_SCHEMA = RECONFIGURE_SCHEMA.extend(
+    {
+        vol.Required(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )
 
@@ -180,10 +185,6 @@ class GoogleTravelTimeConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self) -> None:
-        """Init Config Flow."""
-        self._entry: ConfigEntry | None = None
-
     @staticmethod
     @callback
     def async_get_options_flow(
@@ -205,13 +206,6 @@ class GoogleTravelTimeConfigFlow(ConfigFlow, domain=DOMAIN):
                     user_input[CONF_ORIGIN],
                     user_input[CONF_DESTINATION],
                 )
-                if self._entry:
-                    return self.async_update_reload_and_abort(
-                        self._entry,
-                        title=user_input[CONF_NAME],
-                        data=user_input,
-                        reason="reconfigure_successful",
-                    )
                 return self.async_create_entry(
                     title=user_input.get(CONF_NAME, DEFAULT_NAME),
                     data=user_input,
@@ -231,15 +225,39 @@ class GoogleTravelTimeConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_reconfigure(
-        self, _: dict[str, Any] | None = None
+        self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle reconfiguration."""
-        self._entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
-        assert self._entry
+        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+        assert entry
+
+        errors = {}
+        user_input = user_input or {}
+        if user_input:
+            try:
+                await self.hass.async_add_executor_job(
+                    validate_config_entry,
+                    self.hass,
+                    user_input[CONF_API_KEY],
+                    user_input[CONF_ORIGIN],
+                    user_input[CONF_DESTINATION],
+                )
+                return self.async_update_reload_and_abort(
+                    entry,
+                    data=user_input,
+                    reason="reconfigure_successful",
+                )
+            except InvalidApiKeyException:
+                errors["base"] = "invalid_auth"
+            except TimeoutError:
+                errors["base"] = "timeout_connect"
+            except UnknownException:
+                errors["base"] = "cannot_connect"
 
         return self.async_show_form(
-            step_id="user",
+            step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
-                CONFIG_SCHEMA, self._entry.data.copy()
+                RECONFIGURE_SCHEMA, entry.data.copy()
             ),
+            errors=errors,
         )

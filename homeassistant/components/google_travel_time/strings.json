@@ -10,6 +10,14 @@
           "origin": "Origin",
           "destination": "Destination"
         }
+      },
+      "reconfigure": {
+        "description": "You can specify the origin and destination in the form of an address, latitude/longitude coordinates, or a Google place ID. When specifying the location using a Google place ID, the ID must be prefixed with `place_id:`.",
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "origin": "[%key:component::google_travel_time::config::step::user::data::origin%]",
+          "destination": "[%key:component::google_travel_time::config::step::user::data::destination%]"
+        }
       }
     },
     "error": {

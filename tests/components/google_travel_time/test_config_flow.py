@@ -75,24 +75,22 @@ async def test_reconfigure(hass: HomeAssistant, mock_config) -> None:
         },
     )
     assert reconfigure_result["type"] is FlowResultType.FORM
-    assert reconfigure_result["step_id"] == "user"
+    assert reconfigure_result["step_id"] == "reconfigure"
 
-    user_step_result = await hass.config_entries.flow.async_configure(
+    reconfigure_successful_result = await hass.config_entries.flow.async_configure(
         reconfigure_result["flow_id"],
         {
-            CONF_NAME: "test",
             CONF_API_KEY: "api_key2",
             CONF_ORIGIN: "location3",
             CONF_DESTINATION: "location4",
         },
     )
-    assert user_step_result["type"] is FlowResultType.ABORT
-    assert user_step_result["reason"] == "reconfigure_successful"
+    assert reconfigure_successful_result["type"] is FlowResultType.ABORT
+    assert reconfigure_successful_result["reason"] == "reconfigure_successful"
     await hass.async_block_till_done()
 
     entry = hass.config_entries.async_entries(DOMAIN)[0]
     assert entry.data == {
-        CONF_NAME: "test",
         CONF_API_KEY: "api_key2",
         CONF_ORIGIN: "location3",
         CONF_DESTINATION: "location4",
