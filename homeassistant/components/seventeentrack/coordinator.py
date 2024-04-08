@@ -30,8 +30,6 @@ class SeventeenTrackData:
         self.summary: dict[str, dict[str, Any]] = {}
         self.live_packages: dict[str, Package] = {}
         self.current_packages: set[Package] = set()
-        # self.new_packages: dict[str, Package] = {}
-        # self.old_packages: set[Package] = set()
 
 
 class SeventeenTrackCoordinator(DataUpdateCoordinator[SeventeenTrackData]):
@@ -74,6 +72,7 @@ class SeventeenTrackCoordinator(DataUpdateCoordinator[SeventeenTrackData]):
             self.data.summary[slugify(status)] = {
                 "quantity": quantity,
                 "packages": [],
+                "status_name": status,
             }
 
         try:

@@ -153,8 +153,8 @@ async def async_setup_entry(
                 )
 
     async_add_entities(
-        SeventeenTrackSummarySensor(status, coordinator)
-        for status in coordinator.data.summary
+        SeventeenTrackSummarySensor(status, summary_data["status_name"], coordinator)
+        for status, summary_data in coordinator.data.summary.items()
     )
 
     _async_create_remove_entities()
@@ -176,12 +176,13 @@ class SeventeenTrackSummarySensor(
     def __init__(
         self,
         status: str,
+        status_name: str,
         coordinator: SeventeenTrackCoordinator,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
         self._status = status
-        self._attr_name = f"Seventeentrack Packages {status}"
+        self._attr_name = f"Seventeentrack Packages {status_name}"
         self._attr_unique_id = f"summary_{coordinator.account_id}_{self._status}"
 
     @property
