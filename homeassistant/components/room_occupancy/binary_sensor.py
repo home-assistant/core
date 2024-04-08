@@ -64,7 +64,7 @@ class RoomOccupancyBinarySensor(BinarySensorEntity):
         _LOGGER.debug("attr: %s", self.attr)
         self._state = STATE_OFF
         _LOGGER.debug("state: %s", self._state)
-        self._name = data[CONF_NAME]  # + " Occupancy"
+        self._name = data[CONF_NAME]
         _LOGGER.debug("name: %s", self._name)
         self._timeout_handle: Optional[Callable[[], None]] = None
         self.entity_id = (
