@@ -17,12 +17,12 @@ VEHICLE_REDACT = [
     "vin",
     "tokens",
     "id_s",
-    "active_route_latitude",
-    "active_route_longitude",
-    "latitude",
-    "longitude",
-    "native_latitude",
-    "native_longitude",
+    "drive_state_active_route_latitude",
+    "drive_state_active_route_longitude",
+    "drive_state_latitude",
+    "drive_state_longitude",
+    "drive_state_native_latitude",
+    "drive_state_native_longitude",
 ]
 
 ENERGY_REDACT = ["din"]
