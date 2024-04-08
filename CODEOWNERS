@@ -130,6 +130,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/arcam_fmj/ @elupus
 /tests/components/arcam_fmj/ @elupus
 /homeassistant/components/arris_tg2492lg/ @vanbalken
+/homeassistant/components/arve/ @ikalnyi
+/tests/components/arve/ @ikalnyi
 /homeassistant/components/aseko_pool_live/ @milanmeu
 /tests/components/aseko_pool_live/ @milanmeu
 /homeassistant/components/assist_pipeline/ @balloob @synesthesiam
@@ -1270,6 +1272,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/sms/ @ocalvo
 /homeassistant/components/snapcast/ @luar123
 /tests/components/snapcast/ @luar123
+/homeassistant/components/snmp/ @nmaggioni
+/tests/components/snmp/ @nmaggioni
 /homeassistant/components/snooz/ @AustinBrunkhorst
 /tests/components/snooz/ @AustinBrunkhorst
 /homeassistant/components/solaredge/ @frenck
