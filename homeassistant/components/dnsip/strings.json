@@ -5,8 +5,7 @@
         "data": {
           "hostname": "The hostname for which to perform the DNS query",
           "resolver": "Resolver for IPV4 lookup",
-          "resolver_ipv6": "Resolver for IPV6 lookup",
-          "round_robin": "Include all round-robin entries"
+          "resolver_ipv6": "Resolver for IPV6 lookup"
         }
       }
     },
@@ -19,8 +18,7 @@
       "init": {
         "data": {
           "resolver": "[%key:component::dnsip::config::step::user::data::resolver%]",
-          "resolver_ipv6": "[%key:component::dnsip::config::step::user::data::resolver_ipv6%]",
-          "round_robin": "[%key:component::dnsip::config::step::user::data::round_robin%]"
+          "resolver_ipv6": "[%key:component::dnsip::config::step::user::data::resolver_ipv6%]"
         }
       }
     },

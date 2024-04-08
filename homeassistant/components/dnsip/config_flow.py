@@ -27,12 +27,10 @@ from .const import (
     CONF_IPV6_V4,
     CONF_RESOLVER,
     CONF_RESOLVER_IPV6,
-    CONF_ROUND_ROBIN,
     DEFAULT_HOSTNAME,
     DEFAULT_NAME,
     DEFAULT_RESOLVER,
     DEFAULT_RESOLVER_IPV6,
-    DEFAULT_ROUND_ROBIN,
     DOMAIN,
 )
 
@@ -46,7 +44,6 @@ DATA_SCHEMA_ADV = vol.Schema(
         vol.Required(CONF_HOSTNAME, default=DEFAULT_HOSTNAME): cv.string,
         vol.Optional(CONF_RESOLVER, default=DEFAULT_RESOLVER): cv.string,
         vol.Optional(CONF_RESOLVER_IPV6, default=DEFAULT_RESOLVER_IPV6): cv.string,
-        vol.Optional(CONF_ROUND_ROBIN, default=DEFAULT_ROUND_ROBIN): cv.boolean,
     }
 )
 
@@ -105,7 +102,6 @@ class DnsIPConfigFlow(ConfigFlow, domain=DOMAIN):
             name = DEFAULT_NAME if hostname == DEFAULT_HOSTNAME else hostname
             resolver = user_input.get(CONF_RESOLVER, DEFAULT_RESOLVER)
             resolver_ipv6 = user_input.get(CONF_RESOLVER_IPV6, DEFAULT_RESOLVER_IPV6)
-            round_robin = user_input.get(CONF_ROUND_ROBIN, DEFAULT_ROUND_ROBIN)
 
             validate = await async_validate_hostname(hostname, resolver, resolver_ipv6)
 
@@ -134,7 +130,6 @@ class DnsIPConfigFlow(ConfigFlow, domain=DOMAIN):
                     options={
                         CONF_RESOLVER: resolver,
                         CONF_RESOLVER_IPV6: set_resolver,
-                        CONF_ROUND_ROBIN: round_robin,
                     },
                 )
 
@@ -162,7 +157,6 @@ class DnsIPOptionsFlowHandler(OptionsFlowWithConfigEntry):
         if user_input is not None:
             resolver = user_input.get(CONF_RESOLVER, DEFAULT_RESOLVER)
             resolver_ipv6 = user_input.get(CONF_RESOLVER_IPV6, DEFAULT_RESOLVER_IPV6)
-            round_robin = user_input.get(CONF_ROUND_ROBIN, DEFAULT_ROUND_ROBIN)
             validate = await async_validate_hostname(
                 self.config_entry.data[CONF_HOSTNAME],
                 resolver,
@@ -185,7 +179,6 @@ class DnsIPOptionsFlowHandler(OptionsFlowWithConfigEntry):
                     data={
                         CONF_RESOLVER: resolver,
                         CONF_RESOLVER_IPV6: resolver_ipv6,
-                        CONF_ROUND_ROBIN: round_robin,
                     },
                 )
 
@@ -194,7 +187,6 @@ class DnsIPOptionsFlowHandler(OptionsFlowWithConfigEntry):
                 {
                     vol.Optional(CONF_RESOLVER): cv.string,
                     vol.Optional(CONF_RESOLVER_IPV6): cv.string,
-                    vol.Optional(CONF_ROUND_ROBIN): cv.boolean,
                 }
             ),
             self.config_entry.options,

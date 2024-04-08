@@ -21,8 +21,6 @@ from .const import (
     CONF_IPV6,
     CONF_RESOLVER,
     CONF_RESOLVER_IPV6,
-    CONF_ROUND_ROBIN,
-    DEFAULT_ROUND_ROBIN,
     DOMAIN,
 )
 
@@ -33,28 +31,18 @@ _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(seconds=120)
 
 
-def join_ips(ips: list, querytype: str) -> str:
+def sort_ips(ips: list, querytype: str) -> list:
     """Join IPs into a single string."""
 
     if querytype == "AAAA":
-        sorted_addresses = sorted(
+        return sorted(
             ips,
             key=lambda ip: [int(hextet, 16) for hextet in ip.split(":") if hextet],
         )
-    else:
-        sorted_addresses = sorted(
-            ips,
-            key=lambda ip: [int(octet) for octet in ip.split(".")],
-        )
-    filtered_addresses = []
-    total_length = 0
-    for address in sorted_addresses:
-        if total_length + len(address) + 1 <= 255:
-            filtered_addresses.append(address)
-            total_length += len(address) + 1
-        else:
-            break
-    return "\n".join(filtered_addresses)
+    return sorted(
+        ips,
+        key=lambda ip: [int(octet) for octet in ip.split(".")],
+    )
 
 
 async def async_setup_entry(
@@ -67,17 +55,12 @@ async def async_setup_entry(
 
     resolver_ipv4 = entry.options[CONF_RESOLVER]
     resolver_ipv6 = entry.options[CONF_RESOLVER_IPV6]
-    round_robin = entry.options.get(CONF_ROUND_ROBIN, DEFAULT_ROUND_ROBIN)
 
     entities = []
     if entry.data[CONF_IPV4]:
-        entities.append(
-            WanIpSensor(name, hostname, resolver_ipv4, False, round_robin=round_robin)
-        )
+        entities.append(WanIpSensor(name, hostname, resolver_ipv4, False))
     if entry.data[CONF_IPV6]:
-        entities.append(
-            WanIpSensor(name, hostname, resolver_ipv6, True, round_robin=round_robin)
-        )
+        entities.append(WanIpSensor(name, hostname, resolver_ipv6, True))
 
     async_add_entities(entities, update_before_add=True)
 
@@ -94,7 +77,6 @@ class WanIpSensor(SensorEntity):
         hostname: str,
         resolver: str,
         ipv6: bool,
-        round_robin: bool,
     ) -> None:
         """Initialize the DNS IP sensor."""
         self._attr_name = "IPv6" if ipv6 else None
@@ -104,7 +86,6 @@ class WanIpSensor(SensorEntity):
         self.resolver.nameservers = [resolver]
         self.querytype = "AAAA" if ipv6 else "A"
         self._retries = DEFAULT_RETRIES
-        self._round_robin = round_robin
         self._attr_extra_state_attributes = {
             "Resolver": resolver,
             "Querytype": self.querytype,
@@ -126,12 +107,11 @@ class WanIpSensor(SensorEntity):
             response = None
 
         if response:
-            if self._round_robin:
-                self._attr_native_value = join_ips(
-                    [res.host for res in response], querytype=self.querytype
-                )
-            else:
-                self._attr_native_value = response[0].host
+            sorted_ips = sort_ips(
+                [res.host for res in response], querytype=self.querytype
+            )
+            self._attr_native_value = sorted_ips[0]
+            self._attr_extra_state_attributes["IPs"] = sorted_ips
             self._attr_available = True
             self._retries = DEFAULT_RETRIES
         elif self._retries > 0:

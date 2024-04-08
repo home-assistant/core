@@ -14,7 +14,6 @@ from homeassistant.components.dnsip.const import (
     CONF_IPV6,
     CONF_RESOLVER,
     CONF_RESOLVER_IPV6,
-    CONF_ROUND_ROBIN,
     DOMAIN,
 )
 from homeassistant.components.dnsip.sensor import SCAN_INTERVAL
@@ -41,7 +40,6 @@ async def test_sensor(hass: HomeAssistant) -> None:
         options={
             CONF_RESOLVER: "208.67.222.222",
             CONF_RESOLVER_IPV6: "2620:119:53::53",
-            CONF_ROUND_ROBIN: False,
         },
         entry_id="1",
         unique_id="home-assistant.io",
@@ -58,8 +56,13 @@ async def test_sensor(hass: HomeAssistant) -> None:
     state1 = hass.states.get("sensor.home_assistant_io")
     state2 = hass.states.get("sensor.home_assistant_io_ipv6")
 
-    assert state1.state == "1.2.3.4"
-    assert state2.state == "2001:db8:77::face:b00c"
+    assert state1.state == "1.1.1.1"
+    assert state1.attributes["IPs"] == ["1.1.1.1", "1.2.3.4"]
+    assert state2.state == "2001:db8:77::dead:beef"
+    assert state2.attributes["IPs"] == [
+        "2001:db8:77::dead:beef",
+        "2001:db8:77::face:b00c",
+    ]
 
 
 async def test_sensor_no_response(
@@ -74,7 +77,6 @@ async def test_sensor_no_response(
             CONF_NAME: "home-assistant.io",
             CONF_IPV4: True,
             CONF_IPV6: False,
-            CONF_ROUND_ROBIN: False,
         },
         options={
             CONF_RESOLVER: "208.67.222.222",
@@ -95,7 +97,7 @@ async def test_sensor_no_response(
 
     state = hass.states.get("sensor.home_assistant_io")
 
-    assert state.state == "1.2.3.4"
+    assert state.state == "1.1.1.1"
 
     dns_mock.error = DNSError()
     with patch(
@@ -110,7 +112,8 @@ async def test_sensor_no_response(
 
         # Allows 2 retries before going unavailable
         state = hass.states.get("sensor.home_assistant_io")
-        assert state.state == "1.2.3.4"
+        assert state.state == "1.1.1.1"
+        assert state.attributes["IPs"] == ["1.1.1.1", "1.2.3.4"]
 
         freezer.tick(timedelta(seconds=SCAN_INTERVAL.seconds))
         async_fire_time_changed(hass)
@@ -118,38 +121,3 @@ async def test_sensor_no_response(
 
     state = hass.states.get("sensor.home_assistant_io")
     assert state.state == STATE_UNAVAILABLE
-
-
-async def test_sensor_round_robin(hass: HomeAssistant) -> None:
-    """Test the DNS IP sensor."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        source=SOURCE_USER,
-        data={
-            CONF_HOSTNAME: "home-assistant.io",
-            CONF_NAME: "home-assistant.io",
-            CONF_IPV4: True,
-            CONF_IPV6: True,
-        },
-        options={
-            CONF_RESOLVER: "208.67.222.222",
-            CONF_RESOLVER_IPV6: "2620:119:53::53",
-            CONF_ROUND_ROBIN: True,
-        },
-        entry_id="1",
-        unique_id="home-assistant.io",
-    )
-    entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.dnsip.sensor.aiodns.DNSResolver",
-        return_value=RetrieveDNS(),
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    state1 = hass.states.get("sensor.home_assistant_io")
-    state2 = hass.states.get("sensor.home_assistant_io_ipv6")
-
-    assert state1.state == "1.1.1.1\n1.2.3.4"
-    assert state2.state == "2001:db8:77::dead:beef\n2001:db8:77::face:b00c"
