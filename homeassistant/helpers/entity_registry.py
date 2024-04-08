@@ -51,7 +51,10 @@ from homeassistant.util.json import format_unserializable_data
 from homeassistant.util.read_only_dict import ReadOnlyDict
 
 from . import device_registry as dr, storage
-from .device_registry import EVENT_DEVICE_REGISTRY_UPDATED
+from .device_registry import (
+    EVENT_DEVICE_REGISTRY_UPDATED,
+    EventDeviceRegistryUpdatedData,
+)
 from .json import JSON_DUMP, find_paths_unserializable_data, json_bytes, json_fragment
 from .registry import BaseRegistry, BaseRegistryItems
 from .typing import UNDEFINED, UndefinedType
@@ -903,7 +906,9 @@ class EntityRegistry(BaseRegistry):
         self.async_schedule_save()
 
     @callback
-    def async_device_modified(self, event: Event) -> None:
+    def async_device_modified(
+        self, event: Event[EventDeviceRegistryUpdatedData]
+    ) -> None:
         """Handle the removal or update of a device.
 
         Remove entities from the registry that are associated to a device when
