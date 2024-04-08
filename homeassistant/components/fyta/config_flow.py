@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from datetime import datetime
 import logging
 from typing import Any
 
@@ -33,15 +32,13 @@ class FytaConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
     _entry: ConfigEntry | None = None
-    credentials: dict[str, str | datetime] = {}
 
     async def async_auth(self, user_input: Mapping[str, Any]) -> dict[str, str]:
         """Reusable Auth Helper."""
-        credentials: dict[str, str | datetime] = {}
         fyta = FytaConnector(user_input[CONF_USERNAME], user_input[CONF_PASSWORD])
 
         try:
-            credentials = await fyta.login()
+            await fyta.login()
         except FytaConnectionError:
             return {"base": "cannot_connect"}
         except FytaAuthentificationError:
@@ -53,10 +50,6 @@ class FytaConfigFlow(ConfigFlow, domain=DOMAIN):
             return {"base": "unknown"}
         finally:
             await fyta.client.close()
-
-        if isinstance(credentials["expiration"], datetime):
-            credentials["expiration"] = credentials["expiration"].isoformat()
-        self.credentials = credentials
 
         return {}
 
