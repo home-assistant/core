@@ -21,7 +21,7 @@ import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN, IMAGE_CACHE_INTERVAL, IMAGE_DRAWABLES, MAP_SLEEP
 from .coordinator import RoborockDataUpdateCoordinator
-from .device import RoborockCoordinatedEntity
+from .device import RoborockCoordinatedEntityV1
 
 
 async def async_setup_entry(
@@ -37,14 +37,18 @@ async def async_setup_entry(
     entities = list(
         chain.from_iterable(
             await asyncio.gather(
-                *(create_coordinator_maps(coord) for coord in coordinators.values())
+                *(
+                    create_coordinator_maps(coord)
+                    for coord in coordinators.values()
+                    if isinstance(coord, RoborockDataUpdateCoordinator)
+                )
             )
         )
     )
     async_add_entities(entities)
 
 
-class RoborockMap(RoborockCoordinatedEntity, ImageEntity):
+class RoborockMap(RoborockCoordinatedEntityV1, ImageEntity):
     """A class to let you visualize the map."""
 
     _attr_has_entity_name = True
@@ -58,7 +62,7 @@ class RoborockMap(RoborockCoordinatedEntity, ImageEntity):
         map_name: str,
     ) -> None:
         """Initialize a Roborock map."""
-        RoborockCoordinatedEntity.__init__(self, unique_id, coordinator)
+        RoborockCoordinatedEntityV1.__init__(self, unique_id, coordinator)
         ImageEntity.__init__(self, coordinator.hass)
         self._attr_name = map_name
         self.parser = RoborockMapDataParser(

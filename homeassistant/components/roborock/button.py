@@ -15,7 +15,7 @@ from homeassistant.util import slugify
 
 from .const import DOMAIN
 from .coordinator import RoborockDataUpdateCoordinator
-from .device import RoborockEntity
+from .device import RoborockEntityV1
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -79,10 +79,11 @@ async def async_setup_entry(
         )
         for device_id, coordinator in coordinators.items()
         for description in CONSUMABLE_BUTTON_DESCRIPTIONS
+        if isinstance(coordinator, RoborockDataUpdateCoordinator)
     )
 
 
-class RoborockButtonEntity(RoborockEntity, ButtonEntity):
+class RoborockButtonEntity(RoborockEntityV1, ButtonEntity):
     """A class to define Roborock button entities."""
 
     entity_description: RoborockButtonDescription

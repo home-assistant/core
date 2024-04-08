@@ -20,7 +20,7 @@ from homeassistant.util import slugify
 
 from .const import DOMAIN
 from .coordinator import RoborockDataUpdateCoordinator
-from .device import RoborockCoordinatedEntity
+from .device import RoborockCoordinatedEntityV1
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -86,11 +86,12 @@ async def async_setup_entry(
         )
         for device_id, coordinator in coordinators.items()
         for description in BINARY_SENSOR_DESCRIPTIONS
+        if isinstance(coordinator, RoborockDataUpdateCoordinator)
         if description.value_fn(coordinator.roborock_device_info.props) is not None
     )
 
 
-class RoborockBinarySensorEntity(RoborockCoordinatedEntity, BinarySensorEntity):
+class RoborockBinarySensorEntity(RoborockCoordinatedEntityV1, BinarySensorEntity):
     """Representation of a Roborock binary sensor."""
 
     entity_description: RoborockBinarySensorDescription

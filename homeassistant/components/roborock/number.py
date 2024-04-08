@@ -6,9 +6,9 @@ from dataclasses import dataclass
 import logging
 from typing import Any
 
-from roborock.api import AttributeCache
 from roborock.command_cache import CacheableAttribute
 from roborock.exceptions import RoborockException
+from roborock.version_1_apis.roborock_client_v1 import AttributeCache
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -19,7 +19,7 @@ from homeassistant.util import slugify
 
 from .const import DOMAIN
 from .coordinator import RoborockDataUpdateCoordinator
-from .device import RoborockEntity
+from .device import RoborockEntityV1
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -63,6 +63,7 @@ async def async_setup_entry(
         (coordinator, description)
         for coordinator in coordinators.values()
         for description in NUMBER_DESCRIPTIONS
+        if isinstance(coordinator, RoborockDataUpdateCoordinator)
     ]
     # We need to check if this function is supported by the device.
     results = await asyncio.gather(
@@ -87,7 +88,7 @@ async def async_setup_entry(
     async_add_entities(valid_entities)
 
 
-class RoborockNumberEntity(RoborockEntity, NumberEntity):
+class RoborockNumberEntity(RoborockEntityV1, NumberEntity):
     """A class to let you set options on a Roborock vacuum where the potential options are fixed."""
 
     entity_description: RoborockNumberDescription

@@ -69,6 +69,55 @@
       }
     },
     "sensor": {
+      "a01_error": {
+        "name": "Error",
+        "state": {
+          "none": "No error",
+
+          "dirty_tank_full": "Dirty tank full",
+          "water_level_sensor_stuck": "Water level sensor stuck.",
+          "clean_tank_empty": "Clean tank empty",
+          "clean_head_entangled": "Cleaning head entangled",
+          "clean_head_too_hot": "Cleaning head too hot.",
+          "fan_protection_e5": "Fan protection",
+          "cleaning_head_blocked": "Cleaning head blocked",
+          "temperature_protection": "Temperature protection",
+          "fan_protection_e4": "Fan protection",
+          "fan_protection_e9": "Fan protection",
+          "battery_temperature_protection_e0": "Temperature protection",
+          "battery_temperature_protection": "Battery temperature protection",
+          "battery_temperature_protection_2": "Battery temperature protection",
+          "power_adapter_error": "Power adapter error",
+          "dirty_charging_contacts": "Clean charging contacts",
+          "low_battery": "Low battery",
+          "battery_under_10": "Battery under 10%"
+        }
+      },
+      "a01_status": {
+        "name": "Status",
+        "state": {
+          "unknown": "Unknown",
+          "fetching": "Fetching",
+          "fetch_failed": "Fetch failed",
+          "updating": "Updating",
+          "washing": "Washing",
+          "ready": "Ready",
+          "charging": "Charging",
+          "mop_washing": "Washing mop",
+          "self_clean_cleaning": "Self clean cleaning",
+          "self_clean_deep_cleaning": "Self clean deep cleaning",
+          "self_clean_rinsing": "Self clean rinsing",
+          "self_clean_dehydrating": "Self clean drying",
+          "drying": "Drying",
+          "ventilating": "Ventilating",
+          "reserving": "Reserving",
+          "mop_washing_paused": "Mop washing paused",
+          "dusting_mode": "Dusting mode"
+        }
+      },
+      "brush_remaining": {
+        "name": "Roller left"
+      },
       "cleaning_area": {
         "name": "Cleaning area"
       },

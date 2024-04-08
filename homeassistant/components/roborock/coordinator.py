@@ -4,12 +4,15 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+import typing
 
-from roborock.cloud_api import RoborockMqttClient
 from roborock.containers import DeviceData, HomeDataDevice, HomeDataProduct, NetworkInfo
 from roborock.exceptions import RoborockException
-from roborock.local_api import RoborockLocalClient
+from roborock.roborock_message import RoborockDyadDataProtocol
 from roborock.roborock_typing import DeviceProp
+from roborock.version_1_apis.roborock_local_client_v1 import RoborockLocalClientV1
+from roborock.version_1_apis.roborock_mqtt_client_v1 import RoborockMqttClientV1
+from roborock.version_a01_apis import RoborockClientA01
 
 from homeassistant.const import ATTR_CONNECTIONS
 from homeassistant.core import HomeAssistant
@@ -34,7 +37,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
         device: HomeDataDevice,
         device_networking: NetworkInfo,
         product_info: HomeDataProduct,
-        cloud_api: RoborockMqttClient,
+        cloud_api: RoborockMqttClientV1,
     ) -> None:
         """Initialize."""
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
@@ -45,7 +48,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
             DeviceProp(),
         )
         device_data = DeviceData(device, product_info.model, device_networking.ip)
-        self.api: RoborockLocalClient | RoborockMqttClient = RoborockLocalClient(
+        self.api: RoborockLocalClientV1 | RoborockMqttClientV1 = RoborockLocalClientV1(
             device_data
         )
         self.cloud_api = cloud_api
@@ -65,7 +68,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
 
     async def verify_api(self) -> None:
         """Verify that the api is reachable. If it is not, switch clients."""
-        if isinstance(self.api, RoborockLocalClient):
+        if isinstance(self.api, RoborockLocalClientV1):
             try:
                 await self.api.ping()
             except RoborockException:
@@ -73,6 +76,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
                     "Using the cloud API for device %s. This is not recommended as it can lead to rate limiting. We recommend making your vacuum accessible by your Home Assistant instance",
                     self.roborock_device_info.device.duid,
                 )
+                await self.api.async_disconnect()
                 # We use the cloud api if the local api fails to connect.
                 self.api = self.cloud_api
                 # Right now this should never be called if the cloud api is the primary api,
@@ -118,3 +122,37 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
         if maps and maps.map_info:
             for roborock_map in maps.map_info:
                 self.maps[roborock_map.mapFlag] = roborock_map.name
+
+
+class RoborockDataUpdateCoordinatorA01(DataUpdateCoordinator[dict]):
+    """Class to manage fetching data from the API for A01 devices."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        device: HomeDataDevice,
+        product_info: HomeDataProduct,
+        api: RoborockClientA01,
+    ) -> None:
+        """Initialize."""
+        super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
+        self.api = api
+        self.device_info = DeviceInfo(
+            name=device.name,
+            identifiers={(DOMAIN, device.duid)},
+            manufacturer="Roborock",
+            model=product_info.model,
+            sw_version=device.fv,
+        )
+        self.request_protocols = [
+            RoborockDyadDataProtocol.STATUS,
+            RoborockDyadDataProtocol.POWER,
+            RoborockDyadDataProtocol.MESH_LEFT,
+            RoborockDyadDataProtocol.BRUSH_LEFT,
+            RoborockDyadDataProtocol.ERROR,
+            RoborockDyadDataProtocol.TOTAL_RUN_TIME,
+            RoborockDyadDataProtocol.RECENT_RUN_TIME,
+        ]
+
+    async def _async_update_data(self) -> dict[RoborockDyadDataProtocol, typing.Any]:
+        return await self.api.update_values(self.request_protocols)

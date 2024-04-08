@@ -16,7 +16,7 @@ from homeassistant.util import slugify
 
 from .const import DOMAIN
 from .coordinator import RoborockDataUpdateCoordinator
-from .device import RoborockCoordinatedEntity
+from .device import RoborockCoordinatedEntityV1
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -78,6 +78,7 @@ async def async_setup_entry(
         )
         for device_id, coordinator in coordinators.items()
         for description in SELECT_DESCRIPTIONS
+        if isinstance(coordinator, RoborockDataUpdateCoordinator)
         if (
             options := description.options_lambda(
                 coordinator.roborock_device_info.props.status
@@ -87,7 +88,7 @@ async def async_setup_entry(
     )
 
 
-class RoborockSelectEntity(RoborockCoordinatedEntity, SelectEntity):
+class RoborockSelectEntity(RoborockCoordinatedEntityV1, SelectEntity):
     """A class to let you set options on a Roborock vacuum where the potential options are fixed."""
 
     entity_description: RoborockSelectDescription

@@ -9,8 +9,9 @@ import logging
 from typing import Any
 
 from roborock import RoborockException, RoborockInvalidCredentials
-from roborock.cloud_api import RoborockMqttClient
 from roborock.containers import DeviceData, HomeDataDevice, HomeDataProduct, UserData
+from roborock.version_1_apis.roborock_mqtt_client_v1 import RoborockMqttClientV1
+from roborock.version_a01_apis import RoborockMqttClientA01
 from roborock.web_api import RoborockApiClient
 
 from homeassistant.config_entries import ConfigEntry
@@ -19,7 +20,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .const import CONF_BASE_URL, CONF_USER_DATA, DOMAIN, PLATFORMS
-from .coordinator import RoborockDataUpdateCoordinator
+from .coordinator import RoborockDataUpdateCoordinator, RoborockDataUpdateCoordinatorA01
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
@@ -34,7 +35,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     api_client = RoborockApiClient(entry.data[CONF_USERNAME], entry.data[CONF_BASE_URL])
     _LOGGER.debug("Getting home data")
     try:
-        home_data = await api_client.get_home_data(user_data)
+        home_data = await api_client.get_home_data_v2(user_data)
     except RoborockInvalidCredentials as err:
         raise ConfigEntryAuthFailed(
             "Invalid credentials",
@@ -60,10 +61,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         return_exceptions=True,
     )
     # Valid coordinators are those where we had networking cached or we could get networking
-    valid_coordinators: list[RoborockDataUpdateCoordinator] = [
+    valid_coordinators: list[
+        RoborockDataUpdateCoordinator | RoborockDataUpdateCoordinatorA01
+    ] = [
         coord
         for coord in coordinators
-        if isinstance(coord, RoborockDataUpdateCoordinator)
+        if isinstance(
+            coord, RoborockDataUpdateCoordinator | RoborockDataUpdateCoordinatorA01
+        )
     ]
     if len(valid_coordinators) == 0:
         raise ConfigEntryNotReady(
@@ -72,7 +77,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             translation_key="no_coordinators",
         )
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
-        coordinator.roborock_device_info.device.duid: coordinator
+        coordinator.api.device_info.device.duid: coordinator
         for coordinator in valid_coordinators
     }
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -85,7 +90,13 @@ def build_setup_functions(
     device_map: dict[str, HomeDataDevice],
     user_data: UserData,
     product_info: dict[str, HomeDataProduct],
-) -> list[Coroutine[Any, Any, RoborockDataUpdateCoordinator | None]]:
+) -> list[
+    Coroutine[
+        Any,
+        Any,
+        RoborockDataUpdateCoordinator | RoborockDataUpdateCoordinatorA01 | None,
+    ]
+]:
     """Create a list of setup functions that can later be called asynchronously."""
     return [
         setup_device(hass, user_data, device, product_info[device.product_id])
@@ -98,9 +109,28 @@ async def setup_device(
     user_data: UserData,
     device: HomeDataDevice,
     product_info: HomeDataProduct,
+) -> RoborockDataUpdateCoordinator | RoborockDataUpdateCoordinatorA01 | None:
+    """Set up a coordinator for a given device."""
+    if device.pv == "1.0":
+        return await setup_device_v1(hass, user_data, device, product_info)
+    if device.pv == "A01":
+        return await setup_device_a01(hass, user_data, device, product_info)
+    logging.info(
+        "Not adding device %s because its protocol version %s is not supported",
+        device.duid,
+        device.pv,
+    )
+    return None
+
+
+async def setup_device_v1(
+    hass: HomeAssistant,
+    user_data: UserData,
+    device: HomeDataDevice,
+    product_info: HomeDataProduct,
 ) -> RoborockDataUpdateCoordinator | None:
-    """Set up a device Coordinator."""
-    mqtt_client = RoborockMqttClient(user_data, DeviceData(device, product_info.name))
+    """Set up a V1 device Coordinator."""
+    mqtt_client = RoborockMqttClientV1(user_data, DeviceData(device, product_info.name))
     try:
         networking = await mqtt_client.get_networking()
         if networking is None:
@@ -131,7 +161,7 @@ async def setup_device(
         await coordinator.async_config_entry_first_refresh()
     except ConfigEntryNotReady as ex:
         await coordinator.release()
-        if isinstance(coordinator.api, RoborockMqttClient):
+        if isinstance(coordinator.api, RoborockMqttClientV1):
             _LOGGER.warning(
                 "Not setting up %s because the we failed to get data for the first time using the online client. "
                 "Please ensure your Home Assistant instance can communicate with this device. "
@@ -155,6 +185,21 @@ async def setup_device(
             )
             raise coordinator.last_exception from ex
     return coordinator
+
+
+async def setup_device_a01(
+    hass: HomeAssistant,
+    user_data: UserData,
+    device: HomeDataDevice,
+    product_info: HomeDataProduct,
+) -> RoborockDataUpdateCoordinatorA01 | None:
+    """Set up a A01 protocol device."""
+    mqtt_client = RoborockMqttClientA01(
+        user_data, DeviceData(device, product_info.name)
+    )
+    coord = RoborockDataUpdateCoordinatorA01(hass, device, product_info, mqtt_client)
+    await coord.async_config_entry_first_refresh()
+    return coord
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
