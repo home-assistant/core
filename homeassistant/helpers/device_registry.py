@@ -1207,7 +1207,6 @@ def async_setup_cleanup(hass: HomeAssistant, dev_reg: DeviceRegistry) -> None:
         event_type=lr.EVENT_LABEL_REGISTRY_UPDATED,
         event_filter=_label_removed_from_registry_filter,
         listener=_handle_label_registry_update,
-        run_immediately=True,
     )
 
     @callback
@@ -1245,7 +1244,6 @@ def async_setup_cleanup(hass: HomeAssistant, dev_reg: DeviceRegistry) -> None:
             entity_registry.EVENT_ENTITY_REGISTRY_UPDATED,
             _async_entity_registry_changed,
             event_filter=entity_registry_changed_filter,
-            run_immediately=True,
         )
         return
 
@@ -1255,22 +1253,17 @@ def async_setup_cleanup(hass: HomeAssistant, dev_reg: DeviceRegistry) -> None:
             entity_registry.EVENT_ENTITY_REGISTRY_UPDATED,
             _async_entity_registry_changed,
             event_filter=entity_registry_changed_filter,
-            run_immediately=True,
         )
         await debounced_cleanup.async_call()
 
-    hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STARTED, startup_clean, run_immediately=True
-    )
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, startup_clean)
 
     @callback
     def _on_homeassistant_stop(event: Event) -> None:
         """Cancel debounced cleanup."""
         debounced_cleanup.async_cancel()
 
-    hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STOP, _on_homeassistant_stop, run_immediately=True
-    )
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _on_homeassistant_stop)
 
 
 def _normalize_connections(connections: set[tuple[str, str]]) -> set[tuple[str, str]]:

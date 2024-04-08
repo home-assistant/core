@@ -162,13 +162,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             for watcher in watchers:
                 watcher.async_stop()
 
-        hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STOP, _async_stop, run_immediately=True
-        )
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_stop)
 
-    hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STARTED, _async_initialize, run_immediately=True
-    )
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _async_initialize)
     return True
 
 

@@ -176,8 +176,7 @@ def async_subscribe_events(
         target, entities_filter, entity_ids, device_ids
     )
     subscriptions.extend(
-        hass.bus.async_listen(event_type, event_forwarder, run_immediately=True)
-        for event_type in event_types
+        hass.bus.async_listen(event_type, event_forwarder) for event_type in event_types
     )
 
     if device_ids and not entity_ids:
@@ -211,7 +210,6 @@ def async_subscribe_events(
         hass.bus.async_listen(
             EVENT_STATE_CHANGED,
             _forward_state_events_filtered,
-            run_immediately=True,
         )
     )
 
