@@ -1355,7 +1355,6 @@ def _event_repr(
 _FilterableJobType = tuple[
     HassJob[[Event[_DataT]], Coroutine[Any, Any, None] | None],  # job
     Callable[[_DataT], bool] | None,  # event_filter
-    bool,  # run_immediately
 ]
 
 
@@ -1484,7 +1483,7 @@ class EventBus:
 
         event: Event[_DataT] | None = None
 
-        for job, event_filter, run_immediately in listeners:
+        for job, event_filter in listeners:
             if event_filter is not None:
                 try:
                     if event_data is None or not event_filter(event_data):
@@ -1502,14 +1501,10 @@ class EventBus:
                     context,
                 )
 
-            if run_immediately:
-                try:
-                    self._hass.async_run_hass_job(job, event)
-                except Exception:  # pylint: disable=broad-except
-                    _LOGGER.exception("Error running job: %s", job)
-            else:
-                # pylint: disable-next=protected-access
-                self._hass._async_add_hass_job(job, event)
+            try:
+                self._hass.async_run_hass_job(job, event)
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Error running job: %s", job)
 
     def listen(
         self,
@@ -1564,7 +1559,6 @@ class EventBus:
                 error_if_core=False,
             )
 
-        run_immediately = True
         if event_filter is not None and not is_callback_check_partial(event_filter):
             raise HomeAssistantError(f"Event filter {event_filter} is not a callback")
         if event_type == EVENT_STATE_REPORTED:
@@ -1572,16 +1566,11 @@ class EventBus:
                 raise HomeAssistantError(
                     f"Event filter is required for event {event_type}"
                 )
-            if not run_immediately:
-                raise HomeAssistantError(
-                    f"Run immediately must be set to True for event {event_type}"
-                )
         return self._async_listen_filterable_job(
             event_type,
             (
                 HassJob(listener, f"listen {event_type}"),
                 event_filter,
-                run_immediately,
             ),
         )
 
@@ -1644,7 +1633,6 @@ class EventBus:
                 error_if_core=False,
             )
 
-        run_immediately = True
         one_time_listener: _OneTimeListener[_DataT] = _OneTimeListener(
             self._hass, HassJob(listener)
         )
@@ -1657,7 +1645,6 @@ class EventBus:
                     job_type=HassJobType.Callback,
                 ),
                 None,
-                run_immediately,
             ),
         )
         one_time_listener.remove = remove
