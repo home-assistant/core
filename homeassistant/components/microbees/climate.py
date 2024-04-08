@@ -1,4 +1,5 @@
 """Climate integration microBees."""
+
 from typing import Any
 
 from microBeesPy import Sensor
@@ -34,11 +35,10 @@ async def async_setup_entry(
             bee_id,
             bee.actuators[0].id,
             next(
-                filter(
-                    lambda x: x.deviceID == (762 if bee.productID == 76 else 782),
-                    bee.sensors,
-                )
-            ).id,
+                sensor.id
+                for sensor in bee.sensors
+                if sensor.deviceID == (762 if bee.productID == 76 else 782)
+            ),
         )
         for bee_id, bee in coordinator.data.bees.items()
         if bee.productID in CLIMATE_PRODUCT_IDS
