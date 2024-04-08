@@ -23,8 +23,8 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    ATTR_NAME,
     ATTR_MANUFACTURER,
+    ATTR_NAME,
     ATTR_SW_VERSION,
     CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
@@ -40,7 +40,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, ARANET_MANUFACTURER_NAME
+from .const import ARANET_MANUFACTURER_NAME, DOMAIN
 
 
 @dataclass(frozen=True)
@@ -51,7 +51,7 @@ class AranetSensorEntityDescription(SensorEntityDescription):
     # Restrict the type to satisfy the type checker and catch attempts
     # to use UNDEFINED in the entity descriptions.
     name: str | None = None
-    scale: int = 1
+    scale: float | int = 1
 
 
 SENSOR_DESCRIPTIONS = {

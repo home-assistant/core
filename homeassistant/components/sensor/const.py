@@ -30,7 +30,6 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfPrecipitationDepth,
     UnitOfPressure,
-    UnitOfRadiationDose,
     UnitOfSoundPressure,
     UnitOfSpeed,
     UnitOfTemperature,
