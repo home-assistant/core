@@ -24,7 +24,6 @@ async def test_join(
     """Test joining configured rooms."""
     assert await async_setup_component(hass, MATRIX_DOMAIN, MOCK_CONFIG_DATA)
     assert await async_setup_component(hass, NOTIFY_DOMAIN, MOCK_CONFIG_DATA)
-    await hass.async_block_till_done(wait_background_tasks=True)
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done(wait_background_tasks=True)
 
