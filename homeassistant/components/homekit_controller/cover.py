@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from functools import cached_property
+from typing import Any
 
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import Service, ServicesTypes
@@ -28,12 +29,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import KNOWN_DEVICES
 from .connection import HKDevice
 from .entity import HomeKitEntity
-
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
-
 
 STATE_STOPPED = "stopped"
 

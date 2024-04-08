@@ -235,7 +235,7 @@ async def ws_get_statistics_during_period(
 def _ws_get_list_statistic_ids(
     hass: HomeAssistant,
     msg_id: int,
-    statistic_type: Literal["mean"] | Literal["sum"] | None = None,
+    statistic_type: Literal["mean", "sum"] | None = None,
 ) -> bytes:
     """Fetch a list of available statistic_id and convert them to JSON.
 

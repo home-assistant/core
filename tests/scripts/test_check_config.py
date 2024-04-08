@@ -137,6 +137,7 @@ def test_secrets(mock_is_file, event_loop, mock_hass_config_yaml: None) -> None:
         "ssl_profile": "modern",
         "strict_connection": StrictConnectionMode.DISABLED,
         "use_x_frame_options": True,
+        "server_host": ["0.0.0.0", "::"],
     }
     assert res["secret_cache"] == {
         get_test_config_dir("secrets.yaml"): {"http_pw": "http://google.com"}

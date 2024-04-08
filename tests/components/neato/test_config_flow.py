@@ -10,6 +10,7 @@ from homeassistant.components.application_credentials import (
     async_import_client_credential,
 )
 from homeassistant.components.neato.const import NEATO_DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -158,6 +159,6 @@ async def test_reauth(
 
     assert result3["type"] is FlowResultType.ABORT
     assert result3["reason"] == "reauth_successful"
-    assert new_entry.state == config_entries.ConfigEntryState.LOADED
+    assert new_entry.state is ConfigEntryState.LOADED
     assert len(hass.config_entries.async_entries(NEATO_DOMAIN)) == 1
     assert len(mock_setup.mock_calls) == 1
