@@ -10,6 +10,7 @@ from homeassistant.components.dnsip.const import (
     CONF_IPV6,
     CONF_RESOLVER,
     CONF_RESOLVER_IPV6,
+    CONF_ROUND_ROBIN,
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
@@ -35,6 +36,7 @@ async def test_load_unload_entry(hass: HomeAssistant) -> None:
         options={
             CONF_RESOLVER: "208.67.222.222",
             CONF_RESOLVER_IPV6: "2620:119:53::53",
+            CONF_ROUND_ROBIN: False,
         },
         entry_id="1",
         unique_id="home-assistant.io",

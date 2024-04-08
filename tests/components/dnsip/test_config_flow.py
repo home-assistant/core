@@ -15,6 +15,7 @@ from homeassistant.components.dnsip.const import (
     CONF_IPV6,
     CONF_RESOLVER,
     CONF_RESOLVER_IPV6,
+    CONF_ROUND_ROBIN,
     DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntryState
@@ -66,6 +67,7 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result2["options"] == {
         "resolver": "208.67.222.222",
         "resolver_ipv6": "2620:119:53::53",
+        "round_robin": False,
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -96,6 +98,7 @@ async def test_form_adv(hass: HomeAssistant) -> None:
                 CONF_HOSTNAME: "home-assistant.io",
                 CONF_RESOLVER: "8.8.8.8",
                 CONF_RESOLVER_IPV6: "2620:119:53::53",
+                CONF_ROUND_ROBIN: True,
             },
         )
         await hass.async_block_till_done()
@@ -111,6 +114,7 @@ async def test_form_adv(hass: HomeAssistant) -> None:
     assert result2["options"] == {
         "resolver": "8.8.8.8",
         "resolver_ipv6": "2620:119:53::53",
+        "round_robin": True,
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -152,6 +156,7 @@ async def test_flow_already_exist(hass: HomeAssistant) -> None:
         options={
             CONF_RESOLVER: "208.67.222.222",
             CONF_RESOLVER_IPV6: "2620:119:53::5",
+            CONF_ROUND_ROBIN: False,
         },
         unique_id="home-assistant.io",
     ).add_to_hass(hass)
@@ -197,6 +202,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
         options={
             CONF_RESOLVER: "208.67.222.222",
             CONF_RESOLVER_IPV6: "2620:119:53::5",
+            CONF_ROUND_ROBIN: True,
         },
     )
     entry.add_to_hass(hass)
@@ -226,6 +232,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     assert result["data"] == {
         "resolver": "8.8.8.8",
         "resolver_ipv6": "2001:4860:4860::8888",
+        "round_robin": False,
     }
 
     assert entry.state is ConfigEntryState.LOADED
@@ -245,6 +252,7 @@ async def test_options_flow_empty_return(hass: HomeAssistant) -> None:
         options={
             CONF_RESOLVER: "8.8.8.8",
             CONF_RESOLVER_IPV6: "2620:119:53::1",
+            CONF_ROUND_ROBIN: False,
         },
     )
     entry.add_to_hass(hass)
@@ -271,6 +279,7 @@ async def test_options_flow_empty_return(hass: HomeAssistant) -> None:
     assert result["data"] == {
         "resolver": "208.67.222.222",
         "resolver_ipv6": "2620:119:53::53",
+        "round_robin": False,
     }
 
     entry = hass.config_entries.async_get_entry(entry.entry_id)
@@ -283,6 +292,7 @@ async def test_options_flow_empty_return(hass: HomeAssistant) -> None:
     assert entry.options == {
         "resolver": "208.67.222.222",
         "resolver_ipv6": "2620:119:53::53",
+        "round_robin": False,
     }
 
 

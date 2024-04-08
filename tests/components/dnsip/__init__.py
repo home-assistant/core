@@ -26,7 +26,14 @@ class RetrieveDNS:
         """Return information."""
         if self.error:
             raise self.error
-        return [QueryResult]
+        if qtype == "AAAA":
+            results = [QueryResult(), QueryResult()]
+            results[0].host = "2001:db8:77::face:b00c"
+            results[1].host = "2001:db8:77::dead:beef"
+        else:
+            results = [QueryResult(), QueryResult()]
+            results[1].host = "1.1.1.1"
+        return results
 
     @property
     def nameservers(self) -> list[str]:
