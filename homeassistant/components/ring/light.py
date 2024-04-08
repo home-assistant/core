@@ -5,7 +5,6 @@ import logging
 from typing import Any
 
 from ring_doorbell import RingStickUpCam
-from ring_doorbell.generic import RingGeneric
 
 from homeassistant.components.light import ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
@@ -41,13 +40,12 @@ async def async_setup_entry(
     devices_coordinator: RingDataCoordinator = hass.data[DOMAIN][config_entry.entry_id][
         RING_DEVICES_COORDINATOR
     ]
-    lights = []
 
-    for device in devices["stickup_cams"]:
-        if device.has_capability("light"):
-            lights.append(RingLight(device, devices_coordinator))
-
-    async_add_entities(lights)
+    async_add_entities(
+        RingLight(device, devices_coordinator)
+        for device in devices["stickup_cams"]
+        if device.has_capability("light")
+    )
 
 
 class RingLight(RingEntity, LightEntity):
@@ -57,7 +55,7 @@ class RingLight(RingEntity, LightEntity):
     _attr_supported_color_modes = {ColorMode.ONOFF}
     _attr_translation_key = "light"
 
-    def __init__(self, device: RingGeneric, coordinator) -> None:
+    def __init__(self, device, coordinator):
         """Initialize the light."""
         super().__init__(device, coordinator)
         self._attr_unique_id = device.id

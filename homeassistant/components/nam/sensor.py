@@ -367,12 +367,11 @@ async def async_setup_entry(
             )
             ent_reg.async_update_entity(entity_id, new_unique_id=new_unique_id)
 
-    sensors: list[NAMSensor] = []
-    for description in SENSORS:
-        if getattr(coordinator.data, description.key) is not None:
-            sensors.append(NAMSensor(coordinator, description))
-
-    async_add_entities(sensors, False)
+    async_add_entities(
+        NAMSensor(coordinator, description)
+        for description in SENSORS
+        if getattr(coordinator.data, description.key) is not None
+    )
 
 
 class NAMSensor(CoordinatorEntity[NAMDataUpdateCoordinator], SensorEntity):

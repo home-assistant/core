@@ -219,7 +219,9 @@ class MatrixBot:
                 loop_sleep_time=1_000,
             )  # milliseconds.
 
-        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, handle_startup)
+        self.hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_START, handle_startup, run_immediately=True
+        )
 
     def _load_commands(self, commands: list[ConfigCommand]) -> None:
         for command in commands:
@@ -432,18 +434,16 @@ class MatrixBot:
         self, target_rooms: Sequence[RoomAnyID], message_type: str, content: dict
     ) -> None:
         """Wrap _handle_room_send for multiple target_rooms."""
-        _tasks = []
-        for target_room in target_rooms:
-            _tasks.append(
-                self.hass.async_create_task(
-                    self._handle_room_send(
-                        target_room=target_room,
-                        message_type=message_type,
-                        content=content,
-                    )
+        await asyncio.wait(
+            self.hass.async_create_task(
+                self._handle_room_send(
+                    target_room=target_room,
+                    message_type=message_type,
+                    content=content,
                 )
             )
-        await asyncio.wait(_tasks)
+            for target_room in target_rooms
+        )
 
     async def _send_image(
         self, image_path: str, target_rooms: Sequence[RoomAnyID]

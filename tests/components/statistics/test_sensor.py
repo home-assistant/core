@@ -1292,17 +1292,16 @@ async def test_state_characteristics(hass: HomeAssistant) -> None:
             "unit": "%",
         },
     )
-    sensors_config = []
-    for characteristic in characteristics:
-        sensors_config.append(
-            {
-                "platform": "statistics",
-                "name": f"test_{characteristic['source_sensor_domain']}_{characteristic['name']}",
-                "entity_id": f"{characteristic['source_sensor_domain']}.test_monitored",
-                "state_characteristic": characteristic["name"],
-                "max_age": {"minutes": 8},  # 9 values spaces by one minute
-            }
-        )
+    sensors_config = [
+        {
+            "platform": "statistics",
+            "name": f"test_{characteristic['source_sensor_domain']}_{characteristic['name']}",
+            "entity_id": f"{characteristic['source_sensor_domain']}.test_monitored",
+            "state_characteristic": characteristic["name"],
+            "max_age": {"minutes": 8},  # 9 values spaces by one minute
+        }
+        for characteristic in characteristics
+    ]
 
     with freeze_time(current_time) as freezer:
         assert await async_setup_component(
@@ -1531,8 +1530,9 @@ async def test_initialize_from_database_with_maxage(
     await hass.async_block_till_done()
     await async_wait_recording_done(hass)
 
-    with freeze_time(current_time) as freezer, patch.object(
-        StatisticsSensor, "_purge_old_states", mock_purge
+    with (
+        freeze_time(current_time) as freezer,
+        patch.object(StatisticsSensor, "_purge_old_states", mock_purge),
     ):
         for value in VALUES_NUMERIC:
             hass.states.async_set(

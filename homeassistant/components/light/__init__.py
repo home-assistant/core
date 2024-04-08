@@ -7,9 +7,10 @@ import csv
 import dataclasses
 from datetime import timedelta
 from enum import IntFlag, StrEnum
+from functools import cached_property
 import logging
 import os
-from typing import TYPE_CHECKING, Any, Self, cast, final
+from typing import Any, Self, cast, final
 
 import voluptuous as vol
 
@@ -33,11 +34,6 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 import homeassistant.util.color as color_util
-
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
 
 DOMAIN = "light"
 SCAN_INTERVAL = timedelta(seconds=30)
@@ -403,7 +399,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
     await component.async_setup(config)
 
     profiles = hass.data[DATA_PROFILES] = Profiles(hass)
-    await profiles.async_initialize()
+    # Profiles are loaded in a separate task to avoid delaying the setup
+    # of the light base platform.
+    hass.async_create_task(profiles.async_initialize(), eager_start=True)
 
     def preprocess_data(data: dict[str, Any]) -> dict[str | vol.Optional, Any]:
         """Preprocess the service data."""
@@ -959,8 +957,7 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     @property
     def _light_internal_rgbw_color(self) -> tuple[int, int, int, int] | None:
         """Return the rgbw color value [int, int, int, int]."""
-        rgbw_color = self.rgbw_color
-        return rgbw_color
+        return self.rgbw_color
 
     @cached_property
     def rgbww_color(self) -> tuple[int, int, int, int, int] | None:
@@ -1216,9 +1213,9 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 color_temp_kelvin = self.color_temp_kelvin
                 data[ATTR_COLOR_TEMP_KELVIN] = color_temp_kelvin
                 if color_temp_kelvin:
-                    data[
-                        ATTR_COLOR_TEMP
-                    ] = color_util.color_temperature_kelvin_to_mired(color_temp_kelvin)
+                    data[ATTR_COLOR_TEMP] = (
+                        color_util.color_temperature_kelvin_to_mired(color_temp_kelvin)
+                    )
                 else:
                     data[ATTR_COLOR_TEMP] = None
             else:
@@ -1231,9 +1228,9 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 color_temp_kelvin = self.color_temp_kelvin
                 data[ATTR_COLOR_TEMP_KELVIN] = color_temp_kelvin
                 if color_temp_kelvin:
-                    data[
-                        ATTR_COLOR_TEMP
-                    ] = color_util.color_temperature_kelvin_to_mired(color_temp_kelvin)
+                    data[ATTR_COLOR_TEMP] = (
+                        color_util.color_temperature_kelvin_to_mired(color_temp_kelvin)
+                    )
                 else:
                     data[ATTR_COLOR_TEMP] = None
             else:

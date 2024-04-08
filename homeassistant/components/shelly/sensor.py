@@ -934,7 +934,7 @@ RPC_SENSORS: Final = {
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "battery": RpcSensorDescription(
-        key="devicepower:0",
+        key="devicepower",
         sub_key="battery",
         name="Battery",
         native_unit_of_measurement=PERCENTAGE,
@@ -942,6 +942,7 @@ RPC_SENSORS: Final = {
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
+        removal_condition=lambda _config, status, key: (status[key]["battery"] is None),
     ),
     "voltmeter": RpcSensorDescription(
         key="voltmeter",

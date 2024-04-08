@@ -51,13 +51,13 @@ class ProgettiHWSWConfigFlow(ConfigFlow, domain=DOMAIN):
 
         relay_modes_schema = {}
         for i in range(1, int(self.s1_in["relay_count"]) + 1):
-            relay_modes_schema[
-                vol.Required(f"relay_{str(i)}", default="bistable")
-            ] = vol.In(
-                {
-                    "bistable": "Bistable (ON/OFF Mode)",
-                    "monostable": "Monostable (Timer Mode)",
-                }
+            relay_modes_schema[vol.Required(f"relay_{str(i)}", default="bistable")] = (
+                vol.In(
+                    {
+                        "bistable": "Bistable (ON/OFF Mode)",
+                        "monostable": "Monostable (Timer Mode)",
+                    }
+                )
             )
 
         return self.async_show_form(

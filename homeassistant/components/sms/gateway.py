@@ -134,9 +134,7 @@ class Gateway:
             _LOGGER.info("Failed to read messages!")
 
         # Link all SMS when there are concatenated messages
-        entries = gammu.LinkSMS(entries)
-
-        return entries
+        return gammu.LinkSMS(entries)
 
     @callback
     def _notify_incoming_sms(self, messages):
@@ -210,7 +208,7 @@ async def create_sms_gateway(config, hass):
             _LOGGER.error("Failed to initialize, error %s", exc)
             await gateway.terminate_async()
             return None
-        return gateway
     except gammu.GSMError as exc:
         _LOGGER.error("Failed to create async worker, error %s", exc)
         return None
+    return gateway

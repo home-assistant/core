@@ -15,6 +15,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
@@ -48,21 +49,25 @@ async def test_form(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     c4_account = _get_mock_c4_account()
     c4_director = _get_mock_c4_director()
-    with patch(
-        "homeassistant.components.control4.config_flow.C4Account",
-        return_value=c4_account,
-    ), patch(
-        "homeassistant.components.control4.config_flow.C4Director",
-        return_value=c4_director,
-    ), patch(
-        "homeassistant.components.control4.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.control4.config_flow.C4Account",
+            return_value=c4_account,
+        ),
+        patch(
+            "homeassistant.components.control4.config_flow.C4Director",
+            return_value=c4_director,
+        ),
+        patch(
+            "homeassistant.components.control4.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -73,7 +78,7 @@ async def test_form(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "create_entry"
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "control4_model_00AA00AA00AA"
     assert result2["data"] == {
         CONF_HOST: "1.1.1.1",
@@ -103,7 +108,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
@@ -126,7 +131,7 @@ async def test_form_unexpected_exception(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
 
 
@@ -136,12 +141,15 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "homeassistant.components.control4.config_flow.Control4Validator.authenticate",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.control4.config_flow.C4Director",
-        side_effect=Unauthorized("message"),
+    with (
+        patch(
+            "homeassistant.components.control4.config_flow.Control4Validator.authenticate",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.control4.config_flow.C4Director",
+            side_effect=Unauthorized("message"),
+        ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -152,7 +160,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
@@ -163,14 +171,14 @@ async def test_option_flow(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={CONF_SCAN_INTERVAL: 4},
     )
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         CONF_SCAN_INTERVAL: 4,
     }
@@ -183,13 +191,13 @@ async def test_option_flow_defaults(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input={}
     )
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL,
     }

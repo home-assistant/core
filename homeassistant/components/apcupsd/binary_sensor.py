@@ -17,6 +17,8 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN
 from .coordinator import APCUPSdCoordinator
 
+PARALLEL_UPDATES = 0
+
 _LOGGER = logging.getLogger(__name__)
 _DESCRIPTION = BinarySensorEntityDescription(
     key="statflag",

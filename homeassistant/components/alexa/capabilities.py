@@ -1584,7 +1584,7 @@ class AlexaModeController(AlexaCapability):
                 )
                 modes += 1
 
-            # Alexa requiers at least 2 modes
+            # Alexa requires at least 2 modes
             if modes == 1:
                 self._resource.add_mode(f"state.{PRESET_MODE_NA}", [PRESET_MODE_NA])
 
@@ -1764,10 +1764,7 @@ class AlexaRangeController(AlexaCapability):
             speed_list = self.entity.attributes.get(vacuum.ATTR_FAN_SPEED_LIST)
             speed = self.entity.attributes.get(vacuum.ATTR_FAN_SPEED)
             if speed_list is not None and speed is not None:
-                speed_index = next(
-                    (i for i, v in enumerate(speed_list) if v == speed), None
-                )
-                return speed_index
+                return next((i for i, v in enumerate(speed_list) if v == speed), None)
 
         # Valve Position
         if self.instance == f"{valve.DOMAIN}.{valve.ATTR_POSITION}":

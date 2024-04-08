@@ -58,7 +58,7 @@ class PublishMessage:
     retain: bool
 
 
-@dataclass
+@dataclass(slots=True, frozen=True)
 class ReceiveMessage:
     """MQTT Message received."""
 
@@ -115,6 +115,8 @@ class MqttOriginInfo(TypedDict, total=False):
 
 class MqttCommandTemplateException(ServiceValidationError):
     """Handle MqttCommandTemplate exceptions."""
+
+    _message: str
 
     def __init__(
         self,
@@ -226,6 +228,8 @@ class MqttCommandTemplate:
 
 class MqttValueTemplateException(TemplateError):
     """Handle MqttValueTemplate exceptions."""
+
+    _message: str
 
     def __init__(
         self,

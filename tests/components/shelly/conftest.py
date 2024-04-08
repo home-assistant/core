@@ -169,6 +169,11 @@ MOCK_CONFIG = {
     "input:1": {"id": 1, "type": "analog", "enable": True},
     "input:2": {"id": 2, "name": "Gas", "type": "count", "enable": True},
     "light:0": {"name": "test light_0"},
+    "light:1": {"name": "test light_1"},
+    "light:2": {"name": "test light_2"},
+    "light:3": {"name": "test light_3"},
+    "rgb:0": {"name": "test rgb_0"},
+    "rgbw:0": {"name": "test rgbw_0"},
     "switch:0": {"name": "test switch_0"},
     "cover:0": {"name": "test cover_0"},
     "thermostat:0": {
@@ -223,6 +228,11 @@ MOCK_STATUS_RPC = {
     "input:1": {"id": 1, "percent": 89, "xpercent": 8.9},
     "input:2": {"id": 2, "counts": {"total": 56174, "xtotal": 561.74}},
     "light:0": {"output": True, "brightness": 53.0},
+    "light:1": {"output": True, "brightness": 53.0},
+    "light:2": {"output": True, "brightness": 53.0},
+    "light:3": {"output": True, "brightness": 53.0},
+    "rgb:0": {"output": True, "brightness": 53.0, "rgb": [45, 55, 65]},
+    "rgbw:0": {"output": True, "brightness": 53.0, "rgb": [21, 22, 23], "white": 120},
     "cloud": {"connected": False},
     "cover:0": {
         "state": "stopped",
@@ -351,8 +361,9 @@ def _mock_rpc_device(version: str | None = None):
 @pytest.fixture
 async def mock_rpc_device():
     """Mock rpc (Gen2, Websocket) device with BLE support."""
-    with patch("aioshelly.rpc_device.RpcDevice.create") as rpc_device_mock, patch(
-        "homeassistant.components.shelly.bluetooth.async_start_scanner"
+    with (
+        patch("aioshelly.rpc_device.RpcDevice.create") as rpc_device_mock,
+        patch("homeassistant.components.shelly.bluetooth.async_start_scanner"),
     ):
 
         def update():
