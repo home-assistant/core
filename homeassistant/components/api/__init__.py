@@ -397,7 +397,6 @@ class APIDomainServicesView(HomeAssistantView):
         cancel_listen = hass.bus.async_listen(
             EVENT_STATE_CHANGED,
             _async_save_changed_entities,
-            run_immediately=True,
         )
 
         try:

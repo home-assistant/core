@@ -918,9 +918,7 @@ class MockEntityPlatform(entity_platform.EntityPlatform):
         def _async_on_stop(_: Event) -> None:
             self.async_shutdown()
 
-        hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STOP, _async_on_stop, run_immediately=True
-        )
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_on_stop)
 
 
 class MockToggleEntity(entity.ToggleEntity):
@@ -1493,7 +1491,7 @@ def async_capture_events(hass: HomeAssistant, event_name: str) -> list[Event]:
     def capture_events(event: Event) -> None:
         events.append(event)
 
-    hass.bus.async_listen(event_name, capture_events, run_immediately=True)
+    hass.bus.async_listen(event_name, capture_events)
 
     return events
 

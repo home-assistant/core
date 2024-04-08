@@ -1399,9 +1399,7 @@ class EventBus:
         self._listeners[MATCH_ALL] = self._match_all_listeners
         self._hass = hass
         self._async_logging_changed()
-        self.async_listen(
-            EVENT_LOGGING_CHANGED, self._async_logging_changed, run_immediately=True
-        )
+        self.async_listen(EVENT_LOGGING_CHANGED, self._async_logging_changed)
 
     @callback
     def _async_logging_changed(self, event: Event | None = None) -> None:

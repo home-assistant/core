@@ -550,15 +550,12 @@ class ESPHomeManager:
         # when the CLOSE event is fired so anything using a Bluetooth
         # proxy has a chance to shut down properly.
         entry_data.cleanup_callbacks.append(
-            hass.bus.async_listen(
-                EVENT_HOMEASSISTANT_CLOSE, self.on_stop, run_immediately=True
-            )
+            hass.bus.async_listen(EVENT_HOMEASSISTANT_CLOSE, self.on_stop)
         )
         entry_data.cleanup_callbacks.append(
             hass.bus.async_listen(
                 EVENT_LOGGING_CHANGED,
                 self._async_handle_logging_changed,
-                run_immediately=True,
             )
         )
 

@@ -419,7 +419,6 @@ def _async_track_event(
             tracker.event_type,
             ft.partial(tracker.dispatcher_callable, hass, callbacks),
             event_filter=ft.partial(tracker.filter_callable, hass, callbacks),
-            run_immediately=True,
         )
 
     job = HassJob(action, f"track {tracker.event_type} event {keys}", job_type=job_type)
