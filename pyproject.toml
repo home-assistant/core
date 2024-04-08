@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools==68.0.0", "wheel~=0.40.0"]
+requires = ["setuptools==69.2.0", "wheel~=0.43.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -638,6 +638,7 @@ select = [
     "PIE", # flake8-pie
     "PL", # pylint
     "PT", # flake8-pytest-style
+    "PYI", # flake8-pyi
     "RET", # flake8-return
     "RSE", # flake8-raise
     "RUF005", # Consider iterable unpacking instead of concatenation
@@ -719,6 +720,9 @@ ignore = [
 
     # temporarily disabled
     "PT019",
+    "PYI024", # Use typing.NamedTuple instead of collections.namedtuple
+    "PYI036",
+    "PYI041",
     "RET503",
     "RET502",
     "RET501",
