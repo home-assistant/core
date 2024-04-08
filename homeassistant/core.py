@@ -1560,7 +1560,7 @@ class EventBus:
 
             frame.report(
                 "calls `async_listen` with run_immediately, which is"
-                " deprecated and will be removed in Assistant 2025.4",
+                " deprecated and will be removed in Assistant 2025.5",
                 error_if_core=False,
             )
 
@@ -1640,7 +1640,7 @@ class EventBus:
 
             frame.report(
                 "calls `async_listen_once` with run_immediately, which is "
-                "deprecated and will be removed in Assistant 2025.4",
+                "deprecated and will be removed in Assistant 2025.5",
                 error_if_core=False,
             )
 
