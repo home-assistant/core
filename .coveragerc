@@ -365,7 +365,6 @@ omit =
     homeassistant/components/epion/sensor.py
     homeassistant/components/epson/__init__.py
     homeassistant/components/epson/media_player.py
-    homeassistant/components/epsonworkforce/sensor.py
     homeassistant/components/eq3btsmart/__init__.py
     homeassistant/components/eq3btsmart/climate.py
     homeassistant/components/eq3btsmart/const.py
@@ -542,12 +541,9 @@ omit =
     homeassistant/components/hko/weather.py
     homeassistant/components/hlk_sw16/__init__.py
     homeassistant/components/hlk_sw16/switch.py
-    homeassistant/components/home_connect/__init__.py
-    homeassistant/components/home_connect/api.py
     homeassistant/components/home_connect/binary_sensor.py
     homeassistant/components/home_connect/entity.py
     homeassistant/components/home_connect/light.py
-    homeassistant/components/home_connect/sensor.py
     homeassistant/components/home_connect/switch.py
     homeassistant/components/homematic/__init__.py
     homeassistant/components/homematic/binary_sensor.py

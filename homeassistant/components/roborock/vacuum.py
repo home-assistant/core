@@ -1,5 +1,6 @@
 """Support for Roborock vacuum class."""
 
+from dataclasses import asdict
 from typing import Any
 
 from roborock.code_mappings import RoborockStateCode
@@ -17,11 +18,12 @@ from homeassistant.components.vacuum import (
     VacuumEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceResponse, SupportsResponse
+from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import slugify
 
-from .const import DOMAIN
+from .const import DOMAIN, GET_MAPS_SERVICE_NAME
 from .coordinator import RoborockDataUpdateCoordinator
 from .device import RoborockCoordinatedEntity
 
@@ -64,6 +66,15 @@ async def async_setup_entry(
     async_add_entities(
         RoborockVacuum(slugify(device_id), coordinator)
         for device_id, coordinator in coordinators.items()
+    )
+
+    platform = entity_platform.async_get_current_platform()
+
+    platform.async_register_entity_service(
+        GET_MAPS_SERVICE_NAME,
+        {},
+        RoborockVacuum.get_maps.__name__,
+        supports_response=SupportsResponse.ONLY,
     )
 
 
@@ -164,3 +175,7 @@ class RoborockVacuum(RoborockCoordinatedEntity, StateVacuumEntity):
     ) -> None:
         """Send a command to a vacuum cleaner."""
         await self.send(command, params)
+
+    async def get_maps(self) -> ServiceResponse:
+        """Get map information such as map id and room ids."""
+        return {"maps": [asdict(map) for map in self.coordinator.maps.values()]}

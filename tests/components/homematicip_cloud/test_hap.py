@@ -105,7 +105,7 @@ async def test_hap_setup_connection_error() -> None:
     ):
         assert not await hap.async_setup()
 
-    assert not hass.async_add_hass_job.mock_calls
+    assert not hass.async_run_hass_job.mock_calls
     assert not hass.config_entries.flow.async_init.mock_calls
 
 
