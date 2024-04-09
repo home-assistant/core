@@ -14,7 +14,7 @@ MAP_PATH = f"{DOMAIN}/maps"
 MAP_UPDATE_FREQUENCY = 3600  # Only save the map once every hour.
 
 
-async def get_roborock_storage(hass: HomeAssistant, entry_id: str):
+def get_roborock_storage(hass: HomeAssistant, entry_id: str):
     """Get a roborock storage object for a given config entry."""
     map_path = hass.config.path(MAP_PATH)
 
@@ -26,7 +26,6 @@ class RoborockMapEntry:
     """Describe a map entry stored on disk."""
 
     map_name: str
-    content: bytes
     time: float
 
 
@@ -45,19 +44,17 @@ class RoborockStorage:
         self._map_path = map_path
         self._entry_id = entry_id
 
-    def _should_update(self, map_entry: RoborockMapEntry | None, content: bytes):
-        return (
-            map_entry is None
-            or time.time() - map_entry.time > MAP_UPDATE_FREQUENCY
-            or content != map_entry.content
-        )
+    def _should_update(self, map_entry: RoborockMapEntry | None):
+        return map_entry is None or time.time() - map_entry.time > MAP_UPDATE_FREQUENCY
 
     def _get_map_filename(self, map_name: str):
         return self._hass.config.path(f"{MAP_PATH}/{self._entry_id}/{map_name}")
 
-    async def async_load_map(self, map_name: str) -> bytes | None:
-        """Load map content."""
-        filename = self._get_map_filename(map_name)
+    def async_load_maps(self, map_names: list[str]) -> list[bytes | None]:
+        """Load map content. Should be called in executor thread."""
+        filenames: list[tuple[str, str]] = [
+            (map_name, self._get_map_filename(map_name)) for map_name in map_names
+        ]
 
         def load_map(filename: str) -> bytes | None:
             if not os.path.exists(filename):
@@ -66,27 +63,31 @@ class RoborockStorage:
             with open(filename, "rb") as stored_map:
                 return stored_map.read()
 
-        try:
-            map_data = await self._hass.async_add_executor_job(load_map, filename)
-        except OSError as err:
-            _LOGGER.error("Unable to read map file: %s %s", filename, err)
-            return None
-        if map_data is None:
-            return None
-        self._data[map_name] = RoborockMapEntry(
-            map_name,
-            map_data,
-            time.time(),
-        )
-        return self._data[map_name].content
+        results: list[bytes | None] = []
+        for map_name, filename in filenames:
+            try:
+                map_data = load_map(filename)
+            except OSError as err:
+                _LOGGER.error("Unable to read map file: %s %s", filename, err)
+                results.append(None)
+                continue
+            if map_data is None:
+                results.append(None)
+                continue
+            self._data[map_name] = RoborockMapEntry(
+                map_name,
+                time.time(),
+            )
+            results.append(map_data)
+        return results
 
     async def async_save_map(self, map_name: str, content: bytes) -> None:
         """Write map if it should be updated."""
         map_entry = self._data.get(map_name)
-        if not self._should_update(map_entry, content):
+        if not self._should_update(map_entry):
             return None
         filename = self._get_map_filename(map_name)
-        self._data[map_name] = RoborockMapEntry(map_name, content, time.time())
+        self._data[map_name] = RoborockMapEntry(map_name, time.time())
 
         def save_map(filename: str, content: bytes) -> None:
             os.makedirs(os.path.dirname(filename), exist_ok=True)

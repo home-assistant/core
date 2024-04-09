@@ -16,7 +16,6 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
 
@@ -49,7 +48,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class RoborockMap(RoborockCoordinatedEntity, ImageEntity, RestoreEntity):
+class RoborockMap(RoborockCoordinatedEntity, ImageEntity):
     """A class to let you visualize the map."""
 
     _attr_has_entity_name = True
@@ -118,11 +117,15 @@ class RoborockMap(RoborockCoordinatedEntity, ImageEntity, RestoreEntity):
         """Update the image if it is not cached."""
         if self.is_map_valid():
             map_data: bytes = await self.cloud_api.get_map_v1()
+            old_data = self.cached_map
             self.cached_map = self._create_image(map_data)
-            self.coordinator.config_entry.async_create_task(
-                self.hass,
-                self._roborock_storage.async_save_map(self._attr_name, self.cached_map),
-            )
+            if old_data != self.cached_map:
+                self.coordinator.config_entry.async_create_task(
+                    self.hass,
+                    self._roborock_storage.async_save_map(
+                        self._attr_name, self.cached_map
+                    ),
+                )
         return self.cached_map
 
     def _create_image(self, map_bytes: bytes) -> bytes:
@@ -146,7 +149,7 @@ async def create_coordinator_maps(
     Only one map can be loaded at a time per device.
     """
     entities = []
-    roborock_storage = await get_roborock_storage(hass, coord.config_entry.entry_id)
+    roborock_storage = get_roborock_storage(hass, coord.config_entry.entry_id)
     cur_map = coord.current_map
     # This won't be None at this point as the coordinator will have run first.
     assert cur_map is not None
@@ -155,8 +158,9 @@ async def create_coordinator_maps(
     maps_info = sorted(
         coord.maps.items(), key=lambda data: data[0] == cur_map, reverse=True
     )
-    maps = await asyncio.gather(
-        *(roborock_storage.async_load_map(map.name) for map in coord.maps.values())
+    maps = await hass.async_add_executor_job(
+        roborock_storage.async_load_maps,
+        [roborock_map.name for roborock_map in coord.maps.values()],
     )
     storage_updates = []
     for (map_flag, map_info), storage_map in zip(maps_info, maps):

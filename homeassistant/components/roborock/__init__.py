@@ -178,5 +178,5 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle removal of an entry."""
-    roborock_storage = await get_roborock_storage(hass, entry.entry_id)
+    roborock_storage = get_roborock_storage(hass, entry.entry_id)
     await roborock_storage.async_remove_maps(entry.entry_id)
