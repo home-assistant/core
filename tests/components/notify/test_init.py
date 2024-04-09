@@ -26,7 +26,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.discovery import async_load_platform
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.setup import async_setup_component
 
@@ -55,6 +54,14 @@ class MockNotifyEntity(MockEntity, NotifyEntity):
         self.send_message_mock_calls(message=message)
 
 
+async def help_async_setup_entry_init(
+    hass: HomeAssistant, config_entry: ConfigEntry
+) -> bool:
+    """Set up test config entry."""
+    await hass.config_entries.async_forward_entry_setup(config_entry, DOMAIN)
+    return True
+
+
 async def test_send_message_service(
     hass: HomeAssistant, config_flow_fixture: None
 ) -> None:
@@ -65,20 +72,12 @@ async def test_send_message_service(
     config_entry = MockConfigEntry(domain="test")
     config_entry.add_to_hass(hass)
 
-    async def async_setup_entry_init(
-        hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
-        """Set up test config entry."""
-        await hass.config_entries.async_forward_entry_setups(config_entry, [DOMAIN])
-        return True
-
     mock_integration(
         hass,
         MockModule(
             "test",
-            async_setup_entry=async_setup_entry_init,
+            async_setup_entry=help_async_setup_entry_init,
         ),
-        built_in=False,
     )
     setup_test_component_platform(hass, DOMAIN, [entity], from_config_entry=True)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -110,34 +109,16 @@ async def test_restore_state(
     """Test we restore state integration."""
     mock_restore_cache(hass, (State("notify.test", state),))
 
-    async def async_setup_entry_init(
-        hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
-        """Set up test config entry."""
-        await hass.config_entries.async_forward_entry_setups(config_entry, [DOMAIN])
-        return True
-
-    async def async_setup_entry_notify_platform(
-        hass: HomeAssistant,
-        config_entry: ConfigEntry,
-        async_add_entities: AddEntitiesCallback,
-    ) -> None:
-        """Set up test notify platform via config entry."""
-        async_add_entities([MockNotifyEntity(name="test", entity_id="notify.test")])
-
     mock_integration(
         hass,
         MockModule(
             "test",
-            async_setup_entry=async_setup_entry_init,
+            async_setup_entry=help_async_setup_entry_init,
         ),
-        built_in=False,
     )
-    mock_platform(
-        hass,
-        "test.notify",
-        MockPlatform(async_setup_entry=async_setup_entry_notify_platform),
-    )
+
+    entity = MockNotifyEntity(name="test", entity_id="notify.test")
+    setup_test_component_platform(hass, DOMAIN, [entity], from_config_entry=True)
 
     config_entry = MockConfigEntry(domain="test")
     config_entry.add_to_hass(hass)
@@ -151,19 +132,12 @@ async def test_restore_state(
 async def test_name(hass: HomeAssistant, config_flow_fixture: None) -> None:
     """Test notify name."""
 
-    async def async_setup_entry_init(
-        hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
-        """Set up test config entry."""
-        await hass.config_entries.async_forward_entry_setup(config_entry, DOMAIN)
-        return True
-
     mock_platform(hass, "test.config_flow")
     mock_integration(
         hass,
         MockModule(
             "test",
-            async_setup_entry=async_setup_entry_init,
+            async_setup_entry=help_async_setup_entry_init,
         ),
     )
 
@@ -181,18 +155,8 @@ async def test_name(hass: HomeAssistant, config_flow_fixture: None) -> None:
     entity3.entity_id = "notify.test4"
     entity3.entity_description = NotifyEntityDescription("test", has_entity_name=True)
 
-    async def async_setup_entry_platform(
-        hass: HomeAssistant,
-        config_entry: ConfigEntry,
-        async_add_entities: AddEntitiesCallback,
-    ) -> None:
-        """Set up test notify entity platform via config entry."""
-        async_add_entities([entity1, entity2, entity3])
-
-    mock_platform(
-        hass,
-        "test.notify",
-        MockPlatform(async_setup_entry=async_setup_entry_platform),
+    setup_test_component_platform(
+        hass, DOMAIN, [entity1, entity2, entity3], from_config_entry=True
     )
 
     config_entry = MockConfigEntry(domain="test")
