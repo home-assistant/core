@@ -5,6 +5,7 @@ import enum
 from typing import Self
 
 DOMAIN = "homeassistant_sky_connect"
+ZHA_DOMAIN = "zha"
 
 
 @dataclasses.dataclass(frozen=True)

@@ -72,6 +72,7 @@ class HomeAssistantSkyConnectConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Home Assistant SkyConnect."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     def __init__(self) -> None:
         """Initialize flow instance."""
@@ -195,6 +196,7 @@ class HomeAssistantSkyConnectConfigFlow(ConfigFlow, domain=DOMAIN):
         if self._current_firmware_type not in (
             ApplicationType.EZSP,
             ApplicationType.SPINEL,
+            ApplicationType.CPC,
         ):
             return self.async_abort(
                 reason="unsupported_firmware",
@@ -353,7 +355,7 @@ class HomeAssistantSkyConnectConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_confirm_zigbee(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Confirm a discovery."""
+        """Confirm Zigbee setup."""
         self._set_confirm_only()
         assert self._usb_info is not None
         assert self._hw_variant is not None
@@ -373,17 +375,7 @@ class HomeAssistantSkyConnectConfigFlow(ConfigFlow, domain=DOMAIN):
                 },
             )
 
-            return self.async_create_entry(
-                title=self._hw_variant.full_name,
-                data={
-                    "vid": self._usb_info.vid,
-                    "pid": self._usb_info.pid,
-                    "serial_number": self._usb_info.serial_number,
-                    "manufacturer": self._usb_info.manufacturer,
-                    "description": self._usb_info.description,
-                    "device": self._usb_info.device,
-                },
-            )
+            return self._async_create_entry()
 
         return self.async_show_form(
             step_id="confirm_zigbee",
@@ -517,33 +509,44 @@ class HomeAssistantSkyConnectConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Show completion dialog for OTBR."""
+        self._current_firmware_type = ApplicationType.SPINEL
         return self.async_show_progress_done(next_step_id="confirm_otbr")
 
     async def async_step_confirm_otbr(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Confirm a discovery."""
+        """Confirm OTBR setup."""
         self._set_confirm_only()
         assert self._usb_info is not None
         assert self._hw_variant is not None
+        assert self._current_firmware_type is not None
 
         if user_input is not None:
             # OTBR discovery is done automatically via hassio
-            return self.async_create_entry(
-                title=self._hw_variant.full_name,
-                data={
-                    "vid": self._usb_info.vid,
-                    "pid": self._usb_info.pid,
-                    "serial_number": self._usb_info.serial_number,
-                    "manufacturer": self._usb_info.manufacturer,
-                    "description": self._usb_info.description,
-                    "device": self._usb_info.device,
-                },
-            )
+            return self._async_create_entry()
 
         return self.async_show_form(
             step_id="confirm_otbr",
             description_placeholders=self.context["description_placeholders"],
+        )
+
+    def _async_create_entry(self) -> ConfigFlowResult:
+        """Create the config entry."""
+        assert self._usb_info is not None
+        assert self._hw_variant is not None
+        assert self._current_firmware_type is not None
+
+        return self.async_create_entry(
+            title=self._hw_variant.full_name,
+            data={
+                "vid": self._usb_info.vid,
+                "pid": self._usb_info.pid,
+                "serial_number": self._usb_info.serial_number,
+                "manufacturer": self._usb_info.manufacturer,
+                "description": self._usb_info.description,
+                "device": self._usb_info.device,
+                "firmware": self._current_firmware_type.name.lower(),
+            },
         )
 
 
