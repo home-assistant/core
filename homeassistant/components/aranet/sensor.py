@@ -83,6 +83,7 @@ SENSOR_DESCRIPTIONS = {
     ),
     "radiation_rate": AranetSensorEntityDescription(
         key="radiation_rate",
+        translation_key="radiation_rate",
         name="Radiation Dose Rate",
         native_unit_of_measurement="μSv/h",
         state_class=SensorStateClass.MEASUREMENT,
@@ -91,6 +92,7 @@ SENSOR_DESCRIPTIONS = {
     ),
     "radiation_total": AranetSensorEntityDescription(
         key="radiation_total",
+        translation_key="radiation_total",
         name="Radiation Total Dose",
         native_unit_of_measurement="mSv",
         state_class=SensorStateClass.MEASUREMENT,
