@@ -11,7 +11,13 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import (
+    HomeAssistant,
+    ServiceCall,
+    ServiceResponse,
+    SupportsResponse,
+    callback,
+)
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryError,
@@ -23,6 +29,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_ENABLE_PUSH, DOMAIN
 from .coordinator import (
+    ImapMessage,
     ImapPollingDataUpdateCoordinator,
     ImapPushDataUpdateCoordinator,
     connect_to_server,
@@ -56,6 +63,7 @@ SERVICE_MOVE_SCHEMA = _SERVICE_UID_SCHEMA.extend(
     }
 )
 SERVICE_DELETE_SCHEMA = _SERVICE_UID_SCHEMA
+SERVICE_FETCH_TEXT_SCHEMA = _SERVICE_UID_SCHEMA
 
 
 async def async_get_imap_client(hass: HomeAssistant, entry_id: str) -> IMAP4_SSL:
@@ -187,6 +195,42 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         await client.close()
 
     hass.services.async_register(DOMAIN, "delete", async_delete, SERVICE_DELETE_SCHEMA)
+
+    async def async_fetch(call: ServiceCall) -> ServiceResponse:
+        """Process fetch email service and return content."""
+        entry_id: str = call.data[CONF_ENTRY]
+        uid: str = call.data[CONF_UID]
+        _LOGGER.debug(
+            "Fetch text for message %s. Entry: %s",
+            uid,
+            entry_id,
+        )
+        client = await async_get_imap_client(hass, entry_id)
+        try:
+            response = await client.fetch(uid, "BODY.PEEK[]")
+        except (TimeoutError, AioImapException) as exc:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="imap_server_fail",
+                translation_placeholders={"error": str(exc)},
+            ) from exc
+        raise_on_error(response, "fetch_failed")
+        message = ImapMessage(response.lines[1])
+        await client.close()
+        return {
+            "text": message.text,
+            "sender": message.sender,
+            "subject": message.subject,
+            "uid": uid,
+        }
+
+    hass.services.async_register(
+        DOMAIN,
+        "fetch",
+        async_fetch,
+        SERVICE_FETCH_TEXT_SCHEMA,
+        supports_response=SupportsResponse.ONLY,
+    )
 
     return True
 

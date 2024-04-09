@@ -280,9 +280,7 @@ async def async_setup_internal(hass: HomeAssistant, entry: ConfigEntry) -> None:
     hass.data[DOMAIN][DATA_RFXOBJECT] = rfx_object
 
     entry.async_on_unload(
-        hass.bus.async_listen(
-            dr.EVENT_DEVICE_REGISTRY_UPDATED, _updated_device, run_immediately=False
-        )
+        hass.bus.async_listen(dr.EVENT_DEVICE_REGISTRY_UPDATED, _updated_device)
     )
 
     def _shutdown_rfxtrx(event: Event) -> None:

@@ -8,7 +8,7 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-from roborock import RoborockException, RoborockInvalidCredentials
+from roborock import HomeDataRoom, RoborockException, RoborockInvalidCredentials
 from roborock.cloud_api import RoborockMqttClient
 from roborock.containers import DeviceData, HomeDataDevice, HomeDataProduct, UserData
 from roborock.web_api import RoborockApiClient
@@ -28,6 +28,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up roborock from a config entry."""
+
     _LOGGER.debug("Integration async setup entry: %s", entry.as_dict())
 
     user_data = UserData.from_dict(entry.data[CONF_USER_DATA])
@@ -56,7 +57,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     }
     # Get a Coordinator if the device is available or if we have connected to the device before
     coordinators = await asyncio.gather(
-        *build_setup_functions(hass, device_map, user_data, product_info),
+        *build_setup_functions(
+            hass, device_map, user_data, product_info, home_data.rooms
+        ),
         return_exceptions=True,
     )
     # Valid coordinators are those where we had networking cached or we could get networking
@@ -85,10 +88,13 @@ def build_setup_functions(
     device_map: dict[str, HomeDataDevice],
     user_data: UserData,
     product_info: dict[str, HomeDataProduct],
+    home_data_rooms: list[HomeDataRoom],
 ) -> list[Coroutine[Any, Any, RoborockDataUpdateCoordinator | None]]:
     """Create a list of setup functions that can later be called asynchronously."""
     return [
-        setup_device(hass, user_data, device, product_info[device.product_id])
+        setup_device(
+            hass, user_data, device, product_info[device.product_id], home_data_rooms
+        )
         for device in device_map.values()
     ]
 
@@ -98,6 +104,7 @@ async def setup_device(
     user_data: UserData,
     device: HomeDataDevice,
     product_info: HomeDataProduct,
+    home_data_rooms: list[HomeDataRoom],
 ) -> RoborockDataUpdateCoordinator | None:
     """Set up a device Coordinator."""
     mqtt_client = RoborockMqttClient(user_data, DeviceData(device, product_info.name))
@@ -117,7 +124,7 @@ async def setup_device(
         await mqtt_client.async_release()
         raise
     coordinator = RoborockDataUpdateCoordinator(
-        hass, device, networking, product_info, mqtt_client
+        hass, device, networking, product_info, mqtt_client, home_data_rooms
     )
     # Verify we can communicate locally - if we can't, switch to cloud api
     await coordinator.verify_api()
