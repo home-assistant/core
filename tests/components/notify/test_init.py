@@ -39,6 +39,7 @@ from tests.common import (
     mock_integration,
     mock_platform,
     mock_restore_cache,
+    setup_test_component_platform,
 )
 
 TEST_KWARGS = {"message": "Test message"}
@@ -61,20 +62,15 @@ async def test_send_message_service(
 
     entity = MockNotifyEntity(name="test", entity_id="notify.test")
 
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+
     async def async_setup_entry_init(
         hass: HomeAssistant, config_entry: ConfigEntry
     ) -> bool:
         """Set up test config entry."""
         await hass.config_entries.async_forward_entry_setups(config_entry, [DOMAIN])
         return True
-
-    async def async_setup_entry_notify_platform(
-        hass: HomeAssistant,
-        config_entry: ConfigEntry,
-        async_add_entities: AddEntitiesCallback,
-    ) -> None:
-        """Set up test notify platform via config entry."""
-        async_add_entities([entity])
 
     mock_integration(
         hass,
@@ -84,14 +80,7 @@ async def test_send_message_service(
         ),
         built_in=False,
     )
-    mock_platform(
-        hass,
-        "test.notify",
-        MockPlatform(async_setup_entry=async_setup_entry_notify_platform),
-    )
-
-    config_entry = MockConfigEntry(domain="test")
-    config_entry.add_to_hass(hass)
+    setup_test_component_platform(hass, DOMAIN, [entity], from_config_entry=True)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
 
     state = hass.states.get("notify.test")
