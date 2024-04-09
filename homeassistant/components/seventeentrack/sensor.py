@@ -118,7 +118,9 @@ async def async_setup_entry(
             set(coordinator.data.live_packages.values()) - current_packages
         )
 
-        current_packages.update((current_packages | packages_to_add) - old_packages)
+        current_packages.clear() or current_packages.update(
+            (current_packages | packages_to_add) - old_packages
+        )
 
         remove_packages(hass, coordinator.account_id, old_packages)
 

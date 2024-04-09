@@ -25,10 +25,8 @@ from .const import (
 class SeventeenTrackData:
     """Class for handling the data retrieval."""
 
-    def __init__(self) -> None:
-        """Initialize the data object."""
-        self.summary: dict[str, dict[str, Any]] = {}
-        self.live_packages: dict[str, Package] = {}
+    summary: dict[str, dict[str, Any]]
+    live_packages: dict[str, Package]
 
 
 class SeventeenTrackCoordinator(DataUpdateCoordinator[SeventeenTrackData]):
@@ -55,9 +53,10 @@ class SeventeenTrackCoordinator(DataUpdateCoordinator[SeventeenTrackData]):
     ) -> SeventeenTrackData:
         """Fetch data from 17Track API."""
 
-        data = SeventeenTrackData()
         summary = {}
+        summary_dict = {}
         live_packages = set()
+        live_packages_dict = {}
 
         try:
             summary = await self._client.profile.summary(
@@ -68,7 +67,7 @@ class SeventeenTrackCoordinator(DataUpdateCoordinator[SeventeenTrackData]):
             LOGGER.error("There was an error retrieving the summary: %s", err)
 
         for status, quantity in summary.items():
-            data.summary[slugify(status)] = {
+            summary_dict[slugify(status)] = {
                 "quantity": quantity,
                 "packages": [],
                 "status_name": status,
@@ -81,12 +80,12 @@ class SeventeenTrackCoordinator(DataUpdateCoordinator[SeventeenTrackData]):
         except SeventeenTrackError as err:
             LOGGER.error("There was an error retrieving the packages: %s", err)
 
-        data.live_packages.clear()
-
         for package in live_packages:
-            data.live_packages[package.tracking_number] = package
-            summary_value = data.summary.get(slugify(package.status))
+            live_packages_dict[package.tracking_number] = package
+            summary_value = summary_dict.get(slugify(package.status))
             if summary_value:
                 summary_value["packages"].append(package)
 
-        return data
+        return SeventeenTrackData(
+            summary=summary_dict, live_packages=live_packages_dict
+        )
