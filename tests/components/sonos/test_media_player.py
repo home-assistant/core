@@ -16,6 +16,7 @@ from homeassistant.helpers.device_registry import (
     DeviceRegistry,
 )
 
+from homeassistant.components.sonos.media_player import SERVICE_PARTYMODE
 from .conftest import SoCoMockFactory
 
 
@@ -170,3 +171,22 @@ async def test_play_media_music_library_playlist_dne(
     assert soco_mock.play_uri.call_count == 0
     assert media_content_id in caplog.text
     assert "playlist" in caplog.text
+
+async def test_partymode(
+    hass: HomeAssistant,
+    soco_factory: SoCoMockFactory,
+    async_autosetup_sonos,
+) -> None:
+    """Test partymode service call ."""
+    soco_mock = soco_factory.mock_list.get("192.168.42.2")
+
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_PARTYMODE,
+        {
+            "entity_id": "media_player.zone_a",
+        },
+        blocking=True,
+    )
+    assert soco_mock.partymode_called
+
