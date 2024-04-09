@@ -39,4 +39,4 @@ async def test_button_opens_door(
     )
 
     await hass.async_block_till_done()
-    assert mock.called_once
+    assert mock.call_count == 1

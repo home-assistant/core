@@ -72,7 +72,8 @@
           "search": "[%key:component::imap::config::step::user::data::search%]",
           "custom_event_data_template": "Template to create custom event data",
           "max_message_size": "Max message size (2048 < size < 30000)",
-          "enable_push": "Enable Push-IMAP if the server supports it. Turn off if Push-IMAP updates are unreliable."
+          "enable_push": "Enable Push-IMAP if the server supports it. Turn off if Push-IMAP updates are unreliable.",
+          "event_message_data": "Message data to be included in the `imap_content` event data:"
         }
       }
     },
@@ -91,6 +92,12 @@
         "python_default": "Default settings",
         "modern": "Modern ciphers",
         "intermediate": "Intermediate ciphers"
+      }
+    },
+    "event_message_data": {
+      "options": {
+        "text": "Body text",
+        "headers": "Message headers"
       }
     }
   },

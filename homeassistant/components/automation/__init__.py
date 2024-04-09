@@ -782,7 +782,6 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         self.hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_STARTED,
             self._async_enable_automation,
-            run_immediately=True,
         )
         self.async_write_ha_state()
 

@@ -38,7 +38,7 @@ async def test_scene_activate(hass: HomeAssistant, scene) -> None:
     assert state.attributes["icon"] == scene.icon
     assert state.attributes["color"] == scene.color
     assert state.attributes["location_id"] == scene.location_id
-    assert scene.execute.call_count == 1  # type: ignore
+    assert scene.execute.call_count == 1
 
 
 async def test_unload_config_entry(hass: HomeAssistant, scene) -> None:
