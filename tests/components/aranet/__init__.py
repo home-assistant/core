@@ -58,6 +58,14 @@ VALID_DATA_SERVICE_INFO = fake_service_info(
     },
 )
 
+VALID_DATA_SERVICE_INFO_WITH_NO_NAME = fake_service_info(
+    None,
+    "0000fce0-0000-1000-8000-00805f9b34fb",
+    {
+        1794: b'\x21\x00\x02\x01\x00\x00\x00\x01\x8a\x02\xa5\x01\xb1&"Y\x01,\x01\xe8\x00\x88'
+    },
+)
+
 VALID_ARANET2_DATA_SERVICE_INFO = fake_service_info(
     "Aranet2 12345",
     "0000fce0-0000-1000-8000-00805f9b34fb",
