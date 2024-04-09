@@ -169,10 +169,9 @@ async def create_coordinator_maps(
                 coord,
                 map_flag,
                 api_data,
-                map_name,
+                map_info.name,
                 sizes,
                 drawables,
-                map_info.name,
             )
         )
     if len(coord.maps) != 1:

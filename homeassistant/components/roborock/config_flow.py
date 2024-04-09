@@ -17,7 +17,13 @@ from roborock.exceptions import (
 from roborock.web_api import RoborockApiClient
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+    OptionsFlowWithConfigEntry,
+)
 from homeassistant.const import CONF_USERNAME
 from homeassistant.core import callback
 
@@ -168,24 +174,24 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
-    ) -> config_entries.OptionsFlow:
+        config_entry: ConfigEntry,
+    ) -> OptionsFlow:
         """Create the options flow."""
         return RoborockOptionsFlowHandler(config_entry)
 
 
-class RoborockOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
+class RoborockOptionsFlowHandler(OptionsFlowWithConfigEntry):
     """Handle an option flow for Roborock."""
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage the options."""
         return self.async_show_menu(step_id="init", menu_options=[DOMAIN, MAPS])
 
     async def async_step_roborock(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage the options domain wide."""
         if user_input is not None:
             return self.async_create_entry(
@@ -207,13 +213,13 @@ class RoborockOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
 
     async def async_step_maps(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Open the menu for the map options."""
         return self.async_show_menu(step_id=MAPS, menu_options=[DRAWABLES, SIZES])
 
     async def async_step_sizes(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage the map object size options."""
         if user_input is not None:
             new_sizes = {
@@ -238,7 +244,7 @@ class RoborockOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
 
     async def async_step_drawables(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage the map object drawable options."""
         if user_input is not None:
             self.options.setdefault(DRAWABLES, {}).update(user_input)
