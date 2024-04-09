@@ -1,6 +1,5 @@
 """Tests for Islamic Prayer Times config flow."""
 
-
 import pytest
 
 from homeassistant import config_entries
