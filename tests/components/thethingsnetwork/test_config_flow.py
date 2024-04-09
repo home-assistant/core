@@ -20,9 +20,7 @@ USER_DATA = {CONF_HOSTNAME: HOSTNAME, CONF_APP_ID: APP_ID, CONF_API_KEY: API_KEY
 USER_DATA_PARTIAL = {CONF_APP_ID: APP_ID, CONF_API_KEY: API_KEY}
 
 
-async def test_user(
-    hass: HomeAssistant, mock_TTNClient_coordinator, mock_TTNClient_config_flow
-) -> None:
+async def test_user(hass: HomeAssistant, mock_TTNClient) -> None:
     """Test user config."""
 
     result = await hass.config_entries.flow.async_init(
@@ -30,7 +28,7 @@ async def test_user(
         context={"source": SOURCE_USER},
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     schema = result["data_schema"]
@@ -51,17 +49,17 @@ async def test_user(
     assert result["data"][CONF_API_KEY] == API_KEY
 
     # Connection error
-    mock_TTNClient_config_flow.return_value.fetch_data.side_effect = TTNAuthError
+    mock_TTNClient.return_value.fetch_data.side_effect = TTNAuthError
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
         data=user_data,
     )
     assert result["type"] == FlowResultType.FORM
-    assert "invalid_auth" in result["errors"]["base"]
+    assert result["errors"] == {"base": "invalid_auth"}
 
     # Unknown error
-    mock_TTNClient_config_flow.return_value.fetch_data.side_effect = Exception
+    mock_TTNClient.return_value.fetch_data.side_effect = Exception
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
@@ -71,9 +69,7 @@ async def test_user(
     assert "unknown" in result["errors"]["base"]
 
 
-async def test_step_reauth(
-    hass: HomeAssistant, mock_TTNClient_coordinator, mock_TTNClient_config_flow
-) -> None:
+async def test_step_reauth(hass: HomeAssistant, mock_TTNClient) -> None:
     """Test that the reauth step works."""
 
     CONFIG_ENTRY.add_to_hass(hass)

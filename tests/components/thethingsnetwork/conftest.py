@@ -74,24 +74,19 @@ CONFIG_ENTRY = MockConfigEntry(
 
 
 @pytest.fixture
-def mock_TTNClient_coordinator():
+def mock_TTNClient():
     """Mock TTNClient."""
 
-    with patch(
-        "homeassistant.components.thethingsnetwork.coordinator.TTNClient", autospec=True
-    ) as TTNClient:
-        instance = TTNClient.return_value
-        instance.fetch_data = AsyncMock(return_value=DATA)
-        yield TTNClient
-
-
-@pytest.fixture
-def mock_TTNClient_config_flow():
-    """Mock TTNClient."""
-
-    with patch(
-        "homeassistant.components.thethingsnetwork.config_flow.TTNClient", autospec=True
-    ) as TTNClient:
+    with (
+        patch(
+            "homeassistant.components.thethingsnetwork.coordinator.TTNClient",
+            autospec=True,
+        ) as TTNClient,
+        patch(
+            "homeassistant.components.thethingsnetwork.config_flow.TTNClient",
+            new=TTNClient,
+        ),
+    ):
         instance = TTNClient.return_value
         instance.fetch_data = AsyncMock(return_value=DATA)
         yield TTNClient

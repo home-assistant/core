@@ -2,16 +2,16 @@
   "config": {
     "step": {
       "user": {
-        "title": "Connect to The Thinks Network v3 App",
+        "title": "Connect to The Things Network v3 App",
         "description": "Enter the API hostname, app id and API key for your TTN application.\n\nYou can find your API key in the [The Things Network console](https://console.thethingsnetwork.org) -> Applications -> application_id -> API keys.",
         "data": {
-          "hostname": "Hostname",
+          "hostname": "[%key:common::config_flow::data::host%]",
           "app_id": "Application ID",
-          "access_key": "API Key"
+          "access_key": "[%key:common::config_flow::data::api_key%]"
         }
       },
       "reauth_confirm": {
-        "description": "The Thinks Network application could not be connected.\n\nPlease check your credentials."
+        "description": "The Things Network application could not be connected.\n\nPlease check your credentials."
       }
     },
     "abort": {

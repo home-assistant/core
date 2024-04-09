@@ -33,7 +33,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             hass,
             DOMAIN,
             "manual_migration",
-            breaks_in_ha_version="2021.10.0",
+            breaks_in_ha_version="2024.11.0",
             is_fixable=False,
             severity=ir.IssueSeverity.ERROR,
             translation_key="manual_migration",
@@ -56,16 +56,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.data.get(CONF_HOSTNAME, TTN_API_HOSTNAME),
     )
 
-    # Create coordinator to fetch TTN updates
     coordinator = TTNCoordinator(hass, entry)
 
-    # Fetch all existing values in the TTN storage DB - NOTE: the free TTN only keeps 24 hours
     await coordinator.async_config_entry_first_refresh()
 
-    # Store the coordinator - support for multiple entries so indexing by entry_id
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
-    # Trigger the creation of entities for each supported platform
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True

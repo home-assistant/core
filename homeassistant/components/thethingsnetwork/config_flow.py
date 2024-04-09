@@ -58,8 +58,7 @@ class TTNFlowHandler(ConfigFlow, domain=DOMAIN):
                         data=user_input,
                         reason="reauth_successful",
                     )
-                if not self.unique_id:
-                    await self.async_set_unique_id(user_input[CONF_APP_ID])
+                await self.async_set_unique_id(user_input[CONF_APP_ID])
                 self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(

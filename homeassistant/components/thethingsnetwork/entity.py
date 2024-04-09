@@ -46,7 +46,7 @@ class TTNEntity(CoordinatorEntity[TTNCoordinator]):
         """Handle updated data from the coordinator."""
 
         my_entity_update = self.coordinator.data.get(self.device_id, {}).get(
-            self.field_id, None
+            self.field_id
         )
         if (
             my_entity_update

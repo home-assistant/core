@@ -27,7 +27,7 @@ async def test_normal(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
-    mock_TTNClient_coordinator,
+    mock_TTNClient,
 ) -> None:
     """Test a working configurations."""
     CONFIG_ENTRY.add_to_hass(hass)
@@ -46,24 +46,19 @@ async def test_normal(
     # Check entities
     assert entity_registry.async_get(f"sensor.{DEVICE_ID}_{DEVICE_FIELD}")
 
-    # Test reaction to options update
-    hass.config_entries.async_update_entry(
-        CONFIG_ENTRY, data=CONFIG_ENTRY.data, options={"dummy": "new_value"}
-    )
-
     assert not entity_registry.async_get(f"sensor.{DEVICE_ID_2}_{DEVICE_FIELD}")
-    push_callback = mock_TTNClient_coordinator.call_args.kwargs["push_callback"]
+    push_callback = mock_TTNClient.call_args.kwargs["push_callback"]
     await push_callback(DATA_UPDATE)
     assert entity_registry.async_get(f"sensor.{DEVICE_ID_2}_{DEVICE_FIELD_2}")
 
 
-@pytest.mark.parametrize(("exceptionClass"), [TTNAuthError, Exception])
+@pytest.mark.parametrize(("exception_class"), [TTNAuthError, Exception])
 async def test_client_exceptions(
-    hass: HomeAssistant, mock_TTNClient_coordinator, exceptionClass
+    hass: HomeAssistant, mock_TTNClient, exception_class
 ) -> None:
     """Test TTN Exceptions."""
 
-    mock_TTNClient_coordinator.return_value.fetch_data.side_effect = exceptionClass
+    mock_TTNClient.return_value.fetch_data.side_effect = exception_class
     CONFIG_ENTRY.add_to_hass(hass)
     assert not await hass.config_entries.async_setup(CONFIG_ENTRY.entry_id)
 
