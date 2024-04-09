@@ -1,0 +1,67 @@
+# serializer version: 1
+# name: test_default_prompt[None]
+  list([
+    dict({
+      'content': '''
+        This smart home is controlled by Home Assistant.
+        
+        An overview of the areas and the devices in this smart home:
+        
+        Test Area:
+        - Test Device (Test Model)
+        
+        Test Area 2:
+        - Test Device 2
+        - Test Device 3 (Test Model 3A)
+        - Test Device 4
+        - 1 (3)
+        
+        Answer the user's questions about the world truthfully.
+        
+        If the user wants to control a device, reject the request and suggest using the Home Assistant app.
+      ''',
+      'role': 'system',
+    }),
+    dict({
+      'content': 'hello',
+      'role': 'user',
+    }),
+    dict({
+      'content': 'Hello, how can I help you?',
+      'role': 'assistant',
+    }),
+  ])
+# ---
+# name: test_default_prompt[conversation.openai]
+  list([
+    dict({
+      'content': '''
+        This smart home is controlled by Home Assistant.
+        
+        An overview of the areas and the devices in this smart home:
+        
+        Test Area:
+        - Test Device (Test Model)
+        
+        Test Area 2:
+        - Test Device 2
+        - Test Device 3 (Test Model 3A)
+        - Test Device 4
+        - 1 (3)
+        
+        Answer the user's questions about the world truthfully.
+        
+        If the user wants to control a device, reject the request and suggest using the Home Assistant app.
+      ''',
+      'role': 'system',
+    }),
+    dict({
+      'content': 'hello',
+      'role': 'user',
+    }),
+    dict({
+      'content': 'Hello, how can I help you?',
+      'role': 'assistant',
+    }),
+  ])
+# ---
