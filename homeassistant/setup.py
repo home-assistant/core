@@ -455,7 +455,7 @@ async def _async_setup_component(  # noqa: C901
     if domain in hass.data[DATA_SETUP]:
         hass.data[DATA_SETUP].pop(domain)
 
-    hass.bus.async_fire(EVENT_COMPONENT_LOADED, {ATTR_COMPONENT: domain})
+    hass.bus.async_fire(EVENT_COMPONENT_LOADED, EventComponentLoaded(component=domain))
 
     return True
 
@@ -615,14 +615,11 @@ def _async_when_setup(
             EVENT_COMPONENT_LOADED,
             _matched_event,
             event_filter=_async_is_component_filter,
-            run_immediately=True,
         )
     )
     if start_event:
         listeners.append(
-            hass.bus.async_listen(
-                EVENT_HOMEASSISTANT_START, _matched_event, run_immediately=True
-            )
+            hass.bus.async_listen(EVENT_HOMEASSISTANT_START, _matched_event)
         )
 
 

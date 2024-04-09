@@ -28,7 +28,13 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     UnitOfTime,
 )
-from homeassistant.core import Event, HomeAssistant, State, callback
+from homeassistant.core import (
+    Event,
+    EventStateChangedData,
+    HomeAssistant,
+    State,
+    callback,
+)
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -36,10 +42,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import (
-    EventStateChangedData,
-    async_track_state_change_event,
-)
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
@@ -463,11 +466,9 @@ class IntegrationSensor(RestoreSensor):
     @property
     def extra_state_attributes(self) -> dict[str, str] | None:
         """Return the state attributes of the sensor."""
-        state_attr = {
+        return {
             ATTR_SOURCE_ID: self._source_entity,
         }
-
-        return state_attr
 
     @property
     def extra_restore_state_data(self) -> IntegrationSensorExtraStoredData:

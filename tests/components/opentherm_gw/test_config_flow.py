@@ -35,7 +35,7 @@ async def test_form_user(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     with (
@@ -60,7 +60,7 @@ async def test_form_user(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "create_entry"
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Test Entry 1"
     assert result2["data"] == {
         CONF_NAME: "Test Entry 1",
@@ -99,7 +99,7 @@ async def test_form_import(hass: HomeAssistant) -> None:
             data={CONF_ID: "legacy_gateway", CONF_DEVICE: "/dev/ttyUSB1"},
         )
 
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "legacy_gateway"
     assert result["data"] == {
         CONF_NAME: "legacy_gateway",
@@ -150,10 +150,10 @@ async def test_form_duplicate_entries(hass: HomeAssistant) -> None:
         result3 = await hass.config_entries.flow.async_configure(
             flow3["flow_id"], {CONF_NAME: "Test Entry 2", CONF_DEVICE: "/dev/ttyUSB0"}
         )
-    assert result1["type"] == "create_entry"
-    assert result2["type"] == "form"
+    assert result1["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "id_exists"}
-    assert result3["type"] == "form"
+    assert result3["type"] is FlowResultType.FORM
     assert result3["errors"] == {"base": "already_configured"}
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -178,7 +178,7 @@ async def test_form_connection_timeout(hass: HomeAssistant) -> None:
             {CONF_NAME: "Test Entry 1", CONF_DEVICE: "socket://192.0.2.254:1234"},
         )
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "timeout_connect"}
     assert len(mock_connect.mock_calls) == 1
 
@@ -199,7 +199,7 @@ async def test_form_connection_error(hass: HomeAssistant) -> None:
             result["flow_id"], {CONF_NAME: "Test Entry 1", CONF_DEVICE: "/dev/ttyUSB0"}
         )
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
     assert len(mock_connect.mock_calls) == 1
 

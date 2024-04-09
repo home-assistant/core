@@ -18,6 +18,7 @@ from aioesphomeapi import (
     HomeassistantServiceCall,
     ReconnectLogic,
     UserService,
+    VoiceAssistantFeature,
 )
 import pytest
 from zeroconf import Zeroconf
@@ -354,10 +355,16 @@ async def mock_voice_assistant_entry(
 ):
     """Set up an ESPHome entry with voice assistant."""
 
-    async def _mock_voice_assistant_entry(version: int) -> MockConfigEntry:
+    async def _mock_voice_assistant_entry(
+        voice_assistant_feature_flags: VoiceAssistantFeature,
+    ) -> MockConfigEntry:
         return (
             await _mock_generic_device_entry(
-                hass, mock_client, {"voice_assistant_version": version}, ([], []), []
+                hass,
+                mock_client,
+                {"voice_assistant_feature_flags": voice_assistant_feature_flags},
+                ([], []),
+                [],
             )
         ).entry
 
@@ -367,13 +374,28 @@ async def mock_voice_assistant_entry(
 @pytest.fixture
 async def mock_voice_assistant_v1_entry(mock_voice_assistant_entry) -> MockConfigEntry:
     """Set up an ESPHome entry with voice assistant."""
-    return await mock_voice_assistant_entry(version=1)
+    return await mock_voice_assistant_entry(
+        voice_assistant_feature_flags=VoiceAssistantFeature.VOICE_ASSISTANT
+    )
 
 
 @pytest.fixture
 async def mock_voice_assistant_v2_entry(mock_voice_assistant_entry) -> MockConfigEntry:
     """Set up an ESPHome entry with voice assistant."""
-    return await mock_voice_assistant_entry(version=2)
+    return await mock_voice_assistant_entry(
+        voice_assistant_feature_flags=VoiceAssistantFeature.VOICE_ASSISTANT
+        | VoiceAssistantFeature.SPEAKER
+    )
+
+
+@pytest.fixture
+async def mock_voice_assistant_api_entry(mock_voice_assistant_entry) -> MockConfigEntry:
+    """Set up an ESPHome entry with voice assistant."""
+    return await mock_voice_assistant_entry(
+        voice_assistant_feature_flags=VoiceAssistantFeature.VOICE_ASSISTANT
+        | VoiceAssistantFeature.SPEAKER
+        | VoiceAssistantFeature.API_AUDIO
+    )
 
 
 @pytest.fixture

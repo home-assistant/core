@@ -7,17 +7,34 @@ import dataclasses
 from dataclasses import dataclass, field
 from typing import Literal, TypedDict, cast
 
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.util.event_type import EventType
 from homeassistant.util.ulid import ulid_now
 
 from .registry import BaseRegistry
 from .storage import Store
-from .typing import UNDEFINED, EventType, UndefinedType
+from .typing import UNDEFINED, UndefinedType
 
 DATA_REGISTRY = "category_registry"
-EVENT_CATEGORY_REGISTRY_UPDATED = "category_registry_updated"
+EVENT_CATEGORY_REGISTRY_UPDATED: EventType[EventCategoryRegistryUpdatedData] = (
+    EventType("category_registry_updated")
+)
 STORAGE_KEY = "core.category_registry"
 STORAGE_VERSION_MAJOR = 1
+
+
+class _CategoryStoreData(TypedDict):
+    """Data type for individual category. Used in CategoryRegistryStoreData."""
+
+    category_id: str
+    icon: str | None
+    name: str
+
+
+class CategoryRegistryStoreData(TypedDict):
+    """Store data type for CategoryRegistry."""
+
+    categories: dict[str, list[_CategoryStoreData]]
 
 
 class EventCategoryRegistryUpdatedData(TypedDict):
@@ -28,7 +45,7 @@ class EventCategoryRegistryUpdatedData(TypedDict):
     category_id: str
 
 
-EventCategoryRegistryUpdated = EventType[EventCategoryRegistryUpdatedData]
+EventCategoryRegistryUpdated = Event[EventCategoryRegistryUpdatedData]
 
 
 @dataclass(slots=True, kw_only=True, frozen=True)
@@ -40,14 +57,14 @@ class CategoryEntry:
     name: str
 
 
-class CategoryRegistry(BaseRegistry):
+class CategoryRegistry(BaseRegistry[CategoryRegistryStoreData]):
     """Class to hold a registry of categories by scope."""
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the category registry."""
         self.hass = hass
         self.categories: dict[str, dict[str, CategoryEntry]] = {}
-        self._store: Store[dict[str, dict[str, list[dict[str, str]]]]] = Store(
+        self._store = Store(
             hass,
             STORAGE_VERSION_MAJOR,
             STORAGE_KEY,
@@ -167,7 +184,7 @@ class CategoryRegistry(BaseRegistry):
         self.categories = category_entries
 
     @callback
-    def _data_to_save(self) -> dict[str, dict[str, list[dict[str, str | None]]]]:
+    def _data_to_save(self) -> CategoryRegistryStoreData:
         """Return data of category registry to store in a file."""
         return {
             "categories": {

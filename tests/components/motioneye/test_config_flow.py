@@ -35,7 +35,7 @@ async def test_user_success(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert not result["errors"]
 
     mock_client = create_mock_motioneye_client()
@@ -62,7 +62,7 @@ async def test_user_success(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == f"{TEST_URL}"
     assert result["data"] == {
         CONF_URL: TEST_URL,
@@ -160,7 +160,7 @@ async def test_user_invalid_auth(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_auth"}
     assert mock_client.async_client_close.called
 
@@ -189,7 +189,7 @@ async def test_user_invalid_url(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_url"}
 
 
@@ -220,7 +220,7 @@ async def test_user_cannot_connect(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
     assert mock_client.async_client_close.called
 
@@ -250,7 +250,7 @@ async def test_user_request_error(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "unknown"}
     assert mock_client.async_client_close.called
 
@@ -272,7 +272,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
         },
         data=config_entry.data,
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert not result["errors"]
 
     mock_client = create_mock_motioneye_client()
@@ -329,7 +329,7 @@ async def test_duplicate(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert not result["errors"]
     mock_client = create_mock_motioneye_client()
 

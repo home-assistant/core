@@ -146,5 +146,5 @@ async def test_already_configured(hass: HomeAssistant, mock_hub_discover) -> Non
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_devices_found"

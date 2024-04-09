@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from datetime import timedelta
 from enum import StrEnum
-from functools import lru_cache
+from functools import cached_property, lru_cache
 import logging
-from typing import TYPE_CHECKING, Any, Final, final
+from typing import Any, Final, final
 
 from awesomeversion import AwesomeVersion, AwesomeVersionCompareException
 import voluptuous as vol
@@ -42,11 +42,6 @@ from .const import (
     SERVICE_SKIP,
     UpdateEntityFeature,
 )
-
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
 
 SCAN_INTERVAL = timedelta(minutes=15)
 

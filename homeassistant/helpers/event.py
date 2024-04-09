@@ -11,15 +11,7 @@ import functools as ft
 import logging
 from random import randint
 import time
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Concatenate,
-    Generic,
-    ParamSpec,
-    TypedDict,
-    TypeVar,
-)
+from typing import TYPE_CHECKING, Any, Concatenate, Generic, ParamSpec, TypeVar
 
 import attr
 
@@ -33,6 +25,8 @@ from homeassistant.const import (
 from homeassistant.core import (
     CALLBACK_TYPE,
     Event,
+    # Explicit reexport of 'EventStateChangedData' for backwards compatibility
+    EventStateChangedData as EventStateChangedData,  # noqa: PLC0414
     HassJob,
     HassJobType,
     HomeAssistant,
@@ -44,6 +38,7 @@ from homeassistant.exceptions import TemplateError
 from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import run_callback_threadsafe
+from homeassistant.util.event_type import EventType
 
 from .device_registry import (
     EVENT_DEVICE_REGISTRY_UPDATED,
@@ -96,7 +91,7 @@ class _KeyedEventTracker(Generic[_TypedDictT]):
 
     listeners_key: str
     callbacks_key: str
-    event_type: str
+    event_type: EventType[_TypedDictT] | str
     dispatcher_callable: Callable[
         [
             HomeAssistant,
@@ -113,7 +108,6 @@ class _KeyedEventTracker(Generic[_TypedDictT]):
         ],
         bool,
     ]
-    run_immediately: bool
 
 
 @dataclass(slots=True)
@@ -161,14 +155,6 @@ class TrackTemplateResult:
     template: Template
     last_result: Any
     result: Any
-
-
-class EventStateChangedData(TypedDict):
-    """EventStateChanged data."""
-
-    entity_id: str
-    old_state: State | None
-    new_state: State | None
 
 
 def threaded_listener_factory(
@@ -287,7 +273,9 @@ def async_track_state_change(
         return async_track_state_change_event(hass, entity_ids, state_change_listener)
 
     return hass.bus.async_listen(
-        EVENT_STATE_CHANGED, state_change_dispatcher, event_filter=state_change_filter
+        EVENT_STATE_CHANGED,
+        state_change_dispatcher,
+        event_filter=state_change_filter,
     )
 
 
@@ -353,7 +341,6 @@ _KEYED_TRACK_STATE_CHANGE = _KeyedEventTracker(
     event_type=EVENT_STATE_CHANGED,
     dispatcher_callable=_async_dispatch_entity_id_event,
     filter_callable=_async_state_change_filter,
-    run_immediately=False,
 )
 
 
@@ -414,9 +401,6 @@ def _async_track_event(
     if not keys:
         return _remove_empty_listener
 
-    if isinstance(keys, str):
-        keys = [keys]
-
     hass_data = hass.data
     callbacks_key = tracker.callbacks_key
 
@@ -431,16 +415,27 @@ def _async_track_event(
             tracker.event_type,
             ft.partial(tracker.dispatcher_callable, hass, callbacks),
             event_filter=ft.partial(tracker.filter_callable, hass, callbacks),
-            run_immediately=tracker.run_immediately,
         )
 
     job = HassJob(action, f"track {tracker.event_type} event {keys}", job_type=job_type)
 
-    for key in keys:
-        if callback_list := callbacks.get(key):
+    if isinstance(keys, str):
+        # Almost all calls to this function use a single key
+        # so we optimize for that case. We don't use setdefault
+        # here because this function gets called ~20000 times
+        # during startup, and we want to avoid the overhead of
+        # creating empty lists and throwing them away.
+        if callback_list := callbacks.get(keys):
             callback_list.append(job)
         else:
-            callbacks[key] = [job]
+            callbacks[keys] = [job]
+        keys = [keys]
+    else:
+        for key in keys:
+            if callback_list := callbacks.get(key):
+                callback_list.append(job)
+            else:
+                callbacks[key] = [job]
 
     return ft.partial(_remove_listener, hass, listeners_key, keys, job, callbacks)
 
@@ -485,7 +480,6 @@ _KEYED_TRACK_ENTITY_REGISTRY_UPDATED = _KeyedEventTracker(
     event_type=EVENT_ENTITY_REGISTRY_UPDATED,
     dispatcher_callable=_async_dispatch_old_entity_id_or_entity_id_event,
     filter_callable=_async_entity_registry_updated_filter,
-    run_immediately=True,
 )
 
 
@@ -544,7 +538,6 @@ _KEYED_TRACK_DEVICE_REGISTRY_UPDATED = _KeyedEventTracker(
     event_type=EVENT_DEVICE_REGISTRY_UPDATED,
     dispatcher_callable=_async_dispatch_device_id_event,
     filter_callable=_async_device_registry_updated_filter,
-    run_immediately=True,
 )
 
 
@@ -613,7 +606,6 @@ _KEYED_TRACK_STATE_ADDED_DOMAIN = _KeyedEventTracker(
     event_type=EVENT_STATE_CHANGED,
     dispatcher_callable=_async_dispatch_domain_event,
     filter_callable=_async_domain_added_filter,
-    run_immediately=False,
 )
 
 
@@ -649,7 +641,6 @@ _KEYED_TRACK_STATE_REMOVED_DOMAIN = _KeyedEventTracker(
     event_type=EVENT_STATE_CHANGED,
     dispatcher_callable=_async_dispatch_domain_event,
     filter_callable=_async_domain_removed_filter,
-    run_immediately=False,
 )
 
 

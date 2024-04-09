@@ -72,7 +72,7 @@ async def siren(hass, zigpy_device_mock, zha_device_joined_restored):
 async def light(hass, zigpy_device_mock):
     """Siren fixture."""
 
-    zigpy_device = zigpy_device_mock(
+    return zigpy_device_mock(
         {
             1: {
                 SIG_EP_PROFILE: zha.PROFILE_ID,
@@ -87,8 +87,6 @@ async def light(hass, zigpy_device_mock):
         },
         node_descriptor=b"\x02@\x84_\x11\x7fd\x00\x00,d\x00\x00",
     )
-
-    return zigpy_device
 
 
 @pytest.fixture

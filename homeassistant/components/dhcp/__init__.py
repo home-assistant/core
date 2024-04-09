@@ -37,7 +37,13 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     STATE_HOME,
 )
-from homeassistant.core import Event, HomeAssistant, State, callback
+from homeassistant.core import (
+    Event,
+    EventStateChangedData,
+    HomeAssistant,
+    State,
+    callback,
+)
 from homeassistant.data_entry_flow import BaseServiceInfo
 from homeassistant.helpers import config_validation as cv, discovery_flow
 from homeassistant.helpers.device_registry import (
@@ -48,7 +54,6 @@ from homeassistant.helpers.device_registry import (
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import (
-    EventStateChangedData,
     async_track_state_added_domain,
     async_track_time_interval,
 )
@@ -157,13 +162,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             for watcher in watchers:
                 watcher.async_stop()
 
-        hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STOP, _async_stop, run_immediately=True
-        )
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_stop)
 
-    hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STARTED, _async_initialize, run_immediately=True
-    )
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _async_initialize)
     return True
 
 

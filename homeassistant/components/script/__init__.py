@@ -5,8 +5,9 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 import asyncio
 from dataclasses import dataclass
+from functools import cached_property
 import logging
-from typing import TYPE_CHECKING, Any, cast
+from typing import Any, cast
 
 import voluptuous as vol
 
@@ -73,12 +74,6 @@ from .const import (
 )
 from .helpers import async_get_blueprints
 from .trace import trace_script
-
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
-
 
 SCRIPT_SERVICE_SCHEMA = vol.Schema(dict)
 SCRIPT_TURN_ONOFF_SCHEMA = make_entity_service_schema(
@@ -464,14 +459,9 @@ class UnavailableScriptEntity(BaseScriptEntity):
         raw_config: ConfigType | None,
     ) -> None:
         """Initialize a script entity."""
-        self._name = raw_config.get(CONF_ALIAS, key) if raw_config else key
+        self._attr_name = raw_config.get(CONF_ALIAS, key) if raw_config else key
         self._attr_unique_id = key
         self.raw_config = raw_config
-
-    @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        return self._name
 
     @cached_property
     def referenced_labels(self) -> set[str]:
@@ -508,6 +498,7 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
     """Representation of a script entity."""
 
     icon = None
+    _attr_should_poll = False
 
     def __init__(self, hass, key, cfg, raw_config, blueprint_inputs):
         """Initialize the script."""
@@ -536,16 +527,7 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
         self.raw_config = raw_config
         self._trace_config = cfg[CONF_TRACE]
         self._blueprint_inputs = blueprint_inputs
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
-    def name(self):
-        """Return the name of the entity."""
-        return self.script.name
+        self._attr_name = self.script.name
 
     @property
     def extra_state_attributes(self):

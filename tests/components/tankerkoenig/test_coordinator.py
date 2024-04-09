@@ -34,7 +34,7 @@ async def test_rate_limit(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test detection of API rate limit."""
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
     state = hass.states.get("binary_sensor.station_somewhere_street_1_status")
     assert state
     assert state.state == "on"
