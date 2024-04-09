@@ -489,7 +489,7 @@ class HomeAssistantSkyConnectConfigFlow(
         config_entry: ConfigEntry,
     ) -> OptionsFlow:
         """Return the options flow."""
-        firmware_type = ApplicationType(config_entry.data["firmware"].upper())
+        firmware_type = ApplicationType(config_entry.data["firmware"])
 
         if firmware_type == ApplicationType.CPC:
             return HomeAssistantSkyConnectMultiPanOptionsFlowHandler(config_entry)
@@ -560,7 +560,7 @@ class HomeAssistantSkyConnectConfigFlow(
                 "manufacturer": self._usb_info.manufacturer,
                 "description": self._usb_info.description,
                 "device": self._usb_info.device,
-                "firmware": self._current_firmware_type.name.lower(),
+                "firmware": self._current_firmware_type.lower(),
             },
         )
 
@@ -626,7 +626,7 @@ class HomeAssistantSkyConnectOptionsFlowHandler(
             entry=self.config_entry,
             data={
                 **self.config_entry.data,
-                "firmware": self._current_firmware_type.name.lower(),
+                "firmware": self._current_firmware_type,
             },
             options=self.config_entry.options,
         )
