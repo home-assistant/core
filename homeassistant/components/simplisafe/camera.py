@@ -55,6 +55,15 @@ SERVICES = (
 )
 
 
+def _write_image(to_file: str, image_data: bytes | None) -> None:
+    """Write image content to a file."""
+    if image_data is None:
+        return
+    os.makedirs(os.path.dirname(to_file), exist_ok=True)
+    with open(to_file, "wb") as img_file:
+        img_file.write(image_data)
+
+
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
@@ -68,11 +77,23 @@ async def async_setup_entry(
             LOGGER.info("Skipping camera setup for V2 system: %s", system.system_id)
             continue
 
-        cameras = [
-            SimplisafeOutdoorCamera(hass, simplisafe, system, camera)
-            for camera in system.cameras.values()
-            if camera.camera_type == CameraTypes.OUTDOOR_CAMERA
-        ]
+        for camera in system.cameras.values():
+            if camera.camera_type == CameraTypes.OUTDOOR_CAMERA:
+                outdoor = SimplisafeOutdoorCamera(hass, simplisafe, system, camera)
+                for service, method, schema in (
+                    (
+                        SERVICE_OC_IMAGE,
+                        outdoor.save_image_handler,
+                        SERVICE_OC_IMAGE_SCHEMA,
+                    ),
+                    (
+                        SERVICE_OC_CLIP,
+                        outdoor.save_clip_handler,
+                        SERVICE_OC_CLIP_SCHEMA,
+                    ),
+                ):
+                    hass.services.async_register(DOMAIN, service, method, schema=schema)
+                cameras.append(outdoor)
 
     async_add_entities(cameras)
 
@@ -105,7 +126,6 @@ class SimplisafeOutdoorCamera(SimpliSafeEntity, Camera):
         Camera.__init__(self)
 
         self._hass = hass
-        self._register_services()
 
     @property
     def name(self) -> str | None:
@@ -133,75 +153,52 @@ class SimplisafeOutdoorCamera(SimpliSafeEntity, Camera):
         )
         return self._attr_cached_image
 
-    def _register_services(self) -> None:
-        """Register the Outdoor Camera hass service calls."""
+    async def save_image_handler(self, call: ServiceCall) -> None:
+        """Handle the service call to save a motion image."""
+        if self._attr_image_url is None:
+            return
 
-        def _write_image(to_file: str, image_data: bytes | None) -> None:
-            """Executor helper to write image."""
-            if image_data is None:
-                return
-            os.makedirs(os.path.dirname(to_file), exist_ok=True)
-            with open(to_file, "wb") as img_file:
-                img_file.write(image_data)
+        width = call.data.get(ATTR_WIDTH)
+        filename: Template = call.data.get(ATTR_FILENAME)  # type: ignore[assignment]
+        filename.hass = self._hass
+        snapshot_file: str = filename.async_render(variables={ATTR_ENTITY_ID: self})
 
-        async def save_image_handler(call: ServiceCall) -> None:
-            if self._attr_image_url is None:
-                return
+        try:
+            snapshot = await self._simplisafe.async_media_request(
+                self._attr_image_url.replace("{&width}", "&width=" + str(width))
+            )
+        except SimplipyError as err:
+            raise HomeAssistantError(
+                f'Error fetching motion media "{self._system.system_id}": {err}'
+            ) from err
 
-            width = call.data.get(ATTR_WIDTH)
-            filename: Template = call.data.get(ATTR_FILENAME)  # type: ignore[assignment]
-            filename.hass = self._hass
-            snapshot_file: str = filename.async_render(variables={ATTR_ENTITY_ID: self})
+        try:
+            await self._hass.async_add_executor_job(
+                _write_image, snapshot_file, snapshot
+            )
+        except OSError as err:
+            LOGGER.error("Can't write image to file: %s", err)
 
-            try:
-                snapshot = await self._simplisafe.async_media_request(
-                    self._attr_image_url.replace("{&width}", "&width=" + str(width))
-                )
-            except SimplipyError as err:
-                raise HomeAssistantError(
-                    f'Error fetching motion media "{self._system.system_id}": {err}'
-                ) from err
+    async def save_clip_handler(self, call: ServiceCall) -> None:
+        """Handle the service call to save a motion clip."""
+        if self._attr_clip_url is None:
+            return
 
-            try:
-                await self._hass.async_add_executor_job(
-                    _write_image, snapshot_file, snapshot
-                )
-            except OSError as err:
-                LOGGER.error("Can't write image to file: %s", err)
+        filename: Template = call.data.get(ATTR_FILENAME)  # type: ignore[assignment]
+        filename.hass = self._hass
+        clip_file: str = filename.async_render(variables={ATTR_ENTITY_ID: self})
 
-        async def save_clip_handler(call: ServiceCall) -> None:
-            if self._attr_clip_url is None:
-                return
+        try:
+            clip = await self._simplisafe.async_media_request(self._attr_clip_url)
+        except SimplipyError as err:
+            raise HomeAssistantError(
+                f'Error fetching motion media "{self._system.system_id}": {err}'
+            ) from err
 
-            filename: Template = call.data.get(ATTR_FILENAME)  # type: ignore[assignment]
-            filename.hass = self._hass
-            clip_file: str = filename.async_render(variables={ATTR_ENTITY_ID: self})
-
-            try:
-                clip = await self._simplisafe.async_media_request(self._attr_clip_url)
-            except SimplipyError as err:
-                raise HomeAssistantError(
-                    f'Error fetching motion media "{self._system.system_id}": {err}'
-                ) from err
-
-            try:
-                await self._hass.async_add_executor_job(_write_image, clip_file, clip)
-            except OSError as err:
-                LOGGER.error("Can't write image to file: %s", err)
-
-        self._hass.services.async_register(
-            DOMAIN,
-            SERVICE_OC_IMAGE,
-            save_image_handler,
-            schema=SERVICE_OC_IMAGE_SCHEMA,
-        )
-
-        self._hass.services.async_register(
-            DOMAIN,
-            SERVICE_OC_CLIP,
-            save_clip_handler,
-            schema=SERVICE_OC_CLIP_SCHEMA,
-        )
+        try:
+            await self._hass.async_add_executor_job(_write_image, clip_file, clip)
+        except OSError as err:
+            LOGGER.error("Can't write image to file: %s", err)
 
     @callback
     def async_update_from_websocket_event(self, event: WebsocketEvent) -> None:
