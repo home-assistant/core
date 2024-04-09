@@ -305,7 +305,7 @@ async def test_update_unique_id(
     )
     entry.add_to_hass(hass)
 
-    entity: er.RegistryEntry = entity_registry.async_get_or_create(
+    entity = entity_registry.async_get_or_create(
         domain=domain,
         platform=DOMAIN,
         unique_id=old_unique_id,
@@ -340,13 +340,13 @@ async def test_update_unique_id_existing(
     )
     entry.add_to_hass(hass)
 
-    entity: er.RegistryEntry = entity_registry.async_get_or_create(
+    entity = entity_registry.async_get_or_create(
         domain=CAMERA_DOMAIN,
         platform=DOMAIN,
         unique_id=old_unique_id,
         config_entry=entry,
     )
-    entity_existing: er.RegistryEntry = entity_registry.async_get_or_create(
+    entity_existing = entity_registry.async_get_or_create(
         domain=CAMERA_DOMAIN,
         platform=DOMAIN,
         unique_id=str(old_unique_id),
@@ -388,7 +388,7 @@ async def test_update_unique_id_no_update(
     )
     entry.add_to_hass(hass)
 
-    entity: er.RegistryEntry = entity_registry.async_get_or_create(
+    entity = entity_registry.async_get_or_create(
         domain=CAMERA_DOMAIN,
         platform=DOMAIN,
         unique_id="123456",
