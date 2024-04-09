@@ -205,7 +205,7 @@ def build_item_response(
 
     if not title:
         try:
-            title = payload["idstring"].split("/")[1]
+            title = urllib.parse.unquote(payload["idstring"].split("/")[1])
         except IndexError:
             title = LIBRARY_TITLES_MAPPING[payload["idstring"]]
 
@@ -496,6 +496,19 @@ def get_media(
 ) -> MusicServiceItem:
     """Fetch media/album."""
     search_type = MEDIA_TYPES_TO_SONOS.get(search_type, search_type)
+
+    if search_type == "playlists":
+        # Format is S:TITLE or S:ITEM_ID
+        splits = item_id.split(":")
+        title = splits[1] if len(splits) > 1 else None
+        return next(
+            (
+                p
+                for p in media_library.get_playlists()
+                if (item_id == p.item_id or title == p.title)
+            ),
+            None,
+        )
 
     if not item_id.startswith("A:ALBUM") and search_type == SONOS_ALBUM:
         item_id = "A:ALBUMARTIST/" + "/".join(item_id.split("/")[2:])

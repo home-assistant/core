@@ -7,9 +7,10 @@ import csv
 import dataclasses
 from datetime import timedelta
 from enum import IntFlag, StrEnum
+from functools import cached_property
 import logging
 import os
-from typing import TYPE_CHECKING, Any, Self, cast, final
+from typing import Any, Self, cast, final
 
 import voluptuous as vol
 
@@ -33,11 +34,6 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 import homeassistant.util.color as color_util
-
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
 
 DOMAIN = "light"
 SCAN_INTERVAL = timedelta(seconds=30)
@@ -961,8 +957,7 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     @property
     def _light_internal_rgbw_color(self) -> tuple[int, int, int, int] | None:
         """Return the rgbw color value [int, int, int, int]."""
-        rgbw_color = self.rgbw_color
-        return rgbw_color
+        return self.rgbw_color
 
     @cached_property
     def rgbww_color(self) -> tuple[int, int, int, int, int] | None:

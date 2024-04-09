@@ -13,13 +13,13 @@ from unittest.mock import DEFAULT, MagicMock
 
 import pytest
 
-from homeassistant import config_entries
 from homeassistant.components.sensor import (
     ATTR_OPTIONS,
     ATTR_STATE_CLASS,
     SensorDeviceClass,
     SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_FRIENDLY_NAME,
@@ -1325,7 +1325,7 @@ async def test_reconnect(hass: HomeAssistant, dsmr_connection_fixture) -> None:
 
     await hass.config_entries.async_unload(mock_entry.entry_id)
 
-    assert mock_entry.state == config_entries.ConfigEntryState.NOT_LOADED
+    assert mock_entry.state is ConfigEntryState.NOT_LOADED
 
 
 async def test_gas_meter_providing_energy_reading(

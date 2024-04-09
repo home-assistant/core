@@ -33,16 +33,20 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_CLOSE,
     EVENT_LOGGING_CHANGED,
 )
-from homeassistant.core import Event, HomeAssistant, ServiceCall, State, callback
+from homeassistant.core import (
+    Event,
+    EventStateChangedData,
+    HomeAssistant,
+    ServiceCall,
+    State,
+    callback,
+)
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.device_registry import format_mac
-from homeassistant.helpers.event import (
-    EventStateChangedData,
-    async_track_state_change_event,
-)
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.issue_registry import (
     IssueSeverity,
     async_create_issue,
@@ -546,15 +550,12 @@ class ESPHomeManager:
         # when the CLOSE event is fired so anything using a Bluetooth
         # proxy has a chance to shut down properly.
         entry_data.cleanup_callbacks.append(
-            hass.bus.async_listen(
-                EVENT_HOMEASSISTANT_CLOSE, self.on_stop, run_immediately=True
-            )
+            hass.bus.async_listen(EVENT_HOMEASSISTANT_CLOSE, self.on_stop)
         )
         entry_data.cleanup_callbacks.append(
             hass.bus.async_listen(
                 EVENT_LOGGING_CHANGED,
                 self._async_handle_logging_changed,
-                run_immediately=True,
             )
         )
 

@@ -105,7 +105,7 @@ async def test_image_entity(
         await hass.config_entries.async_setup(entry.entry_id)
 
     await hass.async_block_till_done()
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     # test image entity is generated as expected
     states = hass.states.async_all(IMAGE_DOMAIN)
@@ -155,7 +155,7 @@ async def test_image_update(
         await hass.config_entries.async_setup(entry.entry_id)
 
     await hass.async_block_till_done()
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     client = await hass_client()
     resp = await client.get("/api/image_proxy/image.mock_title_guestwifi")
@@ -164,7 +164,7 @@ async def test_image_update(
 
     fc_class_mock().override_services({**MOCK_FB_SERVICES, **GUEST_WIFI_CHANGED})
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=60))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     resp = await client.get("/api/image_proxy/image.mock_title_guestwifi")
     resp_body_new = await resp.read()
@@ -191,7 +191,7 @@ async def test_image_update_unavailable(
         await hass.config_entries.async_setup(entry.entry_id)
 
     await hass.async_block_till_done()
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     state = hass.states.get("image.mock_title_guestwifi")
     assert state

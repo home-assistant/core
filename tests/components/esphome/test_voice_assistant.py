@@ -47,7 +47,7 @@ def voice_assistant_udp_server(
             server.close()
 
         server = VoiceAssistantUDPServer(hass, entry_data, Mock(), handle_finished)
-        return server
+        return server  # noqa: RET504
 
     return _voice_assistant_udp_server
 
