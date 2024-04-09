@@ -1304,7 +1304,9 @@ def _get_oldest_sum_statistic(
         head_start_time is not None
         and oldest_5_min_stat is not None
         and (
-            # If we want stats older than the short term purge window, then don't lookup the oldest sum in the short term table, as it would be prioritized over older LongTermStats.
+            # If we want stats older than the short term purge window, don't lookup
+            # the oldest sum in the short term table, as it would be prioritized
+            # over older LongTermStats.
             (oldest_stat is None)
             or (oldest_5_min_stat < oldest_stat)
             or (oldest_5_min_stat <= head_start_time)
