@@ -76,7 +76,7 @@ async def async_setup_platform(
     if value_template is not None:
         value_template.hass = hass
     json_attributes: list[str] | None = sensor_config.get(CONF_JSON_ATTRIBUTES)
-    json_attributes_path: str | None = config.get(CONF_JSON_ATTRIBUTES_PATH)
+    json_attributes_path: str | None = sensor_config.get(CONF_JSON_ATTRIBUTES_PATH)
     scan_interval: timedelta = sensor_config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
     data = CommandSensorData(hass, command, command_timeout)
 
