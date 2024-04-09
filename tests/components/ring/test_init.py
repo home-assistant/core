@@ -283,10 +283,6 @@ async def test_issue_deprecated_service_ring_update(
             CAMERA_DOMAIN,
             654321,
         ),
-        (
-            CAMERA_DOMAIN,
-            "99999",
-        ),
     ],
 )
 async def test_update_unique_id(
@@ -322,9 +318,7 @@ async def test_update_unique_id(
     entity_migrated = entity_registry.async_get(entity.entity_id)
     assert entity_migrated
     assert entity_migrated.unique_id == str(old_unique_id)
-    assert (
-        (f"Fixing non string unique id {old_unique_id}") in caplog.text
-    ) == isinstance(old_unique_id, int)
+    assert (f"Fixing non string unique id {old_unique_id}") in caplog.text
 
 
 async def test_update_unique_id_existing(
@@ -369,10 +363,42 @@ async def test_update_unique_id_existing(
     assert entity_existing
     assert entity_not_migrated.unique_id == old_unique_id
     assert (
-        (
-            f"Cannot migrate to unique_id '{old_unique_id}', "
-            f"already exists for '{entity_existing.entity_id}', "
-            "You may have to delete unavailable ring entities"
-        )
-        in caplog.text
-    ) == isinstance(old_unique_id, int)
+        f"Cannot migrate to unique_id '{old_unique_id}', "
+        f"already exists for '{entity_existing.entity_id}', "
+        "You may have to delete unavailable ring entities"
+    ) in caplog.text
+
+
+async def test_update_unique_id_no_update(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+    requests_mock: requests_mock.Mocker,
+) -> None:
+    """Test unique_id update of integration."""
+    correct_unique_id = "123456"
+    entry = MockConfigEntry(
+        title="Ring",
+        domain=DOMAIN,
+        data={
+            CONF_USERNAME: "foo@bar.com",
+            "token": {"access_token": "mock-token"},
+        },
+        unique_id="foo@bar.com",
+    )
+    entry.add_to_hass(hass)
+
+    entity: er.RegistryEntry = entity_registry.async_get_or_create(
+        domain=CAMERA_DOMAIN,
+        platform=DOMAIN,
+        unique_id="123456",
+        config_entry=entry,
+    )
+    assert entity.unique_id == correct_unique_id
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_migrated = entity_registry.async_get(entity.entity_id)
+    assert entity_migrated
+    assert entity_migrated.unique_id == correct_unique_id
+    assert ("Fixing non string unique id") not in caplog.text
