@@ -3,7 +3,6 @@
 from unittest.mock import patch
 
 from freezegun import freeze_time
-from prayer_times_calculator_offline.exceptions import InvalidResponseError
 import pytest
 
 from homeassistant.components import islamic_prayer_times
@@ -42,25 +41,6 @@ async def test_successful_config_entry(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
         assert entry.state is ConfigEntryState.LOADED
-
-
-async def test_setup_failed(hass: HomeAssistant) -> None:
-    """Test Islamic Prayer Times failed due to an error."""
-
-    entry = MockConfigEntry(
-        domain=islamic_prayer_times.DOMAIN,
-        data={},
-    )
-    entry.add_to_hass(hass)
-
-    # test request error raising ConfigEntryNotReady
-    with patch(
-        "prayer_times_calculator_offline.PrayerTimesCalculator.fetch_prayer_times",
-        side_effect=InvalidResponseError(),
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-        assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_unload_entry(hass: HomeAssistant) -> None:
