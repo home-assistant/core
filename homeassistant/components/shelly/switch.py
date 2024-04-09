@@ -62,7 +62,7 @@ GAS_VALVE_SWITCH = BlockSwitchDescription(
 
 MOTION_SWITCH = BlockSwitchDescription(
     key="sensor|motionActive",
-    name="Motion",
+    name="Motion active",
     entity_registry_enabled_default=False,
 )
 
