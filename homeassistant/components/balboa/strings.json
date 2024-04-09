@@ -65,6 +65,11 @@
       "only_light": {
         "name": "Light"
       }
+    },
+    "switch": {
+      "temperature_range": {
+        "name": "Temperature high range"
+      }
     }
   }
 }
