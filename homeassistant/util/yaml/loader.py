@@ -8,7 +8,7 @@ from io import StringIO, TextIOWrapper
 import logging
 import os
 from pathlib import Path
-from typing import Any, TextIO, TypeVar, overload
+from typing import Any, TextIO, overload
 
 import yaml
 
@@ -33,7 +33,6 @@ from .objects import Input, NodeDictClass, NodeListClass, NodeStrClass
 # mypy: allow-untyped-calls, no-warn-return-any
 
 JSON_TYPE = list | dict | str
-_DictT = TypeVar("_DictT", bound=dict)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -276,7 +275,7 @@ def _parse_yaml_python(
 
 
 def _parse_yaml(
-    loader: type[FastSafeLoader] | type[PythonSafeLoader],
+    loader: type[FastSafeLoader | PythonSafeLoader],
     content: str | TextIO,
     secrets: Secrets | None = None,
 ) -> JSON_TYPE:
@@ -286,37 +285,37 @@ def _parse_yaml(
 
 @overload
 def _add_reference(
-    obj: list | NodeListClass,
-    loader: LoaderType,
-    node: yaml.nodes.Node,
+    obj: list | NodeListClass, loader: LoaderType, node: yaml.nodes.Node
 ) -> NodeListClass: ...
 
 
 @overload
 def _add_reference(
-    obj: str | NodeStrClass,
-    loader: LoaderType,
-    node: yaml.nodes.Node,
+    obj: str | NodeStrClass, loader: LoaderType, node: yaml.nodes.Node
 ) -> NodeStrClass: ...
 
 
 @overload
 def _add_reference(
-    obj: _DictT, loader: LoaderType, node: yaml.nodes.Node
-) -> _DictT: ...
+    obj: dict | NodeDictClass, loader: LoaderType, node: yaml.nodes.Node
+) -> NodeDictClass: ...
 
 
-def _add_reference(  # type: ignore[no-untyped-def]
-    obj, loader: LoaderType, node: yaml.nodes.Node
-):
+def _add_reference(
+    obj: dict | list | str | NodeDictClass | NodeListClass | NodeStrClass,
+    loader: LoaderType,
+    node: yaml.nodes.Node,
+) -> NodeDictClass | NodeListClass | NodeStrClass:
     """Add file reference information to an object."""
     if isinstance(obj, list):
         obj = NodeListClass(obj)
-    if isinstance(obj, str):
+    elif isinstance(obj, str):
         obj = NodeStrClass(obj)
+    elif isinstance(obj, dict):
+        obj = NodeDictClass(obj)
     try:  # suppress is much slower
-        setattr(obj, "__config_file__", loader.get_name)
-        setattr(obj, "__line__", node.start_mark.line + 1)
+        obj.__config_file__ = loader.get_name
+        obj.__line__ = node.start_mark.line + 1
     except AttributeError:
         pass
     return obj
