@@ -4,7 +4,7 @@ from typing import Literal
 
 import openai
 
-from homeassistant.components import conversation
+from homeassistant.components import assist_pipeline, conversation
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import MATCH_ALL
 from homeassistant.core import HomeAssistant
@@ -36,7 +36,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up conversation entities."""
     agent = OpenAIConversationEntity(hass, config_entry)
-    conversation.async_set_agent(hass, config_entry, agent)
     async_add_entities([agent])
 
 
@@ -51,11 +50,25 @@ class OpenAIConversationEntity(
         self.entry = entry
         self.history: dict[str, list[dict]] = {}
         self._attr_name = entry.title
+        self._attr_unique_id = entry.entry_id
 
     @property
     def supported_languages(self) -> list[str] | Literal["*"]:
         """Return a list of supported languages."""
         return MATCH_ALL
+
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to Home Assistant."""
+        await super().async_added_to_hass()
+        assist_pipeline.async_migrate_engine(
+            self.hass, "conversation", self.entry.entry_id, self.entity_id
+        )
+        conversation.async_set_agent(self.hass, self.entry, self)
+
+    async def async_will_remove_from_hass(self) -> None:
+        """When entity will be removed from Home Assistant."""
+        conversation.async_unset_agent(self.hass, self.entry)
+        await super().async_will_remove_from_hass()
 
     async def async_process(
         self, user_input: conversation.ConversationInput
