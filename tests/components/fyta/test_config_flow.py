@@ -21,7 +21,6 @@ from tests.common import MockConfigEntry
 USERNAME = "fyta_user"
 PASSWORD = "fyta_pass"
 ACCESS_TOKEN = "123xyz"
-EXPIRATION = datetime.now().isoformat()
 
 
 async def test_user_flow(
