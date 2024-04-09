@@ -444,6 +444,9 @@ asterisk_mbox==0.5.0
 # homeassistant.components.yeelight
 async-upnp-client==0.38.3
 
+# homeassistant.components.arve
+asyncarve==0.0.9
+
 # homeassistant.components.sleepiq
 asyncsleepiq==1.5.2
 
@@ -735,7 +738,7 @@ freebox-api==1.1.0
 fritzconnection[qr]==1.13.2
 
 # homeassistant.components.fyta
-fyta_cli==0.3.3
+fyta_cli==0.3.5
 
 # homeassistant.components.google_translate
 gTTS==2.2.4
@@ -852,7 +855,7 @@ habitipy==0.2.0
 habluetooth==2.4.2
 
 # homeassistant.components.cloud
-hass-nabucasa==0.80.0
+hass-nabucasa==0.78.0
 
 # homeassistant.components.conversation
 hassil==1.6.1
@@ -1414,7 +1417,7 @@ pyevilgenius==2.0.0
 pyezviz==0.2.1.2
 
 # homeassistant.components.fibaro
-pyfibaro==0.7.6
+pyfibaro==0.7.7
 
 # homeassistant.components.fido
 pyfido==2.1.2
@@ -1590,7 +1593,7 @@ pyotgw==2.1.3
 pyotp==2.8.0
 
 # homeassistant.components.overkiz
-pyoverkiz==1.13.9
+pyoverkiz==1.13.10
 
 # homeassistant.components.openweathermap
 pyowm==3.2.0
@@ -1894,7 +1897,7 @@ reolink-aio==0.8.9
 rflink==0.0.66
 
 # homeassistant.components.ring
-ring-doorbell[listen]==0.8.10
+ring-doorbell[listen]==0.8.11
 
 # homeassistant.components.roku
 rokuecp==0.19.2
@@ -2161,7 +2164,7 @@ vallox-websocket-api==5.1.1
 vehicle==2.2.1
 
 # homeassistant.components.velbus
-velbus-aio==2024.4.0
+velbus-aio==2024.4.1
 
 # homeassistant.components.venstar
 venstarcolortouch==0.19
@@ -2255,7 +2258,7 @@ yalexs==3.0.1
 yeelight==0.7.14
 
 # homeassistant.components.yolink
-yolink-api==0.4.1
+yolink-api==0.4.2
 
 # homeassistant.components.youless
 youless-api==1.0.1
