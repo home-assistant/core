@@ -10,6 +10,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from decimal import Decimal
+from functools import partial
 
 from aiounifi.interfaces.api_handlers import ItemEvent
 from aiounifi.interfaces.clients import Clients
@@ -32,7 +33,7 @@ from homeassistant.components.sensor import (
     UnitOfTemperature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EntityCategory, UnitOfDataRate, UnitOfPower
+from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfDataRate, UnitOfPower
 from homeassistant.core import Event as core_Event, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -138,6 +139,16 @@ def async_device_outlet_power_supported_fn(hub: UnifiHub, obj_id: str) -> bool:
 def async_device_outlet_supported_fn(hub: UnifiHub, obj_id: str) -> bool:
     """Determine if a device supports reading overall power metrics."""
     return hub.api.devices[obj_id].outlet_ac_power_budget is not None
+
+
+def device_system_stats_supported_fn(
+    stat_index: int, hub: UnifiHub, obj_id: str
+) -> bool:
+    """Determine if a device supports reading item at index in system stats."""
+    return (
+        "system-stats" in hub.api.devices[obj_id].raw
+        and hub.api.devices[obj_id].system_stats[stat_index] != ""
+    )
 
 
 @callback
@@ -338,6 +349,47 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         unique_id_fn=lambda hub, obj_id: f"device_state-{obj_id}",
         value_fn=async_device_state_value_fn,
         options=list(DEVICE_STATES.values()),
+    ),
+    UnifiSensorEntityDescription[Wlans, Wlan](
+        key="WLAN password",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        api_handler_fn=lambda api: api.wlans,
+        available_fn=async_wlan_available_fn,
+        device_info_fn=async_wlan_device_info_fn,
+        name_fn=lambda wlan: "Password",
+        object_fn=lambda api, obj_id: api.wlans[obj_id],
+        supported_fn=lambda hub, obj_id: hub.api.wlans[obj_id].x_passphrase is not None,
+        unique_id_fn=lambda hub, obj_id: f"password-{obj_id}",
+        value_fn=lambda hub, obj: obj.x_passphrase,
+    ),
+    UnifiSensorEntityDescription[Devices, Device](
+        key="Device CPU utilization",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        api_handler_fn=lambda api: api.devices,
+        available_fn=async_device_available_fn,
+        device_info_fn=async_device_device_info_fn,
+        name_fn=lambda device: "CPU utilization",
+        object_fn=lambda api, obj_id: api.devices[obj_id],
+        supported_fn=partial(device_system_stats_supported_fn, 0),
+        unique_id_fn=lambda hub, obj_id: f"cpu_utilization-{obj_id}",
+        value_fn=lambda hub, device: device.system_stats[0],
+    ),
+    UnifiSensorEntityDescription[Devices, Device](
+        key="Device memory utilization",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        api_handler_fn=lambda api: api.devices,
+        available_fn=async_device_available_fn,
+        device_info_fn=async_device_device_info_fn,
+        name_fn=lambda device: "Memory utilization",
+        object_fn=lambda api, obj_id: api.devices[obj_id],
+        supported_fn=partial(device_system_stats_supported_fn, 1),
+        unique_id_fn=lambda hub, obj_id: f"memory_utilization-{obj_id}",
+        value_fn=lambda hub, device: device.system_stats[1],
     ),
 )
 

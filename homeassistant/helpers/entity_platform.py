@@ -362,10 +362,6 @@ class EntityPlatform:
                 pending = self._tasks.copy()
                 self._tasks.clear()
                 await asyncio.gather(*pending)
-
-            hass.config.components.add(full_name)
-            self._setup_complete = True
-            return True
         except PlatformNotReady as ex:
             tries += 1
             wait_time = min(tries, 6) * PLATFORM_NOT_READY_BASE_WAIT_TIME
@@ -417,6 +413,10 @@ class EntityPlatform:
                 self.domain,
             )
             return False
+        else:
+            hass.config.components.add(full_name)
+            self._setup_complete = True
+            return True
         finally:
             warn_task.cancel()
 
@@ -631,7 +631,16 @@ class EntityPlatform:
         if (
             (self.config_entry and self.config_entry.pref_disable_polling)
             or self._async_unsub_polling is not None
-            or not any(entity.should_poll for entity in entities)
+            or not any(
+                # Entity may have failed to add or called `add_to_platform_abort`
+                # so we check if the entity is in self.entities before
+                # checking `entity.should_poll` since `should_poll` may need to
+                # check `self.hass` which will be `None` if the entity did not add
+                entity.entity_id
+                and entity.entity_id in self.entities
+                and entity.should_poll
+                for entity in entities
+            )
         ):
             return
 

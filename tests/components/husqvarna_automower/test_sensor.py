@@ -1,6 +1,5 @@
 """Tests for sensor platform."""
 
-from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
 from aioautomower.model import MowerModes
@@ -10,6 +9,7 @@ import pytest
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.husqvarna_automower.const import DOMAIN
+from homeassistant.components.husqvarna_automower.coordinator import SCAN_INTERVAL
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -41,7 +41,7 @@ async def test_sensor_unknown_states(
 
     values[TEST_MOWER_ID].mower.mode = MowerModes.UNKNOWN
     mock_automower_client.get_status.return_value = values
-    freezer.tick(timedelta(minutes=5))
+    freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     state = hass.states.get("sensor.test_mower_1_mode")
@@ -92,6 +92,31 @@ async def test_statistics_not_available(
     await setup_integration(hass, mock_config_entry)
     state = hass.states.get(f"sensor.test_mower_1_{sensor_to_test}")
     assert state is None
+
+
+async def test_error_sensor(
+    hass: HomeAssistant,
+    mock_automower_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test error sensor."""
+    values = mower_list_to_dictionary_dataclass(
+        load_json_value_fixture("mower.json", DOMAIN)
+    )
+    await setup_integration(hass, mock_config_entry)
+
+    for state, expected_state in [
+        (None, "no_error"),
+        ("can_error", "can_error"),
+    ]:
+        values[TEST_MOWER_ID].mower.error_key = state
+        mock_automower_client.get_status.return_value = values
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        state = hass.states.get("sensor.test_mower_1_error")
+        assert state.state == expected_state
 
 
 async def test_sensor(

@@ -6,6 +6,7 @@ import asyncio
 from collections.abc import Callable
 from datetime import timedelta
 from enum import Enum
+from functools import cached_property
 import logging
 import random
 import time
@@ -23,7 +24,6 @@ from zigpy.zcl.clusters.general import Groups, Identify
 from zigpy.zcl.foundation import Status as ZclStatus, ZCLCommandDef
 import zigpy.zdo.types as zdo_types
 
-from homeassistant.backports.functools import cached_property
 from homeassistant.const import ATTR_COMMAND, ATTR_DEVICE_ID, ATTR_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -789,15 +789,6 @@ class ZHADevice(LogMixin):
             response = await cluster.write_attributes(
                 {attribute: value}, manufacturer=manufacturer
             )
-            self.debug(
-                "set: %s for attr: %s to cluster: %s for ept: %s - res: %s",
-                value,
-                attribute,
-                cluster_id,
-                endpoint_id,
-                response,
-            )
-            return response
         except zigpy.exceptions.ZigbeeException as exc:
             raise HomeAssistantError(
                 f"Failed to set attribute: "
@@ -806,6 +797,16 @@ class ZHADevice(LogMixin):
                 f"{ATTR_CLUSTER_ID}: {cluster_id} "
                 f"{ATTR_ENDPOINT_ID}: {endpoint_id}"
             ) from exc
+
+        self.debug(
+            "set: %s for attr: %s to cluster: %s for ept: %s - res: %s",
+            value,
+            attribute,
+            cluster_id,
+            endpoint_id,
+            response,
+        )
+        return response
 
     async def issue_cluster_command(
         self,

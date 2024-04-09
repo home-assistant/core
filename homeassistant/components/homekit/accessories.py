@@ -45,16 +45,14 @@ from homeassistant.core import (
     CALLBACK_TYPE,
     Context,
     Event,
+    EventStateChangedData,
     HomeAssistant,
     State,
     callback as ha_callback,
     split_entity_id,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.event import (
-    EventStateChangedData,
-    async_track_state_change_event,
-)
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.util.decorator import Registry
 
 from .const import (

@@ -5,6 +5,7 @@ from unittest.mock import patch
 from homeassistant.components.kraken.const import CONF_TRACKED_ASSET_PAIRS, DOMAIN
 from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from .const import TICKER_INFORMATION_RESPONSE, TRADEABLE_ASSET_PAIR_RESPONSE
 
@@ -20,13 +21,13 @@ async def test_config_flow(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": "user"}
         )
-        assert result["type"] == "form"
+        assert result["type"] is FlowResultType.FORM
 
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
         await hass.async_block_till_done()
 
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -37,7 +38,7 @@ async def test_already_configured(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "user"}
     )
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -86,7 +87,7 @@ async def test_options(hass: HomeAssistant) -> None:
                 CONF_TRACKED_ASSET_PAIRS: ["ADA/ETH"],
             },
         )
-        assert result["type"] == "create_entry"
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         await hass.async_block_till_done()
 
         ada_eth_sensor = hass.states.get("sensor.ada_eth_ask")

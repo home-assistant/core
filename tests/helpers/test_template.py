@@ -1176,7 +1176,7 @@ def test_as_datetime(hass: HomeAssistant, input) -> None:
 )
 def test_as_datetime_from_timestamp(
     hass: HomeAssistant,
-    input: int | float,
+    input: float,
     output: str,
 ) -> None:
     """Test converting a UNIX timestamp to a date object."""
@@ -5198,17 +5198,23 @@ async def test_floors(
 async def test_floor_id(
     hass: HomeAssistant,
     floor_registry: fr.FloorRegistry,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test floor_id function."""
 
-    # Test non existing floor name
-    info = render_to_info(hass, "{{ floor_id('Third floor') }}")
-    assert_result_info(info, None)
-    assert info.rate_limit is None
+    def test(value: str, expected: str | None) -> None:
+        info = render_to_info(hass, f"{{{{ floor_id('{value}') }}}}")
+        assert_result_info(info, expected)
+        assert info.rate_limit is None
 
-    info = render_to_info(hass, "{{ 'Third floor' | floor_id }}")
-    assert_result_info(info, None)
-    assert info.rate_limit is None
+        info = render_to_info(hass, f"{{{{ '{value}' | floor_id }}}}")
+        assert_result_info(info, expected)
+        assert info.rate_limit is None
+
+    # Test non existing floor name
+    test("Third floor", None)
 
     # Test wrong value type
     info = render_to_info(hass, "{{ floor_id(42) }}")
@@ -5221,28 +5227,65 @@ async def test_floor_id(
 
     # Test with an actual floor
     floor = floor_registry.async_create("First floor")
-    info = render_to_info(hass, "{{ floor_id('First floor') }}")
-    assert_result_info(info, floor.floor_id)
-    assert info.rate_limit is None
+    test("First floor", floor.floor_id)
 
-    info = render_to_info(hass, "{{ 'First floor' | floor_id }}")
-    assert_result_info(info, floor.floor_id)
-    assert info.rate_limit is None
+    config_entry = MockConfigEntry(domain="light")
+    config_entry.add_to_hass(hass)
+    area_entry_hex = area_registry.async_get_or_create("123abc")
+
+    # Create area, device, entity and assign area to device and entity
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entity_entry = entity_registry.async_get_or_create(
+        "light",
+        "hue",
+        "5678",
+        config_entry=config_entry,
+        device_id=device_entry.id,
+    )
+    device_entry = device_registry.async_update_device(
+        device_entry.id, area_id=area_entry_hex.id
+    )
+    entity_entry = entity_registry.async_update_entity(
+        entity_entry.entity_id, area_id=area_entry_hex.id
+    )
+
+    test(area_entry_hex.id, None)
+    test(device_entry.id, None)
+    test(entity_entry.entity_id, None)
+
+    # Add floor to area
+    area_entry_hex = area_registry.async_update(
+        area_entry_hex.id, floor_id=floor.floor_id
+    )
+
+    test(area_entry_hex.id, floor.floor_id)
+    test(device_entry.id, floor.floor_id)
+    test(entity_entry.entity_id, floor.floor_id)
 
 
 async def test_floor_name(
     hass: HomeAssistant,
     floor_registry: fr.FloorRegistry,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test floor_name function."""
-    # Test non existing floor ID
-    info = render_to_info(hass, "{{ floor_name('third_floor') }}")
-    assert_result_info(info, None)
-    assert info.rate_limit is None
 
-    info = render_to_info(hass, "{{ 'third_floor' | floor_name }}")
-    assert_result_info(info, None)
-    assert info.rate_limit is None
+    def test(value: str, expected: str | None) -> None:
+        info = render_to_info(hass, f"{{{{ floor_name('{value}') }}}}")
+        assert_result_info(info, expected)
+        assert info.rate_limit is None
+
+        info = render_to_info(hass, f"{{{{ '{value}' | floor_name }}}}")
+        assert_result_info(info, expected)
+        assert info.rate_limit is None
+
+    # Test non existing floor name
+    test("Third floor", None)
 
     # Test wrong value type
     info = render_to_info(hass, "{{ floor_name(42) }}")
@@ -5255,13 +5298,43 @@ async def test_floor_name(
 
     # Test existing floor ID
     floor = floor_registry.async_create("First floor")
-    info = render_to_info(hass, f"{{{{ floor_name('{floor.floor_id}') }}}}")
-    assert_result_info(info, floor.name)
-    assert info.rate_limit is None
+    test(floor.floor_id, floor.name)
 
-    info = render_to_info(hass, f"{{{{ '{floor.floor_id}' | floor_name }}}}")
-    assert_result_info(info, floor.name)
-    assert info.rate_limit is None
+    config_entry = MockConfigEntry(domain="light")
+    config_entry.add_to_hass(hass)
+    area_entry_hex = area_registry.async_get_or_create("123abc")
+
+    # Create area, device, entity and assign area to device and entity
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entity_entry = entity_registry.async_get_or_create(
+        "light",
+        "hue",
+        "5678",
+        config_entry=config_entry,
+        device_id=device_entry.id,
+    )
+    device_entry = device_registry.async_update_device(
+        device_entry.id, area_id=area_entry_hex.id
+    )
+    entity_entry = entity_registry.async_update_entity(
+        entity_entry.entity_id, area_id=area_entry_hex.id
+    )
+
+    test(area_entry_hex.id, None)
+    test(device_entry.id, None)
+    test(entity_entry.entity_id, None)
+
+    # Add floor to area
+    area_entry_hex = area_registry.async_update(
+        area_entry_hex.id, floor_id=floor.floor_id
+    )
+
+    test(area_entry_hex.id, floor.name)
+    test(device_entry.id, floor.name)
+    test(entity_entry.entity_id, floor.name)
 
 
 async def test_floor_areas(
