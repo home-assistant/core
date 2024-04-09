@@ -14,7 +14,7 @@ from bring_api.exceptions import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
@@ -50,7 +50,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BringConfigEntry) -> boo
             translation_key="setup_request_exception",
         ) from e
     except BringAuthException as e:
-        raise ConfigEntryError(
+        raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
             translation_key="setup_authentication_exception",
             translation_placeholders={CONF_EMAIL: email},
