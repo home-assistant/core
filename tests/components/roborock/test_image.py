@@ -6,7 +6,10 @@ from http import HTTPStatus
 import io
 from unittest.mock import patch
 
+from PIL import Image
 import pytest
+from vacuum_map_parser_base.config.image_config import ImageConfig
+from vacuum_map_parser_base.map_data import ImageData
 
 from homeassistant.components.roborock import DOMAIN
 from homeassistant.core import HomeAssistant
@@ -41,6 +44,10 @@ async def test_floorplan_image(
     # Copy the device prop so we don't override it
     prop = copy.deepcopy(PROP)
     prop.status.in_cleaning = 1
+    new_map_data = copy.deepcopy(MAP_DATA)
+    new_map_data.image = ImageData(
+        100, 10, 10, 10, 10, ImageConfig(), Image.new("RGB", (2, 2)), lambda p: p
+    )
     with (
         patch(
             "homeassistant.components.roborock.coordinator.RoborockLocalClient.get_prop",
@@ -48,6 +55,10 @@ async def test_floorplan_image(
         ),
         patch(
             "homeassistant.components.roborock.image.dt_util.utcnow", return_value=now
+        ),
+        patch(
+            "homeassistant.components.roborock.image.RoborockMapDataParser.parse",
+            return_value=new_map_data,
         ),
     ):
         async_fire_time_changed(hass, now)
@@ -162,3 +173,47 @@ async def test_fail_to_load_image(
         # Ensure that we never updated the map manually since we couldn't load it.
         assert parse_map.call_count == 4
     assert "Unable to read map file" in caplog.text
+
+
+async def test_fail_parse_on_startup(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_roborock_entry: MockConfigEntry,
+    bypass_api_fixture,
+) -> None:
+    """Test that if we fail parsing on startup, we create the entity but set it as unavailable."""
+    map_data = copy.deepcopy(MAP_DATA)
+    map_data.image = None
+    with (
+        patch(
+            "homeassistant.components.roborock.image.RoborockMapDataParser.parse",
+            return_value=map_data,
+        ),
+        patch(
+            "homeassistant.components.roborock.coordinator.RoborockMqttClient",
+            return_value=None,
+        ),
+    ):
+        await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
+    assert hass.states.get("image.roborock_s7_maxv_upstairs") is not None
+    assert not hass.states.async_available("image.roborock_s7_maxv_upstairs")
+
+
+async def test_fail_get_map_on_startup(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_roborock_entry: MockConfigEntry,
+    bypass_api_fixture,
+) -> None:
+    """Test that if we fail getting map on startup, we create the entity but set it as unavailable."""
+    with (
+        patch(
+            "homeassistant.components.roborock.coordinator.RoborockMqttClient.get_map_v1",
+            return_value=None,
+        ),
+    ):
+        await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
+    assert hass.states.get("image.roborock_s7_maxv_upstairs") is not None
+    assert not hass.states.async_available("image.roborock_s7_maxv_upstairs")
