@@ -49,22 +49,15 @@ class MockNotifyEntity(MockEntity, NotifyEntity):
 
     send_message_mock_calls = MagicMock()
 
-    def send_message(
-        self,
-        message: str | None = None,
-        title: str | None = None,
-        recipients: list[str] | None = None,
-    ) -> None:
+    async def async_send_message(self, message: str) -> None:
         """Send a notification message."""
-        self.send_message_mock_calls(
-            message=message, title=title, recipients=recipients
-        )
+        self.send_message_mock_calls(message=message)
 
 
 async def test_send_message_service(
     hass: HomeAssistant, config_flow_fixture: None
 ) -> None:
-    """Test mode validation for fan, swing and preset."""
+    """Test send_message service."""
 
     entity = MockNotifyEntity(name="test", entity_id="notify.test")
 

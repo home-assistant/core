@@ -49,26 +49,6 @@ class DemoNotify(NotifyEntity):
         )
         self._attr_name = entity_name
 
-    def send_message(
-        self,
-        message: str | None = None,
-        title: str | None = None,
-        recipients: list[str] | None = None,
-    ) -> None:
+    async def async_send_message(self, message: str) -> None:
         """Send out a persistent notification."""
-        status_update = (
-            f"Name: {self.name}, Message: {message}, Title: {title}, "
-            f"Recipients: {recipients}"
-        )
-        persistent_notification.async_create(
-            self.hass, status_update, "Demo notification"
-        )
-
-    async def async_internal_added_to_hass(self) -> None:
-        """Send a message after the entity has been added."""
-
-        def _send_message():
-            self.send_message("Demo message", title="Message from SMTP notifier")
-
-        await super().async_internal_added_to_hass()
-        self.hass.loop.call_soon_threadsafe(_send_message)
+        persistent_notification.async_create(self.hass, message, "Demo notification")

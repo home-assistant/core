@@ -58,15 +58,6 @@ PLATFORM_SCHEMA = vol.Schema(
 )
 
 
-SERVICE_SEND_MESSAGE_SCHEMA = cv.make_entity_service_schema(
-    {
-        vol.Optional(ATTR_MESSAGE): cv.string,
-        vol.Optional(ATTR_TITLE): cv.string,
-        vol.Optional(ATTR_RECIPIENTS): vol.All(cv.ensure_list, [cv.string]),
-    }
-)
-
-
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the notify services."""
 
@@ -82,7 +73,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component = hass.data[DOMAIN] = EntityComponent[NotifyEntity](_LOGGER, DOMAIN, hass)
     component.async_register_entity_service(
         SERVICE_SEND_MESSAGE,
-        SERVICE_SEND_MESSAGE_SCHEMA,
+        {vol.Required(ATTR_MESSAGE): cv.string},
         "_async_send_message",
     )
 
@@ -158,11 +149,8 @@ class NotifyEntity(RestoreEntity):
         return self.__last_notified_isoformat
 
     def __set_state(self, state: str | None) -> None:
-        """Set the entity state."""
-        try:  # noqa: SIM105  suppress is much slower
-            del self.state
-        except AttributeError:
-            pass
+        """Invalidate the cache of the cached property."""
+        self.__dict__.pop("state", None)
         self.__last_notified_isoformat = state
 
     async def async_internal_added_to_hass(self) -> None:

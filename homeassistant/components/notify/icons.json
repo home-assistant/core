@@ -2,15 +2,6 @@
   "entity_component": {
     "_": {
       "default": "mdi:message"
-    },
-    "direct_message": {
-      "default": "mdi:message-fast"
-    },
-    "display": {
-      "default": "mdi:monitor-screenshot"
-    },
-    "email": {
-      "default": "mdi:email-fast"
     }
   },
   "services": {
