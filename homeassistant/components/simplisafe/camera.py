@@ -61,7 +61,7 @@ async def async_setup_entry(
     """Set up SimpliSafe cameras based on a config entry."""
     simplisafe = hass.data[DOMAIN][entry.entry_id]
 
-    cameras: list[SimplisafeMotionCamera] = []
+    cameras: list[SimplisafeOutdoorCamera] = []
 
     for system in simplisafe.systems.values():
         if system.version == 2:
@@ -69,7 +69,7 @@ async def async_setup_entry(
             continue
 
         cameras = [
-            SimplisafeMotionCamera(hass, simplisafe, system, camera)
+            SimplisafeOutdoorCamera(hass, simplisafe, system, camera)
             for camera in system.cameras.values()
             if camera.camera_type == CameraTypes.OUTDOOR_CAMERA
         ]
@@ -77,7 +77,7 @@ async def async_setup_entry(
     async_add_entities(cameras)
 
 
-class SimplisafeMotionCamera(SimpliSafeEntity, Camera):
+class SimplisafeOutdoorCamera(SimpliSafeEntity, Camera):
     """A camera base class that supports motion capture media."""
 
     _device: DeviceV3
@@ -219,10 +219,6 @@ class SimplisafeMotionCamera(SimpliSafeEntity, Camera):
         self._attr_clip_url = event.media_urls["clip_url"]
         self._attr_hls_url = event.media_urls["hls_url"]
         self._attr_cached_image = None
-
-
-class SimplisafeOutdoorCamera(SimplisafeMotionCamera):
-    """Define the outdoor camera."""
 
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
