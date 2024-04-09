@@ -657,8 +657,7 @@ class SimpliSafe:
 
     async def async_media_request(self, url: str) -> bytes | None:
         """Fetch a media file."""
-        content = await self._api.async_media(url)
-        return cast(bytes, content)
+        return await self._api.async_media(url)
 
 
 class SimpliSafeEntity(CoordinatorEntity[DataUpdateCoordinator[None]]):
