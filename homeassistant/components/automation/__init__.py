@@ -795,6 +795,22 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         """Log helper callback."""
         self._logger.log(level, "%s %s", msg, self.name, **kwargs)
 
+    async def _async_trigger_if_enabled(
+        self,
+        run_variables: dict[str, Any],
+        context: Context | None = None,
+        skip_condition: bool = False,
+    ) -> ScriptRunResult | None:
+        """Trigger automation if enabled.
+
+        If the trigger starts but has a delay, the automation will be triggered
+        when the delay has passed so we need to make sure its still enabled before
+        executing the action.
+        """
+        if not self._is_enabled:
+            return None
+        return await self.async_trigger(run_variables, context, skip_condition)
+
     async def _async_attach_triggers(
         self, home_assistant_start: bool
     ) -> Callable[[], None] | None:
@@ -818,7 +834,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         return await async_initialize_triggers(
             self.hass,
             self._trigger_config,
-            self.async_trigger,
+            self._async_trigger_if_enabled,
             DOMAIN,
             str(self.name),
             self._log_callback,
