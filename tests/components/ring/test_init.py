@@ -401,4 +401,4 @@ async def test_update_unique_id_no_update(
     entity_migrated = entity_registry.async_get(entity.entity_id)
     assert entity_migrated
     assert entity_migrated.unique_id == correct_unique_id
-    assert ("Fixing non string unique id") not in caplog.text
+    assert "Fixing non string unique id" not in caplog.text
