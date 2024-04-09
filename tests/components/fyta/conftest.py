@@ -5,8 +5,6 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from .test_config_flow import ACCESS_TOKEN, EXPIRATION
-
 
 @pytest.fixture
 def mock_fyta():
