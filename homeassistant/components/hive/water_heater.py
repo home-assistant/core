@@ -116,4 +116,5 @@ class HiveWaterHeater(HiveEntity, WaterHeaterEntity):
             self._attr_current_operation = HIVE_TO_HASS_STATE[
                 self.device["status"]["current_operation"]
             ]
-            self._attr_current_state = await self.hive.hotwater.getState(self.device)
+            current_state = await self.hive.hotwater.getState(self.device)
+            self._attr_current_state = current_state.capitalize()
