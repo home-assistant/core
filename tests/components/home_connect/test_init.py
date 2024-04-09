@@ -239,7 +239,7 @@ async def test_http_error(
     assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup()
     assert config_entry.state == ConfigEntryState.LOADED
-    assert get_appliances.called
+    assert get_appliances.call_count == 1
 
 
 @pytest.mark.parametrize(
