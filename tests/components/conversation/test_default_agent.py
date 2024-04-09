@@ -609,12 +609,13 @@ async def test_error_no_device_class(hass: HomeAssistant, init_components) -> No
     """Test error message when no entities of a device class exist."""
 
     # We don't have a sentence for opening all windows
+    cover_domain = MatchEntity(name="domain", value="cover", text="cover")
     window_class = MatchEntity(name="device_class", value="window", text="windows")
     recognize_result = RecognizeResult(
         intent=Intent("HassTurnOn"),
         intent_data=IntentData([]),
-        entities={"device_class": window_class},
-        entities_list=[window_class],
+        entities={"domain": cover_domain, "device_class": window_class},
+        entities_list=[cover_domain, window_class],
     )
 
     with patch(
@@ -823,7 +824,7 @@ async def test_empty_aliases(
     area_kitchen = area_registry.async_get_or_create("kitchen_id")
     area_kitchen = area_registry.async_update(area_kitchen.id, name="kitchen")
     area_kitchen = area_registry.async_update(
-        area_kitchen.id, aliases={" "}, floor_id=floor_1
+        area_kitchen.id, aliases={" "}, floor_id=floor_1.floor_id
     )
 
     entry = MockConfigEntry()

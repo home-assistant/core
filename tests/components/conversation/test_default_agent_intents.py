@@ -12,9 +12,17 @@ from homeassistant.components import (
 )
 from homeassistant.components.cover import intent as cover_intent
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
-from homeassistant.components.media_player import intent as media_player_intent
+from homeassistant.components.media_player import (
+    MediaPlayerEntityFeature,
+    intent as media_player_intent,
+)
 from homeassistant.components.vacuum import intent as vaccum_intent
-from homeassistant.const import STATE_CLOSED
+from homeassistant.const import (
+    ATTR_SUPPORTED_FEATURES,
+    STATE_CLOSED,
+    STATE_PAUSED,
+    STATE_PLAYING,
+)
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import (
     area_registry as ar,
@@ -189,7 +197,13 @@ async def test_media_player_intents(
     await media_player_intent.async_setup_intents(hass)
 
     entity_id = f"{media_player.DOMAIN}.tv"
-    hass.states.async_set(entity_id, media_player.STATE_PLAYING)
+    attributes = {
+        ATTR_SUPPORTED_FEATURES: MediaPlayerEntityFeature.PAUSE
+        | MediaPlayerEntityFeature.NEXT_TRACK
+        | MediaPlayerEntityFeature.VOLUME_SET
+    }
+
+    hass.states.async_set(entity_id, STATE_PLAYING, attributes=attributes)
     async_expose_entity(hass, conversation.DOMAIN, entity_id, True)
 
     # pause
@@ -206,6 +220,9 @@ async def test_media_player_intents(
     call = calls[0]
     assert call.data == {"entity_id": entity_id}
 
+    # Unpause requires paused state
+    hass.states.async_set(entity_id, STATE_PAUSED, attributes=attributes)
+
     # unpause
     calls = async_mock_service(
         hass, media_player.DOMAIN, media_player.SERVICE_MEDIA_PLAY
@@ -221,6 +238,9 @@ async def test_media_player_intents(
     assert len(calls) == 1
     call = calls[0]
     assert call.data == {"entity_id": entity_id}
+
+    # Next track requires playing state
+    hass.states.async_set(entity_id, STATE_PLAYING, attributes=attributes)
 
     # next
     calls = async_mock_service(

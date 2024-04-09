@@ -176,7 +176,7 @@ class GetStateIntentHandler(intent.IntentHandler):
 
     intent_type = intent.INTENT_GET_STATE
     slot_schema = {
-        vol.Any("name", "area"): cv.string,
+        vol.Any("name", "area", "floor"): cv.string,
         vol.Optional("domain"): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional("device_class"): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional("state"): vol.All(cv.ensure_list, [cv.string]),
@@ -192,16 +192,14 @@ class GetStateIntentHandler(intent.IntentHandler):
         entity_name: str | None = name_slot.get("value")
         entity_text: str | None = name_slot.get("text")
 
-        # Look up area first to fail early
+        # Get area/floor info
         area_slot = slots.get("area", {})
         area_id = area_slot.get("value")
         area_name = area_slot.get("text")
-        area: ar.AreaEntry | None = None
-        if area_id is not None:
-            areas = ar.async_get(hass)
-            area = areas.async_get_area(area_id)
-            if area is None:
-                raise intent.IntentHandleError(f"No area named {area_name}")
+
+        floor_slot = slots.get("floor", {})
+        floor_id = floor_slot.get("value")
+        floor_name = floor_slot.get("text")
 
         # Optional domain/device class filters.
         # Convert to sets for speed.
@@ -218,46 +216,39 @@ class GetStateIntentHandler(intent.IntentHandler):
         if "state" in slots:
             state_names = set(slots["state"]["value"])
 
-        states = list(
-            intent.async_match_states(
-                hass,
-                name=entity_name,
-                area=area,
-                domains=domains,
-                device_classes=device_classes,
-                assistant=intent_obj.assistant,
-            )
+        match_constraints = intent.MatchTargetsConstraints(
+            name=entity_name,
+            area_name=area_id,
+            floor_name=floor_id,
+            domains=domains,
+            device_classes=device_classes,
+            assistant=intent_obj.assistant,
         )
-
-        _LOGGER.debug(
-            "Found %s state(s) that matched: name=%s, area=%s, domains=%s, device_classes=%s, assistant=%s",
-            len(states),
-            entity_name,
-            area,
-            domains,
-            device_classes,
-            intent_obj.assistant,
-        )
-
-        if entity_name and (len(states) > 1):
-            # Multiple entities matched for the same name
-            raise intent.DuplicateNamesMatchedError(
-                name=entity_text or entity_name,
-                area=area_name or area_id,
-            )
+        match_result = intent.async_match_targets(hass, match_constraints)
 
         # Create response
         response = intent_obj.create_response()
         response.response_type = intent.IntentResponseType.QUERY_ANSWER
 
         success_results: list[intent.IntentResponseTarget] = []
-        if area is not None:
-            success_results.append(
+        if match_result.areas:
+            success_results.extend(
                 intent.IntentResponseTarget(
                     type=intent.IntentResponseTargetType.AREA,
                     name=area.name,
                     id=area.id,
                 )
+                for area in match_result.areas
+            )
+
+        if match_result.floors:
+            success_results.extend(
+                intent.IntentResponseTarget(
+                    type=intent.IntentResponseTargetType.FLOOR,
+                    name=floor.name,
+                    id=floor.floor_id,
+                )
+                for floor in match_result.floors
             )
 
         # If we are matching a state name (e.g., "which lights are on?"), then
@@ -271,7 +262,7 @@ class GetStateIntentHandler(intent.IntentHandler):
         matched_states: list[State] = []
         unmatched_states: list[State] = []
 
-        for state in states:
+        for state in match_result.states:
             success_results.append(
                 intent.IntentResponseTarget(
                     type=intent.IntentResponseTargetType.ENTITY,
