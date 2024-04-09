@@ -87,6 +87,7 @@ SERVICE_CLEAR_TIMER = "clear_sleep_timer"
 SERVICE_UPDATE_ALARM = "update_alarm"
 SERVICE_PLAY_QUEUE = "play_queue"
 SERVICE_REMOVE_FROM_QUEUE = "remove_from_queue"
+SERVICE_PARTYMODE = "partymode"
 
 ATTR_SLEEP_TIME = "sleep_time"
 ATTR_ALARM_ID = "alarm_id"
@@ -186,7 +187,12 @@ async def async_setup_entry(
         {vol.Optional(ATTR_QUEUE_POSITION): cv.positive_int},
         "remove_from_queue",
     )
-
+    
+    platform.async_register_entity_service(
+        SERVICE_PARTYMODE,
+        {},
+        "party_mode_services",
+    )
 
 class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
     """Representation of a Sonos entity."""
@@ -695,6 +701,11 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
     def remove_from_queue(self, queue_position: int = 0) -> None:
         """Remove item from the queue."""
         self.coordinator.soco.remove_from_queue(queue_position)
+
+    @soco_error()
+    def party_mode_services(self) -> None:
+        """Join all visible sevices in the party mode."""
+        self.coordinator.soco.partymode()
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
