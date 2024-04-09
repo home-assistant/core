@@ -2630,7 +2630,7 @@ async def test_suggested_unit_guard_valid_unit(
     native_unit: str,
     native_value: int,
     suggested_unit: str,
-    expect_value: float | int,
+    expect_value: float,
 ) -> None:
     """Test suggested_unit_of_measurement guard.
 

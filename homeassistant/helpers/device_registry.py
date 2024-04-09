@@ -16,6 +16,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT
 from homeassistant.core import Event, HomeAssistant, callback, get_release_channel
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import async_suggest_report_issue
+from homeassistant.util.event_type import EventType
 from homeassistant.util.json import format_unserializable_data
 import homeassistant.util.uuid as uuid_util
 
@@ -40,7 +41,9 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 
 DATA_REGISTRY = "device_registry"
-EVENT_DEVICE_REGISTRY_UPDATED = "device_registry_updated"
+EVENT_DEVICE_REGISTRY_UPDATED: EventType[EventDeviceRegistryUpdatedData] = EventType(
+    "device_registry_updated"
+)
 STORAGE_KEY = "core.device_registry"
 STORAGE_VERSION_MAJOR = 1
 STORAGE_VERSION_MINOR = 5
@@ -551,7 +554,7 @@ class ActiveDeviceRegistryItems(DeviceRegistryItems[DeviceEntry]):
         ]
 
 
-class DeviceRegistry(BaseRegistry):
+class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
     """Class to hold a registry of devices."""
 
     devices: ActiveDeviceRegistryItems
@@ -908,12 +911,11 @@ class DeviceRegistry(BaseRegistry):
 
         self.async_schedule_save()
 
-        data: dict[str, Any] = {
-            "action": "create" if old.is_new else "update",
-            "device_id": new.id,
-        }
-        if not old.is_new:
-            data["changes"] = old_values
+        data: EventDeviceRegistryUpdatedData
+        if old.is_new:
+            data = {"action": "create", "device_id": new.id}
+        else:
+            data = {"action": "update", "device_id": new.id, "changes": old_values}
 
         self.hass.bus.async_fire(EVENT_DEVICE_REGISTRY_UPDATED, data)
 
@@ -934,7 +936,10 @@ class DeviceRegistry(BaseRegistry):
             if other_device.via_device_id == device_id:
                 self.async_update_device(other_device.id, via_device_id=None)
         self.hass.bus.async_fire(
-            EVENT_DEVICE_REGISTRY_UPDATED, {"action": "remove", "device_id": device_id}
+            EVENT_DEVICE_REGISTRY_UPDATED,
+            _EventDeviceRegistryUpdatedData_CreateRemove(
+                action="remove", device_id=device_id
+            ),
         )
         self.async_schedule_save()
 
@@ -1202,7 +1207,6 @@ def async_setup_cleanup(hass: HomeAssistant, dev_reg: DeviceRegistry) -> None:
         event_type=lr.EVENT_LABEL_REGISTRY_UPDATED,
         event_filter=_label_removed_from_registry_filter,
         listener=_handle_label_registry_update,
-        run_immediately=True,
     )
 
     @callback
@@ -1216,12 +1220,16 @@ def async_setup_cleanup(hass: HomeAssistant, dev_reg: DeviceRegistry) -> None:
     )
 
     @callback
-    def _async_entity_registry_changed(event: Event) -> None:
+    def _async_entity_registry_changed(
+        event: Event[entity_registry.EventEntityRegistryUpdatedData],
+    ) -> None:
         """Handle entity updated or removed dispatch."""
         debounced_cleanup.async_schedule_call()
 
     @callback
-    def entity_registry_changed_filter(event_data: Mapping[str, Any]) -> bool:
+    def entity_registry_changed_filter(
+        event_data: entity_registry.EventEntityRegistryUpdatedData,
+    ) -> bool:
         """Handle entity updated or removed filter."""
         if (
             event_data["action"] == "update"
@@ -1236,7 +1244,6 @@ def async_setup_cleanup(hass: HomeAssistant, dev_reg: DeviceRegistry) -> None:
             entity_registry.EVENT_ENTITY_REGISTRY_UPDATED,
             _async_entity_registry_changed,
             event_filter=entity_registry_changed_filter,
-            run_immediately=True,
         )
         return
 
@@ -1246,13 +1253,10 @@ def async_setup_cleanup(hass: HomeAssistant, dev_reg: DeviceRegistry) -> None:
             entity_registry.EVENT_ENTITY_REGISTRY_UPDATED,
             _async_entity_registry_changed,
             event_filter=entity_registry_changed_filter,
-            run_immediately=True,
         )
         await debounced_cleanup.async_call()
 
-    hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STARTED, startup_clean, run_immediately=True
-    )
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, startup_clean)
 
     @callback
     def _on_homeassistant_stop(event: Event) -> None:

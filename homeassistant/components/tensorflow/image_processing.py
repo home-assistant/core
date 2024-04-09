@@ -96,9 +96,7 @@ def get_model_detection_function(model):
 
         image, shapes = model.preprocess(image)
         prediction_dict = model.predict(image, shapes)
-        detections = model.postprocess(prediction_dict, shapes)
-
-        return detections
+        return model.postprocess(prediction_dict, shapes)
 
     return detect_fn
 

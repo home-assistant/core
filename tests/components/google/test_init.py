@@ -116,7 +116,7 @@ async def test_unload_entry(
     assert entry.state is ConfigEntryState.LOADED
 
     assert await hass.config_entries.async_unload(entry.entry_id)
-    assert entry.state == ConfigEntryState.NOT_LOADED
+    assert entry.state is ConfigEntryState.NOT_LOADED
 
 
 @pytest.mark.parametrize(
@@ -959,4 +959,4 @@ async def test_remove_entry(
     assert entry.state is ConfigEntryState.LOADED
 
     assert await hass.config_entries.async_remove(entry.entry_id)
-    assert entry.state == ConfigEntryState.NOT_LOADED
+    assert entry.state is ConfigEntryState.NOT_LOADED
