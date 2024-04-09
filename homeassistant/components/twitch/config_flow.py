@@ -8,17 +8,13 @@ from typing import Any, cast
 
 from twitchAPI.helper import first
 from twitchAPI.twitch import Twitch
-from twitchAPI.type import AuthScope, InvalidTokenException
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlowResult
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_CLIENT_ID, CONF_TOKEN
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN
-from homeassistant.data_entry_flow import AbortFlow
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.config_entry_oauth2_flow import LocalOAuth2Implementation
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
-from .const import CONF_CHANNELS, CONF_REFRESH_TOKEN, DOMAIN, LOGGER, OAUTH_SCOPES
+from .const import CONF_CHANNELS, DOMAIN, LOGGER, OAUTH_SCOPES
 
 
 class OAuth2FlowHandler(
@@ -121,77 +117,3 @@ class OAuth2FlowHandler(
         if user_input is None:
             return self.async_show_form(step_id="reauth_confirm")
         return await self.async_step_user()
-
-    async def async_step_import(self, config: dict[str, Any]) -> ConfigFlowResult:
-        """Import from yaml."""
-        client = await Twitch(
-            app_id=config[CONF_CLIENT_ID],
-            authenticate_app=False,
-        )
-        client.auto_refresh_auth = False
-        token = config[CONF_TOKEN]
-        try:
-            await client.set_user_authentication(
-                token, validate=True, scope=[AuthScope.USER_READ_SUBSCRIPTIONS]
-            )
-        except InvalidTokenException:
-            async_create_issue(
-                self.hass,
-                DOMAIN,
-                "deprecated_yaml_invalid_token",
-                breaks_in_ha_version="2024.4.0",
-                is_fixable=False,
-                severity=IssueSeverity.WARNING,
-                translation_key="deprecated_yaml_invalid_token",
-                translation_placeholders={
-                    "domain": DOMAIN,
-                    "integration_title": "Twitch",
-                },
-            )
-            return self.async_abort(reason="invalid_token")
-        user = await first(client.get_users())
-        assert user
-        await self.async_set_unique_id(user.id)
-        try:
-            self._abort_if_unique_id_configured()
-        except AbortFlow:
-            async_create_issue(
-                self.hass,
-                DOMAIN,
-                "deprecated_yaml_already_imported",
-                breaks_in_ha_version="2024.4.0",
-                is_fixable=False,
-                severity=IssueSeverity.WARNING,
-                translation_key="deprecated_yaml_already_imported",
-                translation_placeholders={
-                    "domain": DOMAIN,
-                    "integration_title": "Twitch",
-                },
-            )
-            raise
-        async_create_issue(
-            self.hass,
-            HOMEASSISTANT_DOMAIN,
-            "deprecated_yaml",
-            breaks_in_ha_version="2024.4.0",
-            is_fixable=False,
-            severity=IssueSeverity.WARNING,
-            translation_key="deprecated_yaml",
-            translation_placeholders={
-                "domain": DOMAIN,
-                "integration_title": "Twitch",
-            },
-        )
-        return self.async_create_entry(
-            title=user.display_name,
-            data={
-                "auth_implementation": DOMAIN,
-                CONF_TOKEN: {
-                    CONF_ACCESS_TOKEN: token,
-                    CONF_REFRESH_TOKEN: "",
-                    "expires_at": 0,
-                },
-                "imported": True,
-            },
-            options={CONF_CHANNELS: config[CONF_CHANNELS]},
-        )
