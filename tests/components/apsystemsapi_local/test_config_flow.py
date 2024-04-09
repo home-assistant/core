@@ -57,44 +57,17 @@ async def test_form_cannot_connect(
         json=SUCCESS_DEVICE_INFO_DATA,
         headers={"Content-Type": "application/json"},
     )
-    try:
-        await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_IP_ADDRESS: "127.0.0.1",
-                CONF_NAME: "Solar",
-                "update_interval": 15,
-            },
-        )
-        # AiohttpClientMockResponse does not have .ok
-        # So, I check if it's coming that far and fail if that's not the case
-        assert "OTHER_ERROR" == "CHECK_COMMENT"  # noqa: PLR0133
-    except AttributeError:
-        pass
-
-
-async def test_form_with_connect_check(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test we handle cannot connect error."""
-    aioclient_mock.get(
-        "http://127.0.0.1:8050/getDeviceInfo",
-        json=SUCCESS_DEVICE_INFO_DATA,
-        headers={"Content-Type": "application/json"},
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_IP_ADDRESS: "127.0.0.1",
+            CONF_NAME: "Solar",
+            "update_interval": 15,
+        },
     )
-
-    try:
-        await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data={
-                CONF_IP_ADDRESS: "127.0.0.1",
-                CONF_NAME: "Solar",
-                "update_interval": 10,
-            },
-        )
-        # AiohttpClientMockResponse does not have .ok
-        # So, I check if it's coming that far and fail if that's not the case
-        assert "OTHER_ERROR" == "CHECK_COMMENT"  # noqa: PLR0133
-    except AttributeError:
-        pass
+    # AiohttpClientMockResponse does not have .ok
+    # So, I check if it's coming that far and fail if that's not the case
+    assert result2.get("type") == FlowResultType.CREATE_ENTRY
+    assert result2["data"].get(CONF_IP_ADDRESS) == "127.0.0.1"
+    assert result2["data"].get(CONF_NAME) == "Solar"
+    assert result2["data"].get("update_interval") == 15
