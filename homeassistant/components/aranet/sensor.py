@@ -30,8 +30,6 @@ from homeassistant.const import (
     PERCENTAGE,
     EntityCategory,
     UnitOfPressure,
-    UnitOfRadiationDose,
-    UnitOfRadiationDoseRate,
     UnitOfTemperature,
     UnitOfTime,
 )
@@ -86,8 +84,7 @@ SENSOR_DESCRIPTIONS = {
     "radiation_rate": AranetSensorEntityDescription(
         key="radiation_rate",
         name="Radiation Dose Rate",
-        device_class=SensorDeviceClass.RADIATION_DOSE_RATE,
-        native_unit_of_measurement=UnitOfRadiationDoseRate.USV,
+        native_unit_of_measurement="μSv/h",
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=2,
         scale=0.001,
@@ -95,8 +92,7 @@ SENSOR_DESCRIPTIONS = {
     "radiation_total": AranetSensorEntityDescription(
         key="radiation_total",
         name="Radiation Total Dose",
-        device_class=SensorDeviceClass.RADIATION_DOSE,
-        native_unit_of_measurement=UnitOfRadiationDose.MSV,
+        native_unit_of_measurement="mSv",
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=4,
         scale=0.000001,
