@@ -58,7 +58,7 @@ class RingLight(RingEntity, LightEntity):
     def __init__(self, device, coordinator):
         """Initialize the light."""
         super().__init__(device, coordinator)
-        self._attr_unique_id = device.id
+        self._attr_unique_id = str(device.id)
         self._attr_is_on = device.lights == ON_STATE
         self._no_updates_until = dt_util.utcnow()
 
