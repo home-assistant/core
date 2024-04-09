@@ -96,6 +96,5 @@ class FytaConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=data_schema,
-            description_placeholders={"FYTA username": self._entry.data[CONF_USERNAME]},
             errors=errors,
         )
