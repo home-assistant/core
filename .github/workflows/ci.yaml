@@ -1090,7 +1090,7 @@ jobs:
         if: needs.info.outputs.test_full_suite == 'true'
         uses: Wandalen/wretry.action@v3.1.0
         with:
-          action: codecov/codecov-action@v3.1.3
+          action: codecov/codecov-action@v4.3.0
           with: |
             fail_ci_if_error: true
             flags: full-suite
@@ -1101,7 +1101,7 @@ jobs:
         if: needs.info.outputs.test_full_suite == 'false'
         uses: Wandalen/wretry.action@v3.1.0
         with:
-          action: codecov/codecov-action@v3.1.3
+          action: codecov/codecov-action@v4.3.0
           with: |
             fail_ci_if_error: true
             token: ${{ env.CODECOV_TOKEN }}
@@ -1236,7 +1236,7 @@ jobs:
         if: needs.info.outputs.test_full_suite == 'true'
         uses: Wandalen/wretry.action@v3.1.0
         with:
-          action: codecov/codecov-action@v3.1.3
+          action: codecov/codecov-action@v4.3.0
           with: |
             fail_ci_if_error: true
             flags: full-suite
@@ -1247,7 +1247,7 @@ jobs:
         if: needs.info.outputs.test_full_suite == 'false'
         uses: Wandalen/wretry.action@v3.1.0
         with:
-          action: codecov/codecov-action@v3.1.3
+          action: codecov/codecov-action@v4.3.0
           with: |
             fail_ci_if_error: true
             token: ${{ env.CODECOV_TOKEN }}
