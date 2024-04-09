@@ -32,6 +32,8 @@ STORAGE_KEY = "auth.session"
 class StrictConnectionTempSessionData:
     """Data for accessing unauthorized resources for a short period of time."""
 
+    __slots__ = ("cancel_remove", "absolute_expiry")
+
     def __init__(self, cancel_remove: CALLBACK_TYPE) -> None:
         """Initialize the temp session data."""
         self.cancel_remove: Final[CALLBACK_TYPE] = cancel_remove
