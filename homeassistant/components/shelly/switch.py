@@ -26,7 +26,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
-from .const import DOMAIN, GAS_VALVE_OPEN_STATES
+from .const import DOMAIN, GAS_VALVE_OPEN_STATES, MOTION_MODELS
 from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
 from .entity import (
     BlockEntityDescription,
@@ -57,6 +57,12 @@ GAS_VALVE_SWITCH = BlockSwitchDescription(
     name="Valve",
     available=lambda block: block.valve not in ("failure", "checking"),
     removal_condition=lambda _, block: block.valve in ("not_connected", "unknown"),
+    entity_registry_enabled_default=False,
+)
+
+MOTION_SWITCH = BlockSwitchDescription(
+    key="sensor|motionActive",
+    name="Motion",
     entity_registry_enabled_default=False,
 )
 
@@ -91,6 +97,17 @@ def async_setup_block_entry(
             coordinator,
             {("valve", "valve"): GAS_VALVE_SWITCH},
             BlockValveSwitch,
+        )
+        return
+
+    # Add Shelly Motion as a switch
+    if coordinator.model in MOTION_MODELS:
+        async_setup_block_attribute_entities(
+            hass,
+            async_add_entities,
+            coordinator,
+            {("sensor", "motionActive"): MOTION_SWITCH},
+            BlockMotionSwitch,
         )
         return
 
@@ -163,6 +180,28 @@ def async_setup_rpc_entry(
         return
 
     async_add_entities(RpcRelaySwitch(coordinator, id_) for id_ in switch_ids)
+
+
+class BlockMotionSwitch(ShellyBlockAttributeEntity, SwitchEntity):
+    """Entity that controls Motion Sensor on Block based Shelly devices."""
+
+    entity_description: BlockSwitchDescription
+    _attr_translation_key = "motion_switch"
+
+    @property
+    def is_on(self) -> bool:
+        """If motion is active."""
+        return bool(self.block.motionActive)
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Activate switch."""
+        await self.block.device.set_shelly_motion_detection(True)
+        self.async_write_ha_state()
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Deactivate switch."""
+        await self.block.device.set_shelly_motion_detection(False)
+        self.async_write_ha_state()
 
 
 class BlockValveSwitch(ShellyBlockAttributeEntity, SwitchEntity):
