@@ -444,6 +444,9 @@ asterisk_mbox==0.5.0
 # homeassistant.components.yeelight
 async-upnp-client==0.38.3
 
+# homeassistant.components.arve
+asyncarve==0.0.9
+
 # homeassistant.components.sleepiq
 asyncsleepiq==1.5.2
 
@@ -1894,7 +1897,7 @@ reolink-aio==0.8.9
 rflink==0.0.66
 
 # homeassistant.components.ring
-ring-doorbell[listen]==0.8.10
+ring-doorbell[listen]==0.8.11
 
 # homeassistant.components.roku
 rokuecp==0.19.2

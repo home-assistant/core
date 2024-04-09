@@ -489,6 +489,9 @@ asterisk_mbox==0.5.0
 # homeassistant.components.yeelight
 async-upnp-client==0.38.3
 
+# homeassistant.components.arve
+asyncarve==0.0.9
+
 # homeassistant.components.keyboard_remote
 asyncinotify==4.0.2
 
@@ -817,9 +820,6 @@ epion==0.0.3
 
 # homeassistant.components.epson
 epson-projector==0.5.1
-
-# homeassistant.components.epsonworkforce
-epsonprinter==0.0.9
 
 # homeassistant.components.eq3btsmart
 eq3btsmart==1.1.6
@@ -2451,7 +2451,7 @@ rfk101py==0.0.1
 rflink==0.0.66
 
 # homeassistant.components.ring
-ring-doorbell[listen]==0.8.10
+ring-doorbell[listen]==0.8.11
 
 # homeassistant.components.fleetgo
 ritassist==0.9.2

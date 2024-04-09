@@ -722,8 +722,6 @@ ignore = [
     # temporarily disabled
     "PT019",
     "PYI024", # Use typing.NamedTuple instead of collections.namedtuple
-    "PYI036",
-    "PYI041",
     "RET503",
     "RET502",
     "RET501",

@@ -276,7 +276,6 @@ def async_track_state_change(
         EVENT_STATE_CHANGED,
         state_change_dispatcher,
         event_filter=state_change_filter,
-        run_immediately=True,
     )
 
 
@@ -419,7 +418,6 @@ def _async_track_event(
             tracker.event_type,
             ft.partial(tracker.dispatcher_callable, hass, callbacks),
             event_filter=ft.partial(tracker.filter_callable, hass, callbacks),
-            run_immediately=True,
         )
 
     job = HassJob(action, f"track {tracker.event_type} event {keys}", job_type=job_type)
