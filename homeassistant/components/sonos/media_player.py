@@ -191,7 +191,7 @@ async def async_setup_entry(
     platform.async_register_entity_service(
         SERVICE_PARTYMODE,
         {},
-        "party_mode_services",
+        "partymode",
     )
 
 class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
@@ -703,7 +703,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         self.coordinator.soco.remove_from_queue(queue_position)
 
     @soco_error()
-    def party_mode_services(self) -> None:
+    def partymode(self) -> None:
         """Join all visible sevices in the party mode."""
         self.coordinator.soco.partymode()
 
