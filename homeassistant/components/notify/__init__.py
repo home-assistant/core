@@ -131,7 +131,6 @@ class NotifyEntity(RestoreEntity):
     _attr_should_poll = False
     _attr_device_class: None
     _attr_state: None = None
-    _attr_supported_features: None
     __last_notified_isoformat: str | None = None
 
     def _default_to_device_class_name(self) -> bool:
