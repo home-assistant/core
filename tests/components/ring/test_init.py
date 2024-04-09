@@ -257,7 +257,7 @@ async def test_issue_deprecated_service_ring_update(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    _ = await hass.services.async_call(DOMAIN, "update", {}, blocking=True)
+    await hass.services.async_call(DOMAIN, "update", {}, blocking=True)
 
     issue = issue_registry.async_get_issue("ring", "deprecated_service_ring_update")
     assert issue
