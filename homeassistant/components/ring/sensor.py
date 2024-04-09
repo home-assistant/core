@@ -85,7 +85,10 @@ class RingSensor(RingEntity, SensorEntity):
         self._device = self._get_coordinator_data().get_device(
             self._device.device_api_id
         )
-        self._attr_native_value = self.entity_description.value_fn(self._device)
+        # History values can drop off the last 10 events so only update
+        # the value if it's not None
+        if native_value := self.entity_description.value_fn(self._device):
+            self._attr_native_value = native_value
         if self.entity_description.extra_state_attributes_fn and (
             extra_attrs := self.entity_description.extra_state_attributes_fn(
                 self._device
