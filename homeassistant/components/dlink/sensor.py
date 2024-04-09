@@ -54,17 +54,11 @@ async def async_setup_entry(
         SmartPlugSensor(entry, hass.data[DOMAIN][entry.entry_id], sensor)
         for sensor in SENSOR_TYPES
     ]
-    async_add_entities(entities)
+    async_add_entities(entities, True)
 
 
 class SmartPlugSensor(DLinkEntity, SensorEntity):
     """Representation of a D-Link Smart Plug sensor."""
-
-    def __init__(self, entry, data, entity_description) -> None:
-        """Initialize the sensor."""
-        super().__init__(entry, data, entity_description)
-        self.entity_description = entity_description
-        self.data = data
 
     @property
     def name(self) -> str | UndefinedType | None:
@@ -79,3 +73,7 @@ class SmartPlugSensor(DLinkEntity, SensorEntity):
         except ValueError:
             return None
         return state
+
+    def update(self) -> None:
+        """Get the latest data from the smart plug and updates the states."""
+        self.data.update()
