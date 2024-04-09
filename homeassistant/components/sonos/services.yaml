@@ -91,3 +91,8 @@ update_alarm:
     include_linked_zones:
       selector:
         boolean:
+
+partymode:
+  target:
+    device:
+      integration: sonos
