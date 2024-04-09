@@ -105,12 +105,6 @@
     "pressure": {
       "default": "mdi:gauge"
     },
-    "radiation_dose": {
-      "default": "mdi:radioactive"
-    },
-    "radiation_dose_rate": {
-      "default": "mdi:radioactive"
-    },
     "reactive_power": {
       "default": "mdi:flash"
     },

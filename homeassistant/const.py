@@ -978,26 +978,6 @@ _DEPRECATED_PRESSURE_PSI: Final = DeprecatedConstantEnum(
 """Deprecated: please use UnitOfPressure.PSI"""
 
 
-# Radiation dose units
-class UnitOfRadiationDose(StrEnum):
-    """Radiation dose units."""
-
-    SV = "Sv"
-    MSV = "mSv"
-    USV = "μSv"
-    NSV = "nSv"
-
-
-# Radiation dose rate units
-class UnitOfRadiationDoseRate(StrEnum):
-    """Radiation dose rate units."""
-
-    SV = "Sv/h"
-    MSV = "mSv/h"
-    USV = "μSv/h"
-    NSV = "nSv/h"
-
-
 # Sound pressure units
 class UnitOfSoundPressure(StrEnum):
     """Sound pressure units."""
