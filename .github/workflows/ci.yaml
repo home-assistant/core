@@ -1086,7 +1086,7 @@ jobs:
         uses: actions/download-artifact@v4.1.4
         with:
           pattern: coverage-*
-      - name: Upload coverage to Codecov (full coverage)
+      - name: Upload coverage to Codecov
         if: needs.info.outputs.test_full_suite == 'true'
         uses: Wandalen/wretry.action@v3.1.0
         with:
@@ -1094,16 +1094,6 @@ jobs:
           with: |
             fail_ci_if_error: true
             flags: full-suite
-            token: ${{ env.CODECOV_TOKEN }}
-          attempt_limit: 5
-          attempt_delay: 30000
-      - name: Upload coverage to Codecov (partial coverage)
-        if: needs.info.outputs.test_full_suite == 'false'
-        uses: Wandalen/wretry.action@v3.1.0
-        with:
-          action: codecov/codecov-action@v3.1.3
-          with: |
-            fail_ci_if_error: true
             token: ${{ env.CODECOV_TOKEN }}
           attempt_limit: 5
           attempt_delay: 30000
@@ -1232,18 +1222,7 @@ jobs:
         uses: actions/download-artifact@v4.1.4
         with:
           pattern: coverage-*
-      - name: Upload coverage to Codecov (full coverage)
-        if: needs.info.outputs.test_full_suite == 'true'
-        uses: Wandalen/wretry.action@v3.1.0
-        with:
-          action: codecov/codecov-action@v3.1.3
-          with: |
-            fail_ci_if_error: true
-            flags: full-suite
-            token: ${{ env.CODECOV_TOKEN }}
-          attempt_limit: 5
-          attempt_delay: 30000
-      - name: Upload coverage to Codecov (partial coverage)
+      - name: Upload coverage to Codecov
         if: needs.info.outputs.test_full_suite == 'false'
         uses: Wandalen/wretry.action@v3.1.0
         with:
