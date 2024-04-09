@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import timedelta
 import logging
 from typing import Any
@@ -94,7 +95,7 @@ class RingCam(RingEntity, Camera):
             self.async_write_ha_state()
 
     @property
-    def extra_state_attributes(self) -> dict[str, Any]:
+    def extra_state_attributes(self) -> Mapping[str, Any]:
         """Return the state attributes."""
         return {
             "video_url": self._video_url,
