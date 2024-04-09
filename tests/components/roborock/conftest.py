@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import pytest
+from roborock import RoomMapping
 
 from homeassistant.components.roborock.const import (
     CONF_BASE_URL,
@@ -73,6 +74,22 @@ def bypass_api_fixture() -> None:
         patch(
             "homeassistant.components.roborock.image.MAP_SLEEP",
             0,
+        ),
+        patch(
+            "homeassistant.components.roborock.coordinator.RoborockLocalClient.get_room_mapping",
+            return_value=[
+                RoomMapping(16, "2362048"),
+                RoomMapping(17, "2362044"),
+                RoomMapping(18, "2362041"),
+            ],
+        ),
+        patch(
+            "homeassistant.components.roborock.coordinator.RoborockMqttClient.get_room_mapping",
+            return_value=[
+                RoomMapping(16, "2362048"),
+                RoomMapping(17, "2362044"),
+                RoomMapping(18, "2362041"),
+            ],
         ),
     ):
         yield

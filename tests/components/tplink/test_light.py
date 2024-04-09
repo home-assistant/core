@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import timedelta
 from unittest.mock import MagicMock, PropertyMock
 
+from kasa import AuthenticationException, SmartDeviceException, TimeoutException
 import pytest
 
 from homeassistant.components import tplink
@@ -24,8 +25,10 @@ from homeassistant.components.light import (
     DOMAIN as LIGHT_DOMAIN,
 )
 from homeassistant.components.tplink.const import DOMAIN
+from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -730,3 +733,66 @@ async def test_smart_strip_custom_sequence_effect(hass: HomeAssistant) -> None:
         }
     )
     strip.set_custom_effect.reset_mock()
+
+
+@pytest.mark.parametrize(
+    ("exception_type", "msg", "reauth_expected"),
+    [
+        (
+            AuthenticationException,
+            "Device authentication error async_turn_on: test error",
+            True,
+        ),
+        (
+            TimeoutException,
+            "Timeout communicating with the device async_turn_on: test error",
+            False,
+        ),
+        (
+            SmartDeviceException,
+            "Unable to communicate with the device async_turn_on: test error",
+            False,
+        ),
+    ],
+    ids=["Authentication", "Timeout", "Other"],
+)
+async def test_light_errors_when_turned_on(
+    hass: HomeAssistant,
+    exception_type,
+    msg,
+    reauth_expected,
+) -> None:
+    """Tests the light wraps errors correctly."""
+    already_migrated_config_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
+    )
+    already_migrated_config_entry.add_to_hass(hass)
+    bulb = _mocked_bulb()
+    bulb.turn_on.side_effect = exception_type(msg)
+
+    with _patch_discovery(device=bulb), _patch_connect(device=bulb):
+        await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
+        await hass.async_block_till_done()
+
+    entity_id = "light.my_bulb"
+
+    assert not any(
+        already_migrated_config_entry.async_get_active_flows(hass, {SOURCE_REAUTH})
+    )
+
+    with pytest.raises(HomeAssistantError, match=msg):
+        await hass.services.async_call(
+            LIGHT_DOMAIN, "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
+        )
+    await hass.async_block_till_done()
+    assert bulb.turn_on.call_count == 1
+    assert (
+        any(
+            flow
+            for flow in already_migrated_config_entry.async_get_active_flows(
+                hass, {SOURCE_REAUTH}
+            )
+            if flow["handler"] == tplink.DOMAIN
+        )
+        == reauth_expected
+    )

@@ -401,14 +401,14 @@ def cleanup_name_for_homekit(name: str | None) -> str:
     return name.translate(HOMEKIT_CHAR_TRANSLATIONS)[:MAX_NAME_LENGTH]
 
 
-def temperature_to_homekit(temperature: float | int, unit: str) -> float:
+def temperature_to_homekit(temperature: float, unit: str) -> float:
     """Convert temperature to Celsius for HomeKit."""
     return round(
         TemperatureConverter.convert(temperature, unit, UnitOfTemperature.CELSIUS), 1
     )
 
 
-def temperature_to_states(temperature: float | int, unit: str) -> float:
+def temperature_to_states(temperature: float, unit: str) -> float:
     """Convert temperature back from Celsius to Home Assistant unit."""
     return (
         round(
