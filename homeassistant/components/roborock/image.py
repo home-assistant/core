@@ -156,7 +156,7 @@ async def create_coordinator_maps(
         coord.maps.items(), key=lambda data: data[0] == cur_map, reverse=True
     )
     maps = await asyncio.gather(
-        *(roborock_storage.async_load_map(map_name) for map_name in coord.maps.values())
+        *(roborock_storage.async_load_map(map.name) for map in coord.maps.values())
     )
     storage_updates = []
     for (map_flag, map_info), storage_map in zip(maps_info, maps):
@@ -177,15 +177,15 @@ async def create_coordinator_maps(
                 # map change.
                 await asyncio.sleep(MAP_SLEEP)
             # Get the map data
-        map_update = await asyncio.gather(
-            *[coord.cloud_api.get_map_v1(), coord.get_rooms()]
-        )
-        api_data = map_update[0]
-        if api_data is None:
-            # If we fail to get the map data, we should set it to empty bytes,
-            # so it is setup, but set as unavailable
-            api_data = b""
-        create_map = True
+            map_update = await asyncio.gather(
+                *[coord.cloud_api.get_map_v1(), coord.get_rooms()]
+            )
+            api_data = map_update[0]
+            if api_data is None:
+                # If we fail to get the map data, we should set it to empty bytes,
+                # so it is setup, but set as unavailable
+                api_data = b""
+            create_map = True
         roborock_map = RoborockMap(
             unique_id,
             coord,
