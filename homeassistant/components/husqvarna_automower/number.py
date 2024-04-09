@@ -1,5 +1,6 @@
 """Creates the number entities for the mower."""
 
+import asyncio
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 import logging
@@ -69,7 +70,10 @@ WORK_AREA_NUMBER_TYPES: tuple[AutomowerWorkAreaNumberEntityDescription, ...] = (
         exists_fn=lambda data: True,
         value_fn=lambda data: data.cutting_height,
         set_value_fn=(
-            lambda session, mower_id, cheight, work_area: session.set_cutting_height(
+            lambda session,
+            mower_id,
+            cheight,
+            work_area: session.set_cutting_height_workarea(
                 mower_id, int(cheight), work_area
             )
         ),
@@ -160,9 +164,11 @@ class AutomowerWorkAreaNumberEntity(AutomowerBaseEntity, NumberEntity):
     async def async_set_native_value(self, value: float) -> None:
         """Change to new number value."""
         try:
-            await self.entity_description.set_value_fn(  # type: ignore[call-arg, misc]
-                self.coordinator.api, self.mower_id, value
+            await self.entity_description.set_value_fn(
+                self.coordinator.api, self.mower_id, value, self.work_area
             )
+            await asyncio.sleep(5)
+            await self.async_update()
         except ApiException as exception:
             raise HomeAssistantError(
                 f"Command couldn't be sent to the command queue: {exception}"
