@@ -24,7 +24,14 @@ from homeassistant.components.zha import DOMAIN as ZHA_DOMAIN
 from homeassistant.components.zha.repairs.wrong_silabs_firmware import (
     probe_silabs_firmware_type,
 )
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigEntryBaseFlow,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+    OptionsFlowWithConfigEntry,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.singleton import singleton
@@ -68,17 +75,13 @@ def get_zigbee_flasher_addon_manager(hass: HomeAssistant) -> WaitingAddonManager
     )
 
 
-class HomeAssistantSkyConnectConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Home Assistant SkyConnect."""
+class BaseFirmwareInstallFlow(ConfigEntryBaseFlow):
+    """Base flow to install firmware."""
 
-    VERSION = 1
-    MINOR_VERSION = 2
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """Instantiate base flow."""
+        super().__init__(*args, **kwargs)
 
-    def __init__(self) -> None:
-        """Initialize flow instance."""
-        super().__init__()
-
-        self._hass = None
         self._current_firmware_type: ApplicationType | None = None
         self._usb_info: usb.UsbServiceInfo | None = None
         self._hw_variant: HardwareVariant | None = None
@@ -86,14 +89,6 @@ class HomeAssistantSkyConnectConfigFlow(ConfigFlow, domain=DOMAIN):
         self.install_task: asyncio.Task | None = None
         self.start_task: asyncio.Task | None = None
         self.stop_task: asyncio.Task | None = None
-
-    @staticmethod
-    @callback
-    def async_get_options_flow(
-        config_entry: ConfigEntry,
-    ) -> HomeAssistantSkyConnectOptionsFlow:
-        """Return the options flow."""
-        return HomeAssistantSkyConnectOptionsFlow(config_entry)
 
     async def _async_set_addon_config(
         self, config: dict, addon_manager: AddonManager
@@ -117,59 +112,6 @@ class HomeAssistantSkyConnectConfigFlow(ConfigFlow, domain=DOMAIN):
             ) from err
 
         return addon_info
-
-    async def async_step_usb(
-        self, discovery_info: usb.UsbServiceInfo
-    ) -> ConfigFlowResult:
-        """Handle usb discovery."""
-        device = discovery_info.device
-        vid = discovery_info.vid
-        pid = discovery_info.pid
-        serial_number = discovery_info.serial_number
-        manufacturer = discovery_info.manufacturer
-        description = discovery_info.description
-        unique_id = f"{vid}:{pid}_{serial_number}_{manufacturer}_{description}"
-
-        if await self.async_set_unique_id(unique_id):
-            self._abort_if_unique_id_configured(updates={"device": device})
-
-        discovery_info.device = await self.hass.async_add_executor_job(
-            usb.get_serial_by_id, discovery_info.device
-        )
-
-        self._usb_info = discovery_info
-
-        assert description is not None
-        self._hw_variant = HardwareVariant.from_usb_product_name(description)
-
-        self.context["description_placeholders"] = {
-            "model": self._hw_variant.full_name,
-            "firmware_type": "unknown",
-            "docs_web_flasher_url": "https://skyconnect.home-assistant.io/firmware-update/",
-        }
-        self.context["title_placeholders"] = self.context["description_placeholders"]
-
-        return await self.async_step_confirm()
-
-    async def async_step_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Confirm a discovery."""
-        self._set_confirm_only()
-
-        # Don't permit discovery if we are already set up
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-
-        # Without confirmation, discovery can automatically progress into parts of the
-        # config flow logic that interacts with hardware.
-        if user_input is not None:
-            return await self.async_step_pick_firmware()
-
-        return self.async_show_form(
-            step_id="confirm",
-            description_placeholders=self.context["description_placeholders"],
-        )
 
     async def async_step_pick_firmware(
         self, user_input: dict[str, Any] | None = None
@@ -356,7 +298,6 @@ class HomeAssistantSkyConnectConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Confirm Zigbee setup."""
-        self._set_confirm_only()
         assert self._usb_info is not None
         assert self._hw_variant is not None
 
@@ -375,7 +316,7 @@ class HomeAssistantSkyConnectConfigFlow(ConfigFlow, domain=DOMAIN):
                 },
             )
 
-            return self._async_create_entry()
+            return self._async_flow_finished()
 
         return self.async_show_form(
             step_id="confirm_zigbee",
@@ -516,21 +457,95 @@ class HomeAssistantSkyConnectConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Confirm OTBR setup."""
-        self._set_confirm_only()
         assert self._usb_info is not None
         assert self._hw_variant is not None
         assert self._current_firmware_type is not None
 
         if user_input is not None:
             # OTBR discovery is done automatically via hassio
-            return self._async_create_entry()
+            return self._async_flow_finished()
 
         return self.async_show_form(
             step_id="confirm_otbr",
             description_placeholders=self.context["description_placeholders"],
         )
 
-    def _async_create_entry(self) -> ConfigFlowResult:
+    def _async_flow_finished(self) -> ConfigFlowResult:
+        """Finish the flow."""
+        raise NotImplementedError
+
+
+class HomeAssistantSkyConnectConfigFlow(
+    BaseFirmwareInstallFlow, ConfigFlow, domain=DOMAIN
+):
+    """Handle a config flow for Home Assistant SkyConnect."""
+
+    VERSION = 1
+    MINOR_VERSION = 2
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> OptionsFlow:
+        """Return the options flow."""
+        firmware_type = ApplicationType(config_entry.data["firmware"].upper())
+
+        if firmware_type == ApplicationType.CPC:
+            return HomeAssistantSkyConnectMultiPanOptionsFlowHandler(config_entry)
+
+        return HomeAssistantSkyConnectOptionsFlowHandler(config_entry)
+
+    async def async_step_usb(
+        self, discovery_info: usb.UsbServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle usb discovery."""
+        device = discovery_info.device
+        vid = discovery_info.vid
+        pid = discovery_info.pid
+        serial_number = discovery_info.serial_number
+        manufacturer = discovery_info.manufacturer
+        description = discovery_info.description
+        unique_id = f"{vid}:{pid}_{serial_number}_{manufacturer}_{description}"
+
+        if await self.async_set_unique_id(unique_id):
+            self._abort_if_unique_id_configured(updates={"device": device})
+
+        discovery_info.device = await self.hass.async_add_executor_job(
+            usb.get_serial_by_id, discovery_info.device
+        )
+
+        self._usb_info = discovery_info
+
+        assert description is not None
+        self._hw_variant = HardwareVariant.from_usb_product_name(description)
+
+        self.context["description_placeholders"] = {
+            "model": self._hw_variant.full_name,
+            "firmware_type": "unknown",
+            "docs_web_flasher_url": "https://skyconnect.home-assistant.io/firmware-update/",
+        }
+        self.context["title_placeholders"] = self.context["description_placeholders"]
+
+        return await self.async_step_confirm()
+
+    async def async_step_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm a discovery."""
+        self._set_confirm_only()
+
+        # Without confirmation, discovery can automatically progress into parts of the
+        # config flow logic that interacts with hardware.
+        if user_input is not None:
+            return await self.async_step_pick_firmware()
+
+        return self.async_show_form(
+            step_id="confirm",
+            description_placeholders=self.context["description_placeholders"],
+        )
+
+    def _async_flow_finished(self) -> ConfigFlowResult:
         """Create the config entry."""
         assert self._usb_info is not None
         assert self._hw_variant is not None
@@ -550,8 +565,10 @@ class HomeAssistantSkyConnectConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
 
-class HomeAssistantSkyConnectOptionsFlow(silabs_multiprotocol_addon.OptionsFlowHandler):
-    """Handle an option flow for Home Assistant SkyConnect."""
+class HomeAssistantSkyConnectMultiPanOptionsFlowHandler(
+    silabs_multiprotocol_addon.OptionsFlowHandler
+):
+    """Multi-PAN options flow for Home Assistant SkyConnect."""
 
     async def _async_serial_port_settings(
         self,
@@ -586,3 +603,32 @@ class HomeAssistantSkyConnectOptionsFlow(silabs_multiprotocol_addon.OptionsFlowH
     def _hardware_name(self) -> str:
         """Return the name of the hardware."""
         return self._hw_variant.full_name
+
+
+class HomeAssistantSkyConnectOptionsFlowHandler(
+    BaseFirmwareInstallFlow, OptionsFlowWithConfigEntry
+):
+    """Zigbee and Thread options flow handlers."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage the options flow."""
+        return await self.async_step_pick_firmware()
+
+    def _async_flow_finished(self) -> ConfigFlowResult:
+        """Create the config entry."""
+        assert self._usb_info is not None
+        assert self._hw_variant is not None
+        assert self._current_firmware_type is not None
+
+        self.hass.config_entries.async_update_entry(
+            entry=self.config_entry,
+            data={
+                **self.config_entry.data,
+                "firmware": self._current_firmware_type.name.lower(),
+            },
+            options=self.config_entry.options,
+        )
+
+        return self.async_create_entry(title="", data={})
