@@ -124,7 +124,7 @@ class Hub:
 
         writer.write(s.encode())
         await writer.drain()
-        async for line in await reader.read(10000):
+        async for line in await reader:
             try:
                 message = json.loads(line.decode())
                 _LOGGER.debug(message)
