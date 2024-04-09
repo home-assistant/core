@@ -1175,53 +1175,6 @@ async def test_measure_sliding_window(
             ]
         }
 
-    await async_setup_component(
-        hass,
-        "sensor",
-        {
-            "sensor": [
-                {
-                    "platform": "history_stats",
-                    "entity_id": "binary_sensor.test_id",
-                    "name": "sensor1",
-                    "state": "on",
-                    "start": "{{ as_timestamp(now()) - 3600 }}",
-                    "end": "{{ as_timestamp(now()) + 3600 }}",
-                    "type": "time",
-                },
-                {
-                    "platform": "history_stats",
-                    "entity_id": "binary_sensor.test_id",
-                    "name": "sensor2",
-                    "state": "on",
-                    "start": "{{ as_timestamp(now()) - 3600 }}",
-                    "end": "{{ as_timestamp(now()) + 3600 }}",
-                    "type": "time",
-                    "unique_id": "6b1f54e3-4065-43ca-8492-d0d4506a573a",
-                },
-                {
-                    "platform": "history_stats",
-                    "entity_id": "binary_sensor.test_id",
-                    "name": "sensor3",
-                    "state": "on",
-                    "start": "{{ as_timestamp(now()) - 3600 }}",
-                    "end": "{{ as_timestamp(now()) + 3600 }}",
-                    "type": "count",
-                },
-                {
-                    "platform": "history_stats",
-                    "entity_id": "binary_sensor.test_id",
-                    "name": "sensor4",
-                    "state": "on",
-                    "start": "{{ as_timestamp(now()) - 3600 }}",
-                    "end": "{{ as_timestamp(now()) + 3600 }}",
-                    "type": "ratio",
-                },
-            ]
-        },
-    )
-    await hass.async_block_till_done()
-
     with (
         patch(
             "homeassistant.components.recorder.history.state_changes_during_period",
@@ -1229,6 +1182,52 @@ async def test_measure_sliding_window(
         ),
         freeze_time(start_time),
     ):
+        await async_setup_component(
+            hass,
+            "sensor",
+            {
+                "sensor": [
+                    {
+                        "platform": "history_stats",
+                        "entity_id": "binary_sensor.test_id",
+                        "name": "sensor1",
+                        "state": "on",
+                        "start": "{{ as_timestamp(now()) - 3600 }}",
+                        "end": "{{ as_timestamp(now()) + 3600 }}",
+                        "type": "time",
+                    },
+                    {
+                        "platform": "history_stats",
+                        "entity_id": "binary_sensor.test_id",
+                        "name": "sensor2",
+                        "state": "on",
+                        "start": "{{ as_timestamp(now()) - 3600 }}",
+                        "end": "{{ as_timestamp(now()) + 3600 }}",
+                        "type": "time",
+                        "unique_id": "6b1f54e3-4065-43ca-8492-d0d4506a573a",
+                    },
+                    {
+                        "platform": "history_stats",
+                        "entity_id": "binary_sensor.test_id",
+                        "name": "sensor3",
+                        "state": "on",
+                        "start": "{{ as_timestamp(now()) - 3600 }}",
+                        "end": "{{ as_timestamp(now()) + 3600 }}",
+                        "type": "count",
+                    },
+                    {
+                        "platform": "history_stats",
+                        "entity_id": "binary_sensor.test_id",
+                        "name": "sensor4",
+                        "state": "on",
+                        "start": "{{ as_timestamp(now()) - 3600 }}",
+                        "end": "{{ as_timestamp(now()) + 3600 }}",
+                        "type": "ratio",
+                    },
+                ]
+            },
+        )
+        await hass.async_block_till_done()
         for i in range(1, 5):
             await async_update_entity(hass, f"sensor.sensor{i}")
         await hass.async_block_till_done()
