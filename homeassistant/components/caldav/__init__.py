@@ -34,6 +34,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         username=entry.data[CONF_USERNAME],
         password=entry.data[CONF_PASSWORD],
         ssl_verify_cert=entry.data[CONF_VERIFY_SSL],
+        timeout=10,
     )
     try:
         await hass.async_add_executor_job(client.principal)

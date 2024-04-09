@@ -1,16 +1,21 @@
 """Configuration for Sonos tests."""
 
+import asyncio
+from collections.abc import Callable
 from copy import copy
 from ipaddress import ip_address
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
 from soco import SoCo
+from soco.alarms import Alarms
+from soco.events_base import Event as SonosEvent
 
 from homeassistant.components import ssdp, zeroconf
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.components.sonos import DOMAIN
 from homeassistant.const import CONF_HOSTS
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_fixture
 
@@ -30,6 +35,31 @@ class SonosMockSubscribe:
         """Initialize the mock subscriber."""
         self.event_listener = SonosMockEventListener(ip_address)
         self.service = Mock()
+        self.callback_future: asyncio.Future[Callable[[SonosEvent], None]] = None
+        self._callback: Callable[[SonosEvent], None] | None = None
+
+    @property
+    def callback(self) -> Callable[[SonosEvent], None] | None:
+        """Return the callback."""
+        return self._callback
+
+    @callback.setter
+    def callback(self, callback: Callable[[SonosEvent], None]) -> None:
+        """Set the callback."""
+        self._callback = callback
+        future = self._get_callback_future()
+        if not future.done():
+            future.set_result(callback)
+
+    def _get_callback_future(self) -> asyncio.Future[Callable[[SonosEvent], None]]:
+        """Get the callback future."""
+        if not self.callback_future:
+            self.callback_future = asyncio.get_running_loop().create_future()
+        return self.callback_future
+
+    async def wait_for_callback_to_be_set(self) -> Callable[[SonosEvent], None]:
+        """Wait for the callback to be set."""
+        return await self._get_callback_future()
 
     async def unsubscribe(self) -> None:
         """Unsubscribe mock."""
@@ -93,9 +123,12 @@ def async_setup_sonos(hass, config_entry, fire_zgs_event):
 
     async def _wrapper():
         config_entry.add_to_hass(hass)
+        sonos_alarms = Alarms()
+        sonos_alarms.last_alarm_list_version = "RINCON_test:0"
         assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         await fire_zgs_event()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     return _wrapper
 
@@ -455,15 +488,15 @@ def zgs_discovery_fixture():
 
 
 @pytest.fixture(name="fire_zgs_event")
-def zgs_event_fixture(hass, soco, zgs_discovery):
+def zgs_event_fixture(hass: HomeAssistant, soco: SoCo, zgs_discovery: str):
     """Create alarm_event fixture."""
     variables = {"ZoneGroupState": zgs_discovery}
 
     async def _wrapper():
         event = SonosMockEvent(soco, soco.zoneGroupTopology, variables)
-        subscription = soco.zoneGroupTopology.subscribe.return_value
-        sub_callback = subscription.callback
+        subscription: SonosMockSubscribe = soco.zoneGroupTopology.subscribe.return_value
+        sub_callback = await subscription.wait_for_callback_to_be_set()
         sub_callback(event)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     return _wrapper

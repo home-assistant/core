@@ -16,7 +16,7 @@ import voluptuous as vol
 
 # Otherwise can't test just this file (import order issue)
 from homeassistant import config_entries, exceptions
-import homeassistant.components.scene as scene
+from homeassistant.components import scene
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_DEVICE_ID,
@@ -668,6 +668,31 @@ async def test_delay_basic(hass: HomeAssistant) -> None:
     assert_action_trace(
         {
             "0": [{"result": {"delay": 5.0, "done": True}}],
+        }
+    )
+
+
+async def test_empty_delay(hass: HomeAssistant) -> None:
+    """Test an empty delay."""
+    delay_alias = "delay step"
+    sequence = cv.SCRIPT_SCHEMA({"delay": {"seconds": 0}, "alias": delay_alias})
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+    delay_started_flag = async_watch_for_action(script_obj, delay_alias)
+
+    try:
+        await script_obj.async_run(context=Context())
+        await asyncio.wait_for(delay_started_flag.wait(), 1)
+    except (AssertionError, TimeoutError):
+        await script_obj.async_stop()
+        raise
+    else:
+        await hass.async_block_till_done()
+        assert not script_obj.is_running
+        assert script_obj.last_action is None
+
+    assert_action_trace(
+        {
+            "0": [{"result": {"delay": 0.0, "done": True}}],
         }
     )
 
@@ -2810,6 +2835,58 @@ async def test_repeat_nested(
         "2": [{"result": {"event": "test_event", "event_data": event_data1}}],
     }
     assert_action_trace(expected_trace)
+
+
+@pytest.mark.parametrize(
+    ("condition", "check"), [("while", "above"), ("until", "below")]
+)
+async def test_repeat_limits(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, condition: str, check: str
+) -> None:
+    """Test limits on repeats prevent the system from hanging."""
+    event = "test_event"
+    events = async_capture_events(hass, event)
+    hass.states.async_set("sensor.test", "0.5")
+
+    sequence = {
+        "repeat": {
+            "sequence": [
+                {
+                    "event": event,
+                },
+            ],
+        }
+    }
+    sequence["repeat"][condition] = {
+        "condition": "numeric_state",
+        "entity_id": "sensor.test",
+        check: "0",
+    }
+
+    with (
+        patch.object(script, "REPEAT_WARN_ITERATIONS", 5),
+        patch.object(script, "REPEAT_TERMINATE_ITERATIONS", 10),
+    ):
+        script_obj = script.Script(
+            hass, cv.SCRIPT_SCHEMA(sequence), f"Test {condition}", "test_domain"
+        )
+
+        caplog.clear()
+        caplog.set_level(logging.WARNING)
+
+        hass.async_create_task(script_obj.async_run(context=Context()))
+        await asyncio.wait_for(hass.async_block_till_done(), 1)
+
+    title_condition = condition.title()
+
+    assert f"{title_condition} condition" in caplog.text
+    assert f"in script `Test {condition}` looped 5 times" in caplog.text
+    assert (
+        f"script `Test {condition}` terminated because it looped 10 times"
+        in caplog.text
+    )
+
+    assert len(events) == 10
 
 
 async def test_choose_warning(

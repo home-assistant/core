@@ -5,7 +5,7 @@ from collections.abc import Iterable
 from datetime import timedelta
 import logging
 from typing import Any
-from unittest.mock import ANY, Mock, patch
+from unittest.mock import ANY, AsyncMock, Mock, patch
 
 import pytest
 
@@ -76,6 +76,40 @@ async def test_polling_only_updates_entities_it_should_poll(
 
     assert not no_poll_ent.async_update.called
     assert poll_ent.async_update.called
+
+
+async def test_polling_check_works_if_entity_add_fails(
+    hass: HomeAssistant,
+) -> None:
+    """Test the polling check works if an entity add fails."""
+    component = EntityComponent(_LOGGER, DOMAIN, hass, timedelta(seconds=20))
+    await component.async_setup({})
+
+    class MockEntityNeedsSelfHassInShouldPoll(MockEntity):
+        """Mock entity that needs self.hass in should_poll."""
+
+        @property
+        def should_poll(self) -> bool:
+            """Return True if entity has to be polled."""
+            return self.hass.data is not None
+
+    working_poll_ent = MockEntityNeedsSelfHassInShouldPoll(should_poll=True)
+    working_poll_ent.async_update = AsyncMock()
+    broken_poll_ent = MockEntityNeedsSelfHassInShouldPoll(should_poll=True)
+    broken_poll_ent.async_update = AsyncMock(side_effect=Exception("Broken"))
+
+    await component.async_add_entities(
+        [broken_poll_ent, working_poll_ent], update_before_add=True
+    )
+
+    working_poll_ent.async_update.reset_mock()
+    broken_poll_ent.async_update.reset_mock()
+
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=20))
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert not broken_poll_ent.async_update.called
+    assert working_poll_ent.async_update.called
 
 
 async def test_polling_disabled_by_config_entry(hass: HomeAssistant) -> None:
@@ -1432,9 +1466,9 @@ async def test_override_restored_entities(
     component = EntityComponent(_LOGGER, DOMAIN, hass)
     await component.async_setup({})
 
-    await component.async_add_entities(
-        [MockEntity(unique_id="1234", state="on", entity_id="test_domain.world")], True
-    )
+    ent = MockEntity(unique_id="1234", entity_id="test_domain.world")
+    ent._attr_state = "on"
+    await component.async_add_entities([ent], True)
 
     state = hass.states.get("test_domain.world")
     assert state.state == "on"

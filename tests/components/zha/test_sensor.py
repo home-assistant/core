@@ -672,7 +672,6 @@ def core_rs(hass_storage):
                 }
             ],
         }
-        return
 
     return _storage
 
@@ -1260,10 +1259,10 @@ async def test_last_feeding_size_sensor_v2(
     assert entity_id is not None
 
     await send_attributes_report(hass, cluster, {0x010C: 1})
-    assert_state(hass, entity_id, "1.0", UnitOfMass.GRAMS)
+    assert_state(hass, entity_id, "1.0", UnitOfMass.GRAMS.value)
 
     await send_attributes_report(hass, cluster, {0x010C: 5})
-    assert_state(hass, entity_id, "5.0", UnitOfMass.GRAMS)
+    assert_state(hass, entity_id, "5.0", UnitOfMass.GRAMS.value)
 
 
 @pytest.fixture

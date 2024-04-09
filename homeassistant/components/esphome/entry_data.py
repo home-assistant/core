@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Coroutine, Iterable
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
 from functools import partial
 import logging
@@ -47,6 +47,7 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.storage import Store
+from homeassistant.util.signal_type import SignalType
 
 from .const import DOMAIN
 from .dashboard import async_get_dashboard
@@ -147,9 +148,9 @@ class RuntimeEntryData:
         )
 
     @property
-    def signal_static_info_updated(self) -> str:
+    def signal_static_info_updated(self) -> SignalType[list[EntityInfo]]:
         """Return the signal to listen to for updates on static info."""
-        return f"esphome_{self.entry_id}_on_list"
+        return SignalType(f"esphome_{self.entry_id}_on_list")
 
     @callback
     def async_register_static_info_callback(
@@ -171,15 +172,6 @@ class RuntimeEntryData:
         callback_: Callable[[list[EntityInfo]], None],
     ) -> None:
         """Unsubscribe to when static info is registered."""
-        callbacks.remove(callback_)
-
-    @callback
-    def _async_unsubscribe_static_key_remove(
-        self,
-        callbacks: list[Callable[[], Coroutine[Any, Any, None]]],
-        callback_: Callable[[], Coroutine[Any, Any, None]],
-    ) -> None:
-        """Unsubscribe to when static info is removed."""
         callbacks.remove(callback_)
 
     @callback
@@ -265,7 +257,9 @@ class RuntimeEntryData:
         if async_get_dashboard(hass):
             needed_platforms.add(Platform.UPDATE)
 
-        if self.device_info and self.device_info.voice_assistant_version:
+        if self.device_info and self.device_info.voice_assistant_feature_flags_compat(
+            self.api_version
+        ):
             needed_platforms.add(Platform.BINARY_SENSOR)
             needed_platforms.add(Platform.SELECT)
 
@@ -361,11 +355,11 @@ class RuntimeEntryData:
         if subscription := self.state_subscriptions.get(subscription_key):
             try:
                 subscription()
-            except Exception as ex:  # pylint: disable=broad-except
+            except Exception:  # pylint: disable=broad-except
                 # If we allow this exception to raise it will
                 # make it all the way to data_received in aioesphomeapi
                 # which will cause the connection to be closed.
-                _LOGGER.exception("Error while calling subscription: %s", ex)
+                _LOGGER.exception("Error while calling subscription")
 
     @callback
     def async_update_device_state(self) -> None:

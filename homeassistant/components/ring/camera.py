@@ -67,7 +67,7 @@ class RingCam(RingEntity, Camera):
         self._video_url = None
         self._image = None
         self._expires_at = dt_util.utcnow() - FORCE_REFRESH_INTERVAL
-        self._attr_unique_id = device.id
+        self._attr_unique_id = str(device.id)
         if device.has_capability(MOTION_DETECTION_CAPABILITY):
             self._attr_motion_detection_enabled = device.motion_detection
 
@@ -132,7 +132,7 @@ class RingCam(RingEntity, Camera):
         finally:
             await stream.close()
 
-    async def async_update(self) -> None:
+    async def async_update(self):
         """Update camera entity and refresh attributes."""
         if (
             self._device.has_capability(MOTION_DETECTION_CAPABILITY)
@@ -160,7 +160,7 @@ class RingCam(RingEntity, Camera):
         self._expires_at = FORCE_REFRESH_INTERVAL + utcnow
 
     @exception_wrap
-    def _get_video(self) -> str:
+    def _get_video(self):
         return self._device.recording_url(self._last_event["id"])
 
     @exception_wrap

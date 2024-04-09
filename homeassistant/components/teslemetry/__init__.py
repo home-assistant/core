@@ -13,10 +13,10 @@ from tesla_fleet_api.exceptions import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN
 from .coordinator import (
     TeslemetryEnergyDataCoordinator,
     TeslemetryVehicleDataCoordinator,
@@ -38,12 +38,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     try:
         products = (await teslemetry.products())["response"]
-    except InvalidToken:
-        LOGGER.error("Access token is invalid, unable to connect to Teslemetry")
-        return False
-    except SubscriptionRequired:
-        LOGGER.error("Subscription required, unable to connect to Telemetry")
-        return False
+    except InvalidToken as e:
+        raise ConfigEntryAuthFailed from e
+    except SubscriptionRequired as e:
+        raise ConfigEntryAuthFailed from e
     except TeslaFleetError as e:
         raise ConfigEntryNotReady from e
 

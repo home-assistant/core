@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Generator
 from datetime import timedelta
+from functools import cached_property
 import logging
 from typing import Any
 from unittest.mock import ANY, AsyncMock, Mock, patch
@@ -14,7 +15,6 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import config_entries, data_entry_flow, loader
-from homeassistant.backports.functools import cached_property
 from homeassistant.components import dhcp
 from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.const import (
@@ -821,6 +821,8 @@ async def test_as_dict(snapshot: SnapshotAssertion) -> None:
         "_setup_lock",
         "update_listeners",
         "reason",
+        "error_reason_translation_key",
+        "error_reason_translation_placeholders",
         "_async_cancel_retry_setup",
         "_on_unload",
         "reload_lock",

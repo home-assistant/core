@@ -1672,3 +1672,25 @@ def test_color_hex() -> None:
 
     with pytest.raises(vol.Invalid, match=msg):
         cv.color_hex(123456)
+
+
+def test_determine_script_action_ambiguous():
+    """Test determine script action with ambiguous actions."""
+    assert (
+        cv.determine_script_action(
+            {
+                "type": "is_power",
+                "condition": "device",
+                "device_id": "9c2bda81bc7997c981f811c32cafdb22",
+                "entity_id": "2ee287ec70dd0c6db187b539bee429b7",
+                "domain": "sensor",
+                "below": "15",
+            }
+        )
+        == "condition"
+    )
+
+
+def test_determine_script_action_non_ambiguous():
+    """Test determine script action with a non ambiguous action."""
+    assert cv.determine_script_action({"delay": "00:00:05"}) == "delay"

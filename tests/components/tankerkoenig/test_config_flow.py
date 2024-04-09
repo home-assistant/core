@@ -56,7 +56,7 @@ async def test_user(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     with (
@@ -71,13 +71,13 @@ async def test_user(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=MOCK_USER_DATA
         )
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "select_station"
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=MOCK_STATIONS_DATA
         )
-        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["data"][CONF_NAME] == "Home"
         assert result["data"][CONF_API_KEY] == "269534f6-xxxx-xxxx-xxxx-yyyyzzzzxxxx"
         assert result["data"][CONF_FUEL_TYPES] == ["e5"]
@@ -107,14 +107,14 @@ async def test_user_already_configured(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=MOCK_USER_DATA
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -123,7 +123,7 @@ async def test_exception_security(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     with patch(
@@ -133,7 +133,7 @@ async def test_exception_security(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=MOCK_USER_DATA
         )
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
         assert result["errors"][CONF_API_KEY] == "invalid_auth"
 
@@ -143,7 +143,7 @@ async def test_user_no_stations(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     with patch(
@@ -153,7 +153,7 @@ async def test_user_no_stations(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=MOCK_USER_DATA
         )
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
         assert result["errors"][CONF_RADIUS] == "no_stations"
 
@@ -176,7 +176,7 @@ async def test_reauth(hass: HomeAssistant, config_entry: MockConfigEntry) -> Non
             context={"source": SOURCE_REAUTH, "entry_id": config_entry.entry_id},
             data=config_entry.data,
         )
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "reauth_confirm"
 
         # re-auth unsuccessful
@@ -187,7 +187,7 @@ async def test_reauth(hass: HomeAssistant, config_entry: MockConfigEntry) -> Non
                 CONF_API_KEY: "269534f6-aaaa-bbbb-cccc-yyyyzzzzxxxx",
             },
         )
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "reauth_confirm"
         assert result["errors"] == {CONF_API_KEY: "invalid_auth"}
 
@@ -199,7 +199,7 @@ async def test_reauth(hass: HomeAssistant, config_entry: MockConfigEntry) -> Non
                 CONF_API_KEY: "269534f6-aaaa-bbbb-cccc-yyyyzzzzxxxx",
             },
         )
-        assert result["type"] == FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "reauth_successful"
 
     mock_setup_entry.assert_called()
@@ -224,7 +224,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
         return_value=NEARBY_STATIONS,
     ):
         result = await hass.config_entries.options.async_init(mock_config.entry_id)
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "init"
 
         result = await hass.config_entries.options.async_configure(
@@ -234,7 +234,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
                 CONF_STATIONS: MOCK_OPTIONS_DATA[CONF_STATIONS],
             },
         )
-        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         assert not mock_config.options[CONF_SHOW_ON_MAP]
 
 
@@ -254,7 +254,7 @@ async def test_options_flow_error(hass: HomeAssistant) -> None:
         side_effect=TankerkoenigInvalidKeyError("Booom!"),
     ) as mock_nearby_stations:
         result = await hass.config_entries.options.async_init(mock_config.entry_id)
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "init"
         assert result["errors"] == {"base": "invalid_auth"}
 
@@ -267,5 +267,5 @@ async def test_options_flow_error(hass: HomeAssistant) -> None:
                 CONF_STATIONS: MOCK_OPTIONS_DATA[CONF_STATIONS],
             },
         )
-        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         assert not mock_config.options[CONF_SHOW_ON_MAP]
