@@ -206,17 +206,18 @@ class GoogleTravelTimeConfigFlow(ConfigFlow, domain=DOMAIN):
                     user_input[CONF_ORIGIN],
                     user_input[CONF_DESTINATION],
                 )
-                return self.async_create_entry(
-                    title=user_input.get(CONF_NAME, DEFAULT_NAME),
-                    data=user_input,
-                    options=default_options(self.hass),
-                )
             except InvalidApiKeyException:
                 errors["base"] = "invalid_auth"
             except TimeoutError:
                 errors["base"] = "timeout_connect"
             except UnknownException:
                 errors["base"] = "cannot_connect"
+            else:
+                return self.async_create_entry(
+                    title=user_input.get(CONF_NAME, DEFAULT_NAME),
+                    data=user_input,
+                    options=default_options(self.hass),
+                )
 
         return self.async_show_form(
             step_id="user",
@@ -242,17 +243,18 @@ class GoogleTravelTimeConfigFlow(ConfigFlow, domain=DOMAIN):
                     user_input[CONF_ORIGIN],
                     user_input[CONF_DESTINATION],
                 )
-                return self.async_update_reload_and_abort(
-                    entry,
-                    data=user_input,
-                    reason="reconfigure_successful",
-                )
             except InvalidApiKeyException:
                 errors["base"] = "invalid_auth"
             except TimeoutError:
                 errors["base"] = "timeout_connect"
             except UnknownException:
                 errors["base"] = "cannot_connect"
+            else:
+                return self.async_update_reload_and_abort(
+                    entry,
+                    data=user_input,
+                    reason="reconfigure_successful",
+                )
 
         return self.async_show_form(
             step_id="reconfigure",
