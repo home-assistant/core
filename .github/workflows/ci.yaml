@@ -1098,7 +1098,6 @@ jobs:
         uses: codecov/codecov-action@v4.3.0
         with:
           fail_ci_if_error: true
-          flags: full-suite
           token: ${{ secrets.CODECOV_TOKEN }}
 
   pytest-partial:
@@ -1237,5 +1236,4 @@ jobs:
         uses: codecov/codecov-action@v4.3.0
         with:
           fail_ci_if_error: true
-          flags: full-suite
           token: ${{ secrets.CODECOV_TOKEN }}
