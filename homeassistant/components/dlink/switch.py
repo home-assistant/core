@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Optional, cast
+from typing import Any
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -42,20 +42,14 @@ class SmartPlugSwitch(DLinkEntity, SwitchEntity):
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the device."""
         try:
-            _temperature: Optional[int] = self.coordinator.data.get("temperature")
-            if _temperature is not None:
-                temperature = self.hass.config.units.temperature(
-                    int(_temperature), UnitOfTemperature.CELSIUS
-                )
+            temperature = self.hass.config.units.temperature(
+                int(self.coordinator.temperature), UnitOfTemperature.CELSIUS
+            )
         except ValueError:
             temperature = None
 
         try:
-            _total_consumption: Optional[float] = self.coordinator.data.get(
-                "total_consumption"
-            )
-            if _total_consumption is not None:
-                total_consumption = float(_total_consumption)
+            total_consumption = float(self.coordinator.total_consumption)
         except ValueError:
             total_consumption = None
 
@@ -67,7 +61,7 @@ class SmartPlugSwitch(DLinkEntity, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return true if switch is on."""
-        return self.coordinator.data.get("state") == "ON"
+        return self.coordinator.state == "ON"
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
@@ -90,4 +84,4 @@ class SmartPlugSwitch(DLinkEntity, SwitchEntity):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return cast(bool, self.coordinator.data.get("available"))
+        return self.coordinator.available

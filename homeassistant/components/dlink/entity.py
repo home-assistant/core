@@ -32,7 +32,7 @@ class DLinkEntity(CoordinatorEntity[DlinkCoordinator], Entity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
             manufacturer=MANUFACTURER,
-            model=coordinator.data.get("model_name"),
+            model=coordinator.smartplug.model_name,
             name=entry.title,
         )
         if entry.unique_id:
