@@ -581,7 +581,7 @@ async def test_option_flow_integration_not_setup(
     hass.data[UNIFI_DOMAIN].pop(config_entry.entry_id)
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "integration_not_setup"
 
 
@@ -602,7 +602,7 @@ async def test_form_ssdp(hass: HomeAssistant) -> None:
             },
         ),
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -647,7 +647,7 @@ async def test_form_ssdp_aborts_if_host_already_exists(hass: HomeAssistant) -> N
             },
         ),
     )
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -674,7 +674,7 @@ async def test_form_ssdp_aborts_if_serial_already_exists(hass: HomeAssistant) ->
             },
         ),
     )
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -701,7 +701,7 @@ async def test_form_ssdp_gets_form_with_ignored_entry(hass: HomeAssistant) -> No
             },
         ),
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
     context = next(

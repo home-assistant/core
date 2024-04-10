@@ -30,7 +30,9 @@ async def _async_usb_scan_done(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
     if not usb.async_is_plugged_in(hass, matcher):
         # The USB dongle is not plugged in, remove the config entry
-        hass.async_create_task(hass.config_entries.async_remove(entry.entry_id))
+        hass.async_create_task(
+            hass.config_entries.async_remove(entry.entry_id), eager_start=True
+        )
         return
 
     usb_dev = entry.data["device"]
@@ -73,7 +75,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     @callback
     def async_usb_scan_done() -> None:
         """Handle usb discovery started."""
-        hass.async_create_task(_async_usb_scan_done(hass, entry))
+        hass.async_create_task(_async_usb_scan_done(hass, entry), eager_start=True)
 
     unsub_usb = usb.async_register_initial_scan_callback(hass, async_usb_scan_done)
     entry.async_on_unload(unsub_usb)

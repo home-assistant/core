@@ -21,6 +21,7 @@ from homeassistant.const import (
 from homeassistant.core import (
     Context,
     Event,
+    EventStateChangedData,
     HomeAssistant,
     ServiceResponse,
     State,
@@ -36,7 +37,6 @@ from homeassistant.exceptions import (
 from homeassistant.helpers import config_validation as cv, entity, template
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import (
-    EventStateChangedData,
     TrackTemplate,
     TrackTemplateResult,
     async_track_template_result,
@@ -165,7 +165,7 @@ def handle_subscribe_events(
         )
 
     connection.subscriptions[msg["id"]] = hass.bus.async_listen(
-        event_type, forward_events, run_immediately=True
+        event_type, forward_events
     )
 
     connection.send_result(msg["id"])
@@ -410,7 +410,6 @@ def handle_subscribe_entities(
             connection.user,
             msg["id"],
         ),
-        run_immediately=True,
     )
     connection.send_result(msg["id"])
 

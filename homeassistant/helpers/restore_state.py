@@ -73,12 +73,11 @@ class StoredState:
 
     def as_dict(self) -> dict[str, Any]:
         """Return a dict representation of the stored state to be JSON serialized."""
-        result = {
+        return {
             "state": self.state.json_fragment,
             "extra_data": self.extra_data.as_dict() if self.extra_data else None,
             "last_seen": self.last_seen,
         }
-        return result
 
     @classmethod
     def from_dict(cls, json_dict: dict) -> Self:
@@ -253,7 +252,7 @@ class RestoreStateData:
 
         # Dump states when stopping hass
         self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STOP, _async_dump_states_at_stop, run_immediately=True
+            EVENT_HOMEASSISTANT_STOP, _async_dump_states_at_stop
         )
 
     @callback

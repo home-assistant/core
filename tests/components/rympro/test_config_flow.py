@@ -171,7 +171,7 @@ async def test_form_reauth(hass: HomeAssistant, config_entry) -> None:
         },
         data=config_entry.data,
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
     with (
@@ -197,7 +197,7 @@ async def test_form_reauth(hass: HomeAssistant, config_entry) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "abort"
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
     assert config_entry.data[CONF_PASSWORD] == "new_password"
     assert len(mock_setup_entry.mock_calls) == 1
@@ -214,7 +214,7 @@ async def test_form_reauth_with_new_account(hass: HomeAssistant, config_entry) -
         },
         data=config_entry.data,
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
     with (
@@ -240,7 +240,7 @@ async def test_form_reauth_with_new_account(hass: HomeAssistant, config_entry) -
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "abort"
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
     assert config_entry.data[CONF_UNIQUE_ID] == "new-account-number"
     assert config_entry.unique_id == "new-account-number"

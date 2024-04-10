@@ -41,6 +41,7 @@ from homeassistant.util.ssl import (
 from .const import (
     CONF_CHARSET,
     CONF_CUSTOM_EVENT_DATA_TEMPLATE,
+    CONF_EVENT_MESSAGE_DATA,
     CONF_FOLDER,
     CONF_MAX_MESSAGE_SIZE,
     CONF_SEARCH,
@@ -48,6 +49,7 @@ from .const import (
     CONF_SSL_CIPHER_LIST,
     DEFAULT_MAX_MESSAGE_SIZE,
     DOMAIN,
+    MESSAGE_DATA_OPTIONS,
 )
 from .errors import InvalidAuth, InvalidFolder
 
@@ -225,6 +227,12 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int | None]):
         self._last_message_id: str | None = None
         self.custom_event_template = None
         self._diagnostics_data: dict[str, Any] = {}
+        self._event_data_keys: list[str] = entry.data.get(
+            CONF_EVENT_MESSAGE_DATA, MESSAGE_DATA_OPTIONS
+        )
+        self._max_event_size: int = entry.data.get(
+            CONF_MAX_MESSAGE_SIZE, DEFAULT_MAX_MESSAGE_SIZE
+        )
         _custom_event_template = entry.data.get(CONF_CUSTOM_EVENT_DATA_TEMPLATE)
         if _custom_event_template is not None:
             self.custom_event_template = Template(_custom_event_template, hass=hass)
@@ -261,12 +269,11 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int | None]):
                 "folder": self.config_entry.data[CONF_FOLDER],
                 "initial": initial,
                 "date": message.date,
-                "text": message.text,
                 "sender": message.sender,
                 "subject": message.subject,
-                "headers": message.headers,
                 "uid": last_message_uid,
             }
+            data.update({key: getattr(message, key) for key in self._event_data_keys})
             if self.custom_event_template is not None:
                 try:
                     data["custom"] = self.custom_event_template.async_render(
@@ -289,11 +296,8 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int | None]):
                         last_message_uid,
                         err,
                     )
-            data["text"] = message.text[
-                : self.config_entry.data.get(
-                    CONF_MAX_MESSAGE_SIZE, DEFAULT_MAX_MESSAGE_SIZE
-                )
-            ]
+            if "text" in data:
+                data["text"] = message.text[: self._max_event_size]
             self._update_diagnostics(data)
             if (size := len(json_bytes(data))) > MAX_EVENT_DATA_BYTES:
                 _LOGGER.warning(
@@ -448,7 +452,7 @@ class ImapPushDataUpdateCoordinator(ImapDataUpdateCoordinator):
     async def async_start(self) -> None:
         """Start coordinator."""
         self._push_wait_task = self.hass.async_create_background_task(
-            self._async_wait_push_loop(), "Wait for IMAP data push"
+            self._async_wait_push_loop(), "Wait for IMAP data push", eager_start=False
         )
 
     async def _async_wait_push_loop(self) -> None:

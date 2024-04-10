@@ -95,7 +95,7 @@ async def test_form_advanced_options(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "create_entry"
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "devolo Home Control"
     assert result2["data"] == {
         "username": "test-username",
@@ -286,7 +286,7 @@ async def _setup(hass: HomeAssistant, result: FlowResult) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "create_entry"
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "devolo Home Control"
     assert result2["data"] == {
         "username": "test-username",

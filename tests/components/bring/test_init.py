@@ -37,10 +37,10 @@ async def test_load_unload(
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
 
-    assert bring_config_entry.state == ConfigEntryState.LOADED
+    assert bring_config_entry.state is ConfigEntryState.LOADED
 
     assert await hass.config_entries.async_unload(bring_config_entry.entry_id)
-    assert bring_config_entry.state == ConfigEntryState.NOT_LOADED
+    assert bring_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
 @pytest.mark.parametrize(

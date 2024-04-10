@@ -64,7 +64,7 @@ async def test_flow_ssdp(hass: HomeAssistant) -> None:
         context={"source": SOURCE_SSDP},
         data=SSDP_DATA,
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
     assert result["description_placeholders"] == {
         CONF_NAME: FRIENDLY_NAME,

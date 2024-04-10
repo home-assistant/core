@@ -107,9 +107,7 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
 
         features = features | ClimateEntityFeature.PRESET_MODE
 
-        features = features | ClimateEntityFeature.FAN_MODE
-
-        return features
+        return features | ClimateEntityFeature.FAN_MODE
 
     @property
     def current_humidity(self) -> int | None:

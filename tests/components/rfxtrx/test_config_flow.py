@@ -45,7 +45,7 @@ async def test_setup_network(transport_mock, hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -54,7 +54,7 @@ async def test_setup_network(transport_mock, hass: HomeAssistant) -> None:
         {"type": "Network"},
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "setup_network"
     assert result["errors"] == {}
 
@@ -63,7 +63,7 @@ async def test_setup_network(transport_mock, hass: HomeAssistant) -> None:
             result["flow_id"], {"host": "10.10.0.1", "port": 1234}
         )
 
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "RFXTRX"
     assert result["data"] == {
         "host": "10.10.0.1",
@@ -83,7 +83,7 @@ async def test_setup_serial(com_mock, transport_mock, hass: HomeAssistant) -> No
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -92,7 +92,7 @@ async def test_setup_serial(com_mock, transport_mock, hass: HomeAssistant) -> No
         {"type": "Serial"},
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "setup_serial"
     assert result["errors"] == {}
 
@@ -101,7 +101,7 @@ async def test_setup_serial(com_mock, transport_mock, hass: HomeAssistant) -> No
             result["flow_id"], {"device": port.device}
         )
 
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "RFXTRX"
     assert result["data"] == {
         "host": None,
@@ -121,7 +121,7 @@ async def test_setup_serial_manual(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -130,7 +130,7 @@ async def test_setup_serial_manual(
         {"type": "Serial"},
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "setup_serial"
     assert result["errors"] == {}
 
@@ -138,7 +138,7 @@ async def test_setup_serial_manual(
         result["flow_id"], {"device": "Enter Manually"}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "setup_serial_manual_path"
     assert result["errors"] == {}
 
@@ -147,7 +147,7 @@ async def test_setup_serial_manual(
             result["flow_id"], {"device": "/dev/ttyUSB0"}
         )
 
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "RFXTRX"
     assert result["data"] == {
         "host": None,
@@ -165,7 +165,7 @@ async def test_setup_network_fail(transport_mock, hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -174,7 +174,7 @@ async def test_setup_network_fail(transport_mock, hass: HomeAssistant) -> None:
         {"type": "Network"},
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "setup_network"
     assert result["errors"] == {}
 
@@ -182,7 +182,7 @@ async def test_setup_network_fail(transport_mock, hass: HomeAssistant) -> None:
         result["flow_id"], {"host": "10.10.0.1", "port": 1234}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "setup_network"
     assert result["errors"] == {"base": "cannot_connect"}
 
@@ -197,7 +197,7 @@ async def test_setup_serial_fail(com_mock, transport_mock, hass: HomeAssistant) 
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -206,7 +206,7 @@ async def test_setup_serial_fail(com_mock, transport_mock, hass: HomeAssistant) 
         {"type": "Serial"},
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "setup_serial"
     assert result["errors"] == {}
 
@@ -214,7 +214,7 @@ async def test_setup_serial_fail(com_mock, transport_mock, hass: HomeAssistant) 
         result["flow_id"], {"device": port.device}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "setup_serial"
     assert result["errors"] == {"base": "cannot_connect"}
 
@@ -229,7 +229,7 @@ async def test_setup_serial_manual_fail(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -238,7 +238,7 @@ async def test_setup_serial_manual_fail(
         {"type": "Serial"},
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "setup_serial"
     assert result["errors"] == {}
 
@@ -246,7 +246,7 @@ async def test_setup_serial_manual_fail(
         result["flow_id"], {"device": "Enter Manually"}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "setup_serial_manual_path"
     assert result["errors"] == {}
 
@@ -254,7 +254,7 @@ async def test_setup_serial_manual_fail(
         result["flow_id"], {"device": "/dev/ttyUSB0"}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "setup_serial_manual_path"
     assert result["errors"] == {"base": "cannot_connect"}
 
@@ -277,7 +277,7 @@ async def test_options_global(hass: HomeAssistant) -> None:
     with patch("homeassistant.components.rfxtrx.async_setup_entry", return_value=True):
         result = await start_options_flow(hass, entry)
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "prompt_options"
 
     result = await hass.config_entries.options.async_configure(
@@ -312,7 +312,7 @@ async def test_no_protocols(hass: HomeAssistant) -> None:
     with patch("homeassistant.components.rfxtrx.async_setup_entry", return_value=True):
         result = await start_options_flow(hass, entry)
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "prompt_options"
 
     result = await hass.config_entries.options.async_configure(
@@ -345,7 +345,7 @@ async def test_options_add_device(hass: HomeAssistant) -> None:
     )
     result = await start_options_flow(hass, entry)
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "prompt_options"
 
     # Try with invalid event code
@@ -354,7 +354,7 @@ async def test_options_add_device(hass: HomeAssistant) -> None:
         user_input={"automatic_add": True, "event_code": "1234"},
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "prompt_options"
     assert result["errors"]
     assert result["errors"]["event_code"] == "invalid_event_code"
@@ -368,7 +368,7 @@ async def test_options_add_device(hass: HomeAssistant) -> None:
         },
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "set_device_options"
 
     result = await hass.config_entries.options.async_configure(
@@ -409,7 +409,7 @@ async def test_options_add_duplicate_device(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "prompt_options"
 
     result = await hass.config_entries.options.async_configure(
@@ -420,7 +420,7 @@ async def test_options_add_duplicate_device(hass: HomeAssistant) -> None:
         },
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "prompt_options"
     assert result["errors"]
     assert result["errors"]["event_code"] == "already_configured_device"
@@ -508,7 +508,7 @@ async def test_options_replace_sensor_device(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "prompt_options"
 
     result = await hass.config_entries.options.async_configure(
@@ -519,7 +519,7 @@ async def test_options_replace_sensor_device(hass: HomeAssistant) -> None:
         },
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "set_device_options"
 
     result = await hass.config_entries.options.async_configure(
@@ -641,7 +641,7 @@ async def test_options_replace_control_device(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "prompt_options"
 
     result = await hass.config_entries.options.async_configure(
@@ -652,7 +652,7 @@ async def test_options_replace_control_device(hass: HomeAssistant) -> None:
         },
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "set_device_options"
 
     result = await hass.config_entries.options.async_configure(
@@ -702,7 +702,7 @@ async def test_options_add_and_configure_device(hass: HomeAssistant) -> None:
     )
     result = await start_options_flow(hass, entry)
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "prompt_options"
 
     result = await hass.config_entries.options.async_configure(
@@ -713,7 +713,7 @@ async def test_options_add_and_configure_device(hass: HomeAssistant) -> None:
         },
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "set_device_options"
 
     result = await hass.config_entries.options.async_configure(
@@ -726,7 +726,7 @@ async def test_options_add_and_configure_device(hass: HomeAssistant) -> None:
         },
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "set_device_options"
     assert result["errors"]
     assert result["errors"]["off_delay"] == "invalid_input_off_delay"
@@ -764,7 +764,7 @@ async def test_options_add_and_configure_device(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "prompt_options"
 
     result = await hass.config_entries.options.async_configure(
@@ -775,7 +775,7 @@ async def test_options_add_and_configure_device(hass: HomeAssistant) -> None:
         },
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "set_device_options"
 
     result = await hass.config_entries.options.async_configure(
@@ -811,7 +811,7 @@ async def test_options_configure_rfy_cover_device(hass: HomeAssistant) -> None:
     )
     result = await start_options_flow(hass, entry)
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "prompt_options"
 
     result = await hass.config_entries.options.async_configure(
@@ -822,7 +822,7 @@ async def test_options_configure_rfy_cover_device(hass: HomeAssistant) -> None:
         },
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "set_device_options"
 
     result = await hass.config_entries.options.async_configure(
@@ -849,7 +849,7 @@ async def test_options_configure_rfy_cover_device(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "prompt_options"
 
     result = await hass.config_entries.options.async_configure(
@@ -860,7 +860,7 @@ async def test_options_configure_rfy_cover_device(hass: HomeAssistant) -> None:
         },
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "set_device_options"
 
     result = await hass.config_entries.options.async_configure(

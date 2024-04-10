@@ -154,7 +154,7 @@ async def test_multipan_firmware_repair(
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-        assert config_entry.state == ConfigEntryState.SETUP_ERROR
+        assert config_entry.state is ConfigEntryState.SETUP_ERROR
 
     await hass.config_entries.async_unload(config_entry.entry_id)
 
@@ -203,7 +203,7 @@ async def test_multipan_firmware_no_repair_on_probe_failure(
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-        assert config_entry.state == ConfigEntryState.SETUP_RETRY
+        assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
     await hass.config_entries.async_unload(config_entry.entry_id)
 
@@ -241,7 +241,7 @@ async def test_multipan_firmware_retry_on_probe_ezsp(
         await hass.async_block_till_done()
 
         # The config entry state is `SETUP_RETRY`, not `SETUP_ERROR`!
-        assert config_entry.state == ConfigEntryState.SETUP_RETRY
+        assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
     await hass.config_entries.async_unload(config_entry.entry_id)
 
@@ -308,7 +308,7 @@ async def test_inconsistent_settings_keep_new(
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-        assert config_entry.state == ConfigEntryState.SETUP_ERROR
+        assert config_entry.state is ConfigEntryState.SETUP_ERROR
 
     await hass.config_entries.async_unload(config_entry.entry_id)
 
@@ -388,7 +388,7 @@ async def test_inconsistent_settings_restore_old(
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-        assert config_entry.state == ConfigEntryState.SETUP_ERROR
+        assert config_entry.state is ConfigEntryState.SETUP_ERROR
 
     await hass.config_entries.async_unload(config_entry.entry_id)
 

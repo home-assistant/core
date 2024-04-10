@@ -19,7 +19,7 @@ async def test_form(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert not result["errors"]
 
     with patch(
@@ -37,7 +37,7 @@ async def test_form(hass: HomeAssistant) -> None:
             },
         )
         await hass.async_block_till_done()
-    assert result["type"] == "progress"
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
 
     with (
         patch(
@@ -61,7 +61,7 @@ async def test_form(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "create_entry"
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "1.1.1.1"
     assert result2["data"] == {
         "username": "testuser",
@@ -94,7 +94,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
             "path": "/",
         },
     )
-    assert result["type"] == "progress"
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
 
     with patch(
         "pyoctoprintapi.OctoprintClient.request_app_key", return_value="test-key"
@@ -103,7 +103,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
             result["flow_id"],
         )
         await hass.async_block_till_done()
-    assert result["type"] == "progress"
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
 
     with patch(
         "pyoctoprintapi.OctoprintClient.get_discovery_info",
@@ -123,7 +123,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"]["base"] == "cannot_connect"
 
 
@@ -144,7 +144,7 @@ async def test_form_unknown_exception(hass: HomeAssistant) -> None:
             "path": "/",
         },
     )
-    assert result["type"] == "progress"
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
 
     with patch(
         "pyoctoprintapi.OctoprintClient.request_app_key", return_value="test-key"
@@ -153,7 +153,7 @@ async def test_form_unknown_exception(hass: HomeAssistant) -> None:
             result["flow_id"],
         )
         await hass.async_block_till_done()
-    assert result["type"] == "progress"
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
 
     with patch(
         "pyoctoprintapi.OctoprintClient.get_discovery_info",
@@ -173,7 +173,7 @@ async def test_form_unknown_exception(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"]["base"] == "unknown"
 
 
@@ -193,7 +193,7 @@ async def test_show_zerconf_form(hass: HomeAssistant) -> None:
             type="mock_type",
         ),
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert not result["errors"]
 
     result = await hass.config_entries.flow.async_configure(
@@ -202,7 +202,7 @@ async def test_show_zerconf_form(hass: HomeAssistant) -> None:
             "username": "testuser",
         },
     )
-    assert result["type"] == "progress"
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
 
     with patch(
         "pyoctoprintapi.OctoprintClient.request_app_key", return_value="test-key"
@@ -212,7 +212,7 @@ async def test_show_zerconf_form(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == "progress"
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
 
     with (
         patch(
@@ -262,7 +262,7 @@ async def test_show_ssdp_form(hass: HomeAssistant) -> None:
             },
         ),
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert not result["errors"]
 
     result = await hass.config_entries.flow.async_configure(
@@ -271,7 +271,7 @@ async def test_show_ssdp_form(hass: HomeAssistant) -> None:
             "username": "testuser",
         },
     )
-    assert result["type"] == "progress"
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
 
     with patch(
         "pyoctoprintapi.OctoprintClient.request_app_key", return_value="test-key"
@@ -281,7 +281,7 @@ async def test_show_ssdp_form(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == "progress"
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
 
     with (
         patch(
@@ -406,7 +406,7 @@ async def test_failed_auth(hass: HomeAssistant) -> None:
             "path": "/",
         },
     )
-    assert result["type"] == "progress"
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
 
     with patch("pyoctoprintapi.OctoprintClient.request_app_key", side_effect=ApiError):
         result = await hass.config_entries.flow.async_configure(
@@ -414,10 +414,10 @@ async def test_failed_auth(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == "progress"
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "auth_failed"
 
 
@@ -438,7 +438,7 @@ async def test_failed_auth_unexpected_error(hass: HomeAssistant) -> None:
             "path": "/",
         },
     )
-    assert result["type"] == "progress"
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
 
     with patch("pyoctoprintapi.OctoprintClient.request_app_key", side_effect=Exception):
         result = await hass.config_entries.flow.async_configure(
@@ -446,10 +446,10 @@ async def test_failed_auth_unexpected_error(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == "progress"
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "auth_failed"
 
 
@@ -465,7 +465,7 @@ async def test_user_duplicate_entry(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert not result["errors"]
 
     with patch(
@@ -483,7 +483,7 @@ async def test_user_duplicate_entry(hass: HomeAssistant) -> None:
             },
         )
         await hass.async_block_till_done()
-    assert result["type"] == "progress"
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
 
     with (
         patch(
@@ -507,7 +507,7 @@ async def test_user_duplicate_entry(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "abort"
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "already_configured"
     assert len(mock_setup.mock_calls) == 0
     assert len(mock_setup_entry.mock_calls) == 0
@@ -535,7 +535,7 @@ async def test_duplicate_zerconf_ignored(hass: HomeAssistant) -> None:
             type="mock_type",
         ),
     )
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -561,7 +561,7 @@ async def test_duplicate_ssdp_ignored(hass: HomeAssistant) -> None:
             },
         ),
     )
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -589,7 +589,7 @@ async def test_reauth_form(hass: HomeAssistant) -> None:
         },
         data=entry.data,
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert not result["errors"]
 
     with patch(
@@ -602,7 +602,7 @@ async def test_reauth_form(hass: HomeAssistant) -> None:
             },
         )
         await hass.async_block_till_done()
-    assert result["type"] == "progress"
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
 
     with patch(
         "homeassistant.components.octoprint.async_setup_entry",
@@ -613,5 +613,5 @@ async def test_reauth_form(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "abort"
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"

@@ -17,7 +17,7 @@ async def test_form(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     with (
@@ -37,7 +37,7 @@ async def test_form(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "create_entry"
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "blink"
     assert result2["result"].unique_id == "blink@example.com"
     assert result2["data"] == {
@@ -72,7 +72,7 @@ async def test_form_2fa(hass: HomeAssistant) -> None:
             {"username": "blink@example.com", "password": "example"},
         )
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "2fa"
 
     with (
@@ -98,7 +98,7 @@ async def test_form_2fa(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result3["type"] == "create_entry"
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == "blink"
     assert result3["result"].unique_id == "blink@example.com"
     assert len(mock_setup_entry.mock_calls) == 1
@@ -123,7 +123,7 @@ async def test_form_2fa_connect_error(hass: HomeAssistant) -> None:
             {"username": "blink@example.com", "password": "example"},
         )
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "2fa"
 
     with (
@@ -149,7 +149,7 @@ async def test_form_2fa_connect_error(hass: HomeAssistant) -> None:
             result2["flow_id"], {"pin": "1234"}
         )
 
-    assert result3["type"] == "form"
+    assert result3["type"] is FlowResultType.FORM
     assert result3["errors"] == {"base": "cannot_connect"}
 
 
@@ -172,7 +172,7 @@ async def test_form_2fa_invalid_key(hass: HomeAssistant) -> None:
             {"username": "blink@example.com", "password": "example"},
         )
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "2fa"
 
     with (
@@ -200,7 +200,7 @@ async def test_form_2fa_invalid_key(hass: HomeAssistant) -> None:
             result2["flow_id"], {"pin": "1234"}
         )
 
-    assert result3["type"] == "form"
+    assert result3["type"] is FlowResultType.FORM
     assert result3["errors"] == {"base": "invalid_access_token"}
 
 
@@ -223,7 +223,7 @@ async def test_form_2fa_unknown_error(hass: HomeAssistant) -> None:
             {"username": "blink@example.com", "password": "example"},
         )
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "2fa"
 
     with (
@@ -249,7 +249,7 @@ async def test_form_2fa_unknown_error(hass: HomeAssistant) -> None:
             result2["flow_id"], {"pin": "1234"}
         )
 
-    assert result3["type"] == "form"
+    assert result3["type"] is FlowResultType.FORM
     assert result3["errors"] == {"base": "unknown"}
 
 
@@ -267,7 +267,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
             result["flow_id"], {"username": "blink@example.com", "password": "example"}
         )
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
@@ -285,7 +285,7 @@ async def test_form_unknown_error(hass: HomeAssistant) -> None:
             result["flow_id"], {"username": "blink@example.com", "password": "example"}
         )
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
 
 

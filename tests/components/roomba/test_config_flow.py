@@ -1009,7 +1009,7 @@ async def test_dhcp_discovery_partial_hostname(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "link"
 
     with patch(

@@ -81,7 +81,7 @@ async def test_success(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     with patch("asyncsleepiq.AsyncSleepIQ.login", return_value=True):
