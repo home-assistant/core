@@ -3,7 +3,7 @@
   dict({
     'current_weather': dict({
       '__type': "<class 'pyipma.observation.Observation'>",
-      'repr': 'Observation(intensidadeVentoKM=3.94, temperatura=18.0, radiacao=0.0, idDireccVento=8, precAcumulada=0.0, intensidadeVento=1.0944, humidade=71.0, pressao=1000.0, timestamp=datetime.datetime(2024, 4, 10, 6, 57, 42, 949786), idEstacao=0)',
+      'repr': 'Observation(intensidadeVentoKM=3.94, temperatura=18.0, radiacao=0.0, idDireccVento=8, precAcumulada=0.0, intensidadeVento=1.0944, humidade=71.0, pressao=1000.0, timestamp=datetime.datetime(2020, 1, 16, 0, 0), idEstacao=0)',
     }),
     'location_information': dict({
       'global_id_local': 1130600,

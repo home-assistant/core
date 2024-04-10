@@ -26,7 +26,7 @@ class MockLocation:
 
     async def uv_risk(self, api):
         """Mock UV Index."""
-        return UV(0, "0", datetime.now(), 0, 5.7)
+        return UV(0, "0", datetime(2020, 1, 16, 0, 0, 0), 0, 5.7)
 
     async def observation(self, api):
         """Mock Observation."""
@@ -39,7 +39,7 @@ class MockLocation:
             idDireccVento=8,
             intensidadeVentoKM=3.94,
             intensidadeVento=1.0944,
-            timestamp=datetime.now(),
+            timestamp=datetime(2020, 1, 16, 0, 0, 0),
             idEstacao=0,
         )
 
