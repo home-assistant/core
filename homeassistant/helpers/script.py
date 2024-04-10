@@ -1105,12 +1105,13 @@ class _ScriptRun:
         timeout_future: asyncio.Future[None] | None,
     ) -> None:
         await asyncio.wait(futures, return_when=asyncio.FIRST_COMPLETED)
-        if timeout_future and timeout_future.done():
-            self._variables["wait"]["remaining"] = 0.0
-            if not self._action.get(CONF_CONTINUE_ON_TIMEOUT, True):
-                self._log(_TIMEOUT_MSG)
-                trace_set_result(wait=self._variables["wait"], timeout=True)
-                raise _AbortScript from TimeoutError()
+        if not timeout_future or not timeout_future.done():
+            return
+        self._variables["wait"]["remaining"] = 0.0
+        if not self._action.get(CONF_CONTINUE_ON_TIMEOUT, True):
+            self._log(_TIMEOUT_MSG)
+            trace_set_result(wait=self._variables["wait"], timeout=True)
+            raise _AbortScript from TimeoutError()
 
     async def _async_variables_step(self):
         """Set a variable value."""
