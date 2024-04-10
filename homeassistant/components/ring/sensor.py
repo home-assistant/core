@@ -47,12 +47,12 @@ async def async_setup_entry(
 ) -> None:
     """Set up a sensor for a Ring device."""
     ring_data: RingData = hass.data[DOMAIN][config_entry.entry_id]
-    devices_coordinator = ring_data.ring_devices_coordinator
+    devices_coordinator = ring_data.devices_coordinator
 
     entities = [
         RingSensor(device, devices_coordinator, description)
         for description in SENSOR_TYPES
-        for device in ring_data.ring_devices.all_devices
+        for device in ring_data.devices.all_devices
         if description.exists_fn(device)
     ]
 

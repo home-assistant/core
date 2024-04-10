@@ -43,11 +43,11 @@ async def async_setup_entry(
 ) -> None:
     """Create the lights for the Ring devices."""
     ring_data: RingData = hass.data[DOMAIN][config_entry.entry_id]
-    devices_coordinator = ring_data.ring_devices_coordinator
+    devices_coordinator = ring_data.devices_coordinator
 
     async_add_entities(
         RingLight(device, devices_coordinator)
-        for device in ring_data.ring_devices.stickup_cams
+        for device in ring_data.devices.stickup_cams
         if device.has_capability("light")
     )
 

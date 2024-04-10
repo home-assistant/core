@@ -36,11 +36,11 @@ async def async_setup_entry(
 ) -> None:
     """Set up a Ring Door Bell and StickUp Camera."""
     ring_data: RingData = hass.data[DOMAIN][config_entry.entry_id]
-    devices_coordinator = ring_data.ring_devices_coordinator
+    devices_coordinator = ring_data.devices_coordinator
     ffmpeg_manager = ffmpeg.get_ffmpeg_manager(hass)
 
     cams = []
-    for camera in ring_data.ring_devices.video_devices:
+    for camera in ring_data.devices.video_devices:
         if not camera.has_subscription:
             continue
 

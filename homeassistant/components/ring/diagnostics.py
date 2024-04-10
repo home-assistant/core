@@ -33,7 +33,7 @@ async def async_get_config_entry_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     ring_data: RingData = hass.data[DOMAIN][entry.entry_id]
-    devices_data = ring_data.ring_api.devices_data
+    devices_data = ring_data.api.devices_data
     devices_raw = [
         devices_data[device_type][device_id]
         for device_type in devices_data

@@ -25,10 +25,10 @@ _LOGGER = logging.getLogger(__name__)
 class RingData:
     """Class to support type hinting of ring data collection."""
 
-    ring_api: Ring
-    ring_devices: RingDevices
-    ring_devices_coordinator: RingDataCoordinator
-    ring_notifications_coordinator: RingNotificationsCoordinator
+    api: Ring
+    devices: RingDevices
+    devices_coordinator: RingDataCoordinator
+    notifications_coordinator: RingNotificationsCoordinator
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -57,10 +57,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await notifications_coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = RingData(
-        ring_api=ring,
-        ring_devices=ring.devices(),
-        ring_devices_coordinator=devices_coordinator,
-        ring_notifications_coordinator=notifications_coordinator,
+        api=ring,
+        devices=ring.devices(),
+        devices_coordinator=devices_coordinator,
+        notifications_coordinator=notifications_coordinator,
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -89,8 +89,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         for info in hass.data[DOMAIN].values():
             ring_data = cast(RingData, info)
-            await ring_data.ring_devices_coordinator.async_refresh()
-            await ring_data.ring_notifications_coordinator.async_refresh()
+            await ring_data.devices_coordinator.async_refresh()
+            await ring_data.notifications_coordinator.async_refresh()
 
     # register service
     hass.services.async_register(DOMAIN, "update", async_refresh_all)

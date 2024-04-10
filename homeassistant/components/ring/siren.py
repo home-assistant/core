@@ -25,11 +25,11 @@ async def async_setup_entry(
 ) -> None:
     """Create the sirens for the Ring devices."""
     ring_data: RingData = hass.data[DOMAIN][config_entry.entry_id]
-    devices_coordinator = ring_data.ring_devices_coordinator
+    devices_coordinator = ring_data.devices_coordinator
 
     async_add_entities(
         RingChimeSiren(device, devices_coordinator)
-        for device in ring_data.ring_devices.chimes
+        for device in ring_data.devices.chimes
     )
 
 

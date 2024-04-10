@@ -26,11 +26,11 @@ async def async_setup_entry(
 ) -> None:
     """Create the buttons for the Ring devices."""
     ring_data: RingData = hass.data[DOMAIN][config_entry.entry_id]
-    devices_coordinator = ring_data.ring_devices_coordinator
+    devices_coordinator = ring_data.devices_coordinator
 
     async_add_entities(
         RingDoorButton(device, devices_coordinator, BUTTON_DESCRIPTION)
-        for device in ring_data.ring_devices.other
+        for device in ring_data.devices.other
         if device.has_capability("open")
     )
 

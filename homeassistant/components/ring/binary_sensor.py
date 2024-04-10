@@ -58,13 +58,13 @@ async def async_setup_entry(
 
     entities = [
         RingBinarySensor(
-            ring_data.ring_api,
+            ring_data.api,
             device,
-            ring_data.ring_notifications_coordinator,
+            ring_data.notifications_coordinator,
             description,
         )
         for description in BINARY_SENSOR_TYPES
-        for device in ring_data.ring_devices.all_devices
+        for device in ring_data.devices.all_devices
         if description.exists_fn(device)
     ]
 
