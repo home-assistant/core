@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools==68.0.0", "wheel~=0.40.0"]
+requires = ["setuptools==69.2.0", "wheel~=0.43.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -627,6 +627,7 @@ select = [
     "F", # pyflakes/autoflake
     "G", # flake8-logging-format
     "I", # isort
+    "INP", # flake8-no-pep420
     "ISC", # flake8-implicit-str-concat
     "ICN001", # import concentions; {name} should be imported as {asname}
     "LOG", # flake8-logging
@@ -634,10 +635,11 @@ select = [
     "N805", # First argument of a method should be named self
     "N815", # Variable {name} in class scope should not be mixedCase
     "PERF", # Perflint
-    "PGH004", # Use specific rule codes when using noqa
+    "PGH", # pygrep-hooks
     "PIE", # flake8-pie
     "PL", # pylint
     "PT", # flake8-pytest-style
+    "PYI", # flake8-pyi
     "RET", # flake8-return
     "RSE", # flake8-raise
     "RUF005", # Consider iterable unpacking instead of concatenation
@@ -719,6 +721,7 @@ ignore = [
 
     # temporarily disabled
     "PT019",
+    "PYI024", # Use typing.NamedTuple instead of collections.namedtuple
     "RET503",
     "RET502",
     "RET501",

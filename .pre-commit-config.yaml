@@ -6,7 +6,7 @@ repos:
         args:
           - --fix
       - id: ruff-format
-        files: ^((homeassistant|pylint|script|tests)/.+)?[^/]+\.py$
+        files: ^((homeassistant|pylint|script|tests)/.+)?[^/]+\.(py|pyi)$
   - repo: https://github.com/codespell-project/codespell
     rev: v2.2.6
     hooks:
@@ -63,7 +63,7 @@ repos:
         language: script
         types: [python]
         require_serial: true
-        files: ^(homeassistant|pylint)/.+\.py$
+        files: ^(homeassistant|pylint)/.+\.(py|pyi)$
       - id: pylint
         name: pylint
         entry: script/run-in-env.sh pylint -j 0 --ignore-missing-annotations=y

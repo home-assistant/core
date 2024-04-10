@@ -38,7 +38,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def setup_decrypt(
-    key_encoder: type[RawEncoder] | type[HexEncoder],
+    key_encoder: type[RawEncoder | HexEncoder],
 ) -> Callable[[bytes, bytes], bytes]:
     """Return decryption function and length of key.
 
@@ -55,7 +55,7 @@ def setup_decrypt(
 
 
 def setup_encrypt(
-    key_encoder: type[RawEncoder] | type[HexEncoder],
+    key_encoder: type[RawEncoder | HexEncoder],
 ) -> Callable[[bytes, bytes], bytes]:
     """Return encryption function and length of key.
 
@@ -75,7 +75,7 @@ def _decrypt_payload_helper(
     key: str | bytes,
     ciphertext: bytes,
     key_bytes: bytes,
-    key_encoder: type[RawEncoder] | type[HexEncoder],
+    key_encoder: type[RawEncoder | HexEncoder],
 ) -> JsonValueType | None:
     """Decrypt encrypted payload."""
     try:

@@ -76,11 +76,11 @@
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'Dew Point',
+    'original_name': 'Dew point',
     'platform': 'bluemaestro',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'dew_point',
     'unique_id': 'aa:bb:cc:dd:ee:ff-dew_point',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
@@ -89,7 +89,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Tempo Disc THD EEFF Dew Point',
+      'friendly_name': 'Tempo Disc THD EEFF Dew point',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
@@ -178,7 +178,7 @@
     }),
     'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
     'original_icon': None,
-    'original_name': 'Signal Strength',
+    'original_name': 'Signal strength',
     'platform': 'bluemaestro',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -191,7 +191,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'signal_strength',
-      'friendly_name': 'Tempo Disc THD EEFF Signal Strength',
+      'friendly_name': 'Tempo Disc THD EEFF Signal strength',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'dBm',
     }),

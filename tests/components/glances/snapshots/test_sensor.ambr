@@ -200,6 +200,114 @@
     'state': '59',
   })
 # ---
+# name: test_sensor_states[sensor.0_0_0_0_dummy0_rx-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.0_0_0_0_dummy0_rx',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
+    'original_icon': None,
+    'original_name': 'dummy0 RX',
+    'platform': 'glances',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'network_rx',
+    'unique_id': 'test-dummy0-rx',
+    'unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+  })
+# ---
+# name: test_sensor_states[sensor.0_0_0_0_dummy0_rx-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'data_rate',
+      'friendly_name': '0.0.0.0 dummy0 RX',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.0_0_0_0_dummy0_rx',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.000000',
+  })
+# ---
+# name: test_sensor_states[sensor.0_0_0_0_dummy0_tx-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.0_0_0_0_dummy0_tx',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
+    'original_icon': None,
+    'original_name': 'dummy0 TX',
+    'platform': 'glances',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'network_tx',
+    'unique_id': 'test-dummy0-tx',
+    'unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+  })
+# ---
+# name: test_sensor_states[sensor.0_0_0_0_dummy0_tx-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'data_rate',
+      'friendly_name': '0.0.0.0 dummy0 TX',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.0_0_0_0_dummy0_tx',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.000000',
+  })
+# ---
 # name: test_sensor_states[sensor.0_0_0_0_err_temp_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -249,6 +357,222 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
+  })
+# ---
+# name: test_sensor_states[sensor.0_0_0_0_eth0_rx-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.0_0_0_0_eth0_rx',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
+    'original_icon': None,
+    'original_name': 'eth0 RX',
+    'platform': 'glances',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'network_rx',
+    'unique_id': 'test-eth0-rx',
+    'unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+  })
+# ---
+# name: test_sensor_states[sensor.0_0_0_0_eth0_rx-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'data_rate',
+      'friendly_name': '0.0.0.0 eth0 RX',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.0_0_0_0_eth0_rx',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.03162',
+  })
+# ---
+# name: test_sensor_states[sensor.0_0_0_0_eth0_tx-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.0_0_0_0_eth0_tx',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
+    'original_icon': None,
+    'original_name': 'eth0 TX',
+    'platform': 'glances',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'network_tx',
+    'unique_id': 'test-eth0-tx',
+    'unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+  })
+# ---
+# name: test_sensor_states[sensor.0_0_0_0_eth0_tx-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'data_rate',
+      'friendly_name': '0.0.0.0 eth0 TX',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.0_0_0_0_eth0_tx',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.04796',
+  })
+# ---
+# name: test_sensor_states[sensor.0_0_0_0_lo_rx-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.0_0_0_0_lo_rx',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
+    'original_icon': None,
+    'original_name': 'lo RX',
+    'platform': 'glances',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'network_rx',
+    'unique_id': 'test-lo-rx',
+    'unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+  })
+# ---
+# name: test_sensor_states[sensor.0_0_0_0_lo_rx-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'data_rate',
+      'friendly_name': '0.0.0.0 lo RX',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.0_0_0_0_lo_rx',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.06117',
+  })
+# ---
+# name: test_sensor_states[sensor.0_0_0_0_lo_tx-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.0_0_0_0_lo_tx',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
+    'original_icon': None,
+    'original_name': 'lo TX',
+    'platform': 'glances',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'network_tx',
+    'unique_id': 'test-lo-tx',
+    'unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+  })
+# ---
+# name: test_sensor_states[sensor.0_0_0_0_lo_tx-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'data_rate',
+      'friendly_name': '0.0.0.0 lo TX',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.0_0_0_0_lo_tx',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.06117',
   })
 # ---
 # name: test_sensor_states[sensor.0_0_0_0_md1_available-entry]
