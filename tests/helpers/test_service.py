@@ -1592,6 +1592,64 @@ async def test_reload_service_helper(hass: HomeAssistant) -> None:
     # Test redundant reload of single targets
     reloader = service.ReloadServiceHelper(reload_service_handler, reload_targets)
     tasks = [
+        # This reload task will start executing first, (target1)
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target1"})),
+        # These reload tasks will be deduplicated while the first task is reloaded,
+        # (target2, target3, target4, target1)
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target2"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target3"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target4"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target1"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target2"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target3"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target4"})),
+    ]
+    await asyncio.gather(*tasks)
+    assert reloaded == unordered(
+        ["target1", "target2", "target3", "target4", "target1"]
+    )
+
+    # Test redundant reload of multiple targets + single target
+    reloaded.clear()
+    tasks = [
+        # This reload task will start executing first, (target1)
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target1"})),
+        # These reload tasks will be deduplicated while the first task is reloaded,
+        # (target2, target3, target4, all)
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target2"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target3"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target4"})),
+        reloader.execute_service(ServiceCall("test", "test")),
+    ]
+    await asyncio.gather(*tasks)
+    assert reloaded == unordered(["target1", "target2", "target3", "target4", "all"])
+
+    # Test redundant reload of multiple targets + single target
+    reloaded.clear()
+    reloader = service.ReloadServiceHelper(reload_service_handler, reload_targets)
+    tasks = [
+        # This reload task will start executing first, (all)
+        reloader.execute_service(ServiceCall("test", "test")),
+        # These reload tasks will be deduplicated while the first task is reloaded,
+        # (target1, target2, target3, target4)
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target1"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target2"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target3"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target4"})),
+    ]
+    await asyncio.gather(*tasks)
+    assert reloaded == unordered(["all", "target1", "target2", "target3", "target4"])
+
+    # Test redundant reload of single targets
+    reloader = service.ReloadServiceHelper(reload_service_handler, reload_targets)
+    tasks = [
+        # This reload task will start executing first, (target1)
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target1"})),
+        # These reload tasks will be deduplicated while the first task is reloaded,
+        # (target2, target3, target4, target1)
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target2"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target3"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target4"})),
         reloader.execute_service(ServiceCall("test", "test", {"target": "target1"})),
         reloader.execute_service(ServiceCall("test", "test", {"target": "target2"})),
         reloader.execute_service(ServiceCall("test", "test", {"target": "target3"})),
@@ -1609,10 +1667,14 @@ async def test_reload_service_helper(hass: HomeAssistant) -> None:
     # Test redundant reload of multiple targets + single target
     reloaded.clear()
     tasks = [
+        # This reload task will start executing first, (target1)
         reloader.execute_service(ServiceCall("test", "test", {"target": "target1"})),
+        # These reload tasks will be deduplicated while the first task is reloaded,
+        # (target2, target3, target4, all)
         reloader.execute_service(ServiceCall("test", "test", {"target": "target2"})),
         reloader.execute_service(ServiceCall("test", "test", {"target": "target3"})),
         reloader.execute_service(ServiceCall("test", "test", {"target": "target4"})),
+        reloader.execute_service(ServiceCall("test", "test")),
         reloader.execute_service(ServiceCall("test", "test")),
     ]
     await asyncio.gather(*tasks)
@@ -1622,7 +1684,14 @@ async def test_reload_service_helper(hass: HomeAssistant) -> None:
     reloaded.clear()
     reloader = service.ReloadServiceHelper(reload_service_handler, reload_targets)
     tasks = [
+        # This reload task will start executing first, (all)
         reloader.execute_service(ServiceCall("test", "test")),
+        # These reload tasks will be deduplicated while the first task is reloaded,
+        # (target1, target2, target3, target4)
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target1"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target2"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target3"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target4"})),
         reloader.execute_service(ServiceCall("test", "test", {"target": "target1"})),
         reloader.execute_service(ServiceCall("test", "test", {"target": "target2"})),
         reloader.execute_service(ServiceCall("test", "test", {"target": "target3"})),
