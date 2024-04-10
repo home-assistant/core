@@ -35,7 +35,7 @@ async def test_binary_sensors(
     get_appliances: MagicMock,
     appliance: Mock,
 ) -> None:
-    """Test sensor entities."""
+    """Test binary sensor entities."""
     get_appliances.return_value = [appliance]
     assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup()
