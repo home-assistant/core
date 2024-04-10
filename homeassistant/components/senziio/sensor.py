@@ -23,8 +23,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.json import json_loads_object
 
-from .const import DOMAIN
-from .entity import SenziioEntity
+from .entity import DOMAIN, SenziioEntity
 
 
 @dataclass(frozen=True, kw_only=True)

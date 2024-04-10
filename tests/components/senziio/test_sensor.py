@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from homeassistant.components.senziio.const import DOMAIN
+from homeassistant.components.senziio.entity import DOMAIN
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (

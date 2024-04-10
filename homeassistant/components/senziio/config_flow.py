@@ -12,8 +12,8 @@ from homeassistant.components import zeroconf
 from homeassistant.const import CONF_FRIENDLY_NAME, CONF_MODEL, CONF_UNIQUE_ID
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN, MANUFACTURER
 from .device import SenziioDevice
+from .entity import DOMAIN, MANUFACTURER
 from .exceptions import CannotConnect, MQTTNotEnabled, RepeatedTitle
 
 _LOGGER = logging.getLogger(__name__)

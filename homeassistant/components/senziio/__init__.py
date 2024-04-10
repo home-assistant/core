@@ -9,8 +9,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MODEL, CONF_UNIQUE_ID, Platform
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN
 from .device import SenziioDevice
+from .entity import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

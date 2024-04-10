@@ -6,7 +6,7 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.senziio.config_flow import CannotConnect
-from homeassistant.components.senziio.const import DOMAIN, MANUFACTURER
+from homeassistant.components.senziio.entity import DOMAIN, MANUFACTURER
 from homeassistant.components.senziio.exceptions import MQTTNotEnabled, RepeatedTitle
 from homeassistant.const import CONF_FRIENDLY_NAME, CONF_MODEL, CONF_UNIQUE_ID
 from homeassistant.core import HomeAssistant

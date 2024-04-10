@@ -5,7 +5,8 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
-from .const import DOMAIN, MANUFACTURER
+DOMAIN = "senziio"
+MANUFACTURER = "Senziio"
 
 
 class SenziioEntity(Entity):
