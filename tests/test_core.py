@@ -2870,7 +2870,7 @@ def test_state_timestamp_conversion() -> None:
         last_reported=now,
         last_updated=now,
         context=ha.Context(id="1234"),
-        last_updated_timestamp=last_updated_timestamp,
+        _last_updated_timestamp=last_updated_timestamp,
     )
     assert state.last_changed_timestamp == now.timestamp()
     assert state.last_changed_timestamp == now.timestamp()
@@ -2891,7 +2891,7 @@ def test_state_timestamps_with_timestamp_passed() -> None:
         last_reported=now,
         last_updated=now,
         context=ha.Context(id="1234"),
-        last_updated_timestamp=now.timestamp(),
+        _last_updated_timestamp=now.timestamp(),
     )
     assert state.last_changed_timestamp == now.timestamp()
     assert state.last_changed_timestamp == now.timestamp()
@@ -2913,7 +2913,7 @@ def test_state_timestamps_rounds_timestamp_passed() -> None:
         last_reported=now,
         last_updated=now,
         context=ha.Context(id="1234"),
-        last_updated_timestamp=timestamp,
+        _last_updated_timestamp=timestamp,
     )
     assert state.last_changed_timestamp == now.timestamp()
     assert state.last_changed_timestamp == now.timestamp()
