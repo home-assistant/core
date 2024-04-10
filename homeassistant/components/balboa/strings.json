@@ -66,9 +66,13 @@
         "name": "Light"
       }
     },
-    "switch": {
+    "select": {
       "temperature_range": {
-        "name": "Temperature high range"
+        "name": "Temperature range",
+        "state": {
+          "low": "Low",
+          "high": "High"
+        }
       }
     }
   }

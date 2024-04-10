@@ -5,7 +5,6 @@ from __future__ import annotations
 from collections.abc import Callable, Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from pybalboa import SpaControl
 from pybalboa.enums import HeatMode, LowHighRange
 import pytest
 
