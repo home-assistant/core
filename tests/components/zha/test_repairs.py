@@ -265,7 +265,9 @@ async def test_no_warn_on_socket(hass: HomeAssistant) -> None:
     mock_probe.assert_not_called()
 
 
-async def test_probe_failure_exception_handling(caplog) -> None:
+async def test_probe_failure_exception_handling(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test that probe failures are handled gracefully."""
     with (
         patch(
