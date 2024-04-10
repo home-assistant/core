@@ -64,19 +64,6 @@ from .helper import NetatmoArea
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORTED_PUBLIC_SENSOR_TYPES: tuple[str, ...] = (
-    "temperature",
-    "pressure",
-    "humidity",
-    "rain",
-    "wind_strength",
-    "gust_strength",
-    "sum_rain_1",
-    "sum_rain_24",
-    "wind_angle",
-    "gust_angle",
-)
-
 
 def process_health(health: StateType) -> str | None:
     """Process health index and return string for display."""
