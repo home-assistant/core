@@ -2858,9 +2858,10 @@ def test_state_timestamps() -> None:
     assert state.last_updated_timestamp == now.timestamp()
 
 
-def test_state_timestamp_ends_in_5() -> None:
+def test_state_timestamp_conversion() -> None:
     """Test timestamp functions for State."""
-    now = dt_util.utc_from_timestamp(1712718689.0294285)
+    last_updated_timestamp = time.time_ns() / 1000000000
+    now = dt_util.utc_from_timestamp(last_updated_timestamp)
     state = ha.State(
         "light.bedroom",
         "on",
@@ -2869,7 +2870,7 @@ def test_state_timestamp_ends_in_5() -> None:
         last_reported=now,
         last_updated=now,
         context=ha.Context(id="1234"),
-        last_updated_timestamp=1712718689.0294285,
+        last_updated_timestamp=last_updated_timestamp,
     )
     assert state.last_changed_timestamp == now.timestamp()
     assert state.last_changed_timestamp == now.timestamp()

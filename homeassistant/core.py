@@ -1741,12 +1741,9 @@ class State:
         # last_updated_timestamp will nearly always be called by
         # the recorder or websocket_api so we do not need to
         # generate it lazily.
-        if last_updated_timestamp is not None:
-            # We round to 6 decimal places to match .timestamp() precision
-            # using int() as it is ~4.8x faster than round()
-            self.last_updated_timestamp = int(last_updated_timestamp * 1e6 + 0.5) / 1e6
-        else:
-            self.last_updated_timestamp = self.last_updated.timestamp()
+        self.last_updated_timestamp = (
+            last_updated_timestamp or self.last_updated.timestamp()
+        )
 
     @cached_property
     def name(self) -> str:
@@ -2216,7 +2213,9 @@ class StateMachine:
         # timestamp implementation:
         # https://github.com/python/cpython/blob/c90a862cdcf55dc1753c6466e5fa4a467a13ae24/Modules/_datetimemodule.c#L6387
         # https://github.com/python/cpython/blob/c90a862cdcf55dc1753c6466e5fa4a467a13ae24/Modules/_datetimemodule.c#L6323
-        timestamp = time.time()
+        timestamp = (
+            time.time_ns() / 1000000000
+        )  # datetime objects only have 6 decimal places of precision
         now = dt_util.utc_from_timestamp(timestamp)
 
         if same_state and same_attr:
