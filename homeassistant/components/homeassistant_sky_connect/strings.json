@@ -117,7 +117,9 @@
     },
     "progress": {
       "install_addon": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::progress::install_addon%]",
-      "start_addon": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::progress::start_addon%]"
+      "start_addon": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::progress::start_addon%]",
+      "start_otbr_addon": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::progress::start_addon%]",
+      "run_zigbee_flasher_addon": "Please wait while Zigbee firmware is installed to your {name}, this will take a few minutes. Do not make any changes to your hardware or software until this finishes."
     }
   },
   "config": {
