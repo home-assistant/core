@@ -1102,10 +1102,7 @@ class _ScriptRun:
         timeout_future: asyncio.Future[None] | None,
     ) -> None:
         try:
-            if len(futures) == 1:
-                await futures[0]
-            else:
-                await asyncio.wait(futures, return_when=asyncio.FIRST_COMPLETED)
+            await asyncio.wait(futures, return_when=asyncio.FIRST_COMPLETED)
             if timeout_future and timeout_future.done():
                 self._variables["wait"]["remaining"] = 0.0
                 if not self._action.get(CONF_CONTINUE_ON_TIMEOUT, True):
