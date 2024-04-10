@@ -188,5 +188,5 @@ async def test_partymode(
         },
         blocking=True,
     )
-    assert soco_mock.partymode_called
+    assert soco_mock.partymode.call_count == 1
 
