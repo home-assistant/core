@@ -9,6 +9,7 @@ import logging
 from typing import Any
 
 from roborock import HomeDataRoom, RoborockException, RoborockInvalidCredentials
+from roborock.code_mappings import RoborockCategory
 from roborock.containers import DeviceData, HomeDataDevice, HomeDataProduct, UserData
 from roborock.version_1_apis.roborock_mqtt_client_v1 import RoborockMqttClientV1
 from roborock.version_a01_apis import RoborockMqttClientA01
@@ -80,7 +81,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             translation_key="no_coordinators",
         )
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
-        coordinator.api.device_info.device.duid: coordinator
+        coordinator.roborock_device_info.device.duid: coordinator
         for coordinator in valid_coordinators
     }
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -115,16 +116,21 @@ async def setup_device(
     user_data: UserData,
     device: HomeDataDevice,
     product_info: HomeDataProduct,
+    home_data_rooms: list[HomeDataRoom],
 ) -> RoborockDataUpdateCoordinator | RoborockDataUpdateCoordinatorA01 | None:
     """Set up a coordinator for a given device."""
     if device.pv == "1.0":
-        return await setup_device_v1(hass, user_data, device, product_info)
+        return await setup_device_v1(
+            hass, user_data, device, product_info, home_data_rooms
+        )
     if device.pv == "A01":
-        return await setup_device_a01(hass, user_data, device, product_info)
-    logging.info(
-        "Not adding device %s because its protocol version %s is not supported",
+        if product_info.category == RoborockCategory.WET_DRY_VAC:
+            return await setup_device_a01(hass, user_data, device, product_info)
+    _LOGGER.info(
+        "Not adding device %s because its protocol version %s or category %s is not supported",
         device.duid,
         device.pv,
+        product_info.category.name,
     )
     return None
 

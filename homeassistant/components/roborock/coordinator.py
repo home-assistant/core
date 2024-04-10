@@ -23,7 +23,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
-from .models import RoborockHassDeviceInfo, RoborockMapInfo
+from .models import RoborockA01HassDeviceInfo, RoborockHassDeviceInfo, RoborockMapInfo
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
@@ -142,6 +142,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
                         self._home_data_rooms.get(room.iot_id, "Unknown")
                     )
 
+
 class RoborockDataUpdateCoordinatorA01(DataUpdateCoordinator[dict]):
     """Class to manage fetching data from the API for A01 devices."""
 
@@ -169,8 +170,12 @@ class RoborockDataUpdateCoordinatorA01(DataUpdateCoordinator[dict]):
             RoborockDyadDataProtocol.BRUSH_LEFT,
             RoborockDyadDataProtocol.ERROR,
             RoborockDyadDataProtocol.TOTAL_RUN_TIME,
-            RoborockDyadDataProtocol.RECENT_RUN_TIME,
         ]
+        self.roborock_device_info = RoborockA01HassDeviceInfo(device, product_info)
 
     async def _async_update_data(self) -> dict[RoborockDyadDataProtocol, typing.Any]:
         return await self.api.update_values(self.request_protocols)
+
+    async def release(self) -> None:
+        """Disconnect from API."""
+        await self.api.async_release()

@@ -17,9 +17,8 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .coordinator import RoborockDataUpdateCoordinator, RoborockDataUpdateCoordinatorA01
 from .const import DOMAIN
-from .coordinator import RoborockDataUpdateCoordinator
+from .coordinator import RoborockDataUpdateCoordinator, RoborockDataUpdateCoordinatorA01
 
 
 class RoborockEntity(Entity):
@@ -31,7 +30,7 @@ class RoborockEntity(Entity):
         self,
         unique_id: str,
         device_info: DeviceInfo,
-        api: RoborockClientV1,
+        api: RoborockClient,
     ) -> None:
         """Initialize the Roborock Device."""
         self._attr_unique_id = unique_id
