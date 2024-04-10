@@ -172,10 +172,10 @@
           "description": "Enable or disable including grouped rooms."
         }
       }
-    }
+    },
     "partymode": {
       "name": "Party Mode",
       "description": "Joins all Sonos speaker in the network to one group.",
-    },
+    }
   }
 }
