@@ -184,15 +184,9 @@ async def test_fail_parse_on_startup(
     """Test that if we fail parsing on startup, we create the entity but set it as unavailable."""
     map_data = copy.deepcopy(MAP_DATA)
     map_data.image = None
-    with (
-        patch(
-            "homeassistant.components.roborock.image.RoborockMapDataParser.parse",
-            return_value=map_data,
-        ),
-        patch(
-            "homeassistant.components.roborock.coordinator.RoborockMqttClient",
-            return_value=None,
-        ),
+    with patch(
+        "homeassistant.components.roborock.image.RoborockMapDataParser.parse",
+        return_value=map_data,
     ):
         await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
@@ -209,7 +203,7 @@ async def test_fail_get_map_on_startup(
     """Test that if we fail getting map on startup, we create the entity but set it as unavailable."""
     with (
         patch(
-            "homeassistant.components.roborock.coordinator.RoborockMqttClient.get_map_v1",
+            "homeassistant.components.roborock.coordinator.RoborockMqttClientV1.get_map_v1",
             return_value=None,
         ),
     ):
