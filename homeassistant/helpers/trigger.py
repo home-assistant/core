@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections import defaultdict
 from collections.abc import Callable, Coroutine
+import contextlib
 from dataclasses import dataclass, field
 import functools
 import logging
@@ -334,7 +335,16 @@ async def async_initialize_triggers(
             )
         )
 
-    attach_results = await asyncio.gather(*triggers, return_exceptions=True)
+    try:
+        attach_results = await asyncio.gather(*triggers, return_exceptions=True)
+    except asyncio.CancelledError:
+        # If attaching is cancelled, make sure to detach all triggers
+        for result in attach_results:
+            if result and not isinstance(result, BaseException):
+                with contextlib.suppress(BaseException):
+                    result()
+        raise
+
     removes: list[Callable[[], None]] = []
 
     for result in attach_results:
