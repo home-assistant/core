@@ -8,7 +8,6 @@ import logging
 from typing import Any, cast
 
 import pyatmo
-from pyatmo import DeviceType
 from pyatmo.modules import PublicWeatherArea
 
 from homeassistant.components.sensor import (
@@ -510,33 +509,7 @@ class NetatmoWeatherSensor(NetatmoWeatherModuleEntity, SensorEntity):
         super().__init__(netatmo_device)
         self.entity_description = description
         self._attr_translation_key = description.netatmo_name
-        category = getattr(self.device.device_category, "name")
-        self._publishers.extend(
-            [
-                {
-                    "name": category,
-                    SIGNAL_NAME: category,
-                },
-            ]
-        )
         self._attr_unique_id = f"{self.device.entity_id}-{description.key}"
-
-        if hasattr(self.device, "place"):
-            place = cast(pyatmo.modules.base_class.Place, getattr(self.device, "place"))
-            if hasattr(place, "location") and place.location is not None:
-                self._attr_extra_state_attributes.update(
-                    {
-                        ATTR_LATITUDE: place.location.latitude,
-                        ATTR_LONGITUDE: place.location.longitude,
-                    }
-                )
-
-    @property
-    def device_type(self) -> DeviceType:
-        """Return the Netatmo device type."""
-        if "." not in self.device.device_type:
-            return super().device_type
-        return DeviceType(self.device.device_type.partition(".")[2])
 
     @property
     def available(self) -> bool:
