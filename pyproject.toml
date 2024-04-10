@@ -664,6 +664,7 @@ select = [
     "S608", # hardcoded-sql-expression
     "S609", # unix-command-wildcard-injection
     "SIM", # flake8-simplify
+    "SLOT", # flake8-slots
     "T100", # Trace found: {name} used
     "T20", # flake8-print
     "TID251", # Banned imports
