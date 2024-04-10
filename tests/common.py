@@ -299,7 +299,6 @@ async def async_test_home_assistant(
     hass.bus.async_listen_once(
         EVENT_HOMEASSISTANT_STOP,
         hass.config_entries._async_shutdown,
-        run_immediately=True,
     )
 
     # Load the registries
@@ -353,9 +352,9 @@ async def async_test_home_assistant(
 
     hass.set_state(CoreState.running)
 
-    @callback
-    def clear_instance(event):
+    async def clear_instance(event):
         """Clear global instance."""
+        await asyncio.sleep(0)  # Give aiohttp one loop iteration to close
         INSTANCES.remove(hass)
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, clear_instance)
@@ -587,12 +586,12 @@ def json_round_trip(obj: Any) -> Any:
 def mock_state_change_event(
     hass: HomeAssistant, new_state: State, old_state: State | None = None
 ) -> None:
-    """Mock state change envent."""
-    event_data = {"entity_id": new_state.entity_id, "new_state": new_state}
-
-    if old_state:
-        event_data["old_state"] = old_state
-
+    """Mock state change event."""
+    event_data = {
+        "entity_id": new_state.entity_id,
+        "new_state": new_state,
+        "old_state": old_state,
+    }
     hass.bus.fire(EVENT_STATE_CHANGED, event_data, context=new_state.context)
 
 
@@ -916,9 +915,7 @@ class MockEntityPlatform(entity_platform.EntityPlatform):
         def _async_on_stop(_: Event) -> None:
             self.async_shutdown()
 
-        hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STOP, _async_on_stop, run_immediately=True
-        )
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_on_stop)
 
 
 class MockToggleEntity(entity.ToggleEntity):
@@ -1491,7 +1488,7 @@ def async_capture_events(hass: HomeAssistant, event_name: str) -> list[Event]:
     def capture_events(event: Event) -> None:
         events.append(event)
 
-    hass.bus.async_listen(event_name, capture_events, run_immediately=True)
+    hass.bus.async_listen(event_name, capture_events)
 
     return events
 
@@ -1525,12 +1522,12 @@ class _HA_ANY:
 
     _other = _SENTINEL
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         """Test equal."""
         self._other = other
         return True
 
-    def __ne__(self, other: Any) -> bool:
+    def __ne__(self, other: object) -> bool:
         """Test not equal."""
         self._other = other
         return False
@@ -1638,6 +1635,40 @@ def import_and_test_deprecated_constant(
     # verify deprecated constant is included in dir()
     assert constant_name in dir(module)
     assert constant_name in module.__all__
+
+
+def import_and_test_deprecated_alias(
+    caplog: pytest.LogCaptureFixture,
+    module: ModuleType,
+    alias_name: str,
+    replacement: Any,
+    breaks_in_ha_version: str,
+) -> None:
+    """Import and test deprecated alias replaced by a value.
+
+    - Import deprecated alias
+    - Assert value is the same as the replacement
+    - Assert a warning is logged
+    - Assert the deprecated alias is included in the modules.__dir__()
+    - Assert the deprecated alias is included in the modules.__all__()
+    """
+    replacement_name = f"{replacement.__module__}.{replacement.__name__}"
+    value = import_deprecated_constant(module, alias_name)
+    assert value == replacement
+    assert (
+        module.__name__,
+        logging.WARNING,
+        (
+            f"{alias_name} was used from test_constant_deprecation,"
+            f" this is a deprecated alias which will be removed in HA Core {breaks_in_ha_version}. "
+            f"Use {replacement_name} instead, please report "
+            "it to the author of the 'test_constant_deprecation' custom integration"
+        ),
+    ) in caplog.record_tuples
+
+    # verify deprecated alias is included in dir()
+    assert alias_name in dir(module)
+    assert alias_name in module.__all__
 
 
 def help_test_all(module: ModuleType) -> None:

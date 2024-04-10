@@ -8,7 +8,6 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from homeassistant import config_entries
 from homeassistant.components import automation
 from homeassistant.components.automation import (
     ATTR_SOURCE,
@@ -18,6 +17,7 @@ from homeassistant.components.automation import (
     SERVICE_TRIGGER,
     AutomationEntity,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_NAME,
@@ -1615,7 +1615,7 @@ async def test_extraction_functions(
 ) -> None:
     """Test extraction functions."""
     config_entry = MockConfigEntry(domain="fake_integration", data={})
-    config_entry.mock_state(hass, config_entries.ConfigEntryState.LOADED)
+    config_entry.mock_state(hass, ConfigEntryState.LOADED)
     config_entry.add_to_hass(hass)
 
     condition_device = device_registry.async_get_or_create(
@@ -2506,6 +2506,7 @@ async def test_recursive_automation_starting_script(
         async def async_automation_triggered(event):
             """Listen to automation_triggered event from the automation integration."""
             automation_triggered.append(event)
+            await asyncio.sleep(0)  # Yield to allow other tasks to run
             hass.states.async_set("sensor.test", str(len(automation_triggered)))
 
         hass.services.async_register("test", "script_done", async_service_handler)

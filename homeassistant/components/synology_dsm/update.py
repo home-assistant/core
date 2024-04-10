@@ -59,7 +59,7 @@ class SynoDSMUpdateEntity(
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return bool(self._api.upgrade)
+        return bool(self._api.upgrade) and super().available
 
     @property
     def installed_version(self) -> str | None:

@@ -263,9 +263,7 @@ def normalize_package_name(requirement: str) -> str:
         return ""
 
     # pipdeptree needs lowercase and dash instead of underscore as separator
-    package = match.group(1).lower().replace("_", "-")
-
-    return package
+    return match.group(1).lower().replace("_", "-")
 
 
 def comment_requirement(req: str) -> bool:

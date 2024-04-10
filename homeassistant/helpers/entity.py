@@ -5,7 +5,7 @@ from __future__ import annotations
 from abc import ABCMeta
 import asyncio
 from collections import deque
-from collections.abc import Callable, Coroutine, Iterable, Mapping, MutableMapping
+from collections.abc import Callable, Coroutine, Iterable, Mapping
 import dataclasses
 from enum import Enum, IntFlag, auto
 import functools as ft
@@ -537,7 +537,7 @@ class Entity(
     _attr_entity_picture: str | None = None
     _attr_entity_registry_enabled_default: bool
     _attr_entity_registry_visible_default: bool
-    _attr_extra_state_attributes: MutableMapping[str, Any]
+    _attr_extra_state_attributes: dict[str, Any]
     _attr_force_update: bool
     _attr_icon: str | None
     _attr_name: str | None
@@ -1092,7 +1092,7 @@ class Entity(
     @callback
     def _async_write_ha_state(self) -> None:
         """Write the state to the state machine."""
-        if self._platform_state == EntityPlatformState.REMOVED:
+        if self._platform_state is EntityPlatformState.REMOVED:
             # Polling returned after the entity has already been removed
             return
 
@@ -1234,6 +1234,7 @@ class Entity(
             self.hass.async_create_task(
                 self.async_update_ha_state(force_refresh),
                 f"Entity schedule update ha state {self.entity_id}",
+                eager_start=True,
             )
         else:
             self.async_write_ha_state()
@@ -1304,7 +1305,7 @@ class Entity(
         parallel_updates: asyncio.Semaphore | None,
     ) -> None:
         """Start adding an entity to a platform."""
-        if self._platform_state != EntityPlatformState.NOT_ADDED:
+        if self._platform_state is not EntityPlatformState.NOT_ADDED:
             raise HomeAssistantError(
                 f"Entity '{self.entity_id}' cannot be added a second time to an entity"
                 " platform"
@@ -1571,7 +1572,7 @@ class Entity(
 
         If the entity is not added to a platform it's not safe to call _stringify_state.
         """
-        if self._platform_state != EntityPlatformState.ADDED:
+        if self._platform_state is not EntityPlatformState.ADDED:
             return f"<entity unknown.unknown={STATE_UNKNOWN}>"
         return f"<entity {self.entity_id}={self._stringify_state(self.available)}>"
 

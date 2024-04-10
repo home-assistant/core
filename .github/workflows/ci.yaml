@@ -1088,9 +1088,9 @@ jobs:
           pattern: coverage-*
       - name: Upload coverage to Codecov (full coverage)
         if: needs.info.outputs.test_full_suite == 'true'
-        uses: Wandalen/wretry.action@v3.0.1
+        uses: Wandalen/wretry.action@v3.1.0
         with:
-          action: codecov/codecov-action@v3.1.3
+          action: codecov/codecov-action@v4.3.0
           with: |
             fail_ci_if_error: true
             flags: full-suite
@@ -1099,9 +1099,9 @@ jobs:
           attempt_delay: 30000
       - name: Upload coverage to Codecov (partial coverage)
         if: needs.info.outputs.test_full_suite == 'false'
-        uses: Wandalen/wretry.action@v3.0.1
+        uses: Wandalen/wretry.action@v3.1.0
         with:
-          action: codecov/codecov-action@v3.1.3
+          action: codecov/codecov-action@v4.3.0
           with: |
             fail_ci_if_error: true
             token: ${{ env.CODECOV_TOKEN }}
@@ -1234,9 +1234,9 @@ jobs:
           pattern: coverage-*
       - name: Upload coverage to Codecov (full coverage)
         if: needs.info.outputs.test_full_suite == 'true'
-        uses: Wandalen/wretry.action@v3.0.1
+        uses: Wandalen/wretry.action@v3.1.0
         with:
-          action: codecov/codecov-action@v3.1.3
+          action: codecov/codecov-action@v4.3.0
           with: |
             fail_ci_if_error: true
             flags: full-suite
@@ -1245,9 +1245,9 @@ jobs:
           attempt_delay: 30000
       - name: Upload coverage to Codecov (partial coverage)
         if: needs.info.outputs.test_full_suite == 'false'
-        uses: Wandalen/wretry.action@v3.0.1
+        uses: Wandalen/wretry.action@v3.1.0
         with:
-          action: codecov/codecov-action@v3.1.3
+          action: codecov/codecov-action@v4.3.0
           with: |
             fail_ci_if_error: true
             token: ${{ env.CODECOV_TOKEN }}

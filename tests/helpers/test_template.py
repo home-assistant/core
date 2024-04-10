@@ -1176,7 +1176,7 @@ def test_as_datetime(hass: HomeAssistant, input) -> None:
 )
 def test_as_datetime_from_timestamp(
     hass: HomeAssistant,
-    input: int | float,
+    input: float,
     output: str,
 ) -> None:
     """Test converting a UNIX timestamp to a date object."""
@@ -1270,7 +1270,7 @@ def test_to_json(hass: HomeAssistant) -> None:
     # Test special case where substring class cannot be rendered
     # See: https://github.com/ijl/orjson/issues/445
     class MyStr(str):
-        pass
+        __slots__ = ()
 
     expected_result = '{"mykey1":11.0,"mykey2":"myvalue2","mykey3":["opt3b","opt3a"]}'
     test_dict = {

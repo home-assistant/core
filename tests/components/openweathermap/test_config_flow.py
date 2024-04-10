@@ -59,11 +59,11 @@ async def test_form(hass: HomeAssistant) -> None:
 
         conf_entries = hass.config_entries.async_entries(DOMAIN)
         entry = conf_entries[0]
-        assert entry.state == ConfigEntryState.LOADED
+        assert entry.state is ConfigEntryState.LOADED
 
         await hass.config_entries.async_unload(conf_entries[0].entry_id)
         await hass.async_block_till_done()
-        assert entry.state == ConfigEntryState.NOT_LOADED
+        assert entry.state is ConfigEntryState.NOT_LOADED
 
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == CONFIG[CONF_NAME]
@@ -88,7 +88,7 @@ async def test_form_options(hass: HomeAssistant) -> None:
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-        assert config_entry.state == ConfigEntryState.LOADED
+        assert config_entry.state is ConfigEntryState.LOADED
 
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
@@ -107,7 +107,7 @@ async def test_form_options(hass: HomeAssistant) -> None:
 
         await hass.async_block_till_done()
 
-        assert config_entry.state == ConfigEntryState.LOADED
+        assert config_entry.state is ConfigEntryState.LOADED
 
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
@@ -126,7 +126,7 @@ async def test_form_options(hass: HomeAssistant) -> None:
 
         await hass.async_block_till_done()
 
-        assert config_entry.state == ConfigEntryState.LOADED
+        assert config_entry.state is ConfigEntryState.LOADED
 
 
 async def test_form_invalid_api_key(hass: HomeAssistant) -> None:
