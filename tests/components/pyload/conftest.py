@@ -3,7 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
-from pyloadapi.types import StatusServerResponse
+from pyloadapi.types import LoginResponse, StatusServerResponse
 import pytest
 
 from homeassistant.components.pyload import DOMAIN
@@ -52,8 +52,32 @@ def mock_pyloadapi() -> Generator[AsyncMock, None, None]:
         ),
     ):
         client = mock_client.return_value
-        client.login.return_value = True
-        client.get_status.return_value = StatusServerResponse
+        client.login.return_value = LoginResponse.from_dict(
+            {
+                "_permanent": True,
+                "authenticated": True,
+                "id": 1,
+                "name": "admin",
+                "role": 0,
+                "perms": 0,
+                "template": "default",
+                "_flashes": [
+                    ["message", "Logged in successfully"],
+                ],
+            }
+        )
+        client.get_status.return_value = StatusServerResponse.from_dict(
+            {
+                "pause": False,
+                "active": 5,
+                "queue": 45,
+                "total": 50,
+                "speed": 43653456,
+                "download": True,
+                "reconnect": True,
+                "captcha": False,
+            }
+        )
         yield client
 
 

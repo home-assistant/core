@@ -33,7 +33,7 @@ class PyLoadCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self):
         """Fetch data from API endpoint."""
         try:
-            return (await self.pyload.get_status()).to_dict()
+            return await self.pyload.get_status()
         except InvalidAuth:
             try:
                 await self.pyload.login()
