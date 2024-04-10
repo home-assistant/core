@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import CONF_URL_WEATHER, NETATMO_CREATE_WEATHER_SENSOR
+from .const import NETATMO_CREATE_WEATHER_SENSOR
 from .data_handler import NetatmoDevice
 from .entity import NetatmoWeatherModuleEntity
 
@@ -44,7 +44,6 @@ async def async_setup_entry(
 
 class NetatmoWeatherBinarySensor(NetatmoWeatherModuleEntity, BinarySensorEntity):
     """Implementation of a Netatmo binary sensor."""
-
 
     def __init__(
         self, device: NetatmoDevice, description: BinarySensorEntityDescription
