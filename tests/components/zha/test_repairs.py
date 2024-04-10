@@ -1,5 +1,6 @@
 """Test ZHA repairs."""
 
+import asyncio
 from collections.abc import Callable
 from http import HTTPStatus
 import logging
@@ -277,6 +278,7 @@ async def test_probe_failure_exception_handling(
         caplog.at_level(logging.DEBUG),
     ):
         await probe_silabs_firmware_type("/dev/ttyZigbee")
+        await asyncio.sleep(0)
 
     mock_probe_app_type.assert_awaited()
     assert "Failed to probe application type" in caplog.text
