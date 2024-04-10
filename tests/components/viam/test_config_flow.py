@@ -1,4 +1,5 @@
 """Test the viam config flow."""
+
 import asyncio
 from dataclasses import dataclass
 from unittest.mock import AsyncMock, MagicMock, patch

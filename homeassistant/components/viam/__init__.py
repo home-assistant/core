@@ -1,4 +1,5 @@
 """The viam integration."""
+
 from __future__ import annotations
 
 from viam.app.viam_client import ViamClient
