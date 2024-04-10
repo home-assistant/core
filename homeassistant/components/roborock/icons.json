@@ -37,6 +37,9 @@
       }
     },
     "sensor": {
+      "current_room": {
+        "default": "mdi:floor-plan"
+      },
       "main_brush_time_left": {
         "default": "mdi:brush"
       },

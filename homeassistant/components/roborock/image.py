@@ -108,6 +108,7 @@ class RoborockMap(RoborockCoordinatedEntity, ImageEntity):
                 translation_domain=DOMAIN,
                 translation_key="map_failure",
             )
+        self.coordinator.maps[self.map_flag].current_room = parsed_map.vacuum_room
         img_byte_arr = io.BytesIO()
         parsed_map.image.data.save(img_byte_arr, format="PNG")
         return img_byte_arr.getvalue()

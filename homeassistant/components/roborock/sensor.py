@@ -202,16 +202,24 @@ async def async_setup_entry(
     coordinators: dict[str, RoborockDataUpdateCoordinator] = hass.data[DOMAIN][
         config_entry.entry_id
     ]
-    async_add_entities(
-        RoborockSensorEntity(
-            f"{description.key}_{slugify(device_id)}",
-            coordinator,
-            description,
+    entities: list[RoborockSensorEntity | RoborockSensorRoomEntity] = []
+    for device_id, coordinator in coordinators.items():
+        entities.extend(
+            [
+                RoborockSensorEntity(
+                    f"{description.key}_{slugify(device_id)}",
+                    coordinator,
+                    description,
+                )
+                for description in SENSOR_DESCRIPTIONS
+                if description.value_fn(coordinator.roborock_device_info.props)
+                is not None
+            ]
         )
-        for device_id, coordinator in coordinators.items()
-        for description in SENSOR_DESCRIPTIONS
-        if description.value_fn(coordinator.roborock_device_info.props) is not None
-    )
+        entities.append(
+            RoborockSensorRoomEntity(f"current_room_{slugify(device_id)}", coordinator)
+        )
+    async_add_entities(entities)
 
 
 class RoborockSensorEntity(RoborockCoordinatedEntity, SensorEntity):
@@ -235,3 +243,31 @@ class RoborockSensorEntity(RoborockCoordinatedEntity, SensorEntity):
         return self.entity_description.value_fn(
             self.coordinator.roborock_device_info.props
         )
+
+
+class RoborockSensorRoomEntity(RoborockCoordinatedEntity, SensorEntity):
+    """Representation of a room entity - it uses the coordinator so it is separate from others."""
+
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_translation_key = "current_room"
+    _attr_key = "current_room"
+
+    def __init__(
+        self,
+        unique_id: str,
+        coordinator: RoborockDataUpdateCoordinator,
+    ) -> None:
+        """Initialize the entity."""
+        super().__init__(unique_id, coordinator, None)
+
+    @property
+    def native_value(self) -> str | None:
+        """Return the value reported by the sensor."""
+        if (
+            self.coordinator.current_map is not None
+            and (current_map := self.coordinator.maps[self.coordinator.current_map])
+            is not None
+            and current_map.current_room is not None
+        ):
+            return current_map.rooms.get(current_map.current_room)
+        return None

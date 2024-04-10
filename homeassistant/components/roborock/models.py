@@ -33,3 +33,4 @@ class RoborockMapInfo:
     flag: int
     name: str
     rooms: dict[int, str]
+    current_room: int | None = None

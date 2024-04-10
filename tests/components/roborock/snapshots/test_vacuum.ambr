@@ -4,6 +4,7 @@
     'vacuum.roborock_s7_maxv': dict({
       'maps': list([
         dict({
+          'current_room': 17,
           'flag': 0,
           'name': 'Upstairs',
           'rooms': dict({
@@ -13,6 +14,7 @@
           }),
         }),
         dict({
+          'current_room': 17,
           'flag': 1,
           'name': 'Downstairs',
           'rooms': dict({
