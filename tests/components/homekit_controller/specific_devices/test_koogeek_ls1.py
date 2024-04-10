@@ -1,4 +1,5 @@
 """Make sure that existing Koogeek LS1 support isn't broken."""
+
 from datetime import timedelta
 from unittest import mock
 

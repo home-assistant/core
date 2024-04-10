@@ -39,5 +39,32 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
+  },
+  "entity": {
+    "switch": {
+      "poe_control": {
+        "name": "Port {port_name} PoE"
+      },
+      "wan_connect_ipv4": {
+        "name": "Port {port_name} Internet Connected"
+      },
+      "wan_connect_ipv6": {
+        "name": "Port {port_name} Internet Connected (IPv6)"
+      }
+    },
+    "binary_sensor": {
+      "wan_link": {
+        "name": "Port {port_name} Internet Link"
+      },
+      "online_detection": {
+        "name": "Port {port_name} Online Detection"
+      },
+      "lan_status": {
+        "name": "Port {port_name} LAN Status"
+      },
+      "poe_delivery": {
+        "name": "Port {port_name} PoE Delivery"
+      }
+    }
   }
 }

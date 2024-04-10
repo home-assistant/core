@@ -1,4 +1,5 @@
 """Binary sensors for Yale Alarm."""
+
 from __future__ import annotations
 
 from homeassistant.components.binary_sensor import (
@@ -51,11 +52,12 @@ async def async_setup_entry(
     coordinator: YaleDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
         COORDINATOR
     ]
-    sensors: list[YaleDoorSensor | YaleProblemSensor] = []
-    for data in coordinator.data["door_windows"]:
-        sensors.append(YaleDoorSensor(coordinator, data))
-    for description in SENSOR_TYPES:
-        sensors.append(YaleProblemSensor(coordinator, description))
+    sensors: list[YaleDoorSensor | YaleProblemSensor] = [
+        YaleDoorSensor(coordinator, data) for data in coordinator.data["door_windows"]
+    ]
+    sensors.extend(
+        YaleProblemSensor(coordinator, description) for description in SENSOR_TYPES
+    )
 
     async_add_entities(sensors)
 

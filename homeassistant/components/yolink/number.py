@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import Any
 
 from yolink.client_request import ClientRequest
 from yolink.const import ATTR_DEVICE_SPEAKER_HUB
@@ -22,7 +23,7 @@ from .const import DOMAIN
 from .coordinator import YoLinkCoordinator
 from .entity import YoLinkEntity
 
-OPTIONS_VALUME = "options_volume"
+OPTIONS_VOLUME = "options_volume"
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -30,6 +31,7 @@ class YoLinkNumberTypeConfigEntityDescription(NumberEntityDescription):
     """YoLink NumberEntity description."""
 
     exists_fn: Callable[[YoLinkDevice], bool]
+    should_update_entity: Callable
     value: Callable
 
 
@@ -37,18 +39,26 @@ NUMBER_TYPE_CONF_SUPPORT_DEVICES = [ATTR_DEVICE_SPEAKER_HUB]
 
 SUPPORT_SET_VOLUME_DEVICES = [ATTR_DEVICE_SPEAKER_HUB]
 
+
+def get_volume_value(state: dict[str, Any]) -> int | None:
+    """Get volume option."""
+    if (options := state.get("options")) is not None:
+        return options.get("volume")
+    return None
+
+
 DEVICE_CONFIG_DESCRIPTIONS: tuple[YoLinkNumberTypeConfigEntityDescription, ...] = (
     YoLinkNumberTypeConfigEntityDescription(
-        key=OPTIONS_VALUME,
+        key=OPTIONS_VOLUME,
         translation_key="config_volume",
         native_min_value=1,
         native_max_value=16,
         mode=NumberMode.SLIDER,
         native_step=1.0,
         native_unit_of_measurement=None,
-        icon="mdi:volume-high",
         exists_fn=lambda device: device.device_type in SUPPORT_SET_VOLUME_DEVICES,
-        value=lambda state: state["options"]["volume"],
+        should_update_entity=lambda value: value is not None,
+        value=get_volume_value,
     ),
 )
 
@@ -65,18 +75,16 @@ async def async_setup_entry(
         for device_coordinator in device_coordinators.values()
         if device_coordinator.device.device_type in NUMBER_TYPE_CONF_SUPPORT_DEVICES
     ]
-    entities = []
-    for config_device_coordinator in config_device_coordinators:
-        for description in DEVICE_CONFIG_DESCRIPTIONS:
-            if description.exists_fn(config_device_coordinator.device):
-                entities.append(
-                    YoLinkNumberTypeConfigEntity(
-                        config_entry,
-                        config_device_coordinator,
-                        description,
-                    )
-                )
-    async_add_entities(entities)
+    async_add_entities(
+        YoLinkNumberTypeConfigEntity(
+            config_entry,
+            config_device_coordinator,
+            description,
+        )
+        for config_device_coordinator in config_device_coordinators
+        for description in DEVICE_CONFIG_DESCRIPTIONS
+        if description.exists_fn(config_device_coordinator.device)
+    )
 
 
 class YoLinkNumberTypeConfigEntity(YoLinkEntity, NumberEntity):
@@ -98,7 +106,10 @@ class YoLinkNumberTypeConfigEntity(YoLinkEntity, NumberEntity):
     @callback
     def update_entity_state(self, state: dict) -> None:
         """Update HA Entity State."""
-        attr_val = self.entity_description.value(state)
+        if (
+            attr_val := self.entity_description.value(state)
+        ) is None and self.entity_description.should_update_entity(attr_val) is False:
+            return
         self._attr_native_value = attr_val
         self.async_write_ha_state()
 
@@ -110,7 +121,7 @@ class YoLinkNumberTypeConfigEntity(YoLinkEntity, NumberEntity):
         """Update the current value."""
         if (
             self.coordinator.device.device_type == ATTR_DEVICE_SPEAKER_HUB
-            and self.entity_description.key == OPTIONS_VALUME
+            and self.entity_description.key == OPTIONS_VOLUME
         ):
             await self.update_speaker_hub_volume(value)
             self._attr_native_value = value

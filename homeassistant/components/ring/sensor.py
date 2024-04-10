@@ -1,15 +1,17 @@
 """Component providing HA sensor support for Ring Door Bell/Chimes."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Any
 
-from ring_doorbell.generic import RingGeneric
+from ring_doorbell import RingGeneric
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -38,7 +40,13 @@ async def async_setup_entry(
 
     entities = [
         description.cls(device, devices_coordinator, description)
-        for device_type in ("chimes", "doorbots", "authorized_doorbots", "stickup_cams")
+        for device_type in (
+            "chimes",
+            "doorbots",
+            "authorized_doorbots",
+            "stickup_cams",
+            "other",
+        )
         for description in SENSOR_TYPES
         if device_type in description.category
         for device in devices[device_type]
@@ -70,6 +78,12 @@ class RingSensor(RingEntity, SensorEntity):
         sensor_type = self.entity_description.key
         if sensor_type == "volume":
             return self._device.volume
+        if sensor_type == "doorbell_volume":
+            return self._device.doorbell_volume
+        if sensor_type == "mic_volume":
+            return self._device.mic_volume
+        if sensor_type == "voice_volume":
+            return self._device.voice_volume
 
         if sensor_type == "battery":
             return self._device.battery_life
@@ -141,17 +155,12 @@ class HistoryRingSensor(RingSensor):
         return attrs
 
 
-@dataclass(frozen=True)
-class RingRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class RingSensorEntityDescription(SensorEntityDescription):
+    """Describes Ring sensor entity."""
 
     category: list[str]
     cls: type[RingSensor]
-
-
-@dataclass(frozen=True)
-class RingSensorEntityDescription(SensorEntityDescription, RingRequiredKeysMixin):
-    """Describes Ring sensor entity."""
 
     kind: str | None = None
 
@@ -159,25 +168,24 @@ class RingSensorEntityDescription(SensorEntityDescription, RingRequiredKeysMixin
 SENSOR_TYPES: tuple[RingSensorEntityDescription, ...] = (
     RingSensorEntityDescription(
         key="battery",
-        category=["doorbots", "authorized_doorbots", "stickup_cams"],
+        category=["doorbots", "authorized_doorbots", "stickup_cams", "other"],
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
+        state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         cls=RingSensor,
     ),
     RingSensorEntityDescription(
         key="last_activity",
         translation_key="last_activity",
-        category=["doorbots", "authorized_doorbots", "stickup_cams"],
-        icon="mdi:history",
+        category=["doorbots", "authorized_doorbots", "stickup_cams", "other"],
         device_class=SensorDeviceClass.TIMESTAMP,
         cls=HistoryRingSensor,
     ),
     RingSensorEntityDescription(
         key="last_ding",
         translation_key="last_ding",
-        category=["doorbots", "authorized_doorbots"],
-        icon="mdi:history",
+        category=["doorbots", "authorized_doorbots", "other"],
         kind="ding",
         device_class=SensorDeviceClass.TIMESTAMP,
         cls=HistoryRingSensor,
@@ -186,7 +194,6 @@ SENSOR_TYPES: tuple[RingSensorEntityDescription, ...] = (
         key="last_motion",
         translation_key="last_motion",
         category=["doorbots", "authorized_doorbots", "stickup_cams"],
-        icon="mdi:history",
         kind="motion",
         device_class=SensorDeviceClass.TIMESTAMP,
         cls=HistoryRingSensor,
@@ -195,23 +202,38 @@ SENSOR_TYPES: tuple[RingSensorEntityDescription, ...] = (
         key="volume",
         translation_key="volume",
         category=["chimes", "doorbots", "authorized_doorbots", "stickup_cams"],
-        icon="mdi:bell-ring",
+        cls=RingSensor,
+    ),
+    RingSensorEntityDescription(
+        key="doorbell_volume",
+        translation_key="doorbell_volume",
+        category=["other"],
+        cls=RingSensor,
+    ),
+    RingSensorEntityDescription(
+        key="mic_volume",
+        translation_key="mic_volume",
+        category=["other"],
+        cls=RingSensor,
+    ),
+    RingSensorEntityDescription(
+        key="voice_volume",
+        translation_key="voice_volume",
+        category=["other"],
         cls=RingSensor,
     ),
     RingSensorEntityDescription(
         key="wifi_signal_category",
         translation_key="wifi_signal_category",
-        category=["chimes", "doorbots", "authorized_doorbots", "stickup_cams"],
-        icon="mdi:wifi",
+        category=["chimes", "doorbots", "authorized_doorbots", "stickup_cams", "other"],
         entity_category=EntityCategory.DIAGNOSTIC,
         cls=HealthDataRingSensor,
     ),
     RingSensorEntityDescription(
         key="wifi_signal_strength",
         translation_key="wifi_signal_strength",
-        category=["chimes", "doorbots", "authorized_doorbots", "stickup_cams"],
+        category=["chimes", "doorbots", "authorized_doorbots", "stickup_cams", "other"],
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-        icon="mdi:wifi",
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         entity_category=EntityCategory.DIAGNOSTIC,
         cls=HealthDataRingSensor,

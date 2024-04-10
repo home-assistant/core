@@ -1,4 +1,5 @@
 """Test sensor of AccuWeather integration."""
+
 from datetime import timedelta
 from unittest.mock import PropertyMock, patch
 
@@ -576,15 +577,18 @@ async def test_availability(hass: HomeAssistant) -> None:
         assert state.state == STATE_UNAVAILABLE
 
     future = utcnow() + timedelta(minutes=120)
-    with patch(
-        "homeassistant.components.accuweather.AccuWeather.async_get_current_conditions",
-        return_value=load_json_object_fixture(
-            "accuweather/current_conditions_data.json"
+    with (
+        patch(
+            "homeassistant.components.accuweather.AccuWeather.async_get_current_conditions",
+            return_value=load_json_object_fixture(
+                "accuweather/current_conditions_data.json"
+            ),
         ),
-    ), patch(
-        "homeassistant.components.accuweather.AccuWeather.requests_remaining",
-        new_callable=PropertyMock,
-        return_value=10,
+        patch(
+            "homeassistant.components.accuweather.AccuWeather.requests_remaining",
+            new_callable=PropertyMock,
+            return_value=10,
+        ),
     ):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
@@ -604,16 +608,20 @@ async def test_manual_update_entity(hass: HomeAssistant) -> None:
     current = load_json_object_fixture("accuweather/current_conditions_data.json")
     forecast = load_json_array_fixture("accuweather/forecast_data.json")
 
-    with patch(
-        "homeassistant.components.accuweather.AccuWeather.async_get_current_conditions",
-        return_value=current,
-    ) as mock_current, patch(
-        "homeassistant.components.accuweather.AccuWeather.async_get_daily_forecast",
-        return_value=forecast,
-    ) as mock_forecast, patch(
-        "homeassistant.components.accuweather.AccuWeather.requests_remaining",
-        new_callable=PropertyMock,
-        return_value=10,
+    with (
+        patch(
+            "homeassistant.components.accuweather.AccuWeather.async_get_current_conditions",
+            return_value=current,
+        ) as mock_current,
+        patch(
+            "homeassistant.components.accuweather.AccuWeather.async_get_daily_forecast",
+            return_value=forecast,
+        ) as mock_forecast,
+        patch(
+            "homeassistant.components.accuweather.AccuWeather.requests_remaining",
+            new_callable=PropertyMock,
+            return_value=10,
+        ),
     ):
         await hass.services.async_call(
             "homeassistant",
@@ -664,13 +672,16 @@ async def test_state_update(hass: HomeAssistant) -> None:
     )
     current_condition["Ceiling"]["Metric"]["Value"] = 3300
 
-    with patch(
-        "homeassistant.components.accuweather.AccuWeather.async_get_current_conditions",
-        return_value=current_condition,
-    ), patch(
-        "homeassistant.components.accuweather.AccuWeather.requests_remaining",
-        new_callable=PropertyMock,
-        return_value=10,
+    with (
+        patch(
+            "homeassistant.components.accuweather.AccuWeather.async_get_current_conditions",
+            return_value=current_condition,
+        ),
+        patch(
+            "homeassistant.components.accuweather.AccuWeather.requests_remaining",
+            new_callable=PropertyMock,
+            return_value=10,
+        ),
     ):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()

@@ -1,9 +1,11 @@
 """The tests for the pilight component."""
+
 from datetime import timedelta
 import logging
 import socket
 from unittest.mock import patch
 
+import pytest
 from voluptuous import MultipleInvalid
 
 from homeassistant.components import pilight
@@ -69,9 +71,10 @@ class PilightDaemonSim:
 @patch("homeassistant.components.pilight._LOGGER.error")
 async def test_connection_failed_error(mock_error, hass: HomeAssistant) -> None:
     """Try to connect at 127.0.0.1:5001 with socket error."""
-    with assert_setup_component(4), patch(
-        "pilight.pilight.Client", side_effect=socket.error
-    ) as mock_client:
+    with (
+        assert_setup_component(4),
+        patch("pilight.pilight.Client", side_effect=socket.error) as mock_client,
+    ):
         assert not await async_setup_component(
             hass, pilight.DOMAIN, {pilight.DOMAIN: {}}
         )
@@ -84,9 +87,10 @@ async def test_connection_failed_error(mock_error, hass: HomeAssistant) -> None:
 @patch("homeassistant.components.pilight._LOGGER.error")
 async def test_connection_timeout_error(mock_error, hass: HomeAssistant) -> None:
     """Try to connect at 127.0.0.1:5001 with socket timeout."""
-    with assert_setup_component(4), patch(
-        "pilight.pilight.Client", side_effect=socket.timeout
-    ) as mock_client:
+    with (
+        assert_setup_component(4),
+        patch("pilight.pilight.Client", side_effect=socket.timeout) as mock_client,
+    ):
         assert not await async_setup_component(
             hass, pilight.DOMAIN, {pilight.DOMAIN: {}}
         )
@@ -103,7 +107,7 @@ async def test_send_code_no_protocol(hass: HomeAssistant) -> None:
         assert await async_setup_component(hass, pilight.DOMAIN, {pilight.DOMAIN: {}})
 
         # Call without protocol info, should raise an error
-        try:
+        with pytest.raises(MultipleInvalid) as excinfo:
             await hass.services.async_call(
                 pilight.DOMAIN,
                 pilight.SERVICE_NAME,
@@ -111,8 +115,7 @@ async def test_send_code_no_protocol(hass: HomeAssistant) -> None:
                 blocking=True,
             )
             await hass.async_block_till_done()
-        except MultipleInvalid as error:
-            assert "required key not provided @ data['protocol']" in str(error)
+        assert "required key not provided @ data['protocol']" in str(excinfo.value)
 
 
 @patch("homeassistant.components.pilight._LOGGER.error")
@@ -141,8 +144,9 @@ async def test_send_code(mock_pilight_error, hass: HomeAssistant) -> None:
 @patch("homeassistant.components.pilight._LOGGER.error")
 async def test_send_code_fail(mock_pilight_error, hass: HomeAssistant) -> None:
     """Check IOError exception error message."""
-    with assert_setup_component(4), patch(
-        "pilight.pilight.Client.send_code", side_effect=IOError
+    with (
+        assert_setup_component(4),
+        patch("pilight.pilight.Client.send_code", side_effect=IOError),
     ):
         assert await async_setup_component(hass, pilight.DOMAIN, {pilight.DOMAIN: {}})
 

@@ -1,4 +1,5 @@
 """Entity representing a Bang & Olufsen device."""
+
 from __future__ import annotations
 
 from typing import cast
@@ -36,7 +37,6 @@ class BangOlufsenBase:
 
         # Set the configuration variables.
         self._host: str = self.entry.data[CONF_HOST]
-        self._name: str = self.entry.title
         self._unique_id: str = cast(str, self.entry.unique_id)
 
         # Objects that get directly updated by notifications.
@@ -54,15 +54,13 @@ class BangOlufsenEntity(Entity, BangOlufsenBase):
     """Base Entity for BangOlufsen entities."""
 
     _attr_has_entity_name = True
+    _attr_should_poll = False
 
     def __init__(self, entry: ConfigEntry, client: MozartClient) -> None:
         """Initialize the object."""
         super().__init__(entry, client)
 
         self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, self._unique_id)})
-        self._attr_device_class = None
-        self._attr_entity_category = None
-        self._attr_should_poll = False
 
     async def _update_connection_state(self, connection_state: bool) -> None:
         """Update entity connection state."""

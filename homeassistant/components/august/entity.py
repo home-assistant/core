@@ -1,4 +1,5 @@
 """Base class for August entity."""
+
 from abc import abstractmethod
 
 from yalexs.doorbell import Doorbell, DoorbellDetail

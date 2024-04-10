@@ -1,11 +1,12 @@
 """The test for light device automation."""
+
 from datetime import timedelta
 
 from freezegun import freeze_time
 import pytest
 from pytest_unordered import unordered
 
-import homeassistant.components.automation as automation
+from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.light import DOMAIN
 from homeassistant.const import CONF_PLATFORM, STATE_OFF, STATE_ON, EntityCategory
@@ -20,7 +21,9 @@ from tests.common import (
     async_get_device_automation_capabilities,
     async_get_device_automations,
     async_mock_service,
+    setup_test_component_platform,
 )
+from tests.components.light.common import MockLight
 
 
 @pytest.fixture(autouse=True, name="stub_blueprint_populate")
@@ -68,12 +71,12 @@ async def test_get_conditions(
 
 @pytest.mark.parametrize(
     ("hidden_by", "entity_category"),
-    (
+    [
         (RegistryEntryHider.INTEGRATION, None),
         (RegistryEntryHider.USER, None),
         (None, EntityCategory.CONFIG),
         (None, EntityCategory.DIAGNOSTIC),
-    ),
+    ],
 )
 async def test_get_conditions_hidden_auxiliary(
     hass: HomeAssistant,
@@ -322,7 +325,7 @@ async def test_if_fires_on_for_condition(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     calls,
-    enable_custom_integrations: None,
+    mock_light_entities: list[MockLight],
 ) -> None:
     """Test for firing if condition is on with delay."""
     config_entry = MockConfigEntry(domain="test", data={})
@@ -341,13 +344,9 @@ async def test_if_fires_on_for_condition(
     point2 = point1 + timedelta(seconds=10)
     point3 = point2 + timedelta(seconds=10)
 
-    platform = getattr(hass.components, f"test.{DOMAIN}")
-
-    platform.init()
+    setup_test_component_platform(hass, DOMAIN, mock_light_entities)
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
-
-    ent1, ent2, ent3 = platform.ENTITIES
 
     with freeze_time(point1) as freezer:
         assert await async_setup_component(

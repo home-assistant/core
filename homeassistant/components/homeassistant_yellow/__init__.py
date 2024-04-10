@@ -1,4 +1,5 @@
 """The Home Assistant Yellow integration."""
+
 from __future__ import annotations
 
 from homeassistant.components.hassio import get_os_info, is_hassio
@@ -7,9 +8,10 @@ from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon 
     get_zigbee_socket,
     multi_pan_addon_using_device,
 )
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_HARDWARE, ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
+from homeassistant.helpers import discovery_flow
 
 from .const import RADIO_DEVICE, ZHA_HW_DISCOVERY_DATA
 
@@ -47,9 +49,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             "radio_type": "ezsp",
         }
 
-    await hass.config_entries.flow.async_init(
+    discovery_flow.async_create_flow(
+        hass,
         "zha",
-        context={"source": "hardware"},
+        context={"source": SOURCE_HARDWARE},
         data=hw_discovery_data,
     )
 

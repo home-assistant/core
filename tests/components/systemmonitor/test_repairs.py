@@ -28,7 +28,6 @@ async def test_migrate_process_sensor(
     entity_registry_enabled_by_default: None,
     mock_psutil: Mock,
     mock_os: Mock,
-    mock_util: Mock,
     hass_client: ClientSessionGenerator,
     hass_ws_client: WebSocketGenerator,
     snapshot: SnapshotAssertion,
@@ -95,7 +94,8 @@ async def test_migrate_process_sensor(
     assert resp.status == HTTPStatus.OK
     data = await resp.json()
 
-    assert data["type"] == FlowResultType.CREATE_ENTRY
+    # Cannot use identity `is` check here as the value is parsed from JSON
+    assert data["type"] == FlowResultType.CREATE_ENTRY.value
     await hass.async_block_till_done()
 
     state = hass.states.get("binary_sensor.system_monitor_process_python3")
@@ -193,5 +193,6 @@ async def test_other_fixable_issues(
     assert resp.status == HTTPStatus.OK
     data = await resp.json()
 
-    assert data["type"] == FlowResultType.CREATE_ENTRY
+    # Cannot use identity `is` check here as the value is parsed from JSON
+    assert data["type"] == FlowResultType.CREATE_ENTRY.value
     await hass.async_block_till_done()

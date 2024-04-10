@@ -1,12 +1,12 @@
 """Data coordinators for the ring integration."""
+
 from asyncio import TaskGroup
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
 from typing import Any, Optional
 
-import ring_doorbell
-from ring_doorbell.generic import RingGeneric
+from ring_doorbell import AuthenticationError, Ring, RingError, RingGeneric, RingTimeout
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
@@ -22,15 +22,15 @@ async def _call_api(
 ):
     try:
         return await hass.async_add_executor_job(target, *args)
-    except ring_doorbell.AuthenticationError as err:
+    except AuthenticationError as err:
         # Raising ConfigEntryAuthFailed will cancel future updates
         # and start a config flow with SOURCE_REAUTH (async_step_reauth)
         raise ConfigEntryAuthFailed from err
-    except ring_doorbell.RingTimeout as err:
+    except RingTimeout as err:
         raise UpdateFailed(
             f"Timeout communicating with API{msg_suffix}: {err}"
         ) from err
-    except ring_doorbell.RingError as err:
+    except RingError as err:
         raise UpdateFailed(f"Error communicating with API{msg_suffix}: {err}") from err
 
 
@@ -48,7 +48,7 @@ class RingDataCoordinator(DataUpdateCoordinator[dict[int, RingDeviceData]]):
     def __init__(
         self,
         hass: HomeAssistant,
-        ring_api: ring_doorbell.Ring,
+        ring_api: Ring,
     ) -> None:
         """Initialize my coordinator."""
         super().__init__(
@@ -57,7 +57,7 @@ class RingDataCoordinator(DataUpdateCoordinator[dict[int, RingDeviceData]]):
             logger=_LOGGER,
             update_interval=SCAN_INTERVAL,
         )
-        self.ring_api: ring_doorbell.Ring = ring_api
+        self.ring_api: Ring = ring_api
         self.first_call: bool = True
 
     async def _async_update_data(self):
@@ -104,7 +104,7 @@ class RingDataCoordinator(DataUpdateCoordinator[dict[int, RingDeviceData]]):
 class RingNotificationsCoordinator(DataUpdateCoordinator[None]):
     """Global notifications coordinator."""
 
-    def __init__(self, hass: HomeAssistant, ring_api: ring_doorbell.Ring) -> None:
+    def __init__(self, hass: HomeAssistant, ring_api: Ring) -> None:
         """Initialize my coordinator."""
         super().__init__(
             hass,
@@ -112,7 +112,7 @@ class RingNotificationsCoordinator(DataUpdateCoordinator[None]):
             name="active dings",
             update_interval=NOTIFICATIONS_SCAN_INTERVAL,
         )
-        self.ring_api: ring_doorbell.Ring = ring_api
+        self.ring_api: Ring = ring_api
 
     async def _async_update_data(self):
         """Fetch data from API endpoint."""

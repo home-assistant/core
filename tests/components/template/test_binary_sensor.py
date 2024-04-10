@@ -1,4 +1,5 @@
 """The tests for the Template Binary sensor platform."""
+
 from datetime import UTC, datetime, timedelta
 import logging
 from unittest.mock import patch

@@ -1,13 +1,20 @@
 """Translation string lookup helpers."""
+
 from __future__ import annotations
 
 import asyncio
 from collections.abc import Iterable, Mapping
+from contextlib import suppress
 import logging
 import string
 from typing import Any
 
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.const import (
+    EVENT_CORE_CONFIG_UPDATE,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+)
+from homeassistant.core import Event, HomeAssistant, async_get_hass, callback
 from homeassistant.loader import (
     Integration,
     async_get_config_flows,
@@ -66,23 +73,27 @@ def component_translation_path(
     return str(translation_path / filename)
 
 
-def load_translations_files(
-    translation_files: dict[str, str],
+def _load_translations_files_by_language(
+    translation_files: dict[str, dict[str, str]],
 ) -> dict[str, dict[str, Any]]:
     """Load and parse translation.json files."""
-    loaded = {}
-    for component, translation_file in translation_files.items():
-        loaded_json = load_json(translation_file)
+    loaded: dict[str, dict[str, Any]] = {}
+    for language, component_translation_file in translation_files.items():
+        loaded_for_language: dict[str, Any] = {}
+        loaded[language] = loaded_for_language
 
-        if not isinstance(loaded_json, dict):
-            _LOGGER.warning(
-                "Translation file is unexpected type %s. Expected dict for %s",
-                type(loaded_json),
-                translation_file,
-            )
-            continue
+        for component, translation_file in component_translation_file.items():
+            loaded_json = load_json(translation_file)
 
-        loaded[component] = loaded_json
+            if not isinstance(loaded_json, dict):
+                _LOGGER.warning(
+                    "Translation file is unexpected type %s. Expected dict for %s",
+                    type(loaded_json),
+                    translation_file,
+                )
+                continue
+
+            loaded_for_language[component] = loaded_json
 
     return loaded
 
@@ -108,7 +119,7 @@ def _merge_resources(
         # We are going to merge the translations for the custom device classes into
         # the translations of sensor.
 
-        new_value = translation_strings[component].get(category)
+        new_value = translation_strings.get(component, {}).get(category)
 
         if new_value is None:
             continue
@@ -129,62 +140,77 @@ def _merge_resources(
 
 
 def build_resources(
-    translation_strings: dict[str, dict[str, Any]],
+    translation_strings: dict[str, dict[str, dict[str, Any] | str]],
     components: set[str],
     category: str,
 ) -> dict[str, dict[str, Any] | str]:
     """Build the resources response for the given components."""
     # Build response
     return {
-        component: translation_strings[component][category]
+        component: category_strings
         for component in components
-        if category in translation_strings[component]
-        and translation_strings[component][category] is not None
+        if (component_strings := translation_strings.get(component))
+        and (category_strings := component_strings.get(category))
     }
 
 
 async def _async_get_component_strings(
     hass: HomeAssistant,
-    language: str,
+    languages: Iterable[str],
     components: set[str],
     integrations: dict[str, Integration],
-) -> dict[str, Any]:
+) -> dict[str, dict[str, Any]]:
     """Load translations."""
-    translations: dict[str, Any] = {}
+    translations_by_language: dict[str, dict[str, Any]] = {}
     # Determine paths of missing components/platforms
-    files_to_load = {}
-    for loaded in components:
-        domain = loaded.partition(".")[0]
-        integration = integrations[domain]
+    files_to_load_by_language: dict[str, dict[str, str]] = {}
+    loaded_translations_by_language: dict[str, dict[str, Any]] = {}
+    has_files_to_load = False
+    for language in languages:
+        files_to_load: dict[str, str] = {}
+        files_to_load_by_language[language] = files_to_load
+        translations_by_language[language] = {}
 
-        path = component_translation_path(loaded, language, integration)
-        # No translation available
-        if path is None:
-            translations[loaded] = {}
-        else:
-            files_to_load[loaded] = path
+        for comp in components:
+            domain, _, platform = comp.partition(".")
+            if (
+                not (integration := integrations.get(domain))
+                or not integration.has_translations
+            ):
+                continue
 
-    if not files_to_load:
-        return translations
+            if platform and integration.is_built_in:
+                # Legacy state translations are no longer used for built-in integrations
+                # and we avoid trying to load them. This is a temporary measure to allow
+                # them to keep working for custom integrations until we can fully remove
+                # them.
+                continue
 
-    # Load files
-    load_translations_job = hass.async_add_executor_job(
-        load_translations_files, files_to_load
-    )
-    assert load_translations_job is not None
-    loaded_translations = await load_translations_job
+            if path := component_translation_path(comp, language, integration):
+                files_to_load[comp] = path
+                has_files_to_load = True
 
-    # Translations that miss "title" will get integration put in.
-    for loaded, loaded_translation in loaded_translations.items():
-        if "." in loaded:
-            continue
+    if has_files_to_load:
+        loaded_translations_by_language = await hass.async_add_executor_job(
+            _load_translations_files_by_language, files_to_load_by_language
+        )
 
-        if "title" not in loaded_translation:
-            loaded_translation["title"] = integrations[loaded].name
+    for language in languages:
+        loaded_translations = loaded_translations_by_language.setdefault(language, {})
+        for comp in components:
+            if "." in comp:
+                continue
 
-    translations.update(loaded_translations)
+            # Translations that miss "title" will get integration put in.
+            component_translations = loaded_translations.setdefault(comp, {})
+            if "title" not in component_translations and (
+                integration := integrations.get(comp)
+            ):
+                component_translations["title"] = integration.name
 
-    return translations
+        translations_by_language[language].update(loaded_translations)
+
+    return translations_by_language
 
 
 class _TranslationCache:
@@ -199,12 +225,16 @@ class _TranslationCache:
         self.cache: dict[str, dict[str, dict[str, dict[str, str]]]] = {}
         self.lock = asyncio.Lock()
 
-    async def async_fetch(
+    @callback
+    def async_is_loaded(self, language: str, components: set[str]) -> bool:
+        """Return if the given components are loaded for the language."""
+        return components.issubset(self.loaded.get(language, set()))
+
+    async def async_load(
         self,
         language: str,
-        category: str,
         components: set[str],
-    ) -> dict[str, str]:
+    ) -> None:
         """Load resources into the cache."""
         loaded = self.loaded.setdefault(language, set())
         if components_to_load := components - loaded:
@@ -218,6 +248,24 @@ class _TranslationCache:
                 if components_to_load := components - loaded:
                     await self._async_load(language, components_to_load)
 
+    async def async_fetch(
+        self,
+        language: str,
+        category: str,
+        components: set[str],
+    ) -> dict[str, str]:
+        """Load resources into the cache and return them."""
+        await self.async_load(language, components)
+
+        return self.get_cached(language, category, components)
+
+    def get_cached(
+        self,
+        language: str,
+        category: str,
+        components: set[str],
+    ) -> dict[str, str]:
+        """Read resources from the cache."""
         category_cache = self.cache.get(language, {}).get(category, {})
         # If only one component was requested, return it directly
         # to avoid merging the dictionaries and keeping additional
@@ -235,26 +283,45 @@ class _TranslationCache:
         _LOGGER.debug(
             "Cache miss for %s: %s",
             language,
-            ", ".join(components),
+            components,
         )
         # Fetch the English resources, as a fallback for missing keys
         languages = [LOCALE_EN] if language == LOCALE_EN else [LOCALE_EN, language]
 
         integrations: dict[str, Integration] = {}
-        domains = list({loaded.partition(".")[0] for loaded in components})
+        domains = {loaded.partition(".")[0] for loaded in components}
         ints_or_excs = await async_get_integrations(self.hass, domains)
         for domain, int_or_exc in ints_or_excs.items():
             if isinstance(int_or_exc, Exception):
-                raise int_or_exc
+                _LOGGER.warning(
+                    "Failed to load integration for translation: %s", int_or_exc
+                )
+                continue
             integrations[domain] = int_or_exc
 
-        for translation_strings in await asyncio.gather(
-            *(
-                _async_get_component_strings(self.hass, lang, components, integrations)
-                for lang in languages
+        translation_by_language_strings = await _async_get_component_strings(
+            self.hass, languages, components, integrations
+        )
+
+        # English is always the fallback language so we load them first
+        self._build_category_cache(
+            language, components, translation_by_language_strings[LOCALE_EN]
+        )
+
+        if language != LOCALE_EN:
+            # Now overlay the requested language on top of the English
+            self._build_category_cache(
+                language, components, translation_by_language_strings[language]
             )
-        ):
-            self._build_category_cache(language, components, translation_strings)
+
+            loaded_english_components = self.loaded.setdefault(LOCALE_EN, set())
+            # Since we just loaded english anyway we can avoid loading
+            # again if they switch back to english.
+            if loaded_english_components.isdisjoint(components):
+                self._build_category_cache(
+                    LOCALE_EN, components, translation_by_language_strings[LOCALE_EN]
+                )
+                loaded_english_components.update(components)
 
         self.loaded[language].update(components)
 
@@ -273,7 +340,13 @@ class _TranslationCache:
         for key, value in updated_resources.items():
             if key not in cached_resources:
                 continue
-            tuples = list(string.Formatter().parse(value))
+            try:
+                tuples = list(string.Formatter().parse(value))
+            except ValueError:
+                _LOGGER.error(
+                    ("Error while parsing localized (%s) string %s"), language, key
+                )
+                continue
             updated_placeholders = {tup[1] for tup in tuples if tup[1] is not None}
 
             tuples = list(string.Formatter().parse(cached_resources[key]))
@@ -348,25 +421,182 @@ async def async_get_translations(
 ) -> dict[str, str]:
     """Return all backend translations.
 
-    If integration specified, load it for that one.
-    Otherwise default to loaded integrations combined with config flow
+    If integration is specified, load it for that one.
+    Otherwise, default to loaded integrations combined with config flow
     integrations if config_flow is true.
     """
-    if integrations is not None:
-        components = set(integrations)
-    elif config_flow:
+    if integrations is None and config_flow:
         components = (await async_get_config_flows(hass)) - hass.config.components
-    elif category in ("state", "entity_component", "services"):
-        components = hass.config.components
+    elif integrations is not None:
+        components = set(integrations)
     else:
-        # Only 'state' supports merging, so remove platforms from selection
-        components = {
-            component for component in hass.config.components if "." not in component
-        }
+        components = _async_get_components(hass, category)
 
-    if TRANSLATION_FLATTEN_CACHE in hass.data:
-        cache: _TranslationCache = hass.data[TRANSLATION_FLATTEN_CACHE]
+    return await _async_get_translations_cache(hass).async_fetch(
+        language, category, components
+    )
+
+
+@callback
+def async_get_cached_translations(
+    hass: HomeAssistant,
+    language: str,
+    category: str,
+    integration: str | None = None,
+) -> dict[str, str]:
+    """Return all cached backend translations.
+
+    If integration is specified, return translations for it.
+    Otherwise, default to all loaded integrations.
+    """
+    if integration is not None:
+        components = {integration}
     else:
-        cache = hass.data[TRANSLATION_FLATTEN_CACHE] = _TranslationCache(hass)
+        components = _async_get_components(hass, category)
 
-    return await cache.async_fetch(language, category, components)
+    return _async_get_translations_cache(hass).get_cached(
+        language, category, components
+    )
+
+
+@callback
+def _async_get_translations_cache(hass: HomeAssistant) -> _TranslationCache:
+    """Return the translation cache."""
+    cache: _TranslationCache = hass.data[TRANSLATION_FLATTEN_CACHE]
+    return cache
+
+
+_DIRECT_MAPPED_CATEGORIES = {"state", "entity_component", "services"}
+
+
+@callback
+def _async_get_components(
+    hass: HomeAssistant,
+    category: str,
+) -> set[str]:
+    """Return a set of components for which translations should be loaded."""
+    if category in _DIRECT_MAPPED_CATEGORIES:
+        return hass.config.components
+    # Only 'state' supports merging, so remove platforms from selection
+    return {component for component in hass.config.components if "." not in component}
+
+
+@callback
+def async_setup(hass: HomeAssistant) -> None:
+    """Create translation cache and register listeners for translation loaders.
+
+    Listeners load translations for every loaded component and after config change.
+    """
+    cache = _TranslationCache(hass)
+    current_language = hass.config.language
+    hass.data[TRANSLATION_FLATTEN_CACHE] = cache
+
+    @callback
+    def _async_load_translations_filter(event_data: Mapping[str, Any]) -> bool:
+        """Filter out unwanted events."""
+        nonlocal current_language
+        if (
+            new_language := event_data.get("language")
+        ) and new_language != current_language:
+            current_language = new_language
+            return True
+        return False
+
+    async def _async_load_translations(event: Event) -> None:
+        new_language = event.data["language"]
+        _LOGGER.debug("Loading translations for language: %s", new_language)
+        await cache.async_load(new_language, hass.config.components)
+
+    hass.bus.async_listen(
+        EVENT_CORE_CONFIG_UPDATE,
+        _async_load_translations,
+        event_filter=_async_load_translations_filter,
+    )
+
+
+async def async_load_integrations(hass: HomeAssistant, integrations: set[str]) -> None:
+    """Load translations for integrations."""
+    await _async_get_translations_cache(hass).async_load(
+        hass.config.language, integrations
+    )
+
+
+@callback
+def async_translations_loaded(hass: HomeAssistant, components: set[str]) -> bool:
+    """Return if the given components are loaded for the language."""
+    return _async_get_translations_cache(hass).async_is_loaded(
+        hass.config.language, components
+    )
+
+
+@callback
+def async_get_exception_message(
+    translation_domain: str,
+    translation_key: str,
+    translation_placeholders: dict[str, str] | None = None,
+) -> str:
+    """Return a translated exception message.
+
+    Defaults to English, requires translations to already be cached.
+    """
+    language = "en"
+    hass = async_get_hass()
+    localize_key = (
+        f"component.{translation_domain}.exceptions.{translation_key}.message"
+    )
+    translations = async_get_cached_translations(hass, language, "exceptions")
+    if localize_key in translations:
+        if message := translations[localize_key]:
+            message = message.rstrip(".")
+        if not translation_placeholders:
+            return message
+        with suppress(KeyError):
+            message = message.format(**translation_placeholders)
+        return message
+
+    # We return the translation key when was not found in the cache
+    return translation_key
+
+
+@callback
+def async_translate_state(
+    hass: HomeAssistant,
+    state: str,
+    domain: str,
+    platform: str | None,
+    translation_key: str | None,
+    device_class: str | None,
+) -> str:
+    """Translate provided state using cached translations for currently selected language."""
+    if state in [STATE_UNAVAILABLE, STATE_UNKNOWN]:
+        return state
+    language = hass.config.language
+    if platform is not None and translation_key is not None:
+        localize_key = (
+            f"component.{platform}.entity.{domain}.{translation_key}.state.{state}"
+        )
+        translations = async_get_cached_translations(hass, language, "entity")
+        if localize_key in translations:
+            return translations[localize_key]
+
+    translations = async_get_cached_translations(hass, language, "entity_component")
+    if device_class is not None:
+        localize_key = (
+            f"component.{domain}.entity_component.{device_class}.state.{state}"
+        )
+        if localize_key in translations:
+            return translations[localize_key]
+    localize_key = f"component.{domain}.entity_component._.state.{state}"
+    if localize_key in translations:
+        return translations[localize_key]
+
+    translations = async_get_cached_translations(hass, language, "state", domain)
+    if device_class is not None:
+        localize_key = f"component.{domain}.state.{device_class}.{state}"
+        if localize_key in translations:
+            return translations[localize_key]
+    localize_key = f"component.{domain}.state._.{state}"
+    if localize_key in translations:
+        return translations[localize_key]
+
+    return state

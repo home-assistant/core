@@ -1,4 +1,5 @@
 """Test diagnostics."""
+
 from unittest.mock import patch
 
 import pytest
@@ -34,16 +35,17 @@ async def test_diagnostics(
 ) -> None:
     """Test diagnostics v1."""
 
+    await async_setup_component(hass, "homeassistant", {})
     await setup.async_setup_component(
         hass, switch.DOMAIN, {"switch": [{"platform": "demo"}]}
     )
-    await async_setup_component(hass, "homeassistant", {})
 
     await async_setup_component(
         hass,
         ga.DOMAIN,
         {"google_assistant": DUMMY_CONFIG},
     )
+    await hass.async_block_till_done()
 
     config_entry = hass.config_entries.async_entries("google_assistant")[0]
     assert await get_diagnostics_for_config_entry(

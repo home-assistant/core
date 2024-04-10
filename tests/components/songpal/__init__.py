@@ -1,4 +1,5 @@
 """Test the songpal integration."""
+
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from songpal import SongpalException

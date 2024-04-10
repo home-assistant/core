@@ -1,4 +1,5 @@
 """Constants used by the Netatmo component."""
+
 from homeassistant.const import Platform
 
 API = "api"
@@ -11,6 +12,7 @@ PLATFORMS = [
     Platform.CAMERA,
     Platform.CLIMATE,
     Platform.COVER,
+    Platform.FAN,
     Platform.LIGHT,
     Platform.SELECT,
     Platform.SENSOR,

@@ -13,8 +13,10 @@
       }
     },
     "abort": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "error": {
+      "no_integration_selected": "You must select at least one integration to track"
     }
   },
   "options": {
@@ -32,6 +34,9 @@
     },
     "abort": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "error": {
+      "no_integration_selected": "[%key:component::analytics_insights::config::error::no_integration_selected%]"
     }
   },
   "entity": {

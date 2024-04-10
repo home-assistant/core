@@ -1,4 +1,5 @@
 """Helpers to setup multi-factor auth module."""
+
 from __future__ import annotations
 
 import logging
@@ -146,8 +147,7 @@ def _prepare_result_json(
 ) -> data_entry_flow.FlowResult:
     """Convert result to JSON."""
     if result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY:
-        data = result.copy()
-        return data
+        return result.copy()
 
     if result["type"] != data_entry_flow.FlowResultType.FORM:
         return result

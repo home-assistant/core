@@ -1,4 +1,5 @@
-"""Coordinator for imag integration."""
+"""Coordinator for imap integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -30,6 +31,7 @@ from homeassistant.exceptions import (
 from homeassistant.helpers.json import json_bytes
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 from homeassistant.util.ssl import (
     SSLCipherList,
     client_context,
@@ -39,6 +41,7 @@ from homeassistant.util.ssl import (
 from .const import (
     CONF_CHARSET,
     CONF_CUSTOM_EVENT_DATA_TEMPLATE,
+    CONF_EVENT_MESSAGE_DATA,
     CONF_FOLDER,
     CONF_MAX_MESSAGE_SIZE,
     CONF_SEARCH,
@@ -46,6 +49,7 @@ from .const import (
     CONF_SSL_CIPHER_LIST,
     DEFAULT_MAX_MESSAGE_SIZE,
     DOMAIN,
+    MESSAGE_DATA_OPTIONS,
 )
 from .errors import InvalidAuth, InvalidFolder
 
@@ -56,6 +60,8 @@ BACKOFF_TIME = 10
 EVENT_IMAP = "imap_content"
 MAX_ERRORS = 3
 MAX_EVENT_DATA_BYTES = 32168
+
+DIAGNOSTICS_ATTRIBUTES = ["date", "initial"]
 
 
 async def connect_to_server(data: Mapping[str, Any]) -> IMAP4_SSL:
@@ -220,6 +226,13 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int | None]):
         self._last_message_uid: str | None = None
         self._last_message_id: str | None = None
         self.custom_event_template = None
+        self._diagnostics_data: dict[str, Any] = {}
+        self._event_data_keys: list[str] = entry.data.get(
+            CONF_EVENT_MESSAGE_DATA, MESSAGE_DATA_OPTIONS
+        )
+        self._max_event_size: int = entry.data.get(
+            CONF_MAX_MESSAGE_SIZE, DEFAULT_MAX_MESSAGE_SIZE
+        )
         _custom_event_template = entry.data.get(CONF_CUSTOM_EVENT_DATA_TEMPLATE)
         if _custom_event_template is not None:
             self.custom_event_template = Template(_custom_event_template, hass=hass)
@@ -249,17 +262,18 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int | None]):
                 initial = False
             self._last_message_id = message_id
             data = {
+                "entry_id": self.config_entry.entry_id,
                 "server": self.config_entry.data[CONF_SERVER],
                 "username": self.config_entry.data[CONF_USERNAME],
                 "search": self.config_entry.data[CONF_SEARCH],
                 "folder": self.config_entry.data[CONF_FOLDER],
                 "initial": initial,
                 "date": message.date,
-                "text": message.text,
                 "sender": message.sender,
                 "subject": message.subject,
-                "headers": message.headers,
+                "uid": last_message_uid,
             }
+            data.update({key: getattr(message, key) for key in self._event_data_keys})
             if self.custom_event_template is not None:
                 try:
                     data["custom"] = self.custom_event_template.async_render(
@@ -282,11 +296,9 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int | None]):
                         last_message_uid,
                         err,
                     )
-            data["text"] = message.text[
-                : self.config_entry.data.get(
-                    CONF_MAX_MESSAGE_SIZE, DEFAULT_MAX_MESSAGE_SIZE
-                )
-            ]
+            if "text" in data:
+                data["text"] = message.text[: self._max_event_size]
+            self._update_diagnostics(data)
             if (size := len(json_bytes(data))) > MAX_EVENT_DATA_BYTES:
                 _LOGGER.warning(
                     "Custom imap_content event skipped, size (%s) exceeds "
@@ -357,6 +369,23 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int | None]):
         """Close resources."""
         await self._cleanup(log_error=True)
 
+    def _update_diagnostics(self, data: dict[str, Any]) -> None:
+        """Update the diagnostics."""
+        self._diagnostics_data.update(
+            {key: value for key, value in data.items() if key in DIAGNOSTICS_ATTRIBUTES}
+        )
+        custom: Any | None = data.get("custom")
+        self._diagnostics_data["custom_template_data_type"] = str(type(custom))
+        self._diagnostics_data["custom_template_result_length"] = (
+            None if custom is None else len(f"{custom}")
+        )
+        self._diagnostics_data["event_time"] = dt_util.now().isoformat()
+
+    @property
+    def diagnostics_data(self) -> dict[str, Any]:
+        """Return diagnostics info."""
+        return self._diagnostics_data
+
 
 class ImapPollingDataUpdateCoordinator(ImapDataUpdateCoordinator):
     """Class for imap client."""
@@ -374,8 +403,6 @@ class ImapPollingDataUpdateCoordinator(ImapDataUpdateCoordinator):
         """Update the number of unread emails."""
         try:
             messages = await self._async_fetch_number_of_messages()
-            self.auth_errors = 0
-            return messages
         except (
             AioImapException,
             UpdateFailed,
@@ -383,7 +410,7 @@ class ImapPollingDataUpdateCoordinator(ImapDataUpdateCoordinator):
         ) as ex:
             await self._cleanup()
             self.async_set_update_error(ex)
-            raise UpdateFailed() from ex
+            raise UpdateFailed from ex
         except InvalidFolder as ex:
             _LOGGER.warning("Selected mailbox folder is invalid")
             await self._cleanup()
@@ -400,7 +427,10 @@ class ImapPollingDataUpdateCoordinator(ImapDataUpdateCoordinator):
                 )
                 self.config_entry.async_start_reauth(self.hass)
             self.async_set_update_error(ex)
-            raise ConfigEntryAuthFailed() from ex
+            raise ConfigEntryAuthFailed from ex
+
+        self.auth_errors = 0
+        return messages
 
 
 class ImapPushDataUpdateCoordinator(ImapDataUpdateCoordinator):
@@ -422,7 +452,7 @@ class ImapPushDataUpdateCoordinator(ImapDataUpdateCoordinator):
     async def async_start(self) -> None:
         """Start coordinator."""
         self._push_wait_task = self.hass.async_create_background_task(
-            self._async_wait_push_loop(), "Wait for IMAP data push"
+            self._async_wait_push_loop(), "Wait for IMAP data push", eager_start=False
         )
 
     async def _async_wait_push_loop(self) -> None:

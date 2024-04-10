@@ -1,4 +1,5 @@
 """The test for weather entity."""
+
 from datetime import datetime
 
 import pytest
@@ -6,17 +7,6 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.weather import (
     ATTR_CONDITION_SUNNY,
-    ATTR_FORECAST,
-    ATTR_FORECAST_APPARENT_TEMP,
-    ATTR_FORECAST_DEW_POINT,
-    ATTR_FORECAST_HUMIDITY,
-    ATTR_FORECAST_PRECIPITATION,
-    ATTR_FORECAST_PRESSURE,
-    ATTR_FORECAST_TEMP,
-    ATTR_FORECAST_TEMP_LOW,
-    ATTR_FORECAST_UV_INDEX,
-    ATTR_FORECAST_WIND_GUST_SPEED,
-    ATTR_FORECAST_WIND_SPEED,
     ATTR_WEATHER_APPARENT_TEMPERATURE,
     ATTR_WEATHER_OZONE,
     ATTR_WEATHER_PRECIPITATION_UNIT,
@@ -78,6 +68,7 @@ class MockWeatherEntity(WeatherEntity):
     def __init__(self) -> None:
         """Initiate Entity."""
         super().__init__()
+        self._attr_precision = PRECISION_TENTHS
         self._attr_condition = ATTR_CONDITION_SUNNY
         self._attr_native_precipitation_unit = UnitOfLength.MILLIMETERS
         self._attr_native_pressure = 10
@@ -91,14 +82,6 @@ class MockWeatherEntity(WeatherEntity):
         self._attr_native_wind_gust_speed = 10
         self._attr_native_wind_speed = 3
         self._attr_native_wind_speed_unit = UnitOfSpeed.METERS_PER_SECOND
-        self._attr_forecast = [
-            Forecast(
-                datetime=datetime(2022, 6, 20, 00, 00, 00, tzinfo=dt_util.UTC),
-                native_precipitation=1,
-                native_temperature=20,
-                native_dew_point=2,
-            )
-        ]
         self._attr_forecast_twice_daily = [
             Forecast(
                 datetime=datetime(2022, 6, 20, 8, 00, 00, tzinfo=dt_util.UTC),
@@ -109,14 +92,14 @@ class MockWeatherEntity(WeatherEntity):
 
 
 @pytest.mark.parametrize(
-    "native_unit", (UnitOfTemperature.FAHRENHEIT, UnitOfTemperature.CELSIUS)
+    "native_unit", [UnitOfTemperature.FAHRENHEIT, UnitOfTemperature.CELSIUS]
 )
 @pytest.mark.parametrize(
     ("state_unit", "unit_system"),
-    (
+    [
         (UnitOfTemperature.CELSIUS, METRIC_SYSTEM),
         (UnitOfTemperature.FAHRENHEIT, US_CUSTOMARY_SYSTEM),
-    ),
+    ],
 )
 async def test_temperature(
     hass: HomeAssistant,
@@ -140,14 +123,6 @@ async def test_temperature(
         dew_point_native_value, native_unit, state_unit
     )
 
-    class MockWeatherMock(MockWeatherTest):
-        """Mock weather class."""
-
-        @property
-        def forecast(self) -> list[Forecast] | None:
-            """Return the forecast."""
-            return self.forecast_list
-
     kwargs = {
         "native_temperature": native_value,
         "native_temperature_unit": native_unit,
@@ -155,10 +130,9 @@ async def test_temperature(
         "native_dew_point": dew_point_native_value,
     }
 
-    entity0 = await create_entity(hass, MockWeatherMock, None, **kwargs)
+    entity0 = await create_entity(hass, MockWeatherTest, None, **kwargs)
 
     state = hass.states.get(entity0.entity_id)
-    forecast_daily = state.attributes[ATTR_FORECAST][0]
 
     expected = state_value
     apparent_expected = apparent_state_value
@@ -173,29 +147,15 @@ async def test_temperature(
         dew_point_expected, rel=0.1
     )
     assert state.attributes[ATTR_WEATHER_TEMPERATURE_UNIT] == state_unit
-    assert float(forecast_daily[ATTR_FORECAST_TEMP]) == pytest.approx(expected, rel=0.1)
-    assert float(forecast_daily[ATTR_FORECAST_APPARENT_TEMP]) == pytest.approx(
-        apparent_expected, rel=0.1
-    )
-    assert float(forecast_daily[ATTR_FORECAST_DEW_POINT]) == pytest.approx(
-        dew_point_expected, rel=0.1
-    )
-    assert float(forecast_daily[ATTR_FORECAST_TEMP_LOW]) == pytest.approx(
-        expected, rel=0.1
-    )
-    assert float(forecast_daily[ATTR_FORECAST_TEMP]) == pytest.approx(expected, rel=0.1)
-    assert float(forecast_daily[ATTR_FORECAST_TEMP_LOW]) == pytest.approx(
-        expected, rel=0.1
-    )
 
 
-@pytest.mark.parametrize("native_unit", (None,))
+@pytest.mark.parametrize("native_unit", [None])
 @pytest.mark.parametrize(
     ("state_unit", "unit_system"),
-    (
+    [
         (UnitOfTemperature.CELSIUS, METRIC_SYSTEM),
         (UnitOfTemperature.FAHRENHEIT, US_CUSTOMARY_SYSTEM),
-    ),
+    ],
 )
 async def test_temperature_no_unit(
     hass: HomeAssistant,
@@ -213,14 +173,6 @@ async def test_temperature_no_unit(
     dew_point_state_value = dew_point_native_value
     apparent_temp_state_value = apparent_temp_native_value
 
-    class MockWeatherMock(MockWeatherTest):
-        """Mock weather class."""
-
-        @property
-        def forecast(self) -> list[Forecast] | None:
-            """Return the forecast."""
-            return self.forecast_list
-
     kwargs = {
         "native_temperature": native_value,
         "native_temperature_unit": native_unit,
@@ -228,10 +180,9 @@ async def test_temperature_no_unit(
         "native_apparent_temperature": apparent_temp_native_value,
     }
 
-    entity0 = await create_entity(hass, MockWeatherMock, None, **kwargs)
+    entity0 = await create_entity(hass, MockWeatherTest, None, **kwargs)
 
     state = hass.states.get(entity0.entity_id)
-    forecast = state.attributes[ATTR_FORECAST][0]
 
     expected = state_value
     dew_point_expected = dew_point_state_value
@@ -246,20 +197,14 @@ async def test_temperature_no_unit(
         expected_apparent_temp, rel=0.1
     )
     assert state.attributes[ATTR_WEATHER_TEMPERATURE_UNIT] == state_unit
-    assert float(forecast[ATTR_FORECAST_TEMP]) == pytest.approx(expected, rel=0.1)
-    assert float(forecast[ATTR_FORECAST_DEW_POINT]) == pytest.approx(
-        dew_point_expected, rel=0.1
-    )
-    assert float(forecast[ATTR_FORECAST_TEMP_LOW]) == pytest.approx(expected, rel=0.1)
-    assert float(forecast[ATTR_FORECAST_APPARENT_TEMP]) == pytest.approx(
-        expected_apparent_temp, rel=0.1
-    )
 
 
-@pytest.mark.parametrize("native_unit", (UnitOfPressure.INHG, UnitOfPressure.INHG))
 @pytest.mark.parametrize(
-    ("state_unit", "unit_system"),
-    ((UnitOfPressure.HPA, METRIC_SYSTEM), (UnitOfPressure.INHG, US_CUSTOMARY_SYSTEM)),
+    ("state_unit", "unit_system", "native_unit"),
+    [
+        (UnitOfPressure.HPA, METRIC_SYSTEM, UnitOfPressure.INHG),
+        (UnitOfPressure.INHG, US_CUSTOMARY_SYSTEM, UnitOfPressure.INHG),
+    ],
 )
 async def test_pressure(
     hass: HomeAssistant,
@@ -273,32 +218,22 @@ async def test_pressure(
     native_value = 30
     state_value = PressureConverter.convert(native_value, native_unit, state_unit)
 
-    class MockWeatherMock(MockWeatherTest):
-        """Mock weather class."""
-
-        @property
-        def forecast(self) -> list[Forecast] | None:
-            """Return the forecast."""
-            return self.forecast_list
-
     kwargs = {"native_pressure": native_value, "native_pressure_unit": native_unit}
 
-    entity0 = await create_entity(hass, MockWeatherMock, None, **kwargs)
+    entity0 = await create_entity(hass, MockWeatherTest, None, **kwargs)
 
     state = hass.states.get(entity0.entity_id)
-    forecast = state.attributes[ATTR_FORECAST][0]
 
     expected = state_value
     assert float(state.attributes[ATTR_WEATHER_PRESSURE]) == pytest.approx(
         expected, rel=1e-2
     )
-    assert float(forecast[ATTR_FORECAST_PRESSURE]) == pytest.approx(expected, rel=1e-2)
 
 
-@pytest.mark.parametrize("native_unit", (None,))
+@pytest.mark.parametrize("native_unit", [None])
 @pytest.mark.parametrize(
     ("state_unit", "unit_system"),
-    ((UnitOfPressure.HPA, METRIC_SYSTEM), (UnitOfPressure.INHG, US_CUSTOMARY_SYSTEM)),
+    [(UnitOfPressure.HPA, METRIC_SYSTEM), (UnitOfPressure.INHG, US_CUSTOMARY_SYSTEM)],
 )
 async def test_pressure_no_unit(
     hass: HomeAssistant,
@@ -312,42 +247,32 @@ async def test_pressure_no_unit(
     native_value = 30
     state_value = native_value
 
-    class MockWeatherMock(MockWeatherTest):
-        """Mock weather class."""
-
-        @property
-        def forecast(self) -> list[Forecast] | None:
-            """Return the forecast."""
-            return self.forecast_list
-
     kwargs = {"native_pressure": native_value, "native_pressure_unit": native_unit}
 
-    entity0 = await create_entity(hass, MockWeatherMock, None, **kwargs)
+    entity0 = await create_entity(hass, MockWeatherTest, None, **kwargs)
 
     state = hass.states.get(entity0.entity_id)
-    forecast = state.attributes[ATTR_FORECAST][0]
 
     expected = state_value
     assert float(state.attributes[ATTR_WEATHER_PRESSURE]) == pytest.approx(
         expected, rel=1e-2
     )
-    assert float(forecast[ATTR_FORECAST_PRESSURE]) == pytest.approx(expected, rel=1e-2)
 
 
 @pytest.mark.parametrize(
     "native_unit",
-    (
+    [
         UnitOfSpeed.MILES_PER_HOUR,
         UnitOfSpeed.KILOMETERS_PER_HOUR,
         UnitOfSpeed.METERS_PER_SECOND,
-    ),
+    ],
 )
 @pytest.mark.parametrize(
     ("state_unit", "unit_system"),
-    (
+    [
         (UnitOfSpeed.KILOMETERS_PER_HOUR, METRIC_SYSTEM),
         (UnitOfSpeed.MILES_PER_HOUR, US_CUSTOMARY_SYSTEM),
-    ),
+    ],
 )
 async def test_wind_speed(
     hass: HomeAssistant,
@@ -361,44 +286,32 @@ async def test_wind_speed(
     native_value = 10
     state_value = SpeedConverter.convert(native_value, native_unit, state_unit)
 
-    class MockWeatherMock(MockWeatherTest):
-        """Mock weather class."""
-
-        @property
-        def forecast(self) -> list[Forecast] | None:
-            """Return the forecast."""
-            return self.forecast_list
-
     kwargs = {"native_wind_speed": native_value, "native_wind_speed_unit": native_unit}
 
-    entity0 = await create_entity(hass, MockWeatherMock, None, **kwargs)
+    entity0 = await create_entity(hass, MockWeatherTest, None, **kwargs)
 
     state = hass.states.get(entity0.entity_id)
-    forecast = state.attributes[ATTR_FORECAST][0]
 
     expected = state_value
     assert float(state.attributes[ATTR_WEATHER_WIND_SPEED]) == pytest.approx(
-        expected, rel=1e-2
-    )
-    assert float(forecast[ATTR_FORECAST_WIND_SPEED]) == pytest.approx(
         expected, rel=1e-2
     )
 
 
 @pytest.mark.parametrize(
     "native_unit",
-    (
+    [
         UnitOfSpeed.MILES_PER_HOUR,
         UnitOfSpeed.KILOMETERS_PER_HOUR,
         UnitOfSpeed.METERS_PER_SECOND,
-    ),
+    ],
 )
 @pytest.mark.parametrize(
     ("state_unit", "unit_system"),
-    (
+    [
         (UnitOfSpeed.KILOMETERS_PER_HOUR, METRIC_SYSTEM),
         (UnitOfSpeed.MILES_PER_HOUR, US_CUSTOMARY_SYSTEM),
-    ),
+    ],
 )
 async def test_wind_gust_speed(
     hass: HomeAssistant,
@@ -412,40 +325,28 @@ async def test_wind_gust_speed(
     native_value = 10
     state_value = SpeedConverter.convert(native_value, native_unit, state_unit)
 
-    class MockWeatherMock(MockWeatherTest):
-        """Mock weather class."""
-
-        @property
-        def forecast(self) -> list[Forecast] | None:
-            """Return the forecast."""
-            return self.forecast_list
-
     kwargs = {
         "native_wind_gust_speed": native_value,
         "native_wind_speed_unit": native_unit,
     }
 
-    entity0 = await create_entity(hass, MockWeatherMock, None, **kwargs)
+    entity0 = await create_entity(hass, MockWeatherTest, None, **kwargs)
 
     state = hass.states.get(entity0.entity_id)
-    forecast = state.attributes[ATTR_FORECAST][0]
 
     expected = state_value
     assert float(state.attributes[ATTR_WEATHER_WIND_GUST_SPEED]) == pytest.approx(
         expected, rel=1e-2
     )
-    assert float(forecast[ATTR_FORECAST_WIND_GUST_SPEED]) == pytest.approx(
-        expected, rel=1e-2
-    )
 
 
-@pytest.mark.parametrize("native_unit", (None,))
+@pytest.mark.parametrize("native_unit", [None])
 @pytest.mark.parametrize(
     ("state_unit", "unit_system"),
-    (
+    [
         (UnitOfSpeed.KILOMETERS_PER_HOUR, METRIC_SYSTEM),
         (UnitOfSpeed.MILES_PER_HOUR, US_CUSTOMARY_SYSTEM),
-    ),
+    ],
 )
 async def test_wind_speed_no_unit(
     hass: HomeAssistant,
@@ -459,192 +360,14 @@ async def test_wind_speed_no_unit(
     native_value = 10
     state_value = native_value
 
-    class MockWeatherMock(MockWeatherTest):
-        """Mock weather class."""
-
-        @property
-        def forecast(self) -> list[Forecast] | None:
-            """Return the forecast."""
-            return self.forecast_list
-
     kwargs = {"native_wind_speed": native_value, "native_wind_speed_unit": native_unit}
 
-    entity0 = await create_entity(hass, MockWeatherMock, None, **kwargs)
+    entity0 = await create_entity(hass, MockWeatherTest, None, **kwargs)
 
     state = hass.states.get(entity0.entity_id)
-    forecast = state.attributes[ATTR_FORECAST][0]
 
     expected = state_value
     assert float(state.attributes[ATTR_WEATHER_WIND_SPEED]) == pytest.approx(
-        expected, rel=1e-2
-    )
-    assert float(forecast[ATTR_FORECAST_WIND_SPEED]) == pytest.approx(
-        expected, rel=1e-2
-    )
-
-
-@pytest.mark.parametrize("native_unit", (UnitOfLength.MILES, UnitOfLength.KILOMETERS))
-@pytest.mark.parametrize(
-    ("state_unit", "unit_system"),
-    (
-        (UnitOfLength.KILOMETERS, METRIC_SYSTEM),
-        (UnitOfLength.MILES, US_CUSTOMARY_SYSTEM),
-    ),
-)
-async def test_visibility(
-    hass: HomeAssistant,
-    config_flow_fixture: None,
-    native_unit: str,
-    state_unit: str,
-    unit_system,
-) -> None:
-    """Test visibility."""
-    hass.config.units = unit_system
-    native_value = 10
-    state_value = DistanceConverter.convert(native_value, native_unit, state_unit)
-
-    class MockWeatherMock(MockWeatherTest):
-        """Mock weather class."""
-
-        @property
-        def forecast(self) -> list[Forecast] | None:
-            """Return the forecast."""
-            return self.forecast_list
-
-    kwargs = {"native_visibility": native_value, "native_visibility_unit": native_unit}
-
-    entity0 = await create_entity(hass, MockWeatherMock, None, **kwargs)
-
-    state = hass.states.get(entity0.entity_id)
-    expected = state_value
-    assert float(state.attributes[ATTR_WEATHER_VISIBILITY]) == pytest.approx(
-        expected, rel=1e-2
-    )
-
-
-@pytest.mark.parametrize("native_unit", (None,))
-@pytest.mark.parametrize(
-    ("state_unit", "unit_system"),
-    (
-        (UnitOfLength.KILOMETERS, METRIC_SYSTEM),
-        (UnitOfLength.MILES, US_CUSTOMARY_SYSTEM),
-    ),
-)
-async def test_visibility_no_unit(
-    hass: HomeAssistant,
-    config_flow_fixture: None,
-    native_unit: str,
-    state_unit: str,
-    unit_system,
-) -> None:
-    """Test visibility when the entity does not declare a native unit."""
-    hass.config.units = unit_system
-    native_value = 10
-    state_value = native_value
-
-    class MockWeatherMock(MockWeatherTest):
-        """Mock weather class."""
-
-        @property
-        def forecast(self) -> list[Forecast] | None:
-            """Return the forecast."""
-            return self.forecast_list
-
-    kwargs = {"native_visibility": native_value, "native_visibility_unit": native_unit}
-
-    entity0 = await create_entity(hass, MockWeatherMock, None, **kwargs)
-
-    state = hass.states.get(entity0.entity_id)
-    expected = state_value
-    assert float(state.attributes[ATTR_WEATHER_VISIBILITY]) == pytest.approx(
-        expected, rel=1e-2
-    )
-
-
-@pytest.mark.parametrize("native_unit", (UnitOfLength.INCHES, UnitOfLength.MILLIMETERS))
-@pytest.mark.parametrize(
-    ("state_unit", "unit_system"),
-    (
-        (UnitOfLength.MILLIMETERS, METRIC_SYSTEM),
-        (UnitOfLength.INCHES, US_CUSTOMARY_SYSTEM),
-    ),
-)
-async def test_precipitation(
-    hass: HomeAssistant,
-    config_flow_fixture: None,
-    native_unit: str,
-    state_unit: str,
-    unit_system,
-) -> None:
-    """Test precipitation."""
-    hass.config.units = unit_system
-    native_value = 30
-    state_value = DistanceConverter.convert(native_value, native_unit, state_unit)
-
-    class MockWeatherMock(MockWeatherTest):
-        """Mock weather class."""
-
-        @property
-        def forecast(self) -> list[Forecast] | None:
-            """Return the forecast."""
-            return self.forecast_list
-
-    kwargs = {
-        "native_precipitation": native_value,
-        "native_precipitation_unit": native_unit,
-    }
-
-    entity0 = await create_entity(hass, MockWeatherMock, None, **kwargs)
-
-    state = hass.states.get(entity0.entity_id)
-    forecast = state.attributes[ATTR_FORECAST][0]
-
-    expected = state_value
-    assert float(forecast[ATTR_FORECAST_PRECIPITATION]) == pytest.approx(
-        expected, rel=1e-2
-    )
-
-
-@pytest.mark.parametrize("native_unit", (None,))
-@pytest.mark.parametrize(
-    ("state_unit", "unit_system"),
-    (
-        (UnitOfLength.MILLIMETERS, METRIC_SYSTEM),
-        (UnitOfLength.INCHES, US_CUSTOMARY_SYSTEM),
-    ),
-)
-async def test_precipitation_no_unit(
-    hass: HomeAssistant,
-    config_flow_fixture: None,
-    native_unit: str,
-    state_unit: str,
-    unit_system,
-) -> None:
-    """Test precipitation when the entity does not declare a native unit."""
-    hass.config.units = unit_system
-    native_value = 30
-    state_value = native_value
-
-    class MockWeatherMock(MockWeatherTest):
-        """Mock weather class."""
-
-        @property
-        def forecast(self) -> list[Forecast] | None:
-            """Return the forecast."""
-            return self.forecast_list
-
-    kwargs = {
-        "native_precipitation": native_value,
-        "native_precipitation_unit": native_unit,
-    }
-
-    entity0 = await create_entity(hass, MockWeatherMock, None, **kwargs)
-
-    state = hass.states.get(entity0.entity_id)
-    forecast = state.attributes[ATTR_FORECAST][0]
-
-    expected = state_value
-    assert float(forecast[ATTR_FORECAST_PRECIPITATION]) == pytest.approx(
         expected, rel=1e-2
     )
 
@@ -659,14 +382,6 @@ async def test_wind_bearing_ozone_and_cloud_coverage_and_uv_index(
     cloud_coverage = 75
     uv_index = 1.2
 
-    class MockWeatherMock(MockWeatherTest):
-        """Mock weather class."""
-
-        @property
-        def forecast(self) -> list[Forecast] | None:
-            """Return the forecast."""
-            return self.forecast_list
-
     kwargs = {
         "wind_bearing": wind_bearing_value,
         "ozone": ozone_value,
@@ -674,15 +389,13 @@ async def test_wind_bearing_ozone_and_cloud_coverage_and_uv_index(
         "uv_index": uv_index,
     }
 
-    entity0 = await create_entity(hass, MockWeatherMock, None, **kwargs)
+    entity0 = await create_entity(hass, MockWeatherTest, None, **kwargs)
 
     state = hass.states.get(entity0.entity_id)
-    forecast = state.attributes[ATTR_FORECAST][0]
     assert float(state.attributes[ATTR_WEATHER_WIND_BEARING]) == 180
     assert float(state.attributes[ATTR_WEATHER_OZONE]) == 10
     assert float(state.attributes[ATTR_WEATHER_CLOUD_COVERAGE]) == 75
     assert float(state.attributes[ATTR_WEATHER_UV_INDEX]) == 1.2
-    assert float(forecast[ATTR_FORECAST_UV_INDEX]) == 1.2
 
 
 async def test_humidity(
@@ -692,55 +405,12 @@ async def test_humidity(
     """Test humidity."""
     humidity_value = 80.2
 
-    class MockWeatherMock(MockWeatherTest):
-        """Mock weather class."""
-
-        @property
-        def forecast(self) -> list[Forecast] | None:
-            """Return the forecast."""
-            return self.forecast_list
-
     kwargs = {"humidity": humidity_value}
 
-    entity0 = await create_entity(hass, MockWeatherMock, None, **kwargs)
+    entity0 = await create_entity(hass, MockWeatherTest, None, **kwargs)
 
     state = hass.states.get(entity0.entity_id)
-    forecast = state.attributes[ATTR_FORECAST][0]
     assert float(state.attributes[ATTR_WEATHER_HUMIDITY]) == 80
-    assert float(forecast[ATTR_FORECAST_HUMIDITY]) == 80
-
-
-async def test_none_forecast(
-    hass: HomeAssistant,
-    config_flow_fixture: None,
-) -> None:
-    """Test that conversion with None values succeeds."""
-
-    class MockWeatherMock(MockWeatherTest):
-        """Mock weather class."""
-
-        @property
-        def forecast(self) -> list[Forecast] | None:
-            """Return the forecast."""
-            return self.forecast_list
-
-    kwargs = {
-        "native_pressure": None,
-        "native_pressure_unit": UnitOfPressure.INHG,
-        "native_wind_speed": None,
-        "native_wind_speed_unit": UnitOfSpeed.METERS_PER_SECOND,
-        "native_precipitation": None,
-        "native_precipitation_unit": UnitOfLength.MILLIMETERS,
-    }
-
-    entity0 = await create_entity(hass, MockWeatherMock, None, **kwargs)
-
-    state = hass.states.get(entity0.entity_id)
-    forecast = state.attributes[ATTR_FORECAST][0]
-
-    assert forecast.get(ATTR_FORECAST_PRESSURE) is None
-    assert forecast.get(ATTR_FORECAST_WIND_SPEED) is None
-    assert forecast.get(ATTR_FORECAST_PRECIPITATION) is None
 
 
 async def test_custom_units(hass: HomeAssistant, config_flow_fixture: None) -> None:
@@ -770,14 +440,6 @@ async def test_custom_units(hass: HomeAssistant, config_flow_fixture: None) -> N
     entity_registry.async_update_entity_options(entry.entity_id, "weather", set_options)
     await hass.async_block_till_done()
 
-    class MockWeatherMock(MockWeatherTest):
-        """Mock weather class."""
-
-        @property
-        def forecast(self) -> list[Forecast] | None:
-            """Return the forecast."""
-            return self.forecast_list
-
     kwargs = {
         "native_temperature": temperature_value,
         "native_temperature_unit": temperature_unit,
@@ -793,10 +455,9 @@ async def test_custom_units(hass: HomeAssistant, config_flow_fixture: None) -> N
         "unique_id": "very_unique",
     }
 
-    entity0 = await create_entity(hass, MockWeatherMock, None, **kwargs)
+    entity0 = await create_entity(hass, MockWeatherTest, None, **kwargs)
 
     state = hass.states.get(entity0.entity_id)
-    forecast = state.attributes[ATTR_FORECAST][0]
 
     expected_wind_speed = round(
         SpeedConverter.convert(
@@ -817,12 +478,6 @@ async def test_custom_units(hass: HomeAssistant, config_flow_fixture: None) -> N
         ),
         ROUNDING_PRECISION,
     )
-    expected_precipitation = round(
-        DistanceConverter.convert(
-            precipitation_value, precipitation_unit, UnitOfLength.INCHES
-        ),
-        ROUNDING_PRECISION,
-    )
 
     assert float(state.attributes[ATTR_WEATHER_WIND_SPEED]) == pytest.approx(
         expected_wind_speed
@@ -835,9 +490,6 @@ async def test_custom_units(hass: HomeAssistant, config_flow_fixture: None) -> N
     )
     assert float(state.attributes[ATTR_WEATHER_VISIBILITY]) == pytest.approx(
         expected_visibility
-    )
-    assert float(forecast[ATTR_FORECAST_PRECIPITATION]) == pytest.approx(
-        expected_precipitation, rel=1e-2
     )
 
     assert (
@@ -922,14 +574,6 @@ async def test_forecast_twice_daily_missing_is_daytime(
 ) -> None:
     """Test forecast_twice_daily missing mandatory attribute is_daytime."""
 
-    class MockWeatherMock(MockWeatherTest):
-        """Mock weather class."""
-
-        @property
-        def forecast(self) -> list[Forecast] | None:
-            """Return the forecast."""
-            return self.forecast_list
-
     kwargs = {
         "native_temperature": 38,
         "native_temperature_unit": UnitOfTemperature.CELSIUS,
@@ -937,7 +581,7 @@ async def test_forecast_twice_daily_missing_is_daytime(
         "supported_features": WeatherEntityFeature.FORECAST_TWICE_DAILY,
     }
 
-    entity0 = await create_entity(hass, MockWeatherMock, None, **kwargs)
+    entity0 = await create_entity(hass, MockWeatherTest, None, **kwargs)
 
     client = await hass_ws_client(hass)
 
@@ -1142,155 +786,6 @@ async def test_get_forecast_unsupported(
 
 
 ISSUE_TRACKER = "https://blablabla.com"
-
-
-@pytest.mark.parametrize(
-    ("manifest_extra", "translation_key", "translation_placeholders_extra", "report"),
-    [
-        (
-            {},
-            "deprecated_weather_forecast_no_url",
-            {},
-            "report it to the author of the 'test' custom integration",
-        ),
-        (
-            {"issue_tracker": ISSUE_TRACKER},
-            "deprecated_weather_forecast_url",
-            {"issue_tracker": ISSUE_TRACKER},
-            "create a bug report at https://blablabla.com",
-        ),
-    ],
-)
-async def test_issue_forecast_property_deprecated(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-    config_flow_fixture: None,
-    manifest_extra: dict[str, str],
-    translation_key: str,
-    translation_placeholders_extra: dict[str, str],
-    report: str,
-) -> None:
-    """Test the issue is raised on deprecated forecast attributes."""
-
-    class MockWeatherMockLegacyForecastOnly(MockWeatherTest):
-        """Mock weather class with mocked legacy forecast."""
-
-        @property
-        def forecast(self) -> list[Forecast] | None:
-            """Return the forecast."""
-            return self.forecast_list
-
-    # Fake that the class belongs to a custom integration
-    MockWeatherMockLegacyForecastOnly.__module__ = "custom_components.test.weather"
-
-    kwargs = {
-        "native_temperature": 38,
-        "native_temperature_unit": UnitOfTemperature.CELSIUS,
-    }
-    weather_entity = await create_entity(
-        hass, MockWeatherMockLegacyForecastOnly, manifest_extra, **kwargs
-    )
-
-    assert weather_entity.state == ATTR_CONDITION_SUNNY
-
-    issues = ir.async_get(hass)
-    issue = issues.async_get_issue("weather", "deprecated_weather_forecast_test")
-    assert issue
-    assert issue.issue_domain == "test"
-    assert issue.issue_id == "deprecated_weather_forecast_test"
-    assert issue.translation_key == translation_key
-    assert (
-        issue.translation_placeholders
-        == {"platform": "test"} | translation_placeholders_extra
-    )
-
-    assert (
-        "test::MockWeatherMockLegacyForecastOnly implements the `forecast` property or "
-        "sets `self._attr_forecast` in a subclass of WeatherEntity, this is deprecated "
-        f"and will be unsupported from Home Assistant 2024.3. Please {report}"
-    ) in caplog.text
-
-
-async def test_issue_forecast_attr_deprecated(
-    hass: HomeAssistant,
-    issue_registry: ir.IssueRegistry,
-    config_flow_fixture: None,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test the issue is raised on deprecated forecast attributes."""
-
-    class MockWeatherMockLegacyForecast(MockWeatherTest):
-        """Mock weather class with legacy forecast."""
-
-        @property
-        def forecast(self) -> list[Forecast] | None:
-            """Return the forecast."""
-            return self.forecast_list
-
-    kwargs = {
-        "native_temperature": 38,
-        "native_temperature_unit": UnitOfTemperature.CELSIUS,
-    }
-
-    # Fake that the class belongs to a custom integration
-    MockWeatherMockLegacyForecast.__module__ = "custom_components.test.weather"
-
-    weather_entity = await create_entity(
-        hass, MockWeatherMockLegacyForecast, None, **kwargs
-    )
-
-    assert weather_entity.state == ATTR_CONDITION_SUNNY
-
-    issue = issue_registry.async_get_issue(
-        "weather", "deprecated_weather_forecast_test"
-    )
-    assert issue
-    assert issue.issue_domain == "test"
-    assert issue.issue_id == "deprecated_weather_forecast_test"
-    assert issue.translation_key == "deprecated_weather_forecast_no_url"
-    assert issue.translation_placeholders == {"platform": "test"}
-
-    assert (
-        "test::MockWeatherMockLegacyForecast implements the `forecast` property or "
-        "sets `self._attr_forecast` in a subclass of WeatherEntity, this is deprecated "
-        "and will be unsupported from Home Assistant 2024.3. Please report it to the "
-        "author of the 'test' custom integration"
-    ) in caplog.text
-
-
-async def test_issue_forecast_deprecated_no_logging(
-    hass: HomeAssistant,
-    config_flow_fixture: None,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test the no issue is raised on deprecated forecast attributes if new methods exist."""
-
-    class MockWeatherMockForecast(MockWeatherTest):
-        """Mock weather class with mocked new method and legacy forecast."""
-
-        @property
-        def forecast(self) -> list[Forecast] | None:
-            """Return the forecast."""
-            return self.forecast_list
-
-        async def async_forecast_daily(self) -> list[Forecast] | None:
-            """Return the forecast_daily."""
-            return self.forecast_list
-
-    kwargs = {
-        "native_temperature": 38,
-        "native_temperature_unit": UnitOfTemperature.CELSIUS,
-    }
-
-    weather_entity = await create_entity(hass, MockWeatherMockForecast, None, **kwargs)
-
-    assert weather_entity.state == ATTR_CONDITION_SUNNY
-
-    assert "Setting up test.weather" in caplog.text
-    assert (
-        "custom_components.test_weather.weather::weather.test is using a forecast attribute on an instance of WeatherEntity"
-        not in caplog.text
-    )
 
 
 async def test_issue_deprecated_service_weather_get_forecast(

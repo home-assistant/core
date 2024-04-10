@@ -1,4 +1,5 @@
 """Tests for the WLED sensor platform."""
+
 from datetime import datetime
 from unittest.mock import MagicMock, patch
 
@@ -122,14 +123,14 @@ async def test_sensors(
 
 @pytest.mark.parametrize(
     "entity_id",
-    (
+    [
         "sensor.wled_rgb_light_uptime",
         "sensor.wled_rgb_light_free_memory",
         "sensor.wled_rgb_light_wi_fi_signal",
         "sensor.wled_rgb_light_wi_fi_rssi",
         "sensor.wled_rgb_light_wi_fi_channel",
         "sensor.wled_rgb_light_wi_fi_bssid",
-    ),
+    ],
 )
 @pytest.mark.usefixtures("init_integration")
 async def test_disabled_by_default_sensors(

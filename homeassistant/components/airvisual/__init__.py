@@ -1,4 +1,5 @@
 """The AirVisual component."""
+
 from __future__ import annotations
 
 import asyncio
@@ -161,13 +162,13 @@ def _standardize_geography_config_entry(
         # about, infer it from the data we have:
         entry_updates["data"] = {**entry.data}
         if CONF_CITY in entry.data:
-            entry_updates["data"][
-                CONF_INTEGRATION_TYPE
-            ] = INTEGRATION_TYPE_GEOGRAPHY_NAME
+            entry_updates["data"][CONF_INTEGRATION_TYPE] = (
+                INTEGRATION_TYPE_GEOGRAPHY_NAME
+            )
         else:
-            entry_updates["data"][
-                CONF_INTEGRATION_TYPE
-            ] = INTEGRATION_TYPE_GEOGRAPHY_COORDS
+            entry_updates["data"][CONF_INTEGRATION_TYPE] = (
+                INTEGRATION_TYPE_GEOGRAPHY_COORDS
+            )
 
     if not entry_updates:
         return
@@ -242,7 +243,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # 1 -> 2: One geography per config entry
     if version == 1:
-        version = entry.version = 2
+        version = 2
 
         # Update the config entry to only include the first geography (there is always
         # guaranteed to be at least one):
@@ -255,6 +256,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             unique_id=first_id,
             title=f"Cloud API ({first_id})",
             data={CONF_API_KEY: entry.data[CONF_API_KEY], **first_geography},
+            version=version,
         )
 
         # For any geographies that remain, create a new config entry for each one:
@@ -379,7 +381,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     },
                 )
         else:
-            entry.version = version
+            hass.config_entries.async_update_entry(entry, version=version)
 
     LOGGER.info("Migration to version %s successful", version)
 

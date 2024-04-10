@@ -1,4 +1,5 @@
 """Binary sensor entity platform for Tailwind."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -34,7 +35,6 @@ DESCRIPTIONS: tuple[TailwindDoorBinarySensorEntityDescription, ...] = (
         translation_key="operational_problem",
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=BinarySensorDeviceClass.PROBLEM,
-        icon="mdi:garage-alert",
         is_on_fn=lambda door: door.locked_out,
     ),
 )

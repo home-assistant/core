@@ -1,4 +1,5 @@
 """Handle the frontend for Home Assistant."""
+
 from __future__ import annotations
 
 from collections.abc import Iterator
@@ -14,7 +15,7 @@ import voluptuous as vol
 from yarl import URL
 
 from homeassistant.components import onboarding, websocket_api
-from homeassistant.components.http.view import HomeAssistantView
+from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.config import async_hass_config_yaml
 from homeassistant.const import (
@@ -595,7 +596,7 @@ class IndexView(web_urldispatcher.AbstractResource):
 
     async def get(self, request: web.Request) -> web.Response:
         """Serve the index page for panel pages."""
-        hass: HomeAssistant = request.app["hass"]
+        hass = request.app[KEY_HASS]
 
         if not onboarding.async_is_onboarded(hass):
             return web.Response(status=302, headers={"location": "/onboarding.html"})
@@ -644,9 +645,11 @@ class ManifestJSONView(HomeAssistantView):
     @callback
     def get(self, request: web.Request) -> web.Response:
         """Return the manifest.json."""
-        return web.Response(
+        response = web.Response(
             text=MANIFEST_JSON.json, content_type="application/manifest+json"
         )
+        response.enable_compression()
+        return response
 
 
 @websocket_api.websocket_command(

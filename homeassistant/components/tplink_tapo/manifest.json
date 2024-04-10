@@ -1,0 +1,6 @@
+{
+  "domain": "tplink_tapo",
+  "name": "Tapo",
+  "integration_type": "virtual",
+  "supported_by": "tplink"
+}

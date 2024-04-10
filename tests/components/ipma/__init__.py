@@ -1,4 +1,5 @@
 """Tests for the IPMA component."""
+
 from collections import namedtuple
 from datetime import UTC, datetime
 
