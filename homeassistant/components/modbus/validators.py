@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-from collections import namedtuple
 import logging
 import struct
-from typing import Any
+from typing import Any, NamedTuple
 
 import voluptuous as vol
 
@@ -57,30 +56,30 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-ENTRY = namedtuple(
-    "ENTRY",
-    [
-        "struct_id",
-        "register_count",
-        "validate_parm",
-    ],
-)
+
+class ENTRY(NamedTuple):
+    """Tuple for a validator schema entry."""
+
+    struct_id: str
+    register_count: int
+    validate_parm: PARM_IS_LEGAL
 
 
 ILLEGAL = "I"
 OPTIONAL = "O"
 DEMANDED = "D"
 
-PARM_IS_LEGAL = namedtuple(
-    "PARM_IS_LEGAL",
-    [
-        "count",
-        "structure",
-        "slave_count",
-        "swap_byte",
-        "swap_word",
-    ],
-)
+
+class PARM_IS_LEGAL(NamedTuple):
+    """Tuple for the parameter type legality."""
+
+    count: str  # type: ignore[assignment]
+    structure: str
+    slave_count: str
+    swap_byte: str
+    swap_word: str
+
+
 DEFAULT_STRUCT_FORMAT = {
     DataType.INT16: ENTRY(
         "h", 1, PARM_IS_LEGAL(ILLEGAL, ILLEGAL, OPTIONAL, OPTIONAL, ILLEGAL)

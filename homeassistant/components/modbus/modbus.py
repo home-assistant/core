@@ -3,10 +3,9 @@
 from __future__ import annotations
 
 import asyncio
-from collections import namedtuple
 from collections.abc import Callable
 import logging
-from typing import Any
+from typing import Any, NamedTuple
 
 from pymodbus.client import (
     AsyncModbusSerialClient,
@@ -75,8 +74,21 @@ from .validators import check_config
 _LOGGER = logging.getLogger(__name__)
 
 
-ConfEntry = namedtuple("ConfEntry", "call_type attr func_name")
-RunEntry = namedtuple("RunEntry", "attr func")
+class ConfEntry(NamedTuple):
+    """Tuple for a conf entry."""
+
+    call_type: str
+    attr: str
+    func_name: str
+
+
+class RunEntry(NamedTuple):
+    """Tuple for a run entry."""
+
+    attr: str
+    func: Callable
+
+
 PB_CALL = [
     ConfEntry(
         CALL_TYPE_COIL,

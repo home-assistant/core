@@ -1,7 +1,7 @@
 """Test the hardware websocket API."""
 
-from collections import namedtuple
 import datetime
+from typing import NamedTuple
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -61,7 +61,11 @@ async def test_system_status_subscription(
     response = await client.receive_json()
     assert response["success"]
 
-    VirtualMem = namedtuple("VirtualMemory", ["available", "percent", "total"])
+    class VirtualMem(NamedTuple):
+        available: int
+        percent: float
+        total: int
+
     vmem = VirtualMem(10 * 1024**2, 50, 30 * 1024**2)
 
     with (

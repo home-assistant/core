@@ -2,11 +2,12 @@
 
 import asyncio
 from asyncio import timeout
-from collections import namedtuple
+from collections.abc import Callable
 import ctypes
 import logging
 import struct
 import threading
+from typing import NamedTuple
 
 import pyads
 import voluptuous as vol
@@ -135,10 +136,14 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-# Tuple to hold data needed for notification
-NotificationItem = namedtuple(
-    "NotificationItem", "hnotify huser name plc_datatype callback"
-)
+class NotificationItem(NamedTuple):
+    """Tuple to hold data needed for notification."""
+
+    hnotify: int
+    huser: int
+    name: str
+    plc_datatype: type
+    callback: Callable
 
 
 class AdsHub:

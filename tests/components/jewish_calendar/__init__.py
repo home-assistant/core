@@ -1,14 +1,18 @@
 """Tests for the jewish_calendar component."""
 
-from collections import namedtuple
 from datetime import datetime
+from typing import NamedTuple
 
 from freezegun import freeze_time as alter_time  # noqa: F401
 
 from homeassistant.components import jewish_calendar
 import homeassistant.util.dt as dt_util
 
-_LatLng = namedtuple("_LatLng", ["lat", "lng"])
+
+class _LatLng(NamedTuple):
+    lat: float
+    lng: float
+
 
 HDATE_DEFAULT_ALTITUDE = 754
 NYC_LATLNG = _LatLng(40.7128, -74.0060)

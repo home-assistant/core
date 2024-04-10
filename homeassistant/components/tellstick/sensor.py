@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from collections import namedtuple
 import logging
+from typing import NamedTuple
 
 from tellcore import telldus
 import tellcore.constants as tellcore_constants
@@ -29,9 +29,14 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
-DatatypeDescription = namedtuple(
-    "DatatypeDescription", ["name", "unit", "device_class"]
-)
+
+class DatatypeDescription(NamedTuple):
+    """Tuple for a datatype description."""
+
+    name: str
+    unit: str | None
+    device_class: str | None
+
 
 CONF_DATATYPE_MASK = "datatype_mask"
 CONF_ONLY_NAMED = "only_named"

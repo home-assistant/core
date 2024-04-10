@@ -4,13 +4,12 @@ from __future__ import annotations
 
 import argparse
 import asyncio
-import collections
 from collections.abc import Callable
 from contextlib import suppress
 import json
 import logging
 from timeit import default_timer as timer
-from typing import TypeVar
+from typing import Any, NamedTuple, TypeVar
 
 from homeassistant import core
 from homeassistant.const import EVENT_STATE_CHANGED
@@ -20,6 +19,7 @@ from homeassistant.helpers.event import (
     async_track_state_change_event,
 )
 from homeassistant.helpers.json import JSON_DUMP, JSONEncoder
+from homeassistant.util.event_type import EventType
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
 # mypy: no-warn-return-any
@@ -315,6 +315,22 @@ async def json_serialize_states(hass):
     return timer() - start
 
 
+class Row(NamedTuple):
+    """Tuple for a row."""
+
+    event_type: EventType
+    event_data: str
+    time_fired: float
+    context_id: None
+    context_user_id: None
+    state: Any
+    domain: str
+    entity_id: str
+    attributes: str
+    state_id: int
+    old_state_id: int
+
+
 def _create_state_changed_event_from_old_new(
     entity_id, event_time_fired, old_state, new_state
 ):
@@ -325,34 +341,19 @@ def _create_state_changed_event_from_old_new(
     attributes_json = json.dumps(attributes, cls=JSONEncoder)
     if attributes_json == "null":
         attributes_json = "{}"
-    row = collections.namedtuple(
-        "Row",
-        [
-            "event_type"
-            "event_data"
-            "time_fired"
-            "context_id"
-            "context_user_id"
-            "state"
-            "entity_id"
-            "domain"
-            "attributes"
-            "state_id",
-            "old_state_id",
-        ],
+    row = Row(
+        event_type=EVENT_STATE_CHANGED,
+        event_data="{}",
+        attributes=attributes_json,
+        time_fired=event_time_fired,
+        state=new_state and new_state.get("state"),
+        entity_id=entity_id,
+        domain=entity_id and core.split_entity_id(entity_id)[0],
+        context_id=None,
+        context_user_id=None,
+        old_state_id=old_state and 1,
+        state_id=new_state and 1,
     )
-
-    row.event_type = EVENT_STATE_CHANGED
-    row.event_data = "{}"
-    row.attributes = attributes_json
-    row.time_fired = event_time_fired
-    row.state = new_state and new_state.get("state")
-    row.entity_id = entity_id
-    row.domain = entity_id and core.split_entity_id(entity_id)[0]
-    row.context_id = None
-    row.context_user_id = None
-    row.old_state_id = old_state and 1
-    row.state_id = new_state and 1
 
     # pylint: disable-next=import-outside-toplevel
     from homeassistant.components import logbook

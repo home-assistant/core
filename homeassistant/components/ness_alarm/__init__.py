@@ -1,8 +1,8 @@
 """Support for Ness D8X/D16X devices."""
 
-from collections import namedtuple
 import datetime
 import logging
+from typing import NamedTuple
 
 from nessclient import ArmingMode, ArmingState, Client
 import voluptuous as vol
@@ -44,7 +44,13 @@ DEFAULT_INFER_ARMING_STATE = False
 SIGNAL_ZONE_CHANGED = "ness_alarm.zone_changed"
 SIGNAL_ARMING_STATE_CHANGED = "ness_alarm.arming_state_changed"
 
-ZoneChangedData = namedtuple("ZoneChangedData", ["zone_id", "state"])
+
+class ZoneChangedData(NamedTuple):
+    """Tuple for the data of a zone changed signal."""
+
+    zone_id: int
+    state: bool
+
 
 DEFAULT_ZONE_TYPE = BinarySensorDeviceClass.MOTION
 ZONE_SCHEMA = vol.Schema(

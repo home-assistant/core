@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from collections import namedtuple
 from http import HTTPStatus
 import logging
+from typing import NamedTuple
 
 import requests
 import voluptuous as vol
@@ -42,7 +42,11 @@ def get_scanner(
     return scanner if scanner.success_init else None
 
 
-Device = namedtuple("Device", ["mac", "name"])
+class Device(NamedTuple):
+    """Tuple for a device."""
+
+    mac: str | None
+    name: str | None
 
 
 class HitronCODADeviceScanner(DeviceScanner):

@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-from collections import namedtuple
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, NamedTuple
 
 from pynetio import Netio
 import voluptuous as vol
@@ -23,6 +22,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -35,7 +35,15 @@ CONF_OUTLETS = "outlets"
 
 DEFAULT_PORT = 1234
 DEFAULT_USERNAME = "admin"
-Device = namedtuple("Device", ["netio", "entities"])
+
+
+class Device(NamedTuple):
+    """Tuple for a Netio device."""
+
+    netio: Netio
+    entities: list[Entity]
+
+
 DEVICES: dict[str, Device] = {}
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)

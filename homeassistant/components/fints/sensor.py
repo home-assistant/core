@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-from collections import namedtuple
 from datetime import timedelta
 from functools import cached_property
 import logging
-from typing import Any
+from typing import Any, NamedTuple
 
 from fints.client import FinTS3PinTanClient
 from fints.models import SEPAAccount
@@ -25,7 +24,15 @@ SCAN_INTERVAL = timedelta(hours=4)
 
 ICON = "mdi:currency-eur"
 
-BankCredentials = namedtuple("BankCredentials", "blz login pin url")
+
+class BankCredentials(NamedTuple):
+    """Tuple of the bank credentials."""
+
+    blz: str
+    login: str
+    pin: str
+    url: str
+
 
 CONF_BIN = "bank_identification_number"
 CONF_ACCOUNTS = "accounts"

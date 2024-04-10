@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from collections import namedtuple
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
+from typing import NamedTuple
 
 import pybbox
 import voluptuous as vol
@@ -39,7 +39,13 @@ def get_scanner(hass: HomeAssistant, config: ConfigType) -> BboxDeviceScanner | 
     return scanner if scanner.success_init else None
 
 
-Device = namedtuple("Device", ["mac", "name", "ip", "last_update"])
+class Device(NamedTuple):
+    """Tuple for a device."""
+
+    mac: str
+    name: str
+    ip: str
+    last_update: datetime
 
 
 class BboxDeviceScanner(DeviceScanner):

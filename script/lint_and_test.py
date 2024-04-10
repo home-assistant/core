@@ -5,13 +5,13 @@ This is NOT a full CI/linting replacement, only a quick check during development
 """
 
 import asyncio
-from collections import namedtuple
 from contextlib import suppress
 import itertools
 import os
 import re
 import shlex
 import sys
+from typing import NamedTuple
 
 try:
     from colorlog.escape_codes import escape_codes
@@ -20,7 +20,17 @@ except ImportError:
 
 
 RE_ASCII = re.compile(r"\033\[[^m]*m")
-Error = namedtuple("Error", ["file", "line", "col", "msg", "skip"])
+
+
+class Error(NamedTuple):
+    """Tuple for a error entry."""
+
+    file: str
+    line: str
+    col: str
+    msg: str
+    skip: bool
+
 
 PASS = "green"
 FAIL = "bold_red"

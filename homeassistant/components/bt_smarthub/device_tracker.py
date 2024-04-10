@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from collections import namedtuple
 import logging
+from typing import NamedTuple
 
 from btsmarthub_devicelist import BTSmartHub
 import voluptuous as vol
@@ -51,7 +51,12 @@ def _create_device(data):
     return _Device(ip_address, mac, host, status, name)
 
 
-_Device = namedtuple("_Device", ["ip_address", "mac", "host", "status", "name"])
+class _Device(NamedTuple):
+    ip_address: str | None
+    mac: str | None
+    host: str | None
+    status: bool | None
+    name: str | None
 
 
 class BTSmartHubScanner(DeviceScanner):

@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from collections import namedtuple
 from datetime import timedelta
 from http import HTTPStatus
 import logging
+from typing import NamedTuple
 
 from aiohttp import ClientResponseError
 
@@ -22,7 +22,15 @@ _LOGGER = logging.getLogger(__name__)
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 
-SensorType = namedtuple("SensorType", ["name", "icon", "unit", "path"])
+
+class SensorType(NamedTuple):
+    """Tuple for a sensor type."""
+
+    name: str
+    icon: str | None
+    unit: str | None
+    path: list[str]
+
 
 SENSORS_TYPES = {
     "name": SensorType("Name", None, None, ["profile", "name"]),

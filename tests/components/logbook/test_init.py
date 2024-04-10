@@ -1,11 +1,11 @@
 """The tests for the logbook component."""
 
 import asyncio
-import collections
 from collections.abc import Callable
 from datetime import datetime, timedelta
 from http import HTTPStatus
 import json
+from typing import NamedTuple
 from unittest.mock import Mock
 
 from freezegun import freeze_time
@@ -328,46 +328,49 @@ def create_state_changed_event_from_old_new(
     if new_state is not None:
         attributes = new_state.get("attributes")
     attributes_json = json.dumps(attributes, cls=JSONEncoder)
-    row = collections.namedtuple(
-        "Row",
-        [
-            "event_type",
-            "event_data",
-            "time_fired",
-            "time_fired_ts",
-            "context_id_bin",
-            "context_user_id_bin",
-            "context_parent_id_bin",
-            "state",
-            "entity_id",
-            "domain",
-            "attributes",
-            "state_id",
-            "old_state_id",
-            "shared_attrs",
-            "shared_data",
-            "context_only",
-        ],
-    )
 
-    row.event_type = PSEUDO_EVENT_STATE_CHANGED
-    row.event_data = "{}"
-    row.shared_data = "{}"
-    row.attributes = attributes_json
-    row.shared_attrs = attributes_json
-    row.time_fired = event_time_fired
-    row.time_fired_ts = dt_util.utc_to_timestamp(event_time_fired)
-    row.state = new_state and new_state.get("state")
-    row.entity_id = entity_id
-    row.domain = entity_id and ha.split_entity_id(entity_id)[0]
-    row.context_only = False
-    row.context_id_bin = None
-    row.friendly_name = None
-    row.icon = None
-    row.context_user_id_bin = None
-    row.context_parent_id_bin = None
-    row.old_state_id = old_state and 1
-    row.state_id = new_state and 1
+    class Row(NamedTuple):
+        """Tuple for a row."""
+
+        event_type: None
+        event_data: str
+        shared_data: str
+        time_fired: datetime
+        time_fired_ts: float
+        state: ha.State
+        domain: str
+        entity_id: str
+        attributes: str
+        shared_attrs: str
+        state_id: int
+        old_state_id: int
+        context_only: bool
+        context_id_bin: None
+        friendly_name: None
+        icon: None
+        context_user_id_bin: None
+        context_parent_id_bin: None
+
+    row = Row(
+        event_type=PSEUDO_EVENT_STATE_CHANGED,
+        event_data="{}",
+        shared_data="{}",
+        attributes=attributes_json,
+        shared_attrs=attributes_json,
+        time_fired=event_time_fired,
+        time_fired_ts=dt_util.utc_to_timestamp(event_time_fired),
+        state=new_state and new_state.get("state"),
+        entity_id=entity_id,
+        domain=entity_id and ha.split_entity_id(entity_id)[0],
+        context_only=False,
+        context_id_bin=None,
+        friendly_name=None,
+        icon=None,
+        context_user_id_bin=None,
+        context_parent_id_bin=None,
+        old_state_id=old_state and 1,
+        state_id=new_state and 1,
+    )
     return LazyEventPartialState(row, {})
 
 
