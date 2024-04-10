@@ -12,6 +12,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ADDRESS, CONF_API_KEY
+from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.selector import (
     SelectOptionDict,
@@ -169,6 +170,11 @@ class ViamFlowHandler(ConfigFlow, domain=DOMAIN):
                 }
             ),
         )
+
+    @callback
+    def async_remove(self) -> None:
+        """Notification that the flow has been removed."""
+        self._close_client()
 
     def _get_app_client(self) -> AppClient:
         if self._client is None:
