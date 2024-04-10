@@ -14,9 +14,9 @@
         },
         "capabilities": {
           "headlights": true,
-          "workAreas": false,
+          "workAreas": true,
           "position": true,
-          "stayOutZones": false
+          "stayOutZones": true
         },
         "mower": {
           "mode": "MAIN_AREA",

@@ -54,20 +54,23 @@ NUMBER_TYPES: tuple[AutomowerNumberEntityDescription, ...] = (
 class AutomowerWorkAreaNumberEntityDescription(NumberEntityDescription):
     """Describes Automower number entity."""
 
-    exists_fn: Callable[[MowerAttributes], bool] = lambda _: True
     value_fn: Callable[[WorkArea], int]
+    translation_key_fn: Callable[[WorkArea], str]
     set_value_fn: Callable[[AutomowerSession, str, float, WorkArea], Awaitable[Any]]
 
 
 WORK_AREA_NUMBER_TYPES: tuple[AutomowerWorkAreaNumberEntityDescription, ...] = (
     AutomowerWorkAreaNumberEntityDescription(
         key="cutting_height_work_area",
-        translation_key="cutting_height_work_area",
+        translation_key_fn=(
+            lambda work_area: "cutting_height_work_area_my_lawn"
+            if work_area.name is None
+            else "cutting_height_work_area"
+        ),
         entity_registry_enabled_default=True,
         entity_category=EntityCategory.CONFIG,
         native_min_value=0,
         native_max_value=100,
-        exists_fn=lambda data: True,
         value_fn=lambda data: data.cutting_height,
         set_value_fn=(
             lambda session,
@@ -97,6 +100,7 @@ async def async_setup_entry(
         for mower_id in coordinator.data
         for description in WORK_AREA_NUMBER_TYPES
         for work_area in coordinator.data[mower_id].work_areas
+        if coordinator.data[mower_id].capabilities.work_areas
     )
 
 
@@ -149,10 +153,17 @@ class AutomowerWorkAreaNumberEntity(AutomowerBaseEntity, NumberEntity):
         super().__init__(mower_id, coordinator)
         self.entity_description = description
         self.work_area = work_area
-        self._attr_unique_id = f"{mower_id}_{description.key}_{work_area}"
+        self._attr_unique_id = f"{mower_id}_cutting_height_work_area_{work_area}"
         self._attr_translation_placeholders = {
             "work_area": self.mower_attributes.work_areas[work_area].name
         }
+
+    @property
+    def translation_key(self) -> str:
+        """Return the translation key of the work area."""
+        return self.entity_description.translation_key_fn(
+            self.mower_attributes.work_areas[self.work_area]
+        )
 
     @property
     def native_value(self) -> float:

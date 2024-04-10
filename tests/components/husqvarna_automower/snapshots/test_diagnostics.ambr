@@ -35,8 +35,8 @@
     'capabilities': dict({
       'headlights': True,
       'position': True,
-      'stay_out_zones': False,
-      'work_areas': False,
+      'stay_out_zones': True,
+      'work_areas': True,
     }),
     'cutting_height': 4,
     'headlight': dict({
@@ -51,11 +51,13 @@
       'error_code': 0,
       'error_datetime': None,
       'error_key': None,
+      'error_timestamp': 0,
       'mode': 'MAIN_AREA',
       'state': 'RESTRICTED',
     }),
     'planner': dict({
-      'next_start_datetime': '2023-06-05T19:00:00',
+      'next_start_datetime': '2023-06-05T19:00:00+00:00',
+      'next_start_timestamp': 1685991600000,
       'override': dict({
         'action': 'NOT_ACTIVE',
       }),
