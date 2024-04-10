@@ -56,14 +56,14 @@ class TTNCoordinator(DataUpdateCoordinator[TTNClient.DATA_TYPE]):
             # handled by the data update coordinator.
             measurements = await self._client.fetch_data()
             _LOGGER.debug("fetched data: %s", measurements)
-
-            # Return measurements
-            return measurements
         except TTNAuthError as err:
             # Raising ConfigEntryAuthFailed will cancel future updates
             # and start a config flow with SOURCE_REAUTH (async_step_reauth)
             _LOGGER.error("TTNAuthError")
             raise ConfigEntryAuthFailed from err
+        else:
+            # Return measurements
+            return measurements
 
     async def _push_callback(self, data: TTNClient.DATA_TYPE) -> None:
         _LOGGER.debug("pushed data: %s", data)
