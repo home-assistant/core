@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, cast
+from typing import Any, Optional, cast
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -42,17 +42,20 @@ class SmartPlugSwitch(DLinkEntity, SwitchEntity):
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the device."""
         try:
-            temperature = self.hass.config.units.temperature(
-                cast(int, self.coordinator.data.get("temperature")),
-                UnitOfTemperature.CELSIUS,
-            )
+            _temperature: Optional[int] = self.coordinator.data.get("temperature")
+            if _temperature is not None:
+                temperature = self.hass.config.units.temperature(
+                    int(_temperature), UnitOfTemperature.CELSIUS
+                )
         except ValueError:
             temperature = None
 
         try:
-            total_consumption = cast(
-                float, self.coordinator.data.get("total_consumption")
+            _total_consumption: Optional[float] = self.coordinator.data.get(
+                "total_consumption"
             )
+            if _total_consumption is not None:
+                total_consumption = float(_total_consumption)
         except ValueError:
             total_consumption = None
 
