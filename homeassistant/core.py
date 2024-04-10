@@ -1724,8 +1724,7 @@ class State:
         :param validate_entity_id: Validate the entity_id format.
         :param state_info: Additional state information.
         :param _last_updated_timestamp: Timestamp of last update with
-               6 digits precision and must be created with time.time_ns()
-               / 1000000000. It is only expected to be passed from
+               6 digits precision. It is only expected to be passed from
                core internals to avoid the overhead of creating a new
                timestamp from a datetime object.
         """
@@ -2230,8 +2229,10 @@ class StateMachine:
         # https://github.com/python/cpython/blob/c90a862cdcf55dc1753c6466e5fa4a467a13ae24/Modules/_datetimemodule.c#L6387
         # https://github.com/python/cpython/blob/c90a862cdcf55dc1753c6466e5fa4a467a13ae24/Modules/_datetimemodule.c#L6323
         # datetime objects only have 6 decimal places of precision, and we want
-        # to avoid rounding errors when converting between the two.
-        timestamp = time.time_ns() / 1000000000
+        # to avoid rounding errors when converting between the two so we use
+        # a defined rounding method to ensure the timestamp is always the same
+        # regardless of the platform and python version.
+        timestamp = int(time.time() * 1e6 + 0.5) / 1e6
         now = dt_util.utc_from_timestamp(timestamp)
 
         if same_state and same_attr:

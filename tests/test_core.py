@@ -2903,7 +2903,11 @@ def test_state_timestamps_with_timestamp_passed() -> None:
 
 def test_state_timestamps_rounds_timestamp_passed() -> None:
     """Test timestamp functions for State."""
-    timestamp = time.time()
+    # datetime objects only have 6 decimal places of precision, and we want
+    # to avoid rounding errors when converting between the two so we use
+    # a defined rounding method to ensure the timestamp is always the same
+    # regardless of the platform and python version.
+    timestamp = int(time.time() * 1e6 + 0.5) / 1e6
     now = dt_util.utc_from_timestamp(timestamp)
     state = ha.State(
         "light.bedroom",
