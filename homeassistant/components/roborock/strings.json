@@ -72,8 +72,7 @@
       "a01_error": {
         "name": "Error",
         "state": {
-          "none": "No error",
-
+          "none": "[%key:component::roborock::entity::sensor::vacuum_error::state::none%]",
           "dirty_tank_full": "Dirty tank full",
           "water_level_sensor_stuck": "Water level sensor stuck.",
           "clean_tank_empty": "Clean tank empty",
@@ -82,27 +81,27 @@
           "fan_protection_e5": "Fan protection",
           "cleaning_head_blocked": "Cleaning head blocked",
           "temperature_protection": "Temperature protection",
-          "fan_protection_e4": "Fan protection",
-          "fan_protection_e9": "Fan protection",
-          "battery_temperature_protection_e0": "Temperature protection",
+          "fan_protection_e4": "[%key:component::roborock::entity::sensor::a01_error::state::fan_protection_e5%]",
+          "fan_protection_e9": "[%key:component::roborock::entity::sensor::a01_error::state::fan_protection_e5%]",
+          "battery_temperature_protection_e0": "[%key:component::roborock::entity::sensor::a01_error::state::temperature_protection%]",
           "battery_temperature_protection": "Battery temperature protection",
-          "battery_temperature_protection_2": "Battery temperature protection",
+          "battery_temperature_protection_2": "[%key:component::roborock::entity::sensor::a01_error::state::battery_temperature_protection%]",
           "power_adapter_error": "Power adapter error",
           "dirty_charging_contacts": "Clean charging contacts",
-          "low_battery": "Low battery",
+          "low_battery": "[%key:component::roborock::entity::sensor::vacuum_error::state::low_battery%]",
           "battery_under_10": "Battery under 10%"
         }
       },
       "a01_status": {
         "name": "Status",
         "state": {
-          "unknown": "Unknown",
+          "unknown": "[%key:component::roborock::entity::sensor::status::state::unknown%]",
           "fetching": "Fetching",
           "fetch_failed": "Fetch failed",
-          "updating": "Updating",
+          "updating": "[%key:component::roborock::entity::sensor::status::state::updating%]",
           "washing": "Washing",
           "ready": "Ready",
-          "charging": "Charging",
+          "charging": "[%key:component::roborock::entity::sensor::status::state::charging%]",
           "mop_washing": "Washing mop",
           "self_clean_cleaning": "Self clean cleaning",
           "self_clean_deep_cleaning": "Self clean deep cleaning",
