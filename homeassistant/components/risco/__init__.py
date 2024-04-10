@@ -6,7 +6,6 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import timedelta
 import logging
-import traceback
 from typing import Any
 
 from pyrisco import (
@@ -102,8 +101,7 @@ async def _async_setup_local_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
         return False
 
     async def _error(error: Exception) -> None:
-        tb = traceback.format_exception(error)
-        _LOGGER.error("Error in Risco library:\n %s", "".join(tb))
+        _LOGGER.error("Error in Risco library", exc_info=error)
 
     entry.async_on_unload(risco.add_error_handler(_error))
 
