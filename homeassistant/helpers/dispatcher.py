@@ -195,7 +195,7 @@ def async_dispatcher_send(
     """
     if (
         hass.debug
-        and (loop_thread_ident := getattr(hass.loop, "_thread_ident", None))
+        and (loop_thread_ident := hass.loop.__dict__.get("_thread_ident"))
         and loop_thread_ident != threading.get_ident()
     ):
         frame.report("calls async_dispatcher_send from a thread")
