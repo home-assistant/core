@@ -70,23 +70,25 @@ class SessionManager:
             self._async_schedule_save()
         return self._key
 
-    async def async_validate_strict_connection_session(
+    async def async_validate_request_for_strict_connection_session(
         self,
         request: Request,
     ) -> bool:
         """Check if a request has a valid strict connection session."""
         session = await get_session(request)
-        if session.new:
+        if session.new or session.empty:
             return False
-        result = await self._async_validate_strict_connection_session(session)
+        result = self.async_validate_strict_connection_session(session)
         if result is False:
             session.invalidate()
         return result
 
-    async def _async_validate_strict_connection_session(
+    @callback
+    def async_validate_strict_connection_session(
         self,
         session: Session,
     ) -> bool:
+        """Validate a strict connection session."""
         if not (session_id := session.get(SESSION_ID)):
             return False
 

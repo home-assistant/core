@@ -68,7 +68,19 @@ class HomeAssistantCookieStorage(EncryptedCookieStorage):
             )
             data = None
 
-        return Session(None, data=data, new=data is None, max_age=self.max_age)
+        session = Session(None, data=data, new=data is None, max_age=self.max_age)
+
+        # Validate session if not empty
+        if (
+            not session.empty
+            and not self._hass.auth.session.async_validate_strict_connection_session(
+                session
+            )
+        ):
+            # Invalidate session as it is not valid
+            session.invalidate()
+
+        return session
 
     async def load_session(self, request: Request) -> Session:
         """Load session."""

@@ -259,7 +259,7 @@ async def async_setup_auth(
             not authenticated
             and strict_connection_mode_non_cloud is not StrictConnectionMode.DISABLED
             and not request.path.startswith(STRICT_CONNECTION_EXCLUDED_PATH)
-            and not await hass.auth.session.async_validate_strict_connection_session(
+            and not await hass.auth.session.async_validate_request_for_strict_connection_session(
                 request
             )
             and (
