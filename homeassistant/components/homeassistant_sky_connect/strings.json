@@ -137,7 +137,7 @@
       },
       "install_zigbee_flasher_addon": {
         "title": "Installing flasher",
-        "description": "Installing the Silicon Labs Flasher add-on."
+        "description": "Installing the Silicon Labs Flasher addon."
       },
       "run_zigbee_flasher_addon": {
         "title": "Flashing Zigbee firmware",
@@ -152,12 +152,12 @@
         "description": "Your {model} is now a Zigbee coordinator and will be shown as discovered by the Zigbee Home Automation integration once you exit."
       },
       "install_otbr_addon": {
-        "title": "Installing OpenThread Border Router add-on",
-        "description": "The OpenThread Border Router (OTBR) add-on is being installed."
+        "title": "Installing OpenThread Border Router addon",
+        "description": "The OpenThread Border Router (OTBR) addon is being installed."
       },
       "start_otbr_addon": {
-        "title": "Starting OpenThread Border Router add-on",
-        "description": "The OpenThread Border Router (OTBR) add-on is now starting."
+        "title": "Starting OpenThread Border Router addon",
+        "description": "The OpenThread Border Router (OTBR) addon is now starting."
       },
       "otbr_failed": {
         "title": "Failed to setup OpenThread Border Router",
@@ -176,7 +176,9 @@
       "addon_start_failed": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::abort::addon_start_failed%]",
       "not_hassio": "Firmware for the {model} can only be automatically installed in Home Assistant OS with an addon. Please install the requested firmware manually using [the web flasher]({docs_web_flasher_url}).",
       "not_hassio_thread": "Running the {model} as a Thread border router requires firmware to be installed and for the OpenThread Border Router software to be running. Please install the requested firmware manually using [the web flasher]({docs_web_flasher_url}) and set up OTBR.",
-      "zha_migration_failed": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::abort::zha_migration_failed%]"
+      "zha_migration_failed": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::abort::zha_migration_failed%]",
+      "zha_still_using_stick": "This {model} is in use by the Zigbee Home Automation integration. Please migrate your Zigbee network to another adapter or delete the integration and try again.",
+      "otbr_still_using_stick": "This {model} is in use by the OpenThread Border Router addon. Please migrate your Thread network to another device or delete the addon and try again."
     }
   }
 }

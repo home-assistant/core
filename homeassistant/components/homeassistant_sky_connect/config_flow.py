@@ -20,7 +20,6 @@ from homeassistant.components.homeassistant_hardware import silabs_multiprotocol
 from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon import (
     WaitingAddonManager,
 )
-from homeassistant.components.zha import DOMAIN as ZHA_DOMAIN
 from homeassistant.components.zha.repairs.wrong_silabs_firmware import (
     probe_silabs_firmware_type,
 )
@@ -36,8 +35,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.singleton import singleton
 
-from .const import DOMAIN, HardwareVariant
-from .util import get_hardware_variant, get_usb_service_info
+from .const import DOMAIN, ZHA_DOMAIN, HardwareVariant
+from .util import get_hardware_variant, get_usb_service_info, get_zha_device_path
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -173,6 +172,9 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Pick Zigbee firmware."""
+
+        # Don't re-install Zigbee firmware. Removing this check would upgrade all new
+        # adapters to the latest version on first install.
         if self._current_firmware_type == ApplicationType.EZSP:
             return await self.async_step_confirm_zigbee()
 
@@ -268,8 +270,8 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow):
 
         if not self.start_task.done():
             return self.async_show_progress(
-                step_id="start_zigbee_flasher_addon",
-                progress_action="start_zigbee_flasher_addon",
+                step_id="run_zigbee_flasher_addon",
+                progress_action="run_zigbee_flasher_addon",
                 description_placeholders={
                     **self._get_translation_placeholders(),
                     "addon_name": fw_flasher_manager.addon_name,
@@ -641,7 +643,50 @@ class HomeAssistantSkyConnectOptionsFlowHandler(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Manage the options flow."""
-        return await self.async_step_pick_firmware()
+        # Don't probe the running firmware, we load it from the config entry
+        return self.async_show_menu(
+            step_id="pick_firmware",
+            menu_options=[
+                STEP_PICK_FIRMWARE_THREAD,
+                STEP_PICK_FIRMWARE_ZIGBEE,
+            ],
+            description_placeholders=self._get_translation_placeholders(),
+        )
+
+    async def async_step_pick_firmware_zigbee(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Pick Zigbee firmware."""
+        assert self._usb_info is not None
+
+        if is_hassio(self.hass):
+            otbr_manager = get_otbr_addon_manager(self.hass)
+            addon_info = await self._async_get_addon_info(otbr_manager)
+
+            if (
+                addon_info.state != AddonState.NOT_INSTALLED
+                and addon_info.options.get("device") == self._usb_info.device
+            ):
+                raise AbortFlow("otbr_using_stick")
+
+        return await super().async_step_pick_firmware_zigbee(user_input)
+
+    async def async_step_pick_firmware_thread(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Pick Thread firmware."""
+        assert self._usb_info is not None
+
+        zha_entries = self.hass.config_entries.async_entries(
+            ZHA_DOMAIN,
+            include_ignore=False,
+            include_disabled=True,
+        )
+
+        if zha_entries and get_zha_device_path(zha_entries[0]) == self._usb_info.device:
+            raise AbortFlow("zha_stil_using_stick")
+
+        return await super().async_step_pick_firmware_thread(user_input)
 
     def _async_flow_finished(self) -> ConfigFlowResult:
         """Create the config entry."""

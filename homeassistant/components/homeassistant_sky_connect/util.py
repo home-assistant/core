@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from typing import cast
 
 from universal_silabs_flasher.const import ApplicationType
 
@@ -38,13 +39,17 @@ def get_hardware_variant(config_entry: ConfigEntry) -> HardwareVariant:
     return HardwareVariant.from_usb_product_name(config_entry.data["description"])
 
 
+def get_zha_device_path(config_entry: ConfigEntry) -> str:
+    """Get the device path from a ZHA config entry."""
+    return cast(str, config_entry.data["device"]["path"])
+
+
 async def guess_firmware_type(hass: HomeAssistant, device_path: str) -> ApplicationType:
     """Guess the firmware type based on installed addons and other integrations."""
-
-    device_guesses = {}
+    device_guesses: dict[str | None, ApplicationType] = {}
 
     for zha_config_entry in hass.config_entries.async_entries(ZHA_DOMAIN):
-        zha_path = zha_config_entry.data["device"]["path"]
+        zha_path = get_zha_device_path(zha_config_entry)
         device_guesses[zha_path] = ApplicationType.EZSP
 
     if is_hassio(hass):
@@ -77,7 +82,7 @@ async def guess_firmware_type(hass: HomeAssistant, device_path: str) -> Applicat
             pass
         else:
             if multipan_addon_info.state != AddonState.NOT_INSTALLED:
-                multipan_path = multipan_addon_info.options["device"]
+                multipan_path = multipan_addon_info.options.get("device")
                 device_guesses[multipan_path] = ApplicationType.CPC
 
     # Fall back to EZSP if we can't guess the firmware type
