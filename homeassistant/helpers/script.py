@@ -1046,13 +1046,14 @@ class _ScriptRun:
         If timeout is set, a timeout future and handle will be created
         and will be added to the list of futures.
         """
-        if timeout:
-            timeout_future = self._hass.loop.create_future()
-            timeout_handle = self._hass.loop.call_later(
-                timeout, _set_result_unless_done, timeout_future
-            )
-            return [timeout_future], timeout_handle, timeout_future
-        return [], None, None
+        if not timeout:
+            return [], None, None
+        loop = self._hass.loop
+        timeout_future = loop.create_future()
+        timeout_handle = loop.call_later(
+            timeout, _set_result_unless_done, timeout_future
+        )
+        return [timeout_future], timeout_handle, timeout_future
 
     async def _async_wait_for_trigger_step(self):
         """Wait for a trigger event."""
