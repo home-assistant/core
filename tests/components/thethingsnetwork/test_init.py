@@ -23,8 +23,8 @@ async def test_normal(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
-    init_integration,
     mock_TTNClient,
+    init_integration,
 ) -> None:
     """Test a working configurations."""
 

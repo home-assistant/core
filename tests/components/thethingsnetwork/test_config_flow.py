@@ -69,7 +69,7 @@ async def test_user(hass: HomeAssistant, mock_TTNClient) -> None:
     assert "unknown" in result["errors"]["base"]
 
     # Recover
-    mock_TTNClient.return_value.fetch_data.side_effect = Exception
+    mock_TTNClient.return_value.fetch_data.side_effect = None
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
