@@ -69,9 +69,7 @@ class OmniLogicUpdateCoordinator(DataUpdateCoordinator[dict[tuple, dict[str, Any
 
             return data
 
-        parsed_data = get_item_data(data, "Backyard", (), parsed_data)
-
-        return parsed_data
+        return get_item_data(data, "Backyard", (), parsed_data)
 
 
 class OmniLogicEntity(CoordinatorEntity[OmniLogicUpdateCoordinator]):

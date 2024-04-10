@@ -15,6 +15,7 @@ from .common import selected_platforms, snapshot_platform_entities
 from tests.common import MockConfigEntry
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_entity(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,

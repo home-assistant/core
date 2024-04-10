@@ -69,5 +69,5 @@ async def test_options(hass: HomeAssistant) -> None:
             },
         )
 
-        assert configured.get("type") == "create_entry"
+        assert configured.get("type") is FlowResultType.CREATE_ENTRY
         assert config_entry.options == {CONF_SHOW_ON_MAP: True}

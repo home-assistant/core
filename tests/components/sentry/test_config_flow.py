@@ -44,7 +44,7 @@ async def test_full_user_flow_implementation(hass: HomeAssistant) -> None:
             {"dsn": "http://public@sentry.local/1"},
         )
 
-    assert result2.get("type") == "create_entry"
+    assert result2.get("type") is FlowResultType.CREATE_ENTRY
     assert result2.get("title") == "Sentry"
     assert result2.get("data") == {
         "dsn": "http://public@sentry.local/1",

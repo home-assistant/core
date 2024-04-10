@@ -31,7 +31,7 @@ async def test_invalid_credentials(hass: HomeAssistant) -> None:
             data={CONF_EMAIL: "test-email", CONF_PASSWORD: "test-password"},
         )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_auth"}
 
 

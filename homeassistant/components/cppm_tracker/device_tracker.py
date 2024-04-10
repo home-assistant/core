@@ -64,10 +64,9 @@ class CPPMDeviceScanner(DeviceScanner):
 
     def get_device_name(self, device):
         """Retrieve device name."""
-        name = next(
+        return next(
             (result["name"] for result in self.results if result["mac"] == device), None
         )
-        return name
 
     def get_cppm_data(self):
         """Retrieve data from Aruba Clearpass and return parsed result."""

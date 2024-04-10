@@ -50,7 +50,7 @@ async def test_form(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert form_result["type"] == "create_entry"
+    assert form_result["type"] is FlowResultType.CREATE_ENTRY
     assert form_result["title"] == "test-username"
     assert form_result["data"] == {
         "id": "test-id",

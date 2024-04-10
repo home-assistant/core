@@ -190,7 +190,7 @@ async def test_reauth(
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
-    assert result.get("type") == "abort"
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "reauth_successful"
 
     assert mock_config_entry.unique_id == USER_ID
@@ -261,7 +261,7 @@ async def test_reauth_wrong_account(
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
-    assert result.get("type") == "abort"
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "wrong_account"
 
     assert mock_config_entry.unique_id == USER_ID

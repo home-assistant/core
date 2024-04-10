@@ -19,7 +19,7 @@ async def test_show_config_form(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
 
@@ -31,7 +31,7 @@ async def test_create_entry(hass: HomeAssistant, mock_litejet) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=test_data
     )
 
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "/dev/test"
     assert result["data"] == test_data
 
@@ -50,7 +50,7 @@ async def test_flow_entry_already_exists(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=test_data
     )
 
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
 
 
@@ -65,7 +65,7 @@ async def test_flow_open_failed(hass: HomeAssistant) -> None:
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data=test_data
         )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"][CONF_PORT] == "open_failed"
 
 

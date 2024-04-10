@@ -233,5 +233,5 @@ async def test_reauth(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-        assert result7["type"] == "abort"
+        assert result7["type"] is FlowResultType.ABORT
         assert result7["reason"] == "reauth_successful"

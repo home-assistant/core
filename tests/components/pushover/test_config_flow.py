@@ -189,7 +189,7 @@ async def test_reauth_failed(hass: HomeAssistant, mock_pushover: MagicMock) -> N
         data=MOCK_CONFIG,
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
     mock_pushover.side_effect = BadAPIRequestError("400: application token is invalid")

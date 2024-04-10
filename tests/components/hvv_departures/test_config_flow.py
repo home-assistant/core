@@ -77,7 +77,7 @@ async def test_user_flow(hass: HomeAssistant) -> None:
             {CONF_STATION: "Wartenau"},
         )
 
-        assert result_station_select["type"] == "create_entry"
+        assert result_station_select["type"] is FlowResultType.CREATE_ENTRY
         assert result_station_select["title"] == "Wartenau"
         assert result_station_select["data"] == {
             CONF_HOST: "api-test.geofox.de",
@@ -159,7 +159,7 @@ async def test_user_flow_invalid_auth(hass: HomeAssistant) -> None:
             },
         )
 
-        assert result_user["type"] == "form"
+        assert result_user["type"] is FlowResultType.FORM
         assert result_user["errors"] == {"base": "invalid_auth"}
 
 
@@ -181,7 +181,7 @@ async def test_user_flow_cannot_connect(hass: HomeAssistant) -> None:
             },
         )
 
-        assert result_user["type"] == "form"
+        assert result_user["type"] is FlowResultType.FORM
         assert result_user["errors"] == {"base": "cannot_connect"}
 
 
@@ -217,7 +217,7 @@ async def test_user_flow_station(hass: HomeAssistant) -> None:
             result_user["flow_id"],
             None,
         )
-        assert result_station["type"] == "form"
+        assert result_station["type"] is FlowResultType.FORM
         assert result_station["step_id"] == "station"
 
 
@@ -255,7 +255,7 @@ async def test_user_flow_station_select(hass: HomeAssistant) -> None:
             None,
         )
 
-        assert result_station_select["type"] == "form"
+        assert result_station_select["type"] is FlowResultType.FORM
         assert result_station_select["step_id"] == "station_select"
 
 

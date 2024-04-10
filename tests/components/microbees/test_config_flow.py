@@ -152,7 +152,7 @@ async def test_config_reauth_profile(
         },
         data=config_entry.data,
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
@@ -213,7 +213,7 @@ async def test_config_reauth_wrong_account(
         },
         data=config_entry.data,
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})

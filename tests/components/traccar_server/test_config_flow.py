@@ -17,6 +17,7 @@ from homeassistant.components.traccar_server.const import (
     DOMAIN,
     EVENTS,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -62,7 +63,7 @@ async def test_form(
         CONF_SSL: False,
         CONF_VERIFY_SSL: True,
     }
-    assert result["result"].state == config_entries.ConfigEntryState.LOADED
+    assert result["result"].state is ConfigEntryState.LOADED
 
 
 @pytest.mark.parametrize(
@@ -120,7 +121,7 @@ async def test_form_cannot_connect(
         CONF_VERIFY_SSL: True,
     }
 
-    assert result["result"].state == config_entries.ConfigEntryState.LOADED
+    assert result["result"].state is ConfigEntryState.LOADED
 
 
 async def test_options(
@@ -242,7 +243,7 @@ async def test_import_from_yaml(
     assert result["title"] == f"{data[CONF_HOST]}:{data[CONF_PORT]}"
     assert result["data"] == data
     assert result["options"] == options
-    assert result["result"].state == config_entries.ConfigEntryState.LOADED
+    assert result["result"].state is ConfigEntryState.LOADED
 
 
 async def test_abort_import_already_configured(hass: HomeAssistant) -> None:

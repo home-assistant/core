@@ -205,7 +205,7 @@ async def test_abort_form(hass: HomeAssistant) -> None:
     get_abort = await hass.config_entries.flow.async_configure(
         start_another_flow["flow_id"], BASIC_CONFIG
     )
-    assert get_abort["type"] == "abort"
+    assert get_abort["type"] is FlowResultType.ABORT
     assert get_abort["reason"] == "already_configured"
 
 
@@ -239,7 +239,7 @@ async def test_validation_errors_user(
     flow_id = flow_at_user_step["flow_id"]
     config[field] = value
     result_err = await hass.config_entries.flow.async_configure(flow_id, config)
-    assert result_err["type"] == "form"
+    assert result_err["type"] is FlowResultType.FORM
     assert result_err["errors"] == {"base": error}
 
 
@@ -269,7 +269,7 @@ async def test_validation_errors_account(
     flow_id = flow_at_add_account_step["flow_id"]
     config[field] = value
     result_err = await hass.config_entries.flow.async_configure(flow_id, config)
-    assert result_err["type"] == "form"
+    assert result_err["type"] is FlowResultType.FORM
     assert result_err["errors"] == {"base": error}
 
 

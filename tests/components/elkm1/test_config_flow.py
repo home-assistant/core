@@ -66,7 +66,7 @@ async def test_form_user_with_secure_elk_no_discovery(hass: HomeAssistant) -> No
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
     assert result["step_id"] == "manual_connection"
 
@@ -95,7 +95,7 @@ async def test_form_user_with_secure_elk_no_discovery(hass: HomeAssistant) -> No
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "create_entry"
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "ElkM1"
     assert result2["data"] == {
         "auto_configure": True,
@@ -123,7 +123,7 @@ async def test_form_user_with_insecure_elk_skip_discovery(hass: HomeAssistant) -
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
     assert result["step_id"] == "manual_connection"
 
@@ -152,7 +152,7 @@ async def test_form_user_with_insecure_elk_skip_discovery(hass: HomeAssistant) -
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "create_entry"
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "ElkM1"
     assert result2["data"] == {
         "auto_configure": True,
@@ -180,7 +180,7 @@ async def test_form_user_with_insecure_elk_no_discovery(hass: HomeAssistant) -> 
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
     assert result["step_id"] == "manual_connection"
 
@@ -209,7 +209,7 @@ async def test_form_user_with_insecure_elk_no_discovery(hass: HomeAssistant) -> 
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "create_entry"
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "ElkM1"
     assert result2["data"] == {
         "auto_configure": True,
@@ -237,7 +237,7 @@ async def test_form_user_with_insecure_elk_times_out(hass: HomeAssistant) -> Non
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
     assert result["step_id"] == "manual_connection"
 
@@ -285,7 +285,7 @@ async def test_form_user_with_secure_elk_no_discovery_ip_already_configured(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
     assert result["step_id"] == "manual_connection"
 
@@ -317,7 +317,7 @@ async def test_form_user_with_secure_elk_with_discovery(hass: HomeAssistant) -> 
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
     assert result["step_id"] == "user"
 
@@ -350,7 +350,7 @@ async def test_form_user_with_secure_elk_with_discovery(hass: HomeAssistant) -> 
         )
         await hass.async_block_till_done()
 
-    assert result3["type"] == "create_entry"
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == "ElkM1 ddeeff"
     assert result3["data"] == {
         "auto_configure": True,
@@ -375,7 +375,7 @@ async def test_form_user_with_secure_elk_with_discovery_pick_manual(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
     assert result["step_id"] == "user"
 
@@ -411,7 +411,7 @@ async def test_form_user_with_secure_elk_with_discovery_pick_manual(
         )
         await hass.async_block_till_done()
 
-    assert result3["type"] == "create_entry"
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == "ElkM1"
     assert result3["data"] == {
         "auto_configure": True,
@@ -436,7 +436,7 @@ async def test_form_user_with_secure_elk_with_discovery_pick_manual_direct_disco
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
     assert result["step_id"] == "user"
 
@@ -472,7 +472,7 @@ async def test_form_user_with_secure_elk_with_discovery_pick_manual_direct_disco
         )
         await hass.async_block_till_done()
 
-    assert result3["type"] == "create_entry"
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == "ElkM1 ddeeff"
     assert result3["data"] == {
         "auto_configure": True,
@@ -495,7 +495,7 @@ async def test_form_user_with_tls_elk_no_discovery(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
     assert result["step_id"] == "manual_connection"
 
@@ -524,7 +524,7 @@ async def test_form_user_with_tls_elk_no_discovery(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "create_entry"
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "ElkM1"
     assert result2["data"] == {
         "auto_configure": True,
@@ -546,7 +546,7 @@ async def test_form_user_with_non_secure_elk_no_discovery(hass: HomeAssistant) -
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
     assert result["step_id"] == "manual_connection"
 
@@ -573,7 +573,7 @@ async def test_form_user_with_non_secure_elk_no_discovery(hass: HomeAssistant) -
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "create_entry"
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "guest_house"
     assert result2["data"] == {
         "auto_configure": True,
@@ -595,7 +595,7 @@ async def test_form_user_with_serial_elk_no_discovery(hass: HomeAssistant) -> No
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
     assert result["step_id"] == "manual_connection"
 
@@ -622,7 +622,7 @@ async def test_form_user_with_serial_elk_no_discovery(hass: HomeAssistant) -> No
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "create_entry"
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "ElkM1"
     assert result2["data"] == {
         "auto_configure": True,
@@ -667,7 +667,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
@@ -703,7 +703,7 @@ async def test_unknown_exception(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
 
 
@@ -730,7 +730,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {CONF_PASSWORD: "invalid_auth"}
 
 
@@ -757,7 +757,7 @@ async def test_form_invalid_auth_no_password(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {CONF_PASSWORD: "invalid_auth"}
 
 
@@ -807,7 +807,7 @@ async def test_form_import(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "ohana"
 
     assert result["data"] == {
@@ -877,7 +877,7 @@ async def test_form_import_device_discovered(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "ohana"
     assert result["result"].unique_id == MOCK_MAC
     assert result["data"] == {
@@ -929,7 +929,7 @@ async def test_form_import_non_secure_device_discovered(hass: HomeAssistant) -> 
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "ohana"
     assert result["result"].unique_id == MOCK_MAC
     assert result["data"] == {
@@ -973,7 +973,7 @@ async def test_form_import_non_secure_non_stanadard_port_device_discovered(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "ohana"
     assert result["result"].unique_id == MOCK_MAC
     assert result["data"] == {
@@ -1007,7 +1007,7 @@ async def test_form_import_non_secure_device_discovered_invalid_auth(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "invalid_auth"
 
 
@@ -1189,7 +1189,7 @@ async def test_discovered_by_discovery(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "create_entry"
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "ElkM1 ddeeff"
     assert result2["data"] == {
         "auto_configure": True,
@@ -1239,7 +1239,7 @@ async def test_discovered_by_discovery_non_standard_port(hass: HomeAssistant) ->
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "create_entry"
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "ElkM1 ddeeff"
     assert result2["data"] == {
         "auto_configure": True,
@@ -1310,7 +1310,7 @@ async def test_discovered_by_dhcp_udp_responds(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "create_entry"
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "ElkM1 ddeeff"
     assert result2["data"] == {
         "auto_configure": True,
@@ -1359,7 +1359,7 @@ async def test_discovered_by_dhcp_udp_responds_with_nonsecure_port(
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "create_entry"
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "ElkM1 ddeeff"
     assert result2["data"] == {
         "auto_configure": True,
@@ -1412,7 +1412,7 @@ async def test_discovered_by_dhcp_udp_responds_existing_config_entry(
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "create_entry"
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "ElkM1 ddeeff"
     assert result2["data"] == {
         "auto_configure": True,
@@ -1450,7 +1450,7 @@ async def test_multiple_instances_with_discovery(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert not result["errors"]
     assert result["step_id"] == "user"
 
@@ -1483,7 +1483,7 @@ async def test_multiple_instances_with_discovery(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result3["type"] == "create_entry"
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == "ElkM1 ddeeff"
     assert result3["data"] == {
         "auto_configure": True,
@@ -1502,7 +1502,7 @@ async def test_multiple_instances_with_discovery(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert not result["errors"]
     assert result["step_id"] == "user"
 
@@ -1532,7 +1532,7 @@ async def test_multiple_instances_with_discovery(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result3["type"] == "create_entry"
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == "ElkM1 ddeefe"
     assert result3["data"] == {
         "auto_configure": True,
@@ -1551,7 +1551,7 @@ async def test_multiple_instances_with_discovery(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
     assert result["step_id"] == "manual_connection"
 
@@ -1575,7 +1575,7 @@ async def test_multiple_instances_with_discovery(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "create_entry"
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "guest_house"
     assert result2["data"] == {
         "auto_configure": True,
@@ -1599,7 +1599,7 @@ async def test_multiple_instances_with_tls_v12(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert not result["errors"]
     assert result["step_id"] == "user"
 
@@ -1612,7 +1612,7 @@ async def test_multiple_instances_with_tls_v12(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert not result["errors"]
     assert result2["step_id"] == "discovered_connection"
     with (
@@ -1636,7 +1636,7 @@ async def test_multiple_instances_with_tls_v12(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result3["type"] == "create_entry"
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == "ElkM1 ddeeff"
     assert result3["data"] == {
         "auto_configure": True,
@@ -1655,7 +1655,7 @@ async def test_multiple_instances_with_tls_v12(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert not result["errors"]
     assert result["step_id"] == "user"
 
@@ -1686,7 +1686,7 @@ async def test_multiple_instances_with_tls_v12(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result3["type"] == "create_entry"
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == "ElkM1 ddeefe"
     assert result3["data"] == {
         "auto_configure": True,
@@ -1705,7 +1705,7 @@ async def test_multiple_instances_with_tls_v12(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
     assert result["step_id"] == "manual_connection"
 
@@ -1731,7 +1731,7 @@ async def test_multiple_instances_with_tls_v12(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "create_entry"
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "guest_house"
     assert result2["data"] == {
         "auto_configure": True,

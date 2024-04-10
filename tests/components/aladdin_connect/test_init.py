@@ -93,7 +93,7 @@ async def test_setup_component_no_error(hass: HomeAssistant) -> None:
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
 
@@ -135,12 +135,12 @@ async def test_load_and_unload(
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
     assert await config_entry.async_unload(hass)
     await hass.async_block_till_done()
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
 
 
 async def test_stale_device_removal(
@@ -190,7 +190,7 @@ async def test_stale_device_removal(
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
     device_registry = dr.async_get(hass)
@@ -220,7 +220,7 @@ async def test_stale_device_removal(
 
     assert await config_entry.async_unload(hass)
     await hass.async_block_till_done()
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
 
     mock_aladdinconnect_api.get_doors = AsyncMock(return_value=[DEVICE_CONFIG_OPEN])
     with patch(
@@ -230,7 +230,7 @@ async def test_stale_device_removal(
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
     device_entries = dr.async_entries_for_config_entry(

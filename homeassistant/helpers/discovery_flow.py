@@ -11,7 +11,7 @@ from homeassistant.core import CoreState, Event, HomeAssistant, callback
 from homeassistant.loader import bind_hass
 from homeassistant.util.async_ import gather_with_limited_concurrency
 
-FLOW_INIT_LIMIT = 2
+FLOW_INIT_LIMIT = 20
 DISCOVERY_FLOW_DISPATCHER = "discovery_flow_dispatcher"
 
 
@@ -82,9 +82,7 @@ class FlowDispatcher:
     @callback
     def async_setup(self) -> None:
         """Set up the flow disptcher."""
-        self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STARTED, self._async_start, run_immediately=True
-        )
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, self._async_start)
 
     async def _async_start(self, event: Event) -> None:
         """Start processing pending flows."""

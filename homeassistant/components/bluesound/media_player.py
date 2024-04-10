@@ -863,8 +863,6 @@ class BluesoundPlayer(MediaPlayerEntity):
         if self._group_name is None:
             return None
 
-        bluesound_group = []
-
         device_group = self._group_name.split("+")
 
         sorted_entities = sorted(
@@ -872,13 +870,11 @@ class BluesoundPlayer(MediaPlayerEntity):
             key=lambda entity: entity.is_master,
             reverse=True,
         )
-        bluesound_group = [
+        return [
             entity.name
             for entity in sorted_entities
             if entity.bluesound_device_name in device_group
         ]
-
-        return bluesound_group
 
     async def async_unjoin(self):
         """Unjoin the player from a group."""

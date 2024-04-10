@@ -276,7 +276,7 @@ async def test_options_flow(
 
     result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(

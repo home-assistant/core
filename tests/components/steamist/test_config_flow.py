@@ -173,7 +173,7 @@ async def test_discovery(hass: HomeAssistant) -> None:
 
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         await hass.async_block_till_done()
-        assert result2["type"] == "form"
+        assert result2["type"] is FlowResultType.FORM
         assert result2["step_id"] == "pick_device"
         assert not result2["errors"]
 

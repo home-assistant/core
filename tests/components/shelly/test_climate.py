@@ -479,7 +479,7 @@ async def test_block_set_mode_auth_error(
     mock_block_device.mock_update()
     await hass.async_block_till_done()
 
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
@@ -489,7 +489,7 @@ async def test_block_set_mode_auth_error(
     )
     await hass.async_block_till_done()
 
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
@@ -527,7 +527,7 @@ async def test_block_restored_climate_auth_error(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     # Make device online with auth error
     monkeypatch.setattr(mock_block_device, "initialized", True)
@@ -537,7 +537,7 @@ async def test_block_restored_climate_auth_error(
     mock_block_device.mock_update()
     await hass.async_block_till_done()
 
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1

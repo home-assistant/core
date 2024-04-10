@@ -54,7 +54,7 @@ def hmip_config_entry_fixture() -> config_entries.ConfigEntry:
         HMIPC_NAME: "",
         HMIPC_PIN: HAPPIN,
     }
-    config_entry = MockConfigEntry(
+    return MockConfigEntry(
         version=1,
         domain=HMIPC_DOMAIN,
         title="Home Test SN",
@@ -62,8 +62,6 @@ def hmip_config_entry_fixture() -> config_entries.ConfigEntry:
         data=entry_data,
         source=SOURCE_IMPORT,
     )
-
-    return config_entry
 
 
 @pytest.fixture(name="default_mock_hap_factory")

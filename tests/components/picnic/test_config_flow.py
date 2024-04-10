@@ -60,7 +60,7 @@ async def test_form(hass: HomeAssistant, picnic_api) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "create_entry"
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Picnic"
     assert result2["data"] == {
         CONF_ACCESS_TOKEN: picnic_api().session.auth_token,
@@ -238,7 +238,7 @@ async def test_step_reauth_failed(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     # Check that the returned flow has type form with error set
-    assert result_configure["type"] == "form"
+    assert result_configure["type"] is FlowResultType.FORM
     assert result_configure["errors"] == {"base": "invalid_auth"}
 
     assert len(hass.config_entries.async_entries()) == 1
@@ -277,7 +277,7 @@ async def test_step_reauth_different_account(hass: HomeAssistant, picnic_api) ->
         await hass.async_block_till_done()
 
     # Check that the returned flow has type form with error set
-    assert result_configure["type"] == "form"
+    assert result_configure["type"] is FlowResultType.FORM
     assert result_configure["errors"] == {"base": "different_account"}
 
     assert len(hass.config_entries.async_entries()) == 1
