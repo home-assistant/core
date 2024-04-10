@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Mapping
 from dataclasses import dataclass
 import logging
-from time import sleep
 from typing import Any
 
 from pyhomeworks.pyhomeworks import HW_BUTTON_PRESSED, HW_BUTTON_RELEASED, Homeworks
@@ -129,19 +129,6 @@ async def async_send_command(hass: HomeAssistant, data: Mapping[str, Any]) -> No
                 return data
         return None
 
-    def send_commands(controller: Homeworks, commands: list[str]) -> None:
-        """Send commands to controller."""
-        _LOGGER.debug("Send commands: %s", commands)
-        for command in commands:
-            if command.lower().startswith("delay"):
-                delay = int(command.partition(" ")[2])
-                _LOGGER.debug("Sleeping for %s ms", delay)
-                sleep(delay / 1000)
-            else:
-                _LOGGER.debug("Sending command '%s'", command)
-                # pylint: disable-next=protected-access
-                controller._send(command)
-
     homeworks_data = get_homeworks_data(data[CONF_CONTROLLER_ID])
     if not homeworks_data:
         raise ServiceValidationError(
@@ -153,9 +140,20 @@ async def async_send_command(hass: HomeAssistant, data: Mapping[str, Any]) -> No
             },
         )
 
-    await hass.async_add_executor_job(
-        send_commands, homeworks_data.controller, data[CONF_COMMAND]
-    )
+    commands = data[CONF_COMMAND]
+    _LOGGER.debug("Send commands: %s", commands)
+    for command in commands:
+        if command.lower().startswith("delay"):
+            delay = int(command.partition(" ")[2])
+            _LOGGER.debug("Sleeping for %s ms", delay)
+            await asyncio.sleep(delay / 1000)
+        else:
+            _LOGGER.debug("Sending command '%s'", command)
+            await hass.async_add_executor_job(
+                # pylint: disable-next=protected-access
+                homeworks_data.controller._send,
+                command,
+            )
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

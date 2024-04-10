@@ -117,7 +117,7 @@ async def test_switch_setup(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
     assert entry.entry_id in hass.data[DOMAIN]
 
     state = hass.states.get(f"switch.{entity_name}")

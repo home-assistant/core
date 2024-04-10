@@ -195,8 +195,7 @@ async def setup_accessories_from_file(hass: HomeAssistant, path: str) -> Accesso
         load_fixture, os.path.join("homekit_controller", path)
     )
     accessories_json = hkloads(accessories_fixture)
-    accessories = Accessories.from_list(accessories_json)
-    return accessories
+    return Accessories.from_list(accessories_json)
 
 
 async def setup_platform(hass):

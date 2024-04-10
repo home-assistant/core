@@ -26,7 +26,7 @@ async def test_button_setup(hass: HomeAssistant, fc_class_mock, fh_class_mock) -
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     buttons = hass.states.async_all(BUTTON_DOMAIN)
     assert len(buttons) == 4
@@ -57,7 +57,7 @@ async def test_buttons(
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     button = hass.states.get(entity_id)
     assert button
@@ -91,7 +91,7 @@ async def test_wol_button(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     button = hass.states.get("button.printer_wake_on_lan")
     assert button
@@ -125,7 +125,7 @@ async def test_wol_button_new_device(
     mesh_data = copy.deepcopy(MOCK_MESH_DATA)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     assert hass.states.get("button.printer_wake_on_lan")
     assert not hass.states.get("button.server_wake_on_lan")
@@ -156,7 +156,7 @@ async def test_wol_button_absent_for_mesh_slave(
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     button = hass.states.get("button.printer_wake_on_lan")
     assert button is None
@@ -182,7 +182,7 @@ async def test_wol_button_absent_for_non_lan_device(
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     button = hass.states.get("button.printer_wake_on_lan")
     assert button is None

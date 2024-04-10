@@ -540,6 +540,7 @@ async def test_config_flow_preview(
         }
     )
     msg = await client.receive_json()
+    preview_subscribe_id = msg["id"]
     assert msg["success"]
     assert msg["result"] is None
 
@@ -549,8 +550,31 @@ async def test_config_flow_preview(
         "state": "unavailable",
     }
 
+    await client.send_json_auto_id(
+        {
+            "type": "unsubscribe_events",
+            "subscription": preview_subscribe_id,
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+
     hass.states.async_set(input_entities[0], input_states[0])
     hass.states.async_set(input_entities[1], input_states[1])
+
+    await client.send_json_auto_id(
+        {
+            "type": "group/start_preview",
+            "flow_id": result["flow_id"],
+            "flow_type": "config_flow",
+            "user_input": {"name": "My group", "entities": input_entities}
+            | extra_user_input,
+        }
+    )
+    msg = await client.receive_json()
+    preview_subscribe_id = msg["id"]
+    assert msg["success"]
+    assert msg["result"] is None
 
     msg = await client.receive_json()
     assert msg["event"] == {
