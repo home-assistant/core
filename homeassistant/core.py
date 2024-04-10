@@ -1710,9 +1710,22 @@ class State:
         context: Context | None = None,
         validate_entity_id: bool | None = True,
         state_info: StateInfo | None = None,
-        last_updated_timestamp: float | None = None,
+        _last_updated_timestamp: float | None = None,
     ) -> None:
-        """Initialize a new state."""
+        """Initialize a new state.
+
+        :param entity_id: the entity that is represented.
+        :param state: the state of the entity
+        :param attributes: extra information on entity and state
+        :param last_changed: last time the state was changed.
+        :param last_reported: last time the state was reported.
+        :param last_updated: last time the state or attributes were changed.
+        :param context: Context in which it was created
+        :param validate_entity_id: Validate the entity_id format.
+        :param state_info: Additional state information.
+        :param _last_updated_timestamp: Timestamp of last update with 6 digits precision.
+               must be created with time.time_ns() / 1000000000.
+        """
         state = str(state)
 
         if validate_entity_id and not valid_entity_id(entity_id):
@@ -1742,7 +1755,7 @@ class State:
         # the recorder or websocket_api so we do not need to
         # generate it lazily.
         self.last_updated_timestamp = (
-            last_updated_timestamp or self.last_updated.timestamp()
+            _last_updated_timestamp or self.last_updated.timestamp()
         )
 
     @cached_property
@@ -2213,9 +2226,9 @@ class StateMachine:
         # timestamp implementation:
         # https://github.com/python/cpython/blob/c90a862cdcf55dc1753c6466e5fa4a467a13ae24/Modules/_datetimemodule.c#L6387
         # https://github.com/python/cpython/blob/c90a862cdcf55dc1753c6466e5fa4a467a13ae24/Modules/_datetimemodule.c#L6323
-        timestamp = (
-            time.time_ns() / 1000000000
-        )  # datetime objects only have 6 decimal places of precision
+        # datetime objects only have 6 decimal places of precision, and we want
+        # to avoid rounding errors when converting between the two.
+        timestamp = time.time_ns() / 1000000000
         now = dt_util.utc_from_timestamp(timestamp)
 
         if same_state and same_attr:
