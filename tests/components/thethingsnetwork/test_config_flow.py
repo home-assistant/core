@@ -48,8 +48,18 @@ async def test_user(hass: HomeAssistant, mock_TTNClient) -> None:
     assert result["data"][CONF_APP_ID] == APP_ID
     assert result["data"][CONF_API_KEY] == API_KEY
 
+    # Prepare to test errors
+    user_data[CONF_APP_ID] = "another app"
+    mock_fetch_data_exceptiom = None
+
+    def mock_fetch_data():
+        if mock_fetch_data_exceptiom:
+            raise mock_fetch_data_exceptiom
+
+    mock_TTNClient.return_value.fetch_data.side_effect = mock_fetch_data
+
     # Connection error
-    mock_TTNClient.return_value.fetch_data.side_effect = TTNAuthError
+    mock_fetch_data_exceptiom = TTNAuthError
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
@@ -59,7 +69,7 @@ async def test_user(hass: HomeAssistant, mock_TTNClient) -> None:
     assert result["errors"] == {"base": "invalid_auth"}
 
     # Unknown error
-    mock_TTNClient.return_value.fetch_data.side_effect = Exception
+    mock_fetch_data_exceptiom = Exception
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
@@ -69,7 +79,7 @@ async def test_user(hass: HomeAssistant, mock_TTNClient) -> None:
     assert "unknown" in result["errors"]["base"]
 
     # Recover
-    mock_TTNClient.return_value.fetch_data.side_effect = None
+    mock_fetch_data_exceptiom = None
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
