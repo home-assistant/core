@@ -341,7 +341,7 @@ class ShellyBlockEntity(CoordinatorEntity[ShellyBlockCoordinator]):
             self.coordinator.last_update_success = False
             raise HomeAssistantError(
                 f"Setting state for entity {self.name} failed, state: {kwargs}, error:"
-                f" {repr(err)}"
+                f" {err!r}"
             ) from err
         except InvalidAuthError:
             await self.coordinator.async_shutdown_device_and_start_reauth()
@@ -389,12 +389,12 @@ class ShellyRpcEntity(CoordinatorEntity[ShellyRpcCoordinator]):
             self.coordinator.last_update_success = False
             raise HomeAssistantError(
                 f"Call RPC for {self.name} connection error, method: {method}, params:"
-                f" {params}, error: {repr(err)}"
+                f" {params}, error: {err!r}"
             ) from err
         except RpcCallError as err:
             raise HomeAssistantError(
                 f"Call RPC for {self.name} request error, method: {method}, params:"
-                f" {params}, error: {repr(err)}"
+                f" {params}, error: {err!r}"
             ) from err
         except InvalidAuthError:
             await self.coordinator.async_shutdown_device_and_start_reauth()

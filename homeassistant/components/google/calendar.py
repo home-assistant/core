@@ -519,7 +519,7 @@ class GoogleCalendarEntity(
                 CalendarSyncUpdateCoordinator, self.coordinator
             ).sync.store_service.async_add_event(event)
         except ApiException as err:
-            raise HomeAssistantError(f"Error while creating event: {str(err)}") from err
+            raise HomeAssistantError(f"Error while creating event: {err!s}") from err
         await self.coordinator.async_refresh()
 
     async def async_delete_event(

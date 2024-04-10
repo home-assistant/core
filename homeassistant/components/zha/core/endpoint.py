@@ -44,7 +44,7 @@ class Endpoint:
         self._all_cluster_handlers: dict[str, ClusterHandler] = {}
         self._claimed_cluster_handlers: dict[str, ClusterHandler] = {}
         self._client_cluster_handlers: dict[str, ClientClusterHandler] = {}
-        self._unique_id: str = f"{str(device.ieee)}-{zigpy_endpoint.endpoint_id}"
+        self._unique_id: str = f"{device.ieee!s}-{zigpy_endpoint.endpoint_id}"
 
     @property
     def device(self) -> ZHADevice:

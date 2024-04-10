@@ -67,7 +67,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     ) as err:
         await host.stop()
         raise ConfigEntryNotReady(
-            f"Error while trying to setup {host.api.host}:{host.api.port}: {str(err)}"
+            f"Error while trying to setup {host.api.host}:{host.api.port}: {err!s}"
         ) from err
     except Exception:
         await host.stop()

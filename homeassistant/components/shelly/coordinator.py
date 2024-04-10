@@ -305,7 +305,7 @@ class ShellyBlockCoordinator(ShellyCoordinatorBase[BlockDevice]):
         try:
             await self.device.update()
         except DeviceConnectionError as err:
-            raise UpdateFailed(f"Error fetching data: {repr(err)}") from err
+            raise UpdateFailed(f"Error fetching data: {err!r}") from err
         except InvalidAuthError:
             await self.async_shutdown_device_and_start_reauth()
 
@@ -389,7 +389,7 @@ class ShellyRestCoordinator(ShellyCoordinatorBase[BlockDevice]):
                 return
             await self.device.update_shelly()
         except DeviceConnectionError as err:
-            raise UpdateFailed(f"Error fetching data: {repr(err)}") from err
+            raise UpdateFailed(f"Error fetching data: {err!r}") from err
         except InvalidAuthError:
             await self.async_shutdown_device_and_start_reauth()
         else:
@@ -543,7 +543,7 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
             await self.device.initialize()
             update_device_fw_info(self.hass, self.device, self.entry)
         except DeviceConnectionError as err:
-            raise UpdateFailed(f"Device disconnected: {repr(err)}") from err
+            raise UpdateFailed(f"Device disconnected: {err!r}") from err
         except InvalidAuthError:
             await self.async_shutdown_device_and_start_reauth()
 
@@ -667,7 +667,7 @@ class ShellyRpcPollingCoordinator(ShellyCoordinatorBase[RpcDevice]):
         try:
             await self.device.update_status()
         except (DeviceConnectionError, RpcCallError) as err:
-            raise UpdateFailed(f"Device disconnected: {repr(err)}") from err
+            raise UpdateFailed(f"Device disconnected: {err!r}") from err
         except InvalidAuthError:
             await self.async_shutdown_device_and_start_reauth()
 

@@ -214,5 +214,5 @@ class ZWaveLock(ZWaveBaseEntity, LockEntity):
             return
         msg = f"Result status is {result.status}"
         if result.remaining_duration is not None:
-            msg += f" and remaining duration is {str(result.remaining_duration)}"
+            msg += f" and remaining duration is {result.remaining_duration!s}"
         LOGGER.info("%s after setting lock configuration for %s", msg, self.entity_id)

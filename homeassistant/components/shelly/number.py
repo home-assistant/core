@@ -123,7 +123,7 @@ class BlockSleepingNumber(ShellySleepingBlockAttributeEntity, RestoreNumber):
             self.coordinator.last_update_success = False
             raise HomeAssistantError(
                 f"Setting state for entity {self.name} failed, state: {params}, error:"
-                f" {repr(err)}"
+                f" {err!r}"
             ) from err
         except InvalidAuthError:
             await self.coordinator.async_shutdown_device_and_start_reauth()

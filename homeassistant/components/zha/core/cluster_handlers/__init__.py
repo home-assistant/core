@@ -583,7 +583,7 @@ class ZDOClusterHandler(LogMixin):
         self._cluster = device.device.endpoints[0]
         self._zha_device = device
         self._status = ClusterHandlerStatus.CREATED
-        self._unique_id = f"{str(device.ieee)}:{device.name}_ZDO"
+        self._unique_id = f"{device.ieee!s}:{device.name}_ZDO"
         self._cluster.add_listener(self)
 
     @property

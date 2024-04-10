@@ -49,7 +49,7 @@ async def async_setup_entry(
         ProgettihwswSwitch(
             coordinator,
             f"Relay #{i}",
-            setup_switch(board_api, i, config_entry.data[f"relay_{str(i)}"]),
+            setup_switch(board_api, i, config_entry.data[f"relay_{i!s}"]),
         )
         for i in range(1, int(relay_count) + 1)
     )

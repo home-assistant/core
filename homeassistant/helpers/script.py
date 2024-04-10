@@ -893,7 +893,7 @@ class _ScriptRun:
             count = len(items)
             for iteration, item in enumerate(items, 1):
                 set_repeat_var(iteration, count, item)
-                extra_msg = f" of {count} with item: {repr(item)}"
+                extra_msg = f" of {count} with item: {item!r}"
                 if self._stop.done():
                     break
                 await async_run_sequence(iteration, extra_msg)

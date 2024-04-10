@@ -1073,7 +1073,7 @@ async def merge_packages_config(
                 pack_name,
                 None,
                 config,
-                f"Invalid package definition '{pack_name}': {str(exc)}. Package "
+                f"Invalid package definition '{pack_name}': {exc!s}. Package "
                 f"will not be initialized",
             )
             invalid_packages.append(pack_name)
@@ -1101,7 +1101,7 @@ async def merge_packages_config(
                     pack_name,
                     comp_name,
                     config,
-                    f"Integration {comp_name} caused error: {str(exc)}",
+                    f"Integration {comp_name} caused error: {exc!s}",
                 )
                 continue
             except INTEGRATION_LOAD_EXCEPTIONS as exc:

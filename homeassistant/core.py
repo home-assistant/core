@@ -2755,7 +2755,7 @@ class Config:
 
     def is_allowed_external_url(self, url: str) -> bool:
         """Check if an external URL is allowed."""
-        parsed_url = f"{str(yarl.URL(url))}/"
+        parsed_url = f"{yarl.URL(url)!s}/"
 
         return any(
             allowed

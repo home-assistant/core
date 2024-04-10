@@ -348,7 +348,7 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
             if cast(int, nearest_distance_to) == int(distance_to):
                 _LOGGER.debug("set equally close entity_data: %s", entity_data)
                 proximity_data[ATTR_NEAREST] = (
-                    f"{proximity_data[ATTR_NEAREST]}, {str(entity_data[ATTR_NAME])}"
+                    f"{proximity_data[ATTR_NEAREST]}, {entity_data[ATTR_NAME]!s}"
                 )
 
         return ProximityData(proximity_data, entities_data)
