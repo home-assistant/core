@@ -2,15 +2,20 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 import logging
 
+from senziio import Senziio, SenziioMQTT
+
 from homeassistant.components import mqtt
+from homeassistant.components.mqtt import async_publish, async_subscribe
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MODEL, CONF_UNIQUE_ID, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
-from .device import SenziioDevice
 from .entity import DOMAIN
+from .exceptions import MQTTNotEnabled
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,7 +32,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     device_id = entry.data[CONF_UNIQUE_ID]
     device_model = entry.data[CONF_MODEL]
-    device = SenziioDevice(device_id, device_model, hass)
+    device = Senziio(device_id, device_model, mqtt=SenziioHAMQTT(hass))
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = device
@@ -44,3 +49,27 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
+
+
+class SenziioHAMQTT(SenziioMQTT):
+    """Senziio MQTT interface using available integration."""
+
+    def __init__(self, hass: HomeAssistant) -> None:
+        """Initialize MQTT interface for Senziio devices."""
+        self._hass = hass
+
+    async def publish(self, topic: str, payload: str) -> None:
+        """Publish to topic with a payload."""
+        try:
+            return await async_publish(self._hass, topic, payload)
+        except HomeAssistantError as error:
+            _LOGGER.error("Could not publish to MQTT topic")
+            raise MQTTNotEnabled from error
+
+    async def subscribe(self, topic: str, callback: Callable) -> Callable:
+        """Subscribe to topic with a callback."""
+        try:
+            return await async_subscribe(self._hass, topic, callback)
+        except HomeAssistantError as error:
+            _LOGGER.error("Could not subscribe to MQTT topic")
+            raise MQTTNotEnabled from error

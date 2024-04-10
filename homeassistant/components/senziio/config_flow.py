@@ -12,7 +12,7 @@ from homeassistant.components import zeroconf
 from homeassistant.const import CONF_FRIENDLY_NAME, CONF_MODEL, CONF_UNIQUE_ID
 from homeassistant.core import HomeAssistant
 
-from .device import SenziioDevice
+from . import Senziio, SenziioHAMQTT
 from .entity import DOMAIN, MANUFACTURER
 from .exceptions import CannotConnect, MQTTNotEnabled, RepeatedTitle
 
@@ -169,7 +169,7 @@ async def validate_input(
     # validate device response
     device_id = _sanitize(data_input[CONF_UNIQUE_ID])
     device_model = _sanitize(data_input[CONF_MODEL])
-    device = SenziioDevice(device_id, device_model, hass)
+    device = Senziio(device_id, device_model, mqtt=SenziioHAMQTT(hass))
     device_info = await device.get_info()
 
     if not device_info:

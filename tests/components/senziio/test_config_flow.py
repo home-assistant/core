@@ -29,7 +29,7 @@ async def test_user_flow_success(hass: HomeAssistant):
     """Test a successful configuration via user initiated config flow."""
     with (
         patch(
-            "homeassistant.components.senziio.config_flow.SenziioDevice",
+            "homeassistant.components.senziio.config_flow.Senziio",
             return_value=FakeSenziioDevice(DEVICE_INFO),
         ),
         patch(
@@ -108,7 +108,7 @@ async def test_user_flow_form_error_handling(
 async def test_user_flow_cannot_connect(hass: HomeAssistant):
     """Test raising connection error when no device data is retrieved."""
     with patch(
-        "homeassistant.components.senziio.config_flow.SenziioDevice",
+        "homeassistant.components.senziio.config_flow.Senziio",
         return_value=FakeSenziioDevice({}),
     ):
         # open user flow
@@ -137,7 +137,7 @@ async def test_user_flow_cannot_connect(hass: HomeAssistant):
 async def test_user_flow_aborted_if_device_id_already_configured(hass: HomeAssistant):
     """Test that the same friendly name can not be added twice via config flow."""
     with patch(
-        "homeassistant.components.senziio.config_flow.SenziioDevice",
+        "homeassistant.components.senziio.config_flow.Senziio",
         return_value=FakeSenziioDevice(DEVICE_INFO),
     ):
         entry = MockConfigEntry(
@@ -168,7 +168,7 @@ async def test_user_flow_aborted_if_device_id_already_configured(hass: HomeAssis
 async def test_user_flow_repeated_friendly_name(hass: HomeAssistant):
     """Test that the same friendly name can not be added twice via config flow."""
     with patch(
-        "homeassistant.components.senziio.config_flow.SenziioDevice",
+        "homeassistant.components.senziio.config_flow.Senziio",
         return_value=FakeSenziioDevice(DEVICE_INFO),
     ):
         entry = MockConfigEntry(
@@ -200,7 +200,7 @@ async def test_user_flow_repeated_friendly_name(hass: HomeAssistant):
 async def test_user_flow_friendly_name_generation(hass: HomeAssistant):
     """Test that the same friendly name can not be added twice via config flow."""
     with patch(
-        "homeassistant.components.senziio.config_flow.SenziioDevice",
+        "homeassistant.components.senziio.config_flow.Senziio",
         return_value=FakeSenziioDevice(DEVICE_INFO),
     ):
         entry = MockConfigEntry(
@@ -228,7 +228,7 @@ async def test_zeroconf_flow_success(hass: HomeAssistant):
     """Test a successful configuration via zeroconf discovery."""
     with (
         patch(
-            "homeassistant.components.senziio.config_flow.SenziioDevice",
+            "homeassistant.components.senziio.config_flow.Senziio",
             return_value=FakeSenziioDevice(DEVICE_INFO),
         ),
         patch(
@@ -309,7 +309,7 @@ async def test_zeroconf_flow_aborted_if_device_id_already_configured(
 ):
     """Test that the same friendly name can not be added twice via config flow."""
     with patch(
-        "homeassistant.components.senziio.config_flow.SenziioDevice",
+        "homeassistant.components.senziio.config_flow.Senziio",
         return_value=FakeSenziioDevice(DEVICE_INFO),
     ):
         entry = MockConfigEntry(
@@ -332,7 +332,7 @@ async def test_zeroconf_flow_aborted_if_device_id_already_configured(
 async def test_zeroconf_flow_cannot_connect(hass: HomeAssistant):
     """Test raising connection error when no device data is retrieved."""
     with patch(
-        "homeassistant.components.senziio.config_flow.SenziioDevice",
+        "homeassistant.components.senziio.config_flow.Senziio",
         return_value=FakeSenziioDevice({}),
     ):
         result = await hass.config_entries.flow.async_init(
@@ -355,7 +355,7 @@ async def test_zeroconf_flow_cannot_connect(hass: HomeAssistant):
 async def test_zeroconf_flow_repeated_friendly_name(hass: HomeAssistant):
     """Test that the same friendly name can not be added twice via config flow."""
     with patch(
-        "homeassistant.components.senziio.config_flow.SenziioDevice",
+        "homeassistant.components.senziio.config_flow.Senziio",
         return_value=FakeSenziioDevice(DEVICE_INFO),
     ):
         entry = MockConfigEntry(

@@ -2,13 +2,18 @@
 
 from unittest.mock import AsyncMock, patch
 
+import pytest
+
 from homeassistant.components.senziio import (
     DOMAIN,
     PLATFORMS,
+    SenziioHAMQTT,
     async_setup_entry,
     async_unload_entry,
 )
+from homeassistant.components.senziio.exceptions import MQTTNotEnabled
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 from . import A_DEVICE_ID, CONFIG_ENTRY, DEVICE_INFO, FakeSenziioDevice
 
@@ -23,7 +28,7 @@ async def test_async_setup_entry(hass: HomeAssistant):
             return_value=True,
         ),
         patch(
-            "homeassistant.components.senziio.SenziioDevice",
+            "homeassistant.components.senziio.Senziio",
             return_value=FakeSenziioDevice(DEVICE_INFO),
         ),
         patch.object(
@@ -67,7 +72,7 @@ async def test_async_unload_entry(hass: HomeAssistant):
             return_value=True,
         ),
         patch(
-            "homeassistant.components.senziio.SenziioDevice",
+            "homeassistant.components.senziio.Senziio",
             return_value=FakeSenziioDevice(DEVICE_INFO),
         ),
         patch.object(
@@ -84,3 +89,56 @@ async def test_async_unload_entry(hass: HomeAssistant):
         assert await async_unload_entry(hass, CONFIG_ENTRY) is True
         assert CONFIG_ENTRY.entry_id not in hass.data[DOMAIN]
         unload_platforms_mock.assert_called_once_with(CONFIG_ENTRY, PLATFORMS)
+
+
+async def test_senziio_ha_mqtt_publish_success(hass):
+    """Test successful MQTT publish."""
+    mqtt_interface = SenziioHAMQTT(hass)
+
+    with patch(
+        "homeassistant.components.senziio.async_publish", new_callable=AsyncMock
+    ) as publish_mock:
+        await mqtt_interface.publish("test/topic", "test payload")
+        publish_mock.assert_awaited_with(hass, "test/topic", "test payload")
+
+
+async def test_senziio_ha_mqtt_publish_failure(hass):
+    """Test failure in MQTT publish."""
+    mqtt_interface = SenziioHAMQTT(hass)
+
+    with (
+        patch(
+            "homeassistant.components.senziio.async_publish",
+            side_effect=HomeAssistantError,
+        ),
+        pytest.raises(MQTTNotEnabled),
+    ):
+        await mqtt_interface.publish("test/topic", "test payload")
+
+
+async def test_senziio_ha_mqtt_subscribe_success(hass):
+    """Test success when subscribing to MQTT topic."""
+    mqtt_interface = SenziioHAMQTT(hass)
+    callback = AsyncMock()
+
+    with patch(
+        "homeassistant.components.senziio.async_subscribe",
+        new_callable=AsyncMock,
+    ) as subscribe_mock:
+        await mqtt_interface.subscribe("test/topic", callback)
+        subscribe_mock.assert_awaited_with(hass, "test/topic", callback)
+
+
+async def test_senziio_ha_mqtt_subscribe_failure(hass):
+    """Test exception raised when subscribing to MQTT topic."""
+    mqtt_interface = SenziioHAMQTT(hass)
+    callback = AsyncMock()
+
+    with (
+        patch(
+            "homeassistant.components.senziio.async_subscribe",
+            side_effect=HomeAssistantError,
+        ),
+        pytest.raises(MQTTNotEnabled),
+    ):
+        await mqtt_interface.subscribe("test/topic", callback)
