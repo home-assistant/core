@@ -81,7 +81,7 @@ async def probe_silabs_firmware_type(device: str) -> ApplicationType | None:
     try:
         await flasher.probe_app_type()
     except Exception:  # pylint: disable=broad-except
-        _LOGGER.debug("Failed to probe application type", exc_info=True)
+        _LOGGER.exception("Failed to probe application type")
 
     return flasher.app_type
 
