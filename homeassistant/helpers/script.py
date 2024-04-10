@@ -13,7 +13,7 @@ from functools import cached_property, partial
 import itertools
 import logging
 from types import MappingProxyType
-from typing import Any, Literal, TypedDict, TypeVar, cast
+from typing import Any, Literal, TypedDict, cast
 
 import async_interrupt
 import voluptuous as vol
@@ -108,8 +108,6 @@ from .trigger import async_initialize_triggers, async_validate_trigger_config
 from .typing import UNDEFINED, ConfigType, UndefinedType
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
-
-_T = TypeVar("_T")
 
 SCRIPT_MODE_PARALLEL = "parallel"
 SCRIPT_MODE_QUEUED = "queued"
@@ -688,17 +686,6 @@ class _ScriptRun:
         else:
             wait_var["remaining"] = None
 
-    async def _async_run_long_action(self, long_task: asyncio.Task[_T]) -> _T | None:
-        """Run a long task while monitoring for stop request."""
-        try:
-            async with async_interrupt.interrupt(self._stop, ScriptStoppedError, None):
-                # if stop is set, interrupt will cancel inside the context
-                # manager which will cancel long_task, and raise
-                # ScriptStoppedError outside the context manager
-                return await long_task
-        except ScriptStoppedError as ex:
-            raise asyncio.CancelledError from ex
-
     async def _async_call_service_step(self):
         """Call the service specified in the action."""
         self._step_log("call service")
@@ -732,16 +719,11 @@ class _ScriptRun:
             or params[CONF_DOMAIN] in ("python_script", "script")
         )
         trace_set_result(params=params, running_script=running_script)
-        response_data = await self._async_run_long_action(
-            self._hass.async_create_task(
-                self._hass.services.async_call(
-                    **params,
-                    blocking=True,
-                    context=self._context,
-                    return_response=return_response,
-                ),
-                eager_start=True,
-            )
+        response_data = await self._hass.services.async_call(
+            **params,
+            blocking=True,
+            context=self._context,
+            return_response=return_response,
         )
         if response_variable:
             self._variables[response_variable] = response_data
@@ -1200,11 +1182,7 @@ class _ScriptRun:
 
     async def _async_run_script(self, script: Script) -> None:
         """Execute a script."""
-        result = await self._async_run_long_action(
-            self._hass.async_create_task(
-                script.async_run(self._variables, self._context), eager_start=True
-            )
-        )
+        result = await script.async_run(self._variables, self._context)
         if result and result.conversation_response is not UNDEFINED:
             self._conversation_response = result.conversation_response
 
