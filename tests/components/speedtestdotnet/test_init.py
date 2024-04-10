@@ -46,7 +46,7 @@ async def test_entry_lifecycle(hass: HomeAssistant, mock_api: MagicMock) -> None
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
     assert hass.data[DOMAIN]
 
     assert await hass.config_entries.async_unload(entry.entry_id)

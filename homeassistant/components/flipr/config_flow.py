@@ -91,9 +91,7 @@ class FliprConfigFlow(ConfigFlow, domain=DOMAIN):
         # Instantiates the flipr API that does not require async since it is has no network access.
         client = FliprAPIRestClient(self._username, self._password)
 
-        flipr_ids = await self.hass.async_add_executor_job(client.search_flipr_ids)
-
-        return flipr_ids
+        return await self.hass.async_add_executor_job(client.search_flipr_ids)
 
     async def async_step_flipr_id(
         self, user_input: dict[str, str] | None = None

@@ -20,10 +20,10 @@ async def test_entity_registry(hass: HomeAssistant, mock_ring_client) -> None:
     entity_registry = er.async_get(hass)
 
     entry = entity_registry.async_get("light.front_light")
-    assert entry.unique_id == 765432
+    assert entry.unique_id == "765432"
 
     entry = entity_registry.async_get("light.internal_light")
-    assert entry.unique_id == 345678
+    assert entry.unique_id == "345678"
 
 
 async def test_light_off_reports_correctly(

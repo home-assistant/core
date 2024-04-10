@@ -6,9 +6,9 @@ from abc import ABC, abstractmethod
 import asyncio
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
-from functools import partial
+from functools import cached_property, partial
 import logging
-from typing import TYPE_CHECKING, Any, Protocol, cast
+from typing import Any, Protocol, cast
 
 import voluptuous as vol
 
@@ -111,12 +111,6 @@ from .const import (
 )
 from .helpers import async_get_blueprints
 from .trace import trace_automation
-
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
-
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
@@ -426,14 +420,9 @@ class UnavailableAutomationEntity(BaseAutomationEntity):
         raw_config: ConfigType | None,
     ) -> None:
         """Initialize an automation entity."""
-        self._name = name
+        self._attr_name = name
         self._attr_unique_id = automation_id
         self.raw_config = raw_config
-
-    @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        return self._name
 
     @cached_property
     def referenced_labels(self) -> set[str]:
@@ -494,7 +483,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         trace_config: ConfigType,
     ) -> None:
         """Initialize an automation entity."""
-        self._name = name
+        self._attr_name = name
         self._trigger_config = trigger_config
         self._async_detach_triggers: CALLBACK_TYPE | None = None
         self._cond_func = cond_func
@@ -509,11 +498,6 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         self._blueprint_inputs = blueprint_inputs
         self._trace_config = trace_config
         self._attr_unique_id = automation_id
-
-    @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        return self._name
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -738,7 +722,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
                     translation_placeholders={
                         "service": f"{err.domain}.{err.service}",
                         "entity_id": self.entity_id,
-                        "name": self.name or self.entity_id,
+                        "name": self._attr_name or self.entity_id,
                         "edit": f"/config/automation/edit/{self.unique_id}",
                     },
                 )
@@ -788,7 +772,6 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         self.hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_STARTED,
             self._async_enable_automation,
-            run_immediately=True,
         )
         self.async_write_ha_state()
 
@@ -811,6 +794,22 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
     def _log_callback(self, level: int, msg: str, **kwargs: Any) -> None:
         """Log helper callback."""
         self._logger.log(level, "%s %s", msg, self.name, **kwargs)
+
+    async def _async_trigger_if_enabled(
+        self,
+        run_variables: dict[str, Any],
+        context: Context | None = None,
+        skip_condition: bool = False,
+    ) -> ScriptRunResult | None:
+        """Trigger automation if enabled.
+
+        If the trigger starts but has a delay, the automation will be triggered
+        when the delay has passed so we need to make sure its still enabled before
+        executing the action.
+        """
+        if not self._is_enabled:
+            return None
+        return await self.async_trigger(run_variables, context, skip_condition)
 
     async def _async_attach_triggers(
         self, home_assistant_start: bool
@@ -835,7 +834,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         return await async_initialize_triggers(
             self.hass,
             self._trigger_config,
-            self.async_trigger,
+            self._async_trigger_if_enabled,
             DOMAIN,
             str(self.name),
             self._log_callback,

@@ -9,12 +9,12 @@ from contextlib import suppress
 from dataclasses import asdict
 from datetime import datetime, timedelta
 from enum import IntFlag
-from functools import partial
+from functools import cached_property, partial
 import logging
 import os
 from random import SystemRandom
 import time
-from typing import TYPE_CHECKING, Any, Final, cast, final
+from typing import Any, Final, cast, final
 
 from aiohttp import hdrs, web
 import attr
@@ -84,11 +84,6 @@ from .const import (  # noqa: F401
 )
 from .img_util import scale_jpeg_camera_image
 from .prefs import CameraPreferences, DynamicStreamSettings  # noqa: F401
-
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -417,9 +412,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             stream.add_provider("hls")
             await stream.start()
 
-    hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STARTED, preload_stream, run_immediately=True
-    )
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, preload_stream)
 
     @callback
     def update_tokens(t: datetime) -> None:
@@ -437,9 +430,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """Unsubscribe track time interval timer."""
         unsub()
 
-    hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STOP, unsub_track_time_interval, run_immediately=True
-    )
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, unsub_track_time_interval)
 
     component.async_register_entity_service(
         SERVICE_ENABLE_MOTION, {}, "async_enable_motion_detection"

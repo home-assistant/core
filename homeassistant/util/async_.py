@@ -24,12 +24,20 @@ def create_eager_task(
     loop: AbstractEventLoop | None = None,
 ) -> Task[_T]:
     """Create a task from a coroutine and schedule it to run immediately."""
-    return Task(
-        coro,
-        loop=loop or get_running_loop(),
-        name=name,
-        eager_start=True,
-    )
+    if not loop:
+        try:
+            loop = get_running_loop()
+        except RuntimeError:
+            # If there is no running loop, create_eager_task is being called from
+            # the wrong thread.
+            # Late import to avoid circular dependencies
+            # pylint: disable-next=import-outside-toplevel
+            from homeassistant.helpers import frame
+
+            frame.report("attempted to create an asyncio task from a thread")
+            raise
+
+    return Task(coro, loop=loop, name=name, eager_start=True)
 
 
 def cancelling(task: Future[Any]) -> bool:
