@@ -11,7 +11,7 @@ TOTAL_SENSOR_TYPES: tuple[SunWEGSensorEntityDescription, ...] = (
     SunWEGSensorEntityDescription(
         key="total_money_total",
         name="Money lifetime",
-        api_variable_key="_saving",
+        api_variable_key="saving",
         icon="mdi:cash",
         native_unit_of_measurement="R$",
         suggested_display_precision=2,
@@ -19,8 +19,8 @@ TOTAL_SENSOR_TYPES: tuple[SunWEGSensorEntityDescription, ...] = (
     SunWEGSensorEntityDescription(
         key="total_energy_today",
         name="Energy Today",
-        api_variable_key="_today_energy",
-        api_variable_unit="_today_energy_metric",
+        api_variable_key="today_energy",
+        api_variable_unit="today_energy_metric",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -28,14 +28,14 @@ TOTAL_SENSOR_TYPES: tuple[SunWEGSensorEntityDescription, ...] = (
     SunWEGSensorEntityDescription(
         key="total_output_power",
         name="Output Power",
-        api_variable_key="_total_power",
+        api_variable_key="total_power",
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
         device_class=SensorDeviceClass.POWER,
     ),
     SunWEGSensorEntityDescription(
         key="total_energy_output",
         name="Lifetime energy output",
-        api_variable_key="_total_energy",
+        api_variable_key="total_energy",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL,
@@ -44,12 +44,12 @@ TOTAL_SENSOR_TYPES: tuple[SunWEGSensorEntityDescription, ...] = (
     SunWEGSensorEntityDescription(
         key="kwh_per_kwp",
         name="kWh por kWp",
-        api_variable_key="_kwh_per_kwp",
+        api_variable_key="kwh_per_kwp",
     ),
     SunWEGSensorEntityDescription(
         key="last_update",
         name="Last Update",
-        api_variable_key="_last_update",
+        api_variable_key="last_update",
         device_class=SensorDeviceClass.DATE,
     ),
 )

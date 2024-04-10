@@ -16,8 +16,8 @@ INVERTER_SENSOR_TYPES: tuple[SunWEGSensorEntityDescription, ...] = (
     SunWEGSensorEntityDescription(
         key="inverter_energy_today",
         name="Energy today",
-        api_variable_key="_today_energy",
-        api_variable_unit="_today_energy_metric",
+        api_variable_key="today_energy",
+        api_variable_unit="today_energy_metric",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -26,8 +26,8 @@ INVERTER_SENSOR_TYPES: tuple[SunWEGSensorEntityDescription, ...] = (
     SunWEGSensorEntityDescription(
         key="inverter_energy_total",
         name="Lifetime energy output",
-        api_variable_key="_total_energy",
-        api_variable_unit="_total_energy_metric",
+        api_variable_key="total_energy",
+        api_variable_unit="total_energy_metric",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         suggested_display_precision=1,
@@ -37,7 +37,7 @@ INVERTER_SENSOR_TYPES: tuple[SunWEGSensorEntityDescription, ...] = (
     SunWEGSensorEntityDescription(
         key="inverter_frequency",
         name="AC frequency",
-        api_variable_key="_frequency",
+        api_variable_key="frequency",
         native_unit_of_measurement=UnitOfFrequency.HERTZ,
         device_class=SensorDeviceClass.FREQUENCY,
         suggested_display_precision=1,
@@ -45,8 +45,8 @@ INVERTER_SENSOR_TYPES: tuple[SunWEGSensorEntityDescription, ...] = (
     SunWEGSensorEntityDescription(
         key="inverter_current_wattage",
         name="Output power",
-        api_variable_key="_power",
-        api_variable_unit="_power_metric",
+        api_variable_key="power",
+        api_variable_unit="power_metric",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -55,7 +55,7 @@ INVERTER_SENSOR_TYPES: tuple[SunWEGSensorEntityDescription, ...] = (
     SunWEGSensorEntityDescription(
         key="inverter_temperature",
         name="Temperature",
-        api_variable_key="_temperature",
+        api_variable_key="temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         icon="mdi:temperature-celsius",
@@ -64,7 +64,7 @@ INVERTER_SENSOR_TYPES: tuple[SunWEGSensorEntityDescription, ...] = (
     SunWEGSensorEntityDescription(
         key="inverter_power_factor",
         name="Power Factor",
-        api_variable_key="_power_factor",
+        api_variable_key="power_factor",
         suggested_display_precision=1,
     ),
 )

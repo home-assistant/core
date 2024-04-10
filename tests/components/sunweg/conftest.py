@@ -5,6 +5,7 @@ from datetime import datetime
 import pytest
 from sunweg.device import MPPT, Inverter, Phase, String
 from sunweg.plant import Plant
+from sunweg.util import Status
 
 
 @pytest.fixture
@@ -34,15 +35,15 @@ def inverter_fixture(phase_fixture, mppt_fixture) -> Inverter:
         21255,
         "INVERSOR01",
         "J63T233018RE074",
+        Status.OK,
         23.2,
         0.0,
-        0.0,
         "MWh",
-        0,
+        0.0,
         "kWh",
+        0,
         0.0,
         1,
-        0,
         "kW",
     )
     inverter.phases.append(phase_fixture)
@@ -88,3 +89,39 @@ def plant_fixture_alternative(inverter_fixture) -> Plant:
     )
     plant.inverters.append(inverter_fixture)
     return plant
+
+
+@pytest.fixture
+def plant_fixture_total_power_0() -> Plant:
+    """Define Plant fixture."""
+    return Plant(
+        123456,
+        "Plant #123",
+        29.5,
+        0.5,
+        0,
+        12.786912,
+        24.0,
+        "kWh",
+        0.0,
+        0.012296,
+        None,
+    )
+
+
+@pytest.fixture
+def plant_fixture_total_power_none() -> Plant:
+    """Define Plant fixture."""
+    return Plant(
+        123456,
+        "Plant #123",
+        29.5,
+        0.5,
+        0,
+        12.786912,
+        24.0,
+        "kWh",
+        None,
+        0.012296,
+        None,
+    )
