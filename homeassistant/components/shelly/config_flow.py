@@ -11,7 +11,6 @@ from aioshelly.const import BLOCK_GENERATIONS, DEFAULT_HTTP_PORT, RPC_GENERATION
 from aioshelly.exceptions import (
     CustomPortNotSupported,
     DeviceConnectionError,
-    FirmwareUnsupported,
     InvalidAuthError,
 )
 from aioshelly.rpc_device import RpcDevice
@@ -156,8 +155,6 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
                 self.info = await self._async_get_info(host, port)
             except DeviceConnectionError:
                 errors["base"] = "cannot_connect"
-            except FirmwareUnsupported:
-                return self.async_abort(reason="unsupported_firmware")
             except Exception:  # pylint: disable=broad-except
                 LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
@@ -289,8 +286,6 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             self.info = await self._async_get_info(host, DEFAULT_HTTP_PORT)
         except DeviceConnectionError:
             return self.async_abort(reason="cannot_connect")
-        except FirmwareUnsupported:
-            return self.async_abort(reason="unsupported_firmware")
 
         if not mac:
             # We could not get the mac address from the name
@@ -368,14 +363,14 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 info = await self._async_get_info(host, port)
-            except (DeviceConnectionError, InvalidAuthError, FirmwareUnsupported):
+            except (DeviceConnectionError, InvalidAuthError):
                 return self.async_abort(reason="reauth_unsuccessful")
 
             if get_device_entry_gen(self.entry) != 1:
                 user_input[CONF_USERNAME] = "admin"
             try:
                 await validate_input(self.hass, host, port, info, user_input)
-            except (DeviceConnectionError, InvalidAuthError, FirmwareUnsupported):
+            except (DeviceConnectionError, InvalidAuthError):
                 return self.async_abort(reason="reauth_unsuccessful")
 
             return self.async_update_reload_and_abort(

@@ -63,6 +63,7 @@ from .const import (
     BLEScannerMode,
 )
 from .utils import (
+    async_create_issue_unsupported_firmware,
     async_shutdown_device,
     get_block_device_sleep_period,
     get_device_entry_gen,
@@ -164,6 +165,10 @@ class ShellyCoordinatorBase(DataUpdateCoordinator[None], Generic[_DeviceT]):
             self.entry.async_start_reauth(self.hass)
             return
 
+        if not self.device.firmware_supported:
+            async_create_issue_unsupported_firmware(self.hass, self.entry)
+            return
+
         if not self.finish_setup_platforms:
             return
 
@@ -251,8 +256,6 @@ class ShellyBlockCoordinator(ShellyCoordinatorBase[BlockDevice]):
         """Handle device updates."""
         if not self.device.initialized:
             return
-
-        assert self.device.blocks
 
         # For buttons which are battery powered - set initial value for last_event_count
         if self.model in SHBTN_MODELS and self._last_input_events_count.get(1) is None:

@@ -10,7 +10,6 @@ from aioshelly.common import ConnectionOptions
 from aioshelly.const import DEFAULT_COAP_PORT, RPC_GENERATIONS
 from aioshelly.exceptions import (
     DeviceConnectionError,
-    FirmwareUnsupported,
     InvalidAuthError,
     MacAddressMismatchError,
 )
@@ -187,13 +186,13 @@ async def _async_setup_block_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
         LOGGER.debug("Setting up online block device %s", entry.title)
         try:
             await device.initialize()
+            if not device.firmware_supported:
+                async_create_issue_unsupported_firmware(hass, entry)
+                raise ConfigEntryNotReady
         except (DeviceConnectionError, MacAddressMismatchError) as err:
             raise ConfigEntryNotReady(repr(err)) from err
         except InvalidAuthError as err:
             raise ConfigEntryAuthFailed(repr(err)) from err
-        except FirmwareUnsupported as err:
-            async_create_issue_unsupported_firmware(hass, entry)
-            raise ConfigEntryNotReady from err
 
         shelly_entry_data.block = ShellyBlockCoordinator(hass, entry, device)
         shelly_entry_data.block.async_setup()
@@ -258,9 +257,9 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ConfigEntry) -> boo
         LOGGER.debug("Setting up online RPC device %s", entry.title)
         try:
             await device.initialize()
-        except FirmwareUnsupported as err:
-            async_create_issue_unsupported_firmware(hass, entry)
-            raise ConfigEntryNotReady from err
+            if not device.firmware_supported:
+                async_create_issue_unsupported_firmware(hass, entry)
+                raise ConfigEntryNotReady
         except (DeviceConnectionError, MacAddressMismatchError) as err:
             raise ConfigEntryNotReady(repr(err)) from err
         except InvalidAuthError as err:

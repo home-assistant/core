@@ -8,7 +8,6 @@ from aioshelly.common import ConnectionOptions
 from aioshelly.const import MODEL_PLUS_2PM
 from aioshelly.exceptions import (
     DeviceConnectionError,
-    FirmwareUnsupported,
     InvalidAuthError,
     MacAddressMismatchError,
 )
@@ -27,6 +26,7 @@ from homeassistant.components.shelly.const import (
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PORT, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
     DeviceRegistry,
@@ -145,25 +145,44 @@ async def test_setup_entry_not_shelly(
 
 
 @pytest.mark.parametrize("gen", [1, 2, 3])
-@pytest.mark.parametrize("side_effect", [DeviceConnectionError, FirmwareUnsupported])
 async def test_device_connection_error(
     hass: HomeAssistant,
     gen: int,
-    side_effect: Exception,
     mock_block_device: Mock,
     mock_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test device connection error."""
     monkeypatch.setattr(
-        mock_block_device, "initialize", AsyncMock(side_effect=side_effect)
+        mock_block_device, "initialize", AsyncMock(side_effect=DeviceConnectionError)
     )
     monkeypatch.setattr(
-        mock_rpc_device, "initialize", AsyncMock(side_effect=side_effect)
+        mock_rpc_device, "initialize", AsyncMock(side_effect=DeviceConnectionError)
     )
 
     entry = await init_integration(hass, gen)
     assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.parametrize("gen", [1, 2, 3])
+async def test_device_unsupported_firmware(
+    hass: HomeAssistant,
+    gen: int,
+    mock_block_device: Mock,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test device init with unsupported firmware."""
+    monkeypatch.setattr(mock_block_device, "firmware_supported", False)
+    monkeypatch.setattr(mock_rpc_device, "firmware_supported", False)
+
+    entry = await init_integration(hass, gen)
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert (
+        DOMAIN,
+        "firmware_unsupported_123456789ABC",
+    ) in issue_registry.issues
 
 
 @pytest.mark.parametrize("gen", [1, 2, 3])

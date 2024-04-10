@@ -10,7 +10,6 @@ from aioshelly.const import DEFAULT_HTTP_PORT, MODEL_1, MODEL_PLUS_2PM
 from aioshelly.exceptions import (
     CustomPortNotSupported,
     DeviceConnectionError,
-    FirmwareUnsupported,
     InvalidAuthError,
 )
 import pytest
@@ -433,25 +432,6 @@ async def test_user_setup_ignored_device(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_firmware_unsupported(hass: HomeAssistant) -> None:
-    """Test we abort if device firmware is unsupported."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with patch(
-        "homeassistant.components.shelly.config_flow.get_info",
-        side_effect=FirmwareUnsupported,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {"host": "1.1.1.1"},
-        )
-
-        assert result2["type"] is FlowResultType.ABORT
-        assert result2["reason"] == "unsupported_firmware"
-
-
 @pytest.mark.parametrize(
     ("exc", "base_error"),
     [
@@ -757,22 +737,6 @@ async def test_zeroconf_with_wifi_ap_ip(hass: HomeAssistant) -> None:
     assert entry.data["host"] == "2.2.2.2"
 
 
-async def test_zeroconf_firmware_unsupported(hass: HomeAssistant) -> None:
-    """Test we abort if device firmware is unsupported."""
-    with patch(
-        "homeassistant.components.shelly.config_flow.get_info",
-        side_effect=FirmwareUnsupported,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            data=DISCOVERY_INFO,
-            context={"source": config_entries.SOURCE_ZEROCONF},
-        )
-
-        assert result["type"] is FlowResultType.ABORT
-        assert result["reason"] == "unsupported_firmware"
-
-
 async def test_zeroconf_cannot_connect(hass: HomeAssistant) -> None:
     """Test we get the form."""
     with patch(
@@ -927,11 +891,7 @@ async def test_reauth_unsuccessful(
         assert result["reason"] == "reauth_unsuccessful"
 
 
-@pytest.mark.parametrize(
-    "error",
-    [DeviceConnectionError, FirmwareUnsupported],
-)
-async def test_reauth_get_info_error(hass: HomeAssistant, error: Exception) -> None:
+async def test_reauth_get_info_error(hass: HomeAssistant) -> None:
     """Test reauthentication flow failed with error in get_info()."""
     entry = MockConfigEntry(
         domain="shelly", unique_id="test-mac", data={"host": "0.0.0.0", "gen": 2}
@@ -940,7 +900,7 @@ async def test_reauth_get_info_error(hass: HomeAssistant, error: Exception) -> N
 
     with patch(
         "homeassistant.components.shelly.config_flow.get_info",
-        side_effect=error,
+        side_effect=DeviceConnectionError,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
