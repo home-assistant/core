@@ -226,9 +226,11 @@ async def trace_action(
                 hass, SCRIPT_DEBUG_CONTINUE_ALL, async_continue_stop
             )
 
-            await asyncio.wait([stop, done], return_when=asyncio.FIRST_COMPLETED)
-            remove_signal1()
-            remove_signal2()
+            try:
+                await done
+            finally:
+                remove_signal1()
+                remove_signal2()
 
     try:
         yield trace_element
