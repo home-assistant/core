@@ -23,9 +23,13 @@ from homeassistant.components.vacuum import (
     StateVacuumEntity,
     VacuumEntityFeature,
 )
+from homeassistant.const import CONF_PLATFORM
 from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 
-from . import MockVacuum, create_entity
+from . import MockVacuum
+
+from tests.common import MockConfigEntry, setup_test_component_platform
 
 
 @pytest.mark.parametrize(
@@ -42,16 +46,28 @@ async def test_state_services(
     hass: HomeAssistant, config_flow_fixture: None, service: str, expected_state: str
 ) -> None:
     """Test get vacuum service that affect state."""
+    mock_vacuum = MockVacuum(
+        name="Testing",
+        entity_id="vacuum.testing",
+    )
+    setup_test_component_platform(
+        hass,
+        DOMAIN,
+        [mock_vacuum],
+    )
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
 
-    entity0 = await create_entity(hass)
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
 
     await hass.services.async_call(
         DOMAIN,
         service,
-        {"entity_id": entity0.entity_id},
+        {"entity_id": mock_vacuum.entity_id},
         blocking=True,
     )
-    vacuum_state = hass.states.get(entity0.entity_id)
+    vacuum_state = hass.states.get(mock_vacuum.entity_id)
 
     assert vacuum_state.state == expected_state
 
@@ -59,16 +75,29 @@ async def test_state_services(
 async def test_fan_speed(hass: HomeAssistant, config_flow_fixture: None) -> None:
     """Test set vacuum fan speed."""
 
-    entity0 = await create_entity(hass)
+    mock_vacuum = MockVacuum(
+        name="Testing",
+        entity_id="vacuum.testing",
+    )
+    setup_test_component_platform(
+        hass,
+        DOMAIN,
+        [mock_vacuum],
+    )
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
+
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
 
     await hass.services.async_call(
         DOMAIN,
         SERVICE_SET_FAN_SPEED,
-        {"entity_id": entity0.entity_id, "fan_speed": "high"},
+        {"entity_id": mock_vacuum.entity_id, "fan_speed": "high"},
         blocking=True,
     )
 
-    assert entity0.fan_speed == "high"
+    assert mock_vacuum.fan_speed == "high"
 
 
 async def test_locate(hass: HomeAssistant, config_flow_fixture: None) -> None:
@@ -87,12 +116,24 @@ async def test_locate(hass: HomeAssistant, config_flow_fixture: None) -> None:
         def locate(self, **kwargs: Any) -> None:
             self._calls.append("locate")
 
-    entity0 = await create_entity(hass, mock_vacuum=MockVacuumWithLocation, calls=calls)
+    mock_vacuum = MockVacuumWithLocation(
+        name="Testing", entity_id="vacuum.testing", calls=calls
+    )
+    setup_test_component_platform(
+        hass,
+        DOMAIN,
+        [mock_vacuum],
+    )
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
+
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
 
     await hass.services.async_call(
         DOMAIN,
         SERVICE_LOCATE,
-        {"entity_id": entity0.entity_id},
+        {"entity_id": mock_vacuum.entity_id},
         blocking=True,
     )
 
@@ -104,7 +145,7 @@ async def test_send_command(hass: HomeAssistant, config_flow_fixture: None) -> N
 
     strings = []
 
-    class MockVacuumWithLocation(MockVacuum):
+    class MockVacuumWithSendCommand(MockVacuum):
         def __init__(self, strings: list[str], **kwargs) -> None:
             super().__init__()
             self._attr_supported_features = (
@@ -121,17 +162,25 @@ async def test_send_command(hass: HomeAssistant, config_flow_fixture: None) -> N
             if command == "add_str":
                 self._strings.append(params["str"])
 
-    entity0 = await create_entity(
-        hass,
-        mock_vacuum=MockVacuumWithLocation,
-        strings=strings,
+    mock_vacuum = MockVacuumWithSendCommand(
+        name="Testing", entity_id="vacuum.testing", strings=strings
     )
+    setup_test_component_platform(
+        hass,
+        DOMAIN,
+        [mock_vacuum],
+    )
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
+
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
 
     await hass.services.async_call(
         DOMAIN,
         SERVICE_SEND_COMMAND,
         {
-            "entity_id": entity0.entity_id,
+            "entity_id": mock_vacuum.entity_id,
             "command": "add_str",
             "params": {"str": "test"},
         },

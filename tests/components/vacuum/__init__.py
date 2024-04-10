@@ -3,7 +3,6 @@
 from typing import Any
 
 from homeassistant.components.vacuum import (
-    DOMAIN,
     STATE_CLEANING,
     STATE_DOCKED,
     STATE_IDLE,
@@ -12,18 +11,8 @@ from homeassistant.components.vacuum import (
     StateVacuumEntity,
     VacuumEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from tests.common import (
-    MockConfigEntry,
-    MockEntity,
-    MockModule,
-    MockPlatform,
-    mock_integration,
-    mock_platform,
-)
+from tests.common import MockEntity
 
 
 class MockVacuum(MockEntity, StateVacuumEntity):
@@ -72,53 +61,3 @@ class MockVacuum(MockEntity, StateVacuumEntity):
     def pause(self) -> None:
         """Pause cleaning."""
         self._attr_state = STATE_PAUSED
-
-
-async def create_entity(
-    hass: HomeAssistant,
-    mock_vacuum: MockVacuum = MockVacuum,
-    **kwargs,
-) -> MockVacuum:
-    """Create the vacuum entity to run tests on."""
-
-    vacuum_entity = mock_vacuum(
-        name="Testing",
-        entity_id="vacuum.testing",
-        **kwargs,
-    )
-
-    async def async_setup_entry_init(
-        hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
-        """Set up test config entry."""
-        await hass.config_entries.async_forward_entry_setups(config_entry, [DOMAIN])
-        return True
-
-    async def async_setup_entry_vacuum_platform(
-        hass: HomeAssistant,
-        config_entry: ConfigEntry,
-        async_add_entities: AddEntitiesCallback,
-    ) -> None:
-        """Set up test vacuum platform via config entry."""
-        async_add_entities([vacuum_entity])
-
-    mock_integration(
-        hass,
-        MockModule(
-            "test",
-            async_setup_entry=async_setup_entry_init,
-        ),
-        built_in=False,
-    )
-    mock_platform(
-        hass,
-        "test.vacuum",
-        MockPlatform(async_setup_entry=async_setup_entry_vacuum_platform),
-    )
-
-    config_entry = MockConfigEntry(domain="test")
-    config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    return vacuum_entity
