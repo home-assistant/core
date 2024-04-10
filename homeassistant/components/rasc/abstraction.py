@@ -306,7 +306,7 @@ class StateDetector:
         # TODO: put this in bg # pylint: disable=fixme
         dist = get_best_distribution(history)
         self._attr_upper_bound = dist.ppf(0.99)
-        self._polls = get_polls(dist, self._attr_upper_bound)
+        self._polls = get_polls(dist)
 
     @property
     def upper_bound(self) -> float | None:
