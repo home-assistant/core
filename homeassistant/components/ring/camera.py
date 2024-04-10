@@ -67,7 +67,7 @@ class RingCam(RingEntity, Camera):
         self._video_url = None
         self._image = None
         self._expires_at = dt_util.utcnow() - FORCE_REFRESH_INTERVAL
-        self._attr_unique_id = device.id
+        self._attr_unique_id = str(device.id)
         if device.has_capability(MOTION_DETECTION_CAPABILITY):
             self._attr_motion_detection_enabled = device.motion_detection
 

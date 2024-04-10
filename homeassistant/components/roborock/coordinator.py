@@ -7,11 +7,11 @@ from datetime import timedelta
 import logging
 
 from roborock import HomeDataRoom
-from roborock.cloud_api import RoborockMqttClient
 from roborock.containers import DeviceData, HomeDataDevice, HomeDataProduct, NetworkInfo
 from roborock.exceptions import RoborockException
-from roborock.local_api import RoborockLocalClient
 from roborock.roborock_typing import DeviceProp
+from roborock.version_1_apis.roborock_local_client_v1 import RoborockLocalClientV1
+from roborock.version_1_apis.roborock_mqtt_client_v1 import RoborockMqttClientV1
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_CONNECTIONS
@@ -39,7 +39,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
         device: HomeDataDevice,
         device_networking: NetworkInfo,
         product_info: HomeDataProduct,
-        cloud_api: RoborockMqttClient,
+        cloud_api: RoborockMqttClientV1,
         home_data_rooms: list[HomeDataRoom],
     ) -> None:
         """Initialize."""
@@ -51,7 +51,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
             DeviceProp(),
         )
         device_data = DeviceData(device, product_info.model, device_networking.ip)
-        self.api: RoborockLocalClient | RoborockMqttClient = RoborockLocalClient(
+        self.api: RoborockLocalClientV1 | RoborockMqttClientV1 = RoborockLocalClientV1(
             device_data
         )
         self.cloud_api = cloud_api
@@ -72,7 +72,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
 
     async def verify_api(self) -> None:
         """Verify that the api is reachable. If it is not, switch clients."""
-        if isinstance(self.api, RoborockLocalClient):
+        if isinstance(self.api, RoborockLocalClientV1):
             try:
                 await self.api.ping()
             except RoborockException:
