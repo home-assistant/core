@@ -15,13 +15,13 @@ from .const import NOTIFICATIONS_SCAN_INTERVAL, SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
-_T = TypeVar("_T")
+_R = TypeVar("_R")
 _Ts = TypeVarTuple("_Ts")
 
 
 async def _call_api(
-    hass: HomeAssistant, target: Callable[[*_Ts], _T], *args: *_Ts, msg_suffix: str = ""
-) -> _T:
+    hass: HomeAssistant, target: Callable[[*_Ts], _R], *args: *_Ts, msg_suffix: str = ""
+) -> _R:
     try:
         return await hass.async_add_executor_job(target, *args)
     except AuthenticationError as err:

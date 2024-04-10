@@ -4,7 +4,7 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-from ring_doorbell import RingDevices, RingStickUpCam
+from ring_doorbell import RingStickUpCam
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
@@ -12,7 +12,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
-from .const import DOMAIN, RING_DEVICES, RING_DEVICES_COORDINATOR
+from . import RingData
+from .const import DOMAIN
 from .coordinator import RingDataCoordinator
 from .entity import RingEntity, exception_wrap
 
@@ -33,14 +34,12 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Create the switches for the Ring devices."""
-    devices: RingDevices = hass.data[DOMAIN][config_entry.entry_id][RING_DEVICES]
-    coordinator: RingDataCoordinator = hass.data[DOMAIN][config_entry.entry_id][
-        RING_DEVICES_COORDINATOR
-    ]
+    ring_data: RingData = hass.data[DOMAIN][config_entry.entry_id]
+    devices_coordinator = ring_data.ring_devices_coordinator
 
     async_add_entities(
-        SirenSwitch(device, coordinator)
-        for device in devices.stickup_cams
+        SirenSwitch(device, devices_coordinator)
+        for device in ring_data.ring_devices.stickup_cams
         if device.has_capability("siren")
     )
 

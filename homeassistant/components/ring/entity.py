@@ -1,7 +1,7 @@
 """Base class for Ring entity."""
 
 from collections.abc import Callable
-from typing import Concatenate, ParamSpec, TypeVar
+from typing import Any, Concatenate, ParamSpec, TypeVar
 
 from ring_doorbell import (
     AuthenticationError,
@@ -23,17 +23,17 @@ _RingCoordinatorT = TypeVar(
     "_RingCoordinatorT",
     bound=(RingDataCoordinator | RingNotificationsCoordinator),
 )
-_T = TypeVar("_T", bound="RingBaseEntity")
+_RingBaseEntityT = TypeVar("_RingBaseEntityT", bound="RingBaseEntity[Any]")
 _R = TypeVar("_R")
 _P = ParamSpec("_P")
 
 
 def exception_wrap(
-    func: Callable[Concatenate[_T, _P], _R],
-) -> Callable[Concatenate[_T, _P], _R]:
+    func: Callable[Concatenate[_RingBaseEntityT, _P], _R],
+) -> Callable[Concatenate[_RingBaseEntityT, _P], _R]:
     """Define a wrapper to catch exceptions and raise HomeAssistant errors."""
 
-    def _wrap(self: _T, *args: _P.args, **kwargs: _P.kwargs) -> _R:
+    def _wrap(self: _RingBaseEntityT, *args: _P.args, **kwargs: _P.kwargs) -> _R:
         try:
             return func(self, *args, **kwargs)
         except AuthenticationError as err:

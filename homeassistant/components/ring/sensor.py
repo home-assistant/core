@@ -2,19 +2,19 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, MutableMapping
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Generic
 
 from ring_doorbell import (
     RingCapability,
-    RingDevices,
+    RingChime,
     RingDoorBell,
     RingEventKind,
     RingGeneric,
     RingOther,
-    RingStickUpCam,
 )
+from typing_extensions import TypeVar
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -32,9 +32,12 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import DOMAIN, RING_DEVICES, RING_DEVICES_COORDINATOR
+from . import RingData
+from .const import DOMAIN
 from .coordinator import RingDataCoordinator
 from .entity import RingEntity
+
+_RingGenericT = TypeVar("_RingGenericT", bound=RingGeneric)
 
 
 async def async_setup_entry(
@@ -43,15 +46,13 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up a sensor for a Ring device."""
-    devices: RingDevices = hass.data[DOMAIN][config_entry.entry_id][RING_DEVICES]
-    devices_coordinator: RingDataCoordinator = hass.data[DOMAIN][config_entry.entry_id][
-        RING_DEVICES_COORDINATOR
-    ]
+    ring_data: RingData = hass.data[DOMAIN][config_entry.entry_id]
+    devices_coordinator = ring_data.ring_devices_coordinator
 
     entities = [
         RingSensor(device, devices_coordinator, description)
         for description in SENSOR_TYPES
-        for device in devices.all_devices
+        for device in ring_data.ring_devices.all_devices
         if description.exists_fn(device)
     ]
 
@@ -61,13 +62,13 @@ async def async_setup_entry(
 class RingSensor(RingEntity, SensorEntity):
     """A sensor implementation for Ring device."""
 
-    entity_description: RingSensorEntityDescription
+    entity_description: RingSensorEntityDescription[RingGeneric]
 
     def __init__(
         self,
         device: RingGeneric,
         coordinator: RingDataCoordinator,
-        description: RingSensorEntityDescription,
+        description: RingSensorEntityDescription[RingGeneric],
     ) -> None:
         """Initialize a sensor for Ring device."""
         super().__init__(device, coordinator)
@@ -89,10 +90,8 @@ class RingSensor(RingEntity, SensorEntity):
         # the value if it's not None
         if native_value := self.entity_description.value_fn(self._device):
             self._attr_native_value = native_value
-        if self.entity_description.extra_state_attributes_fn and (
-            extra_attrs := self.entity_description.extra_state_attributes_fn(
-                self._device
-            )
+        if extra_attrs := self.entity_description.extra_state_attributes_fn(
+            self._device
         ):
             self._attr_extra_state_attributes = extra_attrs
         super()._handle_coordinator_update()
@@ -125,39 +124,18 @@ def _get_last_event_attrs(
 
 
 @dataclass(frozen=True, kw_only=True)
-class RingSensorEntityDescription(SensorEntityDescription):
+class RingSensorEntityDescription(SensorEntityDescription, Generic[_RingGenericT]):
     """Describes Ring sensor entity."""
 
-    kind: RingEventKind | None = None
-    value_fn: Callable[[RingGeneric], StateType]
+    value_fn: Callable[[_RingGenericT], StateType] = lambda _: True
     exists_fn: Callable[[RingGeneric], bool] = lambda _: True
-    extra_state_attributes_fn: (
-        Callable[[RingGeneric], MutableMapping[str, Any] | None] | None
-    ) = None
-
-
-@dataclass(frozen=True, kw_only=True)
-class RingDoorbellSensorEntityDescription(RingSensorEntityDescription):
-    """Describes Ring sensor entity."""
-
-    exists_fn: Callable[[RingDoorBell], bool] = lambda device: isinstance(
-        device, RingDoorBell
+    extra_state_attributes_fn: Callable[[_RingGenericT], dict[str, Any] | None] = (
+        lambda _: None
     )
-    value_fn: Callable[[RingDoorBell], StateType]
-
-
-@dataclass(frozen=True, kw_only=True)
-class RingOtherSensorEntityDescription(RingSensorEntityDescription):
-    """Describes Ring sensor entity."""
-
-    exists_fn: Callable[[RingOther], bool] = lambda device: isinstance(
-        device, RingOther
-    )
-    value_fn: Callable[[RingOther], StateType]
 
 
 SENSOR_TYPES: tuple[RingSensorEntityDescription, ...] = (
-    RingSensorEntityDescription(
+    RingSensorEntityDescription[RingGeneric](
         key="battery",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
@@ -166,7 +144,7 @@ SENSOR_TYPES: tuple[RingSensorEntityDescription, ...] = (
         value_fn=lambda device: device.battery_life,
         exists_fn=lambda device: device.family != "chimes",
     ),
-    RingSensorEntityDescription(
+    RingSensorEntityDescription[RingGeneric](
         key="last_activity",
         translation_key="last_activity",
         device_class=SensorDeviceClass.TIMESTAMP,
@@ -178,10 +156,9 @@ SENSOR_TYPES: tuple[RingSensorEntityDescription, ...] = (
         else None,
         exists_fn=lambda device: device.has_capability(RingCapability.HISTORY),
     ),
-    RingSensorEntityDescription(
+    RingSensorEntityDescription[RingGeneric](
         key="last_ding",
         translation_key="last_ding",
-        kind=RingEventKind.DING,
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda device: last_event.get("created_at")
         if (last_event := _get_last_event(device.last_history, RingEventKind.DING))
@@ -195,10 +172,9 @@ SENSOR_TYPES: tuple[RingSensorEntityDescription, ...] = (
         else None,
         exists_fn=lambda device: device.has_capability(RingCapability.HISTORY),
     ),
-    RingSensorEntityDescription(
+    RingSensorEntityDescription[RingGeneric](
         key="last_motion",
         translation_key="last_motion",
-        kind=RingEventKind.MOTION,
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda device: last_event.get("created_at")
         if (last_event := _get_last_event(device.last_history, RingEventKind.MOTION))
@@ -212,36 +188,38 @@ SENSOR_TYPES: tuple[RingSensorEntityDescription, ...] = (
         else None,
         exists_fn=lambda device: device.has_capability(RingCapability.HISTORY),
     ),
-    RingDoorbellSensorEntityDescription(
+    RingSensorEntityDescription[RingDoorBell | RingChime](
         key="volume",
         translation_key="volume",
         value_fn=lambda device: device.volume,
-        exists_fn=lambda device: isinstance(device, RingStickUpCam)
-        or device.has_capability(RingCapability.VOLUME),
+        exists_fn=lambda device: isinstance(device, (RingDoorBell, RingChime)),
     ),
-    RingOtherSensorEntityDescription(
+    RingSensorEntityDescription[RingOther](
         key="doorbell_volume",
         translation_key="doorbell_volume",
         value_fn=lambda device: device.doorbell_volume,
+        exists_fn=lambda device: isinstance(device, RingOther),
     ),
-    RingOtherSensorEntityDescription(
+    RingSensorEntityDescription[RingOther](
         key="mic_volume",
         translation_key="mic_volume",
         value_fn=lambda device: device.mic_volume,
+        exists_fn=lambda device: isinstance(device, RingOther),
     ),
-    RingOtherSensorEntityDescription(
+    RingSensorEntityDescription[RingOther](
         key="voice_volume",
         translation_key="voice_volume",
         value_fn=lambda device: device.voice_volume,
+        exists_fn=lambda device: isinstance(device, RingOther),
     ),
-    RingSensorEntityDescription(
+    RingSensorEntityDescription[RingGeneric](
         key="wifi_signal_category",
         translation_key="wifi_signal_category",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda device: device.wifi_signal_category,
     ),
-    RingSensorEntityDescription(
+    RingSensorEntityDescription[RingGeneric](
         key="wifi_signal_strength",
         translation_key="wifi_signal_strength",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,

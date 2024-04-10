@@ -2,14 +2,13 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from datetime import timedelta
 import logging
 from typing import Any
 
 from aiohttp import web
 from haffmpeg.camera import CameraMjpeg
-from ring_doorbell import RingDevices, RingDoorBell
+from ring_doorbell import RingDoorBell
 
 from homeassistant.components import ffmpeg
 from homeassistant.components.camera import Camera
@@ -19,7 +18,8 @@ from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN, RING_DEVICES, RING_DEVICES_COORDINATOR
+from . import RingData
+from .const import DOMAIN
 from .coordinator import RingDataCoordinator
 from .entity import RingEntity, exception_wrap
 
@@ -35,14 +35,12 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up a Ring Door Bell and StickUp Camera."""
-    devices: RingDevices = hass.data[DOMAIN][config_entry.entry_id][RING_DEVICES]
-    devices_coordinator: RingDataCoordinator = hass.data[DOMAIN][config_entry.entry_id][
-        RING_DEVICES_COORDINATOR
-    ]
+    ring_data: RingData = hass.data[DOMAIN][config_entry.entry_id]
+    devices_coordinator = ring_data.ring_devices_coordinator
     ffmpeg_manager = ffmpeg.get_ffmpeg_manager(hass)
 
     cams = []
-    for camera in devices.video_devices:
+    for camera in ring_data.ring_devices.video_devices:
         if not camera.has_subscription:
             continue
 
@@ -82,7 +80,7 @@ class RingCam(RingEntity, Camera):
         self._device = self._get_coordinator_data().get_video_device(
             self._device.device_api_id
         )
-        history_data: list = self._device.last_history
+        history_data = self._device.last_history
         if history_data:
             self._last_event = history_data[0]
             self.async_schedule_update_ha_state(True)
@@ -95,7 +93,7 @@ class RingCam(RingEntity, Camera):
             self.async_write_ha_state()
 
     @property
-    def extra_state_attributes(self) -> Mapping[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return {
             "video_url": self._video_url,

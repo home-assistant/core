@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
 
-from ring_doorbell import Ring, RingDevices, RingEvent, RingGeneric
+from ring_doorbell import Ring, RingEvent, RingGeneric
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -18,7 +18,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, RING_API, RING_DEVICES, RING_NOTIFICATIONS_COORDINATOR
+from . import RingData
+from .const import DOMAIN
 from .coordinator import RingNotificationsCoordinator
 from .entity import RingBaseEntity
 
@@ -27,20 +28,22 @@ from .entity import RingBaseEntity
 class RingBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describes Ring binary sensor entity."""
 
-    category: list[str]
+    exists_fn: Callable[[RingGeneric], bool] = lambda _: True
 
 
 BINARY_SENSOR_TYPES: tuple[RingBinarySensorEntityDescription, ...] = (
     RingBinarySensorEntityDescription(
         key="ding",
         translation_key="ding",
-        category=["doorbots", "authorized_doorbots", "other"],
         device_class=BinarySensorDeviceClass.OCCUPANCY,
+        exists_fn=lambda device: device.family
+        in ["doorbots", "authorized_doorbots", "other"],
     ),
     RingBinarySensorEntityDescription(
         key="motion",
-        category=["doorbots", "authorized_doorbots", "stickup_cams"],
         device_class=BinarySensorDeviceClass.MOTION,
+        exists_fn=lambda device: device.family
+        in ["doorbots", "authorized_doorbots", "stickup_cams"],
     ),
 )
 
@@ -51,24 +54,26 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Ring binary sensors from a config entry."""
-    ring: Ring = hass.data[DOMAIN][config_entry.entry_id][RING_API]
-    devices: RingDevices = hass.data[DOMAIN][config_entry.entry_id][RING_DEVICES]
-    notifications_coordinator: RingNotificationsCoordinator = hass.data[DOMAIN][
-        config_entry.entry_id
-    ][RING_NOTIFICATIONS_COORDINATOR]
+    ring_data: RingData = hass.data[DOMAIN][config_entry.entry_id]
 
     entities = [
-        RingBinarySensor(ring, device, notifications_coordinator, description)
-        for device_type in ("doorbots", "authorized_doorbots", "stickup_cams", "other")
+        RingBinarySensor(
+            ring_data.ring_api,
+            device,
+            ring_data.ring_notifications_coordinator,
+            description,
+        )
         for description in BINARY_SENSOR_TYPES
-        if device_type in description.category
-        for device in devices[device_type]
+        for device in ring_data.ring_devices.all_devices
+        if description.exists_fn(device)
     ]
 
     async_add_entities(entities)
 
 
-class RingBinarySensor(RingBaseEntity, BinarySensorEntity):
+class RingBinarySensor(
+    RingBaseEntity[RingNotificationsCoordinator], BinarySensorEntity
+):
     """A binary sensor implementation for Ring device."""
 
     _active_alert: RingEvent | None = None
@@ -119,11 +124,11 @@ class RingBinarySensor(RingBaseEntity, BinarySensorEntity):
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return the state attributes."""
         attrs = super().extra_state_attributes
-        assert isinstance(attrs, dict)
 
         if self._active_alert is None:
             return attrs
 
+        assert isinstance(attrs, dict)
         attrs["state"] = self._active_alert["state"]
         now = self._active_alert.get("now")
         expires_in = self._active_alert.get("expires_in")
