@@ -75,6 +75,7 @@ from homeassistant.core import (
     HassJob,
     HomeAssistant,
     ServiceResponse,
+    State,
     SupportsResponse,
     callback,
 )
@@ -657,8 +658,10 @@ class _ScriptRun:
         done = self._hass.loop.create_future()
         futures.append(done)
 
-        @callback
-        def async_script_wait(entity_id, from_s, to_s):
+        @callback  # type: ignore[misc]
+        def async_script_wait(
+            entity_id: str, from_s: State | None, to_s: State | None
+        ) -> None:
             """Handle script after template condition is true."""
             self._async_set_remaining_time_var(timeout_handle)
             self._variables["wait"]["completed"] = True
