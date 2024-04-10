@@ -1446,7 +1446,7 @@ class EventBus:
         """
         if (
             self._hass.debug
-            and (loop_thread_ident := getattr(self._hass.loop, "_thread_ident"))
+            and (loop_thread_ident := getattr(self._hass.loop, "_thread_ident", None))
             and loop_thread_ident != threading.get_ident()
         ):
             # late import to avoid circular imports

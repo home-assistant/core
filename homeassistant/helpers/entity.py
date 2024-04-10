@@ -973,7 +973,7 @@ class Entity(
             raise RuntimeError(f"Attribute hass is None for {self}")
         if (
             self.hass.debug
-            and (loop_thread_ident := getattr(self.hass.loop, "_thread_ident"))
+            and (loop_thread_ident := getattr(self.hass.loop, "_thread_ident", None))
             and loop_thread_ident != threading.get_ident()
         ):
             frame.report("calls async_write_ha_state from a thread")
