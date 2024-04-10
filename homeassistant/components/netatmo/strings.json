@@ -182,7 +182,7 @@
         "name": "Precipitation last hour"
       },
       "sum_rain_24": {
-        "name": "Precipitation last 24 hours"
+        "name": "Precipitation today"
       },
       "wind_direction": {
         "name": "Wind direction"

@@ -1801,59 +1801,6 @@
     'state': '17.0',
   })
 # ---
-# name: test_entity[sensor.home_avg_none_2-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.home_avg_none_2',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'netatmo',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'Home-avg-gustangle_value',
-    'unit_of_measurement': '°',
-  })
-# ---
-# name: test_entity[sensor.home_avg_none_2-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Netatmo',
-      'friendly_name': 'Home avg None',
-      'latitude': 32.17901225,
-      'longitude': -117.17901225,
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '°',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.home_avg_none_2',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '217.0',
-  })
-# ---
 # name: test_entity[sensor.home_avg_precipitation-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1906,171 +1853,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.1',
-  })
-# ---
-# name: test_entity[sensor.home_avg_precipitation_2-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.home_avg_precipitation_2',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.PRECIPITATION: 'precipitation'>,
-    'original_icon': None,
-    'original_name': 'Precipitation',
-    'platform': 'netatmo',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'Home-avg-sum_rain_1',
-    'unit_of_measurement': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
-  })
-# ---
-# name: test_entity[sensor.home_avg_precipitation_2-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Netatmo',
-      'device_class': 'precipitation',
-      'friendly_name': 'Home avg Precipitation',
-      'latitude': 32.17901225,
-      'longitude': -117.17901225,
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.home_avg_precipitation_2',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.1',
-  })
-# ---
-# name: test_entity[sensor.home_avg_precipitation_3-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.home_avg_precipitation_3',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.PRECIPITATION: 'precipitation'>,
-    'original_icon': None,
-    'original_name': 'Precipitation',
-    'platform': 'netatmo',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'Home-avg-sum_rain_24',
-    'unit_of_measurement': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
-  })
-# ---
-# name: test_entity[sensor.home_avg_precipitation_3-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Netatmo',
-      'device_class': 'precipitation',
-      'friendly_name': 'Home avg Precipitation',
-      'latitude': 32.17901225,
-      'longitude': -117.17901225,
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.home_avg_precipitation_3',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '11.3',
-  })
-# ---
-# name: test_entity[sensor.home_avg_precipitation_last_24_hours-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.home_avg_precipitation_last_24_hours',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.PRECIPITATION: 'precipitation'>,
-    'original_icon': None,
-    'original_name': 'Precipitation last 24 hours',
-    'platform': 'netatmo',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'sum_rain_24',
-    'unique_id': 'Home-avg-sum_rain_24',
-    'unit_of_measurement': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
-  })
-# ---
-# name: test_entity[sensor.home_avg_precipitation_last_24_hours-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Netatmo',
-      'device_class': 'precipitation',
-      'friendly_name': 'Home avg Precipitation last 24 hours',
-      'latitude': 32.17901225,
-      'longitude': -117.17901225,
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.home_avg_precipitation_last_24_hours',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '11.3',
   })
 # ---
 # name: test_entity[sensor.home_avg_precipitation_last_hour-entry]
@@ -2128,6 +1910,60 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.1',
+  })
+# ---
+# name: test_entity[sensor.home_avg_precipitation_today-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.home_avg_precipitation_today',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.PRECIPITATION: 'precipitation'>,
+    'original_icon': None,
+    'original_name': 'Precipitation today',
+    'platform': 'netatmo',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'sum_rain_24',
+    'unique_id': 'Home-avg-sum_rain_24',
+    'unit_of_measurement': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+  })
+# ---
+# name: test_entity[sensor.home_avg_precipitation_today-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Netatmo',
+      'device_class': 'precipitation',
+      'friendly_name': 'Home avg Precipitation today',
+      'latitude': 32.17901225,
+      'longitude': -117.17901225,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.home_avg_precipitation_today',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '11.3',
   })
 # ---
 # name: test_entity[sensor.home_avg_temperature-entry]
@@ -2239,60 +2075,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '15.0',
-  })
-# ---
-# name: test_entity[sensor.home_avg_wind_speed_2-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.home_avg_wind_speed_2',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.WIND_SPEED: 'wind_speed'>,
-    'original_icon': None,
-    'original_name': 'Wind speed',
-    'platform': 'netatmo',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'Home-avg-guststrength',
-    'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
-  })
-# ---
-# name: test_entity[sensor.home_avg_wind_speed_2-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Netatmo',
-      'device_class': 'wind_speed',
-      'friendly_name': 'Home avg Wind speed',
-      'latitude': 32.17901225,
-      'longitude': -117.17901225,
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.home_avg_wind_speed_2',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '31.0',
   })
 # ---
 # name: test_entity[sensor.home_max_atmospheric_pressure-entry]
@@ -2569,59 +2351,6 @@
     'state': '17',
   })
 # ---
-# name: test_entity[sensor.home_max_none_2-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.home_max_none_2',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'netatmo',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'Home-max-gustangle_value',
-    'unit_of_measurement': '°',
-  })
-# ---
-# name: test_entity[sensor.home_max_none_2-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Netatmo',
-      'friendly_name': 'Home max None',
-      'latitude': 32.17901225,
-      'longitude': -117.17901225,
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '°',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.home_max_none_2',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '217',
-  })
-# ---
 # name: test_entity[sensor.home_max_precipitation-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -2674,171 +2403,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.5',
-  })
-# ---
-# name: test_entity[sensor.home_max_precipitation_2-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.home_max_precipitation_2',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.PRECIPITATION: 'precipitation'>,
-    'original_icon': None,
-    'original_name': 'Precipitation',
-    'platform': 'netatmo',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'Home-max-sum_rain_1',
-    'unit_of_measurement': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
-  })
-# ---
-# name: test_entity[sensor.home_max_precipitation_2-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Netatmo',
-      'device_class': 'precipitation',
-      'friendly_name': 'Home max Precipitation',
-      'latitude': 32.17901225,
-      'longitude': -117.17901225,
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.home_max_precipitation_2',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.2',
-  })
-# ---
-# name: test_entity[sensor.home_max_precipitation_3-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.home_max_precipitation_3',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.PRECIPITATION: 'precipitation'>,
-    'original_icon': None,
-    'original_name': 'Precipitation',
-    'platform': 'netatmo',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'Home-max-sum_rain_24',
-    'unit_of_measurement': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
-  })
-# ---
-# name: test_entity[sensor.home_max_precipitation_3-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Netatmo',
-      'device_class': 'precipitation',
-      'friendly_name': 'Home max Precipitation',
-      'latitude': 32.17901225,
-      'longitude': -117.17901225,
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.home_max_precipitation_3',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '12.322',
-  })
-# ---
-# name: test_entity[sensor.home_max_precipitation_last_24_hours-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.home_max_precipitation_last_24_hours',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.PRECIPITATION: 'precipitation'>,
-    'original_icon': None,
-    'original_name': 'Precipitation last 24 hours',
-    'platform': 'netatmo',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'sum_rain_24',
-    'unique_id': 'Home-max-sum_rain_24',
-    'unit_of_measurement': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
-  })
-# ---
-# name: test_entity[sensor.home_max_precipitation_last_24_hours-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Netatmo',
-      'device_class': 'precipitation',
-      'friendly_name': 'Home max Precipitation last 24 hours',
-      'latitude': 32.17901225,
-      'longitude': -117.17901225,
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.home_max_precipitation_last_24_hours',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '12.322',
   })
 # ---
 # name: test_entity[sensor.home_max_precipitation_last_hour-entry]
@@ -2896,6 +2460,60 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.2',
+  })
+# ---
+# name: test_entity[sensor.home_max_precipitation_today-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.home_max_precipitation_today',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.PRECIPITATION: 'precipitation'>,
+    'original_icon': None,
+    'original_name': 'Precipitation today',
+    'platform': 'netatmo',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'sum_rain_24',
+    'unique_id': 'Home-max-sum_rain_24',
+    'unit_of_measurement': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+  })
+# ---
+# name: test_entity[sensor.home_max_precipitation_today-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Netatmo',
+      'device_class': 'precipitation',
+      'friendly_name': 'Home max Precipitation today',
+      'latitude': 32.17901225,
+      'longitude': -117.17901225,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.home_max_precipitation_today',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '12.322',
   })
 # ---
 # name: test_entity[sensor.home_max_temperature-entry]
@@ -3007,60 +2625,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '15',
-  })
-# ---
-# name: test_entity[sensor.home_max_wind_speed_2-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.home_max_wind_speed_2',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.WIND_SPEED: 'wind_speed'>,
-    'original_icon': None,
-    'original_name': 'Wind speed',
-    'platform': 'netatmo',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'Home-max-guststrength',
-    'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
-  })
-# ---
-# name: test_entity[sensor.home_max_wind_speed_2-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Netatmo',
-      'device_class': 'wind_speed',
-      'friendly_name': 'Home max Wind speed',
-      'latitude': 32.17901225,
-      'longitude': -117.17901225,
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.home_max_wind_speed_2',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '31',
   })
 # ---
 # name: test_entity[sensor.hot_water_none-entry]
@@ -7408,58 +6972,6 @@
     'state': '3.7',
   })
 # ---
-# name: test_entity[sensor.villa_rain_precipitation_last_24_hours-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.villa_rain_precipitation_last_24_hours',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.PRECIPITATION: 'precipitation'>,
-    'original_icon': None,
-    'original_name': 'Precipitation last 24 hours',
-    'platform': 'netatmo',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'sum_rain_24',
-    'unique_id': '12:34:56:80:c1:ea-sum_rain_24',
-    'unit_of_measurement': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
-  })
-# ---
-# name: test_entity[sensor.villa_rain_precipitation_last_24_hours-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Netatmo',
-      'device_class': 'precipitation',
-      'friendly_name': 'Villa Rain Precipitation last 24 hours',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.villa_rain_precipitation_last_24_hours',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '6.9',
-  })
-# ---
 # name: test_entity[sensor.villa_rain_precipitation_last_hour-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -7513,6 +7025,58 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
+  })
+# ---
+# name: test_entity[sensor.villa_rain_precipitation_today-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.villa_rain_precipitation_today',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.PRECIPITATION: 'precipitation'>,
+    'original_icon': None,
+    'original_name': 'Precipitation today',
+    'platform': 'netatmo',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'sum_rain_24',
+    'unique_id': '12:34:56:80:c1:ea-sum_rain_24',
+    'unit_of_measurement': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+  })
+# ---
+# name: test_entity[sensor.villa_rain_precipitation_today-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Netatmo',
+      'device_class': 'precipitation',
+      'friendly_name': 'Villa Rain Precipitation today',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.villa_rain_precipitation_today',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '6.9',
   })
 # ---
 # name: test_entity[sensor.villa_rain_radio-entry]
