@@ -212,12 +212,8 @@ def async_setup(hass: HomeAssistant) -> bool:
     cancel = async_track_time_interval(
         hass, _async_adjust_lru_sizes, timedelta(minutes=10)
     )
-    hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_START, _async_adjust_lru_sizes, run_immediately=True
-    )
-    hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STOP, callback(lambda _: cancel()), run_immediately=True
-    )
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _async_adjust_lru_sizes)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, callback(lambda _: cancel()))
     return True
 
 
