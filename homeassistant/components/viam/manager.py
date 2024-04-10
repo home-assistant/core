@@ -16,10 +16,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 
 from .const import (
+    CONF_API_ID,
     CONF_CREDENTIAL_TYPE,
     CONF_ROBOT_ID,
     CONF_SECRET,
-    CRED_TYPE_API_KEY,
     CRED_TYPE_LOCATION_SECRET,
     DOMAIN,
 )
@@ -78,13 +78,18 @@ class ViamManager:
         """Check initialized data to create robot client."""
         address = self.data.get(CONF_ADDRESS)
         payload = self.data.get(CONF_SECRET)
-        if self.data[CONF_CREDENTIAL_TYPE] == CRED_TYPE_API_KEY:
-            if robot_secret is None or robot_address is None:
+        cred_type = self.data.get(CONF_CREDENTIAL_TYPE)
+        auth_entity = self.data.get(CONF_API_ID)
+
+        if robot_secret is not None:
+            if robot_address is None:
                 raise ServiceValidationError(
-                    "The robot location and secret are required for this connection type.",
+                    "The robot address is required for this connection type.",
                     translation_domain=DOMAIN,
                     translation_key="robot_credentials_required",
                 )
+            cred_type = CRED_TYPE_LOCATION_SECRET
+            auth_entity = None
             address = robot_address
             payload = robot_secret
 
@@ -95,9 +100,10 @@ class ViamManager:
                 translation_key="robot_credentials_not_found",
             )
 
-        credentials = Credentials(type=CRED_TYPE_LOCATION_SECRET, payload=payload)
+        credentials = Credentials(type=cred_type, payload=payload)
         robot_options = RobotClient.Options(
-            refresh_interval=0, dial_options=DialOptions(credentials=credentials)
+            refresh_interval=0,
+            dial_options=DialOptions(auth_entity=auth_entity, credentials=credentials),
         )
         return await RobotClient.at_address(address, robot_options)
 

@@ -56,7 +56,7 @@
       "message": "Invalid config entry provided. {config_entry} is not loaded."
     },
     "robot_credentials_required": {
-      "message": "The robot location and secret are required for this connection type."
+      "message": "The robot address is required for this connection type."
     },
     "robot_credentials_not_found": {
       "message": "The necessary credentials for the RobotClient could not be found."
