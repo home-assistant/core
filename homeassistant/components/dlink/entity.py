@@ -7,34 +7,35 @@ from homeassistant.const import ATTR_CONNECTIONS
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity, EntityDescription
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import ATTRIBUTION, DOMAIN, MANUFACTURER
-from .data import SmartPlugData
+from .coordinator import DlinkCoordinator
 
 
-class DLinkEntity(Entity):
-    """Representation of a D-Link Power Plug entity."""
+class DLinkEntity(CoordinatorEntity[DlinkCoordinator], Entity):
+    """Representation of a D-Link Smart Plug entity."""
 
     _attr_attribution = ATTRIBUTION
     _attr_has_entity_name = True
 
     def __init__(
         self,
-        config_entry: ConfigEntry,
-        data: SmartPlugData,
+        coordinator: DlinkCoordinator,
+        entry: ConfigEntry,
         description: EntityDescription,
     ) -> None:
-        """Initialize a D-Link Power Plug entity."""
-        self.data = data
+        """Initialize the entity."""
+        super().__init__(coordinator)
         self.entity_description = description
-        self._attr_unique_id = f"{config_entry.entry_id}_{description.key}"
+        self._attr_unique_id = f"{entry.entry_id}_{description.key}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, config_entry.entry_id)},
+            identifiers={(DOMAIN, entry.entry_id)},
             manufacturer=MANUFACTURER,
-            model=data.smartplug.model_name,
-            name=config_entry.title,
+            model=coordinator.data.get("model_name"),
+            name=entry.title,
         )
-        if config_entry.unique_id:
+        if entry.unique_id:
             self._attr_device_info[ATTR_CONNECTIONS] = {
-                (dr.CONNECTION_NETWORK_MAC, config_entry.unique_id)
+                (dr.CONNECTION_NETWORK_MAC, entry.unique_id)
             }
