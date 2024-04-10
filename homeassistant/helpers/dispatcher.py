@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable, Coroutine
 from functools import partial
 import logging
+import threading
 from typing import Any, TypeVarTuple, overload
 
 from homeassistant.core import HassJob, HomeAssistant, callback
@@ -14,6 +15,8 @@ from homeassistant.util.logging import catch_log_exception
 
 # Explicit reexport of 'SignalType' for backwards compatibility
 from homeassistant.util.signal_type import SignalType as SignalType  # noqa: PLC0414
+
+from . import frame
 
 _Ts = TypeVarTuple("_Ts")
 
@@ -190,6 +193,12 @@ def async_dispatcher_send(
 
     This method must be run in the event loop.
     """
+    if (
+        hass.debug
+        and (loop_thread_ident := getattr(hass.loop, "_thread_ident"))
+        and loop_thread_ident != threading.get_ident()
+    ):
+        frame.report("calls async_dispatcher_send from a thread")
     if (maybe_dispatchers := hass.data.get(DATA_DISPATCHER)) is None:
         return
     dispatchers: _DispatcherDataType[*_Ts] = maybe_dispatchers

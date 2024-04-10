@@ -14,6 +14,7 @@ import logging
 import math
 from operator import attrgetter
 import sys
+import threading
 from timeit import default_timer as timer
 from types import FunctionType
 from typing import (
@@ -65,7 +66,7 @@ from homeassistant.loader import async_suggest_report_issue, bind_hass
 from homeassistant.util import ensure_unique_string, slugify
 from homeassistant.util.frozen_dataclass_compat import FrozenOrThawed
 
-from . import device_registry as dr, entity_registry as er
+from . import device_registry as dr, entity_registry as er, frame
 from .device_registry import DeviceInfo, EventDeviceRegistryUpdatedData
 from .event import (
     async_track_device_registry_updated_event,
@@ -970,7 +971,12 @@ class Entity(
         """Write the state to the state machine."""
         if self.hass is None:
             raise RuntimeError(f"Attribute hass is None for {self}")
-
+        if (
+            self.hass.debug
+            and (loop_thread_ident := getattr(self.hass.loop, "_thread_ident"))
+            and loop_thread_ident != threading.get_ident()
+        ):
+            frame.report("calls async_write_ha_state from a thread")
         # The check for self.platform guards against integrations not using an
         # EntityComponent and can be removed in HA Core 2024.1
         if self.platform is None and not self._no_platform_reported:  # type: ignore[unreachable]

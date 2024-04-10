@@ -421,6 +421,7 @@ class HomeAssistant:
         self.import_executor = InterruptibleThreadPoolExecutor(
             max_workers=1, thread_name_prefix="ImportExecutor"
         )
+        self.debug: bool = True
 
     @property
     def _active_tasks(self) -> set[asyncio.Future[Any]]:
@@ -496,7 +497,6 @@ class HomeAssistant:
         This method is a coroutine.
         """
         _LOGGER.info("Starting Home Assistant")
-        setattr(self.loop, "_thread_ident", threading.get_ident())
 
         self.set_state(CoreState.starting)
         self.bus.async_fire(EVENT_CORE_CONFIG_UPDATE)
@@ -1444,6 +1444,16 @@ class EventBus:
 
         This method must be run in the event loop.
         """
+        if (
+            self._hass.debug
+            and (loop_thread_ident := getattr(self._hass.loop, "_thread_ident"))
+            and loop_thread_ident != threading.get_ident()
+        ):
+            # late import to avoid circular imports
+            from .helpers import frame  # pylint: disable=import-outside-toplevel
+
+            frame.report("calls async_fire from a thread")
+
         if len(event_type) > MAX_LENGTH_EVENT_EVENT_TYPE:
             raise MaxLengthExceeded(
                 event_type, "event_type", MAX_LENGTH_EVENT_EVENT_TYPE
@@ -1463,7 +1473,6 @@ class EventBus:
 
         This method must be run in the event loop.
         """
-
         if self._debug:
             _LOGGER.debug(
                 "Bus:Handling %s", _event_repr(event_type, origin, event_data)
