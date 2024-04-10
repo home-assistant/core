@@ -32,14 +32,17 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         # the stick. Instead, we must make an educated guess!
         firmware = await guess_firmware_type(hass, config_entry.data["device"])
 
+        new_data = {**config_entry.data}
+        new_data["firmware"] = firmware
+
+        # Rename `description` to `product`
+        new_data["product"] = new_data.pop("description")
+
         hass.config_entries.async_update_entry(
             config_entry,
-            data={
-                **config_entry.data,
-                "firmware": firmware.name.lower(),
-            },
-            minor_version=2,
-            version=1,
+            data=new_data,
+            version=2,
+            minor_version=1,
         )
 
     _LOGGER.debug(
