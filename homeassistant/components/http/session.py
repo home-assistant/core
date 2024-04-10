@@ -27,16 +27,22 @@ def _get_cookie_name(is_secure: bool) -> str:
 
 
 class HomeAssistantCookieStorage(EncryptedCookieStorage):
-    """Home Assistant cookie storage."""
+    """Home Assistant cookie storage.
+
+    Own class is required:
+        - to set the secure flag based on the connection type
+        - to use a LRU cache for session decryption
+    """
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the cookie storage."""
         super().__init__(
             hass.auth.session.key,
-            cookie_name=COOKIE_NAME,
+            cookie_name=PREFIXED_COOKIE_NAME,
             max_age=int(REFRESH_TOKEN_EXPIRATION),
             httponly=True,
             samesite="Lax",
+            secure=True,
             encoder=json_dumps,
             decoder=json_loads,
         )
@@ -50,7 +56,6 @@ class HomeAssistantCookieStorage(EncryptedCookieStorage):
         """Load cookie."""
         is_secure = self._secure_connection(request)
         cookie_name = _get_cookie_name(is_secure)
-        self.cookie_params["secure"] = is_secure
         return request.cookies.get(cookie_name)
 
     @lru_cache(maxsize=SESSION_CACHE_SIZE)
@@ -111,6 +116,8 @@ class HomeAssistantCookieStorage(EncryptedCookieStorage):
                 self._fernet.encrypt(cookie_data).decode("utf-8"),
                 **params,
             )
+            # Add Cache-Control header to not cache the cookie as it
+            # is used for session management
             self._add_cache_control_header(response)
 
     @staticmethod

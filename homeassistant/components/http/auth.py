@@ -291,7 +291,14 @@ def _async_perform_action_on_non_local(
     request: Request,
     strict_connection_static_file_content: str | None,
 ) -> StreamResponse | None:
-    """Perform strict connection mode action if the request is not local."""
+    """Perform strict connection mode action if the request is not local.
+
+    The function does the following:
+    - Try to get the IP address of the request. If it fails, assume it's not local
+    - If the request is local, return None (allow the request to continue)
+    - If strict_connection_static_file_content is set, return a response with the content
+    - Otherwise close the connection and raise an exception
+    """
     try:
         ip_address_ = ip_address(request.remote)  # type: ignore[arg-type]
     except ValueError:

@@ -134,10 +134,13 @@ class SessionManager:
         request: Request,
         refresh_token: RefreshToken,
     ) -> None:
-        """Create new session for given refresh token."""
-        if not self._auth.async_get_refresh_token(refresh_token.id):
-            return
+        """Create new session for given refresh token.
 
+        Caller needs to make sure that the refresh token is valid.
+        By creating a session, we are implicitly revoking all other
+        sessions for the given refresh token as there is one refresh
+        token per device/user case.
+        """
         self._strict_connection_sessions = {
             session_id: token_id
             for session_id, token_id in self._strict_connection_sessions.items()
@@ -193,7 +196,7 @@ class SessionManager:
     async def async_setup(self) -> None:
         """Set up session manager."""
         data = await self._store.async_load()
-        if data is None or not isinstance(data, dict):
+        if data is None:
             return
 
         self._key = data["key"]
