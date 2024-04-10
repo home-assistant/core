@@ -19,7 +19,7 @@
     },
     "error": {
       "cannot_connect": "Failed to connect. Turn on or restart device",
-      "mqtt_not_enabled": "To register a device, enable the MQTT integration",
+      "mqtt_error": "Verify that the MQTT integration is enabled and working",
       "repeated_title": "The provided friendly name is already in use",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },

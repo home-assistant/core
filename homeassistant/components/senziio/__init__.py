@@ -15,7 +15,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from .entity import DOMAIN
-from .exceptions import MQTTNotEnabled
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -64,7 +63,7 @@ class SenziioHAMQTT(SenziioMQTT):
             return await async_publish(self._hass, topic, payload)
         except HomeAssistantError as error:
             _LOGGER.error("Could not publish to MQTT topic")
-            raise MQTTNotEnabled from error
+            raise MQTTError from error
 
     async def subscribe(self, topic: str, callback: Callable) -> Callable:
         """Subscribe to topic with a callback."""
@@ -72,4 +71,8 @@ class SenziioHAMQTT(SenziioMQTT):
             return await async_subscribe(self._hass, topic, callback)
         except HomeAssistantError as error:
             _LOGGER.error("Could not subscribe to MQTT topic")
-            raise MQTTNotEnabled from error
+            raise MQTTError from error
+
+
+class MQTTError(HomeAssistantError):
+    """Error to indicate that required MQTT integration is not enabled."""

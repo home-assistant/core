@@ -5,16 +5,17 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from senziio import Senziio
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import zeroconf
 from homeassistant.const import CONF_FRIENDLY_NAME, CONF_MODEL, CONF_UNIQUE_ID
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
-from . import Senziio, SenziioHAMQTT
+from . import MQTTError, SenziioHAMQTT
 from .entity import DOMAIN, MANUFACTURER
-from .exceptions import CannotConnect, MQTTNotEnabled, RepeatedTitle
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,8 +47,8 @@ class SenziioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             try:
                 data = await validate_input(self.hass, user_input)
-            except MQTTNotEnabled:
-                errors["base"] = "mqtt_not_enabled"
+            except MQTTError:
+                errors["base"] = "mqtt_error"
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except RepeatedTitle:
@@ -106,8 +107,8 @@ class SenziioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             try:
                 data = await validate_input(self.hass, data_input)
-            except MQTTNotEnabled:
-                errors["base"] = "mqtt_not_enabled"
+            except MQTTError:
+                errors["base"] = "mqtt_error"
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except RepeatedTitle:
@@ -186,3 +187,11 @@ async def validate_input(
 def _sanitize(value: str) -> str:
     """Sanitize entry value."""
     return " ".join(value.split())
+
+
+class CannotConnect(HomeAssistantError):
+    """Error to indicate we cannot connect to the device."""
+
+
+class RepeatedTitle(HomeAssistantError):
+    """Error to indicate that chosen device name is not unique."""

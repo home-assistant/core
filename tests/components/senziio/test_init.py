@@ -7,11 +7,11 @@ import pytest
 from homeassistant.components.senziio import (
     DOMAIN,
     PLATFORMS,
+    MQTTError,
     SenziioHAMQTT,
     async_setup_entry,
     async_unload_entry,
 )
-from homeassistant.components.senziio.exceptions import MQTTNotEnabled
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
@@ -111,7 +111,7 @@ async def test_senziio_ha_mqtt_publish_failure(hass):
             "homeassistant.components.senziio.async_publish",
             side_effect=HomeAssistantError,
         ),
-        pytest.raises(MQTTNotEnabled),
+        pytest.raises(MQTTError),
     ):
         await mqtt_interface.publish("test/topic", "test payload")
 
@@ -139,6 +139,6 @@ async def test_senziio_ha_mqtt_subscribe_failure(hass):
             "homeassistant.components.senziio.async_subscribe",
             side_effect=HomeAssistantError,
         ),
-        pytest.raises(MQTTNotEnabled),
+        pytest.raises(MQTTError),
     ):
         await mqtt_interface.subscribe("test/topic", callback)

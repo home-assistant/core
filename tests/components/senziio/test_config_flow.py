@@ -5,9 +5,12 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.senziio.config_flow import CannotConnect
+from homeassistant.components.senziio.config_flow import (
+    CannotConnect,
+    MQTTError,
+    RepeatedTitle,
+)
 from homeassistant.components.senziio.entity import DOMAIN, MANUFACTURER
-from homeassistant.components.senziio.exceptions import MQTTNotEnabled, RepeatedTitle
 from homeassistant.const import CONF_FRIENDLY_NAME, CONF_MODEL, CONF_UNIQUE_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -74,7 +77,7 @@ async def test_user_flow_success(hass: HomeAssistant):
 @pytest.mark.parametrize(
     ("error", "expected_error_key"),
     [
-        (MQTTNotEnabled, "mqtt_not_enabled"),
+        (MQTTError, "mqtt_error"),
         (CannotConnect, "cannot_connect"),
         (RepeatedTitle, "repeated_title"),
         (KeyError, "unknown"),
@@ -273,7 +276,7 @@ async def test_zeroconf_flow_success(hass: HomeAssistant):
 @pytest.mark.parametrize(
     ("error", "expected_error_key"),
     [
-        (MQTTNotEnabled, "mqtt_not_enabled"),
+        (MQTTError, "mqtt_error"),
         (CannotConnect, "cannot_connect"),
         (RepeatedTitle, "repeated_title"),
         (KeyError, "unknown"),
