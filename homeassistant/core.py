@@ -1723,8 +1723,11 @@ class State:
         :param context: Context in which it was created
         :param validate_entity_id: Validate the entity_id format.
         :param state_info: Additional state information.
-        :param _last_updated_timestamp: Timestamp of last update with 6 digits precision.
-               must be created with time.time_ns() / 1000000000.
+        :param _last_updated_timestamp: Timestamp of last update with
+               6 digits precision and must be created with time.time_ns()
+               / 1000000000. It is only expected to be passed from
+               core internals to avoid the overhead of creating a new
+               timestamp from a datetime object.
         """
         state = str(state)
 
