@@ -2858,6 +2858,49 @@ def test_state_timestamps() -> None:
     assert state.last_updated_timestamp == now.timestamp()
 
 
+def test_state_timestamps_with_timestamp_passed() -> None:
+    """Test timestamp functions for State."""
+    now = dt_util.utcnow()
+    state = ha.State(
+        "light.bedroom",
+        "on",
+        {"brightness": 100},
+        last_changed=now,
+        last_reported=now,
+        last_updated=now,
+        context=ha.Context(id="1234"),
+        last_updated_timestamp=now.timestamp(),
+    )
+    assert state.last_changed_timestamp == now.timestamp()
+    assert state.last_changed_timestamp == now.timestamp()
+    assert state.last_reported_timestamp == now.timestamp()
+    assert state.last_reported_timestamp == now.timestamp()
+    assert state.last_updated_timestamp == now.timestamp()
+    assert state.last_updated_timestamp == now.timestamp()
+
+
+def test_state_timestamps_rounds_timestamp_passed() -> None:
+    """Test timestamp functions for State."""
+    timestamp = time.time()
+    now = dt_util.utc_from_timestamp(timestamp)
+    state = ha.State(
+        "light.bedroom",
+        "on",
+        {"brightness": 100},
+        last_changed=now,
+        last_reported=now,
+        last_updated=now,
+        context=ha.Context(id="1234"),
+        last_updated_timestamp=timestamp,
+    )
+    assert state.last_changed_timestamp == now.timestamp()
+    assert state.last_changed_timestamp == now.timestamp()
+    assert state.last_reported_timestamp == now.timestamp()
+    assert state.last_reported_timestamp == now.timestamp()
+    assert state.last_updated_timestamp == now.timestamp()
+    assert state.last_updated_timestamp == now.timestamp()
+
+
 async def test_state_firing_event_matches_context_id_ulid_time(
     hass: HomeAssistant,
 ) -> None:
