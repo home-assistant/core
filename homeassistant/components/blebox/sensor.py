@@ -92,7 +92,7 @@ SENSOR_TYPES = (
     ),
     SensorEntityDescription(
         key="apparentPower",
-        device_class=SensorDeviceClass.POWER,
+        device_class=SensorDeviceClass.APPARENT_POWER,
         native_unit_of_measurement=UnitOfApparentPower.VOLT_AMPERE,
     ),
     SensorEntityDescription(
@@ -103,7 +103,7 @@ SENSOR_TYPES = (
     SensorEntityDescription(
         key="current",
         device_class=SensorDeviceClass.CURRENT,
-        native_unit_of_measurement=UnitOfElectricCurrent.MILLIAMPERE,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
     ),
     SensorEntityDescription(
         key="frequency",
