@@ -399,7 +399,6 @@ async def test_show_progress(hass: HomeAssistant, manager) -> None:
     hass.bus.async_listen(
         data_entry_flow.EVENT_DATA_ENTRY_FLOW_PROGRESSED,
         capture_events,
-        run_immediately=True,
     )
 
     result = await manager.async_init("test")
@@ -479,7 +478,6 @@ async def test_show_progress_error(hass: HomeAssistant, manager) -> None:
     hass.bus.async_listen(
         data_entry_flow.EVENT_DATA_ENTRY_FLOW_PROGRESSED,
         capture_events,
-        run_immediately=True,
     )
 
     result = await manager.async_init("test")
