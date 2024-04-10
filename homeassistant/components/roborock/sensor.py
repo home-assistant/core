@@ -205,14 +205,13 @@ async def async_setup_entry(
     entities: list[RoborockSensorEntity | RoborockSensorRoomEntity] = []
     for device_id, coordinator in coordinators.items():
         entities.extend(
-                RoborockSensorEntity(
-                    f"{description.key}_{slugify(device_id)}",
-                    coordinator,
-                    description,
-                )
-                for description in SENSOR_DESCRIPTIONS
-                if description.value_fn(coordinator.roborock_device_info.props)
-                is not None
+            RoborockSensorEntity(
+                f"{description.key}_{slugify(device_id)}",
+                coordinator,
+                description,
+            )
+            for description in SENSOR_DESCRIPTIONS
+            if description.value_fn(coordinator.roborock_device_info.props) is not None
         )
         entities.append(
             RoborockSensorRoomEntity(f"current_room_{slugify(device_id)}", coordinator)
@@ -263,7 +262,7 @@ class RoborockSensorRoomEntity(RoborockCoordinatedEntity, SensorEntity):
         """Return the value reported by the sensor."""
         if (
             self.coordinator.current_map is not None
-            and (current_map := self.coordinator.maps[self.coordinator.current_map])
+            and (current_map := self.coordinator.maps.get(self.coordinator.current_map))
             is not None
             and current_map.current_room is not None
         ):
