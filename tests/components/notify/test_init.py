@@ -304,17 +304,17 @@ class NotificationService(notify.BaseNotificationService):
     def __init__(
         self,
         hass: HomeAssistant,
-        target_list=copy.copy({"a": 1, "b": 2}),
+        target_list: dict[str, Any] | None = None,
         name="notify",
     ) -> None:
         """Initialize the service."""
 
-        async def _async_make_reloadable(hass):
+        async def _async_make_reloadable(hass: HomeAssistant) -> None:
             """Initialize the reload service."""
             await async_setup_reload_service(hass, name, [notify.DOMAIN])
 
         self.hass = hass
-        self.target_list = target_list
+        self.target_list = target_list or {"a": 1, "b": 2}
         hass.async_create_task(_async_make_reloadable(hass))
 
     @property
