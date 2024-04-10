@@ -622,6 +622,27 @@ class HomeAssistantSkyConnectOptionsFlowHandler(
 ):
     """Zigbee and Thread options flow handlers."""
 
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """Instantiate options flow."""
+        super().__init__(*args, **kwargs)
+
+        self._usb_info = usb.UsbServiceInfo(
+            device=self.config_entry.data["device"],
+            vid=self.config_entry.data["vid"],
+            pid=self.config_entry.data["pid"],
+            serial_number=self.config_entry.data["serial_number"],
+            manufacturer=self.config_entry.data["manufacturer"],
+            description=self.config_entry.data["product"],
+        )
+        self._current_firmware_type = ApplicationType(
+            self.config_entry.data["firmware"]
+        )
+        self._hw_variant = HardwareVariant.from_usb_product_name(
+            self.config_entry.data["product"]
+        )
+
+        self.context["title_placeholders"] = self._translation_placeholders
+
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
