@@ -29,7 +29,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity, ToggleEntity
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
@@ -46,7 +45,6 @@ from .const import (
     CONF_DATA_TYPE,
     CONF_DEVICE_ADDRESS,
     CONF_INPUT_TYPE,
-    CONF_LAZY_ERROR,
     CONF_MAX_VALUE,
     CONF_MIN_VALUE,
     CONF_NAN_VALUE,
@@ -63,14 +61,12 @@ from .const import (
     CONF_VIRTUAL_COUNT,
     CONF_WRITE_TYPE,
     CONF_ZERO_SUPPRESS,
-    MODBUS_DOMAIN,
     SIGNAL_START_ENTITY,
     SIGNAL_STOP_ENTITY,
     DataType,
 )
 from .modbus import ModbusHub
 
-PARALLEL_UPDATES = 1
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -81,25 +77,6 @@ class BasePlatform(Entity):
         self, hass: HomeAssistant, hub: ModbusHub, entry: dict[str, Any]
     ) -> None:
         """Initialize the Modbus binary sensor."""
-
-        if CONF_LAZY_ERROR in entry:
-            async_create_issue(
-                hass,
-                MODBUS_DOMAIN,
-                "removed_lazy_error_count",
-                breaks_in_ha_version="2024.7.0",
-                is_fixable=False,
-                severity=IssueSeverity.WARNING,
-                translation_key="removed_lazy_error_count",
-                translation_placeholders={
-                    "config_key": "lazy_error_count",
-                    "integration": MODBUS_DOMAIN,
-                    "url": "https://www.home-assistant.io/integrations/modbus",
-                },
-            )
-            _LOGGER.warning(
-                "`lazy_error_count`: is deprecated and will be removed in version 2024.7"
-            )
 
         self._hub = hub
         self._slave = entry.get(CONF_SLAVE) or entry.get(CONF_DEVICE_ADDRESS, 0)
@@ -207,7 +184,7 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
         """Do swap as needed."""
         if slave_count:
             swapped = []
-            for i in range(0, self._slave_count + 1):
+            for i in range(self._slave_count + 1):
                 inx = i * self._slave_size
                 inx2 = inx + self._slave_size
                 swapped.extend(self._swap_registers(registers[inx:inx2], 0))
@@ -225,7 +202,7 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
             registers.reverse()
         return registers
 
-    def __process_raw_value(self, entry: float | int | str | bytes) -> str | None:
+    def __process_raw_value(self, entry: float | str | bytes) -> str | None:
         """Process value from sensor with NaN handling, scaling, offset, min/max etc."""
         if self._nan_value and entry in (self._nan_value, -self._nan_value):
             return None

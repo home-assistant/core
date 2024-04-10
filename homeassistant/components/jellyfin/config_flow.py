@@ -51,9 +51,6 @@ class JellyfinConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a user defined configuration."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-
         errors: dict[str, str] = {}
 
         if user_input is not None:
@@ -69,9 +66,9 @@ class JellyfinConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
-            except Exception as ex:  # pylint: disable=broad-except
+            except Exception:  # pylint: disable=broad-except
                 errors["base"] = "unknown"
-                _LOGGER.exception(ex)
+                _LOGGER.exception("Unexpected exception")
             else:
                 entry_title = user_input[CONF_URL]
 
@@ -119,9 +116,9 @@ class JellyfinConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
-            except Exception as ex:  # pylint: disable=broad-except
+            except Exception:  # pylint: disable=broad-except
                 errors["base"] = "unknown"
-                _LOGGER.exception(ex)
+                _LOGGER.exception("Unexpected exception")
             else:
                 self.hass.config_entries.async_update_entry(self.entry, data=new_input)
 

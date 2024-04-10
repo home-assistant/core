@@ -154,15 +154,15 @@ class EntityComponent(Generic[_EntityT]):
 
         # Generic discovery listener for loading platform dynamically
         # Refer to: homeassistant.helpers.discovery.async_load_platform()
-        async def component_platform_discovered(
-            platform: str, info: dict[str, Any] | None
-        ) -> None:
-            """Handle the loading of a platform."""
-            await self.async_setup_platform(platform, {}, info)
-
         discovery.async_listen_platform(
-            self.hass, self.domain, component_platform_discovered
+            self.hass, self.domain, self._async_component_platform_discovered
         )
+
+    async def _async_component_platform_discovered(
+        self, platform: str, info: dict[str, Any] | None
+    ) -> None:
+        """Handle the loading of a platform."""
+        await self.async_setup_platform(platform, {}, info)
 
     async def async_setup_entry(self, config_entry: ConfigEntry) -> bool:
         """Set up a config entry."""

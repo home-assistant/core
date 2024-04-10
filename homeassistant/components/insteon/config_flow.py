@@ -72,11 +72,12 @@ async def _async_connect(**kwargs):
     """Connect to the Insteon modem."""
     try:
         await async_connect(**kwargs)
-        _LOGGER.info("Connected to Insteon modem")
-        return True
     except ConnectionError:
         _LOGGER.error("Could not connect to Insteon modem")
         return False
+
+    _LOGGER.info("Connected to Insteon modem")
+    return True
 
 
 def _remove_override(address, options):

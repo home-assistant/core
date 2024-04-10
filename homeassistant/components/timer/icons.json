@@ -1,0 +1,10 @@
+{
+  "services": {
+    "start": "mdi:play",
+    "pause": "mdi:pause",
+    "cancel": "mdi:cancel",
+    "finish": "mdi:check",
+    "change": "mdi:pencil",
+    "reload": "mdi:reload"
+  }
+}

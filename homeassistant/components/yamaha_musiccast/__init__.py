@@ -120,7 +120,7 @@ class MusicCastDataUpdateCoordinator(DataUpdateCoordinator[MusicCastData]):  # p
         try:
             await self.musiccast.fetch()
         except MusicCastConnectionException as exception:
-            raise UpdateFailed() from exception
+            raise UpdateFailed from exception
         return self.musiccast.data
 
 

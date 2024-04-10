@@ -1,4 +1,17 @@
 {
+  "config": {
+    "step": {
+      "user": {
+        "description": "Select a location to get to store downloads. The setup will check if the directory exists."
+      }
+    },
+    "error": {
+      "directory_does_not_exist": "The directory could not be reached. Please check your settings."
+    },
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    }
+  },
   "services": {
     "download_file": {
       "name": "Download file",
@@ -21,6 +34,12 @@
           "description": "Whether to overwrite the file or not."
         }
       }
+    }
+  },
+  "issues": {
+    "directory_does_not_exist": {
+      "title": "The {integration_title} failed to import",
+      "description": "The {integration_title} integration failed to import because the configured directory does not exist.\n\nEnsure the directory exists and restart Home Assistant to try again or remove the {integration_title} configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually."
     }
   }
 }

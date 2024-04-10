@@ -6,7 +6,7 @@ import asyncio
 from collections.abc import Callable
 from datetime import datetime
 import logging
-from typing import TYPE_CHECKING, Any, TypeVar, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import voluptuous as vol
 
@@ -142,8 +142,6 @@ CONFIG_ENTRY_CONFIG_KEYS = [
     CONF_USERNAME,
     CONF_WILL_MESSAGE,
 ]
-
-_T = TypeVar("_T")
 
 REMOVED_OPTIONS = vol.All(
     cv.removed(CONF_BIRTH_MESSAGE),  # Removed in HA Core 2023.4
@@ -331,8 +329,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             except vol.Invalid as err:
                 err_str = str(err)
                 raise ServiceValidationError(
-                    f"Unable to publish: topic template '{msg_topic_template}' produced an "
-                    f"invalid topic '{rendered_topic}' after rendering ({err_str})",
                     translation_domain=DOMAIN,
                     translation_key="invalid_publish_topic",
                     translation_placeholders={
@@ -405,7 +401,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 )
             except ConfigValidationError as ex:
                 raise ServiceValidationError(
-                    str(ex),
                     translation_domain=ex.translation_domain,
                     translation_key=ex.translation_key,
                     translation_placeholders=ex.translation_placeholders,
