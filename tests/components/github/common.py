@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import json
 
-from homeassistant import config_entries
 from homeassistant.components.github.const import CONF_REPOSITORIES, DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_fixture
@@ -50,4 +50,4 @@ async def setup_github_integration(
     await hass.async_block_till_done()
 
     assert setup_result
-    assert mock_config_entry.state == config_entries.ConfigEntryState.LOADED
+    assert mock_config_entry.state is ConfigEntryState.LOADED

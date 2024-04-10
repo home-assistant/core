@@ -13,7 +13,7 @@ async def test_init_success(mock_api, hass: HomeAssistant) -> None:
     """Test setup and that we can create the entry."""
 
     entry = await create_config_entry(hass)
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
 
 @pytest.mark.parametrize(
@@ -23,7 +23,7 @@ async def test_init_with_api_error(mock_api, hass: HomeAssistant) -> None:
     """Test init with api error."""
 
     entry = await create_config_entry(hass)
-    assert entry.state == ConfigEntryState.SETUP_RETRY
+    assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
 @pytest.mark.parametrize(

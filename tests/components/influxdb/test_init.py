@@ -7,7 +7,7 @@ from unittest.mock import ANY, MagicMock, Mock, call, patch
 
 import pytest
 
-import homeassistant.components.influxdb as influxdb
+from homeassistant.components import influxdb
 from homeassistant.components.influxdb.const import DEFAULT_BUCKET
 from homeassistant.const import PERCENTAGE, STATE_OFF, STATE_ON, STATE_STANDBY
 from homeassistant.core import HomeAssistant, split_entity_id

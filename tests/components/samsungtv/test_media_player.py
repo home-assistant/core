@@ -200,7 +200,7 @@ async def test_setup_websocket_2(
         next_update = mock_now + timedelta(minutes=5)
         freezer.move_to(next_update)
         async_fire_time_changed(hass, next_update)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(entity_id)
     assert state
@@ -225,7 +225,7 @@ async def test_setup_encrypted_websocket(
         next_update = mock_now + timedelta(minutes=5)
         freezer.move_to(next_update)
         async_fire_time_changed(hass, next_update)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(ENTITY_ID)
     assert state
@@ -242,7 +242,7 @@ async def test_update_on(
     next_update = mock_now + timedelta(minutes=5)
     freezer.move_to(next_update)
     async_fire_time_changed(hass, next_update)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_ON
@@ -262,7 +262,7 @@ async def test_update_off(
         next_update = mock_now + timedelta(minutes=5)
         freezer.move_to(next_update)
         async_fire_time_changed(hass, next_update)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         state = hass.states.get(ENTITY_ID)
         assert state.state == STATE_UNAVAILABLE
@@ -290,7 +290,7 @@ async def test_update_off_ws_no_power_state(
     next_update = mock_now + timedelta(minutes=5)
     freezer.move_to(next_update)
     async_fire_time_changed(hass, next_update)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_OFF

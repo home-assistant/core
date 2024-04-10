@@ -4,7 +4,7 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-from ring_doorbell import RingGeneric, RingStickUpCam
+from ring_doorbell import RingStickUpCam
 
 from homeassistant.components.light import ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
@@ -55,10 +55,10 @@ class RingLight(RingEntity, LightEntity):
     _attr_supported_color_modes = {ColorMode.ONOFF}
     _attr_translation_key = "light"
 
-    def __init__(self, device: RingGeneric, coordinator) -> None:
+    def __init__(self, device, coordinator):
         """Initialize the light."""
         super().__init__(device, coordinator)
-        self._attr_unique_id = device.id
+        self._attr_unique_id = str(device.id)
         self._attr_is_on = device.lights == ON_STATE
         self._no_updates_until = dt_util.utcnow()
 

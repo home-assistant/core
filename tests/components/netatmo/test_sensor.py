@@ -15,6 +15,7 @@ from .common import selected_platforms, snapshot_platform_entities
 from tests.common import MockConfigEntry
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_entity(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -45,8 +46,8 @@ async def test_indoor_sensor(
 
     assert hass.states.get(f"{prefix}temperature").state == "20.3"
     assert hass.states.get(f"{prefix}humidity").state == "63"
-    assert hass.states.get(f"{prefix}co2").state == "494"
-    assert hass.states.get(f"{prefix}pressure").state == "1014.5"
+    assert hass.states.get(f"{prefix}carbon_dioxide").state == "494"
+    assert hass.states.get(f"{prefix}atmospheric_pressure").state == "1014.5"
 
 
 async def test_weather_sensor(
@@ -78,13 +79,13 @@ async def test_public_weather_sensor(
 
     assert hass.states.get(f"{prefix}temperature").state == "27.4"
     assert hass.states.get(f"{prefix}humidity").state == "76"
-    assert hass.states.get(f"{prefix}pressure").state == "1014.4"
+    assert hass.states.get(f"{prefix}atmospheric_pressure").state == "1014.4"
 
     prefix = "sensor.home_avg_"
 
     assert hass.states.get(f"{prefix}temperature").state == "22.7"
     assert hass.states.get(f"{prefix}humidity").state == "63.2"
-    assert hass.states.get(f"{prefix}pressure").state == "1010.4"
+    assert hass.states.get(f"{prefix}atmospheric_pressure").state == "1010.4"
 
     entities_before_change = len(hass.states.async_all())
 
@@ -247,4 +248,4 @@ async def test_climate_battery_sensor(
 
     prefix = "sensor.livingroom_"
 
-    assert hass.states.get(f"{prefix}battery_percent").state == "75"
+    assert hass.states.get(f"{prefix}battery").state == "75"

@@ -687,11 +687,12 @@ class TelegramNotificationService:
                 _LOGGER.warning(
                     "Update last message: out_type:%s, out=%s", type(out), out
                 )
-            return out
         except TelegramError as exc:
             _LOGGER.error(
                 "%s: %s. Args: %s, kwargs: %s", msg_error, exc, args_msg, kwargs_msg
             )
+            return None
+        return out
 
     async def send_message(self, message="", target=None, **kwargs):
         """Send a message to one or multiple pre-allowed chat IDs."""
@@ -982,10 +983,9 @@ class TelegramNotificationService:
         """Remove bot from chat."""
         chat_id = self._get_target_chat_ids(chat_id)[0]
         _LOGGER.debug("Leave from chat ID %s", chat_id)
-        leaved = await self._send_msg(
+        return await self._send_msg(
             self.bot.leave_chat, "Error leaving chat", None, chat_id
         )
-        return leaved
 
 
 class BaseTelegramBotEntity:

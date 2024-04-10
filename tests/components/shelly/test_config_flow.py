@@ -15,7 +15,7 @@ from aioshelly.exceptions import (
 )
 import pytest
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components import zeroconf
 from homeassistant.components.shelly import config_flow
 from homeassistant.components.shelly.const import (
@@ -26,6 +26,7 @@ from homeassistant.components.shelly.const import (
 from homeassistant.components.shelly.coordinator import ENTRY_RELOAD_COOLDOWN
 from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -74,7 +75,7 @@ async def test_form(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     with (
@@ -102,7 +103,7 @@ async def test_form(
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Test name"
     assert result2["data"] == {
         "host": "1.1.1.1",
@@ -123,7 +124,7 @@ async def test_form_gen1_custom_port(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     with (
@@ -141,7 +142,7 @@ async def test_form_gen1_custom_port(
             {"host": "1.1.1.1", "port": "1100"},
         )
 
-        assert result2["type"] == data_entry_flow.FlowResultType.FORM
+        assert result2["type"] is FlowResultType.FORM
         assert result2["errors"]["base"] == "custom_port_not_supported"
 
 
@@ -181,7 +182,7 @@ async def test_form_auth(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     with patch(
@@ -193,7 +194,7 @@ async def test_form_auth(
             {"host": "1.1.1.1"},
         )
 
-    assert result2["type"] == data_entry_flow.FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     with (
@@ -210,7 +211,7 @@ async def test_form_auth(
         )
         await hass.async_block_till_done()
 
-    assert result3["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == "Test name"
     assert result3["data"] == {
         "host": "1.1.1.1",
@@ -246,7 +247,7 @@ async def test_form_errors_get_info(
             {"host": "1.1.1.1"},
         )
 
-    assert result2["type"] == data_entry_flow.FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": base_error}
 
 
@@ -267,7 +268,7 @@ async def test_form_missing_model_key(
             {"host": "1.1.1.1"},
         )
 
-    assert result2["type"] == data_entry_flow.FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "firmware_not_fully_provisioned"}
 
 
@@ -278,7 +279,7 @@ async def test_form_missing_model_key_auth_enabled(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     with patch(
@@ -290,14 +291,14 @@ async def test_form_missing_model_key_auth_enabled(
             {"host": "1.1.1.1"},
         )
 
-    assert result2["type"] == data_entry_flow.FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     monkeypatch.setattr(mock_rpc_device, "shelly", {"gen": 2})
     result3 = await hass.config_entries.flow.async_configure(
         result2["flow_id"], {"password": "1234"}
     )
-    assert result3["type"] == data_entry_flow.FlowResultType.FORM
+    assert result3["type"] is FlowResultType.FORM
     assert result3["errors"] == {"base": "firmware_not_fully_provisioned"}
 
 
@@ -317,14 +318,14 @@ async def test_form_missing_model_key_zeroconf(
             data=DISCOVERY_INFO,
             context={"source": config_entries.SOURCE_ZEROCONF},
         )
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["errors"] == {"base": "firmware_not_fully_provisioned"}
 
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {},
         )
-        assert result2["type"] == data_entry_flow.FlowResultType.FORM
+        assert result2["type"] is FlowResultType.FORM
         assert result2["errors"] == {"base": "firmware_not_fully_provisioned"}
 
 
@@ -357,7 +358,7 @@ async def test_form_errors_test_connection(
             {"host": "1.1.1.1"},
         )
 
-    assert result2["type"] == data_entry_flow.FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": base_error}
 
 
@@ -382,7 +383,7 @@ async def test_form_already_configured(hass: HomeAssistant) -> None:
             {"host": "1.1.1.1"},
         )
 
-        assert result2["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result2["type"] is FlowResultType.ABORT
         assert result2["reason"] == "already_configured"
 
     # Test config entry got updated with latest IP
@@ -424,7 +425,7 @@ async def test_user_setup_ignored_device(
             {"host": "1.1.1.1"},
         )
 
-        assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result2["type"] is FlowResultType.CREATE_ENTRY
 
     # Test config entry got updated with latest IP
     assert entry.data["host"] == "1.1.1.1"
@@ -447,7 +448,7 @@ async def test_form_firmware_unsupported(hass: HomeAssistant) -> None:
             {"host": "1.1.1.1"},
         )
 
-        assert result2["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result2["type"] is FlowResultType.ABORT
         assert result2["reason"] == "unsupported_firmware"
 
 
@@ -484,7 +485,7 @@ async def test_form_auth_errors_test_connection_gen1(
             result2["flow_id"],
             {"username": "test username", "password": "test password"},
         )
-    assert result3["type"] == data_entry_flow.FlowResultType.FORM
+    assert result3["type"] is FlowResultType.FORM
     assert result3["errors"] == {"base": base_error}
 
 
@@ -520,7 +521,7 @@ async def test_form_auth_errors_test_connection_gen2(
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"], {"password": "test password"}
         )
-    assert result3["type"] == data_entry_flow.FlowResultType.FORM
+    assert result3["type"] is FlowResultType.FORM
     assert result3["errors"] == {"base": base_error}
 
 
@@ -562,7 +563,7 @@ async def test_zeroconf(
             data=DISCOVERY_INFO,
             context={"source": config_entries.SOURCE_ZEROCONF},
         )
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["errors"] == {}
         context = next(
             flow["context"]
@@ -586,7 +587,7 @@ async def test_zeroconf(
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Test name"
     assert result2["data"] == {
         "host": "1.1.1.1",
@@ -621,7 +622,7 @@ async def test_zeroconf_sleeping_device(
             data=DISCOVERY_INFO,
             context={"source": config_entries.SOURCE_ZEROCONF},
         )
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["errors"] == {}
         context = next(
             flow["context"]
@@ -644,7 +645,7 @@ async def test_zeroconf_sleeping_device(
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Test name"
     assert result2["data"] == {
         "host": "1.1.1.1",
@@ -678,7 +679,7 @@ async def test_zeroconf_sleeping_device_error(hass: HomeAssistant) -> None:
             data=DISCOVERY_INFO,
             context={"source": config_entries.SOURCE_ZEROCONF},
         )
-        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "cannot_connect"
 
 
@@ -699,7 +700,7 @@ async def test_zeroconf_already_configured(hass: HomeAssistant) -> None:
             data=DISCOVERY_INFO,
             context={"source": config_entries.SOURCE_ZEROCONF},
         )
-        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "already_configured"
 
     # Test config entry got updated with latest IP
@@ -726,7 +727,7 @@ async def test_zeroconf_ignored(hass: HomeAssistant) -> None:
             data=DISCOVERY_INFO,
             context={"source": config_entries.SOURCE_ZEROCONF},
         )
-        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "already_configured"
 
 
@@ -749,7 +750,7 @@ async def test_zeroconf_with_wifi_ap_ip(hass: HomeAssistant) -> None:
             ),
             context={"source": config_entries.SOURCE_ZEROCONF},
         )
-        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "already_configured"
 
     # Test config entry was not updated with the wifi ap ip
@@ -768,7 +769,7 @@ async def test_zeroconf_firmware_unsupported(hass: HomeAssistant) -> None:
             context={"source": config_entries.SOURCE_ZEROCONF},
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "unsupported_firmware"
 
 
@@ -783,7 +784,7 @@ async def test_zeroconf_cannot_connect(hass: HomeAssistant) -> None:
             data=DISCOVERY_INFO,
             context={"source": config_entries.SOURCE_ZEROCONF},
         )
-        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "cannot_connect"
 
 
@@ -801,7 +802,7 @@ async def test_zeroconf_require_auth(
             data=DISCOVERY_INFO,
             context={"source": config_entries.SOURCE_ZEROCONF},
         )
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["errors"] == {}
 
     with (
@@ -819,7 +820,7 @@ async def test_zeroconf_require_auth(
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Test name"
     assert result2["data"] == {
         "host": "1.1.1.1",
@@ -865,7 +866,7 @@ async def test_reauth_successful(
             data=entry.data,
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "reauth_confirm"
 
         result = await hass.config_entries.flow.async_configure(
@@ -873,7 +874,7 @@ async def test_reauth_successful(
             user_input=user_input,
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "reauth_successful"
 
 
@@ -914,7 +915,7 @@ async def test_reauth_unsuccessful(
             data=entry.data,
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "reauth_confirm"
 
         result = await hass.config_entries.flow.async_configure(
@@ -922,7 +923,7 @@ async def test_reauth_unsuccessful(
             user_input=user_input,
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "reauth_unsuccessful"
 
 
@@ -947,7 +948,7 @@ async def test_reauth_get_info_error(hass: HomeAssistant, error: Exception) -> N
             data=entry.data,
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "reauth_confirm"
 
         result = await hass.config_entries.flow.async_configure(
@@ -955,7 +956,7 @@ async def test_reauth_get_info_error(hass: HomeAssistant, error: Exception) -> N
             user_input={"password": "test2 password"},
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "reauth_unsuccessful"
 
 
@@ -1026,7 +1027,7 @@ async def test_options_flow_ble(hass: HomeAssistant, mock_rpc_device: Mock) -> N
     """Test setting ble options for gen2 devices."""
     entry = await init_integration(hass, 2)
     result = await hass.config_entries.options.async_init(entry.entry_id)
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
     assert result["errors"] is None
 
@@ -1038,11 +1039,11 @@ async def test_options_flow_ble(hass: HomeAssistant, mock_rpc_device: Mock) -> N
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_BLE_SCANNER_MODE] == BLEScannerMode.DISABLED
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
     assert result["errors"] is None
 
@@ -1054,11 +1055,11 @@ async def test_options_flow_ble(hass: HomeAssistant, mock_rpc_device: Mock) -> N
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_BLE_SCANNER_MODE] == BLEScannerMode.ACTIVE
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
     assert result["errors"] is None
 
@@ -1070,7 +1071,7 @@ async def test_options_flow_ble(hass: HomeAssistant, mock_rpc_device: Mock) -> N
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_BLE_SCANNER_MODE] == BLEScannerMode.PASSIVE
 
     await hass.config_entries.async_unload(entry.entry_id)
@@ -1099,7 +1100,7 @@ async def test_zeroconf_already_configured_triggers_refresh_mac_in_name(
             data=DISCOVERY_INFO_WITH_MAC,
             context={"source": config_entries.SOURCE_ZEROCONF},
         )
-        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "already_configured"
 
     monkeypatch.setattr(mock_rpc_device, "connected", False)
@@ -1134,7 +1135,7 @@ async def test_zeroconf_already_configured_triggers_refresh(
             data=DISCOVERY_INFO,
             context={"source": config_entries.SOURCE_ZEROCONF},
         )
-        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "already_configured"
 
     monkeypatch.setattr(mock_rpc_device, "connected", False)
@@ -1176,7 +1177,7 @@ async def test_zeroconf_sleeping_device_not_triggers_refresh(
             data=DISCOVERY_INFO,
             context={"source": config_entries.SOURCE_ZEROCONF},
         )
-        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "already_configured"
 
     monkeypatch.setattr(mock_rpc_device, "connected", False)
@@ -1197,7 +1198,7 @@ async def test_sleeping_device_gen2_with_new_firmware(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     with (

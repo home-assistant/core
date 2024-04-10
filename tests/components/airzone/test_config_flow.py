@@ -76,7 +76,7 @@ async def test_form(hass: HomeAssistant) -> None:
             DOMAIN, context={"source": SOURCE_USER}
         )
 
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
         assert result["errors"] == {}
 
@@ -90,7 +90,7 @@ async def test_form(hass: HomeAssistant) -> None:
         entry = conf_entries[0]
         assert entry.state is ConfigEntryState.LOADED
 
-        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == f"Airzone {CONFIG[CONF_HOST]}:{CONFIG[CONF_PORT]}"
         assert result["data"][CONF_HOST] == CONFIG[CONF_HOST]
         assert result["data"][CONF_PORT] == CONFIG[CONF_PORT]
@@ -132,7 +132,7 @@ async def test_form_invalid_system_id(hass: HomeAssistant) -> None:
             DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
         )
 
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
         assert result["errors"] == {CONF_ID: "invalid_system_id"}
 
@@ -143,7 +143,7 @@ async def test_form_invalid_system_id(hass: HomeAssistant) -> None:
             result["flow_id"], CONFIG_ID1
         )
 
-        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
 
         await hass.async_block_till_done()
 
@@ -151,7 +151,7 @@ async def test_form_invalid_system_id(hass: HomeAssistant) -> None:
         entry = conf_entries[0]
         assert entry.state is ConfigEntryState.LOADED
 
-        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         assert (
             result["title"]
             == f"Airzone {CONFIG_ID1[CONF_HOST]}:{CONFIG_ID1[CONF_PORT]}"
@@ -177,7 +177,7 @@ async def test_form_duplicated_id(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
     )
 
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -208,7 +208,7 @@ async def test_dhcp_flow(hass: HomeAssistant) -> None:
             context={"source": config_entries.SOURCE_DHCP},
         )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "discovered_connection"
 
     with (
@@ -244,7 +244,7 @@ async def test_dhcp_flow(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["data"] == {
         CONF_HOST: TEST_IP,
         CONF_PORT: TEST_PORT,
@@ -266,7 +266,7 @@ async def test_dhcp_flow_error(hass: HomeAssistant) -> None:
             context={"source": config_entries.SOURCE_DHCP},
         )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
 
 
@@ -283,7 +283,7 @@ async def test_dhcp_connection_error(hass: HomeAssistant) -> None:
             context={"source": config_entries.SOURCE_DHCP},
         )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "discovered_connection"
 
     with patch(
@@ -338,7 +338,7 @@ async def test_dhcp_connection_error(hass: HomeAssistant) -> None:
         entry = conf_entries[0]
         assert entry.state is ConfigEntryState.LOADED
 
-        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == f"Airzone {short_mac(HVAC_WEBSERVER_MOCK[API_MAC])}"
         assert result["data"][CONF_HOST] == TEST_IP
         assert result["data"][CONF_PORT] == TEST_PORT
@@ -359,7 +359,7 @@ async def test_dhcp_invalid_system_id(hass: HomeAssistant) -> None:
             context={"source": config_entries.SOURCE_DHCP},
         )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "discovered_connection"
 
     with (
@@ -395,7 +395,7 @@ async def test_dhcp_invalid_system_id(hass: HomeAssistant) -> None:
             },
         )
 
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "discovered_connection"
         assert result["errors"] == {CONF_ID: "invalid_system_id"}
 
@@ -416,7 +416,7 @@ async def test_dhcp_invalid_system_id(hass: HomeAssistant) -> None:
         entry = conf_entries[0]
         assert entry.state is ConfigEntryState.LOADED
 
-        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == f"Airzone {short_mac(DHCP_SERVICE_INFO.macaddress)}"
         assert result["data"][CONF_HOST] == TEST_IP
         assert result["data"][CONF_PORT] == TEST_PORT

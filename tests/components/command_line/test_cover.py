@@ -383,3 +383,48 @@ async def test_availability(
     entity_state = hass.states.get("cover.test")
     assert entity_state
     assert entity_state.state == STATE_UNAVAILABLE
+
+
+async def test_icon_template(hass: HomeAssistant) -> None:
+    """Test with state value."""
+    with tempfile.TemporaryDirectory() as tempdirname:
+        path = os.path.join(tempdirname, "cover_status_icon")
+        await setup.async_setup_component(
+            hass,
+            DOMAIN,
+            {
+                "command_line": [
+                    {
+                        "cover": {
+                            "command_state": f"cat {path}",
+                            "command_open": f"echo 100 > {path}",
+                            "command_close": f"echo 0 > {path}",
+                            "command_stop": f"echo 0 > {path}",
+                            "name": "Test",
+                            "icon": "{% if this.state=='open' %} mdi:open {% else %} mdi:closed {% endif %}",
+                        }
+                    }
+                ]
+            },
+        )
+        await hass.async_block_till_done()
+
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_CLOSE_COVER,
+            {ATTR_ENTITY_ID: "cover.test"},
+            blocking=True,
+        )
+        entity_state = hass.states.get("cover.test")
+        assert entity_state
+        assert entity_state.attributes.get("icon") == "mdi:closed"
+
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_OPEN_COVER,
+            {ATTR_ENTITY_ID: "cover.test"},
+            blocking=True,
+        )
+        entity_state = hass.states.get("cover.test")
+        assert entity_state
+        assert entity_state.attributes.get("icon") == "mdi:open"

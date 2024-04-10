@@ -1,6 +1,6 @@
 """Fixtures for imap tests."""
 
-from collections.abc import Generator
+from collections.abc import AsyncGenerator, Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from aioimaplib import AUTH, LOGOUT, NONAUTH, SELECTED, STARTED, Response
@@ -62,7 +62,7 @@ async def mock_imap_protocol(
     imap_pending_idle: bool,
     imap_login_state: str,
     imap_select_state: str,
-) -> Generator[MagicMock, None]:
+) -> AsyncGenerator[MagicMock, None]:
     """Mock the aioimaplib IMAP protocol handler."""
 
     with patch(
@@ -79,7 +79,14 @@ async def mock_imap_protocol(
 
         async def close() -> Response:
             """Mock imap close the selected folder."""
-            imap_mock.protocol.state = imap_login_state
+            return Response("OK", [])
+
+        async def store(uid: str, flags: str) -> Response:
+            """Mock imap store command."""
+            return Response("OK", [])
+
+        async def copy(uid: str, folder: str) -> Response:
+            """Mock imap store command."""
             return Response("OK", [])
 
         async def logout() -> Response:
@@ -101,12 +108,17 @@ async def mock_imap_protocol(
         imap_mock.has_pending_idle.return_value = imap_pending_idle
         imap_mock.protocol = MagicMock()
         imap_mock.protocol.state = STARTED
+        imap_mock.protocol.expunge = AsyncMock()
+        imap_mock.protocol.expunge.return_value = Response("OK", [])
         imap_mock.has_capability.return_value = imap_has_capability
         imap_mock.login.side_effect = login
         imap_mock.close.side_effect = close
+        imap_mock.copy.side_effect = copy
         imap_mock.logout.side_effect = logout
         imap_mock.select.side_effect = select
         imap_mock.search.return_value = Response(*imap_search)
+        imap_mock.store.side_effect = store
         imap_mock.fetch.return_value = Response(*imap_fetch)
         imap_mock.wait_hello_from_server.side_effect = wait_hello_from_server
+        imap_mock.timeout = 3
         yield imap_mock
