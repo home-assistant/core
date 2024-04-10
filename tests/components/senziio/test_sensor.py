@@ -45,9 +45,7 @@ async def test_loading_sensor_entities(
     # initial entity states should be unknown
     assert_entity_state_is(hass, TEMPERATURE_ENTITY, STATE_UNKNOWN)
     assert_entity_state_is(hass, COUNTER_ENTITY, STATE_UNKNOWN)
-    assert_entity_state_is(hass, ATM_PRESSURE_ENTITY, STATE_UNKNOWN)
     assert_entity_state_is(hass, CO2_ENTITY, STATE_UNKNOWN)
-    assert_entity_state_is(hass, HUMIDITY_ENTITY, STATE_UNKNOWN)
     assert_entity_state_is(hass, ILLUMINANCE_ENTITY, STATE_UNKNOWN)
 
     senziio_device = hass.data[DOMAIN][config_entry.entry_id]
@@ -68,20 +66,10 @@ async def test_loading_sensor_entities(
     await when_message_received_is(hass, topic_counter, '{"counter": 8}')
     assert_entity_state_is(hass, COUNTER_ENTITY, "8")
 
-    # atmospheric pressure entity
-    topic_pressure = senziio_device.entity_topic("atm-pressure")
-    await when_message_received_is(hass, topic_pressure, '{"pressure": 1015.5}')
-    assert_entity_state_is(hass, ATM_PRESSURE_ENTITY, "1015.5")
-
     # co2 entity
     topic_co2 = senziio_device.entity_topic("co2")
     await when_message_received_is(hass, topic_co2, '{"co2": 510}')
     assert_entity_state_is(hass, CO2_ENTITY, "510")
-
-    # humidity entity
-    topic_humidity = senziio_device.entity_topic("humidity")
-    await when_message_received_is(hass, topic_humidity, '{"humidity": 36}')
-    assert_entity_state_is(hass, HUMIDITY_ENTITY, "36")
 
     # illuminance entity
     topic_illuminance = senziio_device.entity_topic("illuminance")

@@ -15,8 +15,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     LIGHT_LUX,
-    PERCENTAGE,
-    UnitOfPressure,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -42,15 +40,6 @@ SENSOR_DESCRIPTIONS: tuple[SenziioSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SenziioSensorEntityDescription(
-        name="Atmospheric Pressure",
-        key="atm-pressure",
-        value_key="pressure",
-        translation_key="atmospheric-pressure",
-        state_class=SensorStateClass.MEASUREMENT,
-        device_class=SensorDeviceClass.PRESSURE,
-        native_unit_of_measurement=UnitOfPressure.HPA,
-    ),
-    SenziioSensorEntityDescription(
         name="CO2",
         key="co2",
         value_key="co2",
@@ -58,14 +47,6 @@ SENSOR_DESCRIPTIONS: tuple[SenziioSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.CO2,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
-    ),
-    SenziioSensorEntityDescription(
-        name="Humidity",
-        key="humidity",
-        value_key="humidity",
-        translation_key="humidity",
-        state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=PERCENTAGE,
     ),
     SenziioSensorEntityDescription(
         name="Illuminance",
