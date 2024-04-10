@@ -9,6 +9,7 @@ from typing import Literal, TypedDict, cast
 
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.util import slugify
+from homeassistant.util.event_type import EventType
 
 from .normalized_name_base_registry import (
     NormalizedNameBaseRegistryEntry,
@@ -20,7 +21,9 @@ from .storage import Store
 from .typing import UNDEFINED, UndefinedType
 
 DATA_REGISTRY = "floor_registry"
-EVENT_FLOOR_REGISTRY_UPDATED = "floor_registry_updated"
+EVENT_FLOOR_REGISTRY_UPDATED: EventType[EventFloorRegistryUpdatedData] = EventType(
+    "floor_registry_updated"
+)
 STORAGE_KEY = "core.floor_registry"
 STORAGE_VERSION_MAJOR = 1
 

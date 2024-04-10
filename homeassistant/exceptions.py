@@ -4,7 +4,9 @@ from __future__ import annotations
 
 from collections.abc import Callable, Generator, Sequence
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
+
+from .util.event_type import EventType
 
 if TYPE_CHECKING:
     from .core import Context
@@ -271,8 +273,12 @@ class ServiceNotFound(HomeAssistantError):
 class MaxLengthExceeded(HomeAssistantError):
     """Raised when a property value has exceeded the max character length."""
 
-    def __init__(self, value: str, property_name: str, max_length: int) -> None:
+    def __init__(
+        self, value: EventType[Any] | str, property_name: str, max_length: int
+    ) -> None:
         """Initialize error."""
+        if TYPE_CHECKING:
+            value = str(value)
         super().__init__(
             translation_domain="homeassistant",
             translation_key="max_length_exceeded",

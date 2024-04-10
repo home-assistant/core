@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from enum import Enum
 from functools import cached_property
 import logging
-from typing import Any, TypeVar
+from typing import Any
 
 import voluptuous as vol
 
@@ -34,7 +34,6 @@ from . import (
 
 _LOGGER = logging.getLogger(__name__)
 _SlotsType = dict[str, Any]
-_T = TypeVar("_T")
 
 INTENT_TURN_OFF = "HassTurnOff"
 INTENT_TURN_ON = "HassTurnOn"

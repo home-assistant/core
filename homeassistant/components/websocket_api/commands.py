@@ -165,7 +165,7 @@ def handle_subscribe_events(
         )
 
     connection.subscriptions[msg["id"]] = hass.bus.async_listen(
-        event_type, forward_events, run_immediately=True
+        event_type, forward_events
     )
 
     connection.send_result(msg["id"])
@@ -410,7 +410,6 @@ def handle_subscribe_entities(
             connection.user,
             msg["id"],
         ),
-        run_immediately=True,
     )
     connection.send_result(msg["id"])
 

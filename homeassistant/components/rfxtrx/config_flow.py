@@ -486,7 +486,10 @@ class RfxtrxOptionsFlow(OptionsFlow):
         if devices:
             for event_code, options in devices.items():
                 if options is None:
-                    entry_data[CONF_DEVICES].pop(event_code)
+                    # If the config entry is setup, the device registry
+                    # listener will remove the device from the config
+                    # entry before we get here
+                    entry_data[CONF_DEVICES].pop(event_code, None)
                 else:
                     entry_data[CONF_DEVICES][event_code] = options
         self.hass.config_entries.async_update_entry(self._config_entry, data=entry_data)
