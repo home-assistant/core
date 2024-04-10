@@ -32,26 +32,26 @@ from tests.common import MockConfigEntry
 def bypass_api_fixture() -> None:
     """Skip calls to the API."""
     with (
-        patch("homeassistant.components.roborock.RoborockMqttClient.async_connect"),
-        patch("homeassistant.components.roborock.RoborockMqttClient._send_command"),
+        patch("homeassistant.components.roborock.RoborockMqttClientV1.async_connect"),
+        patch("homeassistant.components.roborock.RoborockMqttClientV1._send_command"),
         patch(
             "homeassistant.components.roborock.RoborockApiClient.get_home_data",
             return_value=HOME_DATA,
         ),
         patch(
-            "homeassistant.components.roborock.RoborockMqttClient.get_networking",
+            "homeassistant.components.roborock.RoborockMqttClientV1.get_networking",
             return_value=NETWORK_INFO,
         ),
         patch(
-            "homeassistant.components.roborock.coordinator.RoborockLocalClient.get_prop",
+            "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.get_prop",
             return_value=PROP,
         ),
         patch(
-            "homeassistant.components.roborock.coordinator.RoborockMqttClient.get_multi_maps_list",
+            "homeassistant.components.roborock.coordinator.RoborockMqttClientV1.get_multi_maps_list",
             return_value=MULTI_MAP_LIST,
         ),
         patch(
-            "homeassistant.components.roborock.coordinator.RoborockLocalClient.get_multi_maps_list",
+            "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.get_multi_maps_list",
             return_value=MULTI_MAP_LIST,
         ),
         patch(
@@ -59,24 +59,24 @@ def bypass_api_fixture() -> None:
             return_value=MAP_DATA,
         ),
         patch(
-            "homeassistant.components.roborock.coordinator.RoborockLocalClient.send_message"
+            "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.send_message"
         ),
-        patch("homeassistant.components.roborock.RoborockMqttClient._wait_response"),
+        patch("homeassistant.components.roborock.RoborockMqttClientV1._wait_response"),
         patch(
-            "homeassistant.components.roborock.coordinator.RoborockLocalClient._wait_response"
-        ),
-        patch(
-            "roborock.api.AttributeCache.async_value",
+            "homeassistant.components.roborock.coordinator.RoborockLocalClientV1._wait_response"
         ),
         patch(
-            "roborock.api.AttributeCache.value",
+            "roborock.version_1_apis.AttributeCache.async_value",
+        ),
+        patch(
+            "roborock.version_1_apis.AttributeCache.value",
         ),
         patch(
             "homeassistant.components.roborock.image.MAP_SLEEP",
             0,
         ),
         patch(
-            "homeassistant.components.roborock.coordinator.RoborockLocalClient.get_room_mapping",
+            "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.get_room_mapping",
             return_value=[
                 RoomMapping(16, "2362048"),
                 RoomMapping(17, "2362044"),
@@ -84,7 +84,7 @@ def bypass_api_fixture() -> None:
             ],
         ),
         patch(
-            "homeassistant.components.roborock.coordinator.RoborockMqttClient.get_room_mapping",
+            "homeassistant.components.roborock.coordinator.RoborockMqttClientV1.get_room_mapping",
             return_value=[
                 RoomMapping(16, "2362048"),
                 RoomMapping(17, "2362044"),

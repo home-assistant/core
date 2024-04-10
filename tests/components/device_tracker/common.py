@@ -30,14 +30,14 @@ from tests.common import MockPlatform, mock_platform
 @bind_hass
 def async_see(
     hass: HomeAssistant,
-    mac: str = None,
-    dev_id: str = None,
-    host_name: str = None,
-    location_name: str = None,
-    gps: GPSType = None,
+    mac: str | None = None,
+    dev_id: str | None = None,
+    host_name: str | None = None,
+    location_name: str | None = None,
+    gps: GPSType | None = None,
     gps_accuracy=None,
-    battery: int = None,
-    attributes: dict = None,
+    battery: int | None = None,
+    attributes: dict | None = None,
 ):
     """Call service to notify you see device."""
     data = {
