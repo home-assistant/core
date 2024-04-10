@@ -305,6 +305,8 @@ def gen_result_wrapper(kls: type[dict | list | set]) -> type:
 class TupleWrapper(tuple, ResultWrapper):
     """Wrap a tuple."""
 
+    __slots__ = ()
+
     # This is all magic to be allowed to subclass a tuple.
 
     def __new__(cls, value: tuple, *, render_result: str | None = None) -> Self:
