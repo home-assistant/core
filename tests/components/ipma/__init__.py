@@ -45,25 +45,6 @@ class MockLocation:
 
     async def forecast(self, api, period):
         """Mock Forecast."""
-        # Forecast = namedtuple(
-        #     "Forecast",
-        #     [
-        #         "feels_like_temperature",
-        #         "forecast_date",
-        #         "forecasted_hours",
-        #         "humidity",
-        #         "max_temperature",
-        #         "min_temperature",
-        #         "precipitation_probability",
-        #         "temperature",
-        #         "update_date",
-        #         "weather_type",
-        #         "wind_direction",
-        #         "wind_strength",
-        #     ],
-        # )
-
-        # WeatherType = namedtuple("WeatherType", ["id", "en", "pt"])
 
         if period == 24:
             return [
