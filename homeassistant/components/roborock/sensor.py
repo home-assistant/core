@@ -205,7 +205,6 @@ async def async_setup_entry(
     entities: list[RoborockSensorEntity | RoborockSensorRoomEntity] = []
     for device_id, coordinator in coordinators.items():
         entities.extend(
-            [
                 RoborockSensorEntity(
                     f"{description.key}_{slugify(device_id)}",
                     coordinator,
@@ -214,7 +213,6 @@ async def async_setup_entry(
                 for description in SENSOR_DESCRIPTIONS
                 if description.value_fn(coordinator.roborock_device_info.props)
                 is not None
-            ]
         )
         entities.append(
             RoborockSensorRoomEntity(f"current_room_{slugify(device_id)}", coordinator)
