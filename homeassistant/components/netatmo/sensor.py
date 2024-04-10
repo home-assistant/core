@@ -234,7 +234,6 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.WIND_SPEED,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    # Deprecated in 2024.5, will be removed in 2024.11
     NetatmoSensorEntityDescription(
         key="reachable",
         netatmo_name="reachable",
