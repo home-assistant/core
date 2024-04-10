@@ -281,6 +281,7 @@ async def async_setup_entry(
         for device_id, coordinator in coordinators.items()
         for description in A01_SENSOR_DESCRIPTIONS
         if isinstance(coordinator, RoborockDataUpdateCoordinatorA01)
+        if description.data_protocol in coordinator.data
     )
 
 
