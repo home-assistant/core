@@ -133,13 +133,6 @@ class NotifyEntity(RestoreEntity):
     _attr_state: None = None
     __last_notified_isoformat: str | None = None
 
-    def _default_to_device_class_name(self) -> bool:
-        """Return True if an unnamed entity should be named by its device class.
-
-        For buttons this is True if the entity has a device class.
-        """
-        return self.device_class is not None
-
     @cached_property
     @final
     @override
