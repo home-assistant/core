@@ -2869,6 +2869,7 @@ def test_state_timestamp_ends_in_5() -> None:
         last_reported=now,
         last_updated=now,
         context=ha.Context(id="1234"),
+        last_updated_timestamp=1712718689.0294285,
     )
     assert state.last_changed_timestamp == now.timestamp()
     assert state.last_changed_timestamp == now.timestamp()
