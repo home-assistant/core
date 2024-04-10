@@ -28,7 +28,7 @@ from .entity import RingBaseEntity
 class RingBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describes Ring binary sensor entity."""
 
-    exists_fn: Callable[[RingGeneric], bool] = lambda _: True
+    exists_fn: Callable[[RingGeneric], bool]
 
 
 BINARY_SENSOR_TYPES: tuple[RingBinarySensorEntityDescription, ...] = (
@@ -37,13 +37,13 @@ BINARY_SENSOR_TYPES: tuple[RingBinarySensorEntityDescription, ...] = (
         translation_key="ding",
         device_class=BinarySensorDeviceClass.OCCUPANCY,
         exists_fn=lambda device: device.family
-        in ["doorbots", "authorized_doorbots", "other"],
+        in {"doorbots", "authorized_doorbots", "other"},
     ),
     RingBinarySensorEntityDescription(
         key="motion",
         device_class=BinarySensorDeviceClass.MOTION,
         exists_fn=lambda device: device.family
-        in ["doorbots", "authorized_doorbots", "stickup_cams"],
+        in {"doorbots", "authorized_doorbots", "stickup_cams"},
     ),
 )
 

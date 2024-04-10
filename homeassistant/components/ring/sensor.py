@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Generic
+from typing import Any, Generic, cast
 
 from ring_doorbell import (
     RingCapability,
@@ -37,7 +37,7 @@ from .const import DOMAIN
 from .coordinator import RingDataCoordinator
 from .entity import RingEntity
 
-_RingGenericT = TypeVar("_RingGenericT", bound=RingGeneric)
+_RingGenericT = TypeVar("_RingGenericT", bound=RingGeneric, default=RingGeneric)
 
 
 async def async_setup_entry(
@@ -59,16 +59,17 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class RingSensor(RingEntity, SensorEntity):
+class RingSensor(RingEntity, SensorEntity, Generic[_RingGenericT]):
     """A sensor implementation for Ring device."""
 
-    entity_description: RingSensorEntityDescription[RingGeneric]
+    entity_description: RingSensorEntityDescription[_RingGenericT]
+    _device: _RingGenericT
 
     def __init__(
         self,
         device: RingGeneric,
         coordinator: RingDataCoordinator,
-        description: RingSensorEntityDescription[RingGeneric],
+        description: RingSensorEntityDescription[_RingGenericT],
     ) -> None:
         """Initialize a sensor for Ring device."""
         super().__init__(device, coordinator)
@@ -83,8 +84,9 @@ class RingSensor(RingEntity, SensorEntity):
     def _handle_coordinator_update(self) -> None:
         """Call update method."""
 
-        self._device = self._get_coordinator_data().get_device(
-            self._device.device_api_id
+        self._device = cast(
+            _RingGenericT,
+            self._get_coordinator_data().get_device(self._device.device_api_id),
         )
         # History values can drop off the last 10 events so only update
         # the value if it's not None
@@ -134,8 +136,13 @@ class RingSensorEntityDescription(SensorEntityDescription, Generic[_RingGenericT
     )
 
 
-SENSOR_TYPES: tuple[RingSensorEntityDescription, ...] = (
-    RingSensorEntityDescription[RingGeneric](
+SENSOR_TYPES: tuple[
+    RingSensorEntityDescription[RingGeneric]
+    | RingSensorEntityDescription[RingDoorBell | RingChime]
+    | RingSensorEntityDescription[RingOther],
+    ...,
+] = (
+    RingSensorEntityDescription(
         key="battery",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
@@ -144,7 +151,7 @@ SENSOR_TYPES: tuple[RingSensorEntityDescription, ...] = (
         value_fn=lambda device: device.battery_life,
         exists_fn=lambda device: device.family != "chimes",
     ),
-    RingSensorEntityDescription[RingGeneric](
+    RingSensorEntityDescription(
         key="last_activity",
         translation_key="last_activity",
         device_class=SensorDeviceClass.TIMESTAMP,
@@ -156,7 +163,7 @@ SENSOR_TYPES: tuple[RingSensorEntityDescription, ...] = (
         else None,
         exists_fn=lambda device: device.has_capability(RingCapability.HISTORY),
     ),
-    RingSensorEntityDescription[RingGeneric](
+    RingSensorEntityDescription(
         key="last_ding",
         translation_key="last_ding",
         device_class=SensorDeviceClass.TIMESTAMP,
@@ -172,7 +179,7 @@ SENSOR_TYPES: tuple[RingSensorEntityDescription, ...] = (
         else None,
         exists_fn=lambda device: device.has_capability(RingCapability.HISTORY),
     ),
-    RingSensorEntityDescription[RingGeneric](
+    RingSensorEntityDescription(
         key="last_motion",
         translation_key="last_motion",
         device_class=SensorDeviceClass.TIMESTAMP,
@@ -212,14 +219,14 @@ SENSOR_TYPES: tuple[RingSensorEntityDescription, ...] = (
         value_fn=lambda device: device.voice_volume,
         exists_fn=lambda device: isinstance(device, RingOther),
     ),
-    RingSensorEntityDescription[RingGeneric](
+    RingSensorEntityDescription(
         key="wifi_signal_category",
         translation_key="wifi_signal_category",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda device: device.wifi_signal_category,
     ),
-    RingSensorEntityDescription[RingGeneric](
+    RingSensorEntityDescription(
         key="wifi_signal_strength",
         translation_key="wifi_signal_strength",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
