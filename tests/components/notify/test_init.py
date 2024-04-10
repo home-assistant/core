@@ -54,6 +54,16 @@ class MockNotifyEntity(MockEntity, NotifyEntity):
         self.send_message_mock_calls(message=message)
 
 
+class MockNotifyEntityNonAsync(MockEntity, NotifyEntity):
+    """Mock Email notitier entity to use in tests."""
+
+    send_message_mock_calls = MagicMock()
+
+    def send_message(self, message: str) -> None:
+        """Send a notification message."""
+        self.send_message_mock_calls(message=message)
+
+
 async def help_async_setup_entry_init(
     hass: HomeAssistant, config_entry: ConfigEntry
 ) -> bool:
@@ -62,12 +72,27 @@ async def help_async_setup_entry_init(
     return True
 
 
+async def help_async_unload_entry(
+    hass: HomeAssistant, config_entry: ConfigEntry
+) -> bool:
+    """Unload test config emntry."""
+    return await hass.config_entries.async_unload_platforms(
+        config_entry, [Platform.NOTIFY]
+    )
+
+
+@pytest.mark.parametrize(
+    "entity",
+    [
+        MockNotifyEntityNonAsync(name="test", entity_id="notify.test"),
+        MockNotifyEntity(name="test", entity_id="notify.test"),
+    ],
+    ids=["non_async", "async"],
+)
 async def test_send_message_service(
-    hass: HomeAssistant, config_flow_fixture: None
+    hass: HomeAssistant, config_flow_fixture: None, entity: NotifyEntity
 ) -> None:
     """Test send_message service."""
-
-    entity = MockNotifyEntity(name="test", entity_id="notify.test")
 
     config_entry = MockConfigEntry(domain="test")
     config_entry.add_to_hass(hass)
@@ -77,6 +102,7 @@ async def test_send_message_service(
         MockModule(
             "test",
             async_setup_entry=help_async_setup_entry_init,
+            async_unload_entry=help_async_unload_entry,
         ),
     )
     setup_test_component_platform(hass, DOMAIN, [entity], from_config_entry=True)
@@ -94,6 +120,9 @@ async def test_send_message_service(
     await hass.async_block_till_done()
 
     entity.send_message_mock_calls.assert_called_once()
+
+    # Test unloading the entry succeeds
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
 
 
 @pytest.mark.parametrize(
