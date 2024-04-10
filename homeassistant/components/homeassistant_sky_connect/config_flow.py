@@ -90,6 +90,23 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow):
         self.start_task: asyncio.Task | None = None
         self.stop_task: asyncio.Task | None = None
 
+    @property
+    def _translation_placeholders(self) -> dict[str, str]:
+        """Shared translation placeholders."""
+        return {
+            "model": (
+                self._hw_variant.full_name
+                if self._hw_variant is not None
+                else "unknown"
+            ),
+            "firmware_type": (
+                self._current_firmware_type
+                if self._current_firmware_type is not None
+                else "unknown"
+            ),
+            "docs_web_flasher_url": "https://skyconnect.home-assistant.io/firmware-update/",
+        }
+
     async def _async_set_addon_config(
         self, config: dict, addon_manager: AddonManager
     ) -> None:
@@ -142,7 +159,7 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow):
         ):
             return self.async_abort(
                 reason="unsupported_firmware",
-                description_placeholders=self.context["description_placeholders"],
+                description_placeholders=self._translation_placeholders,
             )
 
         return self.async_show_menu(
@@ -151,7 +168,7 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow):
                 STEP_PICK_FIRMWARE_THREAD,
                 STEP_PICK_FIRMWARE_ZIGBEE,
             ],
-            description_placeholders=self.context["description_placeholders"],
+            description_placeholders=self._translation_placeholders,
         )
 
     async def async_step_pick_firmware_zigbee(
@@ -164,7 +181,7 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow):
         if not is_hassio(self.hass):
             return self.async_abort(
                 reason="not_hassio",
-                description_placeholders=self.context["description_placeholders"],
+                description_placeholders=self._translation_placeholders,
             )
 
         # Only flash new firmware if we need to
@@ -181,7 +198,7 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow):
         return self.async_abort(
             reason="addon_already_running",
             description_placeholders={
-                **self.context["description_placeholders"],
+                **self._translation_placeholders,
                 "addon_name": fw_flasher_manager.addon_name,
             },
         )
@@ -206,7 +223,7 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow):
                 step_id="install_zigbee_flasher_addon",
                 progress_action="install_addon",
                 description_placeholders={
-                    **self.context["description_placeholders"],
+                    **self._translation_placeholders,
                     "addon_name": fw_flasher_manager.addon_name,
                 },
                 progress_task=self.install_task,
@@ -256,7 +273,7 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow):
                 step_id="start_zigbee_flasher_addon",
                 progress_action="start_zigbee_flasher_addon",
                 description_placeholders={
-                    **self.context["description_placeholders"],
+                    **self._translation_placeholders,
                     "addon_name": fw_flasher_manager.addon_name,
                 },
                 progress_task=self.start_task,
@@ -280,7 +297,7 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow):
         return self.async_abort(
             reason="addon_start_failed",
             description_placeholders={
-                **self.context["description_placeholders"],
+                **self._translation_placeholders,
                 "addon_name": fw_flasher_manager.addon_name,
             },
         )
@@ -320,7 +337,7 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow):
 
         return self.async_show_form(
             step_id="confirm_zigbee",
-            description_placeholders=self.context["description_placeholders"],
+            description_placeholders=self._translation_placeholders,
         )
 
     async def async_step_pick_firmware_thread(
@@ -331,7 +348,7 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow):
         if not is_hassio(self.hass):
             return self.async_abort(
                 reason="not_hassio_thread",
-                description_placeholders=self.context["description_placeholders"],
+                description_placeholders=self._translation_placeholders,
             )
 
         otbr_manager = get_otbr_addon_manager(self.hass)
@@ -347,7 +364,7 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow):
         return self.async_abort(
             reason="otbr_addon_already_running",
             description_placeholders={
-                **self.context["description_placeholders"],
+                **self._translation_placeholders,
                 "addon_name": otbr_manager.addon_name,
             },
         )
@@ -372,7 +389,7 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow):
                 step_id="install_otbr_addon",
                 progress_action="install_addon",
                 description_placeholders={
-                    **self.context["description_placeholders"],
+                    **self._translation_placeholders,
                     "addon_name": otbr_manager.addon_name,
                 },
                 progress_task=self.install_task,
@@ -417,7 +434,7 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow):
                 step_id="start_otbr_addon",
                 progress_action="start_otbr_addon",
                 description_placeholders={
-                    **self.context["description_placeholders"],
+                    **self._translation_placeholders,
                     "addon_name": otbr_manager.addon_name,
                 },
                 progress_task=self.start_task,
@@ -441,7 +458,7 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow):
         return self.async_abort(
             reason="addon_start_failed",
             description_placeholders={
-                **self.context["description_placeholders"],
+                **self._translation_placeholders,
                 "addon_name": otbr_manager.addon_name,
             },
         )
@@ -467,7 +484,7 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow):
 
         return self.async_show_form(
             step_id="confirm_otbr",
-            description_placeholders=self.context["description_placeholders"],
+            description_placeholders=self._translation_placeholders,
         )
 
     def _async_flow_finished(self) -> ConfigFlowResult:
@@ -520,11 +537,6 @@ class HomeAssistantSkyConnectConfigFlow(
         assert description is not None
         self._hw_variant = HardwareVariant.from_usb_product_name(description)
 
-        self.context["description_placeholders"] = {
-            "model": self._hw_variant.full_name,
-            "firmware_type": "unknown",
-            "docs_web_flasher_url": "https://skyconnect.home-assistant.io/firmware-update/",
-        }
         self.context["title_placeholders"] = self.context["description_placeholders"]
 
         return await self.async_step_confirm()
@@ -542,7 +554,7 @@ class HomeAssistantSkyConnectConfigFlow(
 
         return self.async_show_form(
             step_id="confirm",
-            description_placeholders=self.context["description_placeholders"],
+            description_placeholders=self._translation_placeholders,
         )
 
     def _async_flow_finished(self) -> ConfigFlowResult:
