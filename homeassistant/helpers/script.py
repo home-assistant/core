@@ -1061,7 +1061,7 @@ class _ScriptRun:
         """
         timeout_handle: asyncio.TimerHandle | None = None
         timeout_future: asyncio.Future[None] | None = None
-        futures: list[asyncio.Future[None]] = [self._stop]
+        futures: list[asyncio.Future[None]] = []
         if timeout:
             timeout_future = self._hass.loop.create_future()
             timeout_handle = self._hass.loop.call_later(
