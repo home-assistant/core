@@ -4,7 +4,11 @@ import asyncio
 from datetime import timedelta
 import logging
 
-from aioautomower.exceptions import ApiException, HusqvarnaWSServerHandshakeError
+from aioautomower.exceptions import (
+    ApiException,
+    AuthException,
+    HusqvarnaWSServerHandshakeError,
+)
 from aioautomower.model import MowerAttributes
 from aioautomower.session import AutomowerSession
 
@@ -44,7 +48,7 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, MowerAttrib
             self.ws_connected = True
         try:
             return await self.api.get_status()
-        except ApiException as err:
+        except (ApiException, AuthException) as err:
             raise UpdateFailed(err) from err
 
     @callback
