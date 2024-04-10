@@ -89,7 +89,7 @@ async def test_next_start_sensor(
     )
     values[TEST_MOWER_ID].planner.next_start_timestamp = 0
     mock_automower_client.get_status.return_value = values
-    freezer.tick(timedelta(minutes=5))
+    freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     state = hass.states.get("sensor.test_mower_1_next_start")
