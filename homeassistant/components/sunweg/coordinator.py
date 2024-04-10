@@ -47,7 +47,10 @@ class SunWEGDataUpdateCoordinator(DataUpdateCoordinator[Plant]):
             if self.plant_id == DEFAULT_PLANT_ID:
                 plant_list = await self.hass.async_add_executor_job(self.api.listPlants)
                 if len(plant_list) == 0:
-                    raise ConfigEntryError("No plant found")
+                    raise ConfigEntryError(
+                        translation_domain=DOMAIN,
+                        translation_key="no_plants",
+                    )
                 self.plant_id = plant_list[0].id
                 self.plant_name = plant_list[0].name
 
@@ -56,7 +59,11 @@ class SunWEGDataUpdateCoordinator(DataUpdateCoordinator[Plant]):
             )
 
             if plant is None:
-                raise ConfigEntryError(f"Plant {self.plant_id} not found")
+                raise ConfigEntryError(
+                    translation_domain=DOMAIN,
+                    translation_key="plant_not_found",
+                    translation_placeholders={"plant_id": str(self.plant_id)},
+                )
 
             for inverter in plant.inverters:
                 await self.hass.async_add_executor_job(
