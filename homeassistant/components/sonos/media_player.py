@@ -187,7 +187,7 @@ async def async_setup_entry(
         {vol.Optional(ATTR_QUEUE_POSITION): cv.positive_int},
         "remove_from_queue",
     )
-    
+
     platform.async_register_entity_service(
         SERVICE_PARTYMODE,
         {},
