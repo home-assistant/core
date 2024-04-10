@@ -4,7 +4,7 @@ from unittest.mock import MagicMock
 
 from sunweg.api import LoginError, SunWegApiError
 
-from homeassistant.components.sunweg.const import DEFAULT_PLANT_ID, DeviceType
+from homeassistant.components.sunweg.const import DEFAULT_PLANT_ID, DOMAIN, DeviceType
 from homeassistant.components.sunweg.coordinator import SunWEGDataUpdateCoordinator
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryError
@@ -18,7 +18,8 @@ async def test_update_listPlants_empty(hass: HomeAssistant) -> None:
     coordinator = SunWEGDataUpdateCoordinator(hass, api, DEFAULT_PLANT_ID, None)
     await coordinator.async_refresh()
     assert type(coordinator.last_exception) is ConfigEntryError
-    assert coordinator.last_exception._message == "No plant found"
+    assert coordinator.last_exception.translation_domain == DOMAIN
+    assert coordinator.last_exception.translation_key == "no_plants"
 
 
 async def test_update_plant_none(hass: HomeAssistant) -> None:
@@ -28,7 +29,8 @@ async def test_update_plant_none(hass: HomeAssistant) -> None:
     coordinator = SunWEGDataUpdateCoordinator(hass, api, 1, "")
     await coordinator.async_refresh()
     assert type(coordinator.last_exception) is ConfigEntryError
-    assert coordinator.last_exception._message == "Plant 1 not found"
+    assert coordinator.last_exception.translation_domain == DOMAIN
+    assert coordinator.last_exception.translation_key == "plant_not_found"
 
 
 async def test_update_auth_error(hass: HomeAssistant) -> None:
