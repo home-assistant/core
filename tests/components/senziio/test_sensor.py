@@ -29,7 +29,7 @@ ILLUMINANCE_ENTITY = "sensor.illuminance"
 async def test_loading_sensor_entities(
     hass: HomeAssistant, config_entry: MockConfigEntry, mqtt_mock: MqttMockHAClient
 ):
-    """Test creation of binary sensor entities."""
+    """Test creation of sensor entities."""
     config_entry.add_to_hass(hass)
 
     with patch(

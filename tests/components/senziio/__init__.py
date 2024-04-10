@@ -60,6 +60,7 @@ class FakeSenziioDevice:
     def __init__(self, device_info: Optional[dict] = None) -> None:
         """Initialize with expected info."""
         self._device_info = device_info or {}
+        self.device_id = self._device_info.get("serial-number")
 
     async def get_info(self) -> dict[str, str]:
         """Get device info."""

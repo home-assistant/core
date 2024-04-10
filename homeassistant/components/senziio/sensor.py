@@ -20,11 +20,11 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.json import json_loads_object
 
 from .const import DOMAIN
+from .entity import SenziioEntity
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -95,31 +95,28 @@ async def async_setup_entry(
 ) -> None:
     """Set up Senziio entities."""
     device = hass.data[DOMAIN][entry.entry_id]
-    device_info = DeviceInfo(
-        identifiers={(DOMAIN, entry.data["unique_id"])},
-    )
     async_add_entities(
         [
-            SenziioSensorEntity(hass, entity_description, device_info, device)
+            SenziioSensorEntity(hass, entity_description, entry, device)
             for entity_description in SENSOR_DESCRIPTIONS
         ]
     )
 
 
-class SenziioSensorEntity(SensorEntity):
+class SenziioSensorEntity(SenziioEntity, SensorEntity):
     """Senziio binary sensor entity."""
 
     def __init__(
         self,
         hass: HomeAssistant,
         entity_description: SenziioSensorEntityDescription,
-        device_info: DeviceInfo,
+        entry: ConfigEntry,
         device,
     ) -> None:
         """Initialize entity."""
+        super().__init__(entry)
         self.entity_description = entity_description
         self._attr_unique_id = f"{device.id}_{entity_description.key}"
-        self._attr_device_info = device_info
         self._hass = hass
         self._dt_topic = device.entity_topic(entity_description.key)
 

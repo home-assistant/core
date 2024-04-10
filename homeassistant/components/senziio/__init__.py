@@ -8,10 +8,8 @@ from homeassistant.components import mqtt
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MODEL, CONF_UNIQUE_ID, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import DeviceInfo
 
-from .const import DOMAIN, MANUFACTURER
+from .const import DOMAIN
 from .device import SenziioDevice
 
 _LOGGER = logging.getLogger(__name__)
@@ -30,21 +28,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     device_id = entry.data[CONF_UNIQUE_ID]
     device_model = entry.data[CONF_MODEL]
     device = SenziioDevice(device_id, device_model, hass)
-
-    registry_info = DeviceInfo(
-        identifiers={(DOMAIN, device_id)},
-        name=entry.title,
-        manufacturer=MANUFACTURER,
-        model=device_model,
-        sw_version=entry.data["fw-version"],
-        serial_number=entry.data["serial-number"],
-        connections={(dr.CONNECTION_NETWORK_MAC, entry.data["mac-address"])},
-    )
-    device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        **registry_info,
-    )
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = device

@@ -8,18 +8,9 @@ from homeassistant.components.senziio import (
     async_setup_entry,
     async_unload_entry,
 )
-from homeassistant.components.senziio.const import MANUFACTURER
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
 
-from . import (
-    A_DEVICE_ID,
-    A_DEVICE_MODEL,
-    A_FRIENDLY_NAME,
-    CONFIG_ENTRY,
-    DEVICE_INFO,
-    FakeSenziioDevice,
-)
+from . import A_DEVICE_ID, CONFIG_ENTRY, DEVICE_INFO, FakeSenziioDevice
 
 
 async def test_async_setup_entry(hass: HomeAssistant):
@@ -43,17 +34,10 @@ async def test_async_setup_entry(hass: HomeAssistant):
         assert await async_setup_entry(hass, CONFIG_ENTRY) is True
         forward_entry_mock.assert_awaited_once_with(CONFIG_ENTRY, PLATFORMS)
 
-    # verify device registry data
-    device_registry = dr.async_get(hass)
-    device = device_registry.async_get_device(identifiers={(DOMAIN, A_DEVICE_ID)})
+    device = hass.data[DOMAIN][CONFIG_ENTRY.entry_id]
 
     assert device is not None
-    assert device.manufacturer == MANUFACTURER
-    assert device.model == A_DEVICE_MODEL
-    assert device.name == A_FRIENDLY_NAME
-    assert device.sw_version == "1.2.3"
-    assert device.serial_number == "theia-pro-2F3D56AA1234"
-    assert device.connections == {("mac", "1a:2b:3c:4d:5e:6f")}
+    assert device.device_id == A_DEVICE_ID
 
 
 async def test_do_not_setup_entry_if_mqtt_is_not_available(hass: HomeAssistant):
