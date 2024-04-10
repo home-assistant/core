@@ -467,7 +467,7 @@ aprslib==0.7.0
 aqualogic==2.6
 
 # homeassistant.components.aranet
-aranet4==2.2.2
+aranet4==2.3.3
 
 # homeassistant.components.arcam_fmj
 arcam-fmj==1.4.0
