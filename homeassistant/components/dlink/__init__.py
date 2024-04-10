@@ -12,7 +12,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from .const import CONF_USE_LEGACY_PROTOCOL, DOMAIN
 from .coordinator import DlinkCoordinator
 
-PLATFORMS = [Platform.SENSOR, Platform.SWITCH]
+PLATFORMS = [Platform.SWITCH]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

@@ -24,7 +24,6 @@ class DlinkCoordinator(DataUpdateCoordinator[dict]):
             name=DOMAIN,
             update_interval=timedelta(minutes=2),
         )
-        self.hass = hass
         self.smartplug = smartplug
         self._n_tried = 0
         self._last_tried: datetime | None = None
