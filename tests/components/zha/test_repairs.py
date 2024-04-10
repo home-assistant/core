@@ -1,6 +1,5 @@
 """Test ZHA repairs."""
 
-import asyncio
 from collections.abc import Callable
 from http import HTTPStatus
 import logging
@@ -270,6 +269,11 @@ async def test_probe_failure_exception_handling(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test that probe failures are handled gracefully."""
+    logger = logging.getLogger(
+        "homeassistant.components.zha.repairs.wrong_silabs_firmware"
+    )
+    orig_level = logger.level
+
     with (
         caplog.at_level(logging.DEBUG),
         patch(
@@ -277,11 +281,12 @@ async def test_probe_failure_exception_handling(
             side_effect=RuntimeError(),
         ) as mock_probe_app_type,
     ):
+        logger.setLevel(logging.DEBUG)
         await probe_silabs_firmware_type("/dev/ttyZigbee")
-        await asyncio.sleep(0)
+        logger.setLevel(orig_level)
 
-        mock_probe_app_type.assert_awaited()
-        assert "Failed to probe application type" in caplog.text
+    mock_probe_app_type.assert_awaited()
+    assert "Failed to probe application type" in caplog.text
 
 
 async def test_inconsistent_settings_keep_new(
