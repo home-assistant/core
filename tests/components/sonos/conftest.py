@@ -162,16 +162,11 @@ class MockSoCo(MagicMock):
     surround_level = 3
     music_surround_level = 4
     soundbar_audio_input_format = "Dolby 5.1"
-    partymode_called = False
 
     @property
     def visible_zones(self):
         """Return visible zones and allow property to be overridden by device classes."""
         return {self}
-        
-    def partymode(self):
-        """ Fake call partymode services """
-        self.partymode_called = True
 
 
 class SoCoMockFactory:
