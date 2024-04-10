@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
@@ -230,7 +230,8 @@ class GoogleTravelTimeConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle reconfiguration."""
         entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
-        assert entry
+        if TYPE_CHECKING:
+            assert entry
 
         errors = {}
         user_input = user_input or {}
