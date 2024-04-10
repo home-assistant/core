@@ -464,7 +464,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_reset_platform(hass: HomeAssistant, integration_name: str) -> None:
     """Release modbus resources."""
     if DOMAIN not in hass.data:
-        _LOGGER.info("Modbus cannot reload, because it was never loaded")
+        _LOGGER.error("Modbus cannot reload, because it was never loaded")
         return
     _LOGGER.info("Modbus reloading")
     hubs = hass.data[DOMAIN]
