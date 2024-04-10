@@ -671,9 +671,12 @@ class _ScriptRun:
             self._hass, wait_template, async_script_wait, self._variables
         )
         self._changed()
-        await self._async_wait_with_optional_timeout(
-            futures, timeout_handle, timeout_future, unsub
-        )
+        try:
+            await self._async_wait_with_optional_timeout(
+                futures, timeout_handle, timeout_future
+            )
+        finally:
+            unsub()
 
     def _async_set_remaining_time_var(
         self, timeout_handle: asyncio.TimerHandle | None
@@ -1106,16 +1109,18 @@ class _ScriptRun:
         if not remove_triggers:
             return
         self._changed()
-        await self._async_wait_with_optional_timeout(
-            futures, timeout_handle, timeout_future, remove_triggers
-        )
+        try:
+            await self._async_wait_with_optional_timeout(
+                futures, timeout_handle, timeout_future
+            )
+        finally:
+            remove_triggers()
 
     async def _async_wait_with_optional_timeout(
         self,
         futures: list[asyncio.Future[None]],
         timeout_handle: asyncio.TimerHandle | None,
         timeout_future: asyncio.Future[None] | None,
-        unsub: Callable[[], None],
     ) -> None:
         try:
             if len(futures) == 1:
@@ -1131,8 +1136,6 @@ class _ScriptRun:
         finally:
             if timeout_future and not timeout_future.done() and timeout_handle:
                 timeout_handle.cancel()
-
-            unsub()
 
     async def _async_variables_step(self):
         """Set a variable value."""
