@@ -24,7 +24,6 @@ class DlinkCoordinator(DataUpdateCoordinator[None]):
             name=DOMAIN,
             update_interval=timedelta(minutes=2),
         )
-        self.hass = hass
         self.smartplug = smartplug
         self.state: str | None = None
         self.temperature: str = ""
@@ -41,7 +40,7 @@ class DlinkCoordinator(DataUpdateCoordinator[None]):
             last_try_s = (dt_util.now() - self._last_tried).total_seconds() / 60
             retry_seconds = min(self._n_tried * 2, 10) - last_try_s
             if self._n_tried > 0 and retry_seconds > 0:
-                # _LOGGER.warning("Waiting %s s to retry", retry_seconds)
+                _LOGGER.warning("Waiting %s s to retry", retry_seconds)
                 return
 
         _state = "unknown"
