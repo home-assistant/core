@@ -68,12 +68,20 @@ async def test_user(hass: HomeAssistant, mock_TTNClient) -> None:
     assert result["type"] == FlowResultType.FORM
     assert "unknown" in result["errors"]["base"]
 
+    # Recover
+    mock_TTNClient.return_value.fetch_data.side_effect = Exception
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data=user_data,
+    )
+    assert result["type"] == FlowResultType.CREATE_ENTRY
 
-async def test_step_reauth(hass: HomeAssistant, mock_TTNClient) -> None:
+
+async def test_step_reauth(
+    hass: HomeAssistant, mock_TTNClient, init_integration
+) -> None:
     """Test that the reauth step works."""
-
-    CONFIG_ENTRY.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(CONFIG_ENTRY.entry_id)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,

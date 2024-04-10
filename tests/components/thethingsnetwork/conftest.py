@@ -12,6 +12,7 @@ from homeassistant.components.thethingsnetwork.const import (
     DOMAIN,
     TTN_API_HOSTNAME,
 )
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -71,6 +72,13 @@ CONFIG_ENTRY = MockConfigEntry(
         CONF_API_KEY: API_KEY,
     },
 )
+
+
+@pytest.fixture
+async def init_integration(hass: HomeAssistant):
+    """Mock TTNClient."""
+    CONFIG_ENTRY.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(CONFIG_ENTRY.entry_id)
 
 
 @pytest.fixture
