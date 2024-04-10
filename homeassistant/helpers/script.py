@@ -444,11 +444,13 @@ class _ScriptRun:
 
         try:
             self._log("Running %s", self._script.running_description)
-            async with async_interrupt.interrupt(self._stop, ScriptStoppedError, None):
-                for self._step, self._action in enumerate(self._script.sequence):
-                    await self._async_step(log_exceptions=False)
-        except ScriptStoppedError:
-            script_execution_set("cancelled")
+            for self._step, self._action in enumerate(self._script.sequence):
+                if self._stop.done():
+                    script_execution_set("cancelled")
+                    break
+                await self._async_step(log_exceptions=False)
+            else:
+                script_execution_set("finished")
         except _AbortScript:
             script_execution_set("aborted")
             # Let the _AbortScript bubble up if this is a sub-script
@@ -468,8 +470,6 @@ class _ScriptRun:
         except Exception:
             script_execution_set("error")
             raise
-        else:
-            script_execution_set("cancelled" if self._stop.done() else "finished")
         finally:
             # Pop the script from the script execution stack
             script_stack.pop()
@@ -1695,9 +1695,6 @@ class Script:
             # return false after the other script runs were stopped until our task
             # resumes running.
             self._log("Restarting")
-            # Important: yield to the event loop to allow the script to start in case
-            # the script is restarting itself.
-            await asyncio.sleep(0)
             await self.async_stop(update_state=False, spare=run)
 
         if started_action:
@@ -1727,13 +1724,11 @@ class Script:
         # asyncio.shield as asyncio.shield yields to the event loop, which would cause
         # us to wait for script runs added after the call to async_stop.
         aws = [
-            create_eager_task(run.async_stop()) for run in self._runs if run != spare
+            asyncio.create_task(run.async_stop()) for run in self._runs if run != spare
         ]
         if not aws:
             return
-        await asyncio.shield(
-            create_eager_task(self._async_stop(aws, update_state, spare))
-        )
+        await asyncio.shield(self._async_stop(aws, update_state, spare))
 
     async def _async_get_condition(self, config):
         if isinstance(config, template.Template):

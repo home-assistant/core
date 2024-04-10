@@ -1069,8 +1069,7 @@ async def test_wait_basic_times_out(hass: HomeAssistant, action_type) -> None:
                         "variables": {"wait": {"completed": False, "remaining": None}},
                     }
                 ],
-            },
-            "cancelled",
+            }
         )
     else:
         assert_action_trace(
@@ -1081,8 +1080,7 @@ async def test_wait_basic_times_out(hass: HomeAssistant, action_type) -> None:
                         "variables": {"wait": {"remaining": None, "trigger": None}},
                     }
                 ],
-            },
-            "cancelled",
+            }
         )
 
 
@@ -1486,8 +1484,7 @@ async def test_wait_template_with_utcnow_no_match(hass: HomeAssistant) -> None:
                     "variables": {"wait": {"completed": False, "remaining": None}},
                 }
             ],
-        },
-        "cancelled",
+        }
     )
 
 
@@ -4716,7 +4713,7 @@ async def test_shutdown_at(
     expected_trace = {
         "0": [{"result": {"delay": 120.0, "done": False}}],
     }
-    assert_action_trace(expected_trace, "cancelled")
+    assert_action_trace(expected_trace)
 
 
 @pytest.mark.parametrize("wait_for_stop_scripts_after_shutdown", [True])
@@ -4755,7 +4752,7 @@ async def test_shutdown_after(
     expected_trace = {
         "0": [{"result": {"delay": 120.0, "done": False}}],
     }
-    assert_action_trace(expected_trace, "cancelled")
+    assert_action_trace(expected_trace)
 
 
 @pytest.mark.parametrize("wait_for_stop_scripts_after_shutdown", [True])
