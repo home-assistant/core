@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from http import HTTPStatus
+import logging
 from unittest.mock import Mock, call, patch
 
 import pytest
@@ -264,17 +265,21 @@ async def test_no_warn_on_socket(hass: HomeAssistant) -> None:
     mock_probe.assert_not_called()
 
 
-async def test_probe_failure_exception_handling() -> None:
+async def test_probe_failure_exception_handling(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test that probe failures are handled gracefully."""
     with (
         patch(
             "homeassistant.components.zha.repairs.wrong_silabs_firmware.Flasher.probe_app_type",
             side_effect=RuntimeError(),
         ) as mock_probe_app_type,
+        caplog.at_level(logging.DEBUG),
     ):
         await probe_silabs_firmware_type("/dev/ttyZigbee")
 
     mock_probe_app_type.assert_awaited()
+    assert "Failed to probe application type" in caplog.text
 
 
 async def test_inconsistent_settings_keep_new(
