@@ -91,11 +91,11 @@ async def test_update_failed(
     exception: Exception,
 ) -> None:
     """Test update failed."""
-    getattr(mock_automower_client, "get_status").side_effect = exception("Test error")
+    mock_automower_client.get_status.side_effect = exception("Test error")
     await setup_integration(hass, mock_config_entry)
     assert "return await self.api.get_status()" not in caplog.text
-    entry = hass.config_entries.async_entries(DOMAIN)[0]
     assert len(mock_automower_client.get_status.mock_calls) == 1
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
     assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
