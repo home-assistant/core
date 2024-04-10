@@ -7,7 +7,6 @@ from dataclasses import dataclass
 import datetime
 from enum import Enum
 import logging
-from typing import cast
 
 from bimmer_connected.models import ValueWithUnit
 from bimmer_connected.vehicle import MyBMWVehicle
@@ -27,7 +26,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
 
 from . import BMWBaseEntity
