@@ -57,6 +57,50 @@
       "start_flasher_addon": {
         "title": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::start_flasher_addon::title%]",
         "description": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::start_flasher_addon::description%]"
+      },
+      "confirm": {
+        "title": "[%key:component::homeassistant_sky_connect::config::step::confirm::title%]",
+        "description": "[%key:component::homeassistant_sky_connect::config::step::confirm::description%]"
+      },
+      "pick_firmware": {
+        "title": "[%key:component::homeassistant_sky_connect::config::step::pick_firmware::title%]",
+        "description": "[%key:component::homeassistant_sky_connect::config::step::pick_firmware::description%]",
+        "menu_options": {
+          "pick_firmware_thread": "[%key:component::homeassistant_sky_connect::config::step::pick_firmware::menu_options::pick_firmware_thread%]",
+          "pick_firmware_zigbee": "[%key:component::homeassistant_sky_connect::config::step::pick_firmware::menu_options::pick_firmware_zigbee%]"
+        }
+      },
+      "install_zigbee_flasher_addon": {
+        "title": "[%key:component::homeassistant_sky_connect::config::step::install_zigbee_flasher_addon::title%]",
+        "description": "[%key:component::homeassistant_sky_connect::config::step::install_zigbee_flasher_addon::description%]"
+      },
+      "run_zigbee_flasher_addon": {
+        "title": "[%key:component::homeassistant_sky_connect::config::step::run_zigbee_flasher_addon::title%]",
+        "description": "[%key:component::homeassistant_sky_connect::config::step::run_zigbee_flasher_addon::description%]"
+      },
+      "zigbee_flasher_failed": {
+        "title": "[%key:component::homeassistant_sky_connect::config::step::zigbee_flasher_failed::title%]",
+        "description": "[%key:component::homeassistant_sky_connect::config::step::zigbee_flasher_failed::description%]"
+      },
+      "confirm_zigbee": {
+        "title": "[%key:component::homeassistant_sky_connect::config::step::confirm_zigbee::title%]",
+        "description": "[%key:component::homeassistant_sky_connect::config::step::confirm_zigbee::description%]"
+      },
+      "install_otbr_addon": {
+        "title": "[%key:component::homeassistant_sky_connect::config::step::install_otbr_addon::title%]",
+        "description": "[%key:component::homeassistant_sky_connect::config::step::install_otbr_addon::description%]"
+      },
+      "start_otbr_addon": {
+        "title": "[%key:component::homeassistant_sky_connect::config::step::start_otbr_addon::title%]",
+        "description": "[%key:component::homeassistant_sky_connect::config::step::start_otbr_addon::description%]"
+      },
+      "otbr_failed": {
+        "title": "[%key:component::homeassistant_sky_connect::config::step::otbr_failed::title%]",
+        "description": "[%key:component::homeassistant_sky_connect::config::step::otbr_failed::description%]"
+      },
+      "confirm_otbr": {
+        "title": "[%key:component::homeassistant_sky_connect::config::step::confirm_otbr::title%]",
+        "description": "[%key:component::homeassistant_sky_connect::config::step::confirm_otbr::description%]"
       }
     },
     "error": {
