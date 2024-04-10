@@ -82,7 +82,7 @@ async def test_commands(
 
     data = {ATTR_ENTITY_ID: ENTITY_ID, **(service_params or {})}
     with patch(
-        "homeassistant.components.roborock.coordinator.RoborockLocalClient.send_command"
+        "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.send_command"
     ) as mock_send_command:
         await hass.services.async_call(
             Platform.VACUUM,
@@ -115,7 +115,7 @@ async def test_resume_cleaning(
     prop = copy.deepcopy(PROP)
     prop.status.in_cleaning = in_cleaning_int
     with patch(
-        "homeassistant.components.roborock.coordinator.RoborockLocalClient.get_prop",
+        "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.get_prop",
         return_value=prop,
     ):
         await async_setup_component(hass, DOMAIN, {})
@@ -124,7 +124,7 @@ async def test_resume_cleaning(
 
     data = {ATTR_ENTITY_ID: ENTITY_ID}
     with patch(
-        "homeassistant.components.roborock.coordinator.RoborockLocalClient.send_command"
+        "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.send_command"
     ) as mock_send_command:
         await hass.services.async_call(
             Platform.VACUUM,
@@ -145,7 +145,7 @@ async def test_failed_user_command(
     data = {ATTR_ENTITY_ID: ENTITY_ID, "command": "fake_command"}
     with (
         patch(
-            "homeassistant.components.roborock.coordinator.RoborockLocalClient.send_command",
+            "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.send_command",
             side_effect=RoborockException(),
         ),
         pytest.raises(HomeAssistantError, match="Error while calling fake_command"),
