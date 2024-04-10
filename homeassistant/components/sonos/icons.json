@@ -50,7 +50,7 @@
     "clear_sleep_timer": "mdi:alarm-off",
     "play_queue": "mdi:play",
     "remove_from_queue": "mdi:playlist-remove",
-    "update_alarm": "mdi:alarm"
+    "update_alarm": "mdi:alarm",
     "partymode": "mdi:party-popper"
   }
 }
