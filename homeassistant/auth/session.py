@@ -153,6 +153,7 @@ class SessionManager:
             request, max_age=int(TEMP_TIMEOUT_SECONDS)
         )
 
+        @callback
         def remove(_: datetime) -> None:
             self._temp_sessions.pop(session_id, None)
 

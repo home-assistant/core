@@ -681,7 +681,7 @@ def app_strict_connection(hass):
 @pytest.mark.parametrize(
     "strict_connection_mode", [e.value for e in StrictConnectionMode]
 )
-async def test_strict_connection_non_cloud_authenticated_requestes(
+async def test_strict_connection_non_cloud_authenticated_requests(
     hass: HomeAssistant,
     app_strict_connection: web.Application,
     aiohttp_client: ClientSessionGenerator,
@@ -781,7 +781,7 @@ async def _test_strict_connection_non_cloud_enabled_external_unauthenticated_req
     app: web.Application,
     aiohttp_client: ClientSessionGenerator,
     hass_access_token: str,
-    perform_unauthenticatd_request: Callable[
+    perform_unauthenticated_request: Callable[
         [HomeAssistant, TestClient], Awaitable[None]
     ],
     strict_connection_mode: StrictConnectionMode,
@@ -793,7 +793,7 @@ async def _test_strict_connection_non_cloud_enabled_external_unauthenticated_req
 
     for remote_addr in EXTERNAL_ADDRESSES:
         set_mock_ip(remote_addr)
-        await perform_unauthenticatd_request(hass, client)
+        await perform_unauthenticated_request(hass, client)
 
 
 async def _test_strict_connection_non_cloud_enabled_external_unauthenticated_requests_refresh_token(
@@ -801,7 +801,7 @@ async def _test_strict_connection_non_cloud_enabled_external_unauthenticated_req
     app: web.Application,
     aiohttp_client: ClientSessionGenerator,
     hass_access_token: str,
-    perform_unauthenticatd_request: Callable[
+    perform_unauthenticated_request: Callable[
         [HomeAssistant, TestClient], Awaitable[None]
     ],
     strict_connection_mode: StrictConnectionMode,
@@ -831,7 +831,7 @@ async def _test_strict_connection_non_cloud_enabled_external_unauthenticated_req
     assert session._strict_connection_sessions == {}
     for remote_addr in EXTERNAL_ADDRESSES:
         set_mock_ip(remote_addr)
-        await perform_unauthenticatd_request(hass, client)
+        await perform_unauthenticated_request(hass, client)
 
 
 async def _test_strict_connection_non_cloud_enabled_external_unauthenticated_requests_temp_session(
@@ -839,7 +839,7 @@ async def _test_strict_connection_non_cloud_enabled_external_unauthenticated_req
     app: web.Application,
     aiohttp_client: ClientSessionGenerator,
     hass_access_token: str,
-    perform_unauthenticatd_request: Callable[
+    perform_unauthenticated_request: Callable[
         [HomeAssistant, TestClient], Awaitable[None]
     ],
     strict_connection_mode: StrictConnectionMode,
@@ -857,7 +857,6 @@ async def _test_strict_connection_non_cloud_enabled_external_unauthenticated_req
     assert client.session.cookie_jar.filter_cookies(URL("http://127.0.0.1"))
     assert session_id in session._temp_sessions
     for remote_addr in EXTERNAL_ADDRESSES:
-        _LOGGER.info("Testing %s", remote_addr)
         set_mock_ip(remote_addr)
         resp = await client.get("/")
         assert resp.status == HTTPStatus.OK
@@ -869,7 +868,7 @@ async def _test_strict_connection_non_cloud_enabled_external_unauthenticated_req
     assert session._temp_sessions == {}
     for remote_addr in EXTERNAL_ADDRESSES:
         set_mock_ip(remote_addr)
-        await perform_unauthenticatd_request(hass, client)
+        await perform_unauthenticated_request(hass, client)
 
 
 async def _drop_connection_unauthorized_request(
