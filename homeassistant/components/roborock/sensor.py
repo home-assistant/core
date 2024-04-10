@@ -247,7 +247,6 @@ class RoborockSensorRoomEntity(RoborockCoordinatedEntity, SensorEntity):
 
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_translation_key = "current_room"
-    _attr_key = "current_room"
 
     def __init__(
         self,
