@@ -26,7 +26,7 @@ from .const import (
 )
 
 DEFAULT_RETRIES = 2
-MAX_RESULTS = 12
+MAX_RESULTS = 10
 
 _LOGGER = logging.getLogger(__name__)
 
