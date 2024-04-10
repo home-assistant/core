@@ -630,14 +630,7 @@ class HomeAssistantSkyConnectOptionsFlowHandler(
         """Instantiate options flow."""
         super().__init__(*args, **kwargs)
 
-        self._usb_info = usb.UsbServiceInfo(
-            device=self.config_entry.data["device"],
-            vid=self.config_entry.data["vid"],
-            pid=self.config_entry.data["pid"],
-            serial_number=self.config_entry.data["serial_number"],
-            manufacturer=self.config_entry.data["manufacturer"],
-            description=self.config_entry.data["product"],
-        )
+        self._usb_info = get_usb_service_info(self.config_entry)
         self._current_firmware_type = ApplicationType(
             self.config_entry.data["firmware"]
         )

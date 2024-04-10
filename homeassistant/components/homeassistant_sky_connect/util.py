@@ -30,13 +30,13 @@ def get_usb_service_info(config_entry: ConfigEntry) -> usb.UsbServiceInfo:
         pid=config_entry.data["pid"],
         serial_number=config_entry.data["serial_number"],
         manufacturer=config_entry.data["manufacturer"],
-        description=config_entry.data["description"],
+        description=config_entry.data["product"],
     )
 
 
 def get_hardware_variant(config_entry: ConfigEntry) -> HardwareVariant:
     """Get the hardware variant from the config entry."""
-    return HardwareVariant.from_usb_product_name(config_entry.data["description"])
+    return HardwareVariant.from_usb_product_name(config_entry.data["product"])
 
 
 def get_zha_device_path(config_entry: ConfigEntry) -> str:
