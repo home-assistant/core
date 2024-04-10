@@ -117,7 +117,10 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow):
             await addon_manager.async_set_addon_options(config)
         except AddonError as err:
             _LOGGER.error(err)
-            raise AbortFlow("addon_set_config_failed") from err
+            raise AbortFlow(
+                "addon_set_config_failed",
+                description_placeholders=self._get_translation_placeholders(),
+            ) from err
 
     async def _async_get_addon_info(self, addon_manager: AddonManager) -> AddonInfo:
         """Return add-on info."""
@@ -127,7 +130,10 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow):
             _LOGGER.error(err)
             raise AbortFlow(
                 "addon_info_failed",
-                description_placeholders={"addon_name": addon_manager.addon_name},
+                description_placeholders={
+                    **self._get_translation_placeholders(),
+                    "addon_name": addon_manager.addon_name,
+                },
             ) from err
 
         return addon_info
@@ -639,6 +645,12 @@ class HomeAssistantSkyConnectOptionsFlowHandler(
             self.config_entry.data["product"]
         )
 
+        # Make `context` a regular dictionary
+        self.context = {}
+
+        # Regenerate the translation placeholders
+        self._get_translation_placeholders()
+
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -667,7 +679,10 @@ class HomeAssistantSkyConnectOptionsFlowHandler(
                 addon_info.state != AddonState.NOT_INSTALLED
                 and addon_info.options.get("device") == self._usb_info.device
             ):
-                raise AbortFlow("otbr_using_stick")
+                raise AbortFlow(
+                    "otbr_still_using_stick",
+                    description_placeholders=self._get_translation_placeholders(),
+                )
 
         return await super().async_step_pick_firmware_zigbee(user_input)
 
@@ -684,7 +699,10 @@ class HomeAssistantSkyConnectOptionsFlowHandler(
         )
 
         if zha_entries and get_zha_device_path(zha_entries[0]) == self._usb_info.device:
-            raise AbortFlow("zha_stil_using_stick")
+            raise AbortFlow(
+                "zha_still_using_stick",
+                description_placeholders=self._get_translation_placeholders(),
+            )
 
         return await super().async_step_pick_firmware_thread(user_input)
 
