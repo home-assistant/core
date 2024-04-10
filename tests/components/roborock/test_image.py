@@ -37,7 +37,7 @@ async def test_floorplan_image(
     prop.status.in_cleaning = 1
     with (
         patch(
-            "homeassistant.components.roborock.coordinator.RoborockLocalClient.get_prop",
+            "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.get_prop",
             return_value=prop,
         ),
         patch(
@@ -72,7 +72,7 @@ async def test_floorplan_image_failed_parse(
             return_value=map_data,
         ),
         patch(
-            "homeassistant.components.roborock.coordinator.RoborockLocalClient.get_prop",
+            "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.get_prop",
             return_value=prop,
         ),
         patch(
