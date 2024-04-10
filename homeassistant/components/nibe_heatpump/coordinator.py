@@ -136,7 +136,7 @@ class Coordinator(ContextCoordinator[dict[int, CoilData], int]):
             return float(value)  # type: ignore[arg-type]
         return None
 
-    async def async_write_coil(self, coil: Coil, value: int | float | str) -> None:
+    async def async_write_coil(self, coil: Coil, value: float | str) -> None:
         """Write coil and update state."""
         data = CoilData(coil, value)
         await self.connection.write_coil(data)
@@ -224,7 +224,7 @@ class CoilEntity(CoordinatorEntity[Coordinator]):
     def _async_read_coil(self, data: CoilData):
         """Update state of entity based on coil data."""
 
-    async def _async_write_coil(self, value: int | float | str):
+    async def _async_write_coil(self, value: float | str):
         """Write coil and update state."""
         await self.coordinator.async_write_coil(self._coil, value)
 
