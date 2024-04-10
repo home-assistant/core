@@ -1059,7 +1059,9 @@ omit =
     homeassistant/components/progettihwsw/switch.py
     homeassistant/components/proliphix/climate.py
     homeassistant/components/prowl/notify.py
-    homeassistant/components/proxmoxve/*
+    homeassistant/components/proxmoxve/__init__.py
+    homeassistant/components/proxmoxve/binary_sensor.py
+    homeassistant/components/proxmoxve/entity.py
     homeassistant/components/proxy/camera.py
     homeassistant/components/pulseaudio_loopback/switch.py
     homeassistant/components/purpleair/coordinator.py

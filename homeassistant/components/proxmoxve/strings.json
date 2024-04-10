@@ -1,0 +1,38 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "step": {
+      "user": {
+        "title": "Connect to your Proxmox server",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "realm": "Realm",
+          "verify_ssl": "Verify SSL"
+        },
+        "data_description": {
+          "host": "IP address of the Proxmox VE instance. Can include port by appending.",
+          "verify_ssl": "Whether to do strict validation on SSL certificates. If you use a self signed SSL certificate you need to set this to false."
+        }
+      },
+      "selection:": {
+        "title": "Select the VM's and/or the containers you want to monitor.",
+        "data": {
+          "vms": "Virtual Machines",
+          "containers": " Containers"
+        }
+      },
+      "error": {
+        "unknown": "[%key:common::config_flow::error::unknown%]",
+        "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+        "ssl_error": "Unable to verify proxmox server SSL. Try Verify SSL unchecked.",
+        "unknown_error": "Error connecting to Proxmox. Please check the logs."
+      }
+    }
+  }
+}

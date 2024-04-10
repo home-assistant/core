@@ -2,6 +2,7 @@
   "domain": "proxmoxve",
   "name": "Proxmox VE",
   "codeowners": ["@jhollowe", "@Corbeno"],
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/proxmoxve",
   "iot_class": "local_polling",
   "loggers": ["proxmoxer"],
