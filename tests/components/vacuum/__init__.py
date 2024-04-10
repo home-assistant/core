@@ -3,6 +3,7 @@
 from typing import Any
 
 from homeassistant.components.vacuum import (
+    DOMAIN,
     STATE_CLEANING,
     STATE_DOCKED,
     STATE_IDLE,
@@ -11,6 +12,9 @@ from homeassistant.components.vacuum import (
     StateVacuumEntity,
     VacuumEntityFeature,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockEntity
 
@@ -61,3 +65,20 @@ class MockVacuum(MockEntity, StateVacuumEntity):
     def pause(self) -> None:
         """Pause cleaning."""
         self._attr_state = STATE_PAUSED
+
+
+async def help_async_setup_entry_init(
+    hass: HomeAssistant, config_entry: ConfigEntry
+) -> bool:
+    """Set up test config entry."""
+    await hass.config_entries.async_forward_entry_setup(config_entry, DOMAIN)
+    return True
+
+
+async def help_async_unload_entry(
+    hass: HomeAssistant, config_entry: ConfigEntry
+) -> bool:
+    """Unload test config emntry."""
+    return await hass.config_entries.async_unload_platforms(
+        config_entry, [Platform.VACUUM]
+    )

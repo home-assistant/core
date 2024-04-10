@@ -23,13 +23,16 @@ from homeassistant.components.vacuum import (
     StateVacuumEntity,
     VacuumEntityFeature,
 )
-from homeassistant.const import CONF_PLATFORM
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
-from . import MockVacuum
+from . import MockVacuum, help_async_setup_entry_init, help_async_unload_entry
 
-from tests.common import MockConfigEntry, setup_test_component_platform
+from tests.common import (
+    MockConfigEntry,
+    MockModule,
+    mock_integration,
+    setup_test_component_platform,
+)
 
 
 @pytest.mark.parametrize(
@@ -50,16 +53,19 @@ async def test_state_services(
         name="Testing",
         entity_id="vacuum.testing",
     )
-    setup_test_component_platform(
-        hass,
-        DOMAIN,
-        [mock_vacuum],
-    )
-    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
-    await hass.async_block_till_done()
-
-    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry = MockConfigEntry(domain="test")
     config_entry.add_to_hass(hass)
+
+    mock_integration(
+        hass,
+        MockModule(
+            "test",
+            async_setup_entry=help_async_setup_entry_init,
+            async_unload_entry=help_async_unload_entry,
+        ),
+    )
+    setup_test_component_platform(hass, DOMAIN, [mock_vacuum], from_config_entry=True)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
 
     await hass.services.async_call(
         DOMAIN,
@@ -74,18 +80,23 @@ async def test_state_services(
 
 async def test_fan_speed(hass: HomeAssistant, config_flow_fixture: None) -> None:
     """Test set vacuum fan speed."""
-
     mock_vacuum = MockVacuum(
         name="Testing",
         entity_id="vacuum.testing",
     )
-    setup_test_component_platform(
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+
+    mock_integration(
         hass,
-        DOMAIN,
-        [mock_vacuum],
+        MockModule(
+            "test",
+            async_setup_entry=help_async_setup_entry_init,
+            async_unload_entry=help_async_unload_entry,
+        ),
     )
-    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
-    await hass.async_block_till_done()
+    setup_test_component_platform(hass, DOMAIN, [mock_vacuum], from_config_entry=True)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
 
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
@@ -119,16 +130,19 @@ async def test_locate(hass: HomeAssistant, config_flow_fixture: None) -> None:
     mock_vacuum = MockVacuumWithLocation(
         name="Testing", entity_id="vacuum.testing", calls=calls
     )
-    setup_test_component_platform(
-        hass,
-        DOMAIN,
-        [mock_vacuum],
-    )
-    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
-    await hass.async_block_till_done()
-
-    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry = MockConfigEntry(domain="test")
     config_entry.add_to_hass(hass)
+
+    mock_integration(
+        hass,
+        MockModule(
+            "test",
+            async_setup_entry=help_async_setup_entry_init,
+            async_unload_entry=help_async_unload_entry,
+        ),
+    )
+    setup_test_component_platform(hass, DOMAIN, [mock_vacuum], from_config_entry=True)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
 
     await hass.services.async_call(
         DOMAIN,
@@ -165,16 +179,19 @@ async def test_send_command(hass: HomeAssistant, config_flow_fixture: None) -> N
     mock_vacuum = MockVacuumWithSendCommand(
         name="Testing", entity_id="vacuum.testing", strings=strings
     )
-    setup_test_component_platform(
-        hass,
-        DOMAIN,
-        [mock_vacuum],
-    )
-    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
-    await hass.async_block_till_done()
-
-    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry = MockConfigEntry(domain="test")
     config_entry.add_to_hass(hass)
+
+    mock_integration(
+        hass,
+        MockModule(
+            "test",
+            async_setup_entry=help_async_setup_entry_init,
+            async_unload_entry=help_async_unload_entry,
+        ),
+    )
+    setup_test_component_platform(hass, DOMAIN, [mock_vacuum], from_config_entry=True)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
 
     await hass.services.async_call(
         DOMAIN,
