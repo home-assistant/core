@@ -8,6 +8,7 @@ from typing import Any
 
 from bring_api.bring import Bring
 from bring_api.exceptions import BringAuthException, BringRequestException
+from bring_api.types import BringAuthResponse
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
@@ -44,32 +45,18 @@ class BringConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
     reauth_entry: ConfigEntry | None = None
+    info = {}
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
-        if user_input is not None:
-            session = async_get_clientsession(self.hass)
-            bring = Bring(session, user_input[CONF_EMAIL], user_input[CONF_PASSWORD])
-
-            try:
-                info = await bring.login()
-                await bring.load_lists()
-            except BringRequestException:
-                errors["base"] = "cannot_connect"
-            except BringAuthException:
-                errors["base"] = "invalid_auth"
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-            else:
-                await self.async_set_unique_id(bring.uuid)
-                self._abort_if_unique_id_configured()
-                return self.async_create_entry(
-                    title=info["name"] or user_input[CONF_EMAIL], data=user_input
-                )
+        if user_input is not None and not (errors := await self.async_auth(user_input)):
+            self._abort_if_unique_id_configured()
+            return self.async_create_entry(
+                title=self.info["name"] or user_input[CONF_EMAIL], data=user_input
+            )
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
@@ -88,26 +75,14 @@ class BringConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Dialog that informs the user that reauth is required."""
-        errors = {}
+        errors: dict[str, str] = {}
 
         assert self.reauth_entry
 
         if user_input is not None:
             new_input = self.reauth_entry.data | user_input
 
-            session = async_get_clientsession(self.hass)
-            bring = Bring(session, new_input[CONF_EMAIL], new_input[CONF_PASSWORD])
-
-            try:
-                await bring.login()
-            except BringRequestException:
-                errors["base"] = "cannot_connect"
-            except BringAuthException:
-                errors["base"] = "invalid_auth"
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-            else:
+            if not (errors := await self.async_auth(new_input)):
                 self.hass.config_entries.async_update_entry(
                     self.reauth_entry, data=new_input
                 )
@@ -119,8 +94,28 @@ class BringConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm",
             data_schema=self.add_suggested_values_to_schema(
                 data_schema=STEP_USER_DATA_SCHEMA,
-                suggested_values=self.reauth_entry.data,
+                suggested_values={CONF_EMAIL: self.reauth_entry.data[CONF_EMAIL]},
             ),
             description_placeholders={CONF_NAME: self.reauth_entry.title},
             errors=errors,
         )
+
+    async def async_auth(self, user_input: Mapping[str, Any]) -> dict[str, str]:
+        """Auth Helper."""
+
+        errors: dict[str, str] = {}
+        session = async_get_clientsession(self.hass)
+        bring = Bring(session, user_input[CONF_EMAIL], user_input[CONF_PASSWORD])
+
+        try:
+            self.info = await bring.login()
+        except BringRequestException:
+            errors["base"] = "cannot_connect"
+        except BringAuthException:
+            errors["base"] = "invalid_auth"
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
+            errors["base"] = "unknown"
+        else:
+            await self.async_set_unique_id(bring.uuid)
+        return errors
