@@ -3,11 +3,6 @@
 from __future__ import annotations
 
 import datetime
-from types import MappingProxyType
-from typing import Any
-
-from sunweg.device import Inverter
-from sunweg.plant import Plant
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
@@ -26,12 +21,6 @@ from .sensor_types.string import STRING_SENSOR_TYPES
 from .sensor_types.total import TOTAL_SENSOR_TYPES
 
 
-def get_device_list(plant: Plant, config: MappingProxyType[str, Any]) -> list[Inverter]:
-    """Retrieve the device list for the selected plant."""
-
-    return plant.inverters.copy()
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -41,11 +30,6 @@ async def async_setup_entry(
     name = config_entry.data[CONF_NAME]
 
     coordinator: SunWEGDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
-    await coordinator.async_config_entry_first_refresh()
-
-    devices = await hass.async_add_executor_job(
-        get_device_list, coordinator.data, config_entry.data
-    )
 
     entities = [
         SunWEGInverter(
@@ -69,7 +53,7 @@ async def async_setup_entry(
                 device_type=DeviceType.INVERTER,
                 inverter_id=device.id,
             )
-            for device in devices
+            for device in coordinator.data.inverters
             for description in INVERTER_SENSOR_TYPES
         ]
     )
@@ -85,7 +69,7 @@ async def async_setup_entry(
                 device_type=DeviceType.PHASE,
                 deep_name=phase.name,
             )
-            for device in devices
+            for device in coordinator.data.inverters
             for phase in device.phases
             for description in PHASE_SENSOR_TYPES
         ]
@@ -102,7 +86,7 @@ async def async_setup_entry(
                 device_type=DeviceType.STRING,
                 deep_name=string.name,
             )
-            for device in devices
+            for device in coordinator.data.inverters
             for mppt in device.mppts
             for string in mppt.strings
             for description in STRING_SENSOR_TYPES
@@ -177,4 +161,4 @@ class SunWEGInverter(CoordinatorEntity[SunWEGDataUpdateCoordinator], SensorEntit
 
         self._attr_native_value = value
         self._attr_native_unit_of_measurement = unit_of_measurement
-        self.async_write_ha_state()
+        super()._handle_coordinator_update()
