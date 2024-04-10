@@ -241,7 +241,7 @@ def mock_events_list(
 
     def _put_result(
         response: dict[str, Any],
-        calendar_id: str = None,
+        calendar_id: str | None = None,
         exc: ClientError | None = None,
     ) -> None:
         if calendar_id is None:
