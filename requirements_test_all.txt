@@ -2617,6 +2617,9 @@ transmission-rpc==7.0.3
 # homeassistant.components.triggercmd
 triggercmd==0.0.36
 
+# homeassistant.components.trinnov_altitude
+trinnov_altitude==0.1
+
 # homeassistant.components.twinkly
 ttls==1.8.3
 

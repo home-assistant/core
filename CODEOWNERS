@@ -1753,6 +1753,8 @@ build.json @home-assistant/supervisor
 /tests/components/trend/ @jpbede
 /homeassistant/components/triggercmd/ @rvmey
 /tests/components/triggercmd/ @rvmey
+/homeassistant/components/trinnov_altitude/ @binarylogic
+/tests/components/trinnov_altitude/ @binarylogic
 /homeassistant/components/tts/ @home-assistant/core
 /tests/components/tts/ @home-assistant/core
 /homeassistant/components/tuya/ @Tuya @zlinoliver

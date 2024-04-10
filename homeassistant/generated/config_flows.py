@@ -740,6 +740,7 @@ FLOWS = {
         "trane",
         "transmission",
         "triggercmd",
+        "trinnov_altitude",
         "tuya",
         "twentemilieu",
         "twilio",
