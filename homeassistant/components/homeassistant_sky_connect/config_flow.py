@@ -576,7 +576,7 @@ class HomeAssistantSkyConnectConfigFlow(
                 "manufacturer": self._usb_info.manufacturer,
                 "product": self._usb_info.description,
                 "device": self._usb_info.device,
-                "firmware": self._current_firmware_type.lower(),
+                "firmware": self._current_firmware_type.value,
             },
         )
 
@@ -709,7 +709,7 @@ class HomeAssistantSkyConnectOptionsFlowHandler(
             entry=self.config_entry,
             data={
                 **self.config_entry.data,
-                "firmware": self._current_firmware_type,
+                "firmware": self._current_firmware_type.value,
             },
             options=self.config_entry.options,
         )
