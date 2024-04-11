@@ -35,12 +35,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
 )
 from homeassistant.core import DOMAIN as HA_DOMAIN, HomeAssistant, State
-from homeassistant.helpers import (
-    area_registry as ar,
-    config_validation as cv,
-    integration_platform,
-    intent,
-)
+from homeassistant.helpers import config_validation as cv, integration_platform, intent
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
@@ -190,16 +185,13 @@ class GetStateIntentHandler(intent.IntentHandler):
         # Entity name to match
         name_slot = slots.get("name", {})
         entity_name: str | None = name_slot.get("value")
-        entity_text: str | None = name_slot.get("text")
 
         # Get area/floor info
         area_slot = slots.get("area", {})
         area_id = area_slot.get("value")
-        area_name = area_slot.get("text")
 
         floor_slot = slots.get("floor", {})
         floor_id = floor_slot.get("value")
-        floor_name = floor_slot.get("text")
 
         # Optional domain/device class filters.
         # Convert to sets for speed.
@@ -225,6 +217,19 @@ class GetStateIntentHandler(intent.IntentHandler):
             assistant=intent_obj.assistant,
         )
         match_result = intent.async_match_targets(hass, match_constraints)
+        if (not match_result.is_match) and (
+            match_result.no_match_reason
+            in (
+                intent.MatchFailedReason.DUPLICATE_NAME,
+                intent.MatchFailedReason.INVALID_AREA,
+                intent.MatchFailedReason.INVALID_FLOOR,
+            )
+        ):
+            # Don't try to answer questions for certain errors.
+            # Other match failure reasons are OK.
+            raise intent.MatchFailedError(
+                result=match_result, constraints=match_constraints
+            )
 
         # Create response
         response = intent_obj.create_response()
@@ -300,7 +305,7 @@ class SetPositionIntentHandler(intent.DynamicServiceIntentHandler):
         """Create set position handler."""
         super().__init__(
             intent.INTENT_SET_POSITION,
-            extra_slots={ATTR_POSITION: vol.All(vol.Range(min=0, max=100))},
+            required_slots={ATTR_POSITION: vol.All(vol.Range(min=0, max=100))},
         )
 
     def get_domain_and_service(

@@ -793,7 +793,9 @@ async def test_no_states_matched_default_error(
 
     with patch(
         "homeassistant.components.conversation.default_agent.intent.async_handle",
-        side_effect=intent.NoStatesMatchedError(),
+        side_effect=intent.MatchFailedError(
+            intent.MatchTargetsResult(False), intent.MatchTargetsConstraints()
+        ),
     ):
         result = await conversation.async_converse(
             hass, "turn on lights in the kitchen", None, Context(), None
@@ -864,17 +866,14 @@ async def test_empty_aliases(
         assert slot_lists.keys() == {"area", "name", "floor"}
         areas = slot_lists["area"]
         assert len(areas.values) == 1
-        assert areas.values[0].value_out == area_kitchen.id
         assert areas.values[0].text_in.text == area_kitchen.normalized_name
 
         names = slot_lists["name"]
         assert len(names.values) == 1
-        assert names.values[0].value_out == kitchen_light.name
         assert names.values[0].text_in.text == kitchen_light.name
 
         floors = slot_lists["floor"]
         assert len(floors.values) == 1
-        assert floors.values[0].value_out == floor_1.floor_id
         assert floors.values[0].text_in.text == floor_1.name
 
 

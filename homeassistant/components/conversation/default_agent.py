@@ -1058,6 +1058,14 @@ def _get_match_error_response(
 
         return ErrorKey.DUPLICATE_ENTITIES, {"entity": result.no_match_name}
 
+    if reason == intent.MatchFailedReason.INVALID_AREA:
+        # Invalid area name
+        return ErrorKey.NO_AREA, {"area": result.no_match_name}
+
+    if reason == intent.MatchFailedReason.INVALID_FLOOR:
+        # Invalid floor name
+        return ErrorKey.NO_FLOOR, {"floor": result.no_match_name}
+
     # Default error
     return ErrorKey.NO_INTENT, {}
 

@@ -34,25 +34,6 @@ async def test_intent_set_color(hass: HomeAssistant) -> None:
     assert call.data.get(light.ATTR_RGB_COLOR) == (0, 0, 255)
 
 
-async def test_intent_set_color_tests_feature(hass: HomeAssistant) -> None:
-    """Test the set color intent."""
-    hass.states.async_set("light.hello", "off")
-    calls = async_mock_service(hass, light.DOMAIN, light.SERVICE_TURN_ON)
-    await intent.async_setup_intents(hass)
-
-    response = await async_handle(
-        hass,
-        "test",
-        intent.INTENT_SET,
-        {"name": {"value": "Hello"}, "color": {"value": "blue"}},
-    )
-
-    # Response should contain one failed target
-    assert len(response.success_results) == 0
-    assert len(response.failed_results) == 1
-    assert len(calls) == 0
-
-
 async def test_intent_set_color_and_brightness(hass: HomeAssistant) -> None:
     """Test the set color intent."""
     hass.states.async_set(
