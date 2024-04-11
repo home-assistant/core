@@ -12,6 +12,9 @@ from homeassistant.helpers.entity import Entity
 from .const import AREA, DOMAIN, MANUFACTURER, MODEL, NAME
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+    from typing import Any
+
     from trinnov_altitude.messages import Message
     from trinnov_altitude.trinnov_altitude import TrinnovAltitude
 
@@ -26,11 +29,13 @@ class TrinnovAltitudeEntity(Entity):
 
     def __init__(self, device: TrinnovAltitude) -> None:
         """Initialize entity."""
+
         self._device = device
+        self._callback: Callable[[Any], None] | None = None
 
         self._attr_unique_id = device.id
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, device.id)},
+            identifiers={(DOMAIN, str(device.id))},
             # Instead of setting the device name to the entity name,
             # this should be updated to set has_entity_name = True
             name=f"{NAME} ({device.id})",
@@ -49,5 +54,11 @@ class TrinnovAltitudeEntity(Entity):
             """Handle device state changes."""
             self.async_write_ha_state()
 
-        self._device.register_callback(_update)
-        self.async_on_remove(self._device.disconnect)
+        self._callback = _update
+        self._device.register_callback(self._callback)
+
+    async def async_will_remove_from_hass(self):
+        """Deregister update listener."""
+
+        if self._callback is not None:
+            self._device.deregister_callback(self._callback)

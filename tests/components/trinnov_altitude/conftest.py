@@ -6,10 +6,10 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from homeassistant.components.trinnov_altitude.const import DOMAIN
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_MAC
 from homeassistant.core import HomeAssistant
 
-from . import MOCK_HOST, MOCK_ID
+from . import MOCK_HOST, MOCK_ID, MOCK_MAC
 
 from tests.common import MockConfigEntry
 
@@ -36,7 +36,7 @@ def fixture_mock_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         unique_id=MOCK_ID,
         version=1,
-        data={CONF_HOST: MOCK_HOST},
+        data={CONF_HOST: MOCK_HOST, CONF_MAC: MOCK_MAC},
     )
 
 

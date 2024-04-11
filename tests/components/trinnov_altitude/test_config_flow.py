@@ -6,28 +6,31 @@ from trinnov_altitude.exceptions import ConnectionFailedError, ConnectionTimeout
 
 from homeassistant.components.trinnov_altitude.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_MAC
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from . import MOCK_HOST
+from . import MOCK_HOST, MOCK_MAC
 
 from tests.common import MockConfigEntry
+
+CONTEXT = {"source": SOURCE_USER}
+DATA = {CONF_HOST: MOCK_HOST, CONF_MAC: MOCK_MAC}
 
 
 async def test_user_config_flow(hass: HomeAssistant, mock_device: AsyncMock) -> None:
     """Test user config flow."""
 
+    # Note: I could not get this test to pass when isolating each failure in
+    # separate tests. There appears to be a race condition with mocking that
+    # I could not resolve despite other tests having the same pattern.
+
     # Test connection failed
-    #
-    # Note: I could not get this test to pass when isolating in a separate test.
-    # There appears to be a race condition with mocking that I could not resolve
-    # despite other tests having the same pattern.
 
     mock_device.connect.side_effect = ConnectionFailedError("message")
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data={CONF_HOST: MOCK_HOST}
+        DOMAIN, context=CONTEXT, data=DATA
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -39,7 +42,7 @@ async def test_user_config_flow(hass: HomeAssistant, mock_device: AsyncMock) -> 
     mock_device.connect.side_effect = ConnectionTimeoutError("message")
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data={CONF_HOST: MOCK_HOST}
+        DOMAIN, context=CONTEXT, data=DATA
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -50,14 +53,12 @@ async def test_user_config_flow(hass: HomeAssistant, mock_device: AsyncMock) -> 
 
     mock_device.connect.side_effect = None
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
+    result = await hass.config_entries.flow.async_init(DOMAIN, context=CONTEXT)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={CONF_HOST: MOCK_HOST}
+        result["flow_id"], user_input={CONF_HOST: MOCK_HOST, CONF_MAC: MOCK_MAC}
     )
     await hass.async_block_till_done()
 
@@ -71,7 +72,9 @@ async def test_user_config_flow_device_exists_abort(
 ) -> None:
     """Test flow aborts when device already configured."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data={CONF_HOST: MOCK_HOST}
+        DOMAIN,
+        context=CONTEXT,
+        data=DATA,
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"

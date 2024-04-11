@@ -5,42 +5,26 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from trinnov_altitude.exceptions import ConnectionFailedError, ConnectionTimeoutError
+from trinnov_altitude.exceptions import (
+    ConnectionFailedError,
+    ConnectionTimeoutError,
+    InvalidMacAddressOUIError,
+    MalformedMacAddressError,
+)
 import voluptuous as vol
 
-from homeassistant import exceptions
 from homeassistant.config_entries import (
     CONN_CLASS_LOCAL_PUSH,
     ConfigFlow,
     ConfigFlowResult,
 )
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_MAC
 
 from . import TrinnovAltitude
-from .const import DOMAIN  # pylint:disable=unused-import
+from .const import DOMAIN, NAME  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
-DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
-
-
-async def validate_input(data: dict) -> dict[str, Any]:
-    """Validate the user input allows us to connect."""
-
-    host = data[CONF_HOST].strip()
-    device = TrinnovAltitude(host=host)
-    device_id = None
-
-    try:
-        await device.connect()
-        device_id = device.id
-    except ConnectionFailedError as exc:
-        raise ConnectionFailed from exc
-    except ConnectionTimeoutError as exc:
-        raise ConnectionTimeout from exc
-    finally:
-        await device.disconnect()
-
-    return {"host": host, "id": device_id, "title": f"Trinnov Altitude ({device_id})"}
+DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str, vol.Optional(CONF_MAC): str})
 
 
 class TrinnovAltitudeConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -56,28 +40,31 @@ class TrinnovAltitudeConfigFlow(ConfigFlow, domain=DOMAIN):
 
         errors = {}
         if user_input is not None:
+            host = user_input[CONF_HOST].strip()
+            mac = user_input[CONF_MAC]
+
             try:
-                info = await validate_input(user_input)
-            except ConnectionFailed:
-                errors["host"] = "invalid_host"
-            except ConnectionTimeout:
+                device = TrinnovAltitude(host=host, mac=mac)
+                await device.connect()
+            except MalformedMacAddressError:
+                errors[CONF_MAC] = "invalid_mac"
+            except InvalidMacAddressOUIError:
+                errors[CONF_MAC] = "invalid_mac"
+            except ConnectionFailedError:
+                errors[CONF_HOST] = "invalid_host"
+            except ConnectionTimeoutError:
                 errors["base"] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
+                _LOGGER.exception("Unexpected exception: {e}")
                 errors["base"] = "unknown"
             else:
-                await self.async_set_unique_id(info["id"], raise_on_progress=False)
-                self._abort_if_unique_id_configured(updates={CONF_HOST: info["host"]})
-                return self.async_create_entry(title=info["title"], data=user_input)
+                await self.async_set_unique_id(device.id, raise_on_progress=False)
+                processed_input = {CONF_HOST: host, CONF_MAC: mac}
+                self._abort_if_unique_id_configured(processed_input)
+                return self.async_create_entry(
+                    title=f"{NAME} ({device.id})", data=processed_input
+                )
 
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
-
-
-class ConnectionFailed(exceptions.HomeAssistantError):
-    """Error to indicate that we could not connect to the provided host."""
-
-
-class ConnectionTimeout(exceptions.HomeAssistantError):
-    """Error to indicate that we timed out trying to connect to the provided host."""

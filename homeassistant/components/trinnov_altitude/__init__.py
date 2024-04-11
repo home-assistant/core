@@ -2,15 +2,13 @@
 
 from __future__ import annotations
 
-from trinnov_altitude.exceptions import ConnectionFailedError, ConnectionTimeoutError
 from trinnov_altitude.trinnov_altitude import TrinnovAltitude
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP, Platform
+from homeassistant.const import CONF_HOST, CONF_MAC, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import DOMAIN
+from .const import CLIENT_ID, DOMAIN
 
 PLATFORMS: list[str] = [Platform.REMOTE]
 
@@ -18,19 +16,18 @@ PLATFORMS: list[str] = [Platform.REMOTE]
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry for Trinnov Altitude."""
 
-    host = entry.data[CONF_HOST]
-    client = TrinnovAltitude(host=host)
+    host = entry.data[CONF_HOST].strip()
+    mac = entry.data[CONF_MAC].strip()
+    device = TrinnovAltitude(host=host, mac=mac, client_id=CLIENT_ID)
 
-    try:
-        await client.connect()
-    except (ConnectionFailedError, ConnectionTimeoutError) as err:
-        await client.disconnect()
-        raise ConfigEntryNotReady(f"Unable to connect to {host}: {err}") from err
+    # Spawn a task to start listening for events from the device
+    device.start_listening()
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = client
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = device
 
+    # If the device is connected, ensure that we disconnect when Home Assistant is stopped
     async def disconnect(event: Event) -> None:
-        await client.disconnect()
+        await device.disconnect()
 
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, disconnect)
