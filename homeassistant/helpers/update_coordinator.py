@@ -136,7 +136,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             await self.async_shutdown()
 
         self._unsub_shutdown = self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STOP, _on_hass_stop, run_immediately=True
+            EVENT_HOMEASSISTANT_STOP, _on_hass_stop
         )
 
     @callback

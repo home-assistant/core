@@ -54,7 +54,7 @@ class MockValveEntity(ValveEntity):
         unique_id: str = "mock_valve",
         name: str = "Valve",
         features: ValveEntityFeature = ValveEntityFeature(0),
-        current_position: int = None,
+        current_position: int | None = None,
         device_class: ValveDeviceClass = None,
         reports_position: bool = True,
     ) -> None:
@@ -104,7 +104,7 @@ class MockBinaryValveEntity(ValveEntity):
         unique_id: str = "mock_valve_2",
         name: str = "Valve",
         features: ValveEntityFeature = ValveEntityFeature(0),
-        is_closed: bool = None,
+        is_closed: bool | None = None,
     ) -> None:
         """Initialize the valve."""
         self._attr_name = name
