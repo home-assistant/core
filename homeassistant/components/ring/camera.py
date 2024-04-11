@@ -52,7 +52,6 @@ class RingCam(RingEntity[RingDoorBell], Camera):
     """An implementation of a Ring Door Bell camera."""
 
     _attr_name = None
-    _device: RingDoorBell
 
     def __init__(
         self,

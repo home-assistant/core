@@ -60,7 +60,6 @@ class RingSensor(RingEntity[RingDeviceT], SensorEntity):
     """A sensor implementation for Ring device."""
 
     entity_description: RingSensorEntityDescription[RingDeviceT]
-    _device: RingDeviceT
 
     def __init__(
         self,
