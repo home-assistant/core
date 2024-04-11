@@ -1088,7 +1088,7 @@ jobs:
           pattern: coverage-*
       - name: Upload coverage to Codecov (full coverage)
         if: needs.info.outputs.test_full_suite == 'true'
-        uses: Wandalen/wretry.action@v3.1.0
+        uses: Wandalen/wretry.action@v3.3.0
         with:
           action: codecov/codecov-action@v4.3.0
           with: |
@@ -1099,7 +1099,7 @@ jobs:
           attempt_delay: 30000
       - name: Upload coverage to Codecov (partial coverage)
         if: needs.info.outputs.test_full_suite == 'false'
-        uses: Wandalen/wretry.action@v3.1.0
+        uses: Wandalen/wretry.action@v3.3.0
         with:
           action: codecov/codecov-action@v4.3.0
           with: |
@@ -1234,7 +1234,7 @@ jobs:
           pattern: coverage-*
       - name: Upload coverage to Codecov (full coverage)
         if: needs.info.outputs.test_full_suite == 'true'
-        uses: Wandalen/wretry.action@v3.1.0
+        uses: Wandalen/wretry.action@v3.3.0
         with:
           action: codecov/codecov-action@v4.3.0
           with: |
@@ -1245,7 +1245,7 @@ jobs:
           attempt_delay: 30000
       - name: Upload coverage to Codecov (partial coverage)
         if: needs.info.outputs.test_full_suite == 'false'
-        uses: Wandalen/wretry.action@v3.1.0
+        uses: Wandalen/wretry.action@v3.3.0
         with:
           action: codecov/codecov-action@v4.3.0
           with: |
