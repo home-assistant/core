@@ -604,18 +604,20 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
             )
 
         if enable_automation:
-            await self.async_enable()
+            await self._async_enable()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on and update the state."""
-        await self.async_enable()
+        await self._async_enable()
+        self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         if CONF_STOP_ACTIONS in kwargs:
-            await self.async_disable(kwargs[CONF_STOP_ACTIONS])
+            await self._async_disable(kwargs[CONF_STOP_ACTIONS])
         else:
-            await self.async_disable()
+            await self._async_disable()
+        self.async_write_ha_state()
 
     async def async_trigger(
         self,
@@ -743,7 +745,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
     async def async_will_remove_from_hass(self) -> None:
         """Remove listeners when removing automation from Home Assistant."""
         await super().async_will_remove_from_hass()
-        await self.async_disable()
+        await self._async_disable()
 
     async def _async_enable_automation(self, event: Event) -> None:
         """Start automation on startup."""
@@ -752,31 +754,34 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
             return
 
         self._async_detach_triggers = await self._async_attach_triggers(True)
+        self.async_write_ha_state()
 
-    async def async_enable(self) -> None:
+    async def _async_enable(self) -> None:
         """Enable this automation entity.
 
-        This method is a coroutine.
+        This method is not expected to write state to the
+        state machine.
         """
         if self._is_enabled:
             return
 
         self._is_enabled = True
-
         # HomeAssistant is starting up
         if self.hass.state is not CoreState.not_running:
             self._async_detach_triggers = await self._async_attach_triggers(False)
-            self.async_write_ha_state()
             return
 
         self.hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_STARTED,
             self._async_enable_automation,
         )
-        self.async_write_ha_state()
 
-    async def async_disable(self, stop_actions: bool = DEFAULT_STOP_ACTIONS) -> None:
-        """Disable the automation entity."""
+    async def _async_disable(self, stop_actions: bool = DEFAULT_STOP_ACTIONS) -> None:
+        """Disable the automation entity.
+
+        This method is not expected to write state to the
+        state machine.
+        """
         if not self._is_enabled and not self.action_script.runs:
             return
 
@@ -788,8 +793,6 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
 
         if stop_actions:
             await self.action_script.async_stop()
-
-        self.async_write_ha_state()
 
     def _log_callback(self, level: int, msg: str, **kwargs: Any) -> None:
         """Log helper callback."""
@@ -816,7 +819,6 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
     ) -> Callable[[], None] | None:
         """Set up the triggers."""
         this = None
-        self.async_write_ha_state()
         if state := self.hass.states.get(self.entity_id):
             this = state.as_dict()
         variables = {"this": this}
