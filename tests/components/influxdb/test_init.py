@@ -1,5 +1,6 @@
 """The tests for the InfluxDB component."""
 
+import asyncio
 from dataclasses import dataclass
 import datetime
 from http import HTTPStatus
@@ -1572,12 +1573,21 @@ async def test_invalid_inputs_error(
     await _setup(hass, mock_client, config_ext, get_write_api)
 
     write_api = get_write_api(mock_client)
-    write_api.side_effect = test_exception
+
+    write_api_done_event = asyncio.Event()
+
+    def wait_for_write(*args, **kwargs):
+        hass.loop.call_soon_threadsafe(write_api_done_event.set)
+        raise test_exception
+
+    write_api.side_effect = wait_for_write
 
     with patch(f"{INFLUX_PATH}.time.sleep") as sleep:
+        write_api_done_event.clear()
         hass.states.async_set("fake.something", 1)
         await hass.async_block_till_done()
         await async_wait_for_queue_to_process(hass)
+        await write_api_done_event.wait()
         await hass.async_block_till_done()
 
         write_api.assert_called_once()
