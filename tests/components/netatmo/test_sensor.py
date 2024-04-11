@@ -165,17 +165,17 @@ async def test_process_health(health: int, expected: str) -> None:
         ),
         ("12:34:56:80:c1:ea-sum_rain_1", "villa_rain_rain_last_hour", "0"),
         ("12:34:56:80:c1:ea-sum_rain_24", "villa_rain_rain_today", "6.9"),
-        ("12:34:56:03:1b:e4-windangle", "netatmoindoor_garden_direction", "SW"),
+        ("12:34:56:03:1b:e4-windangle", "netatmoindoor_garden_direction", "sw"),
         (
             "12:34:56:03:1b:e4-windangle_value",
             "netatmoindoor_garden_angle",
             "217",
         ),
-        ("12:34:56:03:1b:e4-gustangle", "mystation_garden_gust_direction", "S"),
+        ("12:34:56:03:1b:e4-gustangle", "mystation_garden_gust_direction", "s"),
         (
             "12:34:56:03:1b:e4-gustangle",
             "netatmoindoor_garden_gust_direction",
-            "S",
+            "s",
         ),
         (
             "12:34:56:03:1b:e4-gustangle_value",
