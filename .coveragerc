@@ -365,7 +365,6 @@ omit =
     homeassistant/components/epion/sensor.py
     homeassistant/components/epson/__init__.py
     homeassistant/components/epson/media_player.py
-    homeassistant/components/epsonworkforce/sensor.py
     homeassistant/components/eq3btsmart/__init__.py
     homeassistant/components/eq3btsmart/climate.py
     homeassistant/components/eq3btsmart/const.py
