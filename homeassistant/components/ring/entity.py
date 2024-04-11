@@ -20,11 +20,12 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import ATTRIBUTION, DOMAIN
 from .coordinator import RingDataCoordinator, RingNotificationsCoordinator
 
+RingDeviceT = TypeVar("RingDeviceT", bound=RingGeneric, default=RingGeneric)
+
 _RingCoordinatorT = TypeVar(
     "_RingCoordinatorT",
     bound=(RingDataCoordinator | RingNotificationsCoordinator),
 )
-_RingDeviceT = TypeVar("_RingDeviceT", bound=RingGeneric, default=RingGeneric)
 _RingBaseEntityT = TypeVar("_RingBaseEntityT", bound="RingBaseEntity[Any, Any]")
 _R = TypeVar("_R")
 _P = ParamSpec("_P")
@@ -56,7 +57,7 @@ def exception_wrap(
 
 
 class RingBaseEntity(
-    CoordinatorEntity[_RingCoordinatorT], Generic[_RingCoordinatorT, _RingDeviceT]
+    CoordinatorEntity[_RingCoordinatorT], Generic[_RingCoordinatorT, RingDeviceT]
 ):
     """Base implementation for Ring device."""
 
@@ -66,7 +67,7 @@ class RingBaseEntity(
 
     def __init__(
         self,
-        device: _RingDeviceT,
+        device: RingDeviceT,
         coordinator: _RingCoordinatorT,
     ) -> None:
         """Initialize a sensor for Ring device."""
@@ -81,7 +82,7 @@ class RingBaseEntity(
         )
 
 
-class RingEntity(RingBaseEntity[RingDataCoordinator, _RingDeviceT]):
+class RingEntity(RingBaseEntity[RingDataCoordinator, RingDeviceT]):
     """Implementation for Ring devices."""
 
     def _get_coordinator_data(self) -> RingDevices:
@@ -90,7 +91,7 @@ class RingEntity(RingBaseEntity[RingDataCoordinator, _RingDeviceT]):
     @callback
     def _handle_coordinator_update(self) -> None:
         self._device = cast(
-            _RingDeviceT,
+            RingDeviceT,
             self._get_coordinator_data().get_device(self._device.device_api_id),
         )
         super()._handle_coordinator_update()
