@@ -188,13 +188,13 @@
         "name": "Wind direction",
         "state": {
           "n": "North",
-          "ne": "North-East",
+          "ne": "North-east",
           "e": "East",
-          "se": "South-East",
+          "se": "South-east",
           "s": "South",
-          "sw": "South-West",
+          "sw": "South-west",
           "w": "West",
-          "nw": "North-West"
+          "nw": "North-west"
         }
       },
       "wind_angle": {
