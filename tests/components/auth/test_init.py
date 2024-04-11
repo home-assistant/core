@@ -3,8 +3,7 @@
 from datetime import timedelta
 from http import HTTPStatus
 import logging
-from unittest.mock import Mock, patch
-from urllib.parse import quote_plus
+from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -16,10 +15,7 @@ from homeassistant.auth.models import (
     Credentials,
 )
 from homeassistant.components import auth
-from homeassistant.components.http.const import StrictConnectionMode
-from homeassistant.config import async_process_ha_core_config
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
@@ -686,78 +682,3 @@ async def test_ws_sign_path(
     hass, path, expires = mock_sign.mock_calls[0][1]
     assert path == "/api/hello"
     assert expires.total_seconds() == 20
-
-
-async def test_service_create_temporary_strict_connection_url_strict_connection_disabled(
-    hass: HomeAssistant,
-) -> None:
-    """Test service create_temporary_strict_connection_url with strict_connection not enabled."""
-    assert await async_setup_component(hass, auth.DOMAIN, {"http": {}})
-    with pytest.raises(
-        ServiceValidationError,
-        match="Strict connection is not enabled for non-cloud requests",
-    ):
-        await hass.services.async_call(
-            auth.DOMAIN,
-            "create_temporary_strict_connection_url",
-            blocking=True,
-            return_response=True,
-        )
-
-
-@pytest.mark.parametrize(
-    ("mode"),
-    [
-        StrictConnectionMode.DROP_CONNECTION,
-        StrictConnectionMode.STATIC_PAGE,
-    ],
-)
-async def test_service_create_temporary_strict_connection(
-    hass: HomeAssistant, mode: StrictConnectionMode
-) -> None:
-    """Test service create_temporary_strict_connection_url."""
-    assert await async_setup_component(
-        hass, auth.DOMAIN, {"http": {"strict_connection": mode}}
-    )
-
-    # No external url set
-    assert hass.config.external_url is None
-    assert hass.config.internal_url is None
-    with pytest.raises(ServiceValidationError, match="No external URL available"):
-        await hass.services.async_call(
-            auth.DOMAIN,
-            "create_temporary_strict_connection_url",
-            blocking=True,
-            return_response=True,
-        )
-
-    # Raise if only internal url is available
-    hass.config.api = Mock(use_ssl=False, port=8123, local_ip="192.168.123.123")
-    with pytest.raises(ServiceValidationError, match="No external URL available"):
-        await hass.services.async_call(
-            auth.DOMAIN,
-            "create_temporary_strict_connection_url",
-            blocking=True,
-            return_response=True,
-        )
-
-    # Set external url too
-    external_url = "https://example.com"
-    await async_process_ha_core_config(
-        hass,
-        {"external_url": external_url},
-    )
-    assert hass.config.external_url == external_url
-    response = await hass.services.async_call(
-        auth.DOMAIN,
-        "create_temporary_strict_connection_url",
-        blocking=True,
-        return_response=True,
-    )
-    assert isinstance(response, dict)
-    direct_url_prefix = f"{external_url}/auth/strict_connection/temp_token?authSig="
-    assert response.pop("direct_url").startswith(direct_url_prefix)
-    assert response.pop("url").startswith(
-        f"https://login.home-assistant.io?u={quote_plus(direct_url_prefix)}"
-    )
-    assert response == {}  # No more keys in response

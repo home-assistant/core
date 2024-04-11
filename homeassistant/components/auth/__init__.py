@@ -130,7 +130,6 @@ from datetime import datetime, timedelta
 from http import HTTPStatus
 from logging import getLogger
 from typing import Any, cast
-from urllib.parse import quote_plus, urljoin
 import uuid
 
 from aiohttp import web
@@ -145,7 +144,7 @@ from homeassistant.auth.models import (
     User,
 )
 from homeassistant.components import websocket_api
-from homeassistant.components.http import KEY_HASS, StrictConnectionMode
+from homeassistant.components.http import KEY_HASS
 from homeassistant.components.http.auth import (
     async_sign_path,
     async_user_not_allowed_do_auth,
@@ -153,17 +152,9 @@ from homeassistant.components.http.auth import (
 from homeassistant.components.http.ban import log_invalid_auth
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.http.view import HomeAssistantView
-from homeassistant.core import (
-    HomeAssistant,
-    ServiceCall,
-    ServiceResponse,
-    SupportsResponse,
-    callback,
-)
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2AuthorizeCallbackView
-from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util
@@ -208,42 +199,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     await login_flow.async_setup(hass, store_result)
     await mfa_setup_flow.async_setup(hass)
-
-    @callback
-    def create_temporary_strict_connection_url(
-        _: ServiceCall,
-    ) -> ServiceResponse:
-        """Create a strict connection url and return it."""
-        if hass.http.strict_connection_non_cloud is StrictConnectionMode.DISABLED:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="strict_connection_not_enabled_non_cloud",
-            )
-
-        try:
-            url = get_url(hass, prefer_external=True, allow_internal=False)
-        except NoURLAvailableError as ex:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="no_external_url_available",
-            ) from ex
-
-        path = async_sign_path(
-            hass, STRICT_CONNECTION_URL, timedelta(hours=1), use_content_user=True
-        )
-        url = urljoin(url, path)
-
-        return {
-            "url": f"https://login.home-assistant.io?u={quote_plus(url)}",
-            "direct_url": url,
-        }
-
-    hass.services.async_register(
-        DOMAIN,
-        "create_temporary_strict_connection_url",
-        create_temporary_strict_connection_url,
-        supports_response=SupportsResponse.ONLY,
-    )
 
     return True
 
@@ -492,7 +447,6 @@ class StrictConnectionTempTokenView(HomeAssistantView):
     url = STRICT_CONNECTION_URL
     name = "api:auth:strict_connection:temp_token"
     requires_auth = False
-    cors_allowed = True
 
     async def get(self, request: web.Request) -> web.Response:
         """Get a temporary token and redirect to main page."""

@@ -148,23 +148,6 @@ def string_no_single_quoted_placeholders(value: str) -> str:
     return value
 
 
-SERVICES_SCHEMA = cv.schema_with_slug_keys(
-    {
-        vol.Required("name"): translation_value_validator,
-        vol.Required("description"): translation_value_validator,
-        vol.Optional("fields"): cv.schema_with_slug_keys(
-            {
-                vol.Required("name"): str,
-                vol.Required("description"): translation_value_validator,
-                vol.Optional("example"): translation_value_validator,
-            },
-            slug_validator=translation_key_validator,
-        ),
-    },
-    slug_validator=translation_key_validator,
-)
-
-
 def gen_data_entry_schema(
     *,
     config: Config,
@@ -374,7 +357,21 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
                 {vol.Optional("message"): translation_value_validator},
                 slug_validator=cv.slug,
             ),
-            vol.Optional("services"): SERVICES_SCHEMA,
+            vol.Optional("services"): cv.schema_with_slug_keys(
+                {
+                    vol.Required("name"): translation_value_validator,
+                    vol.Required("description"): translation_value_validator,
+                    vol.Optional("fields"): cv.schema_with_slug_keys(
+                        {
+                            vol.Required("name"): str,
+                            vol.Required("description"): translation_value_validator,
+                            vol.Optional("example"): translation_value_validator,
+                        },
+                        slug_validator=translation_key_validator,
+                    ),
+                },
+                slug_validator=translation_key_validator,
+            ),
             vol.Optional("conversation"): {
                 vol.Required("agent"): {
                     vol.Required("done"): translation_value_validator,
@@ -388,11 +385,6 @@ def gen_auth_schema(config: Config, integration: Integration) -> vol.Schema:
     """Generate auth schema."""
     return vol.Schema(
         {
-            vol.Optional("exceptions"): cv.schema_with_slug_keys(
-                {vol.Optional("message"): translation_value_validator},
-                slug_validator=cv.slug,
-            ),
-            vol.Optional("issues"): gen_issues_schema(config, integration),
             vol.Optional("mfa_setup"): {
                 str: gen_data_entry_schema(
                     config=config,
@@ -401,7 +393,7 @@ def gen_auth_schema(config: Config, integration: Integration) -> vol.Schema:
                     require_step_title=True,
                 )
             },
-            vol.Optional("services"): SERVICES_SCHEMA,
+            vol.Optional("issues"): gen_issues_schema(config, integration),
         }
     )
 
