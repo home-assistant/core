@@ -1646,7 +1646,7 @@ async def test_shutdown(
     ],
 )
 async def test_stop_restart(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, mock_pymodbus_return
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, mock_modbus
 ) -> None:
     """Run test for service stop."""
 
@@ -1657,7 +1657,7 @@ async def test_stop_restart(
     await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == "17"
 
-    mock_pymodbus_return.reset_mock()
+    mock_modbus.reset_mock()
     caplog.clear()
     data = {
         ATTR_HUB: TEST_MODBUS_NAME,
@@ -1665,23 +1665,23 @@ async def test_stop_restart(
     await hass.services.async_call(DOMAIN, SERVICE_STOP, data, blocking=True)
     await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
-    assert mock_pymodbus_return.close.called
+    assert mock_modbus.close.called
     assert f"modbus {TEST_MODBUS_NAME} communication closed" in caplog.text
 
-    mock_pymodbus_return.reset_mock()
+    mock_modbus.reset_mock()
     caplog.clear()
     await hass.services.async_call(DOMAIN, SERVICE_RESTART, data, blocking=True)
     await hass.async_block_till_done()
-    assert not mock_pymodbus_return.close.called
-    assert mock_pymodbus_return.connect.called
+    assert not mock_modbus.close.called
+    assert mock_modbus.connect.called
     assert f"modbus {TEST_MODBUS_NAME} communication open" in caplog.text
 
-    mock_pymodbus_return.reset_mock()
+    mock_modbus.reset_mock()
     caplog.clear()
     await hass.services.async_call(DOMAIN, SERVICE_RESTART, data, blocking=True)
     await hass.async_block_till_done()
-    assert mock_pymodbus_return.close.called
-    assert mock_pymodbus_return.connect.called
+    assert mock_modbus.close.called
+    assert mock_modbus.connect.called
     assert f"modbus {TEST_MODBUS_NAME} communication closed" in caplog.text
     assert f"modbus {TEST_MODBUS_NAME} communication open" in caplog.text
 
@@ -1711,7 +1711,7 @@ async def test_write_no_client(hass: HomeAssistant, mock_modbus) -> None:
 async def test_integration_reload(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
-    mock_pymodbus_return,
+    mock_modbus,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Run test for integration reload."""
@@ -1732,7 +1732,7 @@ async def test_integration_reload(
 
 @pytest.mark.parametrize("do_config", [{}])
 async def test_integration_reload_failed(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, mock_pymodbus_return
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, mock_modbus
 ) -> None:
     """Run test for integration connect failure on reload."""
     caplog.set_level(logging.INFO)
@@ -1741,9 +1741,7 @@ async def test_integration_reload_failed(
     yaml_path = get_fixture_path("configuration.yaml", "modbus")
     with (
         mock.patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path),
-        mock.patch.object(
-            mock_pymodbus_return, "connect", side_effect=ModbusException("error")
-        ),
+        mock.patch.object(mock_modbus, "connect", side_effect=ModbusException("error")),
     ):
         await hass.services.async_call(DOMAIN, SERVICE_RELOAD, blocking=True)
         await hass.async_block_till_done()
@@ -1754,7 +1752,7 @@ async def test_integration_reload_failed(
 
 @pytest.mark.parametrize("do_config", [{}])
 async def test_integration_setup_failed(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, mock_pymodbus_return
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, mock_modbus
 ) -> None:
     """Run test for integration setup on reload."""
     with mock.patch.object(

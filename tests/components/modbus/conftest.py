@@ -76,7 +76,7 @@ def mock_pymodbus_fixture(do_exception, register_words):
     """Mock pymodbus."""
     mock_pb = mock.AsyncMock()
     mock_pb.close = mock.MagicMock()
-    read_result = ReadResult(register_words)
+    read_result = ReadResult(register_words if register_words else [])
     mock_pb.read_coils.return_value = read_result
     mock_pb.read_discrete_inputs.return_value = read_result
     mock_pb.read_input_registers.return_value = read_result
@@ -154,32 +154,11 @@ async def mock_modbus_fixture(
     return mock_pymodbus
 
 
-@pytest.fixture(name="mock_pymodbus_return")
-async def mock_pymodbus_return_fixture(hass, register_words, do_exception, mock_modbus):
-    """Trigger update call with time_changed event."""
-    read_result = ReadResult(register_words if register_words else [])
-    mock_modbus.read_coils.return_value = read_result
-    mock_modbus.read_discrete_inputs.return_value = read_result
-    mock_modbus.read_input_registers.return_value = read_result
-    mock_modbus.read_holding_registers.return_value = read_result
-    mock_modbus.write_register.return_value = read_result
-    mock_modbus.write_registers.return_value = read_result
-    mock_modbus.write_coil.return_value = read_result
-    mock_modbus.write_coils.return_value = read_result
-    if do_exception:
-        exc = ModbusException("fail read_coils")
-        mock_modbus.read_coils.side_effect = exc
-        mock_modbus.read_discrete_inputs.side_effect = exc
-        mock_modbus.read_input_registers.side_effect = exc
-        mock_modbus.read_holding_registers.side_effect = exc
-    return mock_modbus
-
-
 @pytest.fixture(name="mock_do_cycle")
 async def mock_do_cycle_fixture(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
-    mock_pymodbus_return,
+    mock_modbus,
 ) -> FrozenDateTimeFactory:
     """Trigger update call with time_changed event."""
     freezer.tick(timedelta(seconds=1))
@@ -205,7 +184,7 @@ async def mock_test_state_fixture(hass, request):
 
 
 @pytest.fixture(name="mock_ha")
-async def mock_ha_fixture(hass, mock_pymodbus_return):
+async def mock_ha_fixture(hass, mock_modbus):
     """Load homeassistant to allow service calls."""
     assert await async_setup_component(hass, "homeassistant", {})
     await hass.async_block_till_done()
