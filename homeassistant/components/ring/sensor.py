@@ -14,7 +14,6 @@ from ring_doorbell import (
     RingGeneric,
     RingOther,
 )
-from typing_extensions import TypeVar
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -35,9 +34,7 @@ from homeassistant.helpers.typing import StateType
 from . import RingData
 from .const import DOMAIN
 from .coordinator import RingDataCoordinator
-from .entity import RingEntity
-
-_RingDeviceT = TypeVar("_RingDeviceT", bound=RingGeneric, default=RingGeneric)
+from .entity import RingDeviceT, RingEntity
 
 
 async def async_setup_entry(
@@ -59,17 +56,16 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class RingSensor(RingEntity, SensorEntity, Generic[_RingDeviceT]):
+class RingSensor(RingEntity[RingDeviceT], SensorEntity):
     """A sensor implementation for Ring device."""
 
-    entity_description: RingSensorEntityDescription[_RingDeviceT]
-    _device: _RingDeviceT
+    entity_description: RingSensorEntityDescription[RingDeviceT]
 
     def __init__(
         self,
-        device: RingGeneric,
+        device: RingDeviceT,
         coordinator: RingDataCoordinator,
-        description: RingSensorEntityDescription[_RingDeviceT],
+        description: RingSensorEntityDescription[RingDeviceT],
     ) -> None:
         """Initialize a sensor for Ring device."""
         super().__init__(device, coordinator)
@@ -85,7 +81,7 @@ class RingSensor(RingEntity, SensorEntity, Generic[_RingDeviceT]):
         """Call update method."""
 
         self._device = cast(
-            _RingDeviceT,
+            RingDeviceT,
             self._get_coordinator_data().get_device(self._device.device_api_id),
         )
         # History values can drop off the last 10 events so only update
@@ -126,12 +122,12 @@ def _get_last_event_attrs(
 
 
 @dataclass(frozen=True, kw_only=True)
-class RingSensorEntityDescription(SensorEntityDescription, Generic[_RingDeviceT]):
+class RingSensorEntityDescription(SensorEntityDescription, Generic[RingDeviceT]):
     """Describes Ring sensor entity."""
 
-    value_fn: Callable[[_RingDeviceT], StateType] = lambda _: True
+    value_fn: Callable[[RingDeviceT], StateType] = lambda _: True
     exists_fn: Callable[[RingGeneric], bool] = lambda _: True
-    extra_state_attributes_fn: Callable[[_RingDeviceT], dict[str, Any] | None] = (
+    extra_state_attributes_fn: Callable[[RingDeviceT], dict[str, Any] | None] = (
         lambda _: None
     )
 
