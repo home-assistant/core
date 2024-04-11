@@ -172,6 +172,7 @@ async def test_play_media_music_library_playlist_dne(
     assert media_content_id in caplog.text
     assert "playlist" in caplog.text
 
+
 async def test_partymode(
     hass: HomeAssistant,
     soco_factory: SoCoMockFactory,
