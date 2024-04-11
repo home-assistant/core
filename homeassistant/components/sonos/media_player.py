@@ -194,6 +194,7 @@ async def async_setup_entry(
         "partymode",
     )
 
+
 class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
     """Representation of a Sonos entity."""
 
