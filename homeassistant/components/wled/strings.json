@@ -80,6 +80,9 @@
       "preset": {
         "name": "Preset"
       },
+      "effect": {
+        "name": "Effect"
+      },
       "playlist": {
         "name": "Playlist"
       }

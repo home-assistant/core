@@ -99,6 +99,34 @@ class WLEDPresetSelect(WLEDEntity, SelectEntity):
         """Set WLED segment to the selected preset."""
         await self.coordinator.wled.preset(preset=option)
 
+class WLEDEffectSelect(WLEDEntity, SelectEntity):
+    """Defined a WLED Effect select."""
+
+    _attr_translation_key = "effect"
+
+    def __init__(self, coordinator: WLEDDataUpdateCoordinator) -> None:
+        """Initialize WLED ."""
+        super().__init__(coordinator=coordinator)
+
+        self._attr_unique_id = f"{coordinator.data.info.mac_address}_effect"
+        self._attr_options = [effect.name for effect in coordinator.data.effects]
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return len(self.coordinator.data.effects) > 0 and super().available
+
+    @property
+    def current_option(self) -> str | None:
+        """Return the current selected effect."""
+        if not isinstance(self.coordinator.data.state.effect, Effect):
+            return None
+        return self.coordinator.data.state.effect.name
+
+    @wled_exception_handler
+    async def async_select_option(self, option: str) -> None:
+        """Set WLED effect to the selected effect."""
+        await self.coordinator.wled.effect(effect=option)
 
 class WLEDPlaylistSelect(WLEDEntity, SelectEntity):
     """Define a WLED Playlist select."""
