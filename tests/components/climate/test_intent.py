@@ -183,7 +183,7 @@ async def test_get_temperature(
     assert state.attributes["current_temperature"] == 22.0
 
     # Check area with no climate entities
-    with pytest.raises(intent.NoStatesMatchedError) as error:
+    with pytest.raises(intent.MatchFailedError) as error:
         response = await intent.async_handle(
             hass,
             "test",
@@ -192,14 +192,16 @@ async def test_get_temperature(
         )
 
     # Exception should contain details of what we tried to match
-    assert isinstance(error.value, intent.NoStatesMatchedError)
-    assert error.value.name is None
-    assert error.value.area == office_area.name
-    assert error.value.domains == {DOMAIN}
-    assert error.value.device_classes is None
+    assert isinstance(error.value, intent.MatchFailedError)
+    assert error.value.result.no_match_reason == intent.MatchFailedReason.AREA
+    constraints = error.value.constraints
+    assert constraints.name is None
+    assert constraints.area_name == office_area.name
+    assert constraints.domains == {DOMAIN}
+    assert constraints.device_classes is None
 
     # Check wrong name
-    with pytest.raises(intent.NoStatesMatchedError) as error:
+    with pytest.raises(intent.MatchFailedError) as error:
         response = await intent.async_handle(
             hass,
             "test",
@@ -207,14 +209,16 @@ async def test_get_temperature(
             {"name": {"value": "Does not exist"}},
         )
 
-    assert isinstance(error.value, intent.NoStatesMatchedError)
-    assert error.value.name == "Does not exist"
-    assert error.value.area is None
-    assert error.value.domains == {DOMAIN}
-    assert error.value.device_classes is None
+    assert isinstance(error.value, intent.MatchFailedError)
+    assert error.value.result.no_match_reason == intent.MatchFailedReason.NAME
+    constraints = error.value.constraints
+    assert constraints.name == "Does not exist"
+    assert constraints.area_name is None
+    assert constraints.domains == {DOMAIN}
+    assert constraints.device_classes is None
 
     # Check wrong name with area
-    with pytest.raises(intent.NoStatesMatchedError) as error:
+    with pytest.raises(intent.MatchFailedError) as error:
         response = await intent.async_handle(
             hass,
             "test",
@@ -222,11 +226,13 @@ async def test_get_temperature(
             {"name": {"value": "Climate 1"}, "area": {"value": bedroom_area.name}},
         )
 
-    assert isinstance(error.value, intent.NoStatesMatchedError)
-    assert error.value.name == "Climate 1"
-    assert error.value.area == bedroom_area.name
-    assert error.value.domains == {DOMAIN}
-    assert error.value.device_classes is None
+    assert isinstance(error.value, intent.MatchFailedError)
+    assert error.value.result.no_match_reason == intent.MatchFailedReason.AREA
+    constraints = error.value.constraints
+    assert constraints.name == "Climate 1"
+    assert constraints.area_name == bedroom_area.name
+    assert constraints.domains == {DOMAIN}
+    assert constraints.device_classes is None
 
 
 async def test_get_temperature_no_entities(
@@ -275,7 +281,7 @@ async def test_get_temperature_no_state(
 
     with (
         patch("homeassistant.core.StateMachine.async_all", return_value=[]),
-        pytest.raises(intent.NoStatesMatchedError) as error,
+        pytest.raises(intent.MatchFailedError) as error,
     ):
         await intent.async_handle(
             hass,
@@ -285,8 +291,10 @@ async def test_get_temperature_no_state(
         )
 
     # Exception should contain details of what we tried to match
-    assert isinstance(error.value, intent.NoStatesMatchedError)
-    assert error.value.name is None
-    assert error.value.area == "Living Room"
-    assert error.value.domains == {DOMAIN}
-    assert error.value.device_classes is None
+    assert isinstance(error.value, intent.MatchFailedError)
+    assert error.value.result.no_match_reason == intent.MatchFailedReason.AREA
+    constraints = error.value.constraints
+    assert constraints.name is None
+    assert constraints.area_name == "Living Room"
+    assert constraints.domains == {DOMAIN}
+    assert constraints.device_classes is None

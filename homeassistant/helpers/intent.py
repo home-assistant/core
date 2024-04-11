@@ -270,6 +270,31 @@ class MatchFailedError(IntentError):
         return f"result={self.result}, constraints={self.constraints}, preferences={self.preferences}"
 
 
+class NoStatesMatchedError(MatchFailedError):
+    """Error when no states match the intent's constraints."""
+
+    def __init__(
+        self,
+        reason: MatchFailedReason,
+        name: str | None = None,
+        area: str | None = None,
+        floor: str | None = None,
+        domains: set[str] | None = None,
+        device_classes: set[str] | None = None,
+    ) -> None:
+        """Initialize error."""
+        super().__init__(
+            result=MatchTargetsResult(False, reason),
+            constraints=MatchTargetsConstraints(
+                name=name,
+                area_name=area,
+                floor_name=floor,
+                domains=domains,
+                device_classes=device_classes,
+            ),
+        )
+
+
 @dataclass
 class MatchTargetsCandidate:
     """Candidate for async_match_targets."""
@@ -718,8 +743,8 @@ class DynamicServiceIntentHandler(IntentHandler):
         vol.Any("name", "area", "floor"): cv.string,
         vol.Optional("domain"): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional("device_class"): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional("context_area_id"): cv.string,
-        vol.Optional("context_floor_id"): cv.string,
+        vol.Optional("preferred_area_id"): cv.string,
+        vol.Optional("preferred_floor_id"): cv.string,
     }
 
     # We use a small timeout in service calls to (hopefully) pass validation
@@ -804,6 +829,7 @@ class DynamicServiceIntentHandler(IntentHandler):
 
         name_slot = slots.get("name", {})
         entity_name: str | None = name_slot.get("value")
+        entity_text: str | None = name_slot.get("text")
         if entity_name == "all":
             # Don't match on name if targeting all entities
             entity_name = None
@@ -840,8 +866,8 @@ class DynamicServiceIntentHandler(IntentHandler):
             states=self.required_states,
         )
         match_preferences = MatchTargetsPreferences(
-            area_id=slots.get("context_area_id", {}).get("value"),
-            floor_id=slots.get("context_floor_id", {}).get("value"),
+            area_id=slots.get("preferred_area_id", {}).get("value"),
+            floor_id=slots.get("preferred_floor_id", {}).get("value"),
         )
 
         match_result = async_match_targets(hass, match_constraints, match_preferences)
@@ -851,6 +877,10 @@ class DynamicServiceIntentHandler(IntentHandler):
                 constraints=match_constraints,
                 preferences=match_preferences,
             )
+
+        # Ensure name is text
+        if ("name" in slots) and entity_text:
+            slots["name"]["value"] = entity_text
 
         # Replace area/floor values with the resolved ids for use in templates
         if ("area" in slots) and match_result.areas:

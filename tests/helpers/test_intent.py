@@ -30,7 +30,7 @@ from tests.common import MockConfigEntry
 class MockIntentHandler(intent.IntentHandler):
     """Provide a mock intent handler."""
 
-    def __init__(self, slot_schema):
+    def __init__(self, slot_schema) -> None:
         """Initialize the mock handler."""
         self.slot_schema = slot_schema
 
@@ -173,6 +173,7 @@ async def test_async_match_targets(
     floor_registry: fr.FloorRegistry,
     device_registry: dr.DeviceRegistry,
 ) -> None:
+    """Tests for async_match_targets function."""
     # Needed for exposure
     assert await async_setup_component(hass, "homeassistant", {})
 
@@ -309,7 +310,8 @@ async def test_async_match_targets(
         state_bathroom_light_2,
         state_bathroom_light_3,
     ]
-    states = bathroom_light_states + [
+    states = [
+        *bathroom_light_states,
         state_kitchen_outlet,
         state_bedroom_switch_2,
         state_bedroom_switch_3,
@@ -322,7 +324,7 @@ async def test_async_match_targets(
         states=states,
     )
     assert not result.is_match
-    assert result.no_match_reason == intent.NoTargetsMatchedReason.DUPLICATE_NAME
+    assert result.no_match_reason == intent.MatchFailedReason.DUPLICATE_NAME
     assert result.no_match_name == "bathroom light"
 
     # Works with duplicate names allowed
@@ -352,9 +354,8 @@ async def test_async_match_targets(
     # We can disambiguate by preferred floor (from context)
     result = intent.async_match_targets(
         hass,
-        intent.MatchTargetsConstraints(
-            name="bathroom light", preferred_floor_id=floor_3.floor_id
-        ),
+        intent.MatchTargetsConstraints(name="bathroom light"),
+        intent.MatchTargetsPreferences(floor_id=floor_3.floor_id),
         states=states,
     )
     assert result.is_match
@@ -364,9 +365,8 @@ async def test_async_match_targets(
     # Also disambiguate by preferred area (from context)
     result = intent.async_match_targets(
         hass,
-        intent.MatchTargetsConstraints(
-            name="bathroom light", preferred_area_id=area_bathroom_2.id
-        ),
+        intent.MatchTargetsConstraints(name="bathroom light"),
+        intent.MatchTargetsPreferences(area_id=area_bathroom_2.id),
         states=states,
     )
     assert result.is_match
@@ -390,7 +390,7 @@ async def test_async_match_targets(
         states=states,
     )
     assert not result.is_match
-    assert result.no_match_reason == intent.NoTargetsMatchedReason.DUPLICATE_NAME
+    assert result.no_match_reason == intent.MatchFailedReason.DUPLICATE_NAME
 
     # Disambiguate by area name, if unique
     result = intent.async_match_targets(
@@ -411,7 +411,7 @@ async def test_async_match_targets(
         states=states,
     )
     assert not result.is_match
-    assert result.no_match_reason == intent.NoTargetsMatchedReason.DUPLICATE_NAME
+    assert result.no_match_reason == intent.MatchFailedReason.DUPLICATE_NAME
 
     # Does work if floor/area name combo is unique
     result = intent.async_match_targets(
@@ -436,7 +436,7 @@ async def test_async_match_targets(
         states=states,
     )
     assert not result.is_match
-    assert result.no_match_reason == intent.NoTargetsMatchedReason.AREA
+    assert result.no_match_reason == intent.MatchFailedReason.AREA
 
     # Check state constraint (only third floor bathroom light is on)
     result = intent.async_match_targets(
@@ -697,24 +697,28 @@ async def test_validate_then_run_in_background(hass: HomeAssistant) -> None:
 
 
 async def test_invalid_area_floor_names(hass: HomeAssistant) -> None:
-    """Test that we throw an intent handle error with invalid area/floor names."""
+    """Test that we throw an appropriate errors with invalid area/floor names."""
     handler = intent.ServiceIntentHandler(
         "TestType", "light", "turn_on", "Turned {} on"
     )
     intent.async_register(hass, handler)
 
-    with pytest.raises(intent.IntentHandleError):
+    with pytest.raises(intent.MatchFailedError) as err:
         await intent.async_handle(
             hass,
             "test",
             "TestType",
             slots={"area": {"value": "invalid area"}},
         )
+        assert err.value.result.no_match_reason == intent.MatchFailedReason.INVALID_AREA
 
-    with pytest.raises(intent.IntentHandleError):
+    with pytest.raises(intent.MatchFailedError) as err:
         await intent.async_handle(
             hass,
             "test",
             "TestType",
             slots={"floor": {"value": "invalid floor"}},
+        )
+        assert (
+            err.value.result.no_match_reason == intent.MatchFailedReason.INVALID_FLOOR
         )

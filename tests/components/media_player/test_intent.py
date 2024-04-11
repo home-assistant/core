@@ -403,7 +403,7 @@ async def test_multiple_media_players(
         media_player_intent.INTENT_MEDIA_UNPAUSE,
         {
             "name": {"value": "smart speaker"},
-            "context_area_id": {"value": area_living_room.id},
+            "preferred_area_id": {"value": area_living_room.id},
         },
     )
     await hass.async_block_till_done()
@@ -441,7 +441,7 @@ async def test_multiple_media_players(
         media_player_intent.INTENT_MEDIA_PAUSE,
         {
             "name": {"value": "TV"},
-            "context_floor_id": {"value": floor_2.floor_id},
+            "preferred_floor_id": {"value": floor_2.floor_id},
         },
     )
     await hass.async_block_till_done()
