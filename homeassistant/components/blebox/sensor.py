@@ -103,7 +103,7 @@ SENSOR_TYPES = (
     SensorEntityDescription(
         key="current",
         device_class=SensorDeviceClass.CURRENT,
-        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        native_unit_of_measurement=UnitOfElectricCurrent.MILLIAMPERE,
     ),
     SensorEntityDescription(
         key="frequency",
