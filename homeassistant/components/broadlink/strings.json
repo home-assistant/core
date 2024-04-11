@@ -62,5 +62,10 @@
         "name": "Total consumption"
       }
     }
+  },
+  "exceptions": {
+    "request_failed_device_not_connected": {
+      "message": "The device needs to be connected in order to send data to it."
+    }
   }
 }
