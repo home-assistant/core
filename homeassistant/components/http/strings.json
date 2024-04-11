@@ -9,7 +9,7 @@
   },
   "services": {
     "create_temporary_strict_connection_url": {
-      "name": "Create a tempoary strict connection URL",
+      "name": "Create a temporary strict connection URL",
       "description": "Create a temporary strict connection URL, which can be used to login on another device."
     }
   }
