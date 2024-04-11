@@ -1,6 +1,5 @@
 """Test the fyta config flow."""
 
-from datetime import datetime
 from unittest.mock import AsyncMock
 
 from fyta_cli.fyta_exceptions import (
