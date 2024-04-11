@@ -105,7 +105,7 @@ class WLEDEffectSelect(WLEDEntity, SelectEntity):
     _attr_translation_key = "effect"
 
     def __init__(self, coordinator: WLEDDataUpdateCoordinator) -> None:
-        """Initialize WLED ."""
+        """Initialize WLED."""
         super().__init__(coordinator=coordinator)
 
         self._attr_unique_id = f"{coordinator.data.info.mac_address}_effect"
