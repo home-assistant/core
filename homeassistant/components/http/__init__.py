@@ -39,7 +39,12 @@ from homeassistant.core import (
     SupportsResponse,
     callback,
 )
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import (
+    HomeAssistantError,
+    ServiceValidationError,
+    Unauthorized,
+    UnknownUser,
+)
 from homeassistant.helpers import storage
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.http import (
@@ -603,11 +608,19 @@ async def start_http_server_and_save_config(
 def _setup_services(hass: HomeAssistant, conf: ConfData) -> None:
     """Set up services for HTTP component."""
 
-    @callback
-    def create_temporary_strict_connection_url(
-        _: ServiceCall,
+    async def create_temporary_strict_connection_url(
+        call: ServiceCall,
     ) -> ServiceResponse:
         """Create a strict connection url and return it."""
+        # Copied form homeassistant/helpers/service.py#_async_admin_handler
+        # as the helper supports no responses yet
+        if call.context.user_id:
+            user = await hass.auth.async_get_user(call.context.user_id)
+            if user is None:
+                raise UnknownUser(context=call.context)
+            if not user.is_admin:
+                raise Unauthorized(context=call.context)
+
         if conf[CONF_STRICT_CONNECTION] is StrictConnectionMode.DISABLED:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
