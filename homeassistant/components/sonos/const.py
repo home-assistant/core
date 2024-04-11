@@ -179,3 +179,4 @@ BATTERY_SCAN_INTERVAL = datetime.timedelta(minutes=15)
 SCAN_INTERVAL = datetime.timedelta(seconds=10)
 DISCOVERY_INTERVAL = datetime.timedelta(seconds=60)
 SUBSCRIPTION_TIMEOUT = 1200
+SOCO_DEFAULT_SERVICE_TIMEOUT = 9.5

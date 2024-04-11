@@ -9,6 +9,7 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 import pytest
 from soco import SoCo
 from soco.alarms import Alarms
+from soco.data_structures import SearchResult
 from soco.events_base import Event as SonosEvent
 
 from homeassistant.components import ssdp, zeroconf
@@ -303,11 +304,50 @@ def config_fixture():
     return {DOMAIN: {MP_DOMAIN: {CONF_HOSTS: ["192.168.42.2"]}}}
 
 
+class _MockMusicServiceItem:
+    """Mocks a Soco MusicServiceItem."""
+
+    def __init__(
+        self, title: str, item_id: str, parent_id: str, item_class: str, uri: str = None
+    ) -> None:
+        """Initialize the mock item."""
+        self.title = title
+        self.item_id = item_id
+        self.item_class = item_class
+        self.parent_id = parent_id
+        self.reference = MagicMock()
+        self.reference.resources.return_value = True
+        self.reference.get_uri.return_value = uri
+
+    def get_uri(self) -> str:
+        """Return URI."""
+        return self.item_id.replace("S://", "x-file-cifs://")
+
+
+_mock_favorites = [
+    _MockMusicServiceItem(
+        "MyRadioStation",
+        "x-sonosapi-radio:MyRadioStation",
+        "A:PLAYLISTS",
+        "object.container.playlistContainer",
+        uri="x-sonosapi-radio:MyRadioStation",
+    ),
+    _MockMusicServiceItem(
+        "playlist2",
+        "S://192.168.1.68/music/iTunes/iTunes%20Music%20Library.xml#GUID_2",
+        "A:PLAYLISTS",
+        "object.container.playlistContainer",
+    ),
+]
+
+
 @pytest.fixture(name="music_library")
 def music_library_fixture():
     """Create music_library fixture."""
     music_library = MagicMock()
-    music_library.get_sonos_favorites.return_value.update_id = 1
+    music_library.get_sonos_favorites.return_value = SearchResult(
+        _mock_favorites, "favorites", 3, 3, 1
+    )
     return music_library
 
 

@@ -8,6 +8,8 @@ from homeassistant.components.media_player import (
     DOMAIN as MP_DOMAIN,
     SERVICE_PLAY_MEDIA,
 )
+from homeassistant.components.media_player.const import SERVICE_SELECT_SOURCE
+from homeassistant.components.sonos.const import SOURCE_LINEIN, SOURCE_TV
 from homeassistant.const import STATE_IDLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import (
@@ -170,3 +172,58 @@ async def test_play_media_music_library_playlist_dne(
     assert soco_mock.play_uri.call_count == 0
     assert media_content_id in caplog.text
     assert "playlist" in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("source", "test_result"),
+    [
+        (
+            SOURCE_LINEIN,
+            {
+                "LINE_IN": 1,
+                "TV": 0,
+                "URI": 0,
+            },
+        ),
+        (
+            SOURCE_TV,
+            {
+                "LINE_IN": 0,
+                "TV": 1,
+                "URI": 0,
+            },
+        ),
+        (
+            "MyRadioStation",
+            {
+                "LINE_IN": 0,
+                "TV": 0,
+                "URI": 1,
+            },
+        ),
+    ],
+)
+async def test_select_source(
+    hass: HomeAssistant,
+    soco_factory: SoCoMockFactory,
+    async_autosetup_sonos,
+    caplog: pytest.LogCaptureFixture,
+    source,
+    test_result,
+) -> None:
+    """Test error handling when attempting to play a non-existent playlist ."""
+    soco_mock = soco_factory.mock_list.get("192.168.42.2")
+    soco_mock.music_library.get_favorites.return_value = _mock_playlists
+
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_SELECT_SOURCE,
+        {
+            "entity_id": "media_player.zone_a",
+            "source": source,
+        },
+        blocking=True,
+    )
+    assert soco_mock.switch_to_line_in.call_count == test_result["LINE_IN"]
+    assert soco_mock.switch_to_tv.call_count == test_result["TV"]
+    assert soco_mock.play_uri.call_count == test_result["URI"]
