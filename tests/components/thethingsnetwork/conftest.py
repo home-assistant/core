@@ -74,15 +74,15 @@ CONFIG_ENTRY = MockConfigEntry(
 )
 
 
-@pytest.fixture
 async def init_integration(hass: HomeAssistant):
     """Mock TTNClient."""
     CONFIG_ENTRY.add_to_hass(hass)
     assert await hass.config_entries.async_setup(CONFIG_ENTRY.entry_id)
+    await hass.async_block_till_done()
 
 
 @pytest.fixture
-def mock_TTNClient():
+def mock_ttnclient():
     """Mock TTNClient."""
 
     with (

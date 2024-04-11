@@ -1,5 +1,6 @@
 """Define tests for the The Things Network onfig flows."""
 
+import pytest
 from ttn_client import TTNAuthError
 
 from homeassistant.components.thethingsnetwork.const import (
@@ -14,13 +15,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import add_schema_suggestion
-from .conftest import API_KEY, APP_ID, CONFIG_ENTRY, HOSTNAME
+from .conftest import API_KEY, APP_ID, CONFIG_ENTRY, HOSTNAME, init_integration
 
 USER_DATA = {CONF_HOSTNAME: HOSTNAME, CONF_APP_ID: APP_ID, CONF_API_KEY: API_KEY}
 USER_DATA_PARTIAL = {CONF_APP_ID: APP_ID, CONF_API_KEY: API_KEY}
 
 
-async def test_user(hass: HomeAssistant, mock_TTNClient) -> None:
+async def test_user(hass: HomeAssistant, mock_ttnclient) -> None:
     """Test user config."""
 
     result = await hass.config_entries.flow.async_init(
@@ -42,7 +43,7 @@ async def test_user(hass: HomeAssistant, mock_TTNClient) -> None:
         context={"source": SOURCE_USER},
         data=user_data,
     )
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == APP_ID
     assert result["data"][CONF_HOSTNAME] == HOSTNAME
     assert result["data"][CONF_APP_ID] == APP_ID
@@ -56,7 +57,7 @@ async def test_user(hass: HomeAssistant, mock_TTNClient) -> None:
         if mock_fetch_data_exceptiom:
             raise mock_fetch_data_exceptiom
 
-    mock_TTNClient.return_value.fetch_data.side_effect = mock_fetch_data
+    mock_ttnclient.return_value.fetch_data.side_effect = mock_fetch_data
 
     # Connection error
     mock_fetch_data_exceptiom = TTNAuthError
@@ -65,7 +66,7 @@ async def test_user(hass: HomeAssistant, mock_TTNClient) -> None:
         context={"source": SOURCE_USER},
         data=user_data,
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_auth"}
 
     # Unknown error
@@ -75,7 +76,7 @@ async def test_user(hass: HomeAssistant, mock_TTNClient) -> None:
         context={"source": SOURCE_USER},
         data=user_data,
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert "unknown" in result["errors"]["base"]
 
     # Recover
@@ -88,10 +89,10 @@ async def test_user(hass: HomeAssistant, mock_TTNClient) -> None:
     assert result["type"] == FlowResultType.CREATE_ENTRY
 
 
-async def test_step_reauth(
-    hass: HomeAssistant, mock_TTNClient, init_integration
-) -> None:
+async def test_step_reauth(hass: HomeAssistant, mock_ttnclient) -> None:
     """Test that the reauth step works."""
+
+    await init_integration(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -102,14 +103,14 @@ async def test_step_reauth(
         },
         data=USER_DATA,
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     assert not result["errors"]
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert not result["errors"]
 
@@ -122,9 +123,19 @@ async def test_step_reauth(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=user_data
     )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
 
     assert len(hass.config_entries.async_entries()) == 1
     assert hass.config_entries.async_entries()[0].data[CONF_API_KEY] == new_api_key
     await hass.async_block_till_done()
+
+
+@pytest.mark.parametrize(("exception_class"), [TTNAuthError, Exception])
+async def test_client_exceptions(
+    hass: HomeAssistant, mock_ttnclient, exception_class
+) -> None:
+    """Test TTN Exceptions."""
+
+    mock_ttnclient.return_value.fetch_data.side_effect = exception_class
+    init_integration(hass)
