@@ -226,7 +226,7 @@ class ShellyBlockCoordinator(ShellyCoordinatorBase[BlockDevice]):
 
         self._last_cfg_changed: int | None = None
         self._last_mode: str | None = None
-        self._last_effect: int | None = None
+        self._last_effect: str | None = None
         self._last_input_events_count: dict = {}
         self._last_target_temp: float | None = None
         self._push_update_failures: int = 0
@@ -266,7 +266,8 @@ class ShellyBlockCoordinator(ShellyCoordinatorBase[BlockDevice]):
                 if block.type != "device":
                     continue
 
-                if len(block.wakeupEvent) == 1 and block.wakeupEvent[0] == "button":
+                wakeup_event = cast(list, block.wakeupEvent)
+                if len(wakeup_event) == 1 and wakeup_event[0] == "button":
                     self._last_input_events_count[1] = -1
 
                 break
@@ -275,7 +276,7 @@ class ShellyBlockCoordinator(ShellyCoordinatorBase[BlockDevice]):
         cfg_changed = 0
         for block in self.device.blocks:
             if block.type == "device" and block.cfgChanged is not None:
-                cfg_changed = block.cfgChanged
+                cfg_changed = cast(int, block.cfgChanged)
 
             # Shelly TRV sends information about changing the configuration for no
             # reason, reloading the config entry is not needed for it.
