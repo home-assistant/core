@@ -117,7 +117,7 @@ def mock_pymodbus_fixture(do_exception, register_words):
 
 @pytest.fixture(name="mock_modbus")
 async def mock_modbus_fixture(
-    hass, caplog, register_words, check_config_loaded, config_addon, do_config
+    hass, caplog, check_config_loaded, config_addon, do_config, mock_pymodbus
 ):
     """Load integration modbus using mocked pymodbus."""
     conf = copy.deepcopy(do_config)
@@ -142,23 +142,16 @@ async def mock_modbus_fixture(
             }
         ]
     }
-    mock_pb = mock.AsyncMock()
-    mock_pb.close = mock.MagicMock()
+    now = dt_util.utcnow()
     with mock.patch(
-        "homeassistant.components.modbus.modbus.AsyncModbusTcpClient",
-        return_value=mock_pb,
+        "homeassistant.helpers.event.dt_util.utcnow",
+        return_value=now,
         autospec=True,
     ):
-        now = dt_util.utcnow()
-        with mock.patch(
-            "homeassistant.helpers.event.dt_util.utcnow",
-            return_value=now,
-            autospec=True,
-        ):
-            result = await async_setup_component(hass, DOMAIN, config)
-            assert result or not check_config_loaded
-        await hass.async_block_till_done()
-        yield mock_pb
+        result = await async_setup_component(hass, DOMAIN, config)
+        assert result or not check_config_loaded
+    await hass.async_block_till_done()
+    return mock_pymodbus
 
 
 @pytest.fixture(name="mock_pymodbus_return")
