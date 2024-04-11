@@ -59,7 +59,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class RingSensor(RingEntity, SensorEntity, Generic[_RingDeviceT]):
+class RingSensor(RingEntity[_RingDeviceT], SensorEntity):
     """A sensor implementation for Ring device."""
 
     entity_description: RingSensorEntityDescription[_RingDeviceT]
@@ -67,7 +67,7 @@ class RingSensor(RingEntity, SensorEntity, Generic[_RingDeviceT]):
 
     def __init__(
         self,
-        device: RingGeneric,
+        device: _RingDeviceT,
         coordinator: RingDataCoordinator,
         description: RingSensorEntityDescription[_RingDeviceT],
     ) -> None:

@@ -1,7 +1,7 @@
 """Base class for Ring entity."""
 
 from collections.abc import Callable
-from typing import Any, Concatenate, ParamSpec, TypeVar
+from typing import Any, Concatenate, Generic, ParamSpec, cast
 
 from ring_doorbell import (
     AuthenticationError,
@@ -10,6 +10,7 @@ from ring_doorbell import (
     RingGeneric,
     RingTimeout,
 )
+from typing_extensions import TypeVar
 
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
@@ -23,7 +24,8 @@ _RingCoordinatorT = TypeVar(
     "_RingCoordinatorT",
     bound=(RingDataCoordinator | RingNotificationsCoordinator),
 )
-_RingBaseEntityT = TypeVar("_RingBaseEntityT", bound="RingBaseEntity[Any]")
+_RingDeviceT = TypeVar("_RingDeviceT", bound=RingGeneric, default=RingGeneric)
+_RingBaseEntityT = TypeVar("_RingBaseEntityT", bound="RingBaseEntity[Any, Any]")
 _R = TypeVar("_R")
 _P = ParamSpec("_P")
 
@@ -53,7 +55,9 @@ def exception_wrap(
     return _wrap
 
 
-class RingBaseEntity(CoordinatorEntity[_RingCoordinatorT]):
+class RingBaseEntity(
+    CoordinatorEntity[_RingCoordinatorT], Generic[_RingCoordinatorT, _RingDeviceT]
+):
     """Base implementation for Ring device."""
 
     _attr_attribution = ATTRIBUTION
@@ -62,7 +66,7 @@ class RingBaseEntity(CoordinatorEntity[_RingCoordinatorT]):
 
     def __init__(
         self,
-        device: RingGeneric,
+        device: _RingDeviceT,
         coordinator: _RingCoordinatorT,
     ) -> None:
         """Initialize a sensor for Ring device."""
@@ -77,7 +81,7 @@ class RingBaseEntity(CoordinatorEntity[_RingCoordinatorT]):
         )
 
 
-class RingEntity(RingBaseEntity[RingDataCoordinator]):
+class RingEntity(RingBaseEntity[RingDataCoordinator, _RingDeviceT]):
     """Implementation for Ring devices."""
 
     def _get_coordinator_data(self) -> RingDevices:
@@ -85,7 +89,8 @@ class RingEntity(RingBaseEntity[RingDataCoordinator]):
 
     @callback
     def _handle_coordinator_update(self) -> None:
-        self._device = self._get_coordinator_data().get_device(
-            self._device.device_api_id
+        self._device = cast(
+            _RingDeviceT,
+            self._get_coordinator_data().get_device(self._device.device_api_id),
         )
         super()._handle_coordinator_update()

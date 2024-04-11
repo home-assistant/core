@@ -33,14 +33,12 @@ async def async_setup_entry(
     )
 
 
-class RingChimeSiren(RingEntity, SirenEntity):
+class RingChimeSiren(RingEntity[RingChime], SirenEntity):
     """Creates a siren to play the test chimes of a Chime device."""
 
     _attr_available_tones = [RingEventKind.DING.value, RingEventKind.MOTION.value]
     _attr_supported_features = SirenEntityFeature.TURN_ON | SirenEntityFeature.TONES
     _attr_translation_key = "siren"
-
-    _device: RingChime
 
     def __init__(self, device: RingChime, coordinator: RingDataCoordinator) -> None:
         """Initialize a Ring Chime siren."""

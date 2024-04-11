@@ -52,14 +52,12 @@ async def async_setup_entry(
     )
 
 
-class RingLight(RingEntity, LightEntity):
+class RingLight(RingEntity[RingStickUpCam], LightEntity):
     """Creates a switch to turn the ring cameras light on and off."""
 
     _attr_color_mode = ColorMode.ONOFF
     _attr_supported_color_modes = {ColorMode.ONOFF}
     _attr_translation_key = "light"
-
-    _device: RingStickUpCam
 
     def __init__(
         self, device: RingStickUpCam, coordinator: RingDataCoordinator

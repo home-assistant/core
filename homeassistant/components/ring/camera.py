@@ -48,7 +48,7 @@ async def async_setup_entry(
     async_add_entities(cams)
 
 
-class RingCam(RingEntity, Camera):
+class RingCam(RingEntity[RingDoorBell], Camera):
     """An implementation of a Ring Door Bell camera."""
 
     _attr_name = None
