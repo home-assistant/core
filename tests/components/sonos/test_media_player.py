@@ -8,6 +8,7 @@ from homeassistant.components.media_player import (
     DOMAIN as MP_DOMAIN,
     SERVICE_PLAY_MEDIA,
 )
+from homeassistant.components.sonos.media_player import SERVICE_PARTYMODE
 from homeassistant.const import STATE_IDLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import (
@@ -16,7 +17,6 @@ from homeassistant.helpers.device_registry import (
     DeviceRegistry,
 )
 
-from homeassistant.components.sonos.media_player import SERVICE_PARTYMODE
 from .conftest import SoCoMockFactory
 
 
