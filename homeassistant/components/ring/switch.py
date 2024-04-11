@@ -44,10 +44,8 @@ async def async_setup_entry(
     )
 
 
-class BaseRingSwitch(RingEntity, SwitchEntity):
+class BaseRingSwitch(RingEntity[RingStickUpCam], SwitchEntity):
     """Represents a switch for controlling an aspect of a ring device."""
-
-    _device: RingStickUpCam
 
     def __init__(
         self, device: RingStickUpCam, coordinator: RingDataCoordinator, device_type: str
