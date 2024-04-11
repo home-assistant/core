@@ -4582,6 +4582,12 @@
       "config_flow": false,
       "iot_class": "local_push"
     },
+    "pinecil": {
+      "name": "Pinecil",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "ping": {
       "name": "Ping (ICMP)",
       "integration_type": "hub",

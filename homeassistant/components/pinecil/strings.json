@@ -1,0 +1,101 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "[%key:component::bluetooth::config::step::user::description%]",
+        "data": {
+          "address": "[%key:common::config_flow::data::device%]"
+        }
+      },
+      "bluetooth_confirm": {
+        "description": "[%key:component::bluetooth::config::step::bluetooth_confirm::description%]"
+      }
+    },
+    "abort": {
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "entity": {
+    "number": {
+      "setpoint_temperature": {
+        "name": "Set temperature"
+      },
+      "sleep_temperature": {
+        "name": "Sleep temperature"
+      },
+      "sleep_timeout": {
+        "name": "Sleep timeout"
+      },
+      "qc_max_voltage": {
+        "name": "QC voltage"
+      },
+      "pd_timeout": {
+        "name": "PD timeout"
+      },
+      "boost_temp": {
+        "name": "Boost temperature"
+      },
+      "shutdown_timeout": {
+        "name": "Shutdown timeout"
+      },
+      "display_brightness": {
+        "name": "Display brightness"
+      }
+    },
+    "sensor": {
+      "live_temperature": {
+        "name": "Tip temperature"
+      },
+      "voltage": {
+        "name": "DC Input Voltage"
+      },
+      "handle_temperature": {
+        "name": "Handle Temperature"
+      },
+      "power_pwm_level": {
+        "name": "Power Level"
+      },
+      "power_source": {
+        "name": "Power Source",
+        "state": {
+          "dc": "DC Input",
+          "qc": "USB Quick Charge",
+          "pd_vbus": "USB Power Delivery VBUS",
+          "pd": "USB Power Delivery"
+        }
+      },
+      "tip_resistance": {
+        "name": "Tip Resistance"
+      },
+      "uptime": {
+        "name": "Uptime"
+      },
+      "movement_time": {
+        "name": "Last Movement Time"
+      },
+      "max_tip_temp_ability": {
+        "name": "Max Tip Temperature"
+      },
+      "tip_voltage": {
+        "name": "Raw Tip Voltage"
+      },
+      "hall_sensor": {
+        "name": "Hall Effect Strength"
+      },
+      "operating_mode": {
+        "name": "Operating Mode",
+        "state": {
+          "idle": "Idle",
+          "soldering": "Soldering",
+          "sleeping": "Sleeping",
+          "settings": "Settings",
+          "debug": "Debug"
+        }
+      },
+      "estimated_power": {
+        "name": "Estimated Power"
+      }
+    }
+  }
+}
