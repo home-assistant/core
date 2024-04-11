@@ -51,8 +51,15 @@
       "title": "Multiple data disks detected",
       "fix_flow": {
         "step": {
-          "system_rename_data_disk": {
-            "description": "`{reference}` is a filesystem with the name hassos-data and is not the active data disk. This can cause Home Assistant to choose the wrong data disk at system reboot.\n\nUse the fix option to rename the filesystem to prevent this. Alternatively you can move the data disk to the drive (overwriting its contents) or remove the drive from the system."
+          "fix_menu": {
+            "description": "`{reference}` is a filesystem with the name hassos-data and is not the active data disk. This can cause Home Assistant to choose the wrong data disk at system reboot.\n\nUse the 'Rename' option to rename the filesystem to prevent this. Use the 'Adopt' option to make that your data disk and rename the existing one. Alternatively you can move the data disk to the drive (overwriting its contents) or remove the drive from the system.",
+            "menu_options": {
+              "system_rename_data_disk": "Rename",
+              "system_adopt_data_disk": "Adopt"
+            }
+          },
+          "system_adopt_data_disk": {
+            "description": "This fix will initiate a system reboot which will make Home Assistant and all the Add-ons inaccessible for a brief period. After the reboot `{reference}` will be the data disk of Home Assistant and your existing data disk will be renamed and ignored."
           }
         },
         "abort": {

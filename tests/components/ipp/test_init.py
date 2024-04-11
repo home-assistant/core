@@ -1,4 +1,5 @@
 """Tests for the IPP integration."""
+
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from pyipp import IPPConnectionError

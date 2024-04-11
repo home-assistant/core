@@ -1,4 +1,5 @@
 """Test the swiss_public_transport config flow."""
+
 from unittest.mock import AsyncMock, patch
 
 from homeassistant.components.swiss_public_transport.const import (

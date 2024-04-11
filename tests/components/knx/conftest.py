@@ -1,4 +1,5 @@
 """Conftest for the KNX integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -161,7 +162,7 @@ class KNXTestKit:
 
         if payload is not None:
             assert (
-                telegram.payload.value.value == payload  # type: ignore
+                telegram.payload.value.value == payload  # type: ignore[attr-defined]
             ), f"Payload mismatch in {telegram} - Expected: {payload}"
 
     async def assert_read(self, group_address: str) -> None:
@@ -278,4 +279,3 @@ def load_knxproj(hass_storage):
         "version": 1,
         "data": FIXTURE_PROJECT_DATA,
     }
-    return

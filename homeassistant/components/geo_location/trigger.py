@@ -1,4 +1,5 @@
 """Offer geolocation automation rules."""
+
 from __future__ import annotations
 
 import logging
@@ -7,16 +8,20 @@ from typing import Final
 import voluptuous as vol
 
 from homeassistant.const import CONF_EVENT, CONF_PLATFORM, CONF_SOURCE, CONF_ZONE
-from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, State, callback
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Event,
+    EventStateChangedData,
+    HassJob,
+    HomeAssistant,
+    State,
+    callback,
+)
 from homeassistant.helpers import condition, config_validation as cv
 from homeassistant.helpers.config_validation import entity_domain
-from homeassistant.helpers.event import (
-    EventStateChangedData,
-    TrackStates,
-    async_track_state_change_filtered,
-)
+from homeassistant.helpers.event import TrackStates, async_track_state_change_filtered
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
-from homeassistant.helpers.typing import ConfigType, EventType
+from homeassistant.helpers.typing import ConfigType
 
 from . import DOMAIN
 
@@ -57,7 +62,7 @@ async def async_attach_trigger(
     job = HassJob(action)
 
     @callback
-    def state_change_listener(event: EventType[EventStateChangedData]) -> None:
+    def state_change_listener(event: Event[EventStateChangedData]) -> None:
         """Handle specific state changes."""
         # Skip if the event's source does not match the trigger's source.
         from_state = event.data["old_state"]

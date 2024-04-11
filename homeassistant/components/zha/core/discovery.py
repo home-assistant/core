@@ -1,11 +1,26 @@
 """Device discovery functions for Zigbee Home Automation."""
+
 from __future__ import annotations
 
 from collections import Counter
 from collections.abc import Callable
 import logging
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Any, cast
 
+from slugify import slugify
+from zigpy.quirks.v2 import (
+    BinarySensorMetadata,
+    CustomDeviceV2,
+    EntityType,
+    NumberMetadata,
+    SwitchMetadata,
+    WriteAttributeButtonMetadata,
+    ZCLCommandButtonMetadata,
+    ZCLEnumMetadata,
+    ZCLSensorMetadata,
+)
+from zigpy.state import State
+from zigpy.zcl import ClusterType
 from zigpy.zcl.clusters.general import Ota
 
 from homeassistant.const import CONF_TYPE, Platform
@@ -64,6 +79,66 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 
 
+QUIRKS_ENTITY_META_TO_ENTITY_CLASS = {
+    (
+        Platform.BUTTON,
+        WriteAttributeButtonMetadata,
+        EntityType.CONFIG,
+    ): button.ZHAAttributeButton,
+    (
+        Platform.BUTTON,
+        WriteAttributeButtonMetadata,
+        EntityType.STANDARD,
+    ): button.ZHAAttributeButton,
+    (Platform.BUTTON, ZCLCommandButtonMetadata, EntityType.CONFIG): button.ZHAButton,
+    (
+        Platform.BUTTON,
+        ZCLCommandButtonMetadata,
+        EntityType.DIAGNOSTIC,
+    ): button.ZHAButton,
+    (Platform.BUTTON, ZCLCommandButtonMetadata, EntityType.STANDARD): button.ZHAButton,
+    (
+        Platform.BINARY_SENSOR,
+        BinarySensorMetadata,
+        EntityType.CONFIG,
+    ): binary_sensor.BinarySensor,
+    (
+        Platform.BINARY_SENSOR,
+        BinarySensorMetadata,
+        EntityType.DIAGNOSTIC,
+    ): binary_sensor.BinarySensor,
+    (
+        Platform.BINARY_SENSOR,
+        BinarySensorMetadata,
+        EntityType.STANDARD,
+    ): binary_sensor.BinarySensor,
+    (Platform.SENSOR, ZCLEnumMetadata, EntityType.DIAGNOSTIC): sensor.EnumSensor,
+    (Platform.SENSOR, ZCLEnumMetadata, EntityType.STANDARD): sensor.EnumSensor,
+    (Platform.SENSOR, ZCLSensorMetadata, EntityType.DIAGNOSTIC): sensor.Sensor,
+    (Platform.SENSOR, ZCLSensorMetadata, EntityType.STANDARD): sensor.Sensor,
+    (Platform.SELECT, ZCLEnumMetadata, EntityType.CONFIG): select.ZCLEnumSelectEntity,
+    (Platform.SELECT, ZCLEnumMetadata, EntityType.STANDARD): select.ZCLEnumSelectEntity,
+    (
+        Platform.SELECT,
+        ZCLEnumMetadata,
+        EntityType.DIAGNOSTIC,
+    ): select.ZCLEnumSelectEntity,
+    (
+        Platform.NUMBER,
+        NumberMetadata,
+        EntityType.CONFIG,
+    ): number.ZHANumberConfigurationEntity,
+    (Platform.NUMBER, NumberMetadata, EntityType.DIAGNOSTIC): number.ZhaNumber,
+    (Platform.NUMBER, NumberMetadata, EntityType.STANDARD): number.ZhaNumber,
+    (
+        Platform.SWITCH,
+        SwitchMetadata,
+        EntityType.CONFIG,
+    ): switch.ZHASwitchConfigurationEntity,
+    (Platform.SWITCH, SwitchMetadata, EntityType.STANDARD): switch.Switch,
+}
+
+
 @callback
 async def async_add_entities(
     _async_add_entities: AddEntitiesCallback,
@@ -71,13 +146,19 @@ async def async_add_entities(
         tuple[
             type[ZhaEntity],
             tuple[str, ZHADevice, list[ClusterHandler]],
+            dict[str, Any],
         ]
     ],
+    **kwargs,
 ) -> None:
     """Add entities helper."""
     if not entities:
         return
-    to_add = [ent_cls.create_entity(*args) for ent_cls, args in entities]
+
+    to_add = [
+        ent_cls.create_entity(*args, **{**kwargs, **kw_args})
+        for ent_cls, args, kw_args in entities
+    ]
     entities_to_add = [entity for entity in to_add if entity is not None]
     _async_add_entities(entities_to_add, update_before_add=False)
     entities.clear()
@@ -103,6 +184,181 @@ class ProbeEndpoint:
         self.discover_by_cluster_id(endpoint)
         self.discover_multi_entities(endpoint, config_diagnostic_entities=True)
         zha_regs.ZHA_ENTITIES.clean_up()
+
+    @callback
+    def discover_device_entities(self, device: ZHADevice) -> None:
+        """Discover entities for a ZHA device."""
+        _LOGGER.debug(
+            "Discovering entities for device: %s-%s",
+            str(device.ieee),
+            device.name,
+        )
+
+        if device.is_coordinator:
+            self.discover_coordinator_device_entities(device)
+            return
+
+        self.discover_quirks_v2_entities(device)
+        zha_regs.ZHA_ENTITIES.clean_up()
+
+    @callback
+    def discover_quirks_v2_entities(self, device: ZHADevice) -> None:
+        """Discover entities for a ZHA device exposed by quirks v2."""
+        _LOGGER.debug(
+            "Attempting to discover quirks v2 entities for device: %s-%s",
+            str(device.ieee),
+            device.name,
+        )
+
+        if not isinstance(device.device, CustomDeviceV2):
+            _LOGGER.debug(
+                "Device: %s-%s is not a quirks v2 device - skipping "
+                "discover_quirks_v2_entities",
+                str(device.ieee),
+                device.name,
+            )
+            return
+
+        zigpy_device: CustomDeviceV2 = device.device
+
+        if not zigpy_device.exposes_metadata:
+            _LOGGER.debug(
+                "Device: %s-%s does not expose any quirks v2 entities",
+                str(device.ieee),
+                device.name,
+            )
+            return
+
+        for (
+            cluster_details,
+            entity_metadata_list,
+        ) in zigpy_device.exposes_metadata.items():
+            endpoint_id, cluster_id, cluster_type = cluster_details
+
+            if endpoint_id not in device.endpoints:
+                _LOGGER.warning(
+                    "Device: %s-%s does not have an endpoint with id: %s - unable to "
+                    "create entity with cluster details: %s",
+                    str(device.ieee),
+                    device.name,
+                    endpoint_id,
+                    cluster_details,
+                )
+                continue
+
+            endpoint: Endpoint = device.endpoints[endpoint_id]
+            cluster = (
+                endpoint.zigpy_endpoint.in_clusters.get(cluster_id)
+                if cluster_type is ClusterType.Server
+                else endpoint.zigpy_endpoint.out_clusters.get(cluster_id)
+            )
+
+            if cluster is None:
+                _LOGGER.warning(
+                    "Device: %s-%s does not have a cluster with id: %s - "
+                    "unable to create entity with cluster details: %s",
+                    str(device.ieee),
+                    device.name,
+                    cluster_id,
+                    cluster_details,
+                )
+                continue
+
+            cluster_handler_id = f"{endpoint.id}:0x{cluster.cluster_id:04x}"
+            cluster_handler = (
+                endpoint.all_cluster_handlers.get(cluster_handler_id)
+                if cluster_type is ClusterType.Server
+                else endpoint.client_cluster_handlers.get(cluster_handler_id)
+            )
+            assert cluster_handler
+
+            for entity_metadata in entity_metadata_list:
+                platform = Platform(entity_metadata.entity_platform.value)
+                metadata_type = type(entity_metadata)
+                entity_class = QUIRKS_ENTITY_META_TO_ENTITY_CLASS.get(
+                    (platform, metadata_type, entity_metadata.entity_type)
+                )
+
+                if entity_class is None:
+                    _LOGGER.warning(
+                        "Device: %s-%s has an entity with details: %s that does not"
+                        " have an entity class mapping - unable to create entity",
+                        str(device.ieee),
+                        device.name,
+                        {
+                            zha_const.CLUSTER_DETAILS: cluster_details,
+                            zha_const.ENTITY_METADATA: entity_metadata,
+                        },
+                    )
+                    continue
+
+                # automatically add the attribute to ZCL_INIT_ATTRS for the cluster
+                # handler if it is not already in the list
+                if (
+                    hasattr(entity_metadata, "attribute_name")
+                    and entity_metadata.attribute_name
+                    not in cluster_handler.ZCL_INIT_ATTRS
+                ):
+                    init_attrs = cluster_handler.ZCL_INIT_ATTRS.copy()
+                    init_attrs[entity_metadata.attribute_name] = (
+                        entity_metadata.attribute_initialized_from_cache
+                    )
+                    cluster_handler.__dict__[zha_const.ZCL_INIT_ATTRS] = init_attrs
+
+                endpoint.async_new_entity(
+                    platform,
+                    entity_class,
+                    endpoint.unique_id,
+                    [cluster_handler],
+                    entity_metadata=entity_metadata,
+                )
+
+                _LOGGER.debug(
+                    "'%s' platform -> '%s' using %s",
+                    platform,
+                    entity_class.__name__,
+                    [cluster_handler.name],
+                )
+
+    @callback
+    def discover_coordinator_device_entities(self, device: ZHADevice) -> None:
+        """Discover entities for the coordinator device."""
+        _LOGGER.debug(
+            "Discovering entities for coordinator device: %s-%s",
+            str(device.ieee),
+            device.name,
+        )
+        state: State = device.gateway.application_controller.state
+        platforms: dict[Platform, list] = get_zha_data(device.hass).platforms
+
+        @callback
+        def process_counters(counter_groups: str) -> None:
+            for counter_group, counters in getattr(state, counter_groups).items():
+                for counter in counters:
+                    platforms[Platform.SENSOR].append(
+                        (
+                            sensor.DeviceCounterSensor,
+                            (
+                                f"{slugify(str(device.ieee))}_{counter_groups}_{counter_group}_{counter}",
+                                device,
+                                counter_groups,
+                                counter_group,
+                                counter,
+                            ),
+                            {},
+                        )
+                    )
+                    _LOGGER.debug(
+                        "'%s' platform -> '%s' using %s",
+                        Platform.SENSOR,
+                        sensor.DeviceCounterSensor.__name__,
+                        f"counter groups[{counter_groups}] counter group[{counter_group}] counter[{counter}]",
+                    )
+
+        process_counters("counters")
+        process_counters("broadcast_counters")
+        process_counters("device_counters")
+        process_counters("group_counters")
 
     @callback
     def discover_by_device_type(self, endpoint: Endpoint) -> None:
@@ -260,7 +516,7 @@ class ProbeEndpoint:
         for platform, ent_n_handler_list in matches.items():
             for entity_and_handler in ent_n_handler_list:
                 _LOGGER.debug(
-                    "'%s' component -> '%s' using %s",
+                    "'%s' platform -> '%s' using %s",
                     platform,
                     entity_and_handler.entity_class.__name__,
                     [ch.name for ch in entity_and_handler.claimed_cluster_handlers],
@@ -268,7 +524,8 @@ class ProbeEndpoint:
         for platform, ent_n_handler_list in matches.items():
             for entity_and_handler in ent_n_handler_list:
                 if platform == cmpt_by_dev_type:
-                    # for well known device types, like thermostats we'll take only 1st class
+                    # for well known device types,
+                    # like thermostats we'll take only 1st class
                     endpoint.async_new_entity(
                         platform,
                         entity_and_handler.entity_class,
@@ -356,6 +613,7 @@ class GroupProbe:
                         group.group_id,
                         zha_gateway.coordinator_zha_device,
                     ),
+                    {},
                 )
             )
         async_dispatcher_send(self._hass, zha_const.SIGNAL_ADD_ENTITIES)

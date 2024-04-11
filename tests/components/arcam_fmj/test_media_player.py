@@ -1,4 +1,5 @@
 """Tests for arcam fmj receivers."""
+
 from math import isclose
 from unittest.mock import ANY, PropertyMock, patch
 

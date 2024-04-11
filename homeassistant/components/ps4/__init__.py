@@ -1,4 +1,5 @@
 """Support for PlayStation 4 consoles."""
+
 import logging
 import os
 

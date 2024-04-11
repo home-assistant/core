@@ -1,4 +1,5 @@
 """Common test objects."""
+
 import asyncio
 from datetime import timedelta
 import math
@@ -243,10 +244,7 @@ def patch_zha_config(component: str, overrides: dict[tuple[str, str], Any]):
     def new_get_config(config_entry, section, config_key, default):
         if (section, config_key) in overrides:
             return overrides[section, config_key]
-        else:
-            return async_get_zha_config_value(
-                config_entry, section, config_key, default
-            )
+        return async_get_zha_config_value(config_entry, section, config_key, default)
 
     return patch(
         f"homeassistant.components.zha.{component}.async_get_zha_config_value",

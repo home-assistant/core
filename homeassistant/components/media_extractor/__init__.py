@@ -1,4 +1,5 @@
 """Decorator service for the media_player.play_media service."""
+
 from collections.abc import Callable
 import logging
 from pathlib import Path
@@ -126,7 +127,7 @@ class MediaExtractor:
             all_media = ydl.extract_info(self.get_media_url(), process=False)
         except DownloadError as err:
             # This exception will be logged by youtube-dl itself
-            raise MEDownloadException() from err
+            raise MEDownloadException from err
 
         if "entries" in all_media:
             _LOGGER.warning("Playlists are not supported, looking for the first video")
@@ -135,7 +136,7 @@ class MediaExtractor:
                 selected_media = entries[0]
             else:
                 _LOGGER.error("Playlist is empty")
-                raise MEDownloadException()
+                raise MEDownloadException
         else:
             selected_media = all_media
 
@@ -146,7 +147,7 @@ class MediaExtractor:
                 requested_stream = ydl.process_ie_result(selected_media, download=False)
             except (ExtractorError, DownloadError) as err:
                 _LOGGER.error("Could not extract stream for the query: %s", query)
-                raise MEQueryException() from err
+                raise MEQueryException from err
 
             if "formats" in requested_stream:
                 if requested_stream["extractor"] == "youtube":

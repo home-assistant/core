@@ -1,4 +1,5 @@
 """Tests for the DLNA DMR media_player module."""
+
 from __future__ import annotations
 
 import asyncio
@@ -84,9 +85,7 @@ async def setup_mock_component(hass: HomeAssistant, mock_entry: MockConfigEntry)
 
     entries = async_entries_for_config_entry(async_get_er(hass), mock_entry.entry_id)
     assert len(entries) == 1
-    entity_id = entries[0].entity_id
-
-    return entity_id
+    return entries[0].entity_id
 
 
 async def get_attrs(hass: HomeAssistant, entity_id: str) -> Mapping[str, Any]:
@@ -265,14 +264,13 @@ async def test_setup_entry_no_options(
     domain_data_mock.async_release_event_notifier.assert_awaited_once()
     dmr_device_mock.async_unsubscribe_services.assert_awaited_once()
     assert dmr_device_mock.on_event is None
-    mock_state = hass.states.get(mock_entity_id)
-    assert mock_state is not None
-    assert mock_state.state == ha_const.STATE_UNAVAILABLE
+    # Entity should be removed by the cleanup
+    assert hass.states.get(mock_entity_id) is None
 
 
 @pytest.mark.parametrize(
     "core_state",
-    (CoreState.not_running, CoreState.running),
+    [CoreState.not_running, CoreState.running],
 )
 async def test_setup_entry_with_options(
     hass: HomeAssistant,
@@ -344,9 +342,8 @@ async def test_setup_entry_with_options(
     domain_data_mock.async_release_event_notifier.assert_awaited_once()
     dmr_device_mock.async_unsubscribe_services.assert_awaited_once()
     assert dmr_device_mock.on_event is None
-    mock_state = hass.states.get(mock_entity_id)
-    assert mock_state is not None
-    assert mock_state.state == ha_const.STATE_UNAVAILABLE
+    # Entity should be removed by the cleanup
+    assert hass.states.get(mock_entity_id) is None
 
 
 async def test_setup_entry_mac_address(
@@ -1010,6 +1007,7 @@ async def test_shuffle_repeat_modes(
     dmr_device_mock.async_set_play_mode.reset_mock()
     dmr_device_mock.play_mode = PlayMode.RANDOM
     dmr_device_mock.valid_play_modes = {PlayMode.SHUFFLE, PlayMode.RANDOM}
+    await get_attrs(hass, mock_entity_id)
     await hass.services.async_call(
         MP_DOMAIN,
         ha_const.SERVICE_SHUFFLE_SET,
@@ -1023,6 +1021,7 @@ async def test_shuffle_repeat_modes(
     dmr_device_mock.async_set_play_mode.reset_mock()
     dmr_device_mock.play_mode = PlayMode.RANDOM
     dmr_device_mock.valid_play_modes = {PlayMode.REPEAT_ONE, PlayMode.REPEAT_ALL}
+    await get_attrs(hass, mock_entity_id)
     await hass.services.async_call(
         MP_DOMAIN,
         ha_const.SERVICE_REPEAT_SET,
@@ -1262,7 +1261,7 @@ async def test_playback_update_state(
 
 @pytest.mark.parametrize(
     "core_state",
-    (CoreState.not_running, CoreState.running),
+    [CoreState.not_running, CoreState.running],
 )
 async def test_unavailable_device(
     hass: HomeAssistant,
@@ -1383,15 +1382,13 @@ async def test_unavailable_device(
     # Check event notifiers are not released
     domain_data_mock.async_release_event_notifier.assert_not_called()
 
-    # Confirm the entity is still unavailable
-    mock_state = hass.states.get(mock_entity_id)
-    assert mock_state is not None
-    assert mock_state.state == ha_const.STATE_UNAVAILABLE
+    # Entity should be removed by the cleanup
+    assert hass.states.get(mock_entity_id) is None
 
 
 @pytest.mark.parametrize(
     "core_state",
-    (CoreState.not_running, CoreState.running),
+    [CoreState.not_running, CoreState.running],
 )
 async def test_become_available(
     hass: HomeAssistant,
@@ -1424,7 +1421,7 @@ async def test_become_available(
     domain_data_mock.upnp_factory.async_create_device.reset_mock()
 
     # Send an SSDP notification from the now alive device
-    ssdp_callback = ssdp_scanner_mock.async_register_callback.call_args.args[0]
+    ssdp_callback = ssdp_scanner_mock.async_register_callback.call_args.args[0].target
     await ssdp_callback(
         ssdp.SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
@@ -1476,14 +1473,13 @@ async def test_become_available(
     domain_data_mock.async_release_event_notifier.assert_awaited_once()
     dmr_device_mock.async_unsubscribe_services.assert_awaited_once()
     assert dmr_device_mock.on_event is None
-    mock_state = hass.states.get(mock_entity_id)
-    assert mock_state is not None
-    assert mock_state.state == ha_const.STATE_UNAVAILABLE
+    # Entity should be removed by the cleanup
+    assert hass.states.get(mock_entity_id) is None
 
 
 @pytest.mark.parametrize(
     "core_state",
-    (CoreState.not_running, CoreState.running),
+    [CoreState.not_running, CoreState.running],
 )
 async def test_alive_but_gone(
     hass: HomeAssistant,
@@ -1497,7 +1493,7 @@ async def test_alive_but_gone(
     domain_data_mock.upnp_factory.async_create_device.side_effect = UpnpError
 
     # Send an SSDP notification from the still missing device
-    ssdp_callback = ssdp_scanner_mock.async_register_callback.call_args.args[0]
+    ssdp_callback = ssdp_scanner_mock.async_register_callback.call_args.args[0].target
     await ssdp_callback(
         ssdp.SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
@@ -1610,7 +1606,7 @@ async def test_multiple_ssdp_alive(
     )
 
     # Send two SSDP notifications with the new device URL
-    ssdp_callback = ssdp_scanner_mock.async_register_callback.call_args.args[0]
+    ssdp_callback = ssdp_scanner_mock.async_register_callback.call_args.args[0].target
     await ssdp_callback(
         ssdp.SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
@@ -1650,7 +1646,7 @@ async def test_ssdp_byebye(
 ) -> None:
     """Test device is disconnected when byebye is received."""
     # First byebye will cause a disconnect
-    ssdp_callback = ssdp_scanner_mock.async_register_callback.call_args.args[0]
+    ssdp_callback = ssdp_scanner_mock.async_register_callback.call_args.args[0].target
     await ssdp_callback(
         ssdp.SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
@@ -1702,7 +1698,7 @@ async def test_ssdp_update_seen_bootid(
     domain_data_mock.upnp_factory.async_create_device.side_effect = None
 
     # Send SSDP alive with boot ID
-    ssdp_callback = ssdp_scanner_mock.async_register_callback.call_args.args[0]
+    ssdp_callback = ssdp_scanner_mock.async_register_callback.call_args.args[0].target
     await ssdp_callback(
         ssdp.SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
@@ -1829,7 +1825,7 @@ async def test_ssdp_update_missed_bootid(
     domain_data_mock.upnp_factory.async_create_device.side_effect = None
 
     # Send SSDP alive with boot ID
-    ssdp_callback = ssdp_scanner_mock.async_register_callback.call_args.args[0]
+    ssdp_callback = ssdp_scanner_mock.async_register_callback.call_args.args[0].target
     await ssdp_callback(
         ssdp.SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
@@ -1906,7 +1902,7 @@ async def test_ssdp_bootid(
     domain_data_mock.upnp_factory.async_create_device.side_effect = None
 
     # Send SSDP alive with boot ID
-    ssdp_callback = ssdp_scanner_mock.async_register_callback.call_args.args[0]
+    ssdp_callback = ssdp_scanner_mock.async_register_callback.call_args.args[0].target
     await ssdp_callback(
         ssdp.SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
@@ -2043,6 +2039,8 @@ async def test_poll_availability(
     # Check that an update will poll the device for availability
     domain_data_mock.upnp_factory.async_create_device.reset_mock()
     await async_update_entity(hass, mock_entity_id)
+    await hass.async_block_till_done()
+
     domain_data_mock.upnp_factory.async_create_device.assert_awaited_once_with(
         MOCK_DEVICE_LOCATION
     )
@@ -2057,6 +2055,8 @@ async def test_poll_availability(
     # Check that an update will notice the device and connect to it
     domain_data_mock.upnp_factory.async_create_device.reset_mock()
     await async_update_entity(hass, mock_entity_id)
+    await hass.async_block_till_done()
+
     domain_data_mock.upnp_factory.async_create_device.assert_awaited_once_with(
         MOCK_DEVICE_LOCATION
     )
@@ -2329,7 +2329,7 @@ async def test_config_update_mac_address(
 
 @pytest.mark.parametrize(
     "core_state",
-    (CoreState.not_running, CoreState.running),
+    [CoreState.not_running, CoreState.running],
 )
 async def test_connections_restored(
     hass: HomeAssistant,
@@ -2362,7 +2362,7 @@ async def test_connections_restored(
     domain_data_mock.upnp_factory.async_create_device.reset_mock()
 
     # Send an SSDP notification from the now alive device
-    ssdp_callback = ssdp_scanner_mock.async_register_callback.call_args.args[0]
+    ssdp_callback = ssdp_scanner_mock.async_register_callback.call_args.args[0].target
     await ssdp_callback(
         ssdp.SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,

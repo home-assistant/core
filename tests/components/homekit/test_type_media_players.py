@@ -1,4 +1,5 @@
 """Test different accessory types: Media Players."""
+
 import pytest
 
 from homeassistant.components.homekit.accessories import HomeDriver
@@ -65,7 +66,7 @@ async def test_media_player_set_state(hass: HomeAssistant, hk_driver, events) ->
     )
     await hass.async_block_till_done()
     acc = MediaPlayer(hass, hk_driver, "MediaPlayer", entity_id, 2, config)
-    await acc.run()
+    acc.run()
     await hass.async_block_till_done()
 
     assert acc.aid == 2
@@ -196,7 +197,7 @@ async def test_media_player_television(
     )
     await hass.async_block_till_done()
     acc = TelevisionMediaPlayer(hass, hk_driver, "MediaPlayer", entity_id, 2, None)
-    await acc.run()
+    acc.run()
     await hass.async_block_till_done()
 
     assert acc.aid == 2
@@ -382,7 +383,7 @@ async def test_media_player_television_basic(
     )
     await hass.async_block_till_done()
     acc = TelevisionMediaPlayer(hass, hk_driver, "MediaPlayer", entity_id, 2, None)
-    await acc.run()
+    acc.run()
     await hass.async_block_till_done()
 
     assert acc.chars_tv == [CHAR_REMOTE_KEY]
@@ -422,7 +423,7 @@ async def test_media_player_television_supports_source_select_no_sources(
     )
     await hass.async_block_till_done()
     acc = TelevisionMediaPlayer(hass, hk_driver, "MediaPlayer", entity_id, 2, None)
-    await acc.run()
+    acc.run()
     await hass.async_block_till_done()
 
     assert acc.support_select_source is False
@@ -500,7 +501,7 @@ async def test_media_player_television_max_sources(
     )
     await hass.async_block_till_done()
     acc = TelevisionMediaPlayer(hass, hk_driver, "MediaPlayer", entity_id, 2, None)
-    await acc.run()
+    acc.run()
     await hass.async_block_till_done()
 
     assert acc.aid == 2
@@ -559,7 +560,7 @@ async def test_media_player_television_duplicate_sources(
     )
     await hass.async_block_till_done()
     acc = TelevisionMediaPlayer(hass, hk_driver, "MediaPlayer", entity_id, 2, None)
-    await acc.run()
+    acc.run()
     await hass.async_block_till_done()
 
     assert acc.aid == 2
@@ -604,7 +605,7 @@ async def test_media_player_television_unsafe_chars(
     )
     await hass.async_block_till_done()
     acc = TelevisionMediaPlayer(hass, hk_driver, "MediaPlayer", entity_id, 2, None)
-    await acc.run()
+    acc.run()
     await hass.async_block_till_done()
 
     assert acc.aid == 2
@@ -671,7 +672,7 @@ async def test_media_player_receiver(
     )
     await hass.async_block_till_done()
     acc = ReceiverMediaPlayer(hass, hk_driver, "MediaPlayer", entity_id, 2, None)
-    await acc.run()
+    acc.run()
     await hass.async_block_till_done()
 
     assert acc.aid == 2

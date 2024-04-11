@@ -1,11 +1,12 @@
 """The tests for the notify.group platform."""
+
 from unittest.mock import MagicMock, patch
 
 from homeassistant import config as hass_config
+from homeassistant.components import notify
 import homeassistant.components.demo.notify as demo
 from homeassistant.components.group import SERVICE_RELOAD
 import homeassistant.components.group.notify as group
-import homeassistant.components.notify as notify
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 

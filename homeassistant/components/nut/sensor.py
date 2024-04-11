@@ -1,4 +1,5 @@
 """Provides a sensor to track various status aspects of a UPS."""
+
 from __future__ import annotations
 
 from dataclasses import asdict
@@ -984,7 +985,7 @@ async def async_setup_entry(
     if KEY_STATUS in resources:
         resources.append(KEY_STATUS_DISPLAY)
 
-    entities = [
+    async_add_entities(
         NUTSensor(
             coordinator,
             SENSOR_TYPES[sensor_type],
@@ -992,9 +993,7 @@ async def async_setup_entry(
             unique_id,
         )
         for sensor_type in resources
-    ]
-
-    async_add_entities(entities, True)
+    )
 
 
 class NUTSensor(CoordinatorEntity[DataUpdateCoordinator[dict[str, str]]], SensorEntity):

@@ -1,4 +1,5 @@
 """Support for yalexs ble sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -27,18 +28,11 @@ from .entity import YALEXSBLEEntity
 from .models import YaleXSBLEData
 
 
-@dataclass(frozen=True)
-class YaleXSBLERequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class YaleXSBLESensorEntityDescription(SensorEntityDescription):
+    """Describes Yale Access Bluetooth sensor entity."""
 
     value_fn: Callable[[LockState, LockInfo, ConnectionInfo], int | float | None]
-
-
-@dataclass(frozen=True)
-class YaleXSBLESensorEntityDescription(
-    SensorEntityDescription, YaleXSBLERequiredKeysMixin
-):
-    """Describes Yale Access Bluetooth sensor entity."""
 
 
 SENSORS: tuple[YaleXSBLESensorEntityDescription, ...] = (

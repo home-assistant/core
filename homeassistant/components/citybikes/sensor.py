@@ -1,4 +1,5 @@
 """Sensor for the CityBikes data."""
+
 from __future__ import annotations
 
 import asyncio
@@ -227,6 +228,9 @@ class CityBikesNetworks:
                     self.hass, NETWORKS_URI, NETWORKS_RESPONSE_SCHEMA
                 )
                 self.networks = networks[ATTR_NETWORKS_LIST]
+        except CityBikesRequestError as err:
+            raise PlatformNotReady from err
+        else:
             result = None
             minimum_dist = None
             for network in self.networks:
@@ -240,8 +244,6 @@ class CityBikesNetworks:
                     result = network[ATTR_ID]
 
             return result
-        except CityBikesRequestError as err:
-            raise PlatformNotReady from err
         finally:
             self.networks_loading.release()
 

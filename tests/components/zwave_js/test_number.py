@@ -1,4 +1,5 @@
 """Test the Z-Wave JS number platform."""
+
 from unittest.mock import patch
 
 import pytest
@@ -231,7 +232,7 @@ async def test_config_parameter_number(
         assert entity_entry.entity_category == EntityCategory.CONFIG
 
     for entity_id in (number_entity_id, number_with_states_entity_id):
-        updated_entry = ent_reg.async_update_entity(entity_id, **{"disabled_by": None})
+        updated_entry = ent_reg.async_update_entity(entity_id, disabled_by=None)
         assert updated_entry != entity_entry
         assert updated_entry.disabled is False
 

@@ -1,4 +1,5 @@
 """Test Fully Kiosk Browser services."""
+
 from unittest.mock import MagicMock
 
 import pytest

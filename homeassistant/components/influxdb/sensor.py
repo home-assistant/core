@@ -1,4 +1,5 @@
 """InfluxDB component which allows you to get data from an Influx database."""
+
 from __future__ import annotations
 
 import datetime
@@ -165,7 +166,7 @@ def setup_platform(
         influx = get_influx_connection(config, test_read=True)
     except ConnectionError as exc:
         _LOGGER.error(exc)
-        raise PlatformNotReady() from exc
+        raise PlatformNotReady from exc
 
     entities = []
     if CONF_QUERIES_FLUX in config:

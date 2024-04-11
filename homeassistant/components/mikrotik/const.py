@@ -1,4 +1,5 @@
 """Constants used in the Mikrotik components."""
+
 from typing import Final
 
 DOMAIN: Final = "mikrotik"

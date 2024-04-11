@@ -1,4 +1,5 @@
 """Test data for the tests of the Huisbaasje integration."""
+
 MOCK_CURRENT_MEASUREMENTS = {
     "electricity": {
         "measurement": {

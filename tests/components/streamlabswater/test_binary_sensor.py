@@ -1,4 +1,5 @@
 """Tests for the Streamlabs Water binary sensor platform."""
+
 from unittest.mock import AsyncMock, patch
 
 from syrupy import SnapshotAssertion

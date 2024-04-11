@@ -1,4 +1,5 @@
 """Helpers for HomeWizard."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
@@ -32,7 +33,6 @@ def homewizard_exception_handler(
             await func(self, *args, **kwargs)
         except RequestError as ex:
             raise HomeAssistantError(
-                "An error occurred while communicating with HomeWizard device",
                 translation_domain=DOMAIN,
                 translation_key="communication_error",
             ) from ex
@@ -41,7 +41,6 @@ def homewizard_exception_handler(
                 self.coordinator.config_entry.entry_id
             )
             raise HomeAssistantError(
-                "The local API of the HomeWizard device is disabled",
                 translation_domain=DOMAIN,
                 translation_key="api_disabled",
             ) from ex

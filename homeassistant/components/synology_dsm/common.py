@@ -1,4 +1,5 @@
 """The Synology DSM component."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -128,7 +129,7 @@ class SynoApi:
                 self._entry.unique_id,
                 err,
             )
-            raise err
+            raise
 
     @callback
     def subscribe(self, api_key: str, unique_id: str) -> Callable[[], None]:
@@ -267,7 +268,7 @@ class SynoApi:
             LOGGER.debug(
                 "Error from '%s': %s", self._entry.unique_id, err, exc_info=True
             )
-            raise err
+            raise
 
     async def async_reboot(self) -> None:
         """Reboot NAS."""
@@ -285,18 +286,7 @@ class SynoApi:
 
     async def async_update(self) -> None:
         """Update function for updating API information."""
-        try:
-            await self._update()
-        except SYNOLOGY_CONNECTION_EXCEPTIONS as err:
-            LOGGER.debug(
-                "Connection error during update of '%s' with exception: %s",
-                self._entry.unique_id,
-                err,
-            )
-            LOGGER.warning(
-                "Connection error during update, fallback by reloading the entry"
-            )
-            await self._hass.config_entries.async_reload(self._entry.entry_id)
+        await self._update()
 
     async def _update(self) -> None:
         """Update function for updating API information."""

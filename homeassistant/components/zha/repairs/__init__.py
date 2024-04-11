@@ -1,4 +1,5 @@
 """ZHA repairs for common environmental and device problems."""
+
 from __future__ import annotations
 
 from typing import Any, cast

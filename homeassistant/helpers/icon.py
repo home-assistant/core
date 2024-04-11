@@ -1,4 +1,5 @@
 """Icon helper methods."""
+
 from __future__ import annotations
 
 import asyncio
@@ -104,10 +105,7 @@ class _IconsCache:
 
     async def _async_load(self, components: set[str]) -> None:
         """Populate the cache for a given set of components."""
-        _LOGGER.debug(
-            "Cache miss for: %s",
-            ", ".join(components),
-        )
+        _LOGGER.debug("Cache miss for: %s", components)
 
         integrations: dict[str, Integration] = {}
         domains = {loaded.rpartition(".")[-1] for loaded in components}
@@ -129,16 +127,15 @@ class _IconsCache:
         icons: dict[str, dict[str, Any]],
     ) -> None:
         """Extract resources into the cache."""
-        resource: dict[str, Any] | str
         categories: set[str] = set()
+
         for resource in icons.values():
             categories.update(resource)
 
         for category in categories:
-            new_resources = build_resources(icons, components, category)
-            for component, resource in new_resources.items():
-                category_cache: dict[str, Any] = self._cache.setdefault(category, {})
-                category_cache[component] = resource
+            self._cache.setdefault(category, {}).update(
+                build_resources(icons, components, category)
+            )
 
 
 async def async_get_icons(
