@@ -40,7 +40,7 @@ from homeassistant.const import (
     MAX_LENGTH_STATE_ENTITY_ID,
     MAX_LENGTH_STATE_STATE,
 )
-from homeassistant.core import Context, Event, EventOrigin, State
+from homeassistant.core import Context, Event, EventOrigin, EventStateChangedData, State
 from homeassistant.helpers.json import JSON_DUMP, json_bytes, json_bytes_strip_null
 import homeassistant.util.dt as dt_util
 from homeassistant.util.json import (
@@ -478,10 +478,10 @@ class States(Base):
         return date_time.isoformat(sep=" ", timespec="seconds")
 
     @staticmethod
-    def from_event(event: Event) -> States:
+    def from_event(event: Event[EventStateChangedData]) -> States:
         """Create object from a state_changed event."""
         entity_id = event.data["entity_id"]
-        state: State | None = event.data.get("new_state")
+        state = event.data["new_state"]
         dbstate = States(
             entity_id=entity_id,
             attributes=None,
@@ -576,13 +576,12 @@ class StateAttributes(Base):
 
     @staticmethod
     def shared_attrs_bytes_from_event(
-        event: Event,
+        event: Event[EventStateChangedData],
         dialect: SupportedDialect | None,
     ) -> bytes:
         """Create shared_attrs from a state_changed event."""
-        state: State | None = event.data.get("new_state")
         # None state means the state was removed from the state machine
-        if state is None:
+        if (state := event.data["new_state"]) is None:
             return b"{}"
         if state_info := state.state_info:
             exclude_attrs = {
