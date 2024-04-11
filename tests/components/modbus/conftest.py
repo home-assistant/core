@@ -72,11 +72,11 @@ def do_exception_fixture():
 
 
 @pytest.fixture(name="mock_pymodbus")
-def mock_pymodbus_fixture():
+def mock_pymodbus_fixture(do_exception, register_words):
     """Mock pymodbus."""
     mock_pb = mock.AsyncMock()
     mock_pb.close = mock.MagicMock()
-    read_result = ReadResult([])
+    read_result = ReadResult(register_words)
     mock_pb.read_coils.return_value = read_result
     mock_pb.read_discrete_inputs.return_value = read_result
     mock_pb.read_input_registers.return_value = read_result
@@ -85,6 +85,16 @@ def mock_pymodbus_fixture():
     mock_pb.write_registers.return_value = read_result
     mock_pb.write_coil.return_value = read_result
     mock_pb.write_coils.return_value = read_result
+    if do_exception:
+        exc = ModbusException("mocked pymodbus exception")
+        mock_pb.read_coils.side_effect = exc
+        mock_pb.read_discrete_inputs.side_effect = exc
+        mock_pb.read_input_registers.side_effect = exc
+        mock_pb.read_holding_registers.side_effect = exc
+        mock_pb.write_register.side_effect = exc
+        mock_pb.write_registers.side_effect = exc
+        mock_pb.write_coil.side_effect = exc
+        mock_pb.write_coils.side_effect = exc
     with (
         mock.patch(
             "homeassistant.components.modbus.modbus.AsyncModbusTcpClient",
