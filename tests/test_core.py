@@ -1174,7 +1174,7 @@ async def test_eventbus_run_immediately_callback(hass: HomeAssistant) -> None:
         """Mock listener."""
         calls.append(event)
 
-    unsub = hass.bus.async_listen("test", listener, run_immediately=True)
+    unsub = hass.bus.async_listen("test", listener)
 
     hass.bus.async_fire("test", {"event": True})
     # No async_block_till_done here
@@ -1191,7 +1191,7 @@ async def test_eventbus_run_immediately_coro(hass: HomeAssistant) -> None:
         """Mock listener."""
         calls.append(event)
 
-    unsub = hass.bus.async_listen("test", listener, run_immediately=True)
+    unsub = hass.bus.async_listen("test", listener)
 
     hass.bus.async_fire("test", {"event": True})
     # No async_block_till_done here
@@ -1208,7 +1208,7 @@ async def test_eventbus_listen_once_run_immediately_coro(hass: HomeAssistant) ->
         """Mock listener."""
         calls.append(event)
 
-    hass.bus.async_listen_once("test", listener, run_immediately=True)
+    hass.bus.async_listen_once("test", listener)
 
     hass.bus.async_fire("test", {"event": True})
     # No async_block_till_done here
@@ -3343,9 +3343,7 @@ async def test_statemachine_report_state(hass: HomeAssistant) -> None:
     hass.states.async_set("light.bowl", "on", {})
     state_changed_events = async_capture_events(hass, EVENT_STATE_CHANGED)
     state_reported_events = []
-    hass.bus.async_listen(
-        EVENT_STATE_REPORTED, listener, event_filter=filter, run_immediately=True
-    )
+    hass.bus.async_listen(EVENT_STATE_REPORTED, listener, event_filter=filter)
 
     hass.states.async_set("light.bowl", "on")
     await hass.async_block_till_done()
@@ -3380,17 +3378,36 @@ async def test_report_state_listener_restrictions(hass: HomeAssistant) -> None:
         """Mock filter."""
         return False
 
-    # run_immediately set to False
-    with pytest.raises(HomeAssistantError):
-        hass.bus.async_listen(
-            EVENT_STATE_REPORTED, listener, event_filter=filter, run_immediately=False
-        )
-
     # no filter
     with pytest.raises(HomeAssistantError):
-        hass.bus.async_listen(EVENT_STATE_REPORTED, listener, run_immediately=True)
+        hass.bus.async_listen(EVENT_STATE_REPORTED, listener)
 
     # Both filter and run_immediately
-    hass.bus.async_listen(
-        EVENT_STATE_REPORTED, listener, event_filter=filter, run_immediately=True
-    )
+    hass.bus.async_listen(EVENT_STATE_REPORTED, listener, event_filter=filter)
+
+
+@pytest.mark.parametrize(
+    "run_immediately",
+    [True, False],
+)
+@pytest.mark.parametrize(
+    "method",
+    ["async_listen", "async_listen_once"],
+)
+async def test_async_listen_with_run_immediately_deprecated(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    run_immediately: bool,
+    method: str,
+) -> None:
+    """Test async_add_job warns about its deprecation."""
+
+    async def _test(event: ha.Event):
+        pass
+
+    func = getattr(hass.bus, method)
+    func(EVENT_HOMEASSISTANT_START, _test, run_immediately=run_immediately)
+    assert (
+        f"Detected code that calls `{method}` with run_immediately, which is "
+        "deprecated and will be removed in Assistant 2025.5."
+    ) in caplog.text

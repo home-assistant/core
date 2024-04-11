@@ -49,6 +49,7 @@ from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.json import json_dumps, json_fragment
 from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.event_type import EventType
 from homeassistant.util.json import json_loads
 
 _LOGGER = logging.getLogger(__name__)
@@ -134,7 +135,7 @@ class APIEventStream(HomeAssistantView):
         stop_obj = object()
         to_write: asyncio.Queue[object | str] = asyncio.Queue()
 
-        restrict: list[str] | None = None
+        restrict: list[EventType[Any] | str] | None = None
         if restrict_str := request.query.get("restrict"):
             restrict = [*restrict_str.split(","), EVENT_HOMEASSISTANT_STOP]
 
@@ -397,7 +398,6 @@ class APIDomainServicesView(HomeAssistantView):
         cancel_listen = hass.bus.async_listen(
             EVENT_STATE_CHANGED,
             _async_save_changed_entities,
-            run_immediately=True,
         )
 
         try:
