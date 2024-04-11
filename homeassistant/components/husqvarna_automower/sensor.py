@@ -301,7 +301,9 @@ SENSOR_TYPES: tuple[AutomowerSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda data: convert_timestamp_to_datetime_utc(
             data.planner.next_start_timestamp, dt_util.DEFAULT_TIME_ZONE
-        ),
+        ),  # Timestamp is in milliseconds since 1970-01-01T00:00:00 in local
+        # time instead of UTC and has to be converted in a aware datetime.
+        # Assuming the device is in the same timezone as the HA instance.
     ),
     AutomowerSensorEntityDescription(
         key="error",
