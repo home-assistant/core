@@ -398,8 +398,7 @@ async def test_snapshot_service(hass: HomeAssistant) -> None:
 
     with (
         patch("homeassistant.components.image.open", mopen, create=True),
-        patch("homeassistant.components.image.os.makedirs",
-              ),
+        patch("homeassistant.components.image.os.makedirs"),
         patch.object(hass.config, "is_allowed_path", return_value=True),
     ):
         await hass.services.async_call(
