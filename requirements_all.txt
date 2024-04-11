@@ -467,7 +467,7 @@ aprslib==0.7.2
 aqualogic==2.6
 
 # homeassistant.components.aranet
-aranet4==2.2.2
+aranet4==2.3.3
 
 # homeassistant.components.arcam_fmj
 arcam-fmj==1.4.0
@@ -560,7 +560,7 @@ bizkaibus==0.1.1
 bleak-esphome==1.0.0
 
 # homeassistant.components.bluetooth
-bleak-retry-connector==3.4.0
+bleak-retry-connector==3.5.0
 
 # homeassistant.components.bluetooth
 bleak==0.21.1
@@ -2294,7 +2294,7 @@ python-rabbitair==0.0.8
 python-ripple-api==0.0.3
 
 # homeassistant.components.roborock
-python-roborock==0.40.0
+python-roborock==1.0.0
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.36

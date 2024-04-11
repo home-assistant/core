@@ -428,7 +428,7 @@ apprise==1.7.4
 aprslib==0.7.2
 
 # homeassistant.components.aranet
-aranet4==2.2.2
+aranet4==2.3.3
 
 # homeassistant.components.arcam_fmj
 arcam-fmj==1.4.0
@@ -482,7 +482,7 @@ bimmer-connected[china]==0.14.6
 bleak-esphome==1.0.0
 
 # homeassistant.components.bluetooth
-bleak-retry-connector==3.4.0
+bleak-retry-connector==3.5.0
 
 # homeassistant.components.bluetooth
 bleak==0.21.1
@@ -1773,7 +1773,7 @@ python-qbittorrent==0.4.3
 python-rabbitair==0.0.8
 
 # homeassistant.components.roborock
-python-roborock==0.40.0
+python-roborock==1.0.0
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.36
