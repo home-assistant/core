@@ -1,28 +1,216 @@
 """The tests for notify services that change targets."""
 
 import asyncio
+import copy
 from pathlib import Path
-from unittest.mock import Mock, patch
+from typing import Any
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 import yaml
 
 from homeassistant import config as hass_config
 from homeassistant.components import notify
-from homeassistant.const import SERVICE_RELOAD, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.components.notify import (
+    DOMAIN,
+    SERVICE_SEND_MESSAGE,
+    NotifyEntity,
+    NotifyEntityDescription,
+)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    SERVICE_RELOAD,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    Platform,
+)
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockPlatform, async_get_persistent_notifications, mock_platform
+from tests.common import (
+    MockConfigEntry,
+    MockEntity,
+    MockModule,
+    MockPlatform,
+    async_get_persistent_notifications,
+    mock_integration,
+    mock_platform,
+    mock_restore_cache,
+    setup_test_component_platform,
+)
+
+TEST_KWARGS = {"message": "Test message"}
+
+
+class MockNotifyEntity(MockEntity, NotifyEntity):
+    """Mock Email notitier entity to use in tests."""
+
+    send_message_mock_calls = MagicMock()
+
+    async def async_send_message(self, message: str) -> None:
+        """Send a notification message."""
+        self.send_message_mock_calls(message=message)
+
+
+class MockNotifyEntityNonAsync(MockEntity, NotifyEntity):
+    """Mock Email notitier entity to use in tests."""
+
+    send_message_mock_calls = MagicMock()
+
+    def send_message(self, message: str) -> None:
+        """Send a notification message."""
+        self.send_message_mock_calls(message=message)
+
+
+async def help_async_setup_entry_init(
+    hass: HomeAssistant, config_entry: ConfigEntry
+) -> bool:
+    """Set up test config entry."""
+    await hass.config_entries.async_forward_entry_setup(config_entry, DOMAIN)
+    return True
+
+
+async def help_async_unload_entry(
+    hass: HomeAssistant, config_entry: ConfigEntry
+) -> bool:
+    """Unload test config emntry."""
+    return await hass.config_entries.async_unload_platforms(
+        config_entry, [Platform.NOTIFY]
+    )
+
+
+@pytest.mark.parametrize(
+    "entity",
+    [
+        MockNotifyEntityNonAsync(name="test", entity_id="notify.test"),
+        MockNotifyEntity(name="test", entity_id="notify.test"),
+    ],
+    ids=["non_async", "async"],
+)
+async def test_send_message_service(
+    hass: HomeAssistant, config_flow_fixture: None, entity: NotifyEntity
+) -> None:
+    """Test send_message service."""
+
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+
+    mock_integration(
+        hass,
+        MockModule(
+            "test",
+            async_setup_entry=help_async_setup_entry_init,
+            async_unload_entry=help_async_unload_entry,
+        ),
+    )
+    setup_test_component_platform(hass, DOMAIN, [entity], from_config_entry=True)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+    state = hass.states.get("notify.test")
+    assert state.state is STATE_UNKNOWN
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SEND_MESSAGE,
+        copy.deepcopy(TEST_KWARGS) | {"entity_id": "notify.test"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    entity.send_message_mock_calls.assert_called_once()
+
+    # Test unloading the entry succeeds
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+
+
+@pytest.mark.parametrize(
+    ("state", "init_state"),
+    [
+        ("2021-01-01T23:59:59+00:00", "2021-01-01T23:59:59+00:00"),
+        (STATE_UNAVAILABLE, STATE_UNKNOWN),
+    ],
+)
+async def test_restore_state(
+    hass: HomeAssistant, config_flow_fixture: None, state: str, init_state: str
+) -> None:
+    """Test we restore state integration."""
+    mock_restore_cache(hass, (State("notify.test", state),))
+
+    mock_integration(
+        hass,
+        MockModule(
+            "test",
+            async_setup_entry=help_async_setup_entry_init,
+        ),
+    )
+
+    entity = MockNotifyEntity(name="test", entity_id="notify.test")
+    setup_test_component_platform(hass, DOMAIN, [entity], from_config_entry=True)
+
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+    state = hass.states.get("notify.test")
+    assert state is not None
+    assert state.state is init_state
+
+
+async def test_name(hass: HomeAssistant, config_flow_fixture: None) -> None:
+    """Test notify name."""
+
+    mock_platform(hass, "test.config_flow")
+    mock_integration(
+        hass,
+        MockModule(
+            "test",
+            async_setup_entry=help_async_setup_entry_init,
+        ),
+    )
+
+    # Unnamed notify entity -> no name
+    entity1 = NotifyEntity()
+    entity1.entity_id = "notify.test1"
+
+    # Unnamed notify entity and has_entity_name True -> unnamed
+    entity2 = NotifyEntity()
+    entity2.entity_id = "notify.test3"
+    entity2._attr_has_entity_name = True
+
+    # Named notify entity and has_entity_name True -> named
+    entity3 = NotifyEntity()
+    entity3.entity_id = "notify.test4"
+    entity3.entity_description = NotifyEntityDescription("test", has_entity_name=True)
+
+    setup_test_component_platform(
+        hass, DOMAIN, [entity1, entity2, entity3], from_config_entry=True
+    )
+
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity1.entity_id)
+    assert state
+    assert state.attributes == {}
+
+    state = hass.states.get(entity2.entity_id)
+    assert state
+    assert state.attributes == {}
+
+    state = hass.states.get(entity3.entity_id)
+    assert state
+    assert state.attributes == {}
 
 
 class MockNotifyPlatform(MockPlatform):
-    """Help to set up test notify service."""
+    """Help to set up a legacy test notify service."""
 
-    def __init__(self, async_get_service=None, get_service=None):
-        """Return the notify service."""
+    def __init__(self, async_get_service: Any = None, get_service: Any = None) -> None:
+        """Return a legacy notify service."""
         super().__init__()
         if get_service:
             self.get_service = get_service
@@ -31,9 +219,13 @@ class MockNotifyPlatform(MockPlatform):
 
 
 def mock_notify_platform(
-    hass, tmp_path, integration="notify", async_get_service=None, get_service=None
+    hass: HomeAssistant,
+    tmp_path: Path,
+    integration: str = "notify",
+    async_get_service: Any = None,
+    get_service: Any = None,
 ):
-    """Specialize the mock platform for notify."""
+    """Specialize the mock platform for legacy notify service."""
     loaded_platform = MockNotifyPlatform(async_get_service, get_service)
     mock_platform(hass, f"{integration}.notify", loaded_platform)
 
@@ -41,7 +233,7 @@ def mock_notify_platform(
 
 
 async def test_same_targets(hass: HomeAssistant) -> None:
-    """Test not changing the targets in a notify service."""
+    """Test not changing the targets in a legacy notify service."""
     test = NotificationService(hass)
     await test.async_setup(hass, "notify", "test")
     await test.async_register_services()
@@ -56,7 +248,7 @@ async def test_same_targets(hass: HomeAssistant) -> None:
 
 
 async def test_change_targets(hass: HomeAssistant) -> None:
-    """Test changing the targets in a notify service."""
+    """Test changing the targets in a legacy notify service."""
     test = NotificationService(hass)
     await test.async_setup(hass, "notify", "test")
     await test.async_register_services()
@@ -73,7 +265,7 @@ async def test_change_targets(hass: HomeAssistant) -> None:
 
 
 async def test_add_targets(hass: HomeAssistant) -> None:
-    """Test adding the targets in a notify service."""
+    """Test adding the targets in a legacy notify service."""
     test = NotificationService(hass)
     await test.async_setup(hass, "notify", "test")
     await test.async_register_services()
@@ -90,7 +282,7 @@ async def test_add_targets(hass: HomeAssistant) -> None:
 
 
 async def test_remove_targets(hass: HomeAssistant) -> None:
-    """Test removing targets from the targets in a notify service."""
+    """Test removing targets from the targets in a legacy notify service."""
     test = NotificationService(hass)
     await test.async_setup(hass, "notify", "test")
     await test.async_register_services()
@@ -107,17 +299,22 @@ async def test_remove_targets(hass: HomeAssistant) -> None:
 
 
 class NotificationService(notify.BaseNotificationService):
-    """A test class for notification services."""
+    """A test class for legacy notification services."""
 
-    def __init__(self, hass, target_list={"a": 1, "b": 2}, name="notify"):
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        target_list: dict[str, Any] | None = None,
+        name="notify",
+    ) -> None:
         """Initialize the service."""
 
-        async def _async_make_reloadable(hass):
+        async def _async_make_reloadable(hass: HomeAssistant) -> None:
             """Initialize the reload service."""
             await async_setup_reload_service(hass, name, [notify.DOMAIN])
 
         self.hass = hass
-        self.target_list = target_list
+        self.target_list = target_list or {"a": 1, "b": 2}
         hass.async_create_task(_async_make_reloadable(hass))
 
     @property
@@ -229,7 +426,7 @@ async def test_platform_setup_with_error(
 async def test_reload_with_notify_builtin_platform_reload(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture, tmp_path: Path
 ) -> None:
-    """Test reload using the notify platform reload method."""
+    """Test reload using the legacy notify platform reload method."""
 
     async def async_get_service(hass, config, discovery_info=None):
         """Get notify service for mocked platform."""
@@ -271,7 +468,7 @@ async def test_setup_platform_and_reload(
         return NotificationService(hass, targetlist, "testnotify")
 
     async def async_get_service2(hass, config, discovery_info=None):
-        """Get notify service for mocked platform."""
+        """Get legacy notify service for mocked platform."""
         get_service_called(config, discovery_info)
         targetlist = {"c": 3, "d": 4}
         return NotificationService(hass, targetlist, "testnotify2")
@@ -351,7 +548,7 @@ async def test_setup_platform_and_reload(
 async def test_setup_platform_before_notify_setup(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture, tmp_path: Path
 ) -> None:
-    """Test trying to setup a platform before notify is setup."""
+    """Test trying to setup a platform before legacy notify service is setup."""
     get_service_called = Mock()
 
     async def async_get_service(hass, config, discovery_info=None):
@@ -401,7 +598,7 @@ async def test_setup_platform_before_notify_setup(
 async def test_setup_platform_after_notify_setup(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture, tmp_path: Path
 ) -> None:
-    """Test trying to setup a platform after notify is setup."""
+    """Test trying to setup a platform after legacy notify service is set up."""
     get_service_called = Mock()
 
     async def async_get_service(hass, config, discovery_info=None):

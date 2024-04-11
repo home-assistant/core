@@ -467,7 +467,7 @@ aprslib==0.7.2
 aqualogic==2.6
 
 # homeassistant.components.aranet
-aranet4==2.2.2
+aranet4==2.3.3
 
 # homeassistant.components.arcam_fmj
 arcam-fmj==1.4.0
@@ -560,7 +560,7 @@ bizkaibus==0.1.1
 bleak-esphome==1.0.0
 
 # homeassistant.components.bluetooth
-bleak-retry-connector==3.4.0
+bleak-retry-connector==3.5.0
 
 # homeassistant.components.bluetooth
 bleak==0.21.1
@@ -2857,7 +2857,7 @@ webmin-xmlrpc==0.0.2
 webrtc-noise-gain==1.2.3
 
 # homeassistant.components.whirlpool
-whirlpool-sixth-sense==0.18.7
+whirlpool-sixth-sense==0.18.8
 
 # homeassistant.components.whois
 whois==0.9.27
