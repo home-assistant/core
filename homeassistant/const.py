@@ -18,6 +18,7 @@ from .util.signal_type import SignalType
 
 if TYPE_CHECKING:
     from .core import EventStateChangedData
+    from .helpers.typing import NoEventData
 
 APPLICATION_NAME: Final = "HomeAssistant"
 MAJOR_VERSION: Final = 2024
@@ -44,6 +45,7 @@ class Platform(StrEnum):
     CALENDAR = "calendar"
     CAMERA = "camera"
     CLIMATE = "climate"
+    CONVERSATION = "conversation"
     COVER = "cover"
     DATE = "date"
     DATETIME = "datetime"
@@ -301,11 +303,13 @@ CONF_ZONE: Final = "zone"
 EVENT_CALL_SERVICE: Final = "call_service"
 EVENT_COMPONENT_LOADED: Final = "component_loaded"
 EVENT_CORE_CONFIG_UPDATE: Final = "core_config_updated"
-EVENT_HOMEASSISTANT_CLOSE: Final = "homeassistant_close"
-EVENT_HOMEASSISTANT_START: Final = "homeassistant_start"
-EVENT_HOMEASSISTANT_STARTED: Final = "homeassistant_started"
-EVENT_HOMEASSISTANT_STOP: Final = "homeassistant_stop"
-EVENT_HOMEASSISTANT_FINAL_WRITE: Final = "homeassistant_final_write"
+EVENT_HOMEASSISTANT_CLOSE: EventType[NoEventData] = EventType("homeassistant_close")
+EVENT_HOMEASSISTANT_START: EventType[NoEventData] = EventType("homeassistant_start")
+EVENT_HOMEASSISTANT_STARTED: EventType[NoEventData] = EventType("homeassistant_started")
+EVENT_HOMEASSISTANT_STOP: EventType[NoEventData] = EventType("homeassistant_stop")
+EVENT_HOMEASSISTANT_FINAL_WRITE: EventType[NoEventData] = EventType(
+    "homeassistant_final_write"
+)
 EVENT_LOGBOOK_ENTRY: Final = "logbook_entry"
 EVENT_LOGGING_CHANGED: Final = "logging_changed"
 EVENT_SERVICE_REGISTERED: Final = "service_registered"
