@@ -183,11 +183,12 @@ async def mock_test_state_fixture(hass, request):
     return request.param
 
 
-@pytest.fixture(name="mock_ha")
-async def mock_ha_fixture(hass, mock_modbus):
+@pytest.fixture(name="mock_modbus_ha")
+async def mock_modbus_ha_fixture(hass, mock_modbus):
     """Load homeassistant to allow service calls."""
     assert await async_setup_component(hass, "homeassistant", {})
     await hass.async_block_till_done()
+    return mock_modbus
 
 
 @pytest.fixture(name="caplog_setup_text")
