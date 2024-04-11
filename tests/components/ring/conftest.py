@@ -1,6 +1,7 @@
 """Configuration for Ring tests."""
 
 from collections.abc import Generator
+from itertools import chain
 from unittest.mock import AsyncMock, Mock, create_autospec, patch
 
 import pytest
@@ -10,7 +11,7 @@ from homeassistant.components.ring import DOMAIN
 from homeassistant.const import CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
-from .device_mocks import get_active_alerts, get_devices, get_devices_data
+from .device_mocks import get_active_alerts, get_devices_data, get_mock_devices
 
 from tests.common import MockConfigEntry
 from tests.components.light.conftest import mock_light_profiles  # noqa: F401
@@ -40,19 +41,54 @@ def mock_ring_auth():
 @pytest.fixture
 def mock_ring_devices():
     """Mock Ring devices."""
-    return get_devices()
+
+    devices = get_mock_devices()
+    device_list = list(chain.from_iterable(devices.values()))
+
+    class FakeRingDevices:
+        """Class fakes the RingDevices class."""
+
+        all_devices = device_list
+        video_devices = (
+            devices["stickup_cams"]
+            + devices["doorbots"]
+            + devices["authorized_doorbots"]
+        )
+        stickup_cams = devices["stickup_cams"]
+        other = devices["other"]
+        chimes = devices["chimes"]
+
+        get_device = lambda _, id: [
+            device for device in device_list if device.id == id
+        ][0]
+        get_video_device = lambda _, id: [
+            device
+            for device in device_list
+            if (
+                device.id == id
+                and device.family in {"stickup_cams", "doorbots", "authorized_doorbots"}
+            )
+        ][0]
+        get_stickup_cam = lambda _, id: [
+            device
+            for device in device_list
+            if (device.id == id and device.family == "stickup_cams")
+        ][0]
+        get_other = lambda _, id: [
+            device
+            for device in device_list
+            if (device.id == id and device.family == "others")
+        ][0]
+
+    return FakeRingDevices()
 
 
 @pytest.fixture
 def mock_ring_client(mock_ring_auth, mock_ring_devices):
     """Mock ring client api."""
     mock_client = create_autospec(ring_doorbell.Ring)
-    devices = {
-        device_type: list(keyed_devices.values())
-        for device_type, keyed_devices in mock_ring_devices.items()
-    }
     mock_client.return_value.devices_data = get_devices_data()
-    mock_client.return_value.devices.return_value = devices
+    mock_client.return_value.devices.return_value = mock_ring_devices
     mock_client.return_value.active_alerts.side_effect = get_active_alerts
 
     with patch("homeassistant.components.ring.Ring", new=mock_client):

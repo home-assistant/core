@@ -52,7 +52,7 @@ async def test_setup_entry_device_update(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    front_door_doorbell = mock_ring_devices["doorbots"][987654]
+    front_door_doorbell = mock_ring_devices.get_device(987654)
     front_door_doorbell.history.assert_not_called()
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass, dt_util.now() + timedelta(minutes=20))
@@ -158,7 +158,7 @@ async def test_auth_failure_on_device_update(
     await hass.async_block_till_done()
     assert not any(mock_config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
 
-    front_door_doorbell = mock_ring_devices["doorbots"][987654]
+    front_door_doorbell = mock_ring_devices.get_device(987654)
     front_door_doorbell.history.side_effect = AuthenticationError
 
     async_fire_time_changed(hass, dt_util.now() + timedelta(minutes=20))
@@ -241,7 +241,7 @@ async def test_error_on_device_update(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    front_door_doorbell = mock_ring_devices["stickup_cams"][765432]
+    front_door_doorbell = mock_ring_devices.get_device(765432)
     front_door_doorbell.history.side_effect = error_type
 
     async_fire_time_changed(hass, dt_util.now() + timedelta(minutes=20))

@@ -150,6 +150,7 @@ async def test_history_sensor(
 async def test_only_chime_devices(
     hass: HomeAssistant,
     mock_ring_client,
+    mock_ring_devices,
     freezer: FrozenDateTimeFactory,
     caplog,
 ) -> None:
@@ -157,8 +158,7 @@ async def test_only_chime_devices(
     hass.config.set_time_zone("UTC")
     freezer.move_to("2021-01-09 12:00:00+00:00")
 
-    devices = mock_ring_client.devices.return_value
-    mock_ring_client.devices.return_value = {"chimes": devices["chimes"]}
+    mock_ring_devices.all_devices = mock_ring_devices.chimes
 
     await setup_platform(hass, Platform.SENSOR)
     await hass.async_block_till_done()

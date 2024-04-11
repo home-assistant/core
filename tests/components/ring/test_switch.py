@@ -73,7 +73,7 @@ async def test_updates_work(
     state = hass.states.get("switch.front_siren")
     assert state.state == "off"
 
-    front_siren_mock = mock_ring_devices["stickup_cams"][765432]
+    front_siren_mock = mock_ring_devices.get_device(765432)
     front_siren_mock.siren = 20
 
     await async_setup_component(hass, "homeassistant", {})
@@ -112,7 +112,7 @@ async def test_switch_errors_when_turned_on(
 
     assert not any(config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
 
-    front_siren_mock = mock_ring_devices["stickup_cams"][765432]
+    front_siren_mock = mock_ring_devices.get_device(765432)
     p = PropertyMock(side_effect=exception_type)
     type(front_siren_mock).siren = p
 

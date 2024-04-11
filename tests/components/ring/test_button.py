@@ -27,7 +27,7 @@ async def test_button_opens_door(
     """Tests the door open button works correctly."""
     await setup_platform(hass, Platform.BUTTON)
 
-    mock_intercom = mock_ring_devices["other"][185036587]
+    mock_intercom = mock_ring_devices.get_device(185036587)
     mock_intercom.open_door.assert_not_called()
 
     await hass.services.async_call(

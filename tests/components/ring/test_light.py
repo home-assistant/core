@@ -72,7 +72,7 @@ async def test_updates_work(
     state = hass.states.get("light.front_light")
     assert state.state == "off"
 
-    front_light_mock = mock_ring_devices["stickup_cams"][765432]
+    front_light_mock = mock_ring_devices.get_device(765432)
     front_light_mock.lights = "on"
 
     await hass.services.async_call("ring", "update", {}, blocking=True)
@@ -105,7 +105,7 @@ async def test_light_errors_when_turned_on(
 
     assert not any(config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
 
-    front_light_mock = mock_ring_devices["stickup_cams"][765432]
+    front_light_mock = mock_ring_devices.get_device(765432)
     p = PropertyMock(side_effect=exception_type)
     type(front_light_mock).lights = p
 

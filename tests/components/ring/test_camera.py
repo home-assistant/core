@@ -1,6 +1,6 @@
 """The tests for the Ring switch platform."""
 
-from unittest.mock import PropertyMock, patch
+from unittest.mock import PropertyMock
 
 import pytest
 import ring_doorbell
@@ -79,7 +79,7 @@ async def test_updates_work(
     state = hass.states.get("camera.internal")
     assert state.attributes.get("motion_detection") is True
 
-    internal_camera_mock = mock_ring_devices["stickup_cams"][345678]
+    internal_camera_mock = mock_ring_devices.get_device(345678)
     internal_camera_mock.motion_detection = False
 
     await hass.services.async_call("ring", "update", {}, blocking=True)
@@ -112,21 +112,18 @@ async def test_motion_detection_errors_when_turned_on(
 
     assert not any(config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
 
-    front_camera_mock = mock_ring_devices["stickup_cams"][765432]
+    front_camera_mock = mock_ring_devices.get_device(765432)
     p = PropertyMock(side_effect=exception_type)
     type(front_camera_mock).motion_detection = p
-    with patch.object(
-        ring_doorbell.RingDoorBell, "motion_detection", new_callable=PropertyMock
-    ) as mock_motion_detection:
-        mock_motion_detection.side_effect = exception_type
-        with pytest.raises(HomeAssistantError):
-            await hass.services.async_call(
-                "camera",
-                "enable_motion_detection",
-                {"entity_id": "camera.front"},
-                blocking=True,
-            )
-        await hass.async_block_till_done()
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            "camera",
+            "enable_motion_detection",
+            {"entity_id": "camera.front"},
+            blocking=True,
+        )
+    await hass.async_block_till_done()
     p.assert_called_once()
     assert (
         any(
