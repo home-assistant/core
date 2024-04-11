@@ -37,7 +37,7 @@ from .const import DOMAIN
 from .coordinator import RingDataCoordinator
 from .entity import RingEntity
 
-_RingGenericT = TypeVar("_RingGenericT", bound=RingGeneric, default=RingGeneric)
+_RingDeviceT = TypeVar("_RingDeviceT", bound=RingGeneric, default=RingGeneric)
 
 
 async def async_setup_entry(
@@ -59,17 +59,17 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class RingSensor(RingEntity, SensorEntity, Generic[_RingGenericT]):
+class RingSensor(RingEntity, SensorEntity, Generic[_RingDeviceT]):
     """A sensor implementation for Ring device."""
 
-    entity_description: RingSensorEntityDescription[_RingGenericT]
-    _device: _RingGenericT
+    entity_description: RingSensorEntityDescription[_RingDeviceT]
+    _device: _RingDeviceT
 
     def __init__(
         self,
         device: RingGeneric,
         coordinator: RingDataCoordinator,
-        description: RingSensorEntityDescription[_RingGenericT],
+        description: RingSensorEntityDescription[_RingDeviceT],
     ) -> None:
         """Initialize a sensor for Ring device."""
         super().__init__(device, coordinator)
@@ -85,7 +85,7 @@ class RingSensor(RingEntity, SensorEntity, Generic[_RingGenericT]):
         """Call update method."""
 
         self._device = cast(
-            _RingGenericT,
+            _RingDeviceT,
             self._get_coordinator_data().get_device(self._device.device_api_id),
         )
         # History values can drop off the last 10 events so only update
@@ -126,23 +126,23 @@ def _get_last_event_attrs(
 
 
 @dataclass(frozen=True, kw_only=True)
-class RingSensorEntityDescription(SensorEntityDescription, Generic[_RingGenericT]):
+class RingSensorEntityDescription(SensorEntityDescription, Generic[_RingDeviceT]):
     """Describes Ring sensor entity."""
 
-    value_fn: Callable[[_RingGenericT], StateType] = lambda _: True
+    value_fn: Callable[[_RingDeviceT], StateType] = lambda _: True
     exists_fn: Callable[[RingGeneric], bool] = lambda _: True
-    extra_state_attributes_fn: Callable[[_RingGenericT], dict[str, Any] | None] = (
+    extra_state_attributes_fn: Callable[[_RingDeviceT], dict[str, Any] | None] = (
         lambda _: None
     )
 
 
-SENSOR_TYPES: tuple[
-    RingSensorEntityDescription[RingGeneric]
-    | RingSensorEntityDescription[RingDoorBell | RingChime]
-    | RingSensorEntityDescription[RingOther],
-    ...,
-] = (
-    RingSensorEntityDescription(
+# For some reason mypy doesn't properly type check the default TypeVar value here
+# so for now the [RingGeneric] subscript needs to be specified.
+# Once https://github.com/python/mypy/issues/14851 is closed this should hopefully
+# be fixed and the [RingGeneric] subscript can be removed.
+# https://github.com/home-assistant/core/pull/115276#discussion_r1560106576
+SENSOR_TYPES: tuple[RingSensorEntityDescription[Any], ...] = (
+    RingSensorEntityDescription[RingGeneric](
         key="battery",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
@@ -151,7 +151,7 @@ SENSOR_TYPES: tuple[
         value_fn=lambda device: device.battery_life,
         exists_fn=lambda device: device.family != "chimes",
     ),
-    RingSensorEntityDescription(
+    RingSensorEntityDescription[RingGeneric](
         key="last_activity",
         translation_key="last_activity",
         device_class=SensorDeviceClass.TIMESTAMP,
@@ -163,7 +163,7 @@ SENSOR_TYPES: tuple[
         else None,
         exists_fn=lambda device: device.has_capability(RingCapability.HISTORY),
     ),
-    RingSensorEntityDescription(
+    RingSensorEntityDescription[RingGeneric](
         key="last_ding",
         translation_key="last_ding",
         device_class=SensorDeviceClass.TIMESTAMP,
@@ -179,7 +179,7 @@ SENSOR_TYPES: tuple[
         else None,
         exists_fn=lambda device: device.has_capability(RingCapability.HISTORY),
     ),
-    RingSensorEntityDescription(
+    RingSensorEntityDescription[RingGeneric](
         key="last_motion",
         translation_key="last_motion",
         device_class=SensorDeviceClass.TIMESTAMP,
@@ -219,14 +219,14 @@ SENSOR_TYPES: tuple[
         value_fn=lambda device: device.voice_volume,
         exists_fn=lambda device: isinstance(device, RingOther),
     ),
-    RingSensorEntityDescription(
+    RingSensorEntityDescription[RingGeneric](
         key="wifi_signal_category",
         translation_key="wifi_signal_category",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda device: device.wifi_signal_category,
     ),
-    RingSensorEntityDescription(
+    RingSensorEntityDescription[RingGeneric](
         key="wifi_signal_strength",
         translation_key="wifi_signal_strength",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,

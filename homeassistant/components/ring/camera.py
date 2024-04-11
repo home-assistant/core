@@ -39,12 +39,11 @@ async def async_setup_entry(
     devices_coordinator = ring_data.devices_coordinator
     ffmpeg_manager = ffmpeg.get_ffmpeg_manager(hass)
 
-    cams = []
-    for camera in ring_data.devices.video_devices:
-        if not camera.has_subscription:
-            continue
-
-        cams.append(RingCam(camera, devices_coordinator, ffmpeg_manager))
+    cams = [
+        RingCam(camera, devices_coordinator, ffmpeg_manager)
+        for camera in ring_data.devices.video_devices
+        if camera.has_subscription
+    ]
 
     async_add_entities(cams)
 
