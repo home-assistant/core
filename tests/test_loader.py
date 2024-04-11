@@ -1474,7 +1474,7 @@ async def test_async_get_component_deadlock_fallback(
 async def test_async_get_component_deadlock_fallback_module_not_found(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Verify async_get_component fallback to importing in the event loop.
+    """Verify async_get_component fallback behavior.
 
     Ensure this fallback is not triggered on ModuleNotFoundError.
     """
@@ -1596,7 +1596,7 @@ async def test_async_get_platform_deadlock_fallback(
 async def test_async_get_platform_deadlock_fallback_module_not_found(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Verify async_get_platform fallback to importing.
+    """Verify async_get_platform fallback behavior.
 
     Ensure this fallback is not triggered on ModuleNotFoundError.
     """
