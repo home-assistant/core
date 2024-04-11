@@ -209,7 +209,14 @@
         "name": "Wi-Fi"
       },
       "health_idx": {
-        "name": "Health index"
+        "name": "Health index",
+        "state": {
+          "healthy": "Healthy",
+          "fine": "Fine",
+          "fair": "Fair",
+          "poor": "Poor",
+          "unhealthy": "Unhealthy"
+        }
       }
     }
   }

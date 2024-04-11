@@ -136,7 +136,7 @@ async def test_process_rf(strength: int, expected: str) -> None:
 
 @pytest.mark.parametrize(
     ("health", "expected"),
-    [(4, "Unhealthy"), (3, "Poor"), (2, "Fair"), (1, "Fine"), (0, "Healthy")],
+    [(4, "unhealthy"), (3, "poor"), (2, "fair"), (1, "fine"), (0, "healthy")],
 )
 async def test_process_health(health: int, expected: str) -> None:
     """Test health index translation."""
@@ -195,7 +195,7 @@ async def test_process_health(health: int, expected: str) -> None:
         (
             "12:34:56:26:68:92-health_idx",
             "baby_bedroom_health",
-            "Fine",
+            "fine",
         ),
         (
             "12:34:56:26:68:92-wifi_status",
