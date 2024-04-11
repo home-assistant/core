@@ -1231,7 +1231,7 @@ jobs:
         with:
           fail_ci_if_error: true
           flags: full-suite
-          token: ${{ vars.CODECOV_TOKEN }}
+          token: ${{ secrets.CODECOV_TOKEN }}
       - name: Upload coverage to Codecov (partial coverage)
         if: needs.info.outputs.test_full_suite == 'false'
         uses: codecov/codecov-action@v4.3.0
