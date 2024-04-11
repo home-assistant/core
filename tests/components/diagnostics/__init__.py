@@ -3,6 +3,8 @@
 from http import HTTPStatus
 from typing import cast
 
+from freezegun.api import FrozenDateTimeFactory
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntry
@@ -44,6 +46,7 @@ async def _get_diagnostics_for_device(
     hass_client: ClientSessionGenerator,
     config_entry: ConfigEntry,
     device: DeviceEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> JsonObjectType:
     """Return the diagnostics for the specified device."""
     assert await async_setup_component(hass, "diagnostics", {})
@@ -61,6 +64,7 @@ async def get_diagnostics_for_device(
     hass_client: ClientSessionGenerator,
     config_entry: ConfigEntry,
     device: DeviceEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> JsonObjectType:
     """Return the diagnostics for the specified device."""
     data = await _get_diagnostics_for_device(hass, hass_client, config_entry, device)
