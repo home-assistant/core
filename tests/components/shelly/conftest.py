@@ -392,12 +392,18 @@ async def mock_rpc_device():
                 {}, RpcUpdateType.DISCONNECTED
             )
 
+        def initialized():
+            rpc_device_mock.return_value.subscribe_updates.call_args[0][0](
+                {}, RpcUpdateType.INITIALIZED
+            )
+
         device = _mock_rpc_device()
         rpc_device_mock.return_value = device
         rpc_device_mock.return_value.mock_disconnected = Mock(side_effect=disconnected)
         rpc_device_mock.return_value.mock_update = Mock(side_effect=update)
         rpc_device_mock.return_value.mock_event = Mock(side_effect=event)
         rpc_device_mock.return_value.mock_online = Mock(side_effect=online)
+        rpc_device_mock.return_value.mock_initialized = Mock(side_effect=initialized)
 
         yield rpc_device_mock.return_value
 

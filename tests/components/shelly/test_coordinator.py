@@ -1,7 +1,7 @@
 """Tests for Shelly coordinator."""
 
 from datetime import timedelta
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, Mock, call, patch
 
 from aioshelly.const import MODEL_BULB, MODEL_BUTTON1
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError
@@ -786,3 +786,23 @@ async def test_rpc_update_entry_fw_ver(
     )
     assert device
     assert device.sw_version == "99.0.0"
+
+
+async def test_rpc_runs_connected_events_when_initialized(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test RPC runs connected events when initialized."""
+    monkeypatch.setattr(mock_rpc_device, "initialized", False)
+    await init_integration(hass, 2)
+
+    assert call.script_list() not in mock_rpc_device.mock_calls
+
+    # Mock initialized event
+    monkeypatch.setattr(mock_rpc_device, "initialized", True)
+    mock_rpc_device.mock_initialized()
+    await hass.async_block_till_done()
+
+    # BLE script list is called during connected events
+    assert call.script_list() in mock_rpc_device.mock_calls
