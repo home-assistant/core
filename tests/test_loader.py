@@ -1476,7 +1476,7 @@ async def test_async_get_component_deadlock_fallback_module_not_found(
 ) -> None:
     """Verify async_get_component fallback behavior.
 
-    Ensure this fallback is not triggered on ModuleNotFoundError.
+    Ensure that fallback is not triggered on ModuleNotFoundError.
     """
     executor_import_integration = _get_test_integration(
         hass, "executor_import", True, import_executor=True
@@ -1599,7 +1599,7 @@ async def test_async_get_platform_deadlock_fallback_module_not_found(
 ) -> None:
     """Verify async_get_platform fallback behavior.
 
-    Ensure this fallback is not triggered on ModuleNotFoundError.
+    Ensure that fallback is not triggered on ModuleNotFoundError.
     """
     executor_import_integration = _get_test_integration(
         hass, "executor_import", True, import_executor=True
