@@ -2,8 +2,6 @@
 
 from typing import Any
 
-from freezegun.api import FrozenDateTimeFactory
-
 from homeassistant.core import HomeAssistant
 
 from .conftest import ComponentSetup
@@ -21,7 +19,6 @@ async def test_entry_diagnostics(
     config_entry: MockConfigEntry,
     rtsp_to_webrtc_client: Any,
     setup_integration: ComponentSetup,
-    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test config entry diagnostics."""
     await setup_integration()
