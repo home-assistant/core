@@ -4,7 +4,7 @@ from functools import lru_cache
 import logging
 
 from aiohttp.web import Request, StreamResponse
-from aiohttp_session import Session
+from aiohttp_session import Session, SessionData
 from aiohttp_session.cookie_storage import EncryptedCookieStorage
 from cryptography.fernet import InvalidToken
 
@@ -14,9 +14,11 @@ from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.network import is_cloud_connection
 from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
 
+from .ban import process_wrong_login
+
 _LOGGER = logging.getLogger(__name__)
 
-COOKIE_NAME = "Id"
+COOKIE_NAME = "SC"
 PREFIXED_COOKIE_NAME = f"__Host-{COOKIE_NAME}"
 SESSION_CACHE_SIZE = 16
 
@@ -59,19 +61,19 @@ class HomeAssistantCookieStorage(EncryptedCookieStorage):
         return request.cookies.get(cookie_name)
 
     @lru_cache(maxsize=SESSION_CACHE_SIZE)
-    def _decrypt_cookie(self, cookie: str) -> Session:
+    def _decrypt_cookie(self, cookie: str) -> Session | None:
         """Decrypt and validate cookie."""
         try:
-            data = self._decoder(
-                self._fernet.decrypt(cookie.encode("utf-8"), ttl=self.max_age).decode(
-                    "utf-8"
+            data = SessionData(  # type: ignore[misc]
+                self._decoder(
+                    self._fernet.decrypt(
+                        cookie.encode("utf-8"), ttl=self.max_age
+                    ).decode("utf-8")
                 )
             )
-        except (InvalidToken, TypeError, *JSON_DECODE_EXCEPTIONS):
-            _LOGGER.warning(
-                "Cannot decrypt/parse cookie value, create a new fresh session"
-            )
-            data = None
+        except (InvalidToken, TypeError, ValueError, *JSON_DECODE_EXCEPTIONS):
+            _LOGGER.warning("Cannot decrypt/parse cookie value")
+            return None
 
         session = Session(None, data=data, new=data is None, max_age=self.max_age)
 
@@ -87,13 +89,24 @@ class HomeAssistantCookieStorage(EncryptedCookieStorage):
 
         return session
 
+    async def new_session(self) -> Session:
+        """Create a new session and mark it as changed."""
+        session = Session(None, data=None, new=True, max_age=self.max_age)
+        session.changed()
+        return session
+
     async def load_session(self, request: Request) -> Session:
         """Load session."""
         # Split parent function to use lru_cache
-        cookie = self.load_cookie(request)
-        if cookie is None:
-            return Session(None, data=None, new=True, max_age=self.max_age)
-        return self._decrypt_cookie(cookie)
+        if (cookie := self.load_cookie(request)) is None:
+            return await self.new_session()
+
+        if (session := self._decrypt_cookie(cookie)) is None:
+            # Decrypting/parsing failed, log wrong login and create a new session
+            await process_wrong_login(request)
+            session = await self.new_session()
+
+        return session
 
     async def save_session(
         self, request: Request, response: StreamResponse, session: Session
