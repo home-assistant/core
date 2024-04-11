@@ -1366,7 +1366,6 @@ async def mock_modbus_read_pymodbus_fixture(
     do_type,
     do_scan_interval,
     do_return,
-    do_exception,
     caplog,
     mock_pymodbus,
     freezer: FrozenDateTimeFactory,
@@ -1374,10 +1373,6 @@ async def mock_modbus_read_pymodbus_fixture(
     """Load integration modbus using mocked pymodbus."""
     caplog.clear()
     caplog.set_level(logging.ERROR)
-    mock_pymodbus.read_coils.side_effect = do_exception
-    mock_pymodbus.read_discrete_inputs.side_effect = do_exception
-    mock_pymodbus.read_input_registers.side_effect = do_exception
-    mock_pymodbus.read_holding_registers.side_effect = do_exception
     mock_pymodbus.read_coils.return_value = do_return
     mock_pymodbus.read_discrete_inputs.return_value = do_return
     mock_pymodbus.read_input_registers.return_value = do_return
