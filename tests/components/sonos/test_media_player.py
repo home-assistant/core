@@ -1,6 +1,7 @@
 """Tests for the Sonos Media Player platform."""
 
 import logging
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -10,6 +11,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.components.media_player.const import SERVICE_SELECT_SOURCE
 from homeassistant.components.sonos.const import SOURCE_LINEIN, SOURCE_TV
+from homeassistant.components.sonos.media_player import LONG_SERVICE_TIMEOUT
 from homeassistant.const import STATE_IDLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import (
@@ -174,6 +176,35 @@ async def test_play_media_music_library_playlist_dne(
     assert "playlist" in caplog.text
 
 
+class _MockDidlFavorite(_MockMusicServiceItem):
+    def __init__(
+        self, title: str, item_id: str, parent_id: str, item_class: str, uri: str = None
+    ) -> None:
+        """Initialize the mock item."""
+        _MockMusicServiceItem.__init__(self, title, item_id, parent_id, item_class)
+        self.reference = MagicMock()
+        self.reference.resources.return_value = True
+        self.reference.get_uri.return_value = uri
+
+
+_mock_favorites = [
+    _MockDidlFavorite(
+        title="66 - Watercolors",
+        item_id="FV:2/4",
+        parent_id="FV:2",
+        item_class="object.itemobject.item.sonos-favorite",
+        uri="x-sonosapi-hls:Api%3atune%3aliveAudio%3ajazzcafe%3ae4b5402c-c608-db84-ad15-4bc8e2cdccce?sid=37&flags=288&sn=5",
+    ),
+    _MockDidlFavorite(
+        title="James Taylor Radio",
+        item_id="FV:2/13",
+        parent_id="FV:2",
+        item_class="object.itemobject.item.sonos-favorite",
+        uri="x-sonosapi-radio:ST%3a1683194974484871160?sid=236&flags=8296&sn=1",
+    ),
+]
+
+
 @pytest.mark.parametrize(
     ("source", "test_result"),
     [
@@ -182,7 +213,8 @@ async def test_play_media_music_library_playlist_dne(
             {
                 "LINE_IN": 1,
                 "TV": 0,
-                "URI": 0,
+                "RADIO_URI": None,
+                "QUEUE": 0,
             },
         ),
         (
@@ -190,16 +222,22 @@ async def test_play_media_music_library_playlist_dne(
             {
                 "LINE_IN": 0,
                 "TV": 1,
-                "URI": 0,
+                "RADIO_URI": None,
+                "QUEUE": 0,
             },
         ),
         (
-            "MyRadioStation",
+            "James Taylor Radio",
             {
                 "LINE_IN": 0,
                 "TV": 0,
-                "URI": 1,
+                "RADIO_URI": "x-sonosapi-radio:ST%3a1683194974484871160?sid=236&flags=8296&sn=1",
+                "QUEUE": 0,
             },
+        ),
+        (
+            "1984",
+            {"LINE_IN": 0, "TV": 0, "RADIO_URI": None, "QUEUE": 1},
         ),
     ],
 )
@@ -213,7 +251,6 @@ async def test_select_source(
 ) -> None:
     """Test error handling when attempting to play a non-existent playlist ."""
     soco_mock = soco_factory.mock_list.get("192.168.42.2")
-    soco_mock.music_library.get_favorites.return_value = _mock_playlists
 
     await hass.services.async_call(
         MP_DOMAIN,
@@ -226,4 +263,15 @@ async def test_select_source(
     )
     assert soco_mock.switch_to_line_in.call_count == test_result["LINE_IN"]
     assert soco_mock.switch_to_tv.call_count == test_result["TV"]
-    assert soco_mock.play_uri.call_count == test_result["URI"]
+    if test_result["QUEUE"] != 0:
+        assert soco_mock.clear_queue.call_count == 1
+        assert soco_mock.add_to_queue.call_count == 1
+        assert soco_mock.add_to_queue.call_args_list[0].args[0].item_id == "FV:2/8"
+        assert (
+            soco_mock.add_to_queue.call_args_list[0].kwargs["timeout"]
+            == LONG_SERVICE_TIMEOUT
+        )
+        assert soco_mock.play_from_queue.call_count == 1
+    if uri := test_result["RADIO_URI"]:
+        assert soco_mock.play_uri.call_count == 1
+        assert soco_mock.play_uri.call_args_list[0].args[0] == uri
