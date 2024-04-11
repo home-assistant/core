@@ -1238,4 +1238,4 @@ jobs:
         with:
           fail_ci_if_error: true
           flags: full-suite
-          token: ${{ vars.CODECOV_TOKEN }}
+          token: ${{ secrets.CODECOV_TOKEN }}
