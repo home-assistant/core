@@ -138,7 +138,7 @@ async def async_setup_platform(
             message = await hass.async_add_executor_job(device.read, slot)
             _LOGGER.debug("Message received from device: '%s'", message)
 
-            if "code" in message and message["code"]:
+            if message.get("code"):
                 log_msg = "Received command is: {}".format(message["code"])
                 _LOGGER.info(log_msg)
                 persistent_notification.async_create(

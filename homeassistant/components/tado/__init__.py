@@ -221,7 +221,7 @@ class TadoConnector:
 
         # Errors are planned to be converted to exceptions
         # in PyTado library, so this can be removed
-        if "errors" in mobile_devices and mobile_devices["errors"]:
+        if mobile_devices.get("errors"):
             _LOGGER.error(
                 "Error for home ID %s while updating mobile devices: %s",
                 self.home_id,
@@ -256,7 +256,7 @@ class TadoConnector:
 
         # Errors are planned to be converted to exceptions
         # in PyTado library, so this can be removed
-        if "errors" in devices and devices["errors"]:
+        if devices.get("errors"):
             _LOGGER.error(
                 "Error for home ID %s while updating devices: %s",
                 self.home_id,
