@@ -1511,6 +1511,7 @@ async def test_async_get_component_deadlock_fallback_module_not_found(
     assert "loaded_executor=False" not in caplog.text
     assert "homeassistant.components.executor_import" not in sys.modules
     assert "custom_components.executor_import" not in sys.modules
+    assert import_attempts == 1
 
 
 async def test_async_get_component_raises_after_import_failure(
@@ -1636,6 +1637,7 @@ async def test_async_get_platform_deadlock_fallback_module_not_found(
     assert "loop=['config_flow']" not in caplog.text
     assert "homeassistant.components.executor_import" not in sys.modules
     assert "custom_components.executor_import" not in sys.modules
+    assert import_attempts == 1
 
 
 async def test_async_get_platform_raises_after_import_failure(
