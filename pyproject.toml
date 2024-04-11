@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools==68.0.0", "wheel~=0.40.0"]
+requires = ["setuptools==69.2.0", "wheel~=0.43.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -628,6 +628,7 @@ select = [
     "F", # pyflakes/autoflake
     "G", # flake8-logging-format
     "I", # isort
+    "INP", # flake8-no-pep420
     "ISC", # flake8-implicit-str-concat
     "ICN001", # import concentions; {name} should be imported as {asname}
     "LOG", # flake8-logging
@@ -635,7 +636,7 @@ select = [
     "N805", # First argument of a method should be named self
     "N815", # Variable {name} in class scope should not be mixedCase
     "PERF", # Perflint
-    "PGH004", # Use specific rule codes when using noqa
+    "PGH", # pygrep-hooks
     "PIE", # flake8-pie
     "PL", # pylint
     "PT", # flake8-pytest-style
@@ -644,6 +645,7 @@ select = [
     "RSE", # flake8-raise
     "RUF005", # Consider iterable unpacking instead of concatenation
     "RUF006", # Store a reference to the return value of asyncio.create_task
+    "RUF013", # PEP 484 prohibits implicit Optional
     # "RUF100", # Unused `noqa` directive; temporarily every now and then to clean them up
     "S102", # Use of exec detected
     "S103", # bad-file-permissions
@@ -664,6 +666,7 @@ select = [
     "S608", # hardcoded-sql-expression
     "S609", # unix-command-wildcard-injection
     "SIM", # flake8-simplify
+    "SLOT", # flake8-slots
     "T100", # Trace found: {name} used
     "T20", # flake8-print
     "TID251", # Banned imports
@@ -722,8 +725,6 @@ ignore = [
     # temporarily disabled
     "PT019",
     "PYI024", # Use typing.NamedTuple instead of collections.namedtuple
-    "PYI036",
-    "PYI041",
     "RET503",
     "RET502",
     "RET501",
