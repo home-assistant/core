@@ -1,0 +1,5 @@
+sync_time:
+  target:
+    entity:
+      integration: broadlink
+      domain: climate

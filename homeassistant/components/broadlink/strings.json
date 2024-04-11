@@ -62,5 +62,11 @@
         "name": "Total consumption"
       }
     }
+  },
+  "services": {
+    "sync_time": {
+      "name": "Sync time",
+      "description": "Sync the current time with the thermostat."
+    }
   }
 }
