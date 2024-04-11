@@ -843,7 +843,9 @@ class EntityPlatform:
             )
 
         # Make sure it is valid in case an entity set the value themselves
-        if not valid_entity_id(entity.entity_id):
+        # Avoid calling valid_entity_id if we already know it is valid
+        # since it already made it in the registry
+        if not entity.registry_entry and not valid_entity_id(entity.entity_id):
             entity.add_to_platform_abort()
             raise HomeAssistantError(f"Invalid entity ID: {entity.entity_id}")
 
