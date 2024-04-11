@@ -1,4 +1,5 @@
 """The swiss_public_transport component."""
+
 import logging
 
 from opendata_transport import OpendataTransport

@@ -1,4 +1,5 @@
 """Support for Todoist task management (https://todoist.com)."""
+
 from __future__ import annotations
 
 from datetime import date, datetime, timedelta

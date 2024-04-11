@@ -1,4 +1,5 @@
 """Tests for Shelly sensor platform."""
+
 from copy import deepcopy
 from unittest.mock import Mock
 

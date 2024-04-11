@@ -1,4 +1,5 @@
-"""Support for iBeacon device sensors."""
+"""Support for Private BLE Device sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -26,20 +27,13 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .entity import BasePrivateDeviceEntity
 
 
-@dataclass(frozen=True)
-class PrivateDeviceSensorEntityDescriptionRequired:
-    """Required domain specific fields for sensor entity."""
+@dataclass(frozen=True, kw_only=True)
+class PrivateDeviceSensorEntityDescription(SensorEntityDescription):
+    """Describes sensor entity."""
 
     value_fn: Callable[
         [HomeAssistant, bluetooth.BluetoothServiceInfoBleak], str | int | float | None
     ]
-
-
-@dataclass(frozen=True)
-class PrivateDeviceSensorEntityDescription(
-    SensorEntityDescription, PrivateDeviceSensorEntityDescriptionRequired
-):
-    """Describes sensor entity."""
 
 
 SENSOR_DESCRIPTIONS = (

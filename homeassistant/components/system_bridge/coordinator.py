@@ -1,4 +1,5 @@
 """DataUpdateCoordinator for System Bridge."""
+
 from __future__ import annotations
 
 import asyncio

@@ -3,6 +3,7 @@
 For more info on the API see :
 https://data.gov.ie/dataset/real-time-passenger-information-rtpi-for-dublin-bus-bus-eireann-luas-and-irish-rail/resource/4b9f2c4f-6bf5-4958-a43a-f12dab04cf61
 """
+
 from __future__ import annotations
 
 from contextlib import suppress

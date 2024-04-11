@@ -1,4 +1,5 @@
 """Support for Synology DSM update platform."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -19,7 +20,7 @@ from .entity import SynologyDSMBaseEntity, SynologyDSMEntityDescription
 from .models import SynologyDSMData
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class SynologyDSMUpdateEntityEntityDescription(
     UpdateEntityDescription, SynologyDSMEntityDescription
 ):
@@ -58,7 +59,7 @@ class SynoDSMUpdateEntity(
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return bool(self._api.upgrade)
+        return bool(self._api.upgrade) and super().available
 
     @property
     def installed_version(self) -> str | None:

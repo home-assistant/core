@@ -1,4 +1,5 @@
 """Get your own public IP address or that of any host."""
+
 from __future__ import annotations
 
 from datetime import timedelta

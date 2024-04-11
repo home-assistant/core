@@ -194,7 +194,7 @@ async def test_discover_routers_unconfigured(
 
 
 @pytest.mark.parametrize(
-    "data", (ROUTER_DISCOVERY_HASS_BAD_DATA, ROUTER_DISCOVERY_HASS_MISSING_DATA)
+    "data", [ROUTER_DISCOVERY_HASS_BAD_DATA, ROUTER_DISCOVERY_HASS_MISSING_DATA]
 )
 async def test_discover_routers_bad_or_missing_optional_data(
     hass: HomeAssistant, mock_async_zeroconf: None, data

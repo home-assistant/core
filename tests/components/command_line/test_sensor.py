@@ -1,4 +1,5 @@
 """The tests for the Command line sensor platform."""
+
 from __future__ import annotations
 
 import asyncio
@@ -107,7 +108,7 @@ async def test_template_render(
         hass,
         dt_util.utcnow() + timedelta(minutes=1),
     )
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     entity_state = hass.states.get("sensor.test")
     assert entity_state
@@ -139,7 +140,7 @@ async def test_template_render_with_quote(hass: HomeAssistant) -> None:
             hass,
             dt_util.utcnow() + timedelta(minutes=1),
         )
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         assert len(mock_subprocess_run.mock_calls) == 1
         mock_subprocess_run.assert_called_with(
@@ -733,7 +734,7 @@ async def test_availability(
     hass.states.async_set("sensor.input1", "on")
     freezer.tick(timedelta(minutes=1))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     entity_state = hass.states.get("sensor.test")
     assert entity_state
@@ -744,7 +745,7 @@ async def test_availability(
     with mock_asyncio_subprocess_run(b"January 17, 2022"):
         freezer.tick(timedelta(minutes=1))
         async_fire_time_changed(hass)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     entity_state = hass.states.get("sensor.test")
     assert entity_state

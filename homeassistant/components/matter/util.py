@@ -1,4 +1,5 @@
 """Provide integration utilities."""
+
 from __future__ import annotations
 
 XY_COLOR_FACTOR = 65536

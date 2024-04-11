@@ -1,4 +1,5 @@
 """Support for testing internet speed via Fast.com."""
+
 from __future__ import annotations
 
 import logging
@@ -13,7 +14,7 @@ from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_MANUAL, DEFAULT_INTERVAL, DOMAIN, PLATFORMS
-from .coordinator import FastdotcomDataUpdateCoordindator
+from .coordinator import FastdotcomDataUpdateCoordinator
 from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
@@ -49,7 +50,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Fast.com from a config entry."""
-    coordinator = FastdotcomDataUpdateCoordindator(hass)
+    coordinator = FastdotcomDataUpdateCoordinator(hass)
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
     await hass.config_entries.async_forward_entry_setups(

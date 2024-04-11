@@ -1,4 +1,5 @@
 """The image integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -6,9 +7,10 @@ import collections
 from contextlib import suppress
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from functools import cached_property
 import logging
 from random import SystemRandom
-from typing import TYPE_CHECKING, Final, final
+from typing import Final, final
 
 from aiohttp import hdrs, web
 import httpx
@@ -16,7 +18,7 @@ import httpx
 from homeassistant.components.http import KEY_AUTHENTICATED, KEY_HASS, HomeAssistantView
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONTENT_TYPE_MULTIPART, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
@@ -25,20 +27,13 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import (
-    EventStateChangedData,
     async_track_state_change_event,
     async_track_time_interval,
 )
 from homeassistant.helpers.httpx_client import get_async_client
-from homeassistant.helpers.typing import UNDEFINED, ConfigType, EventType, UndefinedType
+from homeassistant.helpers.typing import UNDEFINED, ConfigType, UndefinedType
 
-from .const import DOMAIN, IMAGE_TIMEOUT  # noqa: F401
-
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
-
+from .const import DOMAIN, IMAGE_TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -87,8 +82,7 @@ async def _async_get_image(image_entity: ImageEntity, timeout: int) -> Image:
         async with asyncio.timeout(timeout):
             if image_bytes := await image_entity.async_image():
                 content_type = valid_image_content_type(image_entity.content_type)
-                image = Image(content_type, image_bytes)
-                return image
+                return Image(content_type, image_bytes)
 
     raise HomeAssistantError("Unable to get image")
 
@@ -189,7 +183,7 @@ class ImageEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def image(self) -> bytes | None:
         """Return bytes of image."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def _fetch_url(self, url: str) -> httpx.Response | None:
         """Fetch a URL."""
@@ -198,7 +192,6 @@ class ImageEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 url, timeout=GET_IMAGE_TIMEOUT, follow_redirects=True
             )
             response.raise_for_status()
-            return response
         except httpx.TimeoutException:
             _LOGGER.error("%s: Timeout getting image from %s", self.entity_id, url)
             return None
@@ -210,6 +203,7 @@ class ImageEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 err,
             )
             return None
+        return response
 
     async def _async_load_image_from_url(self, url: str) -> Image | None:
         """Load an image by url."""
@@ -277,7 +271,7 @@ class ImageView(HomeAssistantView):
     async def get(self, request: web.Request, entity_id: str) -> web.StreamResponse:
         """Start a GET request."""
         if (image_entity := self.component.get_entity(entity_id)) is None:
-            raise web.HTTPNotFound()
+            raise web.HTTPNotFound
 
         authenticated = (
             request[KEY_AUTHENTICATED]
@@ -288,9 +282,9 @@ class ImageView(HomeAssistantView):
             # Attempt with invalid bearer token, raise unauthorized
             # so ban middleware can handle it.
             if hdrs.AUTHORIZATION in request.headers:
-                raise web.HTTPUnauthorized()
+                raise web.HTTPUnauthorized
             # Invalid sigAuth or image entity access token
-            raise web.HTTPForbidden()
+            raise web.HTTPForbidden
 
         return await self.handle(request, image_entity)
 
@@ -301,7 +295,7 @@ class ImageView(HomeAssistantView):
         try:
             image = await _async_get_image(image_entity, IMAGE_TIMEOUT)
         except (HomeAssistantError, ValueError) as ex:
-            raise web.HTTPInternalServerError() from ex
+            raise web.HTTPInternalServerError from ex
 
         return web.Response(body=image.content, content_type=image.content_type)
 
@@ -335,29 +329,46 @@ async def async_get_still_stream(
         # given the low frequency of image updates, it is acceptable.
         frame.extend(frame)
         await response.write(frame)
-        # Drain to ensure that the latest frame is available to the client
-        await response.drain()
         return True
 
     event = asyncio.Event()
+    timed_out = False
 
-    async def image_state_update(_event: EventType[EventStateChangedData]) -> None:
+    @callback
+    def _async_image_state_update(_event: Event[EventStateChangedData]) -> None:
         """Write image to stream."""
         event.set()
 
+    @callback
+    def _async_timeout_reached() -> None:
+        """Handle timeout."""
+        nonlocal timed_out
+        timed_out = True
+        event.set()
+
     hass = request.app[KEY_HASS]
+    loop = hass.loop
     remove = async_track_state_change_event(
         hass,
         image_entity.entity_id,
-        image_state_update,
+        _async_image_state_update,
     )
+    timeout_handle = None
     try:
         while True:
             if not await _write_frame():
                 return response
+            # Ensure that an image is sent at least every 55 seconds
+            # Otherwise some devices go blank
+            timeout_handle = loop.call_later(55, _async_timeout_reached)
             await event.wait()
             event.clear()
+            if not timed_out:
+                timeout_handle.cancel()
+            timed_out = False
     finally:
+        if timeout_handle:
+            timeout_handle.cancel()
         remove()
 
 

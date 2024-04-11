@@ -1,4 +1,5 @@
 """Tests for Shelly number platform."""
+
 from unittest.mock import AsyncMock, Mock
 
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError
@@ -196,7 +197,7 @@ async def test_block_set_value_auth_error(
     mock_block_device.mock_update()
     await hass.async_block_till_done()
 
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
@@ -206,7 +207,7 @@ async def test_block_set_value_auth_error(
     )
     await hass.async_block_till_done()
 
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1

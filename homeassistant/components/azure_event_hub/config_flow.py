@@ -1,4 +1,5 @@
 """Config flow for azure_event_hub integration."""
+
 from __future__ import annotations
 
 from copy import deepcopy

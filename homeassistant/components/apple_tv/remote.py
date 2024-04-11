@@ -1,4 +1,5 @@
 """Remote control support for Apple TV."""
+
 import asyncio
 from collections.abc import Iterable
 import logging

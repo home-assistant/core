@@ -1,4 +1,5 @@
 """The Discovergy integration."""
+
 from __future__ import annotations
 
 from pydiscovergy import Discovergy

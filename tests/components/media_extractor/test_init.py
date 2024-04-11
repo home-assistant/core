@@ -1,4 +1,5 @@
 """The tests for Media Extractor integration."""
+
 import os
 import os.path
 from typing import Any
@@ -189,12 +190,17 @@ async def test_query_error(
 ) -> None:
     """Test handling error with query."""
 
-    with patch(
-        "homeassistant.components.media_extractor.YoutubeDL.extract_info",
-        return_value=load_json_object_fixture("media_extractor/youtube_1_info.json"),
-    ), patch(
-        "homeassistant.components.media_extractor.YoutubeDL.process_ie_result",
-        side_effect=DownloadError("Message"),
+    with (
+        patch(
+            "homeassistant.components.media_extractor.YoutubeDL.extract_info",
+            return_value=load_json_object_fixture(
+                "media_extractor/youtube_1_info.json"
+            ),
+        ),
+        patch(
+            "homeassistant.components.media_extractor.YoutubeDL.process_ie_result",
+            side_effect=DownloadError("Message"),
+        ),
     ):
         await async_setup_component(hass, DOMAIN, empty_media_extractor_config)
         await hass.async_block_till_done()
@@ -232,14 +238,13 @@ async def test_cookiefile_detection(
     if not os.path.exists(cookies_dir):
         os.makedirs(cookies_dir)
 
-    f = open(cookies_file, "w+", encoding="utf-8")
-    f.write(
-        """# Netscape HTTP Cookie File
+    with open(cookies_file, "w+", encoding="utf-8") as f:
+        f.write(
+            """# Netscape HTTP Cookie File
 
-        .youtube.com TRUE / TRUE 1701708706 GPS 1
-        """
-    )
-    f.close()
+            .youtube.com TRUE / TRUE 1701708706 GPS 1
+            """
+        )
 
     await hass.services.async_call(
         DOMAIN,

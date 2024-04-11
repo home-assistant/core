@@ -1,4 +1,5 @@
 """Persistently store issues raised by integrations."""
+
 from __future__ import annotations
 
 import dataclasses

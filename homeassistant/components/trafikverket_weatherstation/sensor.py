@@ -1,4 +1,5 @@
 """Weather information for air and road temperature (by Trafikverket)."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -42,18 +43,11 @@ PRECIPITATION_TYPE = [
 ]
 
 
-@dataclass(frozen=True)
-class TrafikverketRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class TrafikverketSensorEntityDescription(SensorEntityDescription):
+    """Describes Trafikverket sensor entity."""
 
     value_fn: Callable[[WeatherStationInfo], StateType | datetime]
-
-
-@dataclass(frozen=True)
-class TrafikverketSensorEntityDescription(
-    SensorEntityDescription, TrafikverketRequiredKeysMixin
-):
-    """Describes Trafikverket sensor entity."""
 
 
 def add_utc_timezone(date_time: datetime | None) -> datetime | None:

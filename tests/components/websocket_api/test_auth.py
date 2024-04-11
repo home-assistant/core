@@ -1,4 +1,5 @@
 """Test auth of websocket API."""
+
 from unittest.mock import patch
 
 import aiohttp

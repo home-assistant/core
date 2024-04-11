@@ -1,4 +1,5 @@
 """Basic checks for HomeKit fans."""
+
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
 

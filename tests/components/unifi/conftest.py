@@ -1,4 +1,5 @@
 """Fixtures for UniFi Network methods."""
+
 from __future__ import annotations
 
 import asyncio

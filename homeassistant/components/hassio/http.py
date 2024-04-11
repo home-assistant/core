@@ -1,4 +1,5 @@
 """HTTP Support for Hass.io."""
+
 from __future__ import annotations
 
 from http import HTTPStatus
@@ -147,9 +148,9 @@ class HassIOView(HomeAssistantView):
                 return web.Response(status=HTTPStatus.UNAUTHORIZED)
 
             if authorized:
-                headers[
-                    AUTHORIZATION
-                ] = f"Bearer {os.environ.get('SUPERVISOR_TOKEN', '')}"
+                headers[AUTHORIZATION] = (
+                    f"Bearer {os.environ.get('SUPERVISOR_TOKEN', '')}"
+                )
 
             if request.method == "POST":
                 headers[CONTENT_TYPE] = request.content_type
@@ -187,15 +188,13 @@ class HassIOView(HomeAssistantView):
             async for data, _ in client.content.iter_chunks():
                 await response.write(data)
 
-            return response
-
         except aiohttp.ClientError as err:
             _LOGGER.error("Client error on api %s request %s", path, err)
-
-        except TimeoutError:
+            raise HTTPBadGateway from err
+        except TimeoutError as err:
             _LOGGER.error("Client timeout error on API request %s", path)
-
-        raise HTTPBadGateway()
+            raise HTTPBadGateway from err
+        return response
 
     get = _handle
     post = _handle

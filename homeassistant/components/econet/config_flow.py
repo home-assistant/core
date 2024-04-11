@@ -1,4 +1,5 @@
 """Config flow to configure the EcoNet component."""
+
 from pyeconet import EcoNetApiInterface
 from pyeconet.errors import InvalidCredentialsError, PyeconetError
 import voluptuous as vol

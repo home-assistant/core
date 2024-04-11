@@ -1,4 +1,5 @@
 """The Android TV Remote integration."""
+
 from __future__ import annotations
 
 from asyncio import timeout

@@ -1,4 +1,5 @@
 """Config flow for ecowitt."""
+
 from __future__ import annotations
 
 import secrets

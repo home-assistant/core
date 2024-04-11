@@ -1,4 +1,5 @@
 """Support for Dutch Smart Meter (also known as Smartmeter or P1 port)."""
+
 from __future__ import annotations
 
 import asyncio
@@ -530,9 +531,7 @@ async def async_setup_entry(
         add_entities_handler = None
 
         if dsmr_version == "5B":
-            mbus_entities = create_mbus_entities(hass, telegram, entry)
-            for mbus_entity in mbus_entities:
-                entities.append(mbus_entity)
+            entities.extend(create_mbus_entities(hass, telegram, entry))
 
         entities.extend(
             [

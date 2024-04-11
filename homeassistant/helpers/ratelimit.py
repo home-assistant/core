@@ -1,14 +1,14 @@
 """Ratelimit helper."""
+
 from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable, Hashable
-from datetime import datetime, timedelta
 import logging
+import time
 from typing import TypeVarTuple
 
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.util.dt as dt_util
 
 _Ts = TypeVarTuple("_Ts")
 
@@ -24,7 +24,7 @@ class KeyedRateLimit:
     ) -> None:
         """Initialize ratelimit tracker."""
         self.hass = hass
-        self._last_triggered: dict[Hashable, datetime] = {}
+        self._last_triggered: dict[Hashable, float] = {}
         self._rate_limit_timers: dict[Hashable, asyncio.TimerHandle] = {}
 
     @callback
@@ -33,10 +33,10 @@ class KeyedRateLimit:
         return bool(self._rate_limit_timers and key in self._rate_limit_timers)
 
     @callback
-    def async_triggered(self, key: Hashable, now: datetime | None = None) -> None:
+    def async_triggered(self, key: Hashable, now: float | None = None) -> None:
         """Call when the action we are tracking was triggered."""
         self.async_cancel_timer(key)
-        self._last_triggered[key] = now or dt_util.utcnow()
+        self._last_triggered[key] = now or time.time()
 
     @callback
     def async_cancel_timer(self, key: Hashable) -> None:
@@ -57,11 +57,11 @@ class KeyedRateLimit:
     def async_schedule_action(
         self,
         key: Hashable,
-        rate_limit: timedelta | None,
-        now: datetime,
+        rate_limit: float | None,
+        now: float,
         action: Callable[[*_Ts], None],
         *args: *_Ts,
-    ) -> datetime | None:
+    ) -> float | None:
         """Check rate limits and schedule an action if we hit the limit.
 
         If the rate limit is hit:
@@ -96,7 +96,7 @@ class KeyedRateLimit:
 
         if key not in self._rate_limit_timers:
             self._rate_limit_timers[key] = self.hass.loop.call_later(
-                (next_call_time - now).total_seconds(),
+                next_call_time - now,
                 action,
                 *args,
             )

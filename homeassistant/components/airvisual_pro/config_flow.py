@@ -1,4 +1,5 @@
 """Define a config flow manager for AirVisual Pro."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping

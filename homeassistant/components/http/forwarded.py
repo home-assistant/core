@@ -1,4 +1,5 @@
 """Middleware to handle forwarded data by a reverse proxy."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable

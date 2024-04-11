@@ -1,4 +1,5 @@
 """Sensor component for PECO outage counter."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -24,19 +25,12 @@ from . import PECOCoordinatorData
 from .const import ATTR_CONTENT, CONF_COUNTY, DOMAIN
 
 
-@dataclass(frozen=True)
-class PECOSensorEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class PECOSensorEntityDescription(SensorEntityDescription):
+    """Description for PECO sensor."""
 
     value_fn: Callable[[PECOCoordinatorData], int | str]
     attribute_fn: Callable[[PECOCoordinatorData], dict[str, str]]
-
-
-@dataclass(frozen=True)
-class PECOSensorEntityDescription(
-    SensorEntityDescription, PECOSensorEntityDescriptionMixin
-):
-    """Description for PECO sensor."""
 
 
 PARALLEL_UPDATES: Final = 0

@@ -122,6 +122,7 @@ This is an endpoint for OAuth2 Authorization callbacks used by integrations
 that link accounts with other cloud providers using LocalOAuth2Implementation
 as part of a config flow.
 """
+
 from __future__ import annotations
 
 from collections.abc import Callable

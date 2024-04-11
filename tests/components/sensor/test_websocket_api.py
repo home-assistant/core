@@ -1,4 +1,5 @@
 """Test the sensor websocket API."""
+
 from pytest_unordered import unordered
 
 from homeassistant.components.sensor.const import (

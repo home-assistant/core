@@ -1,4 +1,5 @@
 """Config flow to configure Goodwe inverters using their local API."""
+
 from __future__ import annotations
 
 import logging

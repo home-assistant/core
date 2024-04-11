@@ -1,9 +1,10 @@
 """ZHA logbook describe events tests."""
+
 from unittest.mock import patch
 
 import pytest
 import zigpy.profiles.zha
-import zigpy.zcl.clusters.general as general
+from zigpy.zcl.clusters import general
 
 from homeassistant.components.zha.core.const import ZHA_EVENT
 from homeassistant.const import CONF_DEVICE_ID, CONF_UNIQUE_ID, Platform

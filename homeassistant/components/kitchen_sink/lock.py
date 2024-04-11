@@ -1,4 +1,5 @@
 """Demo platform that has a couple of fake locks."""
+
 from __future__ import annotations
 
 from typing import Any

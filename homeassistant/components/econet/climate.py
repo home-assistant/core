@@ -1,4 +1,5 @@
 """Support for Rheem EcoNet thermostats."""
+
 from typing import Any
 
 from pyeconet.equipment import EquipmentType
@@ -184,17 +185,17 @@ class EcoNetThermostat(EcoNetEntity, ClimateEntity):
     @property
     def fan_modes(self):
         """Return the fan modes."""
-        econet_fan_modes = self._econet.fan_modes
-        fan_list = []
-        for mode in econet_fan_modes:
+        return [
+            ECONET_FAN_STATE_TO_HA[mode]
+            for mode in self._econet.fan_modes
             # Remove the MEDLO MEDHI once we figure out how to handle it
-            if mode not in [
+            if mode
+            not in [
                 ThermostatFanMode.UNKNOWN,
                 ThermostatFanMode.MEDLO,
                 ThermostatFanMode.MEDHI,
-            ]:
-                fan_list.append(ECONET_FAN_STATE_TO_HA[mode])
-        return fan_list
+            ]
+        ]
 
     def set_fan_mode(self, fan_mode: str) -> None:
         """Set the fan mode."""

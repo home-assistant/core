@@ -1,4 +1,5 @@
 """The number platform for rainbird."""
+
 from __future__ import annotations
 
 import logging

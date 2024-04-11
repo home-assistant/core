@@ -1,8 +1,10 @@
 """Translation string lookup helpers."""
+
 from __future__ import annotations
 
 import asyncio
 from collections.abc import Iterable, Mapping
+from contextlib import suppress
 import logging
 import string
 from typing import Any
@@ -12,7 +14,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, async_get_hass, callback
 from homeassistant.loader import (
     Integration,
     async_get_config_flows,
@@ -162,6 +164,7 @@ async def _async_get_component_strings(
     translations_by_language: dict[str, dict[str, Any]] = {}
     # Determine paths of missing components/platforms
     files_to_load_by_language: dict[str, dict[str, str]] = {}
+    loaded_translations_by_language: dict[str, dict[str, Any]] = {}
     has_files_to_load = False
     for language in languages:
         files_to_load: dict[str, str] = {}
@@ -170,7 +173,10 @@ async def _async_get_component_strings(
 
         for comp in components:
             domain, _, platform = comp.partition(".")
-            if not (integration := integrations.get(domain)):
+            if (
+                not (integration := integrations.get(domain))
+                or not integration.has_translations
+            ):
                 continue
 
             if platform and integration.is_built_in:
@@ -184,22 +190,23 @@ async def _async_get_component_strings(
                 files_to_load[comp] = path
                 has_files_to_load = True
 
-    if not has_files_to_load:
-        return translations_by_language
+    if has_files_to_load:
+        loaded_translations_by_language = await hass.async_add_executor_job(
+            _load_translations_files_by_language, files_to_load_by_language
+        )
 
-    # Load files
-    loaded_translations_by_language = await hass.async_add_executor_job(
-        _load_translations_files_by_language, files_to_load_by_language
-    )
-
-    # Translations that miss "title" will get integration put in.
-    for language, loaded_translations in loaded_translations_by_language.items():
-        for loaded, loaded_translation in loaded_translations.items():
-            if "." in loaded:
+    for language in languages:
+        loaded_translations = loaded_translations_by_language.setdefault(language, {})
+        for comp in components:
+            if "." in comp:
                 continue
 
-            if "title" not in loaded_translation:
-                loaded_translation["title"] = integrations[loaded].name
+            # Translations that miss "title" will get integration put in.
+            component_translations = loaded_translations.setdefault(comp, {})
+            if "title" not in component_translations and (
+                integration := integrations.get(comp)
+            ):
+                component_translations["title"] = integration.name
 
         translations_by_language[language].update(loaded_translations)
 
@@ -485,11 +492,11 @@ def async_setup(hass: HomeAssistant) -> None:
     hass.data[TRANSLATION_FLATTEN_CACHE] = cache
 
     @callback
-    def _async_load_translations_filter(event: Event) -> bool:
+    def _async_load_translations_filter(event_data: Mapping[str, Any]) -> bool:
         """Filter out unwanted events."""
         nonlocal current_language
         if (
-            new_language := event.data.get("language")
+            new_language := event_data.get("language")
         ) and new_language != current_language:
             current_language = new_language
             return True
@@ -520,6 +527,35 @@ def async_translations_loaded(hass: HomeAssistant, components: set[str]) -> bool
     return _async_get_translations_cache(hass).async_is_loaded(
         hass.config.language, components
     )
+
+
+@callback
+def async_get_exception_message(
+    translation_domain: str,
+    translation_key: str,
+    translation_placeholders: dict[str, str] | None = None,
+) -> str:
+    """Return a translated exception message.
+
+    Defaults to English, requires translations to already be cached.
+    """
+    language = "en"
+    hass = async_get_hass()
+    localize_key = (
+        f"component.{translation_domain}.exceptions.{translation_key}.message"
+    )
+    translations = async_get_cached_translations(hass, language, "exceptions")
+    if localize_key in translations:
+        if message := translations[localize_key]:
+            message = message.rstrip(".")
+        if not translation_placeholders:
+            return message
+        with suppress(KeyError):
+            message = message.format(**translation_placeholders)
+        return message
+
+    # We return the translation key when was not found in the cache
+    return translation_key
 
 
 @callback

@@ -1,4 +1,5 @@
 """Support for Ecobee Send Message service."""
+
 from __future__ import annotations
 
 from homeassistant.components.notify import ATTR_TARGET, BaseNotificationService

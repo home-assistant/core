@@ -1,4 +1,5 @@
 """The discovery flow helper."""
+
 from __future__ import annotations
 
 from collections.abc import Coroutine
@@ -10,7 +11,7 @@ from homeassistant.core import CoreState, Event, HomeAssistant, callback
 from homeassistant.loader import bind_hass
 from homeassistant.util.async_ import gather_with_limited_concurrency
 
-FLOW_INIT_LIMIT = 2
+FLOW_INIT_LIMIT = 20
 DISCOVERY_FLOW_DISPATCHER = "discovery_flow_dispatcher"
 
 

@@ -1,4 +1,5 @@
 """Config flow for Nexia integration."""
+
 import logging
 
 import aiohttp

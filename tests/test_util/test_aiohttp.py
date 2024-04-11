@@ -1,4 +1,5 @@
 """Tests for our aiohttp mocker."""
+
 import pytest
 
 from .aiohttp import AiohttpClientMocker

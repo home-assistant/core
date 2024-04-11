@@ -1,4 +1,5 @@
 """Hass.io const variables."""
+
 from datetime import timedelta
 from enum import StrEnum
 
@@ -20,6 +21,7 @@ ATTR_HOMEASSISTANT = "homeassistant"
 ATTR_HOMEASSISTANT_EXCLUDE_DATABASE = "homeassistant_exclude_database"
 ATTR_INPUT = "input"
 ATTR_ISSUES = "issues"
+ATTR_MESSAGE = "message"
 ATTR_METHOD = "method"
 ATTR_PANELS = "panels"
 ATTR_PASSWORD = "password"

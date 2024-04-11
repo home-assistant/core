@@ -1,4 +1,5 @@
 """Code to handle a Hue bridge."""
+
 from __future__ import annotations
 
 import asyncio

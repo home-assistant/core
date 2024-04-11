@@ -1,4 +1,5 @@
 """Test cors for the HTTP component."""
+
 from http import HTTPStatus
 from pathlib import Path
 from unittest.mock import patch

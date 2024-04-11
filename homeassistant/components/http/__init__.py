@@ -1,4 +1,5 @@
 """Support to serve the Home Assistant API as WSGI application."""
+
 from __future__ import annotations
 
 import asyncio
@@ -6,6 +7,7 @@ import datetime
 from ipaddress import IPv4Network, IPv6Network, ip_network
 import logging
 import os
+import socket
 import ssl
 from tempfile import NamedTemporaryFile
 from typing import Any, Final, TypedDict, cast
@@ -42,7 +44,11 @@ from homeassistant.helpers.http import (
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
-from homeassistant.setup import async_start_setup, async_when_setup_or_start
+from homeassistant.setup import (
+    SetupPhases,
+    async_start_setup,
+    async_when_setup_or_start,
+)
 from homeassistant.util import dt as dt_util, ssl as ssl_util
 from homeassistant.util.async_ import create_eager_task
 from homeassistant.util.json import json_loads
@@ -93,11 +99,14 @@ STORAGE_KEY: Final = DOMAIN
 STORAGE_VERSION: Final = 1
 SAVE_DELAY: Final = 180
 
+_HAS_IPV6 = hasattr(socket, "AF_INET6")
+_DEFAULT_BIND = ["0.0.0.0", "::"] if _HAS_IPV6 else ["0.0.0.0"]
+
 HTTP_SCHEMA: Final = vol.All(
     cv.deprecated(CONF_BASE_URL),
     vol.Schema(
         {
-            vol.Optional(CONF_SERVER_HOST): vol.All(
+            vol.Optional(CONF_SERVER_HOST, default=_DEFAULT_BIND): vol.All(
                 cv.ensure_list, vol.Length(min=1), [cv.string]
             ),
             vol.Optional(CONF_SERVER_PORT, default=SERVER_PORT): cv.port,
@@ -178,7 +187,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if conf is None:
         conf = cast(ConfData, HTTP_SCHEMA({}))
 
-    server_host = conf.get(CONF_SERVER_HOST)
+    server_host = conf[CONF_SERVER_HOST]
     server_port = conf[CONF_SERVER_PORT]
     ssl_certificate = conf.get(CONF_SSL_CERTIFICATE)
     ssl_peer_certificate = conf.get(CONF_SSL_PEER_CERTIFICATE)
@@ -217,7 +226,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def start_server(*_: Any) -> None:
         """Start the server."""
-        with async_start_setup(hass, ["http"]):
+        with async_start_setup(hass, integration="http", phase=SetupPhases.SETUP):
             hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_server)
             # We already checked it's not None.
             assert conf is not None

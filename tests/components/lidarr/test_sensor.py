@@ -1,4 +1,5 @@
 """The tests for Lidarr sensor platform."""
+
 from homeassistant.components.sensor import CONF_STATE_CLASS, SensorStateClass
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT
 from homeassistant.core import HomeAssistant

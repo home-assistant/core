@@ -1,4 +1,5 @@
 """The tests for the MQTT valve platform."""
+
 from typing import Any
 from unittest.mock import patch
 
@@ -26,7 +27,6 @@ from homeassistant.const import (
     STATE_OPEN,
     STATE_OPENING,
     STATE_UNKNOWN,
-    Platform,
 )
 from homeassistant.core import HomeAssistant
 
@@ -84,13 +84,6 @@ DEFAULT_CONFIG_REPORTS_POSITION = {
         }
     }
 }
-
-
-@pytest.fixture(autouse=True)
-def valve_platform_only():
-    """Only setup the valve platform to speed up tests."""
-    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.VALVE]):
-        yield
 
 
 @pytest.mark.parametrize(

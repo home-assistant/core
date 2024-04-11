@@ -1,4 +1,5 @@
 """Support for AVM Fritz!Box functions."""
+
 import logging
 
 from homeassistant.config_entries import ConfigEntry

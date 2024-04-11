@@ -1,4 +1,5 @@
 """The tests for the UniFi Network device tracker platform."""
+
 from datetime import timedelta
 
 from aiounifi.models.message import MessageKey

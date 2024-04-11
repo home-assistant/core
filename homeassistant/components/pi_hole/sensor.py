@@ -1,4 +1,5 @@
 """Support for getting statistical data from a Pi-hole system."""
+
 from __future__ import annotations
 
 from hole import Hole

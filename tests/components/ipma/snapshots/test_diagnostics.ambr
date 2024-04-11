@@ -1,0 +1,60 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'current_weather': list([
+      0.0,
+      71.0,
+      1000.0,
+      0.0,
+      18.0,
+      'NW',
+      3.94,
+    ]),
+    'location_information': dict({
+      'global_id_local': 1130600,
+      'id_station': 1200545,
+      'latitude': 0.0,
+      'longitude': 0.0,
+      'name': 'HomeTown',
+      'station': 'HomeTown Station',
+    }),
+    'weather_forecast': list([
+      list([
+        '7.7',
+        '2020-01-15T01:00:00+00:00',
+        1,
+        '86.9',
+        12.0,
+        None,
+        80.0,
+        10.6,
+        '2020-01-15T02:51:00',
+        list([
+          10,
+          'Light rain',
+          'Chuva fraca ou chuvisco',
+        ]),
+        'S',
+        '32.7',
+      ]),
+      list([
+        '5.7',
+        '2020-01-15T02:00:00+00:00',
+        1,
+        '86.9',
+        12.0,
+        None,
+        80.0,
+        10.6,
+        '2020-01-15T02:51:00',
+        list([
+          1,
+          'Clear sky',
+          'Céu limpo',
+        ]),
+        'S',
+        '32.7',
+      ]),
+    ]),
+  })
+# ---

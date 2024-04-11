@@ -1,4 +1,5 @@
 """Config flow to configure the GeoNet NZ Quakes integration."""
+
 import logging
 
 import voluptuous as vol

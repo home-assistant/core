@@ -1,4 +1,5 @@
 """Support for exposing Home Assistant via Zeroconf."""
+
 from __future__ import annotations
 
 import contextlib
@@ -23,7 +24,11 @@ from zeroconf.asyncio import AsyncServiceBrowser, AsyncServiceInfo
 
 from homeassistant import config_entries
 from homeassistant.components import network
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP, __version__
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_CLOSE,
+    EVENT_HOMEASSISTANT_STOP,
+    __version__,
+)
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.data_entry_flow import BaseServiceInfo
 from homeassistant.helpers import discovery_flow, instance_id
@@ -162,7 +167,9 @@ async def _async_get_instance(hass: HomeAssistant, **zcargs: Any) -> HaAsyncZero
         """Stop Zeroconf."""
         await aio_zc.ha_async_close()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_stop_zeroconf)
+    # Wait to the close event to shutdown zeroconf to give
+    # integrations time to send a good bye message
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, _async_stop_zeroconf)
     hass.data[DOMAIN] = aio_zc
 
     return aio_zc
@@ -362,9 +369,11 @@ class ZeroconfDiscovery:
         # We want to make sure we know about other HomeAssistant
         # instances as soon as possible to avoid name conflicts
         # so we always browse for ZEROCONF_TYPE
-        for hk_type in (ZEROCONF_TYPE, *HOMEKIT_TYPES):
-            if hk_type not in self.zeroconf_types:
-                types.append(hk_type)
+        types.extend(
+            hk_type
+            for hk_type in (ZEROCONF_TYPE, *HOMEKIT_TYPES)
+            if hk_type not in self.zeroconf_types
+        )
         _LOGGER.debug("Starting Zeroconf browser for: %s", types)
         self.async_service_browser = AsyncServiceBrowser(
             self.zeroconf, types, handlers=[self.async_service_update]
@@ -419,6 +428,7 @@ class ZeroconfDiscovery:
                     zeroconf, async_service_info, service_type, name
                 ),
                 name=f"zeroconf lookup {name}.{service_type}",
+                eager_start=False,
             )
 
     async def _async_lookup_and_process_service_update(

@@ -3,12 +3,14 @@
 Support for bandwidth sensors of network clients.
 Support for uptime sensors of network clients.
 """
+
 from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from decimal import Decimal
+from functools import partial
 
 from aiounifi.interfaces.api_handlers import ItemEvent
 from aiounifi.interfaces.clients import Clients
@@ -31,7 +33,7 @@ from homeassistant.components.sensor import (
     UnitOfTemperature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EntityCategory, UnitOfDataRate, UnitOfPower
+from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfDataRate, UnitOfPower
 from homeassistant.core import Event as core_Event, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -71,7 +73,7 @@ def async_uptime_sensor_allowed_fn(hub: UnifiHub, obj_id: str) -> bool:
 @callback
 def async_client_rx_value_fn(hub: UnifiHub, client: Client) -> float:
     """Calculate receiving data transfer value."""
-    if hub.wireless_clients.is_wireless(client):
+    if hub.entity_loader.wireless_clients.is_wireless(client):
         return client.rx_bytes_r / 1000000
     return client.wired_rx_bytes_r / 1000000
 
@@ -79,7 +81,7 @@ def async_client_rx_value_fn(hub: UnifiHub, client: Client) -> float:
 @callback
 def async_client_tx_value_fn(hub: UnifiHub, client: Client) -> float:
     """Calculate transmission data transfer value."""
-    if hub.wireless_clients.is_wireless(client):
+    if hub.entity_loader.wireless_clients.is_wireless(client):
         return client.tx_bytes_r / 1000000
     return client.wired_tx_bytes_r / 1000000
 
@@ -139,6 +141,16 @@ def async_device_outlet_supported_fn(hub: UnifiHub, obj_id: str) -> bool:
     return hub.api.devices[obj_id].outlet_ac_power_budget is not None
 
 
+def device_system_stats_supported_fn(
+    stat_index: int, hub: UnifiHub, obj_id: str
+) -> bool:
+    """Determine if a device supports reading item at index in system stats."""
+    return (
+        "system-stats" in hub.api.devices[obj_id].raw
+        and hub.api.devices[obj_id].system_stats[stat_index] != ""
+    )
+
+
 @callback
 def async_client_is_connected_fn(hub: UnifiHub, obj_id: str) -> bool:
     """Check if client was last seen recently."""
@@ -185,10 +197,8 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfDataRate.MEGABYTES_PER_SECOND,
         icon="mdi:upload",
-        has_entity_name=True,
         allowed_fn=async_bandwidth_sensor_allowed_fn,
         api_handler_fn=lambda api: api.clients,
-        available_fn=lambda hub, _: hub.available,
         device_info_fn=async_client_device_info_fn,
         is_connected_fn=async_client_is_connected_fn,
         name_fn=lambda _: "RX",
@@ -204,10 +214,8 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfDataRate.MEGABYTES_PER_SECOND,
         icon="mdi:download",
-        has_entity_name=True,
         allowed_fn=async_bandwidth_sensor_allowed_fn,
         api_handler_fn=lambda api: api.clients,
-        available_fn=lambda hub, _: hub.available,
         device_info_fn=async_client_device_info_fn,
         is_connected_fn=async_client_is_connected_fn,
         name_fn=lambda _: "TX",
@@ -221,15 +229,13 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.POWER,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfPower.WATT,
-        has_entity_name=True,
         entity_registry_enabled_default=False,
-        allowed_fn=lambda hub, obj_id: True,
         api_handler_fn=lambda api: api.ports,
         available_fn=async_device_available_fn,
         device_info_fn=async_device_device_info_fn,
         name_fn=lambda port: f"{port.name} PoE Power",
         object_fn=lambda api, obj_id: api.ports[obj_id],
-        supported_fn=lambda hub, obj_id: hub.api.ports[obj_id].port_poe,
+        supported_fn=lambda hub, obj_id: bool(hub.api.ports[obj_id].port_poe),
         unique_id_fn=lambda hub, obj_id: f"poe_power-{obj_id}",
         value_fn=lambda _, obj: obj.poe_power if obj.poe_mode != "off" else "0",
     ),
@@ -237,11 +243,9 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         key="Client uptime",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
-        has_entity_name=True,
         entity_registry_enabled_default=False,
         allowed_fn=async_uptime_sensor_allowed_fn,
         api_handler_fn=lambda api: api.clients,
-        available_fn=lambda hub, obj_id: hub.available,
         device_info_fn=async_client_device_info_fn,
         name_fn=lambda client: "Uptime",
         object_fn=lambda api, obj_id: api.clients[obj_id],
@@ -252,16 +256,12 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
     UnifiSensorEntityDescription[Wlans, Wlan](
         key="WLAN clients",
         entity_category=EntityCategory.DIAGNOSTIC,
-        has_entity_name=True,
         state_class=SensorStateClass.MEASUREMENT,
-        allowed_fn=lambda hub, obj_id: True,
         api_handler_fn=lambda api: api.wlans,
         available_fn=async_wlan_available_fn,
         device_info_fn=async_wlan_device_info_fn,
-        name_fn=lambda wlan: None,
         object_fn=lambda api, obj_id: api.wlans[obj_id],
         should_poll=True,
-        supported_fn=lambda hub, obj_id: True,
         unique_id_fn=lambda hub, obj_id: f"wlan_clients-{obj_id}",
         value_fn=async_wlan_client_value_fn,
     ),
@@ -270,8 +270,6 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.POWER,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfPower.WATT,
-        has_entity_name=True,
-        allowed_fn=lambda hub, obj_id: True,
         api_handler_fn=lambda api: api.outlets,
         available_fn=async_device_available_fn,
         device_info_fn=async_device_device_info_fn,
@@ -288,8 +286,6 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfPower.WATT,
         suggested_display_precision=1,
-        has_entity_name=True,
-        allowed_fn=lambda hub, obj_id: True,
         api_handler_fn=lambda api: api.devices,
         available_fn=async_device_available_fn,
         device_info_fn=async_device_device_info_fn,
@@ -305,8 +301,6 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfPower.WATT,
         suggested_display_precision=1,
-        has_entity_name=True,
-        allowed_fn=lambda hub, obj_id: True,
         api_handler_fn=lambda api: api.devices,
         available_fn=async_device_available_fn,
         device_info_fn=async_device_device_info_fn,
@@ -320,14 +314,11 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         key="Device uptime",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
-        has_entity_name=True,
-        allowed_fn=lambda hub, obj_id: True,
         api_handler_fn=lambda api: api.devices,
         available_fn=async_device_available_fn,
         device_info_fn=async_device_device_info_fn,
         name_fn=lambda device: "Uptime",
         object_fn=lambda api, obj_id: api.devices[obj_id],
-        supported_fn=lambda hub, obj_id: True,
         unique_id_fn=lambda hub, obj_id: f"device_uptime-{obj_id}",
         value_fn=async_device_uptime_value_fn,
         value_changed_fn=async_device_uptime_value_changed_fn,
@@ -337,32 +328,68 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        has_entity_name=True,
-        allowed_fn=lambda hub, obj_id: True,
         api_handler_fn=lambda api: api.devices,
         available_fn=async_device_available_fn,
         device_info_fn=async_device_device_info_fn,
         name_fn=lambda device: "Temperature",
         object_fn=lambda api, obj_id: api.devices[obj_id],
-        supported_fn=lambda ctrlr, obj_id: ctrlr.api.devices[obj_id].has_temperature,
+        supported_fn=lambda hub, obj_id: hub.api.devices[obj_id].has_temperature,
         unique_id_fn=lambda hub, obj_id: f"device_temperature-{obj_id}",
-        value_fn=lambda ctrlr, device: device.general_temperature,
+        value_fn=lambda hub, device: device.general_temperature,
     ),
     UnifiSensorEntityDescription[Devices, Device](
         key="Device State",
         device_class=SensorDeviceClass.ENUM,
         entity_category=EntityCategory.DIAGNOSTIC,
-        has_entity_name=True,
-        allowed_fn=lambda hub, obj_id: True,
         api_handler_fn=lambda api: api.devices,
         available_fn=async_device_available_fn,
         device_info_fn=async_device_device_info_fn,
         name_fn=lambda device: "State",
         object_fn=lambda api, obj_id: api.devices[obj_id],
-        supported_fn=lambda hub, obj_id: True,
         unique_id_fn=lambda hub, obj_id: f"device_state-{obj_id}",
         value_fn=async_device_state_value_fn,
         options=list(DEVICE_STATES.values()),
+    ),
+    UnifiSensorEntityDescription[Wlans, Wlan](
+        key="WLAN password",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        api_handler_fn=lambda api: api.wlans,
+        available_fn=async_wlan_available_fn,
+        device_info_fn=async_wlan_device_info_fn,
+        name_fn=lambda wlan: "Password",
+        object_fn=lambda api, obj_id: api.wlans[obj_id],
+        supported_fn=lambda hub, obj_id: hub.api.wlans[obj_id].x_passphrase is not None,
+        unique_id_fn=lambda hub, obj_id: f"password-{obj_id}",
+        value_fn=lambda hub, obj: obj.x_passphrase,
+    ),
+    UnifiSensorEntityDescription[Devices, Device](
+        key="Device CPU utilization",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        api_handler_fn=lambda api: api.devices,
+        available_fn=async_device_available_fn,
+        device_info_fn=async_device_device_info_fn,
+        name_fn=lambda device: "CPU utilization",
+        object_fn=lambda api, obj_id: api.devices[obj_id],
+        supported_fn=partial(device_system_stats_supported_fn, 0),
+        unique_id_fn=lambda hub, obj_id: f"cpu_utilization-{obj_id}",
+        value_fn=lambda hub, device: device.system_stats[0],
+    ),
+    UnifiSensorEntityDescription[Devices, Device](
+        key="Device memory utilization",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        api_handler_fn=lambda api: api.devices,
+        available_fn=async_device_available_fn,
+        device_info_fn=async_device_device_info_fn,
+        name_fn=lambda device: "Memory utilization",
+        object_fn=lambda api, obj_id: api.devices[obj_id],
+        supported_fn=partial(device_system_stats_supported_fn, 1),
+        unique_id_fn=lambda hub, obj_id: f"memory_utilization-{obj_id}",
+        value_fn=lambda hub, device: device.system_stats[1],
     ),
 )
 
@@ -373,8 +400,8 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up sensors for UniFi Network integration."""
-    UnifiHub.register_platform(
-        hass, config_entry, async_add_entities, UnifiSensorEntity, ENTITY_DESCRIPTIONS
+    UnifiHub.get_hub(hass, config_entry).entity_loader.register_platform(
+        async_add_entities, UnifiSensorEntity, ENTITY_DESCRIPTIONS
     )
 
 

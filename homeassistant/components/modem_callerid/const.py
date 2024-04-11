@@ -1,4 +1,5 @@
 """Constants for the Modem Caller ID integration."""
+
 from typing import Final
 
 from phone_modem import exceptions

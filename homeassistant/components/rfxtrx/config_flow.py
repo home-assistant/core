@@ -1,4 +1,5 @@
 """Config flow for RFXCOM RFXtrx integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -73,7 +74,7 @@ class DeviceData(TypedDict):
 
 
 def none_or_int(value: str | None, base: int) -> int | None:
-    """Check if strin is one otherwise convert to int."""
+    """Check if string is one otherwise convert to int."""
     if value is None:
         return None
     return int(value, base)
@@ -485,7 +486,10 @@ class RfxtrxOptionsFlow(OptionsFlow):
         if devices:
             for event_code, options in devices.items():
                 if options is None:
-                    entry_data[CONF_DEVICES].pop(event_code)
+                    # If the config entry is setup, the device registry
+                    # listener will remove the device from the config
+                    # entry before we get here
+                    entry_data[CONF_DEVICES].pop(event_code, None)
                 else:
                     entry_data[CONF_DEVICES][event_code] = options
         self.hass.config_entries.async_update_entry(self._config_entry, data=entry_data)

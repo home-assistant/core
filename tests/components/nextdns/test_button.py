@@ -1,4 +1,5 @@
 """Test button of NextDNS integration."""
+
 from unittest.mock import patch
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
@@ -30,9 +31,10 @@ async def test_button_press(hass: HomeAssistant) -> None:
     await init_integration(hass)
 
     now = dt_util.utcnow()
-    with patch(
-        "homeassistant.components.nextdns.NextDns.clear_logs"
-    ) as mock_clear_logs, patch("homeassistant.core.dt_util.utcnow", return_value=now):
+    with (
+        patch("homeassistant.components.nextdns.NextDns.clear_logs") as mock_clear_logs,
+        patch("homeassistant.core.dt_util.utcnow", return_value=now),
+    ):
         await hass.services.async_call(
             BUTTON_DOMAIN,
             "press",

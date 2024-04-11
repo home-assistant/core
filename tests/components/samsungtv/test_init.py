@@ -1,4 +1,5 @@
 """Tests for the Samsung TV Integration."""
+
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
@@ -75,23 +76,26 @@ async def test_setup(hass: HomeAssistant) -> None:
 
 async def test_setup_without_port_device_offline(hass: HomeAssistant) -> None:
     """Test import from yaml when the device is offline."""
-    with patch(
-        "homeassistant.components.samsungtv.bridge.Remote", side_effect=OSError
-    ), patch(
-        "homeassistant.components.samsungtv.bridge.SamsungTVEncryptedWSAsyncRemote.start_listening",
-        side_effect=OSError,
-    ), patch(
-        "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncRemote.open",
-        side_effect=OSError,
-    ), patch(
-        "homeassistant.components.samsungtv.bridge.SamsungTVWSBridge.async_device_info",
-        return_value=None,
+    with (
+        patch("homeassistant.components.samsungtv.bridge.Remote", side_effect=OSError),
+        patch(
+            "homeassistant.components.samsungtv.bridge.SamsungTVEncryptedWSAsyncRemote.start_listening",
+            side_effect=OSError,
+        ),
+        patch(
+            "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncRemote.open",
+            side_effect=OSError,
+        ),
+        patch(
+            "homeassistant.components.samsungtv.bridge.SamsungTVWSBridge.async_device_info",
+            return_value=None,
+        ),
     ):
         await setup_samsungtv_entry(hass, MOCK_CONFIG)
 
     config_entries_domain = hass.config_entries.async_entries(SAMSUNGTV_DOMAIN)
     assert len(config_entries_domain) == 1
-    assert config_entries_domain[0].state == ConfigEntryState.SETUP_RETRY
+    assert config_entries_domain[0].state is ConfigEntryState.SETUP_RETRY
 
 
 @pytest.mark.usefixtures("remotews", "remoteencws_failing", "rest_api")
@@ -162,7 +166,7 @@ async def test_reauth_triggered_encrypted(hass: HomeAssistant) -> None:
     del encrypted_entry_data[CONF_SESSION_ID]
 
     entry = await setup_samsungtv_entry(hass, encrypted_entry_data)
-    assert entry.state == ConfigEntryState.SETUP_ERROR
+    assert entry.state is ConfigEntryState.SETUP_ERROR
     flows_in_progress = [
         flow
         for flow in hass.config_entries.flow.async_progress()
