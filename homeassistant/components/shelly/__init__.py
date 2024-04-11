@@ -204,8 +204,7 @@ async def _async_setup_block_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
             "Setup for device %s will resume when device is online", entry.title
         )
         shelly_entry_data.block = ShellyBlockCoordinator(hass, entry, device)
-        shelly_entry_data.block.finish_setup_platforms = BLOCK_SLEEPING_PLATFORMS
-        shelly_entry_data.block.async_setup()
+        shelly_entry_data.block.async_setup(BLOCK_SLEEPING_PLATFORMS)
     else:
         # Restore sensors for sleeping device
         LOGGER.debug("Setting up offline block device %s", entry.title)
@@ -275,8 +274,7 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ConfigEntry) -> boo
             "Setup for device %s will resume when device is online", entry.title
         )
         shelly_entry_data.rpc = ShellyRpcCoordinator(hass, entry, device)
-        shelly_entry_data.rpc.finish_setup_platforms = RPC_SLEEPING_PLATFORMS
-        shelly_entry_data.rpc.async_setup()
+        shelly_entry_data.rpc.async_setup(RPC_SLEEPING_PLATFORMS)
     else:
         # Restore sensors for sleeping device
         LOGGER.debug("Setting up offline RPC device %s", entry.title)

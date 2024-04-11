@@ -104,7 +104,7 @@ class ShellyCoordinatorBase(DataUpdateCoordinator[None], Generic[_DeviceT]):
         self.entry = entry
         self.device = device
         self.device_id: str | None = None
-        self.finish_setup_platforms: list[Platform] | None = None
+        self._pending_platforms: list[Platform] | None = None
         device_name = device.name if device.initialized else entry.title
         interval_td = timedelta(seconds=update_interval)
         super().__init__(hass, LOGGER, name=device_name, update_interval=interval_td)
@@ -138,8 +138,9 @@ class ShellyCoordinatorBase(DataUpdateCoordinator[None], Generic[_DeviceT]):
         """Sleep period of the device."""
         return self.entry.data.get(CONF_SLEEP_PERIOD, 0)
 
-    def async_setup(self) -> None:
+    def async_setup(self, pending_platforms: list[Platform] | None = None) -> None:
         """Set up the coordinator."""
+        self._pending_platforms = pending_platforms
         dev_reg = dr_async_get(self.hass)
         device_entry = dev_reg.async_get_or_create(
             config_entry_id=self.entry.entry_id,
@@ -169,23 +170,25 @@ class ShellyCoordinatorBase(DataUpdateCoordinator[None], Generic[_DeviceT]):
             async_create_issue_unsupported_firmware(self.hass, self.entry)
             return
 
-        if not self.finish_setup_platforms:
+        if not self._pending_platforms:
             return
 
         LOGGER.debug("Device %s is online, resuming setup", self.entry.title)
-        platforms = self.finish_setup_platforms
-        self.finish_setup_platforms = None
+        platforms = self._pending_platforms
+        self._pending_platforms = None
 
         data = {**self.entry.data}
 
         # Update sleep_period
+        old_sleep_period = data[CONF_SLEEP_PERIOD]
         if isinstance(self.device, RpcDevice):
-            data[CONF_SLEEP_PERIOD] = get_rpc_device_wakeup_period(self.device.status)
+            new_sleep_period = get_rpc_device_wakeup_period(self.device.status)
         elif isinstance(self.device, BlockDevice):
-            data[CONF_SLEEP_PERIOD] = get_block_device_sleep_period(
-                self.device.settings
-            )
-        self.hass.config_entries.async_update_entry(self.entry, data=data)
+            new_sleep_period = get_block_device_sleep_period(self.device.settings)
+
+        if new_sleep_period != old_sleep_period:
+            data[CONF_SLEEP_PERIOD] = new_sleep_period
+            self.hass.config_entries.async_update_entry(self.entry, data=data)
 
         # Resume platform setup
         await self.hass.config_entries.async_forward_entry_setups(self.entry, platforms)
@@ -392,9 +395,9 @@ class ShellyBlockCoordinator(ShellyCoordinatorBase[BlockDevice]):
         )
         self.async_set_updated_data(None)
 
-    def async_setup(self) -> None:
+    def async_setup(self, pending_platforms: list[Platform] | None = None) -> None:
         """Set up the coordinator."""
-        super().async_setup()
+        super().async_setup(pending_platforms)
         self.device.subscribe_updates(self._async_handle_update)
 
     def shutdown(self) -> None:
@@ -667,9 +670,9 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         elif update_type is RpcUpdateType.EVENT and (event := self.device.event):
             self._async_device_event_handler(event)
 
-    def async_setup(self) -> None:
+    def async_setup(self, pending_platforms: list[Platform] | None = None) -> None:
         """Set up the coordinator."""
-        super().async_setup()
+        super().async_setup(pending_platforms)
         self.device.subscribe_updates(self._async_handle_update)
         if self.device.initialized:
             # If we are already initialized, we are connected
