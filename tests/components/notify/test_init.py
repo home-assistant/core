@@ -124,19 +124,23 @@ async def test_send_message_service(
     entity.send_message_mock_calls.reset_mock()
 
     # Test schema: `None` message fails
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(vol.Invalid) as exc:
         await hass.services.async_call(
             notify.DOMAIN,
             notify.SERVICE_SEND_MESSAGE,
             {"entity_id": "notify.test", notify.ATTR_MESSAGE: None},
         )
+    assert (
+        str(exc.value) == "string value is None for dictionary value @ data['message']"
+    )
     entity.send_message_mock_calls.assert_not_called()
 
     # Test schema: No message fails
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(vol.Invalid) as exc:
         await hass.services.async_call(
             notify.DOMAIN, notify.SERVICE_SEND_MESSAGE, {"entity_id": "notify.test"}
         )
+    assert str(exc.value) == "required key not provided @ data['message']"
     entity.send_message_mock_calls.assert_not_called()
 
     # Test unloading the entry succeeds
