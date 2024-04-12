@@ -1,4 +1,5 @@
 """The Bedrock Agent integration."""
+
 from __future__ import annotations
 
 from functools import partial
@@ -9,7 +10,7 @@ from typing import Literal
 import boto3
 
 from homeassistant.components import conversation
-from homeassistant.components.conversation import agent
+from homeassistant.components.conversation import agent_manager
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import MATCH_ALL
 from homeassistant.core import HomeAssistant
@@ -167,11 +168,11 @@ class BedrockAgent(conversation.AbstractConversationAgent):
         return answer
 
     async def async_process(
-        self, user_input: agent.ConversationInput
-    ) -> agent.ConversationResult:
+        self, user_input: agent_manager.ConversationInput
+    ) -> agent_manager.ConversationResult:
         """Process a sentence."""
         answer = await self.async_call_bedrock(user_input.text)
 
         response = intent.IntentResponse(language=user_input.language)
         response.async_set_speech(answer)
-        return agent.ConversationResult(conversation_id=None, response=response)
+        return agent_manager.ConversationResult(conversation_id=None, response=response)
