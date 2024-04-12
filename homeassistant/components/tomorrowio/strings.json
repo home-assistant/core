@@ -161,7 +161,7 @@
         }
       },
       "pressure_surface_level": {
-        "name": "Pressure at surface level"
+        "name": "Pressure (Surface Level)"
       },
       "global_horizontal_irradiance": {
         "name": "Global horizontal irradiance"
@@ -212,7 +212,7 @@
         "name": "Temperature"
       },
       "pressure_sea_level": {
-        "name": "Pressure at sea level"
+        "name": "Pressure (Sea Level)"
       }
     }
   }
