@@ -2650,3 +2650,83 @@ def test_deprecated_constants(
     import_and_test_deprecated_constant(
         caplog, automation, constant_name, replacement.__name__, replacement, "2025.1"
     )
+
+
+async def test_automation_turns_off_other_automation(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test an automation that turns off another automation."""
+    hass.set_state(CoreState.not_running)
+    calls = async_mock_service(hass, "persistent_notification", "create")
+    hass.states.async_set("binary_sensor.presence", "on")
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "platform": "state",
+                        "entity_id": "binary_sensor.presence",
+                        "from": "on",
+                    },
+                    "action": {
+                        "service": "automation.turn_off",
+                        "target": {
+                            "entity_id": "automation.automation_1",
+                        },
+                        "data": {
+                            "stop_actions": True,
+                        },
+                    },
+                    "id": "automation_0",
+                    "mode": "single",
+                },
+                {
+                    "trigger": {
+                        "platform": "state",
+                        "entity_id": "binary_sensor.presence",
+                        "from": "on",
+                        "for": {
+                            "hours": 0,
+                            "minutes": 0,
+                            "seconds": 5,
+                        },
+                    },
+                    "action": {
+                        "service": "persistent_notification.create",
+                        "metadata": {},
+                        "data": {
+                            "message": "Test race",
+                        },
+                    },
+                    "id": "automation_1",
+                    "mode": "single",
+                },
+            ]
+        },
+    )
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    hass.states.async_set("binary_sensor.presence", "off")
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=5))
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    await hass.services.async_call(
+        "automation",
+        "turn_on",
+        {"entity_id": "automation.automation_1"},
+        blocking=True,
+    )
+    hass.states.async_set("binary_sensor.presence", "off")
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=5))
+    await hass.async_block_till_done()
+    assert len(calls) == 0
