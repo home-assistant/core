@@ -55,16 +55,16 @@ async def async_get_config_entry_diagnostics(
         for disk in syno_api.storage.disks:
             diag_data["storage"]["disks"][disk["id"]] = {
                 "name": disk["name"],
-                "vendor": disk["vendor"],  # type: ignore[typeddict-item]
-                "model": disk["model"],  # type: ignore[typeddict-item]
+                "vendor": disk["vendor"],
+                "model": disk["model"],
                 "device": disk["device"],
                 "temp": disk["temp"],
-                "size_total": disk["size_total"],  # type: ignore[typeddict-item]
+                "size_total": disk["size_total"],
             }
 
         for volume in syno_api.storage.volumes:
             diag_data["storage"]["volumes"][volume["id"]] = {
-                "name": volume["fs_type"],  # type: ignore[typeddict-item]
+                "name": volume["fs_type"],
                 "size": volume["size"],
             }
 

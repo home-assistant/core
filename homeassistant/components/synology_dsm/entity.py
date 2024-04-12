@@ -117,8 +117,8 @@ class SynologyDSMDeviceEntity(
             disk = storage.get_disk(self._device_id)
             assert disk is not None
             self._device_name = disk["name"]
-            self._device_manufacturer = disk["vendor"]  # type: ignore[typeddict-item]
-            self._device_model = disk["model"].strip()  # type: ignore[typeddict-item]
+            self._device_manufacturer = disk["vendor"]
+            self._device_model = disk["model"].strip()
             self._device_firmware = disk["firm"]  # type: ignore[typeddict-item]
             self._device_type = disk["diskType"]  # type: ignore[typeddict-item]
 
