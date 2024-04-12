@@ -32,6 +32,7 @@ COMPONENTS_WITH_DEMO_PLATFORM = [
     Platform.IMAGE,
     Platform.LAWN_MOWER,
     Platform.LOCK,
+    Platform.NOTIFY,
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.WEATHER,
@@ -70,7 +71,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     return True
 
 
-def _create_issues(hass):
+def _create_issues(hass: HomeAssistant) -> None:
     """Create some issue registry issues."""
     async_create_issue(
         hass,
