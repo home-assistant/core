@@ -388,7 +388,7 @@ async def test_forecast_subscription(
     entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     await client.send_json_auto_id(
         {
@@ -421,6 +421,15 @@ async def test_forecast_subscription(
 
     assert forecast2 != []
     assert forecast2 == snapshot
+
+    msg = await client.receive_json()
+
+    assert msg["id"] == subscription_id
+    assert msg["type"] == "event"
+    forecast3 = msg["event"]["forecast"]
+
+    assert forecast3 != []
+    assert forecast3 == snapshot
 
     await client.send_json_auto_id(
         {
