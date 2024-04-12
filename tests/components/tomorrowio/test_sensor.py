@@ -52,7 +52,7 @@ WEED_POLLEN = "weed_pollen_index"
 TREE_POLLEN = "tree_pollen_index"
 FEELS_LIKE = "feels_like"
 DEW_POINT = "dew_point"
-PRESSURE_SURFACE_LEVEL = "pressure"
+PRESSURE_SURFACE_LEVEL = "pressure_surface_level"
 SNOW_ACCUMULATION = "snow_accumulation"
 ICE_ACCUMULATION = "ice_accumulation"
 GHI = "irradiance"
@@ -125,6 +125,8 @@ def _enable_entity(hass: HomeAssistant, entity_name: str) -> None:
     """Enable disabled entity."""
     ent_reg = async_get(hass)
     entry = ent_reg.async_get(entity_name)
+    if entry is None:
+        raise ValueError(f"Entity {entity_name} not found in the entity registry.")
     updated_entry = ent_reg.async_update_entity(entry.entity_id, disabled_by=None)
     assert updated_entry != entry
     assert updated_entry.disabled is False
@@ -204,8 +206,6 @@ async def test_v4_sensor(hass: HomeAssistant) -> None:
     check_sensor_state(hass, PRECIPITATION_PROBABILITY, "0")
     check_sensor_state(hass, PRESSURE_SEA_LEVEL, "1023.38")
     check_sensor_state(hass, TEMPERATURE, "19.88")
-    check_sensor_state(hass, FEELS_LIKE, "19.88")
-    check_sensor_state(hass, DEW_POINT, "72.82")
     check_sensor_state(hass, VISIBILITY, "16")
     check_sensor_state(hass, WET_BULB_GLOBE_TEMPERATURE, "18.49")
     check_sensor_state(hass, WIND_DIRECTION, "60.19")

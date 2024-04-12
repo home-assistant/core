@@ -159,6 +159,60 @@
           "very_high": "Very high",
           "extreme": "Extreme"
         }
+      },
+      "pressure_surface_level": {
+        "name": "Pressure at surface level"
+      },
+      "global_horizontal_irradiance": {
+        "name": "Global horizontal irradiance"
+      },
+      "ozone": {
+        "name": "Ozone"
+      },
+      "particulate_matter_2_5_um": {
+        "name": "Particulate matter 2.5 um"
+      },
+      "particulate_matter_10_um": {
+        "name": "Particulate matter 10 um"
+      },
+      "nitrogen_dioxide": {
+        "name": "Nitrogen dioxide"
+      },
+      "carbon_monoxide": {
+        "name": "Carbon monoxide"
+      },
+      "sulphur_dioxide": {
+        "name": "Sulphur dioxide"
+      },
+      "evapotranspiration": {
+        "name": "Evapotranspiration"
+      },
+      "wet_bulb_globe_temperature": {
+        "name": "Wet bulb globe temperature"
+      },
+      "wind_speed": {
+        "name": "Wind speed"
+      },
+      "wind_direction": {
+        "name": "Wind direction"
+      },
+      "precipitation_intensity": {
+        "name": "Precipitation intensity"
+      },
+      "precipitation_probability": {
+        "name": "Precipitation probability"
+      },
+      "visibility": {
+        "name": "Visibility"
+      },
+      "humidity": {
+        "name": "Humidity"
+      },
+      "temperature": {
+        "name": "Temperature"
+      },
+      "pressure_sea_level": {
+        "name": "Pressure at sea level"
       }
     }
   }

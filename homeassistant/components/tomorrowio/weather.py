@@ -51,7 +51,7 @@ from .const import (
     TMRW_ATTR_OZONE,
     TMRW_ATTR_PRECIPITATION,
     TMRW_ATTR_PRECIPITATION_PROBABILITY,
-    TMRW_ATTR_PRESSURE,
+    TMRW_ATTR_PRESSURE_SEA_LEVEL,
     TMRW_ATTR_TEMPERATURE,
     TMRW_ATTR_TEMPERATURE_HIGH,
     TMRW_ATTR_TEMPERATURE_LOW,
@@ -181,7 +181,7 @@ class TomorrowioWeatherEntity(TomorrowioEntity, SingleCoordinatorWeatherEntity):
     @property
     def native_pressure(self):
         """Return the raw pressure."""
-        return self._get_current_property(TMRW_ATTR_PRESSURE)
+        return self._get_current_property(TMRW_ATTR_PRESSURE_SEA_LEVEL)
 
     @property
     def humidity(self):

@@ -67,7 +67,7 @@ from .const import (
     TMRW_ATTR_PRECIPITATION_INTENSITY,
     TMRW_ATTR_PRECIPITATION_PROBABILITY,
     TMRW_ATTR_PRECIPITATION_TYPE,
-    TMRW_ATTR_PRESSURE,
+    TMRW_ATTR_PRESSURE_SEA_LEVEL,
     TMRW_ATTR_PRESSURE_SURFACE_LEVEL,
     TMRW_ATTR_SOLAR_GHI,
     TMRW_ATTR_SULPHUR_DIOXIDE,
@@ -264,7 +264,7 @@ class TomorrowioDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):  #
                         # Weather
                         TMRW_ATTR_TEMPERATURE,
                         TMRW_ATTR_HUMIDITY,
-                        TMRW_ATTR_PRESSURE,
+                        TMRW_ATTR_PRESSURE_SEA_LEVEL,
                         TMRW_ATTR_WIND_SPEED,
                         TMRW_ATTR_WIND_DIRECTION,
                         TMRW_ATTR_CONDITION,
