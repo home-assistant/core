@@ -131,11 +131,24 @@ async def async_setup_entry(
 ) -> None:
     """Set up AirGradient sensor entities based on a config entry."""
 
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: AirGradientDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    async_add_entities(
-        AirGradientSensor(coordinator, description) for description in SENSOR_TYPES
-    )
+    def add_entities() -> None:
+        async_add_entities(
+            AirGradientSensor(coordinator, description) for description in SENSOR_TYPES
+        )
+
+    if coordinator.data.rco2 is None:
+
+        def add_entities_with_data() -> None:
+            """Add entities once we have data."""
+            if coordinator.data.rco2 is not None:
+                add_entities()
+                listener()
+
+        listener = coordinator.async_add_listener(add_entities_with_data)
+    else:
+        add_entities()
 
 
 class AirGradientSensor(
