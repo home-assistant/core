@@ -208,7 +208,7 @@ async def test_play_media_music_library_playlist_dne(
             "1984",
             {
                 "add_to_queue": 1,
-                "add_to_queue_item_id": "FV:2/8",
+                "add_to_queue_item_id": "A:ALBUMARTIST/Aerosmith/1984",
                 "clear_queue": 1,
                 "play_from_queue": 1,
             },

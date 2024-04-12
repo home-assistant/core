@@ -334,13 +334,13 @@ class MockDidlFavorite(MockMusicServiceItem):
         parent_id: str,
         item_class: str,
         uri: str = None,
-        reference=None,
+        reference_item_id=None,
     ) -> None:
         """Initialize the mock item."""
         MockMusicServiceItem.__init__(self, title, item_id, parent_id, item_class)
         self.reference = MagicMock(name=item_id)
         self.reference.resources.return_value = True
-        self.reference.item_id = "FV:2/8"
+        self.reference.item_id = reference_item_id
         self.reference.get_uri.return_value = uri
 
 
@@ -368,6 +368,7 @@ _mock_favorites = [
         parent_id="FV:2",
         item_class="object.itemobject.item.sonos-favorite",
         uri="x-rincon-playlist:RINCON_test#A:ALBUMARTIST/Aerosmith/1984",
+        reference_item_id="A:ALBUMARTIST/Aerosmith/1984",
     ),
 ]
 
