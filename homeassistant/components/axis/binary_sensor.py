@@ -2,16 +2,15 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterable
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from functools import partial
 
-from axis.models.event import Event, EventOperation, EventTopic
-from axis.vapix.interfaces.applications.fence_guard import FenceGuardHandler
-from axis.vapix.interfaces.applications.loitering_guard import LoiteringGuardHandler
-from axis.vapix.interfaces.applications.motion_guard import MotionGuardHandler
-from axis.vapix.interfaces.applications.vmd4 import Vmd4Handler
+from axis.interfaces.applications.fence_guard import FenceGuardHandler
+from axis.interfaces.applications.loitering_guard import LoiteringGuardHandler
+from axis.interfaces.applications.motion_guard import MotionGuardHandler
+from axis.interfaces.applications.vmd4 import Vmd4Handler
+from axis.models.event import Event, EventTopic
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -182,28 +181,9 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up a Axis binary sensor."""
-    hub = AxisHub.get_hub(hass, config_entry)
-
-    @callback
-    def register_platform(descriptions: Iterable[AxisBinarySensorDescription]) -> None:
-        """Register entity platform to create entities on event initialized signal."""
-
-        @callback
-        def create_entity(
-            description: AxisBinarySensorDescription, event: Event
-        ) -> None:
-            """Create Axis entity."""
-            if description.supported_fn(hub, event):
-                async_add_entities([AxisBinarySensor(hub, description, event)])
-
-        for description in descriptions:
-            hub.api.event.subscribe(
-                partial(create_entity, description),
-                topic_filter=description.event_topic,
-                operation_filter=EventOperation.INITIALIZED,
-            )
-
-    register_platform(ENTITY_DESCRIPTIONS)
+    AxisHub.get_hub(hass, config_entry).entity_loader.register_platform(
+        async_add_entities, AxisBinarySensor, ENTITY_DESCRIPTIONS
+    )
 
 
 class AxisBinarySensor(AxisEventEntity, BinarySensorEntity):

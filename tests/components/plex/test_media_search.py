@@ -41,8 +41,9 @@ async def test_media_lookups(
         },
         True,
     )
-    with pytest.raises(MediaNotFound) as excinfo, patch(
-        "plexapi.server.PlexServer.fetchItem", side_effect=NotFound
+    with (
+        pytest.raises(MediaNotFound) as excinfo,
+        patch("plexapi.server.PlexServer.fetchItem", side_effect=NotFound),
     ):
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,

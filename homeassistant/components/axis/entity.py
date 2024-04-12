@@ -99,8 +99,8 @@ class AxisEventEntity(AxisEntity):
 
         self._event_id = event.id
         self._event_topic = event.topic_base
-        event_type = TOPIC_TO_EVENT_TYPE[event.topic_base]
 
+        event_type = TOPIC_TO_EVENT_TYPE[event.topic_base]
         self._attr_name = description.name_fn(hub, event) or f"{event_type} {event.id}"
 
         self._attr_unique_id = f"{hub.unique_id}-{event.topic}-{event.id}"

@@ -1,4 +1,5 @@
 """BinarySensor integration microBees."""
+
 from microBeesPy import Sensor
 
 from homeassistant.components.binary_sensor import (

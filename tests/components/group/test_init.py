@@ -8,7 +8,7 @@ from unittest.mock import patch
 
 import pytest
 
-import homeassistant.components.group as group
+from homeassistant.components import group
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_FRIENDLY_NAME,

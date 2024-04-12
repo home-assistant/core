@@ -29,11 +29,10 @@ async def test_works(hass: HomeAssistant, setup_evil_genius_labs) -> None:
 @pytest.mark.parametrize("platforms", [("light",)])
 async def test_turn_on_color(hass: HomeAssistant, setup_evil_genius_labs) -> None:
     """Test turning on with a color."""
-    with patch(
-        "pyevilgenius.EvilGeniusDevice.set_path_value"
-    ) as mock_set_path_value, patch(
-        "pyevilgenius.EvilGeniusDevice.set_rgb_color"
-    ) as mock_set_rgb_color:
+    with (
+        patch("pyevilgenius.EvilGeniusDevice.set_path_value") as mock_set_path_value,
+        patch("pyevilgenius.EvilGeniusDevice.set_rgb_color") as mock_set_rgb_color,
+    ):
         await hass.services.async_call(
             "light",
             "turn_on",

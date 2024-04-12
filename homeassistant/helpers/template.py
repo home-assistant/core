@@ -28,6 +28,7 @@ from typing import (
     Literal,
     NoReturn,
     ParamSpec,
+    Self,
     TypeVar,
     cast,
     overload,
@@ -85,6 +86,7 @@ from . import (
     entity_registry,
     floor_registry as fr,
     issue_registry,
+    label_registry,
     location as loc_helper,
 )
 from .singleton import singleton
@@ -210,12 +212,8 @@ def async_setup(hass: HomeAssistant) -> bool:
     cancel = async_track_time_interval(
         hass, _async_adjust_lru_sizes, timedelta(minutes=10)
     )
-    hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_START, _async_adjust_lru_sizes, run_immediately=True
-    )
-    hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STOP, callback(lambda _: cancel()), run_immediately=True
-    )
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _async_adjust_lru_sizes)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, callback(lambda _: cancel()))
     return True
 
 
@@ -307,9 +305,11 @@ def gen_result_wrapper(kls: type[dict | list | set]) -> type:
 class TupleWrapper(tuple, ResultWrapper):
     """Wrap a tuple."""
 
+    __slots__ = ()
+
     # This is all magic to be allowed to subclass a tuple.
 
-    def __new__(cls, value: tuple, *, render_result: str | None = None) -> TupleWrapper:
+    def __new__(cls, value: tuple, *, render_result: str | None = None) -> Self:
         """Create a new tuple class."""
         return super().__new__(cls, tuple(value))
 
@@ -1101,7 +1101,7 @@ class TemplateStateBase(State):
             return f"{state} {unit}"
         return state
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         """Ensure we collect on equality check."""
         self._collect_state()
         return self._state.__eq__(other)
@@ -1208,13 +1208,11 @@ def _resolve_state(
 
 
 @overload
-def forgiving_boolean(value: Any) -> bool | object:
-    ...
+def forgiving_boolean(value: Any) -> bool | object: ...
 
 
 @overload
-def forgiving_boolean(value: Any, default: _T) -> bool | _T:
-    ...
+def forgiving_boolean(value: Any, default: _T) -> bool | _T: ...
 
 
 def forgiving_boolean(
@@ -1252,6 +1250,7 @@ def expand(hass: HomeAssistant, *args: Any) -> Iterable[State]:
 
     search = list(args)
     found = {}
+    sources = entity_helper.entity_sources(hass)
     while search:
         entity = search.pop()
         if isinstance(entity, str):
@@ -1267,14 +1266,17 @@ def expand(hass: HomeAssistant, *args: Any) -> Iterable[State]:
             # ignore other types
             continue
 
-        if entity_id.startswith(_GROUP_DOMAIN_PREFIX) or (
-            (source := entity_helper.entity_sources(hass).get(entity_id))
-            and source["domain"] == "group"
+        if entity_id in found:
+            continue
+
+        domain = entity.domain
+        if domain == "group" or (
+            (source := sources.get(entity_id)) and source["domain"] == "group"
         ):
             # Collect state will be called in here since it's wrapped
             if group_entities := entity.attributes.get(ATTR_ENTITY_ID):
                 search += group_entities
-        elif entity_id.startswith(_ZONE_DOMAIN_PREFIX):
+        elif domain == "zone":
             if zone_entities := entity.attributes.get(ATTR_PERSONS):
                 search += zone_entities
         else:
@@ -1405,6 +1407,12 @@ def floor_id(hass: HomeAssistant, lookup_value: Any) -> str | None:
     floor_registry = fr.async_get(hass)
     if floor := floor_registry.async_get_floor_by_name(str(lookup_value)):
         return floor.floor_id
+
+    if aid := area_id(hass, lookup_value):
+        area_reg = area_registry.async_get(hass)
+        if area := area_reg.async_get_area(aid):
+            return area.floor_id
+
     return None
 
 
@@ -1413,6 +1421,16 @@ def floor_name(hass: HomeAssistant, lookup_value: str) -> str | None:
     floor_registry = fr.async_get(hass)
     if floor := floor_registry.async_get_floor(lookup_value):
         return floor.name
+
+    if aid := area_id(hass, lookup_value):
+        area_reg = area_registry.async_get(hass)
+        if (
+            (area := area_reg.async_get_area(aid))
+            and area.floor_id
+            and (floor := floor_registry.async_get_floor(area.floor_id))
+        ):
+            return floor.name
+
     return None
 
 
@@ -1556,6 +1574,92 @@ def area_devices(hass: HomeAssistant, area_id_or_name: str) -> Iterable[str]:
     dev_reg = device_registry.async_get(hass)
     entries = device_registry.async_entries_for_area(dev_reg, _area_id)
     return [entry.id for entry in entries]
+
+
+def labels(hass: HomeAssistant, lookup_value: Any = None) -> Iterable[str | None]:
+    """Return all labels, or those from a area ID, device ID, or entity ID."""
+    label_reg = label_registry.async_get(hass)
+    if lookup_value is None:
+        return [label.label_id for label in label_reg.async_list_labels()]
+
+    ent_reg = entity_registry.async_get(hass)
+
+    # Import here, not at top-level to avoid circular import
+    from . import config_validation as cv  # pylint: disable=import-outside-toplevel
+
+    lookup_value = str(lookup_value)
+
+    try:
+        cv.entity_id(lookup_value)
+    except vol.Invalid:
+        pass
+    else:
+        if entity := ent_reg.async_get(lookup_value):
+            return list(entity.labels)
+
+    # Check if this could be a device ID
+    dev_reg = device_registry.async_get(hass)
+    if device := dev_reg.async_get(lookup_value):
+        return list(device.labels)
+
+    # Check if this could be a area ID
+    area_reg = area_registry.async_get(hass)
+    if area := area_reg.async_get_area(lookup_value):
+        return list(area.labels)
+
+    return []
+
+
+def label_id(hass: HomeAssistant, lookup_value: Any) -> str | None:
+    """Get the label ID from a label name."""
+    label_reg = label_registry.async_get(hass)
+    if label := label_reg.async_get_label_by_name(str(lookup_value)):
+        return label.label_id
+    return None
+
+
+def label_name(hass: HomeAssistant, lookup_value: str) -> str | None:
+    """Get the label name from a label ID."""
+    label_reg = label_registry.async_get(hass)
+    if label := label_reg.async_get_label(lookup_value):
+        return label.name
+    return None
+
+
+def _label_id_or_name(hass: HomeAssistant, label_id_or_name: str) -> str | None:
+    """Get the label ID from a label name or ID."""
+    # If label_name returns a value, we know the input was an ID, otherwise we
+    # assume it's a name, and if it's neither, we return early.
+    if label_name(hass, label_id_or_name) is not None:
+        return label_id_or_name
+    return label_id(hass, label_id_or_name)
+
+
+def label_areas(hass: HomeAssistant, label_id_or_name: str) -> Iterable[str]:
+    """Return areas for a given label ID or name."""
+    if (_label_id := _label_id_or_name(hass, label_id_or_name)) is None:
+        return []
+    area_reg = area_registry.async_get(hass)
+    entries = area_registry.async_entries_for_label(area_reg, _label_id)
+    return [entry.id for entry in entries]
+
+
+def label_devices(hass: HomeAssistant, label_id_or_name: str) -> Iterable[str]:
+    """Return device IDs for a given label ID or name."""
+    if (_label_id := _label_id_or_name(hass, label_id_or_name)) is None:
+        return []
+    dev_reg = device_registry.async_get(hass)
+    entries = device_registry.async_entries_for_label(dev_reg, _label_id)
+    return [entry.id for entry in entries]
+
+
+def label_entities(hass: HomeAssistant, label_id_or_name: str) -> Iterable[str]:
+    """Return entities for a given label ID or name."""
+    if (_label_id := _label_id_or_name(hass, label_id_or_name)) is None:
+        return []
+    ent_reg = entity_registry.async_get(hass)
+    entries = entity_registry.async_entries_for_label(ent_reg, _label_id)
+    return [entry.entity_id for entry in entries]
 
 
 def closest(hass, *args):
@@ -2470,9 +2574,9 @@ def make_logging_undefined(
         def _fail_with_undefined_error(self, *args, **kwargs):
             try:
                 return super()._fail_with_undefined_error(*args, **kwargs)
-            except self._undefined_exception as ex:
+            except self._undefined_exception:
                 _log_fn(logging.ERROR, self._undefined_message)
-                raise ex
+                raise
 
         def __str__(self) -> str:
             """Log undefined __str___."""
@@ -2729,6 +2833,24 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["integration_entities"] = hassfunction(integration_entities)
         self.filters["integration_entities"] = self.globals["integration_entities"]
 
+        self.globals["labels"] = hassfunction(labels)
+        self.filters["labels"] = self.globals["labels"]
+
+        self.globals["label_id"] = hassfunction(label_id)
+        self.filters["label_id"] = self.globals["label_id"]
+
+        self.globals["label_name"] = hassfunction(label_name)
+        self.filters["label_name"] = self.globals["label_name"]
+
+        self.globals["label_areas"] = hassfunction(label_areas)
+        self.filters["label_areas"] = self.globals["label_areas"]
+
+        self.globals["label_devices"] = hassfunction(label_devices)
+        self.filters["label_devices"] = self.globals["label_devices"]
+
+        self.globals["label_entities"] = hassfunction(label_entities)
+        self.filters["label_entities"] = self.globals["label_entities"]
+
         if limited:
             # Only device_entities is available to limited templates, mark other
             # functions and filters as unsupported.
@@ -2762,6 +2884,8 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
                 "floor_name",
                 "relative_time",
                 "today_at",
+                "label_id",
+                "label_name",
             ]
             hass_filters = [
                 "closest",
@@ -2772,6 +2896,8 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
                 "floor_id",
                 "floor_name",
                 "has_value",
+                "label_id",
+                "label_name",
             ]
             hass_tests = [
                 "has_value",
@@ -2842,8 +2968,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         filename: str | None = None,
         raw: Literal[False] = False,
         defer_init: bool = False,
-    ) -> CodeType:
-        ...
+    ) -> CodeType: ...
 
     @overload
     def compile(
@@ -2853,8 +2978,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         filename: str | None = None,
         raw: Literal[True] = ...,
         defer_init: bool = False,
-    ) -> str:
-        ...
+    ) -> str: ...
 
     def compile(
         self,

@@ -111,12 +111,15 @@ CATEGORIES_TO_EVENTS = {
 
 @pytest.fixture
 def _no_zones_and_partitions():
-    with patch(
-        "homeassistant.components.risco.RiscoLocal.zones",
-        new_callable=PropertyMock(return_value=[]),
-    ), patch(
-        "homeassistant.components.risco.RiscoLocal.partitions",
-        new_callable=PropertyMock(return_value=[]),
+    with (
+        patch(
+            "homeassistant.components.risco.RiscoLocal.zones",
+            new_callable=PropertyMock(return_value=[]),
+        ),
+        patch(
+            "homeassistant.components.risco.RiscoLocal.partitions",
+            new_callable=PropertyMock(return_value=[]),
+        ),
     ):
         yield
 
@@ -188,11 +191,14 @@ async def test_cloud_setup(
     for category, entity_id in ENTITY_IDS.items():
         _check_state(hass, category, entity_id)
 
-    with patch(
-        "homeassistant.components.risco.RiscoCloud.get_events", return_value=[]
-    ) as events_mock, patch(
-        "homeassistant.components.risco.Store.async_load",
-        return_value={LAST_EVENT_TIMESTAMP_KEY: TEST_EVENTS[0].time},
+    with (
+        patch(
+            "homeassistant.components.risco.RiscoCloud.get_events", return_value=[]
+        ) as events_mock,
+        patch(
+            "homeassistant.components.risco.Store.async_load",
+            return_value={LAST_EVENT_TIMESTAMP_KEY: TEST_EVENTS[0].time},
+        ),
     ):
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=65))
         await hass.async_block_till_done()

@@ -132,6 +132,7 @@ async def test_get_trace(
     enable_custom_integrations: None,
 ) -> None:
     """Test tracing a script or automation."""
+    await async_setup_component(hass, "homeassistant", {})
     id = 1
 
     def next_id():
@@ -206,7 +207,7 @@ async def test_get_trace(
     _assert_raw_config(domain, sun_config, trace)
     assert trace["blueprint_inputs"] is None
     assert trace["context"]
-    assert trace["error"] == "Service test.automation not found."
+    assert trace["error"] == "Service test.automation not found"
     assert trace["state"] == "stopped"
     assert trace["script_execution"] == "error"
     assert trace["item_id"] == "sun"
@@ -808,6 +809,7 @@ async def test_list_traces(
     script_execution,
 ) -> None:
     """Test listing script and automation traces."""
+    await async_setup_component(hass, "homeassistant", {})
     id = 1
 
     def next_id():
@@ -894,7 +896,7 @@ async def test_list_traces(
     assert len(_find_traces(response["result"], domain, "sun")) == 1
     trace = _find_traces(response["result"], domain, "sun")[0]
     assert trace["last_step"] == last_step[0].format(prefix=prefix)
-    assert trace["error"] == "Service test.automation not found."
+    assert trace["error"] == "Service test.automation not found"
     assert trace["state"] == "stopped"
     assert trace["script_execution"] == script_execution[0]
     assert trace["timestamp"]
@@ -1574,6 +1576,7 @@ async def test_trace_blueprint_automation(
     enable_custom_integrations: None,
 ) -> None:
     """Test trace of blueprint automation."""
+    await async_setup_component(hass, "homeassistant", {})
     id = 1
 
     def next_id():
@@ -1633,7 +1636,7 @@ async def test_trace_blueprint_automation(
     assert trace["config"]["id"] == "sun"
     assert trace["blueprint_inputs"] == sun_config
     assert trace["context"]
-    assert trace["error"] == "Service test.automation not found."
+    assert trace["error"] == "Service test.automation not found"
     assert trace["state"] == "stopped"
     assert trace["script_execution"] == "error"
     assert trace["item_id"] == "sun"

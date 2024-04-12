@@ -49,7 +49,7 @@ async def test_mop_attached(
     )
 
     assert (state := hass.states.get(state.entity_id))
-    assert entity_entry == snapshot(name=f"{entity_id}-state")
+    assert state == snapshot(name=f"{entity_id}-state")
 
     await notify_and_wait(
         hass, event_bus, WaterInfoEvent(WaterAmount.HIGH, mop_attached=False)

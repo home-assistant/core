@@ -25,6 +25,7 @@ from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
 from homeassistant.helpers.typing import DiscoveryInfoType
 from homeassistant.loader import async_get_mqtt
 from homeassistant.util.json import json_loads_object
+from homeassistant.util.signal_type import SignalTypeFormat
 
 from .. import mqtt
 from .abbreviations import ABBREVIATIONS, DEVICE_ABBREVIATIONS, ORIGIN_ABBREVIATIONS
@@ -79,10 +80,14 @@ SUPPORTED_COMPONENTS = {
     "water_heater",
 }
 
-MQTT_DISCOVERY_UPDATED = "mqtt_discovery_updated_{}"
-MQTT_DISCOVERY_NEW = "mqtt_discovery_new_{}_{}"
+MQTT_DISCOVERY_UPDATED: SignalTypeFormat[MQTTDiscoveryPayload] = SignalTypeFormat(
+    "mqtt_discovery_updated_{}"
+)
+MQTT_DISCOVERY_NEW: SignalTypeFormat[MQTTDiscoveryPayload] = SignalTypeFormat(
+    "mqtt_discovery_new_{}_{}"
+)
 MQTT_DISCOVERY_NEW_COMPONENT = "mqtt_discovery_new_component"
-MQTT_DISCOVERY_DONE = "mqtt_discovery_done_{}"
+MQTT_DISCOVERY_DONE: SignalTypeFormat[Any] = SignalTypeFormat("mqtt_discovery_done_{}")
 
 TOPIC_BASE = "~"
 

@@ -7,14 +7,14 @@ import pytest
 from pytest_unordered import unordered
 import voluptuous as vol
 
-from homeassistant import config_entries, loader
-from homeassistant.components import device_automation
-import homeassistant.components.automation as automation
+from homeassistant import loader
+from homeassistant.components import automation, device_automation
 from homeassistant.components.device_automation import (
     InvalidDeviceAutomationConfig,
     toggle_entity,
 )
 from homeassistant.components.websocket_api.const import TYPE_RESULT
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -977,7 +977,7 @@ async def test_automation_with_dynamically_validated_action(
     module.async_validate_action_config = AsyncMock()
 
     config_entry = MockConfigEntry(domain="fake_integration", data={})
-    config_entry.mock_state(hass, config_entries.ConfigEntryState.LOADED)
+    config_entry.mock_state(hass, ConfigEntryState.LOADED)
     config_entry.add_to_hass(hass)
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
@@ -1079,7 +1079,7 @@ async def test_automation_with_dynamically_validated_condition(
     module.async_validate_condition_config = AsyncMock()
 
     config_entry = MockConfigEntry(domain="fake_integration", data={})
-    config_entry.mock_state(hass, config_entries.ConfigEntryState.LOADED)
+    config_entry.mock_state(hass, ConfigEntryState.LOADED)
     config_entry.add_to_hass(hass)
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
@@ -1193,7 +1193,7 @@ async def test_automation_with_dynamically_validated_trigger(
     module.async_validate_trigger_config = AsyncMock(wraps=lambda hass, config: config)
 
     config_entry = MockConfigEntry(domain="fake_integration", data={})
-    config_entry.mock_state(hass, config_entries.ConfigEntryState.LOADED)
+    config_entry.mock_state(hass, ConfigEntryState.LOADED)
     config_entry.add_to_hass(hass)
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
@@ -1294,7 +1294,7 @@ async def test_automation_with_bad_action(
 ) -> None:
     """Test automation with bad device action."""
     config_entry = MockConfigEntry(domain="fake_integration", data={})
-    config_entry.mock_state(hass, config_entries.ConfigEntryState.LOADED)
+    config_entry.mock_state(hass, ConfigEntryState.LOADED)
     config_entry.add_to_hass(hass)
     device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
@@ -1328,7 +1328,7 @@ async def test_automation_with_bad_condition_action(
 ) -> None:
     """Test automation with bad device action."""
     config_entry = MockConfigEntry(domain="fake_integration", data={})
-    config_entry.mock_state(hass, config_entries.ConfigEntryState.LOADED)
+    config_entry.mock_state(hass, ConfigEntryState.LOADED)
     config_entry.add_to_hass(hass)
     device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
@@ -1361,7 +1361,7 @@ async def test_automation_with_bad_condition(
 ) -> None:
     """Test automation with bad device condition."""
     config_entry = MockConfigEntry(domain="fake_integration", data={})
-    config_entry.mock_state(hass, config_entries.ConfigEntryState.LOADED)
+    config_entry.mock_state(hass, ConfigEntryState.LOADED)
     config_entry.add_to_hass(hass)
     device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
@@ -1526,7 +1526,7 @@ async def test_automation_with_bad_sub_condition(
 ) -> None:
     """Test automation with bad device condition under and/or conditions."""
     config_entry = MockConfigEntry(domain="fake_integration", data={})
-    config_entry.mock_state(hass, config_entries.ConfigEntryState.LOADED)
+    config_entry.mock_state(hass, ConfigEntryState.LOADED)
     config_entry.add_to_hass(hass)
     device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
@@ -1564,7 +1564,7 @@ async def test_automation_with_bad_trigger(
 ) -> None:
     """Test automation with bad device trigger."""
     config_entry = MockConfigEntry(domain="fake_integration", data={})
-    config_entry.mock_state(hass, config_entries.ConfigEntryState.LOADED)
+    config_entry.mock_state(hass, ConfigEntryState.LOADED)
     config_entry.add_to_hass(hass)
     device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
@@ -1727,10 +1727,13 @@ async def test_async_get_device_automations_platform_reraises_exceptions(
 ) -> None:
     """Test InvalidDeviceAutomationConfig is raised when async_get_integration_with_requirements fails."""
     await async_setup_component(hass, "device_automation", {})
-    with patch(
-        "homeassistant.components.device_automation.async_get_integration_with_requirements",
-        side_effect=exc,
-    ), pytest.raises(InvalidDeviceAutomationConfig):
+    with (
+        patch(
+            "homeassistant.components.device_automation.async_get_integration_with_requirements",
+            side_effect=exc,
+        ),
+        pytest.raises(InvalidDeviceAutomationConfig),
+    ):
         await device_automation.async_get_device_automation_platform(
             hass, "test", device_automation.DeviceAutomationType.TRIGGER
         )

@@ -58,6 +58,7 @@ from .const import (
     BLEScannerMode,
 )
 from .utils import (
+    async_shutdown_device,
     get_device_entry_gen,
     get_http_port,
     get_rpc_device_wakeup_period,
@@ -151,6 +152,14 @@ class ShellyCoordinatorBase(DataUpdateCoordinator[None], Generic[_DeviceT]):
         LOGGER.debug("Reloading entry %s", self.name)
         await self.hass.config_entries.async_reload(self.entry.entry_id)
 
+    async def async_shutdown_device_and_start_reauth(self) -> None:
+        """Shutdown Shelly device and start reauth flow."""
+        # not running disconnect events since we have auth error
+        # and won't be able to send commands to the device
+        self.last_update_success = False
+        await async_shutdown_device(self.device)
+        self.entry.async_start_reauth(self.hass)
+
 
 class ShellyBlockCoordinator(ShellyCoordinatorBase[BlockDevice]):
     """Coordinator for a Shelly block based device."""
@@ -180,9 +189,7 @@ class ShellyBlockCoordinator(ShellyCoordinatorBase[BlockDevice]):
             self.async_add_listener(self._async_device_updates_handler)
         )
         entry.async_on_unload(
-            hass.bus.async_listen_once(
-                EVENT_HOMEASSISTANT_STOP, self._handle_ha_stop, run_immediately=True
-            )
+            hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._handle_ha_stop)
         )
 
     @callback
@@ -300,7 +307,7 @@ class ShellyBlockCoordinator(ShellyCoordinatorBase[BlockDevice]):
         except DeviceConnectionError as err:
             raise UpdateFailed(f"Error fetching data: {repr(err)}") from err
         except InvalidAuthError:
-            self.entry.async_start_reauth(self.hass)
+            await self.async_shutdown_device_and_start_reauth()
 
     @callback
     def _async_handle_update(
@@ -384,7 +391,7 @@ class ShellyRestCoordinator(ShellyCoordinatorBase[BlockDevice]):
         except DeviceConnectionError as err:
             raise UpdateFailed(f"Error fetching data: {repr(err)}") from err
         except InvalidAuthError:
-            self.entry.async_start_reauth(self.hass)
+            await self.async_shutdown_device_and_start_reauth()
         else:
             update_device_fw_info(self.hass, self.device, self.entry)
 
@@ -411,9 +418,7 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         self._input_event_listeners: list[Callable[[dict[str, Any]], None]] = []
 
         entry.async_on_unload(
-            hass.bus.async_listen_once(
-                EVENT_HOMEASSISTANT_STOP, self._handle_ha_stop, run_immediately=True
-            )
+            hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._handle_ha_stop)
         )
         entry.async_on_unload(entry.add_update_listener(self._async_update_listener))
 
@@ -540,7 +545,7 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         except DeviceConnectionError as err:
             raise UpdateFailed(f"Device disconnected: {repr(err)}") from err
         except InvalidAuthError:
-            self.entry.async_start_reauth(self.hass)
+            await self.async_shutdown_device_and_start_reauth()
 
     async def _async_disconnected(self) -> None:
         """Handle device disconnected."""
@@ -633,7 +638,8 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
             try:
                 await async_stop_scanner(self.device)
             except InvalidAuthError:
-                self.entry.async_start_reauth(self.hass)
+                await self.async_shutdown_device_and_start_reauth()
+                return
         await self.device.shutdown()
         await self._async_disconnected()
 
@@ -663,7 +669,7 @@ class ShellyRpcPollingCoordinator(ShellyCoordinatorBase[RpcDevice]):
         except (DeviceConnectionError, RpcCallError) as err:
             raise UpdateFailed(f"Device disconnected: {repr(err)}") from err
         except InvalidAuthError:
-            self.entry.async_start_reauth(self.hass)
+            await self.async_shutdown_device_and_start_reauth()
 
 
 def get_block_coordinator_by_device_id(

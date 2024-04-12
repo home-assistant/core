@@ -53,6 +53,7 @@ from .coordinator import (
 )
 from .utils import (
     async_create_issue_unsupported_firmware,
+    async_shutdown_device,
     get_block_device_sleep_period,
     get_coap_context,
     get_device_entry_gen,
@@ -339,12 +340,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     shelly_entry_data = get_entry_data(hass)[entry.entry_id]
 
     # If device is present, block/rpc coordinator is not setup yet
-    device = shelly_entry_data.device
-    if isinstance(device, RpcDevice):
-        await device.shutdown()
-        return True
-    if isinstance(device, BlockDevice):
-        device.shutdown()
+    if (device := shelly_entry_data.device) is not None:
+        await async_shutdown_device(device)
         return True
 
     platforms = RPC_SLEEPING_PLATFORMS
