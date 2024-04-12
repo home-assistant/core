@@ -14,7 +14,7 @@ from dataclasses import dataclass
 import enum
 import logging
 import re
-from typing import TYPE_CHECKING, Any, ParamSpec, TypeVar, overload
+from typing import TYPE_CHECKING, Any, TypeVar, overload
 
 import voluptuous as vol
 import zigpy.exceptions
@@ -59,14 +59,10 @@ from .const import CLUSTER_TYPE_IN, CLUSTER_TYPE_OUT, CUSTOM_CONFIGURATION, DATA
 from .registries import BINDABLE_CLUSTERS
 
 if TYPE_CHECKING:
-    from .cluster_handlers import ClusterHandler
     from .device import ZHADevice
     from .gateway import ZHAGateway
 
-_ClusterHandlerT = TypeVar("_ClusterHandlerT", bound="ClusterHandler")
 _T = TypeVar("_T")
-_R = TypeVar("_R")
-_P = ParamSpec("_P")
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -508,9 +504,9 @@ def validate_device_class(
 
 
 def validate_device_class(
-    device_class_enum: type[BinarySensorDeviceClass]
-    | type[SensorDeviceClass]
-    | type[NumberDeviceClass],
+    device_class_enum: type[
+        BinarySensorDeviceClass | SensorDeviceClass | NumberDeviceClass
+    ],
     metadata_value: enum.Enum,
     platform: str,
     logger: logging.Logger,

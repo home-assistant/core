@@ -86,11 +86,7 @@ class User:
     def invalidate_cache(self) -> None:
         """Invalidate permission and is_admin cache."""
         for attr_to_invalidate in ("permissions", "is_admin"):
-            # try is must more efficient than suppress
-            try:  # noqa: SIM105
-                delattr(self, attr_to_invalidate)
-            except AttributeError:
-                pass
+            self.__dict__.pop(attr_to_invalidate, None)
 
 
 @attr.s(slots=True)

@@ -14,6 +14,7 @@ from tests.common import MockConfigEntry
 def mock_config_entry(hass):
     """Mock a config entry."""
     entry = MockConfigEntry(
+        title="OpenAI",
         domain="openai_conversation",
         data={
             "api_key": "bla",
