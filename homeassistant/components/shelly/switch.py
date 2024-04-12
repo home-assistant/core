@@ -136,6 +136,11 @@ def async_setup_rpc_entry(
             continue
 
         if coordinator.model == MODEL_WALL_DISPLAY:
+            # There are three configuration scenarios for WallDisplay:
+            # - relay mode (no thermostat)
+            # - thermostat mode using the internal relay as an actuator
+            # - thermostat mode using an external (from another device) relay as
+            #   an actuator
             if f"thermostat:{id_}" not in coordinator.device.status:
                 # There is no thermostat in the status, we need to remove a climate
                 # entity
