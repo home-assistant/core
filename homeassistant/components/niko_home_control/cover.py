@@ -25,14 +25,16 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Niko Home Control cover."""
-    entities = []
     hub = hass.data[DOMAIN][entry.entry_id]
+    entities = []
 
     for action in hub.actions:
         _LOGGER.debug(action.name)
         action_type = action.action_type
         if action_type == 4:  # blinds/covers
-            entities.append(NikoHomeControlCover(action, hub))
+            entity = NikoHomeControlCover(action, hub)
+            hub.entities.append(entity)
+            entities.append(entity)
 
     async_add_entities(entities, True)
 
@@ -54,7 +56,12 @@ class NikoHomeControlCover(CoverEntity):
             manufacturer=hub.manufacturer,
             name=cover.name,
         )
-
+    
+    @property
+    def id(self):
+        """A Niko Action action_id."""
+        return self._light.action_id
+    
     @property
     def supported_features(self):
         """Flag supported features."""

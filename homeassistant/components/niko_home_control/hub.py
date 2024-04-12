@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import logging
 
 from nikohomecontrol import NikoHomeControlConnection
 import voluptuous as vol
@@ -13,6 +14,8 @@ from homeassistant.exceptions import ConfigEntryNotReady
 
 from .action import Action
 from .const import DEFAULT_IP, DEFAULT_NAME, DEFAULT_PORT
+
+_LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -37,6 +40,7 @@ class Hub:
         self._name = name
         self._id = name
         self._listen_task = None
+        self.entities = []
         try:
             self.connection = NikoHomeControlConnection(self._host, self._port)
             actions = []
@@ -83,6 +87,7 @@ class Hub:
     def _execute(self, message):
         """Execute command."""
         data = json.loads(self.connection.send(message))
+        _LOGGER.debug(data)
         if "error" in data["data"] and data["data"]["error"] > 0:
             error = data["data"]["error"]
             if error == 100:
@@ -115,19 +120,33 @@ class Hub:
         s = '{"cmd":"startevents"}'
         reader, writer = await asyncio.open_connection(self._host, self._port)
 
+        _LOGGER.debug('listening')
+
         writer.write(s.encode())
         await writer.drain()
+        async for line in await reader:
+            try:
+                message = json.loads(line.decode())
+                _LOGGER.debug(message)
+                if (message != 'b\r'):
+                    if "event" in message and message["event"] == "listactions":
+                        for _action in message["data"]:
+                            entity = self.get_entity(_action["id"])
+                            entity.update_state(_action["value1"])
+            except: 
+                _LOGGER.debug('exception')
+                _LOGGER.debug(line)
 
-        async for line in reader:
-            message = json.loads(line.decode())
-            if "event" in message and message["event"] == "listactions":
-                for _action in message["data"]:
-                    action = self.get_action(_action["id"])
-                    action.update_state(_action["value1"])
+        
 
     def get_action(self, action_id):
         """Get action by id."""
         actions = [action for action in self._actions if action.action_id == action_id]
+        return actions[0]
+    
+    def get_entity(self, action_id):
+        """Get entity by id."""
+        actions = [action for action in self.entities if action.id == action_id]
         return actions[0]
 
     def handle(self, pipeline, event):
