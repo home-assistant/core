@@ -24,30 +24,24 @@ DATA_KEY = "llm_tool"
 class Tool:
     """LLM Tool base class."""
 
-    specification: dict[str, str | dict[str, Any]]
+    name: str
+    description: str
+    parameters: dict[str, Any]
 
     @property
-    def name(self) -> str:
-        """Get the tool name."""
-        return self.specification["name"]
-
-    @property
-    def description(self) -> str:
-        """Get the tool description."""
-        return self.specification["description"]
-
-    @property
-    def parameters(self) -> dict[str, Any]:
-        """Get the tool parameters."""
-        return self.specification["parameters"]
+    def specification(self) -> dict[str, Any]:
+        """Get the tool specification."""
+        return {
+            "name": self.name,
+            "description": self.description,
+            "parameters": self.parameters,
+        }
 
     def __init__(self, name: str, description: str, parameters: dict[str, Any]) -> None:
         """Init the class."""
-        self.specification = {
-            "name": name,
-            "description": description,
-            "parameters": parameters,
-        }
+        self.name = name
+        self.description = description
+        self.parameters = parameters
 
     @abstractmethod
     async def async_call(
@@ -207,6 +201,8 @@ class IntentTool(Tool):
             if area:
                 slots["area"]["value"] = area.id
                 slots["area"]["text"] = area.name
+            else:
+                slots["area"]["text"] = id_or_name
 
         intent_response = await intent.async_handle(
             hass, platform, self.name, slots, text_input, context, language, assistant
