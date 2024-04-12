@@ -862,6 +862,20 @@ class multi_select:
         return selected
 
 
+class expandable:
+    """Expandable."""
+
+    def __init__(self, schema: vol.Schema, options: dict[str, Any]) -> None:
+        """Initialize multi select."""
+        self.schema = schema
+        self.options = options or {}
+
+    def __call__(self, value: Any) -> Any:
+        """Validate input."""
+        self.schema(value)
+        return value
+
+
 def _deprecated_or_removed(
     key: str,
     replacement_key: str | None,
@@ -1047,6 +1061,16 @@ def custom_serializer(schema: Any) -> Any:
 
     if schema is boolean:
         return {"type": "boolean"}
+
+    if isinstance(schema, expandable):
+        return {
+            "type": "expandable",
+            "title": schema.options.get("title"),
+            "icon": schema.options.get("icon"),
+            "schema": voluptuous_serialize.convert(
+                schema.schema, custom_serializer=custom_serializer
+            ),
+        }
 
     if isinstance(schema, multi_select):
         return {"type": "multi_select", "options": schema.options}

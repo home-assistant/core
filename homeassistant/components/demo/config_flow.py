@@ -77,6 +77,23 @@ class OptionsFlowHandler(OptionsFlow):
                         CONF_INT,
                         default=self.config_entry.options.get(CONF_INT, 10),
                     ): int,
+                    vol.Required("expandable"): cv.expandable(
+                        vol.Schema(
+                            {
+                                vol.Optional(
+                                    CONF_BOOLEAN,
+                                    default=self.config_entry.options.get(
+                                        CONF_BOOLEAN, False
+                                    ),
+                                ): bool,
+                                vol.Optional(
+                                    CONF_INT,
+                                    default=self.config_entry.options.get(CONF_INT, 10),
+                                ): int,
+                            }
+                        ),
+                        {"title": "Expandable", "icon": "mdi:arrow-expand"},
+                    ),
                 }
             ),
         )
