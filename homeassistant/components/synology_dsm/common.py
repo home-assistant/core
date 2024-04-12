@@ -33,9 +33,15 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_DEVICE_TOKEN, SYNOLOGY_CONNECTION_EXCEPTIONS
+from .const import (
+    CONF_DEVICE_TOKEN,
+    EXCEPTION_DETAILS,
+    EXCEPTION_UNKNOWN,
+    SYNOLOGY_CONNECTION_EXCEPTIONS,
+)
 
 LOGGER = logging.getLogger(__name__)
 
@@ -303,3 +309,12 @@ class SynoApi:
         LOGGER.debug("Start data update for '%s'", self._entry.unique_id)
         self._setup_api_requests()
         await self.dsm.update(self._with_information)
+
+
+def raise_config_entry_auth_error(err: Exception) -> None:
+    """Raise ConfigEntryAuthFailed if error is related to authentication."""
+    if err.args[0] and isinstance(err.args[0], dict):
+        details = err.args[0].get(EXCEPTION_DETAILS, EXCEPTION_UNKNOWN)
+    else:
+        details = EXCEPTION_UNKNOWN
+    raise ConfigEntryAuthFailed(f"reason: {details}") from err

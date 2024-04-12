@@ -7,7 +7,10 @@ import logging
 from typing import Any, TypeVar
 
 from synology_dsm.api.surveillance_station.camera import SynoCamera
-from synology_dsm.exceptions import SynologyDSMAPIErrorException
+from synology_dsm.exceptions import (
+    SynologyDSMAPIErrorException,
+    SynologyDSMNotLoggedInException,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_SCAN_INTERVAL
@@ -15,10 +18,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .common import SynoApi
+from .common import SynoApi, raise_config_entry_auth_error
 from .const import (
     DEFAULT_SCAN_INTERVAL,
     SIGNAL_CAMERA_SOURCE_CHANGED,
+    SYNOLOGY_AUTH_FAILED_EXCEPTIONS,
     SYNOLOGY_CONNECTION_EXCEPTIONS,
 )
 
@@ -100,10 +104,19 @@ class SynologyDSMCentralUpdateCoordinator(SynologyDSMUpdateCoordinator[None]):
 
     async def _async_update_data(self) -> None:
         """Fetch all data from api."""
-        try:
-            await self.api.async_update()
-        except SYNOLOGY_CONNECTION_EXCEPTIONS as err:
-            raise UpdateFailed(f"Error communicating with API: {err}") from err
+        for attempts in range(2):
+            try:
+                await self.api.async_update()
+            except SynologyDSMNotLoggedInException:
+                # If login is expired, try to login again
+                try:
+                    await self.api.dsm.login()
+                except SYNOLOGY_AUTH_FAILED_EXCEPTIONS as err:
+                    raise_config_entry_auth_error(err)
+                if attempts == 0:
+                    continue
+            except SYNOLOGY_CONNECTION_EXCEPTIONS as err:
+                raise UpdateFailed(f"Error communicating with API: {err}") from err
 
 
 class SynologyDSMCameraUpdateCoordinator(

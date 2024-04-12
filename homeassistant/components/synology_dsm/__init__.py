@@ -11,10 +11,10 @@ from synology_dsm.api.surveillance_station.camera import SynoCamera
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MAC, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 
-from .common import SynoApi
+from .common import SynoApi, raise_config_entry_auth_error
 from .const import (
     DEFAULT_VERIFY_SSL,
     DOMAIN,
@@ -68,11 +68,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         await api.async_setup()
     except SYNOLOGY_AUTH_FAILED_EXCEPTIONS as err:
-        if err.args[0] and isinstance(err.args[0], dict):
-            details = err.args[0].get(EXCEPTION_DETAILS, EXCEPTION_UNKNOWN)
-        else:
-            details = EXCEPTION_UNKNOWN
-        raise ConfigEntryAuthFailed(f"reason: {details}") from err
+        raise_config_entry_auth_error(err)
     except SYNOLOGY_CONNECTION_EXCEPTIONS as err:
         if err.args[0] and isinstance(err.args[0], dict):
             details = err.args[0].get(EXCEPTION_DETAILS, EXCEPTION_UNKNOWN)
