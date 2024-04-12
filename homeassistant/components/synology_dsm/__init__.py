@@ -147,8 +147,10 @@ async def async_remove_config_entry_device(
     """Remove synology_dsm config entry from a device."""
     data: SynologyDSMData = hass.data[DOMAIN][entry.unique_id]
     api = data.api
+    assert api.information is not None
     serial = api.information.serial
     storage = api.storage
+    assert storage is not None
     all_cameras: list[SynoCamera] = []
     if api.surveillance_station is not None:
         # get_all_cameras does not do I/O
