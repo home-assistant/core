@@ -659,7 +659,7 @@ filterwarnings = [
 ]
 
 [tool.ruff]
-required-version = ">=0.3.4"
+required-version = ">=0.3.7"
 
 [tool.ruff.lint]
 select = [
