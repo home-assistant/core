@@ -428,7 +428,7 @@ apprise==1.7.4
 aprslib==0.7.0
 
 # homeassistant.components.aranet
-aranet4==2.2.2
+aranet4==2.3.3
 
 # homeassistant.components.arcam_fmj
 arcam-fmj==1.4.0
@@ -478,7 +478,7 @@ bimmer-connected[china]==0.14.6
 bleak-esphome==1.0.0
 
 # homeassistant.components.bluetooth
-bleak-retry-connector==3.4.0
+bleak-retry-connector==3.5.0
 
 # homeassistant.components.bluetooth
 bleak==0.21.1
@@ -721,7 +721,7 @@ fnv-hash-fast==0.5.0
 foobot_async==1.0.0
 
 # homeassistant.components.forecast_solar
-forecast-solar==3.0.0
+forecast-solar==3.1.0
 
 # homeassistant.components.freebox
 freebox-api==1.1.0
@@ -876,7 +876,7 @@ hole==0.8.0
 holidays==0.46
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240404.1
+home-assistant-frontend==20240404.2
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.4.3
@@ -1350,7 +1350,7 @@ pybalboa==1.0.1
 pyblackbird==0.6
 
 # homeassistant.components.neato
-pybotvac==0.0.24
+pybotvac==0.0.25
 
 # homeassistant.components.braviatv
 pybravia==0.3.3
@@ -1533,7 +1533,7 @@ pymeteoclimatic==0.1.0
 pymochad==0.2.0
 
 # homeassistant.components.modbus
-pymodbus==3.6.6
+pymodbus==3.6.7
 
 # homeassistant.components.monoprice
 pymonoprice==0.4
@@ -2197,7 +2197,7 @@ webmin-xmlrpc==0.0.2
 webrtc-noise-gain==1.2.3
 
 # homeassistant.components.whirlpool
-whirlpool-sixth-sense==0.18.7
+whirlpool-sixth-sense==0.18.8
 
 # homeassistant.components.whois
 whois==0.9.27
@@ -2257,7 +2257,7 @@ youless-api==1.0.1
 youtubeaio==1.1.5
 
 # homeassistant.components.media_extractor
-yt-dlp==2024.03.10
+yt-dlp==2024.04.09
 
 # homeassistant.components.zamg
 zamg==0.3.6
@@ -2269,7 +2269,7 @@ zeroconf==0.132.0
 zeversolar==0.3.1
 
 # homeassistant.components.zha
-zha-quirks==0.0.113
+zha-quirks==0.0.114
 
 # homeassistant.components.zha
 zigpy-deconz==0.23.1
