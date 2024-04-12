@@ -282,7 +282,23 @@ class ConfigEntry:
     pref_disable_new_entities: bool
     pref_disable_polling: bool
     version: int
+    source: str
     minor_version: int
+    disabled_by: ConfigEntryDisabler | None
+    supports_unload: bool | None
+    supports_remove_device: bool | None
+    _supports_options: bool | None
+    _supports_reconfigure: bool | None
+    update_listeners: list[UpdateListenerType]
+    _async_cancel_retry_setup: Callable[[], Any] | None
+    _on_unload: list[Callable[[], Coroutine[Any, Any, None] | None]] | None
+    reload_lock: asyncio.Lock
+    _reauth_lock: asyncio.Lock
+    _reconfigure_lock: asyncio.Lock
+    _tasks: set[asyncio.Future[Any]]
+    _background_tasks: set[asyncio.Future[Any]]
+    _integration_for_domain: loader.Integration | None
+    _tries: int
 
     def __init__(
         self,
@@ -334,7 +350,7 @@ class ConfigEntry:
         _setter(self, "pref_disable_polling", pref_disable_polling)
 
         # Source of the configuration (user, discovery, cloud)
-        self.source = source
+        _setter(self, "source", source)
 
         # State of the entry (LOADED, NOT_LOADED)
         _setter(self, "state", state)
@@ -355,22 +371,22 @@ class ConfigEntry:
                 error_if_core=False,
             )
             disabled_by = ConfigEntryDisabler(disabled_by)
-        self.disabled_by = disabled_by
+        _setter(self, "disabled_by", disabled_by)
 
         # Supports unload
-        self.supports_unload: bool | None = None
+        _setter(self, "supports_unload", None)
 
         # Supports remove device
-        self.supports_remove_device: bool | None = None
+        _setter(self, "supports_remove_device", None)
 
         # Supports options
-        self._supports_options: bool | None = None
+        _setter(self, "_supports_options", None)
 
         # Supports reconfigure
-        self._supports_reconfigure: bool | None = None
+        _setter(self, "_supports_reconfigure", None)
 
         # Listeners to call on update
-        self.update_listeners: list[UpdateListenerType] = []
+        _setter(self, "update_listeners", [])
 
         # Reason why config entry is in a failed state
         _setter(self, "reason", None)
@@ -378,25 +394,23 @@ class ConfigEntry:
         _setter(self, "error_reason_translation_placeholders", None)
 
         # Function to cancel a scheduled retry
-        self._async_cancel_retry_setup: Callable[[], Any] | None = None
+        _setter(self, "_async_cancel_retry_setup", None)
 
         # Hold list for actions to call on unload.
-        self._on_unload: list[Callable[[], Coroutine[Any, Any, None] | None]] | None = (
-            None
-        )
+        _setter(self, "_on_unload", None)
 
         # Reload lock to prevent conflicting reloads
-        self.reload_lock = asyncio.Lock()
+        _setter(self, "reload_lock", asyncio.Lock())
         # Reauth lock to prevent concurrent reauth flows
-        self._reauth_lock = asyncio.Lock()
+        _setter(self, "_reauth_lock", asyncio.Lock())
         # Reconfigure lock to prevent concurrent reconfigure flows
-        self._reconfigure_lock = asyncio.Lock()
+        _setter(self, "_reconfigure_lock", asyncio.Lock())
 
-        self._tasks: set[asyncio.Future[Any]] = set()
-        self._background_tasks: set[asyncio.Future[Any]] = set()
+        _setter(self, "_tasks", set())
+        _setter(self, "_background_tasks", set())
 
-        self._integration_for_domain: loader.Integration | None = None
-        self._tries = 0
+        _setter(self, "_integration_for_domain", None)
+        _setter(self, "_tries", 0)
 
     def __repr__(self) -> str:
         """Representation of ConfigEntry."""
