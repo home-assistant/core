@@ -10,7 +10,7 @@ from syrupy import SnapshotAssertion
 
 from homeassistant.components.husqvarna_automower.const import DOMAIN
 from homeassistant.components.husqvarna_automower.coordinator import SCAN_INTERVAL
-from homeassistant.const import Platform
+from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -43,9 +43,9 @@ async def test_sensor_unknown_states(
     mock_automower_client.get_status.return_value = values
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     state = hass.states.get("sensor.test_mower_1_mode")
-    assert state.state == "unknown"
+    assert state.state == STATE_UNKNOWN
 
 
 async def test_cutting_blade_usage_time_sensor(
@@ -91,9 +91,9 @@ async def test_next_start_sensor(
     mock_automower_client.get_status.return_value = values
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     state = hass.states.get("sensor.test_mower_1_next_start")
-    assert state.state == "unknown"
+    assert state.state == STATE_UNKNOWN
 
 
 @pytest.mark.parametrize(
@@ -148,7 +148,7 @@ async def test_error_sensor(
         mock_automower_client.get_status.return_value = values
         freezer.tick(SCAN_INTERVAL)
         async_fire_time_changed(hass)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         state = hass.states.get("sensor.test_mower_1_error")
         assert state.state == expected_state
 
