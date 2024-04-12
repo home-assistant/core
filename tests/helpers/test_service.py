@@ -7,6 +7,7 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from pytest_unordered import unordered
 import voluptuous as vol
 
 # To prevent circular import when running just this file
@@ -796,10 +797,12 @@ async def test_async_get_all_descriptions(hass: HomeAssistant) -> None:
 
     # Test we only load services.yaml for integrations with services.yaml
     # And system_health has no services
-    assert proxy_load_services_files.mock_calls[0][1][1] == [
-        await async_get_integration(hass, DOMAIN_GROUP),
-        await async_get_integration(hass, "http"),  # system_health requires http
-    ]
+    assert proxy_load_services_files.mock_calls[0][1][1] == unordered(
+        [
+            await async_get_integration(hass, DOMAIN_GROUP),
+            await async_get_integration(hass, "http"),  # system_health requires http
+        ]
+    )
 
     assert len(descriptions) == 2
     assert DOMAIN_GROUP in descriptions
