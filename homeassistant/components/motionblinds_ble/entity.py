@@ -1,4 +1,4 @@
-"""Base entity for the Motionblinds BLE integration."""
+"""Base entities for the Motionblinds Bluetooth integration."""
 
 import logging
 
@@ -16,13 +16,13 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class MotionblindsBLEEntity(Entity):
-    """Base class for Motionblinds BLE entities."""
+    """Base class for Motionblinds Bluetooth entities."""
 
     _attr_has_entity_name = True
     _attr_should_poll = False
 
-    _device: MotionDevice
-    config_entry: ConfigEntry
+    device: MotionDevice
+    entry: ConfigEntry
 
     def __init__(
         self,
@@ -32,13 +32,12 @@ class MotionblindsBLEEntity(Entity):
         unique_id_suffix: str | None = None,
     ) -> None:
         """Initialize the entity."""
-        self._attr_unique_id: str = (
-            entry.data[CONF_ADDRESS]
-            if unique_id_suffix is None
-            else f"{entry.data[CONF_ADDRESS]}_{unique_id_suffix}"
-        )
-        self._device = device
-        self.config_entry = entry
+        if unique_id_suffix is None:
+            self._attr_unique_id = entry.data[CONF_ADDRESS]
+        else:
+            self._attr_unique_id = f"{entry.data[CONF_ADDRESS]}_{unique_id_suffix}"
+        self.device = device
+        self.entry = entry
         self.entity_description = entity_description
         self._attr_device_info = DeviceInfo(
             connections={(CONNECTION_BLUETOOTH, entry.data[CONF_ADDRESS])},
@@ -49,5 +48,5 @@ class MotionblindsBLEEntity(Entity):
 
     async def async_update(self) -> None:
         """Update state, called by HA if there is a poll interval and by the service homeassistant.update_entity."""
-        _LOGGER.debug("(%s) Updating entity", self.config_entry.data[CONF_MAC_CODE])
-        await self._device.connect()
+        _LOGGER.debug("(%s) Updating entity", self.entry.data[CONF_MAC_CODE])
+        await self.device.status_query()

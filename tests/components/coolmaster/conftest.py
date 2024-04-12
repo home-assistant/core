@@ -64,7 +64,7 @@ class CoolMasterNetUnitMock:
         self._attributes["mode"] = value
         return CoolMasterNetUnitMock(self.unit_id, self._attributes)
 
-    async def set_thermostat(self, value: int | float) -> CoolMasterNetUnitMock:
+    async def set_thermostat(self, value: float) -> CoolMasterNetUnitMock:
         """Set the target temperature."""
         self._attributes["thermostat"] = value
         return CoolMasterNetUnitMock(self.unit_id, self._attributes)

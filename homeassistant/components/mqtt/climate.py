@@ -272,12 +272,12 @@ _PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
         vol.Optional(CONF_FAN_MODE_STATE_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_HUMIDITY_COMMAND_TEMPLATE): cv.template,
         vol.Optional(CONF_HUMIDITY_COMMAND_TOPIC): valid_publish_topic,
-        vol.Optional(CONF_HUMIDITY_MIN, default=DEFAULT_MIN_HUMIDITY): vol.Coerce(
-            float
-        ),
-        vol.Optional(CONF_HUMIDITY_MAX, default=DEFAULT_MAX_HUMIDITY): vol.Coerce(
-            float
-        ),
+        vol.Optional(
+            CONF_HUMIDITY_MIN, default=DEFAULT_MIN_HUMIDITY
+        ): cv.positive_float,
+        vol.Optional(
+            CONF_HUMIDITY_MAX, default=DEFAULT_MAX_HUMIDITY
+        ): cv.positive_float,
         vol.Optional(CONF_HUMIDITY_STATE_TEMPLATE): cv.template,
         vol.Optional(CONF_HUMIDITY_STATE_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_MODE_COMMAND_TEMPLATE): cv.template,
@@ -865,7 +865,7 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
             await self.async_set_hvac_mode(operation_mode)
         await super().async_set_temperature(**kwargs)
 
-    async def async_set_humidity(self, humidity: int) -> None:
+    async def async_set_humidity(self, humidity: float) -> None:
         """Set new target humidity."""
 
         await self._set_climate_attribute(

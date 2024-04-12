@@ -45,7 +45,7 @@
           'labels': list([
           ]),
           'manufacturer': 'Enphase',
-          'model': 'Envoy, phases: 3, phase mode: three, net-consumption CT, production CT',
+          'model': 'Envoy, phases: 3, phase mode: three, net-consumption CT, production CT, storage CT',
           'name': 'Envoy <<envoyserial>>',
           'name_by_user': None,
           'serial_number': '<<envoyserial>>',
@@ -3092,6 +3092,965 @@
             }),
             'state': None,
           }),
+          dict({
+            'entity': dict({
+              'aliases': list([
+              ]),
+              'area_id': None,
+              'capabilities': dict({
+                'state_class': 'total_increasing',
+              }),
+              'categories': dict({
+              }),
+              'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'device_class': None,
+              'disabled_by': None,
+              'domain': 'sensor',
+              'entity_category': None,
+              'entity_id': 'sensor.envoy_<<envoyserial>>_lifetime_battery_energy_discharged',
+              'has_entity_name': True,
+              'hidden_by': None,
+              'icon': None,
+              'labels': list([
+              ]),
+              'name': None,
+              'options': dict({
+                'sensor': dict({
+                  'suggested_display_precision': 3,
+                }),
+                'sensor.private': dict({
+                  'suggested_unit_of_measurement': 'MWh',
+                }),
+              }),
+              'original_device_class': 'energy',
+              'original_icon': 'mdi:flash',
+              'original_name': 'Lifetime battery energy discharged',
+              'platform': 'enphase_envoy',
+              'previous_unique_id': None,
+              'supported_features': 0,
+              'translation_key': 'lifetime_battery_discharged',
+              'unique_id': '<<envoyserial>>_lifetime_battery_discharged',
+              'unit_of_measurement': 'MWh',
+            }),
+            'state': dict({
+              'attributes': dict({
+                'device_class': 'energy',
+                'friendly_name': 'Envoy <<envoyserial>> Lifetime battery energy discharged',
+                'icon': 'mdi:flash',
+                'state_class': 'total_increasing',
+                'unit_of_measurement': 'MWh',
+              }),
+              'entity_id': 'sensor.envoy_<<envoyserial>>_lifetime_battery_energy_discharged',
+              'state': '0.03<<envoyserial>>',
+            }),
+          }),
+          dict({
+            'entity': dict({
+              'aliases': list([
+              ]),
+              'area_id': None,
+              'capabilities': dict({
+                'state_class': 'total_increasing',
+              }),
+              'categories': dict({
+              }),
+              'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'device_class': None,
+              'disabled_by': None,
+              'domain': 'sensor',
+              'entity_category': None,
+              'entity_id': 'sensor.envoy_<<envoyserial>>_lifetime_battery_energy_charged',
+              'has_entity_name': True,
+              'hidden_by': None,
+              'icon': None,
+              'labels': list([
+              ]),
+              'name': None,
+              'options': dict({
+                'sensor': dict({
+                  'suggested_display_precision': 3,
+                }),
+                'sensor.private': dict({
+                  'suggested_unit_of_measurement': 'MWh',
+                }),
+              }),
+              'original_device_class': 'energy',
+              'original_icon': 'mdi:flash',
+              'original_name': 'Lifetime battery energy charged',
+              'platform': 'enphase_envoy',
+              'previous_unique_id': None,
+              'supported_features': 0,
+              'translation_key': 'lifetime_battery_charged',
+              'unique_id': '<<envoyserial>>_lifetime_battery_charged',
+              'unit_of_measurement': 'MWh',
+            }),
+            'state': dict({
+              'attributes': dict({
+                'device_class': 'energy',
+                'friendly_name': 'Envoy <<envoyserial>> Lifetime battery energy charged',
+                'icon': 'mdi:flash',
+                'state_class': 'total_increasing',
+                'unit_of_measurement': 'MWh',
+              }),
+              'entity_id': 'sensor.envoy_<<envoyserial>>_lifetime_battery_energy_charged',
+              'state': '0.032345',
+            }),
+          }),
+          dict({
+            'entity': dict({
+              'aliases': list([
+              ]),
+              'area_id': None,
+              'capabilities': dict({
+                'state_class': 'measurement',
+              }),
+              'categories': dict({
+              }),
+              'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'device_class': None,
+              'disabled_by': None,
+              'domain': 'sensor',
+              'entity_category': None,
+              'entity_id': 'sensor.envoy_<<envoyserial>>_current_battery_discharge',
+              'has_entity_name': True,
+              'hidden_by': None,
+              'icon': None,
+              'labels': list([
+              ]),
+              'name': None,
+              'options': dict({
+                'sensor': dict({
+                  'suggested_display_precision': 3,
+                }),
+                'sensor.private': dict({
+                  'suggested_unit_of_measurement': 'kW',
+                }),
+              }),
+              'original_device_class': 'power',
+              'original_icon': 'mdi:flash',
+              'original_name': 'Current battery discharge',
+              'platform': 'enphase_envoy',
+              'previous_unique_id': None,
+              'supported_features': 0,
+              'translation_key': 'battery_discharge',
+              'unique_id': '<<envoyserial>>_battery_discharge',
+              'unit_of_measurement': 'kW',
+            }),
+            'state': dict({
+              'attributes': dict({
+                'device_class': 'power',
+                'friendly_name': 'Envoy <<envoyserial>> Current battery discharge',
+                'icon': 'mdi:flash',
+                'state_class': 'measurement',
+                'unit_of_measurement': 'kW',
+              }),
+              'entity_id': 'sensor.envoy_<<envoyserial>>_current_battery_discharge',
+              'state': '0.103',
+            }),
+          }),
+          dict({
+            'entity': dict({
+              'aliases': list([
+              ]),
+              'area_id': None,
+              'capabilities': dict({
+                'state_class': 'measurement',
+              }),
+              'categories': dict({
+              }),
+              'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'device_class': None,
+              'disabled_by': 'integration',
+              'domain': 'sensor',
+              'entity_category': None,
+              'entity_id': 'sensor.envoy_<<envoyserial>>_voltage_storage_ct',
+              'has_entity_name': True,
+              'hidden_by': None,
+              'icon': None,
+              'labels': list([
+              ]),
+              'name': None,
+              'options': dict({
+                'sensor.private': dict({
+                  'suggested_unit_of_measurement': 'V',
+                }),
+              }),
+              'original_device_class': 'voltage',
+              'original_icon': 'mdi:flash',
+              'original_name': 'Voltage storage CT',
+              'platform': 'enphase_envoy',
+              'previous_unique_id': None,
+              'supported_features': 0,
+              'translation_key': 'storage_ct_voltage',
+              'unique_id': '<<envoyserial>>_storage_voltage',
+              'unit_of_measurement': 'V',
+            }),
+            'state': None,
+          }),
+          dict({
+            'entity': dict({
+              'aliases': list([
+              ]),
+              'area_id': None,
+              'capabilities': dict({
+                'options': list([
+                  'normal',
+                  'not-metering',
+                  'check-wiring',
+                ]),
+              }),
+              'categories': dict({
+              }),
+              'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'device_class': None,
+              'disabled_by': 'integration',
+              'domain': 'sensor',
+              'entity_category': None,
+              'entity_id': 'sensor.envoy_<<envoyserial>>_metering_status_storage_ct',
+              'has_entity_name': True,
+              'hidden_by': None,
+              'icon': None,
+              'labels': list([
+              ]),
+              'name': None,
+              'options': dict({
+              }),
+              'original_device_class': 'enum',
+              'original_icon': 'mdi:flash',
+              'original_name': 'Metering status storage CT',
+              'platform': 'enphase_envoy',
+              'previous_unique_id': None,
+              'supported_features': 0,
+              'translation_key': 'storage_ct_metering_status',
+              'unique_id': '<<envoyserial>>_storage_ct_metering_status',
+              'unit_of_measurement': None,
+            }),
+            'state': None,
+          }),
+          dict({
+            'entity': dict({
+              'aliases': list([
+              ]),
+              'area_id': None,
+              'capabilities': None,
+              'categories': dict({
+              }),
+              'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'device_class': None,
+              'disabled_by': 'integration',
+              'domain': 'sensor',
+              'entity_category': None,
+              'entity_id': 'sensor.envoy_<<envoyserial>>_meter_status_flags_active_storage_ct',
+              'has_entity_name': True,
+              'hidden_by': None,
+              'icon': None,
+              'labels': list([
+              ]),
+              'name': None,
+              'options': dict({
+              }),
+              'original_device_class': None,
+              'original_icon': 'mdi:flash',
+              'original_name': 'Meter status flags active storage CT',
+              'platform': 'enphase_envoy',
+              'previous_unique_id': None,
+              'supported_features': 0,
+              'translation_key': 'storage_ct_status_flags',
+              'unique_id': '<<envoyserial>>_storage_ct_status_flags',
+              'unit_of_measurement': None,
+            }),
+            'state': None,
+          }),
+          dict({
+            'entity': dict({
+              'aliases': list([
+              ]),
+              'area_id': None,
+              'capabilities': dict({
+                'state_class': 'total_increasing',
+              }),
+              'categories': dict({
+              }),
+              'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'device_class': None,
+              'disabled_by': 'integration',
+              'domain': 'sensor',
+              'entity_category': None,
+              'entity_id': 'sensor.envoy_<<envoyserial>>_lifetime_battery_energy_discharged_l1',
+              'has_entity_name': True,
+              'hidden_by': None,
+              'icon': None,
+              'labels': list([
+              ]),
+              'name': None,
+              'options': dict({
+                'sensor.private': dict({
+                  'suggested_unit_of_measurement': 'MWh',
+                }),
+              }),
+              'original_device_class': 'energy',
+              'original_icon': 'mdi:flash',
+              'original_name': 'Lifetime battery energy discharged l1',
+              'platform': 'enphase_envoy',
+              'previous_unique_id': None,
+              'supported_features': 0,
+              'translation_key': 'lifetime_battery_discharged_phase',
+              'unique_id': '<<envoyserial>>_lifetime_battery_discharged_l1',
+              'unit_of_measurement': 'MWh',
+            }),
+            'state': None,
+          }),
+          dict({
+            'entity': dict({
+              'aliases': list([
+              ]),
+              'area_id': None,
+              'capabilities': dict({
+                'state_class': 'total_increasing',
+              }),
+              'categories': dict({
+              }),
+              'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'device_class': None,
+              'disabled_by': 'integration',
+              'domain': 'sensor',
+              'entity_category': None,
+              'entity_id': 'sensor.envoy_<<envoyserial>>_lifetime_battery_energy_charged_l1',
+              'has_entity_name': True,
+              'hidden_by': None,
+              'icon': None,
+              'labels': list([
+              ]),
+              'name': None,
+              'options': dict({
+                'sensor.private': dict({
+                  'suggested_unit_of_measurement': 'MWh',
+                }),
+              }),
+              'original_device_class': 'energy',
+              'original_icon': 'mdi:flash',
+              'original_name': 'Lifetime battery energy charged l1',
+              'platform': 'enphase_envoy',
+              'previous_unique_id': None,
+              'supported_features': 0,
+              'translation_key': 'lifetime_battery_charged_phase',
+              'unique_id': '<<envoyserial>>_lifetime_battery_charged_l1',
+              'unit_of_measurement': 'MWh',
+            }),
+            'state': None,
+          }),
+          dict({
+            'entity': dict({
+              'aliases': list([
+              ]),
+              'area_id': None,
+              'capabilities': dict({
+                'state_class': 'measurement',
+              }),
+              'categories': dict({
+              }),
+              'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'device_class': None,
+              'disabled_by': 'integration',
+              'domain': 'sensor',
+              'entity_category': None,
+              'entity_id': 'sensor.envoy_<<envoyserial>>_current_battery_discharge_l1',
+              'has_entity_name': True,
+              'hidden_by': None,
+              'icon': None,
+              'labels': list([
+              ]),
+              'name': None,
+              'options': dict({
+                'sensor.private': dict({
+                  'suggested_unit_of_measurement': 'kW',
+                }),
+              }),
+              'original_device_class': 'power',
+              'original_icon': 'mdi:flash',
+              'original_name': 'Current battery discharge l1',
+              'platform': 'enphase_envoy',
+              'previous_unique_id': None,
+              'supported_features': 0,
+              'translation_key': 'battery_discharge_phase',
+              'unique_id': '<<envoyserial>>_battery_discharge_l1',
+              'unit_of_measurement': 'kW',
+            }),
+            'state': None,
+          }),
+          dict({
+            'entity': dict({
+              'aliases': list([
+              ]),
+              'area_id': None,
+              'capabilities': dict({
+                'state_class': 'measurement',
+              }),
+              'categories': dict({
+              }),
+              'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'device_class': None,
+              'disabled_by': 'integration',
+              'domain': 'sensor',
+              'entity_category': None,
+              'entity_id': 'sensor.envoy_<<envoyserial>>_voltage_storage_ct_l1',
+              'has_entity_name': True,
+              'hidden_by': None,
+              'icon': None,
+              'labels': list([
+              ]),
+              'name': None,
+              'options': dict({
+                'sensor.private': dict({
+                  'suggested_unit_of_measurement': 'V',
+                }),
+              }),
+              'original_device_class': 'voltage',
+              'original_icon': 'mdi:flash',
+              'original_name': 'Voltage storage CT l1',
+              'platform': 'enphase_envoy',
+              'previous_unique_id': None,
+              'supported_features': 0,
+              'translation_key': 'storage_ct_voltage_phase',
+              'unique_id': '<<envoyserial>>_storage_voltage_l1',
+              'unit_of_measurement': 'V',
+            }),
+            'state': None,
+          }),
+          dict({
+            'entity': dict({
+              'aliases': list([
+              ]),
+              'area_id': None,
+              'capabilities': dict({
+                'options': list([
+                  'normal',
+                  'not-metering',
+                  'check-wiring',
+                ]),
+              }),
+              'categories': dict({
+              }),
+              'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'device_class': None,
+              'disabled_by': 'integration',
+              'domain': 'sensor',
+              'entity_category': None,
+              'entity_id': 'sensor.envoy_<<envoyserial>>_metering_status_storage_ct_l1',
+              'has_entity_name': True,
+              'hidden_by': None,
+              'icon': None,
+              'labels': list([
+              ]),
+              'name': None,
+              'options': dict({
+              }),
+              'original_device_class': 'enum',
+              'original_icon': 'mdi:flash',
+              'original_name': 'Metering status storage CT l1',
+              'platform': 'enphase_envoy',
+              'previous_unique_id': None,
+              'supported_features': 0,
+              'translation_key': 'storage_ct_metering_status_phase',
+              'unique_id': '<<envoyserial>>_storage_ct_metering_status_l1',
+              'unit_of_measurement': None,
+            }),
+            'state': None,
+          }),
+          dict({
+            'entity': dict({
+              'aliases': list([
+              ]),
+              'area_id': None,
+              'capabilities': None,
+              'categories': dict({
+              }),
+              'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'device_class': None,
+              'disabled_by': 'integration',
+              'domain': 'sensor',
+              'entity_category': None,
+              'entity_id': 'sensor.envoy_<<envoyserial>>_meter_status_flags_active_storage_ct_l1',
+              'has_entity_name': True,
+              'hidden_by': None,
+              'icon': None,
+              'labels': list([
+              ]),
+              'name': None,
+              'options': dict({
+              }),
+              'original_device_class': None,
+              'original_icon': 'mdi:flash',
+              'original_name': 'Meter status flags active storage CT l1',
+              'platform': 'enphase_envoy',
+              'previous_unique_id': None,
+              'supported_features': 0,
+              'translation_key': 'storage_ct_status_flags_phase',
+              'unique_id': '<<envoyserial>>_storage_ct_status_flags_l1',
+              'unit_of_measurement': None,
+            }),
+            'state': None,
+          }),
+          dict({
+            'entity': dict({
+              'aliases': list([
+              ]),
+              'area_id': None,
+              'capabilities': dict({
+                'state_class': 'total_increasing',
+              }),
+              'categories': dict({
+              }),
+              'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'device_class': None,
+              'disabled_by': 'integration',
+              'domain': 'sensor',
+              'entity_category': None,
+              'entity_id': 'sensor.envoy_<<envoyserial>>_lifetime_battery_energy_discharged_l2',
+              'has_entity_name': True,
+              'hidden_by': None,
+              'icon': None,
+              'labels': list([
+              ]),
+              'name': None,
+              'options': dict({
+                'sensor.private': dict({
+                  'suggested_unit_of_measurement': 'MWh',
+                }),
+              }),
+              'original_device_class': 'energy',
+              'original_icon': 'mdi:flash',
+              'original_name': 'Lifetime battery energy discharged l2',
+              'platform': 'enphase_envoy',
+              'previous_unique_id': None,
+              'supported_features': 0,
+              'translation_key': 'lifetime_battery_discharged_phase',
+              'unique_id': '<<envoyserial>>_lifetime_battery_discharged_l2',
+              'unit_of_measurement': 'MWh',
+            }),
+            'state': None,
+          }),
+          dict({
+            'entity': dict({
+              'aliases': list([
+              ]),
+              'area_id': None,
+              'capabilities': dict({
+                'state_class': 'total_increasing',
+              }),
+              'categories': dict({
+              }),
+              'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'device_class': None,
+              'disabled_by': 'integration',
+              'domain': 'sensor',
+              'entity_category': None,
+              'entity_id': 'sensor.envoy_<<envoyserial>>_lifetime_battery_energy_charged_l2',
+              'has_entity_name': True,
+              'hidden_by': None,
+              'icon': None,
+              'labels': list([
+              ]),
+              'name': None,
+              'options': dict({
+                'sensor.private': dict({
+                  'suggested_unit_of_measurement': 'MWh',
+                }),
+              }),
+              'original_device_class': 'energy',
+              'original_icon': 'mdi:flash',
+              'original_name': 'Lifetime battery energy charged l2',
+              'platform': 'enphase_envoy',
+              'previous_unique_id': None,
+              'supported_features': 0,
+              'translation_key': 'lifetime_battery_charged_phase',
+              'unique_id': '<<envoyserial>>_lifetime_battery_charged_l2',
+              'unit_of_measurement': 'MWh',
+            }),
+            'state': None,
+          }),
+          dict({
+            'entity': dict({
+              'aliases': list([
+              ]),
+              'area_id': None,
+              'capabilities': dict({
+                'state_class': 'measurement',
+              }),
+              'categories': dict({
+              }),
+              'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'device_class': None,
+              'disabled_by': 'integration',
+              'domain': 'sensor',
+              'entity_category': None,
+              'entity_id': 'sensor.envoy_<<envoyserial>>_current_battery_discharge_l2',
+              'has_entity_name': True,
+              'hidden_by': None,
+              'icon': None,
+              'labels': list([
+              ]),
+              'name': None,
+              'options': dict({
+                'sensor.private': dict({
+                  'suggested_unit_of_measurement': 'kW',
+                }),
+              }),
+              'original_device_class': 'power',
+              'original_icon': 'mdi:flash',
+              'original_name': 'Current battery discharge l2',
+              'platform': 'enphase_envoy',
+              'previous_unique_id': None,
+              'supported_features': 0,
+              'translation_key': 'battery_discharge_phase',
+              'unique_id': '<<envoyserial>>_battery_discharge_l2',
+              'unit_of_measurement': 'kW',
+            }),
+            'state': None,
+          }),
+          dict({
+            'entity': dict({
+              'aliases': list([
+              ]),
+              'area_id': None,
+              'capabilities': dict({
+                'state_class': 'measurement',
+              }),
+              'categories': dict({
+              }),
+              'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'device_class': None,
+              'disabled_by': 'integration',
+              'domain': 'sensor',
+              'entity_category': None,
+              'entity_id': 'sensor.envoy_<<envoyserial>>_voltage_storage_ct_l2',
+              'has_entity_name': True,
+              'hidden_by': None,
+              'icon': None,
+              'labels': list([
+              ]),
+              'name': None,
+              'options': dict({
+                'sensor.private': dict({
+                  'suggested_unit_of_measurement': 'V',
+                }),
+              }),
+              'original_device_class': 'voltage',
+              'original_icon': 'mdi:flash',
+              'original_name': 'Voltage storage CT l2',
+              'platform': 'enphase_envoy',
+              'previous_unique_id': None,
+              'supported_features': 0,
+              'translation_key': 'storage_ct_voltage_phase',
+              'unique_id': '<<envoyserial>>_storage_voltage_l2',
+              'unit_of_measurement': 'V',
+            }),
+            'state': None,
+          }),
+          dict({
+            'entity': dict({
+              'aliases': list([
+              ]),
+              'area_id': None,
+              'capabilities': dict({
+                'options': list([
+                  'normal',
+                  'not-metering',
+                  'check-wiring',
+                ]),
+              }),
+              'categories': dict({
+              }),
+              'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'device_class': None,
+              'disabled_by': 'integration',
+              'domain': 'sensor',
+              'entity_category': None,
+              'entity_id': 'sensor.envoy_<<envoyserial>>_metering_status_storage_ct_l2',
+              'has_entity_name': True,
+              'hidden_by': None,
+              'icon': None,
+              'labels': list([
+              ]),
+              'name': None,
+              'options': dict({
+              }),
+              'original_device_class': 'enum',
+              'original_icon': 'mdi:flash',
+              'original_name': 'Metering status storage CT l2',
+              'platform': 'enphase_envoy',
+              'previous_unique_id': None,
+              'supported_features': 0,
+              'translation_key': 'storage_ct_metering_status_phase',
+              'unique_id': '<<envoyserial>>_storage_ct_metering_status_l2',
+              'unit_of_measurement': None,
+            }),
+            'state': None,
+          }),
+          dict({
+            'entity': dict({
+              'aliases': list([
+              ]),
+              'area_id': None,
+              'capabilities': None,
+              'categories': dict({
+              }),
+              'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'device_class': None,
+              'disabled_by': 'integration',
+              'domain': 'sensor',
+              'entity_category': None,
+              'entity_id': 'sensor.envoy_<<envoyserial>>_meter_status_flags_active_storage_ct_l2',
+              'has_entity_name': True,
+              'hidden_by': None,
+              'icon': None,
+              'labels': list([
+              ]),
+              'name': None,
+              'options': dict({
+              }),
+              'original_device_class': None,
+              'original_icon': 'mdi:flash',
+              'original_name': 'Meter status flags active storage CT l2',
+              'platform': 'enphase_envoy',
+              'previous_unique_id': None,
+              'supported_features': 0,
+              'translation_key': 'storage_ct_status_flags_phase',
+              'unique_id': '<<envoyserial>>_storage_ct_status_flags_l2',
+              'unit_of_measurement': None,
+            }),
+            'state': None,
+          }),
+          dict({
+            'entity': dict({
+              'aliases': list([
+              ]),
+              'area_id': None,
+              'capabilities': dict({
+                'state_class': 'total_increasing',
+              }),
+              'categories': dict({
+              }),
+              'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'device_class': None,
+              'disabled_by': 'integration',
+              'domain': 'sensor',
+              'entity_category': None,
+              'entity_id': 'sensor.envoy_<<envoyserial>>_lifetime_battery_energy_discharged_l3',
+              'has_entity_name': True,
+              'hidden_by': None,
+              'icon': None,
+              'labels': list([
+              ]),
+              'name': None,
+              'options': dict({
+                'sensor.private': dict({
+                  'suggested_unit_of_measurement': 'MWh',
+                }),
+              }),
+              'original_device_class': 'energy',
+              'original_icon': 'mdi:flash',
+              'original_name': 'Lifetime battery energy discharged l3',
+              'platform': 'enphase_envoy',
+              'previous_unique_id': None,
+              'supported_features': 0,
+              'translation_key': 'lifetime_battery_discharged_phase',
+              'unique_id': '<<envoyserial>>_lifetime_battery_discharged_l3',
+              'unit_of_measurement': 'MWh',
+            }),
+            'state': None,
+          }),
+          dict({
+            'entity': dict({
+              'aliases': list([
+              ]),
+              'area_id': None,
+              'capabilities': dict({
+                'state_class': 'total_increasing',
+              }),
+              'categories': dict({
+              }),
+              'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'device_class': None,
+              'disabled_by': 'integration',
+              'domain': 'sensor',
+              'entity_category': None,
+              'entity_id': 'sensor.envoy_<<envoyserial>>_lifetime_battery_energy_charged_l3',
+              'has_entity_name': True,
+              'hidden_by': None,
+              'icon': None,
+              'labels': list([
+              ]),
+              'name': None,
+              'options': dict({
+                'sensor.private': dict({
+                  'suggested_unit_of_measurement': 'MWh',
+                }),
+              }),
+              'original_device_class': 'energy',
+              'original_icon': 'mdi:flash',
+              'original_name': 'Lifetime battery energy charged l3',
+              'platform': 'enphase_envoy',
+              'previous_unique_id': None,
+              'supported_features': 0,
+              'translation_key': 'lifetime_battery_charged_phase',
+              'unique_id': '<<envoyserial>>_lifetime_battery_charged_l3',
+              'unit_of_measurement': 'MWh',
+            }),
+            'state': None,
+          }),
+          dict({
+            'entity': dict({
+              'aliases': list([
+              ]),
+              'area_id': None,
+              'capabilities': dict({
+                'state_class': 'measurement',
+              }),
+              'categories': dict({
+              }),
+              'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'device_class': None,
+              'disabled_by': 'integration',
+              'domain': 'sensor',
+              'entity_category': None,
+              'entity_id': 'sensor.envoy_<<envoyserial>>_current_battery_discharge_l3',
+              'has_entity_name': True,
+              'hidden_by': None,
+              'icon': None,
+              'labels': list([
+              ]),
+              'name': None,
+              'options': dict({
+                'sensor.private': dict({
+                  'suggested_unit_of_measurement': 'kW',
+                }),
+              }),
+              'original_device_class': 'power',
+              'original_icon': 'mdi:flash',
+              'original_name': 'Current battery discharge l3',
+              'platform': 'enphase_envoy',
+              'previous_unique_id': None,
+              'supported_features': 0,
+              'translation_key': 'battery_discharge_phase',
+              'unique_id': '<<envoyserial>>_battery_discharge_l3',
+              'unit_of_measurement': 'kW',
+            }),
+            'state': None,
+          }),
+          dict({
+            'entity': dict({
+              'aliases': list([
+              ]),
+              'area_id': None,
+              'capabilities': dict({
+                'state_class': 'measurement',
+              }),
+              'categories': dict({
+              }),
+              'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'device_class': None,
+              'disabled_by': 'integration',
+              'domain': 'sensor',
+              'entity_category': None,
+              'entity_id': 'sensor.envoy_<<envoyserial>>_voltage_storage_ct_l3',
+              'has_entity_name': True,
+              'hidden_by': None,
+              'icon': None,
+              'labels': list([
+              ]),
+              'name': None,
+              'options': dict({
+                'sensor.private': dict({
+                  'suggested_unit_of_measurement': 'V',
+                }),
+              }),
+              'original_device_class': 'voltage',
+              'original_icon': 'mdi:flash',
+              'original_name': 'Voltage storage CT l3',
+              'platform': 'enphase_envoy',
+              'previous_unique_id': None,
+              'supported_features': 0,
+              'translation_key': 'storage_ct_voltage_phase',
+              'unique_id': '<<envoyserial>>_storage_voltage_l3',
+              'unit_of_measurement': 'V',
+            }),
+            'state': None,
+          }),
+          dict({
+            'entity': dict({
+              'aliases': list([
+              ]),
+              'area_id': None,
+              'capabilities': dict({
+                'options': list([
+                  'normal',
+                  'not-metering',
+                  'check-wiring',
+                ]),
+              }),
+              'categories': dict({
+              }),
+              'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'device_class': None,
+              'disabled_by': 'integration',
+              'domain': 'sensor',
+              'entity_category': None,
+              'entity_id': 'sensor.envoy_<<envoyserial>>_metering_status_storage_ct_l3',
+              'has_entity_name': True,
+              'hidden_by': None,
+              'icon': None,
+              'labels': list([
+              ]),
+              'name': None,
+              'options': dict({
+              }),
+              'original_device_class': 'enum',
+              'original_icon': 'mdi:flash',
+              'original_name': 'Metering status storage CT l3',
+              'platform': 'enphase_envoy',
+              'previous_unique_id': None,
+              'supported_features': 0,
+              'translation_key': 'storage_ct_metering_status_phase',
+              'unique_id': '<<envoyserial>>_storage_ct_metering_status_l3',
+              'unit_of_measurement': None,
+            }),
+            'state': None,
+          }),
+          dict({
+            'entity': dict({
+              'aliases': list([
+              ]),
+              'area_id': None,
+              'capabilities': None,
+              'categories': dict({
+              }),
+              'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'device_class': None,
+              'disabled_by': 'integration',
+              'domain': 'sensor',
+              'entity_category': None,
+              'entity_id': 'sensor.envoy_<<envoyserial>>_meter_status_flags_active_storage_ct_l3',
+              'has_entity_name': True,
+              'hidden_by': None,
+              'icon': None,
+              'labels': list([
+              ]),
+              'name': None,
+              'options': dict({
+              }),
+              'original_device_class': None,
+              'original_icon': 'mdi:flash',
+              'original_name': 'Meter status flags active storage CT l3',
+              'platform': 'enphase_envoy',
+              'previous_unique_id': None,
+              'supported_features': 0,
+              'translation_key': 'storage_ct_status_flags_phase',
+              'unique_id': '<<envoyserial>>_storage_ct_status_flags_l3',
+              'unit_of_measurement': None,
+            }),
+            'state': None,
+          }),
         ]),
       }),
       dict({
@@ -3244,6 +4203,24 @@
           'repr': "EnvoyMeterData(eid='100000013', timestamp=1708006113, energy_delivered=112343, energy_received=123453, active_power=50, power_factor=0.14, voltage=111, current=0.2, frequency=50.1, state=<CtState.ENABLED: 'enabled'>, measurement_type=<CtType.PRODUCTION: 'production'>, metering_status=<CtMeterStatus.NORMAL: 'normal'>, status_flags=[])",
         }),
       }),
+      'ctmeter_storage': dict({
+        '__type': "<class 'pyenphase.models.meters.EnvoyMeterData'>",
+        'repr': "EnvoyMeterData(eid='100000030', timestamp=1708006120, energy_delivered=31234, energy_received=32345, active_power=103, power_factor=0.23, voltage=113, current=0.4, frequency=50.3, state=<CtState.ENABLED: 'enabled'>, measurement_type=<CtType.STORAGE: 'storage'>, metering_status=<CtMeterStatus.NORMAL: 'normal'>, status_flags=[])",
+      }),
+      'ctmeter_storage_phases': dict({
+        'L1': dict({
+          '__type': "<class 'pyenphase.models.meters.EnvoyMeterData'>",
+          'repr': "EnvoyMeterData(eid='100000031', timestamp=1708006121, energy_delivered=312341, energy_received=323451, active_power=22, power_factor=0.32, voltage=113, current=0.4, frequency=50.3, state=<CtState.ENABLED: 'enabled'>, measurement_type=<CtType.STORAGE: 'storage'>, metering_status=<CtMeterStatus.NORMAL: 'normal'>, status_flags=[])",
+        }),
+        'L2': dict({
+          '__type': "<class 'pyenphase.models.meters.EnvoyMeterData'>",
+          'repr': "EnvoyMeterData(eid='100000032', timestamp=1708006122, energy_delivered=312342, energy_received=323452, active_power=33, power_factor=0.23, voltage=112, current=0.3, frequency=50.2, state=<CtState.ENABLED: 'enabled'>, measurement_type=<CtType.STORAGE: 'storage'>, metering_status=<CtMeterStatus.NORMAL: 'normal'>, status_flags=[])",
+        }),
+        'L3': dict({
+          '__type': "<class 'pyenphase.models.meters.EnvoyMeterData'>",
+          'repr': "EnvoyMeterData(eid='100000033', timestamp=1708006123, energy_delivered=312343, energy_received=323453, active_power=53, power_factor=0.24, voltage=112, current=0.3, frequency=50.2, state=<CtState.ENABLED: 'enabled'>, measurement_type=<CtType.STORAGE: 'storage'>, metering_status=<CtMeterStatus.NORMAL: 'normal'>, status_flags=[])",
+        }),
+      }),
       'dry_contact_settings': dict({
       }),
       'dry_contact_status': dict({
@@ -3299,10 +4276,11 @@
     'envoy_properties': dict({
       'active_phasecount': 3,
       'ct_consumption_meter': 'net-consumption',
-      'ct_count': 2,
+      'ct_count': 3,
       'ct_production_meter': 'production',
+      'ct_storage_meter': 'storage',
       'envoy_firmware': '7.1.2',
-      'envoy_model': 'Envoy, phases: 3, phase mode: three, net-consumption CT, production CT',
+      'envoy_model': 'Envoy, phases: 3, phase mode: three, net-consumption CT, production CT, storage CT',
       'part_number': '123456789',
       'phase_count': 3,
       'phase_mode': 'three',

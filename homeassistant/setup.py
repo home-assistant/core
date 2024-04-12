@@ -10,7 +10,6 @@ import contextvars
 from enum import StrEnum
 import logging.handlers
 import time
-from timeit import default_timer as timer
 from types import ModuleType
 from typing import Any, Final, TypedDict
 
@@ -34,9 +33,9 @@ from .helpers.issue_registry import IssueSeverity, async_create_issue
 from .helpers.typing import ConfigType
 from .util.async_ import create_eager_task
 
-current_setup_group: contextvars.ContextVar[
-    tuple[str, str | None] | None
-] = contextvars.ContextVar("current_setup_group", default=None)
+current_setup_group: contextvars.ContextVar[tuple[str, str | None] | None] = (
+    contextvars.ContextVar("current_setup_group", default=None)
+)
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -167,7 +166,6 @@ async def async_setup_component(
         setup_future.set_result(result)
         if setup_done_future := setup_done_futures.pop(domain, None):
             setup_done_future.set_result(result)
-        return result
     except BaseException as err:
         futures = [setup_future]
         if setup_done_future := setup_done_futures.pop(domain, None):
@@ -186,6 +184,7 @@ async def async_setup_component(
                 # if there are no concurrent setup attempts
                 await future
         raise
+    return result
 
 
 async def _async_process_dependencies(
@@ -286,6 +285,19 @@ async def _async_setup_component(  # noqa: C901
         log_error(f"Dependency is disabled - {integration.disabled}")
         return False
 
+    integration_set = {domain}
+
+    load_translations_task: asyncio.Task[None] | None = None
+    if integration.has_translations and not translation.async_translations_loaded(
+        hass, integration_set
+    ):
+        # For most cases we expect the translations are already
+        # loaded since we try to load them in bootstrap ahead of time.
+        # If for some reason the background task in bootstrap was too slow
+        # or the integration was added after bootstrap, we will load them here.
+        load_translations_task = create_eager_task(
+            translation.async_load_integrations(hass, integration_set)
+        )
     # Validate all dependencies exist and there are no circular dependencies
     if not await integration.resolve_dependencies():
         return False
@@ -351,19 +363,7 @@ async def _async_setup_component(  # noqa: C901
             },
         )
 
-    start = timer()
     _LOGGER.info("Setting up %s", domain)
-    integration_set = {domain}
-
-    load_translations_task: asyncio.Task[None] | None = None
-    if not translation.async_translations_loaded(hass, integration_set):
-        # For most cases we expect the translations are already
-        # loaded since we try to load them in bootstrap ahead of time.
-        # If for some reason the background task in bootstrap was too slow
-        # or the integration was added after bootstrap, we will load them here.
-        load_translations_task = create_eager_task(
-            translation.async_load_integrations(hass, integration_set)
-        )
 
     with async_start_setup(hass, integration=domain, phase=SetupPhases.SETUP):
         if hasattr(component, "PLATFORM_SCHEMA"):
@@ -412,11 +412,8 @@ async def _async_setup_component(  # noqa: C901
             async_notify_setup_error(hass, domain, integration.documentation)
             return False
         finally:
-            end = timer()
             if warn_task:
                 warn_task.cancel()
-        _LOGGER.info("Setup of domain %s took %.1f seconds", domain, end - start)
-
         if result is False:
             log_error("Integration failed to initialize.")
             return False
@@ -458,7 +455,7 @@ async def _async_setup_component(  # noqa: C901
     if domain in hass.data[DATA_SETUP]:
         hass.data[DATA_SETUP].pop(domain)
 
-    hass.bus.async_fire(EVENT_COMPONENT_LOADED, {ATTR_COMPONENT: domain})
+    hass.bus.async_fire(EVENT_COMPONENT_LOADED, EventComponentLoaded(component=domain))
 
     return True
 
@@ -506,6 +503,12 @@ async def async_prepare_setup_platform(
         except ImportError as exc:
             log_error(f"Unable to import the component ({exc}).")
             return None
+
+    if not integration.platforms_exists((domain,)):
+        log_error(
+            f"Platform not found (No module named '{integration.pkg_path}.{domain}')"
+        )
+        return None
 
     try:
         platform = await integration.async_get_platform(domain)
@@ -612,14 +615,11 @@ def _async_when_setup(
             EVENT_COMPONENT_LOADED,
             _matched_event,
             event_filter=_async_is_component_filter,
-            run_immediately=True,
         )
     )
     if start_event:
         listeners.append(
-            hass.bus.async_listen(
-                EVENT_HOMEASSISTANT_START, _matched_event, run_immediately=True
-            )
+            hass.bus.async_listen(EVENT_HOMEASSISTANT_START, _matched_event)
         )
 
 
@@ -663,6 +663,15 @@ class SetupPhases(StrEnum):
     """Wait time for the packages to import."""
 
 
+def _setup_started(
+    hass: core.HomeAssistant,
+) -> dict[tuple[str, str | None], float]:
+    """Return the setup started dict."""
+    if DATA_SETUP_STARTED not in hass.data:
+        hass.data[DATA_SETUP_STARTED] = {}
+    return hass.data[DATA_SETUP_STARTED]  # type: ignore[no-any-return]
+
+
 @contextlib.contextmanager
 def async_pause_setup(
     hass: core.HomeAssistant, phase: SetupPhases
@@ -673,7 +682,9 @@ def async_pause_setup(
     setting up the base components so we can subtract it
     from the total setup time.
     """
-    if not (running := current_setup_group.get()):
+    if not (running := current_setup_group.get()) or running not in _setup_started(
+        hass
+    ):
         # This means we are likely in a late platform setup
         # that is running in a task so we do not want
         # to subtract out the time later as nothing is waiting
@@ -689,6 +700,13 @@ def async_pause_setup(
         integration, group = running
         # Add negative time for the time we waited
         _setup_times(hass)[integration][group][phase] = -time_taken
+        _LOGGER.debug(
+            "Adding wait for %s for %s (%s) of %.2f",
+            phase,
+            integration,
+            group,
+            time_taken,
+        )
 
 
 def _setup_times(
@@ -726,8 +744,7 @@ def async_start_setup(
         yield
         return
 
-    setup_started: dict[tuple[str, str | None], float]
-    setup_started = hass.data.setdefault(DATA_SETUP_STARTED, {})
+    setup_started = _setup_started(hass)
     current = (integration, group)
     if current in setup_started:
         # We are already inside another async_start_setup, this like means we
@@ -745,7 +762,26 @@ def async_start_setup(
     finally:
         time_taken = time.monotonic() - started
         del setup_started[current]
-        _setup_times(hass)[integration][group][phase] = time_taken
+        group_setup_times = _setup_times(hass)[integration][group]
+        # We may see the phase multiple times if there are multiple
+        # platforms, but we only care about the longest time.
+        group_setup_times[phase] = max(group_setup_times[phase], time_taken)
+        if group is None:
+            _LOGGER.info(
+                "Setup of domain %s took %.2f seconds", integration, time_taken
+            )
+        elif _LOGGER.isEnabledFor(logging.DEBUG):
+            wait_time = -sum(value for value in group_setup_times.values() if value < 0)
+            calculated_time = time_taken - wait_time
+            _LOGGER.debug(
+                "Phase %s for %s (%s) took %.2fs (elapsed=%.2fs) (wait_time=%.2fs)",
+                phase,
+                integration,
+                group,
+                calculated_time,
+                time_taken,
+                wait_time,
+            )
 
 
 @callback

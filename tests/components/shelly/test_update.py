@@ -199,7 +199,7 @@ async def test_block_update_auth_error(
     )
     entry = await init_integration(hass, 1)
 
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
@@ -209,7 +209,7 @@ async def test_block_update_auth_error(
     )
     await hass.async_block_till_done()
 
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
@@ -255,6 +255,16 @@ async def test_rpc_update(
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
+
+    assert mock_rpc_device.trigger_ota_update.call_count == 1
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "1"
+    assert state.attributes[ATTR_LATEST_VERSION] == "2"
+    assert state.attributes[ATTR_IN_PROGRESS] is True
+    assert state.attributes[ATTR_RELEASE_URL] == GEN2_RELEASE_URL
+
     inject_rpc_device_event(
         monkeypatch,
         mock_rpc_device,
@@ -270,14 +280,7 @@ async def test_rpc_update(
         },
     )
 
-    assert mock_rpc_device.trigger_ota_update.call_count == 1
-
-    state = hass.states.get(entity_id)
-    assert state.state == STATE_ON
-    assert state.attributes[ATTR_INSTALLED_VERSION] == "1"
-    assert state.attributes[ATTR_LATEST_VERSION] == "2"
-    assert state.attributes[ATTR_IN_PROGRESS] == 0
-    assert state.attributes[ATTR_RELEASE_URL] == GEN2_RELEASE_URL
+    assert hass.states.get(entity_id).attributes[ATTR_IN_PROGRESS] == 0
 
     inject_rpc_device_event(
         monkeypatch,
@@ -648,7 +651,7 @@ async def test_rpc_update_auth_error(
     )
     entry = await init_integration(hass, 2)
 
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
@@ -658,7 +661,7 @@ async def test_rpc_update_auth_error(
     )
 
     await hass.async_block_till_done()
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1

@@ -38,7 +38,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def setup_decrypt(
-    key_encoder: type[RawEncoder] | type[HexEncoder],
+    key_encoder: type[RawEncoder | HexEncoder],
 ) -> Callable[[bytes, bytes], bytes]:
     """Return decryption function and length of key.
 
@@ -55,7 +55,7 @@ def setup_decrypt(
 
 
 def setup_encrypt(
-    key_encoder: type[RawEncoder] | type[HexEncoder],
+    key_encoder: type[RawEncoder | HexEncoder],
 ) -> Callable[[bytes, bytes], bytes]:
     """Return encryption function and length of key.
 
@@ -75,7 +75,7 @@ def _decrypt_payload_helper(
     key: str | bytes,
     ciphertext: bytes,
     key_bytes: bytes,
-    key_encoder: type[RawEncoder] | type[HexEncoder],
+    key_encoder: type[RawEncoder | HexEncoder],
 ) -> JsonValueType | None:
     """Decrypt encrypted payload."""
     try:
@@ -104,8 +104,7 @@ def _convert_legacy_encryption_key(key: str) -> bytes:
     keylen = SecretBox.KEY_SIZE
     key_bytes = key.encode("utf-8")
     key_bytes = key_bytes[:keylen]
-    key_bytes = key_bytes.ljust(keylen, b"\0")
-    return key_bytes
+    return key_bytes.ljust(keylen, b"\0")
 
 
 def decrypt_payload_legacy(key: str, ciphertext: bytes) -> JsonValueType | None:

@@ -96,9 +96,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         discovery_responder.stop()
         registry.stop()
 
-    hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STOP, _on_hass_stop, run_immediately=True
-    )
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _on_hass_stop)
 
     yaml_config = config.get(DOMAIN, {})
     hass.data[DOMAIN] = WemoData(
@@ -193,6 +191,7 @@ class WemoDispatcher:
 
         platforms = set(WEMO_MODEL_DISPATCH.get(wemo.model_name, [Platform.SWITCH]))
         platforms.add(Platform.SENSOR)
+        platforms_to_load: list[Platform] = []
         for platform in platforms:
             # Three cases:
             # - Platform is loaded, dispatch discovery
@@ -205,14 +204,15 @@ class WemoDispatcher:
                 self._dispatch_backlog[platform].append(coordinator)
             else:
                 self._dispatch_backlog[platform] = [coordinator]
-                hass.async_create_task(
-                    hass.config_entries.async_forward_entry_setup(
-                        self._config_entry, platform
-                    )
-                )
+                platforms_to_load.append(platform)
 
         self._added_serial_numbers.add(wemo.serial_number)
         self._failed_serial_numbers.discard(wemo.serial_number)
+
+        if platforms_to_load:
+            await hass.config_entries.async_forward_entry_setups(
+                self._config_entry, platforms_to_load
+            )
 
     async def async_connect_platform(
         self, platform: Platform, dispatch: DispatchCallback

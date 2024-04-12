@@ -21,8 +21,8 @@ from .const import NAME
 
 _LOGGER = logging.getLogger(__name__)
 
-INTERVAL_SLOW = timedelta(seconds=60)
-INTERVAL_FAST = timedelta(seconds=6)
+INTERVAL_SLOW = timedelta(seconds=10)
+INTERVAL_FAST = timedelta(seconds=5)
 
 
 class JvcProjectorDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):

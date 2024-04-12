@@ -1,4 +1,4 @@
-"""Setup the MotionBlinds BLE tests."""
+"""Setup the Motionblinds Bluetooth tests."""
 
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -19,13 +19,18 @@ def motion_blinds_connect_fixture(enable_bluetooth):
     bleak_scanner = AsyncMock()
     bleak_scanner.discover.return_value = [device]
 
-    with patch(
-        "homeassistant.components.motionblinds_ble.config_flow.bluetooth.async_scanner_count",
-        return_value=1,
-    ), patch(
-        "homeassistant.components.motionblinds_ble.config_flow.bluetooth.async_get_scanner",
-        return_value=bleak_scanner,
-    ), patch(
-        "homeassistant.components.motionblinds_ble.async_setup_entry", return_value=True
+    with (
+        patch(
+            "homeassistant.components.motionblinds_ble.config_flow.bluetooth.async_scanner_count",
+            return_value=1,
+        ),
+        patch(
+            "homeassistant.components.motionblinds_ble.config_flow.bluetooth.async_get_scanner",
+            return_value=bleak_scanner,
+        ),
+        patch(
+            "homeassistant.components.motionblinds_ble.async_setup_entry",
+            return_value=True,
+        ),
     ):
         yield bleak_scanner, device

@@ -1,4 +1,4 @@
-"""Motionblinds BLE integration."""
+"""Motionblinds Bluetooth integration."""
 
 from __future__ import annotations
 
@@ -34,17 +34,15 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS: list[Platform] = [
-    Platform.COVER,
-]
+PLATFORMS: list[Platform] = [Platform.BUTTON, Platform.COVER, Platform.SELECT]
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up Motionblinds BLE integration."""
+    """Set up Motionblinds Bluetooth integration."""
 
-    _LOGGER.debug("Setting up Motionblinds BLE integration")
+    _LOGGER.debug("Setting up Motionblinds Bluetooth integration")
 
     # The correct time is needed for encryption
     _LOGGER.debug("Setting timezone for encryption: %s", hass.config.time_zone)
@@ -54,11 +52,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up Motionblinds BLE device from a config entry."""
+    """Set up Motionblinds Bluetooth device from a config entry."""
 
     _LOGGER.debug("(%s) Setting up device", entry.data[CONF_MAC_CODE])
 
-    # Create MotionDevice with BLEDevice
     ble_device = async_ble_device_from_address(hass, entry.data[CONF_ADDRESS])
     device = MotionDevice(
         ble_device if ble_device is not None else entry.data[CONF_ADDRESS],
@@ -66,14 +63,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     # Register Home Assistant functions to use in the library
-    device.set_ha_create_task(
+    device.set_create_task_factory(
         partial(
             entry.async_create_background_task,
             hass=hass,
             name=device.ble_device.address,
         )
     )
-    device.set_ha_call_later(partial(async_call_later, hass=hass))
+    device.set_call_later_factory(partial(async_call_later, hass=hass))
 
     # Register a callback that updates the BLEDevice in the library
     @callback
@@ -84,11 +81,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.debug("(%s) New BLE device found", service_info.address)
         device.set_ble_device(service_info.device, rssi=service_info.advertisement.rssi)
 
-    async_register_callback(
-        hass,
-        async_update_ble_device,
-        BluetoothCallbackMatcher(address=entry.data[CONF_ADDRESS]),
-        BluetoothScanningMode.ACTIVE,
+    entry.async_on_unload(
+        async_register_callback(
+            hass,
+            async_update_ble_device,
+            BluetoothCallbackMatcher(address=entry.data[CONF_ADDRESS]),
+            BluetoothScanningMode.ACTIVE,
+        )
     )
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = device
@@ -128,7 +127,7 @@ async def apply_options(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Unload Motionblinds BLE device from a config entry."""
+    """Unload Motionblinds Bluetooth device from a config entry."""
 
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         hass.data[DOMAIN].pop(entry.entry_id)

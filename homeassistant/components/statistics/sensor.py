@@ -35,6 +35,7 @@ from homeassistant.const import (
 from homeassistant.core import (
     CALLBACK_TYPE,
     Event,
+    EventStateChangedData,
     HomeAssistant,
     State,
     callback,
@@ -43,7 +44,6 @@ from homeassistant.core import (
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import (
-    EventStateChangedData,
     async_track_point_in_utc_time,
     async_track_state_change_event,
 )
@@ -320,9 +320,9 @@ class StatisticsSensor(SensorEntity):
         self.ages: deque[datetime] = deque(maxlen=self._samples_max_buffer_size)
         self.attributes: dict[str, StateType] = {}
 
-        self._state_characteristic_fn: Callable[
-            [], StateType | datetime
-        ] = self._callable_characteristic_fn(self._state_characteristic)
+        self._state_characteristic_fn: Callable[[], StateType | datetime] = (
+            self._callable_characteristic_fn(self._state_characteristic)
+        )
 
         self._update_listener: CALLBACK_TYPE | None = None
 
@@ -762,19 +762,17 @@ class StatisticsSensor(SensorEntity):
 
     def _stat_sum_differences(self) -> StateType:
         if len(self.states) >= 2:
-            diff_sum = sum(
+            return sum(
                 abs(j - i) for i, j in zip(list(self.states), list(self.states)[1:])
             )
-            return diff_sum
         return None
 
     def _stat_sum_differences_nonnegative(self) -> StateType:
         if len(self.states) >= 2:
-            diff_sum_nn = sum(
+            return sum(
                 (j - i if j >= i else j - 0)
                 for i, j in zip(list(self.states), list(self.states)[1:])
             )
-            return diff_sum_nn
         return None
 
     def _stat_total(self) -> StateType:

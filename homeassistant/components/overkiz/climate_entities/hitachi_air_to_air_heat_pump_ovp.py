@@ -95,6 +95,7 @@ class HitachiAirToAirHeatPumpOVP(OverkizEntity, ClimateEntity):
     _attr_target_temperature_step = 1.0
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_translation_key = DOMAIN
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self, device_url: str, coordinator: OverkizDataUpdateCoordinator
@@ -106,6 +107,8 @@ class HitachiAirToAirHeatPumpOVP(OverkizEntity, ClimateEntity):
             ClimateEntityFeature.TARGET_TEMPERATURE
             | ClimateEntityFeature.FAN_MODE
             | ClimateEntityFeature.PRESET_MODE
+            | ClimateEntityFeature.TURN_OFF
+            | ClimateEntityFeature.TURN_ON
         )
 
         if self.device.states.get(OverkizState.OVP_SWING):
@@ -295,6 +298,11 @@ class HitachiAirToAirHeatPumpOVP(OverkizEntity, ClimateEntity):
             OverkizState.OVP_FAN_SPEED,
             OverkizCommandParam.AUTO,
         )
+        # Sanitize fan mode: Overkiz is sometimes providing a state that
+        # cannot be used as a command. Convert it to HA space and back to Overkiz
+        if fan_mode not in FAN_MODES_TO_OVERKIZ.values():
+            fan_mode = FAN_MODES_TO_OVERKIZ[OVERKIZ_TO_FAN_MODES[fan_mode]]
+
         hvac_mode = self._control_backfill(
             hvac_mode,
             OverkizState.OVP_MODE_CHANGE,
@@ -354,5 +362,5 @@ class HitachiAirToAirHeatPumpOVP(OverkizEntity, ClimateEntity):
         ]
 
         await self.executor.async_execute_command(
-            OverkizCommand.GLOBAL_CONTROL, command_data
+            OverkizCommand.GLOBAL_CONTROL, *command_data
         )

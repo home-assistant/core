@@ -174,11 +174,6 @@ class ECWeather(SingleCoordinatorWeatherEntity):
             return icon_code_to_condition(int(icon_code))
         return ""
 
-    @property
-    def forecast(self) -> list[Forecast] | None:
-        """Return the forecast array."""
-        return get_forecast(self.ec_data, False)
-
     @callback
     def _async_forecast_daily(self) -> list[Forecast] | None:
         """Return the daily forecast in native units."""

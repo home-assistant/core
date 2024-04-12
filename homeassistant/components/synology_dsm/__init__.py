@@ -41,7 +41,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Synology DSM sensors."""
 
-    # Migrate device indentifiers
+    # Migrate device identifiers
     dev_reg = dr.async_get(hass)
     devices: list[dr.DeviceEntry] = dr.async_entries_for_config_entry(
         dev_reg, entry.entry_id
@@ -105,6 +105,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if (
         SynoSurveillanceStation.INFO_API_KEY in available_apis
         and SynoSurveillanceStation.HOME_MODE_API_KEY in available_apis
+        and api.surveillance_station is not None
     ):
         coordinator_switches = SynologyDSMSwitchUpdateCoordinator(hass, entry, api)
         await coordinator_switches.async_config_entry_first_refresh()
