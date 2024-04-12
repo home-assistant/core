@@ -9,7 +9,7 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 SUCCESSFUL_IMPORT_LOG = """Loading HTML5 push notification via configuration.yaml is deprecated,
-it has be automatically imported. Once you have confirmed correct
+it has been automatically imported. Once you have confirmed correct
 operation, please remove HTML5 notification configuration from
 configuration.yaml"""
 
