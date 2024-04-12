@@ -1,6 +1,8 @@
 """Adds config flow for Workday integration."""
+
 from __future__ import annotations
 
+from functools import partial
 from typing import Any
 
 from holidays import HolidayBase, country_holidays, list_supported_countries
@@ -9,15 +11,18 @@ import voluptuous as vol
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
+    ConfigFlowResult,
     OptionsFlowWithConfigEntry,
 )
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_COUNTRY, CONF_LANGUAGE, CONF_NAME
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import AbortFlow, FlowResult
+from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.selector import (
     CountrySelector,
     CountrySelectorConfig,
+    LanguageSelector,
+    LanguageSelectorConfig,
     NumberSelector,
     NumberSelectorConfig,
     NumberSelectorMode,
@@ -31,7 +36,6 @@ from homeassistant.util import dt as dt_util
 from .const import (
     ALLOWED_DAYS,
     CONF_ADD_HOLIDAYS,
-    CONF_COUNTRY,
     CONF_EXCLUDES,
     CONF_OFFSET,
     CONF_PROVINCE,
@@ -46,7 +50,7 @@ from .const import (
 )
 
 
-def add_province_to_schema(
+def add_province_and_language_to_schema(
     schema: vol.Schema,
     country: str | None,
 ) -> vol.Schema:
@@ -54,21 +58,35 @@ def add_province_to_schema(
     if not country:
         return schema
 
-    all_countries = list_supported_countries()
-    if not all_countries.get(country):
-        return schema
+    all_countries = list_supported_countries(include_aliases=False)
 
-    add_schema = {
-        vol.Optional(CONF_PROVINCE): SelectSelector(
-            SelectSelectorConfig(
-                options=all_countries[country],
-                mode=SelectSelectorMode.DROPDOWN,
-                translation_key=CONF_PROVINCE,
+    language_schema = {}
+    province_schema = {}
+
+    _country = country_holidays(country=country)
+    if country_default_language := (_country.default_language):
+        selectable_languages = _country.supported_languages
+        new_selectable_languages = [lang[:2] for lang in selectable_languages]
+        language_schema = {
+            vol.Optional(
+                CONF_LANGUAGE, default=country_default_language
+            ): LanguageSelector(
+                LanguageSelectorConfig(languages=new_selectable_languages)
             )
-        ),
-    }
+        }
 
-    return vol.Schema({**DATA_SCHEMA_OPT.schema, **add_schema})
+    if provinces := all_countries.get(country):
+        province_schema = {
+            vol.Optional(CONF_PROVINCE): SelectSelector(
+                SelectSelectorConfig(
+                    options=provinces,
+                    mode=SelectSelectorMode.DROPDOWN,
+                    translation_key=CONF_PROVINCE,
+                )
+            ),
+        }
+
+    return vol.Schema({**DATA_SCHEMA_OPT.schema, **language_schema, **province_schema})
 
 
 def _is_valid_date_range(check_date: str, error: type[HomeAssistantError]) -> bool:
@@ -93,13 +111,25 @@ def validate_custom_dates(user_input: dict[str, Any]) -> None:
 
     year: int = dt_util.now().year
     if country := user_input.get(CONF_COUNTRY):
-        cls = country_holidays(country)
+        language = user_input.get(CONF_LANGUAGE)
+        province = user_input.get(CONF_PROVINCE)
         obj_holidays = country_holidays(
             country=country,
-            subdiv=user_input.get(CONF_PROVINCE),
+            subdiv=province,
             years=year,
-            language=cls.default_language,
+            language=language,
         )
+        if (
+            supported_languages := obj_holidays.supported_languages
+        ) and language == "en":
+            for lang in supported_languages:
+                if lang.startswith("en"):
+                    obj_holidays = country_holidays(
+                        country,
+                        subdiv=province,
+                        years=year,
+                        language=lang,
+                    )
     else:
         obj_holidays = HolidayBase(years=year)
 
@@ -112,19 +142,16 @@ def validate_custom_dates(user_input: dict[str, Any]) -> None:
             raise RemoveDatesError("Incorrect date or name")
 
 
-DATA_SCHEMA_SETUP = vol.Schema(
-    {
-        vol.Required(CONF_NAME, default=DEFAULT_NAME): TextSelector(),
-        vol.Optional(CONF_COUNTRY): CountrySelector(
-            CountrySelectorConfig(
-                countries=list(list_supported_countries()),
-            )
-        ),
-    }
-)
-
 DATA_SCHEMA_OPT = vol.Schema(
     {
+        vol.Optional(CONF_WORKDAYS, default=DEFAULT_WORKDAYS): SelectSelector(
+            SelectSelectorConfig(
+                options=ALLOWED_DAYS,
+                multiple=True,
+                mode=SelectSelectorMode.DROPDOWN,
+                translation_key="days",
+            )
+        ),
         vol.Optional(CONF_EXCLUDES, default=DEFAULT_EXCLUDES): SelectSelector(
             SelectSelectorConfig(
                 options=ALLOWED_DAYS,
@@ -135,14 +162,6 @@ DATA_SCHEMA_OPT = vol.Schema(
         ),
         vol.Optional(CONF_OFFSET, default=DEFAULT_OFFSET): NumberSelector(
             NumberSelectorConfig(min=-10, max=10, step=1, mode=NumberSelectorMode.BOX)
-        ),
-        vol.Optional(CONF_WORKDAYS, default=DEFAULT_WORKDAYS): SelectSelector(
-            SelectSelectorConfig(
-                options=ALLOWED_DAYS,
-                multiple=True,
-                mode=SelectSelectorMode.DROPDOWN,
-                translation_key="days",
-            )
         ),
         vol.Optional(CONF_ADD_HOLIDAYS, default=[]): SelectSelector(
             SelectSelectorConfig(
@@ -181,22 +200,35 @@ class WorkdayConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the user initial step."""
         errors: dict[str, str] = {}
+
+        supported_countries = await self.hass.async_add_executor_job(
+            partial(list_supported_countries, include_aliases=False)
+        )
 
         if user_input is not None:
             self.data = user_input
             return await self.async_step_options()
         return self.async_show_form(
             step_id="user",
-            data_schema=DATA_SCHEMA_SETUP,
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_NAME, default=DEFAULT_NAME): TextSelector(),
+                    vol.Optional(CONF_COUNTRY): CountrySelector(
+                        CountrySelectorConfig(
+                            countries=list(supported_countries),
+                        )
+                    ),
+                }
+            ),
             errors=errors,
         )
 
     async def async_step_options(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle remaining flow."""
         errors: dict[str, str] = {}
         if user_input is not None:
@@ -237,7 +269,9 @@ class WorkdayConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
         schema = await self.hass.async_add_executor_job(
-            add_province_to_schema, DATA_SCHEMA_OPT, self.data.get(CONF_COUNTRY)
+            add_province_and_language_to_schema,
+            DATA_SCHEMA_OPT,
+            self.data.get(CONF_COUNTRY),
         )
         new_schema = self.add_suggested_values_to_schema(schema, user_input)
         return self.async_show_form(
@@ -256,7 +290,7 @@ class WorkdayOptionsFlowHandler(OptionsFlowWithConfigEntry):
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage Workday options."""
         errors: dict[str, str] = {}
 
@@ -298,7 +332,9 @@ class WorkdayOptionsFlowHandler(OptionsFlowWithConfigEntry):
                     return self.async_create_entry(data=combined_input)
 
         schema: vol.Schema = await self.hass.async_add_executor_job(
-            add_province_to_schema, DATA_SCHEMA_OPT, self.options.get(CONF_COUNTRY)
+            add_province_and_language_to_schema,
+            DATA_SCHEMA_OPT,
+            self.options.get(CONF_COUNTRY),
         )
 
         new_schema = self.add_suggested_values_to_schema(

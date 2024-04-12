@@ -1,4 +1,5 @@
 """Diagnostics support for AirVisual."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -7,6 +8,7 @@ from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_API_KEY,
+    CONF_COUNTRY,
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_STATE,
@@ -15,7 +17,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import CONF_CITY, CONF_COUNTRY, DOMAIN
+from .const import CONF_CITY, DOMAIN
 
 CONF_COORDINATES = "coordinates"
 CONF_TITLE = "title"

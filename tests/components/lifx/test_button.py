@@ -1,4 +1,5 @@
 """Tests for button platform."""
+
 from unittest.mock import patch
 
 import pytest
@@ -31,7 +32,9 @@ def mock_lifx_coordinator_sleep():
         yield
 
 
-async def test_button_restart(hass: HomeAssistant) -> None:
+async def test_button_restart(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test that a bulb can be restarted."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -41,16 +44,17 @@ async def test_button_restart(hass: HomeAssistant) -> None:
     )
     config_entry.add_to_hass(hass)
     bulb = _mocked_bulb()
-    with _patch_discovery(device=bulb), _patch_config_flow_try_connect(
-        device=bulb
-    ), _patch_device(device=bulb):
+    with (
+        _patch_discovery(device=bulb),
+        _patch_config_flow_try_connect(device=bulb),
+        _patch_device(device=bulb),
+    ):
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
 
     unique_id = f"{SERIAL}_restart"
     entity_id = "button.my_bulb_restart"
 
-    entity_registry = er.async_get(hass)
     entity = entity_registry.async_get(entity_id)
     assert entity
     assert not entity.disabled
@@ -63,7 +67,9 @@ async def test_button_restart(hass: HomeAssistant) -> None:
     bulb.set_reboot.assert_called_once()
 
 
-async def test_button_identify(hass: HomeAssistant) -> None:
+async def test_button_identify(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test that a bulb can be identified."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -73,16 +79,17 @@ async def test_button_identify(hass: HomeAssistant) -> None:
     )
     config_entry.add_to_hass(hass)
     bulb = _mocked_bulb()
-    with _patch_discovery(device=bulb), _patch_config_flow_try_connect(
-        device=bulb
-    ), _patch_device(device=bulb):
+    with (
+        _patch_discovery(device=bulb),
+        _patch_config_flow_try_connect(device=bulb),
+        _patch_device(device=bulb),
+    ):
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
 
     unique_id = f"{SERIAL}_identify"
     entity_id = "button.my_bulb_identify"
 
-    entity_registry = er.async_get(hass)
     entity = entity_registry.async_get(entity_id)
     assert entity
     assert not entity.disabled

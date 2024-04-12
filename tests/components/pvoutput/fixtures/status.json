@@ -1,0 +1,11 @@
+{
+  "energy_consumption": 1000,
+  "energy_generation": 500,
+  "normalized_output": 0.5,
+  "power_consumption": 2500,
+  "power_generation": 1500,
+  "reported_date": "20210101",
+  "reported_time": "22:37",
+  "temperature": 20.2,
+  "voltage": 220.5
+}

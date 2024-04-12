@@ -1,4 +1,5 @@
 """Test samsungtv diagnostics."""
+
 from unittest.mock import Mock
 
 import pytest
@@ -41,6 +42,7 @@ async def test_entry_diagnostics(
             "disabled_by": None,
             "domain": "samsungtv",
             "entry_id": "123456",
+            "minor_version": 1,
             "options": {},
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
@@ -77,6 +79,7 @@ async def test_entry_diagnostics_encrypted(
             "disabled_by": None,
             "domain": "samsungtv",
             "entry_id": "123456",
+            "minor_version": 1,
             "options": {},
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
@@ -112,6 +115,7 @@ async def test_entry_diagnostics_encrypte_offline(
             "disabled_by": None,
             "domain": "samsungtv",
             "entry_id": "123456",
+            "minor_version": 1,
             "options": {},
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,

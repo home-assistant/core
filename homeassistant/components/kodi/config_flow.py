@@ -1,4 +1,5 @@
 """Config flow for Kodi integration."""
+
 from __future__ import annotations
 
 import logging
@@ -6,8 +7,8 @@ import logging
 from pykodi import CannotConnectError, InvalidAuthError, Kodi, get_kodi_connection
 import voluptuous as vol
 
-from homeassistant import config_entries, core, exceptions
 from homeassistant.components import zeroconf
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -17,8 +18,8 @@ from homeassistant.const import (
     CONF_TIMEOUT,
     CONF_USERNAME,
 )
-from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
@@ -33,7 +34,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def validate_http(hass: core.HomeAssistant, data):
+async def validate_http(hass: HomeAssistant, data):
     """Validate the user input allows us to connect over HTTP."""
 
     host = data[CONF_HOST]
@@ -56,7 +57,7 @@ async def validate_http(hass: core.HomeAssistant, data):
         raise InvalidAuth from error
 
 
-async def validate_ws(hass: core.HomeAssistant, data):
+async def validate_ws(hass: HomeAssistant, data):
     """Validate the user input allows us to connect over WS."""
     if not (ws_port := data.get(CONF_WS_PORT)):
         return
@@ -77,14 +78,14 @@ async def validate_ws(hass: core.HomeAssistant, data):
         await kwc.connect()
         if not kwc.connected:
             _LOGGER.warning("Cannot connect to %s:%s over WebSocket", host, ws_port)
-            raise WSCannotConnect()
+            raise WSCannotConnect
         kodi = Kodi(kwc)
         await kodi.ping()
     except CannotConnectError as error:
         raise WSCannotConnect from error
 
 
-class KodiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class KodiConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Kodi."""
 
     VERSION = 1
@@ -102,7 +103,7 @@ class KodiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
         self._host = discovery_info.host
         self._port = discovery_info.port or DEFAULT_PORT
@@ -299,7 +300,7 @@ class KodiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     @callback
     def _get_data(self):
-        data = {
+        return {
             CONF_NAME: self._name,
             CONF_HOST: self._host,
             CONF_PORT: self._port,
@@ -310,16 +311,14 @@ class KodiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_TIMEOUT: DEFAULT_TIMEOUT,
         }
 
-        return data
 
-
-class CannotConnect(exceptions.HomeAssistantError):
+class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""
 
 
-class InvalidAuth(exceptions.HomeAssistantError):
+class InvalidAuth(HomeAssistantError):
     """Error to indicate there is invalid auth."""
 
 
-class WSCannotConnect(exceptions.HomeAssistantError):
+class WSCannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect to websocket."""

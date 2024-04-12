@@ -1,6 +1,6 @@
 {
   "domain": "todo",
-  "name": "To-do",
+  "name": "To-do list",
   "codeowners": ["@home-assistant/core"],
   "dependencies": ["http"],
   "documentation": "https://www.home-assistant.io/integrations/todo",

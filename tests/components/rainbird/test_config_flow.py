@@ -1,6 +1,5 @@
 """Tests for the Rain Bird config flow."""
 
-import asyncio
 from collections.abc import Generator
 from http import HTTPStatus
 from typing import Any
@@ -19,22 +18,25 @@ from homeassistant.data_entry_flow import FlowResult, FlowResultType
 from .conftest import (
     CONFIG_ENTRY_DATA,
     HOST,
+    MAC_ADDRESS_UNIQUE_ID,
     PASSWORD,
     SERIAL_NUMBER,
     SERIAL_RESPONSE,
     URL,
+    WIFI_PARAMS_RESPONSE,
     ZERO_SERIAL_RESPONSE,
-    ComponentSetup,
+    mock_json_response,
     mock_response,
 )
 
+from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker, AiohttpClientMockResponse
 
 
 @pytest.fixture(name="responses")
 def mock_responses() -> list[AiohttpClientMockResponse]:
     """Set up fake serial number response when testing the connection."""
-    return [mock_response(SERIAL_RESPONSE)]
+    return [mock_response(SERIAL_RESPONSE), mock_json_response(WIFI_PARAMS_RESPONSE)]
 
 
 @pytest.fixture(autouse=True)
@@ -59,7 +61,7 @@ async def complete_flow(hass: HomeAssistant) -> FlowResult:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "user"
     assert not result.get("errors")
     assert "flow_id" in result
@@ -74,14 +76,20 @@ async def complete_flow(hass: HomeAssistant) -> FlowResult:
     ("responses", "expected_config_entry", "expected_unique_id"),
     [
         (
-            [mock_response(SERIAL_RESPONSE)],
+            [
+                mock_response(SERIAL_RESPONSE),
+                mock_json_response(WIFI_PARAMS_RESPONSE),
+            ],
             CONFIG_ENTRY_DATA,
-            SERIAL_NUMBER,
+            MAC_ADDRESS_UNIQUE_ID,
         ),
         (
-            [mock_response(ZERO_SERIAL_RESPONSE)],
+            [
+                mock_response(ZERO_SERIAL_RESPONSE),
+                mock_json_response(WIFI_PARAMS_RESPONSE),
+            ],
             {**CONFIG_ENTRY_DATA, "serial_number": 0},
-            None,
+            MAC_ADDRESS_UNIQUE_ID,
         ),
     ],
 )
@@ -94,7 +102,7 @@ async def test_controller_flow(
     """Test the controller is setup correctly."""
 
     result = await complete_flow(hass)
-    assert result.get("type") == "create_entry"
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert result.get("title") == HOST
     assert "result" in result
     assert dict(result["result"].data) == expected_config_entry
@@ -115,37 +123,49 @@ async def test_controller_flow(
         (
             "other-serial-number",
             {**CONFIG_ENTRY_DATA, "host": "other-host"},
-            [mock_response(SERIAL_RESPONSE)],
+            [mock_response(SERIAL_RESPONSE), mock_json_response(WIFI_PARAMS_RESPONSE)],
+            CONFIG_ENTRY_DATA,
+        ),
+        (
+            "11:22:33:44:55:66",
+            {
+                **CONFIG_ENTRY_DATA,
+                "host": "other-host",
+            },
+            [
+                mock_response(SERIAL_RESPONSE),
+                mock_json_response(WIFI_PARAMS_RESPONSE),
+            ],
             CONFIG_ENTRY_DATA,
         ),
         (
             None,
             {**CONFIG_ENTRY_DATA, "serial_number": 0, "host": "other-host"},
-            [mock_response(ZERO_SERIAL_RESPONSE)],
+            [
+                mock_response(ZERO_SERIAL_RESPONSE),
+                mock_json_response(WIFI_PARAMS_RESPONSE),
+            ],
             {**CONFIG_ENTRY_DATA, "serial_number": 0},
         ),
     ],
-    ids=["with-serial", "zero-serial"],
+    ids=["with-serial", "with-mac-address", "zero-serial"],
 )
 async def test_multiple_config_entries(
     hass: HomeAssistant,
-    setup_integration: ComponentSetup,
+    config_entry: MockConfigEntry,
     responses: list[AiohttpClientMockResponse],
     config_flow_responses: list[AiohttpClientMockResponse],
     expected_config_entry: dict[str, Any] | None,
 ) -> None:
     """Test setting up multiple config entries that refer to different devices."""
-    assert await setup_integration()
-
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(entries) == 1
-    assert entries[0].state == ConfigEntryState.LOADED
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.LOADED
 
     responses.clear()
     responses.extend(config_flow_responses)
 
     result = await complete_flow(hass)
-    assert result.get("type") == FlowResultType.CREATE_ENTRY
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert dict(result.get("result").data) == expected_config_entry
 
     entries = hass.config_entries.async_entries(DOMAIN)
@@ -157,43 +177,73 @@ async def test_multiple_config_entries(
         "config_entry_unique_id",
         "config_entry_data",
         "config_flow_responses",
+        "expected_config_entry_data",
     ),
     [
+        # Config entry is a pure duplicate with the same mac address unique id
+        (
+            MAC_ADDRESS_UNIQUE_ID,
+            CONFIG_ENTRY_DATA,
+            [
+                mock_response(SERIAL_RESPONSE),
+                mock_json_response(WIFI_PARAMS_RESPONSE),
+            ],
+            CONFIG_ENTRY_DATA,
+        ),
+        # Old unique id with serial, but same host
         (
             SERIAL_NUMBER,
             CONFIG_ENTRY_DATA,
-            [mock_response(SERIAL_RESPONSE)],
+            [mock_response(SERIAL_RESPONSE), mock_json_response(WIFI_PARAMS_RESPONSE)],
+            CONFIG_ENTRY_DATA,
         ),
+        # Old unique id with no serial, but same host
         (
             None,
             {**CONFIG_ENTRY_DATA, "serial_number": 0},
-            [mock_response(ZERO_SERIAL_RESPONSE)],
+            [
+                mock_response(ZERO_SERIAL_RESPONSE),
+                mock_json_response(WIFI_PARAMS_RESPONSE),
+            ],
+            {**CONFIG_ENTRY_DATA, "serial_number": 0},
+        ),
+        # Enters a different hostname that points to the same mac address
+        (
+            MAC_ADDRESS_UNIQUE_ID,
+            {
+                **CONFIG_ENTRY_DATA,
+                "host": f"other-{HOST}",
+            },
+            [mock_response(SERIAL_RESPONSE), mock_json_response(WIFI_PARAMS_RESPONSE)],
+            CONFIG_ENTRY_DATA,  # Updated the host
         ),
     ],
     ids=[
-        "duplicate-serial-number",
+        "duplicate-mac-unique-id",
+        "duplicate-host-legacy-serial-number",
         "duplicate-host-port-no-serial",
+        "duplicate-duplicate-hostname",
     ],
 )
 async def test_duplicate_config_entries(
     hass: HomeAssistant,
-    setup_integration: ComponentSetup,
+    config_entry: MockConfigEntry,
     responses: list[AiohttpClientMockResponse],
     config_flow_responses: list[AiohttpClientMockResponse],
+    expected_config_entry_data: dict[str, Any],
 ) -> None:
     """Test that a device can not be registered twice."""
-    assert await setup_integration()
-
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(entries) == 1
-    assert entries[0].state == ConfigEntryState.LOADED
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.LOADED
 
     responses.clear()
     responses.extend(config_flow_responses)
 
     result = await complete_flow(hass)
-    assert result.get("type") == FlowResultType.ABORT
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "already_configured"
+    assert dict(config_entry.data) == expected_config_entry_data
 
 
 async def test_controller_cannot_connect(
@@ -211,7 +261,7 @@ async def test_controller_cannot_connect(
     )
 
     result = await complete_flow(hass)
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "user"
     assert result.get("errors") == {"base": "cannot_connect"}
 
@@ -226,10 +276,10 @@ async def test_controller_timeout(
 
     with patch(
         "homeassistant.components.rainbird.config_flow.asyncio.timeout",
-        side_effect=asyncio.TimeoutError,
+        side_effect=TimeoutError,
     ):
         result = await complete_flow(hass)
-        assert result.get("type") == FlowResultType.FORM
+        assert result.get("type") is FlowResultType.FORM
         assert result.get("step_id") == "user"
         assert result.get("errors") == {"base": "timeout_connect"}
 
@@ -241,7 +291,7 @@ async def test_options_flow(hass: HomeAssistant, mock_setup: Mock) -> None:
 
     # Setup config flow
     result = await complete_flow(hass)
-    assert result.get("type") == "create_entry"
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert result.get("title") == HOST
     assert "result" in result
     assert result["result"].data == CONFIG_ENTRY_DATA
@@ -249,18 +299,18 @@ async def test_options_flow(hass: HomeAssistant, mock_setup: Mock) -> None:
 
     # Assert single config entry is loaded
     config_entry = next(iter(hass.config_entries.async_entries(DOMAIN)))
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     # Initiate the options flow
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "init"
 
     # Change the default duration
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input={ATTR_DURATION: 5}
     )
-    assert result.get("type") == FlowResultType.CREATE_ENTRY
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert config_entry.options == {
         ATTR_DURATION: 5,
     }

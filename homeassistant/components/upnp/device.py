@@ -1,4 +1,5 @@
 """Home Assistant representation of an UPnP/IGD."""
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -33,6 +34,22 @@ from .const import (
 )
 
 
+def get_preferred_location(locations: set[str]) -> str:
+    """Get the preferred location (an IPv4 location) from a set of locations."""
+    # Prefer IPv4 over IPv6.
+    for location in locations:
+        if location.startswith(("http://[", "https://[")):
+            continue
+
+        return location
+
+    # Fallback to any.
+    for location in locations:
+        return location
+
+    raise ValueError("No location found")
+
+
 async def async_get_mac_address_from_host(hass: HomeAssistant, host: str) -> str | None:
     """Get mac address from host."""
     ip_addr = ip_address(host)
@@ -47,19 +64,17 @@ async def async_get_mac_address_from_host(hass: HomeAssistant, host: str) -> str
     return mac_address
 
 
-async def async_create_device(hass: HomeAssistant, ssdp_location: str) -> Device:
+async def async_create_device(hass: HomeAssistant, location: str) -> Device:
     """Create UPnP/IGD device."""
     session = async_get_clientsession(hass, verify_ssl=False)
     requester = AiohttpSessionRequester(session, with_sleep=True, timeout=20)
 
     factory = UpnpFactory(requester, non_strict=True)
-    upnp_device = await factory.async_create_device(ssdp_location)
+    upnp_device = await factory.async_create_device(location)
 
     # Create profile wrapper.
     igd_device = IgdDevice(upnp_device, None)
-    device = Device(hass, igd_device)
-
-    return device
+    return Device(hass, igd_device)
 
 
 class Device:
@@ -69,9 +84,9 @@ class Device:
         """Initialize UPnP/IGD device."""
         self.hass = hass
         self._igd_device = igd_device
-        self.coordinator: DataUpdateCoordinator[
-            dict[str, str | datetime | int | float | None]
-        ] | None = None
+        self.coordinator: (
+            DataUpdateCoordinator[dict[str, str | datetime | int | float | None]] | None
+        ) = None
         self.original_udn: str | None = None
 
     async def async_get_mac_address(self) -> str | None:
@@ -119,8 +134,7 @@ class Device:
     @property
     def host(self) -> str | None:
         """Get the hostname."""
-        url = self._igd_device.device.device_url
-        parsed = urlparse(url)
+        parsed = urlparse(self.device_url)
         return parsed.hostname
 
     @property
@@ -142,7 +156,7 @@ class Device:
         _LOGGER.debug("Getting data for device: %s", self)
         igd_state = await self._igd_device.async_get_traffic_and_status_data()
         status_info = igd_state.status_info
-        if status_info is not None and not isinstance(status_info, Exception):
+        if status_info is not None and not isinstance(status_info, BaseException):
             wan_status = status_info.connection_status
             router_uptime = status_info.uptime
         else:
@@ -150,7 +164,7 @@ class Device:
             router_uptime = None
 
         def get_value(value: Any) -> Any:
-            if value is None or isinstance(value, Exception):
+            if value is None or isinstance(value, BaseException):
                 return None
 
             return value

@@ -1,0 +1,29 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    '0': dict({
+      'battery_level': 70,
+      'duration_pullspring': 2,
+      'is_charging': False,
+      'is_connected': True,
+      'is_enabled_pullspring': 1,
+      'lock_id': '**REDACTED**',
+      'lock_name': 'Lock-1A2B',
+      'lock_type': 2,
+      'state': 2,
+      'state_change_result': 0,
+    }),
+    '1': dict({
+      'battery_level': 70,
+      'duration_pullspring': 0,
+      'is_charging': False,
+      'is_connected': True,
+      'is_enabled_pullspring': 0,
+      'lock_id': '**REDACTED**',
+      'lock_name': 'Lock-2C3D',
+      'lock_type': 4,
+      'state': 2,
+      'state_change_result': 0,
+    }),
+  })
+# ---

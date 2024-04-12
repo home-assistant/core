@@ -1,4 +1,5 @@
 """The tests for the timer component."""
+
 from datetime import timedelta
 import logging
 from unittest.mock import patch
@@ -44,7 +45,7 @@ from homeassistant.const import (
     EVENT_STATE_CHANGED,
     SERVICE_RELOAD,
 )
-from homeassistant.core import Context, CoreState, HomeAssistant, State
+from homeassistant.core import Context, CoreState, Event, HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.restore_state import StoredState, async_get
@@ -147,7 +148,7 @@ async def test_config_options(hass: HomeAssistant) -> None:
 
 async def test_methods_and_events(hass: HomeAssistant) -> None:
     """Test methods and events."""
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     await async_setup_component(hass, DOMAIN, {DOMAIN: {"test1": {CONF_DURATION: 10}}})
 
@@ -155,11 +156,12 @@ async def test_methods_and_events(hass: HomeAssistant) -> None:
     assert state
     assert state.state == STATUS_IDLE
 
-    results = []
+    results: list[tuple[Event, str]] = []
 
-    def fake_event_listener(event):
+    @callback
+    def fake_event_listener(event: Event):
         """Fake event listener for trigger."""
-        results.append(event)
+        results.append((event, hass.states.get("timer.test1").state))
 
     hass.bus.async_listen(EVENT_TIMER_STARTED, fake_event_listener)
     hass.bus.async_listen(EVENT_TIMER_RESTARTED, fake_event_listener)
@@ -261,7 +263,10 @@ async def test_methods_and_events(hass: HomeAssistant) -> None:
 
         if step["event"] is not None:
             expected_events += 1
-            assert results[-1].event_type == step["event"]
+            last_result = results[-1]
+            event, state = last_result
+            assert event.event_type == step["event"]
+            assert state == step["state"]
             assert len(results) == expected_events
 
 
@@ -393,7 +398,7 @@ async def test_start_service(hass: HomeAssistant) -> None:
 
 async def test_wait_till_timer_expires(hass: HomeAssistant) -> None:
     """Test for a timer to end."""
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     await async_setup_component(hass, DOMAIN, {DOMAIN: {"test1": {CONF_DURATION: 20}}})
 
@@ -403,6 +408,7 @@ async def test_wait_till_timer_expires(hass: HomeAssistant) -> None:
 
     results = []
 
+    @callback
     def fake_event_listener(event):
         """Fake event listener for trigger."""
         results.append(event)
@@ -460,7 +466,7 @@ async def test_wait_till_timer_expires(hass: HomeAssistant) -> None:
 
 async def test_no_initial_state_and_no_restore_state(hass: HomeAssistant) -> None:
     """Ensure that entity is create without initial and restore feature."""
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     await async_setup_component(hass, DOMAIN, {DOMAIN: {"test1": {CONF_DURATION: 10}}})
 
@@ -569,7 +575,7 @@ async def test_config_reload(
 
 async def test_timer_restarted_event(hass: HomeAssistant) -> None:
     """Ensure restarted event is called after starting a paused or running timer."""
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     await async_setup_component(hass, DOMAIN, {DOMAIN: {"test1": {CONF_DURATION: 10}}})
 
@@ -579,6 +585,7 @@ async def test_timer_restarted_event(hass: HomeAssistant) -> None:
 
     results = []
 
+    @callback
     def fake_event_listener(event):
         """Fake event listener for trigger."""
         results.append(event)
@@ -636,7 +643,7 @@ async def test_timer_restarted_event(hass: HomeAssistant) -> None:
 
 async def test_state_changed_when_timer_restarted(hass: HomeAssistant) -> None:
     """Ensure timer's state changes when it restarted."""
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     await async_setup_component(hass, DOMAIN, {DOMAIN: {"test1": {CONF_DURATION: 10}}})
 
@@ -646,6 +653,7 @@ async def test_state_changed_when_timer_restarted(hass: HomeAssistant) -> None:
 
     results = []
 
+    @callback
     def fake_event_listener(event):
         """Fake event listener for trigger."""
         results.append(event)

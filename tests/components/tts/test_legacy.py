@@ -1,4 +1,5 @@
 """Test the legacy tts setup."""
+
 from __future__ import annotations
 
 import pytest
@@ -147,6 +148,7 @@ async def test_service_without_cache_config(
 
     with assert_setup_component(1, DOMAIN):
         assert await async_setup_component(hass, DOMAIN, config)
+        await hass.async_block_till_done()
 
     await hass.services.async_call(
         DOMAIN,

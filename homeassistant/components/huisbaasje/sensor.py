@@ -1,4 +1,5 @@
 """Platform for sensor integration."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -48,7 +49,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class HuisbaasjeSensorEntityDescription(SensorEntityDescription):
     """Class describing Airly sensor entities."""
 
@@ -64,7 +65,6 @@ SENSORS_INFO = [
         native_unit_of_measurement=UnitOfPower.WATT,
         key=SOURCE_TYPE_ELECTRICITY,
         state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:lightning-bolt",
     ),
     HuisbaasjeSensorEntityDescription(
         translation_key="current_power_peak",
@@ -73,7 +73,6 @@ SENSORS_INFO = [
         native_unit_of_measurement=UnitOfPower.WATT,
         key=SOURCE_TYPE_ELECTRICITY_IN,
         state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:lightning-bolt",
     ),
     HuisbaasjeSensorEntityDescription(
         translation_key="current_power_off_peak",
@@ -82,7 +81,6 @@ SENSORS_INFO = [
         native_unit_of_measurement=UnitOfPower.WATT,
         key=SOURCE_TYPE_ELECTRICITY_IN_LOW,
         state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:lightning-bolt",
     ),
     HuisbaasjeSensorEntityDescription(
         translation_key="current_power_out_peak",
@@ -91,7 +89,6 @@ SENSORS_INFO = [
         native_unit_of_measurement=UnitOfPower.WATT,
         key=SOURCE_TYPE_ELECTRICITY_OUT,
         state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:lightning-bolt",
     ),
     HuisbaasjeSensorEntityDescription(
         translation_key="current_power_out_off_peak",
@@ -100,7 +97,6 @@ SENSORS_INFO = [
         native_unit_of_measurement=UnitOfPower.WATT,
         key=SOURCE_TYPE_ELECTRICITY_OUT_LOW,
         state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:lightning-bolt",
     ),
     HuisbaasjeSensorEntityDescription(
         translation_key="energy_consumption_peak_today",
@@ -110,7 +106,6 @@ SENSORS_INFO = [
         sensor_type=SENSOR_TYPE_THIS_DAY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         precision=3,
-        icon="mdi:lightning-bolt",
     ),
     HuisbaasjeSensorEntityDescription(
         translation_key="energy_consumption_off_peak_today",
@@ -120,7 +115,6 @@ SENSORS_INFO = [
         sensor_type=SENSOR_TYPE_THIS_DAY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         precision=3,
-        icon="mdi:lightning-bolt",
     ),
     HuisbaasjeSensorEntityDescription(
         translation_key="energy_production_peak_today",
@@ -130,7 +124,6 @@ SENSORS_INFO = [
         sensor_type=SENSOR_TYPE_THIS_DAY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         precision=3,
-        icon="mdi:lightning-bolt",
     ),
     HuisbaasjeSensorEntityDescription(
         translation_key="energy_production_off_peak_today",
@@ -140,47 +133,42 @@ SENSORS_INFO = [
         sensor_type=SENSOR_TYPE_THIS_DAY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         precision=3,
-        icon="mdi:lightning-bolt",
     ),
     HuisbaasjeSensorEntityDescription(
         translation_key="energy_today",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        state_class=SensorStateClass.TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL,
         key=SOURCE_TYPE_ELECTRICITY,
         sensor_type=SENSOR_TYPE_THIS_DAY,
         precision=1,
-        icon="mdi:lightning-bolt",
     ),
     HuisbaasjeSensorEntityDescription(
         translation_key="energy_week",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        state_class=SensorStateClass.TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL,
         key=SOURCE_TYPE_ELECTRICITY,
         sensor_type=SENSOR_TYPE_THIS_WEEK,
         precision=1,
-        icon="mdi:lightning-bolt",
     ),
     HuisbaasjeSensorEntityDescription(
         translation_key="energy_month",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        state_class=SensorStateClass.TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL,
         key=SOURCE_TYPE_ELECTRICITY,
         sensor_type=SENSOR_TYPE_THIS_MONTH,
         precision=1,
-        icon="mdi:lightning-bolt",
     ),
     HuisbaasjeSensorEntityDescription(
         translation_key="energy_year",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        state_class=SensorStateClass.TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL,
         key=SOURCE_TYPE_ELECTRICITY,
         sensor_type=SENSOR_TYPE_THIS_YEAR,
         precision=1,
-        icon="mdi:lightning-bolt",
     ),
     HuisbaasjeSensorEntityDescription(
         translation_key="current_gas",
@@ -188,7 +176,6 @@ SENSORS_INFO = [
         sensor_type=SENSOR_TYPE_RATE,
         state_class=SensorStateClass.MEASUREMENT,
         key=SOURCE_TYPE_GAS,
-        icon="mdi:fire",
         precision=1,
     ),
     HuisbaasjeSensorEntityDescription(
@@ -198,7 +185,6 @@ SENSORS_INFO = [
         key=SOURCE_TYPE_GAS,
         sensor_type=SENSOR_TYPE_THIS_DAY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        icon="mdi:counter",
         precision=1,
     ),
     HuisbaasjeSensorEntityDescription(
@@ -208,7 +194,6 @@ SENSORS_INFO = [
         key=SOURCE_TYPE_GAS,
         sensor_type=SENSOR_TYPE_THIS_WEEK,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        icon="mdi:counter",
         precision=1,
     ),
     HuisbaasjeSensorEntityDescription(
@@ -218,7 +203,6 @@ SENSORS_INFO = [
         key=SOURCE_TYPE_GAS,
         sensor_type=SENSOR_TYPE_THIS_MONTH,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        icon="mdi:counter",
         precision=1,
     ),
     HuisbaasjeSensorEntityDescription(
@@ -228,7 +212,6 @@ SENSORS_INFO = [
         key=SOURCE_TYPE_GAS,
         sensor_type=SENSOR_TYPE_THIS_YEAR,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        icon="mdi:counter",
         precision=1,
     ),
 ]

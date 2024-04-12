@@ -1,4 +1,5 @@
 """Fixtures for the Open-Meteo integration tests."""
+
 from __future__ import annotations
 
 from collections.abc import Generator
@@ -40,7 +41,7 @@ def mock_open_meteo(request: pytest.FixtureRequest) -> Generator[None, MagicMock
     if hasattr(request, "param") and request.param:
         fixture = request.param
 
-    forecast = Forecast.parse_raw(load_fixture(fixture, DOMAIN))
+    forecast = Forecast.from_json(load_fixture(fixture, DOMAIN))
     with patch(
         "homeassistant.components.open_meteo.OpenMeteo", autospec=True
     ) as open_meteo_mock:

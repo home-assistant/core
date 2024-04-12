@@ -1,4 +1,5 @@
 """The Nibe Heat Pump sensors."""
+
 from __future__ import annotations
 
 from nibe.coil import Coil, CoilData
@@ -24,7 +25,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import DOMAIN, CoilEntity, Coordinator
+from .const import DOMAIN
+from .coordinator import CoilEntity, Coordinator
 
 UNIT_DESCRIPTIONS = {
     "°C": SensorEntityDescription(

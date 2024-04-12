@@ -1,4 +1,5 @@
 """Weather data coordinator for the OpenWeatherMap (OWM) service."""
+
 import asyncio
 from datetime import timedelta
 import logging
@@ -60,7 +61,7 @@ _LOGGER = logging.getLogger(__name__)
 WEATHER_UPDATE_INTERVAL = timedelta(minutes=10)
 
 
-class WeatherUpdateCoordinator(DataUpdateCoordinator):
+class WeatherUpdateCoordinator(DataUpdateCoordinator):  # pylint: disable=hass-enforce-coordinator-module
     """Weather data update coordinator."""
 
     def __init__(self, owm, latitude, longitude, forecast_mode, hass):

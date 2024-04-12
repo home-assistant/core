@@ -1,15 +1,21 @@
 """Configuration for Sonos tests."""
+
+import asyncio
+from collections.abc import Callable
 from copy import copy
 from ipaddress import ip_address
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
 from soco import SoCo
+from soco.alarms import Alarms
+from soco.events_base import Event as SonosEvent
 
 from homeassistant.components import ssdp, zeroconf
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.components.sonos import DOMAIN
 from homeassistant.const import CONF_HOSTS
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_fixture
 
@@ -29,6 +35,31 @@ class SonosMockSubscribe:
         """Initialize the mock subscriber."""
         self.event_listener = SonosMockEventListener(ip_address)
         self.service = Mock()
+        self.callback_future: asyncio.Future[Callable[[SonosEvent], None]] = None
+        self._callback: Callable[[SonosEvent], None] | None = None
+
+    @property
+    def callback(self) -> Callable[[SonosEvent], None] | None:
+        """Return the callback."""
+        return self._callback
+
+    @callback.setter
+    def callback(self, callback: Callable[[SonosEvent], None]) -> None:
+        """Set the callback."""
+        self._callback = callback
+        future = self._get_callback_future()
+        if not future.done():
+            future.set_result(callback)
+
+    def _get_callback_future(self) -> asyncio.Future[Callable[[SonosEvent], None]]:
+        """Get the callback future."""
+        if not self.callback_future:
+            self.callback_future = asyncio.get_running_loop().create_future()
+        return self.callback_future
+
+    async def wait_for_callback_to_be_set(self) -> Callable[[SonosEvent], None]:
+        """Wait for the callback to be set."""
+        return await self._get_callback_future()
 
     async def unsubscribe(self) -> None:
         """Unsubscribe mock."""
@@ -92,9 +123,12 @@ def async_setup_sonos(hass, config_entry, fire_zgs_event):
 
     async def _wrapper():
         config_entry.add_to_hass(hass)
+        sonos_alarms = Alarms()
+        sonos_alarms.last_alarm_list_version = "RINCON_test:0"
         assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         await fire_zgs_event()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     return _wrapper
 
@@ -108,8 +142,26 @@ def config_entry_fixture():
 class MockSoCo(MagicMock):
     """Mock the Soco Object."""
 
+    uid = "RINCON_test"
+    play_mode = "NORMAL"
+    mute = False
+    night_mode = True
+    dialog_level = True
+    loudness = True
+    volume = 19
     audio_delay = 2
+    balance = (61, 100)
+    bass = 1
+    treble = -1
+    mic_enabled = False
+    sub_crossover = None  # Default to None for non-Amp devices
+    sub_enabled = False
     sub_gain = 5
+    surround_enabled = True
+    surround_mode = True
+    surround_level = 3
+    music_surround_level = 4
+    soundbar_audio_input_format = "Dolby 5.1"
 
     @property
     def visible_zones(self):
@@ -143,10 +195,7 @@ class SoCoMockFactory:
         mock_soco.mock_add_spec(SoCo)
         mock_soco.ip_address = ip_address
         if ip_address != "192.168.42.2":
-            mock_soco.uid = f"RINCON_test_{ip_address}"
-        else:
-            mock_soco.uid = "RINCON_test"
-        mock_soco.play_mode = "NORMAL"
+            mock_soco.uid += f"_{ip_address}"
         mock_soco.music_library = self.music_library
         mock_soco.get_current_track_info.return_value = self.current_track_info
         mock_soco.music_source_from_uri = SoCo.music_source_from_uri
@@ -161,23 +210,6 @@ class SoCoMockFactory:
         mock_soco.contentDirectory = SonosMockService("ContentDirectory", ip_address)
         mock_soco.deviceProperties = SonosMockService("DeviceProperties", ip_address)
         mock_soco.alarmClock = self.alarm_clock
-        mock_soco.mute = False
-        mock_soco.night_mode = True
-        mock_soco.dialog_level = True
-        mock_soco.loudness = True
-        mock_soco.volume = 19
-        mock_soco.audio_delay = 2
-        mock_soco.balance = (61, 100)
-        mock_soco.bass = 1
-        mock_soco.treble = -1
-        mock_soco.mic_enabled = False
-        mock_soco.sub_enabled = False
-        mock_soco.sub_gain = 5
-        mock_soco.surround_enabled = True
-        mock_soco.surround_mode = True
-        mock_soco.surround_level = 3
-        mock_soco.music_surround_level = 4
-        mock_soco.soundbar_audio_input_format = "Dolby 5.1"
         mock_soco.get_battery_info.return_value = self.battery_info
         mock_soco.all_zones = {mock_soco}
         mock_soco.group.coordinator = mock_soco
@@ -210,9 +242,11 @@ def soco_factory(
     factory = SoCoMockFactory(
         music_library, speaker_info, current_track_info_empty, battery_info, alarm_clock
     )
-    with patch("homeassistant.components.sonos.SoCo", new=factory.get_mock), patch(
-        "socket.gethostbyname", side_effect=patch_gethostbyname
-    ), patch("homeassistant.components.sonos.ZGS_SUBSCRIPTION_TIMEOUT", 0):
+    with (
+        patch("homeassistant.components.sonos.SoCo", new=factory.get_mock),
+        patch("socket.gethostbyname", side_effect=patch_gethostbyname),
+        patch("homeassistant.components.sonos.ZGS_SUBSCRIPTION_TIMEOUT", 0),
+    ):
         yield factory
 
 
@@ -225,14 +259,16 @@ def soco_fixture(soco_factory):
 @pytest.fixture(autouse=True)
 async def silent_ssdp_scanner(hass):
     """Start SSDP component and get Scanner, prevent actual SSDP traffic."""
-    with patch(
-        "homeassistant.components.ssdp.Scanner._async_start_ssdp_listeners"
-    ), patch("homeassistant.components.ssdp.Scanner._async_stop_ssdp_listeners"), patch(
-        "homeassistant.components.ssdp.Scanner.async_scan"
-    ), patch(
-        "homeassistant.components.ssdp.Server._async_start_upnp_servers"
-    ), patch(
-        "homeassistant.components.ssdp.Server._async_stop_upnp_servers"
+    with (
+        patch("homeassistant.components.ssdp.Scanner._async_start_ssdp_listeners"),
+        patch("homeassistant.components.ssdp.Scanner._async_stop_ssdp_listeners"),
+        patch("homeassistant.components.ssdp.Scanner.async_scan"),
+        patch(
+            "homeassistant.components.ssdp.Server._async_start_upnp_servers",
+        ),
+        patch(
+            "homeassistant.components.ssdp.Server._async_stop_upnp_servers",
+        ),
     ):
         yield
 
@@ -241,8 +277,8 @@ async def silent_ssdp_scanner(hass):
 def discover_fixture(soco):
     """Create a mock soco discover fixture."""
 
-    async def do_callback(hass, callback, *args, **kwargs):
-        await callback(
+    def do_callback(hass, callback, *args, **kwargs):
+        callback(
             ssdp.SsdpServiceInfo(
                 ssdp_location=f"http://{soco.ip_address}/",
                 ssdp_st="urn:schemas-upnp-org:device:ZonePlayer:1",
@@ -452,15 +488,15 @@ def zgs_discovery_fixture():
 
 
 @pytest.fixture(name="fire_zgs_event")
-def zgs_event_fixture(hass, soco, zgs_discovery):
+def zgs_event_fixture(hass: HomeAssistant, soco: SoCo, zgs_discovery: str):
     """Create alarm_event fixture."""
     variables = {"ZoneGroupState": zgs_discovery}
 
     async def _wrapper():
         event = SonosMockEvent(soco, soco.zoneGroupTopology, variables)
-        subscription = soco.zoneGroupTopology.subscribe.return_value
-        sub_callback = subscription.callback
+        subscription: SonosMockSubscribe = soco.zoneGroupTopology.subscribe.return_value
+        sub_callback = await subscription.wait_for_callback_to_be_set()
         sub_callback(event)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     return _wrapper

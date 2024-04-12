@@ -1,4 +1,5 @@
 """Tests the lock platform of the Loqed integration."""
+
 from loqedAPI import loqed
 
 from homeassistant.components.loqed import LoqedDataCoordinator

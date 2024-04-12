@@ -1,4 +1,5 @@
 """Binary sensor tests for the Dremel 3D Printer integration."""
+
 from unittest.mock import AsyncMock
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass

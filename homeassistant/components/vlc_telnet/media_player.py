@@ -1,4 +1,5 @@
 """Provide functionality to interact with the vlc telnet interface."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Coroutine
@@ -45,7 +46,7 @@ async def async_setup_entry(
 
 
 def catch_vlc_errors(
-    func: Callable[Concatenate[_VlcDeviceT, _P], Awaitable[None]]
+    func: Callable[Concatenate[_VlcDeviceT, _P], Awaitable[None]],
 ) -> Callable[Concatenate[_VlcDeviceT, _P], Coroutine[Any, Any, None]]:
     """Catch VLC errors."""
 

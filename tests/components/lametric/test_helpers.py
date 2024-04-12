@@ -1,4 +1,5 @@
 """Tests for the LaMetric helpers."""
+
 from unittest.mock import MagicMock
 
 import pytest
@@ -12,12 +13,11 @@ from tests.common import MockConfigEntry
 
 async def test_get_coordinator_by_device_id(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     init_integration: MockConfigEntry,
     mock_lametric: MagicMock,
 ) -> None:
     """Test get LaMetric coordinator by device ID ."""
-    entity_registry = er.async_get(hass)
-
     with pytest.raises(ValueError, match="Unknown LaMetric device ID: bla"):
         async_get_coordinator_by_device_id(hass, "bla")
 

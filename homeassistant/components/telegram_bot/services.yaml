@@ -34,7 +34,6 @@ send_message:
           min: 1
           max: 3600
           unit_of_measurement: seconds
-
     keyboard:
       example: '["/command1, /command2", "/command3"]'
       selector:
@@ -50,6 +49,10 @@ send_message:
       example: "msg_to_edit"
       selector:
         text:
+    reply_to_message_id:
+      selector:
+        number:
+          mode: box
 
 send_photo:
   fields:
@@ -117,6 +120,10 @@ send_photo:
       example: "msg_to_edit"
       selector:
         text:
+    reply_to_message_id:
+      selector:
+        number:
+          mode: box
 
 send_sticker:
   fields:
@@ -177,6 +184,10 @@ send_sticker:
       example: "msg_to_edit"
       selector:
         text:
+    reply_to_message_id:
+      selector:
+        number:
+          mode: box
 
 send_animation:
   fields:
@@ -240,6 +251,14 @@ send_animation:
         ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
       selector:
         object:
+    message_tag:
+      example: "msg_to_edit"
+      selector:
+        text:
+    reply_to_message_id:
+      selector:
+        number:
+          mode: box
 
 send_video:
   fields:
@@ -307,6 +326,10 @@ send_video:
       example: "msg_to_edit"
       selector:
         text:
+    reply_to_message_id:
+      selector:
+        number:
+          mode: box
 
 send_voice:
   fields:
@@ -367,6 +390,10 @@ send_voice:
       example: "msg_to_edit"
       selector:
         text:
+    reply_to_message_id:
+      selector:
+        number:
+          mode: box
 
 send_document:
   fields:
@@ -434,6 +461,10 @@ send_document:
       example: "msg_to_edit"
       selector:
         text:
+    reply_to_message_id:
+      selector:
+        number:
+          mode: box
 
 send_location:
   fields:
@@ -480,6 +511,10 @@ send_location:
       example: "msg_to_edit"
       selector:
         text:
+    reply_to_message_id:
+      selector:
+        number:
+          mode: box
 
 send_poll:
   fields:
@@ -516,6 +551,14 @@ send_poll:
           min: 1
           max: 3600
           unit_of_measurement: seconds
+    message_tag:
+      example: "msg_to_edit"
+      selector:
+        text:
+    reply_to_message_id:
+      selector:
+        number:
+          mode: box
 
 edit_message:
   fields:

@@ -1,4 +1,5 @@
 """Support for RDW binary sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -23,25 +24,17 @@ from homeassistant.helpers.update_coordinator import (
 from .const import DOMAIN
 
 
-@dataclass
-class RDWBinarySensorEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class RDWBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Describes RDW binary sensor entity."""
 
     is_on_fn: Callable[[Vehicle], bool | None]
-
-
-@dataclass
-class RDWBinarySensorEntityDescription(
-    BinarySensorEntityDescription, RDWBinarySensorEntityDescriptionMixin
-):
-    """Describes RDW binary sensor entity."""
 
 
 BINARY_SENSORS: tuple[RDWBinarySensorEntityDescription, ...] = (
     RDWBinarySensorEntityDescription(
         key="liability_insured",
         translation_key="liability_insured",
-        icon="mdi:shield-car",
         is_on_fn=lambda vehicle: vehicle.liability_insured,
     ),
     RDWBinarySensorEntityDescription(

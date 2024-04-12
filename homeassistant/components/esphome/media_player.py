@@ -1,4 +1,5 @@
 """Support for ESPHome media players."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -25,7 +26,12 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .entity import EsphomeEntity, esphome_state_property, platform_async_setup_entry
+from .entity import (
+    EsphomeEntity,
+    convert_api_error_ha_error,
+    esphome_state_property,
+    platform_async_setup_entry,
+)
 from .enum_mapper import EsphomeEnumMapper
 
 
@@ -94,6 +100,7 @@ class EsphomeMediaPlayer(
         """Volume level of the media player (0..1)."""
         return self._state.volume
 
+    @convert_api_error_ha_error
     async def async_play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
@@ -106,7 +113,7 @@ class EsphomeMediaPlayer(
 
         media_id = async_process_play_media_url(self.hass, media_id)
 
-        await self._client.media_player_command(
+        self._client.media_player_command(
             self._key,
             media_url=media_id,
         )
@@ -123,31 +130,30 @@ class EsphomeMediaPlayer(
             content_filter=lambda item: item.media_content_type.startswith("audio/"),
         )
 
+    @convert_api_error_ha_error
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
-        await self._client.media_player_command(self._key, volume=volume)
+        self._client.media_player_command(self._key, volume=volume)
 
+    @convert_api_error_ha_error
     async def async_media_pause(self) -> None:
         """Send pause command."""
-        await self._client.media_player_command(
-            self._key, command=MediaPlayerCommand.PAUSE
-        )
+        self._client.media_player_command(self._key, command=MediaPlayerCommand.PAUSE)
 
+    @convert_api_error_ha_error
     async def async_media_play(self) -> None:
         """Send play command."""
-        await self._client.media_player_command(
-            self._key, command=MediaPlayerCommand.PLAY
-        )
+        self._client.media_player_command(self._key, command=MediaPlayerCommand.PLAY)
 
+    @convert_api_error_ha_error
     async def async_media_stop(self) -> None:
         """Send stop command."""
-        await self._client.media_player_command(
-            self._key, command=MediaPlayerCommand.STOP
-        )
+        self._client.media_player_command(self._key, command=MediaPlayerCommand.STOP)
 
+    @convert_api_error_ha_error
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute the volume."""
-        await self._client.media_player_command(
+        self._client.media_player_command(
             self._key,
             command=MediaPlayerCommand.MUTE if mute else MediaPlayerCommand.UNMUTE,
         )

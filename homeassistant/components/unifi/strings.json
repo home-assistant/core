@@ -11,6 +11,9 @@
           "port": "[%key:common::config_flow::data::port%]",
           "site": "Site ID",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "host": "Hostname or IP address of your UniFi Network."
         }
       }
     },

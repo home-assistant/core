@@ -1,4 +1,5 @@
 """Base for Hass.io entities."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -7,18 +8,20 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import DOMAIN, HassioDataUpdateCoordinator
 from .const import (
     ATTR_SLUG,
+    CONTAINER_STATS,
     CORE_CONTAINER,
     DATA_KEY_ADDONS,
     DATA_KEY_CORE,
     DATA_KEY_HOST,
     DATA_KEY_OS,
     DATA_KEY_SUPERVISOR,
+    DOMAIN,
     KEY_TO_UPDATE_TYPES,
     SUPERVISOR_CONTAINER,
 )
+from .data import HassioDataUpdateCoordinator
 
 
 class HassioAddonEntity(CoordinatorEntity[HassioDataUpdateCoordinator]):
@@ -58,6 +61,8 @@ class HassioAddonEntity(CoordinatorEntity[HassioDataUpdateCoordinator]):
                 self._addon_slug, self.entity_id, update_types
             )
         )
+        if CONTAINER_STATS in update_types:
+            await self.coordinator.async_request_refresh()
 
 
 class HassioOSEntity(CoordinatorEntity[HassioDataUpdateCoordinator]):
@@ -147,6 +152,8 @@ class HassioSupervisorEntity(CoordinatorEntity[HassioDataUpdateCoordinator]):
                 SUPERVISOR_CONTAINER, self.entity_id, update_types
             )
         )
+        if CONTAINER_STATS in update_types:
+            await self.coordinator.async_request_refresh()
 
 
 class HassioCoreEntity(CoordinatorEntity[HassioDataUpdateCoordinator]):
@@ -183,3 +190,5 @@ class HassioCoreEntity(CoordinatorEntity[HassioDataUpdateCoordinator]):
                 CORE_CONTAINER, self.entity_id, update_types
             )
         )
+        if CONTAINER_STATS in update_types:
+            await self.coordinator.async_request_refresh()

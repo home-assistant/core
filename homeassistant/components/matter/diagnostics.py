@@ -1,4 +1,5 @@
 """Provide diagnostics for Matter."""
+
 from __future__ import annotations
 
 from copy import deepcopy
@@ -21,7 +22,7 @@ def redact_matter_attributes(node_data: dict[str, Any]) -> dict[str, Any]:
     """Redact Matter cluster attribute."""
     redacted = deepcopy(node_data)
     for attribute_to_redact in ATTRIBUTES_TO_REDACT:
-        for attribute_path, _value in redacted["attributes"].items():
+        for attribute_path in redacted["attributes"]:
             _, cluster_id, attribute_id = parse_attribute_path(attribute_path)
             if cluster_id != attribute_to_redact.cluster_id:
                 continue
@@ -58,7 +59,7 @@ async def async_get_device_diagnostics(
     """Return diagnostics for a device."""
     matter = get_matter(hass)
     server_diagnostics = await matter.matter_client.get_diagnostics()
-    node = await get_node_from_device_entry(hass, device)
+    node = get_node_from_device_entry(hass, device)
 
     return {
         "server_info": dataclass_to_dict(server_diagnostics.info),

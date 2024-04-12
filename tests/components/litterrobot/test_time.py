@@ -1,10 +1,12 @@
 """Test the Litter-Robot time entity."""
+
 from __future__ import annotations
 
-from datetime import time
+from datetime import datetime, time
 from unittest.mock import MagicMock
 
 from pylitterbot import LitterRobot3
+import pytest
 
 from homeassistant.components.time import DOMAIN as PLATFORM_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID
@@ -15,6 +17,7 @@ from .conftest import setup_integration
 SLEEP_START_TIME_ENTITY_ID = "time.test_sleep_mode_start_time"
 
 
+@pytest.mark.freeze_time(datetime(2023, 7, 1, 12))
 async def test_sleep_mode_start_time(
     hass: HomeAssistant, mock_account: MagicMock
 ) -> None:

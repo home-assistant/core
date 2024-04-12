@@ -1,4 +1,5 @@
 """Test the Z-Wave JS Websocket API."""
+
 from copy import deepcopy
 from http import HTTPStatus
 import json
@@ -457,7 +458,7 @@ async def test_node_metadata(
     assert msg["error"]["code"] == ERR_NOT_LOADED
 
 
-async def test_node_comments(
+async def test_node_alerts(
     hass: HomeAssistant,
     wallmote_central_scene,
     integration,
@@ -473,13 +474,14 @@ async def test_node_comments(
     await ws_client.send_json(
         {
             ID: 3,
-            TYPE: "zwave_js/node_comments",
+            TYPE: "zwave_js/node_alerts",
             DEVICE_ID: device.id,
         }
     )
     msg = await ws_client.receive_json()
     result = msg["result"]
     assert result["comments"] == [{"level": "info", "text": "test"}]
+    assert result["is_embedded"]
 
 
 async def test_add_node(
@@ -2793,6 +2795,7 @@ async def test_set_config_parameter(
 
     msg = await ws_client.receive_json()
     assert msg["success"]
+    assert msg["result"]["status"] == "queued"
 
     assert len(client.async_send_command_no_wait.call_args_list) == 1
     args = client.async_send_command_no_wait.call_args[0][0]
@@ -2825,6 +2828,7 @@ async def test_set_config_parameter(
 
     msg = await ws_client.receive_json()
     assert msg["success"]
+    assert msg["result"]["status"] == "queued"
 
     assert len(client.async_send_command_no_wait.call_args_list) == 1
     args = client.async_send_command_no_wait.call_args[0][0]
@@ -2856,6 +2860,7 @@ async def test_set_config_parameter(
 
     msg = await ws_client.receive_json()
     assert msg["success"]
+    assert msg["result"]["status"] == "queued"
 
     assert len(client.async_send_command_no_wait.call_args_list) == 1
     args = client.async_send_command_no_wait.call_args[0][0]
@@ -3065,13 +3070,17 @@ async def test_firmware_upload_view(
     """Test the HTTP firmware upload view."""
     client = await hass_client()
     device = get_device(hass, multisensor_6)
-    with patch(
-        "homeassistant.components.zwave_js.api.update_firmware",
-    ) as mock_node_cmd, patch(
-        "homeassistant.components.zwave_js.api.controller_firmware_update_otw",
-    ) as mock_controller_cmd, patch.dict(
-        "homeassistant.components.zwave_js.api.USER_AGENT",
-        {"HomeAssistant": "0.0.0"},
+    with (
+        patch(
+            "homeassistant.components.zwave_js.api.update_firmware",
+        ) as mock_node_cmd,
+        patch(
+            "homeassistant.components.zwave_js.api.controller_firmware_update_otw",
+        ) as mock_controller_cmd,
+        patch.dict(
+            "homeassistant.components.zwave_js.api.USER_AGENT",
+            {"HomeAssistant": "0.0.0"},
+        ),
     ):
         data = {"file": firmware_file}
         data.update(firmware_data)
@@ -3102,13 +3111,17 @@ async def test_firmware_upload_view_controller(
     """Test the HTTP firmware upload view for a controller."""
     hass_client = await hass_client()
     device = get_device(hass, client.driver.controller.nodes[1])
-    with patch(
-        "homeassistant.components.zwave_js.api.update_firmware",
-    ) as mock_node_cmd, patch(
-        "homeassistant.components.zwave_js.api.controller_firmware_update_otw",
-    ) as mock_controller_cmd, patch.dict(
-        "homeassistant.components.zwave_js.api.USER_AGENT",
-        {"HomeAssistant": "0.0.0"},
+    with (
+        patch(
+            "homeassistant.components.zwave_js.api.update_firmware",
+        ) as mock_node_cmd,
+        patch(
+            "homeassistant.components.zwave_js.api.controller_firmware_update_otw",
+        ) as mock_controller_cmd,
+        patch.dict(
+            "homeassistant.components.zwave_js.api.USER_AGENT",
+            {"HomeAssistant": "0.0.0"},
+        ),
     ):
         resp = await hass_client.post(
             f"/api/zwave_js/firmware/upload/{device.id}",

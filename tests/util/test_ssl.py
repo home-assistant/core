@@ -15,8 +15,7 @@ from homeassistant.util.ssl import (
 @pytest.fixture
 def mock_sslcontext():
     """Mock the ssl lib."""
-    ssl_mock = MagicMock(set_ciphers=Mock(return_value=True))
-    return ssl_mock
+    return MagicMock(set_ciphers=Mock(return_value=True))
 
 
 def test_client_context(mock_sslcontext) -> None:
@@ -51,3 +50,12 @@ def test_no_verify_ssl_context(mock_sslcontext) -> None:
         mock_sslcontext.set_ciphers.assert_called_with(
             SSL_CIPHER_LISTS[SSLCipherList.INTERMEDIATE]
         )
+
+
+def test_ssl_context_caching() -> None:
+    """Test that SSLContext instances are cached correctly."""
+
+    assert client_context() is client_context(SSLCipherList.PYTHON_DEFAULT)
+    assert create_no_verify_ssl_context() is create_no_verify_ssl_context(
+        SSLCipherList.PYTHON_DEFAULT
+    )

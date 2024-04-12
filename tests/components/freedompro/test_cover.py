@@ -1,4 +1,5 @@
 """Tests for the Freedompro cover."""
+
 from datetime import timedelta
 from unittest.mock import ANY, patch
 
@@ -20,7 +21,7 @@ from homeassistant.util.dt import utcnow
 
 from .conftest import get_states_response_for_uid
 
-from tests.common import async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.parametrize(
@@ -36,18 +37,17 @@ from tests.common import async_fire_time_changed
 )
 async def test_cover_get_state(
     hass: HomeAssistant,
-    init_integration,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    init_integration: MockConfigEntry,
     entity_id: str,
     uid: str,
     name: str,
     model: str,
 ) -> None:
     """Test states of the cover."""
-    init_integration
-    registry = er.async_get(hass)
-    registry_device = dr.async_get(hass)
 
-    device = registry_device.async_get_device(identifiers={("freedompro", uid)})
+    device = device_registry.async_get_device(identifiers={("freedompro", uid)})
     assert device is not None
     assert device.identifiers == {("freedompro", uid)}
     assert device.manufacturer == "Freedompro"
@@ -59,7 +59,7 @@ async def test_cover_get_state(
     assert state.state == STATE_CLOSED
     assert state.attributes.get("friendly_name") == name
 
-    entry = registry.async_get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.unique_id == uid
 
@@ -76,7 +76,7 @@ async def test_cover_get_state(
         assert state
         assert state.attributes.get("friendly_name") == name
 
-        entry = registry.async_get(entity_id)
+        entry = entity_registry.async_get(entity_id)
         assert entry
         assert entry.unique_id == uid
 
@@ -96,22 +96,21 @@ async def test_cover_get_state(
 )
 async def test_cover_set_position(
     hass: HomeAssistant,
-    init_integration,
+    entity_registry: er.EntityRegistry,
+    init_integration: MockConfigEntry,
     entity_id: str,
     uid: str,
     name: str,
     model: str,
 ) -> None:
     """Test set position of the cover."""
-    init_integration
-    registry = er.async_get(hass)
 
     state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_CLOSED
     assert state.attributes.get("friendly_name") == name
 
-    entry = registry.async_get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.unique_id == uid
 
@@ -151,15 +150,14 @@ async def test_cover_set_position(
 )
 async def test_cover_close(
     hass: HomeAssistant,
-    init_integration,
+    entity_registry: er.EntityRegistry,
+    init_integration: MockConfigEntry,
     entity_id: str,
     uid: str,
     name: str,
     model: str,
 ) -> None:
     """Test close cover."""
-    init_integration
-    registry = er.async_get(hass)
 
     states_response = get_states_response_for_uid(uid)
     states_response[0]["state"]["position"] = 100
@@ -176,7 +174,7 @@ async def test_cover_close(
     assert state.state == STATE_OPEN
     assert state.attributes.get("friendly_name") == name
 
-    entry = registry.async_get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.unique_id == uid
 
@@ -214,22 +212,21 @@ async def test_cover_close(
 )
 async def test_cover_open(
     hass: HomeAssistant,
-    init_integration,
+    entity_registry: er.EntityRegistry,
+    init_integration: MockConfigEntry,
     entity_id: str,
     uid: str,
     name: str,
     model: str,
 ) -> None:
     """Test open cover."""
-    init_integration
-    registry = er.async_get(hass)
 
     state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_CLOSED
     assert state.attributes.get("friendly_name") == name
 
-    entry = registry.async_get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.unique_id == uid
 

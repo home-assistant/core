@@ -1,13 +1,14 @@
 """Support for Roborock number."""
+
 import asyncio
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 import logging
 from typing import Any
 
-from roborock.api import AttributeCache
 from roborock.command_cache import CacheableAttribute
 from roborock.exceptions import RoborockException
+from roborock.version_1_apis.roborock_client_v1 import AttributeCache
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -23,9 +24,9 @@ from .device import RoborockEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
-class RoborockNumberDescriptionMixin:
-    """Define an entity description mixin for button entities."""
+@dataclass(frozen=True, kw_only=True)
+class RoborockNumberDescription(NumberEntityDescription):
+    """Class to describe a Roborock number entity."""
 
     # Gets the status of the switch
     cache_key: CacheableAttribute
@@ -33,18 +34,10 @@ class RoborockNumberDescriptionMixin:
     update_value: Callable[[AttributeCache, float], Coroutine[Any, Any, dict]]
 
 
-@dataclass
-class RoborockNumberDescription(
-    NumberEntityDescription, RoborockNumberDescriptionMixin
-):
-    """Class to describe an Roborock number entity."""
-
-
 NUMBER_DESCRIPTIONS: list[RoborockNumberDescription] = [
     RoborockNumberDescription(
         key="volume",
         translation_key="volume",
-        icon="mdi:volume-source",
         native_min_value=0,
         native_max_value=100,
         native_unit_of_measurement=PERCENTAGE,
@@ -74,7 +67,7 @@ async def async_setup_entry(
     # We need to check if this function is supported by the device.
     results = await asyncio.gather(
         *(
-            coordinator.api.cache.get(description.cache_key).async_value()
+            coordinator.api.get_from_cache(description.cache_key)
             for coordinator, description in possible_entities
         ),
         return_exceptions=True,

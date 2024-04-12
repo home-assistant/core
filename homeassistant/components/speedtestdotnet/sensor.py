@@ -1,4 +1,5 @@
 """Support for Speedtest.net internet speed testing sensor."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -28,12 +29,11 @@ from .const import (
     ATTRIBUTION,
     DEFAULT_NAME,
     DOMAIN,
-    ICON,
 )
 from .coordinator import SpeedTestDataCoordinator
 
 
-@dataclass
+@dataclass(frozen=True)
 class SpeedtestSensorEntityDescription(SensorEntityDescription):
     """Class describing Speedtest sensor entities."""
 
@@ -86,7 +86,6 @@ class SpeedtestSensor(CoordinatorEntity[SpeedTestDataCoordinator], SensorEntity)
     entity_description: SpeedtestSensorEntityDescription
     _attr_attribution = ATTRIBUTION
     _attr_has_entity_name = True
-    _attr_icon = ICON
 
     def __init__(
         self,

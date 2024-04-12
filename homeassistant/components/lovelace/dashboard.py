@@ -1,4 +1,5 @@
 """Lovelace dashboard support."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -14,9 +15,10 @@ from homeassistant.const import CONF_FILENAME
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import collection, storage
-from homeassistant.util.yaml import Secrets, load_yaml
+from homeassistant.util.yaml import Secrets, load_yaml_dict
 
 from .const import (
+    CONF_ALLOW_SINGLE_WORD,
     CONF_ICON,
     CONF_URL_PATH,
     DOMAIN,
@@ -201,7 +203,9 @@ class LovelaceYAML(LovelaceConfig):
         is_updated = self._cache is not None
 
         try:
-            config = load_yaml(self.path, Secrets(Path(self.hass.config.config_dir)))
+            config = load_yaml_dict(
+                self.path, Secrets(Path(self.hass.config.config_dir))
+            )
         except FileNotFoundError:
             raise ConfigNotFound from None
 
@@ -229,29 +233,16 @@ class DashboardsCollection(collection.DictStorageCollection):
             storage.Store(hass, DASHBOARDS_STORAGE_VERSION, DASHBOARDS_STORAGE_KEY),
         )
 
-    async def _async_load_data(self) -> collection.SerializedStorageCollection | None:
-        """Load the data."""
-        if (data := await self.store.async_load()) is None:
-            return data
-
-        updated = False
-
-        for item in data["items"] or []:
-            if "-" not in item[CONF_URL_PATH]:
-                updated = True
-                item[CONF_URL_PATH] = f"lovelace-{item[CONF_URL_PATH]}"
-
-        if updated:
-            await self.store.async_save(data)
-
-        return data
-
     async def _process_create_data(self, data: dict) -> dict:
         """Validate the config is valid."""
-        if "-" not in data[CONF_URL_PATH]:
+        url_path = data[CONF_URL_PATH]
+
+        allow_single_word = data.pop(CONF_ALLOW_SINGLE_WORD, False)
+
+        if not allow_single_word and "-" not in url_path:
             raise vol.Invalid("Url path needs to contain a hyphen (-)")
 
-        if data[CONF_URL_PATH] in self.hass.data[DATA_PANELS]:
+        if url_path in self.hass.data[DATA_PANELS]:
             raise vol.Invalid("Panel url path needs to be unique")
 
         return self.CREATE_SCHEMA(data)

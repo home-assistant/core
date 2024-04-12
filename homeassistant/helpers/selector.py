@@ -1,4 +1,5 @@
 """Selectors for Home Assistant."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping, Sequence
@@ -102,6 +103,7 @@ def _entity_features() -> dict[str, type[IntFlag]]:
     from homeassistant.components.todo import TodoListEntityFeature
     from homeassistant.components.update import UpdateEntityFeature
     from homeassistant.components.vacuum import VacuumEntityFeature
+    from homeassistant.components.valve import ValveEntityFeature
     from homeassistant.components.water_heater import WaterHeaterEntityFeature
     from homeassistant.components.weather import WeatherEntityFeature
 
@@ -122,6 +124,7 @@ def _entity_features() -> dict[str, type[IntFlag]]:
         "TodoListEntityFeature": TodoListEntityFeature,
         "UpdateEntityFeature": UpdateEntityFeature,
         "VacuumEntityFeature": VacuumEntityFeature,
+        "ValveEntityFeature": ValveEntityFeature,
         "WaterHeaterEntityFeature": WaterHeaterEntityFeature,
         "WeatherEntityFeature": WeatherEntityFeature,
     }
@@ -425,8 +428,18 @@ class ColorRGBSelector(Selector[ColorRGBSelectorConfig]):
 class ColorTempSelectorConfig(TypedDict, total=False):
     """Class to represent a color temp selector config."""
 
+    unit: ColorTempSelectorUnit
+    min: int
+    max: int
     max_mireds: int
     min_mireds: int
+
+
+class ColorTempSelectorUnit(StrEnum):
+    """Possible units for a color temperature selector."""
+
+    KELVIN = "kelvin"
+    MIRED = "mired"
 
 
 @SELECTORS.register("color_temp")
@@ -437,6 +450,11 @@ class ColorTempSelector(Selector[ColorTempSelectorConfig]):
 
     CONFIG_SCHEMA = vol.Schema(
         {
+            vol.Optional("unit", default=ColorTempSelectorUnit.MIRED): vol.All(
+                vol.Coerce(ColorTempSelectorUnit), lambda val: val.value
+            ),
+            vol.Optional("min"): vol.Coerce(int),
+            vol.Optional("max"): vol.Coerce(int),
             vol.Optional("max_mireds"): vol.Coerce(int),
             vol.Optional("min_mireds"): vol.Coerce(int),
         }
@@ -448,18 +466,27 @@ class ColorTempSelector(Selector[ColorTempSelectorConfig]):
 
     def __call__(self, data: Any) -> int:
         """Validate the passed selection."""
+        range_min = self.config.get("min")
+        range_max = self.config.get("max")
+
+        if not range_min:
+            range_min = self.config.get("min_mireds")
+
+        if not range_max:
+            range_max = self.config.get("max_mireds")
+
         value: int = vol.All(
             vol.Coerce(float),
             vol.Range(
-                min=self.config.get("min_mireds"),
-                max=self.config.get("max_mireds"),
+                min=range_min,
+                max=range_max,
             ),
         )(data)
         return value
 
 
 class ConditionSelectorConfig(TypedDict):
-    """Class to represent an action selector config."""
+    """Class to represent an condition selector config."""
 
 
 @SELECTORS.register("condition")
@@ -537,6 +564,49 @@ class ConstantSelector(Selector[ConstantSelectorConfig]):
         """Validate the passed selection."""
         vol.Schema(self.config["value"])(data)
         return self.config["value"]
+
+
+class QrErrorCorrectionLevel(StrEnum):
+    """Possible error correction levels for QR code selector."""
+
+    LOW = "low"
+    MEDIUM = "medium"
+    QUARTILE = "quartile"
+    HIGH = "high"
+
+
+class QrCodeSelectorConfig(TypedDict, total=False):
+    """Class to represent a QR code selector config."""
+
+    data: str
+    scale: int
+    error_correction_level: QrErrorCorrectionLevel
+
+
+@SELECTORS.register("qr_code")
+class QrCodeSelector(Selector[QrCodeSelectorConfig]):
+    """QR code selector."""
+
+    selector_type = "qr_code"
+
+    CONFIG_SCHEMA = vol.Schema(
+        {
+            vol.Required("data"): str,
+            vol.Optional("scale"): int,
+            vol.Optional("error_correction_level"): vol.All(
+                vol.Coerce(QrErrorCorrectionLevel), lambda val: val.value
+            ),
+        }
+    )
+
+    def __init__(self, config: QrCodeSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
+    def __call__(self, data: Any) -> Any:
+        """Validate the passed selection."""
+        vol.Schema(vol.Any(str, None))(data)
+        return self.config["data"]
 
 
 class ConversationAgentSelectorConfig(TypedDict, total=False):
@@ -774,6 +844,48 @@ class EntitySelector(Selector[EntitySelectorConfig]):
         return cast(list, vol.Schema([validate])(data))  # Output is a list
 
 
+class FloorSelectorConfig(TypedDict, total=False):
+    """Class to represent an floor selector config."""
+
+    entity: EntityFilterSelectorConfig | list[EntityFilterSelectorConfig]
+    device: DeviceFilterSelectorConfig | list[DeviceFilterSelectorConfig]
+    multiple: bool
+
+
+@SELECTORS.register("floor")
+class FloorSelector(Selector[AreaSelectorConfig]):
+    """Selector of a single or list of floors."""
+
+    selector_type = "floor"
+
+    CONFIG_SCHEMA = vol.Schema(
+        {
+            vol.Optional("entity"): vol.All(
+                cv.ensure_list,
+                [ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA],
+            ),
+            vol.Optional("device"): vol.All(
+                cv.ensure_list,
+                [DEVICE_FILTER_SELECTOR_CONFIG_SCHEMA],
+            ),
+            vol.Optional("multiple", default=False): cv.boolean,
+        }
+    )
+
+    def __init__(self, config: FloorSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
+    def __call__(self, data: Any) -> str | list[str]:
+        """Validate the passed selection."""
+        if not self.config["multiple"]:
+            floor_id: str = vol.Schema(str)(data)
+            return floor_id
+        if not isinstance(data, list):
+            raise vol.Invalid("Value should be a list")
+        return [vol.Schema(str)(val) for val in data]
+
+
 class IconSelectorConfig(TypedDict, total=False):
     """Class to represent an icon selector config."""
 
@@ -799,6 +911,38 @@ class IconSelector(Selector[IconSelectorConfig]):
         """Validate the passed selection."""
         icon: str = vol.Schema(str)(data)
         return icon
+
+
+class LabelSelectorConfig(TypedDict, total=False):
+    """Class to represent a label selector config."""
+
+    multiple: bool
+
+
+@SELECTORS.register("label")
+class LabelSelector(Selector[LabelSelectorConfig]):
+    """Selector of a single or list of labels."""
+
+    selector_type = "label"
+
+    CONFIG_SCHEMA = vol.Schema(
+        {
+            vol.Optional("multiple", default=False): cv.boolean,
+        }
+    )
+
+    def __init__(self, config: LabelSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
+    def __call__(self, data: Any) -> str | list[str]:
+        """Validate the passed selection."""
+        if not self.config["multiple"]:
+            label_id: str = vol.Schema(str)(data)
+            return label_id
+        if not isinstance(data, list):
+            raise vol.Invalid("Value should be a list")
+        return [vol.Schema(str)(val) for val in data]
 
 
 class LanguageSelectorConfig(TypedDict, total=False):
@@ -853,9 +997,9 @@ class LocationSelector(Selector[LocationSelectorConfig]):
     )
     DATA_SCHEMA = vol.Schema(
         {
-            vol.Required("latitude"): float,
-            vol.Required("longitude"): float,
-            vol.Optional("radius"): float,
+            vol.Required("latitude"): vol.Coerce(float),
+            vol.Required("longitude"): vol.Coerce(float),
+            vol.Optional("radius"): vol.Coerce(float),
         }
     )
 
@@ -926,9 +1070,6 @@ def validate_slider(data: Any) -> Any:
 
     if "min" not in data or "max" not in data:
         raise vol.Invalid("min and max are required in slider mode")
-
-    if "step" in data and data["step"] == "any":
-        raise vol.Invalid("step 'any' is not allowed in slider mode")
 
     return data
 
@@ -1182,6 +1323,7 @@ class TextSelectorConfig(TypedDict, total=False):
     suffix: str
     type: TextSelectorType
     autocomplete: str
+    multiple: bool
 
 
 class TextSelectorType(StrEnum):
@@ -1219,6 +1361,7 @@ class TextSelector(Selector[TextSelectorConfig]):
                 vol.Coerce(TextSelectorType), lambda val: val.value
             ),
             vol.Optional("autocomplete"): str,
+            vol.Optional("multiple", default=False): bool,
         }
     )
 
@@ -1226,10 +1369,14 @@ class TextSelector(Selector[TextSelectorConfig]):
         """Instantiate a selector."""
         super().__init__(config)
 
-    def __call__(self, data: Any) -> str:
+    def __call__(self, data: Any) -> str | list[str]:
         """Validate the passed selection."""
-        text: str = vol.Schema(str)(data)
-        return text
+        if not self.config["multiple"]:
+            text: str = vol.Schema(str)(data)
+            return text
+        if not isinstance(data, list):
+            raise vol.Invalid("Value should be a list")
+        return [vol.Schema(str)(val) for val in data]
 
 
 class ThemeSelectorConfig(TypedDict):
@@ -1278,6 +1425,27 @@ class TimeSelector(Selector[TimeSelectorConfig]):
         """Validate the passed selection."""
         cv.time(data)
         return cast(str, data)
+
+
+class TriggerSelectorConfig(TypedDict):
+    """Class to represent an trigger selector config."""
+
+
+@SELECTORS.register("trigger")
+class TriggerSelector(Selector[TriggerSelectorConfig]):
+    """Selector of a trigger sequence (script syntax)."""
+
+    selector_type = "trigger"
+
+    CONFIG_SCHEMA = vol.Schema({})
+
+    def __init__(self, config: TriggerSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
+    def __call__(self, data: Any) -> Any:
+        """Validate the passed selection."""
+        return vol.Schema(cv.TRIGGER_SCHEMA)(data)
 
 
 class FileSelectorConfig(TypedDict):

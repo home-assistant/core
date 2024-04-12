@@ -1,4 +1,5 @@
 """Support for MQTT humidifiers."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -102,7 +103,7 @@ _LOGGER = logging.getLogger(__name__)
 def valid_mode_configuration(config: ConfigType) -> ConfigType:
     """Validate that the mode reset payload is not one of the available modes."""
     if config[CONF_PAYLOAD_RESET_MODE] in config[CONF_AVAILABLE_MODES_LIST]:
-        raise ValueError("modes must not contain payload_reset_mode")
+        raise vol.Invalid("modes must not contain payload_reset_mode")
     return config
 
 
@@ -113,9 +114,9 @@ def valid_humidity_range_configuration(config: ConfigType) -> ConfigType:
     throws if it isn't.
     """
     if config[CONF_TARGET_HUMIDITY_MIN] >= config[CONF_TARGET_HUMIDITY_MAX]:
-        raise ValueError("target_humidity_max must be > target_humidity_min")
+        raise vol.Invalid("target_humidity_max must be > target_humidity_min")
     if config[CONF_TARGET_HUMIDITY_MAX] > 100:
-        raise ValueError("max_humidity must be <= 100")
+        raise vol.Invalid("max_humidity must be <= 100")
 
     return config
 
@@ -148,10 +149,10 @@ _PLATFORM_SCHEMA_BASE = MQTT_RW_SCHEMA.extend(
         vol.Optional(CONF_TARGET_HUMIDITY_COMMAND_TEMPLATE): cv.template,
         vol.Optional(
             CONF_TARGET_HUMIDITY_MAX, default=DEFAULT_MAX_HUMIDITY
-        ): cv.positive_int,
+        ): cv.positive_float,
         vol.Optional(
             CONF_TARGET_HUMIDITY_MIN, default=DEFAULT_MIN_HUMIDITY
-        ): cv.positive_int,
+        ): cv.positive_float,
         vol.Optional(CONF_TARGET_HUMIDITY_STATE_TEMPLATE): cv.template,
         vol.Optional(CONF_TARGET_HUMIDITY_STATE_TOPIC): valid_subscribe_topic,
         vol.Optional(
@@ -253,18 +254,16 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
         )
         self._optimistic_mode = optimistic or self._topic[CONF_MODE_STATE_TOPIC] is None
 
-        self._command_templates = {}
         command_templates: dict[str, Template | None] = {
             CONF_STATE: config.get(CONF_COMMAND_TEMPLATE),
             ATTR_HUMIDITY: config.get(CONF_TARGET_HUMIDITY_COMMAND_TEMPLATE),
             ATTR_MODE: config.get(CONF_MODE_COMMAND_TEMPLATE),
         }
-        for key, tpl in command_templates.items():
-            self._command_templates[key] = MqttCommandTemplate(
-                tpl, entity=self
-            ).async_render
+        self._command_templates = {
+            key: MqttCommandTemplate(tpl, entity=self).async_render
+            for key, tpl in command_templates.items()
+        }
 
-        self._value_templates = {}
         value_templates: dict[str, Template | None] = {
             ATTR_ACTION: config.get(CONF_ACTION_TEMPLATE),
             ATTR_CURRENT_HUMIDITY: config.get(CONF_CURRENT_HUMIDITY_TEMPLATE),
@@ -272,11 +271,13 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
             ATTR_HUMIDITY: config.get(CONF_TARGET_HUMIDITY_STATE_TEMPLATE),
             ATTR_MODE: config.get(CONF_MODE_STATE_TEMPLATE),
         }
-        for key, tpl in value_templates.items():
-            self._value_templates[key] = MqttValueTemplate(
+        self._value_templates = {
+            key: MqttValueTemplate(
                 tpl,
                 entity=self,
             ).async_render_with_possible_json_value
+            for key, tpl in value_templates.items()
+        }
 
     def add_subscription(
         self,
@@ -484,7 +485,7 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
             self._attr_is_on = False
             self.async_write_ha_state()
 
-    async def async_set_humidity(self, humidity: int) -> None:
+    async def async_set_humidity(self, humidity: float) -> None:
         """Set the target humidity of the humidifier.
 
         This method is a coroutine.

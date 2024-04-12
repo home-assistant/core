@@ -44,6 +44,12 @@
       }
     }
   },
+  "issues": {
+    "integration_removed": {
+      "title": "The Logi Circle integration has been deprecated and will be removed",
+      "description": "Logitech stopped accepting applications for access to the Logi Circle API in May 2022, and the Logi Circle integration will be removed from Home Assistant.\n\nTo resolve this issue, please remove the integration entries from your Home Assistant setup. [Click here to see your existing Logi Circle integration entries]({entries})."
+    }
+  },
   "services": {
     "set_config": {
       "name": "Set config",

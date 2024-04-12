@@ -1,7 +1,7 @@
 """Support for the Transmission BitTorrent client API."""
+
 from __future__ import annotations
 
-from datetime import timedelta
 from functools import partial
 import logging
 import re
@@ -21,8 +21,9 @@ from homeassistant.const import (
     CONF_ID,
     CONF_NAME,
     CONF_PASSWORD,
+    CONF_PATH,
     CONF_PORT,
-    CONF_SCAN_INTERVAL,
+    CONF_SSL,
     CONF_USERNAME,
     Platform,
 )
@@ -39,6 +40,8 @@ from .const import (
     ATTR_TORRENT,
     CONF_ENTRY_ID,
     DEFAULT_DELETE_DATA,
+    DEFAULT_PATH,
+    DEFAULT_SSL,
     DOMAIN,
     SERVICE_ADD_TORRENT,
     SERVICE_REMOVE_TORRENT,
@@ -69,7 +72,7 @@ MIGRATION_NAME_TO_KEY = {
 
 SERVICE_BASE_SCHEMA = vol.Schema(
     {
-        vol.Exclusive(CONF_ENTRY_ID, "identifier"): selector.ConfigEntrySelector(),
+        vol.Required(CONF_ENTRY_ID): selector.ConfigEntrySelector(),
     }
 )
 
@@ -135,7 +138,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = coordinator
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
-    config_entry.add_update_listener(async_options_updated)
 
     async def add_torrent(service: ServiceCall) -> None:
         """Add new torrent to download."""
@@ -213,12 +215,43 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     return unload_ok
 
 
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Migrate an old config entry."""
+    _LOGGER.debug(
+        "Migrating from version %s.%s",
+        config_entry.version,
+        config_entry.minor_version,
+    )
+
+    if config_entry.version == 1:
+        # Version 1.2 adds ssl and path
+        if config_entry.minor_version < 2:
+            new = {**config_entry.data}
+
+            new[CONF_PATH] = DEFAULT_PATH
+            new[CONF_SSL] = DEFAULT_SSL
+
+        hass.config_entries.async_update_entry(
+            config_entry, data=new, version=1, minor_version=2
+        )
+
+    _LOGGER.debug(
+        "Migration to version %s.%s successful",
+        config_entry.version,
+        config_entry.minor_version,
+    )
+
+    return True
+
+
 async def get_api(
     hass: HomeAssistant, entry: dict[str, Any]
 ) -> transmission_rpc.Client:
     """Get Transmission client."""
+    protocol = "https" if entry[CONF_SSL] else "http"
     host = entry[CONF_HOST]
     port = entry[CONF_PORT]
+    path = entry[CONF_PATH]
     username = entry.get(CONF_USERNAME)
     password = entry.get(CONF_PASSWORD)
 
@@ -228,13 +261,12 @@ async def get_api(
                 transmission_rpc.Client,
                 username=username,
                 password=password,
+                protocol=protocol,
                 host=host,
                 port=port,
+                path=path,
             )
         )
-        _LOGGER.debug("Successfully connected to %s", host)
-        return api
-
     except TransmissionAuthError as error:
         _LOGGER.error("Credentials for Transmission client are not valid")
         raise AuthenticationError from error
@@ -244,10 +276,5 @@ async def get_api(
     except TransmissionError as error:
         _LOGGER.error(error)
         raise UnknownError from error
-
-
-async def async_options_updated(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Triggered by config entry options updates."""
-    coordinator: TransmissionDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-    coordinator.update_interval = timedelta(seconds=entry.options[CONF_SCAN_INTERVAL])
-    await coordinator.async_request_refresh()
+    _LOGGER.debug("Successfully connected to %s", host)
+    return api

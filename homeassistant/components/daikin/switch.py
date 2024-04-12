@@ -1,4 +1,5 @@
 """Support for Daikin AirBase zones."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -11,10 +12,9 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN as DAIKIN_DOMAIN, DaikinApi
 
-ZONE_ICON = "mdi:home-circle"
-STREAMER_ICON = "mdi:air-filter"
 DAIKIN_ATTR_ADVANCED = "adv"
 DAIKIN_ATTR_STREAMER = "streamer"
+DAIKIN_ATTR_MODE = "mode"
 
 
 async def async_setup_platform(
@@ -35,7 +35,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Daikin climate based on config_entry."""
     daikin_api: DaikinApi = hass.data[DAIKIN_DOMAIN][entry.entry_id]
-    switches: list[DaikinZoneSwitch | DaikinStreamerSwitch] = []
+    switches: list[DaikinZoneSwitch | DaikinStreamerSwitch | DaikinToggleSwitch] = []
     if zones := daikin_api.device.zones:
         switches.extend(
             [
@@ -49,16 +49,17 @@ async def async_setup_entry(
         # device supports the streamer, so assume so if it does support
         # advanced modes.
         switches.append(DaikinStreamerSwitch(daikin_api))
+    switches.append(DaikinToggleSwitch(daikin_api))
     async_add_entities(switches)
 
 
 class DaikinZoneSwitch(SwitchEntity):
     """Representation of a zone."""
 
-    _attr_icon = ZONE_ICON
     _attr_has_entity_name = True
+    _attr_translation_key = "zone"
 
-    def __init__(self, api: DaikinApi, zone_id) -> None:
+    def __init__(self, api: DaikinApi, zone_id: int) -> None:
         """Initialize the zone."""
         self._api = api
         self._zone_id = zone_id
@@ -91,9 +92,9 @@ class DaikinZoneSwitch(SwitchEntity):
 class DaikinStreamerSwitch(SwitchEntity):
     """Streamer state."""
 
-    _attr_icon = STREAMER_ICON
     _attr_name = "Streamer"
     _attr_has_entity_name = True
+    _attr_translation_key = "streamer"
 
     def __init__(self, api: DaikinApi) -> None:
         """Initialize streamer switch."""
@@ -119,3 +120,33 @@ class DaikinStreamerSwitch(SwitchEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the zone off."""
         await self._api.device.set_streamer("off")
+
+
+class DaikinToggleSwitch(SwitchEntity):
+    """Switch state."""
+
+    _attr_has_entity_name = True
+    _attr_translation_key = "toggle"
+
+    def __init__(self, api: DaikinApi) -> None:
+        """Initialize switch."""
+        self._api = api
+        self._attr_device_info = api.device_info
+        self._attr_unique_id = f"{self._api.device.mac}-toggle"
+
+    @property
+    def is_on(self) -> bool:
+        """Return the state of the sensor."""
+        return "off" not in self._api.device.represent(DAIKIN_ATTR_MODE)
+
+    async def async_update(self) -> None:
+        """Retrieve latest state."""
+        await self._api.async_update()
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the zone on."""
+        await self._api.device.set({})
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the zone off."""
+        await self._api.device.set({DAIKIN_ATTR_MODE: "off"})

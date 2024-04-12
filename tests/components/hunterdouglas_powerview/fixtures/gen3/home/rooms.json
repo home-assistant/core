@@ -1,0 +1,83 @@
+[
+  {
+    "id": 217,
+    "name": "RmFtaWx5IFJvb20=",
+    "ptName": "Family Room",
+    "color": "4",
+    "icon": "12",
+    "type": 0,
+    "shadeGroups": []
+  },
+  {
+    "id": 236,
+    "name": "QmVkcm9vbSAy",
+    "ptName": "Bedroom 2",
+    "color": "5",
+    "icon": "7",
+    "type": 0,
+    "shadeGroups": []
+  },
+  {
+    "id": 252,
+    "name": "QmVkcm9vbSAz",
+    "ptName": "Bedroom 3",
+    "color": "11",
+    "icon": "160",
+    "type": 0,
+    "shadeGroups": []
+  },
+  {
+    "id": 277,
+    "name": "QmVkcm9vbSA0",
+    "ptName": "Bedroom 4",
+    "color": "12",
+    "icon": "116",
+    "type": 0,
+    "shadeGroups": []
+  },
+  {
+    "id": 291,
+    "name": "TG91bmdlIFJvb20=",
+    "ptName": "Lounge Room",
+    "color": "7",
+    "icon": "54",
+    "type": 0,
+    "shadeGroups": []
+  },
+  {
+    "id": 298,
+    "name": "TWFzdGVyIEJlZG1vcmQ=",
+    "ptName": "Master Bedroom",
+    "color": "1",
+    "icon": "100",
+    "type": 0,
+    "shadeGroups": []
+  },
+  {
+    "id": 311,
+    "name": "S2l0Y2hlbg==",
+    "ptName": "Kitchen",
+    "color": "6",
+    "icon": "12",
+    "type": 0,
+    "shadeGroups": []
+  },
+  {
+    "id": 327,
+    "name": "U3R1ZHk=",
+    "ptName": "Study",
+    "color": "9",
+    "icon": "123",
+    "type": 0,
+    "shadeGroups": []
+  },
+  {
+    "id": 216,
+    "name": "RGVmYXVsdCBSb29t",
+    "ptName": "Default Room",
+    "color": "15",
+    "icon": "162",
+    "type": 2,
+    "shadeGroups": []
+  }
+]

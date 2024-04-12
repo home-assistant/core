@@ -1,4 +1,5 @@
 """Constants for Blink."""
+
 from homeassistant.const import Platform
 
 DOMAIN = "blink"
@@ -24,10 +25,12 @@ SERVICE_TRIGGER = "trigger_camera"
 SERVICE_SAVE_VIDEO = "save_video"
 SERVICE_SAVE_RECENT_CLIPS = "save_recent_clips"
 SERVICE_SEND_PIN = "send_pin"
+ATTR_CONFIG_ENTRY_ID = "config_entry_id"
 
 PLATFORMS = [
     Platform.ALARM_CONTROL_PANEL,
     Platform.BINARY_SENSOR,
     Platform.CAMERA,
     Platform.SENSOR,
+    Platform.SWITCH,
 ]

@@ -1,4 +1,5 @@
 """The Airzone Cloud integration."""
+
 from __future__ import annotations
 
 from aioairzone_cloud.cloudapi import AirzoneCloudApi
@@ -16,6 +17,7 @@ PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
     Platform.CLIMATE,
     Platform.SENSOR,
+    Platform.WATER_HEATER,
 ]
 
 
@@ -24,6 +26,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     options = ConnectionOptions(
         entry.data[CONF_USERNAME],
         entry.data[CONF_PASSWORD],
+        True,
     )
 
     airzone = AirzoneCloudApi(aiohttp_client.async_get_clientsession(hass), options)
@@ -46,7 +49,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
+
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
+        coordinator: AirzoneUpdateCoordinator = hass.data[DOMAIN].pop(entry.entry_id)
+        await coordinator.airzone.logout()
 
     return unload_ok

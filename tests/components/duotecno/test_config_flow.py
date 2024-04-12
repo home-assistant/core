@@ -1,4 +1,5 @@
 """Test the duotecno config flow."""
+
 from unittest.mock import AsyncMock, patch
 
 from duotecno.exceptions import InvalidPassword
@@ -19,7 +20,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     with patch(
@@ -36,7 +37,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "1.1.1.1"
     assert result2["data"] == {
         "host": "1.1.1.1",
@@ -70,7 +71,7 @@ async def test_invalid(hass: HomeAssistant, test_side_effect, test_error):
             },
         )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": test_error}
 
     with patch("duotecno.controller.PyDuotecno.connect"):
@@ -82,7 +83,7 @@ async def test_invalid(hass: HomeAssistant, test_side_effect, test_error):
                 "password": "test-password2",
             },
         )
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "1.1.1.1"
     assert result2["data"] == {
         "host": "1.1.1.1",
@@ -104,5 +105,5 @@ async def test_already_setup(hass: HomeAssistant, mock_setup_entry: AsyncMock) -
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"

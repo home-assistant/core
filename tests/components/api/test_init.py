@@ -1,9 +1,11 @@
 """The tests for the Home Assistant API component."""
+
+import asyncio
 from http import HTTPStatus
 import json
 from unittest.mock import patch
 
-from aiohttp import web
+from aiohttp import ServerDisconnectedError, web
 from aiohttp.test_utils import TestClient
 import pytest
 import voluptuous as vol
@@ -253,16 +255,20 @@ async def test_api_get_config(hass: HomeAssistant, mock_api_client: TestClient) 
     """Test the return of the configuration."""
     resp = await mock_api_client.get(const.URL_API_CONFIG)
     result = await resp.json()
-    if "components" in result:
-        result["components"] = set(result["components"])
-    if "whitelist_external_dirs" in result:
-        result["whitelist_external_dirs"] = set(result["whitelist_external_dirs"])
-    if "allowlist_external_dirs" in result:
-        result["allowlist_external_dirs"] = set(result["allowlist_external_dirs"])
-    if "allowlist_external_urls" in result:
-        result["allowlist_external_urls"] = set(result["allowlist_external_urls"])
+    ignore_order_keys = (
+        "components",
+        "allowlist_external_dirs",
+        "whitelist_external_dirs",
+        "allowlist_external_urls",
+    )
+    config = hass.config.as_dict()
 
-    assert hass.config.as_dict() == result
+    for key in ignore_order_keys:
+        if key in result:
+            result[key] = set(result[key])
+            config[key] = set(config[key])
+
+    assert result == config
 
 
 async def test_api_get_components(
@@ -300,7 +306,7 @@ async def test_api_get_services(
     for serv_domain in data:
         local = local_services.pop(serv_domain["domain"])
 
-        assert serv_domain["services"] == local
+        assert serv_domain["services"].keys() == local.keys()
 
 
 async def test_api_call_service_no_data(
@@ -350,6 +356,46 @@ async def test_api_call_service_with_data(
     assert state["entity_id"] == "test.data"
     assert state["state"] == "on"
     assert state["attributes"] == {"data": 1}
+
+
+async def test_api_call_service_client_closed(
+    hass: HomeAssistant, mock_api_client: TestClient
+) -> None:
+    """Test that services keep running if client is closed."""
+    test_value = []
+
+    fut = hass.loop.create_future()
+    service_call_started = asyncio.Event()
+
+    async def listener(service_call):
+        """Wait and return after mock_api_client.post finishes."""
+        service_call_started.set()
+        value = await fut
+        test_value.append(value)
+
+    hass.services.async_register("test_domain", "test_service", listener)
+
+    api_task = hass.async_create_task(
+        mock_api_client.post("/api/services/test_domain/test_service")
+    )
+
+    await service_call_started.wait()
+
+    assert len(test_value) == 0
+
+    await mock_api_client.close()
+
+    assert len(test_value) == 0
+    assert api_task.done()
+
+    with pytest.raises(ServerDisconnectedError):
+        await api_task
+
+    fut.set_result(1)
+    await hass.async_block_till_done()
+
+    assert len(test_value) == 1
+    assert test_value[0] == 1
 
 
 async def test_api_template(hass: HomeAssistant, mock_api_client: TestClient) -> None:
@@ -543,7 +589,7 @@ async def test_api_fire_event_context(
     )
     await hass.async_block_till_done()
 
-    refresh_token = await hass.auth.async_validate_access_token(hass_access_token)
+    refresh_token = hass.auth.async_validate_access_token(hass_access_token)
 
     assert len(test_value) == 1
     assert test_value[0].context.user_id == refresh_token.user.id
@@ -561,7 +607,7 @@ async def test_api_call_service_context(
     )
     await hass.async_block_till_done()
 
-    refresh_token = await hass.auth.async_validate_access_token(hass_access_token)
+    refresh_token = hass.auth.async_validate_access_token(hass_access_token)
 
     assert len(calls) == 1
     assert calls[0].context.user_id == refresh_token.user.id
@@ -577,7 +623,7 @@ async def test_api_set_state_context(
         headers={"authorization": f"Bearer {hass_access_token}"},
     )
 
-    refresh_token = await hass.auth.async_validate_access_token(hass_access_token)
+    refresh_token = hass.auth.async_validate_access_token(hass_access_token)
 
     state = hass.states.get("light.kitchen")
     assert state.context.user_id == refresh_token.user.id
@@ -643,6 +689,8 @@ async def test_get_entity_state_read_perm(
 ) -> None:
     """Test getting a state requires read permission."""
     hass_admin_user.mock_policy({})
+    hass_admin_user.groups = []
+    assert hass_admin_user.is_admin is False
     resp = await mock_api_client.get("/api/states/light.test")
     assert resp.status == HTTPStatus.UNAUTHORIZED
 

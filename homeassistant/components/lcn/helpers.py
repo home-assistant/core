@@ -1,4 +1,5 @@
 """Helpers for LCN component."""
+
 from __future__ import annotations
 
 import asyncio
@@ -24,6 +25,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
+    CONF_RESOURCE,
     CONF_SENSORS,
     CONF_SOURCE,
     CONF_SWITCHES,
@@ -42,7 +44,6 @@ from .const import (
     CONF_HARDWARE_SERIAL,
     CONF_HARDWARE_TYPE,
     CONF_OUTPUT,
-    CONF_RESOURCE,
     CONF_SCENES,
     CONF_SK_NUM_TRIES,
     CONF_SOFTWARE_SERIAL,
@@ -286,7 +287,8 @@ def purge_device_registry(
 
     # Find all devices that are referenced in the entity registry.
     references_entities = {
-        entry.device_id for entry in entity_registry.entities.values()
+        entry.device_id
+        for entry in entity_registry.entities.get_entries_for_config_entry_id(entry_id)
     }
 
     # Find device that references the host.

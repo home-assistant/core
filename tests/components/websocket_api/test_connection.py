@@ -1,5 +1,5 @@
 """Test WebSocket Connection class."""
-import asyncio
+
 import logging
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
@@ -32,16 +32,22 @@ from tests.common import MockUser
             "Error handling message: Invalid something. Got {'id': 5} (invalid_format) Mock User from 127.0.0.42 (Browser)",
         ),
         (
-            asyncio.TimeoutError(),
+            TimeoutError(),
             websocket_api.ERR_TIMEOUT,
             "Timeout",
             "Error handling message: Timeout (timeout) Mock User from 127.0.0.42 (Browser)",
         ),
         (
             exceptions.HomeAssistantError("Failed to do X"),
-            websocket_api.ERR_UNKNOWN_ERROR,
+            websocket_api.ERR_HOME_ASSISTANT_ERROR,
             "Failed to do X",
-            "Error handling message: Failed to do X (unknown_error) Mock User from 127.0.0.42 (Browser)",
+            "Error handling message: Failed to do X (home_assistant_error) Mock User from 127.0.0.42 (Browser)",
+        ),
+        (
+            exceptions.ServiceValidationError("Failed to do X"),
+            websocket_api.ERR_HOME_ASSISTANT_ERROR,
+            "Failed to do X",
+            "Error handling message: Failed to do X (home_assistant_error) Mock User from 127.0.0.42 (Browser)",
         ),
         (
             ValueError("Really bad"),

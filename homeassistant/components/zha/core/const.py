@@ -1,4 +1,5 @@
 """All constants related to the ZHA component."""
+
 from __future__ import annotations
 
 import enum
@@ -64,6 +65,8 @@ ATTR_WARNING_DEVICE_STROBE_INTENSITY = "intensity"
 BAUD_RATES = [2400, 4800, 9600, 14400, 19200, 38400, 57600, 115200, 128000, 256000]
 BINDINGS = "bindings"
 
+CLUSTER_DETAILS = "cluster_details"
+
 CLUSTER_HANDLER_ACCELEROMETER = "accelerometer"
 CLUSTER_HANDLER_BINARY_INPUT = "binary_input"
 CLUSTER_HANDLER_ANALOG_INPUT = "analog_input"
@@ -89,6 +92,7 @@ CLUSTER_HANDLER_LEVEL = ATTR_LEVEL
 CLUSTER_HANDLER_MULTISTATE_INPUT = "multistate_input"
 CLUSTER_HANDLER_OCCUPANCY = "occupancy"
 CLUSTER_HANDLER_ON_OFF = "on_off"
+CLUSTER_HANDLER_OTA = "ota"
 CLUSTER_HANDLER_POWER_CONFIGURATION = "power"
 CLUSTER_HANDLER_PRESSURE = "pressure"
 CLUSTER_HANDLER_SHADE = "shade"
@@ -120,6 +124,7 @@ PLATFORMS = (
     Platform.SENSOR,
     Platform.SIREN,
     Platform.SWITCH,
+    Platform.UPDATE,
 )
 
 CONF_ALARM_MASTER_CODE = "alarm_master_code"
@@ -127,6 +132,7 @@ CONF_ALARM_FAILED_TRIES = "alarm_failed_tries"
 CONF_ALARM_ARM_REQUIRES_CODE = "alarm_arm_requires_code"
 
 CONF_BAUDRATE = "baudrate"
+CONF_FLOW_CONTROL = "flow_control"
 CONF_CUSTOM_QUIRKS_PATH = "custom_quirks_path"
 CONF_DEFAULT_LIGHT_TRANSITION = "default_light_transition"
 CONF_DEVICE_CONFIG = "device_config"
@@ -136,7 +142,6 @@ CONF_ALWAYS_PREFER_XY_COLOR_MODE = "always_prefer_xy_color_mode"
 CONF_GROUP_MEMBERS_ASSUME_STATE = "group_members_assume_state"
 CONF_ENABLE_IDENTIFY_ON_JOIN = "enable_identify_on_join"
 CONF_ENABLE_QUIRKS = "enable_quirks"
-CONF_FLOWCONTROL = "flow_control"
 CONF_RADIO_TYPE = "radio_type"
 CONF_USB_PATH = "usb_path"
 CONF_USE_THREAD = "use_thread"
@@ -215,6 +220,8 @@ DISCOVERY_KEY = "zha_discovery_info"
 
 DOMAIN = "zha"
 
+ENTITY_METADATA = "entity_metadata"
+
 GROUP_ID = "group_id"
 GROUP_IDS = "group_ids"
 GROUP_NAME = "group_name"
@@ -227,6 +234,8 @@ POWER_BATTERY_OR_UNKNOWN = "Battery or Unknown"
 PRESET_SCHEDULE = "Schedule"
 PRESET_COMPLEX = "Complex"
 PRESET_TEMP_MANUAL = "Temporary manual"
+
+ZCL_INIT_ATTRS = "ZCL_INIT_ATTRS"
 
 ZHA_ALARM_OPTIONS = "zha_alarm_options"
 ZHA_OPTIONS = "zha_options"
@@ -408,9 +417,6 @@ class Strobe(t.enum8):
     No_Strobe = 0x00
     Strobe = 0x01
 
-
-STARTUP_FAILURE_DELAY_S = 3
-STARTUP_RETRIES = 3
 
 EZSP_OVERWRITE_EUI64 = (
     "i_understand_i_can_update_eui64_only_once_and_i_still_want_to_do_it"

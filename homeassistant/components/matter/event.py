@@ -1,4 +1,5 @@
 """Matter event entities from Node events."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -21,7 +22,7 @@ from .entity import MatterEntity
 from .helpers import get_matter
 from .models import MatterDiscoverySchema
 
-SwitchFeature = clusters.Switch.Bitmaps.SwitchFeature
+SwitchFeature = clusters.Switch.Bitmaps.Feature
 
 EVENT_TYPES_MAP = {
     # mapping from raw event id's to translation keys
@@ -105,8 +106,10 @@ class MatterEventEntity(MatterEntity, EventEntity):
 
     @callback
     def _on_matter_node_event(
-        self, event: EventType, data: MatterNodeEvent
-    ) -> None:  # noqa: F821
+        self,
+        event: EventType,
+        data: MatterNodeEvent,
+    ) -> None:
         """Call on NodeEvent."""
         if data.endpoint_id != self._endpoint.endpoint_id:
             return

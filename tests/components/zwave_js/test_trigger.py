@@ -1,4 +1,5 @@
 """The tests for Z-Wave JS automation triggers."""
+
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -272,7 +273,7 @@ async def test_zwave_js_value_updated(
 
     clear_events()
 
-    with patch("homeassistant.config.load_yaml", return_value={}):
+    with patch("homeassistant.config.load_yaml_dict", return_value={}):
         await hass.services.async_call(automation.DOMAIN, SERVICE_RELOAD, blocking=True)
 
 
@@ -834,7 +835,7 @@ async def test_zwave_js_event(
 
     clear_events()
 
-    with patch("homeassistant.config.load_yaml", return_value={}):
+    with patch("homeassistant.config.load_yaml_dict", return_value={}):
         await hass.services.async_call(automation.DOMAIN, SERVICE_RELOAD, blocking=True)
 
 

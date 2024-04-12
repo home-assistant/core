@@ -3,14 +3,9 @@
 from unittest.mock import patch
 from uuid import uuid4
 
-from homeassistant.components.twinkly.const import (
-    CONF_HOST,
-    CONF_ID,
-    CONF_NAME,
-    DOMAIN as TWINKLY_DOMAIN,
-)
+from homeassistant.components.twinkly.const import DOMAIN as TWINKLY_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_MODEL
+from homeassistant.const import CONF_HOST, CONF_ID, CONF_MODEL, CONF_NAME
 from homeassistant.core import HomeAssistant
 
 from . import TEST_HOST, TEST_MODEL, TEST_NAME_ORIGINAL, ClientMock
@@ -39,11 +34,11 @@ async def test_load_unload_entry(hass: HomeAssistant) -> None:
     with patch("homeassistant.components.twinkly.Twinkly", return_value=client):
         await hass.config_entries.async_setup(config_entry.entry_id)
 
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     await hass.config_entries.async_unload(config_entry.entry_id)
 
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
 
 
 async def test_config_entry_not_ready(hass: HomeAssistant) -> None:

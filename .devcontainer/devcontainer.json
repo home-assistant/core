@@ -4,12 +4,18 @@
   "dockerFile": "../Dockerfile.dev",
   "postCreateCommand": "script/setup",
   "postStartCommand": "script/bootstrap",
-  "containerEnv": { "DEVCONTAINER": "1" },
-  "appPort": ["8123:8123"],
+  "containerEnv": {
+    "DEVCONTAINER": "1",
+    "PYTHONASYNCIODEBUG": "1"
+  },
+  // Port 5683 udp is used by Shelly integration
+  "appPort": ["8123:8123", "5683:5683/udp"],
   "runArgs": ["-e", "GIT_EDITOR=code --wait"],
   "customizations": {
     "vscode": {
       "extensions": [
+        "charliermarsh.ruff",
+        "ms-python.pylint",
         "ms-python.vscode-pylance",
         "visualstudioexptteam.vscodeintellicode",
         "redhat.vscode-yaml",
@@ -18,15 +24,8 @@
       ],
       // Please keep this file in sync with settings in home-assistant/.vscode/settings.default.json
       "settings": {
+        "python.experiments.optOutFrom": ["pythonTestAdapter"],
         "python.pythonPath": "/usr/local/bin/python",
-        "python.linting.enabled": true,
-        "python.linting.pylintEnabled": true,
-        "python.formatting.blackPath": "/usr/local/bin/black",
-        "python.linting.pycodestylePath": "/usr/local/bin/pycodestyle",
-        "python.linting.pydocstylePath": "/usr/local/bin/pydocstyle",
-        "python.linting.mypyPath": "/usr/local/bin/mypy",
-        "python.linting.pylintPath": "/usr/local/bin/pylint",
-        "python.formatting.provider": "black",
         "python.testing.pytestArgs": ["--no-cov"],
         "editor.formatOnPaste": false,
         "editor.formatOnSave": true,
@@ -45,7 +44,10 @@
           "!include_dir_list scalar",
           "!include_dir_merge_list scalar",
           "!include_dir_merge_named scalar"
-        ]
+        ],
+        "[python]": {
+          "editor.defaultFormatter": "charliermarsh.ruff"
+        }
       }
     }
   }

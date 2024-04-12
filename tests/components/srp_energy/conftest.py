@@ -1,4 +1,5 @@
 """Fixtures for Srp Energy integration tests."""
+
 from __future__ import annotations
 
 from collections.abc import Generator
@@ -9,10 +10,11 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.srp_energy.const import DOMAIN, PHOENIX_TIME_ZONE
+from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
 
-from . import MOCK_USAGE, TEST_USER_INPUT
+from . import MOCK_USAGE, TEST_CONFIG_HOME
 
 from tests.common import MockConfigEntry
 
@@ -34,16 +36,14 @@ def fixture_hass_tz_info(hass: HomeAssistant, setup_hass_config) -> dt.tzinfo | 
 @pytest.fixture(name="test_date")
 def fixture_test_date(hass: HomeAssistant, hass_tz_info) -> dt.datetime | None:
     """Return test datetime for the hass timezone."""
-    test_date = dt.datetime(2022, 8, 2, 0, 0, 0, 0, tzinfo=hass_tz_info)
-    return test_date
+    return dt.datetime(2022, 8, 2, 0, 0, 0, 0, tzinfo=hass_tz_info)
 
 
 @pytest.fixture(name="mock_config_entry")
 def fixture_mock_config_entry() -> MockConfigEntry:
     """Return the default mocked config entry."""
     return MockConfigEntry(
-        domain=DOMAIN,
-        data=TEST_USER_INPUT,
+        domain=DOMAIN, data=TEST_CONFIG_HOME, unique_id=TEST_CONFIG_HOME[CONF_ID]
     )
 
 
@@ -81,7 +81,6 @@ async def init_integration(
     mock_srp_energy_config_flow,
 ) -> MockConfigEntry:
     """Set up the Srp Energy integration for testing."""
-
     freezer.move_to(test_date)
     mock_config_entry.add_to_hass(hass)
 

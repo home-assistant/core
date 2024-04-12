@@ -10,7 +10,6 @@
       "invalid_station": "Could not find a station with the specified name",
       "more_stations": "Found multiple stations with the specified name",
       "no_trains": "No train found",
-      "multiple_trains": "Multiple trains found",
       "incorrect_api_key": "Invalid API key for selected account"
     },
     "step": {
@@ -67,6 +66,22 @@
         "state_attributes": {
           "product_filter": {
             "name": "Train filtering"
+          }
+        }
+      },
+      "departure_time_next": {
+        "name": "Departure time next",
+        "state_attributes": {
+          "product_filter": {
+            "name": "[%key:component::trafikverket_train::entity::sensor::departure_time::state_attributes::product_filter::name%]"
+          }
+        }
+      },
+      "departure_time_next_next": {
+        "name": "Departure time next after",
+        "state_attributes": {
+          "product_filter": {
+            "name": "[%key:component::trafikverket_train::entity::sensor::departure_time::state_attributes::product_filter::name%]"
           }
         }
       },

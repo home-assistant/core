@@ -1,4 +1,5 @@
 """Entity tests for mobile_app."""
+
 from http import HTTPStatus
 from unittest.mock import patch
 
@@ -18,13 +19,15 @@ from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
 @pytest.mark.parametrize(
     ("unit_system", "state_unit", "state1", "state2"),
-    (
+    [
         (METRIC_SYSTEM, UnitOfTemperature.CELSIUS, "100", "123"),
         (US_CUSTOMARY_SYSTEM, UnitOfTemperature.FAHRENHEIT, "212", "253"),
-    ),
+    ],
 )
 async def test_sensor(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     create_registrations,
     webhook_client,
     unit_system,
@@ -51,7 +54,7 @@ async def test_sensor(
                 "type": "sensor",
                 "entity_category": "diagnostic",
                 "unique_id": "battery_temp",
-                "state_class": "total",
+                "state_class": "measurement",
                 "unit_of_measurement": UnitOfTemperature.CELSIUS,
             },
         },
@@ -71,15 +74,13 @@ async def test_sensor(
     # unit of temperature sensor is automatically converted to the system UoM
     assert entity.attributes["unit_of_measurement"] == state_unit
     assert entity.attributes["foo"] == "bar"
-    assert entity.attributes["state_class"] == "total"
+    assert entity.attributes["state_class"] == "measurement"
     assert entity.domain == "sensor"
     assert entity.name == "Test 1 Battery Temperature"
     assert entity.state == state1
 
     assert (
-        er.async_get(hass)
-        .async_get("sensor.test_1_battery_temperature")
-        .entity_category
+        entity_registry.async_get("sensor.test_1_battery_temperature").entity_category
         == "diagnostic"
     )
 
@@ -109,8 +110,7 @@ async def test_sensor(
     assert updated_entity.state == state2
     assert "foo" not in updated_entity.attributes
 
-    dev_reg = dr.async_get(hass)
-    assert len(dev_reg.devices) == len(create_registrations)
+    assert len(device_registry.devices) == len(create_registrations)
 
     # Reload to verify state is restored
     config_entry = hass.config_entries.async_entries("mobile_app")[1]
@@ -128,7 +128,7 @@ async def test_sensor(
 
 @pytest.mark.parametrize(
     ("unique_id", "unit_system", "state_unit", "state1", "state2"),
-    (
+    [
         ("battery_temperature", METRIC_SYSTEM, UnitOfTemperature.CELSIUS, "100", "123"),
         (
             "battery_temperature",
@@ -145,7 +145,7 @@ async def test_sensor(
             "212",
             "123",
         ),
-    ),
+    ],
 )
 async def test_sensor_migration(
     hass: HomeAssistant,
@@ -176,7 +176,7 @@ async def test_sensor_migration(
                 "type": "sensor",
                 "entity_category": "diagnostic",
                 "unique_id": unique_id,
-                "state_class": "total",
+                "state_class": "measurement",
                 "unit_of_measurement": UnitOfTemperature.CELSIUS,
             },
         },
@@ -196,7 +196,7 @@ async def test_sensor_migration(
     # unit of temperature sensor is automatically converted to the system UoM
     assert entity.attributes["unit_of_measurement"] == state_unit
     assert entity.attributes["foo"] == "bar"
-    assert entity.attributes["state_class"] == "total"
+    assert entity.attributes["state_class"] == "measurement"
     assert entity.domain == "sensor"
     assert entity.name == "Test 1 Battery Temperature"
     assert entity.state == state1
@@ -503,7 +503,10 @@ async def test_sensor_datetime(
 
 
 async def test_default_disabling_entity(
-    hass: HomeAssistant, create_registrations, webhook_client
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    create_registrations,
+    webhook_client,
 ) -> None:
     """Test that sensors can be disabled by default upon registration."""
     webhook_id = create_registrations[1]["webhook_id"]
@@ -532,13 +535,16 @@ async def test_default_disabling_entity(
     assert entity is None
 
     assert (
-        er.async_get(hass).async_get("sensor.test_1_battery_state").disabled_by
+        entity_registry.async_get("sensor.test_1_battery_state").disabled_by
         == er.RegistryEntryDisabler.INTEGRATION
     )
 
 
 async def test_updating_disabled_sensor(
-    hass: HomeAssistant, create_registrations, webhook_client
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    create_registrations,
+    webhook_client,
 ) -> None:
     """Test that sensors return error if disabled in instance."""
     webhook_id = create_registrations[1]["webhook_id"]
@@ -580,7 +586,7 @@ async def test_updating_disabled_sensor(
     assert json["battery_state"]["success"] is True
     assert "is_disabled" not in json["battery_state"]
 
-    er.async_get(hass).async_update_entity(
+    entity_registry.async_update_entity(
         "sensor.test_1_battery_state", disabled_by=er.RegistryEntryDisabler.USER
     )
 

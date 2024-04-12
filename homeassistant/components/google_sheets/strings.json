@@ -4,9 +4,7 @@
       "pick_implementation": {
         "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
       },
-      "auth": {
-        "title": "Link Google Account"
-      },
+      "auth": { "title": "Link Google Account" },
       "reauth_confirm": {
         "title": "[%key:common::config_flow::title::reauth%]",
         "description": "The Google Sheets integration needs to re-authenticate your account"
@@ -23,7 +21,10 @@
       "invalid_access_token": "[%key:common::config_flow::error::invalid_access_token%]",
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "create_spreadsheet_failure": "Error while creating spreadsheet, see error log for details",
-      "open_spreadsheet_failure": "Error while opening spreadsheet, see error log for details"
+      "open_spreadsheet_failure": "Error while opening spreadsheet, see error log for details",
+      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
+      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
+      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]"
     },
     "create_entry": {
       "default": "Successfully authenticated and spreadsheet created at: {url}"

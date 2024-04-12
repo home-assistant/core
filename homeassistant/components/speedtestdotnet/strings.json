@@ -21,13 +21,52 @@
   "entity": {
     "sensor": {
       "ping": {
-        "name": "Ping"
+        "name": "Ping",
+        "state_attributes": {
+          "server_name": {
+            "name": "Server name"
+          },
+          "server_country": {
+            "name": "Server country"
+          },
+          "server_id": {
+            "name": "Server ID"
+          }
+        }
       },
       "download": {
-        "name": "Download"
+        "name": "Download",
+        "state_attributes": {
+          "server_name": {
+            "name": "[%key:component::speedtestdotnet::entity::sensor::ping::state_attributes::server_name::name%]"
+          },
+          "server_country": {
+            "name": "[%key:component::speedtestdotnet::entity::sensor::ping::state_attributes::server_country::name%]"
+          },
+          "server_id": {
+            "name": "[%key:component::speedtestdotnet::entity::sensor::ping::state_attributes::server_id::name%]"
+          },
+          "bytes_received": {
+            "name": "Bytes received"
+          }
+        }
       },
       "upload": {
-        "name": "Upload"
+        "name": "Upload",
+        "state_attributes": {
+          "server_name": {
+            "name": "[%key:component::speedtestdotnet::entity::sensor::ping::state_attributes::server_name::name%]"
+          },
+          "server_country": {
+            "name": "[%key:component::speedtestdotnet::entity::sensor::ping::state_attributes::server_country::name%]"
+          },
+          "server_id": {
+            "name": "[%key:component::speedtestdotnet::entity::sensor::ping::state_attributes::server_id::name%]"
+          },
+          "bytes_sent": {
+            "name": "Bytes sent"
+          }
+        }
       }
     }
   }

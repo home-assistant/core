@@ -1,4 +1,5 @@
 """Support for Russound multizone controllers using RIO Protocol."""
+
 from __future__ import annotations
 
 from russound_rio import Russound

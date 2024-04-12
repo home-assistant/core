@@ -1,4 +1,5 @@
 """The tests for the Yamaha Media player platform."""
+
 from unittest.mock import MagicMock, PropertyMock, call, patch
 
 import pytest
@@ -16,6 +17,7 @@ CONFIG = {"media_player": {"platform": "yamaha", "host": "127.0.0.1"}}
 def _create_zone_mock(name, url):
     zone = MagicMock()
     zone.ctrl_url = url
+    zone.surround_programs = []
     zone.zone = name
     return zone
 

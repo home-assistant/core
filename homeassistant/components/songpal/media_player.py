@@ -1,4 +1,5 @@
 """Support for Songpal-enabled (Sony) media devices."""
+
 from __future__ import annotations
 
 import asyncio
@@ -16,6 +17,7 @@ from songpal import (
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
+    MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
@@ -71,7 +73,7 @@ async def async_setup_entry(
             10
         ):  # set timeout to avoid blocking the setup process
             await device.get_supported_methods()
-    except (SongpalException, asyncio.TimeoutError) as ex:
+    except (SongpalException, TimeoutError) as ex:
         _LOGGER.warning("[%s(%s)] Unable to connect", name, endpoint)
         _LOGGER.debug("Unable to get methods from songpal: %s", ex)
         raise PlatformNotReady from ex
@@ -91,6 +93,7 @@ class SongpalEntity(MediaPlayerEntity):
     """Class representing a Songpal device."""
 
     _attr_should_poll = False
+    _attr_device_class = MediaPlayerDeviceClass.RECEIVER
     _attr_supported_features = (
         MediaPlayerEntityFeature.VOLUME_SET
         | MediaPlayerEntityFeature.VOLUME_STEP

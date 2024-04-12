@@ -1,18 +1,20 @@
 """The test for light device automation."""
+
 from unittest.mock import AsyncMock, Mock, patch
 
+import attr
 import pytest
 from pytest_unordered import unordered
 import voluptuous as vol
 
-from homeassistant import config_entries, loader
-from homeassistant.components import device_automation
-import homeassistant.components.automation as automation
+from homeassistant import loader
+from homeassistant.components import automation, device_automation
 from homeassistant.components.device_automation import (
     InvalidDeviceAutomationConfig,
     toggle_entity,
 )
 from homeassistant.components.websocket_api.const import TYPE_RESULT
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -29,6 +31,13 @@ from tests.common import (
     mock_platform,
 )
 from tests.typing import WebSocketGenerator
+
+
+@attr.s(frozen=True)
+class MockDeviceEntry(dr.DeviceEntry):
+    """Device Registry Entry with fixed UUID."""
+
+    id: str = attr.ib(default="very_unique")
 
 
 @pytest.fixture(autouse=True, name="stub_blueprint_populate")
@@ -968,7 +977,7 @@ async def test_automation_with_dynamically_validated_action(
     module.async_validate_action_config = AsyncMock()
 
     config_entry = MockConfigEntry(domain="fake_integration", data={})
-    config_entry.state = config_entries.ConfigEntryState.LOADED
+    config_entry.mock_state(hass, ConfigEntryState.LOADED)
     config_entry.add_to_hass(hass)
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
@@ -1070,7 +1079,7 @@ async def test_automation_with_dynamically_validated_condition(
     module.async_validate_condition_config = AsyncMock()
 
     config_entry = MockConfigEntry(domain="fake_integration", data={})
-    config_entry.state = config_entries.ConfigEntryState.LOADED
+    config_entry.mock_state(hass, ConfigEntryState.LOADED)
     config_entry.add_to_hass(hass)
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
@@ -1184,7 +1193,7 @@ async def test_automation_with_dynamically_validated_trigger(
     module.async_validate_trigger_config = AsyncMock(wraps=lambda hass, config: config)
 
     config_entry = MockConfigEntry(domain="fake_integration", data={})
-    config_entry.state = config_entries.ConfigEntryState.LOADED
+    config_entry.mock_state(hass, ConfigEntryState.LOADED)
     config_entry.add_to_hass(hass)
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
@@ -1240,17 +1249,54 @@ async def test_automation_with_integration_without_device_trigger(
     )
 
 
+BAD_AUTOMATIONS = [
+    (
+        {"device_id": "very_unique", "domain": "light"},
+        "required key not provided @ data['entity_id']",
+    ),
+    (
+        {"device_id": "wrong", "domain": "light"},
+        "Unknown device 'wrong'",
+    ),
+    (
+        {"device_id": "wrong"},
+        "required key not provided @ data{path}['domain']",
+    ),
+    (
+        {"device_id": "wrong", "domain": "light"},
+        "Unknown device 'wrong'",
+    ),
+    (
+        {"device_id": "very_unique", "domain": "light"},
+        "required key not provided @ data['entity_id']",
+    ),
+    (
+        {"device_id": "very_unique", "domain": "light", "entity_id": "wrong"},
+        "Unknown entity 'wrong'",
+    ),
+]
+
+BAD_TRIGGERS = BAD_CONDITIONS = [
+    *BAD_AUTOMATIONS,
+    ({"domain": "light"}, "required key not provided @ data{path}['device_id']"),
+]
+
+
+@patch("homeassistant.helpers.device_registry.DeviceEntry", MockDeviceEntry)
+@pytest.mark.parametrize(("action", "expected_error"), BAD_AUTOMATIONS)
 async def test_automation_with_bad_action(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
+    action: dict[str, str],
+    expected_error: str,
 ) -> None:
     """Test automation with bad device action."""
     config_entry = MockConfigEntry(domain="fake_integration", data={})
-    config_entry.state = config_entries.ConfigEntryState.LOADED
+    config_entry.mock_state(hass, ConfigEntryState.LOADED)
     config_entry.add_to_hass(hass)
-    device_entry = device_registry.async_get_or_create(
+    device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
@@ -1262,25 +1308,29 @@ async def test_automation_with_bad_action(
             automation.DOMAIN: {
                 "alias": "hello",
                 "trigger": {"platform": "event", "event_type": "test_event1"},
-                "action": {"device_id": device_entry.id, "domain": "light"},
+                "action": action,
             }
         },
     )
 
-    assert "required key not provided" in caplog.text
+    assert expected_error.format(path="['action'][0]") in caplog.text
 
 
+@patch("homeassistant.helpers.device_registry.DeviceEntry", MockDeviceEntry)
+@pytest.mark.parametrize(("condition", "expected_error"), BAD_CONDITIONS)
 async def test_automation_with_bad_condition_action(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
+    condition: dict[str, str],
+    expected_error: str,
 ) -> None:
     """Test automation with bad device action."""
     config_entry = MockConfigEntry(domain="fake_integration", data={})
-    config_entry.state = config_entries.ConfigEntryState.LOADED
+    config_entry.mock_state(hass, ConfigEntryState.LOADED)
     config_entry.add_to_hass(hass)
-    device_entry = device_registry.async_get_or_create(
+    device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
@@ -1292,42 +1342,32 @@ async def test_automation_with_bad_condition_action(
             automation.DOMAIN: {
                 "alias": "hello",
                 "trigger": {"platform": "event", "event_type": "test_event1"},
-                "action": {
-                    "condition": "device",
-                    "device_id": device_entry.id,
-                    "domain": "light",
-                },
+                "action": {"condition": "device"} | condition,
             }
         },
     )
 
-    assert "required key not provided" in caplog.text
+    assert expected_error.format(path="['action'][0]") in caplog.text
 
 
-async def test_automation_with_bad_condition_missing_domain(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
-    """Test automation with bad device condition."""
-    assert await async_setup_component(
-        hass,
-        automation.DOMAIN,
-        {
-            automation.DOMAIN: {
-                "alias": "hello",
-                "trigger": {"platform": "event", "event_type": "test_event1"},
-                "condition": {"condition": "device", "device_id": "hello.device"},
-                "action": {"service": "test.automation", "entity_id": "hello.world"},
-            }
-        },
-    )
-
-    assert "required key not provided @ data['condition'][0]['domain']" in caplog.text
-
-
+@patch("homeassistant.helpers.device_registry.DeviceEntry", MockDeviceEntry)
+@pytest.mark.parametrize(("condition", "expected_error"), BAD_CONDITIONS)
 async def test_automation_with_bad_condition(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    device_registry: dr.DeviceRegistry,
+    condition: dict[str, str],
+    expected_error: str,
 ) -> None:
     """Test automation with bad device condition."""
+    config_entry = MockConfigEntry(domain="fake_integration", data={})
+    config_entry.mock_state(hass, ConfigEntryState.LOADED)
+    config_entry.add_to_hass(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+
     assert await async_setup_component(
         hass,
         automation.DOMAIN,
@@ -1335,13 +1375,13 @@ async def test_automation_with_bad_condition(
             automation.DOMAIN: {
                 "alias": "hello",
                 "trigger": {"platform": "event", "event_type": "test_event1"},
-                "condition": {"condition": "device", "domain": "light"},
+                "condition": {"condition": "device"} | condition,
                 "action": {"service": "test.automation", "entity_id": "hello.world"},
             }
         },
     )
 
-    assert "required key not provided" in caplog.text
+    assert expected_error.format(path="['condition'][0]") in caplog.text
 
 
 @pytest.fixture
@@ -1406,8 +1446,10 @@ async def test_automation_with_sub_condition(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "and {{ trigger.%s }}"
-                            % "}} - {{ trigger.".join(("platform", "event.event_type"))
+                            "some": (
+                                "and {{ trigger.platform }}"
+                                " - {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
@@ -1437,8 +1479,10 @@ async def test_automation_with_sub_condition(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "or {{ trigger.%s }}"
-                            % "}} - {{ trigger.".join(("platform", "event.event_type"))
+                            "some": (
+                                "or {{ trigger.platform }}"
+                                " - {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
@@ -1475,10 +1519,24 @@ async def test_automation_with_sub_condition(
     )
 
 
+@patch("homeassistant.helpers.device_registry.DeviceEntry", MockDeviceEntry)
+@pytest.mark.parametrize(("condition", "expected_error"), BAD_CONDITIONS)
 async def test_automation_with_bad_sub_condition(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    device_registry: dr.DeviceRegistry,
+    condition: dict[str, str],
+    expected_error: str,
 ) -> None:
     """Test automation with bad device condition under and/or conditions."""
+    config_entry = MockConfigEntry(domain="fake_integration", data={})
+    config_entry.mock_state(hass, ConfigEntryState.LOADED)
+    config_entry.add_to_hass(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+
     assert await async_setup_component(
         hass,
         automation.DOMAIN,
@@ -1488,33 +1546,48 @@ async def test_automation_with_bad_sub_condition(
                 "trigger": {"platform": "event", "event_type": "test_event1"},
                 "condition": {
                     "condition": "and",
-                    "conditions": [{"condition": "device", "domain": "light"}],
+                    "conditions": [{"condition": "device"} | condition],
                 },
                 "action": {"service": "test.automation", "entity_id": "hello.world"},
             }
         },
     )
 
-    assert "required key not provided" in caplog.text
+    path = "['condition'][0]['conditions'][0]"
+    assert expected_error.format(path=path) in caplog.text
 
 
+@patch("homeassistant.helpers.device_registry.DeviceEntry", MockDeviceEntry)
+@pytest.mark.parametrize(("trigger", "expected_error"), BAD_TRIGGERS)
 async def test_automation_with_bad_trigger(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    device_registry: dr.DeviceRegistry,
+    trigger: dict[str, str],
+    expected_error: str,
 ) -> None:
     """Test automation with bad device trigger."""
+    config_entry = MockConfigEntry(domain="fake_integration", data={})
+    config_entry.mock_state(hass, ConfigEntryState.LOADED)
+    config_entry.add_to_hass(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+
     assert await async_setup_component(
         hass,
         automation.DOMAIN,
         {
             automation.DOMAIN: {
                 "alias": "hello",
-                "trigger": {"platform": "device", "domain": "light"},
+                "trigger": {"platform": "device"} | trigger,
                 "action": {"service": "test.automation", "entity_id": "hello.world"},
             }
         },
     )
 
-    assert "required key not provided" in caplog.text
+    assert expected_error.format(path="") in caplog.text
 
 
 async def test_websocket_device_not_found(
@@ -1658,10 +1731,13 @@ async def test_async_get_device_automations_platform_reraises_exceptions(
 ) -> None:
     """Test InvalidDeviceAutomationConfig is raised when async_get_integration_with_requirements fails."""
     await async_setup_component(hass, "device_automation", {})
-    with patch(
-        "homeassistant.components.device_automation.async_get_integration_with_requirements",
-        side_effect=exc,
-    ), pytest.raises(InvalidDeviceAutomationConfig):
+    with (
+        patch(
+            "homeassistant.components.device_automation.async_get_integration_with_requirements",
+            side_effect=exc,
+        ),
+        pytest.raises(InvalidDeviceAutomationConfig),
+    ):
         await device_automation.async_get_device_automation_platform(
             hass, "test", device_automation.DeviceAutomationType.TRIGGER
         )

@@ -1,7 +1,9 @@
 """Tests for the Withings component."""
+
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
+from aiowithings import Goals
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy import SnapshotAssertion
@@ -29,25 +31,24 @@ async def test_all_entities(
     snapshot: SnapshotAssertion,
     withings: AsyncMock,
     polling_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test all entities."""
     with patch("homeassistant.components.withings.PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, polling_config_entry)
-        entity_registry = er.async_get(hass)
-        entity_entries = er.async_entries_for_config_entry(
-            entity_registry, polling_config_entry.entry_id
-        )
+    entity_entries = er.async_entries_for_config_entry(
+        entity_registry, polling_config_entry.entry_id
+    )
 
-        assert entity_entries
-        for entity_entry in entity_entries:
-            assert hass.states.get(entity_entry.entity_id) == snapshot(
-                name=entity_entry.entity_id
-            )
+    assert entity_entries
+    for entity_entry in entity_entries:
+        assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
+        assert (state := hass.states.get(entity_entry.entity_id))
+        assert state == snapshot(name=f"{entity_entry.entity_id}-state")
 
 
 async def test_update_failed(
     hass: HomeAssistant,
-    snapshot: SnapshotAssertion,
     withings: AsyncMock,
     polling_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
@@ -67,7 +68,6 @@ async def test_update_failed(
 
 async def test_update_updates_incrementally(
     hass: HomeAssistant,
-    snapshot: SnapshotAssertion,
     withings: AsyncMock,
     polling_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
@@ -252,7 +252,6 @@ async def test_sleep_sensors_created_when_existed(
     hass: HomeAssistant,
     withings: AsyncMock,
     polling_config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test sleep sensors will be added if they existed before."""
     await setup_integration(hass, polling_config_entry, False)
@@ -300,7 +299,6 @@ async def test_workout_sensors_created_when_existed(
     hass: HomeAssistant,
     withings: AsyncMock,
     polling_config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test workout sensors will be added if they existed before."""
     await setup_integration(hass, polling_config_entry, False)
@@ -341,3 +339,20 @@ async def test_workout_sensors_created_when_receive_workout_data(
     await hass.async_block_till_done()
 
     assert hass.states.get("sensor.henk_last_workout_type")
+
+
+async def test_warning_if_no_entities_created(
+    hass: HomeAssistant,
+    withings: AsyncMock,
+    polling_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test we log a warning if no entities are created at startup."""
+    withings.get_workouts_in_period.return_value = []
+    withings.get_goals.return_value = Goals(None, None, None)
+    withings.get_measurement_in_period.return_value = []
+    withings.get_sleep_summary_since.return_value = []
+    withings.get_activities_since.return_value = []
+    await setup_integration(hass, polling_config_entry, False)
+
+    assert "No data found for Withings entry" in caplog.text

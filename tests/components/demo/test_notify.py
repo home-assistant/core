@@ -1,12 +1,13 @@
 """The tests for the notify demo platform."""
+
 import logging
 from unittest.mock import patch
 
 import pytest
 import voluptuous as vol
 
+from homeassistant.components import notify
 import homeassistant.components.demo.notify as demo
-import homeassistant.components.notify as notify
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import discovery
 from homeassistant.setup import async_setup_component

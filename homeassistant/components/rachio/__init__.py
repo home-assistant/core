@@ -1,4 +1,5 @@
 """Integration with the Rachio Iro sprinkler system controller."""
+
 import logging
 import secrets
 
@@ -7,12 +8,12 @@ from requests.exceptions import ConnectTimeout
 
 from homeassistant.components import cloud
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, Platform
+from homeassistant.const import CONF_API_KEY, CONF_WEBHOOK_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 
-from .const import CONF_CLOUDHOOK_URL, CONF_MANUAL_RUN_MINS, CONF_WEBHOOK_ID, DOMAIN
+from .const import CONF_CLOUDHOOK_URL, CONF_MANUAL_RUN_MINS, DOMAIN
 from .device import RachioPerson
 from .webhooks import (
     async_get_or_create_registered_webhook_id_and_url,
@@ -22,7 +23,7 @@ from .webhooks import (
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.SWITCH, Platform.BINARY_SENSOR]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SWITCH]
 
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
@@ -82,7 +83,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady from error
 
     # Check for Rachio controller devices
-    if not person.controllers:
+    if not person.controllers and not person.base_stations:
         _LOGGER.error("No Rachio devices found in account %s", person.username)
         return False
     _LOGGER.info(
@@ -90,9 +91,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             "%d Rachio device(s) found; The url %s must be accessible from the internet"
             " in order to receive updates"
         ),
-        len(person.controllers),
+        len(person.controllers) + len(person.base_stations),
         webhook_url,
     )
+
+    for base in person.base_stations:
+        await base.coordinator.async_config_entry_first_refresh()
 
     # Enable platform
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = person

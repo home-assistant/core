@@ -5,8 +5,5 @@
   "documentation": "https://www.home-assistant.io/integrations/python_script",
   "loggers": ["RestrictedPython"],
   "quality_scale": "internal",
-  "requirements": [
-    "RestrictedPython==6.2;python_version<'3.12'",
-    "RestrictedPython==7.0a1.dev0;python_version>='3.12'"
-  ]
+  "requirements": ["RestrictedPython==7.0"]
 }

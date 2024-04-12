@@ -20,6 +20,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 
 async def test_setup(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     mock_entry: MockConfigEntry,
     mock_read_char_raw: dict[str, bytes],
     snapshot: SnapshotAssertion,
@@ -34,7 +35,6 @@ async def test_setup(
 
     assert mock_entry.state is ConfigEntryState.LOADED
 
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(
         identifiers={(DOMAIN, WATER_TIMER_SERVICE_INFO.address)}
     )

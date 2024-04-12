@@ -1,4 +1,5 @@
 """The IKEA Idasen Desk integration."""
+
 from __future__ import annotations
 
 import logging
@@ -24,12 +25,12 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
 
-PLATFORMS: list[Platform] = [Platform.COVER]
+PLATFORMS: list[Platform] = [Platform.BUTTON, Platform.COVER, Platform.SENSOR]
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class IdasenDeskCoordinator(DataUpdateCoordinator[int | None]):
+class IdasenDeskCoordinator(DataUpdateCoordinator[int | None]):  # pylint: disable=hass-enforce-coordinator-module
     """Class to manage updates for the Idasen Desk."""
 
     def __init__(
@@ -44,6 +45,7 @@ class IdasenDeskCoordinator(DataUpdateCoordinator[int | None]):
         super().__init__(hass, logger, name=name)
         self._address = address
         self._expected_connected = False
+        self._connection_lost = False
 
         self.desk = Desk(self.async_set_updated_data)
 
@@ -63,6 +65,7 @@ class IdasenDeskCoordinator(DataUpdateCoordinator[int | None]):
         """Disconnect from desk."""
         _LOGGER.debug("Disconnecting from %s", self._address)
         self._expected_connected = False
+        self._connection_lost = False
         await self.desk.disconnect()
 
     @callback
@@ -71,7 +74,11 @@ class IdasenDeskCoordinator(DataUpdateCoordinator[int | None]):
         if self._expected_connected:
             if not self.desk.is_connected:
                 _LOGGER.debug("Desk disconnected. Reconnecting")
+                self._connection_lost = True
                 self.hass.async_create_task(self.async_connect())
+            elif self._connection_lost:
+                _LOGGER.info("Reconnected to desk")
+                self._connection_lost = False
         elif self.desk.is_connected:
             _LOGGER.warning("Desk is connected but should not be. Disconnecting")
             self.hass.async_create_task(self.desk.disconnect())

@@ -1,7 +1,7 @@
 """Support for Blink Alarm Control Panel."""
+
 from __future__ import annotations
 
-import asyncio
 import logging
 
 from blinkpy.blinkpy import Blink, BlinkSyncModule
@@ -27,8 +27,6 @@ from .coordinator import BlinkUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-ICON = "mdi:security"
-
 
 async def async_setup_entry(
     hass: HomeAssistant, config: ConfigEntry, async_add_entities: AddEntitiesCallback
@@ -47,7 +45,6 @@ class BlinkSyncModuleHA(
 ):
     """Representation of a Blink Alarm Control Panel."""
 
-    _attr_icon = ICON
     _attr_supported_features = AlarmControlPanelEntityFeature.ARM_AWAY
     _attr_has_entity_name = True
     _attr_name = None
@@ -58,7 +55,6 @@ class BlinkSyncModuleHA(
         """Initialize the alarm control panel."""
         super().__init__(coordinator)
         self.api: Blink = coordinator.api
-        self._coordinator = coordinator
         self.sync = sync
         self._attr_unique_id: str = sync.serial
         self._attr_device_info = DeviceInfo(
@@ -66,6 +62,7 @@ class BlinkSyncModuleHA(
             name=f"{DOMAIN} {name}",
             manufacturer=DEFAULT_BRAND,
             serial_number=sync.serial,
+            sw_version=sync.version,
         )
         self._update_attr()
 
@@ -91,18 +88,17 @@ class BlinkSyncModuleHA(
         try:
             await self.sync.async_arm(False)
 
-        except asyncio.TimeoutError as er:
+        except TimeoutError as er:
             raise HomeAssistantError("Blink failed to disarm camera") from er
 
-        await self._coordinator.async_refresh()
+        await self.coordinator.async_refresh()
 
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm command."""
         try:
             await self.sync.async_arm(True)
 
-        except asyncio.TimeoutError as er:
+        except TimeoutError as er:
             raise HomeAssistantError("Blink failed to arm camera away") from er
 
-        await self._coordinator.async_refresh()
-        self.async_write_ha_state()
+        await self.coordinator.async_refresh()

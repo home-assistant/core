@@ -1,4 +1,5 @@
 """Common test objects."""
+
 from collections.abc import Iterable
 from contextlib import suppress
 import copy
@@ -8,6 +9,7 @@ from pathlib import Path
 from typing import Any
 from unittest.mock import ANY, MagicMock, patch
 
+from freezegun import freeze_time
 import pytest
 import voluptuous as vol
 import yaml
@@ -31,6 +33,7 @@ from homeassistant.generated.mqtt import MQTT
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_mqtt_message
 from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
@@ -41,6 +44,7 @@ DEFAULT_CONFIG_DEVICE_INFO_ID = {
     "name": "Beer",
     "model": "Glass",
     "hw_version": "rev1",
+    "serial_number": "1234deadbeef",
     "sw_version": "0.1-beta",
     "suggested_area": "default_area",
     "configuration_url": "http://example.com",
@@ -52,6 +56,7 @@ DEFAULT_CONFIG_DEVICE_INFO_MAC = {
     "name": "Beer",
     "model": "Glass",
     "hw_version": "rev1",
+    "serial_number": "1234deadbeef",
     "sw_version": "0.1-beta",
     "suggested_area": "default_area",
     "configuration_url": "http://example.com",
@@ -380,9 +385,10 @@ async def help_test_default_availability_list_single(
     ]
     config[mqtt.DOMAIN][domain]["availability_topic"] = "availability-topic"
 
-    with patch(
-        "homeassistant.config.load_yaml_config_file", return_value=config
-    ), suppress(vol.MultipleInvalid):
+    with (
+        patch("homeassistant.config.load_yaml_config_file", return_value=config),
+        suppress(vol.MultipleInvalid),
+    ):
         await mqtt_mock_entry()
 
     assert (
@@ -585,9 +591,9 @@ async def help_test_setting_attribute_with_template(
     # Add JSON attributes settings to config
     config = copy.deepcopy(config)
     config[mqtt.DOMAIN][domain]["json_attributes_topic"] = "attr-topic"
-    config[mqtt.DOMAIN][domain][
-        "json_attributes_template"
-    ] = "{{ value_json['Timer1'] | tojson }}"
+    config[mqtt.DOMAIN][domain]["json_attributes_template"] = (
+        "{{ value_json['Timer1'] | tojson }}"
+    )
     with patch("homeassistant.config.load_yaml_config_file", return_value=config):
         await mqtt_mock_entry()
 
@@ -1320,10 +1326,9 @@ async def help_test_entity_debug_info_max_messages(
         "subscriptions"
     ]
 
-    start_dt = datetime(2019, 1, 1, 0, 0, 0)
-    with patch("homeassistant.util.dt.utcnow") as dt_utcnow:
-        dt_utcnow.return_value = start_dt
-        for i in range(0, debug_info.STORED_MESSAGES + 1):
+    start_dt = datetime(2019, 1, 1, 0, 0, 0, tzinfo=dt_util.UTC)
+    with freeze_time(start_dt):
+        for i in range(debug_info.STORED_MESSAGES + 1):
             async_fire_mqtt_message(hass, "test-topic", f"{i}")
 
     debug_info_data = debug_info.info_for_device(hass, device.id)
@@ -1396,7 +1401,7 @@ async def help_test_entity_debug_info_message(
 
     debug_info_data = debug_info.info_for_device(hass, device.id)
 
-    start_dt = datetime(2019, 1, 1, 0, 0, 0)
+    start_dt = datetime(2019, 1, 1, 0, 0, 0, tzinfo=dt_util.UTC)
 
     if state_topic is not None:
         assert len(debug_info_data["entities"][0]["subscriptions"]) >= 1
@@ -1404,8 +1409,7 @@ async def help_test_entity_debug_info_message(
             "subscriptions"
         ]
 
-        with patch("homeassistant.util.dt.utcnow") as dt_utcnow:
-            dt_utcnow.return_value = start_dt
+        with freeze_time(start_dt):
             async_fire_mqtt_message(hass, str(state_topic), state_payload)
 
         debug_info_data = debug_info.info_for_device(hass, device.id)
@@ -1426,8 +1430,7 @@ async def help_test_entity_debug_info_message(
     expected_transmissions = []
     if service:
         # Trigger an outgoing MQTT message
-        with patch("homeassistant.util.dt.utcnow") as dt_utcnow:
-            dt_utcnow.return_value = start_dt
+        with freeze_time(start_dt):
             if service:
                 service_data = {ATTR_ENTITY_ID: f"{domain}.beer_test"}
                 if service_parameters:
@@ -1696,9 +1699,9 @@ async def help_test_publishing_with_custom_encoding(
         if test_data["encoding"] is not None:
             test_config_setup["encoding"] = test_data["encoding"]
         if template and test_data["cmd_tpl"]:
-            test_config_setup[
-                template
-            ] = f"{{{{ (('%.1f'|format({tpl_par}))[0] if is_number({tpl_par}) else {tpl_par}[0]) | ord | pack('b') }}}}"
+            test_config_setup[template] = (
+                f"{{{{ (('%.1f'|format({tpl_par}))[0] if is_number({tpl_par}) else {tpl_par}[0]) | ord | pack('b') }}}}"
+            )
         setup_config.append(test_config_setup)
 
         # setup service data
@@ -1708,10 +1711,8 @@ async def help_test_publishing_with_custom_encoding(
 
     # setup test entities using discovery
     mqtt_mock = await mqtt_mock_entry()
-    item: int = 0
-    for component_config in setup_config:
+    for item, component_config in enumerate(setup_config):
         conf = json.dumps(component_config)
-        item += 1
         async_fire_mqtt_message(
             hass, f"homeassistant/{domain}/component_{item}/config", conf
         )

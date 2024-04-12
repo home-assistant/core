@@ -147,6 +147,9 @@
       },
       "voltage_swell_l3_count": {
         "name": "Voltage swells phase L3"
+      },
+      "water_meter_reading": {
+        "name": "Water consumption"
       }
     }
   },

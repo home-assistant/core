@@ -1,8 +1,8 @@
 """Test KNX select."""
+
 import pytest
 
 from homeassistant.components.knx.const import (
-    CONF_PAYLOAD,
     CONF_PAYLOAD_LENGTH,
     CONF_RESPOND_TO_READ,
     CONF_STATE_ADDRESS,
@@ -10,8 +10,9 @@ from homeassistant.components.knx.const import (
     KNX_ADDRESS,
 )
 from homeassistant.components.knx.schema import SelectSchema
-from homeassistant.const import CONF_NAME, STATE_UNKNOWN
+from homeassistant.const import CONF_NAME, CONF_PAYLOAD, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State
+from homeassistant.exceptions import ServiceValidationError
 
 from .conftest import KNXTestKit
 
@@ -77,7 +78,7 @@ async def test_select_dpt_2_simple(hass: HomeAssistant, knx: KNXTestKit) -> None
     assert state.state is STATE_UNKNOWN
 
     # select invalid option
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             "select",
             "select_option",

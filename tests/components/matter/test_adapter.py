@@ -1,4 +1,5 @@
 """Test the adapter."""
+
 from __future__ import annotations
 
 from unittest.mock import MagicMock
@@ -55,6 +56,7 @@ async def test_device_registry_single_node_device(
     assert entry.model == "Mock Light"
     assert entry.hw_version == "v1.0"
     assert entry.sw_version == "v1.0"
+    assert entry.serial_number == "12345678"
 
 
 # This tests needs to be adjusted to remove lingering tasks
@@ -83,6 +85,7 @@ async def test_device_registry_single_node_device_alt(
 
     # test serial id NOT present as additional identifier
     assert (DOMAIN, "serial_TEST_SN") not in entry.identifiers
+    assert entry.serial_number is None
 
 
 @pytest.mark.skip("Waiting for a new test fixture")
@@ -144,10 +147,13 @@ async def test_node_added_subscription(
     integration: MagicMock,
 ) -> None:
     """Test subscription to new devices work."""
-    assert matter_client.subscribe_events.call_count == 4
-    assert matter_client.subscribe_events.call_args[0][1] == EventType.NODE_ADDED
+    assert matter_client.subscribe_events.call_count == 5
+    assert (
+        matter_client.subscribe_events.call_args.kwargs["event_filter"]
+        == EventType.NODE_UPDATED
+    )
 
-    node_added_callback = matter_client.subscribe_events.call_args[0][0]
+    node_added_callback = matter_client.subscribe_events.call_args.kwargs["callback"]
     node_data = load_and_parse_node_fixture("onoff-light")
     node = MatterNode(
         dataclass_from_dict(

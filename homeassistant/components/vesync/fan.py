@@ -1,4 +1,5 @@
 """Support for VeSync fans."""
+
 from __future__ import annotations
 
 import logging
@@ -11,25 +12,15 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.percentage import (
-    int_states_in_range,
     percentage_to_ranged_value,
     ranged_value_to_percentage,
 )
+from homeassistant.util.scaling import int_states_in_range
 
 from .common import VeSyncDevice
-from .const import DOMAIN, SKU_TO_BASE_DEVICE, VS_DISCOVERY, VS_FANS
+from .const import DEV_TYPE_TO_HA, DOMAIN, SKU_TO_BASE_DEVICE, VS_DISCOVERY, VS_FANS
 
 _LOGGER = logging.getLogger(__name__)
-
-DEV_TYPE_TO_HA = {
-    "LV-PUR131S": "fan",
-    "Core200S": "fan",
-    "Core300S": "fan",
-    "Core400S": "fan",
-    "Core600S": "fan",
-    "Vital200S": "fan",
-    "Vital100S": "fan",
-}
 
 FAN_MODE_AUTO = "auto"
 FAN_MODE_SLEEP = "sleep"
@@ -193,6 +184,8 @@ class VeSyncFanHA(VeSyncDevice, FanEntity):
             self.smartfan.auto_mode()
         elif preset_mode == FAN_MODE_SLEEP:
             self.smartfan.sleep_mode()
+        elif preset_mode == FAN_MODE_PET:
+            self.smartfan.pet_mode()
 
         self.schedule_update_ha_state()
 

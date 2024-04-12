@@ -1,4 +1,5 @@
 """Calendar platform for Withings."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -66,7 +67,7 @@ def get_event_name(category: WorkoutCategory) -> str:
 
 
 class WithingsWorkoutCalendarEntity(
-    CalendarEntity, WithingsEntity[WithingsWorkoutDataUpdateCoordinator]
+    WithingsEntity[WithingsWorkoutDataUpdateCoordinator], CalendarEntity
 ):
     """A calendar entity."""
 

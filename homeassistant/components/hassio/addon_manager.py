@@ -1,4 +1,5 @@
 """Provide add-on management."""
+
 from __future__ import annotations
 
 import asyncio
@@ -43,7 +44,7 @@ def api_error(
     """Handle HassioAPIError and raise a specific AddonError."""
 
     def handle_hassio_api_error(
-        func: _FuncType[_AddonManagerT, _P, _R]
+        func: _FuncType[_AddonManagerT, _P, _R],
     ) -> _ReturnFuncType[_AddonManagerT, _P, _R]:
         """Handle a HassioAPIError."""
 

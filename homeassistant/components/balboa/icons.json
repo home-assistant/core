@@ -1,0 +1,32 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "filter_1": {
+        "default": "mdi:sync",
+        "state": {
+          "off": "mdi:sync-off"
+        }
+      },
+      "filter_2": {
+        "default": "mdi:sync",
+        "state": {
+          "off": "mdi:sync-off"
+        }
+      },
+      "circ_pump": {
+        "default": "mdi:pump",
+        "state": {
+          "off": "mdi:pump-off"
+        }
+      }
+    },
+    "fan": {
+      "pump": {
+        "default": "mdi:pump",
+        "state": {
+          "off": "mdi:pump-off"
+        }
+      }
+    }
+  }
+}

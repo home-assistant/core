@@ -1,4 +1,5 @@
 """STT constante."""
+
 from enum import Enum
 
 DOMAIN = "stt"

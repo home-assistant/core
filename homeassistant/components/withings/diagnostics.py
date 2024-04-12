@@ -1,4 +1,5 @@
 """Diagnostics support for Withings."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -33,4 +34,6 @@ async def async_get_config_entry_diagnostics(
         "webhooks_connected": withings_data.measurement_coordinator.webhooks_connected,
         "received_measurements": list(withings_data.measurement_coordinator.data),
         "received_sleep_data": withings_data.sleep_coordinator.data is not None,
+        "received_workout_data": withings_data.workout_coordinator.data is not None,
+        "received_activity_data": withings_data.activity_coordinator.data is not None,
     }

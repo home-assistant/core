@@ -1,7 +1,7 @@
 """Test Google Assistant helpers."""
+
 from datetime import timedelta
 from http import HTTPStatus
-from typing import Any
 from unittest.mock import Mock, call, patch
 
 import pytest
@@ -14,18 +14,16 @@ from homeassistant.components.google_assistant.const import (
     SOURCE_LOCAL,
     STORE_GOOGLE_LOCAL_WEBHOOK_ID,
 )
+from homeassistant.components.matter.models import MatterDeviceInfo
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.core import HomeAssistant, State
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from . import MockConfig
 
-from tests.common import (
-    async_capture_events,
-    async_fire_time_changed,
-    async_mock_service,
-)
+from tests.common import MockConfigEntry, async_capture_events, async_mock_service
 from tests.typing import ClientSessionGenerator
 
 
@@ -71,6 +69,57 @@ async def test_google_entity_sync_serialize_with_local_sdk(hass: HomeAssistant) 
             serialized = entity.sync_serialize(None, "mock-uuid")
             assert "otherDeviceIds" not in serialized
             assert "customData" not in serialized
+
+
+async def test_google_entity_sync_serialize_with_matter(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test sync serialize attributes of a GoogleEntity that is also a Matter device."""
+    entry = MockConfigEntry()
+    entry.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        manufacturer="Someone",
+        model="Some model",
+        sw_version="Some Version",
+        identifiers={("matter", "12345678")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entity = entity_registry.async_get_or_create(
+        "light",
+        "test",
+        "1235",
+        suggested_object_id="ceiling_lights",
+        device_id=device.id,
+    )
+    hass.states.async_set("light.ceiling_lights", "off")
+
+    entity = helpers.GoogleEntity(
+        hass, MockConfig(hass=hass), hass.states.get("light.ceiling_lights")
+    )
+
+    serialized = entity.sync_serialize(None, "mock-uuid")
+    assert "matterUniqueId" not in serialized
+    assert "matterOriginalVendorId" not in serialized
+    assert "matterOriginalProductId" not in serialized
+
+    hass.config.components.add("matter")
+
+    with patch(
+        "homeassistant.components.matter.get_matter_device_info",
+        return_value=MatterDeviceInfo(
+            unique_id="mock-unique-id",
+            vendor_id="mock-vendor-id",
+            product_id="mock-product-id",
+        ),
+    ):
+        serialized = entity.sync_serialize("mock-user-id", "abcdef")
+
+    assert serialized["matterUniqueId"] == "mock-unique-id"
+    assert serialized["matterOriginalVendorId"] == "mock-vendor-id"
+    assert serialized["matterOriginalProductId"] == "mock-product-id"
 
 
 async def test_config_local_sdk(
@@ -220,72 +269,6 @@ async def test_config_local_sdk_if_ssl_enabled(
     assert await resp.read() == b""
 
 
-async def test_agent_user_id_storage(
-    hass: HomeAssistant, hass_storage: dict[str, Any]
-) -> None:
-    """Test a disconnect message."""
-
-    hass_storage["google_assistant"] = {
-        "version": 1,
-        "minor_version": 1,
-        "key": "google_assistant",
-        "data": {
-            "agent_user_ids": {
-                "agent_1": {
-                    "local_webhook_id": "test_webhook",
-                }
-            },
-        },
-    }
-
-    store = helpers.GoogleConfigStore(hass)
-    await store.async_initialize()
-
-    assert hass_storage["google_assistant"] == {
-        "version": 1,
-        "minor_version": 1,
-        "key": "google_assistant",
-        "data": {
-            "agent_user_ids": {
-                "agent_1": {
-                    "local_webhook_id": "test_webhook",
-                }
-            },
-        },
-    }
-
-    async def _check_after_delay(data):
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=2))
-        await hass.async_block_till_done()
-
-        assert (
-            list(hass_storage["google_assistant"]["data"]["agent_user_ids"].keys())
-            == data
-        )
-
-    store.add_agent_user_id("agent_2")
-    await _check_after_delay(["agent_1", "agent_2"])
-
-    store.pop_agent_user_id("agent_1")
-    await _check_after_delay(["agent_2"])
-
-    hass_storage["google_assistant"] = {
-        "version": 1,
-        "minor_version": 1,
-        "key": "google_assistant",
-        "data": {
-            "agent_user_ids": {"agent_1": {}},
-        },
-    }
-    store = helpers.GoogleConfigStore(hass)
-    await store.async_initialize()
-
-    assert (
-        STORE_GOOGLE_LOCAL_WEBHOOK_ID
-        in hass_storage["google_assistant"]["data"]["agent_user_ids"]["agent_1"]
-    )
-
-
 async def test_agent_user_id_connect() -> None:
     """Test the connection and disconnection of users."""
     config = MockConfig()
@@ -361,7 +344,10 @@ def test_supported_features_string(caplog: pytest.LogCaptureFixture) -> None:
         State("test.entity_id", "on", {"supported_features": "invalid"}),
     )
     assert entity.is_supported() is False
-    assert "Entity test.entity_id contains invalid supported_features value invalid"
+    assert (
+        "Entity test.entity_id contains invalid supported_features value invalid"
+        in caplog.text
+    )
 
 
 def test_request_data() -> None:
@@ -421,7 +407,7 @@ async def test_config_local_sdk_allow_min_version(
     ) not in caplog.text
 
 
-@pytest.mark.parametrize("version", (None, "2.1.4"))
+@pytest.mark.parametrize("version", [None, "2.1.4"])
 async def test_config_local_sdk_warn_version(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,

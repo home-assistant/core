@@ -1,10 +1,11 @@
 """Config flow for Roborock."""
+
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
 from typing import Any
 
-from roborock.api import RoborockApiClient
 from roborock.containers import UserData
 from roborock.exceptions import (
     RoborockAccountDoesNotExist,
@@ -13,21 +14,22 @@ from roborock.exceptions import (
     RoborockInvalidEmail,
     RoborockUrlException,
 )
+from roborock.web_api import RoborockApiClient
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_USERNAME
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import CONF_BASE_URL, CONF_ENTRY_CODE, CONF_USER_DATA, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class RoborockFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Roborock."""
 
     VERSION = 1
+    reauth_entry: ConfigEntry | None = None
 
     def __init__(self) -> None:
         """Initialize the config flow."""
@@ -36,7 +38,7 @@ class RoborockFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         errors: dict[str, str] = {}
 
@@ -47,21 +49,8 @@ class RoborockFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self._username = username
             _LOGGER.debug("Requesting code for Roborock account")
             self._client = RoborockApiClient(username)
-            try:
-                await self._client.request_code()
-            except RoborockAccountDoesNotExist:
-                errors["base"] = "invalid_email"
-            except RoborockUrlException:
-                errors["base"] = "unknown_url"
-            except RoborockInvalidEmail:
-                errors["base"] = "invalid_email_format"
-            except RoborockException as ex:
-                _LOGGER.exception(ex)
-                errors["base"] = "unknown_roborock"
-            except Exception as ex:  # pylint: disable=broad-except
-                _LOGGER.exception(ex)
-                errors["base"] = "unknown"
-            else:
+            errors = await self._request_code()
+            if not errors:
                 return await self.async_step_code()
         return self.async_show_form(
             step_id="user",
@@ -69,10 +58,29 @@ class RoborockFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    async def _request_code(self) -> dict:
+        assert self._client
+        errors: dict[str, str] = {}
+        try:
+            await self._client.request_code()
+        except RoborockAccountDoesNotExist:
+            errors["base"] = "invalid_email"
+        except RoborockUrlException:
+            errors["base"] = "unknown_url"
+        except RoborockInvalidEmail:
+            errors["base"] = "invalid_email_format"
+        except RoborockException:
+            _LOGGER.exception("Unexpected exception")
+            errors["base"] = "unknown_roborock"
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Unexpected exception")
+            errors["base"] = "unknown"
+        return errors
+
     async def async_step_code(
         self,
         user_input: dict[str, Any] | None = None,
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         errors: dict[str, str] = {}
         assert self._client
@@ -84,13 +92,25 @@ class RoborockFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 login_data = await self._client.code_login(code)
             except RoborockInvalidCode:
                 errors["base"] = "invalid_code"
-            except RoborockException as ex:
-                _LOGGER.exception(ex)
+            except RoborockException:
+                _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown_roborock"
-            except Exception as ex:  # pylint: disable=broad-except
-                _LOGGER.exception(ex)
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
+                if self.reauth_entry is not None:
+                    self.hass.config_entries.async_update_entry(
+                        self.reauth_entry,
+                        data={
+                            **self.reauth_entry.data,
+                            CONF_USER_DATA: login_data.as_dict(),
+                        },
+                    )
+                    await self.hass.config_entries.async_reload(
+                        self.reauth_entry.entry_id
+                    )
+                    return self.async_abort(reason="reauth_successful")
                 return self._create_entry(self._client, self._username, login_data)
 
         return self.async_show_form(
@@ -99,9 +119,32 @@ class RoborockFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Perform reauth upon an API authentication error."""
+        self._username = entry_data[CONF_USERNAME]
+        assert self._username
+        self._client = RoborockApiClient(self._username)
+        self.reauth_entry = self.hass.config_entries.async_get_entry(
+            self.context["entry_id"]
+        )
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm reauth dialog."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            errors = await self._request_code()
+            if not errors:
+                return await self.async_step_code()
+        return self.async_show_form(step_id="reauth_confirm", errors=errors)
+
     def _create_entry(
         self, client: RoborockApiClient, username: str, user_data: UserData
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Finished config flow and create entry."""
         return self.async_create_entry(
             title=username,

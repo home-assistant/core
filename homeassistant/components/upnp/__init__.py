@@ -1,4 +1,5 @@
 """UPnP/IGD integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -26,7 +27,7 @@ from .const import (
     LOGGER,
 )
 from .coordinator import UpnpDataUpdateCoordinator
-from .device import async_create_device
+from .device import async_create_device, get_preferred_location
 
 NOTIFICATION_ID = "upnp_notification"
 NOTIFICATION_TITLE = "UPnP/IGD Setup"
@@ -57,7 +58,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             return
 
         nonlocal discovery_info
-        LOGGER.debug("Device discovered: %s, at: %s", usn, headers.ssdp_location)
+        LOGGER.debug("Device discovered: %s, at: %s", usn, headers.ssdp_all_locations)
         discovery_info = headers
         device_discovered_event.set()
 
@@ -72,15 +73,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         async with asyncio.timeout(10):
             await device_discovered_event.wait()
-    except asyncio.TimeoutError as err:
+    except TimeoutError as err:
         raise ConfigEntryNotReady(f"Device not discovered: {usn}") from err
     finally:
         cancel_discovered_callback()
 
     # Create device.
     assert discovery_info is not None
-    assert discovery_info.ssdp_location is not None
-    location = discovery_info.ssdp_location
+    assert discovery_info.ssdp_udn
+    assert discovery_info.ssdp_all_locations
+    location = get_preferred_location(discovery_info.ssdp_all_locations)
     try:
         device = await async_create_device(hass, location)
     except UpnpConnectionError as err:
@@ -117,7 +119,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if device.serial_number:
         identifiers.add((IDENTIFIER_SERIAL_NUMBER, device.serial_number))
 
-    connections = {(dr.CONNECTION_UPNP, device.udn)}
+    connections = {(dr.CONNECTION_UPNP, discovery_info.ssdp_udn)}
+    if discovery_info.ssdp_udn != device.udn:
+        connections.add((dr.CONNECTION_UPNP, device.udn))
     if device_mac_address:
         connections.add((dr.CONNECTION_NETWORK_MAC, device_mac_address))
 

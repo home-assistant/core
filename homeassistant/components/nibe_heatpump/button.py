@@ -1,4 +1,5 @@
 """The Nibe Heat Pump sensors."""
+
 from __future__ import annotations
 
 from nibe.coil_groups import UNIT_COILGROUPS, UnitCoilGroup
@@ -11,7 +12,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import DOMAIN, LOGGER, Coordinator
+from .const import DOMAIN, LOGGER
+from .coordinator import Coordinator
 
 
 async def async_setup_entry(

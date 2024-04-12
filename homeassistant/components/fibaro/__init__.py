@@ -1,4 +1,5 @@
 """Support for the Fibaro devices."""
+
 from __future__ import annotations
 
 from collections import defaultdict
@@ -42,12 +43,12 @@ PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.CLIMATE,
     Platform.COVER,
+    Platform.EVENT,
     Platform.LIGHT,
+    Platform.LOCK,
     Platform.SCENE,
     Platform.SENSOR,
-    Platform.LOCK,
     Platform.SWITCH,
-    Platform.EVENT,
 ]
 
 FIBARO_TYPEMAP = {
@@ -186,12 +187,13 @@ class FibaroController:
 
         resolver = FibaroStateResolver(state)
         for event in resolver.get_events():
-            fibaro_id = event.fibaro_id
+            # event does not always have a fibaro id, therefore it is
+            # essential that we first check for relevant event type
             if (
                 event.event_type.lower() == "centralsceneevent"
-                and fibaro_id in self._event_callbacks
+                and event.fibaro_id in self._event_callbacks
             ):
-                for callback in self._event_callbacks[fibaro_id]:
+                for callback in self._event_callbacks[event.fibaro_id]:
                     callback(event)
 
     def register(self, device_id: int, callback: Any) -> None:

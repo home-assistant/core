@@ -1,4 +1,5 @@
 """Config flow for UPB PIM integration."""
+
 import asyncio
 from contextlib import suppress
 import logging
@@ -7,8 +8,9 @@ from urllib.parse import urlparse
 import upb_lib
 import voluptuous as vol
 
-from homeassistant import config_entries, exceptions
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_ADDRESS, CONF_FILE_PATH, CONF_HOST, CONF_PROTOCOL
+from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN
 
@@ -43,7 +45,7 @@ async def _validate_input(data):
 
     upb.connect(_connected_callback)
 
-    with suppress(asyncio.TimeoutError):
+    with suppress(TimeoutError):
         async with asyncio.timeout(VALIDATE_TIMEOUT):
             await connected_event.wait()
 
@@ -70,7 +72,7 @@ def _make_url_from_data(data):
     return f"{protocol}{address}"
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class UPBConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for UPB PIM."""
 
     VERSION = 1
@@ -128,9 +130,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return urlparse(url).hostname in existing_hosts
 
 
-class CannotConnect(exceptions.HomeAssistantError):
+class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""
 
 
-class InvalidUpbFile(exceptions.HomeAssistantError):
+class InvalidUpbFile(HomeAssistantError):
     """Error to indicate there is invalid or missing UPB config file."""

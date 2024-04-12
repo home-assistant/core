@@ -1,4 +1,5 @@
 """Diagnostics support for GIOS."""
+
 from __future__ import annotations
 
 from dataclasses import asdict
@@ -17,9 +18,7 @@ async def async_get_config_entry_diagnostics(
     """Return diagnostics for a config entry."""
     coordinator: GiosDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-    diagnostics_data = {
+    return {
         "config_entry": config_entry.as_dict(),
         "coordinator_data": asdict(coordinator.data),
     }
-
-    return diagnostics_data

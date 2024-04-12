@@ -1,4 +1,5 @@
 """The tests for mqtt camera component."""
+
 from base64 import b64encode
 from http import HTTPStatus
 import json
@@ -8,7 +9,6 @@ import pytest
 
 from homeassistant.components import camera, mqtt
 from homeassistant.components.mqtt.camera import MQTT_CAMERA_ATTRIBUTES_BLOCKED
-from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from .test_common import (
@@ -46,13 +46,6 @@ from tests.typing import (
 )
 
 DEFAULT_CONFIG = {mqtt.DOMAIN: {camera.DOMAIN: {"name": "test", "topic": "test_topic"}}}
-
-
-@pytest.fixture(autouse=True)
-def camera_platform_only():
-    """Only setup the camera platform to speed up tests."""
-    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.CAMERA]):
-        yield
 
 
 @pytest.mark.parametrize(

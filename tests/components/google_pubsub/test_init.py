@@ -1,12 +1,13 @@
 """The tests for the Google Pub/Sub component."""
+
 from dataclasses import dataclass
 from datetime import datetime
 import os
-import unittest.mock as mock
+from unittest import mock
 
 import pytest
 
-import homeassistant.components.google_pubsub as google_pubsub
+from homeassistant.components import google_pubsub
 from homeassistant.components.google_pubsub import DateTimeJSONEncoder as victim
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component

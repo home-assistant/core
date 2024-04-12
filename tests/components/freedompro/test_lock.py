@@ -1,4 +1,5 @@
 """Tests for the Freedompro lock."""
+
 from datetime import timedelta
 from unittest.mock import ANY, patch
 
@@ -15,18 +16,20 @@ from homeassistant.util.dt import utcnow
 
 from .conftest import get_states_response_for_uid
 
-from tests.common import async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 uid = "2WRRJR6RCZQZSND8VP0YTO3YXCSOFPKBMW8T51TU-LQ*2VAS3HTWINNZ5N6HVEIPDJ6NX85P2-AM-GSYWUCNPU0"
 
 
-async def test_lock_get_state(hass: HomeAssistant, init_integration) -> None:
+async def test_lock_get_state(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    init_integration: MockConfigEntry,
+) -> None:
     """Test states of the lock."""
-    init_integration
-    registry = er.async_get(hass)
-    registry_device = dr.async_get(hass)
 
-    device = registry_device.async_get_device(identifiers={("freedompro", uid)})
+    device = device_registry.async_get_device(identifiers={("freedompro", uid)})
     assert device is not None
     assert device.identifiers == {("freedompro", uid)}
     assert device.manufacturer == "Freedompro"
@@ -39,7 +42,7 @@ async def test_lock_get_state(hass: HomeAssistant, init_integration) -> None:
     assert state.state == STATE_UNLOCKED
     assert state.attributes.get("friendly_name") == "lock"
 
-    entry = registry.async_get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.unique_id == uid
 
@@ -56,17 +59,19 @@ async def test_lock_get_state(hass: HomeAssistant, init_integration) -> None:
         assert state
         assert state.attributes.get("friendly_name") == "lock"
 
-        entry = registry.async_get(entity_id)
+        entry = entity_registry.async_get(entity_id)
         assert entry
         assert entry.unique_id == uid
 
         assert state.state == STATE_LOCKED
 
 
-async def test_lock_set_unlock(hass: HomeAssistant, init_integration) -> None:
+async def test_lock_set_unlock(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    init_integration: MockConfigEntry,
+) -> None:
     """Test set on of the lock."""
-    init_integration
-    registry = er.async_get(hass)
 
     entity_id = "lock.lock"
 
@@ -85,7 +90,7 @@ async def test_lock_set_unlock(hass: HomeAssistant, init_integration) -> None:
     assert state.state == STATE_LOCKED
     assert state.attributes.get("friendly_name") == "lock"
 
-    entry = registry.async_get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.unique_id == uid
 
@@ -111,10 +116,12 @@ async def test_lock_set_unlock(hass: HomeAssistant, init_integration) -> None:
     assert state.state == STATE_UNLOCKED
 
 
-async def test_lock_set_lock(hass: HomeAssistant, init_integration) -> None:
+async def test_lock_set_lock(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    init_integration: MockConfigEntry,
+) -> None:
     """Test set on of the lock."""
-    init_integration
-    registry = er.async_get(hass)
 
     entity_id = "lock.lock"
     state = hass.states.get(entity_id)
@@ -122,7 +129,7 @@ async def test_lock_set_lock(hass: HomeAssistant, init_integration) -> None:
     assert state.state == STATE_UNLOCKED
     assert state.attributes.get("friendly_name") == "lock"
 
-    entry = registry.async_get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.unique_id == uid
 
