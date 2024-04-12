@@ -42,4 +42,4 @@ class DemoNotifyEntity(NotifyEntity):
     async def async_send_message(self, message: str) -> None:
         """Send a message to a user."""
         event_notitifcation = {"message": message}
-        self.hass.bus.fire(EVENT_NOTIFY, event_notitifcation)
+        self.hass.bus.async_fire(EVENT_NOTIFY, event_notitifcation)
