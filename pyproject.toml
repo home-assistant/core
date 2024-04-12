@@ -69,6 +69,7 @@ dependencies    = [
     "urllib3>=1.26.5,<2",
     "voluptuous==0.13.1",
     "voluptuous-serialize==2.6.0",
+    "voluptuous-openapi==0.0.1",
     "yarl==1.9.4",
 ]
 
