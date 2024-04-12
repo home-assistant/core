@@ -83,15 +83,12 @@ def process_health(health: StateType) -> str | None:
     """Process health index and return string for display."""
     if not isinstance(health, int):
         return None
-    if health == 0:
-        return "Healthy"
-    if health == 1:
-        return "Fine"
-    if health == 2:
-        return "Fair"
-    if health == 3:
-        return "Poor"
-    return "Unhealthy"
+    return {
+        0: "healthy",
+        1: "fine",
+        2: "fair",
+        3: "poor",
+    }.get(health, "unhealthy")
 
 
 def process_rf(strength: StateType) -> str | None:
@@ -274,6 +271,8 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
     NetatmoSensorEntityDescription(
         key="health_idx",
         netatmo_name="health_idx",
+        device_class=SensorDeviceClass.ENUM,
+        options=["healthy", "fine", "fair", "poor", "unhealthy"],
         value_fn=process_health,
     ),
     NetatmoSensorEntityDescription(
