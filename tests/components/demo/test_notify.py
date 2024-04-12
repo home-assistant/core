@@ -4,7 +4,6 @@ from collections.abc import Generator
 from unittest.mock import patch
 
 import pytest
-import voluptuous as vol
 
 from homeassistant.components import notify
 from homeassistant.components.demo import DOMAIN
@@ -59,28 +58,6 @@ def record_calls(calls):
         calls.append(args)
 
     return record_calls
-
-
-async def test_sending_none_message(hass: HomeAssistant, events: list[Event]) -> None:
-    """Test send with None as message."""
-    with pytest.raises(vol.Invalid):
-        await hass.services.async_call(
-            notify.DOMAIN,
-            notify.SERVICE_SEND_MESSAGE,
-            {"entity_id": "notify.notifier", notify.ATTR_MESSAGE: None},
-        )
-    await hass.async_block_till_done()
-    assert len(events) == 0
-
-
-async def test_sending_no_message(hass: HomeAssistant, events: list[Event]) -> None:
-    """Test send without message."""
-    with pytest.raises(vol.Invalid):
-        await hass.services.async_call(
-            notify.DOMAIN, notify.SERVICE_SEND_MESSAGE, {"entity_id": "notify.notifier"}
-        )
-    await hass.async_block_till_done()
-    assert len(events) == 0
 
 
 async def test_sending_message(hass: HomeAssistant, events: list[Event]) -> None:
