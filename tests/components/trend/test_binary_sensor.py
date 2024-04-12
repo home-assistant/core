@@ -67,7 +67,8 @@ async def test_basic_trend_setup_from_yaml(
         hass.states.async_set("sensor.cpu_temp", state)
         await hass.async_block_till_done()
 
-    assert (sensor_state := hass.states.get("binary_sensor.test_trend_sensor"))
+    sensor_state = hass.states.get("binary_sensor.test_trend_sensor")
+    assert sensor_state
     assert sensor_state.state == expected_state
 
 
@@ -100,7 +101,8 @@ async def test_basic_trend(
         hass.states.async_set("sensor.test_state", state)
         await hass.async_block_till_done()
 
-    assert (sensor_state := hass.states.get("binary_sensor.test_trend_sensor"))
+    sensor_state = hass.states.get("binary_sensor.test_trend_sensor")
+    assert sensor_state
     assert sensor_state.state == expected_state
 
 
@@ -151,7 +153,8 @@ async def test_using_trendline(
             hass.states.async_set("sensor.test_state", state)
             await hass.async_block_till_done()
 
-        assert (sensor_state := hass.states.get("binary_sensor.test_trend_sensor"))
+        sensor_state = hass.states.get("binary_sensor.test_trend_sensor")
+        assert sensor_state
         assert sensor_state.state == expected_states[idx]
 
 
@@ -182,7 +185,8 @@ async def test_attribute_trend(
         hass.states.async_set("sensor.test_state", "State", {"attr": attr})
         await hass.async_block_till_done()
 
-    assert (sensor_state := hass.states.get("binary_sensor.test_trend_sensor"))
+    sensor_state = hass.states.get("binary_sensor.test_trend_sensor")
+    assert sensor_state
     assert sensor_state.state == expected_state
 
 
@@ -201,7 +205,8 @@ async def test_max_samples(
         hass.states.async_set("sensor.test_state", val)
         await hass.async_block_till_done()
 
-    assert (state := hass.states.get("binary_sensor.test_trend_sensor"))
+    state = hass.states.get("binary_sensor.test_trend_sensor")
+    assert state
     assert state.state == "on"
     assert state.attributes["sample_count"] == 3
 
@@ -216,7 +221,8 @@ async def test_non_numeric(
         hass.states.async_set("sensor.test_state", val)
         await hass.async_block_till_done()
 
-    assert (state := hass.states.get("binary_sensor.test_trend_sensor"))
+    state = hass.states.get("binary_sensor.test_trend_sensor")
+    assert state
     assert state.state == STATE_UNKNOWN
 
 
@@ -234,7 +240,8 @@ async def test_missing_attribute(
         hass.states.async_set("sensor.test_state", "State", {"attr": val})
         await hass.async_block_till_done()
 
-    assert (state := hass.states.get("binary_sensor.test_trend_sensor"))
+    state = hass.states.get("binary_sensor.test_trend_sensor")
+    assert state
     assert state.state == STATE_UNKNOWN
 
 

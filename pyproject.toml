@@ -701,6 +701,7 @@ select = [
     "RUF005", # Consider iterable unpacking instead of concatenation
     "RUF006", # Store a reference to the return value of asyncio.create_task
     "RUF013", # PEP 484 prohibits implicit Optional
+    "RUF018", # Avoid assignment expressions in assert statements
     # "RUF100", # Unused `noqa` directive; temporarily every now and then to clean them up
     "S102", # Use of exec detected
     "S103", # bad-file-permissions

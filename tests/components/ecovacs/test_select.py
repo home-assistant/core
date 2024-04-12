@@ -61,20 +61,24 @@ async def test_selects(
     """Test that select entity snapshots match."""
     assert entity_ids == hass.states.async_entity_ids()
     for entity_id in entity_ids:
-        assert (state := hass.states.get(entity_id)), f"State of {entity_id} is missing"
+        state = hass.states.get(entity_id)
+        assert state, f"State of {entity_id} is missing"
         assert state.state == STATE_UNKNOWN
 
     device = next(controller.devices(Capabilities))
     await notify_events(hass, device.events)
     for entity_id in entity_ids:
-        assert (state := hass.states.get(entity_id)), f"State of {entity_id} is missing"
+        state = hass.states.get(entity_id)
+        assert state, f"State of {entity_id} is missing"
         assert snapshot(name=f"{entity_id}:state") == state
 
-        assert (entity_entry := entity_registry.async_get(state.entity_id))
+        entity_entry = entity_registry.async_get(state.entity_id)
+        assert entity_entry
         assert snapshot(name=f"{entity_id}:entity-registry") == entity_entry
 
         assert entity_entry.device_id
-        assert (device_entry := device_registry.async_get(entity_entry.device_id))
+        device_entry = device_registry.async_get(entity_entry.device_id)
+        assert device_entry
         assert device_entry.identifiers == {(DOMAIN, device.device_info["did"])}
 
 
@@ -103,7 +107,8 @@ async def test_selects_change(
     device = next(controller.devices(Capabilities))
     await notify_events(hass, device.events)
 
-    assert (state := hass.states.get(entity_id)), f"State of {entity_id} is missing"
+    state = hass.states.get(entity_id)
+    assert state, f"State of {entity_id} is missing"
     assert state.state == current_state
 
     device._execute_command.reset_mock()

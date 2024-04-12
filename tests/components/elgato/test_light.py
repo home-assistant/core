@@ -45,14 +45,17 @@ async def test_light_state_temperature(
     """Test the creation and values of the Elgato Lights in temperature mode."""
 
     # First segment of the strip
-    assert (state := hass.states.get("light.frenck"))
+    state = hass.states.get("light.frenck")
+    assert state
     assert state == snapshot
 
-    assert (entry := entity_registry.async_get("light.frenck"))
+    entry = entity_registry.async_get("light.frenck")
+    assert entry
     assert entry == snapshot
 
     assert entry.device_id
-    assert (device_entry := device_registry.async_get(entry.device_id))
+    device_entry = device_registry.async_get(entry.device_id)
+    assert device_entry
     assert device_entry == snapshot
 
 
@@ -65,7 +68,8 @@ async def test_light_change_state_temperature(
     mock_elgato: MagicMock,
 ) -> None:
     """Test the change of state of a Elgato Key Light device."""
-    assert (state := hass.states.get("light.frenck"))
+    state = hass.states.get("light.frenck")
+    assert state
     assert state.state == STATE_ON
 
     await hass.services.async_call(
@@ -138,7 +142,8 @@ async def test_light_unavailable(
             blocking=True,
         )
 
-    assert (state := hass.states.get("light.frenck"))
+    state = hass.states.get("light.frenck")
+    assert state
     assert state.state == STATE_UNAVAILABLE
 
 

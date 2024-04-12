@@ -57,7 +57,8 @@ async def test_disabled_by_default_sensors(
     """Test the disabled by default TechnoVE sensors."""
     assert hass.states.get(entity_id) is None
 
-    assert (entry := entity_registry.async_get(entity_id))
+    entry = entity_registry.async_get(entity_id)
+    assert entry
     assert entry.disabled
     assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
@@ -78,7 +79,8 @@ async def test_no_wifi_support(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert (state := hass.states.get("sensor.technove_station_wi_fi_network_name"))
+    state = hass.states.get("sensor.technove_station_wi_fi_network_name")
+    assert state
     assert state.state == STATE_UNKNOWN
 
 

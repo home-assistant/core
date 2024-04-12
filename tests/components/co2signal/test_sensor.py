@@ -34,10 +34,12 @@ async def test_sensor(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test sensor setup and update."""
-    assert (entry := entity_registry.async_get(entity_name))
+    entry = entity_registry.async_get(entity_name)
+    assert entry
     assert entry == snapshot
 
-    assert (state := hass.states.get(entity_name))
+    state = hass.states.get(entity_name)
+    assert state
     assert state == snapshot
 
 
@@ -58,7 +60,8 @@ async def test_sensor_update_fail(
     error: Exception,
 ) -> None:
     """Test sensor error handling."""
-    assert (state := hass.states.get("sensor.electricity_maps_co2_intensity"))
+    state = hass.states.get("sensor.electricity_maps_co2_intensity")
+    assert state
     assert state.state == "45.9862319009581"
     assert len(electricity_maps.mock_calls) == 1
 
@@ -69,7 +72,8 @@ async def test_sensor_update_fail(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert (state := hass.states.get("sensor.electricity_maps_co2_intensity"))
+    state = hass.states.get("sensor.electricity_maps_co2_intensity")
+    assert state
     assert state.state == "unavailable"
     assert len(electricity_maps.mock_calls) == 2
 
@@ -81,7 +85,8 @@ async def test_sensor_update_fail(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert (state := hass.states.get("sensor.electricity_maps_co2_intensity"))
+    state = hass.states.get("sensor.electricity_maps_co2_intensity")
+    assert state
     assert state.state == "45.9862319009581"
     assert len(electricity_maps.mock_calls) == 3
 
@@ -93,7 +98,8 @@ async def test_sensor_reauth_triggered(
     electricity_maps: AsyncMock,
 ):
     """Test if reauth flow is triggered."""
-    assert (state := hass.states.get("sensor.electricity_maps_co2_intensity"))
+    state = hass.states.get("sensor.electricity_maps_co2_intensity")
+    assert state
     assert state.state == "45.9862319009581"
 
     electricity_maps.latest_carbon_intensity_by_coordinates.side_effect = (
@@ -107,6 +113,7 @@ async def test_sensor_reauth_triggered(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert (flows := hass.config_entries.flow.async_progress())
+    flows = hass.config_entries.flow.async_progress()
+    assert flows
     assert len(flows) == 1
     assert flows[0]["step_id"] == "reauth"

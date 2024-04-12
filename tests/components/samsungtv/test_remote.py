@@ -58,9 +58,11 @@ async def test_main_services(
     assert remoteencws.send_commands.call_count == 1
     commands = remoteencws.send_commands.call_args_list[0].args[0]
     assert len(commands) == 2
-    assert isinstance(command := commands[0], SamsungTVEncryptedCommand)
+    command = commands[0]
+    assert isinstance(command, SamsungTVEncryptedCommand)
     assert command.body["param3"] == "KEY_POWEROFF"
-    assert isinstance(command := commands[1], SamsungTVEncryptedCommand)
+    command = commands[1]
+    assert isinstance(command, SamsungTVEncryptedCommand)
     assert command.body["param3"] == "KEY_POWER"
 
     # commands not sent : power off in progress
@@ -90,5 +92,6 @@ async def test_send_command_service(hass: HomeAssistant, remoteencws: Mock) -> N
     assert remoteencws.send_commands.call_count == 1
     commands = remoteencws.send_commands.call_args_list[0].args[0]
     assert len(commands) == 1
-    assert isinstance(command := commands[0], SamsungTVEncryptedCommand)
+    command = commands[0]
+    assert isinstance(command, SamsungTVEncryptedCommand)
     assert command.body["param3"] == "dash"

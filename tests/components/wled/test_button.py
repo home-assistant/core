@@ -26,14 +26,17 @@ async def test_button_restart(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test the creation and values of the WLED button."""
-    assert (state := hass.states.get("button.wled_rgb_light_restart"))
+    state = hass.states.get("button.wled_rgb_light_restart")
+    assert state
     assert state == snapshot
 
-    assert (entity_entry := entity_registry.async_get(state.entity_id))
+    entity_entry = entity_registry.async_get(state.entity_id)
+    assert entity_entry
     assert entity_entry == snapshot
 
     assert entity_entry.device_id
-    assert (device_entry := device_registry.async_get(entity_entry.device_id))
+    device_entry = device_registry.async_get(entity_entry.device_id)
+    assert device_entry
     assert device_entry == snapshot
 
     assert state.state == STATE_UNKNOWN
@@ -46,7 +49,8 @@ async def test_button_restart(
     assert mock_wled.reset.call_count == 1
     mock_wled.reset.assert_called_with()
 
-    assert (state := hass.states.get("button.wled_rgb_light_restart"))
+    state = hass.states.get("button.wled_rgb_light_restart")
+    assert state
     assert state.state == "2021-11-04T16:37:00+00:00"
 
     # Test with WLED error
@@ -61,7 +65,8 @@ async def test_button_restart(
         await hass.async_block_till_done()
 
     # Ensure this didn't made the entity unavailable
-    assert (state := hass.states.get("button.wled_rgb_light_restart"))
+    state = hass.states.get("button.wled_rgb_light_restart")
+    assert state
     assert state.state != STATE_UNAVAILABLE
 
     # Test with WLED connection error
@@ -75,5 +80,6 @@ async def test_button_restart(
         )
 
     # Ensure this made the entity unavailable
-    assert (state := hass.states.get("button.wled_rgb_light_restart"))
+    state = hass.states.get("button.wled_rgb_light_restart")
+    assert state
     assert state.state == STATE_UNAVAILABLE

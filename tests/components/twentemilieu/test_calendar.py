@@ -21,14 +21,17 @@ async def test_waste_pickup_calendar(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test the Twente Milieu waste pickup calendar."""
-    assert (state := hass.states.get("calendar.twente_milieu"))
+    state = hass.states.get("calendar.twente_milieu")
+    assert state
     assert state == snapshot
 
-    assert (entity_entry := entity_registry.async_get(state.entity_id))
+    entity_entry = entity_registry.async_get(state.entity_id)
+    assert entity_entry
     assert entity_entry == snapshot
 
     assert entity_entry.device_id
-    assert (device_entry := device_registry.async_get(entity_entry.device_id))
+    device_entry = device_registry.async_get(entity_entry.device_id)
+    assert device_entry
     assert device_entry == snapshot
 
 

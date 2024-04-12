@@ -74,14 +74,16 @@ async def test_setup_and_update(
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
-    assert (state := hass.states.get("device_tracker.10_10_10_10"))
+    state = hass.states.get("device_tracker.10_10_10_10")
+    assert state
     assert state.state == "not_home"
 
     freezer.tick(timedelta(minutes=1, seconds=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert (state := hass.states.get("device_tracker.10_10_10_10"))
+    state = hass.states.get("device_tracker.10_10_10_10")
+    assert state
     assert state.state == "home"
 
 

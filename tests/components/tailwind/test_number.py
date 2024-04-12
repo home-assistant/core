@@ -25,14 +25,17 @@ async def test_number_entities(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test number entities provided by the Tailwind integration."""
-    assert (state := hass.states.get("number.tailwind_iq3_status_led_brightness"))
+    state = hass.states.get("number.tailwind_iq3_status_led_brightness")
+    assert state
     assert snapshot == state
 
-    assert (entity_entry := entity_registry.async_get(state.entity_id))
+    entity_entry = entity_registry.async_get(state.entity_id)
+    assert entity_entry
     assert snapshot == entity_entry
 
     assert entity_entry.device_id
-    assert (device_entry := device_registry.async_get(entity_entry.device_id))
+    device_entry = device_registry.async_get(entity_entry.device_id)
+    assert device_entry
     assert snapshot == device_entry
 
     assert len(mock_tailwind.status_led.mock_calls) == 0

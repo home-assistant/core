@@ -1652,7 +1652,8 @@ def test_migrate_entity_to_new_platform(
 
     assert not entity_registry.async_get_entity_id("light", "hue", orig_unique_id)
 
-    assert (new_entry := entity_registry.async_get("light.light")) is not orig_entry
+    new_entry = entity_registry.async_get("light.light")
+    assert new_entry is not orig_entry
 
     assert new_entry.config_entry_id == new_config_entry.entry_id
     assert new_entry.unique_id == new_unique_id

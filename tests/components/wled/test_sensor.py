@@ -38,7 +38,8 @@ async def test_sensors(
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert (state := hass.states.get("sensor.wled_rgb_light_estimated_current"))
+    state = hass.states.get("sensor.wled_rgb_light_estimated_current")
+    assert state
     assert (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == UnitOfElectricCurrent.MILLIAMPERE
@@ -46,42 +47,48 @@ async def test_sensors(
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.CURRENT
     assert state.state == "470"
 
-    assert (
-        entry := entity_registry.async_get("sensor.wled_rgb_light_estimated_current")
-    )
+    entry = entity_registry.async_get("sensor.wled_rgb_light_estimated_current")
+    assert entry
     assert entry.unique_id == "aabbccddeeff_estimated_current"
     assert entry.entity_category is EntityCategory.DIAGNOSTIC
 
-    assert (state := hass.states.get("sensor.wled_rgb_light_uptime"))
+    state = hass.states.get("sensor.wled_rgb_light_uptime")
+    assert state
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TIMESTAMP
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
     assert state.state == "2019-11-11T09:10:00+00:00"
 
-    assert (entry := entity_registry.async_get("sensor.wled_rgb_light_uptime"))
+    entry = entity_registry.async_get("sensor.wled_rgb_light_uptime")
+    assert entry
     assert entry.unique_id == "aabbccddeeff_uptime"
     assert entry.entity_category is EntityCategory.DIAGNOSTIC
 
-    assert (state := hass.states.get("sensor.wled_rgb_light_free_memory"))
+    state = hass.states.get("sensor.wled_rgb_light_free_memory")
+    assert state
     assert state.attributes.get(ATTR_ICON) is None
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfInformation.BYTES
     assert state.state == "14600"
     assert entry.entity_category is EntityCategory.DIAGNOSTIC
 
-    assert (entry := entity_registry.async_get("sensor.wled_rgb_light_free_memory"))
+    entry = entity_registry.async_get("sensor.wled_rgb_light_free_memory")
+    assert entry
     assert entry.unique_id == "aabbccddeeff_free_heap"
     assert entry.entity_category is EntityCategory.DIAGNOSTIC
 
-    assert (state := hass.states.get("sensor.wled_rgb_light_wi_fi_signal"))
+    state = hass.states.get("sensor.wled_rgb_light_wi_fi_signal")
+    assert state
     assert state.attributes.get(ATTR_ICON) is None
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
     assert state.state == "76"
     assert entry.entity_category is EntityCategory.DIAGNOSTIC
 
-    assert (entry := entity_registry.async_get("sensor.wled_rgb_light_wi_fi_signal"))
+    entry = entity_registry.async_get("sensor.wled_rgb_light_wi_fi_signal")
+    assert entry
     assert entry.unique_id == "aabbccddeeff_wifi_signal"
     assert entry.entity_category is EntityCategory.DIAGNOSTIC
 
-    assert (state := hass.states.get("sensor.wled_rgb_light_wi_fi_rssi"))
+    state = hass.states.get("sensor.wled_rgb_light_wi_fi_rssi")
+    assert state
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.SIGNAL_STRENGTH
     assert (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
@@ -89,34 +96,41 @@ async def test_sensors(
     )
     assert state.state == "-62"
 
-    assert (entry := entity_registry.async_get("sensor.wled_rgb_light_wi_fi_rssi"))
+    entry = entity_registry.async_get("sensor.wled_rgb_light_wi_fi_rssi")
+    assert entry
     assert entry.unique_id == "aabbccddeeff_wifi_rssi"
     assert entry.entity_category is EntityCategory.DIAGNOSTIC
 
-    assert (state := hass.states.get("sensor.wled_rgb_light_wi_fi_channel"))
+    state = hass.states.get("sensor.wled_rgb_light_wi_fi_channel")
+    assert state
     assert state.attributes.get(ATTR_ICON) is None
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
     assert state.state == "11"
 
-    assert (entry := entity_registry.async_get("sensor.wled_rgb_light_wi_fi_channel"))
+    entry = entity_registry.async_get("sensor.wled_rgb_light_wi_fi_channel")
+    assert entry
     assert entry.unique_id == "aabbccddeeff_wifi_channel"
     assert entry.entity_category is EntityCategory.DIAGNOSTIC
 
-    assert (state := hass.states.get("sensor.wled_rgb_light_wi_fi_bssid"))
+    state = hass.states.get("sensor.wled_rgb_light_wi_fi_bssid")
+    assert state
     assert state.attributes.get(ATTR_ICON) is None
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
     assert state.state == "AA:AA:AA:AA:AA:BB"
 
-    assert (entry := entity_registry.async_get("sensor.wled_rgb_light_wi_fi_bssid"))
+    entry = entity_registry.async_get("sensor.wled_rgb_light_wi_fi_bssid")
+    assert entry
     assert entry.unique_id == "aabbccddeeff_wifi_bssid"
     assert entry.entity_category is EntityCategory.DIAGNOSTIC
 
-    assert (state := hass.states.get("sensor.wled_rgb_light_ip"))
+    state = hass.states.get("sensor.wled_rgb_light_ip")
+    assert state
     assert state.attributes.get(ATTR_ICON) is None
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
     assert state.state == "127.0.0.1"
 
-    assert (entry := entity_registry.async_get("sensor.wled_rgb_light_ip"))
+    entry = entity_registry.async_get("sensor.wled_rgb_light_ip")
+    assert entry
     assert entry.unique_id == "aabbccddeeff_ip"
     assert entry.entity_category is EntityCategory.DIAGNOSTIC
 
@@ -139,7 +153,8 @@ async def test_disabled_by_default_sensors(
     """Test the disabled by default WLED sensors."""
     assert hass.states.get(entity_id) is None
 
-    assert (entry := entity_registry.async_get(entity_id))
+    entry = entity_registry.async_get(entity_id)
+    assert entry
     assert entry.disabled
     assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
@@ -170,7 +185,8 @@ async def test_no_wifi_support(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert (state := hass.states.get(f"sensor.wled_rgb_light_wi_fi_{key}"))
+    state = hass.states.get(f"sensor.wled_rgb_light_wi_fi_{key}")
+    assert state
     assert state.state == STATE_UNKNOWN
 
 

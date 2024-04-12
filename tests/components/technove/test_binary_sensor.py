@@ -52,7 +52,8 @@ async def test_disabled_by_default_binary_sensors(
     """Test the disabled by default TechnoVE binary sensors."""
     assert hass.states.get(entity_id) is None
 
-    assert (entry := entity_registry.async_get(entity_id))
+    entry = entity_registry.async_get(entity_id)
+    assert entry
     assert entry.disabled
     assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 

@@ -3850,10 +3850,12 @@ async def test_reload_config_entry(
     async_fire_mqtt_message(hass, "test-topic_manual1", "manual1_intial")
     async_fire_mqtt_message(hass, "test-topic_manual3", "manual3_intial")
 
-    assert (state := hass.states.get("sensor.test_manual1")) is not None
+    state = hass.states.get("sensor.test_manual1")
+    assert state is not None
     assert state.attributes["friendly_name"] == "test_manual1"
     assert state.state == "manual1_intial"
-    assert (state := hass.states.get("sensor.test_manual3")) is not None
+    state = hass.states.get("sensor.test_manual3")
+    assert state is not None
     assert state.attributes["friendly_name"] == "test_manual3"
     assert state.state == "manual3_intial"
     assert _check_entities() == 3
@@ -3884,16 +3886,20 @@ async def test_reload_config_entry(
         assert entry.state is ConfigEntryState.LOADED
         await hass.async_block_till_done()
 
-    assert (state := hass.states.get("sensor.test_manual1")) is not None
+    state = hass.states.get("sensor.test_manual1")
+    assert state is not None
     assert state.attributes["friendly_name"] == "test_manual1_updated"
     assert state.state == STATE_UNKNOWN
-    assert (state := hass.states.get("sensor.test_manual2_new")) is not None
+    state = hass.states.get("sensor.test_manual2_new")
+    assert state is not None
     assert state.attributes["friendly_name"] == "test_manual2_new"
     assert state.state is STATE_UNKNOWN
     # State of test_manual3 is still loaded but is unavailable
-    assert (state := hass.states.get("sensor.test_manual3")) is not None
+    state = hass.states.get("sensor.test_manual3")
+    assert state is not None
     assert state.state is STATE_UNAVAILABLE
-    assert (state := hass.states.get("sensor.test_discovery")) is not None
+    state = hass.states.get("sensor.test_discovery")
+    assert state is not None
     assert state.state is STATE_UNAVAILABLE
     # The entity is not loaded anymore
     assert _check_entities() == 2
@@ -3902,11 +3908,14 @@ async def test_reload_config_entry(
     async_fire_mqtt_message(hass, "test-topic_manual2", "manual2_update")
     async_fire_mqtt_message(hass, "test-topic_manual3", "manual3_update")
 
-    assert (state := hass.states.get("sensor.test_manual1")) is not None
+    state = hass.states.get("sensor.test_manual1")
+    assert state is not None
     assert state.state == "manual1_update"
-    assert (state := hass.states.get("sensor.test_manual2_new")) is not None
+    state = hass.states.get("sensor.test_manual2_new")
+    assert state is not None
     assert state.state == "manual2_update"
-    assert (state := hass.states.get("sensor.test_manual3")) is not None
+    state = hass.states.get("sensor.test_manual3")
+    assert state is not None
     assert state.state is STATE_UNAVAILABLE
 
     # Reload manual configured items and assert again
@@ -3921,13 +3930,16 @@ async def test_reload_config_entry(
         )
         await hass.async_block_till_done()
 
-    assert (state := hass.states.get("sensor.test_manual1")) is not None
+    state = hass.states.get("sensor.test_manual1")
+    assert state is not None
     assert state.attributes["friendly_name"] == "test_manual1_updated"
     assert state.state == STATE_UNKNOWN
-    assert (state := hass.states.get("sensor.test_manual2_new")) is not None
+    state = hass.states.get("sensor.test_manual2_new")
+    assert state is not None
     assert state.attributes["friendly_name"] == "test_manual2_new"
     assert state.state == STATE_UNKNOWN
-    assert (state := hass.states.get("sensor.test_manual3")) is not None
+    state = hass.states.get("sensor.test_manual3")
+    assert state is not None
     assert state.state == STATE_UNAVAILABLE
     assert _check_entities() == 2
 
@@ -3937,11 +3949,14 @@ async def test_reload_config_entry(
     async_fire_mqtt_message(hass, "test-topic_manual2", "manual2_update_after_reload")
     async_fire_mqtt_message(hass, "test-topic_manual3", "manual3_update_after_reload")
 
-    assert (state := hass.states.get("sensor.test_manual1")) is not None
+    state = hass.states.get("sensor.test_manual1")
+    assert state is not None
     assert state.state == "manual1_update_after_reload"
-    assert (state := hass.states.get("sensor.test_manual2_new")) is not None
+    state = hass.states.get("sensor.test_manual2_new")
+    assert state is not None
     assert state.state == "manual2_update_after_reload"
-    assert (state := hass.states.get("sensor.test_manual3")) is not None
+    state = hass.states.get("sensor.test_manual3")
+    assert state is not None
     assert state.state is STATE_UNAVAILABLE
 
 

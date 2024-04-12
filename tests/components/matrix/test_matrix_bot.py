@@ -17,9 +17,11 @@ async def test_services(hass: HomeAssistant, matrix_bot: MatrixBot):
     services = hass.services.async_services()
 
     # Verify that the matrix service is registered
-    assert (matrix_service := services.get(MATRIX_DOMAIN))
+    matrix_service = services.get(MATRIX_DOMAIN)
+    assert matrix_service
     assert SERVICE_SEND_MESSAGE in matrix_service
 
     # Verify that the matrix notifier is registered
-    assert (notify_service := services.get(NOTIFY_DOMAIN))
+    notify_service = services.get(NOTIFY_DOMAIN)
+    assert notify_service
     assert TEST_NOTIFIER_NAME in notify_service

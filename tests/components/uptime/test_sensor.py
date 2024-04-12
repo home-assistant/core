@@ -22,15 +22,18 @@ async def test_uptime_sensor(
 ) -> None:
     """Test Uptime sensor."""
 
-    assert (state := hass.states.get("sensor.uptime"))
+    state = hass.states.get("sensor.uptime")
+    assert state
     assert state.state == "2022-03-01T00:00:00+00:00"
     assert state == snapshot
 
-    assert (entity_entry := entity_registry.async_get(state.entity_id))
+    entity_entry = entity_registry.async_get(state.entity_id)
+    assert entity_entry
     assert entity_entry == snapshot(exclude=props("unique_id"))
     assert entity_entry.unique_id == init_integration.entry_id
 
     assert entity_entry.device_id
-    assert (device_entry := device_registry.async_get(entity_entry.device_id))
+    device_entry = device_registry.async_get(entity_entry.device_id)
+    assert device_entry
     assert device_entry == snapshot(exclude=props("identifiers"))
     assert device_entry.identifiers == {(DOMAIN, init_integration.entry_id)}

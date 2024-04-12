@@ -590,7 +590,8 @@ def test_entity_names() -> None:
         for entity_class in entity_classes:
             if hasattr(entity_class, "__attr_name"):
                 # The entity has a name
-                assert (name := entity_class.__attr_name) and isinstance(name, str)
+                name = entity_class.__attr_name
+                assert name and isinstance(name, str)
             elif hasattr(entity_class, "__attr_translation_key"):
                 assert (
                     isinstance(entity_class.__attr_translation_key, str)

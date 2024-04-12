@@ -36,7 +36,8 @@ async def test_numbers(
     assert entity_entries
     for entity_entry in entity_entries:
         assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
-        assert (state := hass.states.get(entity_entry.entity_id))
+        state = hass.states.get(entity_entry.entity_id)
+        assert state
         assert state == snapshot(name=f"{entity_entry.entity_id}-state")
 
 

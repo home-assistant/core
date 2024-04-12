@@ -27,14 +27,17 @@ async def test_number_entities(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test button entities provided by the Tailwind integration."""
-    assert (state := hass.states.get("button.tailwind_iq3_identify"))
+    state = hass.states.get("button.tailwind_iq3_identify")
+    assert state
     assert snapshot == state
 
-    assert (entity_entry := entity_registry.async_get(state.entity_id))
+    entity_entry = entity_registry.async_get(state.entity_id)
+    assert entity_entry
     assert snapshot == entity_entry
 
     assert entity_entry.device_id
-    assert (device_entry := device_registry.async_get(entity_entry.device_id))
+    device_entry = device_registry.async_get(entity_entry.device_id)
+    assert device_entry
     assert snapshot == device_entry
 
     assert len(mock_tailwind.identify.mock_calls) == 0
@@ -48,7 +51,8 @@ async def test_number_entities(
     assert len(mock_tailwind.identify.mock_calls) == 1
     mock_tailwind.identify.assert_called_with()
 
-    assert (state := hass.states.get(state.entity_id))
+    state = hass.states.get(state.entity_id)
+    assert state
     assert state.state == "2023-12-17T15:25:00+00:00"
 
     # Test error handling

@@ -24,12 +24,15 @@ async def test_number_entities(
     entity_id: str,
 ) -> None:
     """Test binary sensor entities provided by the Tailwind integration."""
-    assert (state := hass.states.get(entity_id))
+    state = hass.states.get(entity_id)
+    assert state
     assert snapshot == state
 
-    assert (entity_entry := entity_registry.async_get(state.entity_id))
+    entity_entry = entity_registry.async_get(state.entity_id)
+    assert entity_entry
     assert snapshot == entity_entry
 
     assert entity_entry.device_id
-    assert (device_entry := device_registry.async_get(entity_entry.device_id))
+    device_entry = device_registry.async_get(entity_entry.device_id)
+    assert device_entry
     assert snapshot == device_entry
