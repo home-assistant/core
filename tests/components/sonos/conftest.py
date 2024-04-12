@@ -315,9 +315,6 @@ class MockMusicServiceItem:
         self.item_id = item_id
         self.item_class = item_class
         self.parent_id = parent_id
-        self.reference = MagicMock()
-        self.reference.resources.return_value = True
-        self.reference.get_uri.return_value = uri
 
     def get_uri(self) -> str:
         """Return URI."""
