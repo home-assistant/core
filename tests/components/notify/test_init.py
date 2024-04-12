@@ -128,14 +128,14 @@ async def test_send_message_service(
         await hass.services.async_call(
             notify.DOMAIN,
             notify.SERVICE_SEND_MESSAGE,
-            {"entity_id": "notify.notifier", notify.ATTR_MESSAGE: None},
+            {"entity_id": "notify.test", notify.ATTR_MESSAGE: None},
         )
     entity.send_message_mock_calls.assert_not_called()
 
     # Test schema: No message fails
     with pytest.raises(vol.Invalid):
         await hass.services.async_call(
-            notify.DOMAIN, notify.SERVICE_SEND_MESSAGE, {"entity_id": "notify.notifier"}
+            notify.DOMAIN, notify.SERVICE_SEND_MESSAGE, {"entity_id": "notify.test"}
         )
     entity.send_message_mock_calls.assert_not_called()
 
