@@ -866,7 +866,7 @@ class expandable:
     """Expandable."""
 
     def __init__(self, schema: vol.Schema, options: dict[str, Any]) -> None:
-        """Initialize multi select."""
+        """Initialize expandable."""
         self.schema = schema
         self.options = options or {}
 
