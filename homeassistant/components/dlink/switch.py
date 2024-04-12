@@ -63,23 +63,13 @@ class SmartPlugSwitch(DLinkEntity, SwitchEntity):
         """Return true if switch is on."""
         return self.coordinator.state == "ON"
 
-    async def async_turn_on(self, **kwargs: Any) -> None:
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
+        self.coordinator.smartplug.state = "ON"
 
-        def _turn_on(smartplug) -> None:
-            smartplug.state = "ON"
-
-        await self.hass.async_add_executor_job(_turn_on, self.coordinator.smartplug)
-        await self.coordinator.async_request_refresh()
-
-    async def async_turn_off(self, **kwargs: Any) -> None:
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-
-        def _turn_off(smartplug) -> None:
-            smartplug.state = "OFF"
-
-        await self.hass.async_add_executor_job(_turn_off, self.coordinator.smartplug)
-        await self.coordinator.async_request_refresh()
+        self.coordinator.smartplug.state = "OFF"
 
     @property
     def available(self) -> bool:
