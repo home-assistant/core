@@ -21,7 +21,12 @@ from homeassistant.const import (
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity import Entity
 
-from . import AndroidTVConfigEntry, get_androidtv_mac
+from . import (
+    ADB_PYTHON_EXCEPTIONS,
+    ADB_TCP_EXCEPTIONS,
+    AndroidTVConfigEntry,
+    get_androidtv_mac,
+)
 from .const import DEVICE_ANDROIDTV, DOMAIN
 
 PREFIX_ANDROIDTV = "Android TV"
@@ -71,11 +76,25 @@ def adb_decorator(
                     func.__name__,
                 )
                 return None
-            except Exception as err:  # pylint: disable=broad-except
+            except self.exceptions as err:
                 _LOGGER.error(
                     (
                         "Failed to execute an ADB command. ADB connection re-"
                         "establishing attempt in the next update. Error: %s"
+                    ),
+                    err,
+                )
+                await self.aftv.adb_close()
+                # pylint: disable-next=protected-access
+                self._attr_available = False
+                return None
+            except Exception as err:  # pylint: disable=broad-except
+                # An unforeseen exception occurred. Close the ADB connection so that
+                # it doesn't happen over and over again.
+                _LOGGER.error(
+                    (
+                        "Unexpected exception executing an ADB command. ADB connection"
+                        " re-establishing attempt in the next update. Error: %s"
                     ),
                     err,
                 )
@@ -122,3 +141,11 @@ class AndroidTVEntity(Entity):
             self._attr_device_info[ATTR_SW_VERSION] = sw_version
         if mac := get_androidtv_mac(info):
             self._attr_device_info[ATTR_CONNECTIONS] = {(CONNECTION_NETWORK_MAC, mac)}
+
+        # ADB exceptions to catch
+        if not aftv.adb_server_ip:
+            # Using "adb_shell" (Python ADB implementation)
+            self.exceptions = ADB_PYTHON_EXCEPTIONS
+        else:
+            # Using "pure-python-adb" (communicate with ADB server)
+            self.exceptions = ADB_TCP_EXCEPTIONS
