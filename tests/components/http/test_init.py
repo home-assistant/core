@@ -13,7 +13,7 @@ import pytest
 from homeassistant.auth.providers.legacy_api_password import (
     LegacyApiPasswordAuthProvider,
 )
-import homeassistant.components.http as http
+from homeassistant.components import http
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.http import KEY_HASS
 from homeassistant.helpers.network import NoURLAvailableError

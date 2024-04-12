@@ -7,12 +7,9 @@ import pytest
 from voluptuous.error import MultipleInvalid
 
 from homeassistant import config as hass_config
-import homeassistant.components.input_number as input_number
-import homeassistant.components.input_select as input_select
-import homeassistant.components.media_player as media_player
+from homeassistant.components import input_number, input_select, media_player, switch
 from homeassistant.components.media_player import MediaClass, MediaPlayerEntityFeature
 from homeassistant.components.media_player.browse_media import BrowseMedia
-import homeassistant.components.switch as switch
 import homeassistant.components.universal.media_player as universal
 from homeassistant.const import (
     SERVICE_RELOAD,

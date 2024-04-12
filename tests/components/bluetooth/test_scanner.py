@@ -48,7 +48,7 @@ async def test_config_entry_can_be_reloaded_when_stop_raises(
 ) -> None:
     """Test we can reload if stopping the scanner raises."""
     entry = hass.config_entries.async_entries(bluetooth.DOMAIN)[0]
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     with patch(
         "habluetooth.scanner.OriginalBleakScanner.stop",
@@ -57,7 +57,7 @@ async def test_config_entry_can_be_reloaded_when_stop_raises(
         await hass.config_entries.async_reload(entry.entry_id)
         await hass.async_block_till_done()
 
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
     assert "Error stopping scanner" in caplog.text
 
 

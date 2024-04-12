@@ -4,7 +4,7 @@ from unittest.mock import PropertyMock, patch
 
 import pytest
 
-import homeassistant.components.http as http
+from homeassistant.components import http
 import homeassistant.components.image_processing as ip
 from homeassistant.const import ATTR_ENTITY_PICTURE
 from homeassistant.core import HomeAssistant

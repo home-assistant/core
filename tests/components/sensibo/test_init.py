@@ -6,10 +6,9 @@ from unittest.mock import patch
 
 from pysensibo.model import SensiboData
 
-from homeassistant import config_entries
 from homeassistant.components.sensibo.const import DOMAIN
 from homeassistant.components.sensibo.util import NoUsernameError
-from homeassistant.config_entries import SOURCE_USER, ConfigEntry
+from homeassistant.config_entries import SOURCE_USER, ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -49,7 +48,7 @@ async def test_setup_entry(hass: HomeAssistant, get_data: SensiboData) -> None:
         await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.state == config_entries.ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
 
 async def test_migrate_entry(hass: HomeAssistant, get_data: SensiboData) -> None:
@@ -81,7 +80,7 @@ async def test_migrate_entry(hass: HomeAssistant, get_data: SensiboData) -> None
         await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.state == config_entries.ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
     assert entry.version == 2
     assert entry.unique_id == "username"
 
@@ -113,7 +112,7 @@ async def test_migrate_entry_fails(hass: HomeAssistant, get_data: SensiboData) -
         await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.state == config_entries.ConfigEntryState.MIGRATION_ERROR
+    assert entry.state is ConfigEntryState.MIGRATION_ERROR
     assert entry.version == 1
     assert entry.unique_id == "12"
 
@@ -147,10 +146,10 @@ async def test_unload_entry(hass: HomeAssistant, get_data: SensiboData) -> None:
         await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.state == config_entries.ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
-    assert entry.state is config_entries.ConfigEntryState.NOT_LOADED
+    assert entry.state is ConfigEntryState.NOT_LOADED
 
 
 async def remove_device(ws_client, device_id, config_entry_id):

@@ -4,13 +4,14 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components.owntracks import config_flow
 from homeassistant.components.owntracks.config_flow import CONF_CLOUDHOOK, CONF_SECRET
 from homeassistant.components.owntracks.const import DOMAIN
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -66,11 +67,11 @@ async def test_user(hass: HomeAssistant, webhook_id, secret) -> None:
     flow = await init_config_flow(hass)
 
     result = await flow.async_step_user()
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     result = await flow.async_step_user({})
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "OwnTracks"
     assert result["data"][CONF_WEBHOOK_ID] == WEBHOOK_ID
     assert result["data"][CONF_SECRET] == SECRET
@@ -100,7 +101,7 @@ async def test_abort_if_already_setup(hass: HomeAssistant) -> None:
 
     # Should fail, already setup (flow)
     result = await flow.async_step_user({})
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
 
 
@@ -111,7 +112,7 @@ async def test_user_not_supports_encryption(
     flow = await init_config_flow(hass)
 
     result = await flow.async_step_user({})
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert (
         result["description_placeholders"]["secret"]
         == "Encryption is not supported because nacl is not installed."
@@ -169,7 +170,7 @@ async def test_with_cloud_sub(hass: HomeAssistant) -> None:
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data={}
         )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     entry = result["result"]
     assert entry.data["cloudhook"]
     assert (
@@ -198,5 +199,5 @@ async def test_with_cloud_sub_not_connected(hass: HomeAssistant) -> None:
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data={}
         )
 
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cloud_not_connected"

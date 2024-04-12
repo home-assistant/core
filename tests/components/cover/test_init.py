@@ -4,7 +4,7 @@ from enum import Enum
 
 import pytest
 
-import homeassistant.components.cover as cover
+from homeassistant.components import cover
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_PLATFORM,
