@@ -304,7 +304,7 @@ def config_fixture():
     return {DOMAIN: {MP_DOMAIN: {CONF_HOSTS: ["192.168.42.2"]}}}
 
 
-class _MockMusicServiceItem:
+class MockMusicServiceItem:
     """Mocks a Soco MusicServiceItem."""
 
     def __init__(
@@ -324,7 +324,9 @@ class _MockMusicServiceItem:
         return self.item_id.replace("S://", "x-file-cifs://")
 
 
-class _MockDidlFavorite(_MockMusicServiceItem):
+class MockDidlFavorite(MockMusicServiceItem):
+    """Mocks a Soco DidlFavorite."""
+
     def __init__(
         self,
         title: str,
@@ -335,7 +337,7 @@ class _MockDidlFavorite(_MockMusicServiceItem):
         reference=None,
     ) -> None:
         """Initialize the mock item."""
-        _MockMusicServiceItem.__init__(self, title, item_id, parent_id, item_class)
+        MockMusicServiceItem.__init__(self, title, item_id, parent_id, item_class)
         self.reference = MagicMock(name=item_id)
         self.reference.resources.return_value = True
         self.reference.item_id = "FV:2/8"
@@ -343,26 +345,29 @@ class _MockDidlFavorite(_MockMusicServiceItem):
 
 
 _mock_favorites = [
-    _MockDidlFavorite(
+    MockDidlFavorite(
+        # Sirius XM
         title="66 - Watercolors",
         item_id="FV:2/4",
         parent_id="FV:2",
         item_class="object.itemobject.item.sonos-favorite",
-        uri="x-sonosapi-hls:Api%3atune%3aliveAudio%3ajazzcafe%3ae4b5402c-c608-db84-ad15-4bc8e2cdccce?sid=37&flags=288&sn=5",
+        uri="x-sonosapi-hls:Api%3atune%3aliveAudio%3ajazzcafe%3aetc",
     ),
-    _MockDidlFavorite(
+    MockDidlFavorite(
+        # Pandora
         title="James Taylor Radio",
         item_id="FV:2/13",
         parent_id="FV:2",
         item_class="object.itemobject.item.sonos-favorite",
-        uri="x-sonosapi-radio:ST%3a1683194974484871160?sid=236&flags=8296&sn=1",
+        uri="x-sonosapi-radio:ST%3aetc",
     ),
-    _MockDidlFavorite(
+    MockDidlFavorite(
+        # Sonos Playlists for music library
         title="1984",
         item_id="FV:2/8",
         parent_id="FV:2",
         item_class="object.itemobject.item.sonos-favorite",
-        uri="x-rincon-playlist:RINCON_000E58FCDA4801400#A:ALBUMARTIST/Aerosmith/1984",
+        uri="x-rincon-playlist:RINCON_test#A:ALBUMARTIST/Aerosmith/1984",
     ),
 ]
 

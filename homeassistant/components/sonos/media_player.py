@@ -433,6 +433,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         fav = [fav for fav in self.speaker.favorites if fav.title == name]
 
         if len(fav) != 1:
+            _LOGGER.error('Could not find a Sonos favorite named "%s"', name)
             return
 
         src = fav.pop()

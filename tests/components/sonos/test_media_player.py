@@ -211,33 +211,41 @@ _mock_favorites = [
         (
             SOURCE_LINEIN,
             {
-                "LINE_IN": 1,
-                "TV": 0,
-                "RADIO_URI": None,
-                "QUEUE": 0,
+                "switch_to_line_in": 1,
             },
         ),
         (
             SOURCE_TV,
             {
-                "LINE_IN": 0,
-                "TV": 1,
-                "RADIO_URI": None,
-                "QUEUE": 0,
+                "switch_to_tv": 1,
             },
         ),
         (
             "James Taylor Radio",
             {
-                "LINE_IN": 0,
-                "TV": 0,
-                "RADIO_URI": "x-sonosapi-radio:ST%3a1683194974484871160?sid=236&flags=8296&sn=1",
-                "QUEUE": 0,
+                "play_uri": 1,
+                "play_uri_uri": "x-sonosapi-radio:ST%3aetc",
+            },
+        ),
+        (
+            "66 - Watercolors",
+            {
+                "play_uri": 1,
+                "play_uri_uri": "x-sonosapi-hls:Api%3atune%3aliveAudio%3ajazzcafe%3aetc",
             },
         ),
         (
             "1984",
-            {"LINE_IN": 0, "TV": 0, "RADIO_URI": None, "QUEUE": 1},
+            {
+                "add_to_queue": 1,
+                "add_to_queue_item_id": "FV:2/8",
+                "clear_queue": 1,
+                "play_from_queue": 1,
+            },
+        ),
+        (
+            "Nonexistent Name",
+            {"error": True},
         ),
     ],
 )
@@ -252,26 +260,41 @@ async def test_select_source(
     """Test error handling when attempting to play a non-existent playlist ."""
     soco_mock = soco_factory.mock_list.get("192.168.42.2")
 
-    await hass.services.async_call(
-        MP_DOMAIN,
-        SERVICE_SELECT_SOURCE,
-        {
-            "entity_id": "media_player.zone_a",
-            "source": source,
-        },
-        blocking=True,
+    with caplog.at_level(logging.ERROR):
+        caplog.clear()
+        await hass.services.async_call(
+            MP_DOMAIN,
+            SERVICE_SELECT_SOURCE,
+            {
+                "entity_id": "media_player.zone_a",
+                "source": source,
+            },
+            blocking=True,
+        )
+    assert soco_mock.switch_to_line_in.call_count == test_result.get(
+        "switch_to_line_in", 0
     )
-    assert soco_mock.switch_to_line_in.call_count == test_result["LINE_IN"]
-    assert soco_mock.switch_to_tv.call_count == test_result["TV"]
-    if test_result["QUEUE"] != 0:
-        assert soco_mock.clear_queue.call_count == 1
-        assert soco_mock.add_to_queue.call_count == 1
-        assert soco_mock.add_to_queue.call_args_list[0].args[0].item_id == "FV:2/8"
+    assert soco_mock.switch_to_tv.call_count == test_result.get("switch_to_tv", 0)
+    assert soco_mock.clear_queue.call_count == test_result.get("clear_queue", 0)
+    if test_result.get("add_to_queue"):
+        assert soco_mock.add_to_queue.call_count == test_result.get("add_to_queue")
+        assert soco_mock.add_to_queue.call_args_list[0].args[
+            0
+        ].item_id == test_result.get("add_to_queue_item_id")
         assert (
             soco_mock.add_to_queue.call_args_list[0].kwargs["timeout"]
             == LONG_SERVICE_TIMEOUT
         )
-        assert soco_mock.play_from_queue.call_count == 1
-    if uri := test_result["RADIO_URI"]:
-        assert soco_mock.play_uri.call_count == 1
-        assert soco_mock.play_uri.call_args_list[0].args[0] == uri
+    if test_result.get("play_from_queue"):
+        assert soco_mock.play_from_queue.call_count == test_result.get(
+            "play_from_queue"
+        )
+        assert soco_mock.play_from_queue.call_args_list[0].args[0] == 0
+    if test_result.get("play_uri"):
+        assert soco_mock.play_uri.call_count == test_result.get("play_uri")
+        assert soco_mock.play_uri.call_args_list[0].args[0] == test_result.get(
+            "play_uri_uri"
+        )
+    if test_result.get("error"):
+        assert source in caplog.text
+        assert "Could not find" in caplog.text
