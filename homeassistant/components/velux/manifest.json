@@ -6,7 +6,6 @@
   "documentation": "https://www.home-assistant.io/integrations/velux",
   "integration_type": "hub",
   "iot_class": "local_polling",
-  "issue_tracker": "https://github.com/Julius2342/pyvlx/issues",
   "loggers": ["pyvlx"],
   "requirements": ["pyvlx==0.2.23"],
   "zeroconf": [
