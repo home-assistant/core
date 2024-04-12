@@ -1,8 +1,8 @@
 {
   "entity": {
-    "event": {
+    "tag": {
       "tag": {
-        "default": "mdi:tag"
+        "default": "mdi:tag-outline"
       }
     }
   }
