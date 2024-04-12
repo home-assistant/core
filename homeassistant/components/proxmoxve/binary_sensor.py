@@ -6,6 +6,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -18,6 +19,44 @@ from .entity import ProxmoxEntity
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
+    """Set up binary sensors."""
+    if discovery_info is None:
+        return
+
+    sensors = []
+
+    for host_config in discovery_info["config"][DOMAIN]:
+        host_name = host_config["host"]
+        host_name_coordinators = hass.data[DOMAIN][COORDINATORS][host_name]
+
+        if hass.data[PROXMOX_CLIENTS][host_name] is None:
+            continue
+
+        for node_config in host_config["nodes"]:
+            node_name = node_config["node"]
+
+            for dev_id in node_config["vms"] + node_config["containers"]:
+                coordinator = host_name_coordinators[node_name][dev_id]
+
+                # unfound case
+                if (coordinator_data := coordinator.data) is None:
+                    continue
+
+                name = coordinator_data["name"]
+                sensor = create_binary_sensor(
+                    coordinator, host_name, node_name, dev_id, name
+                )
+                sensors.append(sensor)
+
+    add_entities(sensors)
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config: ConfigEntry,
     add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:

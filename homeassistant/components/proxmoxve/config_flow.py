@@ -9,6 +9,7 @@ import requests.exceptions
 from requests.exceptions import ConnectTimeout, SSLError
 import voluptuous as vol
 
+from homeassistant.components.proxmoxve import ProxmoxClient
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_HOST,
@@ -37,18 +38,21 @@ from .const import (
     DEFAULT_REALM,
     DOMAIN,
 )
-from .proxmoxve import ProxmoxClient
 
 DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_HOST, default=""): cv.string,
-        vol.Required(CONF_USERNAME, default="root"): cv.string,
-        vol.Required(CONF_PASSWORD, default=""): cv.string,
-        vol.Required(CONF_NODE, default="pve"): cv.string,
+        vol.Required(CONF_HOST, default=""): cv.string,  # TODO: for testing only
+        vol.Required(
+            CONF_USERNAME, default="root"
+        ): cv.string,  # TODO: for testing only
+        vol.Required(CONF_PASSWORD, default=""): cv.string,  # TODO: for testing only
+        vol.Required(CONF_NODE, default="pve"): cv.string,  # TODO: for testing only
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
         vol.Optional(CONF_REALM, default=DEFAULT_REALM): cv.string,
         # vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
-        vol.Optional(CONF_VERIFY_SSL, default=False): cv.boolean,
+        vol.Optional(
+            CONF_VERIFY_SSL, default=False
+        ): cv.boolean,  # TODO: for testing only
     }
 )
 
@@ -128,7 +132,8 @@ class ProxmoxVEConfigFlow(ConfigFlow, domain=DOMAIN):
         except requests.exceptions.ConnectionError:
             errors["base"] = "unknown_error"
 
-        return await self.async_step_selection(proxmox=proxmox, user_input=user_input)
+        self.context["original_user_input"] = user_input.copy()
+        return await self.async_step_selection(proxmox=proxmox)
 
     async def async_step_selection(
         self,
@@ -136,13 +141,14 @@ class ProxmoxVEConfigFlow(ConfigFlow, domain=DOMAIN):
         proxmox: ProxmoxAPI | None = None,
     ) -> ConfigFlowResult:
         """Handle the selection step."""
-        # if user_input is not None:
-        #    return self.async_create_entry(title=DOMAIN, data={})
+        if user_input is not None:
+            user_input.update(self.context["original_user_input"])
+            return self.async_create_entry(title=DOMAIN, data=user_input)
 
+        context = self.context["original_user_input"]
         vms = await self.hass.async_add_executor_job(
-            proxmox.nodes(user_input[CONF_NODE]).qemu.get
+            proxmox.nodes(context[CONF_NODE]).qemu.get
         )
-
         options_vm = [
             SelectOptionDict(
                 value=str(vm["vmid"]),
@@ -152,9 +158,8 @@ class ProxmoxVEConfigFlow(ConfigFlow, domain=DOMAIN):
         ]
 
         containers = await self.hass.async_add_executor_job(
-            proxmox.nodes(user_input[CONF_NODE]).lxc.get
+            proxmox.nodes(context[CONF_NODE]).lxc.get
         )
-
         options_container = [
             SelectOptionDict(
                 value=str(container["vmid"]),
@@ -162,12 +167,6 @@ class ProxmoxVEConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             for container in containers
         ]
-
-        # options_vm = [
-        #    SelectOptionDict(value="one", label="one"),
-        #    SelectOptionDict(value="two", label="two"),
-        #    SelectOptionDict(value="three", label="three"),
-        # ]
 
         return self.async_show_form(
             step_id="selection",

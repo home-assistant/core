@@ -11,6 +11,7 @@ import requests.exceptions
 from requests.exceptions import ConnectTimeout, SSLError
 import voluptuous as vol
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -181,6 +182,82 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         await hass.async_create_task(
             async_load_platform(hass, component, DOMAIN, {"config": config}, config)
         )
+
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up the platform."""
+
+    def build_client() -> ProxmoxAPI:
+        """Build the Proxmox client connection."""
+        hass.data[PROXMOX_CLIENTS] = {}
+        host = entry.data[CONF_HOST]
+        port = entry.data[CONF_PORT]
+        user = entry.data[CONF_USERNAME]
+        realm = entry.data[CONF_REALM]
+        password = entry.data[CONF_PASSWORD]
+        verify_ssl = entry.data[CONF_VERIFY_SSL]
+        hass.data[PROXMOX_CLIENTS][host] = None
+
+        try:
+            proxmox_client = ProxmoxClient(
+                host, port, user, realm, password, verify_ssl
+            )
+            proxmox_client.build_client()
+        except AuthenticationError:
+            _LOGGER.warning(
+                "Invalid credentials for proxmox instance %s:%d", host, port
+            )
+        except SSLError:
+            _LOGGER.error(
+                (
+                    "Unable to verify proxmox server SSL. "
+                    'Try using "verify_ssl: false" for proxmox instance %s:%d'
+                ),
+                host,
+                port,
+            )
+        except ConnectTimeout:
+            _LOGGER.warning("Connection to host %s timed out during setup", host)
+        except requests.exceptions.ConnectionError:
+            _LOGGER.warning("Host %s is not reachable", host)
+
+        hass.data[PROXMOX_CLIENTS][host] = proxmox_client
+
+    await hass.async_add_executor_job(build_client)
+
+    coordinators: dict[
+        str, dict[str, dict[int, DataUpdateCoordinator[dict[str, Any] | None]]]
+    ] = {}
+    hass.data[DOMAIN][COORDINATORS] = coordinators
+
+    host_name = entry.data["host"]
+    coordinators[host_name] = {}
+
+    proxmox_client = hass.data[PROXMOX_CLIENTS][host_name]
+
+    proxmox = proxmox_client.get_api_client()
+    node_name = entry.data[CONF_NODE]
+    node_coordinators = coordinators[host_name][node_name] = {}
+
+    if entry.data.get(CONF_VMS) is not None:
+        for vm_id in entry.data[CONF_VMS]:
+            coordinator = create_coordinator_container_vm(
+                hass, proxmox, host_name, node_name, vm_id, TYPE_VM
+            )
+            await coordinator.async_refresh()
+            node_coordinators[vm_id] = coordinator
+
+    if entry.data.get(CONF_CONTAINERS) is not None:
+        for container_id in entry.data[CONF_CONTAINERS]:
+            coordinator = create_coordinator_container_vm(
+                hass, proxmox, host_name, node_name, container_id, TYPE_CONTAINER
+            )
+            await coordinator.async_refresh()
+            node_coordinators[container_id] = coordinator
+
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
