@@ -1293,7 +1293,7 @@ py-nightscout==1.2.2
 py-sucks==0.9.9
 
 # homeassistant.components.synology_dsm
-py-synologydsm-api==2.1.4
+py-synologydsm-api==2.4.0
 
 # homeassistant.components.seventeentrack
 py17track==2021.12.2
