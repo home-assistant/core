@@ -1508,6 +1508,7 @@ async def test_async_get_component_deadlock_fallback_module_not_found(
     ):
         await executor_import_integration.async_get_component()
 
+    # We should not have tried to fall back to the event loop import
     assert "loaded_executor=False" not in caplog.text
     assert "homeassistant.components.executor_import" not in sys.modules
     assert "custom_components.executor_import" not in sys.modules
