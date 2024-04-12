@@ -7,6 +7,7 @@ from typing import Any
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
+import voluptuous as vol
 import yaml
 
 from homeassistant import config as hass_config
@@ -120,6 +121,23 @@ async def test_send_message_service(
     await hass.async_block_till_done()
 
     entity.send_message_mock_calls.assert_called_once()
+    entity.send_message_mock_calls.reset_mock()
+
+    # Test schema: `None` message fails
+    with pytest.raises(vol.Invalid):
+        await hass.services.async_call(
+            notify.DOMAIN,
+            notify.SERVICE_SEND_MESSAGE,
+            {"entity_id": "notify.notifier", notify.ATTR_MESSAGE: None},
+        )
+    entity.send_message_mock_calls.assert_not_called()
+
+    # Test schema: No message fails
+    with pytest.raises(vol.Invalid):
+        await hass.services.async_call(
+            notify.DOMAIN, notify.SERVICE_SEND_MESSAGE, {"entity_id": "notify.notifier"}
+        )
+    entity.send_message_mock_calls.assert_not_called()
 
     # Test unloading the entry succeeds
     assert await hass.config_entries.async_unload(config_entry.entry_id)
