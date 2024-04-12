@@ -11,7 +11,7 @@ import voluptuous as vol
 from homeassistant.const import CONF_NAME
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import collection, entity_registry as er
+from homeassistant.helpers import collection
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.storage import Store
@@ -113,8 +113,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     entities: dict[str, TagEntity] = {}
 
-    entity_reg = er.async_get(hass)
-
     async def tag_change_listener(
         change_type: str, item_id: str, updated_config: dict
     ) -> None:
@@ -148,20 +146,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         if change_type == collection.CHANGE_REMOVED:
             # When tags is removed from storage
             await entities[updated_config[TAG_ID]].async_remove()
-            hass.states.async_remove(entities[updated_config[TAG_ID]].entity_id)
+            entity_id = entities[updated_config[TAG_ID]].entity_id
+            hass.states.async_remove(entity_id)
             entities.pop(updated_config[TAG_ID])
-            if entity_id := entity_reg.async_get_entity_id(
-                DOMAIN, DOMAIN, updated_config[TAG_ID]
-            ):
-                if _LOGGER.isEnabledFor(logging.DEBUG):
-                    _LOGGER.debug(
-                        "Removing entity %s. Tag '%s' with id '%s'",
-                        entity_id,
-                        updated_config[CONF_NAME],
-                        updated_config[TAG_ID],
-                    )
-                hass.states.async_remove(entity_id)
-                entity_reg.async_remove(entity_id)
+            hass.states.async_remove(entity_id)
 
     storage_collection.async_add_listener(tag_change_listener)
 
