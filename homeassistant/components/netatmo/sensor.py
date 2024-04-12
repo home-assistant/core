@@ -67,6 +67,17 @@ from .helper import NetatmoArea
 
 _LOGGER = logging.getLogger(__name__)
 
+DIRECTION_OPTIONS = [
+    "n",
+    "ne",
+    "e",
+    "se",
+    "s",
+    "sw",
+    "w",
+    "nw",
+]
+
 
 def process_health(health: StateType) -> str | None:
     """Process health index and return string for display."""
@@ -199,6 +210,9 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
     NetatmoSensorEntityDescription(
         key="windangle",
         netatmo_name="wind_direction",
+        device_class=SensorDeviceClass.ENUM,
+        options=DIRECTION_OPTIONS,
+        value_fn=lambda x: x.lower() if isinstance(x, str) else None,
     ),
     NetatmoSensorEntityDescription(
         key="windangle_value",
@@ -218,6 +232,9 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
         key="gustangle",
         netatmo_name="gust_direction",
         entity_registry_enabled_default=False,
+        device_class=SensorDeviceClass.ENUM,
+        options=DIRECTION_OPTIONS,
+        value_fn=lambda x: x.lower() if isinstance(x, str) else None,
     ),
     NetatmoSensorEntityDescription(
         key="gustangle_value",
