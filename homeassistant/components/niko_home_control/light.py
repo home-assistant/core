@@ -108,6 +108,12 @@ class NikoHomeControlDimmableLight(NikoHomeControlLight):
         self._attr_color_mode = ColorMode.BRIGHTNESS
         self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 
+    def update_state(self, state):
+        """Update HA state."""
+        self._attr_is_on = state != 0
+        self._attr_brightness = state * 2.55
+        self.async_write_ha_state()
+
     def turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
         _LOGGER.debug("Turn on: %s", self.name)
