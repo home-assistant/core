@@ -1,10 +1,7 @@
 """Support for Netgear LTE modems."""
-<<<<<<< HEAD
-=======
 
-from datetime import timedelta
+from typing import Any
 
->>>>>>> efe91815fbf2f57bf8f5b830c675cd6a579ff9b3
 from aiohttp.cookiejar import CookieJar
 import eternalegypt
 from eternalegypt.eternalegypt import SMS
@@ -167,10 +164,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     host = entry.data[CONF_HOST]
     password = entry.data[CONF_PASSWORD]
 
-    if not (data := hass.data.get(DOMAIN)) or data.websession.closed:
-        websession = async_create_clientsession(hass, cookie_jar=CookieJar(unsafe=True))
-        data[DATA_SESSION] = websession
-    modem = eternalegypt.Modem(hostname=host, websession=data[DATA_SESSION])
+    data: dict[str, Any] = hass.data.setdefault(DOMAIN, {})
+    if not (session := data.get(DATA_SESSION)) or session.closed:
+        session = async_create_clientsession(hass, cookie_jar=CookieJar(unsafe=True))
+    modem = eternalegypt.Modem(hostname=host, websession=session)
 
     try:
         await modem.login(password=password)
