@@ -16,9 +16,9 @@ import voluptuous as vol
 from homeassistant.components.camera import Camera
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.template import Template
 
@@ -77,25 +77,27 @@ async def async_setup_entry(
             LOGGER.info("Skipping camera setup for V2 system: %s", system.system_id)
             continue
 
-        for camera in system.cameras.values():
-            if camera.camera_type == CameraTypes.OUTDOOR_CAMERA:
-                outdoor = SimplisafeOutdoorCamera(hass, simplisafe, system, camera)
-                for service, method, schema in (
-                    (
-                        SERVICE_OC_IMAGE,
-                        outdoor.save_image_handler,
-                        SERVICE_OC_IMAGE_SCHEMA,
-                    ),
-                    (
-                        SERVICE_OC_CLIP,
-                        outdoor.save_clip_handler,
-                        SERVICE_OC_CLIP_SCHEMA,
-                    ),
-                ):
-                    hass.services.async_register(DOMAIN, service, method, schema=schema)
-                cameras.append(outdoor)
+        cameras = [
+            SimplisafeOutdoorCamera(hass, simplisafe, system, camera)
+            for camera in system.cameras.values()
+            if camera.camera_type == CameraTypes.OUTDOOR_CAMERA
+        ]
 
-    async_add_entities(cameras)
+        async_add_entities(cameras)
+
+    platform = entity_platform.async_get_current_platform()
+
+    platform.async_register_entity_service(
+        SERVICE_OC_IMAGE,
+        SERVICE_OC_IMAGE_SCHEMA,
+        "async_save_image_handler",
+    )
+
+    platform.async_register_entity_service(
+        SERVICE_OC_CLIP,
+        SERVICE_OC_CLIP_SCHEMA,
+        "async_save_clip_handler",
+    )
 
 
 class SimplisafeOutdoorCamera(SimpliSafeEntity, Camera):
@@ -153,15 +155,15 @@ class SimplisafeOutdoorCamera(SimpliSafeEntity, Camera):
         )
         return self._attr_cached_image
 
-    async def save_image_handler(self, call: ServiceCall) -> None:
+    async def async_save_image_handler(self, filename: Template, width: int) -> None:
         """Handle the service call to save a motion image."""
         if self._attr_image_url is None:
             return
 
-        width = call.data.get(ATTR_WIDTH)
-        filename: Template = call.data.get(ATTR_FILENAME)  # type: ignore[assignment]
         filename.hass = self._hass
-        snapshot_file: str = filename.async_render(variables={ATTR_ENTITY_ID: self})
+        snapshot_file: str = filename.async_render(
+            variables={"entity_id": self.entity_id}
+        )
 
         try:
             snapshot = await self._simplisafe.async_media_request(
@@ -179,14 +181,13 @@ class SimplisafeOutdoorCamera(SimpliSafeEntity, Camera):
         except OSError as err:
             LOGGER.error("Can't write image to file: %s", err)
 
-    async def save_clip_handler(self, call: ServiceCall) -> None:
+    async def async_save_clip_handler(self, filename: Template) -> None:
         """Handle the service call to save a motion clip."""
         if self._attr_clip_url is None:
             return
 
-        filename: Template = call.data.get(ATTR_FILENAME)  # type: ignore[assignment]
         filename.hass = self._hass
-        clip_file: str = filename.async_render(variables={ATTR_ENTITY_ID: self})
+        clip_file: str = filename.async_render(variables={"entity_id": self.entity_id})
 
         try:
             clip = await self._simplisafe.async_media_request(self._attr_clip_url)
