@@ -15,7 +15,7 @@ configuration.yaml"""
 
 FAILED_IMPORT_LOG = """Loading HTML5 push notification via configuration.yaml is deprecated and
 the automatic import has failed. Please remove the HTML5 notification configuration from configuration.yaml
-and setup HTML5 manually."""
+and setup HTML5 from scratch via the UI."""
 
 
 def create_issue(hass: HomeAssistant, import_success: bool):
