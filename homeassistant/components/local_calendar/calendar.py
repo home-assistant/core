@@ -112,6 +112,13 @@ class LocalCalendarEntity(CalendarEntity):
         await self._async_store()
         await self.async_update_ha_state(force_refresh=True)
 
+    async def async_add_events(self, events: list[Event]) -> None:
+        """Add a list of events to calendar."""
+        for event in events:
+            EventStore(self._calendar).add(event)
+        await self._async_store()
+        await self.async_update_ha_state(force_refresh=True)
+
     async def async_delete_event(
         self,
         uid: str,

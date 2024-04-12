@@ -12,7 +12,11 @@ import re
 from typing import Any, Final, cast, final
 
 from aiohttp import web
+from aiohttp.web_request import FileField
 from dateutil.rrule import rrulestr
+from ical.calendar_stream import IcsCalendarStream
+from ical.event import Event
+from ical.exceptions import CalendarParseError
 import voluptuous as vol
 
 from homeassistant.components import frontend, http, websocket_api
@@ -294,6 +298,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.http.register_view(CalendarListView(component))
     hass.http.register_view(CalendarEventView(component))
+    hass.http.register_view(CalendarImportEventsView(component))
 
     frontend.async_register_built_in_panel(
         hass, "calendar", "calendar", "hass:calendar"
@@ -605,6 +610,10 @@ class CalendarEntity(Entity):
         """Add a new event to calendar."""
         raise NotImplementedError
 
+    async def async_add_events(self, events: list[Event]) -> None:
+        """Add a list of events to calendar."""
+        raise NotImplementedError
+
     async def async_delete_event(
         self,
         uid: str,
@@ -697,6 +706,53 @@ class CalendarListView(http.HomeAssistantView):
             calendar_list.append({"name": state.name, "entity_id": entity.entity_id})
 
         return self.json(sorted(calendar_list, key=lambda x: cast(str, x["name"])))
+
+
+class CalendarImportEventsView(http.HomeAssistantView):
+    """View to import an iCalendar file."""
+
+    url = "/api/calendars/import"
+    name = "api:calendars:import"
+
+    def __init__(self, component: EntityComponent[CalendarEntity]) -> None:
+        """Initialize import calendar view."""
+        self.component = component
+        self.schema = vol.Schema(
+            {vol.Required("entity_id"): str, vol.Required("file"): FileField}
+        )
+
+    async def post(self, request: web.Request) -> web.Response:
+        """Upload a file."""
+        try:
+            data = self.schema(dict(await request.post()))
+        except vol.Invalid as err:
+            return self.json_message(str(err), HTTPStatus.BAD_REQUEST)
+
+        entity_id: str = data["entity_id"]
+        if not (entity := self.component.get_entity(entity_id)):
+            return self.json_message("Entity not found", HTTPStatus.BAD_REQUEST)
+
+        if (
+            not entity.supported_features
+            or not entity.supported_features & CalendarEntityFeature.CREATE_EVENT
+        ):
+            return self.json_message(
+                "Calendar does not support event creation", HTTPStatus.BAD_REQUEST
+            )
+
+        file: FileField = data["file"]
+        try:
+            file_bytes = file.file.read()
+            file_str = file_bytes.decode("utf-8")
+            calendar = IcsCalendarStream.calendar_from_ics(file_str)
+        except CalendarParseError:
+            return self.json_message("Failed to parse ics file", HTTPStatus.BAD_REQUEST)
+
+        await entity.async_add_events(calendar.events)
+
+        return self.json_message(
+            "Successfully imported event data", HTTPStatus.ACCEPTED
+        )
 
 
 @websocket_api.websocket_command(
