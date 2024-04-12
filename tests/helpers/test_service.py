@@ -796,10 +796,11 @@ async def test_async_get_all_descriptions(hass: HomeAssistant) -> None:
     # Test we only load services.yaml for integrations with services.yaml
     # And system_health has no services
     assert proxy_load_services_files.mock_calls[0][1][1] == [
-        await async_get_integration(hass, "group")
+        await async_get_integration(hass, "http"),
+        await async_get_integration(hass, "group"),
     ]
 
-    assert len(descriptions) == 1
+    assert len(descriptions) == 2
 
     assert "description" in descriptions["group"]["reload"]
     assert "fields" in descriptions["group"]["reload"]
@@ -833,7 +834,7 @@ async def test_async_get_all_descriptions(hass: HomeAssistant) -> None:
         await async_setup_component(hass, DOMAIN_LOGGER, logger_config)
         descriptions = await service.async_get_all_descriptions(hass)
 
-    assert len(descriptions) == 2
+    assert len(descriptions) == 3
 
     assert descriptions[DOMAIN_LOGGER]["set_default_level"]["name"] == "Translated name"
     assert (
