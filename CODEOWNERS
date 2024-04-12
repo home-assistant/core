@@ -132,6 +132,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/arcam_fmj/ @elupus
 /tests/components/arcam_fmj/ @elupus
 /homeassistant/components/arris_tg2492lg/ @vanbalken
+/homeassistant/components/arve/ @ikalnyi
+/tests/components/arve/ @ikalnyi
 /homeassistant/components/aseko_pool_live/ @milanmeu
 /tests/components/aseko_pool_live/ @milanmeu
 /homeassistant/components/assist_pipeline/ @balloob @synesthesiam
@@ -318,8 +320,8 @@ build.json @home-assistant/supervisor
 /tests/components/discovergy/ @jpbede
 /homeassistant/components/dlink/ @tkdrob
 /tests/components/dlink/ @tkdrob
-/homeassistant/components/dlna_dmr/ @StevenLooman @chishm
-/tests/components/dlna_dmr/ @StevenLooman @chishm
+/homeassistant/components/dlna_dmr/ @chishm
+/tests/components/dlna_dmr/ @chishm
 /homeassistant/components/dlna_dms/ @chishm
 /tests/components/dlna_dms/ @chishm
 /homeassistant/components/dnsip/ @gjohansson-ST
@@ -380,6 +382,8 @@ build.json @home-assistant/supervisor
 /tests/components/emulated_hue/ @bdraco @Tho85
 /homeassistant/components/emulated_kasa/ @kbickar
 /tests/components/emulated_kasa/ @kbickar
+/homeassistant/components/energenie_power_sockets/ @gnumpi
+/tests/components/energenie_power_sockets/ @gnumpi
 /homeassistant/components/energy/ @home-assistant/core
 /tests/components/energy/ @home-assistant/core
 /homeassistant/components/energyzero/ @klaasnicolaas
@@ -397,7 +401,8 @@ build.json @home-assistant/supervisor
 /tests/components/epion/ @lhgravendeel
 /homeassistant/components/epson/ @pszafer
 /tests/components/epson/ @pszafer
-/homeassistant/components/epsonworkforce/ @ThaStealth
+/homeassistant/components/eq3btsmart/ @eulemitkeule @dbuezas
+/tests/components/eq3btsmart/ @eulemitkeule @dbuezas
 /homeassistant/components/escea/ @lazdavila
 /tests/components/escea/ @lazdavila
 /homeassistant/components/esphome/ @OttoWinter @jesserockz @kbx81 @bdraco
@@ -454,8 +459,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/forked_daapd/ @uvjustin
 /tests/components/forked_daapd/ @uvjustin
 /homeassistant/components/fortios/ @kimfrellsen
-/homeassistant/components/foscam/ @skgsergio @krmarien
-/tests/components/foscam/ @skgsergio @krmarien
+/homeassistant/components/foscam/ @krmarien
+/tests/components/foscam/ @krmarien
 /homeassistant/components/freebox/ @hacf-fr @Quentame
 /tests/components/freebox/ @hacf-fr @Quentame
 /homeassistant/components/freedompro/ @stefano055415
@@ -1075,8 +1080,8 @@ build.json @home-assistant/supervisor
 /tests/components/pvpc_hourly_pricing/ @azogue
 /homeassistant/components/qbittorrent/ @geoffreylagaisse @finder39
 /tests/components/qbittorrent/ @geoffreylagaisse @finder39
-/homeassistant/components/qingping/ @bdraco @skgsergio
-/tests/components/qingping/ @bdraco @skgsergio
+/homeassistant/components/qingping/ @bdraco
+/tests/components/qingping/ @bdraco
 /homeassistant/components/qld_bushfire/ @exxamalte
 /tests/components/qld_bushfire/ @exxamalte
 /homeassistant/components/qnap/ @disforw
@@ -1175,8 +1180,8 @@ build.json @home-assistant/supervisor
 /tests/components/ruuvitag_ble/ @akx
 /homeassistant/components/rympro/ @OnFreund @elad-bar @maorcc
 /tests/components/rympro/ @OnFreund @elad-bar @maorcc
-/homeassistant/components/sabnzbd/ @shaiu
-/tests/components/sabnzbd/ @shaiu
+/homeassistant/components/sabnzbd/ @shaiu @jpbede
+/tests/components/sabnzbd/ @shaiu @jpbede
 /homeassistant/components/saj/ @fredericvl
 /homeassistant/components/samsungtv/ @chemelli74 @epenet
 /tests/components/samsungtv/ @chemelli74 @epenet
@@ -1268,6 +1273,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/sms/ @ocalvo
 /homeassistant/components/snapcast/ @luar123
 /tests/components/snapcast/ @luar123
+/homeassistant/components/snmp/ @nmaggioni
+/tests/components/snmp/ @nmaggioni
 /homeassistant/components/snooz/ @AustinBrunkhorst
 /tests/components/snooz/ @AustinBrunkhorst
 /homeassistant/components/solaredge/ @frenck
@@ -1283,8 +1290,8 @@ build.json @home-assistant/supervisor
 /tests/components/sonarr/ @ctalkington
 /homeassistant/components/songpal/ @rytilahti @shenxn
 /tests/components/songpal/ @rytilahti @shenxn
-/homeassistant/components/sonos/ @jjlawren
-/tests/components/sonos/ @jjlawren
+/homeassistant/components/sonos/ @jjlawren @peterager
+/tests/components/sonos/ @jjlawren @peterager
 /homeassistant/components/soundtouch/ @kroimon
 /tests/components/soundtouch/ @kroimon
 /homeassistant/components/spaceapi/ @fabaff

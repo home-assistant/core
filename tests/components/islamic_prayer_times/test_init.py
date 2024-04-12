@@ -7,10 +7,10 @@ from freezegun import freeze_time
 from prayer_times_calculator.exceptions import InvalidResponseError
 import pytest
 
-from homeassistant import config_entries
 from homeassistant.components import islamic_prayer_times
 from homeassistant.components.islamic_prayer_times.const import CONF_CALC_METHOD
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -43,7 +43,7 @@ async def test_successful_config_entry(hass: HomeAssistant) -> None:
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-        assert entry.state is config_entries.ConfigEntryState.LOADED
+        assert entry.state is ConfigEntryState.LOADED
 
 
 async def test_setup_failed(hass: HomeAssistant) -> None:
@@ -62,7 +62,7 @@ async def test_setup_failed(hass: HomeAssistant) -> None:
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
-        assert entry.state is config_entries.ConfigEntryState.SETUP_RETRY
+        assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_unload_entry(hass: HomeAssistant) -> None:
@@ -81,7 +81,7 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
 
         assert await hass.config_entries.async_unload(entry.entry_id)
         await hass.async_block_till_done()
-        assert entry.state is config_entries.ConfigEntryState.NOT_LOADED
+        assert entry.state is ConfigEntryState.NOT_LOADED
 
 
 async def test_options_listener(hass: HomeAssistant) -> None:
@@ -122,7 +122,7 @@ async def test_update_failed(hass: HomeAssistant) -> None:
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-        assert entry.state is config_entries.ConfigEntryState.LOADED
+        assert entry.state is ConfigEntryState.LOADED
 
     with patch(
         "prayer_times_calculator.PrayerTimesCalculator.fetch_prayer_times"

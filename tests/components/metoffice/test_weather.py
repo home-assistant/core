@@ -125,7 +125,7 @@ async def test_site_cannot_update(
 
     future_time = utcnow() + timedelta(minutes=20)
     async_fire_time_changed(hass, future_time)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     weather = hass.states.get("weather.met_office_wavertree_daily")
     assert weather.state == STATE_UNAVAILABLE
@@ -297,7 +297,7 @@ async def test_forecast_service(
     # Trigger data refetch
     freezer.tick(DEFAULT_SCAN_INTERVAL + timedelta(seconds=1))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert wavertree_data["wavertree_daily_mock"].call_count == 2
     assert wavertree_data["wavertree_hourly_mock"].call_count == 1
@@ -324,7 +324,7 @@ async def test_forecast_service(
 
     freezer.tick(DEFAULT_SCAN_INTERVAL + timedelta(seconds=1))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     response = await hass.services.async_call(
         WEATHER_DOMAIN,
@@ -412,7 +412,7 @@ async def test_forecast_subscription(
 
     freezer.tick(DEFAULT_SCAN_INTERVAL + timedelta(seconds=1))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     msg = await client.receive_json()
 
     assert msg["id"] == subscription_id
@@ -430,6 +430,6 @@ async def test_forecast_subscription(
     )
     freezer.tick(timedelta(seconds=1))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     msg = await client.receive_json()
     assert msg["success"]

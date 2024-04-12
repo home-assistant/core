@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import abc
 import asyncio
-from collections.abc import Callable, Iterable, Mapping
+from collections.abc import Callable, Container, Iterable, Mapping
 from contextlib import suppress
 import copy
 from dataclasses import dataclass
@@ -153,7 +153,7 @@ class FlowResult(TypedDict, Generic[_HandlerT], total=False):
     flow_id: Required[str]
     handler: Required[_HandlerT]
     last_step: bool | None
-    menu_options: list[str] | dict[str, str]
+    menu_options: Container[str]
     options: Mapping[str, Any]
     preview: str | None
     progress_action: str
@@ -489,8 +489,8 @@ class FlowManager(abc.ABC, Generic[_FlowResultT, _HandlerT]):
         flow.async_cancel_progress_task()
         try:
             flow.async_remove()
-        except Exception as err:  # pylint: disable=broad-except
-            _LOGGER.exception("Error removing %s flow: %s", flow.handler, err)
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Error removing %s flow", flow.handler)
 
     async def _async_handle_step(
         self,
@@ -843,7 +843,7 @@ class FlowHandler(Generic[_FlowResultT, _HandlerT]):
         self,
         *,
         step_id: str | None = None,
-        menu_options: list[str] | dict[str, str],
+        menu_options: Container[str],
         description_placeholders: Mapping[str, str] | None = None,
     ) -> _FlowResultT:
         """Show a navigation menu to the user.

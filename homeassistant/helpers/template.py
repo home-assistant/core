@@ -28,6 +28,7 @@ from typing import (
     Literal,
     NoReturn,
     ParamSpec,
+    Self,
     TypeVar,
     cast,
     overload,
@@ -211,12 +212,8 @@ def async_setup(hass: HomeAssistant) -> bool:
     cancel = async_track_time_interval(
         hass, _async_adjust_lru_sizes, timedelta(minutes=10)
     )
-    hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_START, _async_adjust_lru_sizes, run_immediately=True
-    )
-    hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STOP, callback(lambda _: cancel()), run_immediately=True
-    )
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _async_adjust_lru_sizes)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, callback(lambda _: cancel()))
     return True
 
 
@@ -308,9 +305,11 @@ def gen_result_wrapper(kls: type[dict | list | set]) -> type:
 class TupleWrapper(tuple, ResultWrapper):
     """Wrap a tuple."""
 
+    __slots__ = ()
+
     # This is all magic to be allowed to subclass a tuple.
 
-    def __new__(cls, value: tuple, *, render_result: str | None = None) -> TupleWrapper:
+    def __new__(cls, value: tuple, *, render_result: str | None = None) -> Self:
         """Create a new tuple class."""
         return super().__new__(cls, tuple(value))
 
@@ -1102,7 +1101,7 @@ class TemplateStateBase(State):
             return f"{state} {unit}"
         return state
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         """Ensure we collect on equality check."""
         self._collect_state()
         return self._state.__eq__(other)
@@ -1408,6 +1407,12 @@ def floor_id(hass: HomeAssistant, lookup_value: Any) -> str | None:
     floor_registry = fr.async_get(hass)
     if floor := floor_registry.async_get_floor_by_name(str(lookup_value)):
         return floor.floor_id
+
+    if aid := area_id(hass, lookup_value):
+        area_reg = area_registry.async_get(hass)
+        if area := area_reg.async_get_area(aid):
+            return area.floor_id
+
     return None
 
 
@@ -1416,6 +1421,16 @@ def floor_name(hass: HomeAssistant, lookup_value: str) -> str | None:
     floor_registry = fr.async_get(hass)
     if floor := floor_registry.async_get_floor(lookup_value):
         return floor.name
+
+    if aid := area_id(hass, lookup_value):
+        area_reg = area_registry.async_get(hass)
+        if (
+            (area := area_reg.async_get_area(aid))
+            and area.floor_id
+            and (floor := floor_registry.async_get_floor(area.floor_id))
+        ):
+            return floor.name
+
     return None
 
 

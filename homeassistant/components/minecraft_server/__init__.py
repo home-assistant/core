@@ -121,10 +121,9 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
 
             try:
                 await api.async_initialize()
-            except MinecraftServerAddressError as error:
+            except MinecraftServerAddressError:
                 _LOGGER.exception(
-                    "Can't migrate configuration entry due to error while parsing server address, try again later: %s",
-                    error,
+                    "Can't migrate configuration entry due to error while parsing server address, try again later"
                 )
                 return False
 

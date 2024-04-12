@@ -6,7 +6,7 @@ import asyncio
 from collections.abc import Callable
 from datetime import datetime
 import logging
-from typing import TYPE_CHECKING, Any, TypeVar, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import voluptuous as vol
 
@@ -142,8 +142,6 @@ CONFIG_ENTRY_CONFIG_KEYS = [
     CONF_USERNAME,
     CONF_WILL_MESSAGE,
 ]
-
-_T = TypeVar("_T")
 
 REMOVED_OPTIONS = vol.All(
     cv.removed(CONF_BIRTH_MESSAGE),  # Removed in HA Core 2023.4
