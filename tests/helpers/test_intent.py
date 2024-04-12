@@ -258,6 +258,7 @@ def test_async_register(hass: HomeAssistant) -> None:
     """Test registering an intent and verifying it is stored correctly."""
     handler = MagicMock()
     handler.intent_type = "test_intent"
+    handler.slot_schema = {}
 
     intent.async_register(hass, handler)
 
@@ -268,9 +269,11 @@ def test_async_register_overwrite(hass: HomeAssistant) -> None:
     """Test registering multiple intents with the same type, ensuring the last one overwrites the previous one and a warning is emitted."""
     handler1 = MagicMock()
     handler1.intent_type = "test_intent"
+    handler1.slot_schema = {}
 
     handler2 = MagicMock()
     handler2.intent_type = "test_intent"
+    handler2.slot_schema = {}
 
     with patch.object(intent._LOGGER, "warning") as mock_warning:
         intent.async_register(hass, handler1)
@@ -287,6 +290,7 @@ def test_async_remove(hass: HomeAssistant) -> None:
     """Test removing an intent and verifying it is no longer present in the Home Assistant data."""
     handler = MagicMock()
     handler.intent_type = "test_intent"
+    handler.slot_schema = {}
 
     intent.async_register(hass, handler)
     intent.async_remove(hass, "test_intent")
@@ -298,6 +302,7 @@ def test_async_remove_no_existing_entry(hass: HomeAssistant) -> None:
     """Test the removal of a non-existing intent from Home Assistant's data."""
     handler = MagicMock()
     handler.intent_type = "test_intent"
+    handler.slot_schema = {}
     intent.async_register(hass, handler)
 
     intent.async_remove(hass, "test_intent2")
