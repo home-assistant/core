@@ -10,7 +10,7 @@ import typing
 from roborock import HomeDataRoom
 from roborock.containers import DeviceData, HomeDataDevice, HomeDataProduct, NetworkInfo
 from roborock.exceptions import RoborockException
-from roborock.roborock_message import RoborockDyadDataProtocol
+from roborock.roborock_message import RoborockDyadDataProtocol, RoborockZeoProtocol
 from roborock.roborock_typing import DeviceProp
 from roborock.version_1_apis.roborock_local_client_v1 import RoborockLocalClientV1
 from roborock.version_1_apis.roborock_mqtt_client_v1 import RoborockMqttClientV1
@@ -163,7 +163,7 @@ class RoborockDataUpdateCoordinatorA01(DataUpdateCoordinator[dict]):
             model=product_info.model,
             sw_version=device.fv,
         )
-        self.request_protocols = [
+        self.request_protocols: list[RoborockDyadDataProtocol | RoborockZeoProtocol] = [
             RoborockDyadDataProtocol.STATUS,
             RoborockDyadDataProtocol.POWER,
             RoborockDyadDataProtocol.MESH_LEFT,
