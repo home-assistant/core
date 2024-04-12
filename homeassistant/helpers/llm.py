@@ -11,7 +11,6 @@ from typing import Any
 import voluptuous as vol
 from voluptuous_openapi import UNSUPPORTED, convert
 
-from homeassistant import setup
 from homeassistant.core import Context, HomeAssistant, State, callback
 from homeassistant.util import dt as dt_util
 
@@ -93,11 +92,8 @@ def async_remove_tool(hass: HomeAssistant, tool_name: str) -> None:
 
 
 @callback
-async def async_get_tools(hass: HomeAssistant) -> Iterable[Tool]:
+def async_get_tools(hass: HomeAssistant) -> Iterable[Tool]:
     """Return a list of registered LLM tools."""
-    if "intent" not in hass.config.components:
-        await setup.async_setup_component(hass, "intent", {})
-
     if (tools := hass.data.get(DATA_KEY)) is None:
         tools = {}
 
