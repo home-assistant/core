@@ -24,9 +24,8 @@ async def test_sensors(
     """Test the sensor entities."""
     assert await setup_integration(hass, mock_config_entry)
 
-    assert (
-        entry := entity_registry.async_get("sensor.testproject_test_build_latest_build")
-    )
+    entry = entity_registry.async_get("sensor.testproject_test_build_latest_build")
+    assert entry
 
     assert entry == snapshot(name=f"{entry.entity_id}-entry")
 

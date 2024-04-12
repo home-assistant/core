@@ -109,11 +109,10 @@ async def test_devices_in_dr(
 ) -> None:
     """Test all devices are in the device registry."""
     for device in controller.devices(Capabilities):
-        assert (
-            device_entry := device_registry.async_get_device(
-                identifiers={(DOMAIN, device.device_info["did"])}
-            )
+        device_entry = device_registry.async_get_device(
+            identifiers={(DOMAIN, device.device_info["did"])}
         )
+        assert device_entry
         assert device_entry == snapshot(name=device.device_info["did"])
 
 
