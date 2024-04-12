@@ -13,7 +13,6 @@ from .const import (
     DOMAIN,
     KEY_CONNECTED,
     KEY_ID,
-    KEY_MAC_ADDRESS,
     KEY_NAME,
     KEY_REPORTED_STATE,
     KEY_STATE,
@@ -61,7 +60,6 @@ class RachioHoseTimerEntity(CoordinatorEntity[RachioUpdateCoordinator]):
         super().__init__(coordinator)
         self.id = data[KEY_ID]
         self._name = data[KEY_NAME]
-        self._mac = coordinator.base_station[KEY_MAC_ADDRESS]
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.id)},
             model="Smart Hose Timer",
