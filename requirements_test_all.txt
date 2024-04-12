@@ -428,7 +428,7 @@ apprise==1.7.4
 aprslib==0.7.2
 
 # homeassistant.components.aranet
-aranet4==2.2.2
+aranet4==2.3.3
 
 # homeassistant.components.arcam_fmj
 arcam-fmj==1.4.0
@@ -1357,7 +1357,7 @@ pybalboa==1.0.1
 pyblackbird==0.6
 
 # homeassistant.components.neato
-pybotvac==0.0.24
+pybotvac==0.0.25
 
 # homeassistant.components.braviatv
 pybravia==0.3.3
@@ -1773,7 +1773,7 @@ python-qbittorrent==0.4.3
 python-rabbitair==0.0.8
 
 # homeassistant.components.roborock
-python-roborock==1.0.0
+python-roborock==2.0.0
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.36
@@ -2207,7 +2207,7 @@ webmin-xmlrpc==0.0.2
 webrtc-noise-gain==1.2.3
 
 # homeassistant.components.whirlpool
-whirlpool-sixth-sense==0.18.7
+whirlpool-sixth-sense==0.18.8
 
 # homeassistant.components.whois
 whois==0.9.27

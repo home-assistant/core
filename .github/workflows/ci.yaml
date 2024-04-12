@@ -1088,15 +1088,11 @@ jobs:
           pattern: coverage-*
       - name: Upload coverage to Codecov
         if: needs.info.outputs.test_full_suite == 'true'
-        uses: Wandalen/wretry.action@v3.1.0
+        uses: codecov/codecov-action@v4.3.0
         with:
-          action: codecov/codecov-action@v4.3.0
-          with: |
-            fail_ci_if_error: true
-            flags: full-suite
-            token: ${{ env.CODECOV_TOKEN }}
-          attempt_limit: 5
-          attempt_delay: 30000
+          fail_ci_if_error: true
+          flags: full-suite
+          token: ${{ secrets.CODECOV_TOKEN }}
 
   pytest-partial:
     runs-on: ubuntu-22.04
@@ -1224,11 +1220,7 @@ jobs:
           pattern: coverage-*
       - name: Upload coverage to Codecov
         if: needs.info.outputs.test_full_suite == 'false'
-        uses: Wandalen/wretry.action@v3.1.0
+        uses: codecov/codecov-action@v4.3.0
         with:
-          action: codecov/codecov-action@v4.3.0
-          with: |
-            fail_ci_if_error: true
-            token: ${{ env.CODECOV_TOKEN }}
-          attempt_limit: 5
-          attempt_delay: 30000
+          fail_ci_if_error: true
+          token: ${{ secrets.CODECOV_TOKEN }}
