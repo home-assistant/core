@@ -1,4 +1,5 @@
 """The tests for the Logentries component."""
+
 from unittest.mock import ANY, call, patch
 
 import pytest

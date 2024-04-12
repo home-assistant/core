@@ -1,4 +1,5 @@
 """The tests for Kodi device triggers."""
+
 import pytest
 
 import homeassistant.components.automation as automation

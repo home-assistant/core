@@ -1,4 +1,5 @@
 """The tests for Arcam FMJ Receiver control device triggers."""
+
 import pytest
 
 from homeassistant.components.arcam_fmj.const import DOMAIN

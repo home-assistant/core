@@ -1,4 +1,5 @@
 """Test the PECO Outage Counter config flow."""
+
 from unittest.mock import patch
 
 from peco import HttpError, IncompatibleMeterError, UnresponsiveMeterError
@@ -48,10 +49,13 @@ async def test_invalid_county(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    with patch(
-        "homeassistant.components.peco.async_setup_entry",
-        return_value=True,
-    ), pytest.raises(Invalid):
+    with (
+        patch(
+            "homeassistant.components.peco.async_setup_entry",
+            return_value=True,
+        ),
+        pytest.raises(Invalid),
+    ):
         await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {

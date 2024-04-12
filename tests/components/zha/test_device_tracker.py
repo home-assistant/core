@@ -1,4 +1,5 @@
 """Test ZHA Device Tracker."""
+
 from datetime import timedelta
 import time
 from unittest.mock import patch

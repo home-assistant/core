@@ -1,4 +1,5 @@
 """Support for Renault sensors."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -17,20 +18,13 @@ from .entity import RenaultDataEntity, RenaultDataEntityDescription
 from .renault_hub import RenaultHub
 
 
-@dataclass(frozen=True)
-class RenaultSelectRequiredKeysMixin:
-    """Mixin for required keys."""
-
-    data_key: str
-
-
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class RenaultSelectEntityDescription(
-    SelectEntityDescription,
-    RenaultDataEntityDescription,
-    RenaultSelectRequiredKeysMixin,
+    SelectEntityDescription, RenaultDataEntityDescription
 ):
     """Class describing Renault select entities."""
+
+    data_key: str
 
 
 async def async_setup_entry(

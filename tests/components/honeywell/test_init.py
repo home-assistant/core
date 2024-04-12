@@ -1,4 +1,5 @@
 """Test honeywell setup process."""
+
 from unittest.mock import MagicMock, create_autospec, patch
 
 import aiosomecomfort

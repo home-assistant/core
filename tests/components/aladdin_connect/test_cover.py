@@ -1,4 +1,5 @@
 """Test the Aladdin Connect Cover."""
+
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from AIOAladdinConnect import session_manager

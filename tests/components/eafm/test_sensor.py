@@ -1,4 +1,5 @@
 """Tests for polling measures."""
+
 import datetime
 
 import aiohttp

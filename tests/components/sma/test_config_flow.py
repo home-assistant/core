@@ -1,4 +1,5 @@
 """Test the sma config flow."""
+
 from unittest.mock import patch
 
 from pysma.exceptions import (
@@ -24,9 +25,11 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {}
 
-    with patch("pysma.SMA.new_session", return_value=True), patch(
-        "pysma.SMA.device_info", return_value=MOCK_DEVICE
-    ), _patch_async_setup_entry() as mock_setup_entry:
+    with (
+        patch("pysma.SMA.new_session", return_value=True),
+        patch("pysma.SMA.device_info", return_value=MOCK_DEVICE),
+        _patch_async_setup_entry() as mock_setup_entry,
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             MOCK_USER_INPUT,
@@ -46,9 +49,10 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    with patch(
-        "pysma.SMA.new_session", side_effect=SmaConnectionException
-    ), _patch_async_setup_entry() as mock_setup_entry:
+    with (
+        patch("pysma.SMA.new_session", side_effect=SmaConnectionException),
+        _patch_async_setup_entry() as mock_setup_entry,
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             MOCK_USER_INPUT,
@@ -65,9 +69,10 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    with patch(
-        "pysma.SMA.new_session", side_effect=SmaAuthenticationException
-    ), _patch_async_setup_entry() as mock_setup_entry:
+    with (
+        patch("pysma.SMA.new_session", side_effect=SmaAuthenticationException),
+        _patch_async_setup_entry() as mock_setup_entry,
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             MOCK_USER_INPUT,
@@ -84,9 +89,11 @@ async def test_form_cannot_retrieve_device_info(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    with patch("pysma.SMA.new_session", return_value=True), patch(
-        "pysma.SMA.read", side_effect=SmaReadException
-    ), _patch_async_setup_entry() as mock_setup_entry:
+    with (
+        patch("pysma.SMA.new_session", return_value=True),
+        patch("pysma.SMA.read", side_effect=SmaReadException),
+        _patch_async_setup_entry() as mock_setup_entry,
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             MOCK_USER_INPUT,
@@ -103,9 +110,10 @@ async def test_form_unexpected_exception(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    with patch(
-        "pysma.SMA.new_session", side_effect=Exception
-    ), _patch_async_setup_entry() as mock_setup_entry:
+    with (
+        patch("pysma.SMA.new_session", side_effect=Exception),
+        _patch_async_setup_entry() as mock_setup_entry,
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             MOCK_USER_INPUT,
@@ -124,11 +132,12 @@ async def test_form_already_configured(hass: HomeAssistant, mock_config_entry) -
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    with patch("pysma.SMA.new_session", return_value=True), patch(
-        "pysma.SMA.device_info", return_value=MOCK_DEVICE
-    ), patch(
-        "pysma.SMA.close_session", return_value=True
-    ), _patch_async_setup_entry() as mock_setup_entry:
+    with (
+        patch("pysma.SMA.new_session", return_value=True),
+        patch("pysma.SMA.device_info", return_value=MOCK_DEVICE),
+        patch("pysma.SMA.close_session", return_value=True),
+        _patch_async_setup_entry() as mock_setup_entry,
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             MOCK_USER_INPUT,

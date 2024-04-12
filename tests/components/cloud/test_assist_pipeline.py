@@ -1,4 +1,5 @@
 """Test the cloud assist pipeline."""
+
 import pytest
 
 from homeassistant.components.cloud.assist_pipeline import (

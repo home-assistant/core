@@ -1,4 +1,5 @@
 """Define tests for the Meater config flow."""
+
 from unittest.mock import AsyncMock, patch
 
 from meater import AuthenticationError, ServiceUnavailableError

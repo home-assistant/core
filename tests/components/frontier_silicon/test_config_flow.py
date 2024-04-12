@@ -1,4 +1,5 @@
 """Test the Frontier Silicon config flow."""
+
 from unittest.mock import AsyncMock, patch
 
 from afsapi import ConnectionError, InvalidPinException, NotImplementedException

@@ -1,4 +1,5 @@
 """Test Home Assistant package util methods."""
+
 import asyncio
 from importlib.metadata import metadata
 import logging

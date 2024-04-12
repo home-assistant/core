@@ -5,6 +5,7 @@ Discovery of UniFi Network instances hosted on UDM and UDM Pro devices
 through SSDP. Reauthentication when issue with credentials are reported.
 Configuration of options through options flow.
 """
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -236,9 +237,9 @@ class UnifiFlowHandler(ConfigFlow, domain=UNIFI_DOMAIN):
 
         if (port := MODEL_PORTS.get(model_description)) is not None:
             self.config[CONF_PORT] = port
-            self.context[
-                "configuration_url"
-            ] = f"https://{self.config[CONF_HOST]}:{port}"
+            self.context["configuration_url"] = (
+                f"https://{self.config[CONF_HOST]}:{port}"
+            )
 
         return await self.async_step_user()
 
@@ -278,9 +279,9 @@ class UnifiOptionsFlowHandler(OptionsFlow):
         clients_to_block = {}
 
         for client in self.hub.api.clients.values():
-            clients_to_block[
-                client.mac
-            ] = f"{client.name or client.hostname} ({client.mac})"
+            clients_to_block[client.mac] = (
+                f"{client.name or client.hostname} ({client.mac})"
+            )
 
         return self.async_show_form(
             step_id="simple_options",
@@ -409,9 +410,9 @@ class UnifiOptionsFlowHandler(OptionsFlow):
         clients_to_block = {}
 
         for client in self.hub.api.clients.values():
-            clients_to_block[
-                client.mac
-            ] = f"{client.name or client.hostname} ({client.mac})"
+            clients_to_block[client.mac] = (
+                f"{client.name or client.hostname} ({client.mac})"
+            )
 
         selected_clients_to_block = [
             client

@@ -1,4 +1,5 @@
 """Tests for the DSMR integration."""
+
 import datetime
 from decimal import Decimal
 

@@ -1,4 +1,5 @@
 """Constants for the Axis component."""
+
 import logging
 
 from homeassistant.const import Platform

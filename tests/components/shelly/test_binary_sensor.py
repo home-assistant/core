@@ -1,4 +1,5 @@
 """Tests for Shelly binary sensor platform."""
+
 from unittest.mock import Mock
 
 from aioshelly.const import MODEL_MOTION

@@ -1,4 +1,5 @@
 """Test the Devialet config flow."""
+
 from unittest.mock import patch
 
 from aiohttp import ClientError as HTTPClientError

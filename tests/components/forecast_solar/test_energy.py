@@ -1,4 +1,5 @@
 """Test forecast solar energy platform."""
+
 from datetime import UTC, datetime
 from unittest.mock import MagicMock
 

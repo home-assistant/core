@@ -1,4 +1,5 @@
 """Tests for Srp Energy component Init."""
+
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 

@@ -1,4 +1,5 @@
 """Test the Fibaro config flow."""
+
 from unittest.mock import Mock
 
 import pytest

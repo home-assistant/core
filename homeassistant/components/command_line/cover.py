@@ -1,4 +1,5 @@
 """Support for command line covers."""
+
 from __future__ import annotations
 
 import asyncio

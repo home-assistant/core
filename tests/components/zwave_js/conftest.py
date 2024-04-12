@@ -1,4 +1,5 @@
 """Provide common Z-Wave JS fixtures."""
+
 import asyncio
 import copy
 import io

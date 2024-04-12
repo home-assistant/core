@@ -1,4 +1,5 @@
 """Discord notification test helpers."""
+
 from http import HTTPStatus
 
 import pytest

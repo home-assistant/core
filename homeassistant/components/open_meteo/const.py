@@ -1,4 +1,5 @@
 """Constants for the Open-Meteo integration."""
+
 from __future__ import annotations
 
 from datetime import timedelta

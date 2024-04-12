@@ -1,4 +1,5 @@
 """Tests for Glances integration."""
+
 from unittest.mock import AsyncMock, MagicMock
 
 from glances_api.exceptions import (

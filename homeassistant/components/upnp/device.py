@@ -1,4 +1,5 @@
 """Home Assistant representation of an UPnP/IGD."""
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -37,7 +38,7 @@ def get_preferred_location(locations: set[str]) -> str:
     """Get the preferred location (an IPv4 location) from a set of locations."""
     # Prefer IPv4 over IPv6.
     for location in locations:
-        if location.startswith("http://[") or location.startswith("https://["):
+        if location.startswith(("http://[", "https://[")):
             continue
 
         return location
@@ -85,9 +86,9 @@ class Device:
         """Initialize UPnP/IGD device."""
         self.hass = hass
         self._igd_device = igd_device
-        self.coordinator: DataUpdateCoordinator[
-            dict[str, str | datetime | int | float | None]
-        ] | None = None
+        self.coordinator: (
+            DataUpdateCoordinator[dict[str, str | datetime | int | float | None]] | None
+        ) = None
         self.original_udn: str | None = None
 
     async def async_get_mac_address(self) -> str | None:

@@ -1,4 +1,5 @@
 """Tests for the SmartThings config flow module."""
+
 from http import HTTPStatus
 from unittest.mock import AsyncMock, Mock, patch
 from uuid import uuid4
@@ -358,15 +359,18 @@ async def test_entry_created_with_cloudhook(
     request.location_id = location.location_id
     request.refresh_token = refresh_token
 
-    with patch.object(
-        smartapp.cloud,
-        "async_active_subscription",
-        Mock(return_value=True),
-    ), patch.object(
-        smartapp.cloud,
-        "async_create_cloudhook",
-        AsyncMock(return_value="http://cloud.test"),
-    ) as mock_create_cloudhook:
+    with (
+        patch.object(
+            smartapp.cloud,
+            "async_active_subscription",
+            Mock(return_value=True),
+        ),
+        patch.object(
+            smartapp.cloud,
+            "async_create_cloudhook",
+            AsyncMock(return_value="http://cloud.test"),
+        ) as mock_create_cloudhook,
+    ):
         await smartapp.setup_smartapp_endpoint(hass, True)
 
         # Webhook confirmation shown

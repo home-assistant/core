@@ -1,4 +1,5 @@
 """Device for Zigbee Home Automation."""
+
 from __future__ import annotations
 
 import asyncio
@@ -1004,5 +1005,5 @@ class ZHADevice(LogMixin):
     def log(self, level: int, msg: str, *args: Any, **kwargs: Any) -> None:
         """Log a message."""
         msg = f"[%s](%s): {msg}"
-        args = (self.nwk, self.model) + args
+        args = (self.nwk, self.model, *args)
         _LOGGER.log(level, msg, *args, **kwargs)

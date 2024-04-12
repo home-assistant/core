@@ -84,7 +84,7 @@ class Events(Base):  # type: ignore
     context_user_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID), index=True)
     context_parent_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID), index=True)
 
-    __table_args__ = (
+    __table_args__ = (  # noqa: PIE794
         # Used for fetching events at a specific time
         # see logbook
         Index("ix_events_event_type_time_fired", "event_type", "time_fired"),
@@ -156,7 +156,7 @@ class States(Base):  # type: ignore
     event = relationship("Events", uselist=False)
     old_state = relationship("States", remote_side=[state_id])
 
-    __table_args__ = (
+    __table_args__ = (  # noqa: PIE794
         # Used for fetching the state of entities at a specific time
         # (get_states in history.py)
         Index("ix_states_entity_id_last_updated", "entity_id", "last_updated"),
@@ -237,7 +237,7 @@ class Statistics(Base):  # type: ignore
     state = Column(Float())
     sum = Column(Float())
 
-    __table_args__ = (
+    __table_args__ = (  # noqa: PIE794
         # Used for fetching statistics for a certain entity at a specific time
         Index("ix_statistics_statistic_id_start", "statistic_id", "start"),
     )

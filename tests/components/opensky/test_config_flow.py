@@ -1,4 +1,5 @@
 """Test OpenSky config flow."""
+
 from typing import Any
 from unittest.mock import patch
 
@@ -105,9 +106,12 @@ async def test_options_flow_failures(
         assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "init"
         assert result["errors"]["base"] == error
-    with patch("python_opensky.OpenSky.authenticate"), patch(
-        "python_opensky.OpenSky.get_states",
-        return_value=get_states_response_fixture("opensky/states_1.json"),
+    with (
+        patch("python_opensky.OpenSky.authenticate"),
+        patch(
+            "python_opensky.OpenSky.get_states",
+            return_value=get_states_response_fixture("opensky/states_1.json"),
+        ),
     ):
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
@@ -139,9 +143,12 @@ async def test_options_flow(
     entry = hass.config_entries.async_entries(DOMAIN)[0]
     result = await hass.config_entries.options.async_init(entry.entry_id)
     await hass.async_block_till_done()
-    with patch("python_opensky.OpenSky.authenticate"), patch(
-        "python_opensky.OpenSky.get_states",
-        return_value=get_states_response_fixture("opensky/states_1.json"),
+    with (
+        patch("python_opensky.OpenSky.authenticate"),
+        patch(
+            "python_opensky.OpenSky.get_states",
+            return_value=get_states_response_fixture("opensky/states_1.json"),
+        ),
     ):
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],

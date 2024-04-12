@@ -1,4 +1,5 @@
 """The Image Upload integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -198,7 +199,7 @@ class ImageServeView(HomeAssistantView):
         image_info = self.image_collection.data.get(image_id)
 
         if image_info is None:
-            raise web.HTTPNotFound()
+            raise web.HTTPNotFound
 
         hass = request.app[KEY_HASS]
         target_file = self.image_folder / image_id / f"{width}x{height}"

@@ -1,4 +1,5 @@
 """Test the Min/Max config flow."""
+
 from unittest.mock import patch
 
 import pytest
@@ -11,7 +12,7 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 
-@pytest.mark.parametrize("platform", ("sensor",))
+@pytest.mark.parametrize("platform", ["sensor"])
 async def test_config_flow(hass: HomeAssistant, platform: str) -> None:
     """Test the config flow."""
     input_sensors = ["sensor.input_one", "sensor.input_two"]
@@ -65,7 +66,7 @@ def get_suggested(schema, key):
     raise Exception
 
 
-@pytest.mark.parametrize("platform", ("sensor",))
+@pytest.mark.parametrize("platform", ["sensor"])
 async def test_options(hass: HomeAssistant, platform: str) -> None:
     """Test reconfiguring."""
     hass.states.async_set("sensor.input_one", "10")

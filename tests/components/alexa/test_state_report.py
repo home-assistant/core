@@ -1,4 +1,5 @@
 """Test report state."""
+
 import json
 from unittest.mock import AsyncMock, patch
 
@@ -409,7 +410,7 @@ async def test_report_state_number(
     }
 
     if unit:
-        state["unit_of_measurement"]: unit
+        state["unit_of_measurement"] = unit
 
     hass.states.async_set(
         f"{domain}.test_{domain}",

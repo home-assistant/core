@@ -1,4 +1,5 @@
 """Test nest diagnostics."""
+
 from typing import Any
 
 from homeassistant.core import HomeAssistant

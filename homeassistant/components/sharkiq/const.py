@@ -1,4 +1,5 @@
 """Shark IQ Constants."""
+
 from datetime import timedelta
 import logging
 

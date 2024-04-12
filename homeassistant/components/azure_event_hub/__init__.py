@@ -1,4 +1,5 @@
 """Support for Azure Event Hubs."""
+
 from __future__ import annotations
 
 import asyncio
@@ -157,7 +158,7 @@ class AzureEventHub:
         """
         logging.getLogger("azure.eventhub").setLevel(logging.WARNING)
         self._listener_remover = self.hass.bus.async_listen(
-            MATCH_ALL, self.async_listen
+            MATCH_ALL, self.async_listen, run_immediately=True
         )
         self._schedule_next_send()
 

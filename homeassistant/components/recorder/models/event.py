@@ -1,4 +1,5 @@
 """Models events in for Recorder."""
+
 from __future__ import annotations
 
 

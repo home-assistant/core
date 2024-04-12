@@ -1,4 +1,5 @@
 """Tests for syncthru config flow."""
+
 import re
 from unittest.mock import patch
 
@@ -90,8 +91,9 @@ async def test_syncthru_not_supported(hass: HomeAssistant) -> None:
 
 async def test_unknown_state(hass: HomeAssistant) -> None:
     """Test we show user form on unsupported device."""
-    with patch.object(SyncThru, "update"), patch.object(
-        SyncThru, "is_unknown_state", return_value=True
+    with (
+        patch.object(SyncThru, "update"),
+        patch.object(SyncThru, "is_unknown_state", return_value=True),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,

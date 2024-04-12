@@ -78,6 +78,7 @@ light:
   brightness: true
   brightness_scale: 99
 """
+
 import copy
 from typing import Any
 from unittest.mock import call, patch
@@ -95,7 +96,6 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
-    Platform,
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.json import json_dumps
@@ -167,13 +167,6 @@ COLOR_MODES_CONFIG = {
         }
     }
 }
-
-
-@pytest.fixture(autouse=True)
-def light_platform_only():
-    """Only setup the light platform to speed up tests."""
-    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.LIGHT]):
-        yield
 
 
 class JsonValidator:
@@ -990,7 +983,7 @@ async def test_controlling_the_state_with_legacy_color_handling(
     assert state.attributes.get("xy_color") is None
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
-    for _ in range(0, 2):
+    for _ in range(2):
         # Returned state after the light was turned on
         # Receiving legacy color mode: rgb.
         async_fire_mqtt_message(

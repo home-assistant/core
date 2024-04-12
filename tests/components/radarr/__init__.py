@@ -1,4 +1,5 @@
 """Tests for the Radarr component."""
+
 from http import HTTPStatus
 from unittest.mock import patch
 

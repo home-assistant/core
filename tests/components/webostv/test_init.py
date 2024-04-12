@@ -1,4 +1,5 @@
 """The tests for the LG webOS TV platform."""
+
 from unittest.mock import Mock
 
 from aiowebostv import WebOsTvPairError

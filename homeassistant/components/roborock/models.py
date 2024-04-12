@@ -1,4 +1,5 @@
 """Roborock Models."""
+
 from dataclasses import dataclass
 from typing import Any
 

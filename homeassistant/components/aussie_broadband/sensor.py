@@ -1,4 +1,5 @@
 """Support for Aussie Broadband metric sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable

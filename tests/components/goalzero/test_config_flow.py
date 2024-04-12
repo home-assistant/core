@@ -1,4 +1,5 @@
 """Test Goal Zero Yeti config flow."""
+
 from unittest.mock import patch
 
 from goalzero import exceptions

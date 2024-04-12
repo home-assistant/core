@@ -1,4 +1,5 @@
 """The tests for the Remote component, adapted from Light Test."""
+
 import pytest
 
 import homeassistant.components.remote as remote

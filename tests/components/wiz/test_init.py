@@ -1,4 +1,5 @@
 """Tests for wiz integration."""
+
 import datetime
 from unittest.mock import AsyncMock, patch
 
@@ -57,9 +58,10 @@ async def test_cleanup_on_failed_first_update(hass: HomeAssistant) -> None:
         data={CONF_HOST: FAKE_IP},
     )
     entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.wiz.discovery.find_wizlights", return_value=[]
-    ), _patch_wizlight(device=bulb):
+    with (
+        patch("homeassistant.components.wiz.discovery.find_wizlights", return_value=[]),
+        _patch_wizlight(device=bulb),
+    ):
         await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
         await hass.async_block_till_done()
     assert entry.state is config_entries.ConfigEntryState.SETUP_RETRY

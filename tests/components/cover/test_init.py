@@ -1,4 +1,5 @@
 """The tests for Cover."""
+
 from enum import Enum
 
 import pytest
@@ -16,14 +17,21 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import help_test_all, import_and_test_deprecated_constant_enum
+from tests.common import (
+    help_test_all,
+    import_and_test_deprecated_constant_enum,
+    setup_test_component_platform,
+)
+from tests.components.cover.common import MockCover
 
 
-async def test_services(hass: HomeAssistant, enable_custom_integrations: None) -> None:
+async def test_services(
+    hass: HomeAssistant,
+    mock_cover_entities: list[MockCover],
+) -> None:
     """Test the provided services."""
-    platform = getattr(hass.components, "test.cover")
+    setup_test_component_platform(hass, cover.DOMAIN, mock_cover_entities)
 
-    platform.init()
     assert await async_setup_component(
         hass, cover.DOMAIN, {cover.DOMAIN: {CONF_PLATFORM: "test"}}
     )
@@ -35,7 +43,7 @@ async def test_services(hass: HomeAssistant, enable_custom_integrations: None) -
     # ent4 = cover with all tilt functions but no position
     # ent5 = cover with all functions
     # ent6 = cover with only open/close, but also reports opening/closing
-    ent1, ent2, ent3, ent4, ent5, ent6 = platform.ENTITIES
+    ent1, ent2, ent3, ent4, ent5, ent6 = mock_cover_entities
 
     # Test init all covers should be open
     assert is_open(hass, ent1)
@@ -139,10 +147,7 @@ def is_closing(hass, ent):
 
 
 def _create_tuples(enum: Enum, constant_prefix: str) -> list[tuple[Enum, str]]:
-    result = []
-    for enum in enum:
-        result.append((enum, constant_prefix))
-    return result
+    return [(enum_field, constant_prefix) for enum_field in enum]
 
 
 def test_all() -> None:

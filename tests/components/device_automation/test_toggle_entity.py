@@ -1,4 +1,5 @@
 """The test for device automation toggle entity helpers."""
+
 from datetime import timedelta
 
 import pytest
@@ -213,6 +214,7 @@ async def test_if_fires_on_state_change_with_for(
     await hass.async_block_till_done()
     assert len(calls) == 1
     await hass.async_block_till_done()
-    assert calls[0].data["some"] == "turn_off device - {} - on - off - 0:00:05".format(
-        entry.entity_id
+    assert (
+        calls[0].data["some"]
+        == f"turn_off device - {entry.entity_id} - on - off - 0:00:05"
     )

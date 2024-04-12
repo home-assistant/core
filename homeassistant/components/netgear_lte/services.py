@@ -1,4 +1,9 @@
 """Services for the Netgear LTE integration."""
+<<<<<<< HEAD
+=======
+
+from typing import TYPE_CHECKING
+>>>>>>> efe91815fbf2f57bf8f5b830c675cd6a579ff9b3
 
 from eternalegypt.eternalegypt import Modem
 import voluptuous as vol

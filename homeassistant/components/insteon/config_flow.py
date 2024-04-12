@@ -1,4 +1,5 @@
 """Test config flow for Insteon."""
+
 from __future__ import annotations
 
 import logging
@@ -83,10 +84,11 @@ def _remove_override(address, options):
     new_options = {}
     if options.get(CONF_X10):
         new_options[CONF_X10] = options.get(CONF_X10)
-    new_overrides = []
-    for override in options[CONF_OVERRIDE]:
-        if override[CONF_ADDRESS] != address:
-            new_overrides.append(override)
+    new_overrides = [
+        override
+        for override in options[CONF_OVERRIDE]
+        if override[CONF_ADDRESS] != address
+    ]
     if new_overrides:
         new_options[CONF_OVERRIDE] = new_overrides
     return new_options
@@ -99,13 +101,14 @@ def _remove_x10(device, options):
     new_options = {}
     if options.get(CONF_OVERRIDE):
         new_options[CONF_OVERRIDE] = options.get(CONF_OVERRIDE)
-    new_x10 = []
-    for existing_device in options[CONF_X10]:
+    new_x10 = [
+        existing_device
+        for existing_device in options[CONF_X10]
         if (
             existing_device[CONF_HOUSECODE].lower() != housecode
             or existing_device[CONF_UNITCODE] != unitcode
-        ):
-            new_x10.append(existing_device)
+        )
+    ]
     if new_x10:
         new_options[CONF_X10] = new_x10
     return new_options, housecode, unitcode

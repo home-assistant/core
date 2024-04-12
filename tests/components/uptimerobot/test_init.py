@@ -1,4 +1,5 @@
 """Test the UptimeRobot init."""
+
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory

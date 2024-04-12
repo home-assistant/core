@@ -1,4 +1,5 @@
 """The init tests for the nexia platform."""
+
 import aiohttp
 
 from homeassistant.components.nexia.const import DOMAIN

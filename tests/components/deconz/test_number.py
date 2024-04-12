@@ -1,9 +1,9 @@
 """deCONZ number platform tests."""
+
 from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.deconz.const import DOMAIN as DECONZ_DOMAIN
 from homeassistant.components.number import (
     ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
@@ -49,7 +49,6 @@ TEST_DATA = [
             "device_count": 3,
             "entity_id": "number.presence_sensor_delay",
             "unique_id": "00:00:00:00:00:00:00:00-00-delay",
-            "old_unique_id": "00:00:00:00:00:00:00:00-delay",
             "state": "0",
             "entity_category": EntityCategory.CONFIG,
             "attributes": {
@@ -118,15 +117,6 @@ async def test_number_entities(
     expected,
 ) -> None:
     """Test successful creation of number entities."""
-
-    # Create entity entry to migrate to new unique ID
-    if "old_unique_id" in expected:
-        entity_registry.async_get_or_create(
-            NUMBER_DOMAIN,
-            DECONZ_DOMAIN,
-            expected["old_unique_id"],
-            suggested_object_id=expected["entity_id"].replace("number.", ""),
-        )
 
     with patch.dict(DECONZ_WEB_REQUEST, {"sensors": {"0": sensor_data}}):
         config_entry = await setup_deconz_integration(hass, aioclient_mock)

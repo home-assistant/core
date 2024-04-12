@@ -1,4 +1,5 @@
 """Tests for the Sonos Alarm switch platform."""
+
 from copy import copy
 from datetime import timedelta
 from unittest.mock import patch

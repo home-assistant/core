@@ -1,4 +1,5 @@
 """Interfaces with Egardia/Woonveilig alarm control panel."""
+
 from __future__ import annotations
 
 import logging

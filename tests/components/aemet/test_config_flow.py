@@ -1,4 +1,5 @@
 """Define tests for the AEMET OpenData config flow."""
+
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from aemet_opendata.exceptions import AuthError

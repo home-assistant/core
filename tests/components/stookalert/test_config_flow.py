@@ -1,4 +1,5 @@
 """Tests for the Stookalert config flow."""
+
 from unittest.mock import patch
 
 from homeassistant.components.stookalert.const import CONF_PROVINCE, DOMAIN

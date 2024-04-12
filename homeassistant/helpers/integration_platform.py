@@ -1,4 +1,5 @@
 """Helpers to help with integration platforms."""
+
 from __future__ import annotations
 
 import asyncio
@@ -10,7 +11,7 @@ from types import ModuleType
 from typing import Any
 
 from homeassistant.const import EVENT_COMPONENT_LOADED
-from homeassistant.core import HassJob, HomeAssistant, callback
+from homeassistant.core import Event, HassJob, HomeAssistant, callback
 from homeassistant.loader import (
     Integration,
     async_get_integrations,
@@ -20,8 +21,6 @@ from homeassistant.loader import (
 )
 from homeassistant.setup import ATTR_COMPONENT, EventComponentLoaded
 from homeassistant.util.logging import catch_log_exception
-
-from .typing import EventType
 
 _LOGGER = logging.getLogger(__name__)
 DATA_INTEGRATION_PLATFORMS = "integration_platforms"
@@ -40,7 +39,7 @@ class IntegrationPlatform:
 def _async_integration_platform_component_loaded(
     hass: HomeAssistant,
     integration_platforms: list[IntegrationPlatform],
-    event: EventType[EventComponentLoaded],
+    event: Event[EventComponentLoaded],
 ) -> None:
     """Process integration platforms for a component."""
     if "." in (component_name := event.data[ATTR_COMPONENT]):
@@ -53,9 +52,9 @@ def _async_integration_platform_component_loaded(
         if component_name in integration_platform.seen_components:
             continue
         integration_platform.seen_components.add(component_name)
-        integration_platforms_by_name[
-            integration_platform.platform_name
-        ] = integration_platform
+        integration_platforms_by_name[integration_platform.platform_name] = (
+            integration_platform
+        )
 
     if not integration_platforms_by_name:
         return

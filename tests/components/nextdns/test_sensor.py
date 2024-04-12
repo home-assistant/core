@@ -1,4 +1,5 @@
 """Test sensor of NextDNS integration."""
+
 from datetime import timedelta
 from unittest.mock import patch
 
@@ -308,21 +309,27 @@ async def test_availability(
     assert state.state == "90"
 
     future = utcnow() + timedelta(minutes=10)
-    with patch(
-        "homeassistant.components.nextdns.NextDns.get_analytics_status",
-        side_effect=ApiError("API Error"),
-    ), patch(
-        "homeassistant.components.nextdns.NextDns.get_analytics_dnssec",
-        side_effect=ApiError("API Error"),
-    ), patch(
-        "homeassistant.components.nextdns.NextDns.get_analytics_encryption",
-        side_effect=ApiError("API Error"),
-    ), patch(
-        "homeassistant.components.nextdns.NextDns.get_analytics_ip_versions",
-        side_effect=ApiError("API Error"),
-    ), patch(
-        "homeassistant.components.nextdns.NextDns.get_analytics_protocols",
-        side_effect=ApiError("API Error"),
+    with (
+        patch(
+            "homeassistant.components.nextdns.NextDns.get_analytics_status",
+            side_effect=ApiError("API Error"),
+        ),
+        patch(
+            "homeassistant.components.nextdns.NextDns.get_analytics_dnssec",
+            side_effect=ApiError("API Error"),
+        ),
+        patch(
+            "homeassistant.components.nextdns.NextDns.get_analytics_encryption",
+            side_effect=ApiError("API Error"),
+        ),
+        patch(
+            "homeassistant.components.nextdns.NextDns.get_analytics_ip_versions",
+            side_effect=ApiError("API Error"),
+        ),
+        patch(
+            "homeassistant.components.nextdns.NextDns.get_analytics_protocols",
+            side_effect=ApiError("API Error"),
+        ),
     ):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
@@ -348,21 +355,27 @@ async def test_availability(
     assert state.state == STATE_UNAVAILABLE
 
     future = utcnow() + timedelta(minutes=20)
-    with patch(
-        "homeassistant.components.nextdns.NextDns.get_analytics_status",
-        return_value=STATUS,
-    ), patch(
-        "homeassistant.components.nextdns.NextDns.get_analytics_encryption",
-        return_value=ENCRYPTION,
-    ), patch(
-        "homeassistant.components.nextdns.NextDns.get_analytics_dnssec",
-        return_value=DNSSEC,
-    ), patch(
-        "homeassistant.components.nextdns.NextDns.get_analytics_ip_versions",
-        return_value=IP_VERSIONS,
-    ), patch(
-        "homeassistant.components.nextdns.NextDns.get_analytics_protocols",
-        return_value=PROTOCOLS,
+    with (
+        patch(
+            "homeassistant.components.nextdns.NextDns.get_analytics_status",
+            return_value=STATUS,
+        ),
+        patch(
+            "homeassistant.components.nextdns.NextDns.get_analytics_encryption",
+            return_value=ENCRYPTION,
+        ),
+        patch(
+            "homeassistant.components.nextdns.NextDns.get_analytics_dnssec",
+            return_value=DNSSEC,
+        ),
+        patch(
+            "homeassistant.components.nextdns.NextDns.get_analytics_ip_versions",
+            return_value=IP_VERSIONS,
+        ),
+        patch(
+            "homeassistant.components.nextdns.NextDns.get_analytics_protocols",
+            return_value=PROTOCOLS,
+        ),
     ):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()

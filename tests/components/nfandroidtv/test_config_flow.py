@@ -1,4 +1,5 @@
 """Test NFAndroidTV config flow."""
+
 from unittest.mock import patch
 
 from notifications_android_tv.notifications import ConnectError

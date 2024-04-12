@@ -1,4 +1,5 @@
 """Support for Arris TG2492LG router."""
+
 from __future__ import annotations
 
 from arris_tg2492lg import ConnectBox, Device

@@ -1,4 +1,5 @@
 """Test The generic (IP Camera) config flow."""
+
 import contextlib
 import errno
 from http import HTTPStatus
@@ -73,9 +74,12 @@ async def test_form(
     """Test the form with a normal set of settings."""
 
     respx.get("http://127.0.0.1/testurl/1").respond(stream=fakeimgbytes_png)
-    with mock_create_stream as mock_setup, patch(
-        "homeassistant.components.generic.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
+    with (
+        mock_create_stream as mock_setup,
+        patch(
+            "homeassistant.components.generic.async_setup_entry", return_value=True
+        ) as mock_setup_entry,
+    ):
         result1 = await hass.config_entries.flow.async_configure(
             user_flow["flow_id"],
             TESTDATA,
@@ -186,10 +190,13 @@ async def test_form_still_preview_cam_off(
     hass_client: ClientSessionGenerator,
 ) -> None:
     """Test camera errors are triggered during preview."""
-    with patch(
-        "homeassistant.components.generic.camera.GenericCamera.is_on",
-        new_callable=PropertyMock(return_value=False),
-    ), mock_create_stream:
+    with (
+        patch(
+            "homeassistant.components.generic.camera.GenericCamera.is_on",
+            new_callable=PropertyMock(return_value=False),
+        ),
+        mock_create_stream,
+    ):
         result1 = await hass.config_entries.flow.async_configure(
             user_flow["flow_id"],
             TESTDATA,
@@ -357,8 +364,9 @@ async def test_form_rtsp_mode(
     data = TESTDATA.copy()
     data[CONF_RTSP_TRANSPORT] = "tcp"
     data[CONF_STREAM_SOURCE] = "rtsp://127.0.0.1/testurl/2"
-    with mock_create_stream as mock_setup, patch(
-        "homeassistant.components.generic.async_setup_entry", return_value=True
+    with (
+        mock_create_stream as mock_setup,
+        patch("homeassistant.components.generic.async_setup_entry", return_value=True),
     ):
         result1 = await hass.config_entries.flow.async_configure(
             user_flow["flow_id"], data
@@ -448,12 +456,42 @@ async def test_form_still_and_stream_not_provided(
 
 
 @respx.mock
-async def test_form_image_timeout(
-    hass: HomeAssistant, user_flow, mock_create_stream
+@pytest.mark.parametrize(
+    ("side_effect", "expected_message"),
+    [
+        (httpx.TimeoutException, {"still_image_url": "unable_still_load"}),
+        (
+            httpx.HTTPStatusError("", request=None, response=httpx.Response(401)),
+            {"still_image_url": "unable_still_load_auth"},
+        ),
+        (
+            httpx.HTTPStatusError("", request=None, response=httpx.Response(403)),
+            {"still_image_url": "unable_still_load_auth"},
+        ),
+        (
+            httpx.HTTPStatusError("", request=None, response=httpx.Response(404)),
+            {"still_image_url": "unable_still_load_not_found"},
+        ),
+        (
+            httpx.HTTPStatusError("", request=None, response=httpx.Response(500)),
+            {"still_image_url": "unable_still_load_server_error"},
+        ),
+        (
+            httpx.HTTPStatusError("", request=None, response=httpx.Response(503)),
+            {"still_image_url": "unable_still_load_server_error"},
+        ),
+        (  # Errors without specific handler should show the general message.
+            httpx.HTTPStatusError("", request=None, response=httpx.Response(507)),
+            {"still_image_url": "unable_still_load"},
+        ),
+    ],
+)
+async def test_form_image_http_exceptions(
+    side_effect, expected_message, hass: HomeAssistant, user_flow, mock_create_stream
 ) -> None:
-    """Test we handle invalid image timeout."""
+    """Test we handle image http exceptions."""
     respx.get("http://127.0.0.1/testurl/1").side_effect = [
-        httpx.TimeoutException,
+        side_effect,
     ]
 
     with mock_create_stream:
@@ -464,7 +502,7 @@ async def test_form_image_timeout(
     await hass.async_block_till_done()
 
     assert result2["type"] == "form"
-    assert result2["errors"] == {"still_image_url": "unable_still_load"}
+    assert result2["errors"] == expected_message
 
 
 @respx.mock
@@ -498,7 +536,7 @@ async def test_form_stream_invalidimage2(
     await hass.async_block_till_done()
 
     assert result2["type"] == "form"
-    assert result2["errors"] == {"still_image_url": "unable_still_load"}
+    assert result2["errors"] == {"still_image_url": "unable_still_load_no_image"}
 
 
 @respx.mock
@@ -609,10 +647,13 @@ async def test_form_stream_io_error(
 @respx.mock
 async def test_form_oserror(hass: HomeAssistant, fakeimg_png, user_flow) -> None:
     """Test we handle OS error when setting up stream."""
-    with patch(
-        "homeassistant.components.generic.config_flow.create_stream",
-        side_effect=OSError("Some other OSError"),
-    ), pytest.raises(OSError):
+    with (
+        patch(
+            "homeassistant.components.generic.config_flow.create_stream",
+            side_effect=OSError("Some other OSError"),
+        ),
+        pytest.raises(OSError),
+    ):
         await hass.config_entries.flow.async_configure(
             user_flow["flow_id"],
             TESTDATA,
@@ -847,9 +888,10 @@ async def test_use_wallclock_as_timestamps_option(
     )
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "init"
-    with patch(
-        "homeassistant.components.generic.async_setup_entry", return_value=True
-    ), mock_create_stream:
+    with (
+        patch("homeassistant.components.generic.async_setup_entry", return_value=True),
+        mock_create_stream,
+    ):
         result2 = await hass.config_entries.options.async_configure(
             result["flow_id"],
             user_input={CONF_USE_WALLCLOCK_AS_TIMESTAMPS: True, **TESTDATA},
@@ -861,9 +903,10 @@ async def test_use_wallclock_as_timestamps_option(
     )
     assert result3["type"] == FlowResultType.FORM
     assert result3["step_id"] == "init"
-    with patch(
-        "homeassistant.components.generic.async_setup_entry", return_value=True
-    ), mock_create_stream:
+    with (
+        patch("homeassistant.components.generic.async_setup_entry", return_value=True),
+        mock_create_stream,
+    ):
         result4 = await hass.config_entries.options.async_configure(
             result3["flow_id"],
             user_input={CONF_USE_WALLCLOCK_AS_TIMESTAMPS: True, **TESTDATA},

@@ -1,4 +1,5 @@
 """Validate manifests."""
+
 import argparse
 from pathlib import Path
 import subprocess

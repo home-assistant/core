@@ -1,4 +1,5 @@
 """Support for Mopeka sensors."""
+
 from __future__ import annotations
 
 from mopeka_iot_ble import SensorUpdate

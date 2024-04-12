@@ -1,4 +1,5 @@
 """Representation of an EnOcean dongle."""
+
 import glob
 import logging
 from os.path import basename, normpath

@@ -1,4 +1,5 @@
 """The tests for the Google Calendar component."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
@@ -815,7 +816,7 @@ async def test_calendar_yaml_update(
     assert await component_setup()
 
     mock_calendars_yaml().read.assert_called()
-    mock_calendars_yaml().write.called is expect_write_calls
+    assert mock_calendars_yaml().write.called is expect_write_calls
 
     state = hass.states.get(TEST_API_ENTITY)
     assert state

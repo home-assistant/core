@@ -1,4 +1,5 @@
 """Support for Plaato devices."""
+
 from datetime import timedelta
 import logging
 

@@ -1,4 +1,5 @@
 """Test the WiLight config flow."""
+
 import dataclasses
 from unittest.mock import patch
 

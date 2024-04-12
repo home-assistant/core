@@ -63,9 +63,12 @@ async def test_full_flow(
         },
     )
 
-    with patch(
-        "homeassistant.components.google_tasks.async_setup_entry", return_value=True
-    ) as mock_setup, patch("homeassistant.components.google_tasks.config_flow.build"):
+    with (
+        patch(
+            "homeassistant.components.google_tasks.async_setup_entry", return_value=True
+        ) as mock_setup,
+        patch("homeassistant.components.google_tasks.config_flow.build"),
+    ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1

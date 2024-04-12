@@ -1,4 +1,5 @@
 """Test the condition helper."""
+
 from datetime import datetime, timedelta
 from typing import Any
 from unittest.mock import AsyncMock, patch
@@ -3396,7 +3397,7 @@ async def test_disabled_condition(hass: HomeAssistant) -> None:
     hass.states.async_set("binary_sensor.test", "on")
     assert test(hass) is None
 
-    # Still passses, condition is not enabled
+    # Still passes, condition is not enabled
     hass.states.async_set("binary_sensor.test", "off")
     assert test(hass) is None
 

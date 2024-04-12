@@ -1,4 +1,5 @@
 """Test script blueprints."""
+
 import asyncio
 from collections.abc import Iterator
 import contextlib

@@ -1,4 +1,5 @@
 """The tests for Valve."""
+
 from collections.abc import Generator
 
 import pytest
@@ -117,7 +118,7 @@ class MockBinaryValveEntity(ValveEntity):
         self._attr_is_closed = False
 
     def close_valve(self) -> None:
-        """Mock implementantion for sync close function."""
+        """Mock implementation for sync close function."""
         self._attr_is_closed = True
 
 
@@ -297,7 +298,7 @@ async def test_valve_report_position(hass: HomeAssistant) -> None:
     default_valve.hass = hass
 
     with pytest.raises(ValueError):
-        default_valve.reports_position
+        _ = default_valve.reports_position
 
     second_valve = MockValveEntity(reports_position=True)
     second_valve.hass = hass

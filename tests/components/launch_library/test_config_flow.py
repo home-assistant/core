@@ -1,4 +1,5 @@
 """Test launch_library config flow."""
+
 from unittest.mock import patch
 
 from homeassistant import data_entry_flow

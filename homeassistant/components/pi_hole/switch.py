@@ -1,4 +1,5 @@
 """Support for turning on and off Pi-hole system."""
+
 from __future__ import annotations
 
 import logging

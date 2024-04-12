@@ -1,4 +1,5 @@
 """Support for Synology DSM binary sensors."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -27,7 +28,7 @@ from .entity import (
 from .models import SynologyDSMData
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class SynologyDSMBinarySensorEntityDescription(
     BinarySensorEntityDescription, SynologyDSMEntityDescription
 ):
@@ -115,7 +116,7 @@ class SynoDSMSecurityBinarySensor(SynoDSMBinarySensor):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return bool(self._api.security)
+        return bool(self._api.security) and super().available
 
     @property
     def extra_state_attributes(self) -> dict[str, str]:

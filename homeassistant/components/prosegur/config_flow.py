@@ -1,4 +1,5 @@
 """Config flow for Prosegur Alarm integration."""
+
 from collections.abc import Mapping
 import logging
 from typing import Any, cast

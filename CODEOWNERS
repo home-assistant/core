@@ -309,14 +309,16 @@ build.json @home-assistant/supervisor
 /tests/components/doorbird/ @oblogic7 @bdraco @flacjacket
 /homeassistant/components/dormakaba_dkey/ @emontnemery
 /tests/components/dormakaba_dkey/ @emontnemery
+/homeassistant/components/downloader/ @erwindouna
+/tests/components/downloader/ @erwindouna
 /homeassistant/components/dremel_3d_printer/ @tkdrob
 /tests/components/dremel_3d_printer/ @tkdrob
 /homeassistant/components/drop_connect/ @ChandlerSystems @pfrazer
 /tests/components/drop_connect/ @ChandlerSystems @pfrazer
 /homeassistant/components/dsmr/ @Robbie1221 @frenck
 /tests/components/dsmr/ @Robbie1221 @frenck
-/homeassistant/components/dsmr_reader/ @depl0y @glodenox
-/tests/components/dsmr_reader/ @depl0y @glodenox
+/homeassistant/components/dsmr_reader/ @sorted-bits @glodenox
+/tests/components/dsmr_reader/ @sorted-bits @glodenox
 /homeassistant/components/duotecno/ @cereal2nd
 /tests/components/duotecno/ @cereal2nd
 /homeassistant/components/dwd_weather_warnings/ @runningman84 @stephan192 @andarotajo
@@ -453,6 +455,8 @@ build.json @home-assistant/supervisor
 /tests/components/frontier_silicon/ @wlcrs
 /homeassistant/components/fully_kiosk/ @cgarwood
 /tests/components/fully_kiosk/ @cgarwood
+/homeassistant/components/fyta/ @dontinelli
+/tests/components/fyta/ @dontinelli
 /homeassistant/components/garages_amsterdam/ @klaasnicolaas
 /tests/components/garages_amsterdam/ @klaasnicolaas
 /homeassistant/components/gardena_bluetooth/ @elupus
@@ -568,8 +572,8 @@ build.json @home-assistant/supervisor
 /tests/components/homekit/ @bdraco
 /homeassistant/components/homekit_controller/ @Jc2k @bdraco
 /tests/components/homekit_controller/ @Jc2k @bdraco
-/homeassistant/components/homematic/ @pvizeli @danielperna84
-/tests/components/homematic/ @pvizeli @danielperna84
+/homeassistant/components/homematic/ @pvizeli
+/tests/components/homematic/ @pvizeli
 /homeassistant/components/homewizard/ @DCSBL
 /tests/components/homewizard/ @DCSBL
 /homeassistant/components/honeywell/ @rdfurman @mkmer
@@ -837,6 +841,8 @@ build.json @home-assistant/supervisor
 /tests/components/mopeka/ @bdraco
 /homeassistant/components/motion_blinds/ @starkillerOG
 /tests/components/motion_blinds/ @starkillerOG
+/homeassistant/components/motionblinds_ble/ @LennP @jerrybboy
+/tests/components/motionblinds_ble/ @LennP @jerrybboy
 /homeassistant/components/motioneye/ @dermotduffy
 /tests/components/motioneye/ @dermotduffy
 /homeassistant/components/motionmount/ @RJPoelstra
@@ -927,6 +933,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/octoprint/ @rfleming71
 /tests/components/octoprint/ @rfleming71
 /homeassistant/components/ohmconnect/ @robbiet480
+/homeassistant/components/ollama/ @synesthesiam
+/tests/components/ollama/ @synesthesiam
 /homeassistant/components/ombi/ @larssont
 /homeassistant/components/omnilogic/ @oliver84 @djtimca @gentoosu
 /tests/components/omnilogic/ @oliver84 @djtimca @gentoosu
@@ -1190,6 +1198,8 @@ build.json @home-assistant/supervisor
 /tests/components/senz/ @milanmeu
 /homeassistant/components/serial/ @fabaff
 /homeassistant/components/seven_segments/ @fabaff
+/homeassistant/components/seventeentrack/ @shaiu
+/tests/components/seventeentrack/ @shaiu
 /homeassistant/components/sfr_box/ @epenet
 /tests/components/sfr_box/ @epenet
 /homeassistant/components/sharkiq/ @JeffResc @funkybunch
@@ -1239,6 +1249,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/sms/ @ocalvo
 /homeassistant/components/snapcast/ @luar123
 /tests/components/snapcast/ @luar123
+/homeassistant/components/snmp/ @nmaggioni
+/tests/components/snmp/ @nmaggioni
 /homeassistant/components/snooz/ @AustinBrunkhorst
 /tests/components/snooz/ @AustinBrunkhorst
 /homeassistant/components/solaredge/ @frenck

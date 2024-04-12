@@ -1,4 +1,5 @@
 """Config flow for Sun WEG integration."""
+
 from sunweg.api import APIHelper
 import voluptuous as vol
 

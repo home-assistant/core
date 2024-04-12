@@ -1,4 +1,5 @@
 """The config flow tests for the forked_daapd media player platform."""
+
 from ipaddress import ip_address
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -68,13 +69,16 @@ async def test_show_form(hass: HomeAssistant) -> None:
 
 async def test_config_flow(hass: HomeAssistant, config_entry) -> None:
     """Test that the user step works."""
-    with patch(
-        "homeassistant.components.forked_daapd.config_flow.ForkedDaapdAPI.test_connection",
-        new=AsyncMock(),
-    ) as mock_test_connection, patch(
-        "homeassistant.components.forked_daapd.media_player.ForkedDaapdAPI.get_request",
-        autospec=True,
-    ) as mock_get_request:
+    with (
+        patch(
+            "homeassistant.components.forked_daapd.config_flow.ForkedDaapdAPI.test_connection",
+            new=AsyncMock(),
+        ) as mock_test_connection,
+        patch(
+            "homeassistant.components.forked_daapd.media_player.ForkedDaapdAPI.get_request",
+            autospec=True,
+        ) as mock_get_request,
+    ):
         mock_get_request.return_value = SAMPLE_CONFIG
         mock_test_connection.return_value = ["ok", "My Music on myhost"]
         config_data = config_entry.data

@@ -1,4 +1,5 @@
 """Tests for update entities."""
+
 import pytest
 import requests_mock
 

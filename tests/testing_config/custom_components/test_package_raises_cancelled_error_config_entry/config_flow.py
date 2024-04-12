@@ -9,8 +9,6 @@ class MockConfigFlow(
 ):
     """Mock config flow."""
 
-    pass
-
 
 async def _async_has_devices(hass: HomeAssistant) -> bool:
     """Return if there are devices that can be discovered."""

@@ -1,4 +1,5 @@
 """Test the Nina config flow."""
+
 from __future__ import annotations
 
 from copy import deepcopy
@@ -93,12 +94,15 @@ async def test_step_user_unexpected_exception(hass: HomeAssistant) -> None:
 
 async def test_step_user(hass: HomeAssistant) -> None:
     """Test starting a flow by user with valid values."""
-    with patch(
-        "pynina.baseApi.BaseAPI._makeRequest",
-        wraps=mocked_request_function,
-    ), patch(
-        "homeassistant.components.nina.async_setup_entry",
-        return_value=True,
+    with (
+        patch(
+            "pynina.baseApi.BaseAPI._makeRequest",
+            wraps=mocked_request_function,
+        ),
+        patch(
+            "homeassistant.components.nina.async_setup_entry",
+            return_value=True,
+        ),
     ):
         result: dict[str, Any] = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=deepcopy(DUMMY_DATA)
@@ -156,11 +160,12 @@ async def test_options_flow_init(hass: HomeAssistant) -> None:
     )
     config_entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.nina.async_setup_entry", return_value=True
-    ), patch(
-        "pynina.baseApi.BaseAPI._makeRequest",
-        wraps=mocked_request_function,
+    with (
+        patch("homeassistant.components.nina.async_setup_entry", return_value=True),
+        patch(
+            "pynina.baseApi.BaseAPI._makeRequest",
+            wraps=mocked_request_function,
+        ),
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -210,11 +215,12 @@ async def test_options_flow_with_no_selection(hass: HomeAssistant) -> None:
     )
     config_entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.nina.async_setup_entry", return_value=True
-    ), patch(
-        "pynina.baseApi.BaseAPI._makeRequest",
-        wraps=mocked_request_function,
+    with (
+        patch("homeassistant.components.nina.async_setup_entry", return_value=True),
+        patch(
+            "pynina.baseApi.BaseAPI._makeRequest",
+            wraps=mocked_request_function,
+        ),
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -251,12 +257,15 @@ async def test_options_flow_connection_error(hass: HomeAssistant) -> None:
     )
     config_entry.add_to_hass(hass)
 
-    with patch(
-        "pynina.baseApi.BaseAPI._makeRequest",
-        side_effect=ApiError("Could not connect to Api"),
-    ), patch(
-        "homeassistant.components.nina.async_setup_entry",
-        return_value=True,
+    with (
+        patch(
+            "pynina.baseApi.BaseAPI._makeRequest",
+            side_effect=ApiError("Could not connect to Api"),
+        ),
+        patch(
+            "homeassistant.components.nina.async_setup_entry",
+            return_value=True,
+        ),
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -276,12 +285,15 @@ async def test_options_flow_unexpected_exception(hass: HomeAssistant) -> None:
     )
     config_entry.add_to_hass(hass)
 
-    with patch(
-        "pynina.baseApi.BaseAPI._makeRequest",
-        side_effect=Exception("DUMMY"),
-    ), patch(
-        "homeassistant.components.nina.async_setup_entry",
-        return_value=True,
+    with (
+        patch(
+            "pynina.baseApi.BaseAPI._makeRequest",
+            side_effect=Exception("DUMMY"),
+        ),
+        patch(
+            "homeassistant.components.nina.async_setup_entry",
+            return_value=True,
+        ),
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -300,12 +312,15 @@ async def test_options_flow_entity_removal(hass: HomeAssistant) -> None:
     )
     config_entry.add_to_hass(hass)
 
-    with patch(
-        "pynina.baseApi.BaseAPI._makeRequest",
-        wraps=mocked_request_function,
-    ), patch(
-        "homeassistant.components.nina._async_update_listener"
-    ) as mock_update_listener:
+    with (
+        patch(
+            "pynina.baseApi.BaseAPI._makeRequest",
+            wraps=mocked_request_function,
+        ),
+        patch(
+            "homeassistant.components.nina._async_update_listener"
+        ) as mock_update_listener,
+    ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 

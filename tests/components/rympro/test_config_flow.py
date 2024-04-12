@@ -1,4 +1,5 @@
 """Test the Read Your Meter Pro config flow."""
+
 from unittest.mock import patch
 
 import pytest
@@ -24,7 +25,8 @@ TEST_DATA = {
 
 
 @pytest.fixture
-def _config_entry(hass):
+def config_entry(hass: HomeAssistant) -> MockConfigEntry:
+    """Create a mock config entry."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data=TEST_DATA,
@@ -42,16 +44,20 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
 
-    with patch(
-        "homeassistant.components.rympro.config_flow.RymPro.login",
-        return_value="test-token",
-    ), patch(
-        "homeassistant.components.rympro.config_flow.RymPro.account_info",
-        return_value={"accountNumber": TEST_DATA[CONF_UNIQUE_ID]},
-    ), patch(
-        "homeassistant.components.rympro.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.rympro.config_flow.RymPro.login",
+            return_value="test-token",
+        ),
+        patch(
+            "homeassistant.components.rympro.config_flow.RymPro.account_info",
+            return_value={"accountNumber": TEST_DATA[CONF_UNIQUE_ID]},
+        ),
+        patch(
+            "homeassistant.components.rympro.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -96,16 +102,20 @@ async def test_login_error(hass: HomeAssistant, exception, error) -> None:
     assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": error}
 
-    with patch(
-        "homeassistant.components.rympro.config_flow.RymPro.login",
-        return_value="test-token",
-    ), patch(
-        "homeassistant.components.rympro.config_flow.RymPro.account_info",
-        return_value={"accountNumber": TEST_DATA[CONF_UNIQUE_ID]},
-    ), patch(
-        "homeassistant.components.rympro.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.rympro.config_flow.RymPro.login",
+            return_value="test-token",
+        ),
+        patch(
+            "homeassistant.components.rympro.config_flow.RymPro.account_info",
+            return_value={"accountNumber": TEST_DATA[CONF_UNIQUE_ID]},
+        ),
+        patch(
+            "homeassistant.components.rympro.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
             {
@@ -121,18 +131,21 @@ async def test_login_error(hass: HomeAssistant, exception, error) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_already_exists(hass: HomeAssistant, _config_entry) -> None:
+async def test_form_already_exists(hass: HomeAssistant, config_entry) -> None:
     """Test that a flow with an existing account aborts."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "homeassistant.components.rympro.config_flow.RymPro.login",
-        return_value="test-token",
-    ), patch(
-        "homeassistant.components.rympro.config_flow.RymPro.account_info",
-        return_value={"accountNumber": TEST_DATA[CONF_UNIQUE_ID]},
+    with (
+        patch(
+            "homeassistant.components.rympro.config_flow.RymPro.login",
+            return_value="test-token",
+        ),
+        patch(
+            "homeassistant.components.rympro.config_flow.RymPro.account_info",
+            return_value={"accountNumber": TEST_DATA[CONF_UNIQUE_ID]},
+        ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -147,30 +160,34 @@ async def test_form_already_exists(hass: HomeAssistant, _config_entry) -> None:
     assert result2["reason"] == "already_configured"
 
 
-async def test_form_reauth(hass: HomeAssistant, _config_entry) -> None:
+async def test_form_reauth(hass: HomeAssistant, config_entry) -> None:
     """Test reauthentication."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={
             "source": config_entries.SOURCE_REAUTH,
-            "entry_id": _config_entry.entry_id,
+            "entry_id": config_entry.entry_id,
         },
-        data=_config_entry.data,
+        data=config_entry.data,
     )
     assert result["type"] == "form"
     assert result["errors"] is None
 
-    with patch(
-        "homeassistant.components.rympro.config_flow.RymPro.login",
-        return_value="test-token",
-    ), patch(
-        "homeassistant.components.rympro.config_flow.RymPro.account_info",
-        return_value={"accountNumber": TEST_DATA[CONF_UNIQUE_ID]},
-    ), patch(
-        "homeassistant.components.rympro.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.rympro.config_flow.RymPro.login",
+            return_value="test-token",
+        ),
+        patch(
+            "homeassistant.components.rympro.config_flow.RymPro.account_info",
+            return_value={"accountNumber": TEST_DATA[CONF_UNIQUE_ID]},
+        ),
+        patch(
+            "homeassistant.components.rympro.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -182,34 +199,38 @@ async def test_form_reauth(hass: HomeAssistant, _config_entry) -> None:
 
     assert result2["type"] == "abort"
     assert result2["reason"] == "reauth_successful"
-    assert _config_entry.data[CONF_PASSWORD] == "new_password"
+    assert config_entry.data[CONF_PASSWORD] == "new_password"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_reauth_with_new_account(hass: HomeAssistant, _config_entry) -> None:
+async def test_form_reauth_with_new_account(hass: HomeAssistant, config_entry) -> None:
     """Test reauthentication with new account."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={
             "source": config_entries.SOURCE_REAUTH,
-            "entry_id": _config_entry.entry_id,
+            "entry_id": config_entry.entry_id,
         },
-        data=_config_entry.data,
+        data=config_entry.data,
     )
     assert result["type"] == "form"
     assert result["errors"] is None
 
-    with patch(
-        "homeassistant.components.rympro.config_flow.RymPro.login",
-        return_value="test-token",
-    ), patch(
-        "homeassistant.components.rympro.config_flow.RymPro.account_info",
-        return_value={"accountNumber": "new-account-number"},
-    ), patch(
-        "homeassistant.components.rympro.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.rympro.config_flow.RymPro.login",
+            return_value="test-token",
+        ),
+        patch(
+            "homeassistant.components.rympro.config_flow.RymPro.account_info",
+            return_value={"accountNumber": "new-account-number"},
+        ),
+        patch(
+            "homeassistant.components.rympro.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -221,6 +242,6 @@ async def test_form_reauth_with_new_account(hass: HomeAssistant, _config_entry) 
 
     assert result2["type"] == "abort"
     assert result2["reason"] == "reauth_successful"
-    assert _config_entry.data[CONF_UNIQUE_ID] == "new-account-number"
-    assert _config_entry.unique_id == "new-account-number"
+    assert config_entry.data[CONF_UNIQUE_ID] == "new-account-number"
+    assert config_entry.unique_id == "new-account-number"
     assert len(mock_setup_entry.mock_calls) == 1

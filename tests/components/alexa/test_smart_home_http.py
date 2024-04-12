@@ -1,4 +1,5 @@
 """Test Smart Home HTTP endpoints."""
+
 from http import HTTPStatus
 import json
 import logging

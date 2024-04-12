@@ -1,4 +1,5 @@
 """Support for custom shell commands to turn a switch on/off."""
+
 from __future__ import annotations
 
 import asyncio

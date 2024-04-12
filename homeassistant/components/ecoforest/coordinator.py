@@ -1,6 +1,5 @@
 """The ecoforest coordinator."""
 
-
 import logging
 
 from pyecoforest.api import EcoforestApi

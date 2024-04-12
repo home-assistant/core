@@ -1,4 +1,5 @@
 """Test the Broadlink config flow."""
+
 import errno
 import socket
 from unittest.mock import call, patch
@@ -20,9 +21,12 @@ DEVICE_FACTORY = "homeassistant.components.broadlink.config_flow.blk.gendevice"
 @pytest.fixture(autouse=True)
 def broadlink_setup_fixture():
     """Mock broadlink entry setup."""
-    with patch(
-        "homeassistant.components.broadlink.async_setup", return_value=True
-    ), patch("homeassistant.components.broadlink.async_setup_entry", return_value=True):
+    with (
+        patch("homeassistant.components.broadlink.async_setup", return_value=True),
+        patch(
+            "homeassistant.components.broadlink.async_setup_entry", return_value=True
+        ),
+    ):
         yield
 
 

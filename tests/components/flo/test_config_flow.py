@@ -1,4 +1,5 @@
 """Test the flo config flow."""
+
 from http import HTTPStatus
 import json
 import time

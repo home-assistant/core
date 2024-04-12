@@ -1,11 +1,10 @@
 """Component providing HA switch support for Ring Door Bell/Chimes."""
+
 from datetime import timedelta
 import logging
 from typing import Any
 
-import requests
-from ring_doorbell import RingStickUpCam
-from ring_doorbell.generic import RingGeneric
+from ring_doorbell import RingGeneric, RingStickUpCam
 
 from homeassistant.components.light import ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
@@ -15,7 +14,7 @@ import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN, RING_DEVICES, RING_DEVICES_COORDINATOR
 from .coordinator import RingDataCoordinator
-from .entity import RingEntity
+from .entity import RingEntity, exception_wrap
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,13 +40,12 @@ async def async_setup_entry(
     devices_coordinator: RingDataCoordinator = hass.data[DOMAIN][config_entry.entry_id][
         RING_DEVICES_COORDINATOR
     ]
-    lights = []
 
-    for device in devices["stickup_cams"]:
-        if device.has_capability("light"):
-            lights.append(RingLight(device, devices_coordinator))
-
-    async_add_entities(lights)
+    async_add_entities(
+        RingLight(device, devices_coordinator)
+        for device in devices["stickup_cams"]
+        if device.has_capability("light")
+    )
 
 
 class RingLight(RingEntity, LightEntity):
@@ -75,13 +73,10 @@ class RingLight(RingEntity, LightEntity):
             self._attr_is_on = device.lights == ON_STATE
         super()._handle_coordinator_update()
 
+    @exception_wrap
     def _set_light(self, new_state):
         """Update light state, and causes Home Assistant to correctly update."""
-        try:
-            self._device.lights = new_state
-        except requests.Timeout:
-            _LOGGER.error("Time out setting %s light to %s", self.entity_id, new_state)
-            return
+        self._device.lights = new_state
 
         self._attr_is_on = new_state == ON_STATE
         self._no_updates_until = dt_util.utcnow() + SKIP_UPDATES_DELAY

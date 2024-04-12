@@ -1,4 +1,5 @@
 """MQTT component mixins and helpers."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -29,7 +30,7 @@ from homeassistant.const import (
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
 )
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -59,7 +60,6 @@ from homeassistant.helpers.typing import (
     UNDEFINED,
     ConfigType,
     DiscoveryInfoType,
-    EventType,
     UndefinedType,
 )
 from homeassistant.util.json import json_loads
@@ -768,7 +768,7 @@ async def async_remove_discovery_payload(
 async def async_clear_discovery_topic_if_entity_removed(
     hass: HomeAssistant,
     discovery_data: DiscoveryInfoType,
-    event: EventType[er.EventEntityRegistryUpdatedData],
+    event: Event[er.EventEntityRegistryUpdatedData],
 ) -> None:
     """Clear the discovery topic if the entity is removed."""
     if event.data["action"] == "remove":
@@ -872,7 +872,7 @@ class MqttDiscoveryDeviceUpdate(ABC):
             return
 
     async def _async_device_removed(
-        self, event: EventType[EventDeviceRegistryUpdatedData]
+        self, event: Event[EventDeviceRegistryUpdatedData]
     ) -> None:
         """Handle the manual removal of a device."""
         if self._skip_device_removal or not async_removed_from_device(
@@ -1055,16 +1055,16 @@ class MqttDiscoveryUpdate(Entity):
         if self._discovery_data is not None:
             discovery_hash: tuple[str, str] = self._discovery_data[ATTR_DISCOVERY_HASH]
             if self.registry_entry is not None:
-                self._registry_hooks[
-                    discovery_hash
-                ] = async_track_entity_registry_updated_event(
-                    self.hass,
-                    self.entity_id,
-                    partial(
-                        async_clear_discovery_topic_if_entity_removed,
+                self._registry_hooks[discovery_hash] = (
+                    async_track_entity_registry_updated_event(
                         self.hass,
-                        self._discovery_data,
-                    ),
+                        self.entity_id,
+                        partial(
+                            async_clear_discovery_topic_if_entity_removed,
+                            self.hass,
+                            self._discovery_data,
+                        ),
+                    )
                 )
             stop_discovery_updates(self.hass, self._discovery_data)
             send_discovery_done(self.hass, self._discovery_data)
@@ -1343,7 +1343,7 @@ def update_device(
 @callback
 def async_removed_from_device(
     hass: HomeAssistant,
-    event: EventType[EventDeviceRegistryUpdatedData],
+    event: Event[EventDeviceRegistryUpdatedData],
     mqtt_device_id: str,
     config_entry_id: str,
 ) -> bool:

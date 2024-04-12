@@ -1,4 +1,5 @@
 """Device tracker platform that adds support for OwnTracks over MQTT."""
+
 from homeassistant.components.device_tracker import (
     ATTR_SOURCE_TYPE,
     DOMAIN,

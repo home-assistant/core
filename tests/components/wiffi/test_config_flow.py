@@ -1,4 +1,5 @@
 """Test the wiffi integration config flow."""
+
 import errno
 from unittest.mock import patch
 

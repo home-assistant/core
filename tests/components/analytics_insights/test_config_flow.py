@@ -1,4 +1,5 @@
 """Test the Homeassistant Analytics config flow."""
+
 from typing import Any
 from unittest.mock import AsyncMock
 

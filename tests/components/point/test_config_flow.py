@@ -1,4 +1,5 @@
 """Tests for the Point config flow."""
+
 from unittest.mock import AsyncMock, patch
 
 import pytest

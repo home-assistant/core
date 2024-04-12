@@ -3,6 +3,7 @@
 All containing methods are legacy helpers that should not be used by new
 components. Instead call the service directly.
 """
+
 from homeassistant.components.device_tracker import (
     ATTR_ATTRIBUTES,
     ATTR_BATTERY,
@@ -49,4 +50,4 @@ def async_see(
     }
     if attributes:
         data[ATTR_ATTRIBUTES] = attributes
-    hass.async_add_job(hass.services.async_call(DOMAIN, SERVICE_SEE, data))
+    hass.async_create_task(hass.services.async_call(DOMAIN, SERVICE_SEE, data))

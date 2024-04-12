@@ -1,4 +1,5 @@
 """Code to support homekit_controller tests."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

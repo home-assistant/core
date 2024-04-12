@@ -1,4 +1,5 @@
 """Define tests for the Daikin init."""
+
 from datetime import timedelta
 from unittest.mock import AsyncMock, PropertyMock, patch
 

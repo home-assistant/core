@@ -1,4 +1,5 @@
 """Test config flow."""
+
 from ipaddress import IPv4Address, ip_address
 from unittest.mock import ANY, Mock, patch
 

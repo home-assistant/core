@@ -1,4 +1,5 @@
 """Support for the Tank Utility propane monitor."""
+
 from __future__ import annotations
 
 import datetime

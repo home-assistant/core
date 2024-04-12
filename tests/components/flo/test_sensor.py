@@ -1,4 +1,5 @@
 """Test Flo by Moen sensor entities."""
+
 from homeassistant.components.flo.const import DOMAIN as FLO_DOMAIN
 from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorStateClass
 from homeassistant.const import ATTR_ENTITY_ID, CONF_PASSWORD, CONF_USERNAME

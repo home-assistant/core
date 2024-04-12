@@ -1,4 +1,5 @@
 """Tests for the diagnostics data provided by the ESPHome integration."""
+
 from unittest.mock import patch
 
 import pytest

@@ -1,4 +1,5 @@
 """Test the Discovergy config flow."""
+
 from unittest.mock import AsyncMock, patch
 
 from pydiscovergy.error import DiscovergyClientError, HTTPError, InvalidLogin

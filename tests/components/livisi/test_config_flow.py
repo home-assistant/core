@@ -1,4 +1,5 @@
 """Test the Livisi Home Assistant config flow."""
+
 from unittest.mock import patch
 
 from aiolivisi import errors as livisi_errors

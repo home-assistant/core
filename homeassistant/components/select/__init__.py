@@ -1,4 +1,5 @@
 """Component to allow selecting an option from a list as platforms."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -163,7 +164,7 @@ class SelectEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             and self.entity_description.options is not None
         ):
             return self.entity_description.options
-        raise AttributeError()
+        raise AttributeError
 
     @cached_property
     def current_option(self) -> str | None:
@@ -178,7 +179,6 @@ class SelectEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         if not options or option not in options:
             friendly_options: str = ", ".join(options or [])
             raise ServiceValidationError(
-                f"Option {option} is not valid for {self.entity_id}",
                 translation_domain=DOMAIN,
                 translation_key="not_valid_option",
                 translation_placeholders={
@@ -196,7 +196,7 @@ class SelectEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def select_option(self, option: str) -> None:
         """Change the selected option."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""

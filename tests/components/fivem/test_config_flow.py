@@ -1,4 +1,5 @@
 """Test the FiveM config flow."""
+
 from unittest.mock import patch
 
 from fivem import FiveMServerOfflineError
@@ -66,13 +67,16 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
 
-    with patch(
-        "fivem.fivem.FiveM.get_info_raw",
-        return_value=_mock_fivem_info_success(),
-    ), patch(
-        "homeassistant.components.fivem.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "fivem.fivem.FiveM.get_info_raw",
+            return_value=_mock_fivem_info_success(),
+        ),
+        patch(
+            "homeassistant.components.fivem.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             USER_INPUT,

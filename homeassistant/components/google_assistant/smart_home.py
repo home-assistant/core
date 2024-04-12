@@ -1,4 +1,5 @@
 """Support for Google Assistant Smart Home API."""
+
 import asyncio
 from collections.abc import Callable, Coroutine
 from itertools import product

@@ -1,4 +1,5 @@
 """Test the init functions for AEH."""
+
 from datetime import timedelta
 import logging
 from unittest.mock import patch

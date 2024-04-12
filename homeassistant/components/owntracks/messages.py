@@ -1,4 +1,5 @@
 """OwnTracks Message handlers."""
+
 import json
 import logging
 

@@ -1,4 +1,5 @@
 """Test ZHA cover."""
+
 import asyncio
 from unittest.mock import patch
 

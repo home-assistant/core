@@ -1,4 +1,5 @@
 """Test the GPSD config flow."""
+
 from unittest.mock import AsyncMock, patch
 
 from gps3.agps3threaded import GPSD_PORT as DEFAULT_PORT

@@ -1,4 +1,5 @@
 """Tests for Vizio config flow."""
+
 import dataclasses
 
 import pytest

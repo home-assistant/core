@@ -1,4 +1,5 @@
 """Provides functionality to interact with lights."""
+
 from __future__ import annotations
 
 from collections.abc import Iterable
@@ -402,7 +403,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
     await component.async_setup(config)
 
     profiles = hass.data[DATA_PROFILES] = Profiles(hass)
-    await profiles.async_initialize()
+    # Profiles are loaded in a separate task to avoid delaying the setup
+    # of the light base platform.
+    hass.async_create_task(profiles.async_initialize(), eager_start=True)
 
     def preprocess_data(data: dict[str, Any]) -> dict[str | vol.Optional, Any]:
         """Preprocess the service data."""
@@ -1215,9 +1218,9 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 color_temp_kelvin = self.color_temp_kelvin
                 data[ATTR_COLOR_TEMP_KELVIN] = color_temp_kelvin
                 if color_temp_kelvin:
-                    data[
-                        ATTR_COLOR_TEMP
-                    ] = color_util.color_temperature_kelvin_to_mired(color_temp_kelvin)
+                    data[ATTR_COLOR_TEMP] = (
+                        color_util.color_temperature_kelvin_to_mired(color_temp_kelvin)
+                    )
                 else:
                     data[ATTR_COLOR_TEMP] = None
             else:
@@ -1230,9 +1233,9 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 color_temp_kelvin = self.color_temp_kelvin
                 data[ATTR_COLOR_TEMP_KELVIN] = color_temp_kelvin
                 if color_temp_kelvin:
-                    data[
-                        ATTR_COLOR_TEMP
-                    ] = color_util.color_temperature_kelvin_to_mired(color_temp_kelvin)
+                    data[ATTR_COLOR_TEMP] = (
+                        color_util.color_temperature_kelvin_to_mired(color_temp_kelvin)
+                    )
                 else:
                     data[ATTR_COLOR_TEMP] = None
             else:

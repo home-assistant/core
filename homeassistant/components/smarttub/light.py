@@ -1,4 +1,5 @@
 """Platform for light integration."""
+
 from typing import Any
 
 from smarttub import SpaLight

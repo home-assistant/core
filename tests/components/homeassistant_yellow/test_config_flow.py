@@ -1,4 +1,5 @@
 """Test the Home Assistant Yellow config flow."""
+
 from collections.abc import Generator
 from unittest.mock import Mock, patch
 

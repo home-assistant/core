@@ -1,4 +1,5 @@
 """Test the air-Q config flow."""
+
 from unittest.mock import patch
 
 from aioairq import DeviceInfo, InvalidAuth
@@ -36,8 +37,9 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
 
-    with patch("aioairq.AirQ.validate"), patch(
-        "aioairq.AirQ.fetch_device_info", return_value=TEST_DEVICE_INFO
+    with (
+        patch("aioairq.AirQ.validate"),
+        patch("aioairq.AirQ.fetch_device_info", return_value=TEST_DEVICE_INFO),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -92,8 +94,9 @@ async def test_duplicate_error(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch("aioairq.AirQ.validate"), patch(
-        "aioairq.AirQ.fetch_device_info", return_value=TEST_DEVICE_INFO
+    with (
+        patch("aioairq.AirQ.validate"),
+        patch("aioairq.AirQ.fetch_device_info", return_value=TEST_DEVICE_INFO),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], TEST_USER_DATA

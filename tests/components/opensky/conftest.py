@@ -1,4 +1,5 @@
 """Configure tests for the OpenSky integration."""
+
 from collections.abc import Awaitable, Callable
 from unittest.mock import patch
 

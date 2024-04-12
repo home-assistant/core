@@ -1,4 +1,5 @@
 """Define tests for the Luftdaten config flow."""
+
 from unittest.mock import MagicMock
 
 from luftdaten.exceptions import LuftdatenConnectionError

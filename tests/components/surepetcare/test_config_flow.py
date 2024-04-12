@@ -1,4 +1,5 @@
 """Test the Sure Petcare config flow."""
+
 from unittest.mock import NonCallableMagicMock, patch
 
 from surepy.exceptions import SurePetcareAuthenticationError, SurePetcareError

@@ -1,4 +1,5 @@
 """Tests for the Cast config flow."""
+
 from unittest.mock import ANY, patch
 
 import pytest
@@ -13,13 +14,15 @@ from tests.common import MockConfigEntry
 
 async def test_creating_entry_sets_up_media_player(hass: HomeAssistant) -> None:
     """Test setting up Cast loads the media player."""
-    with patch(
-        "homeassistant.components.cast.media_player.async_setup_entry",
-        return_value=True,
-    ) as mock_setup, patch(
-        "pychromecast.discovery.discover_chromecasts", return_value=(True, None)
-    ), patch(
-        "pychromecast.discovery.stop_discovery",
+    with (
+        patch(
+            "homeassistant.components.cast.media_player.async_setup_entry",
+            return_value=True,
+        ) as mock_setup,
+        patch("pychromecast.discovery.discover_chromecasts", return_value=(True, None)),
+        patch(
+            "pychromecast.discovery.stop_discovery",
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             cast.DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -275,7 +278,7 @@ async def test_known_hosts(hass: HomeAssistant, castbrowser_mock) -> None:
         result["flow_id"], {"known_hosts": "192.168.0.1, 192.168.0.2"}
     )
     assert result["type"] == "create_entry"
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     config_entry = hass.config_entries.async_entries("cast")[0]
 
     assert castbrowser_mock.return_value.start_discovery.call_count == 1
@@ -288,7 +291,7 @@ async def test_known_hosts(hass: HomeAssistant, castbrowser_mock) -> None:
         user_input={"known_hosts": "192.168.0.11, 192.168.0.12"},
     )
 
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     castbrowser_mock.return_value.start_discovery.assert_not_called()
     castbrowser_mock.assert_not_called()

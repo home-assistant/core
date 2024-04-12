@@ -1,4 +1,5 @@
 """Component to allow numeric input for platforms."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -393,7 +394,7 @@ class NumberEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def set_native_value(self, value: float) -> None:
         """Set new value."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
@@ -402,7 +403,7 @@ class NumberEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     @final
     def set_value(self, value: float) -> None:
         """Set new value."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @final
     async def async_set_value(self, value: float) -> None:

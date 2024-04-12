@@ -1,4 +1,5 @@
 """Tests for the Twente Milieu calendar."""
+
 from http import HTTPStatus
 
 import pytest

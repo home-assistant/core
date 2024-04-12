@@ -1,4 +1,5 @@
 """Provide common mysensors fixtures."""
+
 from __future__ import annotations
 
 from collections.abc import AsyncGenerator, Callable, Generator
@@ -54,14 +55,17 @@ async def serial_transport_fixture(
     is_serial_port: MagicMock,
 ) -> AsyncGenerator[dict[int, Sensor], None]:
     """Mock a serial transport."""
-    with patch(
-        "mysensors.gateway_serial.AsyncTransport", autospec=True
-    ) as transport_class, patch("mysensors.task.OTAFirmware", autospec=True), patch(
-        "mysensors.task.load_fw", autospec=True
-    ), patch(
-        "mysensors.task.Persistence",
-        autospec=True,
-    ) as persistence_class:
+    with (
+        patch(
+            "mysensors.gateway_serial.AsyncTransport", autospec=True
+        ) as transport_class,
+        patch("mysensors.task.OTAFirmware", autospec=True),
+        patch("mysensors.task.load_fw", autospec=True),
+        patch(
+            "mysensors.task.Persistence",
+            autospec=True,
+        ) as persistence_class,
+    ):
         persistence = persistence_class.return_value
 
         mock_gateway_features(persistence, transport_class, gateway_nodes)

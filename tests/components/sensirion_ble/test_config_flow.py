@@ -1,4 +1,5 @@
 """Test the Sensirion config flow."""
+
 from unittest.mock import patch
 
 import pytest

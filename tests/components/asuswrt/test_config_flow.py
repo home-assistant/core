@@ -1,4 +1,5 @@
 """Tests for the AsusWrt config flow."""
+
 from socket import gaierror
 from unittest.mock import patch
 

@@ -1,4 +1,5 @@
 """Support for the Xiaomi IR Remote (Chuangmi IR)."""
+
 from __future__ import annotations
 
 import asyncio

@@ -1,4 +1,5 @@
 """Data for Hass.io."""
+
 from __future__ import annotations
 
 import asyncio

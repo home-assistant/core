@@ -1,4 +1,5 @@
 """Diagnostics support for NextDNS."""
+
 from __future__ import annotations
 
 from dataclasses import asdict

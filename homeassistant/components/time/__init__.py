@@ -1,4 +1,5 @@
 """Component to allow setting time as platforms."""
+
 from __future__ import annotations
 
 from datetime import time, timedelta
@@ -109,7 +110,7 @@ class TimeEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def set_value(self, value: time) -> None:
         """Change the time."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_set_value(self, value: time) -> None:
         """Change the time."""

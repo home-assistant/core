@@ -1,4 +1,5 @@
 """Config flow for RFXCOM RFXtrx integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -73,7 +74,7 @@ class DeviceData(TypedDict):
 
 
 def none_or_int(value: str | None, base: int) -> int | None:
-    """Check if strin is one otherwise convert to int."""
+    """Check if string is one otherwise convert to int."""
     if value is None:
         return None
     return int(value, base)

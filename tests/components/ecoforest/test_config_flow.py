@@ -1,4 +1,5 @@
 """Test the Ecoforest config flow."""
+
 from unittest.mock import AsyncMock, patch
 
 from pyecoforest.exceptions import EcoforestAuthenticationRequired

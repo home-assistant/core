@@ -1,4 +1,5 @@
 """Event parser and human readable log generator."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
@@ -27,7 +28,6 @@ from homeassistant.helpers.event import (
     EventStateChangedData,
     async_track_state_change_event,
 )
-from homeassistant.helpers.typing import EventType
 
 from .const import ALWAYS_CONTINUOUS_DOMAINS, AUTOMATION_EVENTS, BUILT_IN_EVENTS, DOMAIN
 from .models import LogbookConfig
@@ -161,7 +161,7 @@ def event_forwarder_filtered(
 def async_subscribe_events(
     hass: HomeAssistant,
     subscriptions: list[CALLBACK_TYPE],
-    target: Callable[[Event], None],
+    target: Callable[[Event[Any]], None],
     event_types: tuple[str, ...],
     entities_filter: Callable[[str], bool] | None,
     entity_ids: list[str] | None,
@@ -176,10 +176,10 @@ def async_subscribe_events(
     event_forwarder = event_forwarder_filtered(
         target, entities_filter, entity_ids, device_ids
     )
-    for event_type in event_types:
-        subscriptions.append(
-            hass.bus.async_listen(event_type, event_forwarder, run_immediately=True)
-        )
+    subscriptions.extend(
+        hass.bus.async_listen(event_type, event_forwarder, run_immediately=True)
+        for event_type in event_types
+    )
 
     if device_ids and not entity_ids:
         # No entities to subscribe to but we are filtering
@@ -188,7 +188,7 @@ def async_subscribe_events(
         return
 
     @callback
-    def _forward_state_events_filtered(event: EventType[EventStateChangedData]) -> None:
+    def _forward_state_events_filtered(event: Event[EventStateChangedData]) -> None:
         if (old_state := event.data["old_state"]) is None or (
             new_state := event.data["new_state"]
         ) is None:
@@ -211,7 +211,7 @@ def async_subscribe_events(
     subscriptions.append(
         hass.bus.async_listen(
             EVENT_STATE_CHANGED,
-            _forward_state_events_filtered,  # type: ignore[arg-type]
+            _forward_state_events_filtered,
             run_immediately=True,
         )
     )

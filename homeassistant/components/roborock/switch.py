@@ -1,4 +1,5 @@
 """Support for Roborock switch."""
+
 from __future__ import annotations
 
 import asyncio
@@ -24,9 +25,9 @@ from .device import RoborockEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
-class RoborockSwitchDescriptionMixin:
-    """Define an entity description mixin for switch entities."""
+@dataclass(frozen=True, kw_only=True)
+class RoborockSwitchDescription(SwitchEntityDescription):
+    """Class to describe a Roborock switch entity."""
 
     # Gets the status of the switch
     cache_key: CacheableAttribute
@@ -34,13 +35,6 @@ class RoborockSwitchDescriptionMixin:
     update_value: Callable[[AttributeCache, bool], Coroutine[Any, Any, dict]]
     # Attribute from cache
     attribute: str
-
-
-@dataclass(frozen=True)
-class RoborockSwitchDescription(
-    SwitchEntityDescription, RoborockSwitchDescriptionMixin
-):
-    """Class to describe an Roborock switch entity."""
 
 
 SWITCH_DESCRIPTIONS: list[RoborockSwitchDescription] = [

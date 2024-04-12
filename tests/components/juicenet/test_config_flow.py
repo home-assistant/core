@@ -1,4 +1,5 @@
 """Test the JuiceNet config flow."""
+
 from unittest.mock import MagicMock, patch
 
 import aiohttp
@@ -25,14 +26,18 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["type"] == "form"
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.juicenet.config_flow.Api.get_devices",
-        return_value=MagicMock(),
-    ), patch(
-        "homeassistant.components.juicenet.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.juicenet.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.juicenet.config_flow.Api.get_devices",
+            return_value=MagicMock(),
+        ),
+        patch(
+            "homeassistant.components.juicenet.async_setup", return_value=True
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.juicenet.async_setup_entry", return_value=True
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_ACCESS_TOKEN: "access_token"}
         )
@@ -102,14 +107,18 @@ async def test_form_catch_unknown_errors(hass: HomeAssistant) -> None:
 async def test_import(hass: HomeAssistant) -> None:
     """Test that import works as expected."""
 
-    with patch(
-        "homeassistant.components.juicenet.config_flow.Api.get_devices",
-        return_value=MagicMock(),
-    ), patch(
-        "homeassistant.components.juicenet.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.juicenet.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.juicenet.config_flow.Api.get_devices",
+            return_value=MagicMock(),
+        ),
+        patch(
+            "homeassistant.components.juicenet.async_setup", return_value=True
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.juicenet.async_setup_entry", return_value=True
+        ) as mock_setup_entry,
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},

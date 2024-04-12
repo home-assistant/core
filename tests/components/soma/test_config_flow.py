@@ -1,4 +1,5 @@
 """Tests for the Soma config flow."""
+
 from unittest.mock import patch
 
 from api.soma_api import SomaApi

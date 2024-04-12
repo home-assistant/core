@@ -1,4 +1,5 @@
 """Tests for OwnTracks config flow."""
+
 from unittest.mock import patch
 
 import pytest
@@ -125,7 +126,7 @@ async def test_unload(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.config_entries.ConfigEntries.async_forward_entry_setup"
+        "homeassistant.config_entries.ConfigEntries.async_forward_entry_setups"
     ) as mock_forward:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data={}
@@ -134,8 +135,7 @@ async def test_unload(hass: HomeAssistant) -> None:
     assert len(mock_forward.mock_calls) == 1
     entry = result["result"]
 
-    assert mock_forward.mock_calls[0][1][0] is entry
-    assert mock_forward.mock_calls[0][1][1] == "device_tracker"
+    mock_forward.assert_called_once_with(entry, ["device_tracker"])
     assert entry.data["webhook_id"] in hass.data["webhook"]
 
     with patch(
@@ -145,8 +145,7 @@ async def test_unload(hass: HomeAssistant) -> None:
         assert await hass.config_entries.async_unload(entry.entry_id)
 
     assert len(mock_unload.mock_calls) == 1
-    assert mock_forward.mock_calls[0][1][0] is entry
-    assert mock_forward.mock_calls[0][1][1] == "device_tracker"
+    mock_forward.assert_called_once_with(entry, ["device_tracker"])
     assert entry.data["webhook_id"] not in hass.data["webhook"]
 
 
@@ -154,15 +153,17 @@ async def test_with_cloud_sub(hass: HomeAssistant) -> None:
     """Test creating a config flow while subscribed."""
     assert await async_setup_component(hass, "cloud", {})
 
-    with patch(
-        "homeassistant.components.cloud.async_active_subscription", return_value=True
-    ), patch(
-        "homeassistant.components.cloud.async_is_logged_in", return_value=True
-    ), patch(
-        "homeassistant.components.cloud.async_is_connected", return_value=True
-    ), patch(
-        "hass_nabucasa.cloudhooks.Cloudhooks.async_create",
-        return_value={"cloudhook_url": "https://hooks.nabu.casa/ABCD"},
+    with (
+        patch(
+            "homeassistant.components.cloud.async_active_subscription",
+            return_value=True,
+        ),
+        patch("homeassistant.components.cloud.async_is_logged_in", return_value=True),
+        patch("homeassistant.components.cloud.async_is_connected", return_value=True),
+        patch(
+            "hass_nabucasa.cloudhooks.Cloudhooks.async_create",
+            return_value={"cloudhook_url": "https://hooks.nabu.casa/ABCD"},
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data={}
@@ -181,15 +182,17 @@ async def test_with_cloud_sub_not_connected(hass: HomeAssistant) -> None:
     """Test creating a config flow while subscribed."""
     assert await async_setup_component(hass, "cloud", {})
 
-    with patch(
-        "homeassistant.components.cloud.async_active_subscription", return_value=True
-    ), patch(
-        "homeassistant.components.cloud.async_is_logged_in", return_value=True
-    ), patch(
-        "homeassistant.components.cloud.async_is_connected", return_value=False
-    ), patch(
-        "hass_nabucasa.cloudhooks.Cloudhooks.async_create",
-        return_value={"cloudhook_url": "https://hooks.nabu.casa/ABCD"},
+    with (
+        patch(
+            "homeassistant.components.cloud.async_active_subscription",
+            return_value=True,
+        ),
+        patch("homeassistant.components.cloud.async_is_logged_in", return_value=True),
+        patch("homeassistant.components.cloud.async_is_connected", return_value=False),
+        patch(
+            "hass_nabucasa.cloudhooks.Cloudhooks.async_create",
+            return_value={"cloudhook_url": "https://hooks.nabu.casa/ABCD"},
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data={}

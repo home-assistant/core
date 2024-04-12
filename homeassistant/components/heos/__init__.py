@@ -1,4 +1,5 @@
 """Denon HEOS Media Player."""
+
 from __future__ import annotations
 
 import asyncio

@@ -1,4 +1,5 @@
 """Test the Nina init file."""
+
 from typing import Any
 from unittest.mock import patch
 

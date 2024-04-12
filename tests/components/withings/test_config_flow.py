@@ -1,4 +1,5 @@
 """Tests for config flow."""
+
 from unittest.mock import AsyncMock, patch
 
 from homeassistant.components.withings.const import DOMAIN

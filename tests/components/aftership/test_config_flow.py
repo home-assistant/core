@@ -1,4 +1,5 @@
 """Test AfterShip config flow."""
+
 from unittest.mock import AsyncMock, patch
 
 from pyaftership import AfterShipException

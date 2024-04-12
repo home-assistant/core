@@ -3,6 +3,7 @@
 These tests simulate recent camera events received by the subscriber exposed
 as media in the media source.
 """
+
 from collections.abc import Generator
 import datetime
 from http import HTTPStatus
@@ -1052,7 +1053,7 @@ async def test_multiple_devices(
     assert len(browse.children) == 0
 
     # Send events for device #1
-    for i in range(0, 5):
+    for i in range(5):
         auth.responses = [
             aiohttp.web.json_response(GENERATE_IMAGE_URL_RESPONSE),
             aiohttp.web.Response(body=IMAGE_BYTES_FROM_EVENT),
@@ -1077,7 +1078,7 @@ async def test_multiple_devices(
     assert len(browse.children) == 0
 
     # Send events for device #2
-    for i in range(0, 3):
+    for i in range(3):
         auth.responses = [
             aiohttp.web.json_response(GENERATE_IMAGE_URL_RESPONSE),
             aiohttp.web.Response(body=IMAGE_BYTES_FROM_EVENT),
@@ -1339,7 +1340,7 @@ async def test_camera_event_media_eviction(
     assert len(browse.children) == 0
 
     event_timestamp = dt_util.now()
-    for i in range(0, 7):
+    for i in range(7):
         auth.responses = [aiohttp.web.Response(body=f"image-bytes-{i}".encode())]
         ts = event_timestamp + datetime.timedelta(seconds=i)
         await subscriber.async_receive_event(

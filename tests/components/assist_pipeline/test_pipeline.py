@@ -1,4 +1,5 @@
 """Websocket tests for Voice Assistant integration."""
+
 from collections.abc import AsyncGenerator
 from typing import Any
 from unittest.mock import ANY, patch
@@ -85,12 +86,12 @@ async def test_load_pipelines(hass: HomeAssistant, init_components) -> None:
             "wake_word_id": "wakeword_id_3",
         },
     ]
-    pipeline_ids = []
 
     pipeline_data: PipelineData = hass.data[DOMAIN]
     store1 = pipeline_data.pipeline_store
-    for pipeline in pipelines:
-        pipeline_ids.append((await store1.async_create_item(pipeline)).id)
+    pipeline_ids = [
+        (await store1.async_create_item(pipeline)).id for pipeline in pipelines
+    ]
     assert len(store1.data) == 4  # 3 manually created plus a default pipeline
     assert store1.async_get_preferred_item() == list(store1.data)[0]
 
@@ -400,9 +401,10 @@ async def test_default_pipeline(
     hass.config.country = ha_country
     hass.config.language = ha_language
 
-    with patch.object(
-        mock_stt_provider, "_supported_languages", MANY_LANGUAGES
-    ), patch.object(mock_tts_provider, "_supported_languages", MANY_LANGUAGES):
+    with (
+        patch.object(mock_stt_provider, "_supported_languages", MANY_LANGUAGES),
+        patch.object(mock_tts_provider, "_supported_languages", MANY_LANGUAGES),
+    ):
         assert await async_setup_component(hass, "assist_pipeline", {})
 
     pipeline_data: PipelineData = hass.data[DOMAIN]

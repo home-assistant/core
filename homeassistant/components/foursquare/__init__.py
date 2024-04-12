@@ -1,4 +1,5 @@
 """Support for the Foursquare (Swarm) API."""
+
 from http import HTTPStatus
 import logging
 

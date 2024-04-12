@@ -1,4 +1,5 @@
 """Test the Omnilogic config flow."""
+
 from unittest.mock import patch
 
 from omnilogic import LoginException, OmniLogicException
@@ -21,13 +22,16 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["type"] == "form"
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.omnilogic.config_flow.OmniLogic.connect",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.omnilogic.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.omnilogic.config_flow.OmniLogic.connect",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.omnilogic.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             DATA,

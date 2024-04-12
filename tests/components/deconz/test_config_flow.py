@@ -1,4 +1,5 @@
 """Tests for deCONZ config flow."""
+
 import logging
 from unittest.mock import patch
 

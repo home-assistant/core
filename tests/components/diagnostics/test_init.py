@@ -1,4 +1,5 @@
 """Test the Diagnostics integration."""
+
 from http import HTTPStatus
 from unittest.mock import AsyncMock, Mock
 

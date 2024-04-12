@@ -1,4 +1,5 @@
 """Component to interface with various sirens/chimes."""
+
 from __future__ import annotations
 
 from datetime import timedelta

@@ -1,9 +1,10 @@
 """Config flow for Ring integration."""
+
 from collections.abc import Mapping
 import logging
 from typing import Any
 
-import ring_doorbell
+from ring_doorbell import Auth, AuthenticationError, Requires2FAError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
@@ -30,7 +31,7 @@ STEP_REAUTH_DATA_SCHEMA = vol.Schema({vol.Required(CONF_PASSWORD): str})
 async def validate_input(hass: HomeAssistant, data):
     """Validate the user input allows us to connect."""
 
-    auth = ring_doorbell.Auth(f"{APPLICATION_NAME}/{ha_version}")
+    auth = Auth(f"{APPLICATION_NAME}/{ha_version}")
 
     try:
         token = await hass.async_add_executor_job(
@@ -39,9 +40,9 @@ async def validate_input(hass: HomeAssistant, data):
             data[CONF_PASSWORD],
             data.get(CONF_2FA),
         )
-    except ring_doorbell.Requires2FAError as err:
+    except Requires2FAError as err:
         raise Require2FA from err
-    except ring_doorbell.AuthenticationError as err:
+    except AuthenticationError as err:
         raise InvalidAuth from err
 
     return token

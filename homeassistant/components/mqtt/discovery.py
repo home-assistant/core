@@ -1,4 +1,5 @@
 """Support for MQTT discovery."""
+
 from __future__ import annotations
 
 import asyncio
@@ -24,6 +25,7 @@ from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
 from homeassistant.helpers.typing import DiscoveryInfoType
 from homeassistant.loader import async_get_mqtt
 from homeassistant.util.json import json_loads_object
+from homeassistant.util.signal_type import SignalTypeFormat
 
 from .. import mqtt
 from .abbreviations import ABBREVIATIONS, DEVICE_ABBREVIATIONS, ORIGIN_ABBREVIATIONS
@@ -39,7 +41,7 @@ from .const import (
     DOMAIN,
 )
 from .models import MqttOriginInfo, ReceiveMessage
-from .util import get_mqtt_data
+from .util import async_forward_entry_setup_and_setup_discovery, get_mqtt_data
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -78,9 +80,14 @@ SUPPORTED_COMPONENTS = {
     "water_heater",
 }
 
-MQTT_DISCOVERY_UPDATED = "mqtt_discovery_updated_{}"
-MQTT_DISCOVERY_NEW = "mqtt_discovery_new_{}_{}"
-MQTT_DISCOVERY_DONE = "mqtt_discovery_done_{}"
+MQTT_DISCOVERY_UPDATED: SignalTypeFormat[MQTTDiscoveryPayload] = SignalTypeFormat(
+    "mqtt_discovery_updated_{}"
+)
+MQTT_DISCOVERY_NEW: SignalTypeFormat[MQTTDiscoveryPayload] = SignalTypeFormat(
+    "mqtt_discovery_new_{}_{}"
+)
+MQTT_DISCOVERY_NEW_COMPONENT = "mqtt_discovery_new_component"
+MQTT_DISCOVERY_DONE: SignalTypeFormat[Any] = SignalTypeFormat("mqtt_discovery_done_{}")
 
 TOPIC_BASE = "~"
 
@@ -140,7 +147,31 @@ async def async_start(  # noqa: C901
 ) -> None:
     """Start MQTT Discovery."""
     mqtt_data = get_mqtt_data(hass)
-    mqtt_integrations = {}
+    platform_setup_lock: dict[str, asyncio.Lock] = {}
+
+    async def _async_component_setup(discovery_payload: MQTTDiscoveryPayload) -> None:
+        """Perform component set up."""
+        discovery_hash = discovery_payload.discovery_data[ATTR_DISCOVERY_HASH]
+        component, discovery_id = discovery_hash
+        platform_setup_lock.setdefault(component, asyncio.Lock())
+        async with platform_setup_lock[component]:
+            if component not in mqtt_data.platforms_loaded:
+                await async_forward_entry_setup_and_setup_discovery(
+                    hass, config_entry, {component}
+                )
+        # Add component
+        message = f"Found new component: {component} {discovery_id}"
+        async_log_discovery_origin_info(message, discovery_payload)
+        mqtt_data.discovery_already_discovered.add(discovery_hash)
+        async_dispatcher_send(
+            hass, MQTT_DISCOVERY_NEW.format(component, "mqtt"), discovery_payload
+        )
+
+    mqtt_data.reload_dispatchers.append(
+        async_dispatcher_connect(
+            hass, MQTT_DISCOVERY_NEW_COMPONENT, _async_component_setup
+        )
+    )
 
     @callback
     def async_discovery_message_received(msg: ReceiveMessage) -> None:  # noqa: C901
@@ -303,7 +334,10 @@ async def async_start(  # noqa: C901
                 "pending": deque([]),
             }
 
-        if already_discovered:
+        if component not in mqtt_data.platforms_loaded and payload:
+            # Load component first
+            async_dispatcher_send(hass, MQTT_DISCOVERY_NEW_COMPONENT, payload)
+        elif already_discovered:
             # Dispatch update
             message = f"Component has already been discovered: {component} {discovery_id}, sending update"
             async_log_discovery_origin_info(message, payload)
@@ -374,14 +408,17 @@ async def async_start(  # noqa: C901
                 ):
                     mqtt_data.integration_unsubscribe.pop(key)()
 
-        for topic in topics:
-            key = f"{integration}_{topic}"
-            mqtt_data.integration_unsubscribe[key] = await mqtt.async_subscribe(
-                hass,
-                topic,
-                functools.partial(async_integration_message_received, integration),
-                0,
-            )
+        mqtt_data.integration_unsubscribe.update(
+            {
+                f"{integration}_{topic}": await mqtt.async_subscribe(
+                    hass,
+                    topic,
+                    functools.partial(async_integration_message_received, integration),
+                    0,
+                )
+                for topic in topics
+            }
+        )
 
 
 async def async_stop(hass: HomeAssistant) -> None:

@@ -1,4 +1,5 @@
 """The Roborock component."""
+
 from __future__ import annotations
 
 import asyncio
@@ -86,12 +87,10 @@ def build_setup_functions(
     product_info: dict[str, HomeDataProduct],
 ) -> list[Coroutine[Any, Any, RoborockDataUpdateCoordinator | None]]:
     """Create a list of setup functions that can later be called asynchronously."""
-    setup_functions = []
-    for device in device_map.values():
-        setup_functions.append(
-            setup_device(hass, user_data, device, product_info[device.product_id])
-        )
-    return setup_functions
+    return [
+        setup_device(hass, user_data, device, product_info[device.product_id])
+        for device in device_map.values()
+    ]
 
 
 async def setup_device(

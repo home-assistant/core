@@ -1,7 +1,8 @@
 """Typing Helpers for Home Assistant."""
+
 from collections.abc import Mapping
 from enum import Enum
-from typing import Any, Generic, TypeVar
+from typing import Any, TypeVar
 
 import homeassistant.core
 
@@ -33,11 +34,6 @@ UNDEFINED = UndefinedType._singleton  # pylint: disable=protected-access
 # They are kept in order not to break custom integrations
 # that may rely on them.
 # In due time they will be removed.
+EventType = homeassistant.core.Event
 HomeAssistantType = homeassistant.core.HomeAssistant
 ServiceCallType = homeassistant.core.ServiceCall
-
-
-class EventType(homeassistant.core.Event, Generic[_DataT]):
-    """Generic Event class to better type data."""
-
-    data: _DataT  # type: ignore[assignment]

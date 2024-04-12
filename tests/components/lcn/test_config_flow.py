@@ -1,4 +1,5 @@
 """Tests for the LCN config flow."""
+
 from unittest.mock import patch
 
 from pypck.connection import PchkAuthenticationError, PchkLicenseError
@@ -35,9 +36,11 @@ IMPORT_DATA = {
 async def test_step_import(hass: HomeAssistant) -> None:
     """Test for import step."""
 
-    with patch("pypck.connection.PchkConnectionManager.async_connect"), patch(
-        "homeassistant.components.lcn.async_setup", return_value=True
-    ), patch("homeassistant.components.lcn.async_setup_entry", return_value=True):
+    with (
+        patch("pypck.connection.PchkConnectionManager.async_connect"),
+        patch("homeassistant.components.lcn.async_setup", return_value=True),
+        patch("homeassistant.components.lcn.async_setup_entry", return_value=True),
+    ):
         data = IMPORT_DATA.copy()
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=data

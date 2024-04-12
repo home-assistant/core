@@ -1,4 +1,5 @@
 """Test the duotecno config flow."""
+
 from unittest.mock import AsyncMock, patch
 
 from duotecno.exceptions import InvalidPassword

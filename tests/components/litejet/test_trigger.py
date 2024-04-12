@@ -1,4 +1,5 @@
 """The tests for the litejet component."""
+
 from datetime import timedelta
 import logging
 from unittest import mock

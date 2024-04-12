@@ -1,4 +1,5 @@
 """Test the AirTouch 4 config flow."""
+
 from unittest.mock import AsyncMock, Mock, patch
 
 from airtouch4pyapi.airtouch import AirTouch, AirTouchAc, AirTouchGroup, AirTouchStatus
@@ -23,13 +24,16 @@ async def test_form(hass: HomeAssistant) -> None:
     mock_airtouch.GetAcs = Mock(return_value=[mock_ac])
     mock_airtouch.GetGroups = Mock(return_value=[mock_groups])
 
-    with patch(
-        "homeassistant.components.airtouch4.config_flow.AirTouch",
-        return_value=mock_airtouch,
-    ), patch(
-        "homeassistant.components.airtouch4.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.airtouch4.config_flow.AirTouch",
+            return_value=mock_airtouch,
+        ),
+        patch(
+            "homeassistant.components.airtouch4.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"host": "0.0.0.1"}
         )

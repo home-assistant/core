@@ -1,4 +1,5 @@
 """Test for Roborock init."""
+
 from unittest.mock import patch
 
 from roborock import RoborockException, RoborockInvalidCredentials
@@ -31,11 +32,14 @@ async def test_config_entry_not_ready(
     hass: HomeAssistant, mock_roborock_entry: MockConfigEntry
 ) -> None:
     """Test that when coordinator update fails, entry retries."""
-    with patch(
-        "homeassistant.components.roborock.RoborockApiClient.get_home_data",
-    ), patch(
-        "homeassistant.components.roborock.coordinator.RoborockLocalClient.get_prop",
-        side_effect=RoborockException(),
+    with (
+        patch(
+            "homeassistant.components.roborock.RoborockApiClient.get_home_data",
+        ),
+        patch(
+            "homeassistant.components.roborock.coordinator.RoborockLocalClient.get_prop",
+            side_effect=RoborockException(),
+        ),
     ):
         await async_setup_component(hass, DOMAIN, {})
         assert mock_roborock_entry.state is ConfigEntryState.SETUP_RETRY
@@ -45,12 +49,15 @@ async def test_config_entry_not_ready_home_data(
     hass: HomeAssistant, mock_roborock_entry: MockConfigEntry
 ) -> None:
     """Test that when we fail to get home data, entry retries."""
-    with patch(
-        "homeassistant.components.roborock.RoborockApiClient.get_home_data",
-        side_effect=RoborockException(),
-    ), patch(
-        "homeassistant.components.roborock.coordinator.RoborockLocalClient.get_prop",
-        side_effect=RoborockException(),
+    with (
+        patch(
+            "homeassistant.components.roborock.RoborockApiClient.get_home_data",
+            side_effect=RoborockException(),
+        ),
+        patch(
+            "homeassistant.components.roborock.coordinator.RoborockLocalClient.get_prop",
+            side_effect=RoborockException(),
+        ),
     ):
         await async_setup_component(hass, DOMAIN, {})
         assert mock_roborock_entry.state is ConfigEntryState.SETUP_RETRY
@@ -84,12 +91,15 @@ async def test_cloud_client_fails_props(
     hass: HomeAssistant, mock_roborock_entry: MockConfigEntry, bypass_api_fixture
 ) -> None:
     """Test that if networking succeeds, but we can't communicate with the vacuum, we can't get props, fail."""
-    with patch(
-        "homeassistant.components.roborock.coordinator.RoborockLocalClient.ping",
-        side_effect=RoborockException(),
-    ), patch(
-        "homeassistant.components.roborock.coordinator.RoborockMqttClient.get_prop",
-        side_effect=RoborockException(),
+    with (
+        patch(
+            "homeassistant.components.roborock.coordinator.RoborockLocalClient.ping",
+            side_effect=RoborockException(),
+        ),
+        patch(
+            "homeassistant.components.roborock.coordinator.RoborockMqttClient.get_prop",
+            side_effect=RoborockException(),
+        ),
     ):
         await async_setup_component(hass, DOMAIN, {})
         assert mock_roborock_entry.state is ConfigEntryState.SETUP_RETRY

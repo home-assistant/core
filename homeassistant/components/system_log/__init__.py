@@ -1,4 +1,5 @@
 """Support for system log."""
+
 from __future__ import annotations
 
 from collections import OrderedDict, deque
@@ -62,14 +63,19 @@ SERVICE_WRITE_SCHEMA = vol.Schema(
 
 
 def _figure_out_source(
-    record: logging.LogRecord, paths_re: re.Pattern[str]
+    record: logging.LogRecord,
+    paths_re: re.Pattern[str],
+    extracted_tb: traceback.StackSummary | None = None,
 ) -> tuple[str, int]:
     """Figure out where a log message came from."""
     # If a stack trace exists, extract file names from the entire call stack.
     # The other case is when a regular "log" is made (without an attached
     # exception). In that case, just use the file where the log was made from.
     if record.exc_info:
-        stack = [(x[0], x[1]) for x in traceback.extract_tb(record.exc_info[2])]
+        stack = [
+            (x[0], x[1])
+            for x in (extracted_tb or traceback.extract_tb(record.exc_info[2]))
+        ]
         for i, (filename, _) in enumerate(stack):
             # Slice the stack to the first frame that matches
             # the record pathname.
@@ -166,7 +172,12 @@ class LogEntry:
         "key",
     )
 
-    def __init__(self, record: logging.LogRecord, source: tuple[str, int]) -> None:
+    def __init__(
+        self,
+        record: logging.LogRecord,
+        paths_re: re.Pattern,
+        figure_out_source: bool = False,
+    ) -> None:
         """Initialize a log entry."""
         self.first_occurred = self.timestamp = record.created
         self.name = record.name
@@ -175,16 +186,20 @@ class LogEntry:
         # This must be manually tested when changing the code.
         self.message = deque([_safe_get_message(record)], maxlen=5)
         self.exception = ""
-        self.root_cause = None
+        self.root_cause: str | None = None
+        extracted_tb: traceback.StackSummary | None = None
         if record.exc_info:
             self.exception = "".join(traceback.format_exception(*record.exc_info))
-            _, _, tb = record.exc_info
-            # Last line of traceback contains the root cause of the exception
-            if extracted := traceback.extract_tb(tb):
+            if extracted := traceback.extract_tb(record.exc_info[2]):
+                # Last line of traceback contains the root cause of the exception
+                extracted_tb = extracted
                 self.root_cause = str(extracted[-1])
-        self.source = source
+        if figure_out_source:
+            self.source = _figure_out_source(record, paths_re, extracted_tb)
+        else:
+            self.source = (record.pathname, record.lineno)
         self.count = 1
-        self.key = (self.name, source, self.root_cause)
+        self.key = (self.name, self.source, self.root_cause)
 
     def to_dict(self) -> dict[str, Any]:
         """Convert object into dict to maintain backward compatibility."""
@@ -258,7 +273,7 @@ class LogErrorHandler(logging.Handler):
         default upper limit is set to 50 (older entries are discarded) but can
         be changed if needed.
         """
-        entry = LogEntry(record, _figure_out_source(record, self.paths_re))
+        entry = LogEntry(record, self.paths_re, figure_out_source=True)
         self.records.add_entry(entry)
         if self.fire_event:
             self.hass.bus.fire(EVENT_SYSTEM_LOG, entry.to_dict())
@@ -277,7 +292,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     handler = LogErrorHandler(
         hass, conf[CONF_MAX_ENTRIES], conf[CONF_FIRE_EVENT], paths_re
     )
-    handler.setLevel(logging.WARN)
+    handler.setLevel(logging.WARNING)
 
     hass.data[DOMAIN] = handler
 
@@ -293,23 +308,22 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     websocket_api.async_register_command(hass, list_errors)
 
-    async def async_service_handler(service: ServiceCall) -> None:
-        """Handle logger services."""
-        if service.service == "clear":
-            handler.records.clear()
-            return
-        if service.service == "write":
-            logger = logging.getLogger(
-                service.data.get(CONF_LOGGER, f"{__name__}.external")
-            )
-            level = service.data[CONF_LEVEL]
-            getattr(logger, level)(service.data[CONF_MESSAGE])
+    @callback
+    def _async_clear_service_handler(service: ServiceCall) -> None:
+        handler.records.clear()
+
+    @callback
+    def _async_write_service_handler(service: ServiceCall) -> None:
+        name = service.data.get(CONF_LOGGER, f"{__name__}.external")
+        logger = logging.getLogger(name)
+        level = service.data[CONF_LEVEL]
+        getattr(logger, level)(service.data[CONF_MESSAGE])
 
     hass.services.async_register(
-        DOMAIN, SERVICE_CLEAR, async_service_handler, schema=SERVICE_CLEAR_SCHEMA
+        DOMAIN, SERVICE_CLEAR, _async_clear_service_handler, schema=SERVICE_CLEAR_SCHEMA
     )
     hass.services.async_register(
-        DOMAIN, SERVICE_WRITE, async_service_handler, schema=SERVICE_WRITE_SCHEMA
+        DOMAIN, SERVICE_WRITE, _async_write_service_handler, schema=SERVICE_WRITE_SCHEMA
     )
 
     return True

@@ -1,4 +1,5 @@
 """Constants used by the Netatmo component."""
+
 from homeassistant.const import Platform
 
 API = "api"

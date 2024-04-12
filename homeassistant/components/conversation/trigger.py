@@ -1,4 +1,5 @@
 """Offer sentence based automation rules."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -61,7 +62,9 @@ async def async_attach_trigger(
 
     job = HassJob(action)
 
-    async def call_action(sentence: str, result: RecognizeResult) -> str | None:
+    async def call_action(
+        sentence: str, result: RecognizeResult, device_id: str | None
+    ) -> str | None:
         """Call action with right context."""
 
         # Add slot values as extra trigger data
@@ -69,9 +72,11 @@ async def async_attach_trigger(
             entity_name: {
                 "name": entity_name,
                 "text": entity.text.strip(),  # remove whitespace
-                "value": entity.value.strip()
-                if isinstance(entity.value, str)
-                else entity.value,
+                "value": (
+                    entity.value.strip()
+                    if isinstance(entity.value, str)
+                    else entity.value
+                ),
             }
             for entity_name, entity in result.entities.items()
         }
@@ -84,6 +89,7 @@ async def async_attach_trigger(
             "slots": {  # direct access to values
                 entity_name: entity["value"] for entity_name, entity in details.items()
             },
+            "device_id": device_id,
         }
 
         # Wait for the automation to complete

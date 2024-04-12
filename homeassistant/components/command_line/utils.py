@@ -1,4 +1,5 @@
 """The command_line component utils."""
+
 from __future__ import annotations
 
 import asyncio
@@ -18,7 +19,7 @@ async def async_call_shell_with_timeout(
     """
     try:
         _LOGGER.debug("Running command: %s", command)
-        proc = await asyncio.create_subprocess_shell(  # noqa: S602 # shell by design
+        proc = await asyncio.create_subprocess_shell(  # shell by design
             command,
             close_fds=False,  # required for posix_spawn
         )
@@ -42,7 +43,7 @@ async def async_call_shell_with_timeout(
 async def async_check_output_or_log(command: str, timeout: int) -> str | None:
     """Run a shell command with a timeout and return the output."""
     try:
-        proc = await asyncio.create_subprocess_shell(  # noqa: S602 # shell by design
+        proc = await asyncio.create_subprocess_shell(  # shell by design
             command,
             close_fds=False,  # required for posix_spawn
             stdout=asyncio.subprocess.PIPE,

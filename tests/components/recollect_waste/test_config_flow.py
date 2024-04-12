@@ -1,4 +1,5 @@
 """Define tests for the ReCollect Waste config flow."""
+
 from unittest.mock import AsyncMock, patch
 
 from aiorecollect.errors import RecollectError

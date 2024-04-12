@@ -1,4 +1,5 @@
 """Config flow for the D-Link Power Plug integration."""
+
 from __future__ import annotations
 
 import logging

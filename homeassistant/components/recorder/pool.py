@@ -1,4 +1,5 @@
 """A pool for sqlite connections."""
+
 import logging
 import threading
 import traceback

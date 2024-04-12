@@ -1,4 +1,5 @@
 """Tests for the Webmin integration."""
+
 from homeassistant.components.webmin.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant

@@ -1,4 +1,5 @@
 """Tests for Islamic Prayer Times init."""
+
 from datetime import timedelta
 from unittest.mock import patch
 
@@ -88,10 +89,13 @@ async def test_options_listener(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(domain=islamic_prayer_times.DOMAIN, data={})
     entry.add_to_hass(hass)
 
-    with patch(
-        "prayer_times_calculator.PrayerTimesCalculator.fetch_prayer_times",
-        return_value=PRAYER_TIMES,
-    ) as mock_fetch_prayer_times, freeze_time(NOW):
+    with (
+        patch(
+            "prayer_times_calculator.PrayerTimesCalculator.fetch_prayer_times",
+            return_value=PRAYER_TIMES,
+        ) as mock_fetch_prayer_times,
+        freeze_time(NOW),
+    ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
         assert mock_fetch_prayer_times.call_count == 1
@@ -108,10 +112,13 @@ async def test_update_failed(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(domain=islamic_prayer_times.DOMAIN, data={})
     entry.add_to_hass(hass)
 
-    with patch(
-        "prayer_times_calculator.PrayerTimesCalculator.fetch_prayer_times",
-        return_value=PRAYER_TIMES,
-    ), freeze_time(NOW):
+    with (
+        patch(
+            "prayer_times_calculator.PrayerTimesCalculator.fetch_prayer_times",
+            return_value=PRAYER_TIMES,
+        ),
+        freeze_time(NOW),
+    ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
@@ -175,10 +182,13 @@ async def test_migrate_unique_id(
     )
     assert entity.unique_id == old_unique_id
 
-    with patch(
-        "prayer_times_calculator.PrayerTimesCalculator.fetch_prayer_times",
-        return_value=PRAYER_TIMES,
-    ), freeze_time(NOW):
+    with (
+        patch(
+            "prayer_times_calculator.PrayerTimesCalculator.fetch_prayer_times",
+            return_value=PRAYER_TIMES,
+        ),
+        freeze_time(NOW),
+    ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
@@ -195,10 +205,13 @@ async def test_migration_from_1_1_to_1_2(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
 
-    with patch(
-        "prayer_times_calculator.PrayerTimesCalculator.fetch_prayer_times",
-        return_value=PRAYER_TIMES,
-    ), freeze_time(NOW):
+    with (
+        patch(
+            "prayer_times_calculator.PrayerTimesCalculator.fetch_prayer_times",
+            return_value=PRAYER_TIMES,
+        ),
+        freeze_time(NOW),
+    ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 

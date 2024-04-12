@@ -1,4 +1,5 @@
 """Support for the NOAA Tides and Currents API."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta

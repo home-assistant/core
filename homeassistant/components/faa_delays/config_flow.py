@@ -1,4 +1,5 @@
 """Config flow for FAA Delays integration."""
+
 import logging
 from typing import Any
 

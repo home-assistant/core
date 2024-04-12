@@ -1,4 +1,5 @@
 """The tests for the Conversation component."""
+
 from http import HTTPStatus
 from typing import Any
 from unittest.mock import patch
@@ -23,7 +24,13 @@ from homeassistant.setup import async_setup_component
 
 from . import expose_entity, expose_new
 
-from tests.common import MockConfigEntry, MockUser, async_mock_service
+from tests.common import (
+    MockConfigEntry,
+    MockUser,
+    async_mock_service,
+    setup_test_component_platform,
+)
+from tests.components.light.common import MockLight
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 AGENT_ID_OPTIONS = [None, conversation.HOME_ASSISTANT_AGENT]
@@ -255,7 +262,6 @@ async def test_http_processing_intent_entity_renamed(
     hass_client: ClientSessionGenerator,
     hass_admin_user: MockUser,
     entity_registry: er.EntityRegistry,
-    enable_custom_integrations: None,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test processing intent via HTTP API with entities renamed later.
@@ -263,13 +269,11 @@ async def test_http_processing_intent_entity_renamed(
     We want to ensure that renaming an entity later busts the cache
     so that the new name is used.
     """
-    platform = getattr(hass.components, "test.light")
-    platform.init(empty=True)
-
-    entity = platform.MockLight("kitchen light", "on")
+    entity = MockLight("kitchen light", "on")
     entity._attr_unique_id = "1234"
     entity.entity_id = "light.kitchen"
-    platform.ENTITIES.append(entity)
+    setup_test_component_platform(hass, LIGHT_DOMAIN, [entity])
+
     assert await async_setup_component(
         hass,
         LIGHT_DOMAIN,
@@ -346,7 +350,6 @@ async def test_http_processing_intent_entity_exposed(
     hass_client: ClientSessionGenerator,
     hass_admin_user: MockUser,
     entity_registry: er.EntityRegistry,
-    enable_custom_integrations: None,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test processing intent via HTTP API with manual expose.
@@ -354,13 +357,11 @@ async def test_http_processing_intent_entity_exposed(
     We want to ensure that manually exposing an entity later busts the cache
     so that the new setting is used.
     """
-    platform = getattr(hass.components, "test.light")
-    platform.init(empty=True)
-
-    entity = platform.MockLight("kitchen light", "on")
+    entity = MockLight("kitchen light", "on")
     entity._attr_unique_id = "1234"
     entity.entity_id = "light.kitchen"
-    platform.ENTITIES.append(entity)
+    setup_test_component_platform(hass, LIGHT_DOMAIN, [entity])
+
     assert await async_setup_component(
         hass,
         LIGHT_DOMAIN,
@@ -451,20 +452,17 @@ async def test_http_processing_intent_conversion_not_expose_new(
     hass_client: ClientSessionGenerator,
     hass_admin_user: MockUser,
     entity_registry: er.EntityRegistry,
-    enable_custom_integrations: None,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test processing intent via HTTP API when not exposing new entities."""
     # Disable exposing new entities to the default agent
     expose_new(hass, False)
 
-    platform = getattr(hass.components, "test.light")
-    platform.init(empty=True)
-
-    entity = platform.MockLight("kitchen light", "on")
+    entity = MockLight("kitchen light", "on")
     entity._attr_unique_id = "1234"
     entity.entity_id = "light.kitchen"
-    platform.ENTITIES.append(entity)
+    setup_test_component_platform(hass, LIGHT_DOMAIN, [entity])
+
     assert await async_setup_component(
         hass,
         LIGHT_DOMAIN,
@@ -501,8 +499,8 @@ async def test_http_processing_intent_conversion_not_expose_new(
 
 
 @pytest.mark.parametrize("agent_id", AGENT_ID_OPTIONS)
-@pytest.mark.parametrize("sentence", ("turn on kitchen", "turn kitchen on"))
-@pytest.mark.parametrize("conversation_id", ("my_new_conversation", None))
+@pytest.mark.parametrize("sentence", ["turn on kitchen", "turn kitchen on"])
+@pytest.mark.parametrize("conversation_id", ["my_new_conversation", None])
 async def test_turn_on_intent(
     hass: HomeAssistant, init_components, conversation_id, sentence, agent_id, snapshot
 ) -> None:
@@ -534,9 +532,12 @@ async def test_turn_on_intent(
 
 async def test_service_fails(hass: HomeAssistant, init_components) -> None:
     """Test calling the turn on intent."""
-    with pytest.raises(HomeAssistantError), patch(
-        "homeassistant.components.conversation.async_converse",
-        side_effect=intent.IntentHandleError,
+    with (
+        pytest.raises(HomeAssistantError),
+        patch(
+            "homeassistant.components.conversation.async_converse",
+            side_effect=intent.IntentHandleError,
+        ),
     ):
         await hass.services.async_call(
             "conversation",
@@ -546,7 +547,7 @@ async def test_service_fails(hass: HomeAssistant, init_components) -> None:
         )
 
 
-@pytest.mark.parametrize("sentence", ("turn off kitchen", "turn kitchen off"))
+@pytest.mark.parametrize("sentence", ["turn off kitchen", "turn kitchen off"])
 async def test_turn_off_intent(hass: HomeAssistant, init_components, sentence) -> None:
     """Test calling the turn on intent."""
     hass.states.async_set("light.kitchen", "on")
@@ -597,7 +598,7 @@ async def test_http_api_handle_failure(
 
     # Raise an error during intent handling
     def async_handle_error(*args, **kwargs):
-        raise intent.IntentHandleError()
+        raise intent.IntentHandleError
 
     with patch("homeassistant.helpers.intent.async_handle", new=async_handle_error):
         resp = await client.post(
@@ -625,7 +626,7 @@ async def test_http_api_unexpected_failure(
 
     # Raise an "unexpected" error during intent handling
     def async_handle_error(*args, **kwargs):
-        raise intent.IntentUnexpectedError()
+        raise intent.IntentUnexpectedError
 
     with patch("homeassistant.helpers.intent.async_handle", new=async_handle_error):
         resp = await client.post(

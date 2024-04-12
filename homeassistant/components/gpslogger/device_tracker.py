@@ -1,4 +1,5 @@
 """Support for the GPSLogger device tracking."""
+
 from homeassistant.components.device_tracker import SourceType, TrackerEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -39,9 +40,9 @@ async def async_setup_entry(
 
         async_add_entities([GPSLoggerEntity(device, gps, battery, accuracy, attrs)])
 
-    hass.data[GPL_DOMAIN]["unsub_device_tracker"][
-        entry.entry_id
-    ] = async_dispatcher_connect(hass, TRACKER_UPDATE, _receive_data)
+    hass.data[GPL_DOMAIN]["unsub_device_tracker"][entry.entry_id] = (
+        async_dispatcher_connect(hass, TRACKER_UPDATE, _receive_data)
+    )
 
     # Restore previously loaded devices
     dev_reg = dr.async_get(hass)

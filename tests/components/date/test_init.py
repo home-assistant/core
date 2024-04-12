@@ -1,4 +1,5 @@
 """The tests for the date component."""
+
 from datetime import date
 
 from homeassistant.components.date import DOMAIN, SERVICE_SET_VALUE, DateEntity

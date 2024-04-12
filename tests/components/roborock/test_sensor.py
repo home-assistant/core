@@ -1,4 +1,5 @@
 """Test Roborock Sensors."""
+
 from unittest.mock import patch
 
 from roborock import DeviceData, HomeDataDevice

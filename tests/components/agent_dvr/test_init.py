@@ -1,4 +1,5 @@
 """Test Agent DVR integration."""
+
 from unittest.mock import AsyncMock, patch
 
 from agent import AgentError

@@ -2,6 +2,7 @@
 
 Call init before using it in your tests to ensure clean test data.
 """
+
 from homeassistant.components.text import RestoreText, TextEntity, TextMode
 
 from tests.common import MockEntity

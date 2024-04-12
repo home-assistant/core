@@ -1,4 +1,5 @@
 """Support for Flo Water Monitor sensors."""
+
 from __future__ import annotations
 
 from homeassistant.components.sensor import (

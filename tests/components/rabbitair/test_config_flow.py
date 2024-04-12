@@ -1,4 +1,5 @@
 """Test the RabbitAir config flow."""
+
 from __future__ import annotations
 
 from collections.abc import Generator
@@ -44,8 +45,9 @@ def use_mocked_zeroconf(mock_async_zeroconf):
 @pytest.fixture
 def rabbitair_connect() -> Generator[None, None, None]:
     """Mock connection."""
-    with patch("rabbitair.UdpClient.get_info", return_value=get_mock_info()), patch(
-        "rabbitair.UdpClient.get_state", return_value=get_mock_state()
+    with (
+        patch("rabbitair.UdpClient.get_info", return_value=get_mock_info()),
+        patch("rabbitair.UdpClient.get_state", return_value=get_mock_state()),
     ):
         yield
 

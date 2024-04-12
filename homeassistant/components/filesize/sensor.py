@@ -1,4 +1,5 @@
 """Sensor for monitoring the size of a file."""
+
 from __future__ import annotations
 
 from datetime import datetime

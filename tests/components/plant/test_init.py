@@ -1,4 +1,5 @@
 """Unit tests for platform/plant.py."""
+
 from datetime import datetime, timedelta
 
 import homeassistant.components.plant as plant

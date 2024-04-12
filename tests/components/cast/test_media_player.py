@@ -1,4 +1,5 @@
 """The tests for the Cast Media player platform."""
+
 from __future__ import annotations
 
 import asyncio
@@ -115,7 +116,7 @@ async def async_setup_cast(hass, config=None):
     """Set up the cast platform."""
     if config is None:
         config = {}
-    data = {**{"ignore_cec": [], "known_hosts": [], "uuid": []}, **config}
+    data = {"ignore_cec": [], "known_hosts": [], "uuid": [], **config}
     with patch(
         "homeassistant.helpers.entity_platform.EntityPlatform._async_schedule_add_entities_for_entry"
     ) as add_entities:
@@ -136,8 +137,8 @@ async def async_setup_cast_internal_discovery(hass, config=None):
         return_value=browser,
     ) as cast_browser:
         add_entities = await async_setup_cast(hass, config)
-        await hass.async_block_till_done()
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         assert browser.start_discovery.call_count == 1
 
@@ -190,22 +191,26 @@ async def async_setup_media_player_cast(hass: HomeAssistant, info: ChromecastInf
     chromecast = get_fake_chromecast(info)
     zconf = get_fake_zconf(host=info.cast_info.host, port=info.cast_info.port)
 
-    with patch(
-        "homeassistant.components.cast.discovery.pychromecast.get_chromecast_from_cast_info",
-        return_value=chromecast,
-    ) as get_chromecast, patch(
-        "homeassistant.components.cast.discovery.pychromecast.discovery.CastBrowser",
-        return_value=browser,
-    ) as cast_browser, patch(
-        "homeassistant.components.cast.discovery.ChromeCastZeroconf.get_zeroconf",
-        return_value=zconf,
+    with (
+        patch(
+            "homeassistant.components.cast.discovery.pychromecast.get_chromecast_from_cast_info",
+            return_value=chromecast,
+        ) as get_chromecast,
+        patch(
+            "homeassistant.components.cast.discovery.pychromecast.discovery.CastBrowser",
+            return_value=browser,
+        ) as cast_browser,
+        patch(
+            "homeassistant.components.cast.discovery.ChromeCastZeroconf.get_zeroconf",
+            return_value=zconf,
+        ),
     ):
         data = {"ignore_cec": [], "known_hosts": [], "uuid": [str(info.uuid)]}
         entry = MockConfigEntry(data=data, domain="cast")
         entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         discovery_callback = cast_browser.call_args[0][0].add_cast
 
@@ -579,13 +584,16 @@ async def test_discover_dynamic_group(
         tasks.append(real_create_task(coroutine))
 
     # Discover cast service
-    with patch(
-        "homeassistant.components.cast.discovery.ChromeCastZeroconf.get_zeroconf",
-        return_value=zconf_1,
-    ), patch.object(
-        hass,
-        "async_create_background_task",
-        wraps=create_task,
+    with (
+        patch(
+            "homeassistant.components.cast.discovery.ChromeCastZeroconf.get_zeroconf",
+            return_value=zconf_1,
+        ),
+        patch.object(
+            hass,
+            "async_create_background_task",
+            wraps=create_task,
+        ),
     ):
         discover_cast(
             pychromecast.discovery.MDNSServiceInfo("service"),
@@ -605,13 +613,16 @@ async def test_discover_dynamic_group(
     )
 
     # Discover other dynamic group cast service
-    with patch(
-        "homeassistant.components.cast.discovery.ChromeCastZeroconf.get_zeroconf",
-        return_value=zconf_2,
-    ), patch.object(
-        hass,
-        "async_create_background_task",
-        wraps=create_task,
+    with (
+        patch(
+            "homeassistant.components.cast.discovery.ChromeCastZeroconf.get_zeroconf",
+            return_value=zconf_2,
+        ),
+        patch.object(
+            hass,
+            "async_create_background_task",
+            wraps=create_task,
+        ),
     ):
         discover_cast(
             pychromecast.discovery.MDNSServiceInfo("service"),
@@ -631,13 +642,16 @@ async def test_discover_dynamic_group(
     )
 
     # Get update for cast service
-    with patch(
-        "homeassistant.components.cast.discovery.ChromeCastZeroconf.get_zeroconf",
-        return_value=zconf_1,
-    ), patch.object(
-        hass,
-        "async_create_background_task",
-        wraps=create_task,
+    with (
+        patch(
+            "homeassistant.components.cast.discovery.ChromeCastZeroconf.get_zeroconf",
+            return_value=zconf_1,
+        ),
+        patch.object(
+            hass,
+            "async_create_background_task",
+            wraps=create_task,
+        ),
     ):
         discover_cast(
             pychromecast.discovery.MDNSServiceInfo("service"),
@@ -753,7 +767,7 @@ async def test_entity_availability(hass: HomeAssistant) -> None:
     assert state.state == "unavailable"
 
 
-@pytest.mark.parametrize(("port", "entry_type"), ((8009, None), (12345, None)))
+@pytest.mark.parametrize(("port", "entry_type"), [(8009, None), (12345, None)])
 async def test_device_registry(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -1260,7 +1274,7 @@ async def test_entity_play_media_sign_URL(hass: HomeAssistant, quick_play_mock) 
 
 @pytest.mark.parametrize(
     ("url", "fixture", "playlist_item"),
-    (
+    [
         # Test title is extracted from m3u playlist
         (
             "https://sverigesradio.se/topsy/direkt/209-hi-mp3.m3u",
@@ -1306,7 +1320,7 @@ async def test_entity_play_media_sign_URL(hass: HomeAssistant, quick_play_mock) 
                 "media_type": "audio",
             },
         ),
-    ),
+    ],
 )
 async def test_entity_play_media_playlist(
     hass: HomeAssistant,

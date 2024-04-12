@@ -1,4 +1,10 @@
 """Support for Netgear LTE modems."""
+<<<<<<< HEAD
+=======
+
+from datetime import timedelta
+
+>>>>>>> efe91815fbf2f57bf8f5b830c675cd6a579ff9b3
 from aiohttp.cookiejar import CookieJar
 import eternalegypt
 from eternalegypt.eternalegypt import SMS

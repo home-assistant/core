@@ -1,4 +1,5 @@
 """Support for viewing the camera feed from a DoorBird video doorbell."""
+
 from __future__ import annotations
 
 import asyncio

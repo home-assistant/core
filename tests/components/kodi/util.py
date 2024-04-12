@@ -1,4 +1,5 @@
 """Test the Kodi config flow."""
+
 from ipaddress import ip_address
 
 from homeassistant.components import zeroconf

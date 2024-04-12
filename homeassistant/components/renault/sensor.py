@@ -1,4 +1,5 @@
 """Support for Renault sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -42,22 +43,14 @@ from .renault_hub import RenaultHub
 from .renault_vehicle import RenaultVehicleProxy
 
 
-@dataclass(frozen=True)
-class RenaultSensorRequiredKeysMixin(Generic[T]):
-    """Mixin for required keys."""
-
-    data_key: str
-    entity_class: type[RenaultSensor[T]]
-
-
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class RenaultSensorEntityDescription(
-    SensorEntityDescription,
-    RenaultDataEntityDescription,
-    RenaultSensorRequiredKeysMixin[T],
+    SensorEntityDescription, RenaultDataEntityDescription, Generic[T]
 ):
     """Class describing Renault sensor entities."""
 
+    data_key: str
+    entity_class: type[RenaultSensor[T]]
     condition_lambda: Callable[[RenaultVehicleProxy], bool] | None = None
     requires_fuel: bool = False
     value_lambda: Callable[[RenaultSensor[T]], StateType | datetime] | None = None

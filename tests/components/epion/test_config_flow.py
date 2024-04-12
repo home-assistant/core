@@ -1,4 +1,5 @@
 """Tests for the Epion config flow."""
+
 from unittest.mock import MagicMock, patch
 
 from epion import EpionAuthenticationError, EpionConnectionError

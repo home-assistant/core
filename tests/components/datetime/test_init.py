@@ -1,4 +1,5 @@
 """The tests for the datetime component."""
+
 from datetime import UTC, datetime
 from zoneinfo import ZoneInfo
 

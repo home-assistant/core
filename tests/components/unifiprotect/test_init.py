@@ -70,7 +70,6 @@ async def test_setup_multiple(
     nvr = bootstrap.nvr
     nvr._api = ufp.api
     nvr.mac = "A1E00C826983"
-    nvr.id
     ufp.api.get_nvr = AsyncMock(return_value=nvr)
 
     with patch(
@@ -240,9 +239,12 @@ async def test_setup_starts_discovery(
     hass: HomeAssistant, ufp_config_entry: ConfigEntry, ufp_client: ProtectApiClient
 ) -> None:
     """Test setting up will start discovery."""
-    with _patch_discovery(), patch(
-        "homeassistant.components.unifiprotect.utils.ProtectApiClient"
-    ) as mock_api:
+    with (
+        _patch_discovery(),
+        patch(
+            "homeassistant.components.unifiprotect.utils.ProtectApiClient"
+        ) as mock_api,
+    ):
         ufp_config_entry.add_to_hass(hass)
         mock_api.return_value = ufp_client
         ufp = MockUFPFixture(ufp_config_entry, ufp_client)

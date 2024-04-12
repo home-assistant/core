@@ -1,4 +1,5 @@
 """Support for Rain Bird Irrigation system LNK Wi-Fi Module."""
+
 from __future__ import annotations
 
 import logging

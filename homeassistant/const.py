@@ -1,4 +1,5 @@
 """Constants used by Home Assistant components."""
+
 from __future__ import annotations
 
 from enum import StrEnum
@@ -12,17 +13,18 @@ from .helpers.deprecation import (
     check_if_deprecated_constant,
     dir_with_deprecated_constants,
 )
+from .util.signal_type import SignalType
 
 APPLICATION_NAME: Final = "HomeAssistant"
 MAJOR_VERSION: Final = 2024
 MINOR_VERSION: Final = 4
-PATCH_VERSION: Final = "0.dev0"
+PATCH_VERSION: Final = "3"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
-REQUIRED_PYTHON_VER: Final[tuple[int, int, int]] = (3, 11, 0)
+REQUIRED_PYTHON_VER: Final[tuple[int, int, int]] = (3, 12, 0)
 REQUIRED_NEXT_PYTHON_VER: Final[tuple[int, int, int]] = (3, 12, 0)
 # Truthy date string triggers showing related deprecation warning messages.
-REQUIRED_NEXT_PYTHON_HA_RELEASE: Final = "2024.4"
+REQUIRED_NEXT_PYTHON_HA_RELEASE: Final = ""
 
 # Format for platform files
 PLATFORM_FORMAT: Final = "{platform}.{domain}"
@@ -305,6 +307,7 @@ EVENT_LOGGING_CHANGED: Final = "logging_changed"
 EVENT_SERVICE_REGISTERED: Final = "service_registered"
 EVENT_SERVICE_REMOVED: Final = "service_removed"
 EVENT_STATE_CHANGED: Final = "state_changed"
+EVENT_STATE_REPORTED: Final = "state_reported"
 EVENT_THEMES_UPDATED: Final = "themes_updated"
 EVENT_PANELS_UPDATED: Final = "panels_updated"
 EVENT_LOVELACE_UPDATED: Final = "lovelace_updated"
@@ -508,6 +511,12 @@ ATTR_AREA_ID: Final = "area_id"
 
 # Contains one string, the device ID
 ATTR_DEVICE_ID: Final = "device_id"
+
+# Contains one string or a list of strings, each being an floor id
+ATTR_FLOOR_ID: Final = "floor_id"
+
+# Contains one string or a list of strings, each being an label id
+ATTR_LABEL_ID: Final = "label_id"
 
 # String with a friendly name for the entity
 ATTR_FRIENDLY_NAME: Final = "friendly_name"
@@ -1452,11 +1461,11 @@ _DEPRECATED_DATA_RATE_GIBIBYTES_PER_SECOND: Final = DeprecatedConstantEnum(
 
 
 # States
-COMPRESSED_STATE_STATE = "s"
-COMPRESSED_STATE_ATTRIBUTES = "a"
-COMPRESSED_STATE_CONTEXT = "c"
-COMPRESSED_STATE_LAST_CHANGED = "lc"
-COMPRESSED_STATE_LAST_UPDATED = "lu"
+COMPRESSED_STATE_STATE: Final = "s"
+COMPRESSED_STATE_ATTRIBUTES: Final = "a"
+COMPRESSED_STATE_CONTEXT: Final = "c"
+COMPRESSED_STATE_LAST_CHANGED: Final = "lc"
+COMPRESSED_STATE_LAST_UPDATED: Final = "lu"
 
 # #### SERVICES ####
 SERVICE_TURN_ON: Final = "turn_on"
@@ -1601,7 +1610,9 @@ CAST_APP_ID_HOMEASSISTANT_LOVELACE: Final = "A078F6B0"
 # User used by Supervisor
 HASSIO_USER_NAME = "Supervisor"
 
-SIGNAL_BOOTSTRAP_INTEGRATIONS = "bootstrap_integrations"
+SIGNAL_BOOTSTRAP_INTEGRATIONS: SignalType[dict[str, float]] = SignalType(
+    "bootstrap_integrations"
+)
 
 
 # hass.data key for logging information.

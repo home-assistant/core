@@ -1,9 +1,14 @@
 """Tests for the Airthings BLE integration."""
+
 from __future__ import annotations
 
 from unittest.mock import patch
 
-from airthings_ble import AirthingsBluetoothDeviceData, AirthingsDevice
+from airthings_ble import (
+    AirthingsBluetoothDeviceData,
+    AirthingsDevice,
+    AirthingsDeviceType,
+)
 
 from homeassistant.components.airthings_ble.const import DOMAIN
 from homeassistant.components.bluetooth.models import BluetoothServiceInfoBleak
@@ -59,7 +64,7 @@ WAVE_SERVICE_INFO = BluetoothServiceInfoBleak(
     service_data={
         # Sensor data
         "b42e2a68-ade7-11e4-89d3-123b93f75cba": bytearray(
-            b"\x01\x02\x03\x04\x00\x05\x00\x06\x00\x07\x00\x08\x00\x09\x00\x0A"
+            b"\x01\x02\x03\x04\x00\x05\x00\x06\x00\x07\x00\x08\x00\x09\x00\x0a"
         ),
         # Manufacturer
         "00002a29-0000-1000-8000-00805f9b34fb": bytearray(b"Airthings AS"),
@@ -104,7 +109,7 @@ VIEW_PLUS_SERVICE_INFO = BluetoothServiceInfoBleak(
     manufacturer_data={820: b"\xe4/\xa5\xae\t\x00"},
     service_data={
         "b42eb4a6-ade7-11e4-89d3-123b93f75cba": bytearray(
-            b"\x01\x02\x03\x04\x00\x05\x00\x06\x00\x07\x00\x08\x00\x09\x00\x0A"
+            b"\x01\x02\x03\x04\x00\x05\x00\x06\x00\x07\x00\x08\x00\x09\x00\x0a"
         ),
         # Manufacturer
         "00002a29-0000-1000-8000-00805f9b34fb": bytearray(b"Airthings AS"),
@@ -161,8 +166,7 @@ WAVE_DEVICE_INFO = AirthingsDevice(
     manufacturer="Airthings AS",
     hw_version="REV A",
     sw_version="G-BLE-1.5.3-master+0",
-    model="Wave Plus",
-    model_raw="2930",
+    model=AirthingsDeviceType.WAVE_PLUS,
     name="Airthings Wave+",
     identifier="123456",
     sensors={

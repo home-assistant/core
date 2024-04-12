@@ -1,4 +1,5 @@
 """Support for tracking consumption over given periods of time."""
+
 from datetime import timedelta
 import logging
 
@@ -163,8 +164,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 )
             )
 
-            hass.data[DATA_UTILITY][meter][CONF_TARIFF_ENTITY] = "{}.{}".format(
-                SELECT_DOMAIN, meter
+            hass.data[DATA_UTILITY][meter][CONF_TARIFF_ENTITY] = (
+                f"{SELECT_DOMAIN}.{meter}"
             )
 
             # add one meter for each tariff
@@ -212,9 +213,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entity_entry = entity_registry.async_get_or_create(
             Platform.SELECT, DOMAIN, entry.entry_id, suggested_object_id=entry.title
         )
-        hass.data[DATA_UTILITY][entry.entry_id][
-            CONF_TARIFF_ENTITY
-        ] = entity_entry.entity_id
+        hass.data[DATA_UTILITY][entry.entry_id][CONF_TARIFF_ENTITY] = (
+            entity_entry.entity_id
+        )
         await hass.config_entries.async_forward_entry_setups(
             entry, (Platform.SELECT, Platform.SENSOR)
         )

@@ -1,4 +1,5 @@
 """Support for Modbus."""
+
 from __future__ import annotations
 
 import logging
@@ -50,7 +51,7 @@ from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (  # noqa: F401
+from .const import (
     CALL_TYPE_COIL,
     CALL_TYPE_DISCRETE,
     CALL_TYPE_REGISTER_HOLDING,
@@ -60,7 +61,6 @@ from .const import (  # noqa: F401
     CONF_BAUDRATE,
     CONF_BYTESIZE,
     CONF_CLIMATES,
-    CONF_CLOSE_COMM_ON_ERROR,
     CONF_DATA_TYPE,
     CONF_DEVICE_ADDRESS,
     CONF_FAN_MODE_AUTO,
@@ -97,7 +97,6 @@ from .const import (  # noqa: F401
     CONF_PARITY,
     CONF_PRECISION,
     CONF_RETRIES,
-    CONF_RETRY_ON_EMPTY,
     CONF_SCALE,
     CONF_SLAVE_COUNT,
     CONF_STATE_CLOSED,
@@ -133,7 +132,6 @@ from .const import (  # noqa: F401
 )
 from .modbus import ModbusHub, async_modbus_setup
 from .validators import (
-    check_config,
     check_hvac_target_temp_registers,
     duplicate_fan_mode_validator,
     hvac_fixedsize_reglist_validator,
@@ -373,10 +371,8 @@ MODBUS_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_NAME, default=DEFAULT_HUB): cv.string,
         vol.Optional(CONF_TIMEOUT, default=3): cv.socket_timeout,
-        vol.Optional(CONF_CLOSE_COMM_ON_ERROR): cv.boolean,
         vol.Optional(CONF_DELAY, default=0): cv.positive_int,
         vol.Optional(CONF_RETRIES): cv.positive_int,
-        vol.Optional(CONF_RETRY_ON_EMPTY): cv.boolean,
         vol.Optional(CONF_MSG_WAIT): cv.positive_int,
         vol.Optional(CONF_BINARY_SENSORS): vol.All(
             cv.ensure_list, [BINARY_SENSOR_SCHEMA]
@@ -421,7 +417,6 @@ CONFIG_SCHEMA = vol.Schema(
             [
                 vol.Any(SERIAL_SCHEMA, ETHERNET_SCHEMA),
             ],
-            check_config,
         ),
     },
     extra=vol.ALLOW_EXTRA,
@@ -445,6 +440,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_reset_platform(hass: HomeAssistant, integration_name: str) -> None:
     """Release modbus resources."""
+    if DOMAIN not in hass.data:
+        _LOGGER.error("Modbus cannot reload, because it was never loaded")
+        return
     _LOGGER.info("Modbus reloading")
     hubs = hass.data[DOMAIN]
     for name in hubs:

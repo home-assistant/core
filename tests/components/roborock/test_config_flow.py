@@ -1,4 +1,5 @@
 """Test Roborock config flow."""
+
 from copy import deepcopy
 from unittest.mock import patch
 

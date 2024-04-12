@@ -1,4 +1,5 @@
 """The tests for the Xiaomi router device tracker platform."""
+
 from http import HTTPStatus
 import logging
 from unittest.mock import MagicMock, call, patch

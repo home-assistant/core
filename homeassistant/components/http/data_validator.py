@@ -1,4 +1,5 @@
 """Decorator for view methods to help with data validation."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Coroutine

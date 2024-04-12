@@ -1,4 +1,5 @@
 """Provide integration helpers that are aware of the matter integration."""
+
 from __future__ import annotations
 
 import asyncio

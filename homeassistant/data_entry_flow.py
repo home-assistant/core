@@ -1,4 +1,5 @@
 """Classes to help gather user submissions."""
+
 from __future__ import annotations
 
 import abc
@@ -193,7 +194,7 @@ def _map_error_to_schema_errors(
 class FlowManager(abc.ABC, Generic[_FlowResultT, _HandlerT]):
     """Manage all the flows that are in progress."""
 
-    _flow_result: Callable[..., _FlowResultT] = FlowResult  # type: ignore[assignment]
+    _flow_result: type[_FlowResultT] = FlowResult  # type: ignore[assignment]
 
     def __init__(
         self,
@@ -614,7 +615,7 @@ class FlowManager(abc.ABC, Generic[_FlowResultT, _HandlerT]):
 class FlowHandler(Generic[_FlowResultT, _HandlerT]):
     """Handle a data entry flow."""
 
-    _flow_result: Callable[..., _FlowResultT] = FlowResult  # type: ignore[assignment]
+    _flow_result: type[_FlowResultT] = FlowResult  # type: ignore[assignment]
 
     # Set by flow manager
     cur_step: _FlowResultT | None = None

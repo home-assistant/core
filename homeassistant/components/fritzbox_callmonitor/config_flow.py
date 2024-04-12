@@ -1,4 +1,5 @@
 """Config flow for fritzbox_callmonitor."""
+
 from __future__ import annotations
 
 from enum import StrEnum
@@ -127,12 +128,10 @@ class FritzBoxCallMonitorConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def _get_list_of_phonebook_names(self) -> list[str]:
         """Return list of names for all available phonebooks."""
-        phonebook_names: list[str] = []
-
-        for phonebook_id in self._phonebook_ids:
-            phonebook_names.append(await self._get_name_of_phonebook(phonebook_id))
-
-        return phonebook_names
+        return [
+            await self._get_name_of_phonebook(phonebook_id)
+            for phonebook_id in self._phonebook_ids
+        ]
 
     @staticmethod
     @callback

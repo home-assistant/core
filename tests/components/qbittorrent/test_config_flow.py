@@ -1,4 +1,5 @@
 """Test the qBittorrent config flow."""
+
 import pytest
 from requests.exceptions import RequestException
 import requests_mock

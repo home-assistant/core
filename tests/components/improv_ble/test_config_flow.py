@@ -1,4 +1,5 @@
 """Test the Improv via BLE config flow."""
+
 from collections.abc import Callable
 from unittest.mock import patch
 
@@ -252,13 +253,16 @@ async def _test_common_success(
 ) -> None:
     """Test bluetooth and user flow success paths."""
 
-    with patch(
-        f"{IMPROV_BLE}.config_flow.ImprovBLEClient.need_authorization",
-        return_value=False,
-    ), patch(
-        f"{IMPROV_BLE}.config_flow.ImprovBLEClient.provision",
-        return_value=url,
-    ) as mock_provision:
+    with (
+        patch(
+            f"{IMPROV_BLE}.config_flow.ImprovBLEClient.need_authorization",
+            return_value=False,
+        ),
+        patch(
+            f"{IMPROV_BLE}.config_flow.ImprovBLEClient.provision",
+            return_value=url,
+        ) as mock_provision,
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"ssid": "MyWIFI", "password": "secret"}
         )
@@ -304,13 +308,16 @@ async def _test_common_success_w_authorize(
         state_callback(State.AUTHORIZED)
         return lambda: None
 
-    with patch(
-        f"{IMPROV_BLE}.config_flow.ImprovBLEClient.need_authorization",
-        return_value=True,
-    ), patch(
-        f"{IMPROV_BLE}.config_flow.ImprovBLEClient.subscribe_state_updates",
-        side_effect=subscribe_state_updates,
-    ) as mock_subscribe_state_updates:
+    with (
+        patch(
+            f"{IMPROV_BLE}.config_flow.ImprovBLEClient.need_authorization",
+            return_value=True,
+        ),
+        patch(
+            f"{IMPROV_BLE}.config_flow.ImprovBLEClient.subscribe_state_updates",
+            side_effect=subscribe_state_updates,
+        ) as mock_subscribe_state_updates,
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"ssid": "MyWIFI", "password": "secret"}
         )
@@ -320,13 +327,16 @@ async def _test_common_success_w_authorize(
         mock_subscribe_state_updates.assert_awaited_once()
         await hass.async_block_till_done()
 
-    with patch(
-        f"{IMPROV_BLE}.config_flow.ImprovBLEClient.need_authorization",
-        return_value=False,
-    ), patch(
-        f"{IMPROV_BLE}.config_flow.ImprovBLEClient.provision",
-        return_value="http://blabla.local",
-    ) as mock_provision:
+    with (
+        patch(
+            f"{IMPROV_BLE}.config_flow.ImprovBLEClient.need_authorization",
+            return_value=False,
+        ),
+        patch(
+            f"{IMPROV_BLE}.config_flow.ImprovBLEClient.provision",
+            return_value="http://blabla.local",
+        ) as mock_provision,
+    ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
         assert result["type"] == FlowResultType.SHOW_PROGRESS
         assert result["progress_action"] == "provisioning"
@@ -362,11 +372,11 @@ async def test_bluetooth_step_already_in_progress(hass: HomeAssistant) -> None:
 
 @pytest.mark.parametrize(
     ("exc", "error"),
-    (
+    [
         (BleakError, "cannot_connect"),
         (Exception, "unknown"),
         (improv_ble_errors.CharacteristicMissingError, "characteristic_missing"),
-    ),
+    ],
 )
 async def test_can_identify_fails(hass: HomeAssistant, exc, error) -> None:
     """Test bluetooth flow with error."""
@@ -397,11 +407,11 @@ async def test_can_identify_fails(hass: HomeAssistant, exc, error) -> None:
 
 @pytest.mark.parametrize(
     ("exc", "error"),
-    (
+    [
         (BleakError, "cannot_connect"),
         (Exception, "unknown"),
         (improv_ble_errors.CharacteristicMissingError, "characteristic_missing"),
-    ),
+    ],
 )
 async def test_identify_fails(hass: HomeAssistant, exc, error) -> None:
     """Test bluetooth flow with error."""
@@ -440,11 +450,11 @@ async def test_identify_fails(hass: HomeAssistant, exc, error) -> None:
 
 @pytest.mark.parametrize(
     ("exc", "error"),
-    (
+    [
         (BleakError, "cannot_connect"),
         (Exception, "unknown"),
         (improv_ble_errors.CharacteristicMissingError, "characteristic_missing"),
-    ),
+    ],
 )
 async def test_need_authorization_fails(hass: HomeAssistant, exc, error) -> None:
     """Test bluetooth flow with error."""
@@ -484,11 +494,11 @@ async def test_need_authorization_fails(hass: HomeAssistant, exc, error) -> None
 
 @pytest.mark.parametrize(
     ("exc", "error"),
-    (
+    [
         (BleakError, "cannot_connect"),
         (Exception, "unknown"),
         (improv_ble_errors.CharacteristicMissingError, "characteristic_missing"),
-    ),
+    ],
 )
 async def test_authorize_fails(hass: HomeAssistant, exc, error) -> None:
     """Test bluetooth flow with error."""
@@ -516,12 +526,15 @@ async def test_authorize_fails(hass: HomeAssistant, exc, error) -> None:
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "provision"
 
-    with patch(
-        f"{IMPROV_BLE}.config_flow.ImprovBLEClient.need_authorization",
-        return_value=True,
-    ), patch(
-        f"{IMPROV_BLE}.config_flow.ImprovBLEClient.subscribe_state_updates",
-        side_effect=exc,
+    with (
+        patch(
+            f"{IMPROV_BLE}.config_flow.ImprovBLEClient.need_authorization",
+            return_value=True,
+        ),
+        patch(
+            f"{IMPROV_BLE}.config_flow.ImprovBLEClient.subscribe_state_updates",
+            side_effect=exc,
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"ssid": "MyWIFI", "password": "secret"}
@@ -556,12 +569,15 @@ async def _test_provision_error(hass: HomeAssistant, exc) -> None:
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "provision"
 
-    with patch(
-        f"{IMPROV_BLE}.config_flow.ImprovBLEClient.need_authorization",
-        return_value=False,
-    ), patch(
-        f"{IMPROV_BLE}.config_flow.ImprovBLEClient.provision",
-        side_effect=exc,
+    with (
+        patch(
+            f"{IMPROV_BLE}.config_flow.ImprovBLEClient.need_authorization",
+            return_value=False,
+        ),
+        patch(
+            f"{IMPROV_BLE}.config_flow.ImprovBLEClient.provision",
+            side_effect=exc,
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"ssid": "MyWIFI", "password": "secret"}
@@ -576,12 +592,12 @@ async def _test_provision_error(hass: HomeAssistant, exc) -> None:
 
 @pytest.mark.parametrize(
     ("exc", "error"),
-    (
+    [
         (BleakError, "cannot_connect"),
         (Exception, "unknown"),
         (improv_ble_errors.CharacteristicMissingError, "characteristic_missing"),
         (improv_ble_errors.ProvisioningFailed(Error.UNKNOWN_ERROR), "unknown"),
-    ),
+    ],
 )
 async def test_provision_fails(hass: HomeAssistant, exc, error) -> None:
     """Test bluetooth flow with error."""
@@ -594,7 +610,7 @@ async def test_provision_fails(hass: HomeAssistant, exc, error) -> None:
 
 @pytest.mark.parametrize(
     ("exc", "error"),
-    ((improv_ble_errors.ProvisioningFailed(Error.NOT_AUTHORIZED), "unknown"),),
+    [(improv_ble_errors.ProvisioningFailed(Error.NOT_AUTHORIZED), "unknown")],
 )
 async def test_provision_not_authorized(hass: HomeAssistant, exc, error) -> None:
     """Test bluetooth flow with error."""
@@ -618,12 +634,12 @@ async def test_provision_not_authorized(hass: HomeAssistant, exc, error) -> None
 
 @pytest.mark.parametrize(
     ("exc", "error"),
-    (
+    [
         (
             improv_ble_errors.ProvisioningFailed(Error.UNABLE_TO_CONNECT),
             "unable_to_connect",
         ),
-    ),
+    ],
 )
 async def test_provision_retry(hass: HomeAssistant, exc, error) -> None:
     """Test bluetooth flow with error."""

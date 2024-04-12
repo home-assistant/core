@@ -1,4 +1,5 @@
 """Test the Foscam config flow."""
+
 from unittest.mock import patch
 
 from libpyfoscam.foscam import (
@@ -84,12 +85,15 @@ async def test_user_valid(hass: HomeAssistant) -> None:
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.foscam.config_flow.FoscamCamera",
-    ) as mock_foscam_camera, patch(
-        "homeassistant.components.foscam.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.foscam.config_flow.FoscamCamera",
+        ) as mock_foscam_camera,
+        patch(
+            "homeassistant.components.foscam.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         setup_mock_foscam_camera(mock_foscam_camera)
 
         result = await hass.config_entries.flow.async_configure(

@@ -1,4 +1,5 @@
 """Test the homewizard config flow."""
+
 from ipaddress import ip_address
 from unittest.mock import AsyncMock, MagicMock
 
@@ -289,6 +290,7 @@ async def test_error_flow(
 
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {"base": reason}
+    assert result["data_schema"]({}) == {CONF_IP_ADDRESS: "127.0.0.1"}
 
     # Recover from error
     mock_homewizardenergy.device.side_effect = None

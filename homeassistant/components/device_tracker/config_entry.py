@@ -1,4 +1,5 @@
 """Code to set up a device tracker platform using a config entry."""
+
 from __future__ import annotations
 
 import asyncio

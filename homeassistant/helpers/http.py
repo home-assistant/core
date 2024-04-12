@@ -1,4 +1,5 @@
 """Helper to track the current http request."""
+
 from __future__ import annotations
 
 import asyncio
@@ -16,7 +17,7 @@ from aiohttp.web_exceptions import (
     HTTPInternalServerError,
     HTTPUnauthorized,
 )
-from aiohttp.web_urldispatcher import AbstractRoute
+from aiohttp.web_urldispatcher import AbstractResource, AbstractRoute
 import voluptuous as vol
 
 from homeassistant import exceptions
@@ -29,7 +30,10 @@ from .json import find_paths_unserializable_data, json_bytes, json_dumps
 _LOGGER = logging.getLogger(__name__)
 
 
+AllowCorsType = Callable[[AbstractRoute | AbstractResource], None]
 KEY_AUTHENTICATED: Final = "ha_authenticated"
+KEY_ALLOW_ALL_CORS = AppKey[AllowCorsType]("allow_all_cors")
+KEY_ALLOW_CONFIGRED_CORS = AppKey[AllowCorsType]("allow_configured_cors")
 KEY_HASS: AppKey[HomeAssistant] = AppKey("hass")
 
 current_request: ContextVar[Request | None] = ContextVar(
@@ -54,7 +58,7 @@ def request_handler_factory(
         authenticated = request.get(KEY_AUTHENTICATED, False)
 
         if view.requires_auth and not authenticated:
-            raise HTTPUnauthorized()
+            raise HTTPUnauthorized
 
         if _LOGGER.isEnabledFor(logging.DEBUG):
             _LOGGER.debug(
@@ -70,11 +74,11 @@ def request_handler_factory(
             else:
                 result = handler(request, **request.match_info)
         except vol.Invalid as err:
-            raise HTTPBadRequest() from err
+            raise HTTPBadRequest from err
         except exceptions.ServiceNotFound as err:
-            raise HTTPInternalServerError() from err
+            raise HTTPInternalServerError from err
         except exceptions.Unauthorized as err:
-            raise HTTPUnauthorized() from err
+            raise HTTPUnauthorized from err
 
         if isinstance(result, web.StreamResponse):
             # The method handler returned a ready-made Response, how nice of it
@@ -162,7 +166,7 @@ class HomeAssistantView:
     ) -> None:
         """Register the view with a router."""
         assert self.url is not None, "No url set for view"
-        urls = [self.url] + self.extra_urls
+        urls = [self.url, *self.extra_urls]
         routes: list[AbstractRoute] = []
 
         for method in ("get", "post", "delete", "put", "patch", "head", "options"):
@@ -171,14 +175,13 @@ class HomeAssistantView:
 
             handler = request_handler_factory(hass, self, handler)
 
-            for url in urls:
-                routes.append(router.add_route(method, url, handler))
+            routes.extend(router.add_route(method, url, handler) for url in urls)
 
         # Use `get` because CORS middleware is not be loaded in emulated_hue
         if self.cors_allowed:
-            allow_cors = app.get("allow_all_cors")
+            allow_cors = app.get(KEY_ALLOW_ALL_CORS)
         else:
-            allow_cors = app.get("allow_configured_cors")
+            allow_cors = app.get(KEY_ALLOW_CONFIGRED_CORS)
 
         if allow_cors:
             for route in routes:

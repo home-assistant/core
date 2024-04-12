@@ -1,4 +1,5 @@
 """Provide pre-made queries on top of the recorder component."""
+
 from __future__ import annotations
 
 from collections import defaultdict
@@ -813,6 +814,7 @@ def _sorted_states_to_dict(
                         }
                     )
                     prev_state = state
+            continue
 
         for row in group:
             if (state := row[state_idx]) != prev_state:

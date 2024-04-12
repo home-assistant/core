@@ -1,4 +1,5 @@
 """Test the Loqed config flow."""
+
 from ipaddress import ip_address
 import json
 from unittest.mock import Mock, patch
@@ -48,17 +49,23 @@ async def test_create_entry_zeroconf(hass: HomeAssistant) -> None:
     webhook_id = "Webhook_ID"
     all_locks_response = json.loads(load_fixture("loqed/get_all_locks.json"))
 
-    with patch(
-        "loqedAPI.cloud_loqed.LoqedCloudAPI.async_get_locks",
-        return_value=all_locks_response,
-    ), patch(
-        "loqedAPI.loqed.LoqedAPI.async_get_lock",
-        return_value=mock_lock,
-    ), patch(
-        "homeassistant.components.loqed.async_setup_entry",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.webhook.async_generate_id", return_value=webhook_id
+    with (
+        patch(
+            "loqedAPI.cloud_loqed.LoqedCloudAPI.async_get_locks",
+            return_value=all_locks_response,
+        ),
+        patch(
+            "loqedAPI.loqed.LoqedAPI.async_get_lock",
+            return_value=mock_lock,
+        ),
+        patch(
+            "homeassistant.components.loqed.async_setup_entry",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.webhook.async_generate_id",
+            return_value=webhook_id,
+        ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -103,19 +110,26 @@ async def test_create_entry_user(
     all_locks_response = json.loads(load_fixture("loqed/get_all_locks.json"))
     found_lock = all_locks_response["data"][0]
 
-    with patch(
-        "loqedAPI.cloud_loqed.LoqedCloudAPI.async_get_locks",
-        return_value=all_locks_response,
-    ), patch(
-        "loqedAPI.loqed.LoqedAPI.async_get_lock",
-        return_value=mock_lock,
-    ), patch(
-        "homeassistant.components.loqed.async_setup_entry",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.webhook.async_generate_id", return_value=webhook_id
-    ), patch(
-        "loqedAPI.loqed.LoqedAPI.async_get_lock_details", return_value=lock_result
+    with (
+        patch(
+            "loqedAPI.cloud_loqed.LoqedCloudAPI.async_get_locks",
+            return_value=all_locks_response,
+        ),
+        patch(
+            "loqedAPI.loqed.LoqedAPI.async_get_lock",
+            return_value=mock_lock,
+        ),
+        patch(
+            "homeassistant.components.loqed.async_setup_entry",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.webhook.async_generate_id",
+            return_value=webhook_id,
+        ),
+        patch(
+            "loqedAPI.loqed.LoqedAPI.async_get_lock_details", return_value=lock_result
+        ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -207,10 +221,15 @@ async def test_cannot_connect_when_lock_not_reachable(
 
     all_locks_response = json.loads(load_fixture("loqed/get_all_locks.json"))
 
-    with patch(
-        "loqedAPI.cloud_loqed.LoqedCloudAPI.async_get_locks",
-        return_value=all_locks_response,
-    ), patch("loqedAPI.loqed.LoqedAPI.async_get_lock", side_effect=aiohttp.ClientError):
+    with (
+        patch(
+            "loqedAPI.cloud_loqed.LoqedCloudAPI.async_get_locks",
+            return_value=all_locks_response,
+        ),
+        patch(
+            "loqedAPI.loqed.LoqedAPI.async_get_lock", side_effect=aiohttp.ClientError
+        ),
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_API_TOKEN: "eyadiuyfasiuasf", CONF_NAME: "MyLock"},

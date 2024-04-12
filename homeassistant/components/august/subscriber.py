@@ -1,4 +1,5 @@
 """Base class for August entity."""
+
 from __future__ import annotations
 
 from abc import abstractmethod
@@ -49,8 +50,16 @@ class AugustSubscriberMixin:
         self._hass.async_create_task(self._async_refresh(now), eager_start=True)
 
     @callback
+    def _async_cancel_update_interval(self, _: Event | None = None) -> None:
+        """Cancel the scheduled update."""
+        if self._unsub_interval:
+            self._unsub_interval()
+            self._unsub_interval = None
+
+    @callback
     def _async_setup_listeners(self) -> None:
         """Create interval and stop listeners."""
+        self._async_cancel_update_interval()
         self._unsub_interval = async_track_time_interval(
             self._hass,
             self._async_scheduled_refresh,
@@ -58,15 +67,12 @@ class AugustSubscriberMixin:
             name="august refresh",
         )
 
-        @callback
-        def _async_cancel_update_interval(_: Event) -> None:
-            self._stop_interval = None
-            if self._unsub_interval:
-                self._unsub_interval()
-
-        self._stop_interval = self._hass.bus.async_listen(
-            EVENT_HOMEASSISTANT_STOP, _async_cancel_update_interval
-        )
+        if not self._stop_interval:
+            self._stop_interval = self._hass.bus.async_listen(
+                EVENT_HOMEASSISTANT_STOP,
+                self._async_cancel_update_interval,
+                run_immediately=True,
+            )
 
     @callback
     def async_unsubscribe_device_id(
@@ -79,13 +85,7 @@ class AugustSubscriberMixin:
 
         if self._subscriptions:
             return
-
-        if self._unsub_interval:
-            self._unsub_interval()
-            self._unsub_interval = None
-        if self._stop_interval:
-            self._stop_interval()
-            self._stop_interval = None
+        self._async_cancel_update_interval()
 
     @callback
     def async_signal_device_id_update(self, device_id: str) -> None:

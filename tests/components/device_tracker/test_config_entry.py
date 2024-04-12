@@ -1,4 +1,5 @@
 """Test Device Tracker config entry things."""
+
 from collections.abc import Generator
 from typing import Any
 

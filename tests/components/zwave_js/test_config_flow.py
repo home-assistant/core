@@ -1,4 +1,5 @@
 """Test the Z-Wave JS config flow."""
+
 import asyncio
 from collections.abc import Generator
 from copy import copy
@@ -113,13 +114,16 @@ def mock_get_server_version(server_version_side_effect, server_version_timeout):
         min_schema_version=0,
         max_schema_version=1,
     )
-    with patch(
-        "homeassistant.components.zwave_js.config_flow.get_server_version",
-        side_effect=server_version_side_effect,
-        return_value=version_info,
-    ) as mock_version, patch(
-        "homeassistant.components.zwave_js.config_flow.SERVER_VERSION_TIMEOUT",
-        new=server_version_timeout,
+    with (
+        patch(
+            "homeassistant.components.zwave_js.config_flow.get_server_version",
+            side_effect=server_version_side_effect,
+            return_value=version_info,
+        ) as mock_version,
+        patch(
+            "homeassistant.components.zwave_js.config_flow.SERVER_VERSION_TIMEOUT",
+            new=server_version_timeout,
+        ),
     ):
         yield mock_version
 
@@ -191,12 +195,15 @@ async def test_manual(hass: HomeAssistant) -> None:
     )
     assert result["type"] == "form"
 
-    with patch(
-        "homeassistant.components.zwave_js.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.zwave_js.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.zwave_js.async_setup", return_value=True
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.zwave_js.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -347,12 +354,15 @@ async def test_supervisor_discovery(
         ),
     )
 
-    with patch(
-        "homeassistant.components.zwave_js.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.zwave_js.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.zwave_js.async_setup", return_value=True
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.zwave_js.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         await hass.async_block_till_done()
 
@@ -439,12 +449,15 @@ async def test_clean_discovery_on_user_create(
     assert result["type"] == "form"
     assert result["step_id"] == "manual"
 
-    with patch(
-        "homeassistant.components.zwave_js.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.zwave_js.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.zwave_js.async_setup", return_value=True
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.zwave_js.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -612,12 +625,15 @@ async def test_usb_discovery(
     assert result["type"] == "progress"
     assert result["step_id"] == "start_addon"
 
-    with patch(
-        "homeassistant.components.zwave_js.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.zwave_js.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.zwave_js.async_setup", return_value=True
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.zwave_js.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         await hass.async_block_till_done()
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
         await hass.async_block_till_done()
@@ -702,12 +718,15 @@ async def test_usb_discovery_addon_not_running(
     assert result["type"] == "progress"
     assert result["step_id"] == "start_addon"
 
-    with patch(
-        "homeassistant.components.zwave_js.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.zwave_js.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.zwave_js.async_setup", return_value=True
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.zwave_js.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         await hass.async_block_till_done()
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
         await hass.async_block_till_done()
@@ -788,12 +807,15 @@ async def test_discovery_addon_not_running(
     assert result["type"] == "progress"
     assert result["step_id"] == "start_addon"
 
-    with patch(
-        "homeassistant.components.zwave_js.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.zwave_js.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.zwave_js.async_setup", return_value=True
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.zwave_js.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         await hass.async_block_till_done()
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
         await hass.async_block_till_done()
@@ -882,12 +904,15 @@ async def test_discovery_addon_not_installed(
     assert result["type"] == "progress"
     assert result["step_id"] == "start_addon"
 
-    with patch(
-        "homeassistant.components.zwave_js.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.zwave_js.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.zwave_js.async_setup", return_value=True
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.zwave_js.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         await hass.async_block_till_done()
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
         await hass.async_block_till_done()
@@ -1016,12 +1041,15 @@ async def test_not_addon(hass: HomeAssistant, supervisor) -> None:
     assert result["type"] == "form"
     assert result["step_id"] == "manual"
 
-    with patch(
-        "homeassistant.components.zwave_js.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.zwave_js.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.zwave_js.async_setup", return_value=True
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.zwave_js.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -1068,12 +1096,15 @@ async def test_addon_running(
     assert result["type"] == "form"
     assert result["step_id"] == "on_supervisor"
 
-    with patch(
-        "homeassistant.components.zwave_js.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.zwave_js.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.zwave_js.async_setup", return_value=True
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.zwave_js.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"use_addon": True}
         )
@@ -1267,12 +1298,15 @@ async def test_addon_installed(
     assert result["type"] == "progress"
     assert result["step_id"] == "start_addon"
 
-    with patch(
-        "homeassistant.components.zwave_js.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.zwave_js.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.zwave_js.async_setup", return_value=True
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.zwave_js.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         await hass.async_block_till_done()
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
         await hass.async_block_till_done()
@@ -1644,12 +1678,15 @@ async def test_addon_not_installed(
     assert result["type"] == "progress"
     assert result["step_id"] == "start_addon"
 
-    with patch(
-        "homeassistant.components.zwave_js.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.zwave_js.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.zwave_js.async_setup", return_value=True
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.zwave_js.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         await hass.async_block_till_done()
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
         await hass.async_block_till_done()
@@ -2632,12 +2669,15 @@ async def test_import_addon_installed(
     assert result["type"] == "progress"
     assert result["step_id"] == "start_addon"
 
-    with patch(
-        "homeassistant.components.zwave_js.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.zwave_js.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.zwave_js.async_setup", return_value=True
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.zwave_js.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         await hass.async_block_till_done()
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
         await hass.async_block_till_done()
@@ -2680,12 +2720,15 @@ async def test_zeroconf(hass: HomeAssistant) -> None:
     assert result["type"] == "form"
     assert result["step_id"] == "zeroconf_confirm"
 
-    with patch(
-        "homeassistant.components.zwave_js.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.zwave_js.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.zwave_js.async_setup", return_value=True
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.zwave_js.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         await hass.async_block_till_done()
 

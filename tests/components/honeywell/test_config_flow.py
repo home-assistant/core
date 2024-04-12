@@ -1,4 +1,5 @@
 """Tests for honeywell config flow."""
+
 from unittest.mock import MagicMock, patch
 
 import aiosomecomfort

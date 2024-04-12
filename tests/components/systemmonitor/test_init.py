@@ -1,4 +1,5 @@
 """Test for System Monitor init."""
+
 from __future__ import annotations
 
 from unittest.mock import Mock

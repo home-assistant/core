@@ -1,4 +1,5 @@
 """Config flow for Logitech Squeezebox integration."""
+
 import asyncio
 from http import HTTPStatus
 import logging

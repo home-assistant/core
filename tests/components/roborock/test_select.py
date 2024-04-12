@@ -1,4 +1,5 @@
 """Test Roborock Select platform."""
+
 from unittest.mock import patch
 
 import pytest
@@ -47,10 +48,13 @@ async def test_update_failure(
     setup_entry: MockConfigEntry,
 ) -> None:
     """Test that changing a value will raise a homeassistanterror when it fails."""
-    with patch(
-        "homeassistant.components.roborock.coordinator.RoborockLocalClient.send_message",
-        side_effect=RoborockException(),
-    ), pytest.raises(HomeAssistantError):
+    with (
+        patch(
+            "homeassistant.components.roborock.coordinator.RoborockLocalClient.send_message",
+            side_effect=RoborockException(),
+        ),
+        pytest.raises(HomeAssistantError),
+    ):
         await hass.services.async_call(
             "select",
             SERVICE_SELECT_OPTION,

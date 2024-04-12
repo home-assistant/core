@@ -1,4 +1,5 @@
 """The Panasonic Viera integration."""
+
 from functools import partial
 import logging
 from urllib.error import HTTPError, URLError

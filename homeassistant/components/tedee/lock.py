@@ -1,4 +1,5 @@
 """Tedee lock entities."""
+
 from typing import Any
 
 from pytedee_async import TedeeClientException, TedeeLock, TedeeLockState

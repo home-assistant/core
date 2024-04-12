@@ -1,4 +1,5 @@
 """Tests for the Spider config flow."""
+
 from unittest.mock import Mock, patch
 
 import pytest
@@ -36,11 +37,14 @@ async def test_user(hass: HomeAssistant, spider) -> None:
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    with patch(
-        "homeassistant.components.spider.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.spider.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.spider.async_setup", return_value=True
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.spider.async_setup_entry", return_value=True
+        ) as mock_setup_entry,
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=SPIDER_USER_DATA
         )
@@ -59,13 +63,16 @@ async def test_user(hass: HomeAssistant, spider) -> None:
 async def test_import(hass: HomeAssistant, spider) -> None:
     """Test import step."""
 
-    with patch(
-        "homeassistant.components.spider.async_setup",
-        return_value=True,
-    ) as mock_setup, patch(
-        "homeassistant.components.spider.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.spider.async_setup",
+            return_value=True,
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.spider.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},

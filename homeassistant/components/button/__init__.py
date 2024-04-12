@@ -1,4 +1,5 @@
 """Component to pressing a button as platforms."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -122,10 +123,8 @@ class ButtonEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_
 
     def __set_state(self, state: str | None) -> None:
         """Set the entity state."""
-        try:  # noqa: SIM105  suppress is much slower
-            del self.state
-        except AttributeError:
-            pass
+        # Invalidate the cache of the cached property
+        self.__dict__.pop("state", None)
         self.__last_pressed_isoformat = state
 
     @final
@@ -147,7 +146,7 @@ class ButtonEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_
 
     def press(self) -> None:
         """Press the button."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_press(self) -> None:
         """Press the button."""

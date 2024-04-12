@@ -1,4 +1,5 @@
 """Test the baf init flow."""
+
 from unittest.mock import patch
 
 from aiobafi6.exceptions import DeviceUUIDMismatchError

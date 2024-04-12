@@ -1,0 +1,6 @@
+{
+  "services": {
+    "notify": "mdi:bell-ring",
+    "persistent_notification": "mdi:bell-badge"
+  }
+}

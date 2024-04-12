@@ -1,4 +1,5 @@
 """Freedompro component tests."""
+
 import logging
 from unittest.mock import patch
 
@@ -13,7 +14,9 @@ LOGGER = logging.getLogger(__name__)
 ENTITY_ID = f"{DOMAIN}.fake_name"
 
 
-async def test_async_setup_entry(hass: HomeAssistant, init_integration) -> None:
+async def test_async_setup_entry(
+    hass: HomeAssistant, init_integration: MockConfigEntry
+) -> None:
     """Test a successful setup entry."""
     entry = init_integration
     assert entry is not None
@@ -43,7 +46,9 @@ async def test_config_not_ready(hass: HomeAssistant) -> None:
         assert entry.state == ConfigEntryState.SETUP_RETRY
 
 
-async def test_unload_entry(hass: HomeAssistant, init_integration) -> None:
+async def test_unload_entry(
+    hass: HomeAssistant, init_integration: MockConfigEntry
+) -> None:
     """Test successful unload of entry."""
     entry = init_integration
 

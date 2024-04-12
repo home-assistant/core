@@ -1,4 +1,5 @@
 """Test Ecovacs config flow."""
+
 from collections.abc import Awaitable, Callable
 import ssl
 from typing import Any

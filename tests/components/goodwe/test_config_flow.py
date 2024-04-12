@@ -1,4 +1,5 @@
 """Test the Goodwe config flow."""
+
 from unittest.mock import AsyncMock, patch
 
 from goodwe import InverterError
@@ -35,12 +36,15 @@ async def test_manual_setup(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
     assert not result["errors"]
 
-    with patch(
-        "homeassistant.components.goodwe.config_flow.connect",
-        return_value=mock_inverter(),
-    ), patch(
-        "homeassistant.components.goodwe.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.goodwe.config_flow.connect",
+            return_value=mock_inverter(),
+        ),
+        patch(
+            "homeassistant.components.goodwe.async_setup_entry", return_value=True
+        ) as mock_setup_entry,
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_HOST: TEST_HOST}
         )
@@ -68,10 +72,13 @@ async def test_manual_setup_already_exists(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
     assert not result["errors"]
 
-    with patch(
-        "homeassistant.components.goodwe.config_flow.connect",
-        return_value=mock_inverter(),
-    ), patch("homeassistant.components.goodwe.async_setup_entry", return_value=True):
+    with (
+        patch(
+            "homeassistant.components.goodwe.config_flow.connect",
+            return_value=mock_inverter(),
+        ),
+        patch("homeassistant.components.goodwe.async_setup_entry", return_value=True),
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_HOST: TEST_HOST}
         )

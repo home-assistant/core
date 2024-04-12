@@ -3,6 +3,7 @@
 These tests fake out the subscriber/devicemanager, and are not using a real
 pubsub subscriber.
 """
+
 import datetime
 from http import HTTPStatus
 from unittest.mock import AsyncMock, Mock, patch

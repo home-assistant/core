@@ -1,4 +1,5 @@
 """Test Lidarr config flow."""
+
 from homeassistant.components.lidarr.const import DEFAULT_NAME, DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_SOURCE

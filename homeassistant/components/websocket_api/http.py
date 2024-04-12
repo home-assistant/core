@@ -1,4 +1,5 @@
 """View to accept incoming websocket connection."""
+
 from __future__ import annotations
 
 import asyncio
@@ -291,7 +292,7 @@ class WebSocketHandler:
         self._handle_task = asyncio.current_task()
 
         unsub_stop = hass.bus.async_listen(
-            EVENT_HOMEASSISTANT_STOP, self._async_handle_hass_stop
+            EVENT_HOMEASSISTANT_STOP, self._async_handle_hass_stop, run_immediately=True
         )
 
         writer = wsock._writer  # pylint: disable=protected-access

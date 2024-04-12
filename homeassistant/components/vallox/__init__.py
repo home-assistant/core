@@ -1,4 +1,5 @@
 """Support for Vallox ventilation units."""
+
 from __future__ import annotations
 
 import ipaddress

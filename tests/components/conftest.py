@@ -1,9 +1,16 @@
 """Fixtures for component testing."""
+
 from collections.abc import Generator
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from unittest.mock import MagicMock, patch
 
 import pytest
+
+from homeassistant.const import STATE_OFF, STATE_ON
+
+if TYPE_CHECKING:
+    from tests.components.light.common import MockLight
+    from tests.components.sensor.common import MockSensor
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -100,3 +107,23 @@ def prevent_ffmpeg_subprocess() -> Generator[None, None, None]:
         "homeassistant.components.ffmpeg.FFVersion.get_version", return_value="6.0"
     ):
         yield
+
+
+@pytest.fixture
+def mock_light_entities() -> list["MockLight"]:
+    """Return mocked light entities."""
+    from tests.components.light.common import MockLight
+
+    return [
+        MockLight("Ceiling", STATE_ON),
+        MockLight("Ceiling", STATE_OFF),
+        MockLight(None, STATE_OFF),
+    ]
+
+
+@pytest.fixture
+def mock_sensor_entities() -> dict[str, "MockSensor"]:
+    """Return mocked sensor entities."""
+    from tests.components.sensor.common import get_mock_sensor_entities
+
+    return get_mock_sensor_entities()

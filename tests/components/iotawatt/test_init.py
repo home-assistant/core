@@ -1,4 +1,5 @@
 """Test init."""
+
 import httpx
 
 from homeassistant.config_entries import ConfigEntryState

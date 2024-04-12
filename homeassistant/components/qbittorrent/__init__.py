@@ -1,4 +1,5 @@
 """The qbittorrent component."""
+
 import logging
 
 from qbittorrent.client import LoginRequired

@@ -1,4 +1,5 @@
 """Test ZHA lock."""
+
 from unittest.mock import patch
 
 import pytest

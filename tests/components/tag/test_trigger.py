@@ -1,4 +1,5 @@
 """Tests for tag triggers."""
+
 import pytest
 
 import homeassistant.components.automation as automation

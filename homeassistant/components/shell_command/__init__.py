@@ -1,4 +1,5 @@
 """Expose regular shell commands as services."""
+
 from __future__ import annotations
 
 import asyncio
@@ -76,7 +77,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         else:
             # Template used. Break into list and use create_subprocess_exec
             # (which uses shell=False) for security
-            shlexed_cmd = [prog] + shlex.split(rendered_args)
+            shlexed_cmd = [prog, *shlex.split(rendered_args)]
 
             create_process = asyncio.create_subprocess_exec(
                 *shlexed_cmd,

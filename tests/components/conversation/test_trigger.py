@@ -5,7 +5,8 @@ import logging
 import pytest
 import voluptuous as vol
 
-from homeassistant.core import HomeAssistant
+from homeassistant.components import conversation
+from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import trigger
 from homeassistant.setup import async_setup_component
 
@@ -51,9 +52,7 @@ async def test_if_fires_on_event(hass: HomeAssistant, calls, setup_comp) -> None
     service_response = await hass.services.async_call(
         "conversation",
         "process",
-        {
-            "text": "Ha ha ha",
-        },
+        {"text": "Ha ha ha"},
         blocking=True,
         return_response=True,
     )
@@ -69,6 +68,7 @@ async def test_if_fires_on_event(hass: HomeAssistant, calls, setup_comp) -> None
         "sentence": "Ha ha ha",
         "slots": {},
         "details": {},
+        "device_id": None,
     }
 
 
@@ -160,6 +160,7 @@ async def test_response_same_sentence(hass: HomeAssistant, calls, setup_comp) ->
         "sentence": "test sentence",
         "slots": {},
         "details": {},
+        "device_id": None,
     }
 
 
@@ -311,6 +312,7 @@ async def test_same_trigger_multiple_sentences(
         "sentence": "hello",
         "slots": {},
         "details": {},
+        "device_id": None,
     }
 
 
@@ -488,4 +490,40 @@ async def test_wildcards(hass: HomeAssistant, calls, setup_comp) -> None:
                 "value": "the beatles",
             },
         },
+        "device_id": None,
     }
+
+
+async def test_trigger_with_device_id(hass: HomeAssistant) -> None:
+    """Test that a trigger receives a device_id."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "conversation", {})
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": {
+                "trigger": {
+                    "platform": "conversation",
+                    "command": ["test sentence"],
+                },
+                "action": {
+                    "set_conversation_response": "{{ trigger.device_id }}",
+                },
+            }
+        },
+    )
+
+    agent = await conversation._get_agent_manager(hass).async_get_agent()
+    assert isinstance(agent, conversation.DefaultAgent)
+
+    result = await agent.async_process(
+        conversation.ConversationInput(
+            text="test sentence",
+            context=Context(),
+            conversation_id=None,
+            device_id="my_device",
+            language=hass.config.language,
+        )
+    )
+    assert result.response.speech["plain"]["speech"] == "my_device"

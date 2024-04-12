@@ -1,4 +1,5 @@
 """Config flow for Hong Kong Observatory integration."""
+
 from __future__ import annotations
 
 from asyncio import timeout

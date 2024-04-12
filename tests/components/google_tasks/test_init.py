@@ -1,4 +1,5 @@
 """Tests for Google Tasks."""
+
 from collections.abc import Awaitable, Callable
 import http
 import time

@@ -1,4 +1,5 @@
 """Test the Electra Smart config flow."""
+
 from json import loads
 from unittest.mock import patch
 
@@ -48,15 +49,19 @@ async def test_one_time_password(hass: HomeAssistant):
 
     mock_generate_token = loads(load_fixture("generate_token_response.json", DOMAIN))
     mock_otp_response = loads(load_fixture("otp_response.json", DOMAIN))
-    with patch(
-        "electrasmart.api.ElectraAPI.generate_new_token",
-        return_value=mock_generate_token,
-    ), patch(
-        "electrasmart.api.ElectraAPI.validate_one_time_password",
-        return_value=mock_otp_response,
-    ), patch(
-        "electrasmart.api.ElectraAPI.fetch_devices",
-        return_value=[],
+    with (
+        patch(
+            "electrasmart.api.ElectraAPI.generate_new_token",
+            return_value=mock_generate_token,
+        ),
+        patch(
+            "electrasmart.api.ElectraAPI.validate_one_time_password",
+            return_value=mock_otp_response,
+        ),
+        patch(
+            "electrasmart.api.ElectraAPI.fetch_devices",
+            return_value=[],
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -74,12 +79,15 @@ async def test_one_time_password(hass: HomeAssistant):
 async def test_one_time_password_api_error(hass: HomeAssistant):
     """Test one time password."""
     mock_generate_token = loads(load_fixture("generate_token_response.json", DOMAIN))
-    with patch(
-        "electrasmart.api.ElectraAPI.generate_new_token",
-        return_value=mock_generate_token,
-    ), patch(
-        "electrasmart.api.ElectraAPI.validate_one_time_password",
-        side_effect=ElectraApiError,
+    with (
+        patch(
+            "electrasmart.api.ElectraAPI.generate_new_token",
+            return_value=mock_generate_token,
+        ),
+        patch(
+            "electrasmart.api.ElectraAPI.validate_one_time_password",
+            side_effect=ElectraApiError,
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -143,12 +151,15 @@ async def test_invalid_auth(hass: HomeAssistant):
     )
     mock_invalid_otp_response = loads(load_fixture("invalid_otp_response.json", DOMAIN))
 
-    with patch(
-        "electrasmart.api.ElectraAPI.generate_new_token",
-        return_value=mock_generate_token_response,
-    ), patch(
-        "electrasmart.api.ElectraAPI.validate_one_time_password",
-        return_value=mock_invalid_otp_response,
+    with (
+        patch(
+            "electrasmart.api.ElectraAPI.generate_new_token",
+            return_value=mock_generate_token_response,
+        ),
+        patch(
+            "electrasmart.api.ElectraAPI.validate_one_time_password",
+            return_value=mock_invalid_otp_response,
+        ),
     ):
         # test with required
         result = await hass.config_entries.flow.async_init(

@@ -1,4 +1,5 @@
 """Common stuff for Fritz!Tools tests."""
+
 from homeassistant.components import ssdp
 from homeassistant.components.fritz.const import DOMAIN
 from homeassistant.components.ssdp import ATTR_UPNP_FRIENDLY_NAME, ATTR_UPNP_UDN

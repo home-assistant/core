@@ -1,4 +1,5 @@
 """Test the Pure Energie config flow."""
+
 from ipaddress import ip_address
 from unittest.mock import MagicMock
 

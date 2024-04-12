@@ -1,4 +1,5 @@
 """Support for Broadlink remotes."""
+
 import asyncio
 from base64 import b64encode
 from collections import defaultdict

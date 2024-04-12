@@ -1,4 +1,5 @@
 """Switch platform for V2C EVSE."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
@@ -27,18 +28,13 @@ from .entity import V2CBaseEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
-class V2CRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class V2CSwitchEntityDescription(SwitchEntityDescription):
+    """Describes a V2C EVSE switch entity."""
 
     value_fn: Callable[[TrydanData], bool]
     turn_on_fn: Callable[[Trydan], Coroutine[Any, Any, Any]]
     turn_off_fn: Callable[[Trydan], Coroutine[Any, Any, Any]]
-
-
-@dataclass(frozen=True)
-class V2CSwitchEntityDescription(SwitchEntityDescription, V2CRequiredKeysMixin):
-    """Describes a V2C EVSE switch entity."""
 
 
 TRYDAN_SWITCHES = (

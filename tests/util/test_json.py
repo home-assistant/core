@@ -1,4 +1,5 @@
 """Test Home Assistant json utility functions."""
+
 from pathlib import Path
 import re
 

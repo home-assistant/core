@@ -1,4 +1,5 @@
 """The tests for the integration sensor platform."""
+
 from datetime import timedelta
 
 from freezegun import freeze_time
@@ -562,7 +563,7 @@ async def test_units(hass: HomeAssistant) -> None:
 
     # When source state goes to None / Unknown, expect an early exit without
     # changes to the state or unit_of_measurement
-    hass.states.async_set(entity_id, None, None)
+    hass.states.async_set(entity_id, None, {"unit_of_measurement": UnitOfPower.WATT})
     await hass.async_block_till_done()
 
     new_state = hass.states.get("sensor.integration")

@@ -1,4 +1,5 @@
 """Coordinator for Glances integration."""
+
 import logging
 from typing import Any
 

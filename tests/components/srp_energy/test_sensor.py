@@ -1,4 +1,5 @@
 """Tests for the srp_energy sensor platform."""
+
 import time
 from unittest.mock import patch
 
@@ -71,10 +72,11 @@ async def test_srp_entity_timeout(
 ) -> None:
     """Test the SrpEntity timing out."""
 
-    with patch(
-        "homeassistant.components.srp_energy.SrpEnergyClient", autospec=True
-    ) as srp_energy_mock, patch(
-        "homeassistant.components.srp_energy.coordinator.TIMEOUT", 0
+    with (
+        patch(
+            "homeassistant.components.srp_energy.SrpEnergyClient", autospec=True
+        ) as srp_energy_mock,
+        patch("homeassistant.components.srp_energy.coordinator.TIMEOUT", 0),
     ):
         client = srp_energy_mock.return_value
         client.validate.return_value = True

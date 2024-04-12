@@ -1,4 +1,5 @@
 """Config flow for swiss_public_transport."""
+
 import logging
 from typing import Any
 

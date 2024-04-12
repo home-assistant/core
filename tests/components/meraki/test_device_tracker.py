@@ -1,4 +1,5 @@
 """The tests the for Meraki device tracker."""
+
 from http import HTTPStatus
 import json
 
@@ -20,8 +21,9 @@ from homeassistant.setup import async_setup_component
 def meraki_client(event_loop, hass, hass_client):
     """Meraki mock client."""
     loop = event_loop
-    assert loop.run_until_complete(
-        async_setup_component(
+
+    async def setup_and_wait():
+        result = await async_setup_component(
             hass,
             device_tracker.DOMAIN,
             {
@@ -32,8 +34,10 @@ def meraki_client(event_loop, hass, hass_client):
                 }
             },
         )
-    )
+        await hass.async_block_till_done()
+        return result
 
+    assert loop.run_until_complete(setup_and_wait())
     return loop.run_until_complete(hass_client())
 
 

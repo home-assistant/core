@@ -1,4 +1,5 @@
 """The Samsung TV integration."""
+
 from __future__ import annotations
 
 from collections.abc import Coroutine, Mapping
@@ -148,7 +149,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await bridge.async_close_remote()
 
     entry.async_on_unload(
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_bridge)
+        hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STOP, stop_bridge, run_immediately=True
+        )
     )
 
     await _async_update_ssdp_locations(hass, entry)

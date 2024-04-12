@@ -1,4 +1,5 @@
 """The tests for Z-Wave JS logbook."""
+
 from zwave_js_server.const import CommandClass
 
 from homeassistant.components.zwave_js.const import (

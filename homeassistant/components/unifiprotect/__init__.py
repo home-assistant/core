@@ -1,4 +1,5 @@
 """UniFi Protect Platform."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -6,6 +7,7 @@ import logging
 
 from aiohttp.client_exceptions import ServerDisconnectedError
 from pyunifiprotect.data import Bootstrap
+from pyunifiprotect.data.types import FirmwareReleaseChannel
 from pyunifiprotect.exceptions import ClientError, NotAuthorized
 
 # Import the test_util.anonymize module from the pyunifiprotect package
@@ -108,22 +110,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = data_service
     entry.async_on_unload(entry.add_update_listener(_async_options_updated))
     entry.async_on_unload(
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, data_service.async_stop)
+        hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STOP, data_service.async_stop, run_immediately=True
+        )
     )
 
-    if (
-        not entry.options.get(CONF_ALLOW_EA, False)
-        and await nvr_info.get_is_prerelease()
+    if not entry.options.get(CONF_ALLOW_EA, False) and (
+        await nvr_info.get_is_prerelease()
+        or nvr_info.release_channel != FirmwareReleaseChannel.RELEASE
     ):
         ir.async_create_issue(
             hass,
             DOMAIN,
-            "ea_warning",
+            "ea_channel_warning",
             is_fixable=True,
             is_persistent=True,
             learn_more_url="https://www.home-assistant.io/integrations/unifiprotect#about-unifi-early-access",
             severity=IssueSeverity.WARNING,
-            translation_key="ea_warning",
+            translation_key="ea_channel_warning",
             translation_placeholders={"version": str(nvr_info.version)},
             data={"entry_id": entry.entry_id},
         )
@@ -149,7 +153,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     "version": str(nvr_info.version),
                 },
             )
-            ir.async_delete_issue(hass, DOMAIN, "ea_warning")
+            ir.async_delete_issue(hass, DOMAIN, "ea_channel_warning")
             _LOGGER.exception("Error setting up UniFi Protect integration: %s", err)
         raise
 

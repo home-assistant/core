@@ -1,4 +1,5 @@
 """Test pushbullet integration."""
+
 from unittest.mock import patch
 
 from pushbullet import InvalidKeyError, PushbulletError

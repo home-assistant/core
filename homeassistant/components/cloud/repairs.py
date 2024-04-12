@@ -1,4 +1,5 @@
 """Repairs implementation for the cloud integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -7,7 +8,11 @@ from typing import Any
 from hass_nabucasa import Cloud
 import voluptuous as vol
 
-from homeassistant.components.repairs import RepairsFlow, repairs_flow_manager
+from homeassistant.components.repairs import (
+    ConfirmRepairFlow,
+    RepairsFlow,
+    repairs_flow_manager,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import issue_registry as ir
@@ -119,4 +124,6 @@ async def async_create_fix_flow(
     data: dict[str, str | int | float | None] | None,
 ) -> RepairsFlow:
     """Create flow."""
-    return LegacySubscriptionRepairFlow()
+    if issue_id == "legacy_subscription":
+        return LegacySubscriptionRepairFlow()
+    return ConfirmRepairFlow()

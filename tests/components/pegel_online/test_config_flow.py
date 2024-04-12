@@ -1,4 +1,5 @@
 """Tests for Pegel Online config flow."""
+
 from unittest.mock import patch
 
 from aiohttp.client_exceptions import ClientError
@@ -35,11 +36,14 @@ async def test_user(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    with patch(
-        "homeassistant.components.pegel_online.async_setup_entry", return_value=True
-    ) as mock_setup_entry, patch(
-        "homeassistant.components.pegel_online.config_flow.PegelOnline",
-    ) as pegelonline:
+    with (
+        patch(
+            "homeassistant.components.pegel_online.async_setup_entry", return_value=True
+        ) as mock_setup_entry,
+        patch(
+            "homeassistant.components.pegel_online.config_flow.PegelOnline",
+        ) as pegelonline,
+    ):
         pegelonline.return_value = PegelOnlineMock(nearby_stations=MOCK_NEARBY_STATIONS)
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=MOCK_USER_DATA_STEP1
@@ -99,11 +103,14 @@ async def test_connection_error(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    with patch(
-        "homeassistant.components.pegel_online.async_setup_entry", return_value=True
-    ) as mock_setup_entry, patch(
-        "homeassistant.components.pegel_online.config_flow.PegelOnline",
-    ) as pegelonline:
+    with (
+        patch(
+            "homeassistant.components.pegel_online.async_setup_entry", return_value=True
+        ) as mock_setup_entry,
+        patch(
+            "homeassistant.components.pegel_online.config_flow.PegelOnline",
+        ) as pegelonline,
+    ):
         # connection issue during setup
         pegelonline.return_value = PegelOnlineMock(side_effect=ClientError)
         result = await hass.config_entries.flow.async_configure(
@@ -141,11 +148,14 @@ async def test_user_no_stations(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    with patch(
-        "homeassistant.components.pegel_online.async_setup_entry", return_value=True
-    ) as mock_setup_entry, patch(
-        "homeassistant.components.pegel_online.config_flow.PegelOnline",
-    ) as pegelonline:
+    with (
+        patch(
+            "homeassistant.components.pegel_online.async_setup_entry", return_value=True
+        ) as mock_setup_entry,
+        patch(
+            "homeassistant.components.pegel_online.config_flow.PegelOnline",
+        ) as pegelonline,
+    ):
         # no stations found
         pegelonline.return_value = PegelOnlineMock(nearby_stations={})
         result = await hass.config_entries.flow.async_configure(

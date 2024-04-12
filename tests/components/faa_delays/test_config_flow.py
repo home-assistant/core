@@ -1,4 +1,5 @@
 """Test the FAA Delays config flow."""
+
 from unittest.mock import patch
 
 from aiohttp import ClientConnectionError
@@ -27,10 +28,13 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["type"] == "form"
     assert result["errors"] == {}
 
-    with patch.object(faadelays.Airport, "update", new=mock_valid_airport), patch(
-        "homeassistant.components.faa_delays.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch.object(faadelays.Airport, "update", new=mock_valid_airport),
+        patch(
+            "homeassistant.components.faa_delays.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {

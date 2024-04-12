@@ -1,4 +1,5 @@
 """Config flow to configure the Nextbus integration."""
+
 from collections import Counter
 import logging
 

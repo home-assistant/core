@@ -56,15 +56,19 @@ async def test_open_cover(hass: HomeAssistant) -> None:
 
     assert operate_device.call_count == 0
 
-    with patch(
-        "homeassistant.components.linear_garage_door.cover.Linear.login",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.linear_garage_door.cover.Linear.operate_device",
-        return_value=None,
-    ) as operate_device, patch(
-        "homeassistant.components.linear_garage_door.cover.Linear.close",
-        return_value=True,
+    with (
+        patch(
+            "homeassistant.components.linear_garage_door.cover.Linear.login",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.linear_garage_door.cover.Linear.operate_device",
+            return_value=None,
+        ) as operate_device,
+        patch(
+            "homeassistant.components.linear_garage_door.cover.Linear.close",
+            return_value=True,
+        ),
     ):
         await hass.services.async_call(
             COVER_DOMAIN,
@@ -74,38 +78,51 @@ async def test_open_cover(hass: HomeAssistant) -> None:
         )
 
     assert operate_device.call_count == 1
-    with patch(
-        "homeassistant.components.linear_garage_door.cover.Linear.login",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.linear_garage_door.cover.Linear.get_devices",
-        return_value=[
-            {"id": "test1", "name": "Test Garage 1", "subdevices": ["GDO", "Light"]},
-            {"id": "test2", "name": "Test Garage 2", "subdevices": ["GDO", "Light"]},
-        ],
-    ), patch(
-        "homeassistant.components.linear_garage_door.cover.Linear.get_device_state",
-        side_effect=lambda id: {
-            "test1": {
-                "GDO": {"Open_B": "true", "Open_P": "100"},
-                "Light": {"On_B": "true", "On_P": "100"},
-            },
-            "test2": {
-                "GDO": {"Open_B": "false", "Opening_P": "0"},
-                "Light": {"On_B": "false", "On_P": "0"},
-            },
-            "test3": {
-                "GDO": {"Open_B": "false", "Opening_P": "0"},
-                "Light": {"On_B": "false", "On_P": "0"},
-            },
-            "test4": {
-                "GDO": {"Open_B": "true", "Opening_P": "100"},
-                "Light": {"On_B": "true", "On_P": "100"},
-            },
-        }[id],
-    ), patch(
-        "homeassistant.components.linear_garage_door.cover.Linear.close",
-        return_value=True,
+    with (
+        patch(
+            "homeassistant.components.linear_garage_door.cover.Linear.login",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.linear_garage_door.cover.Linear.get_devices",
+            return_value=[
+                {
+                    "id": "test1",
+                    "name": "Test Garage 1",
+                    "subdevices": ["GDO", "Light"],
+                },
+                {
+                    "id": "test2",
+                    "name": "Test Garage 2",
+                    "subdevices": ["GDO", "Light"],
+                },
+            ],
+        ),
+        patch(
+            "homeassistant.components.linear_garage_door.cover.Linear.get_device_state",
+            side_effect=lambda id: {
+                "test1": {
+                    "GDO": {"Open_B": "true", "Open_P": "100"},
+                    "Light": {"On_B": "true", "On_P": "100"},
+                },
+                "test2": {
+                    "GDO": {"Open_B": "false", "Opening_P": "0"},
+                    "Light": {"On_B": "false", "On_P": "0"},
+                },
+                "test3": {
+                    "GDO": {"Open_B": "false", "Opening_P": "0"},
+                    "Light": {"On_B": "false", "On_P": "0"},
+                },
+                "test4": {
+                    "GDO": {"Open_B": "true", "Opening_P": "100"},
+                    "Light": {"On_B": "true", "On_P": "100"},
+                },
+            }[id],
+        ),
+        patch(
+            "homeassistant.components.linear_garage_door.cover.Linear.close",
+            return_value=True,
+        ),
     ):
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=60))
         await hass.async_block_till_done()
@@ -130,15 +147,19 @@ async def test_close_cover(hass: HomeAssistant) -> None:
 
     assert operate_device.call_count == 0
 
-    with patch(
-        "homeassistant.components.linear_garage_door.cover.Linear.login",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.linear_garage_door.cover.Linear.operate_device",
-        return_value=None,
-    ) as operate_device, patch(
-        "homeassistant.components.linear_garage_door.cover.Linear.close",
-        return_value=True,
+    with (
+        patch(
+            "homeassistant.components.linear_garage_door.cover.Linear.login",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.linear_garage_door.cover.Linear.operate_device",
+            return_value=None,
+        ) as operate_device,
+        patch(
+            "homeassistant.components.linear_garage_door.cover.Linear.close",
+            return_value=True,
+        ),
     ):
         await hass.services.async_call(
             COVER_DOMAIN,
@@ -148,38 +169,51 @@ async def test_close_cover(hass: HomeAssistant) -> None:
         )
 
     assert operate_device.call_count == 1
-    with patch(
-        "homeassistant.components.linear_garage_door.cover.Linear.login",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.linear_garage_door.cover.Linear.get_devices",
-        return_value=[
-            {"id": "test1", "name": "Test Garage 1", "subdevices": ["GDO", "Light"]},
-            {"id": "test2", "name": "Test Garage 2", "subdevices": ["GDO", "Light"]},
-        ],
-    ), patch(
-        "homeassistant.components.linear_garage_door.cover.Linear.get_device_state",
-        side_effect=lambda id: {
-            "test1": {
-                "GDO": {"Open_B": "true", "Opening_P": "100"},
-                "Light": {"On_B": "true", "On_P": "100"},
-            },
-            "test2": {
-                "GDO": {"Open_B": "false", "Open_P": "0"},
-                "Light": {"On_B": "false", "On_P": "0"},
-            },
-            "test3": {
-                "GDO": {"Open_B": "false", "Opening_P": "0"},
-                "Light": {"On_B": "false", "On_P": "0"},
-            },
-            "test4": {
-                "GDO": {"Open_B": "true", "Opening_P": "100"},
-                "Light": {"On_B": "true", "On_P": "100"},
-            },
-        }[id],
-    ), patch(
-        "homeassistant.components.linear_garage_door.cover.Linear.close",
-        return_value=True,
+    with (
+        patch(
+            "homeassistant.components.linear_garage_door.cover.Linear.login",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.linear_garage_door.cover.Linear.get_devices",
+            return_value=[
+                {
+                    "id": "test1",
+                    "name": "Test Garage 1",
+                    "subdevices": ["GDO", "Light"],
+                },
+                {
+                    "id": "test2",
+                    "name": "Test Garage 2",
+                    "subdevices": ["GDO", "Light"],
+                },
+            ],
+        ),
+        patch(
+            "homeassistant.components.linear_garage_door.cover.Linear.get_device_state",
+            side_effect=lambda id: {
+                "test1": {
+                    "GDO": {"Open_B": "true", "Opening_P": "100"},
+                    "Light": {"On_B": "true", "On_P": "100"},
+                },
+                "test2": {
+                    "GDO": {"Open_B": "false", "Open_P": "0"},
+                    "Light": {"On_B": "false", "On_P": "0"},
+                },
+                "test3": {
+                    "GDO": {"Open_B": "false", "Opening_P": "0"},
+                    "Light": {"On_B": "false", "On_P": "0"},
+                },
+                "test4": {
+                    "GDO": {"Open_B": "true", "Opening_P": "100"},
+                    "Light": {"On_B": "true", "On_P": "100"},
+                },
+            }[id],
+        ),
+        patch(
+            "homeassistant.components.linear_garage_door.cover.Linear.close",
+            return_value=True,
+        ),
     ):
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=60))
         await hass.async_block_till_done()

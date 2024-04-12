@@ -1,4 +1,5 @@
 """Test the Zeversolar config flow."""
+
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -30,7 +31,7 @@ async def test_form(hass: HomeAssistant) -> None:
 
 @pytest.mark.parametrize(
     ("side_effect", "errors"),
-    (
+    [
         (
             ZeverSolarHTTPNotFound,
             {"base": "invalid_host"},
@@ -47,7 +48,7 @@ async def test_form(hass: HomeAssistant) -> None:
             RuntimeError,
             {"base": "unknown"},
         ),
-    ),
+    ],
 )
 async def test_form_errors(
     hass: HomeAssistant,
@@ -95,9 +96,12 @@ async def test_abort_already_configured(hass: HomeAssistant) -> None:
 
     mock_data = MagicMock()
     mock_data.serial_number = "test_serial"
-    with patch("zeversolar.ZeverSolarClient.get_data", return_value=mock_data), patch(
-        "homeassistant.components.zeversolar.async_setup_entry",
-    ) as mock_setup_entry:
+    with (
+        patch("zeversolar.ZeverSolarClient.get_data", return_value=mock_data),
+        patch(
+            "homeassistant.components.zeversolar.async_setup_entry",
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             flow_id=result["flow_id"],
             user_input={
@@ -115,10 +119,13 @@ async def _set_up_zeversolar(hass: HomeAssistant, flow_id: str) -> None:
     """Reusable successful setup of Zeversolar sensor."""
     mock_data = MagicMock()
     mock_data.serial_number = "test_serial"
-    with patch("zeversolar.ZeverSolarClient.get_data", return_value=mock_data), patch(
-        "homeassistant.components.zeversolar.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch("zeversolar.ZeverSolarClient.get_data", return_value=mock_data),
+        patch(
+            "homeassistant.components.zeversolar.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             flow_id=flow_id,
             user_input={

@@ -1,4 +1,5 @@
 """Switch platform for FireServiceRota integration."""
+
 import logging
 from typing import Any
 

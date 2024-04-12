@@ -1,4 +1,5 @@
 """Define tests for the Acmeda config flow."""
+
 from unittest.mock import patch
 
 import aiopulse

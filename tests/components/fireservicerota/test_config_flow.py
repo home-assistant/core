@@ -1,4 +1,5 @@
 """Test the FireServiceRota config flow."""
+
 from unittest.mock import patch
 
 from pyfireservicerota import InvalidAuthError
@@ -76,12 +77,15 @@ async def test_invalid_credentials(hass: HomeAssistant) -> None:
 async def test_step_user(hass: HomeAssistant) -> None:
     """Test the start of the config flow."""
 
-    with patch(
-        "homeassistant.components.fireservicerota.config_flow.FireServiceRota"
-    ) as mock_fsr, patch(
-        "homeassistant.components.fireservicerota.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.fireservicerota.config_flow.FireServiceRota"
+        ) as mock_fsr,
+        patch(
+            "homeassistant.components.fireservicerota.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         mock_fireservicerota = mock_fsr.return_value
         mock_fireservicerota.request_tokens.return_value = MOCK_TOKEN_INFO
 
@@ -133,11 +137,14 @@ async def test_reauth(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
         assert result["type"] == data_entry_flow.FlowResultType.FORM
 
-    with patch(
-        "homeassistant.components.fireservicerota.config_flow.FireServiceRota"
-    ) as mock_fsr, patch(
-        "homeassistant.components.fireservicerota.async_setup_entry",
-        return_value=True,
+    with (
+        patch(
+            "homeassistant.components.fireservicerota.config_flow.FireServiceRota"
+        ) as mock_fsr,
+        patch(
+            "homeassistant.components.fireservicerota.async_setup_entry",
+            return_value=True,
+        ),
     ):
         mock_fireservicerota = mock_fsr.return_value
         mock_fireservicerota.request_tokens.return_value = MOCK_TOKEN_INFO

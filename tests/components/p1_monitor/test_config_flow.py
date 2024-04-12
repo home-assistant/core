@@ -1,4 +1,5 @@
 """Test the P1 Monitor config flow."""
+
 from unittest.mock import patch
 
 from p1monitor import P1MonitorError
@@ -19,11 +20,14 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
     assert result.get("type") == FlowResultType.FORM
     assert result.get("step_id") == "user"
 
-    with patch(
-        "homeassistant.components.p1_monitor.config_flow.P1Monitor.smartmeter"
-    ) as mock_p1monitor, patch(
-        "homeassistant.components.p1_monitor.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.p1_monitor.config_flow.P1Monitor.smartmeter"
+        ) as mock_p1monitor,
+        patch(
+            "homeassistant.components.p1_monitor.async_setup_entry", return_value=True
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={CONF_HOST: "example.com"},

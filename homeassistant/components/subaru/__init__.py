@@ -1,4 +1,5 @@
 """The Subaru integration."""
+
 from datetime import timedelta
 import logging
 import time

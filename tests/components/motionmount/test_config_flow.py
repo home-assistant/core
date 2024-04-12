@@ -1,4 +1,5 @@
 """Tests for the Vogel's MotionMount config flow."""
+
 import dataclasses
 import socket
 from unittest.mock import MagicMock, PropertyMock

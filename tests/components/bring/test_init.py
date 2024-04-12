@@ -1,4 +1,5 @@
 """Unit tests for the bring integration."""
+
 from unittest.mock import AsyncMock
 
 import pytest

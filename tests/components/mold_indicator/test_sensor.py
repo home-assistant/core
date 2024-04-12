@@ -1,4 +1,5 @@
 """The tests for the MoldIndicator sensor."""
+
 import pytest
 
 from homeassistant.components.mold_indicator.sensor import (

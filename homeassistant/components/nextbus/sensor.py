@@ -1,4 +1,5 @@
 """NextBus sensor."""
+
 from __future__ import annotations
 
 from itertools import chain

@@ -1,4 +1,5 @@
 """Agent foundation for conversation integration."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod

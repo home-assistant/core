@@ -1,4 +1,5 @@
 """Creates a switch entity for the mower."""
+
 import logging
 from typing import Any
 

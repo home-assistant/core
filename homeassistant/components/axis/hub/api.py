@@ -5,9 +5,15 @@ from types import MappingProxyType
 from typing import Any
 
 import axis
-from axis.configuration import Configuration
+from axis.models.configuration import Configuration
 
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_PROTOCOL,
+    CONF_USERNAME,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.httpx_client import get_async_client
 
@@ -22,21 +28,20 @@ async def get_axis_api(
     """Create a Axis device API."""
     session = get_async_client(hass, verify_ssl=False)
 
-    device = axis.AxisDevice(
+    api = axis.AxisDevice(
         Configuration(
             session,
             config[CONF_HOST],
             port=config[CONF_PORT],
             username=config[CONF_USERNAME],
             password=config[CONF_PASSWORD],
+            web_proto=config.get(CONF_PROTOCOL, "http"),
         )
     )
 
     try:
         async with timeout(30):
-            await device.vapix.initialize()
-
-        return device
+            await api.vapix.initialize()
 
     except axis.Unauthorized as err:
         LOGGER.warning(
@@ -51,3 +56,5 @@ async def get_axis_api(
     except axis.AxisException as err:
         LOGGER.exception("Unknown Axis communication error occurred")
         raise AuthenticationRequired from err
+
+    return api

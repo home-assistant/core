@@ -1,8 +1,12 @@
 """Test Netgear LTE integration."""
+<<<<<<< HEAD
 from datetime import timedelta
 from unittest.mock import patch
 
 from eternalegypt.eternalegypt import Error
+=======
+
+>>>>>>> efe91815fbf2f57bf8f5b830c675cd6a579ff9b3
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.netgear_lte.const import DOMAIN

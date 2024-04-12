@@ -1,4 +1,5 @@
 """Signal notification test helpers."""
+
 from http import HTTPStatus
 
 from pysignalclirestapi import SignalCliRestApi

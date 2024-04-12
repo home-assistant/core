@@ -1,4 +1,5 @@
 """Ping classes shared between platforms."""
+
 import asyncio
 from contextlib import suppress
 import logging

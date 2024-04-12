@@ -1,4 +1,5 @@
 """Tests for the kraken config_flow."""
+
 from unittest.mock import patch
 
 from homeassistant.components.kraken.const import CONF_TRACKED_ASSET_PAIRS, DOMAIN
@@ -58,15 +59,19 @@ async def test_options(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.kraken.config_flow.KrakenAPI.get_tradable_asset_pairs",
-        return_value=TRADEABLE_ASSET_PAIR_RESPONSE,
-    ), patch(
-        "pykrakenapi.KrakenAPI.get_tradable_asset_pairs",
-        return_value=TRADEABLE_ASSET_PAIR_RESPONSE,
-    ), patch(
-        "pykrakenapi.KrakenAPI.get_ticker_information",
-        return_value=TICKER_INFORMATION_RESPONSE,
+    with (
+        patch(
+            "homeassistant.components.kraken.config_flow.KrakenAPI.get_tradable_asset_pairs",
+            return_value=TRADEABLE_ASSET_PAIR_RESPONSE,
+        ),
+        patch(
+            "pykrakenapi.KrakenAPI.get_tradable_asset_pairs",
+            return_value=TRADEABLE_ASSET_PAIR_RESPONSE,
+        ),
+        patch(
+            "pykrakenapi.KrakenAPI.get_ticker_information",
+            return_value=TICKER_INFORMATION_RESPONSE,
+        ),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()

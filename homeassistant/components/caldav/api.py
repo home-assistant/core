@@ -1,6 +1,5 @@
 """Library for working with CalDAV api."""
 
-
 import caldav
 
 from homeassistant.core import HomeAssistant

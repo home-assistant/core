@@ -1,4 +1,5 @@
 """Support for monitoring the Syncthing instance."""
+
 import aiosyncthing
 
 from homeassistant.components.sensor import SensorEntity

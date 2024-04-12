@@ -1,4 +1,5 @@
 """The lg_soundbar component."""
+
 import logging
 
 from homeassistant import config_entries, core

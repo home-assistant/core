@@ -1,4 +1,5 @@
 """Config flow for Airtouch 5 integration."""
+
 from __future__ import annotations
 
 import logging

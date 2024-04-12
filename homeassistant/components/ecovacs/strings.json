@@ -56,6 +56,20 @@
         "name": "Reset side brushes lifespan"
       }
     },
+    "event": {
+      "last_job": {
+        "name": "Last job",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "finished": "Finished",
+              "finished_with_warnings": "Finished with warnings",
+              "manually_stopped": "Manually stopped"
+            }
+          }
+        }
+      }
+    },
     "image": {
       "map": {
         "name": "Map"

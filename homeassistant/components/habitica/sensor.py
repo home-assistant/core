@@ -1,4 +1,5 @@
 """Support for Habitica sensors."""
+
 from __future__ import annotations
 
 from collections import namedtuple
@@ -86,14 +87,16 @@ async def async_setup_entry(
 ) -> None:
     """Set up the habitica sensors."""
 
-    entities: list[SensorEntity] = []
     name = config_entry.data[CONF_NAME]
     sensor_data = HabitipyData(hass.data[DOMAIN][config_entry.entry_id])
     await sensor_data.update()
-    for sensor_type in SENSORS_TYPES:
-        entities.append(HabitipySensor(name, sensor_type, sensor_data))
-    for task_type in TASKS_TYPES:
-        entities.append(HabitipyTaskSensor(name, task_type, sensor_data))
+
+    entities: list[SensorEntity] = [
+        HabitipySensor(name, sensor_type, sensor_data) for sensor_type in SENSORS_TYPES
+    ]
+    entities.extend(
+        HabitipyTaskSensor(name, task_type, sensor_data) for task_type in TASKS_TYPES
+    )
     async_add_entities(entities, True)
 
 

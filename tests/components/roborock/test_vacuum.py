@@ -1,6 +1,5 @@
 """Tests for Roborock vacuums."""
 
-
 import copy
 from typing import Any
 from unittest.mock import patch
@@ -141,11 +140,14 @@ async def test_failed_user_command(
     setup_entry: MockConfigEntry,
 ) -> None:
     """Test that when a user sends an invalid command, we raise HomeAssistantError."""
-    data = {ATTR_ENTITY_ID: ENTITY_ID, **{"command": "fake_command"}}
-    with patch(
-        "homeassistant.components.roborock.coordinator.RoborockLocalClient.send_command",
-        side_effect=RoborockException(),
-    ), pytest.raises(HomeAssistantError, match="Error while calling fake_command"):
+    data = {ATTR_ENTITY_ID: ENTITY_ID, "command": "fake_command"}
+    with (
+        patch(
+            "homeassistant.components.roborock.coordinator.RoborockLocalClient.send_command",
+            side_effect=RoborockException(),
+        ),
+        pytest.raises(HomeAssistantError, match="Error while calling fake_command"),
+    ):
         await hass.services.async_call(
             Platform.VACUUM,
             SERVICE_SEND_COMMAND,

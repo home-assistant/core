@@ -1,4 +1,5 @@
 """Test the Honeywell Lyric config flow."""
+
 from http import HTTPStatus
 from unittest.mock import patch
 
@@ -83,9 +84,12 @@ async def test_full_flow(
         },
     )
 
-    with patch("homeassistant.components.lyric.api.ConfigEntryLyricClient"), patch(
-        "homeassistant.components.lyric.async_setup_entry", return_value=True
-    ) as mock_setup:
+    with (
+        patch("homeassistant.components.lyric.api.ConfigEntryLyricClient"),
+        patch(
+            "homeassistant.components.lyric.async_setup_entry", return_value=True
+        ) as mock_setup,
+    ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["data"]["auth_implementation"] == "cred"
@@ -151,9 +155,12 @@ async def test_reauthentication_flow(
         },
     )
 
-    with patch("homeassistant.components.lyric.api.ConfigEntryLyricClient"), patch(
-        "homeassistant.components.lyric.async_setup_entry", return_value=True
-    ) as mock_setup:
+    with (
+        patch("homeassistant.components.lyric.api.ConfigEntryLyricClient"),
+        patch(
+            "homeassistant.components.lyric.async_setup_entry", return_value=True
+        ) as mock_setup,
+    ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["type"] == data_entry_flow.FlowResultType.ABORT

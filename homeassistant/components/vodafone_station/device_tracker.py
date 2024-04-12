@@ -1,4 +1,5 @@
 """Support for Vodafone Station routers."""
+
 from __future__ import annotations
 
 from aiovodafone import VodafoneStationDevice

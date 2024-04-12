@@ -1,4 +1,5 @@
 """Support for Synology DSM sensors."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -39,7 +40,7 @@ from .entity import (
 from .models import SynologyDSMData
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class SynologyDSMSensorEntityDescription(
     SensorEntityDescription, SynologyDSMEntityDescription
 ):
@@ -365,7 +366,7 @@ class SynoDSMUtilSensor(SynoDSMSensor):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return bool(self._api.utilisation)
+        return bool(self._api.utilisation) and super().available
 
 
 class SynoDSMStorageSensor(SynologyDSMDeviceEntity, SynoDSMSensor):

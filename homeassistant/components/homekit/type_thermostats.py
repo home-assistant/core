@@ -1,4 +1,5 @@
 """Class to hold all thermostat accessories."""
+
 import logging
 from typing import Any
 

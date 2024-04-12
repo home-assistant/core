@@ -1,4 +1,5 @@
 """Tests for the Ambiclimate config flow."""
+
 from unittest.mock import AsyncMock, patch
 
 import ambiclimate

@@ -1,4 +1,5 @@
 """The Compensation integration."""
+
 import logging
 from operator import itemgetter
 

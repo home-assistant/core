@@ -1,4 +1,5 @@
 """Tests for eafm config flow."""
+
 from unittest.mock import patch
 
 import pytest

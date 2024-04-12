@@ -34,6 +34,7 @@ from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
     entity_registry as er,
+    floor_registry as fr,
     intent,
     start,
     template,
@@ -43,7 +44,6 @@ from homeassistant.helpers.event import (
     EventStateChangedData,
     async_track_state_added_domain,
 )
-from homeassistant.helpers.typing import EventType
 from homeassistant.util.json import JsonObjectType, json_loads_object
 
 from .agent import AbstractConversationAgent, ConversationInput, ConversationResult
@@ -54,7 +54,9 @@ _DEFAULT_ERROR_TEXT = "Sorry, I couldn't understand that"
 _ENTITY_REGISTRY_UPDATE_FIELDS = ["aliases", "name", "original_name"]
 
 REGEX_TYPE = type(re.compile(""))
-TRIGGER_CALLBACK_TYPE = Callable[[str, RecognizeResult], Awaitable[str | None]]
+TRIGGER_CALLBACK_TYPE = Callable[
+    [str, RecognizeResult, str | None], Awaitable[str | None]
+]
 METADATA_CUSTOM_SENTENCE = "hass_custom_sentence"
 METADATA_CUSTOM_FILE = "hass_custom_file"
 
@@ -115,7 +117,7 @@ def async_setup(hass: core.HomeAssistant) -> None:
         async_should_expose(hass, DOMAIN, entity_id)
 
     @core.callback
-    def async_entity_state_listener(event: EventType[EventStateChangedData]) -> None:
+    def async_entity_state_listener(event: core.Event[EventStateChangedData]) -> None:
         """Set expose flag on new entities."""
         async_should_expose(hass, DOMAIN, event.data["entity_id"])
 
@@ -162,17 +164,22 @@ class DefaultAgent(AbstractConversationAgent):
 
         self.hass.bus.async_listen(
             ar.EVENT_AREA_REGISTRY_UPDATED,
-            self._async_handle_area_registry_changed,  # type: ignore[arg-type]
+            self._async_handle_area_floor_registry_changed,
+            run_immediately=True,
+        )
+        self.hass.bus.async_listen(
+            fr.EVENT_FLOOR_REGISTRY_UPDATED,
+            self._async_handle_area_floor_registry_changed,
             run_immediately=True,
         )
         self.hass.bus.async_listen(
             er.EVENT_ENTITY_REGISTRY_UPDATED,
-            self._async_handle_entity_registry_changed,  # type: ignore[arg-type]
+            self._async_handle_entity_registry_changed,
             run_immediately=True,
         )
         self.hass.bus.async_listen(
             EVENT_STATE_CHANGED,
-            self._async_handle_state_changed,  # type: ignore[arg-type]
+            self._async_handle_state_changed,
             run_immediately=True,
         )
         async_listen_entity_updates(
@@ -225,7 +232,7 @@ class DefaultAgent(AbstractConversationAgent):
             # Gather callback responses in parallel
             trigger_callbacks = [
                 self._trigger_sentences[trigger_id].callback(
-                    result.sentence, trigger_result
+                    result.sentence, trigger_result, user_input.device_id
                 )
                 for trigger_id, trigger_result in result.matched_triggers.items()
             ]
@@ -695,15 +702,18 @@ class DefaultAgent(AbstractConversationAgent):
         return lang_intents
 
     @core.callback
-    def _async_handle_area_registry_changed(
-        self, event: EventType[ar.EventAreaRegistryUpdatedData]
+    def _async_handle_area_floor_registry_changed(
+        self,
+        event: core.Event[
+            ar.EventAreaRegistryUpdatedData | fr.EventFloorRegistryUpdatedData
+        ],
     ) -> None:
-        """Clear area area cache when the area registry has changed."""
+        """Clear area/floor list cache when the area registry has changed."""
         self._slot_lists = None
 
     @core.callback
     def _async_handle_entity_registry_changed(
-        self, event: EventType[er.EventEntityRegistryUpdatedData]
+        self, event: core.Event[er.EventEntityRegistryUpdatedData]
     ) -> None:
         """Clear names list cache when an entity registry entry has changed."""
         if event.data["action"] != "update" or not any(
@@ -714,7 +724,7 @@ class DefaultAgent(AbstractConversationAgent):
 
     @core.callback
     def _async_handle_state_changed(
-        self, event: EventType[EventStateChangedData]
+        self, event: core.Event[EventStateChangedData]
     ) -> None:
         """Clear names list cache when a state is added or removed from the state machine."""
         if event.data["old_state"] and event.data["new_state"]:
@@ -772,6 +782,8 @@ class DefaultAgent(AbstractConversationAgent):
             # Default name
             entity_names.append((state.name, state.name, context))
 
+        _LOGGER.debug("Exposed entities: %s", entity_names)
+
         # Expose all areas.
         #
         # We pass in area id here with the expectation that no two areas will
@@ -787,11 +799,25 @@ class DefaultAgent(AbstractConversationAgent):
 
                     area_names.append((alias, area.id))
 
-        _LOGGER.debug("Exposed entities: %s", entity_names)
+        # Expose all floors.
+        #
+        # We pass in floor id here with the expectation that no two floors will
+        # share the same name or alias.
+        floors = fr.async_get(self.hass)
+        floor_names = []
+        for floor in floors.async_list_floors():
+            floor_names.append((floor.name, floor.floor_id))
+            if floor.aliases:
+                for alias in floor.aliases:
+                    if not alias.strip():
+                        continue
+
+                    floor_names.append((alias, floor.floor_id))
 
         self._slot_lists = {
             "area": TextSlotList.from_tuples(area_names, allow_template=False),
             "name": TextSlotList.from_tuples(entity_names, allow_template=False),
+            "floor": TextSlotList.from_tuples(floor_names, allow_template=False),
         }
 
         return self._slot_lists
@@ -952,6 +978,10 @@ def _get_unmatched_response(result: RecognizeResult) -> tuple[ErrorKey, dict[str
         # area only
         return ErrorKey.NO_AREA, {"area": unmatched_area}
 
+    if unmatched_floor := unmatched_text.get("floor"):
+        # floor only
+        return ErrorKey.NO_FLOOR, {"floor": unmatched_floor}
+
     # Area may still have matched
     matched_area: str | None = None
     if matched_area_entity := result.entities.get("area"):
@@ -997,6 +1027,13 @@ def _get_no_states_matched_response(
             return ErrorKey.NO_DOMAIN_IN_AREA, {
                 "domain": domain,
                 "area": no_states_error.area,
+            }
+
+        if no_states_error.floor:
+            # domain in floor
+            return ErrorKey.NO_DOMAIN_IN_FLOOR, {
+                "domain": domain,
+                "floor": no_states_error.floor,
             }
 
         # domain only

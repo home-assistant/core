@@ -1,4 +1,5 @@
 """Test the Apple WeatherKit config flow."""
+
 from unittest.mock import AsyncMock, patch
 
 from apple_weatherkit import DataSetType

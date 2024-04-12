@@ -1,4 +1,5 @@
 """Test Radarr config flow."""
+
 from unittest.mock import patch
 
 from aiopyarr import exceptions

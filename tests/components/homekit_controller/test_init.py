@@ -1,4 +1,5 @@
 """Tests for homekit_controller init."""
+
 from datetime import timedelta
 import pathlib
 from unittest.mock import patch
@@ -264,6 +265,7 @@ async def test_snapshots(
                 state_dict = dict(state.as_dict())
                 state_dict.pop("context", None)
                 state_dict.pop("last_changed", None)
+                state_dict.pop("last_reported", None)
                 state_dict.pop("last_updated", None)
 
                 state_dict["attributes"] = dict(state_dict["attributes"])

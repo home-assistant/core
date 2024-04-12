@@ -1,4 +1,5 @@
 """Classes for voice assistant pipelines."""
+
 from __future__ import annotations
 
 import array
@@ -753,9 +754,9 @@ class PipelineRun:
                     raise DuplicateWakeUpDetectedError(result.wake_word_phrase)
 
             # Record last wake up time to block duplicate detections
-            self.hass.data[DATA_LAST_WAKE_UP][
-                result.wake_word_phrase
-            ] = time.monotonic()
+            self.hass.data[DATA_LAST_WAKE_UP][result.wake_word_phrase] = (
+                time.monotonic()
+            )
 
             if result.queued_audio:
                 # Add audio that was pending at detection.
@@ -764,12 +765,12 @@ class PipelineRun:
                 # spoken, we need to make sure pending audio is forwarded to
                 # speech-to-text so the user does not have to pause before
                 # speaking the voice command.
-                for chunk_ts in result.queued_audio:
-                    audio_chunks_for_stt.append(
-                        ProcessedAudioChunk(
-                            audio=chunk_ts[0], timestamp_ms=chunk_ts[1], is_speech=False
-                        )
+                audio_chunks_for_stt.extend(
+                    ProcessedAudioChunk(
+                        audio=chunk_ts[0], timestamp_ms=chunk_ts[1], is_speech=False
                     )
+                    for chunk_ts in result.queued_audio
+                )
 
             wake_word_output = asdict(result)
 
@@ -1374,9 +1375,9 @@ class PipelineInput:
                             raise DuplicateWakeUpDetectedError(self.wake_word_phrase)
 
                     # Record last wake up time to block duplicate detections
-                    self.run.hass.data[DATA_LAST_WAKE_UP][
-                        self.wake_word_phrase
-                    ] = time.monotonic()
+                    self.run.hass.data[DATA_LAST_WAKE_UP][self.wake_word_phrase] = (
+                        time.monotonic()
+                    )
 
                 stt_input_stream = stt_processed_stream
 

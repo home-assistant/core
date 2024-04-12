@@ -1,4 +1,5 @@
 """Tests for the Toon config flow."""
+
 from http import HTTPStatus
 from unittest.mock import patch
 

@@ -1,4 +1,5 @@
 """Tests for the Stookwijzer config flow."""
+
 from unittest.mock import patch
 
 from homeassistant.components.stookwijzer.const import DOMAIN

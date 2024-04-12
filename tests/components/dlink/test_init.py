@@ -1,4 +1,5 @@
 """Test D-Link Smart Plug setup."""
+
 from unittest.mock import MagicMock
 
 from homeassistant.components.dlink.const import DOMAIN

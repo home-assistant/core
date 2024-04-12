@@ -1,4 +1,5 @@
 """Config flow for roon integration."""
+
 import asyncio
 import logging
 
@@ -154,7 +155,7 @@ class RoonConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_link(self, user_input=None):
-        """Handle linking and authenticting with the roon server."""
+        """Handle linking and authenticating with the roon server."""
         errors = {}
         if user_input is not None:
             # Do not authenticate if the host is already configured

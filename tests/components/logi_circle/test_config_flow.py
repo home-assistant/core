@@ -1,4 +1,5 @@
 """Tests for Logi Circle config flow."""
+
 import asyncio
 from http import HTTPStatus
 from unittest.mock import AsyncMock, Mock, patch

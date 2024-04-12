@@ -48,6 +48,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.baby_bedroom_co2',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1053',
   })
@@ -97,6 +98,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.baby_bedroom_health',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'Fine',
   })
@@ -150,6 +152,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.baby_bedroom_humidity',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '66',
   })
@@ -203,6 +206,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.baby_bedroom_noise',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '45',
   })
@@ -259,6 +263,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.baby_bedroom_pressure',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1021.4',
   })
@@ -384,6 +389,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.baby_bedroom_temperature',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '21.6',
   })
@@ -507,6 +513,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.bedroom_co2',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
@@ -554,6 +561,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.bedroom_health',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
@@ -605,6 +613,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.bedroom_humidity',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
@@ -656,6 +665,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.bedroom_noise',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
@@ -710,6 +720,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.bedroom_pressure',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
@@ -833,6 +844,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.bedroom_temperature',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
@@ -956,6 +968,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.bureau_modulate_battery_percent',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '90',
   })
@@ -1007,6 +1020,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.cold_water_power',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
@@ -1094,6 +1108,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.consumption_meter_power',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '476',
   })
@@ -1181,6 +1196,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.corridor_humidity',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '67',
   })
@@ -1232,6 +1248,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.ecocompteur_power',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
@@ -1319,6 +1336,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.gas_power',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
@@ -1522,6 +1540,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.home_avg_humidity',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '63.2',
   })
@@ -1578,6 +1597,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.home_avg_pressure',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1010.4',
   })
@@ -1631,6 +1651,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.home_avg_rain',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.1',
   })
@@ -1722,6 +1743,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.home_avg_rain_today',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '11.3',
   })
@@ -1775,6 +1797,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.home_avg_temperature',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '22.7',
   })
@@ -1828,6 +1851,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.home_avg_wind_strength',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '15.0',
   })
@@ -1995,6 +2019,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.home_max_humidity',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '76',
   })
@@ -2051,6 +2076,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.home_max_pressure',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1014.4',
   })
@@ -2104,6 +2130,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.home_max_rain',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.5',
   })
@@ -2195,6 +2222,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.home_max_rain_today',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '12.322',
   })
@@ -2248,6 +2276,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.home_max_temperature',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '27.4',
   })
@@ -2301,6 +2330,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.home_max_wind_strength',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '15',
   })
@@ -2352,6 +2382,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.hot_water_power',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
@@ -2439,6 +2470,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.kitchen_co2',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
@@ -2486,6 +2518,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.kitchen_health',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
@@ -2537,6 +2570,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.kitchen_humidity',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
@@ -2588,6 +2622,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.kitchen_noise',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
@@ -2642,6 +2677,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.kitchen_pressure',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
@@ -2765,6 +2801,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.kitchen_temperature',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
@@ -2888,6 +2925,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.line_1_power',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
@@ -2975,6 +3013,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.line_2_power',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
@@ -3062,6 +3101,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.line_3_power',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
@@ -3149,6 +3189,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.line_4_power',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
@@ -3236,6 +3277,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.line_5_power',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
@@ -3323,6 +3365,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.livingroom_battery_percent',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '75',
   })
@@ -3374,6 +3417,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.livingroom_co2',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
@@ -3421,6 +3465,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.livingroom_health',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
@@ -3472,6 +3517,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.livingroom_humidity',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
@@ -3523,6 +3569,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.livingroom_noise',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
@@ -3577,6 +3624,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.livingroom_pressure',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
@@ -3700,6 +3748,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.livingroom_temperature',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
@@ -3825,6 +3874,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.parents_bedroom_co2',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '494',
   })
@@ -3874,6 +3924,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.parents_bedroom_health',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'Fine',
   })
@@ -3927,6 +3978,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.parents_bedroom_humidity',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '63',
   })
@@ -3980,6 +4032,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.parents_bedroom_noise',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '42',
   })
@@ -4036,6 +4089,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.parents_bedroom_pressure',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1014.5',
   })
@@ -4161,6 +4215,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.parents_bedroom_temperature',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '20.3',
   })
@@ -4284,6 +4339,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.prise_power',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
@@ -4371,6 +4427,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.total_power',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
@@ -4458,6 +4515,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.valve1_battery_percent',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '90',
   })
@@ -4509,6 +4567,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.valve2_battery_percent',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '90',
   })
@@ -4560,6 +4619,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.villa_bathroom_battery_percent',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '55',
   })
@@ -4611,6 +4671,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.villa_bathroom_co2',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1930',
   })
@@ -4662,6 +4723,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.villa_bathroom_humidity',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '55',
   })
@@ -4785,6 +4847,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.villa_bathroom_temperature',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '19.4',
   })
@@ -4872,6 +4935,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.villa_bedroom_battery_percent',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '28',
   })
@@ -4923,6 +4987,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.villa_bedroom_co2',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1076',
   })
@@ -4974,6 +5039,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.villa_bedroom_humidity',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '53',
   })
@@ -5097,6 +5163,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.villa_bedroom_temperature',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '19.3',
   })
@@ -5186,6 +5253,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.villa_co2',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1339',
   })
@@ -5275,6 +5343,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.villa_garden_battery_percent',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '85',
   })
@@ -5322,6 +5391,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.villa_garden_direction',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'SW',
   })
@@ -5557,6 +5627,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.villa_garden_wind_strength',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '4',
   })
@@ -5610,6 +5681,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.villa_humidity',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '45',
   })
@@ -5663,6 +5735,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.villa_noise',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '35',
   })
@@ -5714,6 +5787,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.villa_outdoor_battery_percent',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
@@ -5765,6 +5839,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.villa_outdoor_humidity',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
@@ -5888,6 +5963,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.villa_outdoor_temperature',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
@@ -5980,6 +6056,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.villa_pressure',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1026.8',
   })
@@ -6067,6 +6144,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.villa_rain_battery_percent',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '21',
   })
@@ -6154,6 +6232,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.villa_rain_rain',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '3.7',
   })
@@ -6243,6 +6322,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.villa_rain_rain_today',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '6.9',
   })
@@ -6368,6 +6448,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.villa_temperature',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '21.1',
   })

@@ -1,4 +1,5 @@
 """Support for the cloud for speech to text service."""
+
 from __future__ import annotations
 
 import asyncio

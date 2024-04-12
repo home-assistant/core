@@ -1,4 +1,5 @@
 """Test the DenonAVR config flow."""
+
 from unittest.mock import patch
 
 import pytest
@@ -40,33 +41,43 @@ TEST_DISCOVER_2_RECEIVER = [{CONF_HOST: TEST_HOST}, {CONF_HOST: TEST_HOST2}]
 @pytest.fixture(name="denonavr_connect", autouse=True)
 def denonavr_connect_fixture():
     """Mock denonavr connection and entry setup."""
-    with patch(
-        "homeassistant.components.denonavr.receiver.DenonAVR.async_setup",
-        return_value=None,
-    ), patch(
-        "homeassistant.components.denonavr.receiver.DenonAVR.async_update",
-        return_value=None,
-    ), patch(
-        "homeassistant.components.denonavr.receiver.DenonAVR.support_sound_mode",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.denonavr.receiver.DenonAVR.name",
-        TEST_NAME,
-    ), patch(
-        "homeassistant.components.denonavr.receiver.DenonAVR.model_name",
-        TEST_MODEL,
-    ), patch(
-        "homeassistant.components.denonavr.receiver.DenonAVR.serial_number",
-        TEST_SERIALNUMBER,
-    ), patch(
-        "homeassistant.components.denonavr.receiver.DenonAVR.manufacturer",
-        TEST_MANUFACTURER,
-    ), patch(
-        "homeassistant.components.denonavr.receiver.DenonAVR.receiver_type",
-        TEST_RECEIVER_TYPE,
-    ), patch(
-        "homeassistant.components.denonavr.async_setup_entry",
-        return_value=True,
+    with (
+        patch(
+            "homeassistant.components.denonavr.receiver.DenonAVR.async_setup",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.denonavr.receiver.DenonAVR.async_update",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.denonavr.receiver.DenonAVR.support_sound_mode",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.denonavr.receiver.DenonAVR.name",
+            TEST_NAME,
+        ),
+        patch(
+            "homeassistant.components.denonavr.receiver.DenonAVR.model_name",
+            TEST_MODEL,
+        ),
+        patch(
+            "homeassistant.components.denonavr.receiver.DenonAVR.serial_number",
+            TEST_SERIALNUMBER,
+        ),
+        patch(
+            "homeassistant.components.denonavr.receiver.DenonAVR.manufacturer",
+            TEST_MANUFACTURER,
+        ),
+        patch(
+            "homeassistant.components.denonavr.receiver.DenonAVR.receiver_type",
+            TEST_RECEIVER_TYPE,
+        ),
+        patch(
+            "homeassistant.components.denonavr.async_setup_entry",
+            return_value=True,
+        ),
     ):
         yield
 
@@ -251,12 +262,15 @@ async def test_config_flow_manual_host_connection_error(hass: HomeAssistant) -> 
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.denonavr.receiver.DenonAVR.async_setup",
-        side_effect=AvrTimoutError("Timeout", "async_setup"),
-    ), patch(
-        "homeassistant.components.denonavr.receiver.DenonAVR.receiver_type",
-        None,
+    with (
+        patch(
+            "homeassistant.components.denonavr.receiver.DenonAVR.async_setup",
+            side_effect=AvrTimoutError("Timeout", "async_setup"),
+        ),
+        patch(
+            "homeassistant.components.denonavr.receiver.DenonAVR.receiver_type",
+            None,
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],

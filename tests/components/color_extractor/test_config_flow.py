@@ -1,4 +1,5 @@
 """Tests for the Color extractor config flow."""
+
 from unittest.mock import patch
 
 import pytest

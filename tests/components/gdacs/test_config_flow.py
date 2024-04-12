@@ -1,4 +1,5 @@
 """Define tests for the GDACS config flow."""
+
 from unittest.mock import patch
 
 import pytest

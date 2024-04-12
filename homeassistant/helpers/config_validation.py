@@ -1,4 +1,5 @@
 """Helpers for config validation using voluptuous."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Hashable
@@ -28,6 +29,8 @@ from homeassistant.const import (
     ATTR_AREA_ID,
     ATTR_DEVICE_ID,
     ATTR_ENTITY_ID,
+    ATTR_FLOOR_ID,
+    ATTR_LABEL_ID,
     CONF_ABOVE,
     CONF_ALIAS,
     CONF_ATTRIBUTE,
@@ -158,15 +161,15 @@ def path(value: Any) -> str:
 # https://github.com/alecthomas/voluptuous/issues/115#issuecomment-144464666
 def has_at_least_one_key(*keys: Any) -> Callable[[dict], dict]:
     """Validate that at least one key exists."""
+    key_set = set(keys)
 
     def validate(obj: dict) -> dict:
         """Test keys exist in dict."""
         if not isinstance(obj, dict):
             raise vol.Invalid("expected dictionary")
 
-        for k in obj:
-            if k in keys:
-                return obj
+        if not key_set.isdisjoint(obj):
+            return obj
         expected = ", ".join(str(k) for k in keys)
         raise vol.Invalid(f"must contain at least one of {expected}.")
 
@@ -281,18 +284,15 @@ def isdir(value: Any) -> str:
 
 
 @overload
-def ensure_list(value: None) -> list[Any]:
-    ...
+def ensure_list(value: None) -> list[Any]: ...
 
 
 @overload
-def ensure_list(value: list[_T]) -> list[_T]:
-    ...
+def ensure_list(value: list[_T]) -> list[_T]: ...
 
 
 @overload
-def ensure_list(value: list[_T] | _T) -> list[_T]:
-    ...
+def ensure_list(value: list[_T] | _T) -> list[_T]: ...
 
 
 def ensure_list(value: _T | None) -> list[_T] | list[Any]:
@@ -623,7 +623,7 @@ def string(value: Any) -> str:
     # This is expected to be the most common case, so check it first.
     if (
         type(value) is str  # noqa: E721
-        or type(value) is NodeStrClass  # noqa: E721
+        or type(value) is NodeStrClass
         or isinstance(value, str)
     ):
         return value
@@ -904,7 +904,7 @@ def _deprecated_or_removed(
             try:
                 near = (
                     f"near {config.__config_file__}"  # type: ignore[attr-defined]
-                    f":{config.__line__} "
+                    f":{config.__line__} "  # type: ignore[attr-defined]
                 )
             except AttributeError:
                 near = ""
@@ -1215,6 +1215,12 @@ ENTITY_SERVICE_FIELDS = {
     vol.Optional(ATTR_AREA_ID): vol.Any(
         ENTITY_MATCH_NONE, vol.All(ensure_list, [vol.Any(dynamic_template, str)])
     ),
+    vol.Optional(ATTR_FLOOR_ID): vol.Any(
+        ENTITY_MATCH_NONE, vol.All(ensure_list, [vol.Any(dynamic_template, str)])
+    ),
+    vol.Optional(ATTR_LABEL_ID): vol.Any(
+        ENTITY_MATCH_NONE, vol.All(ensure_list, [vol.Any(dynamic_template, str)])
+    ),
 }
 
 TARGET_SERVICE_FIELDS = {
@@ -1232,7 +1238,16 @@ TARGET_SERVICE_FIELDS = {
     vol.Optional(ATTR_AREA_ID): vol.Any(
         ENTITY_MATCH_NONE, vol.All(ensure_list, [vol.Any(dynamic_template, str)])
     ),
+    vol.Optional(ATTR_FLOOR_ID): vol.Any(
+        ENTITY_MATCH_NONE, vol.All(ensure_list, [vol.Any(dynamic_template, str)])
+    ),
+    vol.Optional(ATTR_LABEL_ID): vol.Any(
+        ENTITY_MATCH_NONE, vol.All(ensure_list, [vol.Any(dynamic_template, str)])
+    ),
 }
+
+
+_HAS_ENTITY_SERVICE_FIELD = has_at_least_one_key(*ENTITY_SERVICE_FIELDS)
 
 
 def _make_entity_service_schema(schema: dict, extra: int) -> vol.Schema:
@@ -1248,7 +1263,7 @@ def _make_entity_service_schema(schema: dict, extra: int) -> vol.Schema:
                 },
                 extra=extra,
             ),
-            has_at_least_one_key(*ENTITY_SERVICE_FIELDS),
+            _HAS_ENTITY_SERVICE_FIELD,
         )
     )
 
@@ -1335,7 +1350,8 @@ SERVICE_SCHEMA = vol.All(
 )
 
 NUMERIC_STATE_THRESHOLD_SCHEMA = vol.Any(
-    vol.Coerce(float), vol.All(str, entity_domain(["input_number", "number", "sensor"]))
+    vol.Coerce(float),
+    vol.All(str, entity_domain(["input_number", "number", "sensor", "zone"])),
 )
 
 CONDITION_BASE_SCHEMA = {
@@ -1810,54 +1826,42 @@ SCRIPT_ACTION_WAIT_FOR_TRIGGER = "wait_for_trigger"
 SCRIPT_ACTION_WAIT_TEMPLATE = "wait_template"
 
 
+ACTIONS_MAP = {
+    CONF_DELAY: SCRIPT_ACTION_DELAY,
+    CONF_WAIT_TEMPLATE: SCRIPT_ACTION_WAIT_TEMPLATE,
+    CONF_CONDITION: SCRIPT_ACTION_CHECK_CONDITION,
+    "and": SCRIPT_ACTION_CHECK_CONDITION,
+    "or": SCRIPT_ACTION_CHECK_CONDITION,
+    "not": SCRIPT_ACTION_CHECK_CONDITION,
+    CONF_EVENT: SCRIPT_ACTION_FIRE_EVENT,
+    CONF_DEVICE_ID: SCRIPT_ACTION_DEVICE_AUTOMATION,
+    CONF_SCENE: SCRIPT_ACTION_ACTIVATE_SCENE,
+    CONF_REPEAT: SCRIPT_ACTION_REPEAT,
+    CONF_CHOOSE: SCRIPT_ACTION_CHOOSE,
+    CONF_WAIT_FOR_TRIGGER: SCRIPT_ACTION_WAIT_FOR_TRIGGER,
+    CONF_VARIABLES: SCRIPT_ACTION_VARIABLES,
+    CONF_IF: SCRIPT_ACTION_IF,
+    CONF_SERVICE: SCRIPT_ACTION_CALL_SERVICE,
+    CONF_SERVICE_TEMPLATE: SCRIPT_ACTION_CALL_SERVICE,
+    CONF_STOP: SCRIPT_ACTION_STOP,
+    CONF_PARALLEL: SCRIPT_ACTION_PARALLEL,
+    CONF_SET_CONVERSATION_RESPONSE: SCRIPT_ACTION_SET_CONVERSATION_RESPONSE,
+}
+
+ACTIONS_SET = set(ACTIONS_MAP)
+
+
 def determine_script_action(action: dict[str, Any]) -> str:
     """Determine action type."""
-    if CONF_DELAY in action:
-        return SCRIPT_ACTION_DELAY
-
-    if CONF_WAIT_TEMPLATE in action:
-        return SCRIPT_ACTION_WAIT_TEMPLATE
-
-    if any(key in action for key in (CONF_CONDITION, "and", "or", "not")):
-        return SCRIPT_ACTION_CHECK_CONDITION
-
-    if CONF_EVENT in action:
-        return SCRIPT_ACTION_FIRE_EVENT
-
-    if CONF_DEVICE_ID in action:
-        return SCRIPT_ACTION_DEVICE_AUTOMATION
-
-    if CONF_SCENE in action:
-        return SCRIPT_ACTION_ACTIVATE_SCENE
-
-    if CONF_REPEAT in action:
-        return SCRIPT_ACTION_REPEAT
-
-    if CONF_CHOOSE in action:
-        return SCRIPT_ACTION_CHOOSE
-
-    if CONF_WAIT_FOR_TRIGGER in action:
-        return SCRIPT_ACTION_WAIT_FOR_TRIGGER
-
-    if CONF_VARIABLES in action:
-        return SCRIPT_ACTION_VARIABLES
-
-    if CONF_IF in action:
-        return SCRIPT_ACTION_IF
-
-    if CONF_SERVICE in action or CONF_SERVICE_TEMPLATE in action:
-        return SCRIPT_ACTION_CALL_SERVICE
-
-    if CONF_STOP in action:
-        return SCRIPT_ACTION_STOP
-
-    if CONF_PARALLEL in action:
-        return SCRIPT_ACTION_PARALLEL
-
-    if CONF_SET_CONVERSATION_RESPONSE in action:
-        return SCRIPT_ACTION_SET_CONVERSATION_RESPONSE
-
-    raise ValueError("Unable to determine action")
+    if not (actions := ACTIONS_SET.intersection(action)):
+        raise ValueError("Unable to determine action")
+    if len(actions) > 1:
+        # Ambiguous action, select the first one in the
+        # order of the ACTIONS_MAP
+        for action_key, _script_action in ACTIONS_MAP.items():
+            if action_key in actions:
+                return _script_action
+    return ACTIONS_MAP[actions.pop()]
 
 
 ACTION_TYPE_SCHEMAS: dict[str, Callable[[Any], dict]] = {

@@ -1,4 +1,5 @@
 """The tests for the Transport NSW (AU) sensor platform."""
+
 from unittest.mock import patch
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass

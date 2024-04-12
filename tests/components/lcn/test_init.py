@@ -1,4 +1,5 @@
 """Test init of LCN integration."""
+
 from unittest.mock import patch
 
 from pypck.connection import (
@@ -126,9 +127,10 @@ async def test_async_setup_entry_raises_timeout_error(
 
 async def test_async_setup_from_configuration_yaml(hass: HomeAssistant) -> None:
     """Test a successful setup using data from configuration.yaml."""
-    with patch(
-        "pypck.connection.PchkConnectionManager", MockPchkConnectionManager
-    ), patch("homeassistant.components.lcn.async_setup_entry") as async_setup_entry:
+    with (
+        patch("pypck.connection.PchkConnectionManager", MockPchkConnectionManager),
+        patch("homeassistant.components.lcn.async_setup_entry") as async_setup_entry,
+    ):
         await setup_component(hass)
 
         assert async_setup_entry.await_count == 2

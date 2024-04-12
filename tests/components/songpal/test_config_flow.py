@@ -1,4 +1,5 @@
 """Test the songpal config flow."""
+
 import copy
 import dataclasses
 from unittest.mock import patch

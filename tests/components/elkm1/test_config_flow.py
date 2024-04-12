@@ -1,4 +1,5 @@
 """Test the Elk-M1 Control config flow."""
+
 from dataclasses import asdict
 from unittest.mock import patch
 
@@ -71,12 +72,17 @@ async def test_form_user_with_secure_elk_no_discovery(hass: HomeAssistant) -> No
 
     mocked_elk = mock_elk(invalid_auth=False, sync_complete=True)
 
-    with _patch_discovery(no_device=True), _patch_elk(elk=mocked_elk), patch(
-        "homeassistant.components.elkm1.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.elkm1.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        _patch_discovery(no_device=True),
+        _patch_elk(elk=mocked_elk),
+        patch(
+            "homeassistant.components.elkm1.async_setup", return_value=True
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.elkm1.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -123,12 +129,17 @@ async def test_form_user_with_insecure_elk_skip_discovery(hass: HomeAssistant) -
 
     mocked_elk = mock_elk(invalid_auth=False, sync_complete=True)
 
-    with _patch_discovery(), _patch_elk(elk=mocked_elk), patch(
-        "homeassistant.components.elkm1.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.elkm1.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        _patch_discovery(),
+        _patch_elk(elk=mocked_elk),
+        patch(
+            "homeassistant.components.elkm1.async_setup", return_value=True
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.elkm1.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -175,12 +186,17 @@ async def test_form_user_with_insecure_elk_no_discovery(hass: HomeAssistant) -> 
 
     mocked_elk = mock_elk(invalid_auth=False, sync_complete=True)
 
-    with _patch_discovery(no_device=True), _patch_elk(elk=mocked_elk), patch(
-        "homeassistant.components.elkm1.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.elkm1.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        _patch_discovery(no_device=True),
+        _patch_elk(elk=mocked_elk),
+        patch(
+            "homeassistant.components.elkm1.async_setup", return_value=True
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.elkm1.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -227,12 +243,15 @@ async def test_form_user_with_insecure_elk_times_out(hass: HomeAssistant) -> Non
 
     mocked_elk = mock_elk(invalid_auth=False, sync_complete=False)
 
-    with patch(
-        "homeassistant.components.elkm1.config_flow.VALIDATE_TIMEOUT",
-        0,
-    ), patch(
-        "homeassistant.components.elkm1.config_flow.LOGIN_TIMEOUT", 0
-    ), _patch_discovery(), _patch_elk(elk=mocked_elk):
+    with (
+        patch(
+            "homeassistant.components.elkm1.config_flow.VALIDATE_TIMEOUT",
+            0,
+        ),
+        patch("homeassistant.components.elkm1.config_flow.LOGIN_TIMEOUT", 0),
+        _patch_discovery(),
+        _patch_elk(elk=mocked_elk),
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -311,12 +330,17 @@ async def test_form_user_with_secure_elk_with_discovery(hass: HomeAssistant) -> 
         )
         await hass.async_block_till_done()
 
-    with _patch_discovery(), _patch_elk(elk=mocked_elk), patch(
-        "homeassistant.components.elkm1.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.elkm1.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        _patch_discovery(),
+        _patch_elk(elk=mocked_elk),
+        patch(
+            "homeassistant.components.elkm1.async_setup", return_value=True
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.elkm1.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
             {
@@ -364,12 +388,17 @@ async def test_form_user_with_secure_elk_with_discovery_pick_manual(
         )
         await hass.async_block_till_done()
 
-    with _patch_discovery(), _patch_elk(elk=mocked_elk), patch(
-        "homeassistant.components.elkm1.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.elkm1.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        _patch_discovery(),
+        _patch_elk(elk=mocked_elk),
+        patch(
+            "homeassistant.components.elkm1.async_setup", return_value=True
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.elkm1.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
             {
@@ -420,12 +449,17 @@ async def test_form_user_with_secure_elk_with_discovery_pick_manual_direct_disco
         )
         await hass.async_block_till_done()
 
-    with _patch_discovery(), _patch_elk(elk=mocked_elk), patch(
-        "homeassistant.components.elkm1.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.elkm1.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        _patch_discovery(),
+        _patch_elk(elk=mocked_elk),
+        patch(
+            "homeassistant.components.elkm1.async_setup", return_value=True
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.elkm1.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
             {
@@ -467,12 +501,17 @@ async def test_form_user_with_tls_elk_no_discovery(hass: HomeAssistant) -> None:
 
     mocked_elk = mock_elk(invalid_auth=False, sync_complete=True)
 
-    with _patch_discovery(no_device=True), _patch_elk(elk=mocked_elk), patch(
-        "homeassistant.components.elkm1.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.elkm1.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        _patch_discovery(no_device=True),
+        _patch_elk(elk=mocked_elk),
+        patch(
+            "homeassistant.components.elkm1.async_setup", return_value=True
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.elkm1.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -513,12 +552,17 @@ async def test_form_user_with_non_secure_elk_no_discovery(hass: HomeAssistant) -
 
     mocked_elk = mock_elk(invalid_auth=None, sync_complete=True)
 
-    with _patch_discovery(no_device=True), _patch_elk(elk=mocked_elk), patch(
-        "homeassistant.components.elkm1.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.elkm1.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        _patch_discovery(no_device=True),
+        _patch_elk(elk=mocked_elk),
+        patch(
+            "homeassistant.components.elkm1.async_setup", return_value=True
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.elkm1.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -557,12 +601,17 @@ async def test_form_user_with_serial_elk_no_discovery(hass: HomeAssistant) -> No
 
     mocked_elk = mock_elk(invalid_auth=None, sync_complete=True)
 
-    with _patch_discovery(no_device=True), _patch_elk(elk=mocked_elk), patch(
-        "homeassistant.components.elkm1.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.elkm1.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        _patch_discovery(no_device=True),
+        _patch_elk(elk=mocked_elk),
+        patch(
+            "homeassistant.components.elkm1.async_setup", return_value=True
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.elkm1.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -595,12 +644,17 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
 
     mocked_elk = mock_elk(invalid_auth=None, sync_complete=None)
 
-    with _patch_discovery(no_device=True), _patch_elk(elk=mocked_elk), patch(
-        "homeassistant.components.elkm1.config_flow.VALIDATE_TIMEOUT",
-        0,
-    ), patch(
-        "homeassistant.components.elkm1.config_flow.LOGIN_TIMEOUT",
-        0,
+    with (
+        _patch_discovery(no_device=True),
+        _patch_elk(elk=mocked_elk),
+        patch(
+            "homeassistant.components.elkm1.config_flow.VALIDATE_TIMEOUT",
+            0,
+        ),
+        patch(
+            "homeassistant.components.elkm1.config_flow.LOGIN_TIMEOUT",
+            0,
+        ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -626,12 +680,17 @@ async def test_unknown_exception(hass: HomeAssistant) -> None:
 
     mocked_elk = mock_elk(invalid_auth=None, sync_complete=None, exception=OSError)
 
-    with _patch_discovery(no_device=True), _patch_elk(elk=mocked_elk), patch(
-        "homeassistant.components.elkm1.config_flow.VALIDATE_TIMEOUT",
-        0,
-    ), patch(
-        "homeassistant.components.elkm1.config_flow.LOGIN_TIMEOUT",
-        0,
+    with (
+        _patch_discovery(no_device=True),
+        _patch_elk(elk=mocked_elk),
+        patch(
+            "homeassistant.components.elkm1.config_flow.VALIDATE_TIMEOUT",
+            0,
+        ),
+        patch(
+            "homeassistant.components.elkm1.config_flow.LOGIN_TIMEOUT",
+            0,
+        ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -706,12 +765,17 @@ async def test_form_import(hass: HomeAssistant) -> None:
     """Test we get the form with import source."""
 
     mocked_elk = mock_elk(invalid_auth=False, sync_complete=True)
-    with _patch_discovery(no_device=True), _patch_elk(elk=mocked_elk), patch(
-        "homeassistant.components.elkm1.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.elkm1.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        _patch_discovery(no_device=True),
+        _patch_elk(elk=mocked_elk),
+        patch(
+            "homeassistant.components.elkm1.async_setup", return_value=True
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.elkm1.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
@@ -771,12 +835,17 @@ async def test_form_import_device_discovered(hass: HomeAssistant) -> None:
     """Test we can import with discovery."""
 
     mocked_elk = mock_elk(invalid_auth=False, sync_complete=True)
-    with _patch_discovery(), _patch_elk(elk=mocked_elk), patch(
-        "homeassistant.components.elkm1.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.elkm1.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        _patch_discovery(),
+        _patch_elk(elk=mocked_elk),
+        patch(
+            "homeassistant.components.elkm1.async_setup", return_value=True
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.elkm1.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
@@ -836,12 +905,17 @@ async def test_form_import_non_secure_device_discovered(hass: HomeAssistant) -> 
     """Test we can import non-secure with discovery."""
 
     mocked_elk = mock_elk(invalid_auth=False, sync_complete=True)
-    with _patch_discovery(), _patch_elk(elk=mocked_elk), patch(
-        "homeassistant.components.elkm1.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.elkm1.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        _patch_discovery(),
+        _patch_elk(elk=mocked_elk),
+        patch(
+            "homeassistant.components.elkm1.async_setup", return_value=True
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.elkm1.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
@@ -875,12 +949,17 @@ async def test_form_import_non_secure_non_stanadard_port_device_discovered(
     """Test we can import non-secure non standard port with discovery."""
 
     mocked_elk = mock_elk(invalid_auth=False, sync_complete=True)
-    with _patch_discovery(), _patch_elk(elk=mocked_elk), patch(
-        "homeassistant.components.elkm1.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.elkm1.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        _patch_discovery(),
+        _patch_elk(elk=mocked_elk),
+        patch(
+            "homeassistant.components.elkm1.async_setup", return_value=True
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.elkm1.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
@@ -1090,12 +1169,17 @@ async def test_discovered_by_discovery(hass: HomeAssistant) -> None:
 
     mocked_elk = mock_elk(invalid_auth=False, sync_complete=True)
 
-    with _patch_discovery(), _patch_elk(elk=mocked_elk), patch(
-        "homeassistant.components.elkm1.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.elkm1.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        _patch_discovery(),
+        _patch_elk(elk=mocked_elk),
+        patch(
+            "homeassistant.components.elkm1.async_setup", return_value=True
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.elkm1.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -1135,12 +1219,17 @@ async def test_discovered_by_discovery_non_standard_port(hass: HomeAssistant) ->
 
     mocked_elk = mock_elk(invalid_auth=False, sync_complete=True)
 
-    with _patch_discovery(), _patch_elk(elk=mocked_elk), patch(
-        "homeassistant.components.elkm1.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.elkm1.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        _patch_discovery(),
+        _patch_elk(elk=mocked_elk),
+        patch(
+            "homeassistant.components.elkm1.async_setup", return_value=True
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.elkm1.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -1201,12 +1290,17 @@ async def test_discovered_by_dhcp_udp_responds(hass: HomeAssistant) -> None:
 
     mocked_elk = mock_elk(invalid_auth=False, sync_complete=True)
 
-    with _patch_discovery(), _patch_elk(elk=mocked_elk), patch(
-        "homeassistant.components.elkm1.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.elkm1.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        _patch_discovery(),
+        _patch_elk(elk=mocked_elk),
+        patch(
+            "homeassistant.components.elkm1.async_setup", return_value=True
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.elkm1.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -1246,14 +1340,17 @@ async def test_discovered_by_dhcp_udp_responds_with_nonsecure_port(
 
     mocked_elk = mock_elk(invalid_auth=False, sync_complete=True)
 
-    with _patch_discovery(device=ELK_NON_SECURE_DISCOVERY), _patch_elk(
-        elk=mocked_elk
-    ), patch(
-        "homeassistant.components.elkm1.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.elkm1.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        _patch_discovery(device=ELK_NON_SECURE_DISCOVERY),
+        _patch_elk(elk=mocked_elk),
+        patch(
+            "homeassistant.components.elkm1.async_setup", return_value=True
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.elkm1.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -1298,12 +1395,17 @@ async def test_discovered_by_dhcp_udp_responds_existing_config_entry(
 
     mocked_elk = mock_elk(invalid_auth=False, sync_complete=True)
 
-    with _patch_discovery(), _patch_elk(elk=mocked_elk), patch(
-        "homeassistant.components.elkm1.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.elkm1.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        _patch_discovery(),
+        _patch_elk(elk=mocked_elk),
+        patch(
+            "homeassistant.components.elkm1.async_setup", return_value=True
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.elkm1.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {"username": "test-username", "password": "test-password"},
@@ -1361,12 +1463,17 @@ async def test_multiple_instances_with_discovery(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    with _patch_discovery(device=elk_discovery_1), _patch_elk(elk=mocked_elk), patch(
-        "homeassistant.components.elkm1.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.elkm1.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        _patch_discovery(device=elk_discovery_1),
+        _patch_elk(elk=mocked_elk),
+        patch(
+            "homeassistant.components.elkm1.async_setup", return_value=True
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.elkm1.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
             {
@@ -1408,10 +1515,14 @@ async def test_multiple_instances_with_discovery(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    with _patch_discovery(device=elk_discovery_2), _patch_elk(elk=mocked_elk), patch(
-        "homeassistant.components.elkm1.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        _patch_discovery(device=elk_discovery_2),
+        _patch_elk(elk=mocked_elk),
+        patch(
+            "homeassistant.components.elkm1.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
             {
@@ -1446,10 +1557,14 @@ async def test_multiple_instances_with_discovery(hass: HomeAssistant) -> None:
 
     mocked_elk = mock_elk(invalid_auth=None, sync_complete=True)
 
-    with _patch_discovery(no_device=True), _patch_elk(elk=mocked_elk), patch(
-        "homeassistant.components.elkm1.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        _patch_discovery(no_device=True),
+        _patch_elk(elk=mocked_elk),
+        patch(
+            "homeassistant.components.elkm1.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -1500,12 +1615,17 @@ async def test_multiple_instances_with_tls_v12(hass: HomeAssistant) -> None:
     assert result2["type"] == "form"
     assert not result["errors"]
     assert result2["step_id"] == "discovered_connection"
-    with _patch_discovery(device=elk_discovery_1), _patch_elk(elk=mocked_elk), patch(
-        "homeassistant.components.elkm1.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.elkm1.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        _patch_discovery(device=elk_discovery_1),
+        _patch_elk(elk=mocked_elk),
+        patch(
+            "homeassistant.components.elkm1.async_setup", return_value=True
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.elkm1.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
             {
@@ -1548,10 +1668,14 @@ async def test_multiple_instances_with_tls_v12(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    with _patch_discovery(device=elk_discovery_2), _patch_elk(elk=mocked_elk), patch(
-        "homeassistant.components.elkm1.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        _patch_discovery(device=elk_discovery_2),
+        _patch_elk(elk=mocked_elk),
+        patch(
+            "homeassistant.components.elkm1.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
             {
@@ -1587,10 +1711,14 @@ async def test_multiple_instances_with_tls_v12(hass: HomeAssistant) -> None:
 
     mocked_elk = mock_elk(invalid_auth=False, sync_complete=True)
 
-    with _patch_discovery(no_device=True), _patch_elk(elk=mocked_elk), patch(
-        "homeassistant.components.elkm1.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        _patch_discovery(no_device=True),
+        _patch_elk(elk=mocked_elk),
+        patch(
+            "homeassistant.components.elkm1.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {

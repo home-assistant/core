@@ -1,4 +1,5 @@
 """Test the Renault config flow."""
+
 from unittest.mock import AsyncMock, PropertyMock, patch
 
 import pytest
@@ -60,11 +61,15 @@ async def test_config_flow_single_account(
     )
 
     # Account list single
-    with patch("renault_api.renault_session.RenaultSession.login"), patch(
-        "renault_api.renault_account.RenaultAccount.account_id", return_value="123"
-    ), patch(
-        "renault_api.renault_client.RenaultClient.get_api_accounts",
-        return_value=[renault_account],
+    with (
+        patch("renault_api.renault_session.RenaultSession.login"),
+        patch(
+            "renault_api.renault_account.RenaultAccount.account_id", return_value="123"
+        ),
+        patch(
+            "renault_api.renault_client.RenaultClient.get_api_accounts",
+            return_value=[renault_account],
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -96,9 +101,12 @@ async def test_config_flow_no_account(
     assert result["errors"] == {}
 
     # Account list empty
-    with patch("renault_api.renault_session.RenaultSession.login"), patch(
-        "renault_api.renault_client.RenaultClient.get_api_accounts",
-        return_value=[],
+    with (
+        patch("renault_api.renault_session.RenaultSession.login"),
+        patch(
+            "renault_api.renault_client.RenaultClient.get_api_accounts",
+            return_value=[],
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -135,10 +143,14 @@ async def test_config_flow_multiple_accounts(
     )
 
     # Multiple accounts
-    with patch("renault_api.renault_session.RenaultSession.login"), patch(
-        "renault_api.renault_client.RenaultClient.get_api_accounts",
-        return_value=[renault_account_1, renault_account_2],
-    ), patch("renault_api.renault_account.RenaultAccount.get_vehicles"):
+    with (
+        patch("renault_api.renault_session.RenaultSession.login"),
+        patch(
+            "renault_api.renault_client.RenaultClient.get_api_accounts",
+            return_value=[renault_account_1, renault_account_2],
+        ),
+        patch("renault_api.renault_account.RenaultAccount.get_vehicles"),
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={
@@ -183,10 +195,14 @@ async def test_config_flow_duplicate(
         "account_id_1",
         websession=aiohttp_client.async_get_clientsession(hass),
     )
-    with patch("renault_api.renault_session.RenaultSession.login"), patch(
-        "renault_api.renault_client.RenaultClient.get_api_accounts",
-        return_value=[renault_account],
-    ), patch("renault_api.renault_account.RenaultAccount.get_vehicles"):
+    with (
+        patch("renault_api.renault_session.RenaultSession.login"),
+        patch(
+            "renault_api.renault_client.RenaultClient.get_api_accounts",
+            return_value=[renault_account],
+        ),
+        patch("renault_api.renault_account.RenaultAccount.get_vehicles"),
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={

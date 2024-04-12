@@ -1,4 +1,5 @@
 """Data UpdateCoordinator for the Husqvarna Automower integration."""
+
 import asyncio
 from datetime import timedelta
 import logging

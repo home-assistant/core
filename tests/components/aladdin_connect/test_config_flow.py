@@ -1,4 +1,5 @@
 """Test the Aladdin Connect config flow."""
+
 from unittest.mock import MagicMock, patch
 
 from AIOAladdinConnect.session_manager import InvalidPasswordError
@@ -22,12 +23,16 @@ async def test_form(hass: HomeAssistant, mock_aladdinconnect_api: MagicMock) -> 
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
 
-    with patch(
-        "homeassistant.components.aladdin_connect.config_flow.AladdinConnectClient",
-        return_value=mock_aladdinconnect_api,
-    ), patch(
-        "homeassistant.components.aladdin_connect.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.aladdin_connect.config_flow.AladdinConnectClient",
+            return_value=mock_aladdinconnect_api,
+        ),
+        patch(
+            "homeassistant.components.aladdin_connect.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -157,12 +162,15 @@ async def test_reauth_flow(
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.aladdin_connect.async_setup_entry",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.aladdin_connect.config_flow.AladdinConnectClient",
-        return_value=mock_aladdinconnect_api,
+    with (
+        patch(
+            "homeassistant.components.aladdin_connect.async_setup_entry",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.aladdin_connect.config_flow.AladdinConnectClient",
+            return_value=mock_aladdinconnect_api,
+        ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -205,15 +213,19 @@ async def test_reauth_flow_auth_error(
     assert result["errors"] == {}
     mock_aladdinconnect_api.login.return_value = False
     mock_aladdinconnect_api.login.side_effect = InvalidPasswordError
-    with patch(
-        "homeassistant.components.aladdin_connect.config_flow.AladdinConnectClient",
-        return_value=mock_aladdinconnect_api,
-    ), patch(
-        "homeassistant.components.aladdin_connect.cover.async_setup_entry",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.aladdin_connect.cover.async_setup_entry",
-        return_value=True,
+    with (
+        patch(
+            "homeassistant.components.aladdin_connect.config_flow.AladdinConnectClient",
+            return_value=mock_aladdinconnect_api,
+        ),
+        patch(
+            "homeassistant.components.aladdin_connect.cover.async_setup_entry",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.aladdin_connect.cover.async_setup_entry",
+            return_value=True,
+        ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],

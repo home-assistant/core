@@ -1,4 +1,5 @@
 """Test the Home Assistant Green config flow."""
+
 from unittest.mock import patch
 
 import pytest

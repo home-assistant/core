@@ -1,4 +1,5 @@
 """Define patches used for androidtv tests."""
+
 from unittest.mock import patch
 
 from androidtv.constants import CMD_DEVICE_PROPERTIES, CMD_MAC_ETH0, CMD_MAC_WLAN0

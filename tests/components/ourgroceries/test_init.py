@@ -1,4 +1,5 @@
 """Unit tests for the OurGroceries integration."""
+
 from unittest.mock import AsyncMock
 
 import pytest

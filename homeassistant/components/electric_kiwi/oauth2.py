@@ -1,4 +1,5 @@
 """OAuth2 implementations for Toon."""
+
 from __future__ import annotations
 
 import base64

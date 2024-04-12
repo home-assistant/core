@@ -1,4 +1,5 @@
 """Test the huum config flow."""
+
 from unittest.mock import patch
 
 from huum.exceptions import Forbidden
@@ -25,13 +26,16 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.huum.config_flow.Huum.status",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.huum.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.huum.config_flow.Huum.status",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.huum.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -67,12 +71,15 @@ async def test_signup_flow_already_set_up(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "homeassistant.components.huum.config_flow.Huum.status",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.huum.async_setup_entry",
-        return_value=True,
+    with (
+        patch(
+            "homeassistant.components.huum.config_flow.Huum.status",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.huum.async_setup_entry",
+            return_value=True,
+        ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -118,12 +125,15 @@ async def test_huum_errors(
     assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": error_base}
 
-    with patch(
-        "homeassistant.components.huum.config_flow.Huum.status",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.huum.async_setup_entry",
-        return_value=True,
+    with (
+        patch(
+            "homeassistant.components.huum.config_flow.Huum.status",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.huum.async_setup_entry",
+            return_value=True,
+        ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],

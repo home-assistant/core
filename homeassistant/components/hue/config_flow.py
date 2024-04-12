@@ -1,4 +1,5 @@
 """Config flow to configure Philips Hue."""
+
 from __future__ import annotations
 
 import asyncio
@@ -116,7 +117,7 @@ class HueFlowHandler(ConfigFlow, domain=DOMAIN):
                     websession=aiohttp_client.async_get_clientsession(self.hass)
                 )
         except TimeoutError:
-            return self.async_abort(reason="discover_timeout")
+            bridges = []
 
         if bridges:
             # Find already configured hosts

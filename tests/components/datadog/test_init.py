@@ -1,4 +1,5 @@
 """The tests for the Datadog component."""
+
 from unittest import mock
 from unittest.mock import patch
 
@@ -22,8 +23,9 @@ async def test_datadog_setup_full(hass: HomeAssistant) -> None:
     """Test setup with all data."""
     config = {datadog.DOMAIN: {"host": "host", "port": 123, "rate": 1, "prefix": "foo"}}
 
-    with patch("homeassistant.components.datadog.initialize") as mock_init, patch(
-        "homeassistant.components.datadog.statsd"
+    with (
+        patch("homeassistant.components.datadog.initialize") as mock_init,
+        patch("homeassistant.components.datadog.statsd"),
     ):
         assert await async_setup_component(hass, datadog.DOMAIN, config)
 
@@ -33,8 +35,9 @@ async def test_datadog_setup_full(hass: HomeAssistant) -> None:
 
 async def test_datadog_setup_defaults(hass: HomeAssistant) -> None:
     """Test setup with defaults."""
-    with patch("homeassistant.components.datadog.initialize") as mock_init, patch(
-        "homeassistant.components.datadog.statsd"
+    with (
+        patch("homeassistant.components.datadog.initialize") as mock_init,
+        patch("homeassistant.components.datadog.statsd"),
     ):
         assert await async_setup_component(
             hass,
@@ -54,9 +57,10 @@ async def test_datadog_setup_defaults(hass: HomeAssistant) -> None:
 
 async def test_logbook_entry(hass: HomeAssistant) -> None:
     """Test event listener."""
-    with patch("homeassistant.components.datadog.initialize"), patch(
-        "homeassistant.components.datadog.statsd"
-    ) as mock_statsd:
+    with (
+        patch("homeassistant.components.datadog.initialize"),
+        patch("homeassistant.components.datadog.statsd") as mock_statsd,
+    ):
         assert await async_setup_component(
             hass,
             datadog.DOMAIN,
@@ -84,9 +88,10 @@ async def test_logbook_entry(hass: HomeAssistant) -> None:
 
 async def test_state_changed(hass: HomeAssistant) -> None:
     """Test event listener."""
-    with patch("homeassistant.components.datadog.initialize"), patch(
-        "homeassistant.components.datadog.statsd"
-    ) as mock_statsd:
+    with (
+        patch("homeassistant.components.datadog.initialize"),
+        patch("homeassistant.components.datadog.statsd") as mock_statsd,
+    ):
         assert await async_setup_component(
             hass,
             datadog.DOMAIN,

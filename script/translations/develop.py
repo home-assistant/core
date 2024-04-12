@@ -1,4 +1,5 @@
 """Compile the current translation strings files for testing."""
+
 import argparse
 import json
 from pathlib import Path

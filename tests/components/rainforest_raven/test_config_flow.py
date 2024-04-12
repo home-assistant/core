@@ -1,4 +1,5 @@
 """Test Rainforest RAVEn config flow."""
+
 from unittest.mock import patch
 
 from aioraven.device import RAVEnConnectionError

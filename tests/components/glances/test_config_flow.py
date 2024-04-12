@@ -1,4 +1,5 @@
 """Tests for Glances config flow."""
+
 from unittest.mock import MagicMock
 
 from glances_api.exceptions import (

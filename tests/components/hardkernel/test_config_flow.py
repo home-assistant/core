@@ -1,4 +1,5 @@
 """Test the Hardkernel config flow."""
+
 from unittest.mock import patch
 
 from homeassistant.components.hardkernel.const import DOMAIN

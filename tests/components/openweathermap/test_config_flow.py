@@ -1,4 +1,5 @@
 """Define tests for the OpenWeatherMap config flow."""
+
 from unittest.mock import MagicMock, patch
 
 from pyowm.commons.exceptions import APIRequestError, UnauthorizedError

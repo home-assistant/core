@@ -1,4 +1,5 @@
 """Tests for the local_ip component."""
+
 from __future__ import annotations
 
 from homeassistant import config_entries

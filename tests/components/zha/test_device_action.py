@@ -1,4 +1,5 @@
 """The test for ZHA device automation actions."""
+
 from unittest.mock import call, patch
 
 import pytest

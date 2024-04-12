@@ -1,4 +1,5 @@
 """Test the Blink init."""
+
 from unittest.mock import AsyncMock, MagicMock
 
 from aiohttp import ClientError

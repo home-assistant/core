@@ -1,4 +1,5 @@
 """The tests for the notify.group platform."""
+
 from unittest.mock import MagicMock, patch
 
 from homeassistant import config as hass_config

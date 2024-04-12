@@ -1,4 +1,5 @@
 """The tests for the demo remote component."""
+
 from unittest.mock import patch
 
 import pytest

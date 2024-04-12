@@ -1,4 +1,5 @@
 """Asyncio utilities."""
+
 from __future__ import annotations
 
 from asyncio import AbstractEventLoop, Future, Semaphore, Task, gather, get_running_loop
@@ -7,7 +8,6 @@ import concurrent.futures
 from contextlib import suppress
 import functools
 import logging
-import sys
 import threading
 from typing import Any, ParamSpec, TypeVar, TypeVarTuple
 
@@ -22,35 +22,20 @@ _R = TypeVar("_R")
 _P = ParamSpec("_P")
 _Ts = TypeVarTuple("_Ts")
 
-if sys.version_info >= (3, 12, 0):
 
-    def create_eager_task(
-        coro: Coroutine[Any, Any, _T],
-        *,
-        name: str | None = None,
-        loop: AbstractEventLoop | None = None,
-    ) -> Task[_T]:
-        """Create a task from a coroutine and schedule it to run immediately."""
-        return Task(
-            coro,
-            loop=loop or get_running_loop(),
-            name=name,
-            eager_start=True,  # type: ignore[call-arg]
-        )
-else:
-
-    def create_eager_task(
-        coro: Coroutine[Any, Any, _T],
-        *,
-        name: str | None = None,
-        loop: AbstractEventLoop | None = None,
-    ) -> Task[_T]:
-        """Create a task from a coroutine and schedule it to run immediately."""
-        return Task(
-            coro,
-            loop=loop or get_running_loop(),
-            name=name,
-        )
+def create_eager_task(
+    coro: Coroutine[Any, Any, _T],
+    *,
+    name: str | None = None,
+    loop: AbstractEventLoop | None = None,
+) -> Task[_T]:
+    """Create a task from a coroutine and schedule it to run immediately."""
+    return Task(
+        coro,
+        loop=loop or get_running_loop(),
+        name=name,
+        eager_start=True,
+    )
 
 
 def cancelling(task: Future[Any]) -> bool:

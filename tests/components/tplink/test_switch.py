@@ -9,7 +9,13 @@ import pytest
 from homeassistant.components import tplink
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.tplink.const import DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, STATE_UNAVAILABLE
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    CONF_HOST,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -30,7 +36,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 async def test_plug(hass: HomeAssistant) -> None:
     """Test a smart plug."""
     already_migrated_config_entry = MockConfigEntry(
-        domain=DOMAIN, data={}, unique_id=MAC_ADDRESS
+        domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
     )
     already_migrated_config_entry.add_to_hass(hass)
     plug = _mocked_plug()
@@ -66,7 +72,7 @@ async def test_plug(hass: HomeAssistant) -> None:
 async def test_led_switch(hass: HomeAssistant, dev, domain: str) -> None:
     """Test LED setting for plugs, strips and dimmers."""
     already_migrated_config_entry = MockConfigEntry(
-        domain=DOMAIN, data={}, unique_id=MAC_ADDRESS
+        domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
     )
     already_migrated_config_entry.add_to_hass(hass)
     with _patch_discovery(device=dev), _patch_connect(device=dev):
@@ -96,7 +102,7 @@ async def test_led_switch(hass: HomeAssistant, dev, domain: str) -> None:
 async def test_plug_unique_id(hass: HomeAssistant) -> None:
     """Test a plug unique id."""
     already_migrated_config_entry = MockConfigEntry(
-        domain=DOMAIN, data={}, unique_id=MAC_ADDRESS
+        domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
     )
     already_migrated_config_entry.add_to_hass(hass)
     plug = _mocked_plug()
@@ -112,7 +118,7 @@ async def test_plug_unique_id(hass: HomeAssistant) -> None:
 async def test_plug_update_fails(hass: HomeAssistant) -> None:
     """Test a smart plug update failure."""
     already_migrated_config_entry = MockConfigEntry(
-        domain=DOMAIN, data={}, unique_id=MAC_ADDRESS
+        domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
     )
     already_migrated_config_entry.add_to_hass(hass)
     plug = _mocked_plug()
@@ -134,7 +140,7 @@ async def test_plug_update_fails(hass: HomeAssistant) -> None:
 async def test_strip(hass: HomeAssistant) -> None:
     """Test a smart strip."""
     already_migrated_config_entry = MockConfigEntry(
-        domain=DOMAIN, data={}, unique_id=MAC_ADDRESS
+        domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
     )
     already_migrated_config_entry.add_to_hass(hass)
     strip = _mocked_strip()
@@ -182,7 +188,7 @@ async def test_strip(hass: HomeAssistant) -> None:
 async def test_strip_unique_ids(hass: HomeAssistant) -> None:
     """Test a strip unique id."""
     already_migrated_config_entry = MockConfigEntry(
-        domain=DOMAIN, data={}, unique_id=MAC_ADDRESS
+        domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
     )
     already_migrated_config_entry.add_to_hass(hass)
     strip = _mocked_strip()

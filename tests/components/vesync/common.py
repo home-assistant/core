@@ -1,4 +1,5 @@
 """Common methods used across tests for VeSync."""
+
 import json
 
 import requests_mock
@@ -48,10 +49,11 @@ def mock_devices_response(
     requests_mock: requests_mock.Mocker, device_name: str
 ) -> None:
     """Build a response for the Helpers.call_api method."""
-    device_list = []
-    for device in ALL_DEVICES["result"]["list"]:
-        if device["deviceName"] == device_name:
-            device_list.append(device)
+    device_list = [
+        device
+        for device in ALL_DEVICES["result"]["list"]
+        if device["deviceName"] == device_name
+    ]
 
     requests_mock.post(
         "https://smartapi.vesync.com/cloud/v1/deviceManaged/devices",

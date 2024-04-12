@@ -1,4 +1,5 @@
 """Test the NZBGet config flow."""
+
 from unittest.mock import patch
 
 from pynzbgetapi import NZBGetAPIException
@@ -30,7 +31,12 @@ async def test_user_form(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {}
 
-    with _patch_version(), _patch_status(), _patch_history(), _patch_async_setup_entry() as mock_setup_entry:
+    with (
+        _patch_version(),
+        _patch_status(),
+        _patch_history(),
+        _patch_async_setup_entry() as mock_setup_entry,
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             USER_INPUT,
@@ -58,7 +64,12 @@ async def test_user_form_show_advanced_options(hass: HomeAssistant) -> None:
         CONF_VERIFY_SSL: True,
     }
 
-    with _patch_version(), _patch_status(), _patch_history(), _patch_async_setup_entry() as mock_setup_entry:
+    with (
+        _patch_version(),
+        _patch_status(),
+        _patch_history(),
+        _patch_async_setup_entry() as mock_setup_entry,
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input_advanced,

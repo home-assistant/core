@@ -1,4 +1,5 @@
 """A wrapper 'hub' for the Litter-Robot API."""
+
 from __future__ import annotations
 
 from collections.abc import Generator, Mapping

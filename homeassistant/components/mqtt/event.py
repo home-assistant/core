@@ -1,4 +1,5 @@
 """Support for MQTT events."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -140,8 +141,7 @@ class MqttEvent(MqttEntity, EventEntity):
             if (
                 not payload
                 or payload is PayloadSentinel.DEFAULT
-                or payload == PAYLOAD_NONE
-                or payload == PAYLOAD_EMPTY_JSON
+                or payload in (PAYLOAD_NONE, PAYLOAD_EMPTY_JSON)
             ):
                 _LOGGER.debug(
                     "Ignoring empty payload '%s' after rendering for topic %s",

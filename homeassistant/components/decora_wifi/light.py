@@ -1,4 +1,5 @@
 """Interfaces with the myLeviton API for Decora Smart WiFi products."""
+
 from __future__ import annotations
 
 import logging
@@ -62,17 +63,18 @@ def setup_platform(
 
         # Gather all the available devices...
         perms = session.user.get_residential_permissions()
-        all_switches = []
+        all_switches: list = []
         for permission in perms:
             if permission.residentialAccountId is not None:
                 acct = ResidentialAccount(session, permission.residentialAccountId)
-                for residence in acct.get_residences():
-                    for switch in residence.get_iot_switches():
-                        all_switches.append(switch)
+                all_switches.extend(
+                    switch
+                    for residence in acct.get_residences()
+                    for switch in residence.get_iot_switches()
+                )
             elif permission.residenceId is not None:
                 residence = Residence(session, permission.residenceId)
-                for switch in residence.get_iot_switches():
-                    all_switches.append(switch)
+                all_switches.extend(residence.get_iot_switches())
 
         add_entities(DecoraWifiLight(sw) for sw in all_switches)
     except ValueError:

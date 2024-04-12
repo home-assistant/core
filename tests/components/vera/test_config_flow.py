@@ -1,4 +1,5 @@
 """Vera tests."""
+
 from unittest.mock import MagicMock, patch
 
 from requests.exceptions import RequestException

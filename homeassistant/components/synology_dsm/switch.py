@@ -1,4 +1,5 @@
 """Support for Synology DSM switch."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -22,7 +23,7 @@ from .models import SynologyDSMData
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class SynologyDSMSwitchEntityDescription(
     SwitchEntityDescription, SynologyDSMEntityDescription
 ):
@@ -97,7 +98,7 @@ class SynoDSMSurveillanceHomeModeToggle(
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return bool(self._api.surveillance_station)
+        return bool(self._api.surveillance_station) and super().available
 
     @property
     def device_info(self) -> DeviceInfo:

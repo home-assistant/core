@@ -1,4 +1,5 @@
 """Test the DoorBird config flow."""
+
 from ipaddress import ip_address
 from unittest.mock import MagicMock, Mock, patch
 
@@ -51,15 +52,19 @@ async def test_user_form(hass: HomeAssistant) -> None:
     doorbirdapi = _get_mock_doorbirdapi_return_values(
         ready=[True], info={"WIFI_MAC_ADDR": "macaddr"}
     )
-    with patch(
-        "homeassistant.components.doorbird.config_flow.DoorBird",
-        return_value=doorbirdapi,
-    ), patch(
-        "homeassistant.components.doorbird.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.doorbird.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.doorbird.config_flow.DoorBird",
+            return_value=doorbirdapi,
+        ),
+        patch(
+            "homeassistant.components.doorbird.async_setup", return_value=True
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.doorbird.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             VALID_CONFIG,
@@ -194,15 +199,20 @@ async def test_form_zeroconf_correct_oui(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.doorbird.config_flow.DoorBird",
-        return_value=doorbirdapi,
-    ), patch("homeassistant.components.logbook.async_setup", return_value=True), patch(
-        "homeassistant.components.doorbird.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.doorbird.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.doorbird.config_flow.DoorBird",
+            return_value=doorbirdapi,
+        ),
+        patch("homeassistant.components.logbook.async_setup", return_value=True),
+        patch(
+            "homeassistant.components.doorbird.async_setup", return_value=True
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.doorbird.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], VALID_CONFIG
         )

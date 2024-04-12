@@ -1,4 +1,5 @@
 """Support for interfacing with an instance of getchannels.com."""
+
 from __future__ import annotations
 
 from typing import Any

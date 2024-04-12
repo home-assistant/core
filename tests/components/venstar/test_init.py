@@ -1,4 +1,5 @@
 """Tests of the initialization of the venstar integration."""
+
 from unittest.mock import patch
 
 from homeassistant.components.venstar.const import DOMAIN as VENSTAR_DOMAIN
@@ -24,24 +25,31 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
     )
     config_entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.venstar.VenstarColorTouch._request",
-        new=VenstarColorTouchMock._request,
-    ), patch(
-        "homeassistant.components.venstar.VenstarColorTouch.update_sensors",
-        new=VenstarColorTouchMock.update_sensors,
-    ), patch(
-        "homeassistant.components.venstar.VenstarColorTouch.update_info",
-        new=VenstarColorTouchMock.update_info,
-    ), patch(
-        "homeassistant.components.venstar.VenstarColorTouch.update_alerts",
-        new=VenstarColorTouchMock.update_alerts,
-    ), patch(
-        "homeassistant.components.venstar.VenstarColorTouch.get_runtimes",
-        new=VenstarColorTouchMock.get_runtimes,
-    ), patch(
-        "homeassistant.components.venstar.VENSTAR_SLEEP",
-        new=0,
+    with (
+        patch(
+            "homeassistant.components.venstar.VenstarColorTouch._request",
+            new=VenstarColorTouchMock._request,
+        ),
+        patch(
+            "homeassistant.components.venstar.VenstarColorTouch.update_sensors",
+            new=VenstarColorTouchMock.update_sensors,
+        ),
+        patch(
+            "homeassistant.components.venstar.VenstarColorTouch.update_info",
+            new=VenstarColorTouchMock.update_info,
+        ),
+        patch(
+            "homeassistant.components.venstar.VenstarColorTouch.update_alerts",
+            new=VenstarColorTouchMock.update_alerts,
+        ),
+        patch(
+            "homeassistant.components.venstar.VenstarColorTouch.get_runtimes",
+            new=VenstarColorTouchMock.get_runtimes,
+        ),
+        patch(
+            "homeassistant.components.venstar.VENSTAR_SLEEP",
+            new=0,
+        ),
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -64,21 +72,27 @@ async def test_setup_entry_exception(hass: HomeAssistant) -> None:
     )
     config_entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.venstar.VenstarColorTouch._request",
-        new=VenstarColorTouchMock._request,
-    ), patch(
-        "homeassistant.components.venstar.VenstarColorTouch.update_sensors",
-        new=VenstarColorTouchMock.update_sensors,
-    ), patch(
-        "homeassistant.components.venstar.VenstarColorTouch.update_info",
-        new=VenstarColorTouchMock.broken_update_info,
-    ), patch(
-        "homeassistant.components.venstar.VenstarColorTouch.update_alerts",
-        new=VenstarColorTouchMock.update_alerts,
-    ), patch(
-        "homeassistant.components.venstar.VenstarColorTouch.get_runtimes",
-        new=VenstarColorTouchMock.get_runtimes,
+    with (
+        patch(
+            "homeassistant.components.venstar.VenstarColorTouch._request",
+            new=VenstarColorTouchMock._request,
+        ),
+        patch(
+            "homeassistant.components.venstar.VenstarColorTouch.update_sensors",
+            new=VenstarColorTouchMock.update_sensors,
+        ),
+        patch(
+            "homeassistant.components.venstar.VenstarColorTouch.update_info",
+            new=VenstarColorTouchMock.broken_update_info,
+        ),
+        patch(
+            "homeassistant.components.venstar.VenstarColorTouch.update_alerts",
+            new=VenstarColorTouchMock.update_alerts,
+        ),
+        patch(
+            "homeassistant.components.venstar.VenstarColorTouch.get_runtimes",
+            new=VenstarColorTouchMock.get_runtimes,
+        ),
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()

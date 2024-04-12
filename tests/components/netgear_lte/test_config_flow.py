@@ -1,4 +1,5 @@
 """Test Netgear LTE config flow."""
+
 from unittest.mock import patch
 
 import pytest
@@ -39,7 +40,7 @@ async def test_flow_user_form(hass: HomeAssistant, connection: None) -> None:
     assert result["context"]["unique_id"] == "FFFFFFFFFFFFF"
 
 
-@pytest.mark.parametrize("source", (SOURCE_USER, SOURCE_IMPORT))
+@pytest.mark.parametrize("source", [SOURCE_USER, SOURCE_IMPORT])
 async def test_flow_already_configured(
     hass: HomeAssistant, setup_integration: None, source: str
 ) -> None:

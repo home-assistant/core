@@ -1,4 +1,5 @@
 """The tests for deCONZ logbook."""
+
 from unittest.mock import patch
 
 from homeassistant.components.deconz.const import CONF_GESTURE, DOMAIN as DECONZ_DOMAIN

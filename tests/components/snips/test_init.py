@@ -1,4 +1,5 @@
 """Test the Snips component."""
+
 import json
 import logging
 

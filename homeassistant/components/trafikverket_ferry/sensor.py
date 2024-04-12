@@ -1,4 +1,5 @@
 """Ferry information for departures, provided by Trafikverket."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -31,19 +32,12 @@ ATTR_OTHER_INFO = "other_info"
 SCAN_INTERVAL = timedelta(minutes=5)
 
 
-@dataclass(frozen=True)
-class TrafikverketRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class TrafikverketSensorEntityDescription(SensorEntityDescription):
+    """Describes Trafikverket sensor entity."""
 
     value_fn: Callable[[dict[str, Any]], StateType | datetime]
     info_fn: Callable[[dict[str, Any]], StateType | list] | None
-
-
-@dataclass(frozen=True)
-class TrafikverketSensorEntityDescription(
-    SensorEntityDescription, TrafikverketRequiredKeysMixin
-):
-    """Describes Trafikverket sensor entity."""
 
 
 SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (

@@ -1,4 +1,5 @@
 """Test the Home Assistant Hardware silabs multiprotocol addon manager."""
+
 from __future__ import annotations
 
 from collections.abc import Generator
@@ -1609,13 +1610,16 @@ async def test_active_plaforms(
 async def test_check_multi_pan_addon_no_hassio(hass: HomeAssistant) -> None:
     """Test `check_multi_pan_addon` without hassio."""
 
-    with patch(
-        "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.is_hassio",
-        return_value=False,
-    ), patch(
-        "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.get_multiprotocol_addon_manager",
-        autospec=True,
-    ) as mock_get_addon_manager:
+    with (
+        patch(
+            "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.is_hassio",
+            return_value=False,
+        ),
+        patch(
+            "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.get_multiprotocol_addon_manager",
+            autospec=True,
+        ) as mock_get_addon_manager,
+    ):
         await silabs_multiprotocol_addon.check_multi_pan_addon(hass)
         mock_get_addon_manager.assert_not_called()
 
@@ -1718,9 +1722,12 @@ async def test_multi_pan_addon_using_device_not_running(
         "state": "not_running",
     }
 
-    await silabs_multiprotocol_addon.multi_pan_addon_using_device(
-        hass, "/dev/ttyAMA1"
-    ) is False
+    assert (
+        await silabs_multiprotocol_addon.multi_pan_addon_using_device(
+            hass, "/dev/ttyAMA1"
+        )
+        is False
+    )
 
 
 @pytest.mark.parametrize(
@@ -1749,6 +1756,9 @@ async def test_multi_pan_addon_using_device(
         "state": "running",
     }
 
-    await silabs_multiprotocol_addon.multi_pan_addon_using_device(
-        hass, "/dev/ttyAMA1"
-    ) is expected_result
+    assert (
+        await silabs_multiprotocol_addon.multi_pan_addon_using_device(
+            hass, "/dev/ttyAMA1"
+        )
+        is expected_result
+    )

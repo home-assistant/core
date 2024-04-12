@@ -1,4 +1,5 @@
 """Constants for Roborock."""
+
 from vacuum_map_parser_base.config.drawable import Drawable
 
 from homeassistant.const import Platform

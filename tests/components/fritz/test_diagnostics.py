@@ -1,4 +1,5 @@
 """Tests for Fritz!Tools diagnostics platform."""
+
 from __future__ import annotations
 
 from homeassistant.components.diagnostics import REDACTED
