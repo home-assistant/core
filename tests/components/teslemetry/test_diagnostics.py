@@ -15,7 +15,7 @@ async def test_diagnostics(
     hass_client: ClientSessionGenerator,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test select platform."""
+    """Test diagnostics."""
 
     entry = await setup_platform(hass)
 
