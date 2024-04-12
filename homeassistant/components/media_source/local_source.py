@@ -104,7 +104,7 @@ class LocalSource(MediaSource):
 
         # If only one media dir is configured, use that as the local media root
         if source_dir_id is None and len(self.hass.config.media_dirs) == 1:
-            source_dir_id = list(self.hass.config.media_dirs)[0]
+            source_dir_id = next(iter(self.hass.config.media_dirs))
 
         # Multiple folder, root is requested
         if source_dir_id is None:

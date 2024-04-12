@@ -912,7 +912,7 @@ async def test_standard_cluster_handler(hass: HomeAssistant, caplog) -> None:
 
     assert len(zha_endpoint.all_cluster_handlers) == 1
     assert isinstance(
-        list(zha_endpoint.all_cluster_handlers.values())[0], ColorClusterHandler
+        next(iter(zha_endpoint.all_cluster_handlers.values())), ColorClusterHandler
     )
 
 
@@ -947,7 +947,7 @@ async def test_quirk_id_cluster_handler(hass: HomeAssistant, caplog) -> None:
 
     assert len(zha_endpoint.all_cluster_handlers) == 1
     assert isinstance(
-        list(zha_endpoint.all_cluster_handlers.values())[0], TestZigbeeClusterHandler
+        next(iter(zha_endpoint.all_cluster_handlers.values())), TestZigbeeClusterHandler
     )
 
 

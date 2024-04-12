@@ -395,7 +395,7 @@ async def test_remove_entry(
 
     # Check entity got added to entity registry
     assert len(entity_registry.entities) == 1
-    entity_entry = list(entity_registry.entities.values())[0]
+    entity_entry = next(iter(entity_registry.entities.values()))
     assert entity_entry.config_entry_id == entry.entry_id
 
     # Remove entry

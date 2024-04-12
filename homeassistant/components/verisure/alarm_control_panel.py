@@ -72,7 +72,7 @@ class VerisureAlarm(
             transaction = await self.hass.async_add_executor_job(
                 self.coordinator.verisure.request,
                 self.coordinator.verisure.poll_arm_state(
-                    list(arm_state["data"].values())[0], state
+                    next(iter(arm_state["data"].values())), state
                 ),
             )
             result = (

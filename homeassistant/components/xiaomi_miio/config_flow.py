@@ -286,7 +286,7 @@ class XiaomiMiioFlowHandler(ConfigFlow, domain=DOMAIN):
                         return await self.async_step_connect()
 
             if len(self.cloud_devices) == 1:
-                self.extract_cloud_info(list(self.cloud_devices.values())[0])
+                self.extract_cloud_info(next(iter(self.cloud_devices.values())))
                 return await self.async_step_connect()
 
             return await self.async_step_select()

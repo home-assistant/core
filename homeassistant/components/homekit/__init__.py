@@ -1161,7 +1161,7 @@ class HomeKit:
         if device_entry.hw_version:
             config[ATTR_HW_VERSION] = device_entry.hw_version
         if device_entry.config_entries:
-            first_entry = list(device_entry.config_entries)[0]
+            first_entry = next(iter(device_entry.config_entries))
             if entry := self.hass.config_entries.async_get_entry(first_entry):
                 config[ATTR_INTEGRATION] = entry.domain
 

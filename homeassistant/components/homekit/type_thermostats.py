@@ -237,7 +237,7 @@ class Thermostat(HomeAccessory):
         # the value and if 0 is not a valid
         # value this will throw
         self.char_target_heat_cool = serv_thermostat.configure_char(
-            CHAR_TARGET_HEATING_COOLING, value=list(self.hc_homekit_to_hass)[0]
+            CHAR_TARGET_HEATING_COOLING, value=next(iter(self.hc_homekit_to_hass))
         )
         self.char_target_heat_cool.override_properties(
             valid_values=self.hc_hass_to_homekit

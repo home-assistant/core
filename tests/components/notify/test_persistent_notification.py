@@ -22,7 +22,7 @@ async def test_async_send_message(hass: HomeAssistant) -> None:
 
     notifications = async_get_persistent_notifications(hass)
     assert len(notifications) == 1
-    notification = notifications[list(notifications)[0]]
+    notification = notifications[next(iter(notifications))]
 
     assert notification["message"] == "Hello"
     assert notification["title"] == "Test notification"
@@ -62,6 +62,6 @@ async def test_async_supports_notification_id(hass: HomeAssistant) -> None:
     notifications = async_get_persistent_notifications(hass)
     assert len(notifications) == 1
 
-    notification = notifications[list(notifications)[0]]
+    notification = notifications[next(iter(notifications))]
     assert notification["message"] == "Goodbye"
     assert notification["title"] == "Notification was updated"

@@ -31,7 +31,7 @@ def _get_selector_class(config: Any) -> type[Selector]:
     if len(config) != 1:
         raise vol.Invalid(f"Only one type can be specified. Found {', '.join(config)}")
 
-    selector_type: str = list(config)[0]
+    selector_type: str = next(iter(config))
 
     if (selector_class := SELECTORS.get(selector_type)) is None:
         raise vol.Invalid(f"Unknown selector type {selector_type} found")
@@ -42,7 +42,7 @@ def _get_selector_class(config: Any) -> type[Selector]:
 def selector(config: Any) -> Selector:
     """Instantiate a selector."""
     selector_class = _get_selector_class(config)
-    selector_type = list(config)[0]
+    selector_type = next(iter(config))
 
     return selector_class(config[selector_type])
 
@@ -50,7 +50,7 @@ def selector(config: Any) -> Selector:
 def validate_selector(config: Any) -> dict:
     """Validate a selector."""
     selector_class = _get_selector_class(config)
-    selector_type = list(config)[0]
+    selector_type = next(iter(config))
 
     # Selectors can be empty
     if config[selector_type] is None:

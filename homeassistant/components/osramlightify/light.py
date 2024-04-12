@@ -370,7 +370,7 @@ class Luminary(LightEntity):
             )
         if len(self._attr_supported_color_modes) == 1:
             # The light supports only a single color mode
-            self._attr_color_mode = list(self._attr_supported_color_modes)[0]
+            self._attr_color_mode = next(iter(self._attr_supported_color_modes))
 
     def update_dynamic_attributes(self):
         """Update dynamic attributes of the luminary."""

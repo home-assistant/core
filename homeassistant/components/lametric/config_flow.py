@@ -200,7 +200,7 @@ class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 return self.async_abort(reason="reauth_device_not_found")
             user_input = {CONF_DEVICE: self.reauth_entry.unique_id}
         elif len(self.devices) == 1:
-            user_input = {CONF_DEVICE: list(self.devices.values())[0].serial_number}
+            user_input = {CONF_DEVICE: next(iter(self.devices.values())).serial_number}
 
         errors: dict[str, str] = {}
         if user_input is not None:

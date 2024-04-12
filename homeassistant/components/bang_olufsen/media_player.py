@@ -525,7 +525,7 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
             )
             return
 
-        key = [x for x in self._sources if self._sources[x] == source][0]
+        key = next(x for x in self._sources if self._sources[x] == source)
 
         # Check for source type
         if source in self._audio_sources.values():

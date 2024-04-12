@@ -209,7 +209,7 @@ class IcloudAccount:
                 new_device = True
 
         if (
-            DEVICE_STATUS_CODES.get(list(api_devices)[0][DEVICE_STATUS]) == "pending"
+            DEVICE_STATUS_CODES.get(next(iter(api_devices))[DEVICE_STATUS]) == "pending"
             and not self._retried_fetch
         ):
             _LOGGER.debug("Pending devices, trying again in 15s")

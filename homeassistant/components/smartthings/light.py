@@ -202,7 +202,7 @@ class SmartThingsLight(SmartThingsEntity, LightEntity):
         """Return the color mode of the light."""
         if len(self._attr_supported_color_modes) == 1:
             # The light supports only a single color mode
-            return list(self._attr_supported_color_modes)[0]
+            return next(iter(self._attr_supported_color_modes))
 
         # The light supports hs + color temp, determine which one it is
         if self._attr_hs_color and self._attr_hs_color[1]:

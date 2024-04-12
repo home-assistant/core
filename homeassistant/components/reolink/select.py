@@ -44,7 +44,7 @@ class ReolinkSelectEntityDescription(
 
 def _get_quick_reply_id(api: Host, ch: int, mess: str) -> int:
     """Get the quick reply file id from the message string."""
-    return [k for k, v in api.quick_reply_dict(ch).items() if v == mess][0]
+    return next(k for k, v in api.quick_reply_dict(ch).items() if v == mess)
 
 
 SELECT_ENTITIES = (

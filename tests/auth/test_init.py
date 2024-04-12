@@ -1180,13 +1180,13 @@ async def test_rename_does_not_change_refresh_token(mock_hass) -> None:
     await manager.async_create_refresh_token(user, CLIENT_ID)
 
     assert len(list(user.refresh_tokens.values())) == 1
-    token_before = list(user.refresh_tokens.values())[0]
+    token_before = next(iter(user.refresh_tokens.values()))
 
     await manager.async_update_user(user, name="new name")
     assert user.name == "new name"
 
     assert len(list(user.refresh_tokens.values())) == 1
-    token_after = list(user.refresh_tokens.values())[0]
+    token_after = next(iter(user.refresh_tokens.values()))
 
     assert token_before == token_after
 

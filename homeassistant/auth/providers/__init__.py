@@ -223,7 +223,7 @@ class LoginFlow(data_entry_flow.FlowHandler[AuthFlowResult, tuple[str, str]]):
             errors["base"] = "invalid_auth_module"
 
         if len(self.available_mfa_modules) == 1:
-            self._auth_module_id = list(self.available_mfa_modules)[0]
+            self._auth_module_id = next(iter(self.available_mfa_modules))
             return await self.async_step_mfa()
 
         return self.async_show_form(

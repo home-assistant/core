@@ -99,7 +99,7 @@ async def test_unlock_failing(
     hass: HomeAssistant, surepetcare, mock_config_entry_setup: MockConfigEntry
 ) -> None:
     """Test handling of unlock failing."""
-    entity_id = list(EXPECTED_ENTITY_IDS)[0]
+    entity_id = next(iter(EXPECTED_ENTITY_IDS))
 
     await hass.services.async_call(
         "lock", "lock", {"entity_id": entity_id}, blocking=True

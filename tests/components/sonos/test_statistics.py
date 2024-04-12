@@ -8,7 +8,7 @@ async def test_statistics_duplicate(
     hass: HomeAssistant, async_autosetup_sonos, soco, device_properties_event
 ) -> None:
     """Test Sonos statistics."""
-    speaker = list(hass.data[DATA_SONOS].discovered.values())[0]
+    speaker = next(iter(hass.data[DATA_SONOS].discovered.values()))
 
     subscription = soco.deviceProperties.subscribe.return_value
     sub_callback = subscription.callback

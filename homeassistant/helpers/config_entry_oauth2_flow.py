@@ -270,7 +270,7 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
         if len(implementations) == 1 and req is not None:
             # Pick first implementation if we have only one, but only
             # if this is triggered by a user interaction (request).
-            self.flow_impl = list(implementations.values())[0]
+            self.flow_impl = next(iter(implementations.values()))
             return await self.async_step_auth()
 
         return self.async_show_form(
@@ -278,7 +278,7 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
             data_schema=vol.Schema(
                 {
                     vol.Required(
-                        "implementation", default=list(implementations)[0]
+                        "implementation", default=next(iter(implementations))
                     ): vol.In({key: impl.name for key, impl in implementations.items()})
                 }
             ),

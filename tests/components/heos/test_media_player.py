@@ -761,7 +761,7 @@ async def test_play_media_quick_select(
     """Test the play media service with type quick_select."""
     await setup_platform(hass, config_entry, config)
     player = controller.players[1]
-    quick_select = list(quick_selects.items())[0]
+    quick_select = next(iter(quick_selects.items()))
     index = quick_select[0]
     name = quick_select[1]
     # Play by index
@@ -872,7 +872,7 @@ async def test_play_media_favorite(
     """Test the play media service with type favorite."""
     await setup_platform(hass, config_entry, config)
     player = controller.players[1]
-    quick_select = list(favorites.items())[0]
+    quick_select = next(iter(favorites.items()))
     index = quick_select[0]
     name = quick_select[1].name
     # Play by index

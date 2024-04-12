@@ -1241,7 +1241,7 @@ async def test_format_mac(
             config_entry_id=mock_config_entry.entry_id,
             connections={(dr.CONNECTION_NETWORK_MAC, invalid)},
         )
-        assert list(invalid_mac_entry.connections)[0][1] == invalid
+        assert next(iter(invalid_mac_entry.connections))[1] == invalid
 
 
 async def test_update(

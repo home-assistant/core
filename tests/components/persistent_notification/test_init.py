@@ -17,7 +17,7 @@ async def test_create(hass: HomeAssistant) -> None:
     pn.async_create(hass, "Hello World 2", title="2 beers")
     assert len(notifications) == 1
 
-    notification = notifications[list(notifications)[0]]
+    notification = notifications[next(iter(notifications))]
     assert notification["message"] == "Hello World 2"
     assert notification["title"] == "2 beers"
     assert notification["created_at"] is not None
@@ -32,7 +32,7 @@ async def test_create_notification_id(hass: HomeAssistant) -> None:
     pn.async_create(hass, "test", notification_id="Beer 2")
 
     assert len(notifications) == 1
-    notification = notifications[list(notifications)[0]]
+    notification = notifications[next(iter(notifications))]
 
     assert notification["message"] == "test"
     assert notification["title"] is None
@@ -40,7 +40,7 @@ async def test_create_notification_id(hass: HomeAssistant) -> None:
     pn.async_create(hass, "test 2", notification_id="Beer 2")
 
     # We should have overwritten old one
-    notification = notifications[list(notifications)[0]]
+    notification = notifications[next(iter(notifications))]
 
     assert notification["message"] == "test 2"
 
@@ -150,7 +150,7 @@ async def test_ws_get_subscribe(
     assert event["type"] == "added"
     notifications = event["notifications"]
     assert len(notifications) == 1
-    notification = notifications[list(notifications)[0]]
+    notification = notifications[next(iter(notifications))]
     assert notification["notification_id"] == "Beer 2"
     assert notification["message"] == "test"
     assert notification["title"] is None

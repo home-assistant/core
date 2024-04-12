@@ -150,7 +150,7 @@ async def test_list_get_dataset(
         await dataset_store.async_add_dataset(hass, dataset["source"], dataset["tlv"])
 
     store = await dataset_store.async_get_store(hass)
-    dataset_id = list(store.datasets.values())[0].id
+    dataset_id = next(iter(store.datasets.values())).id
     store.preferred_dataset = dataset_id
 
     for dataset in store.datasets.values():

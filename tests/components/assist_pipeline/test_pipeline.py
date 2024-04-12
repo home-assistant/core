@@ -95,7 +95,7 @@ async def test_load_pipelines(hass: HomeAssistant, init_components) -> None:
         (await store1.async_create_item(pipeline)).id for pipeline in pipelines
     ]
     assert len(store1.data) == 4  # 3 manually created plus a default pipeline
-    assert store1.async_get_preferred_item() == list(store1.data)[0]
+    assert store1.async_get_preferred_item() == next(iter(store1.data))
 
     await store1.async_delete_item(pipeline_ids[1])
     assert len(store1.data) == 3

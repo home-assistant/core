@@ -873,7 +873,8 @@ async def test_homekit_start_with_a_device(
     assert homekit.status == STATUS_RUNNING
 
     assert isinstance(
-        list(homekit.driver.accessory.accessories.values())[0], DeviceTriggerAccessory
+        next(iter(homekit.driver.accessory.accessories.values())),
+        DeviceTriggerAccessory,
     )
     await homekit.async_stop()
 

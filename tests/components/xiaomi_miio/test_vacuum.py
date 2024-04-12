@@ -145,7 +145,7 @@ def mirobo_old_speeds_fixture(request):
     mock_vacuum = MagicMock()
     mock_vacuum.status().battery = 32
     mock_vacuum.fan_speed_presets.return_value = request.param
-    mock_vacuum.status().fanspeed = list(request.param.values())[0]
+    mock_vacuum.status().fanspeed = next(iter(request.param.values()))
     mock_vacuum.last_clean_details().start = datetime(
         2020, 4, 1, 13, 21, 10, tzinfo=dt_util.UTC
     )
@@ -167,7 +167,7 @@ def mirobo_is_on_fixture():
     mock_vacuum.status().data = {"test": "raw"}
     mock_vacuum.status().is_on = True
     mock_vacuum.fan_speed_presets.return_value = new_fanspeeds
-    mock_vacuum.status().fanspeed = list(new_fanspeeds.values())[0]
+    mock_vacuum.status().fanspeed = next(iter(new_fanspeeds.values()))
     mock_vacuum.status().got_error = False
     mock_vacuum.status().battery = 32
     mock_vacuum.status().clean_area = 133.43218

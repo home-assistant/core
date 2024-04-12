@@ -332,7 +332,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
     if "hassio_user" in data:
         user = await hass.auth.async_get_user(data["hassio_user"])
         if user and user.refresh_tokens:
-            refresh_token = list(user.refresh_tokens.values())[0]
+            refresh_token = next(iter(user.refresh_tokens.values()))
 
             # Migrate old Hass.io users to be admin.
             if not user.is_admin:
