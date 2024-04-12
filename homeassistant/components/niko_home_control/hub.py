@@ -120,30 +120,28 @@ class Hub:
         s = '{"cmd":"startevents"}'
         reader, writer = await asyncio.open_connection(self._host, self._port)
 
-        _LOGGER.debug('listening')
+        _LOGGER.debug("listening")
 
         writer.write(s.encode())
         await writer.drain()
-        async for line in await reader:
+        async for line in reader:
             try:
                 message = json.loads(line.decode())
                 _LOGGER.debug(message)
-                if (message != 'b\r'):
+                if message != "b\r":
                     if "event" in message and message["event"] == "listactions":
                         for _action in message["data"]:
                             entity = self.get_entity(_action["id"])
                             entity.update_state(_action["value1"])
-            except: 
-                _LOGGER.debug('exception')
+            except:
+                _LOGGER.debug("exception")
                 _LOGGER.debug(line)
-
-        
 
     def get_action(self, action_id):
         """Get action by id."""
         actions = [action for action in self._actions if action.action_id == action_id]
         return actions[0]
-    
+
     def get_entity(self, action_id):
         """Get entity by id."""
         actions = [action for action in self.entities if action.id == action_id]

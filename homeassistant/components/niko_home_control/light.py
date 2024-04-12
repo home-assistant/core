@@ -32,7 +32,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Niko Home Control light platform."""
-    hub = hass.data[DOMAIN][entry.entry_id]    
+    hub = hass.data[DOMAIN][entry.entry_id]
     entities = []
     for action in hub.actions:
         action_type = action.action_type
@@ -76,7 +76,7 @@ class NikoHomeControlLight(LightEntity):
     def update_state(self, state):
         """Update HA state."""
         self._attr_is_on = state != 0
-        self.publish_updates()
+        self.async_write_ha_state()
 
     def turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
