@@ -1,7 +1,6 @@
 """Tests for the Sonos Media Player platform."""
 
 import logging
-from unittest.mock import MagicMock
 
 import pytest
 
@@ -174,35 +173,6 @@ async def test_play_media_music_library_playlist_dne(
     assert soco_mock.play_uri.call_count == 0
     assert media_content_id in caplog.text
     assert "playlist" in caplog.text
-
-
-class _MockDidlFavorite(_MockMusicServiceItem):
-    def __init__(
-        self, title: str, item_id: str, parent_id: str, item_class: str, uri: str = None
-    ) -> None:
-        """Initialize the mock item."""
-        _MockMusicServiceItem.__init__(self, title, item_id, parent_id, item_class)
-        self.reference = MagicMock()
-        self.reference.resources.return_value = True
-        self.reference.get_uri.return_value = uri
-
-
-_mock_favorites = [
-    _MockDidlFavorite(
-        title="66 - Watercolors",
-        item_id="FV:2/4",
-        parent_id="FV:2",
-        item_class="object.itemobject.item.sonos-favorite",
-        uri="x-sonosapi-hls:Api%3atune%3aliveAudio%3ajazzcafe%3ae4b5402c-c608-db84-ad15-4bc8e2cdccce?sid=37&flags=288&sn=5",
-    ),
-    _MockDidlFavorite(
-        title="James Taylor Radio",
-        item_id="FV:2/13",
-        parent_id="FV:2",
-        item_class="object.itemobject.item.sonos-favorite",
-        uri="x-sonosapi-radio:ST%3a1683194974484871160?sid=236&flags=8296&sn=1",
-    ),
-]
 
 
 @pytest.mark.parametrize(
