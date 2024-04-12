@@ -43,7 +43,7 @@ async def test_sensor_unknown_states(
     mock_automower_client.get_status.return_value = values
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await hass.async_block_till_done()
     state = hass.states.get("sensor.test_mower_1_mode")
     assert state.state == STATE_UNKNOWN
 
@@ -91,7 +91,7 @@ async def test_next_start_sensor(
     mock_automower_client.get_status.return_value = values
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await hass.async_block_till_done()
     state = hass.states.get("sensor.test_mower_1_next_start")
     assert state.state == STATE_UNKNOWN
 
@@ -148,7 +148,7 @@ async def test_error_sensor(
         mock_automower_client.get_status.return_value = values
         freezer.tick(SCAN_INTERVAL)
         async_fire_time_changed(hass)
-        await hass.async_block_till_done(wait_background_tasks=True)
+        await hass.async_block_till_done()
         state = hass.states.get("sensor.test_mower_1_error")
         assert state.state == expected_state
 
