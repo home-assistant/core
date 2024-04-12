@@ -41,10 +41,11 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Netgear LTE binary sensor."""
-    modem_data = hass.data[DOMAIN].get_modem_data(entry.data)
+    coordinator = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
-        NetgearLTEBinarySensor(entry, modem_data, sensor) for sensor in BINARY_SENSORS
+        NetgearLTEBinarySensor(coordinator, description)
+        for description in BINARY_SENSORS
     )
 
 
@@ -54,4 +55,4 @@ class NetgearLTEBinarySensor(LTEEntity, BinarySensorEntity):
     @property
     def is_on(self):
         """Return true if the binary sensor is on."""
-        return getattr(self.modem_data.data, self.entity_description.key)
+        return getattr(self.coordinator.data, self.entity_description.key)

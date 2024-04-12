@@ -1,10 +1,10 @@
 """Support for Netgear LTE modems."""
 
-from datetime import timedelta
+from typing import Any
 
 from aiohttp.cookiejar import CookieJar
-import attr
 import eternalegypt
+from eternalegypt.eternalegypt import SMS
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry, ConfigEntryState
@@ -14,15 +14,12 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
     CONF_RECIPIENT,
-    EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, Event, HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
-from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 
@@ -35,13 +32,11 @@ from .const import (
     CONF_NOTIFY,
     CONF_SENSOR,
     DATA_HASS_CONFIG,
-    DISPATCHER_NETGEAR_LTE,
+    DATA_SESSION,
     DOMAIN,
-    LOGGER,
 )
+from .coordinator import NetgearLTEDataUpdateCoordinator
 from .services import async_setup_services
-
-SCAN_INTERVAL = timedelta(seconds=10)
 
 EVENT_SMS = "netgear_lte_sms"
 
@@ -122,50 +117,6 @@ PLATFORMS = [
 ]
 
 
-@attr.s
-class ModemData:
-    """Class for modem state."""
-
-    hass = attr.ib()
-    host = attr.ib()
-    modem = attr.ib()
-
-    data = attr.ib(init=False, default=None)
-    connected = attr.ib(init=False, default=True)
-
-    async def async_update(self):
-        """Call the API to update the data."""
-
-        try:
-            self.data = await self.modem.information()
-            if not self.connected:
-                LOGGER.warning("Connected to %s", self.host)
-                self.connected = True
-        except eternalegypt.Error:
-            if self.connected:
-                LOGGER.warning("Lost connection to %s", self.host)
-                self.connected = False
-            self.data = None
-
-        async_dispatcher_send(self.hass, DISPATCHER_NETGEAR_LTE)
-
-
-@attr.s
-class LTEData:
-    """Shared state."""
-
-    websession = attr.ib()
-    modem_data: dict[str, ModemData] = attr.ib(init=False, factory=dict)
-
-    def get_modem_data(self, config):
-        """Get modem_data for the host in config."""
-        if config[CONF_HOST] is not None:
-            return self.modem_data.get(config[CONF_HOST])
-        if len(self.modem_data) != 1:
-            return None
-        return next(iter(self.modem_data.values()))
-
-
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Netgear LTE component."""
     hass.data[DATA_HASS_CONFIG] = config
@@ -213,33 +164,33 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     host = entry.data[CONF_HOST]
     password = entry.data[CONF_PASSWORD]
 
-    if not (data := hass.data.get(DOMAIN)) or data.websession.closed:
-        websession = async_create_clientsession(hass, cookie_jar=CookieJar(unsafe=True))
+    data: dict[str, Any] = hass.data.setdefault(DOMAIN, {})
+    if not (session := data.get(DATA_SESSION)) or session.closed:
+        session = async_create_clientsession(hass, cookie_jar=CookieJar(unsafe=True))
+    modem = eternalegypt.Modem(hostname=host, websession=session)
 
-        hass.data[DOMAIN] = LTEData(websession)
+    try:
+        await modem.login(password=password)
+    except eternalegypt.Error as ex:
+        raise ConfigEntryNotReady("Cannot connect/authenticate") from ex
 
-    modem = eternalegypt.Modem(hostname=host, websession=hass.data[DOMAIN].websession)
-    modem_data = ModemData(hass, host, modem)
+    def fire_sms_event(sms: SMS) -> None:
+        """Send an SMS event."""
+        data = {
+            ATTR_HOST: modem.hostname,
+            ATTR_SMS_ID: sms.id,
+            ATTR_FROM: sms.sender,
+            ATTR_MESSAGE: sms.message,
+        }
+        hass.bus.async_fire(EVENT_SMS, data)
 
-    await _login(hass, modem_data, password)
+    await modem.add_sms_listener(fire_sms_event)
 
-    async def _update(now):
-        """Periodic update."""
-        await modem_data.async_update()
+    coordinator = NetgearLTEDataUpdateCoordinator(hass, modem)
+    await coordinator.async_config_entry_first_refresh()
+    hass.data[DOMAIN][entry.entry_id] = coordinator
 
-    update_unsub = async_track_time_interval(hass, _update, SCAN_INTERVAL)
-
-    async def cleanup(event: Event | None = None) -> None:
-        """Clean up resources."""
-        update_unsub()
-        await modem.logout()
-        if DOMAIN in hass.data:
-            del hass.data[DOMAIN].modem_data[modem_data.host]
-
-    entry.async_on_unload(cleanup)
-    entry.async_on_unload(hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, cleanup))
-
-    await async_setup_services(hass)
+    await async_setup_services(hass, modem)
 
     _legacy_task(hass, entry)
 
@@ -252,7 +203,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        hass.data[DOMAIN].pop(entry.entry_id)
     loaded_entries = [
         entry
         for entry in hass.config_entries.async_entries(DOMAIN)
@@ -260,31 +212,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     ]
     if len(loaded_entries) == 1:
         hass.data.pop(DOMAIN, None)
+        for service_name in hass.services.async_services()[DOMAIN]:
+            hass.services.async_remove(DOMAIN, service_name)
 
     return unload_ok
-
-
-async def _login(hass: HomeAssistant, modem_data: ModemData, password: str) -> None:
-    """Log in and complete setup."""
-    try:
-        await modem_data.modem.login(password=password)
-    except eternalegypt.Error as ex:
-        raise ConfigEntryNotReady("Cannot connect/authenticate") from ex
-
-    def fire_sms_event(sms):
-        """Send an SMS event."""
-        data = {
-            ATTR_HOST: modem_data.host,
-            ATTR_SMS_ID: sms.id,
-            ATTR_FROM: sms.sender,
-            ATTR_MESSAGE: sms.message,
-        }
-        hass.bus.async_fire(EVENT_SMS, data)
-
-    await modem_data.modem.add_sms_listener(fire_sms_event)
-
-    await modem_data.async_update()
-    hass.data[DOMAIN].modem_data[modem_data.host] = modem_data
 
 
 def _legacy_task(hass: HomeAssistant, entry: ConfigEntry) -> None:
@@ -298,7 +229,7 @@ def _legacy_task(hass: HomeAssistant, entry: ConfigEntry) -> None:
             hass,
             Platform.NOTIFY,
             DOMAIN,
-            {CONF_HOST: entry.data[CONF_HOST], CONF_NAME: entry.title},
+            {"modem": hass.data[DOMAIN][entry.entry_id].modem, CONF_NAME: entry.title},
             hass.data[DATA_HASS_CONFIG],
         )
     )
