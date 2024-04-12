@@ -23,6 +23,7 @@ class DwdWeatherWarningsCoordinator(DataUpdateCoordinator[None]):
     """Custom coordinator for the dwd_weather_warnings integration."""
 
     config_entry: ConfigEntry
+    _api: DwdWeatherWarningsAPI
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize the dwd_weather_warnings coordinator."""
@@ -30,7 +31,6 @@ class DwdWeatherWarningsCoordinator(DataUpdateCoordinator[None]):
             hass, LOGGER, name=DOMAIN, update_interval=DEFAULT_SCAN_INTERVAL
         )
 
-        self._api = DwdWeatherWarningsAPI(None)
         self._device_tracker = None
 
     async def async_config_entry_first_refresh(self) -> None:
@@ -58,7 +58,4 @@ class DwdWeatherWarningsCoordinator(DataUpdateCoordinator[None]):
                 DwdWeatherWarningsAPI, position
             )
         else:
-            if self._api is None:
-                raise UpdateFailed("API is not initialized")
-
             await self.hass.async_add_executor_job(self._api.update)
