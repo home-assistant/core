@@ -1,118 +1,179 @@
 """Tests for the Sun WEG sensor."""
 
-from unittest.mock import MagicMock
+from datetime import timedelta
+from unittest.mock import patch
 
-from homeassistant.components.sensor.const import SensorDeviceClass, SensorStateClass
-from homeassistant.components.sunweg.const import DeviceType
-from homeassistant.components.sunweg.coordinator import SunWEGDataUpdateCoordinator
-from homeassistant.components.sunweg.sensor import SunWEGInverter
-from homeassistant.components.sunweg.sensor_types.sensor_entity_description import (
-    SunWEGSensorEntityDescription,
-)
-from homeassistant.const import UnitOfEnergy
-from homeassistant.core import HomeAssistant
+from freezegun.api import FrozenDateTimeFactory
+from sunweg.api import APIHelper
+from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.sunweg.const import DOMAIN
+from homeassistant.components.sunweg.coordinator import SCAN_INTERVAL
+from homeassistant.core import HomeAssistant, dt_util
+from homeassistant.setup import async_setup_component
 
-async def test_sensor_static_metric(hass: HomeAssistant, plant_fixture) -> None:
-    """Test sensor update with static metric."""
-    api = MagicMock()
-    api.plant = MagicMock(return_value=plant_fixture)
-    api.complete_inverter = MagicMock()
-    description = SunWEGSensorEntityDescription(
-        key="kwh_per_kwp",
-        name="kWh por kWp",
-        api_variable_key="kwh_per_kwp",
-    )
-    coordinator = SunWEGDataUpdateCoordinator(
-        hass, api, plant_fixture.id, plant_fixture.name
-    )
+from .common import SUNWEG_MOCK_ENTRY
 
-    sensor = SunWEGInverter(
-        name=f"{plant_fixture.name} Total",
-        unique_id=f"{coordinator.plant_id}-{description.key}",
-        coordinator=coordinator,
-        description=description,
-        device_type=DeviceType.TOTAL,
-    )
-    await coordinator.async_refresh()
-    sensor.async_write_ha_state = MagicMock()
-    sensor._handle_coordinator_update()
-    assert sensor.native_value == plant_fixture.kwh_per_kwp
+from tests.common import async_fire_time_changed
 
 
-async def test_sensor_dynamic_metric(hass: HomeAssistant, plant_fixture) -> None:
-    """Test sensor update with dynamic metric."""
-    api = MagicMock()
-    api.plant = MagicMock(return_value=plant_fixture)
-    api.complete_inverter = MagicMock()
-    description = SunWEGSensorEntityDescription(
-        key="total_energy_today",
-        name="Energy Today",
-        api_variable_key="today_energy",
-        api_variable_unit="today_energy_metric",
-        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
-        device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-    )
-    coordinator = SunWEGDataUpdateCoordinator(
-        hass, api, plant_fixture.id, plant_fixture.name
-    )
-    sensor = SunWEGInverter(
-        name=f"{plant_fixture.name} Total",
-        unique_id=f"{coordinator.plant_id}-{description.key}",
-        coordinator=coordinator,
-        description=description,
-        device_type=DeviceType.TOTAL,
-    )
-    await coordinator.async_refresh()
-    sensor.async_write_ha_state = MagicMock()
-    sensor._handle_coordinator_update()
-    assert sensor.native_value == plant_fixture.today_energy
-    assert sensor.native_unit_of_measurement == plant_fixture.today_energy_metric
-    assert sensor.native_unit_of_measurement != UnitOfEnergy.WATT_HOUR
-
-
-async def test_sensor_never_reset(
+async def test_sensor_total(
     hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    freezer: FrozenDateTimeFactory,
     plant_fixture,
-    plant_fixture_total_power_0,
-    plant_fixture_total_power_none,
+    plant_fixture_alternative,
 ) -> None:
-    """Test sensor update with dynamic metric."""
-    api = MagicMock()
-    api.plant = MagicMock(return_value=plant_fixture)
-    api.complete_inverter = MagicMock()
-    description = SunWEGSensorEntityDescription(
-        key="total_energy_output",
-        name="Lifetime energy output",
-        api_variable_key="total_energy",
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.TOTAL,
-        never_resets=True,
-    )
-    coordinator = SunWEGDataUpdateCoordinator(
-        hass, api, plant_fixture.id, plant_fixture.name
-    )
-    sensor = SunWEGInverter(
-        name=f"{plant_fixture.name} Total",
-        unique_id=f"{coordinator.plant_id}-{description.key}",
-        coordinator=coordinator,
-        description=description,
-        device_type=DeviceType.TOTAL,
-    )
-    sensor.async_write_ha_state = MagicMock()
+    """Test sensor type total."""
+    mock_entry = SUNWEG_MOCK_ENTRY
+    mock_entry.add_to_hass(hass)
 
-    await coordinator.async_refresh()
-    sensor._handle_coordinator_update()
-    assert sensor.native_value == plant_fixture.total_energy
+    with (
+        patch.object(APIHelper, "authenticate", return_value=True),
+        patch.object(APIHelper, "listPlants", return_value=[plant_fixture]),
+        patch.object(APIHelper, "plant", return_value=plant_fixture),
+        patch.object(APIHelper, "complete_inverter"),
+    ):
+        assert await async_setup_component(hass, DOMAIN, mock_entry.data)
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass, dt_util.now() + timedelta(minutes=20))
+        await hass.async_block_till_done(wait_background_tasks=True)
 
-    coordinator.data = plant_fixture_total_power_0
-    sensor._handle_coordinator_update()
-    assert sensor.native_value is not None
-    assert sensor.native_value == plant_fixture.total_energy
+        state = hass.states.get("sensor.plant_123_total_money_lifetime")
+        assert state.state == snapshot
+        assert state.attributes == snapshot
 
-    coordinator.data = plant_fixture_total_power_none
-    sensor._handle_coordinator_update()
-    assert sensor.native_value != 0.0
-    assert sensor.native_value == plant_fixture.total_energy
+        state = hass.states.get("sensor.plant_123_total_energy_today")
+        assert state.state == snapshot
+        assert state.attributes == snapshot
+
+        state = hass.states.get("sensor.plant_123_total_output_power")
+        assert state.state == snapshot
+        assert state.attributes == snapshot
+
+        state = hass.states.get("sensor.plant_123_total_lifetime_energy_output")
+        assert state.state == snapshot
+        assert state.attributes == snapshot
+
+        state = hass.states.get("sensor.plant_123_total_kwh_per_kwp")
+        assert state.state == snapshot
+        assert state.attributes == snapshot
+
+        state = hass.states.get("sensor.plant_123_total_last_update")
+        assert state.state == snapshot
+        assert state.attributes == snapshot
+
+        with patch.object(APIHelper, "plant", return_value=plant_fixture_alternative):
+            freezer.tick(SCAN_INTERVAL)
+            async_fire_time_changed(hass, dt_util.now() + timedelta(minutes=20))
+            await hass.async_block_till_done(wait_background_tasks=True)
+
+            state = hass.states.get("sensor.plant_123_total_last_update")
+            assert state.state == snapshot
+            assert state.attributes == snapshot
+
+
+async def test_sensor_inverter(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    freezer: FrozenDateTimeFactory,
+    plant_fixture,
+) -> None:
+    """Test sensor type inverter."""
+    mock_entry = SUNWEG_MOCK_ENTRY
+    mock_entry.add_to_hass(hass)
+
+    with (
+        patch.object(APIHelper, "authenticate", return_value=True),
+        patch.object(APIHelper, "listPlants", return_value=[plant_fixture]),
+        patch.object(APIHelper, "plant", return_value=plant_fixture),
+        patch.object(APIHelper, "complete_inverter"),
+    ):
+        assert await async_setup_component(hass, DOMAIN, mock_entry.data)
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass, dt_util.now() + timedelta(minutes=20))
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        state = hass.states.get("sensor.inversor01_energy_today")
+        assert state.state == snapshot
+        assert state.attributes == snapshot
+
+        state = hass.states.get("sensor.inversor01_lifetime_energy_output")
+        assert state.state == snapshot
+        assert state.attributes == snapshot
+
+        state = hass.states.get("sensor.inversor01_ac_frequency")
+        assert state.state == snapshot
+        assert state.attributes == snapshot
+
+        state = hass.states.get("sensor.inversor01_output_power")
+        assert state.state == snapshot
+        assert state.attributes == snapshot
+
+        state = hass.states.get("sensor.inversor01_temperature")
+        assert state.state == snapshot
+        assert state.attributes == snapshot
+
+        state = hass.states.get("sensor.inversor01_power_factor")
+        assert state.state == snapshot
+        assert state.attributes == snapshot
+
+
+async def test_sensor_phase(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    freezer: FrozenDateTimeFactory,
+    plant_fixture,
+) -> None:
+    """Test sensor type phase."""
+    mock_entry = SUNWEG_MOCK_ENTRY
+    mock_entry.add_to_hass(hass)
+
+    with (
+        patch.object(APIHelper, "authenticate", return_value=True),
+        patch.object(APIHelper, "listPlants", return_value=[plant_fixture]),
+        patch.object(APIHelper, "plant", return_value=plant_fixture),
+        patch.object(APIHelper, "complete_inverter"),
+    ):
+        assert await async_setup_component(hass, DOMAIN, mock_entry.data)
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass, dt_util.now() + timedelta(minutes=20))
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        state = hass.states.get("sensor.inversor01_phasea_voltage")
+        assert state.state == snapshot
+        assert state.attributes == snapshot
+
+        state = hass.states.get("sensor.inversor01_phasea_amperage")
+        assert state.state == snapshot
+        assert state.attributes == snapshot
+
+
+async def test_sensor_string(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    freezer: FrozenDateTimeFactory,
+    plant_fixture,
+) -> None:
+    """Test sensor type string."""
+    mock_entry = SUNWEG_MOCK_ENTRY
+    mock_entry.add_to_hass(hass)
+
+    with (
+        patch.object(APIHelper, "authenticate", return_value=True),
+        patch.object(APIHelper, "listPlants", return_value=[plant_fixture]),
+        patch.object(APIHelper, "plant", return_value=plant_fixture),
+        patch.object(APIHelper, "complete_inverter"),
+    ):
+        assert await async_setup_component(hass, DOMAIN, mock_entry.data)
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass, dt_util.now() + timedelta(minutes=20))
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        state = hass.states.get("sensor.inversor01_str1_voltage")
+        assert state.state == snapshot
+        assert state.attributes == snapshot
+
+        state = hass.states.get("sensor.inversor01_str1_amperage")
+        assert state.state == snapshot
+        assert state.attributes == snapshot

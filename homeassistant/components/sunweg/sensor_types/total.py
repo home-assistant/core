@@ -43,7 +43,7 @@ TOTAL_SENSOR_TYPES: tuple[SunWEGSensorEntityDescription, ...] = (
     ),
     SunWEGSensorEntityDescription(
         key="kwh_per_kwp",
-        name="kWh por kWp",
+        name="kWh per kWp",
         api_variable_key="kwh_per_kwp",
     ),
     SunWEGSensorEntityDescription(

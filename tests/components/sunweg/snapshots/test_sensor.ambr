@@ -1,0 +1,186 @@
+# serializer version: 1
+# name: test_sensor_inverter
+  '0.0'
+# ---
+# name: test_sensor_inverter.1
+  ReadOnlyDict({
+    'device_class': 'energy',
+    'friendly_name': 'INVERSOR01 Energy today',
+    'icon': 'mdi:solar-power',
+    'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_sensor_inverter.10
+  '0'
+# ---
+# name: test_sensor_inverter.11
+  ReadOnlyDict({
+    'friendly_name': 'INVERSOR01 Power Factor',
+    'icon': 'mdi:solar-power',
+  })
+# ---
+# name: test_sensor_inverter.2
+  '0.0'
+# ---
+# name: test_sensor_inverter.3
+  ReadOnlyDict({
+    'device_class': 'energy',
+    'friendly_name': 'INVERSOR01 Lifetime energy output',
+    'icon': 'mdi:solar-power',
+    'state_class': <SensorStateClass.TOTAL: 'total'>,
+    'unit_of_measurement': 'MWh',
+  })
+# ---
+# name: test_sensor_inverter.4
+  '0.0'
+# ---
+# name: test_sensor_inverter.5
+  ReadOnlyDict({
+    'device_class': 'frequency',
+    'friendly_name': 'INVERSOR01 AC frequency',
+    'icon': 'mdi:solar-power',
+    'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
+  })
+# ---
+# name: test_sensor_inverter.6
+  '1'
+# ---
+# name: test_sensor_inverter.7
+  ReadOnlyDict({
+    'device_class': 'power',
+    'friendly_name': 'INVERSOR01 Output power',
+    'icon': 'mdi:solar-power',
+    'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    'unit_of_measurement': 'kW',
+  })
+# ---
+# name: test_sensor_inverter.8
+  '23.2'
+# ---
+# name: test_sensor_inverter.9
+  ReadOnlyDict({
+    'device_class': 'temperature',
+    'friendly_name': 'INVERSOR01 Temperature',
+    'icon': 'mdi:temperature-celsius',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_sensor_phase
+  '120.0'
+# ---
+# name: test_sensor_phase.1
+  ReadOnlyDict({
+    'device_class': 'voltage',
+    'friendly_name': 'INVERSOR01 PhaseA Voltage',
+    'icon': 'mdi:solar-power',
+    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+  })
+# ---
+# name: test_sensor_phase.2
+  '3.2'
+# ---
+# name: test_sensor_phase.3
+  ReadOnlyDict({
+    'device_class': 'current',
+    'friendly_name': 'INVERSOR01 PhaseA Amperage',
+    'icon': 'mdi:solar-power',
+    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+  })
+# ---
+# name: test_sensor_string
+  '450.3'
+# ---
+# name: test_sensor_string.1
+  ReadOnlyDict({
+    'device_class': 'voltage',
+    'friendly_name': 'INVERSOR01 STR1 Voltage',
+    'icon': 'mdi:solar-power',
+    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+  })
+# ---
+# name: test_sensor_string.2
+  '23.4'
+# ---
+# name: test_sensor_string.3
+  ReadOnlyDict({
+    'device_class': 'current',
+    'friendly_name': 'INVERSOR01 STR1 Amperage',
+    'icon': 'mdi:solar-power',
+    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+  })
+# ---
+# name: test_sensor_total
+  '12.786912'
+# ---
+# name: test_sensor_total.1
+  ReadOnlyDict({
+    'friendly_name': 'Plant #123 Total Money lifetime',
+    'icon': 'mdi:cash',
+    'unit_of_measurement': 'R$',
+  })
+# ---
+# name: test_sensor_total.10
+  '2023-02-16T14:22:37'
+# ---
+# name: test_sensor_total.11
+  ReadOnlyDict({
+    'device_class': 'date',
+    'friendly_name': 'Plant #123 Total Last Update',
+    'icon': 'mdi:solar-power',
+  })
+# ---
+# name: test_sensor_total.12
+  'unknown'
+# ---
+# name: test_sensor_total.13
+  ReadOnlyDict({
+    'device_class': 'date',
+    'friendly_name': 'Plant #123 Total Last Update',
+    'icon': 'mdi:solar-power',
+  })
+# ---
+# name: test_sensor_total.2
+  '24.0'
+# ---
+# name: test_sensor_total.3
+  ReadOnlyDict({
+    'device_class': 'energy',
+    'friendly_name': 'Plant #123 Total Energy Today',
+    'icon': 'mdi:solar-power',
+    'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_sensor_total.4
+  '29.5'
+# ---
+# name: test_sensor_total.5
+  ReadOnlyDict({
+    'device_class': 'power',
+    'friendly_name': 'Plant #123 Total Output Power',
+    'icon': 'mdi:solar-power',
+    'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+  })
+# ---
+# name: test_sensor_total.6
+  '332.2'
+# ---
+# name: test_sensor_total.7
+  ReadOnlyDict({
+    'device_class': 'energy',
+    'friendly_name': 'Plant #123 Total Lifetime energy output',
+    'icon': 'mdi:solar-power',
+    'state_class': <SensorStateClass.TOTAL: 'total'>,
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_sensor_total.8
+  '0.5'
+# ---
+# name: test_sensor_total.9
+  ReadOnlyDict({
+    'friendly_name': 'Plant #123 Total kWh per kWp',
+    'icon': 'mdi:solar-power',
+  })
+# ---

@@ -6,7 +6,6 @@ import datetime
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -27,13 +26,11 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the SunWEG sensor."""
-    name = config_entry.data[CONF_NAME]
-
     coordinator: SunWEGDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
     entities = [
-        SunWEGInverter(
-            name=f"{name} Total",
+        SunWEGSensor(
+            name=f"{coordinator.plant_name} Total",
             unique_id=f"{coordinator.plant_id}-{description.key}",
             coordinator=coordinator,
             description=description,
@@ -45,7 +42,7 @@ async def async_setup_entry(
     # Add sensors for each device in the specified plant.
     entities.extend(
         [
-            SunWEGInverter(
+            SunWEGSensor(
                 name=f"{device.name}",
                 unique_id=f"{device.sn}-{description.key}",
                 coordinator=coordinator,
@@ -60,7 +57,7 @@ async def async_setup_entry(
 
     entities.extend(
         [
-            SunWEGInverter(
+            SunWEGSensor(
                 name=f"{device.name} {phase.name}",
                 unique_id=f"{device.sn}-{phase.name}-{description.key}",
                 coordinator=coordinator,
@@ -77,7 +74,7 @@ async def async_setup_entry(
 
     entities.extend(
         [
-            SunWEGInverter(
+            SunWEGSensor(
                 name=f"{device.name} {string.name}",
                 unique_id=f"{device.sn}-{string.name}-{description.key}",
                 coordinator=coordinator,
@@ -96,7 +93,7 @@ async def async_setup_entry(
     async_add_entities(entities, True)
 
 
-class SunWEGInverter(CoordinatorEntity[SunWEGDataUpdateCoordinator], SensorEntity):
+class SunWEGSensor(CoordinatorEntity[SunWEGDataUpdateCoordinator], SensorEntity):
     """Representation of a SunWEG Sensor."""
 
     entity_description: SunWEGSensorEntityDescription
