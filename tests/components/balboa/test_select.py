@@ -16,7 +16,7 @@ from homeassistant.components.select import (
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 
-from . import init_integration
+from . import client_update, init_integration
 
 ENTITY_SELECT = "select.fakespa_temperature_range"
 
@@ -26,12 +26,12 @@ def mock_select(client: MagicMock):
     """Return a mock switch."""
     select = MagicMock(SpaControl)
 
-    async def select_option(state: LowHighRange):
-        select.state = state
+    async def set_state(state: LowHighRange):
+        select.state = state  # mock the spacontrol state
 
     select.client = client
     select.state = LowHighRange.LOW
-    select.set_state = select
+    select.set_state = set_state
     client.temperature_range = select
     return select
 
@@ -53,6 +53,23 @@ async def test_select(hass: HomeAssistant, client: MagicMock, mock_select) -> No
     await _select_option_and_wait(hass, ENTITY_SELECT, LowHighRange.LOW.name.lower())
     assert client.set_temperature_range.call_count == 2  # total call count
     assert client.set_temperature_range.call_args == call(LowHighRange.LOW)
+
+
+async def test_selected_option(
+    hass: HomeAssistant, client: MagicMock, mock_select
+) -> None:
+    """Test spa temperature range selected option."""
+
+    await init_integration(hass)
+
+    # ensure initial low state
+    state = hass.states.get(ENTITY_SELECT)
+    assert state.state == LowHighRange.LOW.name.lower()
+
+    # ensure high state
+    mock_select.state = LowHighRange.HIGH
+    state = await client_update(hass, client, ENTITY_SELECT)
+    assert state.state == LowHighRange.HIGH.name.lower()
 
 
 async def _select_option_and_wait(hass: HomeAssistant | None, entity, option):
