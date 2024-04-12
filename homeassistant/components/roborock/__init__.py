@@ -208,7 +208,7 @@ async def setup_device_a01(
 ) -> RoborockDataUpdateCoordinatorA01 | None:
     """Set up a A01 protocol device."""
     mqtt_client = RoborockMqttClientA01(
-        user_data, DeviceData(device, product_info.name)
+        user_data, DeviceData(device, product_info.name), product_info.category
     )
     coord = RoborockDataUpdateCoordinatorA01(hass, device, product_info, mqtt_client)
     await coord.async_config_entry_first_refresh()
