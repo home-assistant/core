@@ -64,7 +64,6 @@ class RachioHoseTimerEntity(CoordinatorEntity[RachioUpdateCoordinator]):
         self._mac = coordinator.base_station[KEY_MAC_ADDRESS]
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.id)},
-            connections={(dr.CONNECTION_NETWORK_MAC, self._mac)},
             model="Smart Hose Timer",
             name=self._name,
             manufacturer=DEFAULT_NAME,
