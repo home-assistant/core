@@ -6,7 +6,7 @@ from unittest.mock import patch
 import pytest
 from roborock import RoomMapping
 from roborock.code_mappings import DyadError, RoborockDyadStateCode
-from roborock.roborock_message import RoborockDyadDataProtocol
+from roborock.roborock_message import RoborockDyadDataProtocol, RoborockZeoProtocol
 from roborock.version_a01_apis import RoborockMqttClientA01
 
 from homeassistant.components.roborock.const import (
@@ -35,13 +35,9 @@ from tests.common import MockConfigEntry
 class A01Mock(RoborockMqttClientA01):
     """A class to mock the A01 client."""
 
-    def __init__(
-        self,
-        user_data,
-        device_info,
-    ) -> None:
+    def __init__(self, user_data, device_info, category) -> None:
         """Initialize the A01Mock."""
-        super().__init__(user_data, device_info)
+        super().__init__(user_data, device_info, category)
         self.protocol_responses = {
             RoborockDyadDataProtocol.STATUS: RoborockDyadStateCode.drying.name,
             RoborockDyadDataProtocol.POWER: 100,
@@ -51,7 +47,9 @@ class A01Mock(RoborockMqttClientA01):
             RoborockDyadDataProtocol.TOTAL_RUN_TIME: 213,
         }
 
-    async def update_values(self, dyad_data_protocols: list[RoborockDyadDataProtocol]):
+    async def update_values(
+        self, dyad_data_protocols: list[RoborockDyadDataProtocol | RoborockZeoProtocol]
+    ):
         """Update values with a predetermined response that can be overridden."""
         return {prot: self.protocol_responses[prot] for prot in dyad_data_protocols}
 
