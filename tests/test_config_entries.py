@@ -1289,10 +1289,12 @@ async def test_reload_during_setup_retrying_waits(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(domain="test")
     entry.add_to_hass(hass)
     load_attempts = []
+    sleep_duration = 0
 
     async def _mock_setup_entry(hass, entry):
         """Mock setup entry."""
-        await asyncio.sleep(0)
+        nonlocal sleep_duration
+        await asyncio.sleep(sleep_duration)
         load_attempts.append(entry.entry_id)
         raise ConfigEntryNotReady
 
@@ -1304,6 +1306,9 @@ async def test_reload_during_setup_retrying_waits(hass: HomeAssistant) -> None:
     )
     assert entry.state is config_entries.ConfigEntryState.SETUP_RETRY
 
+    # Now make the setup take a while so that the setup retry
+    # will still be in progress when the reload request comes in
+    sleep_duration = 0.1
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5))
     await asyncio.sleep(0)
 
