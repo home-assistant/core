@@ -42,5 +42,16 @@
         "urgent_message": "Breaking news - Please get `item name` !"
       }
     }
+  },
+  "exceptions": {
+    "notify_missing_argument_item": {
+      "message": "This service requires field item for `Breaking news` notification, please enter a valid value for item"
+    },
+    "notify_request_failed": {
+      "message": "Failed to send push notification for bring"
+    },
+    "notify_invalid_message_type": {
+      "message": "This service requires message to be one of {notification_types}, please enter a valid value for message"
+    }
   }
 }

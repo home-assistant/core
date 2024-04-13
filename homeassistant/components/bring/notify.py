@@ -89,12 +89,18 @@ class BringNotify(NotifyEntity):
         )
 
     async def async_send_message(self, message: str) -> None:
-        """Send a push notification to members of a To-Do list."""
+        """Send a push notification to members of a shared bring list."""
         try:
             await self.async_send_bring_message(message=BringNotificationType[message])
         except KeyError as e:
             raise ServiceValidationError(
-                f"Message must contain one of {", ".join(x.value for x in BringNotificationType)}"
+                translation_domain=DOMAIN,
+                translation_key="notify_invalid_message_type",
+                translation_placeholders={
+                    "notification_types": ", ".join(
+                        x.value for x in BringNotificationType
+                    ),
+                },
             ) from e
 
     async def async_send_bring_message(
@@ -102,15 +108,17 @@ class BringNotify(NotifyEntity):
         message: BringNotificationType,
         item: str | None = None,
     ) -> None:
-        """Send a push notification to members of a To-Do list."""
+        """Send a push notification to members of a shared bring list."""
 
         try:
             await self.coordinator.bring.notify(self._list_uuid, message, item)
         except BringRequestException as e:
             raise HomeAssistantError(
-                "Unable to send push notification for bring"
+                translation_domain=DOMAIN,
+                translation_key="notify_request_failed",
             ) from e
         except ValueError as e:
             raise ServiceValidationError(
-                "Item name is required for Breaking news notification"
+                translation_domain=DOMAIN,
+                translation_key="notify_missing_argument_item",
             ) from e
