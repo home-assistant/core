@@ -8,6 +8,7 @@ from collections.abc import Awaitable, Callable, Generator, Mapping
 import contextlib
 import contextvars
 from enum import StrEnum
+from functools import partial
 import logging.handlers
 import time
 from types import ModuleType
@@ -253,33 +254,38 @@ async def _async_process_dependencies(
     return failed
 
 
-async def _async_setup_component(  # noqa: C901
+def _log_error_setup_error(
+    hass: HomeAssistant,
+    domain: str,
+    integration: loader.Integration | None,
+    msg: str,
+    exc_info: Exception | None = None,
+) -> None:
+    """Log helper."""
+    if integration is None:
+        custom = ""
+        link = None
+    else:
+        custom = "" if integration.is_built_in else "custom integration "
+        link = integration.documentation
+    _LOGGER.error("Setup failed for %s'%s': %s", custom, domain, msg, exc_info=exc_info)
+    async_notify_setup_error(hass, domain, link)
+
+
+async def _async_setup_component(
     hass: core.HomeAssistant, domain: str, config: ConfigType
 ) -> bool:
     """Set up a component for Home Assistant.
 
     This method is a coroutine.
     """
-    integration: loader.Integration | None = None
-
-    def log_error(msg: str, exc_info: Exception | None = None) -> None:
-        """Log helper."""
-        if integration is None:
-            custom = ""
-            link = None
-        else:
-            custom = "" if integration.is_built_in else "custom integration "
-            link = integration.documentation
-        _LOGGER.error(
-            "Setup failed for %s'%s': %s", custom, domain, msg, exc_info=exc_info
-        )
-        async_notify_setup_error(hass, domain, link)
-
     try:
         integration = await loader.async_get_integration(hass, domain)
     except loader.IntegrationNotFound:
-        log_error("Integration not found.")
+        _log_error_setup_error(hass, domain, None, "Integration not found.")
         return False
+
+    log_error = partial(_log_error_setup_error, hass, domain, integration)
 
     if integration.disabled:
         log_error(f"Dependency is disabled - {integration.disabled}")
