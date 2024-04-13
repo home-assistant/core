@@ -38,22 +38,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await bring.login()
         await bring.load_lists()
     except BringRequestException as e:
-        _LOGGER.error("Failed to connect to server")
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="setup_request_exception",
         ) from e
     except BringParseException as e:
-        _LOGGER.error("Failed to parse server response")
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="setup_request_exception",
         ) from e
     except BringAuthException as e:
-        _LOGGER.error(
-            "Authentication failed for '%s', check your email and password",
-            email,
-        )
         raise ConfigEntryError(
             translation_domain=DOMAIN,
             translation_key="setup_authentication_exception",
