@@ -8,7 +8,6 @@ from unittest.mock import MagicMock, call, patch
 from homeassistant import config as hass_config
 from homeassistant.components import notify
 from homeassistant.components.group import SERVICE_RELOAD
-import homeassistant.components.group.notify as group
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.setup import async_setup_component
@@ -83,9 +82,6 @@ async def help_setup_notify(
 
 async def test_send_message_with_data(hass: HomeAssistant, tmp_path: Path) -> None:
     """Test sending a message with to a notify group."""
-    send_message_mock = await help_setup_notify(
-        hass, tmp_path, {"service1": 1, "service2": 2}
-    )
     assert await async_setup_component(
         hass,
         "group",
@@ -93,9 +89,10 @@ async def test_send_message_with_data(hass: HomeAssistant, tmp_path: Path) -> No
     )
     await hass.async_block_till_done()
 
-    service = await group.async_get_service(
-        hass,
+    group_setup = [
         {
+            "platform": "group",
+            "name": "My notification group",
             "services": [
                 {"service": "test_service1"},
                 {
@@ -105,16 +102,21 @@ async def test_send_message_with_data(hass: HomeAssistant, tmp_path: Path) -> No
                         "data": {"test": "message", "default": "default"},
                     },
                 },
-            ]
-        },
+            ],
+        }
+    ]
+    send_message_mock = await help_setup_notify(
+        hass, tmp_path, {"service1": 1, "service2": 2}, group_setup
     )
+    assert hass.services.has_service("notify", "my_notification_group")
 
     # Test sending a message to a notify group.
-    await service.async_send_message(
-        "Hello", title="Test notification", data={"hello": "world"}
+    await hass.services.async_call(
+        "notify",
+        "my_notification_group",
+        {"message": "Hello", "title": "Test notification", "data": {"hello": "world"}},
+        blocking=True,
     )
-
-    await hass.async_block_till_done()
     send_message_mock.assert_has_calls(
         [
             call(
@@ -138,14 +140,16 @@ async def test_send_message_with_data(hass: HomeAssistant, tmp_path: Path) -> No
     send_message_mock.reset_mock()
 
     # Test sending a message which overrides service defaults to a notify group
-    await service.async_send_message(
-        "Hello",
-        title="Test notification",
-        data={"hello": "world", "default": "override"},
+    await hass.services.async_call(
+        "notify",
+        "my_notification_group",
+        {
+            "message": "Hello",
+            "title": "Test notification",
+            "data": {"hello": "world", "default": "override"},
+        },
+        blocking=True,
     )
-
-    await hass.async_block_till_done()
-
     send_message_mock.assert_has_calls(
         [
             call(
