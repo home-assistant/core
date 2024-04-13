@@ -126,6 +126,18 @@ def register_entity(
     return f"{domain}.{object_id}"
 
 
+def get_entity(
+    hass: HomeAssistant,
+    domain: str,
+    unique_id: str,
+) -> str | None:
+    """Get Shelly entity."""
+    entity_registry = async_get(hass)
+    return entity_registry.async_get_entity_id(
+        domain, DOMAIN, f"{MOCK_MAC}-{unique_id}"
+    )
+
+
 def get_entity_state(hass: HomeAssistant, entity_id: str) -> str:
     """Return entity state."""
     entity = hass.states.get(entity_id)

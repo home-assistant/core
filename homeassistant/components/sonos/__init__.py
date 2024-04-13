@@ -230,7 +230,8 @@ class SonosDiscoveryManager:
                 return
 
             self.hass.async_create_task(
-                self.async_add_speakers(zones_to_add, subscription, soco.uid)
+                self.async_add_speakers(zones_to_add, subscription, soco.uid),
+                eager_start=True,
             )
 
         async def async_subscription_failed(now: datetime.datetime) -> None:
@@ -576,7 +577,6 @@ class SonosDiscoveryManager:
             self.hass.bus.async_listen_once(
                 EVENT_HOMEASSISTANT_STOP,
                 self._async_stop_event_listener,
-                run_immediately=True,
             )
         )
         _LOGGER.debug("Adding discovery job")
@@ -585,7 +585,6 @@ class SonosDiscoveryManager:
                 self.hass.bus.async_listen_once(
                     EVENT_HOMEASSISTANT_STOP,
                     self._stop_manual_heartbeat,
-                    run_immediately=True,
                 )
             )
             await self.async_poll_manual_hosts()

@@ -97,6 +97,28 @@ NUMBER_DESCRIPTIONS: list[OverkizNumberDescription] = [
         max_value_state_name=OverkizState.CORE_MAXIMAL_SHOWER_MANUAL_MODE,
         entity_category=EntityCategory.CONFIG,
     ),
+    OverkizNumberDescription(
+        key=OverkizState.CORE_TARGET_DWH_TEMPERATURE,
+        name="Target temperature",
+        device_class=NumberDeviceClass.TEMPERATURE,
+        command=OverkizCommand.SET_TARGET_DHW_TEMPERATURE,
+        native_min_value=50,
+        native_max_value=65,
+        min_value_state_name=OverkizState.CORE_MINIMAL_TEMPERATURE_MANUAL_MODE,
+        max_value_state_name=OverkizState.CORE_MAXIMAL_TEMPERATURE_MANUAL_MODE,
+        entity_category=EntityCategory.CONFIG,
+    ),
+    OverkizNumberDescription(
+        key=OverkizState.CORE_WATER_TARGET_TEMPERATURE,
+        name="Water target temperature",
+        device_class=NumberDeviceClass.TEMPERATURE,
+        command=OverkizCommand.SET_WATER_TARGET_TEMPERATURE,
+        native_min_value=50,
+        native_max_value=65,
+        min_value_state_name=OverkizState.CORE_MINIMAL_TEMPERATURE_MANUAL_MODE,
+        max_value_state_name=OverkizState.CORE_MAXIMAL_TEMPERATURE_MANUAL_MODE,
+        entity_category=EntityCategory.CONFIG,
+    ),
     # SomfyHeatingTemperatureInterface
     OverkizNumberDescription(
         key=OverkizState.CORE_ECO_ROOM_TEMPERATURE,

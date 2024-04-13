@@ -143,7 +143,7 @@ def session_scope(
             need_rollback = True
             session.commit()
     except Exception as err:  # pylint: disable=broad-except
-        _LOGGER.exception("Error executing query: %s", err)
+        _LOGGER.exception("Error executing query")
         if need_rollback:
             session.rollback()
         if not exception_filter or not exception_filter(err):
@@ -192,13 +192,14 @@ def execute(
                         elapsed,
                     )
 
-            return result
         except SQLAlchemyError as err:
             _LOGGER.error("Error executing query: %s", err)
 
             if tryno == RETRIES - 1:
                 raise
             time.sleep(QUERY_RETRY_WAIT)
+        else:
+            return result
 
     # Unreachable
     raise RuntimeError  # pragma: no cover
@@ -685,7 +686,6 @@ def database_job_retry_wrapper(
             for attempt in range(attempts):
                 try:
                     job(instance, *args, **kwargs)
-                    return
                 except OperationalError as err:
                     if attempt == attempts - 1 or not _is_retryable_error(
                         instance, err
@@ -697,6 +697,8 @@ def database_job_retry_wrapper(
                     )
                     time.sleep(instance.db_retry_wait)
                     # Failed with retryable error
+                else:
+                    return
 
         return wrapper
 

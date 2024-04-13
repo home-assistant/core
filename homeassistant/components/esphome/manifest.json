@@ -16,7 +16,7 @@
   "loggers": ["aioesphomeapi", "noiseprotocol", "bleak_esphome"],
   "quality_scale": "platinum",
   "requirements": [
-    "aioesphomeapi==23.2.0",
+    "aioesphomeapi==24.0.0",
     "esphome-dashboard-api==1.2.3",
     "bleak-esphome==1.0.0"
   ],

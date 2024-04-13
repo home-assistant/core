@@ -53,11 +53,9 @@ jobs:
 
       - name: Fail if translations files are checked in
         run: |
-          files=$(find homeassistant/components/*/translations -type f)
-
-          if [ -n "$files" ]; then
+          if [ -n "$(find homeassistant/components/*/translations -type f)" ]; then
               echo "Translations files are checked in, please remove the following files:"
-              echo "$files"
+              find homeassistant/components/*/translations -type f
               exit 1
           fi
 

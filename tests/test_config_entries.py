@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Generator
 from datetime import timedelta
+from functools import cached_property
 import logging
 from typing import Any
 from unittest.mock import ANY, AsyncMock, Mock, patch
@@ -14,7 +15,6 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import config_entries, data_entry_flow, loader
-from homeassistant.backports.functools import cached_property
 from homeassistant.components import dhcp
 from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.const import (
@@ -821,6 +821,8 @@ async def test_as_dict(snapshot: SnapshotAssertion) -> None:
         "_setup_lock",
         "update_listeners",
         "reason",
+        "error_reason_translation_key",
+        "error_reason_translation_placeholders",
         "_async_cancel_retry_setup",
         "_on_unload",
         "reload_lock",
@@ -1280,6 +1282,53 @@ async def test_setup_does_not_retry_during_shutdown(hass: HomeAssistant) -> None
 
     assert entry.state is config_entries.ConfigEntryState.SETUP_RETRY
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_reload_during_setup_retrying_waits(hass: HomeAssistant) -> None:
+    """Test reloading during setup retry waits."""
+    entry = MockConfigEntry(domain="test")
+    entry.add_to_hass(hass)
+    load_attempts = []
+    sleep_duration = 0
+
+    async def _mock_setup_entry(hass, entry):
+        """Mock setup entry."""
+        nonlocal sleep_duration
+        await asyncio.sleep(sleep_duration)
+        load_attempts.append(entry.entry_id)
+        raise ConfigEntryNotReady
+
+    mock_integration(hass, MockModule("test", async_setup_entry=_mock_setup_entry))
+    mock_platform(hass, "test.config_flow", None)
+
+    await hass.async_create_task(
+        hass.config_entries.async_setup(entry.entry_id), eager_start=True
+    )
+    assert entry.state is config_entries.ConfigEntryState.SETUP_RETRY
+
+    # Now make the setup take a while so that the setup retry
+    # will still be in progress when the reload request comes in
+    sleep_duration = 0.1
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5))
+    await asyncio.sleep(0)
+
+    # Should not raise homeassistant.config_entries.OperationNotAllowed
+    await hass.config_entries.async_reload(entry.entry_id)
+
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=10))
+    await asyncio.sleep(0)
+
+    # Should not raise homeassistant.config_entries.OperationNotAllowed
+    hass.config_entries.async_schedule_reload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert load_attempts == [
+        entry.entry_id,
+        entry.entry_id,
+        entry.entry_id,
+        entry.entry_id,
+        entry.entry_id,
+    ]
 
 
 async def test_create_entry_options(
@@ -2639,10 +2688,6 @@ async def test_unignore_step_form(
 
         await manager.async_remove(entry.entry_id)
 
-        # Right after removal there shouldn't be an entry or active flows
-        assert len(hass.config_entries.async_entries("comp")) == 0
-        assert len(hass.config_entries.flow.async_progress_by_handler("comp")) == 0
-
         # But after a 'tick' the unignore step has run and we can see an active flow again.
         await hass.async_block_till_done()
         assert len(hass.config_entries.flow.async_progress_by_handler("comp")) == 1
@@ -2685,10 +2730,6 @@ async def test_unignore_create_entry(
         assert entry.title == "Ignored Title"
 
         await manager.async_remove(entry.entry_id)
-
-        # Right after removal there shouldn't be an entry or flow
-        assert len(hass.config_entries.flow.async_progress_by_handler("comp")) == 0
-        assert len(hass.config_entries.async_entries("comp")) == 0
 
         # But after a 'tick' the unignore step has run and we can see a config entry.
         await hass.async_block_till_done()

@@ -62,7 +62,7 @@ def _normalize_ips_and_network(hosts_str: str) -> list[str] | None:
             start, end = host.split("-", 1)
             if "." not in end:
                 ip_1, ip_2, ip_3, _ = start.split(".", 3)
-                end = ".".join([ip_1, ip_2, ip_3, end])
+                end = f"{ip_1}.{ip_2}.{ip_3}.{end}"
             summarize_address_range(ip_address(start), ip_address(end))
         except ValueError:
             pass
