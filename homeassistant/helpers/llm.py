@@ -274,14 +274,14 @@ def custom_serializer(schema: Any) -> Any:
     if schema is cv.boolean:
         return {"type": "boolean"}
 
-    if schema is cv.ensure_list:
-        return {}
-
     if schema is color_name_to_rgb:
         return {"type": "string"}
 
     if isinstance(schema, cv.multi_select):
         return {"enum": schema.options}
+
+    if isinstance(schema, FunctionType):
+        return {}
 
     return UNSUPPORTED
 
