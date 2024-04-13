@@ -351,7 +351,7 @@ async def test_select_set_option_light_camera(
     light.__fields__["set_paired_camera"] = Mock(final=False)
     light.set_paired_camera = AsyncMock()
 
-    camera = next(iter(light.api.bootstrap.cameras.values()))
+    camera = list(light.api.bootstrap.cameras.values())[0]
 
     await hass.services.async_call(
         "select",
@@ -535,7 +535,7 @@ async def test_select_set_option_viewer(
     viewer.__fields__["set_liveview"] = Mock(final=False)
     viewer.set_liveview = AsyncMock()
 
-    liveview = next(iter(viewer.api.bootstrap.liveviews.values()))
+    liveview = list(viewer.api.bootstrap.liveviews.values())[0]
 
     await hass.services.async_call(
         "select",

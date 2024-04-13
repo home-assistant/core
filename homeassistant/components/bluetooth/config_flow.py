@@ -114,7 +114,7 @@ class BluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
                 description_placeholders={"ignored_adapters": str(ignored_adapters)},
             )
         if len(unconfigured_adapters) == 1:
-            self._adapter = next(iter(self._adapters))
+            self._adapter = list(self._adapters)[0]
             self._details = self._adapters[self._adapter]
             return await self.async_step_single_adapter()
 

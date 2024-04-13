@@ -33,7 +33,7 @@ async def device_fixture(hass: HomeAssistant, ufp: MockUFPFixture):
 
     device_registry = dr.async_get(hass)
 
-    return next(iter(device_registry.devices.values()))
+    return list(device_registry.devices.values())[0]
 
 
 @pytest.fixture(name="subdevice")
@@ -44,7 +44,7 @@ async def subdevice_fixture(hass: HomeAssistant, ufp: MockUFPFixture, light: Lig
 
     device_registry = dr.async_get(hass)
 
-    return next(d for d in device_registry.devices.values() if d.name != "UnifiProtect")
+    return [d for d in device_registry.devices.values() if d.name != "UnifiProtect"][0]
 
 
 async def test_global_service_bad_device(

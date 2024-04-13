@@ -85,7 +85,7 @@ class NoboGlobalSelector(SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Set override."""
-        mode = next(k for k, v in self._modes.items() if v == option)
+        mode = [k for k, v in self._modes.items() if v == option][0]
         try:
             await self._nobo.async_create_override(
                 mode, self._override_type, nobo.API.OVERRIDE_TARGET_GLOBAL
@@ -142,7 +142,7 @@ class NoboProfileSelector(SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Set week profile."""
-        week_profile_id = next(k for k, v in self._profiles.items() if v == option)
+        week_profile_id = [k for k, v in self._profiles.items() if v == option][0]
         try:
             await self._nobo.async_update_zone(
                 self._id, week_profile_id=week_profile_id

@@ -430,7 +430,7 @@ class Group(Entity):
         # have the same on state we use this state
         # and its hass.data[REG_KEY].on_off_mapping to off
         if num_on_states == 1:
-            on_state = next(iter(self._on_states))
+            on_state = list(self._on_states)[0]
         # If we do not have an on state for any domains
         # we use None (which will be STATE_UNKNOWN)
         elif num_on_states == 0:

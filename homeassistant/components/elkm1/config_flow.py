@@ -359,7 +359,7 @@ class Elkm1ConfigFlow(ConfigFlow, domain=DOMAIN):
 
         errors, result = await self._async_create_or_error(user_input, True)
         if errors:
-            return self.async_abort(reason=next(iter(errors.values())))
+            return self.async_abort(reason=list(errors.values())[0])
         assert result is not None
         return result
 

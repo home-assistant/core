@@ -305,7 +305,7 @@ async def test_device_remove_devices_nvr(
 
     device_registry = dr.async_get(hass)
 
-    live_device_entry = next(iter(device_registry.devices.values()))
+    live_device_entry = list(device_registry.devices.values())[0]
     assert (
         await remove_device(await hass_ws_client(hass), live_device_entry.id, entry_id)
         is False

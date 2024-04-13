@@ -513,7 +513,7 @@ async def test_devices(
     assert device_entries
 
     for device_entry in device_entries:
-        identifier = next(iter(device_entry.identifiers))
+        identifier = list(device_entry.identifiers)[0]
         assert device_entry == snapshot(name=f"{identifier[0]}-{identifier[1]}")
 
 

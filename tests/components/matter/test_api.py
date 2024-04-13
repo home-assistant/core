@@ -255,7 +255,7 @@ async def test_node_diagnostics(
 
     # repeat test with a device id that does not have a node attached
     new_entry = dev_reg.async_get_or_create(
-        config_entry_id=next(iter(entry.config_entries)),
+        config_entry_id=list(entry.config_entries)[0],
         identifiers={(DOMAIN, "MatterNodeDevice")},
     )
     await ws_client.send_json(
@@ -315,7 +315,7 @@ async def test_ping_node(
 
     # repeat test with a device id that does not have a node attached
     new_entry = dev_reg.async_get_or_create(
-        config_entry_id=next(iter(entry.config_entries)),
+        config_entry_id=list(entry.config_entries)[0],
         identifiers={(DOMAIN, "MatterNodeDevice")},
     )
     await ws_client.send_json(
@@ -381,7 +381,7 @@ async def test_open_commissioning_window(
 
     # repeat test with a device id that does not have a node attached
     new_entry = dev_reg.async_get_or_create(
-        config_entry_id=next(iter(entry.config_entries)),
+        config_entry_id=list(entry.config_entries)[0],
         identifiers={(DOMAIN, "MatterNodeDevice")},
     )
     await ws_client.send_json(
@@ -436,7 +436,7 @@ async def test_remove_matter_fabric(
 
     # repeat test with a device id that does not have a node attached
     new_entry = dev_reg.async_get_or_create(
-        config_entry_id=next(iter(entry.config_entries)),
+        config_entry_id=list(entry.config_entries)[0],
         identifiers={(DOMAIN, "MatterNodeDevice")},
     )
     await ws_client.send_json(
@@ -486,7 +486,7 @@ async def test_interview_node(
 
     # repeat test with a device id that does not have a node attached
     new_entry = dev_reg.async_get_or_create(
-        config_entry_id=next(iter(entry.config_entries)),
+        config_entry_id=list(entry.config_entries)[0],
         identifiers={(DOMAIN, "MatterNodeDevice")},
     )
     await ws_client.send_json(

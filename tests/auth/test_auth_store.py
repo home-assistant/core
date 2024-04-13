@@ -100,14 +100,14 @@ async def test_loading_no_group_data_format(
     assert owner.system_generated is False
     assert owner.groups == [admin_group]
     assert len(owner.refresh_tokens) == 1
-    owner_token = next(iter(owner.refresh_tokens.values()))
+    owner_token = list(owner.refresh_tokens.values())[0]
     assert owner_token.id == "user-token-id"
     assert owner_token.version == "1.2.3"
 
     assert system.system_generated is True
     assert system.groups == []
     assert len(system.refresh_tokens) == 1
-    system_token = next(iter(system.refresh_tokens.values()))
+    system_token = list(system.refresh_tokens.values())[0]
     assert system_token.id == "system-token-id"
     assert system_token.version is None
 
@@ -143,14 +143,14 @@ async def test_loading_all_access_group_data_format(
     assert owner.system_generated is False
     assert owner.groups == [admin_group]
     assert len(owner.refresh_tokens) == 1
-    owner_token = next(iter(owner.refresh_tokens.values()))
+    owner_token = list(owner.refresh_tokens.values())[0]
     assert owner_token.id == "user-token-id"
     assert owner_token.version == "1.2.3"
 
     assert system.system_generated is True
     assert system.groups == []
     assert len(system.refresh_tokens) == 1
-    system_token = next(iter(system.refresh_tokens.values()))
+    system_token = list(system.refresh_tokens.values())[0]
     assert system_token.id == "system-token-id"
     assert system_token.version is None
 

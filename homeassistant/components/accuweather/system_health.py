@@ -22,9 +22,9 @@ def async_register(
 
 async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
     """Get info for the info page."""
-    remaining_requests = next(
-        iter(hass.data[DOMAIN].values())
-    ).accuweather.requests_remaining
+    remaining_requests = list(hass.data[DOMAIN].values())[
+        0
+    ].accuweather.requests_remaining
 
     return {
         "can_reach_server": system_health.async_check_can_reach_url(hass, ENDPOINT),

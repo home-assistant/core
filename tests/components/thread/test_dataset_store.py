@@ -77,11 +77,11 @@ async def test_add_dataset_twice(hass: HomeAssistant) -> None:
 
     store = await dataset_store.async_get_store(hass)
     assert len(store.datasets) == 1
-    created = next(iter(store.datasets.values())).created
+    created = list(store.datasets.values())[0].created
 
     await dataset_store.async_add_dataset(hass, "new_source", DATASET_1)
     assert len(store.datasets) == 1
-    assert next(iter(store.datasets.values())).created == created
+    assert list(store.datasets.values())[0].created == created
 
 
 async def test_add_dataset_reordered(hass: HomeAssistant) -> None:
@@ -90,11 +90,11 @@ async def test_add_dataset_reordered(hass: HomeAssistant) -> None:
 
     store = await dataset_store.async_get_store(hass)
     assert len(store.datasets) == 1
-    created = next(iter(store.datasets.values())).created
+    created = list(store.datasets.values())[0].created
 
     await dataset_store.async_add_dataset(hass, "new_source", DATASET_1_REORDERED)
     assert len(store.datasets) == 1
-    assert next(iter(store.datasets.values())).created == created
+    assert list(store.datasets.values())[0].created == created
 
 
 async def test_delete_dataset_twice(hass: HomeAssistant) -> None:
@@ -118,7 +118,7 @@ async def test_delete_preferred_dataset(hass: HomeAssistant) -> None:
     await dataset_store.async_add_dataset(hass, "source", DATASET_1)
 
     store = await dataset_store.async_get_store(hass)
-    dataset_id = next(iter(store.datasets.values())).id
+    dataset_id = list(store.datasets.values())[0].id
     store.preferred_dataset = dataset_id
 
     with pytest.raises(HomeAssistantError, match="attempt to remove preferred dataset"):
@@ -132,7 +132,7 @@ async def test_get_dataset(hass: HomeAssistant) -> None:
 
     await dataset_store.async_add_dataset(hass, "source", DATASET_1)
     store = await dataset_store.async_get_store(hass)
-    dataset_id = next(iter(store.datasets.values())).id
+    dataset_id = list(store.datasets.values())[0].id
 
     assert (await dataset_store.async_get_dataset(hass, dataset_id)) == DATASET_1
 
@@ -144,7 +144,7 @@ async def test_get_preferred_dataset(hass: HomeAssistant) -> None:
     await dataset_store.async_add_dataset(hass, "source", DATASET_1)
 
     store = await dataset_store.async_get_store(hass)
-    dataset_id = next(iter(store.datasets.values())).id
+    dataset_id = list(store.datasets.values())[0].id
     store.preferred_dataset = dataset_id
 
     assert (await dataset_store.async_get_preferred_dataset(hass)) == DATASET_1
@@ -220,7 +220,7 @@ async def test_update_dataset_newer(hass: HomeAssistant, caplog) -> None:
 
     store = await dataset_store.async_get_store(hass)
     assert len(store.datasets) == 1
-    assert next(iter(store.datasets.values())).tlv == DATASET_1_LARGER_TIMESTAMP
+    assert list(store.datasets.values())[0].tlv == DATASET_1_LARGER_TIMESTAMP
 
     assert (
         "Updating dataset with same extended PAN ID and newer active timestamp"
@@ -239,7 +239,7 @@ async def test_update_dataset_older(hass: HomeAssistant, caplog) -> None:
 
     store = await dataset_store.async_get_store(hass)
     assert len(store.datasets) == 1
-    assert next(iter(store.datasets.values())).tlv == DATASET_1_LARGER_TIMESTAMP
+    assert list(store.datasets.values())[0].tlv == DATASET_1_LARGER_TIMESTAMP
 
     assert (
         "Updating dataset with same extended PAN ID and newer active timestamp"
@@ -273,7 +273,7 @@ async def test_load_datasets(hass: HomeAssistant) -> None:
     for dataset in datasets:
         store1.async_add(dataset["source"], dataset["tlv"], None, None)
     assert len(store1.datasets) == 3
-    dataset_id = next(iter(store1.datasets.values())).id
+    dataset_id = list(store1.datasets.values())[0].id
     store1.preferred_dataset = dataset_id
 
     for dataset in store1.datasets.values():
@@ -387,7 +387,7 @@ async def test_migrate_drop_bad_datasets(
 
     store = await dataset_store.async_get_store(hass)
     assert len(store.datasets) == 1
-    assert next(iter(store.datasets.values())).tlv == DATASET_1
+    assert list(store.datasets.values())[0].tlv == DATASET_1
     assert store.preferred_dataset == "id1"
 
     assert f"Dropped invalid Thread dataset '{DATASET_1_NO_EXTPANID}'" in caplog.text
@@ -456,7 +456,7 @@ async def test_migrate_drop_duplicate_datasets(
 
     store = await dataset_store.async_get_store(hass)
     assert len(store.datasets) == 1
-    assert next(iter(store.datasets.values())).tlv == DATASET_1_LARGER_TIMESTAMP
+    assert list(store.datasets.values())[0].tlv == DATASET_1_LARGER_TIMESTAMP
     assert store.preferred_dataset is None
 
     assert (
@@ -493,7 +493,7 @@ async def test_migrate_drop_duplicate_datasets_2(
 
     store = await dataset_store.async_get_store(hass)
     assert len(store.datasets) == 1
-    assert next(iter(store.datasets.values())).tlv == DATASET_1_LARGER_TIMESTAMP
+    assert list(store.datasets.values())[0].tlv == DATASET_1_LARGER_TIMESTAMP
     assert store.preferred_dataset is None
 
     assert (
@@ -530,7 +530,7 @@ async def test_migrate_drop_duplicate_datasets_preferred(
 
     store = await dataset_store.async_get_store(hass)
     assert len(store.datasets) == 1
-    assert next(iter(store.datasets.values())).tlv == DATASET_1
+    assert list(store.datasets.values())[0].tlv == DATASET_1
     assert store.preferred_dataset == "id1"
 
     assert (
@@ -584,19 +584,19 @@ async def test_set_preferred_border_agent_id(hass: HomeAssistant) -> None:
 
     await dataset_store.async_add_dataset(hass, "source", DATASET_2)
     assert len(store.datasets) == 1
-    assert next(iter(store.datasets.values())).preferred_border_agent_id is None
+    assert list(store.datasets.values())[0].preferred_border_agent_id is None
 
     with pytest.raises(HomeAssistantError):
         await dataset_store.async_add_dataset(
             hass, "source", DATASET_2, preferred_border_agent_id="blah"
         )
-    assert next(iter(store.datasets.values())).preferred_border_agent_id is None
+    assert list(store.datasets.values())[0].preferred_border_agent_id is None
 
     store = await dataset_store.async_get_store(hass)
-    dataset_id = next(iter(store.datasets.values())).id
+    dataset_id = list(store.datasets.values())[0].id
     with pytest.raises(HomeAssistantError):
         await store.async_set_preferred_border_agent(dataset_id, "blah", None)
-    assert next(iter(store.datasets.values())).preferred_border_agent_id is None
+    assert list(store.datasets.values())[0].preferred_border_agent_id is None
 
     await dataset_store.async_add_dataset(hass, "source", DATASET_1)
     assert len(store.datasets) == 2
@@ -625,8 +625,8 @@ async def test_set_preferred_border_agent_id_and_extended_address(
 
     store = await dataset_store.async_get_store(hass)
     assert len(store.datasets) == 1
-    assert next(iter(store.datasets.values())).preferred_border_agent_id == "blah"
-    assert next(iter(store.datasets.values())).preferred_extended_address == "bleh"
+    assert list(store.datasets.values())[0].preferred_border_agent_id == "blah"
+    assert list(store.datasets.values())[0].preferred_extended_address == "bleh"
 
     await dataset_store.async_add_dataset(
         hass,
@@ -635,8 +635,8 @@ async def test_set_preferred_border_agent_id_and_extended_address(
         preferred_border_agent_id="bleh",
         preferred_extended_address="bleh",
     )
-    assert next(iter(store.datasets.values())).preferred_border_agent_id == "blah"
-    assert next(iter(store.datasets.values())).preferred_extended_address == "bleh"
+    assert list(store.datasets.values())[0].preferred_border_agent_id == "blah"
+    assert list(store.datasets.values())[0].preferred_extended_address == "bleh"
 
     await dataset_store.async_add_dataset(hass, "source", DATASET_2)
     assert len(store.datasets) == 2
@@ -679,12 +679,12 @@ async def test_set_preferred_extended_address(hass: HomeAssistant) -> None:
 
     store = await dataset_store.async_get_store(hass)
     assert len(store.datasets) == 1
-    assert next(iter(store.datasets.values())).preferred_extended_address == "blah"
+    assert list(store.datasets.values())[0].preferred_extended_address == "blah"
 
     await dataset_store.async_add_dataset(
         hass, "source", DATASET_3, preferred_extended_address="bleh"
     )
-    assert next(iter(store.datasets.values())).preferred_extended_address == "blah"
+    assert list(store.datasets.values())[0].preferred_extended_address == "blah"
 
     await dataset_store.async_add_dataset(hass, "source", DATASET_2)
     assert len(store.datasets) == 2
@@ -760,11 +760,11 @@ async def test_automatically_set_preferred_dataset(
 
     store = await dataset_store.async_get_store(hass)
     assert (
-        next(iter(store.datasets.values())).preferred_border_agent_id
+        list(store.datasets.values())[0].preferred_border_agent_id
         == TEST_BORDER_AGENT_ID.hex()
     )
     assert (
-        next(iter(store.datasets.values())).preferred_extended_address
+        list(store.datasets.values())[0].preferred_extended_address
         == TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex()
     )
     assert await dataset_store.async_get_preferred_dataset(hass) == DATASET_1
@@ -839,11 +839,11 @@ async def test_automatically_set_preferred_dataset_own_and_other_router(
 
     store = await dataset_store.async_get_store(hass)
     assert (
-        next(iter(store.datasets.values())).preferred_border_agent_id
+        list(store.datasets.values())[0].preferred_border_agent_id
         == TEST_BORDER_AGENT_ID.hex()
     )
     assert (
-        next(iter(store.datasets.values())).preferred_extended_address
+        list(store.datasets.values())[0].preferred_extended_address
         == TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex()
     )
     assert await dataset_store.async_get_preferred_dataset(hass) is None
@@ -907,11 +907,11 @@ async def test_automatically_set_preferred_dataset_other_router(
 
     store = await dataset_store.async_get_store(hass)
     assert (
-        next(iter(store.datasets.values())).preferred_border_agent_id
+        list(store.datasets.values())[0].preferred_border_agent_id
         == TEST_BORDER_AGENT_ID.hex()
     )
     assert (
-        next(iter(store.datasets.values())).preferred_extended_address
+        list(store.datasets.values())[0].preferred_extended_address
         == TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex()
     )
     assert await dataset_store.async_get_preferred_dataset(hass) is None
@@ -964,11 +964,11 @@ async def test_automatically_set_preferred_dataset_no_router(
 
     store = await dataset_store.async_get_store(hass)
     assert (
-        next(iter(store.datasets.values())).preferred_border_agent_id
+        list(store.datasets.values())[0].preferred_border_agent_id
         == TEST_BORDER_AGENT_ID.hex()
     )
     assert (
-        next(iter(store.datasets.values())).preferred_extended_address
+        list(store.datasets.values())[0].preferred_extended_address
         == TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex()
     )
     assert await dataset_store.async_get_preferred_dataset(hass) is None

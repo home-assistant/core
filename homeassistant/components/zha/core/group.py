@@ -92,7 +92,7 @@ class ZHAGroupMember(LogMixin):
             if not entity_ref.cluster_handlers:
                 continue
             entity = entity_registry.async_get(entity_ref.reference_id)
-            handler = next(iter(entity_ref.cluster_handlers.values()))
+            handler = list(entity_ref.cluster_handlers.values())[0]
 
             if (
                 entity is None

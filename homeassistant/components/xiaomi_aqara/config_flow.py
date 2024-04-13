@@ -116,7 +116,7 @@ class XiaomiAqaraFlowHandler(ConfigFlow, domain=DOMAIN):
         self.gateways = xiaomi.gateways
 
         if len(self.gateways) == 1:
-            self.selected_gateway = next(iter(self.gateways.values()))
+            self.selected_gateway = list(self.gateways.values())[0]
             self.sid = self.selected_gateway.sid
             return await self.async_step_settings()
         if len(self.gateways) > 1:

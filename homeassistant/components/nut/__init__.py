@@ -255,7 +255,7 @@ class PyNUTData:
             _LOGGER.error("Empty list while getting NUT ups aliases")
             return None
         self.ups_list = ups_list
-        return next(iter(ups_list))
+        return list(ups_list)[0]
 
     def _get_device_info(self) -> NUTDeviceInfo | None:
         """Get the ups device info from NUT."""

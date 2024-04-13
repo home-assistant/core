@@ -362,7 +362,7 @@ async def test_set_network_channel_conflict(
     """Test set network."""
 
     dataset_store = await thread.dataset_store.async_get_store(hass)
-    dataset_id = next(iter(dataset_store.datasets))
+    dataset_id = list(dataset_store.datasets)[0]
 
     multiprotocol_addon_manager_mock.async_get_channel.return_value = 15
 

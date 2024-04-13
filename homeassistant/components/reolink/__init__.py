@@ -197,11 +197,11 @@ def cleanup_disconnected_cams(
     device_reg = dr.async_get(hass)
     devices = dr.async_entries_for_config_entry(device_reg, config_entry_id)
     for device in devices:
-        device_id = next(
+        device_id = [
             dev_id[1].split("_ch")
             for dev_id in device.identifiers
             if dev_id[0] == DOMAIN
-        )
+        ][0]
 
         if len(device_id) < 2:
             # Do not consider the NVR itself

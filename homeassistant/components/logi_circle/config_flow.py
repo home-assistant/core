@@ -81,7 +81,7 @@ class LogiCircleFlowHandler(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="missing_configuration")
 
         if len(flows) == 1:
-            self.flow_impl = next(iter(flows))
+            self.flow_impl = list(flows)[0]
             return await self.async_step_auth()
 
         if user_input is not None:

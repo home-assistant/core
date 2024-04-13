@@ -63,6 +63,6 @@ class GroupIntegrationRegistry:
                 self.on_off_mapping[on_state] = off_state
 
         if len(on_states) == 1 and off_state not in self.off_on_mapping:
-            self.off_on_mapping[off_state] = next(iter(on_states))
+            self.off_on_mapping[off_state] = list(on_states)[0]
 
         self.on_states_by_domain[current_domain.get()] = set(on_states)

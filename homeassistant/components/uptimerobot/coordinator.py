@@ -56,7 +56,7 @@ class UptimeRobotDataUpdateCoordinator(DataUpdateCoordinator[list[UptimeRobotMon
         monitors: list[UptimeRobotMonitor] = response.data
 
         current_monitors = {
-            next(iter(device.identifiers))[1]
+            list(device.identifiers)[0][1]
             for device in dr.async_entries_for_config_entry(
                 self._device_registry, self._config_entry_id
             )

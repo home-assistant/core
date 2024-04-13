@@ -266,7 +266,7 @@ def async_get_zha_device(hass: HomeAssistant, device_id: str) -> ZHADevice:
         raise KeyError(f"Device id `{device_id}` not found in registry.")
     zha_gateway = get_zha_gateway(hass)
     try:
-        ieee_address = next(iter(registry_device.identifiers))[1]
+        ieee_address = list(registry_device.identifiers)[0][1]
         ieee = zigpy.types.EUI64.convert(ieee_address)
     except (IndexError, ValueError) as ex:
         _LOGGER.error(

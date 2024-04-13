@@ -873,7 +873,7 @@ def _get_permissible_entity_candidates(
         assert all_referenced is not None
     if (
         len(all_referenced) == 1
-        and (single_entity := next(iter(all_referenced)))
+        and (single_entity := list(all_referenced)[0])
         and (entity := entities.get(single_entity)) is not None
     ):
         return [entity]

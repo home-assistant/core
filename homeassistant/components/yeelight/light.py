@@ -220,7 +220,7 @@ def _transitions_config_parser(transitions):
     """Parse transitions config into initialized objects."""
     transition_objects = []
     for transition_config in transitions:
-        transition, params = next(iter(transition_config.items()))
+        transition, params = list(transition_config.items())[0]
         transition_objects.append(getattr(yeelight, transition)(*params))
 
     return transition_objects

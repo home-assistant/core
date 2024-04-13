@@ -403,9 +403,9 @@ async def websocket_get_groupable_devices(
                         ),
                     }
                     for entity_ref in entity_refs
-                    if next(
-                        iter(entity_ref.cluster_handlers.values())
-                    ).cluster.endpoint.endpoint_id
+                    if list(entity_ref.cluster_handlers.values())[
+                        0
+                    ].cluster.endpoint.endpoint_id
                     == ep_id
                 ],
                 "device": device.zha_device_info,

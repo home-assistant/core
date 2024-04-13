@@ -1115,7 +1115,7 @@ def assert_setup_component(count, domain=None):
         assert (
             len(config) == 1
         ), f"assert_setup_component requires DOMAIN: {list(config.keys())}"
-        domain = next(iter(config.keys()))
+        domain = list(config.keys())[0]
 
     res = config.get(domain)
     res_len = 0 if res is None else len(res)

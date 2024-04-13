@@ -308,7 +308,7 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         if len(self._discovered_advs) == 1:
             # If there is only one device we can ask for a password
             # or simply confirm it
-            device_adv = next(iter(self._discovered_advs.values()))
+            device_adv = list(self._discovered_advs.values())[0]
             await self._async_set_device(device_adv)
             if device_adv.data.get("modelName") == SwitchbotModel.LOCK:
                 return await self.async_step_lock_choose_method()

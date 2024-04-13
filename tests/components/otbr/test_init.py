@@ -105,11 +105,11 @@ async def test_import_dataset(hass: HomeAssistant, mock_async_zeroconf: None) ->
 
     dataset_store = await thread.dataset_store.async_get_store(hass)
     assert (
-        next(iter(dataset_store.datasets.values())).preferred_border_agent_id
+        list(dataset_store.datasets.values())[0].preferred_border_agent_id
         == TEST_BORDER_AGENT_ID.hex()
     )
     assert (
-        next(iter(dataset_store.datasets.values())).preferred_extended_address
+        list(dataset_store.datasets.values())[0].preferred_extended_address
         == TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex()
     )
     assert await thread.async_get_preferred_dataset(hass) == DATASET_CH16.hex()

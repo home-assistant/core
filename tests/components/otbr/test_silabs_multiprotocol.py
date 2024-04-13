@@ -39,7 +39,7 @@ async def test_async_change_channel(
 
     store = await dataset_store.async_get_store(hass)
     assert len(store.datasets) == 1
-    assert next(iter(store.datasets.values())).tlv == DATASET_CH16.hex()
+    assert list(store.datasets.values())[0].tlv == DATASET_CH16.hex()
 
     with (
         patch("python_otbr_api.OTBR.set_channel") as mock_set_channel,
@@ -55,7 +55,7 @@ async def test_async_change_channel(
     pending_dataset.pop(tlv_parser.MeshcopTLVType.DELAYTIMER)
 
     assert len(store.datasets) == 1
-    assert next(iter(store.datasets.values())).tlv == tlv_parser.encode_tlv(
+    assert list(store.datasets.values())[0].tlv == tlv_parser.encode_tlv(
         pending_dataset
     )
 
@@ -67,7 +67,7 @@ async def test_async_change_channel_no_pending(
 
     store = await dataset_store.async_get_store(hass)
     assert len(store.datasets) == 1
-    assert next(iter(store.datasets.values())).tlv == DATASET_CH16.hex()
+    assert list(store.datasets.values())[0].tlv == DATASET_CH16.hex()
 
     with (
         patch("python_otbr_api.OTBR.set_channel") as mock_set_channel,
@@ -87,7 +87,7 @@ async def test_async_change_channel_no_pending(
     pending_dataset.pop(tlv_parser.MeshcopTLVType.DELAYTIMER)
 
     assert len(store.datasets) == 1
-    assert next(iter(store.datasets.values())).tlv == tlv_parser.encode_tlv(
+    assert list(store.datasets.values())[0].tlv == tlv_parser.encode_tlv(
         pending_dataset
     )
 
@@ -99,7 +99,7 @@ async def test_async_change_channel_no_update(
 
     store = await dataset_store.async_get_store(hass)
     assert len(store.datasets) == 1
-    assert next(iter(store.datasets.values())).tlv == DATASET_CH16.hex()
+    assert list(store.datasets.values())[0].tlv == DATASET_CH16.hex()
 
     with (
         patch("python_otbr_api.OTBR.set_channel") as mock_set_channel,
@@ -115,7 +115,7 @@ async def test_async_change_channel_no_update(
         await otbr_silabs_multiprotocol.async_change_channel(hass, 15, delay=5 * 300)
     mock_set_channel.assert_awaited_once_with(15, delay=5 * 300 * 1000)
 
-    assert next(iter(store.datasets.values())).tlv == DATASET_CH16.hex()
+    assert list(store.datasets.values())[0].tlv == DATASET_CH16.hex()
 
 
 async def test_async_change_channel_no_otbr(hass: HomeAssistant) -> None:

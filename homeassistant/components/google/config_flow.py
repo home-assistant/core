@@ -102,7 +102,7 @@ class OAuth2FlowHandler(
             self.hass, self.DOMAIN
         )
         assert len(implementations) == 1
-        self.flow_impl = next(iter(implementations.values()))
+        self.flow_impl = list(implementations.values())[0]
         self.external_data = info
         return await super().async_step_creation(info)
 

@@ -247,7 +247,7 @@ def test_condition_class() -> None:
 
     def get_condition(index: int) -> str:
         """Return condition given index."""
-        return next(k for k, v in CONDITION_CLASSES.items() if index in v)
+        return [k for k, v in CONDITION_CLASSES.items() if index in v][0]
 
     # SMHI definitions as follows, see
     # http://opendata.smhi.se/apidocs/metfcst/parameters.html

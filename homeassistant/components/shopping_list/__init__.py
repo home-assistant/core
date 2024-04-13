@@ -82,7 +82,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         name = call.data[ATTR_NAME]
 
         try:
-            item = next(item for item in data.items if item["name"] == name)
+            item = [item for item in data.items if item["name"] == name][0]
         except IndexError:
             _LOGGER.error("Removing of item failed: %s cannot be found", name)
         else:
@@ -94,7 +94,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         name = call.data[ATTR_NAME]
 
         try:
-            item = next(item for item in data.items if item["name"] == name)
+            item = [item for item in data.items if item["name"] == name][0]
         except IndexError:
             _LOGGER.error("Updating of item failed: %s cannot be found", name)
         else:
@@ -106,7 +106,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         name = call.data[ATTR_NAME]
 
         try:
-            item = next(item for item in data.items if item["name"] == name)
+            item = [item for item in data.items if item["name"] == name][0]
         except IndexError:
             _LOGGER.error("Restoring of item failed: %s cannot be found", name)
         else:

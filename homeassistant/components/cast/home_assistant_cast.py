@@ -42,9 +42,7 @@ async def async_setup_ha_cast(
         )
 
     if user.refresh_tokens:
-        refresh_token: auth.models.RefreshToken = next(
-            iter(user.refresh_tokens.values())
-        )
+        refresh_token: auth.models.RefreshToken = list(user.refresh_tokens.values())[0]
     else:
         refresh_token = await hass.auth.async_create_refresh_token(user)
 

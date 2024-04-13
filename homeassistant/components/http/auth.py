@@ -145,7 +145,7 @@ async def async_setup_auth(
     if "content_user" in data:
         user = await hass.auth.async_get_user(data["content_user"])
         if user and user.refresh_tokens:
-            refresh_token = next(iter(user.refresh_tokens.values()))
+            refresh_token = list(user.refresh_tokens.values())[0]
 
     if refresh_token is None:
         user = await hass.auth.async_create_system_user(

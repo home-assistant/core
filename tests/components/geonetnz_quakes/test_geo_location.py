@@ -204,7 +204,7 @@ async def test_setup_imperial(
         feeds = hass.data[DOMAIN][FEED]
         assert feeds is not None
         assert len(feeds) == 1
-        manager = next(iter(feeds.values()))
+        manager = list(feeds.values())[0]
         # Ensure that the filter value in km is correctly set.
         assert manager._feed_manager._feed._filter_radius == 321.8688
 

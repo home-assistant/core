@@ -161,7 +161,7 @@ class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                         {vol.Required(CONF_GIID): vol.In(installations)}
                     ),
                 )
-            user_input = {CONF_GIID: next(iter(installations))}
+            user_input = {CONF_GIID: list(installations)[0]}
 
         await self.async_set_unique_id(user_input[CONF_GIID])
         self._abort_if_unique_id_configured()

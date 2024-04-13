@@ -26,7 +26,7 @@ async def test_fallback_to_polling(
     await hass.async_block_till_done()
     await fire_zgs_event()
 
-    speaker = next(iter(hass.data[DATA_SONOS].discovered.values()))
+    speaker = list(hass.data[DATA_SONOS].discovered.values())[0]
     assert speaker.soco is soco
     assert speaker._subscriptions
     assert not speaker.subscriptions_failed
@@ -59,7 +59,7 @@ async def test_subscription_creation_fails(
         await async_setup_sonos()
         await hass.async_block_till_done(wait_background_tasks=True)
 
-    speaker = next(iter(hass.data[DATA_SONOS].discovered.values()))
+    speaker = list(hass.data[DATA_SONOS].discovered.values())[0]
     assert not speaker._subscriptions
 
     with patch.object(speaker, "_resub_cooldown_expires_at", None):

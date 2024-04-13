@@ -351,9 +351,9 @@ class BlockShellyLight(ShellyBlockEntity, LightEntity):
             else:
                 effect_dict = STANDARD_RGB_EFFECTS
             if kwargs[ATTR_EFFECT] in effect_dict.values():
-                params["effect"] = next(
+                params["effect"] = [
                     k for k, v in effect_dict.items() if v == kwargs[ATTR_EFFECT]
-                )
+                ][0]
             else:
                 LOGGER.error(
                     "Effect '%s' not supported by device %s",

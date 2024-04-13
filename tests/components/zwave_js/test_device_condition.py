@@ -46,7 +46,7 @@ async def test_get_conditions(
         identifiers={get_device_id(client.driver, lock_schlage_be469)}
     )
     assert device
-    config_value = next(iter(lock_schlage_be469.get_configuration_values().values()))
+    config_value = list(lock_schlage_be469.get_configuration_values().values())[0]
     value_id = config_value.value_id
     name = config_value.property_name
 
