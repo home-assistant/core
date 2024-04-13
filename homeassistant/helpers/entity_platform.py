@@ -631,7 +631,16 @@ class EntityPlatform:
         if (
             (self.config_entry and self.config_entry.pref_disable_polling)
             or self._async_unsub_polling is not None
-            or not any(entity.should_poll for entity in entities)
+            or not any(
+                # Entity may have failed to add or called `add_to_platform_abort`
+                # so we check if the entity is in self.entities before
+                # checking `entity.should_poll` since `should_poll` may need to
+                # check `self.hass` which will be `None` if the entity did not add
+                entity.entity_id
+                and entity.entity_id in self.entities
+                and entity.should_poll
+                for entity in entities
+            )
         ):
             return
 
@@ -792,7 +801,7 @@ class EntityPlatform:
                 get_initial_options=entity.get_initial_entity_options,
                 has_entity_name=entity.has_entity_name,
                 hidden_by=hidden_by,
-                known_object_ids=self.entities.keys(),
+                known_object_ids=self.entities,
                 original_device_class=entity.device_class,
                 original_icon=entity.icon,
                 original_name=entity_name,
@@ -830,11 +839,13 @@ class EntityPlatform:
             if self.entity_namespace is not None:
                 suggested_object_id = f"{self.entity_namespace} {suggested_object_id}"
             entity.entity_id = entity_registry.async_generate_entity_id(
-                self.domain, suggested_object_id, self.entities.keys()
+                self.domain, suggested_object_id, self.entities
             )
 
         # Make sure it is valid in case an entity set the value themselves
-        if not valid_entity_id(entity.entity_id):
+        # Avoid calling valid_entity_id if we already know it is valid
+        # since it already made it in the registry
+        if not entity.registry_entry and not valid_entity_id(entity.entity_id):
             entity.add_to_platform_abort()
             raise HomeAssistantError(f"Invalid entity ID: {entity.entity_id}")
 

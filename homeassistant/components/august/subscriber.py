@@ -71,7 +71,6 @@ class AugustSubscriberMixin:
             self._stop_interval = self._hass.bus.async_listen(
                 EVENT_HOMEASSISTANT_STOP,
                 self._async_cancel_update_interval,
-                run_immediately=True,
             )
 
     @callback
