@@ -763,7 +763,8 @@ class StatisticsSensor(SensorEntity):
     def _stat_sum_differences(self) -> StateType:
         if len(self.states) >= 2:
             return sum(
-                abs(j - i) for i, j in zip(list(self.states), list(self.states)[1:], strict=False)
+                abs(j - i)
+                for i, j in zip(list(self.states), list(self.states)[1:], strict=False)
             )
         return None
 
