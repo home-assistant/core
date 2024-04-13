@@ -30,8 +30,7 @@ class SwitchBotCoordinator(DataUpdateCoordinator[Status]):
             hass,
             _LOGGER,
             name=DOMAIN,
-            update_interval=DEVICE_SCAN_INTERVAL[device.device_type]
-            or DEFAULT_SCAN_INTERVAL,
+            update_interval=DEVICE_SCAN_INTERVAL.get(device.device_type, DEFAULT_SCAN_INTERVAL),
         )
         self._api = api
         self._device_id = device.device_id
