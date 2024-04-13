@@ -52,6 +52,15 @@ def mock_pymodbus_fixture():
     """Mock pymodbus."""
     mock_pb = mock.AsyncMock()
     mock_pb.close = mock.MagicMock()
+    read_result = ReadResult([])
+    mock_pb.read_coils.return_value = read_result
+    mock_pb.read_discrete_inputs.return_value = read_result
+    mock_pb.read_input_registers.return_value = read_result
+    mock_pb.read_holding_registers.return_value = read_result
+    mock_pb.write_register.return_value = read_result
+    mock_pb.write_registers.return_value = read_result
+    mock_pb.write_coil.return_value = read_result
+    mock_pb.write_coils.return_value = read_result
     with (
         mock.patch(
             "homeassistant.components.modbus.modbus.AsyncModbusTcpClient",
@@ -156,7 +165,7 @@ async def mock_pymodbus_exception_fixture(hass, do_exception, mock_modbus):
 @pytest.fixture(name="mock_pymodbus_return")
 async def mock_pymodbus_return_fixture(hass, register_words, mock_modbus):
     """Trigger update call with time_changed event."""
-    read_result = ReadResult(register_words) if register_words else None
+    read_result = ReadResult(register_words if register_words else [])
     mock_modbus.read_coils.return_value = read_result
     mock_modbus.read_discrete_inputs.return_value = read_result
     mock_modbus.read_input_registers.return_value = read_result
@@ -165,6 +174,7 @@ async def mock_pymodbus_return_fixture(hass, register_words, mock_modbus):
     mock_modbus.write_registers.return_value = read_result
     mock_modbus.write_coil.return_value = read_result
     mock_modbus.write_coils.return_value = read_result
+    return mock_modbus
 
 
 @pytest.fixture(name="mock_do_cycle")
