@@ -26,7 +26,7 @@
           "name": "Notification type",
           "description": "Type of push notification to send to list members."
         },
-        "message": {
+        "item": {
           "name": "Item name (Required if message type `Breaking news` selected)",
           "description": "Item Name to include in an urgent message e.g. `Breaking news - Please get cilantro!`"
         }

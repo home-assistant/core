@@ -91,14 +91,14 @@ class BringNotify(NotifyEntity):
     async def async_send_bring_message(
         self,
         *,
-        message: str | None = None,
+        item: str | None = None,
         notification_type: BringNotificationType,
     ) -> None:
         """Send a push notification to members of a To-Do list."""
 
         try:
             await self.coordinator.bring.notify(
-                self._list_uuid, notification_type, message
+                self._list_uuid, notification_type, item
             )
         except BringRequestException as e:
             raise HomeAssistantError(
@@ -109,4 +109,4 @@ class BringNotify(NotifyEntity):
                 "Item name is required for Breaking news notification"
             ) from e
         else:
-            await super()._async_send_message(message=message or "item_name")
+            await super()._async_send_message(message="None")

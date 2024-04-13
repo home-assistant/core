@@ -16,7 +16,7 @@ send_message:
             - "changed_list"
             - "shopping_done"
             - "urgent_message"
-    message:
+    item:
       example: Cilantro
       required: false
       selector:

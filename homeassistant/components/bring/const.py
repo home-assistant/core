@@ -4,7 +4,7 @@ from typing import Final
 
 DOMAIN = "bring"
 
-ATTR_ITEM_NAME: Final = "message"
+ATTR_ITEM_NAME: Final = "item"
 ATTR_NOTIFICATION_TYPE: Final = "notification_type"
 
 SERVICE_PUSH_NOTIFICATION: Final = "push_notification"
