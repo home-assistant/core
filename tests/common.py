@@ -236,7 +236,7 @@ async def async_test_home_assistant(
     orig_async_create_task = hass.async_create_task
     orig_tz = dt_util.DEFAULT_TIME_ZONE
 
-    def async_add_job(target, *args, eager_start: bool = False):
+    def async_add_job(target, *args, eager_start: bool = True):
         """Add job."""
         check_target = target
         while isinstance(check_target, ft.partial):
@@ -262,7 +262,7 @@ async def async_test_home_assistant(
 
         return orig_async_add_executor_job(target, *args)
 
-    def async_create_task(coroutine, name=None, eager_start=False):
+    def async_create_task(coroutine, name=None, eager_start=True):
         """Create task."""
         if isinstance(coroutine, Mock) and not isinstance(coroutine, AsyncMock):
             fut = asyncio.Future()
