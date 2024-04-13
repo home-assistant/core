@@ -160,6 +160,11 @@ async def async_setup_entry(
             if find_matching_platform(device_point) == Platform.SENSOR:
                 description = get_description(device_point)
                 entity_class = MyUplinkDevicePointSensor
+                # Ignore sensors without a description that provide non-numeric values
+                if description is None and not isinstance(
+                    device_point.value, (int, float)
+                ):
+                    continue
                 if (
                     description is not None
                     and description.device_class == SensorDeviceClass.ENUM
