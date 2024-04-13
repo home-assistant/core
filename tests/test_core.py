@@ -2376,11 +2376,11 @@ async def test_log_blocking_events(
     async def _wait_a_bit_2():
         await asyncio.sleep(0.1)
 
-    hass.async_create_task(_wait_a_bit_1())
+    hass.async_create_task(_wait_a_bit_1(), eager_start=False)
     await hass.async_block_till_done()
 
     with patch.object(ha, "BLOCK_LOG_TIMEOUT", 0.0001):
-        hass.async_create_task(_wait_a_bit_2())
+        hass.async_create_task(_wait_a_bit_2(), eager_start=False)
         await hass.async_block_till_done()
 
     assert "_wait_a_bit_2" in caplog.text
@@ -2429,16 +2429,16 @@ async def test_chained_logging_misses_log_timeout(
         created += 1
         if created > 10:
             return
-        hass.async_create_task(_task_chain_2())
+        hass.async_create_task(_task_chain_2(), eager_start=False)
 
     async def _task_chain_2():
         nonlocal created
         created += 1
         if created > 10:
             return
-        hass.async_create_task(_task_chain_1())
+        hass.async_create_task(_task_chain_1(), eager_start=False)
 
-    hass.async_create_task(_task_chain_1())
+    hass.async_create_task(_task_chain_1(), eager_start=False)
     await hass.async_block_till_done()
 
     assert "_task_chain_" not in caplog.text
