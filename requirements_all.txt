@@ -2928,7 +2928,7 @@ zamg==0.3.6
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.132.0
+zeroconf==0.132.1
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1
