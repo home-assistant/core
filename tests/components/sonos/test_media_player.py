@@ -13,6 +13,7 @@ from homeassistant.components.sonos.const import SOURCE_LINEIN, SOURCE_TV
 from homeassistant.components.sonos.media_player import LONG_SERVICE_TIMEOUT
 from homeassistant.const import STATE_IDLE
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
     CONNECTION_UPNP,
@@ -215,7 +216,7 @@ async def test_play_media_music_library_playlist_dne(
         ),
         (
             "Nonexistent Name",
-            {"error": True},
+            {"exception": True},
         ),
     ],
 )
@@ -230,8 +231,7 @@ async def test_select_source(
     """Test error handling when attempting to play a non-existent playlist ."""
     soco_mock = soco_factory.mock_list.get("192.168.42.2")
 
-    with caplog.at_level(logging.ERROR):
-        caplog.clear()
+    async def service_call():
         await hass.services.async_call(
             MP_DOMAIN,
             SERVICE_SELECT_SOURCE,
@@ -241,6 +241,13 @@ async def test_select_source(
             },
             blocking=True,
         )
+
+    if test_result.get("exception"):
+        with pytest.raises(ServiceValidationError):
+            await service_call()
+    else:
+        await service_call()
+
     assert soco_mock.switch_to_line_in.call_count == test_result.get(
         "switch_to_line_in", 0
     )
@@ -265,6 +272,3 @@ async def test_select_source(
         assert soco_mock.play_uri.call_args_list[0].args[0] == test_result.get(
             "play_uri_uri"
         )
-    if test_result.get("error"):
-        assert source in caplog.text
-        assert "Could not find" in caplog.text

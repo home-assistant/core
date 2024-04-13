@@ -39,7 +39,7 @@ from homeassistant.components.plex.services import process_plex_payload
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TIME
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, entity_platform, service
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -433,8 +433,9 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         fav = [fav for fav in self.speaker.favorites if fav.title == name]
 
         if len(fav) != 1:
-            _LOGGER.error('Could not find a Sonos favorite named "%s"', name)
-            return
+            raise ServiceValidationError(
+                f'Could not find a Sonos favorite named "{name}"'
+            )
 
         src = fav.pop()
         self._play_favorite(src)
