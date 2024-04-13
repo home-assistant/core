@@ -241,7 +241,7 @@ async def test_media_player_entity_with_source(
             {
                 ATTR_ENTITY_ID: "media_player.test_mymedia_player",
                 ATTR_MEDIA_CONTENT_TYPE: "audio/mp3",
-                ATTR_MEDIA_CONTENT_ID: "http://www.example.com/xy.mp3",
+                ATTR_MEDIA_CONTENT_ID: "media-source://local/xy",
             },
             blocking=True,
         )
