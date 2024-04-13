@@ -105,6 +105,7 @@ class SynologyPhotosMediaSource(MediaSource):
             ]
         identifier = SynologyPhotosMediaSourceIdentifier(item.identifier)
         diskstation: SynologyDSMData = self.hass.data[DOMAIN][identifier.unique_id]
+        assert diskstation.api.photos is not None
 
         if identifier.album_id is None:
             # Get Albums
@@ -112,6 +113,7 @@ class SynologyPhotosMediaSource(MediaSource):
                 albums = await diskstation.api.photos.get_albums()
             except SynologyDSMException:
                 return []
+            assert albums is not None
 
             ret = [
                 BrowseMediaSource(
@@ -148,6 +150,7 @@ class SynologyPhotosMediaSource(MediaSource):
             )
         except SynologyDSMException:
             return []
+        assert album_items is not None
 
         ret = []
         for album_item in album_items:
@@ -190,6 +193,8 @@ class SynologyPhotosMediaSource(MediaSource):
         self, item: SynoPhotosItem, diskstation: SynologyDSMData
     ) -> str | None:
         """Get thumbnail."""
+        assert diskstation.api.photos is not None
+
         try:
             thumbnail = await diskstation.api.photos.get_item_thumbnail_url(item)
         except SynologyDSMException:
@@ -215,13 +220,14 @@ class SynologyDsmMediaView(http.HomeAssistantView):
             raise web.HTTPNotFound
         # location: {cache_key}/{filename}
         cache_key, file_name = location.split("/")
-        image_id = cache_key.split("_")[0]
+        image_id = int(cache_key.split("_")[0])
         mime_type, _ = mimetypes.guess_type(file_name)
         if not isinstance(mime_type, str):
             raise web.HTTPNotFound
         diskstation: SynologyDSMData = self.hass.data[DOMAIN][source_dir_id]
 
-        item = SynoPhotosItem(image_id, "", "", "", cache_key, "")
+        assert diskstation.api.photos is not None
+        item = SynoPhotosItem(image_id, "", "", "", cache_key, "", False)
         try:
             image = await diskstation.api.photos.download_item(item)
         except SynologyDSMException as exc:
