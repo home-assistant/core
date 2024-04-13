@@ -24,17 +24,17 @@ class BalboaTempRangeSelectEntity(BalboaEntity, SelectEntity):
     """Representation of a Temperature Range select."""
 
     _attr_icon = "mdi:thermometer-lines"
+    _attr_name = "Temperature range"
+    _attr_unique_id = "temperature_range"
+    _attr_translation_key = "temperature_range"
+    _attr_options = [
+        LowHighRange.LOW.name.lower(),
+        LowHighRange.HIGH.name.lower(),
+    ]
 
     def __init__(self, control: SpaControl) -> None:
-        """Initialise the switch."""
+        """Initialise the select."""
         super().__init__(control.client, "TempHiLow")
-        self._attr_name = "Temperature range"
-        self._attr_unique_id = "temperature_range"
-        self._attr_translation_key = "temperature_range"
-        self._attr_options = [
-            LowHighRange.LOW.name.lower(),
-            LowHighRange.HIGH.name.lower(),
-        ]
         self._control = control
 
     @property

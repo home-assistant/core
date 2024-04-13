@@ -28,7 +28,7 @@
         }
       }
     },
-    "switch": {
+    "select": {
       "temperature_range": {
         "default": "mdi:thermometer-lines"
       }
