@@ -8,10 +8,12 @@ from homeassistant.components.bring import (
     BringAuthException,
     BringParseException,
     BringRequestException,
+    async_setup_entry,
 )
 from homeassistant.components.bring.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 
 from tests.common import MockConfigEntry
 
@@ -62,3 +64,26 @@ async def test_init_failure(
     mock_bring_client.login.side_effect = exception
     await setup_integration(hass, bring_config_entry)
     assert bring_config_entry.state == status
+
+
+@pytest.mark.parametrize(
+    ("exception", "expected"),
+    [
+        (BringRequestException, ConfigEntryNotReady),
+        (BringAuthException, ConfigEntryError),
+        (BringParseException, ConfigEntryNotReady),
+    ],
+)
+async def test_init_exceptions(
+    hass: HomeAssistant,
+    mock_bring_client: AsyncMock,
+    exception: Exception,
+    expected: Exception,
+    bring_config_entry: MockConfigEntry | None,
+) -> None:
+    """Test an initialization error on integration load."""
+    bring_config_entry.add_to_hass(hass)
+    mock_bring_client.login.side_effect = exception
+
+    with pytest.raises(expected):
+        await async_setup_entry(hass, bring_config_entry)
