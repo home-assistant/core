@@ -458,8 +458,7 @@ async def _async_setup_component(
         )
 
     # Cleanup
-    if domain in hass.data[DATA_SETUP]:
-        hass.data[DATA_SETUP].pop(domain)
+    hass.data[DATA_SETUP].pop(domain, None)
 
     hass.bus.async_fire(EVENT_COMPONENT_LOADED, EventComponentLoaded(component=domain))
 
