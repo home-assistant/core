@@ -5,4 +5,5 @@ from typing import Final
 
 DOMAIN: Final = "switchbot_cloud"
 ENTRY_TITLE = "SwitchBot Cloud"
-SCAN_INTERVAL = timedelta(seconds=600)
+DEFAULT_SCAN_INTERVAL = timedelta(seconds=600)
+DEVICE_SCAN_INTERVAL = {"MeterPlus": timedelta(seconds=60)}
