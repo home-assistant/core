@@ -1,14 +1,11 @@
-push_notification:
+send_message:
+  target:
+    entity:
+      domain: todo
+      integration: bring
   fields:
-    entity_id:
-      required: true
-      example: todo.bring_shoppinglist
-      selector:
-        entity:
-          domain: todo
-          integration: bring
-    notification_type:
-      example: going_shopping
+    message:
+      example: urgent_message
       required: true
       default: "going_shopping"
       selector:
@@ -19,7 +16,7 @@ push_notification:
             - "changed_list"
             - "shopping_done"
             - "urgent_message"
-    item_name:
+    item:
       example: Cilantro
       required: false
       selector:

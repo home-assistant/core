@@ -10,17 +10,16 @@ from bring_api.types import BringItem, BringItemOperation, BringNotificationType
 import voluptuous as vol
 
 from homeassistant.components.todo import (
-    DOMAIN as DOMAIN_TODO,
     TodoItem,
     TodoItemStatus,
     TodoListEntity,
     TodoListEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers.config_validation import make_entity_service_schema
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -59,16 +58,15 @@ async def async_setup_entry(
 
     platform.async_register_entity_service(
         SERVICE_PUSH_NOTIFICATION,
-        vol.Schema(
+        make_entity_service_schema(
             {
-                vol.Required(ATTR_ENTITY_ID): cv.entities_domain(DOMAIN_TODO),
                 vol.Required(ATTR_NOTIFICATION_TYPE): vol.All(
                     vol.Upper, cv.enum(BringNotificationType)
                 ),
                 vol.Optional(ATTR_ITEM_NAME): cv.string,
             }
         ),
-        "async_send_push_notification",
+        "async_send_message",
     )
 
 
@@ -257,23 +255,32 @@ class BringTodoListEntity(
 
         await self.coordinator.async_refresh()
 
-    async def async_send_push_notification(
+    async def async_send_message(
         self,
-        notification_type: BringNotificationType,
-        item_name: str | None = None,
+        message: BringNotificationType,
+        item: str | None = None,
     ) -> None:
-        """Send a push notification to members of the To-Do list."""
-        if notification_type is BringNotificationType.URGENT_MESSAGE and not item_name:
-            raise HomeAssistantError(
-                "Item name is required for Breaking news notification"
-            )
+        """Send a push notification to members of a shared bring list."""
+
         try:
-            await self.coordinator.bring.notify(
-                self._list_uuid, notification_type, item_name or None
-            )
+            await self.coordinator.bring.notify(self._list_uuid, message, item or None)
         except BringRequestException as e:
             raise HomeAssistantError(
-                "Unable to send push notification for bring"
+                translation_domain=DOMAIN,
+                translation_key="notify_request_failed",
             ) from e
         except ValueError as e:
-            raise HomeAssistantError("Item name required") from e
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="notify_missing_argument_item",
+            ) from e
+        except TypeError as e:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="notify_invalid_message_type",
+                translation_placeholders={
+                    "notification_types": ", ".join(
+                        x.value for x in BringNotificationType
+                    ),
+                },
+            ) from e

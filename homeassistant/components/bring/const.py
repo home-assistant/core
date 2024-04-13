@@ -5,7 +5,10 @@ from typing import Final
 DOMAIN = "bring"
 
 ATTR_SENDER: Final = "sender"
-ATTR_ITEM_NAME: Final = "item_name"
-ATTR_NOTIFICATION_TYPE: Final = "notification_type"
+ATTR_ITEM_NAME: Final = "item"
+ATTR_NOTIFICATION_TYPE: Final = "message"
 
-SERVICE_PUSH_NOTIFICATION = "push_notification"
+SERVICE_PUSH_NOTIFICATION = "send_message"
+
+MANUFACTURER: Final = "Bring! Labs AG"
+SERVICE_NAME: Final = "Bring!"
