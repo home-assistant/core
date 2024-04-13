@@ -1,4 +1,5 @@
 """Support for Honeywell Lyric binary sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -54,23 +55,19 @@ async def async_setup_entry(
     """Set up the Honeywell Lyric binary sensor platform based on a config entry."""
     coordinator: DataUpdateCoordinator[Lyric] = hass.data[DOMAIN][entry.entry_id]
 
-    entities = []
-
-    for location in coordinator.data.locations:
-        for device in location.devices:
-            for room in coordinator.data.rooms_dict[device.macID].values():
-                for room_sensor in ROOM_SENSORS:
-                    entities.append(
-                        LyricRoomBinarySensor(
-                            coordinator,
-                            room_sensor,
-                            location,
-                            device,
-                            room,
-                        )
-                    )
-
-    async_add_entities(entities)
+    async_add_entities(
+        LyricRoomBinarySensor(
+            coordinator,
+            room_sensor,
+            location,
+            device,
+            room,
+        )
+        for location in coordinator.data.locations
+        for device in location.devices
+        for room in coordinator.data.rooms_dict[device.macID].values()
+        for room_sensor in ROOM_SENSORS
+    )
 
 
 class LyricRoomBinarySensor(LyricRoomEntity, BinarySensorEntity):

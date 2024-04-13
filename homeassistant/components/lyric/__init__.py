@@ -91,7 +91,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             async with asyncio.timeout(60):
                 await asyncio.gather(*get_thermostat_room_tasks)
 
-            return lyric
         except LyricAuthenticationException as exception:
             # Attempt to refresh the token before failing.
             # Honeywell appear to have issues keeping tokens saved.
