@@ -6,6 +6,7 @@ from abc import abstractmethod
 from collections.abc import Iterable
 import json
 import logging
+from types import FunctionType
 from typing import Any
 
 import voluptuous as vol
@@ -289,13 +290,20 @@ def custom_serializer(schema: Any) -> Any:
 class IntentTool(Tool):
     """LLM Tool representing an Intent."""
 
-    def __init__(self, intent_type: str, slot_schema: vol.Schema | None = None) -> None:
+    def __init__(
+        self,
+        intent_type: str,
+        slot_schema: vol.Schema | None = None,
+        description: str | None = None,
+    ) -> None:
         """Init the class."""
         if slot_schema is None:
             slot_schema = vol.Schema({})
+        if description is None:
+            description = f"Execute Home Assistant {intent_type} intent"
         super().__init__(
             intent_type,
-            f"Execute Home Assistant {intent_type} intent",
+            description,
             convert(slot_schema, custom_serializer=custom_serializer),
         )
 
