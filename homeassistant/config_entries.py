@@ -971,7 +971,7 @@ class ConfigEntry:
         hass.async_create_task(
             self._async_init_reauth(hass, context, data),
             f"config entry reauth {self.title} {self.domain} {self.entry_id}",
-            eager_start=False,
+            eager_start=True,
         )
 
     async def _async_init_reauth(
