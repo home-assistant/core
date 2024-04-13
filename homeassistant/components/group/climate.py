@@ -15,7 +15,9 @@ from homeassistant.components.climate import (
     ATTR_HVAC_ACTION,
     ATTR_HVAC_MODE,
     ATTR_HVAC_MODES,
+    ATTR_MAX_HUMIDITY,
     ATTR_MAX_TEMP,
+    ATTR_MIN_HUMIDITY,
     ATTR_MIN_TEMP,
     ATTR_PRESET_MODE,
     ATTR_PRESET_MODES,
@@ -237,6 +239,18 @@ class ClimateGroup(GroupEntity, ClimateEntity):
         self._attr_min_temp = reduce_attribute(states, ATTR_MIN_TEMP, reduce=max)
         self._attr_max_temp = reduce_attribute(states, ATTR_MAX_TEMP, reduce=min)
         # End temperature settings
+        self._attr_target_humidity = reduce_attribute(
+            states, ATTR_HUMIDITY, reduce=lambda *data: mean(data)
+        )
+        self._attr_current_humidity = reduce_attribute(
+            states, ATTR_HUMIDITY, reduce=lambda *data: mean(data)
+        )
+        self._attr_min_humidity = reduce_attribute(
+            states, ATTR_MAX_HUMIDITY, reduce=max
+        )
+        self._attr_max_humidity = reduce_attribute(
+            states, ATTR_MIN_HUMIDITY, reduce=min
+        )
 
         # Build util that will help with the computation of union of modes
         # across all the entity states.
@@ -307,31 +321,80 @@ class ClimateGroup(GroupEntity, ClimateEntity):
                 continue
             self._attr_supported_features |= feature_flags
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
-        """Forward the temperature command to all climate in the climate group."""
-        if temp := kwargs.get(ATTR_TEMPERATURE):
-            data = {
-                ATTR_ENTITY_ID: self._features[ClimateEntityFeature.TARGET_TEMPERATURE],
-                ATTR_TEMPERATURE: temp,
-            }
-        elif (temp_high := kwargs.get(ATTR_TARGET_TEMP_HIGH)) and (
-            temp_low := kwargs.get(ATTR_TARGET_TEMP_LOW)
-        ):
-            data = {
-                ATTR_ENTITY_ID: self._features[
-                    ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
-                ],
-                ATTR_TARGET_TEMP_HIGH: temp_high,
-                ATTR_TARGET_TEMP_LOW: temp_low,
-            }
-        if hvac_mode := kwargs.get(ATTR_HVAC_MODE):
+    async def _async_set_temperature_values(
+        self,
+        *,
+        temp: float,
+        temp_low: float,
+        temp_high: float,
+        hvac_mode: HVACMode | None = None,
+    ) -> None:
+        data: dict[str, Any] = {}
+        if hvac_mode is not None:
             data |= {
                 ATTR_HVAC_MODE: hvac_mode,
             }
 
+        # Call for entities only supporting setting temperature value.
         await self.hass.services.async_call(
-            DOMAIN, SERVICE_SET_TEMPERATURE, data, context=self._context
+            DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            data
+            | {
+                ATTR_ENTITY_ID: self._features[ClimateEntityFeature.TARGET_TEMPERATURE]
+                - self._features[ClimateEntityFeature.TARGET_TEMPERATURE_RANGE],
+                ATTR_TEMPERATURE: temp,
+            },
+            context=self._context,
         )
+        # Call for entities only supporting setting temperature range.
+        await self.hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            data
+            | {
+                ATTR_ENTITY_ID: self._features[
+                    ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+                ]
+                - self._features[ClimateEntityFeature.TARGET_TEMPERATURE],
+                ATTR_TARGET_TEMP_HIGH: temp_high,
+                ATTR_TARGET_TEMP_LOW: temp_low,
+            },
+            context=self._context,
+        )
+        # Call for entities supporting both temperature value and range.
+        await self.hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            data
+            | {
+                ATTR_ENTITY_ID: self._features[ClimateEntityFeature.TARGET_TEMPERATURE]
+                | self._features[ClimateEntityFeature.TARGET_TEMPERATURE_RANGE],
+                ATTR_TEMPERATURE: temp,
+                ATTR_TARGET_TEMP_HIGH: temp_high,
+                ATTR_TARGET_TEMP_LOW: temp_low,
+            },
+            context=self._context,
+        )
+
+    async def async_set_temperature(self, **kwargs: Any) -> None:
+        """Forward the temperature command to all climate in the climate group."""
+        if temp := kwargs.get(ATTR_TEMPERATURE):
+            await self._async_set_temperature_values(
+                temp=temp,
+                temp_high=temp,
+                temp_low=temp,
+                hvac_mode=kwargs.get(ATTR_HVAC_MODE),
+            )
+        elif (temp_high := kwargs.get(ATTR_TARGET_TEMP_HIGH)) and (
+            temp_low := kwargs.get(ATTR_TARGET_TEMP_LOW)
+        ):
+            await self._async_set_temperature_values(
+                temp=(temp_high + temp_low) / 2.0,
+                temp_high=temp_high,
+                temp_low=temp_low,
+                hvac_mode=kwargs.get(ATTR_HVAC_MODE),
+            )
 
     async def async_set_humidity(self, humidity: int) -> None:
         """Forward the humidity to all supported climate in the climate group."""
