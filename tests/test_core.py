@@ -794,7 +794,7 @@ async def test_async_create_task_pending_tasks_coro(hass: HomeAssistant) -> None
         call_count.append("call")
 
     for _ in range(2):
-        hass.async_create_task(test_coro())
+        hass.async_create_task(test_coro(), eager_start=False)
 
     assert len(hass._tasks) == 2
     await hass.async_block_till_done()
@@ -2400,14 +2400,14 @@ async def test_chained_logging_hits_log_timeout(
         created += 1
         if created > 1000:
             return
-        hass.async_create_task(_task_chain_2())
+        hass.async_create_task(_task_chain_2(), eager_start=False)
 
     async def _task_chain_2():
         nonlocal created
         created += 1
         if created > 1000:
             return
-        hass.async_create_task(_task_chain_1())
+        hass.async_create_task(_task_chain_1(), eager_start=False)
 
     with patch.object(ha, "BLOCK_LOG_TIMEOUT", 0.0):
         hass.async_create_task(_task_chain_1())
