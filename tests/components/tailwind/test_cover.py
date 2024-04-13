@@ -40,17 +40,14 @@ async def test_cover_entities(
     entity_id: str,
 ) -> None:
     """Test cover entities provided by the Tailwind integration."""
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state == snapshot
 
-    entity_entry = entity_registry.async_get(state.entity_id)
-    assert entity_entry
+    assert (entity_entry := entity_registry.async_get(state.entity_id))
     assert entity_entry == snapshot
 
     assert entity_entry.device_id
-    device_entry = device_registry.async_get(entity_entry.device_id)
-    assert device_entry
+    assert (device_entry := device_registry.async_get(entity_entry.device_id))
     assert device_entry == snapshot
 
 

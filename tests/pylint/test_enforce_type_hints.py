@@ -65,8 +65,7 @@ def test_regex_x_of_y_i(
     """Test x_of_y_i regexes."""
     matchers: dict[str, re.Pattern] = hass_enforce_type_hints._TYPE_HINT_MATCHERS
 
-    match = matchers[f"x_of_y_{expected_count}"].match(string)
-    assert match
+    assert (match := matchers[f"x_of_y_{expected_count}"].match(string))
     assert match.group(0) == string
     for index in range(expected_count):
         assert match.group(index + 1) == expected_items[index]
@@ -87,8 +86,7 @@ def test_regex_a_or_b(
     """Test a_or_b regexes."""
     matchers: dict[str, re.Pattern] = hass_enforce_type_hints._TYPE_HINT_MATCHERS
 
-    match = matchers["a_or_b"].match(string)
-    assert match
+    assert (match := matchers["a_or_b"].match(string))
     assert match.group(0) == string
     assert match.group(1) == expected_a
     assert match.group(2) == expected_b

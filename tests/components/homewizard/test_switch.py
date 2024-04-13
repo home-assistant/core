@@ -110,17 +110,14 @@ async def test_switch_entities(
     parameter: str,
 ) -> None:
     """Test that switch handles state changes correctly."""
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert snapshot == state
 
-    entity_entry = entity_registry.async_get(entity_id)
-    assert entity_entry
+    assert (entity_entry := entity_registry.async_get(entity_id))
     assert snapshot == entity_entry
 
     assert entity_entry.device_id
-    device_entry = device_registry.async_get(entity_entry.device_id)
-    assert device_entry
+    assert (device_entry := device_registry.async_get(entity_entry.device_id))
     assert snapshot == device_entry
 
     mocked_method = getattr(mock_homewizardenergy, method)
@@ -221,6 +218,5 @@ async def test_switch_unreachable(
     async_fire_time_changed(hass, dt_util.utcnow() + UPDATE_INTERVAL)
     await hass.async_block_till_done()
 
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.state == STATE_UNAVAILABLE

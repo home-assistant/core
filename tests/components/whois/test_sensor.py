@@ -43,17 +43,14 @@ async def test_whois_sensors(
 ) -> None:
     """Test the Whois sensors."""
 
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state == snapshot
 
-    entity_entry = entity_registry.async_get(entity_id)
-    assert entity_entry
+    assert (entity_entry := entity_registry.async_get(entity_id))
     assert entity_entry == snapshot
 
     assert entity_entry.device_id
-    device_entry = device_registry.async_get(entity_entry.device_id)
-    assert device_entry
+    assert (device_entry := device_registry.async_get(entity_entry.device_id))
     assert device_entry == snapshot
 
 
@@ -61,12 +58,10 @@ async def test_whois_sensors_missing_some_attrs(
     hass: HomeAssistant, entity_registry: er.EntityRegistry, snapshot: SnapshotAssertion
 ) -> None:
     """Test the Whois sensors with owner and reseller missing."""
-    state = hass.states.get("sensor.home_assistant_io_last_updated")
-    assert state
+    assert (state := hass.states.get("sensor.home_assistant_io_last_updated"))
     assert state == snapshot
 
-    entry = entity_registry.async_get("sensor.home_assistant_io_last_updated")
-    assert entry
+    assert (entry := entity_registry.async_get("sensor.home_assistant_io_last_updated"))
     assert entry == snapshot
 
 
@@ -85,8 +80,7 @@ async def test_disabled_by_default_sensors(
 ) -> None:
     """Test the disabled by default Whois sensors."""
     assert hass.states.get(entity_id) is None
-    entry = entity_registry.async_get(entity_id)
-    assert entry
+    assert (entry := entity_registry.async_get(entity_id))
     assert entry.disabled
     assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
@@ -115,6 +109,5 @@ async def test_no_data(
     async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
     await hass.async_block_till_done()
 
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.state == STATE_UNKNOWN

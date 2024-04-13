@@ -39,17 +39,14 @@ async def test_switches(
     method: str,
 ) -> None:
     """Test the Elgato switches."""
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state == snapshot
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
+    assert (entry := entity_registry.async_get(entity_id))
     assert entry == snapshot
 
     assert entry.device_id
-    device_entry = device_registry.async_get(entry.device_id)
-    assert device_entry
+    assert (device_entry := device_registry.async_get(entry.device_id))
     assert device_entry == snapshot
 
     await hass.services.async_call(

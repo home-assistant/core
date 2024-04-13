@@ -28,6 +28,5 @@ async def client_update(hass: HomeAssistant, client: MagicMock, entity: str) -> 
     """Update the client."""
     client.emit("")
     await hass.async_block_till_done()
-    state = hass.states.get(entity)
-    assert state is not None
+    assert (state := hass.states.get(entity)) is not None
     return state

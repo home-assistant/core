@@ -37,19 +37,16 @@ async def test_last_job(
     """Test last job event entity."""
     freezer.move_to("2024-03-20T00:00:00+00:00")
     entity_id = "event.ozmo_950_last_job"
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.state == STATE_UNKNOWN
 
-    entity_entry = entity_registry.async_get(state.entity_id)
-    assert entity_entry
+    assert (entity_entry := entity_registry.async_get(state.entity_id))
     assert entity_entry == snapshot(name=f"{entity_id}-entity_entry")
     assert entity_entry.device_id
 
     device = next(controller.devices(Capabilities))
 
-    device_entry = device_registry.async_get(entity_entry.device_id)
-    assert device_entry
+    assert (device_entry := device_registry.async_get(entity_entry.device_id))
     assert device_entry.identifiers == {(DOMAIN, device.device_info["did"])}
 
     event_bus = device.events
@@ -59,8 +56,7 @@ async def test_last_job(
         ReportStatsEvent(10, 5, "spotArea", "1", CleanJobStatus.FINISHED, [1, 2]),
     )
 
-    state = hass.states.get(state.entity_id)
-    assert state
+    assert (state := hass.states.get(state.entity_id))
     assert state == snapshot(name=f"{entity_id}-state")
 
     freezer.tick(timedelta(minutes=5))
@@ -72,8 +68,7 @@ async def test_last_job(
         ),
     )
 
-    state = hass.states.get(state.entity_id)
-    assert state
+    assert (state := hass.states.get(state.entity_id))
     assert state.state == "2024-03-20T00:05:00.000+00:00"
     assert state.attributes[ATTR_EVENT_TYPE] == "finished_with_warnings"
 
@@ -84,8 +79,7 @@ async def test_last_job(
         ReportStatsEvent(0, 1, "spotArea", "3", CleanJobStatus.MANUAL_STOPPED, [1]),
     )
 
-    state = hass.states.get(state.entity_id)
-    assert state
+    assert (state := hass.states.get(state.entity_id))
     assert state.state == "2024-03-20T00:10:00.000+00:00"
     assert state.attributes[ATTR_EVENT_TYPE] == "manually_stopped"
 
@@ -98,7 +92,6 @@ async def test_last_job(
             ReportStatsEvent(12, 11, "spotArea", "4", status, [1, 2, 3]),
         )
 
-        state = hass.states.get(state.entity_id)
-        assert state
+        assert (state := hass.states.get(state.entity_id))
         assert state.state == "2024-03-20T00:10:00.000+00:00"
         assert state.attributes[ATTR_EVENT_TYPE] == "manually_stopped"

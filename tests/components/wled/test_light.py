@@ -40,39 +40,33 @@ async def test_rgb_light_state(
 ) -> None:
     """Test the creation and values of the WLED lights."""
     # First segment of the strip
-    state = hass.states.get("light.wled_rgb_light")
-    assert state
+    assert (state := hass.states.get("light.wled_rgb_light"))
     assert state.attributes.get(ATTR_BRIGHTNESS) == 127
     assert state.attributes.get(ATTR_EFFECT) == "Solid"
     assert state.attributes.get(ATTR_HS_COLOR) == (37.412, 100.0)
     assert state.attributes.get(ATTR_ICON) is None
     assert state.state == STATE_ON
 
-    entry = entity_registry.async_get("light.wled_rgb_light")
-    assert entry
+    assert (entry := entity_registry.async_get("light.wled_rgb_light"))
     assert entry.unique_id == "aabbccddeeff_0"
 
     # Second segment of the strip
-    state = hass.states.get("light.wled_rgb_light_segment_1")
-    assert state
+    assert (state := hass.states.get("light.wled_rgb_light_segment_1"))
     assert state.attributes.get(ATTR_BRIGHTNESS) == 127
     assert state.attributes.get(ATTR_EFFECT) == "Blink"
     assert state.attributes.get(ATTR_HS_COLOR) == (148.941, 100.0)
     assert state.attributes.get(ATTR_ICON) is None
     assert state.state == STATE_ON
 
-    entry = entity_registry.async_get("light.wled_rgb_light_segment_1")
-    assert entry
+    assert (entry := entity_registry.async_get("light.wled_rgb_light_segment_1"))
     assert entry.unique_id == "aabbccddeeff_1"
 
     # Test main control of the lightstrip
-    state = hass.states.get("light.wled_rgb_light_main")
-    assert state
+    assert (state := hass.states.get("light.wled_rgb_light_main"))
     assert state.attributes.get(ATTR_BRIGHTNESS) == 127
     assert state.state == STATE_ON
 
-    entry = entity_registry.async_get("light.wled_rgb_light_main")
-    assert entry
+    assert (entry := entity_registry.async_get("light.wled_rgb_light_main"))
     assert entry.unique_id == "aabbccddeeff"
 
 
@@ -188,8 +182,7 @@ async def test_dynamically_handle_segments(
     mock_wled: MagicMock,
 ) -> None:
     """Test if a new/deleted segment is dynamically added/removed."""
-    segment0 = hass.states.get("light.wled_rgb_light")
-    assert segment0
+    assert (segment0 := hass.states.get("light.wled_rgb_light"))
     assert segment0.state == STATE_ON
     assert not hass.states.get("light.wled_rgb_light_main")
     assert not hass.states.get("light.wled_rgb_light_segment_1")
@@ -203,14 +196,11 @@ async def test_dynamically_handle_segments(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    main = hass.states.get("light.wled_rgb_light_main")
-    assert main
+    assert (main := hass.states.get("light.wled_rgb_light_main"))
     assert main.state == STATE_ON
-    segment0 = hass.states.get("light.wled_rgb_light")
-    assert segment0
+    assert (segment0 := hass.states.get("light.wled_rgb_light"))
     assert segment0.state == STATE_ON
-    segment1 = hass.states.get("light.wled_rgb_light_segment_1")
-    assert segment1
+    assert (segment1 := hass.states.get("light.wled_rgb_light_segment_1"))
     assert segment1.state == STATE_ON
 
     # Test adding if segment shows up again, including the main entity
@@ -219,14 +209,11 @@ async def test_dynamically_handle_segments(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    main = hass.states.get("light.wled_rgb_light_main")
-    assert main
+    assert (main := hass.states.get("light.wled_rgb_light_main"))
     assert main.state == STATE_UNAVAILABLE
-    segment0 = hass.states.get("light.wled_rgb_light")
-    assert segment0
+    assert (segment0 := hass.states.get("light.wled_rgb_light"))
     assert segment0.state == STATE_ON
-    segment1 = hass.states.get("light.wled_rgb_light_segment_1")
-    assert segment1
+    assert (segment1 := hass.states.get("light.wled_rgb_light_segment_1"))
     assert segment1.state == STATE_UNAVAILABLE
 
 
@@ -240,8 +227,7 @@ async def test_single_segment_behavior(
     device = mock_wled.update.return_value
 
     assert not hass.states.get("light.wled_rgb_light_main")
-    state = hass.states.get("light.wled_rgb_light")
-    assert state
+    assert (state := hass.states.get("light.wled_rgb_light"))
     assert state.state == STATE_ON
 
     # Test segment brightness takes main into account
@@ -251,8 +237,7 @@ async def test_single_segment_behavior(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get("light.wled_rgb_light")
-    assert state
+    assert (state := hass.states.get("light.wled_rgb_light"))
     assert state.attributes.get(ATTR_BRIGHTNESS) == 100
 
     # Test segment is off when main is off
@@ -310,8 +295,7 @@ async def test_light_error(
             blocking=True,
         )
 
-    state = hass.states.get("light.wled_rgb_light")
-    assert state
+    assert (state := hass.states.get("light.wled_rgb_light"))
     assert state.state == STATE_ON
     assert mock_wled.segment.call_count == 1
     mock_wled.segment.assert_called_with(on=False, segment_id=0, transition=None)
@@ -332,8 +316,7 @@ async def test_light_connection_error(
             blocking=True,
         )
 
-    state = hass.states.get("light.wled_rgb_light")
-    assert state
+    assert (state := hass.states.get("light.wled_rgb_light"))
     assert state.state == STATE_UNAVAILABLE
     assert mock_wled.segment.call_count == 1
     mock_wled.segment.assert_called_with(on=False, segment_id=0, transition=None)
@@ -342,8 +325,7 @@ async def test_light_connection_error(
 @pytest.mark.parametrize("device_fixture", ["rgbw"])
 async def test_rgbw_light(hass: HomeAssistant, mock_wled: MagicMock) -> None:
     """Test RGBW support for WLED."""
-    state = hass.states.get("light.wled_rgbw_light")
-    assert state
+    assert (state := hass.states.get("light.wled_rgbw_light"))
     assert state.state == STATE_ON
     assert state.attributes.get(ATTR_RGBW_COLOR) == (255, 0, 0, 139)
 
@@ -378,6 +360,5 @@ async def test_single_segment_with_keep_main_light(
     )
     await hass.async_block_till_done()
 
-    state = hass.states.get("light.wled_rgb_light_main")
-    assert state
+    assert (state := hass.states.get("light.wled_rgb_light_main"))
     assert state.state == STATE_ON

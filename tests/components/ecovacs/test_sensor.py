@@ -82,24 +82,20 @@ async def test_sensors(
     """Test that sensor entity snapshots match."""
     assert entity_ids == hass.states.async_entity_ids()
     for entity_id in entity_ids:
-        state = hass.states.get(entity_id)
-        assert state, f"State of {entity_id} is missing"
+        assert (state := hass.states.get(entity_id)), f"State of {entity_id} is missing"
         assert state.state == STATE_UNKNOWN
 
     device = next(controller.devices(Capabilities))
     await notify_events(hass, device.events)
     for entity_id in entity_ids:
-        state = hass.states.get(entity_id)
-        assert state, f"State of {entity_id} is missing"
+        assert (state := hass.states.get(entity_id)), f"State of {entity_id} is missing"
         assert snapshot(name=f"{entity_id}:state") == state
 
-        entity_entry = entity_registry.async_get(state.entity_id)
-        assert entity_entry
+        assert (entity_entry := entity_registry.async_get(state.entity_id))
         assert snapshot(name=f"{entity_id}:entity-registry") == entity_entry
 
         assert entity_entry.device_id
-        device_entry = device_registry.async_get(entity_entry.device_id)
-        assert device_entry
+        assert (device_entry := device_registry.async_get(entity_entry.device_id))
         assert device_entry.identifiers == {(DOMAIN, device.device_info["did"])}
 
 
@@ -124,7 +120,8 @@ async def test_disabled_by_default_sensors(
     for entity_id in entity_ids:
         assert not hass.states.get(entity_id)
 
-        entry = entity_registry.async_get(entity_id)
-        assert entry, f"Entity registry entry for {entity_id} is missing"
+        assert (
+            entry := entity_registry.async_get(entity_id)
+        ), f"Entity registry entry for {entity_id} is missing"
         assert entry.disabled
         assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION

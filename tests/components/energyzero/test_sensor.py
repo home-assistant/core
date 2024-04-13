@@ -66,17 +66,14 @@ async def test_sensor(
 ) -> None:
     """Test the EnergyZero - Energy sensors."""
     entry_id = init_integration.entry_id
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state == snapshot
-    entity_entry = entity_registry.async_get(entity_id)
-    assert entity_entry
+    assert (entity_entry := entity_registry.async_get(entity_id))
     assert entity_entry == snapshot(exclude=props("unique_id"))
     assert entity_entry.unique_id == f"{entry_id}_{entity_unique_id}"
 
     assert entity_entry.device_id
-    device_entry = device_registry.async_get(entity_entry.device_id)
-    assert device_entry
+    assert (device_entry := device_registry.async_get(entity_entry.device_id))
     assert device_entry == snapshot(exclude=props("identifiers"))
     assert device_entry.identifiers == {(DOMAIN, f"{entry_id}_{device_identifier}")}
 
@@ -96,6 +93,5 @@ async def test_no_gas_today(hass: HomeAssistant, mock_energyzero: MagicMock) -> 
     )
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.energyzero_today_gas_current_hour_price")
-    assert state
+    assert (state := hass.states.get("sensor.energyzero_today_gas_current_hour_price"))
     assert state.state == STATE_UNKNOWN

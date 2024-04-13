@@ -826,11 +826,9 @@ async def test_turn_off_encrypted_websocket(
     assert remoteencws.send_commands.call_count == 1
     commands = remoteencws.send_commands.call_args_list[0].args[0]
     assert len(commands) == 2
-    command = commands[0]
-    assert isinstance(command, SamsungTVEncryptedCommand)
+    assert isinstance(command := commands[0], SamsungTVEncryptedCommand)
     assert command.body["param3"] == "KEY_POWEROFF"
-    command = commands[1]
-    assert isinstance(command, SamsungTVEncryptedCommand)
+    assert isinstance(command := commands[1], SamsungTVEncryptedCommand)
     assert command.body["param3"] == "KEY_POWER"
     assert "Unknown power_off command for UE48UNKNOWN (fake_host)" in caplog.text
 
@@ -869,8 +867,7 @@ async def test_turn_off_encrypted_websocket_key_type(
     assert remoteencws.send_commands.call_count == 1
     commands = remoteencws.send_commands.call_args_list[0].args[0]
     assert len(commands) == 1
-    command = commands[0]
-    assert isinstance(command, SamsungTVEncryptedCommand)
+    assert isinstance(command := commands[0], SamsungTVEncryptedCommand)
     assert command.body["param3"] == expected_key_type
     assert "Unknown power_off command for" not in caplog.text
 

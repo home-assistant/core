@@ -64,6 +64,5 @@ async def test_on_off_commands(
         robot._update_data({updated_field: new_value}, partial=True)
 
         assert getattr(robot, robot_command).call_count == count + 1
-        state = hass.states.get(entity_id)
-        assert state
+        assert (state := hass.states.get(entity_id))
         assert state.state == new_state

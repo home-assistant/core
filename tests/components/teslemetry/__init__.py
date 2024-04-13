@@ -46,8 +46,7 @@ def assert_entities(
     assert entity_entries
     for entity_entry in entity_entries:
         assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
-        state = hass.states.get(entity_entry.entity_id)
-        assert state
+        assert (state := hass.states.get(entity_entry.entity_id))
         assert state == snapshot(name=f"{entity_entry.entity_id}-state")
 
 
@@ -62,6 +61,5 @@ def assert_entities_alt(
 
     assert entity_entries
     for entity_entry in entity_entries:
-        state = hass.states.get(entity_entry.entity_id)
-        assert state
+        assert (state := hass.states.get(entity_entry.entity_id))
         assert state == snapshot(name=f"{entity_entry.entity_id}-statealt")

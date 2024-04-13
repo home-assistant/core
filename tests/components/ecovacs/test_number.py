@@ -74,25 +74,21 @@ async def test_number_entities(
     )
     for test_case in tests:
         entity_id = test_case.entity_id
-        state = hass.states.get(entity_id)
-        assert state, f"State of {entity_id} is missing"
+        assert (state := hass.states.get(entity_id)), f"State of {entity_id} is missing"
         assert state.state == STATE_UNKNOWN
 
         event_bus.notify(test_case.event)
         await block_till_done(hass, event_bus)
 
-        state = hass.states.get(entity_id)
-        assert state, f"State of {entity_id} is missing"
+        assert (state := hass.states.get(entity_id)), f"State of {entity_id} is missing"
         assert snapshot(name=f"{entity_id}:state") == state
         assert state.state == test_case.current_state
 
-        entity_entry = entity_registry.async_get(state.entity_id)
-        assert entity_entry
+        assert (entity_entry := entity_registry.async_get(state.entity_id))
         assert snapshot(name=f"{entity_id}:entity-registry") == entity_entry
 
         assert entity_entry.device_id
-        device_entry = device_registry.async_get(entity_entry.device_id)
-        assert device_entry
+        assert (device_entry := device_registry.async_get(entity_entry.device_id))
         assert device_entry.identifiers == {(DOMAIN, device.device_info["did"])}
 
         device._execute_command.reset_mock()
@@ -122,8 +118,9 @@ async def test_disabled_by_default_number_entities(
     for entity_id in entity_ids:
         assert not hass.states.get(entity_id)
 
-        entry = entity_registry.async_get(entity_id)
-        assert entry, f"Entity registry entry for {entity_id} is missing"
+        assert (
+            entry := entity_registry.async_get(entity_id)
+        ), f"Entity registry entry for {entity_id} is missing"
         assert entry.disabled
         assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
@@ -137,20 +134,17 @@ async def test_volume_maximum(
     device = next(controller.devices(Capabilities))
     event_bus = device.events
     entity_id = "number.ozmo_950_volume"
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.attributes["max"] == 10
 
     event_bus.notify(VolumeEvent(5, 20))
     await block_till_done(hass, event_bus)
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.state == "5"
     assert state.attributes["max"] == 20
 
     event_bus.notify(VolumeEvent(10, None))
     await block_till_done(hass, event_bus)
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.state == "10"
     assert state.attributes["max"] == 20

@@ -31,17 +31,14 @@ async def test_number_entities(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test number handles state changes correctly."""
-    state = hass.states.get("number.device_status_light_brightness")
-    assert state
+    assert (state := hass.states.get("number.device_status_light_brightness"))
     assert snapshot == state
 
-    entity_entry = entity_registry.async_get(state.entity_id)
-    assert entity_entry
+    assert (entity_entry := entity_registry.async_get(state.entity_id))
     assert snapshot == entity_entry
 
     assert entity_entry.device_id
-    device_entry = device_registry.async_get(entity_entry.device_id)
-    assert device_entry
+    assert (device_entry := device_registry.async_get(entity_entry.device_id))
     assert snapshot == device_entry
 
     # Test unknown handling
@@ -52,8 +49,7 @@ async def test_number_entities(
     async_fire_time_changed(hass, dt_util.utcnow() + UPDATE_INTERVAL)
     await hass.async_block_till_done()
 
-    state = hass.states.get(state.entity_id)
-    assert state
+    assert (state := hass.states.get(state.entity_id))
     assert state.state == STATE_UNKNOWN
 
     # Test service methods

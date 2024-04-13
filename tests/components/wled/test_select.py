@@ -71,17 +71,14 @@ async def test_color_palette_state(
 ) -> None:
     """Test the creation and values of the WLED selects."""
     # First segment of the strip
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state == snapshot
 
-    entity_entry = entity_registry.async_get(state.entity_id)
-    assert entity_entry
+    assert (entity_entry := entity_registry.async_get(state.entity_id))
     assert entity_entry == snapshot
 
     assert entity_entry.device_id
-    device_entry = device_registry.async_get(entity_entry.device_id)
-    assert device_entry
+    assert (device_entry := device_registry.async_get(entity_entry.device_id))
     assert device_entry == snapshot
 
     method_mock = getattr(mock_wled, method)
@@ -105,8 +102,7 @@ async def test_color_palette_state(
             blocking=True,
         )
 
-    state = hass.states.get(state.entity_id)
-    assert state
+    assert (state := hass.states.get(state.entity_id))
     assert state.state != STATE_UNAVAILABLE
     assert method_mock.call_count == 2
     method_mock.assert_called_with(**called_with)
@@ -121,8 +117,7 @@ async def test_color_palette_state(
             blocking=True,
         )
 
-    state = hass.states.get(state.entity_id)
-    assert state
+    assert (state := hass.states.get(state.entity_id))
     assert state.state == STATE_UNAVAILABLE
     assert method_mock.call_count == 3
     method_mock.assert_called_with(**called_with)
@@ -135,8 +130,7 @@ async def test_color_palette_dynamically_handle_segments(
     mock_wled: MagicMock,
 ) -> None:
     """Test if a new/deleted segment is dynamically added/removed."""
-    segment0 = hass.states.get("select.wled_rgb_light_color_palette")
-    assert segment0
+    assert (segment0 := hass.states.get("select.wled_rgb_light_color_palette"))
     assert segment0.state == "Default"
     assert not hass.states.get("select.wled_rgb_light_segment_1_color_palette")
 
@@ -149,11 +143,11 @@ async def test_color_palette_dynamically_handle_segments(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    segment0 = hass.states.get("select.wled_rgb_light_color_palette")
-    assert segment0
+    assert (segment0 := hass.states.get("select.wled_rgb_light_color_palette"))
     assert segment0.state == "Default"
-    segment1 = hass.states.get("select.wled_rgb_light_segment_1_color_palette")
-    assert segment1
+    assert (
+        segment1 := hass.states.get("select.wled_rgb_light_segment_1_color_palette")
+    )
     assert segment1.state == "Random Cycle"
 
     # Test adding if segment shows up again, including the master entity
@@ -162,25 +156,23 @@ async def test_color_palette_dynamically_handle_segments(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    segment0 = hass.states.get("select.wled_rgb_light_color_palette")
-    assert segment0
+    assert (segment0 := hass.states.get("select.wled_rgb_light_color_palette"))
     assert segment0.state == "Default"
-    segment1 = hass.states.get("select.wled_rgb_light_segment_1_color_palette")
-    assert segment1
+    assert (
+        segment1 := hass.states.get("select.wled_rgb_light_segment_1_color_palette")
+    )
     assert segment1.state == STATE_UNAVAILABLE
 
 
 async def test_preset_unavailable_without_presets(hass: HomeAssistant) -> None:
     """Test WLED preset entity is unavailable when presets are not available."""
-    state = hass.states.get("select.wled_rgb_light_preset")
-    assert state
+    assert (state := hass.states.get("select.wled_rgb_light_preset"))
     assert state.state == STATE_UNAVAILABLE
 
 
 async def test_playlist_unavailable_without_playlists(hass: HomeAssistant) -> None:
     """Test WLED playlist entity is unavailable when playlists are not available."""
-    state = hass.states.get("select.wled_rgb_light_playlist")
-    assert state
+    assert (state := hass.states.get("select.wled_rgb_light_playlist"))
     assert state.state == STATE_UNAVAILABLE
 
 
@@ -198,8 +190,7 @@ async def test_old_style_preset_active(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get("select.wled_rgbw_light_preset")
-    assert state
+    assert (state := hass.states.get("select.wled_rgbw_light_preset"))
     assert state.state == STATE_UNKNOWN
 
 
@@ -217,6 +208,5 @@ async def test_old_style_playlist_active(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get("select.wled_rgbw_light_playlist")
-    assert state
+    assert (state := hass.states.get("select.wled_rgbw_light_playlist"))
     assert state.state == STATE_UNKNOWN

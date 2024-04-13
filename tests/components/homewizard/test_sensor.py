@@ -255,17 +255,14 @@ async def test_sensors(
 ) -> None:
     """Test that sensor entity snapshots match."""
     for entity_id in entity_ids:
-        state = hass.states.get(entity_id)
-        assert state
+        assert (state := hass.states.get(entity_id))
         assert snapshot(name=f"{entity_id}:state") == state
 
-        entity_entry = entity_registry.async_get(state.entity_id)
-        assert entity_entry
+        assert (entity_entry := entity_registry.async_get(state.entity_id))
         assert snapshot(name=f"{entity_id}:entity-registry") == entity_entry
 
         assert entity_entry.device_id
-        device_entry = device_registry.async_get(entity_entry.device_id)
-        assert device_entry
+        assert (device_entry := device_registry.async_get(entity_entry.device_id))
         assert snapshot(name=f"{entity_id}:device-registry") == device_entry
 
 
@@ -396,8 +393,7 @@ async def test_disabled_by_default_sensors(
     for entity_id in entity_ids:
         assert not hass.states.get(entity_id)
 
-        entry = entity_registry.async_get(entity_id)
-        assert entry
+        assert (entry := entity_registry.async_get(entity_id))
         assert entry.disabled
         assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
@@ -409,16 +405,14 @@ async def test_sensors_unreachable(
     exception: Exception,
 ) -> None:
     """Test sensor handles API unreachable."""
-    state = hass.states.get("sensor.device_energy_import_tariff_1")
-    assert state
+    assert (state := hass.states.get("sensor.device_energy_import_tariff_1"))
     assert state.state == "10830.511"
 
     mock_homewizardenergy.data.side_effect = exception
     async_fire_time_changed(hass, dt_util.utcnow() + UPDATE_INTERVAL)
     await hass.async_block_till_done()
 
-    state = hass.states.get(state.entity_id)
-    assert state
+    assert (state := hass.states.get(state.entity_id))
     assert state.state == STATE_UNAVAILABLE
 
 
@@ -427,16 +421,14 @@ async def test_external_sensors_unreachable(
     mock_homewizardenergy: MagicMock,
 ) -> None:
     """Test external device sensor handles API unreachable."""
-    state = hass.states.get("sensor.gas_meter_gas")
-    assert state
+    assert (state := hass.states.get("sensor.gas_meter_gas"))
     assert state.state == "111.111"
 
     mock_homewizardenergy.data.return_value = Data.from_dict({})
     async_fire_time_changed(hass, dt_util.utcnow() + UPDATE_INTERVAL)
     await hass.async_block_till_done()
 
-    state = hass.states.get(state.entity_id)
-    assert state
+    assert (state := hass.states.get(state.entity_id))
     assert state.state == STATE_UNAVAILABLE
 
 
@@ -794,8 +786,7 @@ async def test_gas_meter_migrated(
 
     entity_id = "sensor.homewizard_aabbccddeeff_total_gas_m3"
 
-    entity_entry = entity_registry.async_get(entity_id)
-    assert entity_entry
+    assert (entity_entry := entity_registry.async_get(entity_id))
     assert snapshot(name=f"{entity_id}:entity-registry") == entity_entry
 
     # Make really sure this happens

@@ -42,17 +42,14 @@ async def test_numbers(
     called_arg: str,
 ) -> None:
     """Test the creation and values of the WLED numbers."""
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state == snapshot
 
-    entity_entry = entity_registry.async_get(state.entity_id)
-    assert entity_entry
+    assert (entity_entry := entity_registry.async_get(state.entity_id))
     assert entity_entry == snapshot
 
     assert entity_entry.device_id
-    device_entry = device_registry.async_get(entity_entry.device_id)
-    assert device_entry
+    assert (device_entry := device_registry.async_get(entity_entry.device_id))
     assert device_entry == snapshot
 
     # Test a regular state change service call
@@ -78,8 +75,7 @@ async def test_numbers(
     assert mock_wled.segment.call_count == 2
 
     # Ensure the entity is still available
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.state != STATE_UNAVAILABLE
 
     # Test when a connection error occurs
@@ -94,8 +90,7 @@ async def test_numbers(
     assert mock_wled.segment.call_count == 3
 
     # Ensure the entity became unavailable after the connection error
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.state == STATE_UNAVAILABLE
 
 
@@ -127,8 +122,7 @@ async def test_speed_dynamically_handle_segments(
     state_segment1: str,
 ) -> None:
     """Test if a new/deleted segment is dynamically added/removed."""
-    segment0 = hass.states.get(entity_id_segment0)
-    assert segment0
+    assert (segment0 := hass.states.get(entity_id_segment0))
     assert segment0.state == state_segment0
     assert not hass.states.get(entity_id_segment1)
 
@@ -142,11 +136,9 @@ async def test_speed_dynamically_handle_segments(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    segment0 = hass.states.get(entity_id_segment0)
-    assert segment0
+    assert (segment0 := hass.states.get(entity_id_segment0))
     assert segment0.state == state_segment0
-    segment1 = hass.states.get(entity_id_segment1)
-    assert segment1
+    assert (segment1 := hass.states.get(entity_id_segment1))
     assert segment1.state == state_segment1
 
     # Test remove segment again...
@@ -155,9 +147,7 @@ async def test_speed_dynamically_handle_segments(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    segment0 = hass.states.get(entity_id_segment0)
-    assert segment0
+    assert (segment0 := hass.states.get(entity_id_segment0))
     assert segment0.state == state_segment0
-    segment1 = hass.states.get(entity_id_segment1)
-    assert segment1
+    assert (segment1 := hass.states.get(entity_id_segment1))
     assert segment1.state == STATE_UNAVAILABLE
