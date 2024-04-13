@@ -229,9 +229,7 @@ class ActiveConnection:
     @callback
     def async_handle_close(self) -> None:
         """Handle closing down connection."""
-        # Wrapped in list to avoid
-        # RuntimeError: dictionary changed size during iteration
-        for unsub in list(self.subscriptions.values()):
+        for unsub in self.subscriptions.values():
             try:
                 unsub()
             except Exception:  # pylint: disable=broad-except
