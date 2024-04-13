@@ -6,7 +6,7 @@ import logging
 
 from aiohttp import CookieJar
 from pyloadapi.api import PyLoadAPI
-from pyloadapi.exceptions import CannotConnect, InvalidAuth
+from pyloadapi.exceptions import CannotConnect, InvalidAuth, ParserError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -46,10 +46,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         await pyload.login()
     except CannotConnect as e:
-        raise ConfigEntryNotReady from e
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="connection_exception",
+        ) from e
+    except ParserError as e:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="parse_exception",
+        ) from e
     except InvalidAuth as e:
         raise ConfigEntryAuthFailed(
-            "Authentication failed, please reauthenticate PyLoad."
+            translation_domain=DOMAIN,
+            translation_key="authentication_exception",
+            translation_placeholders={CONF_USERNAME: entry.data[CONF_USERNAME]},
         ) from e
 
     coordinator = PyLoadCoordinator(hass, pyload)

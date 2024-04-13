@@ -4,8 +4,9 @@ from datetime import timedelta
 import logging
 
 from pyloadapi.api import PyLoadAPI
-from pyloadapi.exceptions import CannotConnect, InvalidAuth
+from pyloadapi.exceptions import CannotConnect, InvalidAuth, ParserError
 
+from homeassistant.const import CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -35,9 +36,20 @@ class PyLoadCoordinator(DataUpdateCoordinator):
         try:
             return await self.pyload.get_status()
         except InvalidAuth:
+            _LOGGER.debug(
+                "Authentication failed while retrieving data, trying to reauthenticate"
+            )
             try:
                 await self.pyload.login()
             except InvalidAuth as e:
-                raise ConfigEntryAuthFailed from e
+                raise ConfigEntryAuthFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="authentication_exception",
+                    translation_placeholders={CONF_USERNAME: self.pyload.username},
+                ) from e
         except CannotConnect as e:
-            raise UpdateFailed(f"Error communicating with API: {e}") from e
+            raise UpdateFailed(
+                "Unable to connect and retrieve data from pyLoad API"
+            ) from e
+        except ParserError as e:
+            raise UpdateFailed("Unable to parse data from pyLoad API") from e

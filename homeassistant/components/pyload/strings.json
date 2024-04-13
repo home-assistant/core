@@ -58,5 +58,16 @@
       "title": "The pyLoad YAML configuration import failed",
       "description": "Configuring pyLoad using YAML is being removed but there was an unknown error when trying to import the YAML configuration.\n\nEnsure the YAML configuration is correct and restart Home Assistant to try again or remove the pyLoad YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually."
     }
+  },
+  "exceptions": {
+    "authentication_exception": {
+      "message": "Authentication failed for {username}, check your login credentials"
+    },
+    "connection_exception": {
+      "message": "Unable to connect and retrieve data from pyLoad API"
+    },
+    "parse_exception": {
+      "message": "Unable to parse data from pyLoad API"
+    }
   }
 }
