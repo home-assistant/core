@@ -699,10 +699,19 @@ class ConfigEntry:
         # has started so we do not block shutdown
         if not hass.is_stopping:
             hass.async_create_task(
-                self.async_setup(hass),
+                self._async_setup_retry(hass),
                 f"config entry retry {self.domain} {self.title}",
                 eager_start=True,
             )
+
+    async def _async_setup_retry(self, hass: HomeAssistant) -> None:
+        """Retry setup.
+
+        We hold the reload lock during setup retry to ensure
+        that nothing can reload the entry while we are retrying.
+        """
+        async with self.reload_lock:
+            await self.async_setup(hass)
 
     @callback
     def async_shutdown(self) -> None:
@@ -1762,10 +1771,21 @@ class ConfigEntries:
     async def async_reload(self, entry_id: str) -> bool:
         """Reload an entry.
 
+        When reloading from an integration is is preferable to
+        call async_schedule_reload instead of this method since
+        it will cancel setup retry before starting this method
+        in a task which eliminates a race condition where the
+        setup retry can fire during the reload.
+
         If an entry was not loaded, will just load.
         """
         if (entry := self.async_get_entry(entry_id)) is None:
             raise UnknownEntry
+
+        # Cancel the setup retry task before waiting for the
+        # reload lock to reduce the chance of concurrent reload
+        # attempts.
+        entry.async_cancel_retry_setup()
 
         async with entry.reload_lock:
             unload_result = await self.async_unload(entry_id)
