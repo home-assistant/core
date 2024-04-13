@@ -21,7 +21,6 @@ async def test_import(hass: HomeAssistant) -> None:
         {"google_assistant": DUMMY_CONFIG},
     )
 
-    await hass.async_block_till_done()
     entries = hass.config_entries.async_entries("google_assistant")
     assert len(entries) == 1
     assert entries[0].data[ga.const.CONF_PROJECT_ID] == "1234"
@@ -64,7 +63,6 @@ async def test_request_sync_service(
         "google_assistant",
         {"google_assistant": DUMMY_CONFIG},
     )
-    await hass.async_block_till_done()
 
     assert aioclient_mock.call_count == 0
     await hass.services.async_call(
