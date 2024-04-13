@@ -718,7 +718,7 @@ async def test_always_callback_when_always_update_is_true(
 
 
 async def test_timestamp_date_update_coordinator(hass: HomeAssistant) -> None:
-    """Test the timestamp attribute of the DataUpdateCoordinator."""
+    """Test last_update_success_time is set before calling listeners."""
     last_update_success_times: list[datetime | None] = []
 
     async def refresh() -> int:
