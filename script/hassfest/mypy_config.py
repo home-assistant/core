@@ -43,8 +43,20 @@ GENERAL_SETTINGS: Final[dict[str, str]] = {
     "warn_redundant_casts": "true",
     "warn_unused_configs": "true",
     "warn_unused_ignores": "true",
-    "enable_error_code": "ignore-without-code, redundant-self, truthy-iterable",
-    "disable_error_code": "annotation-unchecked, import-not-found, import-untyped",
+    "enable_error_code": ", ".join(  # noqa: FLY002
+        [
+            "ignore-without-code",
+            "redundant-self",
+            "truthy-iterable",
+        ]
+    ),
+    "disable_error_code": ", ".join(  # noqa: FLY002
+        [
+            "annotation-unchecked",
+            "import-not-found",
+            "import-untyped",
+        ]
+    ),
     # Impractical in real code
     # E.g. this breaks passthrough ParamSpec typing with Concatenate
     "extra_checks": "false",
