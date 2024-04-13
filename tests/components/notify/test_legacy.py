@@ -22,6 +22,31 @@ from homeassistant.setup import async_setup_component
 from tests.common import MockPlatform, async_get_persistent_notifications, mock_platform
 
 
+class NotificationService(notify.BaseNotificationService):
+    """A test class for legacy notification services."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        target_list: dict[str, Any] | None = None,
+        name="notify",
+    ) -> None:
+        """Initialize the service."""
+
+        async def _async_make_reloadable(hass: HomeAssistant) -> None:
+            """Initialize the reload service."""
+            await async_setup_reload_service(hass, name, [notify.DOMAIN])
+
+        self.hass = hass
+        self.target_list = target_list or {"a": 1, "b": 2}
+        hass.async_create_task(_async_make_reloadable(hass))
+
+    @property
+    def targets(self):
+        """Return a dictionary of devices."""
+        return self.target_list
+
+
 class MockNotifyPlatform(MockPlatform):
     """Help to set up a legacy test notify service."""
 
@@ -151,31 +176,6 @@ async def test_remove_targets(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert test.target_list == {"c": 1}
     assert test.registered_targets == {"test_c": 1}
-
-
-class NotificationService(notify.BaseNotificationService):
-    """A test class for legacy notification services."""
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        target_list: dict[str, Any] | None = None,
-        name="notify",
-    ) -> None:
-        """Initialize the service."""
-
-        async def _async_make_reloadable(hass: HomeAssistant) -> None:
-            """Initialize the reload service."""
-            await async_setup_reload_service(hass, name, [notify.DOMAIN])
-
-        self.hass = hass
-        self.target_list = target_list or {"a": 1, "b": 2}
-        hass.async_create_task(_async_make_reloadable(hass))
-
-    @property
-    def targets(self):
-        """Return a dictionary of devices."""
-        return self.target_list
 
 
 async def test_warn_template(
