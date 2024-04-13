@@ -12,7 +12,7 @@ import voluptuous as vol
 from homeassistant.components.notify import NotifyEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.config_validation import make_entity_service_schema
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
@@ -93,7 +93,7 @@ class BringNotify(NotifyEntity):
         try:
             await self.async_send_bring_message(message=BringNotificationType[message])
         except KeyError as e:
-            raise HomeAssistantError(
+            raise ServiceValidationError(
                 f"Message must contain one of {", ".join(x.value for x in BringNotificationType)}"
             ) from e
 
@@ -111,6 +111,6 @@ class BringNotify(NotifyEntity):
                 "Unable to send push notification for bring"
             ) from e
         except ValueError as e:
-            raise HomeAssistantError(
+            raise ServiceValidationError(
                 "Item name is required for Breaking news notification"
             ) from e
