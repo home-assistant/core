@@ -55,6 +55,4 @@ class SwitchBotCloudLock(SwitchBotCloudEntity, LockEntity):
 
     async def async_open(self, **kwargs: Any) -> None:
         """Open the lock."""
-        await self.send_command(LockCommands.UNLOCK)
-        self._attr_is_locked = False
-        self.async_write_ha_state()
+        await self.async_unlock(kwargs)
