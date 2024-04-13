@@ -652,6 +652,20 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    # Thermostat
+    # Test with smart TRV608 device; https://developer.tuya.com/en/docs/iot/f?id=K9gf45ld5l0t9
+    "wk": (
+        SwitchEntityDescription(
+            key=DPCode.CHILD_LOCK,
+            translation_key="child_lock",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.WINDOW_CHECK,
+            translation_key="open_window_detection",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    )
 }
 
 # Socket (duplicate of `pc`)

@@ -29,14 +29,16 @@ from .base import IntegerTypeData, TuyaEntity
 from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode, DPType
 
 TUYA_HVAC_TO_HA = {
-    "auto": HVACMode.HEAT_COOL,
+    "auto": HVACMode.AUTO,
     "cold": HVACMode.COOL,
     "freeze": HVACMode.COOL,
     "heat": HVACMode.HEAT,
     "hot": HVACMode.HEAT,
-    "manual": HVACMode.HEAT_COOL,
+    "manual": HVACMode.MANUAL,
     "wet": HVACMode.DRY,
     "wind": HVACMode.FAN_ONLY,
+#    "off": HVACMode.OFF,
+    "on": HVACMode.ON,
 }
 
 
@@ -67,10 +69,10 @@ CLIMATE_DESCRIPTIONS: dict[str, TuyaClimateEntityDescription] = {
         switch_only_hvac_mode=HVACMode.HEAT,
     ),
     # Thermostat
-    # https://developer.tuya.com/en/docs/iot/f?id=K9gf45ld5l0t9
+    # Test with smart TRV608 / https://developer.tuya.com/en/docs/iot/f?id=K9gf45ld5l0t9
     "wk": TuyaClimateEntityDescription(
         key="wk",
-        switch_only_hvac_mode=HVACMode.HEAT_COOL,
+        switch_only_hvac_mode=HVACMode.MANUAL,
     ),
     # Thermostatic Radiator Valve
     # Not documented

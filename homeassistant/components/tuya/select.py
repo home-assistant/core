@@ -308,6 +308,27 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    # Thermostat
+    # Test on TRV604 /https://developer.tuya.com/en/docs/iot/f?id=K9gf45ld5l0t9
+    "wk": (
+        SelectEntityDescription(
+            key=DPCode.MODE,
+            entity_category=EntityCategory.CONFIG,
+            translation_key="mode",
+            icon="mdi:thermostat-cog"
+        ),
+        #Work but don't make change on my test device
+        #SelectEntityDescription(
+        #    key=DPCode.TEMP_UNIT_CONVERT,
+        #    entity_category=EntityCategory.CONFIG,
+        #    translation_key="temp_unit_convert",
+        #),
+        SelectEntityDescription(
+            key=DPCode.WINDOW_STATE,
+            #entity_category=EntityCategory.,
+            translation_key="window",
+        ),
+    ),
 }
 
 # Socket (duplicate of `kg`)

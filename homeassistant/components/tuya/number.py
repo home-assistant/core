@@ -278,6 +278,38 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
             device_class=NumberDeviceClass.TEMPERATURE,
         ),
     ),
+    # Thermostat
+    # Test wit Smart TRV608 / https://developer.tuya.com/en/docs/iot/f?id=K9gf45ld5l0t9
+    "wk": (
+        NumberEntityDescription(
+            key=DPCode.TEMP_CORRECTION,
+            translation_key="temperature_correction",
+            device_class=NumberDeviceClass.TEMPERATURE,
+            entity_category=EntityCategory.CONFIG,
+            icon="mdi:thermometer-check"
+        ),
+        NumberEntityDescription(
+            key=DPCode.LOWER_TEMP,
+            translation_key="lower_temp",
+            device_class=NumberDeviceClass.TEMPERATURE,
+            entity_category=EntityCategory.CONFIG,
+            icon="mdi:thermometer-minus",
+        ),
+        NumberEntityDescription(
+            key=DPCode.UPPER_TEMP,
+            translation_key="upper_temp",
+            device_class=NumberDeviceClass.TEMPERATURE,
+            entity_category=EntityCategory.CONFIG,
+            icon="mdi:thermometer-plus"
+        ),
+        NumberEntityDescription(
+           key=DPCode.TEMP_SET,
+           translation_key="temp_set",
+           device_class=NumberDeviceClass.TEMPERATURE,
+           #entity_category=EntityCategory.,
+           icon="mdi:thermometer-auto"
+        ),
+    ),
 }
 
 

@@ -190,6 +190,21 @@
       },
       "down_delay": {
         "name": "Down delay"
+      },
+      "temperature_correction": {
+        "name": "Measured Temperature Adjustment"
+      },
+      "temp_set": {
+        "name": "Temperature Setting"
+      },
+      "lower_temp": {
+        "name": "Lower Temperature Setting"
+      },
+      "upper_temp": {
+        "name": "Upper Temperature Setting"
+      },
+      "fault": {
+        "name": "Fault"
       }
     },
     "select": {
