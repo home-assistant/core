@@ -883,7 +883,7 @@ hole==0.8.0
 holidays==0.46
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240404.1
+home-assistant-frontend==20240404.2
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.4.3
@@ -1357,7 +1357,7 @@ pybalboa==1.0.1
 pyblackbird==0.6
 
 # homeassistant.components.neato
-pybotvac==0.0.24
+pybotvac==0.0.25
 
 # homeassistant.components.braviatv
 pybravia==0.3.3
@@ -1776,7 +1776,7 @@ python-qbittorrent==0.4.3
 python-rabbitair==0.0.8
 
 # homeassistant.components.roborock
-python-roborock==1.0.0
+python-roborock==2.0.0
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.36
@@ -2210,7 +2210,7 @@ webmin-xmlrpc==0.0.2
 webrtc-noise-gain==1.2.3
 
 # homeassistant.components.whirlpool
-whirlpool-sixth-sense==0.18.7
+whirlpool-sixth-sense==0.18.8
 
 # homeassistant.components.whois
 whois==0.9.27
@@ -2276,7 +2276,7 @@ yt-dlp==2024.04.09
 zamg==0.3.6
 
 # homeassistant.components.zeroconf
-zeroconf==0.132.0
+zeroconf==0.132.2
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1
