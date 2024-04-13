@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Final, Union
+from typing import Final
 from unittest.mock import ANY, Mock, call
 
 from async_upnp_client.exceptions import UpnpActionError, UpnpConnectionError, UpnpError
@@ -38,7 +38,7 @@ pytestmark = [
 ]
 
 
-BrowseResultList = list[Union[didl_lite.DidlObject, didl_lite.Descriptor]]
+BrowseResultList = list[didl_lite.DidlObject | didl_lite.Descriptor]
 
 
 async def async_resolve_media(
