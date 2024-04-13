@@ -6,30 +6,22 @@ from typing import TYPE_CHECKING
 import uuid
 
 from bring_api.exceptions import BringRequestException
-from bring_api.types import BringItem, BringItemOperation, BringNotificationType
-import voluptuous as vol
+from bring_api.types import BringItem, BringItemOperation
 
 from homeassistant.components.todo import (
-    DOMAIN as DOMAIN_TODO,
     TodoItem,
     TodoItemStatus,
     TodoListEntity,
     TodoListEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import (
-    ATTR_ITEM_NAME,
-    ATTR_NOTIFICATION_TYPE,
-    DOMAIN,
-    SERVICE_PUSH_NOTIFICATION,
-)
+from .const import DOMAIN, MANUFACTURER, SERVICE_NAME
 from .coordinator import BringData, BringDataUpdateCoordinator
 
 
@@ -55,22 +47,6 @@ async def async_setup_entry(
         for bring_list in coordinator.data.values()
     )
 
-    platform = entity_platform.async_get_current_platform()
-
-    platform.async_register_entity_service(
-        SERVICE_PUSH_NOTIFICATION,
-        vol.Schema(
-            {
-                vol.Required(ATTR_ENTITY_ID): cv.entities_domain(DOMAIN_TODO),
-                vol.Required(ATTR_NOTIFICATION_TYPE): vol.All(
-                    vol.Upper, cv.enum(BringNotificationType)
-                ),
-                vol.Optional(ATTR_ITEM_NAME): cv.string,
-            }
-        ),
-        "async_send_push_notification",
-    )
-
 
 class BringTodoListEntity(
     CoordinatorEntity[BringDataUpdateCoordinator], TodoListEntity
@@ -78,7 +54,7 @@ class BringTodoListEntity(
     """A To-do List representation of the Bring! Shopping List."""
 
     _attr_translation_key = "shopping_list"
-    _attr_has_entity_name = True
+    _attr_has_entity_name = False
     _attr_supported_features = (
         TodoListEntityFeature.CREATE_TODO_ITEM
         | TodoListEntityFeature.UPDATE_TODO_ITEM
@@ -97,6 +73,12 @@ class BringTodoListEntity(
         self._list_uuid = bring_list["listUuid"]
         self._attr_name = bring_list["name"]
         self._attr_unique_id = f"{unique_id}_{self._list_uuid}"
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, unique_id)},
+            manufacturer=MANUFACTURER,
+            model=SERVICE_NAME,
+        )
 
     @property
     def todo_items(self) -> list[TodoItem]:
@@ -240,24 +222,3 @@ class BringTodoListEntity(
             raise HomeAssistantError("Unable to delete todo item for bring") from e
 
         await self.coordinator.async_refresh()
-
-    async def async_send_push_notification(
-        self,
-        notification_type: BringNotificationType,
-        item_name: str | None = None,
-    ) -> None:
-        """Send a push notification to members of the To-Do list."""
-        if notification_type is BringNotificationType.URGENT_MESSAGE and not item_name:
-            raise HomeAssistantError(
-                "Item name is required for Breaking news notification"
-            )
-        try:
-            await self.coordinator.bring.notify(
-                self._list_uuid, notification_type, item_name or None
-            )
-        except BringRequestException as e:
-            raise HomeAssistantError(
-                "Unable to send push notification for bring"
-            ) from e
-        except ValueError as e:
-            raise HomeAssistantError("Item name required") from e

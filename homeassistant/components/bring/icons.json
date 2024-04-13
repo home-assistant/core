@@ -7,6 +7,6 @@
     }
   },
   "services": {
-    "push_notification": "mdi:message-alert"
+    "send_message": "mdi:cellphone-message"
   }
 }
