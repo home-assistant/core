@@ -38,6 +38,13 @@ async def async_setup_entry(
         for bring_list in coordinator.data.values()
     )
 
+    # registers service bring.send_message with custom service schema.
+    # message is defined as radio input with predefined values, as bring only
+    # accepts 4 predefined values GOING_SHOPPING, CHANGED_LIST, SHOPPING_DONE, URGENT_MESSAGE.
+    # These are like translation_keys and get localized in the app to notification in the users language.
+    # URGENT_MESSAGE also contains a placeholder for item but the notify entity component does not allow
+    # extra data keys yet, so this service is required to be able to invoke URGENT_MESSAGE with the item field.
+
     platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(
         "send_message",
@@ -82,24 +89,23 @@ class BringNotify(NotifyEntity):
         )
 
     async def async_send_message(self, message: str) -> None:
-        """Implement for base class.
-
-        Cannot be overridden with custom fields,
-        so calling async_send_bring_message instead.
-        """
+        """Send a push notification to members of a To-Do list."""
+        try:
+            await self.async_send_bring_message(message=BringNotificationType[message])
+        except KeyError as e:
+            raise HomeAssistantError(
+                f"Message must contain one of {", ".join(x.value for x in BringNotificationType)}"
+            ) from e
 
     async def async_send_bring_message(
         self,
-        *,
+        message: BringNotificationType,
         item: str | None = None,
-        notification_type: BringNotificationType,
     ) -> None:
         """Send a push notification to members of a To-Do list."""
 
         try:
-            await self.coordinator.bring.notify(
-                self._list_uuid, notification_type, item
-            )
+            await self.coordinator.bring.notify(self._list_uuid, message, item)
         except BringRequestException as e:
             raise HomeAssistantError(
                 "Unable to send push notification for bring"
@@ -108,5 +114,3 @@ class BringNotify(NotifyEntity):
             raise HomeAssistantError(
                 "Item name is required for Breaking news notification"
             ) from e
-        else:
-            await super()._async_send_message(message="None")

@@ -22,7 +22,7 @@
       "name": "[%key:component::notify::services::notify::name%]",
       "description": "Send a mobile push notification to members of a shared Bring! list.",
       "fields": {
-        "notification_type": {
+        "message": {
           "name": "Notification type",
           "description": "Type of push notification to send to list members."
         },

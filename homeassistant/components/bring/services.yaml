@@ -4,7 +4,7 @@ send_message:
       domain: notify
       integration: bring
   fields:
-    notification_type:
+    message:
       example: going_shopping
       required: true
       default: "going_shopping"
