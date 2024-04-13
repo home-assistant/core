@@ -51,7 +51,7 @@ dependencies    = [
     "PyJWT==2.8.0",
     # PyJWT has loose dependency. We want the latest one.
     "cryptography==42.0.5",
-    "Pillow==10.2.0",
+    "Pillow==10.3.0",
     "pyOpenSSL==24.1.0",
     "orjson==3.9.15",
     "packaging>=23.1",
@@ -701,6 +701,7 @@ select = [
     "RUF005", # Consider iterable unpacking instead of concatenation
     "RUF006", # Store a reference to the return value of asyncio.create_task
     "RUF013", # PEP 484 prohibits implicit Optional
+    "RUF018", # Avoid assignment expressions in assert statements
     # "RUF100", # Unused `noqa` directive; temporarily every now and then to clean them up
     "S102", # Use of exec detected
     "S103", # bad-file-permissions
@@ -753,6 +754,7 @@ ignore = [
     "RUF001", # String contains ambiguous unicode character.
     "RUF002", # Docstring contains ambiguous unicode character.
     "RUF003", # Comment contains ambiguous unicode character.
+    "RUF015", # Prefer next(...) over single element slice
     "SIM102", # Use a single if statement instead of nested if statements
     "SIM108", # Use ternary operator {contents} instead of if-else-block
     "SIM115", # Use context handler for opening files
