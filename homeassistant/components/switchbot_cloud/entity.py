@@ -23,12 +23,11 @@ class SwitchBotCloudEntity(CoordinatorEntity[SwitchBotCoordinator]):
         api: SwitchBotAPI,
         device: Device | Remote,
         coordinator: SwitchBotCoordinator,
-        id_suffix="",  # Add suffix for multi-entity devices
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
         self._api = api
-        self._attr_unique_id = f"{device.device_id}{id_suffix}"
+        self._attr_unique_id = device.device_id
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device.device_id)},
             name=device.device_name,
