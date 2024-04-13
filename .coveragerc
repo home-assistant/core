@@ -183,6 +183,7 @@ omit =
     homeassistant/components/cisco_webex_teams/notify.py
     homeassistant/components/citybikes/sensor.py
     homeassistant/components/clementine/media_player.py
+    homeassistant/components/clickatell/__init__.py
     homeassistant/components/clickatell/notify.py
     homeassistant/components/clicksend/notify.py
     homeassistant/components/clicksend_tts/notify.py
