@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
@@ -20,16 +19,12 @@ SWITCH_TYPE = SwitchEntityDescription(
 )
 
 
-_LOGGER = logging.getLogger(__name__)
-
-
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the D-Link Power Plug sensors."""
     coordinator: DlinkCoordinator = hass.data[DOMAIN][entry.entry_id]
-    entities = [SmartPlugSwitch(coordinator, entry, SWITCH_TYPE)]
-    async_add_entities(entities)
+    async_add_entities([SmartPlugSwitch(coordinator, SWITCH_TYPE)])
 
 
 class SmartPlugSwitch(DLinkEntity, SwitchEntity):
@@ -43,13 +38,13 @@ class SmartPlugSwitch(DLinkEntity, SwitchEntity):
         """Return the state attributes of the device."""
         try:
             temperature = self.hass.config.units.temperature(
-                int(self.coordinator.temperature), UnitOfTemperature.CELSIUS
+                int(self.coordinator.data.temperature), UnitOfTemperature.CELSIUS
             )
         except ValueError:
             temperature = None
 
         try:
-            total_consumption = float(self.coordinator.total_consumption)
+            total_consumption = float(self.coordinator.data.total_consumption)
         except ValueError:
             total_consumption = None
 
@@ -61,7 +56,7 @@ class SmartPlugSwitch(DLinkEntity, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return true if switch is on."""
-        return self.coordinator.state == "ON"
+        return self.coordinator.data.state == "ON"
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
