@@ -544,7 +544,7 @@ class DynamicServiceIntentHandler(IntentHandler):
         # Handle service calls in parallel, noting failures as they occur.
         failed_results: list[IntentResponseTarget] = []
         for state, service_coro in zip(
-            states, asyncio.as_completed(service_coros), strict=True
+            states, asyncio.as_completed(service_coros), strict=False
         ):
             target = IntentResponseTarget(
                 type=IntentResponseTargetType.ENTITY,

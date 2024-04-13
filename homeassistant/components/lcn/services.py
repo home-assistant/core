@@ -300,7 +300,7 @@ class SendKeys(LcnServiceCall):
         keys = [[False] * 8 for i in range(4)]
 
         key_strings = zip(
-            service.data[CONF_KEYS][::2], service.data[CONF_KEYS][1::2], strict=True
+            service.data[CONF_KEYS][::2], service.data[CONF_KEYS][1::2], strict=False
         )
 
         for table, key in key_strings:

@@ -85,7 +85,7 @@ def get_valid_responses_from_results(
     zwave_objects: Sequence[T], results: Sequence[Any]
 ) -> Generator[tuple[T, Any], None, None]:
     """Return valid responses from a list of results."""
-    for zwave_object, result in zip(zwave_objects, results, strict=True):
+    for zwave_object, result in zip(zwave_objects, results, strict=False):
         if not isinstance(result, Exception):
             yield zwave_object, result
 

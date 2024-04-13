@@ -512,11 +512,11 @@ def compile_statistics(  # noqa: C901
         stat: StatisticData = {"start": start}
         if "max" in wanted_statistics[entity_id]:
             stat["max"] = max(
-                *itertools.islice(zip(*valid_float_states, strict=True), 1)
+                *itertools.islice(zip(*valid_float_states, strict=False), 1)
             )
         if "min" in wanted_statistics[entity_id]:
             stat["min"] = min(
-                *itertools.islice(zip(*valid_float_states, strict=True), 1)
+                *itertools.islice(zip(*valid_float_states, strict=False), 1)
             )
 
         if "mean" in wanted_statistics[entity_id]:

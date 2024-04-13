@@ -74,7 +74,7 @@ async def async_setup_entry(
     )
     valid_entities: list[RoborockNumberEntity] = []
     for (coordinator, description), result in zip(
-        possible_entities, results, strict=True
+        possible_entities, results, strict=False
     ):
         if result is None or isinstance(result, RoborockException):
             _LOGGER.debug("Not adding entity because of %s", result)
