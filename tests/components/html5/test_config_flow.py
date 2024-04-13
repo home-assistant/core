@@ -153,12 +153,15 @@ async def test_step_import_good(hass: HomeAssistant) -> None:
 async def test_step_import_bad(hass: HomeAssistant, key: str, value: str) -> None:
     """Test invalid import input."""
 
-    with patch(
-        "homeassistant.components.html5.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry, patch(
-        "homeassistant.components.html5.config_flow.create_issue"
-    ) as mock_create_issue:
+    with (
+        patch(
+            "homeassistant.components.html5.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+        patch(
+            "homeassistant.components.html5.config_flow.create_issue"
+        ) as mock_create_issue,
+    ):
         bad_conf = MOCK_CONF.copy()
         bad_conf[key] = value
 
