@@ -750,6 +750,9 @@ ignore = [
     "PT011", # pytest.raises({exception}) is too broad, set the `match` parameter or use a more specific exception
     "PT012", # `pytest.raises()` block should contain a single simple statement
     "PT018", # Assertion should be broken down into multiple parts
+    "RUF001", # String contains ambiguous unicode character.
+    "RUF002", # Docstring contains ambiguous unicode character.
+    "RUF003", # Comment contains ambiguous unicode character.
     "SIM102", # Use a single if statement instead of nested if statements
     "SIM108", # Use ternary operator {contents} instead of if-else-block
     "SIM115", # Use context handler for opening files
