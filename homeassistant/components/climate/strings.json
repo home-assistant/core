@@ -25,7 +25,8 @@
         "heat_cool": "Heat/Cool",
         "auto": "Auto",
         "dry": "Dry",
-        "fan_only": "Fan only"
+        "fan_only": "Fan only",
+        "manual": "Manual"
       },
       "state_attributes": {
         "aux_heat": {
@@ -234,7 +235,8 @@
         "dry": "Dry",
         "fan_only": "Fan only",
         "heat_cool": "Heat/cool",
-        "heat": "Heat"
+        "heat": "Heat",
+        "manual": "Manual"
       }
     }
   },
