@@ -94,7 +94,7 @@ jobs:
         id: generate_python_cache_key
         run: >-
           echo "key=venv-${{ env.CACHE_VERSION }}-${{
-            hashFiles('requirements_test.txt') }}-${{
+            hashFiles('requirements_test.txt', 'requirements_test_pre_commit.txt') }}-${{
             hashFiles('requirements_all.txt') }}-${{
             hashFiles('homeassistant/package_constraints.txt') }}" >> $GITHUB_OUTPUT
       - name: Generate partial pre-commit restore key
