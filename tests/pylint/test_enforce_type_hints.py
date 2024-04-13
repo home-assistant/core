@@ -989,6 +989,39 @@ def test_media_player_entity(
         type_hint_checker.visit_classdef(class_node)
 
 
+def test_humidifier_entity(
+    linter: UnittestLinter, type_hint_checker: BaseChecker
+) -> None:
+    """Ensure valid hints are accepted for humidifier entity."""
+    # Set bypass option
+    type_hint_checker.linter.config.ignore_missing_annotations = False
+
+    # Ensure that `float` and `int` are valid for `int` argument type
+    class_node = astroid.extract_node(
+        """
+    class Entity():
+        pass
+
+    class HumidifierEntity(Entity):
+        pass
+
+    class MyHumidifier(  #@
+        HumidifierEntity
+    ):
+        def set_humidity(self, humidity: int) -> None:
+            pass
+
+        def async_set_humidity(self, humidity: float) -> None:
+            pass
+    """,
+        "homeassistant.components.pylint_test.humidifier",
+    )
+    type_hint_checker.visit_module(class_node.parent)
+
+    with assert_no_messages(linter):
+        type_hint_checker.visit_classdef(class_node)
+
+
 def test_number_entity(linter: UnittestLinter, type_hint_checker: BaseChecker) -> None:
     """Ensure valid hints are accepted for number entity."""
     # Set bypass option

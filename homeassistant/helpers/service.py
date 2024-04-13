@@ -93,6 +93,7 @@ def _base_components() -> dict[str, ModuleType]:
         light,
         lock,
         media_player,
+        notify,
         remote,
         siren,
         todo,
@@ -112,6 +113,7 @@ def _base_components() -> dict[str, ModuleType]:
         "light": light,
         "lock": lock,
         "media_player": media_player,
+        "notify": notify,
         "remote": remote,
         "siren": siren,
         "todo": todo,
@@ -503,15 +505,15 @@ def async_extract_referenced_entity_ids(  # noqa: C901
     ):
         return selected
 
-    ent_reg = entity_registry.async_get(hass)
+    entities = entity_registry.async_get(hass).entities
     dev_reg = device_registry.async_get(hass)
     area_reg = area_registry.async_get(hass)
-    floor_reg = floor_registry.async_get(hass)
-    label_reg = label_registry.async_get(hass)
 
-    for floor_id in selector.floor_ids:
-        if floor_id not in floor_reg.floors:
-            selected.missing_floors.add(floor_id)
+    if selector.floor_ids:
+        floor_reg = floor_registry.async_get(hass)
+        for floor_id in selector.floor_ids:
+            if floor_id not in floor_reg.floors:
+                selected.missing_floors.add(floor_id)
 
     for area_id in selector.area_ids:
         if area_id not in area_reg.areas:
@@ -521,47 +523,47 @@ def async_extract_referenced_entity_ids(  # noqa: C901
         if device_id not in dev_reg.devices:
             selected.missing_devices.add(device_id)
 
-    for label_id in selector.label_ids:
-        if label_id not in label_reg.labels:
-            selected.missing_labels.add(label_id)
-
-    # Find areas, devices & entities for targeted labels
     if selector.label_ids:
-        for area_entry in area_reg.areas.values():
-            if area_entry.labels.intersection(selector.label_ids):
-                selected.referenced_areas.add(area_entry.id)
+        label_reg = label_registry.async_get(hass)
+        for label_id in selector.label_ids:
+            if label_id not in label_reg.labels:
+                selected.missing_labels.add(label_id)
 
-        for device_entry in dev_reg.devices.values():
-            if device_entry.labels.intersection(selector.label_ids):
+            for entity_entry in entities.get_entries_for_label(label_id):
+                if (
+                    entity_entry.entity_category is None
+                    and entity_entry.hidden_by is None
+                ):
+                    selected.indirectly_referenced.add(entity_entry.entity_id)
+
+            for device_entry in dev_reg.devices.get_devices_for_label(label_id):
                 selected.referenced_devices.add(device_entry.id)
 
-        for entity_entry in ent_reg.entities.values():
-            if (
-                entity_entry.entity_category is None
-                and entity_entry.hidden_by is None
-                and entity_entry.labels.intersection(selector.label_ids)
-            ):
-                selected.indirectly_referenced.add(entity_entry.entity_id)
+            for area_entry in area_reg.areas.get_areas_for_label(label_id):
+                selected.referenced_areas.add(area_entry.id)
 
     # Find areas for targeted floors
     if selector.floor_ids:
-        for area_entry in area_reg.areas.values():
-            if area_entry.id and area_entry.floor_id in selector.floor_ids:
-                selected.referenced_areas.add(area_entry.id)
+        selected.referenced_areas.update(
+            area_entry.id
+            for floor_id in selector.floor_ids
+            for area_entry in area_reg.areas.get_areas_for_floor(floor_id)
+        )
 
     # Find devices for targeted areas
     selected.referenced_devices.update(selector.device_ids)
 
     selected.referenced_areas.update(selector.area_ids)
     if selected.referenced_areas:
-        for device_entry in dev_reg.devices.values():
-            if device_entry.area_id in selected.referenced_areas:
-                selected.referenced_devices.add(device_entry.id)
+        for area_id in selected.referenced_areas:
+            selected.referenced_devices.update(
+                device_entry.id
+                for device_entry in dev_reg.devices.get_devices_for_area_id(area_id)
+            )
 
     if not selected.referenced_areas and not selected.referenced_devices:
         return selected
 
-    entities = ent_reg.entities
     # Add indirectly referenced by area
     selected.indirectly_referenced.update(
         entry.entity_id

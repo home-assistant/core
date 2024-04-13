@@ -135,7 +135,10 @@ class AugustLock(AugustEntityMixin, RestoreEntity, LockEntity):
 
         self._attr_is_jammed = self._lock_status is LockStatus.JAMMED
         self._attr_is_locking = self._lock_status is LockStatus.LOCKING
-        self._attr_is_unlocking = self._lock_status is LockStatus.UNLOCKING
+        self._attr_is_unlocking = self._lock_status in (
+            LockStatus.UNLOCKING,
+            LockStatus.UNLATCHING,
+        )
 
         self._attr_extra_state_attributes = {
             ATTR_BATTERY_LEVEL: self._detail.battery_level

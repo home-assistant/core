@@ -205,7 +205,7 @@ class DeviceCoordinator(DataUpdateCoordinator[None]):  # pylint: disable=hass-en
         except Exception as err:  # pylint: disable=broad-except
             self.last_exception = err
             self.last_update_success = False
-            _LOGGER.exception("Unexpected error fetching %s data: %s", self.name, err)
+            _LOGGER.exception("Unexpected error fetching %s data", self.name)
         else:
             self.async_set_updated_data(None)
 

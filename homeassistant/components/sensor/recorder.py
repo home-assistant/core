@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from collections.abc import Callable, Iterable, MutableMapping
+from collections.abc import Callable, Iterable
 import datetime
 import itertools
 import logging
@@ -402,7 +402,7 @@ def compile_statistics(  # noqa: C901
     entities_full_history = [
         i.entity_id for i in sensor_states if "sum" in wanted_statistics[i.entity_id]
     ]
-    history_list: MutableMapping[str, list[State]] = {}
+    history_list: dict[str, list[State]] = {}
     if entities_full_history:
         history_list = history.get_full_significant_states_with_session(
             hass,

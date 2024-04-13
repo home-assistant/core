@@ -10,7 +10,7 @@ import plexapi
 import requests
 import requests_mock
 
-import homeassistant.components.plex.const as const
+from homeassistant.components.plex import const
 from homeassistant.components.plex.models import (
     LIVE_TV_SECTION,
     TRANSIENT_SECTION,
