@@ -81,7 +81,7 @@ class IdasenDeskCoordinator(DataUpdateCoordinator[int | None]):  # pylint: disab
                 self._connection_lost = False
         elif self.desk.is_connected:
             _LOGGER.warning("Desk is connected but should not be. Disconnecting")
-            self.hass.async_create_task(self.desk.disconnect(), eager_start=False)
+            self.hass.async_create_task(self.desk.disconnect())
         return super().async_set_updated_data(data)
 
 
