@@ -1086,18 +1086,12 @@ jobs:
         uses: actions/download-artifact@v4.1.4
         with:
           pattern: coverage-*
-      - name: Upload coverage to Codecov (full coverage)
+      - name: Upload coverage to Codecov
         if: needs.info.outputs.test_full_suite == 'true'
         uses: codecov/codecov-action@v4.3.0
         with:
           fail_ci_if_error: true
           flags: full-suite
-          token: ${{ secrets.CODECOV_TOKEN }}
-      - name: Upload coverage to Codecov (partial coverage)
-        if: needs.info.outputs.test_full_suite == 'false'
-        uses: codecov/codecov-action@v4.3.0
-        with:
-          fail_ci_if_error: true
           token: ${{ secrets.CODECOV_TOKEN }}
 
   pytest-partial:
@@ -1224,14 +1218,7 @@ jobs:
         uses: actions/download-artifact@v4.1.4
         with:
           pattern: coverage-*
-      - name: Upload coverage to Codecov (full coverage)
-        if: needs.info.outputs.test_full_suite == 'true'
-        uses: codecov/codecov-action@v4.3.0
-        with:
-          fail_ci_if_error: true
-          flags: full-suite
-          token: ${{ secrets.CODECOV_TOKEN }}
-      - name: Upload coverage to Codecov (partial coverage)
+      - name: Upload coverage to Codecov
         if: needs.info.outputs.test_full_suite == 'false'
         uses: codecov/codecov-action@v4.3.0
         with:
