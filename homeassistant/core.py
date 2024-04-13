@@ -102,6 +102,7 @@ from .util.async_ import (
     run_callback_threadsafe,
     shutdown_run_callback_threadsafe,
 )
+from .util.event_type import EventType
 from .util.executor import InterruptibleThreadPoolExecutor
 from .util.json import JsonObjectType
 from .util.read_only_dict import ReadOnlyDict
@@ -135,6 +136,7 @@ _P = ParamSpec("_P")
 _Ts = TypeVarTuple("_Ts")
 # Internal; not helpers.typing.UNDEFINED due to circular dependency
 _UNDEF: dict[Any, Any] = {}
+_SENTINEL = object()
 _CallableT = TypeVar("_CallableT", bound=Callable[..., Any])
 _DataT = TypeVar("_DataT", bound=Mapping[str, Any], default=Mapping[str, Any])
 CALLBACK_TYPE = Callable[[], None]
@@ -381,7 +383,7 @@ class HomeAssistant:
     http: HomeAssistantHTTP = None  # type: ignore[assignment]
     config_entries: ConfigEntries = None  # type: ignore[assignment]
 
-    def __new__(cls, config_dir: str) -> HomeAssistant:
+    def __new__(cls, config_dir: str) -> Self:
         """Set the _hass thread local data."""
         hass = super().__new__(cls)
         _hass.hass = hass
@@ -556,7 +558,7 @@ class HomeAssistant:
             target = cast(Callable[[*_Ts], Any], target)
         self.loop.call_soon_threadsafe(
             functools.partial(
-                self.async_add_hass_job, HassJob(target), *args, eager_start=True
+                self._async_add_hass_job, HassJob(target), *args, eager_start=True
             )
         )
 
@@ -628,7 +630,7 @@ class HomeAssistant:
         # https://github.com/home-assistant/core/pull/71960
         if TYPE_CHECKING:
             target = cast(Callable[[*_Ts], Coroutine[Any, Any, _R] | _R], target)
-        return self.async_add_hass_job(HassJob(target), *args, eager_start=eager_start)
+        return self._async_add_hass_job(HassJob(target), *args, eager_start=eager_start)
 
     @overload
     @callback
@@ -652,6 +654,58 @@ class HomeAssistant:
 
     @callback
     def async_add_hass_job(
+        self,
+        hassjob: HassJob[..., Coroutine[Any, Any, _R] | _R],
+        *args: Any,
+        eager_start: bool = False,
+        background: bool = False,
+    ) -> asyncio.Future[_R] | None:
+        """Add a HassJob from within the event loop.
+
+        If eager_start is True, coroutine functions will be scheduled eagerly.
+        If background is True, the task will created as a background task.
+
+        This method must be run in the event loop.
+        hassjob: HassJob to call.
+        args: parameters for method to call.
+        """
+        # late import to avoid circular imports
+        from .helpers import frame  # pylint: disable=import-outside-toplevel
+
+        frame.report(
+            "calls `async_add_hass_job`, which is deprecated and will be removed in Home "
+            "Assistant 2025.5; Please review "
+            "https://developers.home-assistant.io/blog/2024/04/07/deprecate_add_hass_job"
+            " for replacement options",
+            error_if_core=False,
+        )
+
+        return self._async_add_hass_job(
+            hassjob, *args, eager_start=eager_start, background=background
+        )
+
+    @overload
+    @callback
+    def _async_add_hass_job(
+        self,
+        hassjob: HassJob[..., Coroutine[Any, Any, _R]],
+        *args: Any,
+        eager_start: bool = False,
+        background: bool = False,
+    ) -> asyncio.Future[_R] | None: ...
+
+    @overload
+    @callback
+    def _async_add_hass_job(
+        self,
+        hassjob: HassJob[..., Coroutine[Any, Any, _R] | _R],
+        *args: Any,
+        eager_start: bool = False,
+        background: bool = False,
+    ) -> asyncio.Future[_R] | None: ...
+
+    @callback
+    def _async_add_hass_job(
         self,
         hassjob: HassJob[..., Coroutine[Any, Any, _R] | _R],
         *args: Any,
@@ -719,7 +773,7 @@ class HomeAssistant:
         self,
         target: Coroutine[Any, Any, _R],
         name: str | None = None,
-        eager_start: bool = False,
+        eager_start: bool = True,
     ) -> asyncio.Task[_R]:
         """Create a task from within the event loop.
 
@@ -742,7 +796,7 @@ class HomeAssistant:
 
     @callback
     def async_create_background_task(
-        self, target: Coroutine[Any, Any, _R], name: str, eager_start: bool = False
+        self, target: Coroutine[Any, Any, _R], name: str, eager_start: bool = True
     ) -> asyncio.Task[_R]:
         """Create a task from within the event loop.
 
@@ -840,7 +894,7 @@ class HomeAssistant:
             hassjob.target(*args)
             return None
 
-        return self.async_add_hass_job(
+        return self._async_add_hass_job(
             hassjob, *args, eager_start=True, background=background
         )
 
@@ -1168,9 +1222,9 @@ class Context:
         self.parent_id = parent_id
         self.origin_event: Event[Any] | None = None
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         """Compare contexts."""
-        return bool(self.__class__ == other.__class__ and self.id == other.id)
+        return isinstance(other, Context) and self.id == other.id
 
     @cached_property
     def _as_dict(self) -> dict[str, str | None]:
@@ -1216,7 +1270,7 @@ class Event(Generic[_DataT]):
 
     def __init__(
         self,
-        event_type: str,
+        event_type: EventType[_DataT] | str,
         data: _DataT | None = None,
         origin: EventOrigin = EventOrigin.local,
         time_fired_timestamp: float | None = None,
@@ -1290,7 +1344,7 @@ class Event(Generic[_DataT]):
 
 
 def _event_repr(
-    event_type: str, origin: EventOrigin, data: Mapping[str, Any] | None
+    event_type: EventType[_DataT] | str, origin: EventOrigin, data: _DataT | None
 ) -> str:
     """Return the representation."""
     if data:
@@ -1302,18 +1356,17 @@ def _event_repr(
 _FilterableJobType = tuple[
     HassJob[[Event[_DataT]], Coroutine[Any, Any, None] | None],  # job
     Callable[[_DataT], bool] | None,  # event_filter
-    bool,  # run_immediately
 ]
 
 
 @dataclass(slots=True)
-class _OneTimeListener:
+class _OneTimeListener(Generic[_DataT]):
     hass: HomeAssistant
-    listener_job: HassJob[[Event], Coroutine[Any, Any, None] | None]
+    listener_job: HassJob[[Event[_DataT]], Coroutine[Any, Any, None] | None]
     remove: CALLBACK_TYPE | None = None
 
     @callback
-    def __call__(self, event: Event) -> None:
+    def __call__(self, event: Event[_DataT]) -> None:
         """Remove listener from event bus and then fire listener."""
         if not self.remove:
             # If the listener was already removed, we don't need to do anything
@@ -1341,14 +1394,12 @@ class EventBus:
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize a new event bus."""
-        self._listeners: dict[str, list[_FilterableJobType[Any]]] = {}
+        self._listeners: dict[EventType[Any] | str, list[_FilterableJobType[Any]]] = {}
         self._match_all_listeners: list[_FilterableJobType[Any]] = []
         self._listeners[MATCH_ALL] = self._match_all_listeners
         self._hass = hass
         self._async_logging_changed()
-        self.async_listen(
-            EVENT_LOGGING_CHANGED, self._async_logging_changed, run_immediately=True
-        )
+        self.async_listen(EVENT_LOGGING_CHANGED, self._async_logging_changed)
 
     @callback
     def _async_logging_changed(self, event: Event | None = None) -> None:
@@ -1356,7 +1407,7 @@ class EventBus:
         self._debug = _LOGGER.isEnabledFor(logging.DEBUG)
 
     @callback
-    def async_listeners(self) -> dict[str, int]:
+    def async_listeners(self) -> dict[EventType[Any] | str, int]:
         """Return dictionary with events and the number of listeners.
 
         This method must be run in the event loop.
@@ -1364,14 +1415,14 @@ class EventBus:
         return {key: len(listeners) for key, listeners in self._listeners.items()}
 
     @property
-    def listeners(self) -> dict[str, int]:
+    def listeners(self) -> dict[EventType[Any] | str, int]:
         """Return dictionary with events and the number of listeners."""
         return run_callback_threadsafe(self._hass.loop, self.async_listeners).result()
 
     def fire(
         self,
-        event_type: str,
-        event_data: Mapping[str, Any] | None = None,
+        event_type: EventType[_DataT] | str,
+        event_data: _DataT | None = None,
         origin: EventOrigin = EventOrigin.local,
         context: Context | None = None,
     ) -> None:
@@ -1383,8 +1434,8 @@ class EventBus:
     @callback
     def async_fire(
         self,
-        event_type: str,
-        event_data: Mapping[str, Any] | None = None,
+        event_type: EventType[_DataT] | str,
+        event_data: _DataT | None = None,
         origin: EventOrigin = EventOrigin.local,
         context: Context | None = None,
         time_fired: float | None = None,
@@ -1402,8 +1453,8 @@ class EventBus:
     @callback
     def _async_fire(
         self,
-        event_type: str,
-        event_data: Mapping[str, Any] | None = None,
+        event_type: EventType[_DataT] | str,
+        event_data: _DataT | None = None,
         origin: EventOrigin = EventOrigin.local,
         context: Context | None = None,
         time_fired: float | None = None,
@@ -1431,9 +1482,9 @@ class EventBus:
         if not listeners:
             return
 
-        event: Event | None = None
+        event: Event[_DataT] | None = None
 
-        for job, event_filter, run_immediately in listeners:
+        for job, event_filter in listeners:
             if event_filter is not None:
                 try:
                     if event_data is None or not event_filter(event_data):
@@ -1451,18 +1502,15 @@ class EventBus:
                     context,
                 )
 
-            if run_immediately:
-                try:
-                    self._hass.async_run_hass_job(job, event)
-                except Exception:  # pylint: disable=broad-except
-                    _LOGGER.exception("Error running job: %s", job)
-            else:
-                self._hass.async_add_hass_job(job, event)
+            try:
+                self._hass.async_run_hass_job(job, event)
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Error running job: %s", job)
 
     def listen(
         self,
-        event_type: str,
-        listener: Callable[[Event[Any]], Coroutine[Any, Any, None] | None],
+        event_type: EventType[_DataT] | str,
+        listener: Callable[[Event[_DataT]], Coroutine[Any, Any, None] | None],
     ) -> CALLBACK_TYPE:
         """Listen for all events or events of a specific type.
 
@@ -1482,10 +1530,10 @@ class EventBus:
     @callback
     def async_listen(
         self,
-        event_type: str,
+        event_type: EventType[_DataT] | str,
         listener: Callable[[Event[_DataT]], Coroutine[Any, Any, None] | None],
         event_filter: Callable[[_DataT], bool] | None = None,
-        run_immediately: bool = False,
+        run_immediately: bool | object = _SENTINEL,
     ) -> CALLBACK_TYPE:
         """Listen for all events or events of a specific type.
 
@@ -1502,6 +1550,16 @@ class EventBus:
 
         This method must be run in the event loop.
         """
+        if run_immediately in (True, False):
+            # late import to avoid circular imports
+            from .helpers import frame  # pylint: disable=import-outside-toplevel
+
+            frame.report(
+                "calls `async_listen` with run_immediately, which is"
+                " deprecated and will be removed in Assistant 2025.5",
+                error_if_core=False,
+            )
+
         if event_filter is not None and not is_callback_check_partial(event_filter):
             raise HomeAssistantError(f"Event filter {event_filter} is not a callback")
         if event_type == EVENT_STATE_REPORTED:
@@ -1509,22 +1567,19 @@ class EventBus:
                 raise HomeAssistantError(
                     f"Event filter is required for event {event_type}"
                 )
-            if not run_immediately:
-                raise HomeAssistantError(
-                    f"Run immediately must be set to True for event {event_type}"
-                )
         return self._async_listen_filterable_job(
             event_type,
             (
                 HassJob(listener, f"listen {event_type}"),
                 event_filter,
-                run_immediately,
             ),
         )
 
     @callback
     def _async_listen_filterable_job(
-        self, event_type: str, filterable_job: _FilterableJobType[Any]
+        self,
+        event_type: EventType[_DataT] | str,
+        filterable_job: _FilterableJobType[_DataT],
     ) -> CALLBACK_TYPE:
         self._listeners.setdefault(event_type, []).append(filterable_job)
         return functools.partial(
@@ -1533,8 +1588,8 @@ class EventBus:
 
     def listen_once(
         self,
-        event_type: str,
-        listener: Callable[[Event[Any]], Coroutine[Any, Any, None] | None],
+        event_type: EventType[_DataT] | str,
+        listener: Callable[[Event[_DataT]], Coroutine[Any, Any, None] | None],
     ) -> CALLBACK_TYPE:
         """Listen once for event of a specific type.
 
@@ -1556,9 +1611,9 @@ class EventBus:
     @callback
     def async_listen_once(
         self,
-        event_type: str,
-        listener: Callable[[Event[Any]], Coroutine[Any, Any, None] | None],
-        run_immediately: bool = False,
+        event_type: EventType[_DataT] | str,
+        listener: Callable[[Event[_DataT]], Coroutine[Any, Any, None] | None],
+        run_immediately: bool | object = _SENTINEL,
     ) -> CALLBACK_TYPE:
         """Listen once for event of a specific type.
 
@@ -1569,7 +1624,19 @@ class EventBus:
 
         This method must be run in the event loop.
         """
-        one_time_listener = _OneTimeListener(self._hass, HassJob(listener))
+        if run_immediately in (True, False):
+            # late import to avoid circular imports
+            from .helpers import frame  # pylint: disable=import-outside-toplevel
+
+            frame.report(
+                "calls `async_listen_once` with run_immediately, which is "
+                "deprecated and will be removed in Assistant 2025.5",
+                error_if_core=False,
+            )
+
+        one_time_listener: _OneTimeListener[_DataT] = _OneTimeListener(
+            self._hass, HassJob(listener)
+        )
         remove = self._async_listen_filterable_job(
             event_type,
             (
@@ -1579,7 +1646,6 @@ class EventBus:
                     job_type=HassJobType.Callback,
                 ),
                 None,
-                run_immediately,
             ),
         )
         one_time_listener.remove = remove
@@ -1587,7 +1653,9 @@ class EventBus:
 
     @callback
     def _async_remove_listener(
-        self, event_type: str, filterable_job: _FilterableJobType
+        self,
+        event_type: EventType[_DataT] | str,
+        filterable_job: _FilterableJobType[_DataT],
     ) -> None:
         """Remove a listener of a specific event_type.
 

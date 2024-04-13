@@ -95,11 +95,10 @@ async def _init_form(hass, modem_type):
     )
     assert result["type"] is FlowResultType.MENU
 
-    result2 = await hass.config_entries.flow.async_configure(
+    return await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {"next_step_id": modem_type},
     )
-    return result2
 
 
 async def _device_form(hass, flow_id, connection, user_input):
@@ -303,11 +302,10 @@ async def _options_init_form(hass, entry_id, step):
     assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "init"
 
-    result2 = await hass.config_entries.options.async_configure(
+    return await hass.config_entries.options.async_configure(
         result["flow_id"],
         {"next_step_id": step},
     )
-    return result2
 
 
 async def _options_form(

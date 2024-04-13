@@ -258,13 +258,11 @@ class SqueezeBoxEntity(MediaPlayerEntity):
     @property
     def extra_state_attributes(self):
         """Return device-specific attributes."""
-        squeezebox_attr = {
+        return {
             attr: getattr(self, attr)
             for attr in ATTR_TO_PROPERTY
             if getattr(self, attr) is not None
         }
-
-        return squeezebox_attr
 
     @callback
     def rediscovered(self, unique_id, connected):

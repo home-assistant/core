@@ -82,8 +82,7 @@ async def _async_get_image(image_entity: ImageEntity, timeout: int) -> Image:
         async with asyncio.timeout(timeout):
             if image_bytes := await image_entity.async_image():
                 content_type = valid_image_content_type(image_entity.content_type)
-                image = Image(content_type, image_bytes)
-                return image
+                return Image(content_type, image_bytes)
 
     raise HomeAssistantError("Unable to get image")
 

@@ -88,8 +88,7 @@ async def test_flow_works(
 def product_class_mock_fixture():
     """Return a mocked feature."""
     path = "homeassistant.components.blebox.config_flow.Box"
-    patcher = patch(path, DEFAULT, blebox_uniapi.box.Box, True, True)
-    return patcher
+    return patch(path, DEFAULT, blebox_uniapi.box.Box, True, True)
 
 
 async def test_flow_with_connection_failure(

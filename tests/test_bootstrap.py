@@ -1398,3 +1398,13 @@ async def test_setup_does_base_platforms_first(hass: HomeAssistant) -> None:
     # only that they are setup before other integrations.
     assert set(order[1:3]) == {"sensor", "binary_sensor"}
     assert order[3:] == ["root", "first_dep", "second_dep"]
+
+
+def test_should_rollover_is_always_false():
+    """Test that shouldRollover always returns False."""
+    assert (
+        bootstrap._RotatingFileHandlerWithoutShouldRollOver(
+            "any.log", delay=True
+        ).shouldRollover(Mock())
+        is False
+    )
