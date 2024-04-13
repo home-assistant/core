@@ -1,0 +1,18 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "recipient": "Recipient",
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        }
+      }
+    }
+  },
+  "issues": {
+    "migration_notify_service": {
+      "title": "Migration {integration_title} notify service",
+      "description": "The {integration_title} notify service for `{name}` was migrated to a `notify` entity, and configuring {integration_title} using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically, including API key.\n\nRemove the `{domain}` configuration from your configuration.yaml, update any automations that use the `notify.notify` service to use the `notify.send_message` and restart Home Assistant to fix this issue."
+    }
+  }
+}

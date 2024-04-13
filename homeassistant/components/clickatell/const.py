@@ -1,0 +1,3 @@
+"""Cliackatell constants."""
+
+DOMAIN = "clickatell"

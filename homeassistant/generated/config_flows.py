@@ -92,6 +92,7 @@ FLOWS = {
         "cast",
         "ccm15",
         "cert_expiry",
+        "clickatell",
         "cloudflare",
         "co2signal",
         "coinbase",
