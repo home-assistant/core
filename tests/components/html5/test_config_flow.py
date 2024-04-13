@@ -1,4 +1,5 @@
 """Test the HTML5 config flow."""
+
 from unittest.mock import patch
 
 import pytest
@@ -111,12 +112,15 @@ async def test_step_user_form_invalid_key(
 async def test_step_import_good(hass: HomeAssistant) -> None:
     """Test valid import input."""
 
-    with patch(
-        "homeassistant.components.html5.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry, patch(
-        "homeassistant.components.html5.config_flow.create_issue"
-    ) as mock_create_issue:
+    with (
+        patch(
+            "homeassistant.components.html5.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+        patch(
+            "homeassistant.components.html5.config_flow.create_issue"
+        ) as mock_create_issue,
+    ):
         conf = MOCK_CONF.copy()
         conf[ATTR_VAPID_PUB_KEY] = MOCK_CONF_PUB_KEY
         conf["random_key"] = "random_value"

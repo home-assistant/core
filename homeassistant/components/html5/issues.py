@@ -1,4 +1,5 @@
 """Issues utility for HTML5."""
+
 import logging
 
 from homeassistant.core import HomeAssistant

@@ -1,4 +1,5 @@
 """Test the HTML5 setup."""
+
 from unittest.mock import patch
 
 from homeassistant.core import HomeAssistant
