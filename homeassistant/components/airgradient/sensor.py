@@ -172,6 +172,7 @@ class AirGradientSensor(
         self._attr_unique_id = f"{coordinator.data.serial_number}-{description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.data.serial_number)},
+            model=coordinator.data.model,
             manufacturer="AirGradient",
             serial_number=coordinator.data.serial_number,
             sw_version=coordinator.data.firmware_version,

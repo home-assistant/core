@@ -14,5 +14,6 @@
   "rhum": 48,
   "boot": 28,
   "ledMode": "co2",
-  "firmwareVersion": "3.0.8"
+  "firmwareVersion": "3.0.8",
+  "fwMode": "I-9PSL"
 }

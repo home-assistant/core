@@ -20,7 +20,7 @@
     'labels': set({
     }),
     'manufacturer': 'AirGradient',
-    'model': None,
+    'model': 'I-9PSL',
     'name': 'Airgradient',
     'name_by_user': None,
     'serial_number': '84fce612f5b8',

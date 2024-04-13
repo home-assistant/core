@@ -51,7 +51,7 @@ async def test_full_flow(
     )
     await hass.async_block_till_done()
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "84fce612f5b8"
+    assert result["title"] == "I-9PSL"
     assert result["data"] == {
         CONF_HOST: "10.0.0.131",
     }

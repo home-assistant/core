@@ -75,7 +75,7 @@ class AirGradientConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(current_measures.serial_number)
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
-                    title=current_measures.serial_number,
+                    title=current_measures.model,
                     data={CONF_HOST: user_input[CONF_HOST]},
                 )
         return self.async_show_form(
