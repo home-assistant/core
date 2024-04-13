@@ -85,7 +85,7 @@ async def async_get_service(
         f"migration_notify_service_{recipient}",
         breaks_in_ha_version="2024.11.0",
         is_fixable=False,
-        is_persistent=True,
+        is_persistent=False,
         issue_domain=DOMAIN,
         learn_more_url="https://www.home-assistant.io/integrations/clickatell",
         severity=ir.IssueSeverity.WARNING,
