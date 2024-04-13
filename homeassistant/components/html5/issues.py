@@ -29,7 +29,7 @@ def create_issue(hass: HomeAssistant, import_success: bool):
         hass,
         DOMAIN,
         f"deprecated_yaml_{DOMAIN}",
-        breaks_in_ha_version="2024.4.0",
+        breaks_in_ha_version="2024.5.0",
         is_fixable=False,
         issue_domain=DOMAIN,
         severity=IssueSeverity.WARNING,

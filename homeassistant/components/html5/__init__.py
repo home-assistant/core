@@ -7,7 +7,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN
+from .const import DATA_HASS_CONFIG, DOMAIN
 from .issues import create_issue
 
 _LOGGER = logging.getLogger(__name__)
@@ -18,6 +18,7 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the HTML5 push notification component."""
+    hass.data[DATA_HASS_CONFIG] = config
     existing_config_entry = hass.config_entries.async_entries(DOMAIN)
     # Iterate all entries for notify to only get HTML5
     if Platform.NOTIFY in config:
@@ -42,7 +43,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up HTML5 from a config entry."""
     hass.async_create_task(
         discovery.async_load_platform(
-            hass, Platform.NOTIFY, DOMAIN, dict(entry.data), {}
+            hass, Platform.NOTIFY, DOMAIN, dict(entry.data), hass.data[DATA_HASS_CONFIG]
         )
     )
     return True
