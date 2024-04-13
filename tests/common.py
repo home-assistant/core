@@ -236,7 +236,7 @@ async def async_test_home_assistant(
     orig_async_create_task = hass.async_create_task
     orig_tz = dt_util.DEFAULT_TIME_ZONE
 
-    def async_add_job(target, *args, eager_start: bool = True):
+    def async_add_job(target, *args, eager_start: bool = False):
         """Add job."""
         check_target = target
         while isinstance(check_target, ft.partial):
