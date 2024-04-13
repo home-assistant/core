@@ -48,7 +48,7 @@ SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
         translation_key=PyLoadSensorEntity.SPEED,
         device_class=SensorDeviceClass.DATA_RATE,
         native_unit_of_measurement=UnitOfDataRate.BYTES_PER_SECOND,
-        suggested_unit_of_measurement=UnitOfDataRate.MEBIBYTES_PER_SECOND,
+        suggested_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
         suggested_display_precision=1,
     ),
 }
