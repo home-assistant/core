@@ -36,9 +36,7 @@ class PyLoadCoordinator(DataUpdateCoordinator):
         try:
             return await self.pyload.get_status()
         except InvalidAuth:
-            _LOGGER.debug(
-                "Authentication failed while retrieving data, trying to reauthenticate"
-            )
+            _LOGGER.info("Authentication failed, trying to reauthenticate")
             try:
                 await self.pyload.login()
             except InvalidAuth as e:

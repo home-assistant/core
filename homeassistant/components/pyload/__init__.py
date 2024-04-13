@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import logging
-
 from aiohttp import CookieJar
 from pyloadapi.api import PyLoadAPI
 from pyloadapi.exceptions import CannotConnect, InvalidAuth, ParserError
@@ -23,14 +21,11 @@ from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from .const import DOMAIN
 from .coordinator import PyLoadCoordinator
 
-_LOGGER = logging.getLogger(__name__)
-
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up pyLoad from a config entry."""
-    _LOGGER.debug("Setting up entry from config %s", entry.data)
     session = async_create_clientsession(
         hass,
         entry.data.get(CONF_VERIFY_SSL, True),

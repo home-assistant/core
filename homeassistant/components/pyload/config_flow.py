@@ -160,7 +160,6 @@ class PyLoadConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, import_info: dict[str, Any]) -> ConfigFlowResult:
         """Import config from yaml."""
         # Raise an issue that this is deprecated and has been imported
-        _LOGGER.debug("Setting up entry from yaml %s", import_info)
         config = {
             CONF_HOST: import_info[CONF_HOST],
             CONF_PASSWORD: import_info.get(CONF_PASSWORD),
