@@ -438,7 +438,7 @@ async def test_auth_create_token_approval_declined_task_canceled(
     mock_task = CanceledAwaitableMock()
     task_coro: Awaitable | None = None
 
-    def create_task(arg: Any) -> CanceledAwaitableMock:
+    def create_task(arg: Any, **kwargs: Any) -> CanceledAwaitableMock:
         nonlocal task_coro
         task_coro = arg
         return mock_task
@@ -458,6 +458,7 @@ async def test_auth_create_token_approval_declined_task_canceled(
         )
         assert result["step_id"] == "create_token"
 
+        # Tests should not patch the async_create_task function
         with patch.object(hass, "async_create_task", side_effect=create_task):
             result = await _configure_flow(hass, result)
             assert result["step_id"] == "create_token_external"
