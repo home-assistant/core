@@ -1775,7 +1775,7 @@ class ConfigEntries:
         call async_schedule_reload instead of this method since
         it will cancel setup retry before starting this method
         in a task which eliminates a race condition where the
-        setup retry tries can fire during the reload.
+        setup retry can fire during the reload.
 
         If an entry was not loaded, will just load.
         """
