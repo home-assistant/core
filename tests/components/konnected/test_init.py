@@ -290,7 +290,7 @@ async def test_setup_defined_hosts_no_known_auth(hass: HomeAssistant) -> None:
         )
         is True
     )
-    await hass.async_block_till_done()
+
     # Flow started for discovered bridge
     assert len(hass.config_entries.flow.async_progress()) == 1
 
@@ -345,7 +345,6 @@ async def test_setup_multiple(hass: HomeAssistant) -> None:
         )
         is True
     )
-    await hass.async_block_till_done()
 
     # Flow started for discovered bridge
     assert len(hass.config_entries.flow.async_progress()) == 2

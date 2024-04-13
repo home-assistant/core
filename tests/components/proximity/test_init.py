@@ -123,7 +123,6 @@ async def test_device_tracker_test1_in_zone(hass: HomeAssistant) -> None:
     }
 
     assert await async_setup_component(hass, DOMAIN, config)
-    await hass.async_block_till_done()
 
     hass.states.async_set(
         "device_tracker.test1",
@@ -162,7 +161,6 @@ async def test_device_tracker_test1_away(hass: HomeAssistant) -> None:
     }
 
     assert await async_setup_component(hass, DOMAIN, config)
-    await hass.async_block_till_done()
 
     hass.states.async_set(
         "device_tracker.test1",
@@ -206,7 +204,6 @@ async def test_device_tracker_test1_awayfurther(
     }
 
     assert await async_setup_component(hass, DOMAIN, config)
-    await hass.async_block_till_done()
 
     hass.states.async_set(
         "device_tracker.test1",
@@ -270,7 +267,6 @@ async def test_device_tracker_test1_awaycloser(
     }
 
     assert await async_setup_component(hass, DOMAIN, config)
-    await hass.async_block_till_done()
 
     hass.states.async_set(
         "device_tracker.test1",
@@ -330,7 +326,6 @@ async def test_all_device_trackers_in_ignored_zone(hass: HomeAssistant) -> None:
     }
 
     assert await async_setup_component(hass, DOMAIN, config)
-    await hass.async_block_till_done()
 
     hass.states.async_set("device_tracker.test1", "work", {"friendly_name": "test1"})
     await hass.async_block_till_done()
@@ -365,7 +360,6 @@ async def test_device_tracker_test1_no_coordinates(hass: HomeAssistant) -> None:
     }
 
     assert await async_setup_component(hass, DOMAIN, config)
-    await hass.async_block_till_done()
 
     hass.states.async_set(
         "device_tracker.test1", "not_home", {"friendly_name": "test1"}
@@ -404,7 +398,6 @@ async def test_device_tracker_test1_awayfurther_a_bit(hass: HomeAssistant) -> No
             }
         },
     )
-    await hass.async_block_till_done()
 
     hass.states.async_set(
         "device_tracker.test1",
@@ -464,7 +457,6 @@ async def test_device_trackers_in_zone(hass: HomeAssistant) -> None:
     }
 
     assert await async_setup_component(hass, DOMAIN, config)
-    await hass.async_block_till_done()
 
     hass.states.async_set(
         "device_tracker.test1",
@@ -528,7 +520,6 @@ async def test_device_tracker_test1_awayfurther_than_test2_first_test1(
             }
         },
     )
-    await hass.async_block_till_done()
 
     hass.states.async_set(
         "device_tracker.test1",
@@ -614,7 +605,6 @@ async def test_device_tracker_test1_awayfurther_than_test2_first_test2(
             }
         },
     )
-    await hass.async_block_till_done()
 
     hass.states.async_set(
         "device_tracker.test2",
@@ -696,7 +686,6 @@ async def test_device_tracker_test1_awayfurther_test2_in_ignored_zone(
             }
         },
     )
-    await hass.async_block_till_done()
 
     hass.states.async_set(
         "device_tracker.test1",
@@ -755,7 +744,6 @@ async def test_device_tracker_test1_awayfurther_test2_first(
             }
         },
     )
-    await hass.async_block_till_done()
 
     hass.states.async_set(
         "device_tracker.test1",
@@ -838,7 +826,6 @@ async def test_device_tracker_test1_nearest_after_test2_in_ignored_zone(
             }
         },
     )
-    await hass.async_block_till_done()
 
     hass.states.async_set(
         "device_tracker.test1",
