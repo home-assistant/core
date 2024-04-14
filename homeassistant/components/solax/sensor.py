@@ -110,10 +110,19 @@ async def async_setup_entry(
         async_track_time_interval(hass, endpoint.async_refresh, SCAN_INTERVAL)
     )
     devices = []
+    uuids = set()
     for sensor, (idx, measurement) in api.inverter.sensor_map().items():
         description = SENSOR_DESCRIPTIONS[(measurement.unit, measurement.is_monotonic)]
 
         uid = f"{serial}-{idx}"
+        # Make sure we have unique ID by appending _1, _2, etc.
+        suffix = 1
+        while uid in uuids:
+            uid = f"{uid}_{suffix}"
+            suffix += 1
+
+        uuids.add(uid)
+
         devices.append(
             Inverter(
                 api.inverter.manufacturer,
