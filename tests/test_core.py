@@ -3414,7 +3414,7 @@ async def test_async_listen_with_run_immediately_deprecated(
 
 
 async def test_top_level_components(hass: HomeAssistant) -> None:
-    """Test top level components."""
+    """Test top level components are updated when components change."""
     hass.config.components.add("homeassistant")
     assert hass.config.components == {"homeassistant"}
     assert hass.config.top_level_components == {"homeassistant"}
