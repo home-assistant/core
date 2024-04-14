@@ -25,7 +25,6 @@ def _component_icons_path(integration: Integration) -> pathlib.Path:
     """Return the icons json file location for a component.
 
     Ex: components/hue/icons.json
-    If component is just a single file, will return None.
     """
     return integration.file_path / "icons.json"
 
@@ -54,10 +53,10 @@ async def _async_get_component_icons(
     }
 
     # Load files
-    if files_to_load and (
-        load_icons_job := hass.async_add_executor_job(_load_icons_files, files_to_load)
-    ):
-        icons |= await load_icons_job
+    if files_to_load:
+        icons.update(
+            await hass.async_add_executor_job(_load_icons_files, files_to_load)
+        )
 
     return icons
 
