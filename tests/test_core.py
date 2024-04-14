@@ -3411,3 +3411,20 @@ async def test_async_listen_with_run_immediately_deprecated(
         f"Detected code that calls `{method}` with run_immediately, which is "
         "deprecated and will be removed in Home Assistant 2025.5."
     ) in caplog.text
+
+
+async def test_top_level_components(hass: HomeAssistant) -> None:
+    """Test top level components."""
+    hass.config.components.add("homeassistant")
+    assert hass.config.components == {"homeassistant"}
+    assert hass.config.top_level_components == {"homeassistant"}
+    hass.config.components.add("homeassistant.scene")
+    assert hass.config.components == {"homeassistant", "homeassistant.scene"}
+    assert hass.config.top_level_components == {"homeassistant"}
+    hass.config.components.remove("homeassistant")
+    assert hass.config.components == {"homeassistant.scene"}
+    assert hass.config.top_level_components == set()
+    with pytest.raises(ValueError):
+        hass.config.components.remove("homeassistant.scene")
+    with pytest.raises(NotImplementedError):
+        hass.config.components.discard("homeassistant")

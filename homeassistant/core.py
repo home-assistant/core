@@ -2697,6 +2697,7 @@ class _ComponentSet(set[str]):
         """Remove a component from the store."""
         if "." in component:
             raise ValueError("_ComponentSet does not support removing sub-components")
+        self._top_level_components.remove(component)
         return super().remove(component)
 
     def discard(self, component: str) -> None:
