@@ -241,16 +241,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     node_name = entry.data[CONF_NODE]
     node_coordinators = coordinators[host_name][node_name] = {}
 
-    if entry.data.get(CONF_VMS) is not None:
-        for vm_id in entry.data[CONF_VMS]:
+    if entry.options.get(CONF_VMS) is not None:
+        for vm_id in entry.options[CONF_VMS]:
             coordinator = create_coordinator_container_vm(
                 hass, proxmox, host_name, node_name, vm_id, TYPE_VM
             )
             await coordinator.async_refresh()
             node_coordinators[vm_id] = coordinator
 
-    if entry.data.get(CONF_CONTAINERS) is not None:
-        for container_id in entry.data[CONF_CONTAINERS]:
+    if entry.options.get(CONF_CONTAINERS) is not None:
+        for container_id in entry.options[CONF_CONTAINERS]:
             coordinator = create_coordinator_container_vm(
                 hass, proxmox, host_name, node_name, container_id, TYPE_CONTAINER
             )
