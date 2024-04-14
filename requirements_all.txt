@@ -368,7 +368,7 @@ aioruuvigateway==0.1.0
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==8.2.0
+aioshelly==9.0.0
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -1980,7 +1980,7 @@ pymitv==1.4.3
 pymochad==0.2.0
 
 # homeassistant.components.modbus
-pymodbus==3.6.7
+pymodbus==3.6.8
 
 # homeassistant.components.monoprice
 pymonoprice==0.4
