@@ -1,4 +1,5 @@
 """The Nee-Vo Tank Monitoring integration."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -18,15 +19,15 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
     UpdateFailed,
 )
 
-from .const import DOMAIN, TANKS
+from .const import COORDINATOR, DOMAIN, TANKS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -75,7 +76,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][config_entry.entry_id] = {
-        "coordinator": coordinator,
+        COORDINATOR: coordinator,
         TANKS: tanks,
     }
 
@@ -102,10 +103,10 @@ class NeeVoEntity(CoordinatorEntity):
 
     def __init__(self, instance: dict[str, Any], tank_id: str) -> None:
         """Initialize."""
-        super().__init__(instance["coordinator"])
+        super().__init__(instance[COORDINATOR])
         self._neevo = self.coordinator.data[tank_id]
         self._attr_name = self._neevo.name
-        self._attr_unique_id = f"{self._neevo.id}_{self._neevo.name}"
+        self._attr_unique_id = f"{self._neevo.id}"
 
     async def async_added_to_hass(self):
         """Subscribe to device events."""

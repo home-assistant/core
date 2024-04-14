@@ -1,4 +1,5 @@
 """Support for Nee-Vo Tank Monitors."""
+
 from __future__ import annotations
 
 from contextlib import suppress
@@ -16,7 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import NeeVoEntity
-from .const import DOMAIN
+from .const import COORDINATOR, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,7 +48,7 @@ async def async_setup_entry(
 
     sensors = [
         NeeVoSensor(instance, tank_id, description)
-        for tank_id, _equip in instance["coordinator"].data.items()
+        for tank_id, _equip in instance[COORDINATOR].data.items()
         for description in SENSOR_TYPES
         if getattr(_equip, description.key, False) is not False
     ]
@@ -69,7 +70,7 @@ class NeeVoSensor(NeeVoEntity, SensorEntity):
         self.entity_description = description
         self._attr_has_entity_name = True
         self._attr_name = f"{description.name}"
-        self._attr_unique_id = f"{self._neevo.id}_{self._neevo.name}_{description.key}"
+        self._attr_unique_id = f"{self._neevo.id}_{description.key}"
 
     @property
     def native_value(self) -> float:
@@ -81,7 +82,7 @@ class NeeVoSensor(NeeVoEntity, SensorEntity):
         return value
 
     @property
-    def native_unit_of_measurement(self):
+    def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of this entity, if any."""
         if self.entity_description.key == "tank_last_pressure":
             if self._neevo.tank_last_pressure_unit is not None:

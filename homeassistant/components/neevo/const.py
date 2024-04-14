@@ -2,3 +2,4 @@
 
 DOMAIN = "neevo"
 TANKS = "tanks"
+COORDINATOR = "coordinator"
