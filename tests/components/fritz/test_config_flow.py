@@ -367,18 +367,14 @@ async def test_reauth_not_successful(
         assert result["errors"]["base"] == error
 
 
-@pytest.mark.parametrize(
-    "user_input",
-    [MOCK_USER_INPUT_ADVANCED, MOCK_USER_INPUT_SIMPLE],
-)
 async def test_ssdp_already_configured(
-    hass: HomeAssistant, fc_class_mock, mock_get_source_ip, user_input
+    hass: HomeAssistant, fc_class_mock, mock_get_source_ip
 ) -> None:
     """Test starting a flow from discovery with an already configured device."""
 
     mock_config = MockConfigEntry(
         domain=DOMAIN,
-        data=user_input,
+        data=MOCK_USER_DATA,
         unique_id="only-a-test",
     )
     mock_config.add_to_hass(hass)
@@ -400,18 +396,14 @@ async def test_ssdp_already_configured(
         assert result["reason"] == "already_configured"
 
 
-@pytest.mark.parametrize(
-    "user_input",
-    [MOCK_USER_INPUT_ADVANCED, MOCK_USER_INPUT_SIMPLE],
-)
 async def test_ssdp_already_configured_host(
-    hass: HomeAssistant, fc_class_mock, mock_get_source_ip, user_input
+    hass: HomeAssistant, fc_class_mock, mock_get_source_ip
 ) -> None:
     """Test starting a flow from discovery with an already configured host."""
 
     mock_config = MockConfigEntry(
         domain=DOMAIN,
-        data=user_input,
+        data=MOCK_USER_DATA,
         unique_id="different-test",
     )
     mock_config.add_to_hass(hass)
@@ -433,18 +425,14 @@ async def test_ssdp_already_configured_host(
         assert result["reason"] == "already_configured"
 
 
-@pytest.mark.parametrize(
-    "user_input",
-    [MOCK_USER_INPUT_ADVANCED, MOCK_USER_INPUT_SIMPLE],
-)
 async def test_ssdp_already_configured_host_uuid(
-    hass: HomeAssistant, fc_class_mock, mock_get_source_ip, user_input
+    hass: HomeAssistant, fc_class_mock, mock_get_source_ip
 ) -> None:
     """Test starting a flow from discovery with an already configured uuid."""
 
     mock_config = MockConfigEntry(
         domain=DOMAIN,
-        data=user_input,
+        data=MOCK_USER_DATA,
         unique_id=None,
     )
     mock_config.add_to_hass(hass)
@@ -556,14 +544,10 @@ async def test_ssdp_exception(hass: HomeAssistant, mock_get_source_ip) -> None:
         assert result["step_id"] == "confirm"
 
 
-@pytest.mark.parametrize(
-    "user_input",
-    [MOCK_USER_INPUT_ADVANCED, MOCK_USER_INPUT_SIMPLE],
-)
-async def test_options_flow(hass: HomeAssistant, user_input) -> None:
+async def test_options_flow(hass: HomeAssistant) -> None:
     """Test options flow."""
 
-    mock_config = MockConfigEntry(domain=DOMAIN, data=user_input)
+    mock_config = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
     mock_config.add_to_hass(hass)
 
     result = await hass.config_entries.options.async_init(mock_config.entry_id)
