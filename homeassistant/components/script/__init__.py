@@ -665,7 +665,8 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
             assert self.registry_entry is not None
 
         unique_id = self.unique_id
-        self.hass.services.async_register(
+        hass = self.hass
+        hass.services.async_register(
             DOMAIN,
             unique_id,
             self._service_handler,
@@ -674,16 +675,12 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
         )
 
         # Register the service description
-        async_set_service_schema(
-            self.hass,
-            DOMAIN,
-            unique_id,
-            {
-                CONF_NAME: self.registry_entry.name or self.name,
-                CONF_DESCRIPTION: self.description,
-                CONF_FIELDS: self.fields,
-            },
-        )
+        service_desc = {
+            CONF_NAME: self.registry_entry.name or self.name,
+            CONF_DESCRIPTION: self.description,
+            CONF_FIELDS: self.fields,
+        }
+        async_set_service_schema(hass, DOMAIN, unique_id, service_desc)
 
         if (state := await self.async_get_last_state()) and (
             last_triggered := state.attributes.get("last_triggered")
