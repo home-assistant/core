@@ -6,6 +6,7 @@ import asyncio
 from collections.abc import Iterable
 from functools import lru_cache
 import logging
+import pathlib
 from typing import Any
 
 from homeassistant.core import HomeAssistant, callback
@@ -20,21 +21,18 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @callback
-def _component_icons_path(component: str, integration: Integration) -> str | None:
+def _component_icons_path(component: str, integration: Integration) -> pathlib.Path:
     """Return the icons json file location for a component.
 
     Ex: components/hue/icons.json
     If component is just a single file, will return None.
     """
-    # If it's a component that is just one file, we don't support icons
-    # Example custom_components/my_component.py
-    if integration.file_path.name != component:
-        return None
-
-    return str(integration.file_path / "icons.json")
+    return integration.file_path / "icons.json"
 
 
-def _load_icons_files(icons_files: dict[str, str]) -> dict[str, dict[str, Any]]:
+def _load_icons_files(
+    icons_files: dict[str, pathlib.Path],
+) -> dict[str, dict[str, Any]]:
     """Load and parse icons.json files."""
     return {
         component: load_json_object(icons_file)
@@ -51,12 +49,9 @@ async def _async_get_component_icons(
     icons: dict[str, Any] = {}
 
     # Determine files to load
-    files_to_load = {}
-    for comp in components:
-        if (path := _component_icons_path(comp, integrations[comp])) is None:
-            icons[comp] = {}
-        else:
-            files_to_load[comp] = path
+    files_to_load = {
+        comp: _component_icons_path(comp, integrations[comp]) for comp in components
+    }
 
     # Load files
     if files_to_load and (
