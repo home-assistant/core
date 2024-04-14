@@ -1,5 +1,5 @@
 """Test the UniFi Protect switch platform."""
-# pylint: disable=protected-access
+
 from __future__ import annotations
 
 from unittest.mock import AsyncMock, Mock
@@ -33,34 +33,41 @@ from .utils import (
 CAMERA_SWITCHES_BASIC = [
     d
     for d in CAMERA_SWITCHES
-    if d.name != "Detections: Face"
-    and d.name != "Detections: Package"
-    and d.name != "Detections: License Plate"
-    and d.name != "Detections: Smoke/CO"
-    and d.name != "SSH Enabled"
+    if (
+        not d.name.startswith("Detections:")
+        and d.name != "SSH Enabled"
+        and d.name != "Color Night Vision"
+        and d.name != "Tracking: Person"
+        and d.name != "HDR Mode"
+    )
+    or d.name == "Detections: Motion"
+    or d.name == "Detections: Person"
+    or d.name == "Detections: Vehicle"
 ]
 CAMERA_SWITCHES_NO_EXTRA = [
-    d for d in CAMERA_SWITCHES_BASIC if d.name not in ("High FPS", "Privacy Mode")
+    d
+    for d in CAMERA_SWITCHES_BASIC
+    if d.name not in ("High FPS", "Privacy Mode", "HDR Mode")
 ]
 
 
 async def test_switch_camera_remove(
     hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera, unadopted_camera: Camera
-):
+) -> None:
     """Test removing and re-adding a camera device."""
 
     ufp.api.bootstrap.nvr.system_info.ustorage = None
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.SWITCH, 15, 14)
+    assert_entity_counts(hass, Platform.SWITCH, 15, 13)
     await remove_entities(hass, ufp, [doorbell, unadopted_camera])
     assert_entity_counts(hass, Platform.SWITCH, 2, 2)
     await adopt_devices(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.SWITCH, 15, 14)
+    assert_entity_counts(hass, Platform.SWITCH, 15, 13)
 
 
 async def test_switch_light_remove(
     hass: HomeAssistant, ufp: MockUFPFixture, light: Light
-):
+) -> None:
     """Test removing and re-adding a light device."""
 
     ufp.api.bootstrap.nvr.system_info.ustorage = None
@@ -72,7 +79,7 @@ async def test_switch_light_remove(
     assert_entity_counts(hass, Platform.SWITCH, 4, 3)
 
 
-async def test_switch_nvr(hass: HomeAssistant, ufp: MockUFPFixture):
+async def test_switch_nvr(hass: HomeAssistant, ufp: MockUFPFixture) -> None:
     """Test switch entity setup for light devices."""
 
     await init_entry(hass, ufp, [])
@@ -102,7 +109,7 @@ async def test_switch_setup_no_perm(
     ufp: MockUFPFixture,
     light: Light,
     doorbell: Camera,
-):
+) -> None:
     """Test switch entity setup for light devices."""
 
     ufp.api.bootstrap.auth_user.all_permissions = [
@@ -118,7 +125,7 @@ async def test_switch_setup_light(
     hass: HomeAssistant,
     ufp: MockUFPFixture,
     light: Light,
-):
+) -> None:
     """Test switch entity setup for light devices."""
 
     await init_entry(hass, ufp, [light])
@@ -163,11 +170,11 @@ async def test_switch_setup_camera_all(
     hass: HomeAssistant,
     ufp: MockUFPFixture,
     doorbell: Camera,
-):
+) -> None:
     """Test switch entity setup for camera devices (all enabled feature flags)."""
 
     await init_entry(hass, ufp, [doorbell])
-    assert_entity_counts(hass, Platform.SWITCH, 15, 14)
+    assert_entity_counts(hass, Platform.SWITCH, 15, 13)
 
     entity_registry = er.async_get(hass)
 
@@ -210,7 +217,7 @@ async def test_switch_setup_camera_none(
     hass: HomeAssistant,
     ufp: MockUFPFixture,
     camera: Camera,
-):
+) -> None:
     """Test switch entity setup for camera devices (no enabled feature flags)."""
 
     await init_entry(hass, ufp, [camera])
@@ -258,7 +265,7 @@ async def test_switch_setup_camera_none(
 
 async def test_switch_light_status(
     hass: HomeAssistant, ufp: MockUFPFixture, light: Light
-):
+) -> None:
     """Tests status light switch for lights."""
 
     await init_entry(hass, ufp, [light])
@@ -286,11 +293,11 @@ async def test_switch_light_status(
 
 async def test_switch_camera_ssh(
     hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
-):
+) -> None:
     """Tests SSH switch for cameras."""
 
     await init_entry(hass, ufp, [doorbell])
-    assert_entity_counts(hass, Platform.SWITCH, 15, 14)
+    assert_entity_counts(hass, Platform.SWITCH, 15, 13)
 
     description = CAMERA_SWITCHES[0]
 
@@ -319,11 +326,11 @@ async def test_switch_camera_simple(
     ufp: MockUFPFixture,
     doorbell: Camera,
     description: ProtectSwitchEntityDescription,
-):
+) -> None:
     """Tests all simple switches for cameras."""
 
     await init_entry(hass, ufp, [doorbell])
-    assert_entity_counts(hass, Platform.SWITCH, 15, 14)
+    assert_entity_counts(hass, Platform.SWITCH, 15, 13)
 
     assert description.ufp_set_method is not None
 
@@ -348,11 +355,11 @@ async def test_switch_camera_simple(
 
 async def test_switch_camera_highfps(
     hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
-):
+) -> None:
     """Tests High FPS switch for cameras."""
 
     await init_entry(hass, ufp, [doorbell])
-    assert_entity_counts(hass, Platform.SWITCH, 15, 14)
+    assert_entity_counts(hass, Platform.SWITCH, 15, 13)
 
     description = CAMERA_SWITCHES[3]
 
@@ -376,14 +383,14 @@ async def test_switch_camera_highfps(
 
 async def test_switch_camera_privacy(
     hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
-):
+) -> None:
     """Tests Privacy Mode switch for cameras with privacy mode defaulted on."""
 
     previous_mic = doorbell.mic_volume = 53
     previous_record = doorbell.recording_settings.mode = RecordingMode.DETECTIONS
 
     await init_entry(hass, ufp, [doorbell])
-    assert_entity_counts(hass, Platform.SWITCH, 15, 14)
+    assert_entity_counts(hass, Platform.SWITCH, 15, 13)
 
     description = PRIVACY_MODE_SWITCH
 
@@ -430,12 +437,12 @@ async def test_switch_camera_privacy(
 
 async def test_switch_camera_privacy_already_on(
     hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
-):
+) -> None:
     """Tests Privacy Mode switch for cameras with privacy mode defaulted on."""
 
     doorbell.add_privacy_zone()
     await init_entry(hass, ufp, [doorbell])
-    assert_entity_counts(hass, Platform.SWITCH, 15, 14)
+    assert_entity_counts(hass, Platform.SWITCH, 15, 13)
 
     description = PRIVACY_MODE_SWITCH
 

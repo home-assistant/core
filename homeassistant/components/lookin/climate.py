@@ -1,10 +1,11 @@
 """The lookin integration climate platform."""
+
 from __future__ import annotations
 
 import logging
 from typing import Any, Final, cast
 
-from aiolookin import Climate, MeteoSensor
+from aiolookin import Climate, MeteoSensor, Remote
 from aiolookin.models import UDPCommandType, UDPEvent
 
 from homeassistant.components.climate import (
@@ -75,7 +76,7 @@ async def async_setup_entry(
             continue
         uuid = remote["UUID"]
         coordinator = lookin_data.device_coordinators[uuid]
-        device: Climate = coordinator.data
+        device = cast(Climate, coordinator.data)
         entities.append(
             ConditionerEntity(
                 uuid=uuid,
@@ -97,6 +98,8 @@ class ConditionerEntity(LookinCoordinatorEntity, ClimateEntity):
         ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.FAN_MODE
         | ClimateEntityFeature.SWING_MODE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
     _attr_fan_modes: list[str] = LOOKIN_FAN_MODE_IDX_TO_HASS
     _attr_swing_modes: list[str] = LOOKIN_SWING_MODE_IDX_TO_HASS
@@ -104,13 +107,14 @@ class ConditionerEntity(LookinCoordinatorEntity, ClimateEntity):
     _attr_min_temp = MIN_TEMP
     _attr_max_temp = MAX_TEMP
     _attr_target_temperature_step = PRECISION_WHOLE
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,
         uuid: str,
         device: Climate,
         lookin_data: LookinData,
-        coordinator: LookinDataUpdateCoordinator,
+        coordinator: LookinDataUpdateCoordinator[Remote],
     ) -> None:
         """Init the ConditionerEntity."""
         super().__init__(coordinator, uuid, device, lookin_data)

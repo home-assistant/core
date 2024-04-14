@@ -1,8 +1,8 @@
 {
   "domain": "select",
   "name": "Select",
-  "documentation": "https://www.home-assistant.io/integrations/select",
   "codeowners": ["@home-assistant/core"],
-  "quality_scale": "internal",
-  "integration_type": "entity"
+  "documentation": "https://www.home-assistant.io/integrations/select",
+  "integration_type": "entity",
+  "quality_scale": "internal"
 }

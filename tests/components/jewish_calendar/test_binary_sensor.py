@@ -1,4 +1,5 @@
 """The tests for the Jewish calendar binary sensors."""
+
 from datetime import datetime as dt, timedelta
 
 import pytest
@@ -6,6 +7,7 @@ import pytest
 from homeassistant.components import jewish_calendar
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -153,7 +155,7 @@ MELACHA_TEST_IDS = [
 
 
 @pytest.mark.parametrize(
-    [
+    (
         "now",
         "candle_lighting",
         "havdalah",
@@ -162,12 +164,13 @@ MELACHA_TEST_IDS = [
         "latitude",
         "longitude",
         "result",
-    ],
+    ),
     MELACHA_PARAMS,
     ids=MELACHA_TEST_IDS,
 )
 async def test_issur_melacha_sensor(
-    hass,
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     now,
     candle_lighting,
     havdalah,
@@ -176,7 +179,7 @@ async def test_issur_melacha_sensor(
     latitude,
     longitude,
     result,
-):
+) -> None:
     """Test Issur Melacha sensor output."""
     time_zone = dt_util.get_time_zone(tzname)
     test_time = now.replace(tzinfo=time_zone)
@@ -184,8 +187,6 @@ async def test_issur_melacha_sensor(
     hass.config.set_time_zone(tzname)
     hass.config.latitude = latitude
     hass.config.longitude = longitude
-
-    registry = er.async_get(hass)
 
     with alter_time(test_time):
         assert await async_setup_component(
@@ -207,7 +208,7 @@ async def test_issur_melacha_sensor(
             hass.states.get("binary_sensor.test_issur_melacha_in_effect").state
             == result["state"]
         )
-        entity = registry.async_get("binary_sensor.test_issur_melacha_in_effect")
+        entity = entity_registry.async_get("binary_sensor.test_issur_melacha_in_effect")
         target_uid = "_".join(
             map(
                 str,
@@ -236,7 +237,7 @@ async def test_issur_melacha_sensor(
 
 
 @pytest.mark.parametrize(
-    [
+    (
         "now",
         "candle_lighting",
         "havdalah",
@@ -245,7 +246,7 @@ async def test_issur_melacha_sensor(
         "latitude",
         "longitude",
         "result",
-    ],
+    ),
     [
         make_nyc_test_params(
             dt(2020, 10, 23, 17, 44, 59, 999999), [STATE_OFF, STATE_ON]
@@ -257,7 +258,7 @@ async def test_issur_melacha_sensor(
     ids=["before_candle_lighting", "before_havdalah"],
 )
 async def test_issur_melacha_sensor_update(
-    hass,
+    hass: HomeAssistant,
     now,
     candle_lighting,
     havdalah,
@@ -266,7 +267,7 @@ async def test_issur_melacha_sensor_update(
     latitude,
     longitude,
     result,
-):
+) -> None:
     """Test Issur Melacha sensor output."""
     time_zone = dt_util.get_time_zone(tzname)
     test_time = now.replace(tzinfo=time_zone)
@@ -305,7 +306,9 @@ async def test_issur_melacha_sensor_update(
         )
 
 
-async def test_no_discovery_info(hass, caplog):
+async def test_no_discovery_info(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test setup without discovery info."""
     assert BINARY_SENSOR_DOMAIN not in hass.config.components
     assert await async_setup_component(

@@ -1,12 +1,15 @@
 """Tests for the tag component."""
-from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.tag import DOMAIN, TAGS, async_scan_tag
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import collection
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
+
+from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture
@@ -28,7 +31,9 @@ def storage_setup(hass, hass_storage):
     return _storage
 
 
-async def test_ws_list(hass, hass_ws_client, storage_setup):
+async def test_ws_list(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, storage_setup
+) -> None:
     """Test listing tags via WS."""
     assert await storage_setup()
 
@@ -44,7 +49,9 @@ async def test_ws_list(hass, hass_ws_client, storage_setup):
     assert "test tag" in result
 
 
-async def test_ws_update(hass, hass_ws_client, storage_setup):
+async def test_ws_update(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, storage_setup
+) -> None:
     """Test listing tags via WS."""
     assert await storage_setup()
     await async_scan_tag(hass, "test tag", "some_scanner")
@@ -68,7 +75,12 @@ async def test_ws_update(hass, hass_ws_client, storage_setup):
     assert item["name"] == "New name"
 
 
-async def test_tag_scanned(hass, hass_ws_client, storage_setup):
+async def test_tag_scanned(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    freezer: FrozenDateTimeFactory,
+    storage_setup,
+) -> None:
     """Test scanning tags."""
     assert await storage_setup()
 
@@ -84,8 +96,8 @@ async def test_tag_scanned(hass, hass_ws_client, storage_setup):
     assert "test tag" in result
 
     now = dt_util.utcnow()
-    with patch("homeassistant.util.dt.utcnow", return_value=now):
-        await async_scan_tag(hass, "new tag", "some_scanner")
+    freezer.move_to(now)
+    await async_scan_tag(hass, "new tag", "some_scanner")
 
     await client.send_json({"id": 7, "type": f"{DOMAIN}/list"})
     resp = await client.receive_json()
@@ -111,7 +123,9 @@ def track_changes(coll: collection.ObservableCollection):
     return changes
 
 
-async def test_tag_id_exists(hass, hass_ws_client, storage_setup):
+async def test_tag_id_exists(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, storage_setup
+) -> None:
     """Test scanning tags."""
     assert await storage_setup()
     changes = track_changes(hass.data[DOMAIN][TAGS])
@@ -120,5 +134,5 @@ async def test_tag_id_exists(hass, hass_ws_client, storage_setup):
     await client.send_json({"id": 2, "type": f"{DOMAIN}/create", "tag_id": "test tag"})
     response = await client.receive_json()
     assert not response["success"]
-    assert response["error"]["code"] == "unknown_error"
+    assert response["error"]["code"] == "home_assistant_error"
     assert len(changes) == 0

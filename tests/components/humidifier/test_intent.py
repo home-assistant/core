@@ -1,4 +1,7 @@
 """Tests for the humidifier intents."""
+
+import pytest
+
 from homeassistant.components.humidifier import (
     ATTR_AVAILABLE_MODES,
     ATTR_HUMIDITY,
@@ -15,12 +18,13 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.intent import IntentHandleError, async_handle
 
 from tests.common import async_mock_service
 
 
-async def test_intent_set_humidity(hass):
+async def test_intent_set_humidity(hass: HomeAssistant) -> None:
     """Test the set humidity intent."""
     hass.states.async_set(
         "humidifier.bedroom_humidifier", STATE_ON, {ATTR_HUMIDITY: 40}
@@ -48,7 +52,7 @@ async def test_intent_set_humidity(hass):
     assert call.data.get(ATTR_HUMIDITY) == 50
 
 
-async def test_intent_set_humidity_and_turn_on(hass):
+async def test_intent_set_humidity_and_turn_on(hass: HomeAssistant) -> None:
     """Test the set humidity intent for turned off humidifier."""
     hass.states.async_set(
         "humidifier.bedroom_humidifier", STATE_OFF, {ATTR_HUMIDITY: 40}
@@ -83,7 +87,7 @@ async def test_intent_set_humidity_and_turn_on(hass):
     assert call.data.get(ATTR_HUMIDITY) == 50
 
 
-async def test_intent_set_mode(hass):
+async def test_intent_set_mode(hass: HomeAssistant) -> None:
     """Test the set mode intent."""
     hass.states.async_set(
         "humidifier.bedroom_humidifier",
@@ -121,7 +125,7 @@ async def test_intent_set_mode(hass):
     assert call.data.get(ATTR_MODE) == "away"
 
 
-async def test_intent_set_mode_and_turn_on(hass):
+async def test_intent_set_mode_and_turn_on(hass: HomeAssistant) -> None:
     """Test the set mode intent."""
     hass.states.async_set(
         "humidifier.bedroom_humidifier",
@@ -163,7 +167,7 @@ async def test_intent_set_mode_and_turn_on(hass):
     assert call.data.get(ATTR_MODE) == "away"
 
 
-async def test_intent_set_mode_tests_feature(hass):
+async def test_intent_set_mode_tests_feature(hass: HomeAssistant) -> None:
     """Test the set mode intent where modes are not supported."""
     hass.states.async_set(
         "humidifier.bedroom_humidifier", STATE_ON, {ATTR_HUMIDITY: 40}
@@ -171,21 +175,21 @@ async def test_intent_set_mode_tests_feature(hass):
     mode_calls = async_mock_service(hass, DOMAIN, SERVICE_SET_MODE)
     await intent.async_setup_intents(hass)
 
-    try:
+    with pytest.raises(IntentHandleError) as excinfo:
         await async_handle(
             hass,
             "test",
             intent.INTENT_MODE,
             {"name": {"value": "Bedroom humidifier"}, "mode": {"value": "away"}},
         )
-        assert False, "handling intent should have raised"
-    except IntentHandleError as err:
-        assert str(err) == "Entity bedroom humidifier does not support modes"
-
+    assert str(excinfo.value) == "Entity bedroom humidifier does not support modes"
     assert len(mode_calls) == 0
 
 
-async def test_intent_set_unknown_mode(hass):
+@pytest.mark.parametrize("available_modes", [["home", "away"], None])
+async def test_intent_set_unknown_mode(
+    hass: HomeAssistant, available_modes: list[str] | None
+) -> None:
     """Test the set mode intent for unsupported mode."""
     hass.states.async_set(
         "humidifier.bedroom_humidifier",
@@ -193,22 +197,19 @@ async def test_intent_set_unknown_mode(hass):
         {
             ATTR_HUMIDITY: 40,
             ATTR_SUPPORTED_FEATURES: 1,
-            ATTR_AVAILABLE_MODES: ["home", "away"],
-            ATTR_MODE: "home",
+            ATTR_AVAILABLE_MODES: available_modes,
+            ATTR_MODE: None,
         },
     )
     mode_calls = async_mock_service(hass, DOMAIN, SERVICE_SET_MODE)
     await intent.async_setup_intents(hass)
 
-    try:
+    with pytest.raises(IntentHandleError) as excinfo:
         await async_handle(
             hass,
             "test",
             intent.INTENT_MODE,
             {"name": {"value": "Bedroom humidifier"}, "mode": {"value": "eco"}},
         )
-        assert False, "handling intent should have raised"
-    except IntentHandleError as err:
-        assert str(err) == "Entity bedroom humidifier does not support eco mode"
-
+    assert str(excinfo.value) == "Entity bedroom humidifier does not support eco mode"
     assert len(mode_calls) == 0

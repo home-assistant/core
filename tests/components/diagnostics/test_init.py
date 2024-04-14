@@ -1,10 +1,12 @@
 """Test the Diagnostics integration."""
+
 from http import HTTPStatus
 from unittest.mock import AsyncMock, Mock
 
 import pytest
 
 from homeassistant.components.websocket_api.const import TYPE_RESULT
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import async_get
 from homeassistant.helpers.system_info import async_get_system_info
 from homeassistant.setup import async_setup_component
@@ -12,6 +14,7 @@ from homeassistant.setup import async_setup_component
 from . import _get_diagnostics_for_config_entry, _get_diagnostics_for_device
 
 from tests.common import MockConfigEntry, mock_platform
+from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)
@@ -42,7 +45,9 @@ async def mock_diagnostics_integration(hass):
     assert await async_setup_component(hass, "diagnostics", {})
 
 
-async def test_websocket(hass, hass_ws_client):
+async def test_websocket(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test websocket command."""
     client = await hass_ws_client(hass)
     await client.send_json({"id": 5, "type": "diagnostics/list"})
@@ -74,7 +79,11 @@ async def test_websocket(hass, hass_ws_client):
     }
 
 
-async def test_download_diagnostics(hass, hass_client):
+async def test_download_diagnostics(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    enable_custom_integrations: None,
+) -> None:
     """Test download diagnostics."""
     config_entry = MockConfigEntry(domain="fake_integration")
     config_entry.add_to_hass(hass)
@@ -84,7 +93,73 @@ async def test_download_diagnostics(hass, hass_client):
 
     assert await _get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {
         "home_assistant": hass_sys_info,
-        "custom_components": {},
+        "custom_components": {
+            "test": {
+                "documentation": "http://example.com",
+                "requirements": [],
+                "version": "1.2.3",
+            },
+            "test_blocked_version": {
+                "documentation": None,
+                "requirements": [],
+                "version": "1.0.0",
+            },
+            "test_embedded": {
+                "documentation": "http://test-package.io",
+                "requirements": [],
+                "version": "1.2.3",
+            },
+            "test_integration_frame": {
+                "documentation": "http://example.com",
+                "requirements": [],
+                "version": "1.2.3",
+            },
+            "test_integration_platform": {
+                "documentation": "http://test-package.io",
+                "requirements": [],
+                "version": "1.2.3",
+            },
+            "test_legacy_state_translations": {
+                "documentation": "http://test-package.io",
+                "requirements": [],
+                "version": "1.2.3",
+            },
+            "test_legacy_state_translations_bad_data": {
+                "documentation": "http://test-package.io",
+                "requirements": [],
+                "version": "1.2.3",
+            },
+            "test_package": {
+                "documentation": "http://test-package.io",
+                "requirements": [],
+                "version": "1.2.3",
+            },
+            "test_package_loaded_executor": {
+                "documentation": "http://test-package.io",
+                "requirements": [],
+                "version": "1.2.3",
+            },
+            "test_package_loaded_loop": {
+                "documentation": "http://test-package.io",
+                "requirements": [],
+                "version": "1.2.3",
+            },
+            "test_package_raises_cancelled_error": {
+                "documentation": "http://test-package.io",
+                "requirements": [],
+                "version": "1.2.3",
+            },
+            "test_package_raises_cancelled_error_config_entry": {
+                "documentation": "http://test-package.io",
+                "requirements": [],
+                "version": "1.2.3",
+            },
+            "test_with_services": {
+                "documentation": None,
+                "requirements": [],
+                "version": "1.0",
+            },
+        },
         "integration_manifest": {
             "codeowners": [],
             "dependencies": [],
@@ -105,7 +180,73 @@ async def test_download_diagnostics(hass, hass_client):
         hass, hass_client, config_entry, device
     ) == {
         "home_assistant": hass_sys_info,
-        "custom_components": {},
+        "custom_components": {
+            "test": {
+                "documentation": "http://example.com",
+                "requirements": [],
+                "version": "1.2.3",
+            },
+            "test_blocked_version": {
+                "documentation": None,
+                "requirements": [],
+                "version": "1.0.0",
+            },
+            "test_embedded": {
+                "documentation": "http://test-package.io",
+                "requirements": [],
+                "version": "1.2.3",
+            },
+            "test_integration_frame": {
+                "documentation": "http://example.com",
+                "requirements": [],
+                "version": "1.2.3",
+            },
+            "test_integration_platform": {
+                "documentation": "http://test-package.io",
+                "requirements": [],
+                "version": "1.2.3",
+            },
+            "test_legacy_state_translations": {
+                "documentation": "http://test-package.io",
+                "requirements": [],
+                "version": "1.2.3",
+            },
+            "test_legacy_state_translations_bad_data": {
+                "documentation": "http://test-package.io",
+                "requirements": [],
+                "version": "1.2.3",
+            },
+            "test_package": {
+                "documentation": "http://test-package.io",
+                "requirements": [],
+                "version": "1.2.3",
+            },
+            "test_package_loaded_executor": {
+                "documentation": "http://test-package.io",
+                "requirements": [],
+                "version": "1.2.3",
+            },
+            "test_package_loaded_loop": {
+                "documentation": "http://test-package.io",
+                "requirements": [],
+                "version": "1.2.3",
+            },
+            "test_package_raises_cancelled_error": {
+                "documentation": "http://test-package.io",
+                "requirements": [],
+                "version": "1.2.3",
+            },
+            "test_package_raises_cancelled_error_config_entry": {
+                "documentation": "http://test-package.io",
+                "requirements": [],
+                "version": "1.2.3",
+            },
+            "test_with_services": {
+                "documentation": None,
+                "requirements": [],
+                "version": "1.0",
+            },
+        },
         "integration_manifest": {
             "codeowners": [],
             "dependencies": [],
@@ -118,7 +259,9 @@ async def test_download_diagnostics(hass, hass_client):
     }
 
 
-async def test_failure_scenarios(hass, hass_client):
+async def test_failure_scenarios(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
     """Test failure scenarios."""
     client = await hass_client()
 

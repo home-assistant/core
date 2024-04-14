@@ -1,4 +1,5 @@
 """Common methods used across tests for TotalConnect."""
+
 from unittest.mock import patch
 
 from total_connect_client import ArmingState, ResultCode, ZoneStatus, ZoneType
@@ -148,12 +149,64 @@ PARTITIONS_UNKNOWN = {"PartitionInfo": PARTITION_INFO_UNKNOWN}
 
 ZONE_NORMAL = {
     "ZoneID": "1",
-    "ZoneDescription": "Normal",
-    "ZoneStatus": ZoneStatus.NORMAL,
+    "ZoneDescription": "Security",
+    "ZoneStatus": ZoneStatus.FAULT,
+    "ZoneTypeId": ZoneType.SECURITY,
     "PartitionId": "1",
+    "CanBeBypassed": 1,
+}
+ZONE_2 = {
+    "ZoneID": "2",
+    "ZoneDescription": "Fire",
+    "ZoneStatus": ZoneStatus.LOW_BATTERY,
+    "ZoneTypeId": ZoneType.FIRE_SMOKE,
+    "PartitionId": "1",
+    "CanBeBypassed": 1,
+}
+ZONE_3 = {
+    "ZoneID": "3",
+    "ZoneDescription": "Gas",
+    "ZoneStatus": ZoneStatus.TAMPER,
+    "ZoneTypeId": ZoneType.CARBON_MONOXIDE,
+    "PartitionId": "1",
+    "CanBeBypassed": 1,
+}
+ZONE_4 = {
+    "ZoneID": "4",
+    "ZoneDescription": "Motion",
+    "ZoneStatus": ZoneStatus.NORMAL,
+    "ZoneTypeId": ZoneType.INTERIOR_FOLLOWER,
+    "PartitionId": "1",
+    "CanBeBypassed": 1,
+}
+ZONE_5 = {
+    "ZoneID": "5",
+    "ZoneDescription": "Medical",
+    "ZoneStatus": ZoneStatus.NORMAL,
+    "ZoneTypeId": ZoneType.PROA7_MEDICAL,
+    "PartitionId": "1",
+    "CanBeBypassed": 0,
+}
+# 99 is an unknown ZoneType
+ZONE_6 = {
+    "ZoneID": "6",
+    "ZoneDescription": "Unknown",
+    "ZoneStatus": ZoneStatus.NORMAL,
+    "ZoneTypeId": 99,
+    "PartitionId": "1",
+    "CanBeBypassed": 0,
 }
 
-ZONE_INFO = [ZONE_NORMAL]
+ZONE_7 = {
+    "ZoneID": 7,
+    "ZoneDescription": "Temperature",
+    "ZoneStatus": ZoneStatus.NORMAL,
+    "ZoneTypeId": ZoneType.MONITOR,
+    "PartitionId": "1",
+    "CanBeBypassed": 0,
+}
+
+ZONE_INFO = [ZONE_NORMAL, ZONE_2, ZONE_3, ZONE_4, ZONE_5, ZONE_6, ZONE_7]
 ZONES = {"ZoneInfo": ZONE_INFO}
 
 METADATA_DISARMED = {
@@ -336,10 +389,13 @@ async def setup_platform(hass, platform):
         RESPONSE_DISARMED,
     ]
 
-    with patch("homeassistant.components.totalconnect.PLATFORMS", [platform]), patch(
-        TOTALCONNECT_REQUEST,
-        side_effect=responses,
-    ) as mock_request:
+    with (
+        patch("homeassistant.components.totalconnect.PLATFORMS", [platform]),
+        patch(
+            TOTALCONNECT_REQUEST,
+            side_effect=responses,
+        ) as mock_request,
+    ):
         assert await async_setup_component(hass, DOMAIN, {})
         assert mock_request.call_count == 5
     await hass.async_block_till_done()

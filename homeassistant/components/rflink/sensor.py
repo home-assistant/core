@@ -1,4 +1,5 @@
 """Support for Rflink sensors."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -352,6 +353,7 @@ class RflinkSensor(RflinkDevice, SensorEntity):
         """Domain specific event handler."""
         self._state = event["value"]
 
+    # pylint: disable-next=hass-missing-super-call
     async def async_added_to_hass(self) -> None:
         """Register update callback."""
         # Remove temporary bogus entity_id if added

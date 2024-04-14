@@ -1,6 +1,7 @@
 """Tests for the Yeelight integration."""
-import asyncio
+
 from datetime import timedelta
+from ipaddress import ip_address
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from async_upnp_client.search import SsdpSearchListener
@@ -33,16 +34,18 @@ CAPABILITIES = {
     "model": MODEL,
     "fw_ver": FW_VER,
     "location": f"yeelight://{IP_ADDRESS}",
-    "support": "get_prop set_default set_power toggle set_bright start_cf stop_cf"
-    " set_scene cron_add cron_get cron_del set_ct_abx set_rgb",
+    "support": (
+        "get_prop set_default set_power toggle set_bright start_cf stop_cf"
+        " set_scene cron_add cron_get cron_del set_ct_abx set_rgb"
+    ),
     "name": "",
 }
 
 ID_DECIMAL = f"{int(ID, 16):08d}"
 
 ZEROCONF_DATA = zeroconf.ZeroconfServiceInfo(
-    host=IP_ADDRESS,
-    addresses=[IP_ADDRESS],
+    ip_address=ip_address(IP_ADDRESS),
+    ip_addresses=[ip_address(IP_ADDRESS)],
     port=54321,
     hostname=f"yeelink-light-strip1_miio{ID_DECIMAL}.local.",
     type="_miio._udp.local.",
@@ -164,12 +167,12 @@ def _patched_ssdp_listener(info: CaseInsensitiveDict, *args, **kwargs):
     async def _async_callback(*_):
         if kwargs["source"][0] == FAIL_TO_BIND_IP:
             raise OSError
-        await listener.async_connect_callback()
+        listener.connect_callback()
 
     @callback
     def _async_search(*_):
         if info:
-            asyncio.create_task(listener.async_callback(info))
+            listener.callback(info)
 
     listener.async_start = _async_callback
     listener.async_search = _async_search

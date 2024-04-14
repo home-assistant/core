@@ -30,6 +30,10 @@ async def test_anna_climate_binary_sensor_entities(
     assert state
     assert state.state == STATE_OFF
 
+    state = hass.states.get("binary_sensor.opentherm_compressor_state")
+    assert state
+    assert state.state == STATE_ON
+
 
 async def test_anna_climate_binary_sensor_change(
     hass: HomeAssistant, mock_smile_anna: MagicMock, init_integration: MockConfigEntry

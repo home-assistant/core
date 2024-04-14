@@ -1,4 +1,5 @@
 """Platform for Kostal Plenticore select widgets."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -7,8 +8,9 @@ import logging
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo, EntityCategory
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -18,18 +20,11 @@ from .helper import Plenticore, SelectDataUpdateCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
-class PlenticoreRequiredKeysMixin:
-    """A class that describes required properties for plenticore select entities."""
+@dataclass(frozen=True, kw_only=True)
+class PlenticoreSelectEntityDescription(SelectEntityDescription):
+    """A class that describes plenticore select entities."""
 
     module_id: str
-
-
-@dataclass
-class PlenticoreSelectEntityDescription(
-    SelectEntityDescription, PlenticoreRequiredKeysMixin
-):
-    """A class that describes plenticore select entities."""
 
 
 SELECT_SETTINGS_DATA = [
@@ -87,7 +82,9 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class PlenticoreDataSelect(CoordinatorEntity, SelectEntity):
+class PlenticoreDataSelect(
+    CoordinatorEntity[SelectDataUpdateCoordinator], SelectEntity
+):
     """Representation of a Plenticore Select."""
 
     _attr_entity_category = EntityCategory.CONFIG
@@ -108,7 +105,7 @@ class PlenticoreDataSelect(CoordinatorEntity, SelectEntity):
         self.platform_name = platform_name
         self.module_id = description.module_id
         self.data_id = description.key
-        self._device_info = device_info
+        self._attr_device_info = device_info
         self._attr_unique_id = f"{entry_id}_{description.module_id}"
 
     @property
@@ -124,7 +121,11 @@ class PlenticoreDataSelect(CoordinatorEntity, SelectEntity):
     async def async_added_to_hass(self) -> None:
         """Register this entity on the Update Coordinator."""
         await super().async_added_to_hass()
-        self.coordinator.start_fetch_data(self.module_id, self.data_id, self.options)
+        self.async_on_remove(
+            self.coordinator.start_fetch_data(
+                self.module_id, self.data_id, self.options
+            )
+        )
 
     async def async_will_remove_from_hass(self) -> None:
         """Unregister this entity from the Update Coordinator."""

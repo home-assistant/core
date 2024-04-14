@@ -1,0 +1,70 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "host": "URL of the management interface of your TP-Link Omada controller."
+        },
+        "description": "Enter the connection details for the Omada controller. Cloud controllers aren't supported."
+      },
+      "site": {
+        "data": {
+          "site": "Site"
+        },
+        "title": "Choose which site(s) to manage"
+      },
+      "reauth_confirm": {
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "title": "Update TP-Link Omada Credentials",
+        "description": "The provided credentials have stopped working. Please update them."
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unsupported_controller": "Omada Controller version not supported.",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "no_sites_found": "No sites found which the user can manage."
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  },
+  "entity": {
+    "switch": {
+      "poe_control": {
+        "name": "Port {port_name} PoE"
+      },
+      "wan_connect_ipv4": {
+        "name": "Port {port_name} Internet Connected"
+      },
+      "wan_connect_ipv6": {
+        "name": "Port {port_name} Internet Connected (IPv6)"
+      }
+    },
+    "binary_sensor": {
+      "wan_link": {
+        "name": "Port {port_name} Internet Link"
+      },
+      "online_detection": {
+        "name": "Port {port_name} Online Detection"
+      },
+      "lan_status": {
+        "name": "Port {port_name} LAN Status"
+      },
+      "poe_delivery": {
+        "name": "Port {port_name} PoE Delivery"
+      }
+    }
+  }
+}

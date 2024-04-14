@@ -1,11 +1,12 @@
 """Support for Solax inverter via local API."""
+
 from __future__ import annotations
 
 import asyncio
 from datetime import timedelta
 
 from solax import RealTimeAPI
-from solax.discovery import InverterError
+from solax.inverter import InverterError
 from solax.units import Units
 
 from homeassistant.components.sensor import (
@@ -16,17 +17,17 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ELECTRIC_CURRENT_AMPERE,
-    ENERGY_KILO_WATT_HOUR,
     PERCENTAGE,
-    TEMP_CELSIUS,
+    UnitOfElectricCurrent,
     UnitOfElectricPotential,
+    UnitOfEnergy,
     UnitOfFrequency,
     UnitOfPower,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 
@@ -40,19 +41,19 @@ SENSOR_DESCRIPTIONS: dict[tuple[Units, bool], SensorEntityDescription] = {
     (Units.C, False): SensorEntityDescription(
         key=f"{Units.C}_{False}",
         device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     (Units.KWH, False): SensorEntityDescription(
         key=f"{Units.KWH}_{False}",
         device_class=SensorDeviceClass.ENERGY,
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     (Units.KWH, True): SensorEntityDescription(
         key=f"{Units.KWH}_{True}",
         device_class=SensorDeviceClass.ENERGY,
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     (Units.V, False): SensorEntityDescription(
@@ -64,7 +65,7 @@ SENSOR_DESCRIPTIONS: dict[tuple[Units, bool], SensorEntityDescription] = {
     (Units.A, False): SensorEntityDescription(
         key=f"{Units.A}_{False}",
         device_class=SensorDeviceClass.CURRENT,
-        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     (Units.W, False): SensorEntityDescription(
@@ -87,7 +88,6 @@ SENSOR_DESCRIPTIONS: dict[tuple[Units, bool], SensorEntityDescription] = {
     ),
     (Units.NONE, False): SensorEntityDescription(
         key=f"{Units.NONE}_{False}",
-        state_class=SensorStateClass.MEASUREMENT,
     ),
 }
 
@@ -103,8 +103,12 @@ async def async_setup_entry(
     serial = resp.serial_number
     version = resp.version
     endpoint = RealTimeDataEndpoint(hass, api)
-    hass.async_add_job(endpoint.async_refresh)
-    async_track_time_interval(hass, endpoint.async_refresh, SCAN_INTERVAL)
+    entry.async_create_background_task(
+        hass, endpoint.async_refresh(), f"solax {entry.title} initial refresh"
+    )
+    entry.async_on_unload(
+        async_track_time_interval(hass, endpoint.async_refresh, SCAN_INTERVAL)
+    )
     devices = []
     for sensor, (idx, measurement) in api.inverter.sensor_map().items():
         description = SENSOR_DESCRIPTIONS[(measurement.unit, measurement.is_monotonic)]

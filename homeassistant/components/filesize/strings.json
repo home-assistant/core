@@ -15,5 +15,18 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
     }
   },
-  "title": "Filesize"
+  "title": "Filesize",
+  "entity": {
+    "sensor": {
+      "size": {
+        "name": "Size"
+      },
+      "size_bytes": {
+        "name": "Size in bytes"
+      },
+      "last_updated": {
+        "name": "Last updated"
+      }
+    }
+  }
 }

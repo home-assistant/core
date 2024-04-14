@@ -1,4 +1,5 @@
 """Tests for switch platform."""
+
 from flux_led.const import MODE_MUSIC
 
 from homeassistant.components import flux_led
@@ -71,7 +72,9 @@ async def test_switch_on_off(hass: HomeAssistant) -> None:
     assert hass.states.get(entity_id).state == STATE_ON
 
 
-async def test_remote_access_unique_id(hass: HomeAssistant) -> None:
+async def test_remote_access_unique_id(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test a remote access switch unique id."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -91,13 +94,14 @@ async def test_remote_access_unique_id(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     entity_id = "switch.bulb_rgbcw_ddeeff_remote_access"
-    entity_registry = er.async_get(hass)
     assert (
         entity_registry.async_get(entity_id).unique_id == f"{MAC_ADDRESS}_remote_access"
     )
 
 
-async def test_effects_speed_unique_id_no_discovery(hass: HomeAssistant) -> None:
+async def test_effects_speed_unique_id_no_discovery(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test a remote access switch unique id when discovery fails."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -116,7 +120,6 @@ async def test_effects_speed_unique_id_no_discovery(hass: HomeAssistant) -> None
         await hass.async_block_till_done()
 
     entity_id = "switch.bulb_rgbcw_ddeeff_remote_access"
-    entity_registry = er.async_get(hass)
     assert (
         entity_registry.async_get(entity_id).unique_id
         == f"{config_entry.entry_id}_remote_access"

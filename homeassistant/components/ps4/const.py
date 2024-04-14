@@ -1,4 +1,5 @@
 """Constants for PlayStation 4."""
+
 ATTR_MEDIA_IMAGE_URL = "media_image_url"
 CONFIG_ENTRY_VERSION = 3
 DEFAULT_NAME = "PlayStation 4"
@@ -54,7 +55,8 @@ COUNTRYCODE_NAMES = {
     "LU": "Luxembourg",
     "MT": "Malta",
     "MX": "Mexico",
-    "MY": "Maylasia",  # spelling error compatibility with pyps4_2ndscreen.media_art.COUNTRIES
+    # spelling error compatibility with pyps4_2ndscreen.media_art.COUNTRIES
+    "MY": "Maylasia",
     "NI": "Nicaragua",
     "NL": "Nederland",
     "NO": "Norway",

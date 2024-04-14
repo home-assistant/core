@@ -1,7 +1,10 @@
 """Support for Twente Milieu Calendar."""
+
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import date, datetime, timedelta
+
+from twentemilieu import WasteType
 
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
 from homeassistant.config_entries import ConfigEntry
@@ -29,11 +32,12 @@ class TwenteMilieuCalendar(TwenteMilieuEntity, CalendarEntity):
     """Defines a Twente Milieu calendar."""
 
     _attr_has_entity_name = True
-    _attr_icon = "mdi:delete-empty"
+    _attr_name = None
+    _attr_translation_key = "calendar"
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: DataUpdateCoordinator[dict[WasteType, list[date]]],
         entry: ConfigEntry,
     ) -> None:
         """Initialize the Twente Milieu entity."""
@@ -56,7 +60,7 @@ class TwenteMilieuCalendar(TwenteMilieuEntity, CalendarEntity):
                 CalendarEvent(
                     summary=WASTE_TYPE_TO_DESCRIPTION[waste_type],
                     start=waste_date,
-                    end=waste_date,
+                    end=waste_date + timedelta(days=1),
                 )
                 for waste_date in waste_dates
                 if start_date.date() <= waste_date <= end_date.date()
@@ -87,7 +91,7 @@ class TwenteMilieuCalendar(TwenteMilieuEntity, CalendarEntity):
             self._event = CalendarEvent(
                 summary=WASTE_TYPE_TO_DESCRIPTION[next_waste_pickup_type],
                 start=next_waste_pickup_date,
-                end=next_waste_pickup_date,
+                end=next_waste_pickup_date + timedelta(days=1),
             )
 
         super()._handle_coordinator_update()

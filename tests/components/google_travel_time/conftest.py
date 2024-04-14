@@ -1,4 +1,5 @@
 """Fixtures for Google Time Travel tests."""
+
 from unittest.mock import patch
 
 from googlemaps.exceptions import ApiError, Timeout, TransportError
@@ -21,7 +22,7 @@ async def mock_config_fixture(hass, data, options):
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
-    yield config_entry
+    return config_entry
 
 
 @pytest.fixture(name="bypass_setup")
@@ -47,9 +48,12 @@ def bypass_platform_setup_fixture():
 @pytest.fixture(name="validate_config_entry")
 def validate_config_entry_fixture():
     """Return valid config entry."""
-    with patch("homeassistant.components.google_travel_time.helpers.Client"), patch(
-        "homeassistant.components.google_travel_time.helpers.distance_matrix"
-    ) as distance_matrix_mock:
+    with (
+        patch("homeassistant.components.google_travel_time.helpers.Client"),
+        patch(
+            "homeassistant.components.google_travel_time.helpers.distance_matrix"
+        ) as distance_matrix_mock,
+    ):
         distance_matrix_mock.return_value = None
         yield distance_matrix_mock
 

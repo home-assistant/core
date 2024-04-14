@@ -1,4 +1,5 @@
 """Support for Lutron Caseta scenes."""
+
 from typing import Any
 
 from pylutron_caseta.smartbridge import Smartbridge
@@ -6,7 +7,7 @@ from pylutron_caseta.smartbridge import Smartbridge
 from homeassistant.components.scene import Scene
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN as CASETA_DOMAIN

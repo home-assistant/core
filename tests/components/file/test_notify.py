@@ -1,7 +1,9 @@
 """The tests for the notify file platform."""
+
 import os
 from unittest.mock import call, mock_open, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components import notify
@@ -13,11 +15,12 @@ import homeassistant.util.dt as dt_util
 from tests.common import assert_setup_component
 
 
-async def test_bad_config(hass: HomeAssistant):
+async def test_bad_config(hass: HomeAssistant) -> None:
     """Test set up the platform with bad/missing config."""
     config = {notify.DOMAIN: {"name": "test", "platform": "file"}}
     with assert_setup_component(0) as handle_config:
         assert await async_setup_component(hass, notify.DOMAIN, config)
+        await hass.async_block_till_done()
     assert not handle_config[notify.DOMAIN]
 
 
@@ -28,7 +31,9 @@ async def test_bad_config(hass: HomeAssistant):
         True,
     ],
 )
-async def test_notify_file(hass: HomeAssistant, timestamp: bool):
+async def test_notify_file(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, timestamp: bool
+) -> None:
     """Test the notify file output."""
     filename = "mock_file"
     message = "one, two, testing, testing"
@@ -45,13 +50,16 @@ async def test_notify_file(hass: HomeAssistant, timestamp: bool):
                 }
             },
         )
+        await hass.async_block_till_done()
     assert handle_config[notify.DOMAIN]
 
-    m_open = mock_open()
-    with patch("homeassistant.components.file.notify.open", m_open, create=True), patch(
-        "homeassistant.components.file.notify.os.stat"
-    ) as mock_st, patch("homeassistant.util.dt.utcnow", return_value=dt_util.utcnow()):
+    freezer.move_to(dt_util.utcnow())
 
+    m_open = mock_open()
+    with (
+        patch("homeassistant.components.file.notify.open", m_open, create=True),
+        patch("homeassistant.components.file.notify.os.stat") as mock_st,
+    ):
         mock_st.return_value.st_size = 0
         title = (
             f"{ATTR_TITLE_DEFAULT} notifications "

@@ -1,4 +1,5 @@
 """Data update coordinator for Version entities."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -14,7 +15,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import DOMAIN, LOGGER, UPDATE_COORDINATOR_UPDATE_INTERVAL
 
 
-class VersionDataUpdateCoordinator(DataUpdateCoordinator):
+class VersionDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """Data update coordinator for Version entities."""
 
     config_entry: ConfigEntry

@@ -1,4 +1,5 @@
 """Support for Queensland Bushfire Alert Feeds."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -126,7 +127,10 @@ class QldBushfireFeedEntityManager:
     def _init_regular_updates(self) -> None:
         """Schedule regular updates at the specified interval."""
         track_time_interval(
-            self._hass, lambda now: self._feed_manager.update(), self._scan_interval
+            self._hass,
+            lambda now: self._feed_manager.update(),
+            self._scan_interval,
+            cancel_on_shutdown=True,
         )
 
     def get_entry(self, external_id: str) -> QldBushfireAlertFeedEntry | None:
@@ -149,7 +153,7 @@ class QldBushfireFeedEntityManager:
 
 
 class QldBushfireLocationEvent(GeolocationEvent):
-    """This represents an external event with Qld Bushfire feed data."""
+    """Represents an external event with Qld Bushfire feed data."""
 
     _attr_icon = "mdi:fire"
     _attr_should_poll = False

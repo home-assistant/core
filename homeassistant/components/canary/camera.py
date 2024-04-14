@@ -1,4 +1,5 @@
 """Support for Canary camera."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -21,7 +22,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
@@ -63,22 +64,22 @@ async def async_setup_entry(
     ffmpeg_arguments: str = entry.options.get(
         CONF_FFMPEG_ARGUMENTS, DEFAULT_FFMPEG_ARGUMENTS
     )
-    cameras: list[CanaryCamera] = []
 
-    for location_id, location in coordinator.data["locations"].items():
-        for device in location.devices:
-            if device.is_online:
-                cameras.append(
-                    CanaryCamera(
-                        hass,
-                        coordinator,
-                        location_id,
-                        device,
-                        ffmpeg_arguments,
-                    )
-                )
-
-    async_add_entities(cameras, True)
+    async_add_entities(
+        (
+            CanaryCamera(
+                hass,
+                coordinator,
+                location_id,
+                device,
+                ffmpeg_arguments,
+            )
+            for location_id, location in coordinator.data["locations"].items()
+            for device in location.devices
+            if device.is_online
+        ),
+        True,
+    )
 
 
 class CanaryCamera(CoordinatorEntity[CanaryDataUpdateCoordinator], Camera):

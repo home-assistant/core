@@ -1,8 +1,12 @@
 """Support to trigger Maker IFTTT recipes."""
+
+from __future__ import annotations
+
 from http import HTTPStatus
 import json
 import logging
 
+from aiohttp import web
 import pyfttt
 import requests
 import voluptuous as vol
@@ -77,7 +81,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             target_keys[target] = api_keys[target]
 
         try:
-
             for target, key in target_keys.items():
                 res = pyfttt.send_event(key, event, value1, value2, value3)
                 if res.status_code != HTTPStatus.OK:
@@ -92,7 +95,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def handle_webhook(hass, webhook_id, request):
+async def handle_webhook(
+    hass: HomeAssistant, webhook_id: str, request: web.Request
+) -> None:
     """Handle webhook callback."""
     body = await request.text()
     try:

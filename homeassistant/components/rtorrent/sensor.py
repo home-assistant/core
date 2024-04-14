@@ -1,4 +1,5 @@
 """Support for monitoring the rtorrent BitTorrent client API."""
+
 from __future__ import annotations
 
 import logging
@@ -130,7 +131,7 @@ class RTorrentSensor(SensorEntity):
 
     def __init__(
         self, rtorrent_client, client_name, description: SensorEntityDescription
-    ):
+    ) -> None:
         """Initialize the sensor."""
         self.entity_description = description
         self.client = rtorrent_client

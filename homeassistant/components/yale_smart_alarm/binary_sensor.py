@@ -1,4 +1,5 @@
 """Binary sensors for Yale Alarm."""
+
 from __future__ import annotations
 
 from homeassistant.components.binary_sensor import (
@@ -7,8 +8,8 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import COORDINATOR, DOMAIN
@@ -20,25 +21,25 @@ SENSOR_TYPES = (
         key="acfail",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
-        name="Power loss",
+        translation_key="power_loss",
     ),
     BinarySensorEntityDescription(
         key="battery",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
-        name="Battery",
+        translation_key="battery",
     ),
     BinarySensorEntityDescription(
         key="tamper",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
-        name="Tamper",
+        translation_key="tamper",
     ),
     BinarySensorEntityDescription(
         key="jam",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
-        name="Jam",
+        translation_key="jam",
     ),
 )
 
@@ -51,11 +52,12 @@ async def async_setup_entry(
     coordinator: YaleDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
         COORDINATOR
     ]
-    sensors: list[YaleDoorSensor | YaleProblemSensor] = []
-    for data in coordinator.data["door_windows"]:
-        sensors.append(YaleDoorSensor(coordinator, data))
-    for description in SENSOR_TYPES:
-        sensors.append(YaleProblemSensor(coordinator, description))
+    sensors: list[YaleDoorSensor | YaleProblemSensor] = [
+        YaleDoorSensor(coordinator, data) for data in coordinator.data["door_windows"]
+    ]
+    sensors.extend(
+        YaleProblemSensor(coordinator, description) for description in SENSOR_TYPES
+    )
 
     async_add_entities(sensors)
 

@@ -1,4 +1,5 @@
 """Interfaces with Egardia/Woonveilig alarm control panel."""
+
 from __future__ import annotations
 
 import logging
@@ -101,7 +102,7 @@ class EgardiaAlarm(alarm.AlarmControlPanelEntity):
 
     def lookupstatusfromcode(self, statuscode):
         """Look at the rs_codes and returns the status from the code."""
-        status = next(
+        return next(
             (
                 status_group.upper()
                 for status_group, codes in self._rs_codes.items()
@@ -110,7 +111,6 @@ class EgardiaAlarm(alarm.AlarmControlPanelEntity):
             ),
             "UNKNOWN",
         )
-        return status
 
     def parsestatus(self, status):
         """Parse the status."""
@@ -145,8 +145,7 @@ class EgardiaAlarm(alarm.AlarmControlPanelEntity):
             self._egardiasystem.alarm_arm_home()
         except requests.exceptions.RequestException as err:
             _LOGGER.error(
-                "Egardia device exception occurred when "
-                "sending arm home command: %s",
+                "Egardia device exception occurred when sending arm home command: %s",
                 err,
             )
 
@@ -156,7 +155,6 @@ class EgardiaAlarm(alarm.AlarmControlPanelEntity):
             self._egardiasystem.alarm_arm_away()
         except requests.exceptions.RequestException as err:
             _LOGGER.error(
-                "Egardia device exception occurred when "
-                "sending arm away command: %s",
+                "Egardia device exception occurred when sending arm away command: %s",
                 err,
             )

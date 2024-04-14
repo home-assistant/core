@@ -1,9 +1,15 @@
 """Config flow to configure the OVO Energy integration."""
+
+from __future__ import annotations
+
+from collections.abc import Mapping
+from typing import Any
+
 import aiohttp
 from ovoenergy.ovoenergy import OVOEnergy
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
 from .const import CONF_ACCOUNT, DOMAIN
@@ -23,12 +29,15 @@ class OVOEnergyFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the flow."""
         self.username = None
         self.account = None
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self,
+        user_input: Mapping[str, Any] | None = None,
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         errors = {}
         if user_input is not None:
@@ -61,7 +70,10 @@ class OVOEnergyFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=USER_SCHEMA, errors=errors
         )
 
-    async def async_step_reauth(self, user_input):
+    async def async_step_reauth(
+        self,
+        user_input: Mapping[str, Any],
+    ) -> ConfigFlowResult:
         """Handle configuration by re-auth."""
         errors = {}
 
@@ -84,15 +96,15 @@ class OVOEnergyFlowHandler(ConfigFlow, domain=DOMAIN):
             else:
                 if authenticated:
                     entry = await self.async_set_unique_id(self.username)
-                    self.hass.config_entries.async_update_entry(
-                        entry,
-                        data={
-                            CONF_USERNAME: self.username,
-                            CONF_PASSWORD: user_input[CONF_PASSWORD],
-                            CONF_ACCOUNT: self.account,
-                        },
-                    )
-                    return self.async_abort(reason="reauth_successful")
+                    if entry:
+                        self.hass.config_entries.async_update_entry(
+                            entry,
+                            data={
+                                CONF_USERNAME: self.username,
+                                CONF_PASSWORD: user_input[CONF_PASSWORD],
+                            },
+                        )
+                        return self.async_abort(reason="reauth_successful")
 
                 errors["base"] = "authorization_error"
 

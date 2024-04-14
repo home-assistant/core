@@ -1,10 +1,16 @@
 """Passive update coordinator for the Bluetooth integration."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
+from typing_extensions import TypeVar
+
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.update_coordinator import (
+    BaseCoordinatorEntity,
+    BaseDataUpdateCoordinatorProtocol,
+)
 
 from .update_coordinator import BasePassiveBluetoothCoordinator
 
@@ -14,8 +20,16 @@ if TYPE_CHECKING:
 
     from . import BluetoothChange, BluetoothScanningMode, BluetoothServiceInfoBleak
 
+_PassiveBluetoothDataUpdateCoordinatorT = TypeVar(
+    "_PassiveBluetoothDataUpdateCoordinatorT",
+    bound="PassiveBluetoothDataUpdateCoordinator",
+    default="PassiveBluetoothDataUpdateCoordinator",
+)
 
-class PassiveBluetoothDataUpdateCoordinator(BasePassiveBluetoothCoordinator):
+
+class PassiveBluetoothDataUpdateCoordinator(
+    BasePassiveBluetoothCoordinator, BaseDataUpdateCoordinatorProtocol
+):
     """Class to manage passive bluetooth advertisements.
 
     This coordinator is responsible for dispatching the bluetooth data
@@ -75,13 +89,14 @@ class PassiveBluetoothDataUpdateCoordinator(BasePassiveBluetoothCoordinator):
         change: BluetoothChange,
     ) -> None:
         """Handle a Bluetooth event."""
+        self._available = True
         self.async_update_listeners()
 
 
-class PassiveBluetoothCoordinatorEntity(CoordinatorEntity):
+class PassiveBluetoothCoordinatorEntity(
+    BaseCoordinatorEntity[_PassiveBluetoothDataUpdateCoordinatorT]
+):
     """A class for entities using DataUpdateCoordinator."""
-
-    coordinator: PassiveBluetoothDataUpdateCoordinator
 
     async def async_update(self) -> None:
         """All updates are passive."""

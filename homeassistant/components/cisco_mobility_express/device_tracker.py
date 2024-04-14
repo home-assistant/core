@@ -1,4 +1,5 @@
 """Support for Cisco Mobility Express."""
+
 from __future__ import annotations
 
 import logging
@@ -56,7 +57,7 @@ def get_scanner(hass: HomeAssistant, config: ConfigType) -> CiscoMEDeviceScanner
 
 
 class CiscoMEDeviceScanner(DeviceScanner):
-    """This class scans for devices associated to a Cisco ME controller."""
+    """Scanner for devices associated to a Cisco ME controller."""
 
     def __init__(self, controller):
         """Initialize the scanner."""
@@ -71,15 +72,13 @@ class CiscoMEDeviceScanner(DeviceScanner):
 
     def get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""
-        name = next(
+        return next(
             (result.clId for result in self.last_results if result.macaddr == device),
             None,
         )
-        return name
 
     def get_extra_attributes(self, device):
-        """
-        Get extra attributes of a device.
+        """Get extra attributes of a device.
 
         Some known extra attributes that may be returned in the device tuple
         include SSID, PT (eg 802.11ac), devtype (eg iPhone 7) among others.

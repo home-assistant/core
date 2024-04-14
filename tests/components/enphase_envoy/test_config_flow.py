@@ -1,13 +1,17 @@
 """Test the Enphase Envoy config flow."""
-from unittest.mock import AsyncMock, MagicMock
 
-import httpx
+from ipaddress import ip_address
+from unittest.mock import AsyncMock
+
+from pyenphase import EnvoyAuthenticationError, EnvoyError
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import config_entries
 from homeassistant.components import zeroconf
-from homeassistant.components.enphase_envoy.const import DOMAIN
+from homeassistant.components.enphase_envoy.const import DOMAIN, PLATFORMS
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 
 async def test_form(hass: HomeAssistant, config, setup_enphase_envoy) -> None:
@@ -15,7 +19,7 @@ async def test_form(hass: HomeAssistant, config, setup_enphase_envoy) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -26,7 +30,8 @@ async def test_form(hass: HomeAssistant, config, setup_enphase_envoy) -> None:
             "password": "test-password",
         },
     )
-    assert result2["type"] == "create_entry"
+    await hass.async_block_till_done()
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Envoy 1234"
     assert result2["data"] == {
         "host": "1.1.1.1",
@@ -44,7 +49,7 @@ async def test_user_no_serial_number(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -55,7 +60,8 @@ async def test_user_no_serial_number(
             "password": "test-password",
         },
     )
-    assert result2["type"] == "create_entry"
+    await hass.async_block_till_done()
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Envoy"
     assert result2["data"] == {
         "host": "1.1.1.1",
@@ -65,16 +71,7 @@ async def test_user_no_serial_number(
     }
 
 
-@pytest.mark.parametrize(
-    "mock_get_full_serial_number",
-    [
-        AsyncMock(
-            side_effect=httpx.HTTPStatusError(
-                "any", request=MagicMock(), response=MagicMock()
-            )
-        )
-    ],
-)
+@pytest.mark.parametrize("serial_number", [None])
 async def test_user_fetching_serial_fails(
     hass: HomeAssistant, setup_enphase_envoy
 ) -> None:
@@ -82,7 +79,7 @@ async def test_user_fetching_serial_fails(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -93,7 +90,8 @@ async def test_user_fetching_serial_fails(
             "password": "test-password",
         },
     )
-    assert result2["type"] == "create_entry"
+    await hass.async_block_till_done()
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Envoy"
     assert result2["data"] == {
         "host": "1.1.1.1",
@@ -104,13 +102,9 @@ async def test_user_fetching_serial_fails(
 
 
 @pytest.mark.parametrize(
-    "mock_get_data",
+    "mock_authenticate",
     [
-        AsyncMock(
-            side_effect=httpx.HTTPStatusError(
-                "any", request=MagicMock(), response=MagicMock()
-            )
-        )
+        AsyncMock(side_effect=EnvoyAuthenticationError("test")),
     ],
 )
 async def test_form_invalid_auth(hass: HomeAssistant, setup_enphase_envoy) -> None:
@@ -126,12 +120,14 @@ async def test_form_invalid_auth(hass: HomeAssistant, setup_enphase_envoy) -> No
             "password": "test-password",
         },
     )
-    assert result2["type"] == "form"
+    await hass.async_block_till_done()
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
 @pytest.mark.parametrize(
-    "mock_get_data", [AsyncMock(side_effect=httpx.HTTPError("any"))]
+    "mock_setup",
+    [AsyncMock(side_effect=EnvoyError)],
 )
 async def test_form_cannot_connect(hass: HomeAssistant, setup_enphase_envoy) -> None:
     """Test we handle cannot connect error."""
@@ -146,11 +142,15 @@ async def test_form_cannot_connect(hass: HomeAssistant, setup_enphase_envoy) -> 
             "password": "test-password",
         },
     )
-    assert result2["type"] == "form"
+    await hass.async_block_till_done()
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-@pytest.mark.parametrize("mock_get_data", [AsyncMock(side_effect=ValueError)])
+@pytest.mark.parametrize(
+    "mock_setup",
+    [AsyncMock(side_effect=ValueError)],
+)
 async def test_form_unknown_error(hass: HomeAssistant, setup_enphase_envoy) -> None:
     """Test we handle unknown error."""
     result = await hass.config_entries.flow.async_init(
@@ -164,27 +164,40 @@ async def test_form_unknown_error(hass: HomeAssistant, setup_enphase_envoy) -> N
             "password": "test-password",
         },
     )
-    assert result2["type"] == "form"
+    await hass.async_block_till_done()
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
 
 
-async def test_zeroconf(hass: HomeAssistant, setup_enphase_envoy) -> None:
+def _get_schema_default(schema, key_name):
+    """Iterate schema to find a key."""
+    for schema_key in schema:
+        if schema_key == key_name:
+            return schema_key.default()
+    raise KeyError(f"{key_name} not found in schema")
+
+
+async def test_zeroconf_pre_token_firmware(
+    hass: HomeAssistant, setup_enphase_envoy
+) -> None:
     """Test we can setup from zeroconf."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host="1.1.1.1",
-            addresses=["1.1.1.1"],
+            ip_address=ip_address("1.1.1.1"),
+            ip_addresses=[ip_address("1.1.1.1")],
             hostname="mock_hostname",
             name="mock_name",
             port=None,
-            properties={"serialnum": "1234"},
+            properties={"serialnum": "1234", "protovers": "3.0.0"},
             type="mock_type",
         ),
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+
+    assert _get_schema_default(result["data_schema"].schema, "username") == "installer"
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -194,7 +207,8 @@ async def test_zeroconf(hass: HomeAssistant, setup_enphase_envoy) -> None:
             "password": "test-password",
         },
     )
-    assert result2["type"] == "create_entry"
+    await hass.async_block_till_done()
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Envoy 1234"
     assert result2["result"].unique_id == "1234"
     assert result2["data"] == {
@@ -205,15 +219,26 @@ async def test_zeroconf(hass: HomeAssistant, setup_enphase_envoy) -> None:
     }
 
 
-async def test_form_host_already_exists(
-    hass: HomeAssistant, config_entry, setup_enphase_envoy
+async def test_zeroconf_token_firmware(
+    hass: HomeAssistant, setup_enphase_envoy
 ) -> None:
-    """Test host already exists."""
+    """Test we can setup from zeroconf."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=zeroconf.ZeroconfServiceInfo(
+            ip_address=ip_address("1.1.1.1"),
+            ip_addresses=[ip_address("1.1.1.1")],
+            hostname="mock_hostname",
+            name="mock_name",
+            port=None,
+            properties={"serialnum": "1234", "protovers": "7.0.0"},
+            type="mock_type",
+        ),
     )
-    assert result["type"] == "form"
-    assert result["errors"] == {}
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert _get_schema_default(result["data_schema"].schema, "username") == ""
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -223,8 +248,79 @@ async def test_form_host_already_exists(
             "password": "test-password",
         },
     )
-    assert result2["type"] == "abort"
-    assert result2["reason"] == "already_configured"
+    await hass.async_block_till_done()
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "Envoy 1234"
+    assert result2["result"].unique_id == "1234"
+    assert result2["data"] == {
+        "host": "1.1.1.1",
+        "name": "Envoy 1234",
+        "username": "test-username",
+        "password": "test-password",
+    }
+
+
+@pytest.mark.parametrize(
+    "mock_authenticate",
+    [
+        AsyncMock(
+            side_effect=[
+                None,
+                EnvoyAuthenticationError("fail authentication"),
+                None,
+            ]
+        ),
+    ],
+)
+async def test_form_host_already_exists(
+    hass: HomeAssistant, config_entry, setup_enphase_envoy
+) -> None:
+    """Test changing credentials for existing host."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {}
+
+    # existing config
+    assert config_entry.data["host"] == "1.1.1.1"
+    assert config_entry.data["username"] == "test-username"
+    assert config_entry.data["password"] == "test-password"
+
+    # mock failing authentication on first try
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "host": "1.1.1.2",
+            "username": "test-username",
+            "password": "wrong-password",
+        },
+    )
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": "invalid_auth"}
+
+    # still original config after failure
+    assert config_entry.data["host"] == "1.1.1.1"
+    assert config_entry.data["username"] == "test-username"
+    assert config_entry.data["password"] == "test-password"
+
+    # mock successful authentication and update of credentials
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "host": "1.1.1.2",
+            "username": "test-username",
+            "password": "changed-password",
+        },
+    )
+    await hass.async_block_till_done()
+    assert result3["type"] is FlowResultType.ABORT
+    assert result3["reason"] == "reauth_successful"
+
+    # updated config with new ip and changed pw
+    assert config_entry.data["host"] == "1.1.1.2"
+    assert config_entry.data["username"] == "test-username"
+    assert config_entry.data["password"] == "changed-password"
 
 
 async def test_zeroconf_serial_already_exists(
@@ -235,8 +331,8 @@ async def test_zeroconf_serial_already_exists(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host="4.4.4.4",
-            addresses=["4.4.4.4"],
+            ip_address=ip_address("4.4.4.4"),
+            ip_addresses=[ip_address("4.4.4.4")],
             hostname="mock_hostname",
             name="mock_name",
             port=None,
@@ -244,7 +340,8 @@ async def test_zeroconf_serial_already_exists(
             type="mock_type",
         ),
     )
-    assert result["type"] == "abort"
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
     assert config_entry.data["host"] == "4.4.4.4"
@@ -258,8 +355,8 @@ async def test_zeroconf_serial_already_exists_ignores_ipv6(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host="fd00::b27c:63bb:cc85:4ea0",
-            addresses=["fd00::b27c:63bb:cc85:4ea0"],
+            ip_address=ip_address("fd00::b27c:63bb:cc85:4ea0"),
+            ip_addresses=[ip_address("fd00::b27c:63bb:cc85:4ea0")],
             hostname="mock_hostname",
             name="mock_name",
             port=None,
@@ -267,7 +364,8 @@ async def test_zeroconf_serial_already_exists_ignores_ipv6(
             type="mock_type",
         ),
     )
-    assert result["type"] == "abort"
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "not_ipv4_address"
 
     assert config_entry.data["host"] == "1.1.1.1"
@@ -282,8 +380,8 @@ async def test_zeroconf_host_already_exists(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host="1.1.1.1",
-            addresses=["1.1.1.1"],
+            ip_address=ip_address("1.1.1.1"),
+            ip_addresses=[ip_address("1.1.1.1")],
             hostname="mock_hostname",
             name="mock_name",
             port=None,
@@ -291,7 +389,8 @@ async def test_zeroconf_host_already_exists(
             type="mock_type",
         ),
     )
-    assert result["type"] == "abort"
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
     assert config_entry.unique_id == "1234"
@@ -311,10 +410,15 @@ async def test_reauth(hass: HomeAssistant, config_entry, setup_enphase_envoy) ->
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            "host": "1.1.1.1",
             "username": "test-username",
             "password": "test-password",
         },
     )
-    assert result2["type"] == "abort"
+    await hass.async_block_till_done()
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
+
+
+async def test_platforms(snapshot: SnapshotAssertion) -> None:
+    """Test if platform list changed and requires more tests."""
+    assert snapshot == PLATFORMS

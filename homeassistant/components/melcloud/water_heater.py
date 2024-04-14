@@ -1,4 +1,5 @@
 """Platform for water_heater integration."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -44,47 +45,35 @@ class AtwWaterHeater(WaterHeaterEntity):
 
     _attr_supported_features = (
         WaterHeaterEntityFeature.TARGET_TEMPERATURE
+        | WaterHeaterEntityFeature.ON_OFF
         | WaterHeaterEntityFeature.OPERATION_MODE
     )
+    _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(self, api: MelCloudDevice, device: AtwDevice) -> None:
         """Initialize water heater device."""
         self._api = api
         self._device = device
-        self._name = device.name
+        self._attr_unique_id = api.device.serial
+        self._attr_device_info = api.device_info
 
     async def async_update(self) -> None:
         """Update state from MELCloud."""
         await self._api.async_update()
 
-    @property
-    def unique_id(self) -> str | None:
-        """Return a unique ID."""
-        return f"{self._api.device.serial}"
-
-    @property
-    def name(self):
-        """Return the display name of this entity."""
-        return self._name
-
-    @property
-    def device_info(self):
-        """Return a device description for device registry."""
-        return self._api.device_info
-
-    async def async_turn_on(self) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         await self._device.set({PROPERTY_POWER: True})
 
-    async def async_turn_off(self) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self._device.set({PROPERTY_POWER: False})
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the optional state attributes with device specific additions."""
-        data = {ATTR_STATUS: self._device.status}
-        return data
+        return {ATTR_STATUS: self._device.status}
 
     @property
     def temperature_unit(self) -> str:
@@ -107,7 +96,7 @@ class AtwWaterHeater(WaterHeaterEntity):
         return self._device.tank_temperature
 
     @property
-    def target_temperature(self):
+    def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         return self._device.target_tank_temperature
 

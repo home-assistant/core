@@ -1,4 +1,5 @@
 """Support for Litter-Robot "Vacuum"."""
+
 from __future__ import annotations
 
 from datetime import time
@@ -9,7 +10,6 @@ from pylitterbot.enums import LitterBoxStatus
 import voluptuous as vol
 
 from homeassistant.components.vacuum import (
-    DOMAIN as PLATFORM,
     STATE_CLEANING,
     STATE_DOCKED,
     STATE_ERROR,
@@ -26,7 +26,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN
-from .entity import LitterRobotEntity, async_update_unique_id
+from .entity import LitterRobotEntity
 from .hub import LitterRobotHub
 
 SERVICE_SET_SLEEP_MODE = "set_sleep_mode"
@@ -35,6 +35,7 @@ LITTER_BOX_STATUS_STATE_MAP = {
     LitterBoxStatus.CLEAN_CYCLE: STATE_CLEANING,
     LitterBoxStatus.EMPTY_CYCLE: STATE_CLEANING,
     LitterBoxStatus.CLEAN_CYCLE_COMPLETE: STATE_DOCKED,
+    LitterBoxStatus.CAT_DETECTED: STATE_DOCKED,
     LitterBoxStatus.CAT_SENSOR_TIMING: STATE_DOCKED,
     LitterBoxStatus.DRAWER_FULL_1: STATE_DOCKED,
     LitterBoxStatus.DRAWER_FULL_2: STATE_DOCKED,
@@ -43,7 +44,9 @@ LITTER_BOX_STATUS_STATE_MAP = {
     LitterBoxStatus.OFF: STATE_OFF,
 }
 
-LITTER_BOX_ENTITY = StateVacuumEntityDescription("litter_box", name="Litter Box")
+LITTER_BOX_ENTITY = StateVacuumEntityDescription(
+    key="litter_box", translation_key="litter_box"
+)
 
 
 async def async_setup_entry(
@@ -53,12 +56,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up Litter-Robot cleaner using config entry."""
     hub: LitterRobotHub = hass.data[DOMAIN][entry.entry_id]
-
     entities = [
         LitterRobotCleaner(robot=robot, hub=hub, description=LITTER_BOX_ENTITY)
         for robot in hub.litter_robots()
     ]
-    async_update_unique_id(hass, PLATFORM, entities)
     async_add_entities(entities)
 
     platform = entity_platform.async_get_current_platform()
@@ -76,11 +77,7 @@ class LitterRobotCleaner(LitterRobotEntity[LitterRobot], StateVacuumEntity):
     """Litter-Robot "Vacuum" Cleaner."""
 
     _attr_supported_features = (
-        VacuumEntityFeature.START
-        | VacuumEntityFeature.STATE
-        | VacuumEntityFeature.STATUS
-        | VacuumEntityFeature.TURN_OFF
-        | VacuumEntityFeature.TURN_ON
+        VacuumEntityFeature.START | VacuumEntityFeature.STATE | VacuumEntityFeature.STOP
     )
 
     @property
@@ -95,17 +92,14 @@ class LitterRobotCleaner(LitterRobotEntity[LitterRobot], StateVacuumEntity):
             f"{self.robot.status.text}{' (Sleeping)' if self.robot.is_sleeping else ''}"
         )
 
-    async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn the cleaner on, starting a clean cycle."""
-        await self.robot.set_power_status(True)
-
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn the unit off, stopping any cleaning in progress as is."""
-        await self.robot.set_power_status(False)
-
     async def async_start(self) -> None:
         """Start a clean cycle."""
+        await self.robot.set_power_status(True)
         await self.robot.start_cleaning()
+
+    async def async_stop(self, **kwargs: Any) -> None:
+        """Stop the vacuum cleaner."""
+        await self.robot.set_power_status(False)
 
     async def async_set_sleep_mode(
         self, enabled: bool, start_time: str | None = None
@@ -121,7 +115,7 @@ class LitterRobotCleaner(LitterRobotEntity[LitterRobot], StateVacuumEntity):
         if time_str is None:
             return None
 
-        if (parsed_time := dt_util.parse_time(time_str)) is None:  # pragma: no cover
+        if (parsed_time := dt_util.parse_time(time_str)) is None:
             return None
 
         return (

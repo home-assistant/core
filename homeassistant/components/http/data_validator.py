@@ -1,14 +1,14 @@
 """Decorator for view methods to help with data validation."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Coroutine
 from functools import wraps
 from http import HTTPStatus
 import logging
-from typing import Any, TypeVar
+from typing import Any, Concatenate, ParamSpec, TypeVar
 
 from aiohttp import web
-from typing_extensions import Concatenate, ParamSpec
 import voluptuous as vol
 
 from .view import HomeAssistantView
@@ -70,7 +70,6 @@ class RequestDataValidator:
                     f"Message format incorrect: {err}", HTTPStatus.BAD_REQUEST
                 )
 
-            result = await method(view, request, data, *args, **kwargs)
-            return result
+            return await method(view, request, data, *args, **kwargs)
 
         return wrapper

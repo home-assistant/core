@@ -1,4 +1,5 @@
 """The tests for SleepIQ binary sensor platform."""
+
 from homeassistant.components.binary_sensor import DOMAIN, BinarySensorDeviceClass
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -7,6 +8,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import (
@@ -22,7 +24,7 @@ from .conftest import (
 )
 
 
-async def test_binary_sensors(hass, mock_asyncsleepiq):
+async def test_binary_sensors(hass: HomeAssistant, mock_asyncsleepiq) -> None:
     """Test the SleepIQ binary sensors."""
     await setup_platform(hass, DOMAIN)
     entity_registry = er.async_get(hass)

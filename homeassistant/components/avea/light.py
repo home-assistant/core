@@ -1,9 +1,10 @@
 """Support for the Elgato Avea lights."""
+
 from __future__ import annotations
 
 from typing import Any
 
-import avea  # pylint: disable=import-error
+import avea
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,

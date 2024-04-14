@@ -1,4 +1,5 @@
 """Support to interface with the Plex API."""
+
 from __future__ import annotations
 
 from yarl import URL
@@ -7,7 +8,7 @@ from homeassistant.components.media_player import BrowseError, BrowseMedia, Medi
 
 from .const import DOMAIN, SERVERS
 from .errors import MediaNotFound
-from .helpers import pretty_title
+from .helpers import get_plex_data, get_plex_server, pretty_title
 
 
 class UnknownMediaType(BrowseError):
@@ -42,7 +43,7 @@ def browse_media(  # noqa: C901
     if media_content_id:
         url = URL(media_content_id)
         server_id = url.host
-        plex_server = hass.data[DOMAIN][SERVERS][server_id]
+        plex_server = get_plex_server(hass, server_id)
         if media_content_type == "hub":
             _, hub_location, hub_identifier = url.parts
         elif media_content_type in ["library", "server"] and len(url.parts) > 2:
@@ -292,18 +293,16 @@ def generate_plex_uri(server_id, media_id, params=None):
 
 def root_payload(hass, is_internal, platform=None):
     """Return root payload for Plex."""
-    children = []
-
-    for server_id in hass.data[DOMAIN][SERVERS]:
-        children.append(
-            browse_media(
-                hass,
-                is_internal,
-                "server",
-                generate_plex_uri(server_id, ""),
-                platform=platform,
-            )
+    children = [
+        browse_media(
+            hass,
+            is_internal,
+            "server",
+            generate_plex_uri(server_id, ""),
+            platform=platform,
         )
+        for server_id in get_plex_data(hass)[SERVERS]
+    ]
 
     if len(children) == 1:
         return children[0]

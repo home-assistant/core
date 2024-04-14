@@ -1,4 +1,5 @@
 """Support for interfacing to iTunes API."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -65,9 +66,7 @@ class Itunes:
         try:
             if method == "GET":
                 response = requests.get(url, timeout=DEFAULT_TIMEOUT)
-            elif method == "POST":
-                response = requests.put(url, params, timeout=DEFAULT_TIMEOUT)
-            elif method == "PUT":
+            elif method in ("POST", "PUT"):
                 response = requests.put(url, params, timeout=DEFAULT_TIMEOUT)
             elif method == "DELETE":
                 response = requests.delete(url, timeout=DEFAULT_TIMEOUT)
@@ -380,7 +379,9 @@ class ItunesDevice(MediaPlayerEntity):
         response = self.client.previous()
         self.update_state(response)
 
-    def play_media(self, media_type: str, media_id: str, **kwargs: Any) -> None:
+    def play_media(
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
+    ) -> None:
         """Send the play_media command to the media player."""
         if media_type == MediaType.PLAYLIST:
             response = self.client.play_playlist(media_id)

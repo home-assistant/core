@@ -1,4 +1,5 @@
 """Support for Verizon FiOS Quantum Gateways."""
+
 from __future__ import annotations
 
 import logging
@@ -40,7 +41,7 @@ def get_scanner(
 
 
 class QuantumGatewayDeviceScanner(DeviceScanner):
-    """This class queries a Quantum Gateway."""
+    """Class which queries a Quantum Gateway."""
 
     def __init__(self, config):
         """Initialize the scanner."""

@@ -1,9 +1,9 @@
 """Tests for the WiZ Platform integration."""
 
+from collections.abc import Callable
 from contextlib import contextmanager
 from copy import deepcopy
 import json
-from typing import Callable
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from pywizlight import SCENES, BulbType, PilotParser, wizlight
@@ -12,7 +12,7 @@ from pywizlight.discovery import DiscoveredBulb
 
 from homeassistant.components.wiz.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_NAME
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -35,7 +35,7 @@ FAKE_STATE = PilotParser(
     }
 )
 FAKE_IP = "1.1.1.1"
-FAKE_MAC = "ABCABCABCABC"
+FAKE_MAC = "abcabcabcabc"
 FAKE_BULB_CONFIG = {
     "method": "getSystemConfig",
     "env": "pro",
@@ -174,9 +174,7 @@ FAKE_OLD_FIRMWARE_DIMMABLE_BULB = BulbType(
 )
 
 
-async def setup_integration(
-    hass: HomeAssistantType,
-) -> MockConfigEntry:
+async def setup_integration(hass: HomeAssistant) -> MockConfigEntry:
     """Mock ConfigEntry in Home Assistant."""
 
     entry = MockConfigEntry(
@@ -234,9 +232,12 @@ def _patch_wizlight(device=None, extended_white_range=None, bulb_type=None):
     @contextmanager
     def _patcher():
         bulb = device or _mocked_wizlight(device, extended_white_range, bulb_type)
-        with patch("homeassistant.components.wiz.wizlight", return_value=bulb), patch(
-            "homeassistant.components.wiz.config_flow.wizlight",
-            return_value=bulb,
+        with (
+            patch("homeassistant.components.wiz.wizlight", return_value=bulb),
+            patch(
+                "homeassistant.components.wiz.config_flow.wizlight",
+                return_value=bulb,
+            ),
         ):
             yield
 

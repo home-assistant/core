@@ -1,4 +1,5 @@
 """Allows to configure a switch using RPi GPIO."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -12,8 +13,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import CONF_INVERT_LOGIC, DEFAULT_INVERT_LOGIC
 from .. import remote_rpi_gpio
+from . import CONF_INVERT_LOGIC, DEFAULT_INVERT_LOGIC
 
 CONF_PORTS = "ports"
 

@@ -1,4 +1,5 @@
 """Test account link services."""
+
 import asyncio
 import logging
 from time import time
@@ -6,8 +7,10 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components.cloud import account_link
+from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.util.dt import utcnow
 
@@ -36,7 +39,7 @@ def flow_handler(hass):
         yield TestFlowHandler
 
 
-async def test_setup_provide_implementation(hass):
+async def test_setup_provide_implementation(hass: HomeAssistant) -> None:
     """Test that we provide implementations."""
     legacy_entry = MockConfigEntry(
         domain="legacy",
@@ -52,30 +55,34 @@ async def test_setup_provide_implementation(hass):
     legacy_entry.add_to_hass(hass)
     account_link.async_setup(hass)
 
-    with patch(
-        "homeassistant.components.cloud.account_link._get_services",
-        return_value=[
-            {"service": "test", "min_version": "0.1.0"},
-            {"service": "too_new", "min_version": "1000000.0.0"},
-            {"service": "dev", "min_version": "2022.9.0"},
-            {
-                "service": "deprecated",
-                "min_version": "0.1.0",
-                "accepts_new_authorizations": False,
-            },
-            {
-                "service": "legacy",
-                "min_version": "0.1.0",
-                "accepts_new_authorizations": False,
-            },
-            {
-                "service": "no_cloud",
-                "min_version": "0.1.0",
-                "accepts_new_authorizations": False,
-            },
-        ],
-    ), patch(
-        "homeassistant.components.cloud.account_link.HA_VERSION", "2022.9.0.dev20220817"
+    with (
+        patch(
+            "homeassistant.components.cloud.account_link._get_services",
+            return_value=[
+                {"service": "test", "min_version": "0.1.0"},
+                {"service": "too_new", "min_version": "1000000.0.0"},
+                {"service": "dev", "min_version": "2022.9.0"},
+                {
+                    "service": "deprecated",
+                    "min_version": "0.1.0",
+                    "accepts_new_authorizations": False,
+                },
+                {
+                    "service": "legacy",
+                    "min_version": "0.1.0",
+                    "accepts_new_authorizations": False,
+                },
+                {
+                    "service": "no_cloud",
+                    "min_version": "0.1.0",
+                    "accepts_new_authorizations": False,
+                },
+            ],
+        ),
+        patch(
+            "homeassistant.components.cloud.account_link.HA_VERSION",
+            "2022.9.0.dev20220817",
+        ),
     ):
         assert (
             await config_entry_oauth2_flow.async_get_implementations(
@@ -124,16 +131,19 @@ async def test_setup_provide_implementation(hass):
     assert dev_implementations["cloud"].hass is hass
 
 
-async def test_get_services_cached(hass):
+async def test_get_services_cached(hass: HomeAssistant) -> None:
     """Test that we cache services."""
     hass.data["cloud"] = None
 
     services = 1
 
-    with patch.object(account_link, "CACHE_TIMEOUT", 0), patch(
-        "hass_nabucasa.account_link.async_fetch_available_services",
-        side_effect=lambda _: services,
-    ) as mock_fetch:
+    with (
+        patch.object(account_link, "CACHE_TIMEOUT", 0),
+        patch(
+            "hass_nabucasa.account_link.async_fetch_available_services",
+            side_effect=lambda _: services,
+        ) as mock_fetch,
+    ):
         assert await account_link._get_services(hass) == 1
 
         services = 2
@@ -153,19 +163,24 @@ async def test_get_services_cached(hass):
         assert await account_link._get_services(hass) == 4
 
 
-async def test_get_services_error(hass):
+async def test_get_services_error(hass: HomeAssistant) -> None:
     """Test that we cache services."""
     hass.data["cloud"] = None
 
-    with patch.object(account_link, "CACHE_TIMEOUT", 0), patch(
-        "hass_nabucasa.account_link.async_fetch_available_services",
-        side_effect=asyncio.TimeoutError,
+    with (
+        patch.object(account_link, "CACHE_TIMEOUT", 0),
+        patch(
+            "hass_nabucasa.account_link.async_fetch_available_services",
+            side_effect=TimeoutError,
+        ),
     ):
         assert await account_link._get_services(hass) == []
         assert account_link.DATA_SERVICES not in hass.data
 
 
-async def test_implementation(hass, flow_handler, current_request_with_host):
+async def test_implementation(
+    hass: HomeAssistant, flow_handler, current_request_with_host: None
+) -> None:
     """Test Cloud OAuth2 implementation."""
     hass.data["cloud"] = None
 
@@ -189,7 +204,7 @@ async def test_implementation(hass, flow_handler, current_request_with_host):
             TEST_DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
 
-    assert result["type"] == data_entry_flow.FlowResultType.EXTERNAL_STEP
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
     assert result["url"] == "http://example.com/auth"
 
     flow_finished.set_result(

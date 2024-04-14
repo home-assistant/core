@@ -1,4 +1,5 @@
 """Support for LIFX lights."""
+
 from __future__ import annotations
 
 import asyncio
@@ -296,7 +297,6 @@ class LIFXManager:
             )
 
         elif service == SERVICE_EFFECT_MORPH:
-
             theme_name = kwargs.get(ATTR_THEME, "exciting")
             palette = kwargs.get(ATTR_PALETTE, None)
 
@@ -336,7 +336,6 @@ class LIFXManager:
             )
 
         elif service == SERVICE_EFFECT_PULSE:
-
             effect = aiolifx_effects.EffectPulse(
                 power_on=kwargs.get(ATTR_POWER_ON),
                 period=kwargs.get(ATTR_PERIOD),
@@ -347,7 +346,6 @@ class LIFXManager:
             await self.effects_conductor.start(effect, bulbs)
 
         elif service == SERVICE_EFFECT_COLORLOOP:
-
             brightness = None
             saturation_max = None
             saturation_min = None
@@ -378,7 +376,6 @@ class LIFXManager:
             await self.effects_conductor.start(effect, bulbs)
 
         elif service == SERVICE_EFFECT_STOP:
-
             await self.effects_conductor.stop(bulbs)
 
             for coordinator in coordinators:

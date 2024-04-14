@@ -1,4 +1,5 @@
 """Config flow to configure Denon AVR receivers using their HTTP interface."""
+
 from __future__ import annotations
 
 import logging
@@ -9,11 +10,15 @@ import denonavr
 from denonavr.exceptions import AvrNetworkError, AvrTimoutError
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components import ssdp
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_TYPE
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.httpx_client import get_async_client
 
 from .receiver import ConnectDenonAVR
@@ -31,26 +36,29 @@ CONF_ZONE3 = "zone3"
 CONF_MANUFACTURER = "manufacturer"
 CONF_SERIAL_NUMBER = "serial_number"
 CONF_UPDATE_AUDYSSEY = "update_audyssey"
+CONF_USE_TELNET = "use_telnet"
 
 DEFAULT_SHOW_SOURCES = False
 DEFAULT_TIMEOUT = 5
 DEFAULT_ZONE2 = False
 DEFAULT_ZONE3 = False
 DEFAULT_UPDATE_AUDYSSEY = False
+DEFAULT_USE_TELNET = False
+DEFAULT_USE_TELNET_NEW_INSTALL = True
 
 CONFIG_SCHEMA = vol.Schema({vol.Optional(CONF_HOST): str})
 
 
-class OptionsFlowHandler(config_entries.OptionsFlow):
+class OptionsFlowHandler(OptionsFlow):
     """Options for the component."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+    def __init__(self, config_entry: ConfigEntry) -> None:
         """Init object."""
         self.config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage the options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
@@ -77,13 +85,19 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                         CONF_UPDATE_AUDYSSEY, DEFAULT_UPDATE_AUDYSSEY
                     ),
                 ): bool,
+                vol.Optional(
+                    CONF_USE_TELNET,
+                    default=self.config_entry.options.get(
+                        CONF_USE_TELNET, DEFAULT_USE_TELNET
+                    ),
+                ): bool,
             }
         )
 
         return self.async_show_form(step_id="init", data_schema=settings_schema)
 
 
-class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class DenonAvrFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a Denon AVR config flow."""
 
     VERSION = 1
@@ -102,14 +116,14 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
+        config_entry: ConfigEntry,
     ) -> OptionsFlowHandler:
         """Get the options flow."""
         return OptionsFlowHandler(config_entry)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         errors = {}
         if user_input is not None:
@@ -136,7 +150,7 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_select(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle multiple receivers found."""
         errors: dict[str, str] = {}
         if user_input is not None:
@@ -157,7 +171,7 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Allow the user to confirm adding the device."""
         if user_input is not None:
             return await self.async_step_connect()
@@ -167,7 +181,7 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_connect(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Connect to the receiver."""
         assert self.host
         connect_denonavr = ConnectDenonAVR(
@@ -176,7 +190,9 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self.show_all_sources,
             self.zone2,
             self.zone3,
-            lambda: get_async_client(self.hass),
+            use_telnet=False,
+            update_audyssey=False,
+            async_client_getter=lambda: get_async_client(self.hass),
         )
 
         try:
@@ -199,8 +215,10 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
         else:
             _LOGGER.error(
-                "Could not get serial number of host %s, "
-                "unique_id's will not be available",
+                (
+                    "Could not get serial number of host %s, "
+                    "unique_id's will not be available"
+                ),
                 self.host,
             )
             self._async_abort_entries_match({CONF_HOST: self.host})
@@ -214,9 +232,12 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_MANUFACTURER: receiver.manufacturer,
                 CONF_SERIAL_NUMBER: self.serial_number,
             },
+            options={CONF_USE_TELNET: DEFAULT_USE_TELNET_NEW_INSTALL},
         )
 
-    async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
+    async def async_step_ssdp(
+        self, discovery_info: ssdp.SsdpServiceInfo
+    ) -> ConfigFlowResult:
         """Handle a discovered Denon AVR.
 
         This flow is triggered by the SSDP component. It will check if the

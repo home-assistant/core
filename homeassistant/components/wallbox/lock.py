@@ -1,4 +1,5 @@
 """Home Assistant component for accessing the Wallbox Portal API. The lock component creates a lock entity."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -9,18 +10,19 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import InvalidAuth, WallboxCoordinator, WallboxEntity
 from .const import (
     CHARGER_DATA_KEY,
     CHARGER_LOCKED_UNLOCKED_KEY,
     CHARGER_SERIAL_NUMBER_KEY,
     DOMAIN,
 )
+from .coordinator import InvalidAuth, WallboxCoordinator
+from .entity import WallboxEntity
 
 LOCK_TYPES: dict[str, LockEntityDescription] = {
     CHARGER_LOCKED_UNLOCKED_KEY: LockEntityDescription(
         key=CHARGER_LOCKED_UNLOCKED_KEY,
-        name="Locked/Unlocked",
+        translation_key="lock",
     ),
 }
 
@@ -41,11 +43,9 @@ async def async_setup_entry(
         raise PlatformNotReady from exc
 
     async_add_entities(
-        [
-            WallboxLock(coordinator, entry, description)
-            for ent in coordinator.data
-            if (description := LOCK_TYPES.get(ent))
-        ]
+        WallboxLock(coordinator, description)
+        for ent in coordinator.data
+        if (description := LOCK_TYPES.get(ent))
     )
 
 
@@ -55,14 +55,12 @@ class WallboxLock(WallboxEntity, LockEntity):
     def __init__(
         self,
         coordinator: WallboxCoordinator,
-        entry: ConfigEntry,
         description: LockEntityDescription,
     ) -> None:
         """Initialize a Wallbox lock."""
 
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_name = f"{entry.title} {description.name}"
         self._attr_unique_id = f"{description.key}-{coordinator.data[CHARGER_DATA_KEY][CHARGER_SERIAL_NUMBER_KEY]}"
 
     @property

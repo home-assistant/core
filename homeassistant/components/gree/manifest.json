@@ -1,11 +1,11 @@
 {
   "domain": "gree",
   "name": "Gree Climate",
-  "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/gree",
-  "requirements": ["greeclimate==1.3.0"],
-  "dependencies": ["network"],
   "codeowners": ["@cmroche"],
+  "config_flow": true,
+  "dependencies": ["network"],
+  "documentation": "https://www.home-assistant.io/integrations/gree",
   "iot_class": "local_polling",
-  "loggers": ["greeclimate"]
+  "loggers": ["greeclimate"],
+  "requirements": ["greeclimate==1.4.1"]
 }

@@ -1,4 +1,5 @@
 """Test configuration and mocks for the SmartThings component."""
+
 import secrets
 from unittest.mock import Mock, patch
 from uuid import uuid4
@@ -37,7 +38,7 @@ from homeassistant.components.smartthings.const import (
     STORAGE_VERSION,
 )
 from homeassistant.config import async_process_ha_core_config
-from homeassistant.config_entries import SOURCE_USER, ConfigEntry
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
     CONF_CLIENT_ID,
@@ -55,13 +56,13 @@ COMPONENT_PREFIX = "homeassistant.components.smartthings."
 async def setup_platform(hass, platform: str, *, devices=None, scenes=None):
     """Set up the SmartThings platform and prerequisites."""
     hass.config.components.add(DOMAIN)
-    config_entry = ConfigEntry(
-        2,
-        DOMAIN,
-        "Test",
-        {CONF_INSTALLED_APP_ID: str(uuid4())},
-        SOURCE_USER,
+    config_entry = MockConfigEntry(
+        version=2,
+        domain=DOMAIN,
+        title="Test",
+        data={CONF_INSTALLED_APP_ID: str(uuid4())},
     )
+    config_entry.add_to_hass(hass)
     broker = DeviceBroker(
         hass, config_entry, Mock(), Mock(), devices or [], scenes or []
     )
@@ -182,9 +183,11 @@ def smartthings_mock_fixture(locations):
     smartthings_mock = Mock(SmartThings)
     smartthings_mock.location.side_effect = _location
     mock = Mock(return_value=smartthings_mock)
-    with patch(COMPONENT_PREFIX + "SmartThings", new=mock), patch(
-        COMPONENT_PREFIX + "config_flow.SmartThings", new=mock
-    ), patch(COMPONENT_PREFIX + "smartapp.SmartThings", new=mock):
+    with (
+        patch(COMPONENT_PREFIX + "SmartThings", new=mock),
+        patch(COMPONENT_PREFIX + "config_flow.SmartThings", new=mock),
+        patch(COMPONENT_PREFIX + "smartapp.SmartThings", new=mock),
+    ):
         yield smartthings_mock
 
 
@@ -250,7 +253,7 @@ def device_factory_fixture():
     api = Mock(Api)
     api.post_device_command.return_value = {"results": [{"status": "ACCEPTED"}]}
 
-    def _factory(label, capabilities, status: dict = None):
+    def _factory(label, capabilities, status: dict | None = None):
         device_data = {
             "deviceId": str(uuid4()),
             "name": "Device Type Handler Name",

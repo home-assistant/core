@@ -1,4 +1,5 @@
 """Test Dynalite light."""
+
 from unittest.mock import Mock, PropertyMock
 
 from dynalite_devices_lib.light import DynaliteChannelLightDevice
@@ -17,7 +18,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import State
+from homeassistant.core import HomeAssistant, State
 
 from .common import (
     ATTR_METHOD,
@@ -49,7 +50,7 @@ def mock_device():
     return mock_dev
 
 
-async def test_light_setup(hass, mock_device):
+async def test_light_setup(hass: HomeAssistant, mock_device) -> None:
     """Test a successful setup."""
     await create_entity_from_device(hass, mock_device)
     entity_state = hass.states.get("light.name")
@@ -68,7 +69,7 @@ async def test_light_setup(hass, mock_device):
     )
 
 
-async def test_unload_config_entry(hass, mock_device):
+async def test_unload_config_entry(hass: HomeAssistant, mock_device) -> None:
     """Test when a config entry is unloaded from HA."""
     await create_entity_from_device(hass, mock_device)
     assert hass.states.get("light.name")
@@ -78,7 +79,7 @@ async def test_unload_config_entry(hass, mock_device):
     assert hass.states.get("light.name").state == STATE_UNAVAILABLE
 
 
-async def test_remove_config_entry(hass, mock_device):
+async def test_remove_config_entry(hass: HomeAssistant, mock_device) -> None:
     """Test when a config entry is removed from HA."""
     await create_entity_from_device(hass, mock_device)
     assert hass.states.get("light.name")
@@ -88,7 +89,7 @@ async def test_remove_config_entry(hass, mock_device):
     assert not hass.states.get("light.name")
 
 
-async def test_light_restore_state(hass, mock_device):
+async def test_light_restore_state(hass: HomeAssistant, mock_device) -> None:
     """Test restore from cache."""
     mock_restore_cache(
         hass,
@@ -102,7 +103,7 @@ async def test_light_restore_state(hass, mock_device):
     assert entity_state.attributes[ATTR_COLOR_MODE] == ColorMode.BRIGHTNESS
 
 
-async def test_light_restore_state_bad_cache(hass, mock_device):
+async def test_light_restore_state_bad_cache(hass: HomeAssistant, mock_device) -> None:
     """Test restore from a cache without the attribute."""
     mock_restore_cache(
         hass,

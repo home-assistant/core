@@ -1,20 +1,26 @@
 """Test AccuWeather system health."""
+
 import asyncio
 from unittest.mock import Mock
 
 from aiohttp import ClientError
 
 from homeassistant.components.accuweather.const import DOMAIN
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import get_system_health_info
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 
-async def test_accuweather_system_health(hass, aioclient_mock):
+async def test_accuweather_system_health(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test AccuWeather system health."""
     aioclient_mock.get("https://dataservice.accuweather.com/", text="")
     hass.config.components.add(DOMAIN)
     assert await async_setup_component(hass, "system_health", {})
+    await hass.async_block_till_done()
 
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN]["0123xyz"] = {}
@@ -32,11 +38,14 @@ async def test_accuweather_system_health(hass, aioclient_mock):
     }
 
 
-async def test_accuweather_system_health_fail(hass, aioclient_mock):
+async def test_accuweather_system_health_fail(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test AccuWeather system health."""
     aioclient_mock.get("https://dataservice.accuweather.com/", exc=ClientError)
     hass.config.components.add(DOMAIN)
     assert await async_setup_component(hass, "system_health", {})
+    await hass.async_block_till_done()
 
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN]["0123xyz"] = {}

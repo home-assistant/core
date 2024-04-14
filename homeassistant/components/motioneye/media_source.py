@@ -1,9 +1,10 @@
 """motionEye Media Source Implementation."""
+
 from __future__ import annotations
 
 import logging
 from pathlib import PurePath
-from typing import Optional, cast
+from typing import cast
 
 from motioneye_client.const import KEY_MEDIA_LIST, KEY_MIME_TYPE, KEY_PATH
 
@@ -90,7 +91,7 @@ class MotionEyeMediaSource(MediaSource):
         base = [None] * 4
         data = identifier.split("#", 3)
         return cast(
-            tuple[Optional[str], Optional[str], Optional[str], Optional[str]],
+            tuple[str | None, str | None, str | None, str | None],
             tuple(data + base)[:4],  # type: ignore[operator]
         )
 

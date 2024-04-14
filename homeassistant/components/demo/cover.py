@@ -1,4 +1,5 @@
 """Demo platform for the cover component."""
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -13,21 +14,19 @@ from homeassistant.components.cover import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_utc_time_change
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
+    config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the Demo covers."""
+    """Set up the demo cover platform."""
     async_add_entities(
         [
             DemoCover(hass, "cover_1", "Kitchen Window"),
@@ -56,25 +55,18 @@ async def async_setup_platform(
     )
 
 
-async def async_setup_entry(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
-) -> None:
-    """Set up the Demo config entry."""
-    await async_setup_platform(hass, {}, async_add_entities)
-
-
 class DemoCover(CoverEntity):
     """Representation of a demo cover."""
 
+    _attr_has_entity_name = True
+    _attr_name = None
     _attr_should_poll = False
 
     def __init__(
         self,
         hass: HomeAssistant,
         unique_id: str,
-        name: str,
+        device_name: str,
         position: int | None = None,
         tilt_position: int | None = None,
         device_class: CoverDeviceClass | None = None,
@@ -83,7 +75,6 @@ class DemoCover(CoverEntity):
         """Initialize the cover."""
         self.hass = hass
         self._unique_id = unique_id
-        self._attr_name = name
         self._position = position
         self._attr_device_class = device_class
         self._attr_supported_features = supported_features
@@ -101,15 +92,12 @@ class DemoCover(CoverEntity):
         else:
             self._closed = position <= 0
 
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device info."""
-        return DeviceInfo(
+        self._attr_device_info = DeviceInfo(
             identifiers={
                 # Serial numbers are unique identifiers within a specific domain
                 (DOMAIN, self.unique_id)
             },
-            name=self.name,
+            name=device_name,
         )
 
     @property

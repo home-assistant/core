@@ -1,4 +1,5 @@
 """Tests for the WiLight integration."""
+
 from unittest.mock import patch
 
 import pytest
@@ -252,7 +253,7 @@ async def test_switch_services(
     assert state.attributes.get(ATTR_TRIGGER_4) == "00008300"
 
     # Set watering time using WiLight Pause Switch to raise
-    with pytest.raises(ValueError) as exc_info:
+    with pytest.raises(TypeError) as exc_info:
         await hass.services.async_call(
             WILIGHT_DOMAIN,
             SERVICE_SET_WATERING_TIME,

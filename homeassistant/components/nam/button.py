@@ -1,4 +1,5 @@
 """Support for the Nettigo Air Monitor service."""
+
 from __future__ import annotations
 
 import logging
@@ -9,8 +10,8 @@ from homeassistant.components.button import (
     ButtonEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -23,7 +24,6 @@ _LOGGER = logging.getLogger(__name__)
 
 RESTART_BUTTON: ButtonEntityDescription = ButtonEntityDescription(
     key="restart",
-    name="Restart",
     device_class=ButtonDeviceClass.RESTART,
     entity_category=EntityCategory.CONFIG,
 )

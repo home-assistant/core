@@ -1,10 +1,20 @@
 """Fixtures for the Switch as X integration tests."""
+
 from __future__ import annotations
 
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+
+from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
+
+
+@pytest.fixture(autouse=True)
+async def setup_homeassistant(hass: HomeAssistant):
+    """Set up the homeassistant integration."""
+    await async_setup_component(hass, "homeassistant", {})
 
 
 @pytest.fixture

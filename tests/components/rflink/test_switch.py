@@ -13,7 +13,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import CoreState, State, callback
+from homeassistant.core import CoreState, HomeAssistant, State, callback
 
 from .test_init import mock_rflink
 
@@ -33,7 +33,7 @@ CONFIG = {
 }
 
 
-async def test_default_setup(hass, monkeypatch):
+async def test_default_setup(hass: HomeAssistant, monkeypatch) -> None:
     """Test all basic functionality of the rflink switch component."""
     # setup mocking rflink module
     event_callback, create, protocol, _ = await mock_rflink(
@@ -93,7 +93,7 @@ async def test_default_setup(hass, monkeypatch):
     assert protocol.send_command_ack.call_args_list[1][0][1] == "on"
 
 
-async def test_group_alias(hass, monkeypatch):
+async def test_group_alias(hass: HomeAssistant, monkeypatch) -> None:
     """Group aliases should only respond to group commands (allon/alloff)."""
     config = {
         "rflink": {"port": "/dev/ttyABC0"},
@@ -123,7 +123,7 @@ async def test_group_alias(hass, monkeypatch):
     assert hass.states.get(f"{DOMAIN}.test").state == "on"
 
 
-async def test_nogroup_alias(hass, monkeypatch):
+async def test_nogroup_alias(hass: HomeAssistant, monkeypatch) -> None:
     """Non group aliases should not respond to group commands."""
     config = {
         "rflink": {"port": "/dev/ttyABC0"},
@@ -156,7 +156,7 @@ async def test_nogroup_alias(hass, monkeypatch):
     assert hass.states.get(f"{DOMAIN}.test").state == "on"
 
 
-async def test_nogroup_device_id(hass, monkeypatch):
+async def test_nogroup_device_id(hass: HomeAssistant, monkeypatch) -> None:
     """Device id that do not respond to group commands (allon/alloff)."""
     config = {
         "rflink": {"port": "/dev/ttyABC0"},
@@ -184,7 +184,7 @@ async def test_nogroup_device_id(hass, monkeypatch):
     assert hass.states.get(f"{DOMAIN}.test").state == "on"
 
 
-async def test_device_defaults(hass, monkeypatch):
+async def test_device_defaults(hass: HomeAssistant, monkeypatch) -> None:
     """Event should fire if device_defaults config says so."""
     config = {
         "rflink": {"port": "/dev/ttyABC0"},
@@ -216,7 +216,7 @@ async def test_device_defaults(hass, monkeypatch):
     assert calls[0].data == {"state": "off", "entity_id": f"{DOMAIN}.test"}
 
 
-async def test_not_firing_default(hass, monkeypatch):
+async def test_not_firing_default(hass: HomeAssistant, monkeypatch) -> None:
     """By default no bus events should be fired."""
     config = {
         "rflink": {"port": "/dev/ttyABC0"},
@@ -246,7 +246,7 @@ async def test_not_firing_default(hass, monkeypatch):
     assert not calls, "an event has been fired"
 
 
-async def test_restore_state(hass, monkeypatch):
+async def test_restore_state(hass: HomeAssistant, monkeypatch) -> None:
     """Ensure states are restored on startup."""
     config = {
         "rflink": {"port": "/dev/ttyABC0"},
@@ -264,7 +264,7 @@ async def test_restore_state(hass, monkeypatch):
         hass, (State(f"{DOMAIN}.s1", STATE_ON), State(f"{DOMAIN}.s2", STATE_OFF))
     )
 
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     # setup mocking rflink module
     _, _, _, _ = await mock_rflink(hass, config, DOMAIN, monkeypatch)

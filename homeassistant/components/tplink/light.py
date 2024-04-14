@@ -1,4 +1,5 @@
 """Support for TPLink lights."""
+
 from __future__ import annotations
 
 from collections.abc import Sequence
@@ -10,28 +11,26 @@ import voluptuous as vol
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
     ColorMode,
     LightEntity,
     LightEntityFeature,
+    filter_supported_color_modes,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util.color import (
-    color_temperature_kelvin_to_mired as kelvin_to_mired,
-    color_temperature_mired_to_kelvin as mired_to_kelvin,
-)
 
 from . import legacy_device_id
 from .const import DOMAIN
 from .coordinator import TPLinkDataUpdateCoordinator
 from .entity import CoordinatedTPLinkEntity, async_refresh_after
+from .models import TPLinkData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,6 +64,9 @@ SEQUENCE_EFFECT_DICT: Final = {
         cv.ensure_list,
         vol.Length(min=1, max=16),
         [vol.All(vol.Coerce(tuple), HSV_SEQUENCE)],
+    ),
+    vol.Optional("repeat_times", default=0): vol.All(
+        vol.Coerce(int), vol.Range(min=0, max=10)
     ),
     vol.Optional("spread", default=1): vol.All(
         vol.Coerce(int), vol.Range(min=1, max=16)
@@ -133,14 +135,12 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up switches."""
-    coordinator: TPLinkDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
-    if coordinator.device.is_light_strip:
+    data: TPLinkData = hass.data[DOMAIN][config_entry.entry_id]
+    parent_coordinator = data.parent_coordinator
+    device = parent_coordinator.device
+    if device.is_light_strip:
         async_add_entities(
-            [
-                TPLinkSmartLightStrip(
-                    cast(SmartLightStrip, coordinator.device), coordinator
-                )
-            ]
+            [TPLinkSmartLightStrip(cast(SmartLightStrip, device), parent_coordinator)]
         )
         platform = entity_platform.async_get_current_platform()
         platform.async_register_entity_service(
@@ -153,9 +153,9 @@ async def async_setup_entry(
             SEQUENCE_EFFECT_DICT,
             "async_set_sequence_effect",
         )
-    elif coordinator.device.is_bulb or coordinator.device.is_dimmer:
+    elif device.is_bulb or device.is_dimmer:
         async_add_entities(
-            [TPLinkSmartBulb(cast(SmartBulb, coordinator.device), coordinator)]
+            [TPLinkSmartBulb(cast(SmartBulb, device), parent_coordinator)]
         )
 
 
@@ -163,6 +163,8 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
     """Representation of a TPLink Smart Bulb."""
 
     _attr_supported_features = LightEntityFeature.TRANSITION
+    _attr_name = None
+    _fixed_color_mode: ColorMode | None = None
 
     device: SmartBulb
 
@@ -182,6 +184,21 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
             self._attr_unique_id = legacy_device_id(device)
         else:
             self._attr_unique_id = device.mac.replace(":", "").upper()
+        modes: set[ColorMode] = {ColorMode.ONOFF}
+        if device.is_variable_color_temp:
+            modes.add(ColorMode.COLOR_TEMP)
+            temp_range = device.valid_temperature_range
+            self._attr_min_color_temp_kelvin = temp_range.min
+            self._attr_max_color_temp_kelvin = temp_range.max
+        if device.is_color:
+            modes.add(ColorMode.HS)
+        if device.is_dimmable:
+            modes.add(ColorMode.BRIGHTNESS)
+        self._attr_supported_color_modes = filter_supported_color_modes(modes)
+        if len(self._attr_supported_color_modes) == 1:
+            # If the light supports only a single color mode, set it now
+            self._fixed_color_mode = next(iter(self._attr_supported_color_modes))
+        self._async_update_attrs()
 
     @callback
     def _async_extract_brightness_transition(
@@ -203,24 +220,32 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
 
         return brightness, transition
 
-    async def _async_set_color_temp(
-        self, color_temp_mireds: int, brightness: int | None, transition: int | None
-    ) -> None:
-        # Handle temp conversion mireds -> kelvin being slightly outside of valid range
-        kelvin = mired_to_kelvin(color_temp_mireds)
-        kelvin_range = self.device.valid_temperature_range
-        color_tmp = max(kelvin_range.min, min(kelvin_range.max, kelvin))
-        _LOGGER.debug("Changing color temp to %s", color_tmp)
-        await self.device.set_color_temp(
-            color_tmp, brightness=brightness, transition=transition
-        )
-
     async def _async_set_hsv(
         self, hs_color: tuple[int, int], brightness: int | None, transition: int | None
     ) -> None:
         # TP-Link requires integers.
         hue, sat = tuple(int(val) for val in hs_color)
         await self.device.set_hsv(hue, sat, brightness, transition=transition)
+
+    async def _async_set_color_temp(
+        self, color_temp: float, brightness: int | None, transition: int | None
+    ) -> None:
+        device = self.device
+        valid_temperature_range = device.valid_temperature_range
+        requested_color_temp = round(color_temp)
+        # Clamp color temp to valid range
+        # since if the light in a group we will
+        # get requests for color temps for the range
+        # of the group and not the light
+        clamped_color_temp = min(
+            valid_temperature_range.max,
+            max(valid_temperature_range.min, requested_color_temp),
+        )
+        await device.set_color_temp(
+            clamped_color_temp,
+            brightness=brightness,
+            transition=transition,
+        )
 
     async def _async_turn_on_with_brightness(
         self, brightness: int | None, transition: int | None
@@ -229,15 +254,15 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
         if brightness is not None:
             await self.device.set_brightness(brightness, transition=transition)
             return
-        await self.device.turn_on(transition=transition)  # type: ignore[arg-type]
+        await self.device.turn_on(transition=transition)
 
     @async_refresh_after
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         brightness, transition = self._async_extract_brightness_transition(**kwargs)
-        if ATTR_COLOR_TEMP in kwargs:
+        if ATTR_COLOR_TEMP_KELVIN in kwargs:
             await self._async_set_color_temp(
-                int(kwargs[ATTR_COLOR_TEMP]), brightness, transition
+                kwargs[ATTR_COLOR_TEMP_KELVIN], brightness, transition
             )
         if ATTR_HS_COLOR in kwargs:
             await self._async_set_hsv(kwargs[ATTR_HS_COLOR], brightness, transition)
@@ -251,102 +276,78 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
             transition = int(transition * 1_000)
         await self.device.turn_off(transition=transition)
 
-    @property
-    def min_mireds(self) -> int:
-        """Return minimum supported color temperature."""
-        return kelvin_to_mired(self.device.valid_temperature_range.max)
-
-    @property
-    def max_mireds(self) -> int:
-        """Return maximum supported color temperature."""
-        return kelvin_to_mired(self.device.valid_temperature_range.min)
-
-    @property
-    def color_temp(self) -> int | None:
-        """Return the color temperature of this light in mireds for HA."""
-        return kelvin_to_mired(self.device.color_temp)
-
-    @property
-    def brightness(self) -> int | None:
-        """Return the brightness of this light between 0..255."""
-        return round((cast(int, self.device.brightness) * 255.0) / 100.0)
-
-    @property
-    def hs_color(self) -> tuple[int, int] | None:
-        """Return the color."""
-        hue, saturation, _ = self.device.hsv
-        return hue, saturation
-
-    @property
-    def supported_color_modes(self) -> set[ColorMode | str] | None:
-        """Return list of available color modes."""
-        modes: set[ColorMode | str] = set()
-        if self.device.is_variable_color_temp:
-            modes.add(ColorMode.COLOR_TEMP)
-        if self.device.is_color:
-            modes.add(ColorMode.HS)
-        if self.device.is_dimmable:
-            modes.add(ColorMode.BRIGHTNESS)
-
-        if not modes:
-            modes.add(ColorMode.ONOFF)
-
-        return modes
-
-    @property
-    def color_mode(self) -> ColorMode:
+    def _determine_color_mode(self) -> ColorMode:
         """Return the active color mode."""
-        if self.device.is_color:
-            if self.device.is_variable_color_temp and self.device.color_temp:
-                return ColorMode.COLOR_TEMP
-            return ColorMode.HS
-        if self.device.is_variable_color_temp:
-            return ColorMode.COLOR_TEMP
+        if self._fixed_color_mode:
+            # The light supports only a single color mode, return it
+            return self._fixed_color_mode
 
-        return ColorMode.BRIGHTNESS
+        # The light supports both color temp and color, determine which on is active
+        if self.device.is_variable_color_temp and self.device.color_temp:
+            return ColorMode.COLOR_TEMP
+        return ColorMode.HS
+
+    @callback
+    def _async_update_attrs(self) -> None:
+        """Update the entity's attributes."""
+        device = self.device
+        self._attr_is_on = device.is_on
+        if device.is_dimmable:
+            self._attr_brightness = round((device.brightness * 255.0) / 100.0)
+        color_mode = self._determine_color_mode()
+        self._attr_color_mode = color_mode
+        if color_mode is ColorMode.COLOR_TEMP:
+            self._attr_color_temp_kelvin = device.color_temp
+        elif color_mode is ColorMode.HS:
+            hue, saturation, _ = device.hsv
+            self._attr_hs_color = hue, saturation
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._async_update_attrs()
+        super()._handle_coordinator_update()
 
 
 class TPLinkSmartLightStrip(TPLinkSmartBulb):
     """Representation of a TPLink Smart Light Strip."""
 
     device: SmartLightStrip
+    _attr_supported_features = LightEntityFeature.TRANSITION | LightEntityFeature.EFFECT
 
-    @property
-    def supported_features(self) -> LightEntityFeature:
-        """Flag supported features."""
-        return super().supported_features | LightEntityFeature.EFFECT
-
-    @property
-    def effect_list(self) -> list[str] | None:
-        """Return the list of available effects."""
-        if effect_list := self.device.effect_list:
-            return cast(list[str], effect_list)
-        return None
-
-    @property
-    def effect(self) -> str | None:
-        """Return the current effect."""
-        if (effect := self.device.effect) and effect["enable"]:
-            return cast(str, effect["name"])
-        return None
+    @callback
+    def _async_update_attrs(self) -> None:
+        """Update the entity's attributes."""
+        super()._async_update_attrs()
+        device = self.device
+        if (effect := device.effect) and effect["enable"]:
+            self._attr_effect = effect["name"]
+        else:
+            self._attr_effect = None
+        if effect_list := device.effect_list:
+            self._attr_effect_list = effect_list
+        else:
+            self._attr_effect_list = None
 
     @async_refresh_after
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         brightness, transition = self._async_extract_brightness_transition(**kwargs)
-        if ATTR_COLOR_TEMP in kwargs:
+        if ATTR_EFFECT in kwargs:
+            await self.device.set_effect(
+                kwargs[ATTR_EFFECT], brightness=brightness, transition=transition
+            )
+        elif ATTR_COLOR_TEMP_KELVIN in kwargs:
             if self.effect:
                 # If there is an effect in progress
                 # we have to set an HSV value to clear the effect
                 # before we can set a color temp
                 await self.device.set_hsv(0, 0, brightness)
             await self._async_set_color_temp(
-                int(kwargs[ATTR_COLOR_TEMP]), brightness, transition
+                kwargs[ATTR_COLOR_TEMP_KELVIN], brightness, transition
             )
         elif ATTR_HS_COLOR in kwargs:
             await self._async_set_hsv(kwargs[ATTR_HS_COLOR], brightness, transition)
-        elif ATTR_EFFECT in kwargs:
-            await self.device.set_effect(kwargs[ATTR_EFFECT])
         else:
             await self._async_turn_on_with_brightness(brightness, transition)
 
@@ -397,6 +398,7 @@ class TPLinkSmartLightStrip(TPLinkSmartBulb):
         transition: int,
         segments: list[int],
         sequence: Sequence[tuple[int, int, int]],
+        repeat_times: int,
         spread: int,
         direction: int,
     ) -> None:
@@ -405,7 +407,7 @@ class TPLinkSmartLightStrip(TPLinkSmartBulb):
             **_async_build_base_effect(brightness, duration, transition, segments),
             "type": "sequence",
             "sequence": sequence,
-            "repeat_times": 0,
+            "repeat_times": repeat_times,
             "spread": spread,
             "direction": direction,
         }

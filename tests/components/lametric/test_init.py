@@ -1,8 +1,7 @@
 """Tests for the LaMetric integration."""
-from collections.abc import Awaitable, Callable
+
 from unittest.mock import MagicMock
 
-from aiohttp import ClientWebSocketResponse
 from demetriek import (
     LaMetricAuthenticationError,
     LaMetricConnectionError,
@@ -12,12 +11,9 @@ import pytest
 
 from homeassistant.components.lametric.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
-from tests.components.repairs import get_repairs
 
 
 async def test_load_unload_config_entry(
@@ -57,23 +53,6 @@ async def test_config_entry_not_ready(
 
     assert len(mock_lametric.device.mock_calls) == 1
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_yaml_config_raises_repairs(
-    hass: HomeAssistant,
-    hass_ws_client: Callable[[HomeAssistant], Awaitable[ClientWebSocketResponse]],
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test that YAML configuration raises an repairs issue."""
-    await async_setup_component(
-        hass, DOMAIN, {DOMAIN: {CONF_CLIENT_ID: "foo", CONF_CLIENT_SECRET: "bar"}}
-    )
-
-    assert "The 'lametric' option is deprecated" in caplog.text
-
-    issues = await get_repairs(hass, hass_ws_client)
-    assert len(issues) == 1
-    assert issues[0]["issue_id"] == "manual_migration"
 
 
 async def test_config_entry_authentication_failed(

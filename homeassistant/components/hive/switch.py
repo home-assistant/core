@@ -1,4 +1,5 @@
 """Support for the Hive switches."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -6,8 +7,8 @@ from typing import Any
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HiveEntity, refresh_system
@@ -35,13 +36,17 @@ async def async_setup_entry(
 
     hive = hass.data[DOMAIN][entry.entry_id]
     devices = hive.session.deviceList.get("switch")
-    entities = []
-    if devices:
-        for description in SWITCH_TYPES:
-            for dev in devices:
-                if dev["hiveType"] == description.key:
-                    entities.append(HiveSwitch(hive, dev, description))
-    async_add_entities(entities, True)
+    if not devices:
+        return
+    async_add_entities(
+        (
+            HiveSwitch(hive, dev, description)
+            for dev in devices
+            for description in SWITCH_TYPES
+            if dev["hiveType"] == description.key
+        ),
+        True,
+    )
 
 
 class HiveSwitch(HiveEntity, SwitchEntity):

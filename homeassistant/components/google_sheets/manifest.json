@@ -1,11 +1,11 @@
 {
   "domain": "google_sheets",
   "name": "Google Sheets",
+  "codeowners": ["@tkdrob"],
   "config_flow": true,
   "dependencies": ["application_credentials"],
-  "documentation": "https://www.home-assistant.io/integrations/google_sheets/",
-  "requirements": ["gspread==5.5.0"],
-  "codeowners": ["@tkdrob"],
+  "documentation": "https://www.home-assistant.io/integrations/google_sheets",
+  "integration_type": "service",
   "iot_class": "cloud_polling",
-  "integration_type": "service"
+  "requirements": ["gspread==5.5.0"]
 }

@@ -1,4 +1,5 @@
 """Blebox sensors tests."""
+
 import logging
 from unittest.mock import AsyncMock, PropertyMock
 
@@ -11,8 +12,9 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     STATE_UNKNOWN,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from .conftest import async_setup_entity, mock_feature
@@ -55,7 +57,9 @@ def tempsensor_fixture():
     return (feature, "sensor.tempsensor_0_temperature")
 
 
-async def test_init(tempsensor, hass):
+async def test_init(
+    tempsensor, hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Test sensor default state."""
 
     _, entity_id = tempsensor
@@ -66,10 +70,9 @@ async def test_init(tempsensor, hass):
     assert state.name == "tempSensor-0.temperature"
 
     assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.TEMPERATURE
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == TEMP_CELSIUS
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.CELSIUS
     assert state.state == STATE_UNKNOWN
 
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get(entry.device_id)
 
     assert device.name == "My temperature sensor"
@@ -79,7 +82,7 @@ async def test_init(tempsensor, hass):
     assert device.sw_version == "1.23"
 
 
-async def test_update(tempsensor, hass):
+async def test_update(tempsensor, hass: HomeAssistant) -> None:
     """Test sensor update."""
 
     feature_mock, entity_id = tempsensor
@@ -91,11 +94,13 @@ async def test_update(tempsensor, hass):
     await async_setup_entity(hass, entity_id)
 
     state = hass.states.get(entity_id)
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == TEMP_CELSIUS
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.CELSIUS
     assert state.state == "25.18"
 
 
-async def test_update_failure(tempsensor, hass, caplog):
+async def test_update_failure(
+    tempsensor, hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test that update failures are logged."""
 
     caplog.set_level(logging.ERROR)
@@ -107,7 +112,9 @@ async def test_update_failure(tempsensor, hass, caplog):
     assert f"Updating '{feature_mock.full_name}' failed: " in caplog.text
 
 
-async def test_airsensor_init(airsensor, hass):
+async def test_airsensor_init(
+    airsensor, hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Test airSensor default state."""
 
     _, entity_id = airsensor
@@ -120,7 +127,6 @@ async def test_airsensor_init(airsensor, hass):
     assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.PM1
     assert state.state == STATE_UNKNOWN
 
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get(entry.device_id)
 
     assert device.name == "My air sensor"
@@ -130,7 +136,7 @@ async def test_airsensor_init(airsensor, hass):
     assert device.sw_version == "1.23"
 
 
-async def test_airsensor_update(airsensor, hass):
+async def test_airsensor_update(airsensor, hass: HomeAssistant) -> None:
     """Test air quality sensor state after update."""
 
     feature_mock, entity_id = airsensor

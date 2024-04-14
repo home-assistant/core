@@ -1,5 +1,8 @@
 """Account linking via the cloud."""
-import asyncio
+
+from __future__ import annotations
+
+from datetime import datetime
 import logging
 from typing import Any
 
@@ -24,21 +27,23 @@ CURRENT_PLAIN_VERSION = AwesomeVersion(
 
 
 @callback
-def async_setup(hass: HomeAssistant):
+def async_setup(hass: HomeAssistant) -> None:
     """Set up cloud account link."""
     config_entry_oauth2_flow.async_add_implementation_provider(
         hass, DOMAIN, async_provide_implementation
     )
 
 
-async def async_provide_implementation(hass: HomeAssistant, domain: str):
+async def async_provide_implementation(
+    hass: HomeAssistant, domain: str
+) -> list[config_entry_oauth2_flow.AbstractOAuth2Implementation]:
     """Provide an implementation for a domain."""
     services = await _get_services(hass)
 
     for service in services:
         if (
             service["service"] == domain
-            and CURRENT_PLAIN_VERSION >= service["min_version"]
+            and service["min_version"] <= CURRENT_PLAIN_VERSION
             and (
                 service.get("accepts_new_authorizations", True)
                 or (
@@ -55,20 +60,22 @@ async def async_provide_implementation(hass: HomeAssistant, domain: str):
     return []
 
 
-async def _get_services(hass):
+async def _get_services(hass: HomeAssistant) -> list[dict[str, Any]]:
     """Get the available services."""
-    if (services := hass.data.get(DATA_SERVICES)) is not None:
-        return services
+    services: list[dict[str, Any]]
+    if DATA_SERVICES in hass.data:
+        services = hass.data[DATA_SERVICES]
+        return services  # noqa: RET504
 
     try:
         services = await account_link.async_fetch_available_services(hass.data[DOMAIN])
-    except (aiohttp.ClientError, asyncio.TimeoutError):
+    except (aiohttp.ClientError, TimeoutError):
         return []
 
     hass.data[DATA_SERVICES] = services
 
     @callback
-    def clear_services(_now):
+    def clear_services(_now: datetime) -> None:
         """Clear services cache."""
         hass.data.pop(DATA_SERVICES, None)
 
@@ -102,12 +109,12 @@ class CloudOAuth2Implementation(config_entry_oauth2_flow.AbstractOAuth2Implement
         )
         authorize_url = await helper.async_get_authorize_url()
 
-        async def await_tokens():
+        async def await_tokens() -> None:
             """Wait for tokens and pass them on when received."""
             try:
                 tokens = await helper.async_get_tokens()
 
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 _LOGGER.info("Timeout fetching tokens for flow %s", flow_id)
             except account_link.AccountLinkException as err:
                 _LOGGER.info(
@@ -125,7 +132,8 @@ class CloudOAuth2Implementation(config_entry_oauth2_flow.AbstractOAuth2Implement
     async def async_resolve_external_data(self, external_data: Any) -> dict:
         """Resolve external data to tokens."""
         # We already passed in tokens
-        return external_data
+        dict_data: dict = external_data
+        return dict_data
 
     async def _async_refresh_token(self, token: dict) -> dict:
         """Refresh a token."""

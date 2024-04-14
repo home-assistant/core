@@ -1,4 +1,5 @@
 """Support for Broadlink switches."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -221,6 +222,7 @@ class BroadlinkSP2Switch(BroadlinkSP1Switch):
 
     _attr_assumed_state = False
     _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(self, device, *args, **kwargs):
         """Initialize the switch."""

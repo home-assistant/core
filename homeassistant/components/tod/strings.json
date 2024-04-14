@@ -8,7 +8,7 @@
         "data": {
           "after_time": "On time",
           "before_time": "Off time",
-          "name": "Name"
+          "name": "[%key:common::config_flow::data::name%]"
         }
       }
     }

@@ -1,4 +1,5 @@
 """Support for Habitica sensors."""
+
 from __future__ import annotations
 
 from collections import namedtuple
@@ -24,7 +25,7 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 SensorType = namedtuple("SensorType", ["name", "icon", "unit", "path"])
 
 SENSORS_TYPES = {
-    "name": SensorType("Name", None, "", ["profile", "name"]),
+    "name": SensorType("Name", None, None, ["profile", "name"]),
     "hp": SensorType("HP", "mdi:heart", "HP", ["stats", "hp"]),
     "maxHealth": SensorType("max HP", "mdi:heart", "HP", ["stats", "maxHealth"]),
     "mp": SensorType("Mana", "mdi:auto-fix", "MP", ["stats", "mp"]),
@@ -35,7 +36,7 @@ SENSORS_TYPES = {
         "Lvl", "mdi:arrow-up-bold-circle-outline", "Lvl", ["stats", "lvl"]
     ),
     "gp": SensorType("Gold", "mdi:circle-multiple", "Gold", ["stats", "gp"]),
-    "class": SensorType("Class", "mdi:sword", "", ["stats", "class"]),
+    "class": SensorType("Class", "mdi:sword", None, ["stats", "class"]),
 }
 
 TASKS_TYPES = {
@@ -86,14 +87,16 @@ async def async_setup_entry(
 ) -> None:
     """Set up the habitica sensors."""
 
-    entities: list[SensorEntity] = []
     name = config_entry.data[CONF_NAME]
     sensor_data = HabitipyData(hass.data[DOMAIN][config_entry.entry_id])
     await sensor_data.update()
-    for sensor_type in SENSORS_TYPES:
-        entities.append(HabitipySensor(name, sensor_type, sensor_data))
-    for task_type in TASKS_TYPES:
-        entities.append(HabitipyTaskSensor(name, task_type, sensor_data))
+
+    entities: list[SensorEntity] = [
+        HabitipySensor(name, sensor_type, sensor_data) for sensor_type in SENSORS_TYPES
+    ]
+    entities.extend(
+        HabitipyTaskSensor(name, task_type, sensor_data) for task_type in TASKS_TYPES
+    )
     async_add_entities(entities, True)
 
 
@@ -114,8 +117,10 @@ class HabitipyData:
         except ClientResponseError as error:
             if error.status == HTTPStatus.TOO_MANY_REQUESTS:
                 _LOGGER.warning(
-                    "Sensor data update for %s has too many API requests;"
-                    " Skipping the update",
+                    (
+                        "Sensor data update for %s has too many API requests;"
+                        " Skipping the update"
+                    ),
                     DOMAIN,
                 )
             else:
@@ -131,8 +136,10 @@ class HabitipyData:
             except ClientResponseError as error:
                 if error.status == HTTPStatus.TOO_MANY_REQUESTS:
                     _LOGGER.warning(
-                        "Sensor data update for %s has too many API requests;"
-                        " Skipping the update",
+                        (
+                            "Sensor data update for %s has too many API requests;"
+                            " Skipping the update"
+                        ),
                         DOMAIN,
                     )
                 else:

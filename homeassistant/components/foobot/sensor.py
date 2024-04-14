@@ -1,7 +1,7 @@
 """Support for the Foobot indoor air quality monitor."""
+
 from __future__ import annotations
 
-import asyncio
 from datetime import timedelta
 import logging
 from typing import Any
@@ -23,7 +23,7 @@ from homeassistant.const import (
     CONF_TOKEN,
     CONF_USERNAME,
     PERCENTAGE,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
@@ -52,7 +52,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="tmp",
         name=ATTR_TEMPERATURE,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
     ),
     SensorEntityDescription(
@@ -118,7 +118,7 @@ async def async_setup_platform(
             )
     except (
         aiohttp.client_exceptions.ClientConnectorError,
-        asyncio.TimeoutError,
+        TimeoutError,
         FoobotClient.TooManyRequests,
         FoobotClient.InternalError,
     ) as err:
@@ -175,7 +175,7 @@ class FoobotData:
             )
         except (
             aiohttp.client_exceptions.ClientConnectorError,
-            asyncio.TimeoutError,
+            TimeoutError,
             self._client.TooManyRequests,
             self._client.InternalError,
         ):

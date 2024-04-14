@@ -1,4 +1,5 @@
 """Support for Vera cover - curtains, rollershutters etc."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -43,8 +44,7 @@ class VeraCover(VeraDevice[veraApi.VeraCurtain], CoverEntity):
 
     @property
     def current_cover_position(self) -> int:
-        """
-        Return current position of cover.
+        """Return current position of cover.
 
         0 is closed, 100 is fully open.
         """

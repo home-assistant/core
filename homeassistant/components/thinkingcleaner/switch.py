@@ -1,4 +1,5 @@
 """Support for ThinkingCleaner switches."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -75,7 +76,9 @@ def setup_platform(
 class ThinkingCleanerSwitch(SwitchEntity):
     """ThinkingCleaner Switch (dock, clean, find me)."""
 
-    def __init__(self, tc_object, update_devices, description: SwitchEntityDescription):
+    def __init__(
+        self, tc_object, update_devices, description: SwitchEntityDescription
+    ) -> None:
         """Initialize the ThinkingCleaner."""
         self.entity_description = description
 

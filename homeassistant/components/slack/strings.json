@@ -25,5 +25,12 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "do_not_disturb_until": {
+        "name": "Do not disturb until"
+      }
+    }
   }
 }

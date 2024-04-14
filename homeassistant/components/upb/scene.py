@@ -1,4 +1,5 @@
 """Platform for UPB link integration."""
+
 from typing import Any
 
 from homeassistant.components.scene import Scene
@@ -47,7 +48,7 @@ async def async_setup_entry(
 
 
 class UpbLink(UpbEntity, Scene):
-    """Representation of an UPB Link."""
+    """Representation of a UPB Link."""
 
     def __init__(self, element, unique_id, upb):
         """Initialize the base of all UPB devices."""

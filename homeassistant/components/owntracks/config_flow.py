@@ -1,8 +1,9 @@
 """Config flow for OwnTracks."""
+
 import secrets
 
-from homeassistant import config_entries
 from homeassistant.components import cloud, webhook
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_WEBHOOK_ID
 
 from .const import DOMAIN
@@ -12,7 +13,7 @@ CONF_SECRET = "secret"
 CONF_CLOUDHOOK = "cloudhook"
 
 
-class OwnTracksFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class OwnTracksFlow(ConfigFlow, domain=DOMAIN):
     """Set up OwnTracks."""
 
     VERSION = 1
@@ -33,7 +34,10 @@ class OwnTracksFlow(config_entries.ConfigFlow, domain=DOMAIN):
         secret = secrets.token_hex(16)
 
         if supports_encryption():
-            secret_desc = f"The encryption key is {secret} (on Android under preferences -> advanced)"
+            secret_desc = (
+                f"The encryption key is {secret} (on Android under Preferences >"
+                " Advanced)"
+            )
         else:
             secret_desc = "Encryption is not supported because nacl is not installed."
 

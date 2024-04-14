@@ -1,4 +1,5 @@
 """Support for Velbus covers."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -15,7 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .entity import VelbusEntity
+from .entity import VelbusEntity, api_call
 
 
 async def async_setup_entry(
@@ -26,10 +27,7 @@ async def async_setup_entry(
     """Set up Velbus switch based on config_entry."""
     await hass.data[DOMAIN][entry.entry_id]["tsk"]
     cntrl = hass.data[DOMAIN][entry.entry_id]["cntrl"]
-    entities = []
-    for channel in cntrl.get_all("cover"):
-        entities.append(VelbusCover(channel))
-    async_add_entities(entities)
+    async_add_entities(VelbusCover(channel) for channel in cntrl.get_all("cover"))
 
 
 class VelbusCover(VelbusEntity, CoverEntity):
@@ -81,18 +79,22 @@ class VelbusCover(VelbusEntity, CoverEntity):
             return 100 - pos
         return None
 
+    @api_call
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         await self._channel.open()
 
+    @api_call
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         await self._channel.close()
 
+    @api_call
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         await self._channel.stop()
 
+    @api_call
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         await self._channel.set_position(100 - kwargs[ATTR_POSITION])

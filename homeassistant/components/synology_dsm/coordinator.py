@@ -1,13 +1,16 @@
 """synology_dsm coordinators."""
+
 from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, TypeVar
 
-import async_timeout
 from synology_dsm.api.surveillance_station.camera import SynoCamera
-from synology_dsm.exceptions import SynologyDSMAPIErrorException
+from synology_dsm.exceptions import (
+    SynologyDSMAPIErrorException,
+    SynologyDSMNotLoggedInException,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_SCAN_INTERVAL
@@ -15,17 +18,19 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .common import SynoApi
+from .common import SynoApi, raise_config_entry_auth_error
 from .const import (
     DEFAULT_SCAN_INTERVAL,
     SIGNAL_CAMERA_SOURCE_CHANGED,
+    SYNOLOGY_AUTH_FAILED_EXCEPTIONS,
     SYNOLOGY_CONNECTION_EXCEPTIONS,
 )
 
 _LOGGER = logging.getLogger(__name__)
+_DataT = TypeVar("_DataT")
 
 
-class SynologyDSMUpdateCoordinator(DataUpdateCoordinator):
+class SynologyDSMUpdateCoordinator(DataUpdateCoordinator[_DataT]):
     """DataUpdateCoordinator base class for synology_dsm."""
 
     def __init__(
@@ -46,7 +51,9 @@ class SynologyDSMUpdateCoordinator(DataUpdateCoordinator):
         )
 
 
-class SynologyDSMSwitchUpdateCoordinator(SynologyDSMUpdateCoordinator):
+class SynologyDSMSwitchUpdateCoordinator(
+    SynologyDSMUpdateCoordinator[dict[str, dict[str, Any]]]
+):
     """DataUpdateCoordinator to gather data for a synology_dsm switch devices."""
 
     def __init__(
@@ -61,24 +68,22 @@ class SynologyDSMSwitchUpdateCoordinator(SynologyDSMUpdateCoordinator):
 
     async def async_setup(self) -> None:
         """Set up the coordinator initial data."""
-        info = await self.hass.async_add_executor_job(
-            self.api.dsm.surveillance_station.get_info
-        )
+        info = await self.api.dsm.surveillance_station.get_info()
+        assert info is not None
         self.version = info["data"]["CMSMinVersion"]
 
     async def _async_update_data(self) -> dict[str, dict[str, Any]]:
         """Fetch all data from api."""
         surveillance_station = self.api.surveillance_station
+        assert surveillance_station is not None
         return {
             "switches": {
-                "home_mode": await self.hass.async_add_executor_job(
-                    surveillance_station.get_home_mode_status
-                )
+                "home_mode": bool(await surveillance_station.get_home_mode_status())
             }
         }
 
 
-class SynologyDSMCentralUpdateCoordinator(SynologyDSMUpdateCoordinator):
+class SynologyDSMCentralUpdateCoordinator(SynologyDSMUpdateCoordinator[None]):
     """DataUpdateCoordinator to gather data for a synology_dsm central device."""
 
     def __init__(
@@ -99,14 +104,24 @@ class SynologyDSMCentralUpdateCoordinator(SynologyDSMUpdateCoordinator):
 
     async def _async_update_data(self) -> None:
         """Fetch all data from api."""
-        try:
-            await self.api.async_update()
-        except SYNOLOGY_CONNECTION_EXCEPTIONS as err:
-            raise UpdateFailed(f"Error communicating with API: {err}") from err
-        return None
+        for attempts in range(2):
+            try:
+                await self.api.async_update()
+            except SynologyDSMNotLoggedInException:
+                # If login is expired, try to login again
+                try:
+                    await self.api.dsm.login()
+                except SYNOLOGY_AUTH_FAILED_EXCEPTIONS as err:
+                    raise_config_entry_auth_error(err)
+                if attempts == 0:
+                    continue
+            except SYNOLOGY_CONNECTION_EXCEPTIONS as err:
+                raise UpdateFailed(f"Error communicating with API: {err}") from err
 
 
-class SynologyDSMCameraUpdateCoordinator(SynologyDSMUpdateCoordinator):
+class SynologyDSMCameraUpdateCoordinator(
+    SynologyDSMUpdateCoordinator[dict[str, dict[int, SynoCamera]]]
+):
     """DataUpdateCoordinator to gather data for a synology_dsm cameras."""
 
     def __init__(
@@ -118,20 +133,20 @@ class SynologyDSMCameraUpdateCoordinator(SynologyDSMUpdateCoordinator):
         """Initialize DataUpdateCoordinator for cameras."""
         super().__init__(hass, entry, api, timedelta(seconds=30))
 
-    async def _async_update_data(self) -> dict[str, dict[str, SynoCamera]]:
+    async def _async_update_data(self) -> dict[str, dict[int, SynoCamera]]:
         """Fetch all camera data from api."""
         surveillance_station = self.api.surveillance_station
-        current_data: dict[str, SynoCamera] = {
+        assert surveillance_station is not None
+        current_data: dict[int, SynoCamera] = {
             camera.id: camera for camera in surveillance_station.get_all_cameras()
         }
 
         try:
-            async with async_timeout.timeout(30):
-                await self.hass.async_add_executor_job(surveillance_station.update)
+            await surveillance_station.update()
         except SynologyDSMAPIErrorException as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
 
-        new_data: dict[str, SynoCamera] = {
+        new_data: dict[int, SynoCamera] = {
             camera.id: camera for camera in surveillance_station.get_all_cameras()
         }
 

@@ -1,15 +1,32 @@
 """Config flow to configure Met component."""
+
 from __future__ import annotations
 
 from typing import Any
 
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.const import CONF_ELEVATION, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+    OptionsFlowWithConfigEntry,
+)
+from homeassistant.const import (
+    CONF_ELEVATION,
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+    CONF_NAME,
+    UnitOfLength,
+)
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.selector import (
+    NumberSelector,
+    NumberSelectorConfig,
+    NumberSelectorMode,
+)
 
 from .const import (
     CONF_TRACK_HOME,
@@ -22,7 +39,7 @@ from .const import (
 
 @callback
 def configured_instances(hass: HomeAssistant) -> set[str]:
-    """Return a set of configured SimpliSafe instances."""
+    """Return a set of configured met.no instances."""
     entries = []
     for entry in hass.config_entries.async_entries(DOMAIN):
         if entry.data.get("track_home"):
@@ -34,20 +51,61 @@ def configured_instances(hass: HomeAssistant) -> set[str]:
     return set(entries)
 
 
-class MetFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+def _get_data_schema(
+    hass: HomeAssistant, config_entry: ConfigEntry | None = None
+) -> vol.Schema:
+    """Get a schema with default values."""
+    # If tracking home or no config entry is passed in, default value come from Home location
+    if config_entry is None or config_entry.data.get(CONF_TRACK_HOME, False):
+        return vol.Schema(
+            {
+                vol.Required(CONF_NAME, default=HOME_LOCATION_NAME): str,
+                vol.Required(CONF_LATITUDE, default=hass.config.latitude): cv.latitude,
+                vol.Required(
+                    CONF_LONGITUDE, default=hass.config.longitude
+                ): cv.longitude,
+                vol.Required(
+                    CONF_ELEVATION, default=hass.config.elevation
+                ): NumberSelector(
+                    NumberSelectorConfig(
+                        mode=NumberSelectorMode.BOX,
+                        unit_of_measurement=UnitOfLength.METERS,
+                    )
+                ),
+            }
+        )
+    # Not tracking home, default values come from config entry
+    return vol.Schema(
+        {
+            vol.Required(CONF_NAME, default=config_entry.data.get(CONF_NAME)): str,
+            vol.Required(
+                CONF_LATITUDE, default=config_entry.data.get(CONF_LATITUDE)
+            ): cv.latitude,
+            vol.Required(
+                CONF_LONGITUDE, default=config_entry.data.get(CONF_LONGITUDE)
+            ): cv.longitude,
+            vol.Required(
+                CONF_ELEVATION, default=config_entry.data.get(CONF_ELEVATION)
+            ): NumberSelector(
+                NumberSelectorConfig(
+                    mode=NumberSelectorMode.BOX,
+                    unit_of_measurement=UnitOfLength.METERS,
+                )
+            ),
+        }
+    )
+
+
+class MetConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     """Config flow for Met component."""
 
     VERSION = 1
 
-    def __init__(self) -> None:
-        """Init MetFlowHandler."""
-        self._errors: dict[str, Any] = {}
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
-        self._errors = {}
+        errors = {}
 
         if user_input is not None:
             if (
@@ -57,39 +115,17 @@ class MetFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(
                     title=user_input[CONF_NAME], data=user_input
                 )
-            self._errors[CONF_NAME] = "already_configured"
+            errors[CONF_NAME] = "already_configured"
 
-        return await self._show_config_form(
-            name=HOME_LOCATION_NAME,
-            latitude=self.hass.config.latitude,
-            longitude=self.hass.config.longitude,
-            elevation=self.hass.config.elevation,
-        )
-
-    async def _show_config_form(
-        self,
-        name: str | None = None,
-        latitude: float | None = None,
-        longitude: float | None = None,
-        elevation: int | None = None,
-    ) -> FlowResult:
-        """Show the configuration form to edit location data."""
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_NAME, default=name): str,
-                    vol.Required(CONF_LATITUDE, default=latitude): cv.latitude,
-                    vol.Required(CONF_LONGITUDE, default=longitude): cv.longitude,
-                    vol.Required(CONF_ELEVATION, default=elevation): int,
-                }
-            ),
-            errors=self._errors,
+            data_schema=_get_data_schema(self.hass),
+            errors=errors,
         )
 
     async def async_step_onboarding(
         self, data: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by onboarding."""
         # Don't create entry if latitude or longitude isn't set.
         # Also, filters out our onboarding default location.
@@ -101,4 +137,35 @@ class MetFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(
             title=HOME_LOCATION_NAME, data={CONF_TRACK_HOME: True}
+        )
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> OptionsFlow:
+        """Get the options flow for Met."""
+        return MetOptionsFlowHandler(config_entry)
+
+
+class MetOptionsFlowHandler(OptionsFlowWithConfigEntry):
+    """Options flow for Met component."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Configure options for Met."""
+
+        if user_input is not None:
+            # Update config entry with data from user input
+            self.hass.config_entries.async_update_entry(
+                self._config_entry, data=user_input
+            )
+            return self.async_create_entry(
+                title=self._config_entry.title, data=user_input
+            )
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=_get_data_schema(self.hass, config_entry=self._config_entry),
         )

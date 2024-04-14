@@ -1,15 +1,16 @@
 """Test the Coinbase integration."""
+
 from unittest.mock import patch
 
-from homeassistant import config_entries
 from homeassistant.components.coinbase.const import (
     API_TYPE_VAULT,
     CONF_CURRENCIES,
     CONF_EXCHANGE_RATES,
     DOMAIN,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 
 from .common import (
     init_mock_coinbase,
@@ -25,41 +26,49 @@ from .const import (
 )
 
 
-async def test_unload_entry(hass):
+async def test_unload_entry(hass: HomeAssistant) -> None:
     """Test successful unload of entry."""
-    with patch(
-        "coinbase.wallet.client.Client.get_current_user",
-        return_value=mock_get_current_user(),
-    ), patch(
-        "coinbase.wallet.client.Client.get_accounts",
-        new=mocked_get_accounts,
-    ), patch(
-        "coinbase.wallet.client.Client.get_exchange_rates",
-        return_value=mock_get_exchange_rates(),
+    with (
+        patch(
+            "coinbase.wallet.client.Client.get_current_user",
+            return_value=mock_get_current_user(),
+        ),
+        patch(
+            "coinbase.wallet.client.Client.get_accounts",
+            new=mocked_get_accounts,
+        ),
+        patch(
+            "coinbase.wallet.client.Client.get_exchange_rates",
+            return_value=mock_get_exchange_rates(),
+        ),
     ):
         entry = await init_mock_coinbase(hass)
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    assert entry.state == config_entries.ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.state == config_entries.ConfigEntryState.NOT_LOADED
+    assert entry.state is ConfigEntryState.NOT_LOADED
     assert not hass.data.get(DOMAIN)
 
 
-async def test_option_updates(hass: HomeAssistant):
+async def test_option_updates(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test handling option updates."""
 
-    with patch(
-        "coinbase.wallet.client.Client.get_current_user",
-        return_value=mock_get_current_user(),
-    ), patch(
-        "coinbase.wallet.client.Client.get_accounts", new=mocked_get_accounts
-    ), patch(
-        "coinbase.wallet.client.Client.get_exchange_rates",
-        return_value=mock_get_exchange_rates(),
+    with (
+        patch(
+            "coinbase.wallet.client.Client.get_current_user",
+            return_value=mock_get_current_user(),
+        ),
+        patch("coinbase.wallet.client.Client.get_accounts", new=mocked_get_accounts),
+        patch(
+            "coinbase.wallet.client.Client.get_exchange_rates",
+            return_value=mock_get_exchange_rates(),
+        ),
     ):
         config_entry = await init_mock_coinbase(hass)
         await hass.async_block_till_done()
@@ -75,9 +84,8 @@ async def test_option_updates(hass: HomeAssistant):
         )
         await hass.async_block_till_done()
 
-        registry = entity_registry.async_get(hass)
-        entities = entity_registry.async_entries_for_config_entry(
-            registry, config_entry.entry_id
+        entities = er.async_entries_for_config_entry(
+            entity_registry, config_entry.entry_id
         )
         assert len(entities) == 4
         currencies = [
@@ -106,9 +114,8 @@ async def test_option_updates(hass: HomeAssistant):
         )
         await hass.async_block_till_done()
 
-        registry = entity_registry.async_get(hass)
-        entities = entity_registry.async_entries_for_config_entry(
-            registry, config_entry.entry_id
+        entities = er.async_entries_for_config_entry(
+            entity_registry, config_entry.entry_id
         )
         assert len(entities) == 2
         currencies = [
@@ -127,24 +134,27 @@ async def test_option_updates(hass: HomeAssistant):
         assert rates == [GOOD_EXCHANGE_RATE]
 
 
-async def test_ignore_vaults_wallets(hass: HomeAssistant):
+async def test_ignore_vaults_wallets(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test vaults are ignored in wallet sensors."""
 
-    with patch(
-        "coinbase.wallet.client.Client.get_current_user",
-        return_value=mock_get_current_user(),
-    ), patch(
-        "coinbase.wallet.client.Client.get_accounts", new=mocked_get_accounts
-    ), patch(
-        "coinbase.wallet.client.Client.get_exchange_rates",
-        return_value=mock_get_exchange_rates(),
+    with (
+        patch(
+            "coinbase.wallet.client.Client.get_current_user",
+            return_value=mock_get_current_user(),
+        ),
+        patch("coinbase.wallet.client.Client.get_accounts", new=mocked_get_accounts),
+        patch(
+            "coinbase.wallet.client.Client.get_exchange_rates",
+            return_value=mock_get_exchange_rates(),
+        ),
     ):
         config_entry = await init_mock_coinbase(hass, currencies=[GOOD_CURRENCY])
         await hass.async_block_till_done()
 
-        registry = entity_registry.async_get(hass)
-        entities = entity_registry.async_entries_for_config_entry(
-            registry, config_entry.entry_id
+        entities = er.async_entries_for_config_entry(
+            entity_registry, config_entry.entry_id
         )
         assert len(entities) == 1
         entity = entities[0]

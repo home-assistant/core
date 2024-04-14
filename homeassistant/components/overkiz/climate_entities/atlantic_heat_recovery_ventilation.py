@@ -1,4 +1,5 @@
 """Support for AtlanticHeatRecoveryVentilation."""
+
 from __future__ import annotations
 
 from typing import cast
@@ -11,8 +12,9 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.const import UnitOfTemperature
 
+from ..const import DOMAIN
 from ..coordinator import OverkizDataUpdateCoordinator
 from ..entity import OverkizEntity
 
@@ -45,10 +47,15 @@ class AtlanticHeatRecoveryVentilation(OverkizEntity, ClimateEntity):
     _attr_hvac_mode = HVACMode.FAN_ONLY
     _attr_hvac_modes = [HVACMode.FAN_ONLY]
     _attr_preset_modes = [PRESET_AUTO, PRESET_PROG, PRESET_MANUAL]
-    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_supported_features = (
-        ClimateEntityFeature.PRESET_MODE | ClimateEntityFeature.FAN_MODE
+        ClimateEntityFeature.PRESET_MODE
+        | ClimateEntityFeature.FAN_MODE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
+    _attr_translation_key = DOMAIN
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self, device_url: str, coordinator: OverkizDataUpdateCoordinator
@@ -62,7 +69,9 @@ class AtlanticHeatRecoveryVentilation(OverkizEntity, ClimateEntity):
     @property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
-        if temperature := self.temperature_device.states[OverkizState.CORE_TEMPERATURE]:
+        if self.temperature_device is not None and (
+            temperature := self.temperature_device.states[OverkizState.CORE_TEMPERATURE]
+        ):
             return cast(float, temperature.value)
 
         return None

@@ -1,4 +1,5 @@
 """The Image Upload integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -8,16 +9,16 @@ import secrets
 import shutil
 from typing import Any
 
-from PIL import Image, ImageOps, UnidentifiedImageError
 from aiohttp import hdrs, web
 from aiohttp.web_request import FileField
+from PIL import Image, ImageOps, UnidentifiedImageError
 import voluptuous as vol
 
+from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.components.http.static import CACHE_HEADERS
-from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import collection
+from homeassistant.helpers import collection, config_validation as cv
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
@@ -38,13 +39,15 @@ UPDATE_FIELDS = {
     vol.Optional("name"): vol.All(str, vol.Length(min=1)),
 }
 
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Image integration."""
     image_dir = pathlib.Path(hass.config.path("image"))
     hass.data[DOMAIN] = storage_collection = ImageStorageCollection(hass, image_dir)
     await storage_collection.async_load()
-    collection.StorageCollectionWebsocket(
+    collection.DictStorageCollectionWebsocket(
         storage_collection,
         "image",
         "image",
@@ -57,7 +60,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-class ImageStorageCollection(collection.StorageCollection):
+class ImageStorageCollection(collection.DictStorageCollection):
     """Image collection stored in storage."""
 
     CREATE_SCHEMA = vol.Schema(CREATE_FIELDS)
@@ -67,7 +70,6 @@ class ImageStorageCollection(collection.StorageCollection):
         """Initialize media storage collection."""
         super().__init__(
             Store(hass, STORAGE_VERSION, STORAGE_KEY),
-            logging.getLogger(f"{__name__}.storage_collection"),
         )
         self.async_add_listener(self._change_listener)
         self.image_dir = image_dir
@@ -77,8 +79,12 @@ class ImageStorageCollection(collection.StorageCollection):
         data = self.CREATE_SCHEMA(dict(data))
         uploaded_file: FileField = data["file"]
 
-        if not uploaded_file.content_type.startswith("image/"):
-            raise vol.Invalid("Only images are allowed")
+        if uploaded_file.content_type not in (
+            "image/gif",
+            "image/jpeg",
+            "image/png",
+        ):
+            raise vol.Invalid("Only jpeg, png, and gif images are allowed")
 
         data[CONF_ID] = secrets.token_hex(16)
         data["filesize"] = await self.hass.async_add_executor_job(self._move_data, data)
@@ -126,11 +132,11 @@ class ImageStorageCollection(collection.StorageCollection):
 
     async def _update_data(
         self,
-        data: dict[str, Any],
+        item: dict[str, Any],
         update_data: dict[str, Any],
     ) -> dict[str, Any]:
         """Return a new updated data object."""
-        return {**data, **self.UPDATE_SCHEMA(update_data)}
+        return {**item, **self.UPDATE_SCHEMA(update_data)}
 
     async def _change_listener(
         self,
@@ -157,7 +163,7 @@ class ImageUploadView(HomeAssistantView):
         request._client_max_size = MAX_SIZE  # pylint: disable=protected-access
 
         data = await request.post()
-        item = await request.app["hass"].data[DOMAIN].async_create_item(data)
+        item = await request.app[KEY_HASS].data[DOMAIN].async_create_item(data)
         return self.json(item)
 
 
@@ -193,14 +199,15 @@ class ImageServeView(HomeAssistantView):
         image_info = self.image_collection.data.get(image_id)
 
         if image_info is None:
-            raise web.HTTPNotFound()
+            raise web.HTTPNotFound
 
-        hass = request.app["hass"]
+        hass = request.app[KEY_HASS]
         target_file = self.image_folder / image_id / f"{width}x{height}"
 
         if not target_file.is_file():
             async with self.transform_lock:
-                # Another check in case another request already finished it while waiting
+                # Another check in case another request already
+                # finished it while waiting
                 if not target_file.is_file():
                     await hass.async_add_executor_job(
                         _generate_thumbnail,

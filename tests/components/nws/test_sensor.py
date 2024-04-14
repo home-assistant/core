@@ -1,10 +1,12 @@
 """Sensors for National Weather Service (NWS)."""
+
 import pytest
 
 from homeassistant.components.nws.const import ATTRIBUTION, DOMAIN
 from homeassistant.components.nws.sensor import SENSOR_TYPES
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import ATTR_ATTRIBUTION, STATE_UNKNOWN
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import slugify
 from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
@@ -22,7 +24,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
-    "units,result_observation,result_forecast",
+    ("units", "result_observation", "result_forecast"),
     [
         (
             US_CUSTOMARY_SYSTEM,
@@ -33,8 +35,13 @@ from tests.common import MockConfigEntry
     ],
 )
 async def test_imperial_metric(
-    hass, units, result_observation, result_forecast, mock_simple_nws, no_weather
-):
+    hass: HomeAssistant,
+    units,
+    result_observation,
+    result_forecast,
+    mock_simple_nws,
+    no_weather,
+) -> None:
     """Test with imperial and metric units."""
     registry = er.async_get(hass)
 
@@ -64,10 +71,13 @@ async def test_imperial_metric(
         assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
 
 
-async def test_none_values(hass, mock_simple_nws, no_weather):
+@pytest.mark.parametrize("values", [NONE_OBSERVATION, None])
+async def test_none_values(
+    hass: HomeAssistant, mock_simple_nws, no_weather, values
+) -> None:
     """Test with no values."""
     instance = mock_simple_nws.return_value
-    instance.observation = NONE_OBSERVATION
+    instance.observation = values
 
     registry = er.async_get(hass)
 

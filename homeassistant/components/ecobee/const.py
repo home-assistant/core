@@ -1,4 +1,5 @@
 """Constants for the ecobee integration."""
+
 import logging
 
 from homeassistant.components.weather import (
@@ -38,12 +39,14 @@ ECOBEE_MODEL_TO_NAME = {
     "apolloSmart": "ecobee4 Smart",
     "vulcanSmart": "ecobee4 Smart",
     "aresSmart": "ecobee Smart Premium",
+    "artemisSmart": "ecobee Smart Enhanced",
 }
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.CLIMATE,
     Platform.HUMIDIFIER,
+    Platform.NUMBER,
     Platform.SENSOR,
     Platform.WEATHER,
 ]

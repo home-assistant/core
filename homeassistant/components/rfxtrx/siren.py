@@ -1,4 +1,5 @@
 """Support for RFXtrx sirens."""
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -118,6 +119,11 @@ class RfxtrxOffDelayMixin(Entity):
         if self._timeout:
             self._timeout()
             self._timeout = None
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Run when entity will be removed from hass."""
+        self._cancel_timeout()
+        return await super().async_will_remove_from_hass()
 
 
 class RfxtrxChime(RfxtrxCommandEntity, SirenEntity, RfxtrxOffDelayMixin):

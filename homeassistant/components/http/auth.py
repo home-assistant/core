@@ -1,28 +1,43 @@
 """Authentication for HTTP component."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 from datetime import timedelta
+from http import HTTPStatus
 from ipaddress import ip_address
 import logging
+import os
 import secrets
+import time
 from typing import Any, Final
 
 from aiohttp import hdrs
-from aiohttp.web import Application, Request, StreamResponse, middleware
+from aiohttp.web import Application, Request, Response, StreamResponse, middleware
+from aiohttp.web_exceptions import HTTPBadRequest
+from aiohttp_session import session_middleware
 import jwt
+from jwt import api_jws
 from yarl import URL
 
+from homeassistant.auth import jwt_wrapper
 from homeassistant.auth.const import GROUP_ID_READ_ONLY
 from homeassistant.auth.models import User
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.http import current_request
+from homeassistant.helpers.json import json_bytes
+from homeassistant.helpers.network import is_cloud_connection
 from homeassistant.helpers.storage import Store
-from homeassistant.util import dt as dt_util
 from homeassistant.util.network import is_local
 
-from .const import KEY_AUTHENTICATED, KEY_HASS_REFRESH_TOKEN_ID, KEY_HASS_USER
-from .request_context import current_request
+from .const import (
+    KEY_AUTHENTICATED,
+    KEY_HASS_REFRESH_TOKEN_ID,
+    KEY_HASS_USER,
+    StrictConnectionMode,
+)
+from .session import HomeAssistantCookieStorage
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,6 +49,10 @@ SAFE_QUERY_PARAMS: Final = ["height", "width"]
 STORAGE_VERSION = 1
 STORAGE_KEY = "http.auth"
 CONTENT_USER_NAME = "Home Assistant Content"
+STRICT_CONNECTION_EXCLUDED_PATH = "/api/webhook/"
+STRICT_CONNECTION_STATIC_PAGE = os.path.join(
+    os.path.dirname(__file__), "strict_connection_static_page.html"
+)
 
 
 @callback
@@ -43,13 +62,16 @@ def async_sign_path(
     expiration: timedelta,
     *,
     refresh_token_id: str | None = None,
+    use_content_user: bool = False,
 ) -> str:
     """Sign a path for temporary access without auth header."""
     if (secret := hass.data.get(DATA_SIGN_SECRET)) is None:
         secret = hass.data[DATA_SIGN_SECRET] = secrets.token_hex()
 
     if refresh_token_id is None:
-        if connection := websocket_api.current_connection.get():
+        if use_content_user:
+            refresh_token_id = hass.data[STORAGE_KEY]
+        elif connection := websocket_api.current_connection.get():
             refresh_token_id = connection.refresh_token_id
         elif (
             request := current_request.get()
@@ -59,23 +81,20 @@ def async_sign_path(
             refresh_token_id = hass.data[STORAGE_KEY]
 
     url = URL(path)
-    now = dt_util.utcnow()
-    params = dict(sorted(url.query.items()))
-    for param in SAFE_QUERY_PARAMS:
-        params.pop(param, None)
-    encoded = jwt.encode(
+    now_timestamp = int(time.time())
+    expiration_timestamp = now_timestamp + int(expiration.total_seconds())
+    params = [itm for itm in url.query.items() if itm[0] not in SAFE_QUERY_PARAMS]
+    json_payload = json_bytes(
         {
             "iss": refresh_token_id,
             "path": url.path,
             "params": params,
-            "iat": now,
-            "exp": now + expiration,
-        },
-        secret,
-        algorithm="HS256",
+            "iat": now_timestamp,
+            "exp": expiration_timestamp,
+        }
     )
-
-    params[SIGN_QUERY_PARAM] = encoded
+    encoded = api_jws.encode(json_payload, secret, "HS256")
+    params.append((SIGN_QUERY_PARAM, encoded))
     url = url.with_query(params)
     return f"{url.path}?{url.query_string}"
 
@@ -98,25 +117,25 @@ def async_user_not_allowed_do_auth(
     if not request:
         return "No request available to validate local access"
 
-    if "cloud" in hass.config.components:
-        # pylint: disable=import-outside-toplevel
-        from hass_nabucasa import remote
-
-        if remote.is_cloud_request.get():
-            return "User is local only"
+    if is_cloud_connection(hass):
+        return "User is local only"
 
     try:
-        remote = ip_address(request.remote)  # type: ignore[arg-type]
+        remote_address = ip_address(request.remote)  # type: ignore[arg-type]
     except ValueError:
         return "Invalid remote IP"
 
-    if is_local(remote):
+    if is_local(remote_address):
         return None
 
     return "User cannot authenticate remotely"
 
 
-async def async_setup_auth(hass: HomeAssistant, app: Application) -> None:
+async def async_setup_auth(
+    hass: HomeAssistant,
+    app: Application,
+    strict_connection_mode_non_cloud: StrictConnectionMode,
+) -> None:
     """Create auth middleware for the app."""
     store = Store[dict[str, Any]](hass, STORAGE_VERSION, STORAGE_KEY)
     if (data := await store.async_load()) is None:
@@ -137,10 +156,20 @@ async def async_setup_auth(hass: HomeAssistant, app: Application) -> None:
         await store.async_save(data)
 
     hass.data[STORAGE_KEY] = refresh_token.id
+    strict_connection_static_file_content = None
+    if strict_connection_mode_non_cloud is StrictConnectionMode.STATIC_PAGE:
 
-    async def async_validate_auth_header(request: Request) -> bool:
-        """
-        Test authorization header against access token.
+        def read_static_page() -> str:
+            with open(STRICT_CONNECTION_STATIC_PAGE, encoding="utf-8") as file:
+                return file.read()
+
+        strict_connection_static_file_content = await hass.async_add_executor_job(
+            read_static_page
+        )
+
+    @callback
+    def async_validate_auth_header(request: Request) -> bool:
+        """Test authorization header against access token.
 
         Basic auth_type is legacy code, should be removed with api_password.
         """
@@ -155,7 +184,7 @@ async def async_setup_auth(hass: HomeAssistant, app: Application) -> None:
         if auth_type != "Bearer":
             return False
 
-        refresh_token = await hass.auth.async_validate_access_token(auth_val)
+        refresh_token = hass.auth.async_validate_access_token(auth_val)
 
         if refresh_token is None:
             return False
@@ -167,7 +196,8 @@ async def async_setup_auth(hass: HomeAssistant, app: Application) -> None:
         request[KEY_HASS_REFRESH_TOKEN_ID] = refresh_token.id
         return True
 
-    async def async_validate_signed_request(request: Request) -> bool:
+    @callback
+    def async_validate_signed_request(request: Request) -> bool:
         """Validate a signed request."""
         if (secret := hass.data.get(DATA_SIGN_SECRET)) is None:
             return False
@@ -176,7 +206,7 @@ async def async_setup_auth(hass: HomeAssistant, app: Application) -> None:
             return False
 
         try:
-            claims = jwt.decode(
+            claims = jwt_wrapper.verify_and_decode(
                 signature, secret, algorithms=["HS256"], options={"verify_iss": False}
             )
         except jwt.InvalidTokenError:
@@ -185,14 +215,15 @@ async def async_setup_auth(hass: HomeAssistant, app: Application) -> None:
         if claims["path"] != request.path:
             return False
 
-        params = dict(sorted(request.query.items()))
-        del params[SIGN_QUERY_PARAM]
-        for param in SAFE_QUERY_PARAMS:
-            params.pop(param, None)
+        params = [
+            list(itm)  # claims stores tuples as lists
+            for itm in request.query.items()
+            if itm[0] not in SAFE_QUERY_PARAMS and itm[0] != SIGN_QUERY_PARAM
+        ]
         if claims["params"] != params:
             return False
 
-        refresh_token = await hass.auth.async_get_refresh_token(claims["iss"])
+        refresh_token = hass.auth.async_get_refresh_token(claims["iss"])
 
         if refresh_token is None:
             return False
@@ -208,7 +239,7 @@ async def async_setup_auth(hass: HomeAssistant, app: Application) -> None:
         """Authenticate as middleware."""
         authenticated = False
 
-        if hdrs.AUTHORIZATION in request.headers and await async_validate_auth_header(
+        if hdrs.AUTHORIZATION in request.headers and async_validate_auth_header(
             request
         ):
             authenticated = True
@@ -219,12 +250,28 @@ async def async_setup_auth(hass: HomeAssistant, app: Application) -> None:
         elif (
             request.method == "GET"
             and SIGN_QUERY_PARAM in request.query_string
-            and await async_validate_signed_request(request)
+            and async_validate_signed_request(request)
         ):
             authenticated = True
             auth_type = "signed request"
 
-        if authenticated:
+        if (
+            not authenticated
+            and strict_connection_mode_non_cloud is not StrictConnectionMode.DISABLED
+            and not request.path.startswith(STRICT_CONNECTION_EXCLUDED_PATH)
+            and not await hass.auth.session.async_validate_request_for_strict_connection_session(
+                request
+            )
+            and (
+                resp := _async_perform_action_on_non_local(
+                    request, strict_connection_static_file_content
+                )
+            )
+            is not None
+        ):
+            return resp
+
+        if authenticated and _LOGGER.isEnabledFor(logging.DEBUG):
             _LOGGER.debug(
                 "Authenticated %s for %s using %s",
                 request.remote,
@@ -235,4 +282,43 @@ async def async_setup_auth(hass: HomeAssistant, app: Application) -> None:
         request[KEY_AUTHENTICATED] = authenticated
         return await handler(request)
 
+    app.middlewares.append(session_middleware(HomeAssistantCookieStorage(hass)))
     app.middlewares.append(auth_middleware)
+
+
+@callback
+def _async_perform_action_on_non_local(
+    request: Request,
+    strict_connection_static_file_content: str | None,
+) -> StreamResponse | None:
+    """Perform strict connection mode action if the request is not local.
+
+    The function does the following:
+    - Try to get the IP address of the request. If it fails, assume it's not local
+    - If the request is local, return None (allow the request to continue)
+    - If strict_connection_static_file_content is set, return a response with the content
+    - Otherwise close the connection and raise an exception
+    """
+    try:
+        ip_address_ = ip_address(request.remote)  # type: ignore[arg-type]
+    except ValueError:
+        _LOGGER.debug("Invalid IP address: %s", request.remote)
+        ip_address_ = None
+
+    if ip_address_ and is_local(ip_address_):
+        return None
+
+    _LOGGER.debug("Perform strict connection action for %s", ip_address_)
+    if strict_connection_static_file_content:
+        return Response(
+            text=strict_connection_static_file_content,
+            content_type="text/html",
+            status=HTTPStatus.IM_A_TEAPOT,
+        )
+
+    if transport := request.transport:
+        # it should never happen that we don't have a transport
+        transport.close()
+
+    # We need to raise an exception to stop processing the request
+    raise HTTPBadRequest

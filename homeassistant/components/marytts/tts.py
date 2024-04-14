@@ -1,4 +1,5 @@
 """Support for the MaryTTS service."""
+
 from __future__ import annotations
 
 from speak2mary import MaryTTS
@@ -80,7 +81,7 @@ class MaryTTSProvider(Provider):
         """Return a list of supported options."""
         return SUPPORT_OPTIONS
 
-    def get_tts_audio(self, message, language, options=None):
+    def get_tts_audio(self, message, language, options):
         """Load TTS from MaryTTS."""
         effects = options[CONF_EFFECT]
 

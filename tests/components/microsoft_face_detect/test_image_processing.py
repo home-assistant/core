@@ -1,4 +1,5 @@
 """The tests for the microsoft face detect platform."""
+
 from unittest.mock import PropertyMock, patch
 
 import pytest
@@ -6,11 +7,12 @@ import pytest
 import homeassistant.components.image_processing as ip
 import homeassistant.components.microsoft_face as mf
 from homeassistant.const import ATTR_ENTITY_PICTURE
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.setup import async_setup_component
 
 from tests.common import assert_setup_component, load_fixture
 from tests.components.image_processing import common
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 CONFIG = {
     ip.DOMAIN: {
@@ -23,6 +25,12 @@ CONFIG = {
 }
 
 ENDPOINT_URL = f"https://westus.{mf.FACE_API_URL}"
+
+
+@pytest.fixture(autouse=True)
+async def setup_homeassistant(hass: HomeAssistant):
+    """Set up the homeassistant integration."""
+    await async_setup_component(hass, "homeassistant", {})
 
 
 @pytest.fixture
@@ -46,7 +54,7 @@ def poll_mock():
         yield
 
 
-async def test_setup_platform(hass, store_mock):
+async def test_setup_platform(hass: HomeAssistant, store_mock) -> None:
     """Set up platform with one entity."""
     config = {
         ip.DOMAIN: {
@@ -65,7 +73,7 @@ async def test_setup_platform(hass, store_mock):
     assert hass.states.get("image_processing.microsoftface_demo_camera")
 
 
-async def test_setup_platform_name(hass, store_mock):
+async def test_setup_platform_name(hass: HomeAssistant, store_mock) -> None:
     """Set up platform with one entity and set name."""
     config = {
         ip.DOMAIN: {
@@ -83,19 +91,21 @@ async def test_setup_platform_name(hass, store_mock):
     assert hass.states.get("image_processing.test_local")
 
 
-async def test_ms_detect_process_image(hass, poll_mock, aioclient_mock):
+async def test_ms_detect_process_image(
+    hass: HomeAssistant, poll_mock, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Set up and scan a picture and test plates from event."""
     aioclient_mock.get(
         ENDPOINT_URL.format("persongroups"),
-        text=load_fixture("microsoft_face_persongroups.json"),
+        text=load_fixture("persongroups.json", "microsoft_face_detect"),
     )
     aioclient_mock.get(
         ENDPOINT_URL.format("persongroups/test_group1/persons"),
-        text=load_fixture("microsoft_face_persons.json"),
+        text=load_fixture("persons.json", "microsoft_face_detect"),
     )
     aioclient_mock.get(
         ENDPOINT_URL.format("persongroups/test_group2/persons"),
-        text=load_fixture("microsoft_face_persons.json"),
+        text=load_fixture("persons.json", "microsoft_face_detect"),
     )
 
     await async_setup_component(hass, ip.DOMAIN, CONFIG)
@@ -117,7 +127,7 @@ async def test_ms_detect_process_image(hass, poll_mock, aioclient_mock):
 
     aioclient_mock.post(
         ENDPOINT_URL.format("detect"),
-        text=load_fixture("microsoft_face_detect.json"),
+        text=load_fixture("detect.json", "microsoft_face_detect"),
         params={"returnFaceAttributes": "age,gender"},
     )
 

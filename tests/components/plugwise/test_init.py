@@ -1,4 +1,5 @@
 """Tests for the Plugwise Climate integration."""
+
 from unittest.mock import MagicMock
 
 from plugwise.exceptions import (
@@ -44,7 +45,7 @@ async def test_load_unload_config_entry(
 
 
 @pytest.mark.parametrize(
-    "side_effect, entry_state",
+    ("side_effect", "entry_state"),
     [
         (ConnectionFailedError, ConfigEntryState.SETUP_RETRY),
         (InvalidAuthentication, ConfigEntryState.SETUP_ERROR),
@@ -72,7 +73,7 @@ async def test_gateway_config_entry_not_ready(
 
 
 @pytest.mark.parametrize(
-    "entitydata,old_unique_id,new_unique_id",
+    ("entitydata", "old_unique_id", "new_unique_id"),
     [
         (
             {
@@ -99,7 +100,7 @@ async def test_migrate_unique_id_temperature(
     mock_config_entry.add_to_hass(hass)
 
     entity_registry = er.async_get(hass)
-    entity: er.RegistryEntry = entity_registry.async_get_or_create(
+    entity: entity_registry.RegistryEntry = entity_registry.async_get_or_create(
         **entitydata,
         config_entry=mock_config_entry,
     )
@@ -113,7 +114,7 @@ async def test_migrate_unique_id_temperature(
 
 
 @pytest.mark.parametrize(
-    "entitydata,old_unique_id,new_unique_id",
+    ("entitydata", "old_unique_id", "new_unique_id"),
     [
         (
             {
@@ -140,7 +141,7 @@ async def test_migrate_unique_id_relay(
     mock_config_entry.add_to_hass(hass)
 
     entity_registry = er.async_get(hass)
-    entity: er.RegistryEntry = entity_registry.async_get_or_create(
+    entity: entity_registry.RegistryEntry = entity_registry.async_get_or_create(
         **entitydata,
         config_entry=mock_config_entry,
     )

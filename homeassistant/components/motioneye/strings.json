@@ -4,10 +4,10 @@
       "user": {
         "data": {
           "url": "[%key:common::config_flow::data::url%]",
-          "admin_username": "Admin [%key:common::config_flow::data::username%]",
-          "admin_password": "Admin [%key:common::config_flow::data::password%]",
-          "surveillance_username": "Surveillance [%key:common::config_flow::data::username%]",
-          "surveillance_password": "Surveillance [%key:common::config_flow::data::password%]"
+          "admin_username": "Admin username",
+          "admin_password": "Admin password",
+          "surveillance_username": "Surveillance username",
+          "surveillance_password": "Surveillance password"
         }
       },
       "hassio_confirm": {
@@ -35,6 +35,71 @@
           "stream_url_template": "Stream URL template"
         }
       }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "actions": {
+        "name": "Actions"
+      }
+    },
+    "switch": {
+      "motion_detection": {
+        "name": "Motion detection"
+      },
+      "text_overlay": {
+        "name": "Text overlay"
+      },
+      "video_streaming": {
+        "name": "Video streaming"
+      },
+      "still_images": {
+        "name": "Still images"
+      },
+      "movies": {
+        "name": "Movies"
+      },
+      "upload_enabled": {
+        "name": "Upload enabled"
+      }
+    }
+  },
+  "services": {
+    "set_text_overlay": {
+      "name": "Set text overlay",
+      "description": "Sets the text overlay for a camera.",
+      "fields": {
+        "left_text": {
+          "name": "Left text overlay",
+          "description": "Text to display on the left."
+        },
+        "custom_left_text": {
+          "name": "Left custom text",
+          "description": "Custom text to display on the left."
+        },
+        "right_text": {
+          "name": "Right text overlay",
+          "description": "Text to display on the right."
+        },
+        "custom_right_text": {
+          "name": "Right custom text",
+          "description": "Custom text to display on the right."
+        }
+      }
+    },
+    "action": {
+      "name": "Action",
+      "description": "Triggers a motionEye action.",
+      "fields": {
+        "action": {
+          "name": "Action",
+          "description": "Action to trigger."
+        }
+      }
+    },
+    "snapshot": {
+      "name": "Snapshot",
+      "description": "Triggers a motionEye still snapshot."
     }
   }
 }

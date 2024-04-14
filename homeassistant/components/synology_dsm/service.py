@@ -1,4 +1,5 @@
 """The Synology DSM component."""
+
 from __future__ import annotations
 
 import logging
@@ -43,7 +44,10 @@ async def async_setup_services(hass: HomeAssistant) -> None:
                 return
             LOGGER.debug("%s DSM with serial %s", call.service, serial)
             LOGGER.warning(
-                "The %s service is deprecated and will be removed in future release. Please use the corresponding button entity",
+                (
+                    "The %s service is deprecated and will be removed in future"
+                    " release. Please use the corresponding button entity"
+                ),
                 call.service,
             )
             dsm_device = hass.data[DOMAIN][serial]

@@ -1,4 +1,5 @@
 """Device tracker for Synology SRM routers."""
+
 from __future__ import annotations
 
 import logging
@@ -80,7 +81,7 @@ def get_scanner(
 
 
 class SynologySrmDeviceScanner(DeviceScanner):
-    """This class scans for devices connected to a Synology SRM router."""
+    """Scanner for devices connected to a Synology SRM router."""
 
     def __init__(self, config):
         """Initialize the scanner."""

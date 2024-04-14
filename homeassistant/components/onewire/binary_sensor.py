@@ -1,4 +1,5 @@
 """Support for 1-Wire binary sensors."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -10,8 +11,8 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -25,7 +26,7 @@ from .onewire_entities import OneWireEntity, OneWireEntityDescription
 from .onewirehub import OneWireHub
 
 
-@dataclass
+@dataclass(frozen=True)
 class OneWireBinarySensorEntityDescription(
     OneWireEntityDescription, BinarySensorEntityDescription
 ):
@@ -37,8 +38,9 @@ DEVICE_BINARY_SENSORS: dict[str, tuple[OneWireBinarySensorEntityDescription, ...
         OneWireBinarySensorEntityDescription(
             key=f"sensed.{id}",
             entity_registry_enabled_default=False,
-            name=f"Sensed {id}",
             read_mode=READ_MODE_BOOL,
+            translation_key="sensed_id",
+            translation_placeholders={"id": str(id)},
         )
         for id in DEVICE_KEYS_A_B
     ),
@@ -46,8 +48,9 @@ DEVICE_BINARY_SENSORS: dict[str, tuple[OneWireBinarySensorEntityDescription, ...
         OneWireBinarySensorEntityDescription(
             key=f"sensed.{id}",
             entity_registry_enabled_default=False,
-            name=f"Sensed {id}",
             read_mode=READ_MODE_BOOL,
+            translation_key="sensed_id",
+            translation_placeholders={"id": str(id)},
         )
         for id in DEVICE_KEYS_0_7
     ),
@@ -55,8 +58,9 @@ DEVICE_BINARY_SENSORS: dict[str, tuple[OneWireBinarySensorEntityDescription, ...
         OneWireBinarySensorEntityDescription(
             key=f"sensed.{id}",
             entity_registry_enabled_default=False,
-            name=f"Sensed {id}",
             read_mode=READ_MODE_BOOL,
+            translation_key="sensed_id",
+            translation_placeholders={"id": str(id)},
         )
         for id in DEVICE_KEYS_A_B
     ),
@@ -69,10 +73,11 @@ HOBBYBOARD_EF: dict[str, tuple[OneWireBinarySensorEntityDescription, ...]] = {
         OneWireBinarySensorEntityDescription(
             key=f"hub/short.{id}",
             entity_registry_enabled_default=False,
-            name=f"Hub Short on Branch {id}",
             read_mode=READ_MODE_BOOL,
             entity_category=EntityCategory.DIAGNOSTIC,
             device_class=BinarySensorDeviceClass.PROBLEM,
+            translation_key="hub_short_id",
+            translation_placeholders={"id": str(id)},
         )
         for id in DEVICE_KEYS_0_3
     ),
@@ -120,14 +125,12 @@ def get_entities(onewire_hub: OneWireHub) -> list[OneWireBinarySensor]:
             continue
         for description in get_sensor_types(device_sub_type)[family]:
             device_file = os.path.join(os.path.split(device.path)[0], description.key)
-            name = f"{device_id} {description.name}"
             entities.append(
                 OneWireBinarySensor(
                     description=description,
                     device_id=device_id,
                     device_file=device_file,
                     device_info=device_info,
-                    name=name,
                     owproxy=onewire_hub.owproxy,
                 )
             )
@@ -141,6 +144,8 @@ class OneWireBinarySensor(OneWireEntity, BinarySensorEntity):
     entity_description: OneWireBinarySensorEntityDescription
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return true if sensor is on."""
+        if self._state is None:
+            return None
         return bool(self._state)

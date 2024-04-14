@@ -1,8 +1,9 @@
 """Data update coordinator for the Sonarr integration."""
+
 from __future__ import annotations
 
 from datetime import timedelta
-from typing import TypeVar, Union, cast
+from typing import TypeVar, cast
 
 from aiopyarr import (
     Command,
@@ -27,15 +28,15 @@ from .const import CONF_UPCOMING_DAYS, CONF_WANTED_MAX_ITEMS, DOMAIN, LOGGER
 
 SonarrDataT = TypeVar(
     "SonarrDataT",
-    bound=Union[
-        list[SonarrCalendar],
-        list[Command],
-        list[Diskspace],
-        SonarrQueue,
-        list[SonarrSeries],
-        SystemStatus,
-        SonarrWantedMissing,
-    ],
+    bound=(
+        list[SonarrCalendar]
+        | list[Command]
+        | list[Diskspace]
+        | SonarrQueue
+        | list[SonarrSeries]
+        | SystemStatus
+        | SonarrWantedMissing
+    ),
 )
 
 

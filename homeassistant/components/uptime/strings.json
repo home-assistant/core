@@ -5,15 +5,6 @@
       "user": {
         "description": "[%key:common::config_flow::description::confirm_setup%]"
       }
-    },
-    "abort": {
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
-    }
-  },
-  "issues": {
-    "removed_yaml": {
-      "title": "The Uptime YAML configuration has been removed",
-      "description": "Configuring Uptime using YAML has been removed.\n\nYour existing YAML configuration is not used by Home Assistant.\n\nRemove the YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
     }
   }
 }

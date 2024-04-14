@@ -1,9 +1,10 @@
 """Support for Ubiquiti's UniFi Protect NVR."""
+
 from __future__ import annotations
 
 from collections.abc import Generator
 import logging
-from typing import cast
+from typing import Any, cast
 
 from pyunifiprotect.data import (
     Camera as UFPCamera,
@@ -17,8 +18,10 @@ from pyunifiprotect.data import (
 from homeassistant.components.camera import Camera, CameraEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity
 
 from .const import (
     ATTR_BITRATE,
@@ -32,12 +35,40 @@ from .const import (
 )
 from .data import ProtectData
 from .entity import ProtectDeviceEntity
-from .utils import async_dispatch_id as _ufpd
+from .utils import async_dispatch_id as _ufpd, get_camera_base_name
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def get_camera_channels(
+@callback
+def _create_rtsp_repair(
+    hass: HomeAssistant, entry: ConfigEntry, data: ProtectData, camera: UFPCamera
+) -> None:
+    edit_key = "readonly"
+    if camera.can_write(data.api.bootstrap.auth_user):
+        edit_key = "writable"
+
+    translation_key = f"rtsp_disabled_{edit_key}"
+    issue_key = f"rtsp_disabled_{camera.id}"
+
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        issue_key,
+        is_fixable=True,
+        is_persistent=False,
+        learn_more_url="https://www.home-assistant.io/integrations/unifiprotect/#camera-streams",
+        severity=IssueSeverity.WARNING,
+        translation_key=translation_key,
+        translation_placeholders={"camera": camera.display_name},
+        data={"entry_id": entry.entry_id, "camera_id": camera.id},
+    )
+
+
+@callback
+def _get_camera_channels(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
     data: ProtectData,
     ufp_device: UFPCamera | None = None,
 ) -> Generator[tuple[UFPCamera, CameraChannel, bool], None, None]:
@@ -69,15 +100,23 @@ def get_camera_channels(
 
         # no RTSP enabled use first channel with no stream
         if is_default:
+            _create_rtsp_repair(hass, entry, data, camera)
             yield camera, camera.channels[0], True
+        else:
+            ir.async_delete_issue(hass, DOMAIN, f"rtsp_disabled_{camera.id}")
 
 
 def _async_camera_entities(
-    data: ProtectData, ufp_device: UFPCamera | None = None
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    data: ProtectData,
+    ufp_device: UFPCamera | None = None,
 ) -> list[ProtectDeviceEntity]:
     disable_stream = data.disable_stream
     entities: list[ProtectDeviceEntity] = []
-    for camera, channel, is_default in get_camera_channels(data, ufp_device):
+    for camera, channel, is_default in _get_camera_channels(
+        hass, entry, data, ufp_device
+    ):
         # do not enable streaming for package camera
         # 2 FPS causes a lot of buferring
         entities.append(
@@ -113,11 +152,12 @@ async def async_setup_entry(
     """Discover cameras on a UniFi Protect NVR."""
     data: ProtectData = hass.data[DOMAIN][entry.entry_id]
 
-    async def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
+    @callback
+    def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
         if not isinstance(device, UFPCamera):
-            return
+            return  # type: ignore[unreachable]
 
-        entities = _async_camera_entities(data, ufp_device=device)
+        entities = _async_camera_entities(hass, entry, data, ufp_device=device)
         async_add_entities(entities)
 
     entry.async_on_unload(
@@ -127,7 +167,7 @@ async def async_setup_entry(
         async_dispatcher_connect(hass, _ufpd(entry, DISPATCH_CHANNELS), _add_new_device)
     )
 
-    entities = _async_camera_entities(data)
+    entities = _async_camera_entities(hass, entry, data)
     async_add_entities(entities)
 
 
@@ -151,25 +191,27 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
         self._disable_stream = disable_stream
         self._last_image: bytes | None = None
         super().__init__(data, camera)
+        device = self.device
 
+        camera_name = get_camera_base_name(channel)
         if self._secure:
-            self._attr_unique_id = f"{self.device.mac}_{self.channel.id}"
-            self._attr_name = f"{self.device.display_name} {self.channel.name}"
+            self._attr_unique_id = f"{device.mac}_{channel.id}"
+            self._attr_name = f"{device.display_name} {camera_name}"
         else:
-            self._attr_unique_id = f"{self.device.mac}_{self.channel.id}_insecure"
-            self._attr_name = f"{self.device.display_name} {self.channel.name} Insecure"
+            self._attr_unique_id = f"{device.mac}_{channel.id}_insecure"
+            self._attr_name = f"{device.display_name} {camera_name} (Insecure)"
         # only the default (first) channel is enabled by default
         self._attr_entity_registry_enabled_default = is_default and secure
 
     @callback
     def _async_set_stream_source(self) -> None:
         disable_stream = self._disable_stream
-        if not self.channel.is_rtsp_enabled:
+        channel = self.channel
+
+        if not channel.is_rtsp_enabled:
             disable_stream = False
 
-        rtsp_url = self.channel.rtsp_url
-        if self._secure:
-            rtsp_url = self.channel.rtsps_url
+        rtsp_url = channel.rtsps_url if self._secure else channel.rtsp_url
 
         # _async_set_stream_source called by __init__
         self._stream_source = (  # pylint: disable=attribute-defined-outside-init
@@ -181,29 +223,44 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
             self._attr_supported_features = CameraEntityFeature(0)
 
     @callback
+    def _async_get_state_attrs(self) -> tuple[Any, ...]:
+        """Retrieve data that goes into the current state of the entity.
+
+        Called before and after updating entity and state is only written if there
+        is a change.
+        """
+
+        return (
+            self._attr_available,
+            self._attr_is_recording,
+            self._attr_motion_detection_enabled,
+        )
+
+    @callback
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
         super()._async_update_device_from_protect(device)
-        self.channel = self.device.channels[self.channel.id]
-        motion_enabled = self.device.recording_settings.enable_motion_detection
+        updated_device = self.device
+        channel = updated_device.channels[self.channel.id]
+        self.channel = channel
+        motion_enabled = updated_device.recording_settings.enable_motion_detection
         self._attr_motion_detection_enabled = (
             motion_enabled if motion_enabled is not None else True
         )
+        state_type_is_connected = updated_device.state is StateType.CONNECTED
         self._attr_is_recording = (
-            self.device.state == StateType.CONNECTED and self.device.is_recording
+            state_type_is_connected and updated_device.is_recording
         )
-        is_connected = (
-            self.data.last_update_success and self.device.state == StateType.CONNECTED
-        )
+        is_connected = self.data.last_update_success and state_type_is_connected
         # some cameras have detachable lens that could cause the camera to be offline
-        self._attr_available = is_connected and self.device.is_video_ready
+        self._attr_available = is_connected and updated_device.is_video_ready
 
         self._async_set_stream_source()
         self._attr_extra_state_attributes = {
-            ATTR_WIDTH: self.channel.width,
-            ATTR_HEIGHT: self.channel.height,
-            ATTR_FPS: self.channel.fps,
-            ATTR_BITRATE: self.channel.bitrate,
-            ATTR_CHANNEL_ID: self.channel.id,
+            ATTR_WIDTH: channel.width,
+            ATTR_HEIGHT: channel.height,
+            ATTR_FPS: channel.fps,
+            ATTR_BITRATE: channel.bitrate,
+            ATTR_CHANNEL_ID: channel.id,
         }
 
     async def async_camera_image(

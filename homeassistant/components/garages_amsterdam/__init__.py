@@ -1,9 +1,10 @@
 """The Garages Amsterdam integration."""
+
+import asyncio
 from datetime import timedelta
 import logging
 
-import async_timeout
-from odp_amsterdam import ODPAmsterdam
+from odp_amsterdam import ODPAmsterdam, VehicleType
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -40,12 +41,12 @@ async def get_coordinator(
         return hass.data[DOMAIN]
 
     async def async_get_garages():
-        async with async_timeout.timeout(10):
+        async with asyncio.timeout(10):
             return {
                 garage.garage_name: garage
                 for garage in await ODPAmsterdam(
                     session=aiohttp_client.async_get_clientsession(hass)
-                ).all_garages()
+                ).all_garages(vehicle=VehicleType.CAR)
             }
 
     coordinator = DataUpdateCoordinator(

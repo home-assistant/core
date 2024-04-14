@@ -1,9 +1,11 @@
 """Support for Fibaro binary sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
-import json
 from typing import Any, cast
+
+from pyfibaro.fibaro_device import DeviceModel
 
 from homeassistant.components.binary_sensor import (
     ENTITY_ID_FORMAT,
@@ -15,7 +17,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import FIBARO_DEVICES, FibaroDevice
+from . import FibaroController, FibaroDevice
 from .const import DOMAIN
 
 SENSOR_TYPES = {
@@ -44,12 +46,11 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Perform the setup for Fibaro controller devices."""
+    controller: FibaroController = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
         [
             FibaroBinarySensor(device)
-            for device in hass.data[DOMAIN][entry.entry_id][FIBARO_DEVICES][
-                Platform.BINARY_SENSOR
-            ]
+            for device in controller.fibaro_devices[Platform.BINARY_SENSOR]
         ],
         True,
     )
@@ -58,7 +59,7 @@ async def async_setup_entry(
 class FibaroBinarySensor(FibaroDevice, BinarySensorEntity):
     """Representation of a Fibaro Binary Sensor."""
 
-    def __init__(self, fibaro_device: Any) -> None:
+    def __init__(self, fibaro_device: DeviceModel) -> None:
         """Initialize the binary_sensor."""
         super().__init__(fibaro_device)
         self.entity_id = ENTITY_ID_FORMAT.format(self.ha_id)
@@ -66,8 +67,8 @@ class FibaroBinarySensor(FibaroDevice, BinarySensorEntity):
         self._fibaro_sensor_type = None
         if fibaro_device.type in SENSOR_TYPES:
             self._fibaro_sensor_type = fibaro_device.type
-        elif fibaro_device.baseType in SENSOR_TYPES:
-            self._fibaro_sensor_type = fibaro_device.baseType
+        elif fibaro_device.base_type in SENSOR_TYPES:
+            self._fibaro_sensor_type = fibaro_device.base_type
         if self._fibaro_sensor_type:
             self._attr_device_class = cast(
                 BinarySensorDeviceClass, SENSOR_TYPES[self._fibaro_sensor_type][2]
@@ -81,6 +82,7 @@ class FibaroBinarySensor(FibaroDevice, BinarySensorEntity):
 
     def update(self) -> None:
         """Get the latest data and update the state."""
+        super().update()
         if self._fibaro_sensor_type == "com.fibaro.accelerometer":
             # Accelerator sensors have values for the three axis x, y and z
             moving_values = self._get_moving_values()
@@ -105,9 +107,4 @@ class FibaroBinarySensor(FibaroDevice, BinarySensorEntity):
 
     def _get_moving_values(self) -> Mapping[str, Any]:
         """Get the moving values of the accelerator sensor in a dict."""
-        value = self.fibaro_device.properties.value
-        if isinstance(value, str):
-            # HC2 returns dict as str
-            return json.loads(value)
-        # HC3 returns a real dict
-        return value
+        return self.fibaro_device.value.dict_value()

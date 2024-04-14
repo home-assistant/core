@@ -1,8 +1,10 @@
 """Support for the iZone HVAC."""
+
 from __future__ import annotations
 
+from collections.abc import Callable, Mapping
 import logging
-from typing import Any
+from typing import Any, Concatenate, ParamSpec, TypeVar
 
 from pizone import Controller, Zone
 import voluptuous as vol
@@ -29,8 +31,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_platform
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.temperature import display_temp as show_temp
 from homeassistant.helpers.typing import ConfigType
@@ -45,6 +47,12 @@ from .const import (
     DISPATCH_ZONE_UPDATE,
     IZONE,
 )
+
+_DeviceT = TypeVar("_DeviceT", bound="ControllerDevice | ZoneDevice")
+_T = TypeVar("_T")
+_R = TypeVar("_R")
+_P = ParamSpec("_P")
+_FuncType = Callable[Concatenate[_T, _P], _R]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -94,7 +102,9 @@ async def async_setup_entry(
         init_controller(controller)
 
     # connect to register any further components
-    async_dispatcher_connect(hass, DISPATCH_CONTROLLER_DISCOVERED, init_controller)
+    config.async_on_unload(
+        async_dispatcher_connect(hass, DISPATCH_CONTROLLER_DISCOVERED, init_controller)
+    )
 
     platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(
@@ -109,13 +119,15 @@ async def async_setup_entry(
     )
 
 
-def _return_on_connection_error(ret=None):
-    def wrap(func):
-        def wrapped_f(*args, **kwargs):
-            if not args[0].available:
+def _return_on_connection_error(
+    ret: _T = None,  # type: ignore[assignment]
+) -> Callable[[_FuncType[_DeviceT, _P, _R]], _FuncType[_DeviceT, _P, _R | _T]]:
+    def wrap(func: _FuncType[_DeviceT, _P, _R]) -> _FuncType[_DeviceT, _P, _R | _T]:
+        def wrapped_f(self: _DeviceT, *args: _P.args, **kwargs: _P.kwargs) -> _R | _T:
+            if not self.available:
                 return ret
             try:
-                return func(*args, **kwargs)
+                return func(self, *args, **kwargs)
             except ConnectionError:
                 return ret
 
@@ -130,17 +142,28 @@ class ControllerDevice(ClimateEntity):
     _attr_precision = PRECISION_TENTHS
     _attr_should_poll = False
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_has_entity_name = True
+    _attr_name = None
+    _attr_target_temperature_step = 0.5
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, controller: Controller) -> None:
         """Initialise ControllerDevice."""
         self._controller = controller
 
-        self._attr_supported_features = ClimateEntityFeature.FAN_MODE
+        self._attr_supported_features = (
+            ClimateEntityFeature.FAN_MODE
+            | ClimateEntityFeature.TURN_OFF
+            | ClimateEntityFeature.TURN_ON
+        )
 
         # If mode RAS, or mode master with CtrlZone 13 then can set master temperature,
         # otherwise the unit determines which zone to use as target. See interface manual p. 8
+        # It appears some systems may have a different numbering system, so will trigger
+        # this if the control zone is > total zones.
         if (
-            controller.ras_mode == "master" and controller.zone_ctrl == 13
+            controller.ras_mode == "master"
+            and controller.zone_ctrl > controller.zones_total
         ) or controller.ras_mode == "RAS":
             self._attr_supported_features |= ClimateEntityFeature.TARGET_TEMPERATURE
 
@@ -157,13 +180,13 @@ class ControllerDevice(ClimateEntity):
         self._fan_to_pizone = {}
         for fan in controller.fan_modes:
             self._fan_to_pizone[_IZONE_FAN_TO_HA[fan]] = fan
-        self._available = True
 
+        self._attr_unique_id = controller.device_uid
         self._attr_device_info = DeviceInfo(
-            identifiers={(IZONE, self.unique_id)},
+            identifiers={(IZONE, controller.device_uid)},
             manufacturer="IZone",
-            model=self._controller.sys_type,
-            name=self.name,
+            model=controller.sys_type,
+            name=f"iZone Controller {controller.device_uid}",
         )
 
         # Create the zones
@@ -173,6 +196,7 @@ class ControllerDevice(ClimateEntity):
 
     async def async_added_to_hass(self) -> None:
         """Call on adding to hass."""
+
         # Register for connect/disconnect/update events
         @callback
         def controller_disconnected(ctrl: Controller, ex: Exception) -> None:
@@ -215,15 +239,9 @@ class ControllerDevice(ClimateEntity):
             )
         )
 
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self._available
-
     @callback
     def set_available(self, available: bool, ex: Exception | None = None) -> None:
-        """
-        Set availability for the controller.
+        """Set availability for the controller.
 
         Also sets zone availability as they follow the same availability.
         """
@@ -239,24 +257,14 @@ class ControllerDevice(ClimateEntity):
                 ex,
             )
 
-        self._available = available
+        self._attr_available = available
         self.async_write_ha_state()
         for zone in self.zones.values():
             if zone.hass is not None:
                 zone.async_schedule_update_ha_state()
 
     @property
-    def unique_id(self):
-        """Return the ID of the controller device."""
-        return self._controller.device_uid
-
-    @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        return f"iZone Controller {self._controller.device_uid}"
-
-    @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> Mapping[str, Any]:
         """Return the optional state attributes."""
         return {
             "supply_temperature": show_temp(
@@ -273,8 +281,9 @@ class ControllerDevice(ClimateEntity):
             ),
             "control_zone": self._controller.zone_ctrl,
             "control_zone_name": self.control_zone_name,
-            # Feature ClimateEntityFeature.TARGET_TEMPERATURE controls both displaying target temp & setting it
-            # As the feature is turned off for zone control, report target temp as extra state attribute
+            # Feature ClimateEntityFeature.TARGET_TEMPERATURE controls both displaying
+            # target temp & setting it as the feature is turned off for zone control,
+            # report target temp as extra state attribute
             "control_zone_setpoint": show_temp(
                 self.hass,
                 self.control_zone_setpoint,
@@ -290,10 +299,10 @@ class ControllerDevice(ClimateEntity):
             return HVACMode.OFF
         if (mode := self._controller.mode) == Controller.Mode.FREE_AIR:
             return HVACMode.FAN_ONLY
-        for (key, value) in self._state_to_pizone.items():
+        for key, value in self._state_to_pizone.items():
             if value == mode:
                 return key
-        assert False, "Should be unreachable"
+        raise RuntimeError("Should be unreachable")
 
     @property
     @_return_on_connection_error([])
@@ -305,13 +314,13 @@ class ControllerDevice(ClimateEntity):
 
     @property
     @_return_on_connection_error(PRESET_NONE)
-    def preset_mode(self):
+    def preset_mode(self) -> str:
         """Eco mode is external air."""
         return PRESET_ECO if self._controller.free_air else PRESET_NONE
 
     @property
     @_return_on_connection_error([PRESET_NONE])
-    def preset_modes(self):
+    def preset_modes(self) -> list[str]:
         """Available preset modes, normal or eco."""
         if self._controller.free_air_enabled:
             return [PRESET_NONE, PRESET_ECO]
@@ -359,11 +368,6 @@ class ControllerDevice(ClimateEntity):
     def supply_temperature(self) -> float:
         """Return the current supply, or in duct, temperature."""
         return self._controller.temp_supply
-
-    @property
-    def target_temperature_step(self) -> float | None:
-        """Return the supported step of target temperature."""
-        return 0.5
 
     @property
     def fan_mode(self) -> str | None:
@@ -437,13 +441,15 @@ class ZoneDevice(ClimateEntity):
 
     _attr_precision = PRECISION_TENTHS
     _attr_should_poll = False
+    _attr_has_entity_name = True
+    _attr_name = None
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_target_temperature_step = 0.5
 
     def __init__(self, controller: ControllerDevice, zone: Zone) -> None:
         """Initialise ZoneDevice."""
         self._controller = controller
         self._zone = zone
-        self._name = zone.name.title()
 
         if zone.type != Zone.Type.AUTO:
             self._state_to_pizone = {
@@ -457,14 +463,15 @@ class ZoneDevice(ClimateEntity):
                 HVACMode.HEAT_COOL: Zone.Mode.AUTO,
             }
             self._attr_supported_features |= ClimateEntityFeature.TARGET_TEMPERATURE
-
+        self._attr_unique_id = f"{controller.unique_id}_z{zone.index + 1}"
+        assert controller.unique_id
         self._attr_device_info = DeviceInfo(
             identifiers={
                 (IZONE, controller.unique_id, zone.index)  # type:ignore[arg-type]
             },
             manufacturer="IZone",
             model=zone.type.name.title(),
-            name=self.name,
+            name=zone.name.title(),
             via_device=(IZONE, controller.unique_id),
         )
 
@@ -493,7 +500,6 @@ class ZoneDevice(ClimateEntity):
                 return
             if not self.available:
                 return
-            self._name = zone.name.title()
             self.async_write_ha_state()
 
         self.async_on_remove(
@@ -506,17 +512,7 @@ class ZoneDevice(ClimateEntity):
         return self._controller.available
 
     @property
-    def unique_id(self):
-        """Return the ID of the controller device."""
-        return f"{self._controller.unique_id}_z{self._zone.index + 1}"
-
-    @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        return self._name
-
-    @property
-    @_return_on_connection_error(0)
+    @_return_on_connection_error(ClimateEntityFeature(0))
     def supported_features(self) -> ClimateEntityFeature:
         """Return the list of supported features."""
         if self._zone.mode == Zone.Mode.AUTO:
@@ -527,7 +523,7 @@ class ZoneDevice(ClimateEntity):
     def hvac_mode(self) -> HVACMode | None:
         """Return current operation ie. heat, cool, idle."""
         mode = self._zone.mode
-        for (key, value) in self._state_to_pizone.items():
+        for key, value in self._state_to_pizone.items():
             if value == mode:
                 return key
         return None
@@ -538,29 +534,24 @@ class ZoneDevice(ClimateEntity):
         return list(self._state_to_pizone)
 
     @property
-    def current_temperature(self):
+    def current_temperature(self) -> float:
         """Return the current temperature."""
         return self._zone.temp_current
 
     @property
-    def target_temperature(self):
+    def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         if self._zone.type != Zone.Type.AUTO:
             return None
         return self._zone.temp_setpoint
 
     @property
-    def target_temperature_step(self):
-        """Return the supported step of target temperature."""
-        return 0.5
-
-    @property
-    def min_temp(self):
+    def min_temp(self) -> float:
         """Return the minimum temperature."""
         return self._controller.min_temp
 
     @property
-    def max_temp(self):
+    def max_temp(self) -> float:
         """Return the maximum temperature."""
         return self._controller.max_temp
 
@@ -625,7 +616,7 @@ class ZoneDevice(ClimateEntity):
         return self._zone.index
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> Mapping[str, Any]:
         """Return the optional state attributes."""
         return {
             "airflow_max": self._zone.airflow_max,

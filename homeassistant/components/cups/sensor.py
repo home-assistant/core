@@ -1,4 +1,5 @@
 """Details about printers which are connected to CUPS."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -73,7 +74,7 @@ def setup_platform(
         data.update()
         if data.available is False:
             _LOGGER.error("Unable to connect to CUPS server: %s:%s", host, port)
-            raise PlatformNotReady()
+            raise PlatformNotReady
         assert data.printers is not None
 
         dev: list[SensorEntity] = []
@@ -84,8 +85,10 @@ def setup_platform(
             dev.append(CupsSensor(data, printer))
 
             if "marker-names" in data.attributes[printer]:
-                for marker in data.attributes[printer]["marker-names"]:
-                    dev.append(MarkerSensor(data, printer, marker, True))
+                dev.extend(
+                    MarkerSensor(data, printer, marker, True)
+                    for marker in data.attributes[printer]["marker-names"]
+                )
 
         add_entities(dev, True)
         return
@@ -94,7 +97,7 @@ def setup_platform(
     data.update()
     if data.available is False:
         _LOGGER.error("Unable to connect to IPP printer: %s:%s", host, port)
-        raise PlatformNotReady()
+        raise PlatformNotReady
 
     dev = []
     for printer in printers:
@@ -115,9 +118,14 @@ class CupsSensor(SensorEntity):
     def __init__(self, data: CupsData, printer_name: str) -> None:
         """Initialize the CUPS sensor."""
         self.data = data
-        self._attr_name = printer_name
+        self._name = printer_name
         self._printer: dict[str, Any] | None = None
         self._attr_available = False
+
+    @property
+    def name(self) -> str:
+        """Return the name of the entity."""
+        return self._name
 
     @property
     def native_value(self):
@@ -149,7 +157,6 @@ class CupsSensor(SensorEntity):
     def update(self) -> None:
         """Get the latest data and updates the states."""
         self.data.update()
-        assert self.name is not None
         assert self.data.printers is not None
         self._printer = self.data.printers.get(self.name)
         self._attr_available = self.data.available

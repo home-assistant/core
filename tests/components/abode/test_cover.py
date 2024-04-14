@@ -1,4 +1,5 @@
 """Tests for the Abode cover device."""
+
 from unittest.mock import patch
 
 from homeassistant.components.abode import ATTR_DEVICE_ID
@@ -18,10 +19,11 @@ from .common import setup_platform
 DEVICE_ID = "cover.garage_door"
 
 
-async def test_entity_registry(hass: HomeAssistant) -> None:
+async def test_entity_registry(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Tests that the devices are registered in the entity registry."""
     await setup_platform(hass, COVER_DOMAIN)
-    entity_registry = er.async_get(hass)
 
     entry = entity_registry.async_get(DEVICE_ID)
     assert entry.unique_id == "61cbz3b542d2o33ed2fz02721bda3324"
@@ -44,7 +46,7 @@ async def test_open(hass: HomeAssistant) -> None:
     """Test the cover can be opened."""
     await setup_platform(hass, COVER_DOMAIN)
 
-    with patch("abodepy.AbodeCover.open_cover") as mock_open:
+    with patch("jaraco.abode.devices.cover.Cover.open_cover") as mock_open:
         await hass.services.async_call(
             COVER_DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: DEVICE_ID}, blocking=True
         )
@@ -56,7 +58,7 @@ async def test_close(hass: HomeAssistant) -> None:
     """Test the cover can be closed."""
     await setup_platform(hass, COVER_DOMAIN)
 
-    with patch("abodepy.AbodeCover.close_cover") as mock_close:
+    with patch("jaraco.abode.devices.cover.Cover.close_cover") as mock_close:
         await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_CLOSE_COVER,

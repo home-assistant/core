@@ -1,4 +1,5 @@
 """Offer MQTT listening automation rules."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -11,10 +12,10 @@ import voluptuous as vol
 from homeassistant.const import CONF_PAYLOAD, CONF_PLATFORM, CONF_VALUE_TEMPLATE
 from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.json import json_loads
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.trigger import TriggerActionType, TriggerData, TriggerInfo
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
+from homeassistant.util.json import json_loads
 
 from .. import mqtt
 from .const import CONF_ENCODING, CONF_QOS, CONF_TOPIC, DEFAULT_ENCODING, DEFAULT_QOS
@@ -98,7 +99,6 @@ async def async_attach_trigger(
         "Attaching MQTT trigger for topic: '%s', payload: '%s'", topic, wanted_payload
     )
 
-    remove = await mqtt.async_subscribe(
+    return await mqtt.async_subscribe(
         hass, topic, mqtt_automation_listener, encoding=encoding, qos=qos
     )
-    return remove

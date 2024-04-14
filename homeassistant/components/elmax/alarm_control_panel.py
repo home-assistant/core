@@ -1,4 +1,5 @@
 """Elmax sensor platform."""
+
 from __future__ import annotations
 
 from elmax_api.model.alarm_status import AlarmArmStatus, AlarmStatus
@@ -39,7 +40,6 @@ async def async_setup_entry(
         # Otherwise, add all the entities we found
         entities = [
             ElmaxArea(
-                panel=coordinator.panel_entry,
                 elmax_device=area,
                 panel_version=panel_status.release,
                 coordinator=coordinator,
@@ -83,6 +83,9 @@ class ElmaxArea(ElmaxEntity, AlarmControlPanelEntity):
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
+        # Elmax alarm panels do always require a code to be passed for disarm operations
+        if code is None or code == "":
+            raise ValueError("Please input the disarm code.")
         await self.coordinator.http_client.execute_command(
             endpoint_id=self._device.endpoint_id,
             command=AreaCommand.DISARM,

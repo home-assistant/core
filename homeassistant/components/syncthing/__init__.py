@@ -1,4 +1,5 @@
 """The syncthing integration."""
+
 import asyncio
 import logging
 
@@ -153,7 +154,10 @@ class SyncthingClient:
                     )
             except aiosyncthing.exceptions.SyncthingError:
                 _LOGGER.info(
-                    "The syncthing server '%s' is not available. Sleeping %i seconds and retrying",
+                    (
+                        "The syncthing server '%s' is not available. Sleeping %i"
+                        " seconds and retrying"
+                    ),
                     self._client.url,
                     RECONNECT_INTERVAL.total_seconds(),
                 )
@@ -169,5 +173,5 @@ class SyncthingClient:
             await self._client.system.ping()
         except aiosyncthing.exceptions.SyncthingError:
             return False
-        else:
-            return True
+
+        return True

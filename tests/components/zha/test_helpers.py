@@ -1,19 +1,23 @@
 """Tests for ZHA helpers."""
+
+import enum
 import logging
 from unittest.mock import patch
 
 import pytest
 import voluptuous_serialize
-import zigpy.profiles.zha as zha
+from zigpy.profiles import zha
+from zigpy.quirks.v2.homeassistant import UnitOfPower as QuirksUnitOfPower
 from zigpy.types.basic import uint16_t
-import zigpy.zcl.clusters.general as general
-import zigpy.zcl.clusters.lighting as lighting
+from zigpy.zcl.clusters import general, lighting
 
 from homeassistant.components.zha.core.helpers import (
     cluster_command_schema_to_vol_schema,
     convert_to_zcl_values,
+    validate_unit,
 )
-from homeassistant.const import Platform
+from homeassistant.const import Platform, UnitOfPower
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 
 from .common import async_enable_traffic
@@ -24,7 +28,7 @@ _LOGGER = logging.getLogger(__name__)
 
 @pytest.fixture(autouse=True)
 def light_platform_only():
-    """Only setup the light and required base platforms to speed up tests."""
+    """Only set up the light and required base platforms to speed up tests."""
     with patch(
         "homeassistant.components.zha.PLATFORMS",
         (
@@ -38,7 +42,7 @@ def light_platform_only():
 
 
 @pytest.fixture
-async def device_light(hass, zigpy_device_mock, zha_device_joined):
+async def device_light(hass: HomeAssistant, zigpy_device_mock, zha_device_joined):
     """Test light."""
 
     zigpy_device = zigpy_device_mock(
@@ -67,7 +71,7 @@ async def device_light(hass, zigpy_device_mock, zha_device_joined):
     return color_cluster, zha_device
 
 
-async def test_zcl_schema_conversions(hass, device_light):
+async def test_zcl_schema_conversions(hass: HomeAssistant, device_light) -> None:
     """Test ZHA ZCL schema conversion helpers."""
     color_cluster, zha_device = device_light
     await async_enable_traffic(hass, [zha_device])
@@ -209,3 +213,25 @@ async def test_zcl_schema_conversions(hass, device_light):
 
     # No flags are passed through
     assert converted_data["update_flags"] == 0
+
+
+def test_unit_validation() -> None:
+    """Test unit validation."""
+
+    assert validate_unit(QuirksUnitOfPower.WATT) == UnitOfPower.WATT
+
+    class FooUnit(enum.Enum):
+        """Foo unit."""
+
+        BAR = "bar"
+
+    class UnitOfMass(enum.Enum):
+        """UnitOfMass."""
+
+        BAR = "bar"
+
+    with pytest.raises(KeyError):
+        validate_unit(FooUnit.BAR)
+
+    with pytest.raises(ValueError):
+        validate_unit(UnitOfMass.BAR)

@@ -1,4 +1,5 @@
 """Test the SmartTub climate platform."""
+
 import smarttub
 
 from homeassistant.components.climate import (
@@ -26,11 +27,14 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
 )
+from homeassistant.core import HomeAssistant
 
 from . import trigger_update
 
 
-async def test_thermostat_update(spa, spa_state, setup_entry, hass):
+async def test_thermostat_update(
+    spa, spa_state, setup_entry, hass: HomeAssistant
+) -> None:
     """Test the thermostat entity."""
 
     entity_id = f"climate.{spa.brand}_{spa.model}_thermostat"
@@ -55,7 +59,7 @@ async def test_thermostat_update(spa, spa_state, setup_entry, hass):
     assert state.attributes[ATTR_TEMPERATURE] == 39
     assert state.attributes[ATTR_MAX_TEMP] == DEFAULT_MAX_TEMP
     assert state.attributes[ATTR_MIN_TEMP] == DEFAULT_MIN_TEMP
-    assert state.attributes[ATTR_PRESET_MODES] == ["none", "eco", "day"]
+    assert state.attributes[ATTR_PRESET_MODES] == ["none", "eco", "day", "ready"]
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,

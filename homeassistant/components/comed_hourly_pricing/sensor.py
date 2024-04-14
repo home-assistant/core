@@ -1,4 +1,5 @@
 """Support for ComEd Hourly Pricing data."""
+
 from __future__ import annotations
 
 import asyncio
@@ -7,7 +8,6 @@ import json
 import logging
 
 import aiohttp
-import async_timeout
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -91,7 +91,9 @@ class ComedHourlyPricingSensor(SensorEntity):
 
     _attr_attribution = "Data provided by ComEd Hourly Pricing service"
 
-    def __init__(self, websession, offset, name, description: SensorEntityDescription):
+    def __init__(
+        self, websession, offset, name, description: SensorEntityDescription
+    ) -> None:
         """Initialize the sensor."""
         self.entity_description = description
         self.websession = websession
@@ -110,7 +112,7 @@ class ComedHourlyPricingSensor(SensorEntity):
                 else:
                     url_string += "?type=currenthouraverage"
 
-                async with async_timeout.timeout(60):
+                async with asyncio.timeout(60):
                     response = await self.websession.get(url_string)
                     # The API responds with MIME type 'text/html'
                     text = await response.text()
@@ -122,7 +124,7 @@ class ComedHourlyPricingSensor(SensorEntity):
             else:
                 self._attr_native_value = None
 
-        except (asyncio.TimeoutError, aiohttp.ClientError) as err:
+        except (TimeoutError, aiohttp.ClientError) as err:
             _LOGGER.error("Could not get data from ComEd API: %s", err)
         except (ValueError, KeyError):
             _LOGGER.warning("Could not update status for %s", self.name)

@@ -1,9 +1,13 @@
 """Provides device triggers for Select."""
+
 from __future__ import annotations
 
 import voluptuous as vol
 
-from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
+from homeassistant.components.device_automation import (
+    DEVICE_TRIGGER_BASE_SCHEMA,
+    async_get_entity_registry_entry_or_raise,
+)
 from homeassistant.components.homeassistant.triggers.state import (
     CONF_FOR,
     CONF_FROM,
@@ -20,7 +24,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv, entity_registry
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity import get_capability
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
@@ -31,7 +35,7 @@ TRIGGER_TYPES = {"current_option_changed"}
 
 TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_ENTITY_ID): cv.entity_id,
+        vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
         vol.Required(CONF_TYPE): vol.In(TRIGGER_TYPES),
         vol.Optional(CONF_TO): vol.Any(vol.Coerce(str)),
         vol.Optional(CONF_FROM): vol.Any(vol.Coerce(str)),
@@ -44,16 +48,16 @@ async def async_get_triggers(
     hass: HomeAssistant, device_id: str
 ) -> list[dict[str, str]]:
     """List device triggers for Select devices."""
-    registry = entity_registry.async_get(hass)
+    registry = er.async_get(hass)
     return [
         {
             CONF_PLATFORM: "device",
             CONF_DEVICE_ID: device_id,
             CONF_DOMAIN: DOMAIN,
-            CONF_ENTITY_ID: entry.entity_id,
+            CONF_ENTITY_ID: entry.id,
             CONF_TYPE: "current_option_changed",
         }
-        for entry in entity_registry.async_entries_for_device(registry, device_id)
+        for entry in er.async_entries_for_device(registry, device_id)
         if entry.domain == DOMAIN
     ]
 
@@ -89,8 +93,10 @@ async def async_get_trigger_capabilities(
     hass: HomeAssistant, config: ConfigType
 ) -> dict[str, vol.Schema]:
     """List trigger capabilities."""
+
     try:
-        options = get_capability(hass, config[CONF_ENTITY_ID], ATTR_OPTIONS) or []
+        entry = async_get_entity_registry_entry_or_raise(hass, config[CONF_ENTITY_ID])
+        options = get_capability(hass, entry.entity_id, ATTR_OPTIONS) or []
     except HomeAssistantError:
         options = []
 

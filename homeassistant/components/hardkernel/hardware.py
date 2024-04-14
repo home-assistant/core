@@ -1,4 +1,5 @@
 """The Hardkernel hardware platform."""
+
 from __future__ import annotations
 
 from homeassistant.components.hardware.models import BoardInfo, HardwareInfo
@@ -9,10 +10,12 @@ from homeassistant.exceptions import HomeAssistantError
 from .const import DOMAIN
 
 BOARD_NAMES = {
-    "odroid-c2": "Hardkernel Odroid-C2",
-    "odroid-c4": "Hardkernel Odroid-C4",
-    "odroid-n2": "Home Assistant Blue / Hardkernel Odroid-N2",
-    "odroid-xu4": "Hardkernel Odroid-XU4",
+    "odroid-c2": "Hardkernel ODROID-C2",
+    "odroid-c4": "Hardkernel ODROID-C4",
+    "odroid-m1": "Hardkernel ODROID-M1",
+    "odroid-m1s": "Hardkernel ODROID-M1S",
+    "odroid-n2": "Home Assistant Blue / Hardkernel ODROID-N2/N2+",
+    "odroid-xu4": "Hardkernel ODROID-XU4",
 }
 
 

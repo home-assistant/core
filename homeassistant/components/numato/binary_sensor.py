@@ -1,4 +1,5 @@
 """Binary sensor platform integration for Numato USB GPIO expanders."""
+
 from __future__ import annotations
 
 from functools import partial
@@ -52,20 +53,31 @@ def setup_platform(
         ports = platform[CONF_PORTS]
         for port, port_name in ports.items():
             try:
-
                 api.setup_input(device_id, port)
-                api.edge_detect(device_id, port, partial(read_gpio, device_id))
 
             except NumatoGpioError as err:
                 _LOGGER.error(
-                    "Failed to initialize binary sensor '%s' on Numato device %s port %s: %s",
+                    (
+                        "Failed to initialize binary sensor '%s' on Numato device %s"
+                        " port %s: %s"
+                    ),
                     port_name,
                     device_id,
                     port,
                     err,
                 )
                 continue
+            try:
+                api.edge_detect(device_id, port, partial(read_gpio, device_id))
 
+            except NumatoGpioError as err:
+                _LOGGER.info(
+                    "Notification setup failed on device %s, "
+                    "updates on binary sensor %s only in polling mode: %s",
+                    device_id,
+                    port_name,
+                    err,
+                )
             binary_sensors.append(
                 NumatoGpioBinarySensor(
                     port_name,

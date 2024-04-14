@@ -1,4 +1,5 @@
 """Triggers."""
+
 from __future__ import annotations
 
 import asyncio
@@ -7,7 +8,7 @@ from collections.abc import Callable, Coroutine
 from dataclasses import dataclass, field
 import functools
 import logging
-from typing import TYPE_CHECKING, Any, Protocol, TypedDict, cast
+from typing import Any, Protocol, TypedDict, cast
 
 import voluptuous as vol
 
@@ -28,20 +29,43 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import IntegrationNotFound, async_get_integration
+from homeassistant.util.async_ import create_eager_task
 
 from .typing import ConfigType, TemplateVarsType
 
-if TYPE_CHECKING:
-    from homeassistant.components.device_automation.trigger import (
-        DeviceAutomationTriggerProtocol,
-    )
-
 _PLATFORM_ALIASES = {
-    "device_automation": ("device",),
-    "homeassistant": ("event", "numeric_state", "state", "time_pattern", "time"),
+    "device": "device_automation",
+    "event": "homeassistant",
+    "numeric_state": "homeassistant",
+    "state": "homeassistant",
+    "time_pattern": "homeassistant",
+    "time": "homeassistant",
 }
 
 DATA_PLUGGABLE_ACTIONS = "pluggable_actions"
+
+
+class TriggerProtocol(Protocol):
+    """Define the format of trigger modules.
+
+    Each module must define either TRIGGER_SCHEMA or async_validate_trigger_config.
+    """
+
+    TRIGGER_SCHEMA: vol.Schema
+
+    async def async_validate_trigger_config(
+        self, hass: HomeAssistant, config: ConfigType
+    ) -> ConfigType:
+        """Validate config."""
+
+    async def async_attach_trigger(
+        self,
+        hass: HomeAssistant,
+        config: ConfigType,
+        action: TriggerActionType,
+        trigger_info: TriggerInfo,
+    ) -> CALLBACK_TYPE:
+        """Attach a trigger."""
 
 
 class TriggerActionType(Protocol):
@@ -51,7 +75,7 @@ class TriggerActionType(Protocol):
         self,
         run_variables: dict[str, Any],
         context: Context | None = None,
-    ) -> None:
+    ) -> Any:
         """Define action callback type."""
 
 
@@ -73,7 +97,7 @@ class TriggerInfo(TypedDict):
     trigger_data: TriggerData
 
 
-@dataclass
+@dataclass(slots=True)
 class PluggableActionsEntry:
     """Holder to keep track of all plugs and actions for a given trigger."""
 
@@ -127,7 +151,10 @@ class PluggableAction:
         action: TriggerActionType,
         variables: dict[str, Any],
     ) -> CALLBACK_TYPE:
-        """Attach an action to a trigger entry. Existing or future plugs registered will be attached."""
+        """Attach an action to a trigger entry.
+
+        Existing or future plugs registered will be attached.
+        """
         reg = PluggableAction.async_get_registry(hass)
         key = tuple(sorted(trigger.items()))
         entry = reg[key]
@@ -144,7 +171,7 @@ class PluggableAction:
             if not entry.actions and not entry.plugs:
                 del reg[key]
 
-        job = HassJob(action)
+        job = HassJob(action, f"trigger {trigger} {variables}")
         entry.actions[_remove] = (job, variables)
         _update()
 
@@ -163,7 +190,10 @@ class PluggableAction:
 
         @callback
         def _remove() -> None:
-            """Remove plug from registration, and clean up entry if there are no actions or plugs registered."""
+            """Remove plug from registration.
+
+            Clean up entry if there are no actions or plugs registered.
+            """
             assert self._entry
             self._entry.plugs.remove(self)
             if not self._entry.actions and not self._entry.plugs:
@@ -185,19 +215,16 @@ class PluggableAction:
 
 async def _async_get_trigger_platform(
     hass: HomeAssistant, config: ConfigType
-) -> DeviceAutomationTriggerProtocol:
+) -> TriggerProtocol:
     platform_and_sub_type = config[CONF_PLATFORM].split(".")
     platform = platform_and_sub_type[0]
-    for alias, triggers in _PLATFORM_ALIASES.items():
-        if platform in triggers:
-            platform = alias
-            break
+    platform = _PLATFORM_ALIASES.get(platform, platform)
     try:
         integration = await async_get_integration(hass, platform)
     except IntegrationNotFound:
         raise vol.Invalid(f"Invalid platform '{platform}' specified") from None
     try:
-        return integration.get_platform("trigger")
+        return await integration.async_get_platform("trigger")
     except ImportError:
         raise vol.Invalid(
             f"Integration '{platform}' does not provide trigger support"
@@ -280,7 +307,7 @@ async def async_initialize_triggers(
     variables: TemplateVarsType = None,
 ) -> CALLBACK_TYPE | None:
     """Initialize triggers."""
-    triggers = []
+    triggers: list[asyncio.Task[CALLBACK_TYPE]] = []
     for idx, conf in enumerate(trigger_config):
         # Skip triggers that are not enabled
         if not conf.get(CONF_ENABLED, True):
@@ -300,8 +327,10 @@ async def async_initialize_triggers(
         )
 
         triggers.append(
-            platform.async_attach_trigger(
-                hass, conf, _trigger_action_wrapper(hass, action, conf), info
+            create_eager_task(
+                platform.async_attach_trigger(
+                    hass, conf, _trigger_action_wrapper(hass, action, conf), info
+                )
             )
         )
 
@@ -313,8 +342,10 @@ async def async_initialize_triggers(
             log_cb(logging.ERROR, f"Got error '{result}' when setting up triggers for")
         elif isinstance(result, Exception):
             log_cb(logging.ERROR, "Error setting up trigger", exc_info=result)
+        elif isinstance(result, BaseException):
+            raise result from None
         elif result is None:
-            log_cb(
+            log_cb(  # type: ignore[unreachable]
                 logging.ERROR, "Unknown error while setting up trigger (empty result)"
             )
         else:

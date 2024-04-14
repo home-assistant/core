@@ -1,4 +1,5 @@
 """The tests for WebOS TV automation triggers."""
+
 from unittest.mock import patch
 
 import pytest
@@ -6,6 +7,7 @@ import pytest
 from homeassistant.components import automation
 from homeassistant.components.webostv import DOMAIN
 from homeassistant.const import SERVICE_RELOAD
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import async_get as get_dev_reg
 from homeassistant.setup import async_setup_component
@@ -16,7 +18,9 @@ from .const import ENTITY_ID, FAKE_UUID
 from tests.common import MockEntity, MockEntityPlatform
 
 
-async def test_webostv_turn_on_trigger_device_id(hass, calls, client):
+async def test_webostv_turn_on_trigger_device_id(
+    hass: HomeAssistant, calls, client
+) -> None:
     """Test for turn_on triggers by device_id firing."""
     await setup_webostv(hass)
 
@@ -57,7 +61,7 @@ async def test_webostv_turn_on_trigger_device_id(hass, calls, client):
     assert calls[0].data["some"] == device.id
     assert calls[0].data["id"] == 0
 
-    with patch("homeassistant.config.load_yaml", return_value={}):
+    with patch("homeassistant.config.load_yaml_dict", return_value={}):
         await hass.services.async_call(automation.DOMAIN, SERVICE_RELOAD, blocking=True)
 
     calls.clear()
@@ -74,7 +78,9 @@ async def test_webostv_turn_on_trigger_device_id(hass, calls, client):
     assert len(calls) == 0
 
 
-async def test_webostv_turn_on_trigger_entity_id(hass, calls, client):
+async def test_webostv_turn_on_trigger_entity_id(
+    hass: HomeAssistant, calls, client
+) -> None:
     """Test for turn_on triggers by entity_id firing."""
     await setup_webostv(hass)
 
@@ -113,7 +119,9 @@ async def test_webostv_turn_on_trigger_entity_id(hass, calls, client):
     assert calls[0].data["id"] == 0
 
 
-async def test_wrong_trigger_platform_type(hass, caplog, client):
+async def test_wrong_trigger_platform_type(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, client
+) -> None:
     """Test wrong trigger platform type."""
     await setup_webostv(hass)
 
@@ -145,7 +153,9 @@ async def test_wrong_trigger_platform_type(hass, caplog, client):
     )
 
 
-async def test_trigger_invalid_entity_id(hass, caplog, client):
+async def test_trigger_invalid_entity_id(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, client
+) -> None:
     """Test turn on trigger using invalid entity_id."""
     await setup_webostv(hass)
 

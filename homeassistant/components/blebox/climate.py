@@ -1,4 +1,5 @@
 """BleBox climate entity."""
+
 from datetime import timedelta
 from typing import Any
 
@@ -22,6 +23,7 @@ from .const import DOMAIN, PRODUCT
 SCAN_INTERVAL = timedelta(seconds=5)
 
 BLEBOX_TO_HVACMODE = {
+    None: None,
     0: HVACMode.OFF,
     1: HVACMode.HEAT,
     2: HVACMode.COOL,
@@ -52,19 +54,26 @@ async def async_setup_entry(
 class BleBoxClimateEntity(BleBoxEntity[blebox_uniapi.climate.Climate], ClimateEntity):
     """Representation of a BleBox climate feature (saunaBox)."""
 
-    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
+    )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _enable_turn_on_off_backwards_compatibility = False
 
     @property
     def hvac_modes(self):
         """Return list of supported HVAC modes."""
-        return [HVACMode.OFF, self.hvac_mode]
+        return [HVACMode.OFF, BLEBOX_TO_HVACMODE[self._feature.mode]]
 
     @property
     def hvac_mode(self):
         """Return the desired HVAC mode."""
         if self._feature.is_on is None:
             return None
+        if not self._feature.is_on:
+            return HVACMode.OFF
         if self._feature.mode is not None:
             return BLEBOX_TO_HVACMODE[self._feature.mode]
         return HVACMode.HEAT if self._feature.is_on else HVACMode.OFF

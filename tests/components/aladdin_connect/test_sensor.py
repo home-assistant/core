@@ -1,11 +1,12 @@
 """Test the Aladdin Connect Sensors."""
+
 from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from homeassistant.components.aladdin_connect.const import DOMAIN
 from homeassistant.components.aladdin_connect.cover import SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util.dt import utcnow
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -28,6 +29,7 @@ RELOAD_AFTER_UPDATE_DELAY = timedelta(seconds=31)
 async def test_sensors(
     hass: HomeAssistant,
     mock_aladdinconnect_api: MagicMock,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test Sensors for AladdinConnect."""
     config_entry = MockConfigEntry(
@@ -46,18 +48,17 @@ async def test_sensors(
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-        registry = entity_registry.async_get(hass)
-        entry = registry.async_get("sensor.home_battery_level")
+        entry = entity_registry.async_get("sensor.home_battery")
         assert entry
         assert entry.disabled
-        assert entry.disabled_by is entity_registry.RegistryEntryDisabler.INTEGRATION
-        update_entry = registry.async_update_entity(
-            entry.entity_id, **{"disabled_by": None}
+        assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+        update_entry = entity_registry.async_update_entity(
+            entry.entity_id, disabled_by=None
         )
         await hass.async_block_till_done()
         assert update_entry != entry
         assert update_entry.disabled is False
-        state = hass.states.get("sensor.home_battery_level")
+        state = hass.states.get("sensor.home_battery")
         assert state is None
 
         async_fire_time_changed(
@@ -65,16 +66,16 @@ async def test_sensors(
             utcnow() + SCAN_INTERVAL,
         )
         await hass.async_block_till_done()
-        state = hass.states.get("sensor.home_battery_level")
+        state = hass.states.get("sensor.home_battery")
         assert state
 
-        entry = registry.async_get("sensor.home_wi_fi_rssi")
+        entry = entity_registry.async_get("sensor.home_wi_fi_rssi")
         await hass.async_block_till_done()
         assert entry
         assert entry.disabled
-        assert entry.disabled_by is entity_registry.RegistryEntryDisabler.INTEGRATION
-        update_entry = registry.async_update_entity(
-            entry.entity_id, **{"disabled_by": None}
+        assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+        update_entry = entity_registry.async_update_entity(
+            entry.entity_id, disabled_by=None
         )
         await hass.async_block_till_done()
         assert update_entry != entry
@@ -82,8 +83,8 @@ async def test_sensors(
         state = hass.states.get("sensor.home_wi_fi_rssi")
         assert state is None
 
-        update_entry = registry.async_update_entity(
-            entry.entity_id, **{"disabled_by": None}
+        update_entry = entity_registry.async_update_entity(
+            entry.entity_id, disabled_by=None
         )
         await hass.async_block_till_done()
         async_fire_time_changed(
@@ -99,6 +100,7 @@ async def test_sensors(
 async def test_sensors_model_01(
     hass: HomeAssistant,
     mock_aladdinconnect_api: MagicMock,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test Sensors for AladdinConnect."""
     config_entry = MockConfigEntry(
@@ -120,21 +122,20 @@ async def test_sensors_model_01(
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-        registry = entity_registry.async_get(hass)
-        entry = registry.async_get("sensor.home_battery_level")
+        entry = entity_registry.async_get("sensor.home_battery")
         assert entry
         assert entry.disabled is False
         assert entry.disabled_by is None
-        state = hass.states.get("sensor.home_battery_level")
+        state = hass.states.get("sensor.home_battery")
         assert state
 
-        entry = registry.async_get("sensor.home_wi_fi_rssi")
+        entry = entity_registry.async_get("sensor.home_wi_fi_rssi")
         await hass.async_block_till_done()
         assert entry
         assert entry.disabled
-        assert entry.disabled_by is entity_registry.RegistryEntryDisabler.INTEGRATION
-        update_entry = registry.async_update_entity(
-            entry.entity_id, **{"disabled_by": None}
+        assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+        update_entry = entity_registry.async_update_entity(
+            entry.entity_id, disabled_by=None
         )
         await hass.async_block_till_done()
         assert update_entry != entry
@@ -142,8 +143,8 @@ async def test_sensors_model_01(
         state = hass.states.get("sensor.home_wi_fi_rssi")
         assert state is None
 
-        update_entry = registry.async_update_entity(
-            entry.entity_id, **{"disabled_by": None}
+        update_entry = entity_registry.async_update_entity(
+            entry.entity_id, disabled_by=None
         )
         await hass.async_block_till_done()
         async_fire_time_changed(
@@ -155,7 +156,7 @@ async def test_sensors_model_01(
         state = hass.states.get("sensor.home_wi_fi_rssi")
         assert state
 
-        entry = registry.async_get("sensor.home_ble_strength")
+        entry = entity_registry.async_get("sensor.home_ble_strength")
         await hass.async_block_till_done()
         assert entry
         assert entry.disabled is False

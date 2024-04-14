@@ -1,12 +1,14 @@
 """Conftest for the KNX integration."""
+
 from __future__ import annotations
 
 import asyncio
+import json
 from unittest.mock import DEFAULT, AsyncMock, Mock, patch
 
 import pytest
 from xknx import XKNX
-from xknx.core import XknxConnectionState
+from xknx.core import XknxConnectionState, XknxConnectionType
 from xknx.dpt import DPTArray, DPTBinary
 from xknx.io import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
 from xknx.telegram import Telegram, TelegramDirection
@@ -26,10 +28,14 @@ from homeassistant.components.knx.const import (
     DEFAULT_ROUTING_IA,
     DOMAIN as KNX_DOMAIN,
 )
+from homeassistant.components.knx.project import STORAGE_KEY as KNX_PROJECT_STORAGE_KEY
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, load_fixture
+
+FIXTURE_PROJECT_DATA = json.loads(load_fixture("project.json", KNX_DOMAIN))
 
 
 class KNXTestKit:
@@ -53,18 +59,24 @@ class KNXTestKit:
         for attribute, value in attributes.items():
             assert test_state.attributes.get(attribute) == value
 
-    async def setup_integration(self, config):
+    async def setup_integration(
+        self, config: ConfigType, add_entry_to_hass: bool = True
+    ) -> None:
         """Create the KNX integration."""
 
         async def patch_xknx_start():
             """Patch `xknx.start` for unittests."""
+            self.xknx.cemi_handler.send_telegram = AsyncMock(
+                side_effect=self._outgoing_telegrams.put
+            )
             # after XKNX.__init__() to not overwrite it by the config entry again
             # before StateUpdater starts to avoid slow down of tests
             self.xknx.rate_limit = 0
             # set XknxConnectionState.CONNECTED to avoid `unavailable` entities at startup
             # and start StateUpdater. This would be awaited on normal startup too.
             await self.xknx.connection_manager.connection_state_changed(
-                XknxConnectionState.CONNECTED
+                state=XknxConnectionState.CONNECTED,
+                connection_type=XknxConnectionType.TUNNEL_TCP,
             )
 
         def knx_ip_interface_mock():
@@ -72,7 +84,6 @@ class KNXTestKit:
             mock = Mock()
             mock.start = AsyncMock(side_effect=patch_xknx_start)
             mock.stop = AsyncMock()
-            mock.send_telegram = AsyncMock(side_effect=self._outgoing_telegrams.put)
             return mock
 
         def fish_xknx(*args, **kwargs):
@@ -80,12 +91,14 @@ class KNXTestKit:
             self.xknx = args[0]
             return DEFAULT
 
+        if add_entry_to_hass:
+            self.mock_config_entry.add_to_hass(self.hass)
+
         with patch(
             "xknx.xknx.knx_interface_factory",
             return_value=knx_ip_interface_mock(),
             side_effect=fish_xknx,
         ):
-            self.mock_config_entry.add_to_hass(self.hass)
             await async_setup_component(self.hass, KNX_DOMAIN, {KNX_DOMAIN: config})
             await self.hass.async_block_till_done()
 
@@ -130,13 +143,14 @@ class KNXTestKit:
         """Assert outgoing telegram. One by one in timely order."""
         await self.xknx.telegrams.join()
         await self.hass.async_block_till_done()
+        await self.hass.async_block_till_done()
         try:
             telegram = self._outgoing_telegrams.get_nowait()
-        except asyncio.QueueEmpty:
+        except asyncio.QueueEmpty as err:
             raise AssertionError(
                 f"No Telegram found. Expected: {apci_type.__name__} -"
                 f" {group_address} - {payload}"
-            )
+            ) from err
 
         assert isinstance(
             telegram.payload, apci_type
@@ -148,7 +162,7 @@ class KNXTestKit:
 
         if payload is not None:
             assert (
-                telegram.payload.value.value == payload  # type: ignore
+                telegram.payload.value.value == payload  # type: ignore[attr-defined]
             ), f"Payload mismatch in {telegram} - Expected: {payload}"
 
     async def assert_read(self, group_address: str) -> None:
@@ -178,39 +192,59 @@ class KNXTestKit:
             return DPTBinary(payload)
         return DPTArray(payload)
 
-    async def _receive_telegram(self, group_address: str, payload: APCI) -> None:
+    async def _receive_telegram(
+        self,
+        group_address: str,
+        payload: APCI,
+        source: str | None = None,
+    ) -> None:
         """Inject incoming KNX telegram."""
         self.xknx.telegrams.put_nowait(
             Telegram(
                 destination_address=GroupAddress(group_address),
                 direction=TelegramDirection.INCOMING,
                 payload=payload,
-                source_address=IndividualAddress(self.INDIVIDUAL_ADDRESS),
+                source_address=IndividualAddress(source or self.INDIVIDUAL_ADDRESS),
             )
         )
         await self.xknx.telegrams.join()
         await self.hass.async_block_till_done()
 
-    async def receive_read(
-        self,
-        group_address: str,
-    ) -> None:
+    async def receive_read(self, group_address: str, source: str | None = None) -> None:
         """Inject incoming GroupValueRead telegram."""
-        await self._receive_telegram(group_address, GroupValueRead())
+        await self._receive_telegram(
+            group_address,
+            GroupValueRead(),
+            source=source,
+        )
 
     async def receive_response(
-        self, group_address: str, payload: int | tuple[int, ...]
+        self,
+        group_address: str,
+        payload: int | tuple[int, ...],
+        source: str | None = None,
     ) -> None:
         """Inject incoming GroupValueResponse telegram."""
         payload_value = self._payload_value(payload)
-        await self._receive_telegram(group_address, GroupValueResponse(payload_value))
+        await self._receive_telegram(
+            group_address,
+            GroupValueResponse(payload_value),
+            source=source,
+        )
 
     async def receive_write(
-        self, group_address: str, payload: int | tuple[int, ...]
+        self,
+        group_address: str,
+        payload: int | tuple[int, ...],
+        source: str | None = None,
     ) -> None:
         """Inject incoming GroupValueWrite telegram."""
         payload_value = self._payload_value(payload)
-        await self._receive_telegram(group_address, GroupValueWrite(payload_value))
+        await self._receive_telegram(
+            group_address,
+            GroupValueWrite(payload_value),
+            source=source,
+        )
 
 
 @pytest.fixture
@@ -236,3 +270,12 @@ async def knx(request, hass, mock_config_entry: MockConfigEntry):
     knx_test_kit = KNXTestKit(hass, mock_config_entry)
     yield knx_test_kit
     await knx_test_kit.assert_no_telegram()
+
+
+@pytest.fixture
+def load_knxproj(hass_storage):
+    """Mock KNX project data."""
+    hass_storage[KNX_PROJECT_STORAGE_KEY] = {
+        "version": 1,
+        "data": FIXTURE_PROJECT_DATA,
+    }

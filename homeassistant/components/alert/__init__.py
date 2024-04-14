@@ -1,4 +1,5 @@
 """Support for repeating alerts when conditions are met."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -25,7 +26,8 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import Event, HomeAssistant
+from homeassistant.core import Event, EventStateChangedData, HassJob, HomeAssistant
+from homeassistant.exceptions import ServiceNotFound
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
@@ -196,11 +198,11 @@ class Alert(Entity):
             return STATE_ON
         return STATE_IDLE
 
-    async def watched_entity_change(self, event: Event) -> None:
+    async def watched_entity_change(self, event: Event[EventStateChangedData]) -> None:
         """Determine if the alert should start or stop."""
-        if (to_state := event.data.get("new_state")) is None:
+        if (to_state := event.data["new_state"]) is None:
             return
-        LOGGER.debug("Watched entity (%s) has changed", event.data.get("entity_id"))
+        LOGGER.debug("Watched entity (%s) has changed", event.data["entity_id"])
         if to_state.state == self._alert_state and not self._firing:
             await self.begin_alerting()
         if to_state.state != self._alert_state and self._firing:
@@ -237,7 +239,13 @@ class Alert(Entity):
         """Schedule a notification."""
         delay = self._delay[self._next_delay]
         next_msg = now() + delay
-        self._cancel = async_track_point_in_time(self.hass, self._notify, next_msg)
+        self._cancel = async_track_point_in_time(
+            self.hass,
+            HassJob(
+                self._notify, name="Schedule notify alert", cancel_on_shutdown=True
+            ),
+            next_msg,
+        )
         self._next_delay = min(self._next_delay + 1, len(self._delay) - 1)
 
     async def _notify(self, *args: Any) -> None:
@@ -270,7 +278,6 @@ class Alert(Entity):
         await self._send_notification_message(message)
 
     async def _send_notification_message(self, message: Any) -> None:
-
         if not self._notifiers:
             return
 
@@ -285,9 +292,15 @@ class Alert(Entity):
         LOGGER.debug(msg_payload)
 
         for target in self._notifiers:
-            await self.hass.services.async_call(
-                DOMAIN_NOTIFY, target, msg_payload, context=self._context
-            )
+            try:
+                await self.hass.services.async_call(
+                    DOMAIN_NOTIFY, target, msg_payload, context=self._context
+                )
+            except ServiceNotFound:
+                LOGGER.error(
+                    "Failed to call notify.%s, retrying at next notification interval",
+                    target,
+                )
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Async Unacknowledge alert."""

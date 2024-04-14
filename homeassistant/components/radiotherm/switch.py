@@ -1,4 +1,5 @@
 """Support for radiotherm switches."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -28,16 +29,12 @@ async def async_setup_entry(
 class RadioThermHoldSwitch(RadioThermostatEntity, SwitchEntity):
     """Provides radiotherm hold switch support."""
 
+    _attr_translation_key = "hold"
+
     def __init__(self, coordinator: RadioThermUpdateCoordinator) -> None:
         """Initialize the hold mode switch."""
         super().__init__(coordinator)
-        self._attr_name = f"{coordinator.init_data.name} Hold"
         self._attr_unique_id = f"{coordinator.init_data.mac}_hold"
-
-    @property
-    def icon(self) -> str:
-        """Return the icon for the switch."""
-        return "mdi:timer-off" if self.is_on else "mdi:timer"
 
     @callback
     def _process_data(self) -> None:

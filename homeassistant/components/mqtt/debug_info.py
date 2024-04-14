@@ -1,13 +1,13 @@
 """Helper to handle a set of topics to subscribe to."""
+
 from __future__ import annotations
 
 from collections import deque
 from collections.abc import Callable
+from dataclasses import dataclass
 import datetime as dt
 from functools import wraps
-from typing import Any
-
-import attr
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -49,15 +49,15 @@ def log_messages(
     return _decorator
 
 
-@attr.s(slots=True, frozen=True)
+@dataclass
 class TimestampedPublishMessage:
     """MQTT Message."""
 
-    topic: str = attr.ib()
-    payload: PublishPayloadType = attr.ib()
-    qos: int = attr.ib()
-    retain: bool = attr.ib()
-    timestamp: dt.datetime = attr.ib(default=None)
+    topic: str
+    payload: PublishPayloadType
+    qos: int
+    retain: bool
+    timestamp: dt.datetime
 
 
 def log_message(
@@ -128,11 +128,11 @@ def update_entity_discovery_data(
     hass: HomeAssistant, discovery_payload: DiscoveryInfoType, entity_id: str
 ) -> None:
     """Update discovery data."""
-    assert (
-        discovery_data := get_mqtt_data(hass).debug_info_entities[entity_id][
-            "discovery_data"
-        ]
-    ) is not None
+    discovery_data = get_mqtt_data(hass).debug_info_entities[entity_id][
+        "discovery_data"
+    ]
+    if TYPE_CHECKING:
+        assert discovery_data is not None
     discovery_data[ATTR_DISCOVERY_PAYLOAD] = discovery_payload
 
 
@@ -239,11 +239,14 @@ def info_for_config_entry(hass: HomeAssistant) -> dict[str, list[Any]]:
     mqtt_data = get_mqtt_data(hass)
     mqtt_info: dict[str, list[Any]] = {"entities": [], "triggers": []}
 
-    for entity_id in mqtt_data.debug_info_entities:
-        mqtt_info["entities"].append(_info_for_entity(hass, entity_id))
+    mqtt_info["entities"].extend(
+        _info_for_entity(hass, entity_id) for entity_id in mqtt_data.debug_info_entities
+    )
 
-    for trigger_key in mqtt_data.debug_info_triggers:
-        mqtt_info["triggers"].append(_info_for_trigger(hass, trigger_key))
+    mqtt_info["triggers"].extend(
+        _info_for_trigger(hass, trigger_key)
+        for trigger_key in mqtt_data.debug_info_triggers
+    )
 
     return mqtt_info
 
@@ -259,16 +262,16 @@ def info_for_device(hass: HomeAssistant, device_id: str) -> dict[str, list[Any]]
     entries = er.async_entries_for_device(
         entity_registry, device_id, include_disabled_entities=True
     )
-    for entry in entries:
-        if entry.entity_id not in mqtt_data.debug_info_entities:
-            continue
+    mqtt_info["entities"].extend(
+        _info_for_entity(hass, entry.entity_id)
+        for entry in entries
+        if entry.entity_id in mqtt_data.debug_info_entities
+    )
 
-        mqtt_info["entities"].append(_info_for_entity(hass, entry.entity_id))
-
-    for trigger_key, trigger in mqtt_data.debug_info_triggers.items():
-        if trigger["device_id"] != device_id:
-            continue
-
-        mqtt_info["triggers"].append(_info_for_trigger(hass, trigger_key))
+    mqtt_info["triggers"].extend(
+        _info_for_trigger(hass, trigger_key)
+        for trigger_key, trigger in mqtt_data.debug_info_triggers.items()
+        if trigger["device_id"] == device_id
+    )
 
     return mqtt_info

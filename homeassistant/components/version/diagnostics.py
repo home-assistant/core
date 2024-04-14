@@ -1,4 +1,5 @@
 """Provides diagnostics for Version."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -10,6 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .const import DOMAIN
+from .coordinator import VersionDataUpdateCoordinator
 
 
 async def async_get_config_entry_diagnostics(
@@ -17,7 +19,7 @@ async def async_get_config_entry_diagnostics(
     config_entry: ConfigEntry,
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator: VersionDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
     device_registry = dr.async_get(hass)
     entity_registry = er.async_get(hass)
 

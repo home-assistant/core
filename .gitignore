@@ -8,6 +8,9 @@ tests/testing_config/home-assistant.log*
 data/
 .token
 
+# Translations
+homeassistant/components/*/translations
+
 # Hide sublime text stuff
 *.sublime-project
 *.sublime-workspace
@@ -64,6 +67,7 @@ htmlcov/
 test-reports/
 test-results.xml
 test-output.xml
+pytest-*.txt
 
 # Translations
 *.mo
@@ -107,9 +111,6 @@ virtualization/vagrant/config
 !.vscode/tasks.json
 .env
 
-# Built docs
-docs/build
-
 # Windows Explorer
 desktop.ini
 /home-assistant.pyproj
@@ -131,3 +132,6 @@ tmp_cache
 
 # python-language-server / Rope
 .ropeproject
+
+# Will be created from script/split_tests.py
+pytest_buckets.txt

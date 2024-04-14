@@ -1,4 +1,5 @@
 """Component for controlling Pandora stations through the pianobar client."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -68,8 +69,8 @@ class PandoraMediaPlayer(MediaPlayerEntity):
     """A media player that uses the Pianobar interface to Pandora."""
 
     _attr_media_content_type = MediaType.MUSIC
-    # MediaPlayerEntityFeature.VOLUME_SET is close to available but we need volume up/down
-    # controls in the GUI.
+    # MediaPlayerEntityFeature.VOLUME_SET is close to available
+    # but we need volume up/down controls in the GUI.
     _attr_supported_features = (
         MediaPlayerEntityFeature.PAUSE
         | MediaPlayerEntityFeature.TURN_ON
@@ -223,11 +224,9 @@ class PandoraMediaPlayer(MediaPlayerEntity):
             _LOGGER.warning("On unexpected station list page")
             self._pianobar.sendcontrol("m")  # press enter
             self._pianobar.sendcontrol("m")  # do it again b/c an 'i' got in
-            # pylint: disable=assignment-from-none
             response = self.update_playing_status()
         elif match_idx == 3:
             _LOGGER.debug("Received new playlist list")
-            # pylint: disable=assignment-from-none
             response = self.update_playing_status()
         else:
             response = self._pianobar.before.decode("utf-8")
@@ -255,8 +254,7 @@ class PandoraMediaPlayer(MediaPlayerEntity):
 
     @util.Throttle(MIN_TIME_BETWEEN_UPDATES)
     def _update_song_position(self):
-        """
-        Get the song position and duration.
+        """Get the song position and duration.
 
         It's hard to predict whether or not the music will start during init
         so we have to detect state by checking the ticker.
@@ -312,8 +310,7 @@ class PandoraMediaPlayer(MediaPlayerEntity):
         self._pianobar.sendcontrol("m")  # do it twice in case an 'i' got in
 
     def _clear_buffer(self):
-        """
-        Clear buffer from pexpect.
+        """Clear buffer from pexpect.
 
         This is necessary because there are a bunch of 00:00 in the buffer
 

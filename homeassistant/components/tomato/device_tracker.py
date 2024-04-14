@@ -1,4 +1,5 @@
 """Support for Tomato routers."""
+
 from __future__ import annotations
 
 from http import HTTPStatus
@@ -49,7 +50,7 @@ def get_scanner(hass: HomeAssistant, config: ConfigType) -> TomatoDeviceScanner:
 
 
 class TomatoDeviceScanner(DeviceScanner):
-    """This class queries a wireless router running Tomato firmware."""
+    """Class which queries a wireless router running Tomato firmware."""
 
     def __init__(self, config):
         """Initialize the scanner."""
@@ -100,17 +101,15 @@ class TomatoDeviceScanner(DeviceScanner):
         try:
             if self.ssl:
                 response = requests.Session().send(
-                    self.req, timeout=3, verify=self.verify_ssl
+                    self.req, timeout=60, verify=self.verify_ssl
                 )
             else:
-                response = requests.Session().send(self.req, timeout=3)
+                response = requests.Session().send(self.req, timeout=60)
 
             # Calling and parsing the Tomato api here. We only need the
             # wldev and dhcpd_lease values.
             if response.status_code == HTTPStatus.OK:
-
                 for param, value in self.parse_api_pattern.findall(response.text):
-
                     if param in ("wldev", "dhcpd_lease"):
                         self.last_results[param] = json.loads(value.replace("'", '"'))
                 return True

@@ -1,4 +1,5 @@
 """Support for an Intergas boiler via an InComfort/Intouch Lan2RF gateway."""
+
 from __future__ import annotations
 
 import logging
@@ -53,7 +54,7 @@ async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
     )
 
     try:
-        heaters = incomfort_data["heaters"] = list(await client.heaters)
+        heaters = incomfort_data["heaters"] = list(await client.heaters())
     except ClientResponseError as err:
         _LOGGER.warning("Setup failed, check your configuration, message is: %s", err)
         return False

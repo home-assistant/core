@@ -9,6 +9,7 @@ from homeassistant.components.homeassistant import (
 )
 from homeassistant.components.light import ATTR_BRIGHTNESS, DOMAIN as LIGHT_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON, STATE_OFF, STATE_ON
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from . import entity_test_helpers
@@ -35,9 +36,9 @@ test_async_update_locked_callback_and_update = (
 
 
 async def test_available_after_update(
-    hass, pywemo_registry, pywemo_device, wemo_entity
-):
-    """Test the avaliability when an On call fails and after an update."""
+    hass: HomeAssistant, pywemo_registry, pywemo_device, wemo_entity
+) -> None:
+    """Test the availability when an On call fails and after an update."""
     pywemo_device.on.side_effect = ActionException
     pywemo_device.get_state.return_value = 1
     await entity_test_helpers.test_avaliable_after_update(
@@ -45,12 +46,14 @@ async def test_available_after_update(
     )
 
 
-async def test_turn_off_state(hass, wemo_entity):
+async def test_turn_off_state(hass: HomeAssistant, wemo_entity) -> None:
     """Test that the device state is updated after turning off."""
     await entity_test_helpers.test_turn_off_state(hass, wemo_entity, LIGHT_DOMAIN)
 
 
-async def test_turn_on_brightness(hass, pywemo_device, wemo_entity):
+async def test_turn_on_brightness(
+    hass: HomeAssistant, pywemo_device, wemo_entity
+) -> None:
     """Test setting the brightness value of the light."""
     brightness = 0
     state = 0
@@ -78,8 +81,8 @@ async def test_turn_on_brightness(hass, pywemo_device, wemo_entity):
 
 
 async def test_light_registry_state_callback(
-    hass, pywemo_registry, pywemo_device, wemo_entity
-):
+    hass: HomeAssistant, pywemo_registry, pywemo_device, wemo_entity
+) -> None:
     """Verify that the light receives state updates from the registry."""
     # On state.
     pywemo_device.get_state.return_value = 1
@@ -94,7 +97,9 @@ async def test_light_registry_state_callback(
     assert hass.states.get(wemo_entity.entity_id).state == STATE_OFF
 
 
-async def test_light_update_entity(hass, pywemo_registry, pywemo_device, wemo_entity):
+async def test_light_update_entity(
+    hass: HomeAssistant, pywemo_registry, pywemo_device, wemo_entity
+) -> None:
     """Verify that the light performs state updates."""
     await async_setup_component(hass, HA_DOMAIN, {})
 

@@ -1,4 +1,5 @@
 """Support for Vivotek IP Cameras."""
+
 from __future__ import annotations
 
 from libpyvivotek import VivotekCamera
@@ -68,7 +69,9 @@ def setup_platform(
             digest_auth=config[CONF_AUTHENTICATION] == HTTP_DIGEST_AUTHENTICATION,
             sec_lvl=config[CONF_SECURITY_LEVEL],
         ),
-        "stream_source": f"rtsp://{creds}@{config[CONF_IP_ADDRESS]}:554/{config[CONF_STREAM_PATH]}",
+        "stream_source": (
+            f"rtsp://{creds}@{config[CONF_IP_ADDRESS]}:554/{config[CONF_STREAM_PATH]}"
+        ),
     }
     add_entities([VivotekCam(**args)], True)
 

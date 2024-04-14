@@ -1,4 +1,5 @@
 """Support for Iperf3 network measurement tool."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -11,6 +12,7 @@ from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.const import (
     CONF_HOST,
@@ -52,12 +54,16 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=ATTR_DOWNLOAD,
         name=ATTR_DOWNLOAD.capitalize(),
+        icon="mdi:download",
+        state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.DATA_RATE,
         native_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
     ),
     SensorEntityDescription(
         key=ATTR_UPLOAD,
         name=ATTR_UPLOAD.capitalize(),
+        icon="mdi:upload",
+        state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.DATA_RATE,
         native_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
     ),

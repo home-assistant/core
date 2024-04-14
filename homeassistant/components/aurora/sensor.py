@@ -1,12 +1,15 @@
 """Support for Aurora Forecast sensor."""
-from homeassistant.components.sensor import SensorEntity
+
+from __future__ import annotations
+
+from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import AuroraEntity
 from .const import COORDINATOR, DOMAIN
+from .entity import AuroraEntity
 
 
 async def async_setup_entry(
@@ -17,8 +20,7 @@ async def async_setup_entry(
 
     entity = AuroraSensor(
         coordinator=coordinator,
-        name=f"{coordinator.name} Aurora Visibility %",
-        icon="mdi:gauge",
+        translation_key="visibility",
     )
 
     async_add_entries([entity])
@@ -28,8 +30,9 @@ class AuroraSensor(AuroraEntity, SensorEntity):
     """Implementation of an aurora sensor."""
 
     _attr_native_unit_of_measurement = PERCENTAGE
+    _attr_state_class = SensorStateClass.MEASUREMENT
 
     @property
-    def native_value(self):
+    def native_value(self) -> int:
         """Return % chance the aurora is visible."""
         return self.coordinator.data

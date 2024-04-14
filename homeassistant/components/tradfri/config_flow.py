@@ -1,20 +1,19 @@
 """Config flow for Tradfri."""
+
 from __future__ import annotations
 
 import asyncio
 from typing import Any
 from uuid import uuid4
 
-import async_timeout
 from pytradfri import Gateway, RequestError
 from pytradfri.api.aiocoap_api import APIFactory
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components import zeroconf
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import CONF_GATEWAY_ID, CONF_IDENTITY, CONF_KEY, DOMAIN
 
@@ -30,7 +29,7 @@ class AuthError(Exception):
         self.code = code
 
 
-class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class FlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 1
@@ -41,13 +40,13 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         return await self.async_step_auth()
 
     async def async_step_auth(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the authentication with a gateway."""
         errors: dict[str, str] = {}
 
@@ -83,7 +82,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_homekit(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle homekit discovery."""
         await self.async_set_unique_id(
             discovery_info.properties[zeroconf.ATTR_PROPERTIES_ID]
@@ -108,31 +107,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._host = host
         return await self.async_step_auth()
 
-    async def async_step_import(self, user_input: dict[str, Any]) -> FlowResult:
-        """Import a config entry."""
-        self._async_abort_entries_match({CONF_HOST: user_input["host"]})
-
-        # Happens if user has host directly in configuration.yaml
-        if "key" not in user_input:
-            self._host = user_input["host"]
-            return await self.async_step_auth()
-
-        try:
-            data = await get_gateway_info(
-                self.hass,
-                user_input["host"],
-                # Old config format had a fixed identity
-                user_input.get("identity", "homeassistant"),
-                user_input["key"],
-            )
-
-            return await self._entry_from_data(data)
-        except AuthError:
-            # If we fail to connect, just pass it on to discovery
-            self._host = user_input["host"]
-            return await self.async_step_auth()
-
-    async def _entry_from_data(self, data: dict[str, Any]) -> FlowResult:
+    async def _entry_from_data(self, data: dict[str, Any]) -> ConfigFlowResult:
         """Create an entry from data."""
         host = data[CONF_HOST]
         gateway_id = data[CONF_GATEWAY_ID]
@@ -147,7 +122,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if same_hub_entries:
             await asyncio.wait(
                 [
-                    self.hass.config_entries.async_remove(entry_id)
+                    asyncio.create_task(self.hass.config_entries.async_remove(entry_id))
                     for entry_id in same_hub_entries
                 ]
             )
@@ -165,11 +140,11 @@ async def authenticate(
     api_factory = await APIFactory.init(host, psk_id=identity)
 
     try:
-        async with async_timeout.timeout(5):
+        async with asyncio.timeout(5):
             key = await api_factory.generate_psk(security_code)
     except RequestError as err:
         raise AuthError("invalid_security_code") from err
-    except asyncio.TimeoutError as err:
+    except TimeoutError as err:
         raise AuthError("timeout") from err
     finally:
         await api_factory.shutdown()

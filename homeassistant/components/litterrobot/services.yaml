@@ -1,21 +1,15 @@
 # Describes the format for available Litter-Robot services
 
 set_sleep_mode:
-  name: Set sleep mode
-  description: Set the sleep mode and start time.
   target:
     entity:
       integration: litterrobot
   fields:
     enabled:
-      name: Enabled
-      description: Whether sleep mode should be enabled.
       required: true
       selector:
         boolean:
     start_time:
-      name: Start time
-      description: The start time at which the Litter-Robot will enter sleep mode and prevent an automatic clean cycle for 8 hours.
       required: false
       example: '"22:30:00"'
       selector:

@@ -1,4 +1,5 @@
 """Sensor platform integration for ADC ports of Numato USB GPIO expanders."""
+
 from __future__ import annotations
 
 import logging
@@ -22,8 +23,6 @@ from . import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-ICON = "mdi:gauge"
 
 
 def setup_platform(
@@ -71,6 +70,8 @@ def setup_platform(
 class NumatoGpioAdc(SensorEntity):
     """Represents an ADC port of a Numato USB GPIO expander."""
 
+    _attr_icon = "mdi:gauge"
+
     def __init__(self, name, device_id, port, src_range, dst_range, dst_unit, api):
         """Initialize the sensor."""
         self._name = name
@@ -97,11 +98,6 @@ class NumatoGpioAdc(SensorEntity):
         """Return the unit the value is expressed in."""
         return self._unit_of_measurement
 
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend, if any."""
-        return ICON
-
     def update(self) -> None:
         """Get the latest data and updates the state."""
         try:
@@ -120,8 +116,7 @@ class NumatoGpioAdc(SensorEntity):
     def _clamp_to_source_range(self, val):
         # clamp to source range
         val = max(val, self._src_range[0])
-        val = min(val, self._src_range[1])
-        return val
+        return min(val, self._src_range[1])
 
     def _linear_scale_to_dest_range(self, val):
         # linear scale to dest range
@@ -129,5 +124,4 @@ class NumatoGpioAdc(SensorEntity):
         adc_val_rel = val - self._src_range[0]
         ratio = float(adc_val_rel) / float(src_len)
         dst_len = self._dst_range[1] - self._dst_range[0]
-        dest_val = self._dst_range[0] + ratio * dst_len
-        return dest_val
+        return self._dst_range[0] + ratio * dst_len

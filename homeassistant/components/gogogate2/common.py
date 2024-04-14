@@ -1,4 +1,5 @@
 """Common code for GogoGate2 component."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Mapping
@@ -6,7 +7,13 @@ from datetime import timedelta
 import logging
 from typing import Any, NamedTuple
 
-from ismartgate import AbstractGateApi, GogoGate2Api, ISmartGateApi
+from ismartgate import (
+    AbstractGateApi,
+    GogoGate2Api,
+    GogoGate2InfoResponse,
+    ISmartGateApi,
+    ISmartGateInfoResponse,
+)
 from ismartgate.common import AbstractDoor, get_door_by_id
 
 from homeassistant.config_entries import ConfigEntry
@@ -18,7 +25,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.debounce import Debouncer
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -39,7 +46,9 @@ class StateData(NamedTuple):
     door: AbstractDoor | None
 
 
-class DeviceDataUpdateCoordinator(DataUpdateCoordinator):
+class DeviceDataUpdateCoordinator(
+    DataUpdateCoordinator[GogoGate2InfoResponse | ISmartGateInfoResponse]
+):  # pylint: disable=hass-enforce-coordinator-module
     """Manages polling for state changes from the device."""
 
     def __init__(
@@ -50,7 +59,10 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator):
         *,
         name: str,
         update_interval: timedelta,
-        update_method: Callable[[], Awaitable] | None = None,
+        update_method: Callable[
+            [], Awaitable[GogoGate2InfoResponse | ISmartGateInfoResponse]
+        ]
+        | None = None,
         request_refresh_debouncer: Debouncer | None = None,
     ) -> None:
         """Initialize the data update coordinator."""
@@ -102,9 +114,10 @@ class GoGoGate2Entity(CoordinatorEntity[DeviceDataUpdateCoordinator]):
     def device_info(self) -> DeviceInfo:
         """Device info for the controller."""
         data = self.coordinator.data
-        configuration_url = (
-            f"https://{data.remoteaccess}" if data.remoteaccess else None
-        )
+        if data.remoteaccessenabled:
+            configuration_url = f"https://{data.remoteaccess}"
+        else:
+            configuration_url = f"http://{self._config_entry.data[CONF_IP_ADDRESS]}"
         return DeviceInfo(
             configuration_url=configuration_url,
             identifiers={(DOMAIN, str(self._config_entry.unique_id))},
@@ -131,7 +144,7 @@ def get_data_update_coordinator(
     if DATA_UPDATE_COORDINATOR not in config_entry_data:
         api = get_api(hass, config_entry.data)
 
-        async def async_update_data():
+        async def async_update_data() -> GogoGate2InfoResponse | ISmartGateInfoResponse:
             try:
                 return await api.async_info()
             except Exception as exception:

@@ -1,7 +1,10 @@
 """Support for Fibaro cover - curtains, rollershutters etc."""
+
 from __future__ import annotations
 
 from typing import Any
+
+from pyfibaro.fibaro_device import DeviceModel
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -15,7 +18,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import FIBARO_DEVICES, FibaroDevice
+from . import FibaroController, FibaroDevice
 from .const import DOMAIN
 
 
@@ -25,13 +28,9 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Fibaro covers."""
+    controller: FibaroController = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
-        [
-            FibaroCover(device)
-            for device in hass.data[DOMAIN][entry.entry_id][FIBARO_DEVICES][
-                Platform.COVER
-            ]
-        ],
+        [FibaroCover(device) for device in controller.fibaro_devices[Platform.COVER]],
         True,
     )
 
@@ -39,7 +38,7 @@ async def async_setup_entry(
 class FibaroCover(FibaroDevice, CoverEntity):
     """Representation a Fibaro Cover."""
 
-    def __init__(self, fibaro_device):
+    def __init__(self, fibaro_device: DeviceModel) -> None:
         """Initialize the Vera device."""
         super().__init__(fibaro_device)
         self.entity_id = ENTITY_ID_FORMAT.format(self.ha_id)
@@ -67,9 +66,7 @@ class FibaroCover(FibaroDevice, CoverEntity):
         """Return if only open / close is supported."""
         # Normally positionable devices report the position over value,
         # so if it is missing we have a device which supports open / close only
-        if "value" not in self.fibaro_device.properties:
-            return True
-        return False
+        return not self.fibaro_device.value.has_value
 
     @property
     def current_cover_position(self) -> int | None:
@@ -93,12 +90,10 @@ class FibaroCover(FibaroDevice, CoverEntity):
     def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
         if self._is_open_close_only():
-            if (
-                "state" not in self.fibaro_device.properties
-                or self.fibaro_device.properties.state.lower() == "unknown"
-            ):
+            state = self.fibaro_device.state
+            if not state.has_value or state.str_value().lower() == "unknown":
                 return None
-            return self.fibaro_device.properties.state.lower() == "closed"
+            return state.str_value().lower() == "closed"
 
         if self.current_cover_position is None:
             return None

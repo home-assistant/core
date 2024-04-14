@@ -11,16 +11,16 @@
     "step": {
       "user": {
         "data": {
-          "username": "[%key:common::config_flow::data::email%] / devolo ID",
+          "username": "Email / devolo ID",
           "password": "[%key:common::config_flow::data::password%]",
-          "mydevolo_url": "mydevolo [%key:common::config_flow::data::url%]"
+          "mydevolo_url": "mydevolo URL"
         }
       },
       "zeroconf_confirm": {
         "data": {
-          "username": "[%key:common::config_flow::data::email%] / devolo ID",
+          "username": "[%key:component::devolo_home_control::config::step::user::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
-          "mydevolo_url": "mydevolo [%key:common::config_flow::data::url%]"
+          "mydevolo_url": "[%key:component::devolo_home_control::config::step::user::data::mydevolo_url%]"
         }
       }
     }

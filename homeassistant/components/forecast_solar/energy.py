@@ -1,4 +1,5 @@
 """Energy platform."""
+
 from __future__ import annotations
 
 from homeassistant.core import HomeAssistant
@@ -16,6 +17,6 @@ async def async_get_solar_forecast(
     return {
         "wh_hours": {
             timestamp.isoformat(): val
-            for timestamp, val in coordinator.data.wh_hours.items()
+            for timestamp, val in coordinator.data.wh_period.items()
         }
     }

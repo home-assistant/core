@@ -1,7 +1,7 @@
 """Switcher integration Button platform."""
+
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass
 
@@ -16,11 +16,12 @@ from aioswitcher.device import DeviceCategory
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -29,26 +30,18 @@ from .const import SIGNAL_DEVICE_ADD
 from .utils import get_breeze_remote_manager
 
 
-@dataclass
-class SwitcherThermostatButtonDescriptionMixin:
-    """Mixin to describe a Switcher Thermostat Button entity."""
+@dataclass(frozen=True, kw_only=True)
+class SwitcherThermostatButtonEntityDescription(ButtonEntityDescription):
+    """Class to describe a Switcher Thermostat Button entity."""
 
     press_fn: Callable[[SwitcherType2Api, SwitcherBreezeRemote], SwitcherBaseResponse]
     supported: Callable[[SwitcherBreezeRemote], bool]
 
 
-@dataclass
-class SwitcherThermostatButtonEntityDescription(
-    ButtonEntityDescription, SwitcherThermostatButtonDescriptionMixin
-):
-    """Class to describe a Switcher Thermostat Button entity."""
-
-
 THERMOSTAT_BUTTONS = [
     SwitcherThermostatButtonEntityDescription(
         key="assume_on",
-        name="Assume on",
-        icon="mdi:fan",
+        translation_key="assume_on",
         entity_category=EntityCategory.CONFIG,
         press_fn=lambda api, remote: api.control_breeze_device(
             remote, state=DeviceState.ON, update_state=True
@@ -57,8 +50,7 @@ THERMOSTAT_BUTTONS = [
     ),
     SwitcherThermostatButtonEntityDescription(
         key="assume_off",
-        name="Assume off",
-        icon="mdi:fan-off",
+        translation_key="assume_off",
         entity_category=EntityCategory.CONFIG,
         press_fn=lambda api, remote: api.control_breeze_device(
             remote, state=DeviceState.OFF, update_state=True
@@ -67,8 +59,7 @@ THERMOSTAT_BUTTONS = [
     ),
     SwitcherThermostatButtonEntityDescription(
         key="vertical_swing_on",
-        name="Vertical swing on",
-        icon="mdi:autorenew",
+        translation_key="vertical_swing_on",
         press_fn=lambda api, remote: api.control_breeze_device(
             remote, swing=ThermostatSwing.ON
         ),
@@ -76,8 +67,7 @@ THERMOSTAT_BUTTONS = [
     ),
     SwitcherThermostatButtonEntityDescription(
         key="vertical_swing_off",
-        name="Vertical swing off",
-        icon="mdi:autorenew-off",
+        translation_key="vertical_swing_off",
         press_fn=lambda api, remote: api.control_breeze_device(
             remote, swing=ThermostatSwing.OFF
         ),
@@ -116,6 +106,7 @@ class SwitcherThermostatButtonEntity(
     """Representation of a Switcher climate entity."""
 
     entity_description: SwitcherThermostatButtonEntityDescription
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -128,12 +119,9 @@ class SwitcherThermostatButtonEntity(
         self.entity_description = description
         self._remote = remote
 
-        self._attr_name = f"{coordinator.name} {description.name}"
         self._attr_unique_id = f"{coordinator.mac_address}-{description.key}"
         self._attr_device_info = DeviceInfo(
-            connections={
-                (device_registry.CONNECTION_NETWORK_MAC, coordinator.mac_address)
-            }
+            connections={(dr.CONNECTION_NETWORK_MAC, coordinator.mac_address)}
         )
 
     async def async_press(self) -> None:
@@ -143,16 +131,17 @@ class SwitcherThermostatButtonEntity(
 
         try:
             async with SwitcherType2Api(
-                self.coordinator.data.ip_address, self.coordinator.data.device_id
+                self.coordinator.data.ip_address,
+                self.coordinator.data.device_id,
+                self.coordinator.data.device_key,
             ) as swapi:
                 response = await self.entity_description.press_fn(swapi, self._remote)
-        except (asyncio.TimeoutError, OSError, RuntimeError) as err:
+        except (TimeoutError, OSError, RuntimeError) as err:
             error = repr(err)
 
         if error or not response or not response.successful:
             self.coordinator.last_update_success = False
             self.async_write_ha_state()
             raise HomeAssistantError(
-                f"Call api for {self.name} failed, "
-                f"response/error: {response or error}"
+                f"Call api for {self.name} failed, response/error: {response or error}"
             )

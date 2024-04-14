@@ -1,4 +1,5 @@
 """Common code for TCP component."""
+
 from __future__ import annotations
 
 import logging
@@ -131,8 +132,10 @@ class TcpEntity(Entity):
             readable, _, _ = select.select([sock], [], [], self._config[CONF_TIMEOUT])
             if not readable:
                 _LOGGER.warning(
-                    "Timeout (%s second(s)) waiting for a response after "
-                    "sending %r to %s on port %s",
+                    (
+                        "Timeout (%s second(s)) waiting for a response after "
+                        "sending %r to %s on port %s"
+                    ),
                     self._config[CONF_TIMEOUT],
                     self._config[CONF_PAYLOAD],
                     self._config[CONF_HOST],
@@ -146,7 +149,6 @@ class TcpEntity(Entity):
         if value_template is not None:
             try:
                 self._state = value_template.render(parse_result=False, value=value)
-                return
             except TemplateError:
                 _LOGGER.error(
                     "Unable to render template of %r with value: %r",
@@ -154,5 +156,6 @@ class TcpEntity(Entity):
                     value,
                 )
                 return
+            return
 
         self._state = value

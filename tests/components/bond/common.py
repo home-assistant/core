@@ -1,7 +1,7 @@
 """Common methods used across tests for Bond."""
+
 from __future__ import annotations
 
-from asyncio import TimeoutError as AsyncIOTimeoutError
 from contextlib import nullcontext
 from datetime import timedelta
 from typing import Any
@@ -63,18 +63,16 @@ async def setup_bond_entity(
     """Set up Bond entity."""
     config_entry.add_to_hass(hass)
 
-    with patch_start_bpup(), patch_bond_bridge(enabled=patch_bridge), patch_bond_token(
-        enabled=patch_token
-    ), patch_bond_version(enabled=patch_version), patch_bond_device_ids(
-        enabled=patch_device_ids
-    ), patch_setup_entry(
-        "cover", enabled=patch_platforms
-    ), patch_setup_entry(
-        "fan", enabled=patch_platforms
-    ), patch_setup_entry(
-        "light", enabled=patch_platforms
-    ), patch_setup_entry(
-        "switch", enabled=patch_platforms
+    with (
+        patch_start_bpup(),
+        patch_bond_bridge(enabled=patch_bridge),
+        patch_bond_token(enabled=patch_token),
+        patch_bond_version(enabled=patch_version),
+        patch_bond_device_ids(enabled=patch_device_ids),
+        patch_setup_entry("cover", enabled=patch_platforms),
+        patch_setup_entry("fan", enabled=patch_platforms),
+        patch_setup_entry("light", enabled=patch_platforms),
+        patch_setup_entry("switch", enabled=patch_platforms),
     ):
         return await hass.config_entries.async_setup(config_entry.entry_id)
 
@@ -85,11 +83,11 @@ async def setup_platform(
     discovered_device: dict[str, Any],
     *,
     bond_device_id: str = "bond-device-id",
-    bond_version: dict[str, Any] = None,
-    props: dict[str, Any] = None,
-    state: dict[str, Any] = None,
-    bridge: dict[str, Any] = None,
-    token: dict[str, Any] = None,
+    bond_version: dict[str, Any] | None = None,
+    props: dict[str, Any] | None = None,
+    state: dict[str, Any] | None = None,
+    bridge: dict[str, Any] | None = None,
+    token: dict[str, Any] | None = None,
 ):
     """Set up the specified Bond platform."""
     mock_entry = MockConfigEntry(
@@ -98,20 +96,16 @@ async def setup_platform(
     )
     mock_entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.bond.PLATFORMS", [platform]
-    ), patch_bond_version(return_value=bond_version), patch_bond_bridge(
-        return_value=bridge
-    ), patch_bond_token(
-        return_value=token
-    ), patch_bond_device_ids(
-        return_value=[bond_device_id]
-    ), patch_start_bpup(), patch_bond_device(
-        return_value=discovered_device
-    ), patch_bond_device_properties(
-        return_value=props
-    ), patch_bond_device_state(
-        return_value=state
+    with (
+        patch("homeassistant.components.bond.PLATFORMS", [platform]),
+        patch_bond_version(return_value=bond_version),
+        patch_bond_bridge(return_value=bridge),
+        patch_bond_token(return_value=token),
+        patch_bond_device_ids(return_value=[bond_device_id]),
+        patch_start_bpup(),
+        patch_bond_device(return_value=discovered_device),
+        patch_bond_device_properties(return_value=props),
+        patch_bond_device_state(return_value=state),
     ):
         assert await async_setup_component(hass, BOND_DOMAIN, {})
         await hass.async_block_till_done()
@@ -127,7 +121,12 @@ def patch_bond_version(
         return nullcontext()
 
     if return_value is None:
-        return_value = {"bondid": "ZXXX12345"}
+        return_value = {
+            "bondid": "ZXXX12345",
+            "target": "test-model",
+            "fw_ver": "test-version",
+            "mcu_ver": "test-hw-version",
+        }
 
     return patch(
         "homeassistant.components.bond.Bond.version",
@@ -215,7 +214,7 @@ def patch_bond_action_returns_clientresponseerror():
     return patch(
         "homeassistant.components.bond.Bond.action",
         side_effect=ClientResponseError(
-            request_info=None, history=None, code=405, message="Method Not Allowed"
+            request_info=None, history=None, status=405, message="Method Not Allowed"
         ),
     )
 
@@ -251,7 +250,7 @@ async def help_test_entity_available(
 
     assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
 
-    with patch_bond_device_state(side_effect=AsyncIOTimeoutError()):
+    with patch_bond_device_state(side_effect=TimeoutError()):
         async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
         await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE

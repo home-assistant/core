@@ -1,4 +1,5 @@
 """Support for FRITZ!Box devices."""
+
 from __future__ import annotations
 
 import datetime
@@ -20,9 +21,6 @@ from .common import (
 from .const import DATA_FRITZ, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-
-YAML_DEFAULT_HOST = "169.254.1.1"
-YAML_DEFAULT_USERNAME = "admin"
 
 
 async def async_setup_entry(
@@ -68,7 +66,7 @@ def _async_add_entities(
 
 
 class FritzBoxTracker(FritzDeviceBase, ScannerEntity):
-    """This class queries a FRITZ!Box device."""
+    """Class which queries a FRITZ!Box device."""
 
     def __init__(self, avm_wrapper: AvmWrapper, device: FritzDevice) -> None:
         """Initialize a FRITZ!Box device."""

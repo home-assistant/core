@@ -3,9 +3,12 @@
 import pytest
 import smarttub
 
+from homeassistant.const import STATE_UNKNOWN
+from homeassistant.core import HomeAssistant
+
 
 @pytest.mark.parametrize(
-    "entity_suffix,expected_state",
+    ("entity_suffix", "expected_state"),
     [
         ("state", "normal"),
         ("flow_switch", "open"),
@@ -15,7 +18,9 @@ import smarttub
         ("cleanup_cycle", "inactive"),
     ],
 )
-async def test_sensor(spa, setup_entry, hass, entity_suffix, expected_state):
+async def test_sensor(
+    spa, setup_entry, hass: HomeAssistant, entity_suffix, expected_state
+) -> None:
     """Test simple sensors."""
 
     entity_id = f"sensor.{spa.brand}_{spa.model}_{entity_suffix}"
@@ -24,7 +29,30 @@ async def test_sensor(spa, setup_entry, hass, entity_suffix, expected_state):
     assert state.state == expected_state
 
 
-async def test_primary_filtration(spa, spa_state, setup_entry, hass):
+# https://github.com/home-assistant/core/issues/102339
+async def test_null_blowoutcycle(
+    spa,
+    spa_state,
+    config_entry,
+    hass: HomeAssistant,
+) -> None:
+    """Test blowoutCycle having null value."""
+
+    spa_state.blowout_cycle = None
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_id = f"sensor.{spa.brand}_{spa.model}_blowout_cycle"
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+
+async def test_primary_filtration(
+    spa, spa_state, setup_entry, hass: HomeAssistant
+) -> None:
     """Test the primary filtration cycle sensor."""
 
     entity_id = f"sensor.{spa.brand}_{spa.model}_primary_filtration_cycle"
@@ -45,7 +73,9 @@ async def test_primary_filtration(spa, spa_state, setup_entry, hass):
     spa_state.primary_filtration.set.assert_called_with(duration=8, start_hour=1)
 
 
-async def test_secondary_filtration(spa, spa_state, setup_entry, hass):
+async def test_secondary_filtration(
+    spa, spa_state, setup_entry, hass: HomeAssistant
+) -> None:
     """Test the secondary filtration cycle sensor."""
 
     entity_id = f"sensor.{spa.brand}_{spa.model}_secondary_filtration_cycle"

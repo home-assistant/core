@@ -1,4 +1,5 @@
 """Tests for the AVM Fritz!Box integration."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -22,9 +23,9 @@ async def setup_config_entry(
     hass: HomeAssistant,
     data: dict[str, Any],
     unique_id: str = "any",
-    device: Mock = None,
-    fritz: Mock = None,
-    template: Mock = None,
+    device: Mock | None = None,
+    fritz: Mock | None = None,
+    template: Mock | None = None,
 ) -> bool:
     """Do setup of a MockConfigEntry."""
     entry = MockConfigEntry(
@@ -45,6 +46,17 @@ async def setup_config_entry(
     return result
 
 
+def set_devices(
+    fritz: Mock, devices: list[Mock] | None = None, templates: list[Mock] | None = None
+) -> None:
+    """Set list of devices or templates."""
+    if devices is not None:
+        fritz().get_devices.return_value = devices
+
+    if templates is not None:
+        fritz().get_templates.return_value = templates
+
+
 class FritzEntityBaseMock(Mock):
     """base mock of a AVM Fritz!Box binary sensor device."""
 
@@ -52,6 +64,8 @@ class FritzEntityBaseMock(Mock):
     manufacturer = CONF_FAKE_MANUFACTURER
     name = CONF_FAKE_NAME
     productname = CONF_FAKE_PRODUCTNAME
+    rel_humidity = None
+    battery_level = None
 
 
 class FritzDeviceBinarySensorMock(FritzEntityBaseMock):
@@ -127,6 +141,7 @@ class FritzDeviceSwitchMock(FritzEntityBaseMock):
     device_lock = "fake_locked_device"
     energy = 1234
     voltage = 230000
+    current = 25
     fw_version = "1.2.3"
     has_alarm = False
     has_powermeter = True
@@ -149,6 +164,8 @@ class FritzDeviceLightMock(FritzEntityBaseMock):
     has_alarm = False
     has_powermeter = False
     has_lightbulb = True
+    has_color = True
+    has_level = True
     has_switch = False
     has_temperature_sensor = False
     has_thermostat = False

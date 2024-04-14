@@ -1,4 +1,5 @@
 """Constants for GIOS integration."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -15,9 +16,6 @@ MANUFACTURER: Final = "Główny Inspektorat Ochrony Środowiska"
 URL = "http://powietrze.gios.gov.pl/pjp/current/station_details/info/{station_id}"
 
 API_TIMEOUT: Final = 30
-
-ATTR_INDEX: Final = "index"
-ATTR_STATION: Final = "station"
 
 ATTR_C6H6: Final = "c6h6"
 ATTR_CO: Final = "co"

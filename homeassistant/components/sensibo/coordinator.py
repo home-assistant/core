@@ -1,4 +1,5 @@
 """DataUpdateCoordinator for the Sensibo integration."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -20,10 +21,8 @@ from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, LOGGER, TIMEOUT
 REQUEST_REFRESH_DELAY = 0.35
 
 
-class SensiboDataUpdateCoordinator(DataUpdateCoordinator):
+class SensiboDataUpdateCoordinator(DataUpdateCoordinator[SensiboData]):
     """A Sensibo Data Update Coordinator."""
-
-    data: SensiboData
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize the Sensibo coordinator."""

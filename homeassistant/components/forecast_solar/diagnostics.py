@@ -1,4 +1,5 @@
 """Diagnostics support for Forecast.Solar integration."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -34,6 +35,7 @@ async def async_get_config_entry_diagnostics(
         },
         "data": {
             "energy_production_today": coordinator.data.energy_production_today,
+            "energy_production_today_remaining": coordinator.data.energy_production_today_remaining,
             "energy_production_tomorrow": coordinator.data.energy_production_tomorrow,
             "energy_current_hour": coordinator.data.energy_current_hour,
             "power_production_now": coordinator.data.power_production_now,
@@ -45,9 +47,9 @@ async def async_get_config_entry_diagnostics(
                 wh_datetime.isoformat(): wh_value
                 for wh_datetime, wh_value in coordinator.data.wh_days.items()
             },
-            "wh_hours": {
+            "wh_period": {
                 wh_datetime.isoformat(): wh_value
-                for wh_datetime, wh_value in coordinator.data.wh_hours.items()
+                for wh_datetime, wh_value in coordinator.data.wh_period.items()
             },
         },
         "account": {

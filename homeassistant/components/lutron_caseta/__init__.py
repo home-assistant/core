@@ -1,4 +1,5 @@
 """Component for interacting with a Lutron Caseta system."""
+
 from __future__ import annotations
 
 import asyncio
@@ -8,7 +9,6 @@ import logging
 import ssl
 from typing import Any, cast
 
-import async_timeout
 from pylutron_caseta import BUTTON_STATUS_PRESSED
 from pylutron_caseta.smartbridge import Smartbridge
 import voluptuous as vol
@@ -19,7 +19,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -91,12 +92,12 @@ CONFIG_SCHEMA = vol.Schema(
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
+    Platform.BUTTON,
     Platform.COVER,
     Platform.FAN,
     Platform.LIGHT,
     Platform.SCENE,
     Platform.SWITCH,
-    Platform.BUTTON,
 ]
 
 
@@ -142,7 +143,7 @@ async def _async_migrate_unique_ids(
             return None
         sensor_id = unique_id.split("_")[1]
         new_unique_id = f"occupancygroup_{bridge_unique_id}_{sensor_id}"
-        if dev_entry := dev_reg.async_get_device({(DOMAIN, unique_id)}):
+        if dev_entry := dev_reg.async_get_device(identifiers={(DOMAIN, unique_id)}):
             dev_reg.async_update_device(
                 dev_entry.id, new_identifiers={(DOMAIN, new_unique_id)}
             )
@@ -171,8 +172,8 @@ async def async_setup_entry(
         return False
 
     timed_out = True
-    with contextlib.suppress(asyncio.TimeoutError):
-        async with async_timeout.timeout(BRIDGE_TIMEOUT):
+    with contextlib.suppress(TimeoutError):
+        async with asyncio.timeout(BRIDGE_TIMEOUT):
             await bridge.connect()
             timed_out = False
 
@@ -219,14 +220,14 @@ def _async_register_bridge_device(
     """Register the bridge device in the device registry."""
     device_registry = dr.async_get(hass)
 
-    device_args: DeviceInfo = {
-        "name": bridge_device["name"],
-        "manufacturer": MANUFACTURER,
-        "identifiers": {(DOMAIN, bridge_device["serial"])},
-        "model": f"{bridge_device['model']} ({bridge_device['type']})",
-        "via_device": (DOMAIN, bridge_device["serial"]),
-        "configuration_url": "https://device-login.lutron.com",
-    }
+    device_args = DeviceInfo(
+        name=bridge_device["name"],
+        manufacturer=MANUFACTURER,
+        identifiers={(DOMAIN, bridge_device["serial"])},
+        model=f"{bridge_device['model']} ({bridge_device['type']})",
+        via_device=(DOMAIN, bridge_device["serial"]),
+        configuration_url="https://device-login.lutron.com",
+    )
 
     area = _area_name_from_id(bridge.areas, bridge_device["area"])
     if area != UNASSIGNED_AREA:
@@ -256,7 +257,6 @@ def _async_setup_keypads(
     leap_to_keypad_button_names: dict[int, dict[int, str]] = {}
 
     for bridge_button in bridge_buttons.values():
-
         parent_device = cast(str, bridge_button["parent_device"])
         bridge_keypad = bridge_devices[parent_device]
         keypad_lutron_device_id = cast(int, bridge_keypad["device_id"])
@@ -323,7 +323,7 @@ def _async_setup_keypads(
 
 @callback
 def _async_build_trigger_schemas(
-    keypad_button_names_to_leap: dict[int, dict[str, int]]
+    keypad_button_names_to_leap: dict[int, dict[str, int]],
 ) -> dict[int, vol.Schema]:
     """Build device trigger schemas."""
 
@@ -499,7 +499,7 @@ def _async_subscribe_keypad_events(
 async def async_unload_entry(
     hass: HomeAssistant, entry: config_entries.ConfigEntry
 ) -> bool:
-    """Unload the bridge bridge from a config entry."""
+    """Unload the bridge from a config entry."""
     data: LutronCasetaData = hass.data[DOMAIN][entry.entry_id]
     await data.bridge.close()
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
@@ -538,7 +538,12 @@ class LutronCasetaDevice(Entity):
             # here. Since it would be a breaking change to change the identifier
             # we are ignoring the type error here until it can be migrated to
             # a string in a future release.
-            identifiers={(DOMAIN, self._handle_none_serial(self.serial))},  # type: ignore[arg-type]
+            identifiers={
+                (
+                    DOMAIN,
+                    self._handle_none_serial(self.serial),  # type: ignore[arg-type]
+                )
+            },
             manufacturer=MANUFACTURER,
             model=f"{device['model']} ({device['type']})",
             name=full_name,

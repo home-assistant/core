@@ -1,7 +1,9 @@
 """Support for Xiaomi Gateways."""
+
 import asyncio
 from datetime import timedelta
 import logging
+from typing import Any
 
 import voluptuous as vol
 from xiaomi_gateway import AsyncXiaomiGatewayMulticast, XiaomiGateway
@@ -22,8 +24,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.device_registry import format_mac
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.device_registry import DeviceInfo, format_mac
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.dt import utcnow
@@ -78,6 +80,8 @@ SERVICE_SCHEMA_REMOVE_DEVICE = vol.Schema(
     {vol.Required(ATTR_DEVICE_ID): vol.All(cv.string, vol.Length(min=14, max=14))}
 )
 
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
 
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Xiaomi component."""
@@ -105,8 +109,10 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         gateway.write_to_hub(gateway.sid, join_permission="yes")
         persistent_notification.async_create(
             hass,
-            "Join permission enabled for 30 seconds! "
-            "Please press the pairing button of the new device once.",
+            (
+                "Join permission enabled for 30 seconds! "
+                "Please press the pairing button of the new device once."
+            ),
             title="Xiaomi Aqara Gateway",
         )
 
@@ -262,10 +268,8 @@ class XiaomiDevice(Entity):
         self.parse_data(device["data"], device["raw_data"])
         self.parse_voltage(device["data"])
 
-        if hasattr(self, "_data_key") and self._data_key:  # pylint: disable=no-member
-            self._unique_id = (
-                f"{self._data_key}{self._sid}"  # pylint: disable=no-member
-            )
+        if hasattr(self, "_data_key") and self._data_key:
+            self._unique_id = f"{self._data_key}{self._sid}"
         else:
             self._unique_id = f"{self._type}{self._sid}"
 
@@ -349,9 +353,13 @@ class XiaomiDevice(Entity):
             return True
         return False
 
+    def push_data(self, data: dict[str, Any], raw_data: dict[Any, Any]) -> None:
+        """Push from Hub running in another thread."""
+        self.hass.loop.call_soon_threadsafe(self.async_push_data, data, raw_data)
+
     @callback
-    def push_data(self, data, raw_data):
-        """Push from Hub."""
+    def async_push_data(self, data: dict[str, Any], raw_data: dict[Any, Any]) -> None:
+        """Push from Hub handled in the event loop."""
         _LOGGER.debug("PUSH >> %s: %s", self, data)
         was_unavailable = self._async_track_unavailable()
         is_data = self.parse_data(data, raw_data)
@@ -380,7 +388,7 @@ class XiaomiDevice(Entity):
 
     def parse_data(self, data, raw_data):
         """Parse data sent by gateway."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
 
 def _add_gateway_to_schema(hass, schema):

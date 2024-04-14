@@ -1,9 +1,10 @@
 """Support for Tuya Vacuums."""
+
 from __future__ import annotations
 
 from typing import Any
 
-from tuya_iot import TuyaDevice, TuyaDeviceManager
+from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.vacuum import (
     STATE_CLEANING,
@@ -61,12 +62,12 @@ async def async_setup_entry(
         """Discover and add a discovered Tuya vacuum."""
         entities: list[TuyaVacuumEntity] = []
         for device_id in device_ids:
-            device = hass_data.device_manager.device_map[device_id]
+            device = hass_data.manager.device_map[device_id]
             if device.category == "sd":
-                entities.append(TuyaVacuumEntity(device, hass_data.device_manager))
+                entities.append(TuyaVacuumEntity(device, hass_data.manager))
         async_add_entities(entities)
 
-    async_discover_device([*hass_data.device_manager.device_map])
+    async_discover_device([*hass_data.manager.device_map])
 
     entry.async_on_unload(
         async_dispatcher_connect(hass, TUYA_DISCOVERY_NEW, async_discover_device)
@@ -78,38 +79,33 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
 
     _fan_speed: EnumTypeData | None = None
     _battery_level: IntegerTypeData | None = None
+    _attr_name = None
 
-    def __init__(self, device: TuyaDevice, device_manager: TuyaDeviceManager) -> None:
+    def __init__(self, device: CustomerDevice, device_manager: Manager) -> None:
         """Init Tuya vacuum."""
         super().__init__(device, device_manager)
 
         self._attr_fan_speed_list = []
 
-        self._attr_supported_features |= VacuumEntityFeature.SEND_COMMAND
+        self._attr_supported_features = (
+            VacuumEntityFeature.SEND_COMMAND | VacuumEntityFeature.STATE
+        )
         if self.find_dpcode(DPCode.PAUSE, prefer_function=True):
             self._attr_supported_features |= VacuumEntityFeature.PAUSE
 
-        if self.find_dpcode(DPCode.SWITCH_CHARGE, prefer_function=True):
-            self._attr_supported_features |= VacuumEntityFeature.RETURN_HOME
-        elif (
-            enum_type := self.find_dpcode(
-                DPCode.MODE, dptype=DPType.ENUM, prefer_function=True
+        if (
+            self.find_dpcode(DPCode.SWITCH_CHARGE, prefer_function=True)
+            or (
+                enum_type := self.find_dpcode(
+                    DPCode.MODE, dptype=DPType.ENUM, prefer_function=True
+                )
             )
-        ) and TUYA_MODE_RETURN_HOME in enum_type.range:
+            and TUYA_MODE_RETURN_HOME in enum_type.range
+        ):
             self._attr_supported_features |= VacuumEntityFeature.RETURN_HOME
 
         if self.find_dpcode(DPCode.SEEK, prefer_function=True):
             self._attr_supported_features |= VacuumEntityFeature.LOCATE
-
-        if self.find_dpcode(DPCode.STATUS, prefer_function=True):
-            self._attr_supported_features |= (
-                VacuumEntityFeature.STATE | VacuumEntityFeature.STATUS
-            )
-
-        if self.find_dpcode(DPCode.POWER, prefer_function=True):
-            self._attr_supported_features |= (
-                VacuumEntityFeature.TURN_ON | VacuumEntityFeature.TURN_OFF
-            )
 
         if self.find_dpcode(DPCode.POWER_GO, prefer_function=True):
             self._attr_supported_features |= (
@@ -152,14 +148,6 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
             return None
         return TUYA_STATUS_TO_HA.get(status)
 
-    def turn_on(self, **kwargs: Any) -> None:
-        """Turn the device on."""
-        self._send_command([{"code": DPCode.POWER, "value": True}])
-
-    def turn_off(self, **kwargs: Any) -> None:
-        """Turn the device off."""
-        self._send_command([{"code": DPCode.POWER, "value": False}])
-
     def start(self, **kwargs: Any) -> None:
         """Start the device."""
         self._send_command([{"code": DPCode.POWER_GO, "value": True}])
@@ -190,9 +178,14 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
         self._send_command([{"code": DPCode.SUCTION, "value": fan_speed}])
 
     def send_command(
-        self, command: str, params: dict | list | None = None, **kwargs: Any
+        self,
+        command: str,
+        params: dict[str, Any] | list[Any] | None = None,
+        **kwargs: Any,
     ) -> None:
         """Send raw command."""
         if not params:
             raise ValueError("Params cannot be omitted for Tuya vacuum commands")
+        if not isinstance(params, list):
+            raise TypeError("Params must be a list for Tuya vacuum commands")
         self._send_command([{"code": command, "value": params[0]}])

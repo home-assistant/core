@@ -1,4 +1,5 @@
 """Use Bayesian Inference to trigger a binary sensor."""
+
 from __future__ import annotations
 
 from collections import OrderedDict
@@ -27,7 +28,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.exceptions import ConditionError, TemplateError
 from homeassistant.helpers import condition
 import homeassistant.helpers.config_validation as cv
@@ -60,7 +61,7 @@ from .const import (
     DEFAULT_PROBABILITY_THRESHOLD,
 )
 from .helpers import Observation
-from .repairs import raise_mirrored_entries, raise_no_prob_given_false
+from .issues import raise_mirrored_entries, raise_no_prob_given_false
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -217,8 +218,7 @@ class BayesianBinarySensor(BinarySensorEntity):
         }
 
     async def async_added_to_hass(self) -> None:
-        """
-        Call when entity about to be added.
+        """Call when entity about to be added.
 
         All relevant update logic for instance attributes occurs within this closure.
         Other methods in this class are designed to avoid directly modifying instance
@@ -232,17 +232,20 @@ class BayesianBinarySensor(BinarySensorEntity):
         """
 
         @callback
-        def async_threshold_sensor_state_listener(event: Event) -> None:
-            """
-            Handle sensor state changes.
+        def async_threshold_sensor_state_listener(
+            event: Event[EventStateChangedData],
+        ) -> None:
+            """Handle sensor state changes.
 
             When a state changes, we must update our list of current observations,
             then calculate the new probability.
             """
 
-            entity: str = event.data[CONF_ENTITY_ID]
+            entity_id = event.data["entity_id"]
 
-            self.current_observations.update(self._record_entity_observations(entity))
+            self.current_observations.update(
+                self._record_entity_observations(entity_id)
+            )
             self.async_set_context(event.context)
             self._recalculate_and_write_state()
 
@@ -256,19 +259,16 @@ class BayesianBinarySensor(BinarySensorEntity):
 
         @callback
         def _async_template_result_changed(
-            event: Event | None, updates: list[TrackTemplateResult]
+            event: Event[EventStateChangedData] | None,
+            updates: list[TrackTemplateResult],
         ) -> None:
             track_template_result = updates.pop()
             template = track_template_result.template
             result = track_template_result.result
-            entity: str | None = (
-                None if event is None else event.data.get(CONF_ENTITY_ID)
-            )
+            entity_id = None if event is None else event.data["entity_id"]
             if isinstance(result, TemplateError):
                 _LOGGER.error(
-                    "TemplateError('%s') "
-                    "while processing template '%s' "
-                    "in entity '%s'",
+                    "TemplateError('%s') while processing template '%s' in entity '%s'",
                     result,
                     template,
                     self.entity_id,
@@ -282,8 +282,8 @@ class BayesianBinarySensor(BinarySensorEntity):
                 observation.observed = observed
 
                 # in some cases a template may update because of the absence of an entity
-                if entity is not None:
-                    observation.entity_id = entity
+                if entity_id is not None:
+                    observation.entity_id = entity_id
 
                 self.current_observations[observation.id] = observation
 
@@ -312,9 +312,9 @@ class BayesianBinarySensor(BinarySensorEntity):
                 self.hass, observations, text=f"{self._attr_name}/{entity}"
             )
 
-        all_template_observations: list[Observation] = []
-        for observations in self.observations_by_template.values():
-            all_template_observations.append(observations[0])
+        all_template_observations: list[Observation] = [
+            observations[0] for observations in self.observations_by_template.values()
+        ]
         if len(all_template_observations) == 2:
             raise_mirrored_entries(
                 self.hass,
@@ -369,19 +369,24 @@ class BayesianBinarySensor(BinarySensorEntity):
             # observation.observed is None
             if observation.entity_id is not None:
                 _LOGGER.debug(
-                    "Observation for entity '%s' returned None, it will not be used for Bayesian updating",
+                    (
+                        "Observation for entity '%s' returned None, it will not be used"
+                        " for Bayesian updating"
+                    ),
                     observation.entity_id,
                 )
                 continue
             _LOGGER.debug(
-                "Observation for template entity returned None rather than a valid boolean, it will not be used for Bayesian updating",
+                (
+                    "Observation for template entity returned None rather than a valid"
+                    " boolean, it will not be used for Bayesian updating"
+                ),
             )
         # the prior has been updated and is now the posterior
         return prior
 
     def _build_observations_by_entity(self) -> dict[str, list[Observation]]:
-        """
-        Build and return data structure of the form below.
+        """Build and return data structure of the form below.
 
         {
             "sensor.sensor1": [Observation, Observation],
@@ -395,7 +400,6 @@ class BayesianBinarySensor(BinarySensorEntity):
 
         observations_by_entity: dict[str, list[Observation]] = {}
         for observation in self._observations:
-
             if (key := observation.entity_id) is None:
                 continue
             observations_by_entity.setdefault(key, []).append(observation)
@@ -411,8 +415,7 @@ class BayesianBinarySensor(BinarySensorEntity):
         return observations_by_entity
 
     def _build_observations_by_template(self) -> dict[Template, list[Observation]]:
-        """
-        Build and return data structure of the form below.
+        """Build and return data structure of the form below.
 
         {
             "template": [Observation, Observation],

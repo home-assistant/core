@@ -1,4 +1,5 @@
 """Tests for the sensors provided by the Forecast.Solar integration."""
+
 from unittest.mock import MagicMock
 
 import pytest
@@ -15,8 +16,8 @@ from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
-    ENERGY_KILO_WATT_HOUR,
-    POWER_WATT,
+    UnitOfEnergy,
+    UnitOfPower,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -26,12 +27,12 @@ from tests.common import MockConfigEntry
 
 async def test_sensors(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
     init_integration: MockConfigEntry,
 ) -> None:
     """Test the Forecast.Solar sensors."""
     entry_id = init_integration.entry_id
-    entity_registry = er.async_get(hass)
-    device_registry = dr.async_get(hass)
 
     state = hass.states.get("sensor.energy_production_today")
     entry = entity_registry.async_get("sensor.energy_production_today")
@@ -44,7 +45,22 @@ async def test_sensors(
         == "Solar production forecast Estimated energy production - today"
     )
     assert state.attributes.get(ATTR_STATE_CLASS) is None
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ENERGY_KILO_WATT_HOUR
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.KILO_WATT_HOUR
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
+    assert ATTR_ICON not in state.attributes
+
+    state = hass.states.get("sensor.energy_production_today_remaining")
+    entry = entity_registry.async_get("sensor.energy_production_today_remaining")
+    assert entry
+    assert state
+    assert entry.unique_id == f"{entry_id}_energy_production_today_remaining"
+    assert state.state == "50.0"
+    assert (
+        state.attributes.get(ATTR_FRIENDLY_NAME)
+        == "Solar production forecast Estimated energy production - remaining today"
+    )
+    assert state.attributes.get(ATTR_STATE_CLASS) is None
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.KILO_WATT_HOUR
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
     assert ATTR_ICON not in state.attributes
 
@@ -59,7 +75,7 @@ async def test_sensors(
         == "Solar production forecast Estimated energy production - tomorrow"
     )
     assert state.attributes.get(ATTR_STATE_CLASS) is None
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ENERGY_KILO_WATT_HOUR
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.KILO_WATT_HOUR
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
     assert ATTR_ICON not in state.attributes
 
@@ -104,7 +120,7 @@ async def test_sensors(
         == "Solar production forecast Estimated power production - now"
     )
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == POWER_WATT
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfPower.WATT
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.POWER
     assert ATTR_ICON not in state.attributes
 
@@ -119,7 +135,7 @@ async def test_sensors(
         == "Solar production forecast Estimated energy production - this hour"
     )
     assert state.attributes.get(ATTR_STATE_CLASS) is None
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ENERGY_KILO_WATT_HOUR
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.KILO_WATT_HOUR
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
     assert ATTR_ICON not in state.attributes
 
@@ -134,7 +150,7 @@ async def test_sensors(
         == "Solar production forecast Estimated energy production - next hour"
     )
     assert state.attributes.get(ATTR_STATE_CLASS) is None
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ENERGY_KILO_WATT_HOUR
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.KILO_WATT_HOUR
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
     assert ATTR_ICON not in state.attributes
 
@@ -151,18 +167,19 @@ async def test_sensors(
 
 @pytest.mark.parametrize(
     "entity_id",
-    (
+    [
         "sensor.power_production_next_12hours",
         "sensor.power_production_next_24hours",
         "sensor.power_production_next_hour",
-    ),
+    ],
 )
 async def test_disabled_by_default(
-    hass: HomeAssistant, init_integration: MockConfigEntry, entity_id: str
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    init_integration: MockConfigEntry,
+    entity_id: str,
 ) -> None:
     """Test the Forecast.Solar sensors that are disabled by default."""
-    entity_registry = er.async_get(hass)
-
     state = hass.states.get(entity_id)
     assert state is None
 
@@ -173,7 +190,7 @@ async def test_disabled_by_default(
 
 
 @pytest.mark.parametrize(
-    "key,name,value",
+    ("key", "name", "value"),
     [
         (
             "power_production_next_12hours",
@@ -194,6 +211,7 @@ async def test_disabled_by_default(
 )
 async def test_enabling_disable_by_default(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
     mock_forecast_solar: MagicMock,
     key: str,
@@ -203,7 +221,6 @@ async def test_enabling_disable_by_default(
     """Test the Forecast.Solar sensors that are disabled by default."""
     entry_id = mock_config_entry.entry_id
     entity_id = f"{SENSOR_DOMAIN}.{key}"
-    entity_registry = er.async_get(hass)
 
     # Pre-create registry entry for disabled by default sensor
     entity_registry.async_get_or_create(
@@ -228,6 +245,6 @@ async def test_enabling_disable_by_default(
         state.attributes.get(ATTR_FRIENDLY_NAME) == f"Solar production forecast {name}"
     )
     assert state.attributes.get(ATTR_STATE_CLASS) is None
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == POWER_WATT
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfPower.WATT
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.POWER
     assert ATTR_ICON not in state.attributes

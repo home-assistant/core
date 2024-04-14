@@ -1,4 +1,5 @@
 """Switch representing the shutoff valve for the Flo by Moen integration."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -33,11 +34,10 @@ async def async_setup_entry(
     devices: list[FloDeviceDataUpdateCoordinator] = hass.data[FLO_DOMAIN][
         config_entry.entry_id
     ]["devices"]
-    entities = []
-    for device in devices:
-        if device.device_type != "puck_oem":
-            entities.append(FloSwitch(device))
-    async_add_entities(entities)
+
+    async_add_entities(
+        [FloSwitch(device) for device in devices if device.device_type != "puck_oem"]
+    )
 
     platform = entity_platform.async_get_current_platform()
 
@@ -68,43 +68,34 @@ async def async_setup_entry(
 class FloSwitch(FloEntity, SwitchEntity):
     """Switch class for the Flo by Moen valve."""
 
+    _attr_translation_key = "shutoff_valve"
+
     def __init__(self, device: FloDeviceDataUpdateCoordinator) -> None:
         """Initialize the Flo switch."""
-        super().__init__("shutoff_valve", "Shutoff valve", device)
-        self._state = self._device.last_known_valve_state == "open"
-
-    @property
-    def is_on(self) -> bool:
-        """Return True if the valve is open."""
-        return self._state
-
-    @property
-    def icon(self):
-        """Return the icon to use for the valve."""
-        if self.is_on:
-            return "mdi:valve-open"
-        return "mdi:valve-closed"
+        super().__init__("shutoff_valve", device)
+        self._attr_is_on = device.last_known_valve_state == "open"
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Open the valve."""
         await self._device.api_client.device.open_valve(self._device.id)
-        self._state = True
+        self._attr_is_on = True
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Close the valve."""
         await self._device.api_client.device.close_valve(self._device.id)
-        self._state = False
+        self._attr_is_on = False
         self.async_write_ha_state()
 
     @callback
     def async_update_state(self) -> None:
         """Retrieve the latest valve state and update the state machine."""
-        self._state = self._device.last_known_valve_state == "open"
+        self._attr_is_on = self._device.last_known_valve_state == "open"
         self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
+        await super().async_added_to_hass()
         self.async_on_remove(self._device.async_add_listener(self.async_update_state))
 
     async def async_set_mode_home(self):

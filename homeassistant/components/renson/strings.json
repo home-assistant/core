@@ -1,0 +1,254 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Renson Endura delta device."
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  },
+  "entity": {
+    "button": {
+      "sync_time": {
+        "name": "Sync time with device"
+      },
+      "reset_filter": {
+        "name": "Reset filter counter"
+      }
+    },
+    "time": {
+      "day_time": {
+        "name": "Start time of the day"
+      },
+      "night_time": {
+        "name": "Start time of the night"
+      }
+    },
+    "number": {
+      "filter_change": {
+        "name": "Filter clean/replacement"
+      }
+    },
+    "binary_sensor": {
+      "frost_protection_active": {
+        "name": "Frost protection active"
+      },
+      "breeze": {
+        "name": "Breeze"
+      },
+      "breeze_conditions_met": {
+        "name": "Breeze conditions met"
+      },
+      "humidity_control": {
+        "name": "Humidity control"
+      },
+      "air_quality_control": {
+        "name": "Air quality control"
+      },
+      "co2_control": {
+        "name": "CO2 control"
+      },
+      "preheater": {
+        "name": "Preheater"
+      }
+    },
+    "switch": {
+      "breeze": {
+        "name": "Breeze"
+      }
+    },
+    "sensor": {
+      "co2_quality_category": {
+        "name": "CO2 quality category",
+        "state": {
+          "good": "Good",
+          "bad": "Bad",
+          "poor": "Poor"
+        }
+      },
+      "air_quality_category": {
+        "name": "Air quality category",
+        "state": {
+          "good": "[%key:component::renson::entity::sensor::co2_quality_category::state::good%]",
+          "bad": "[%key:component::renson::entity::sensor::co2_quality_category::state::bad%]",
+          "poor": "[%key:component::renson::entity::sensor::co2_quality_category::state::poor%]"
+        }
+      },
+      "air_quality": {
+        "name": "Air quality"
+      },
+      "ventilation_level": {
+        "name": "Ventilation level",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "level1": "Level 1",
+          "level2": "Level 2",
+          "level3": "Level 3",
+          "level4": "Level 4",
+          "breeze": "Breeze",
+          "holiday": "Holiday"
+        }
+      },
+      "total_airflow_out": {
+        "name": "Total airflow out"
+      },
+      "total_airflow_in": {
+        "name": "Total airflow in"
+      },
+      "outdoor_air_temperature": {
+        "name": "Outdoor air temperature"
+      },
+      "extract_air_temperature": {
+        "name": "Extract air temperature"
+      },
+      "filter_change": {
+        "name": "Filter change"
+      },
+      "manual_level": {
+        "name": "Manual level",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "level1": "[%key:component::renson::entity::sensor::ventilation_level::state::level1%]",
+          "level2": "[%key:component::renson::entity::sensor::ventilation_level::state::level2%]",
+          "level3": "[%key:component::renson::entity::sensor::ventilation_level::state::level3%]",
+          "level4": "[%key:component::renson::entity::sensor::ventilation_level::state::level4%]",
+          "breeze": "[%key:component::renson::entity::sensor::ventilation_level::state::breeze%]",
+          "holiday": "[%key:component::renson::entity::sensor::ventilation_level::state::holiday%]"
+        }
+      },
+      "breeze_temperature": {
+        "name": "Breeze temperature"
+      },
+      "breeze_level": {
+        "name": "Breeze level",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "level1": "[%key:component::renson::entity::sensor::ventilation_level::state::level1%]",
+          "level2": "[%key:component::renson::entity::sensor::ventilation_level::state::level2%]",
+          "level3": "[%key:component::renson::entity::sensor::ventilation_level::state::level3%]",
+          "level4": "[%key:component::renson::entity::sensor::ventilation_level::state::level4%]",
+          "breeze": "[%key:component::renson::entity::sensor::ventilation_level::state::breeze%]"
+        }
+      },
+      "day_pollution_level": {
+        "name": "Day pollution level",
+        "state": {
+          "level1": "[%key:component::renson::entity::sensor::ventilation_level::state::level1%]",
+          "level2": "[%key:component::renson::entity::sensor::ventilation_level::state::level2%]",
+          "level3": "[%key:component::renson::entity::sensor::ventilation_level::state::level3%]",
+          "level4": "[%key:component::renson::entity::sensor::ventilation_level::state::level4%]"
+        }
+      },
+      "night_pollution_level": {
+        "name": "Night pollution level",
+        "state": {
+          "level1": "[%key:component::renson::entity::sensor::ventilation_level::state::level1%]",
+          "level2": "[%key:component::renson::entity::sensor::ventilation_level::state::level2%]",
+          "level3": "[%key:component::renson::entity::sensor::ventilation_level::state::level3%]",
+          "level4": "[%key:component::renson::entity::sensor::ventilation_level::state::level4%]"
+        }
+      },
+      "co2_threshold": {
+        "name": "CO2 threshold"
+      },
+      "co2_hysteresis": {
+        "name": "CO2 hysteresis"
+      },
+      "bypass_activation_temperature": {
+        "name": "Bypass activation temperature"
+      },
+      "bypass_level": {
+        "name": "Bypass level"
+      }
+    }
+  },
+  "selector": {
+    "level_setting": {
+      "options": {
+        "off": "[%key:common::state::off%]",
+        "level1": "[%key:component::renson::entity::sensor::ventilation_level::state::level1%]",
+        "level2": "[%key:component::renson::entity::sensor::ventilation_level::state::level2%]",
+        "level3": "[%key:component::renson::entity::sensor::ventilation_level::state::level3%]",
+        "level4": "[%key:component::renson::entity::sensor::ventilation_level::state::level4%]",
+        "breeze": "[%key:component::renson::entity::sensor::ventilation_level::state::breeze%]",
+        "holiday": "[%key:component::renson::entity::sensor::ventilation_level::state::holiday%]"
+      }
+    }
+  },
+  "services": {
+    "set_timer_level": {
+      "name": "Set timer",
+      "description": "Set the ventilation timer",
+      "fields": {
+        "timer_level": {
+          "name": "Level",
+          "description": "Level setting"
+        },
+        "minutes": {
+          "name": "Time",
+          "description": "Time of the timer (0 will disable the timer)"
+        }
+      }
+    },
+    "set_breeze": {
+      "name": "Set breeze",
+      "description": "Set the breeze function of the ventilation system",
+      "fields": {
+        "breeze_level": {
+          "name": "[%key:component::renson::services::set_timer_level::fields::timer_level::name%]",
+          "description": "Ventilation level when breeze function is activated"
+        },
+        "temperature": {
+          "name": "Temperature",
+          "description": "Temperature when the breeze function should be activated"
+        },
+        "activate": {
+          "name": "Activate",
+          "description": "Activate or disable the breeze feature"
+        }
+      }
+    },
+    "set_pollution_settings": {
+      "name": "Set pollution settings",
+      "description": "Set all the pollution settings of the ventilation system",
+      "fields": {
+        "day_pollution_level": {
+          "name": "Day pollution Level",
+          "description": "Ventilation level when pollution is detected in the day"
+        },
+        "night_pollution_level": {
+          "name": "Night pollution Level",
+          "description": "Ventilation level when pollution is detected in the night"
+        },
+        "humidity_control": {
+          "name": "Enable humidity control",
+          "description": "Activate or disable the humidity control"
+        },
+        "airquality_control": {
+          "name": "Enable air quality control",
+          "description": "Activate or disable the air quality control"
+        },
+        "co2_control": {
+          "name": "Enable CO2 control",
+          "description": "Activate or disable the CO2 control"
+        },
+        "co2_threshold": {
+          "name": "CO2 threshold",
+          "description": "Sets the CO2 pollution threshold level in ppm"
+        },
+        "co2_hysteresis": {
+          "name": "CO2 hysteresis",
+          "description": "Sets the CO2 pollution threshold hysteresis level in ppm"
+        }
+      }
+    }
+  }
+}

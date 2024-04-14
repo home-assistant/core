@@ -1,4 +1,5 @@
 """Support for Homekit motion sensors."""
+
 from __future__ import annotations
 
 from aiohomekit.model.characteristics import CharacteristicsTypes
@@ -9,9 +10,8 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import KNOWN_DEVICES

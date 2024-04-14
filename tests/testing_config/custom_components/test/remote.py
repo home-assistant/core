@@ -1,8 +1,8 @@
-"""
-Provide a mock remote platform.
+"""Provide a mock remote platform.
 
 Call init before using it in your tests to ensure clean test data.
 """
+
 from homeassistant.components.remote import RemoteEntity
 from homeassistant.const import STATE_OFF, STATE_ON
 
@@ -13,7 +13,7 @@ ENTITIES = []
 
 def init(empty=False):
     """Initialize the platform with entities."""
-    global ENTITIES
+    global ENTITIES  # noqa: PLW0603
 
     ENTITIES = (
         []

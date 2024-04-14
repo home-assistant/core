@@ -16,6 +16,7 @@ from homeassistant.const import (
     CONF_UNIQUE_ID,
     STATE_ALARM_ARMED_AWAY,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 from homeassistant.util import slugify
@@ -23,9 +24,14 @@ from homeassistant.util import slugify
 from .test_gateway import DECONZ_WEB_REQUEST, setup_deconz_integration
 
 from tests.components.logbook.common import MockRow, mock_humanify
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 
-async def test_humanifying_deconz_alarm_event(hass, aioclient_mock):
+async def test_humanifying_deconz_alarm_event(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    device_registry: dr.DeviceRegistry,
+) -> None:
     """Test humanifying deCONZ event."""
     data = {
         "sensors": {
@@ -58,16 +64,18 @@ async def test_humanifying_deconz_alarm_event(hass, aioclient_mock):
     with patch.dict(DECONZ_WEB_REQUEST, data):
         await setup_deconz_integration(hass, aioclient_mock)
 
-    device_registry = dr.async_get(hass)
-
     keypad_event_id = slugify(data["sensors"]["1"]["name"])
     keypad_serial = serial_from_unique_id(data["sensors"]["1"]["uniqueid"])
     keypad_entry = device_registry.async_get_device(
         identifiers={(DECONZ_DOMAIN, keypad_serial)}
     )
 
+    removed_device_event_id = "removed_device"
+    removed_device_serial = "00:00:00:00:00:00:00:05"
+
     hass.config.components.add("recorder")
     assert await async_setup_component(hass, "logbook", {})
+    await hass.async_block_till_done()
 
     events = mock_humanify(
         hass,
@@ -82,6 +90,17 @@ async def test_humanifying_deconz_alarm_event(hass, aioclient_mock):
                     CONF_UNIQUE_ID: keypad_serial,
                 },
             ),
+            # Event of a removed device
+            MockRow(
+                CONF_DECONZ_ALARM_EVENT,
+                {
+                    CONF_CODE: 1234,
+                    CONF_DEVICE_ID: "ff99ff99ff99ff99ff99ff99ff99ff99",
+                    CONF_EVENT: STATE_ALARM_ARMED_AWAY,
+                    CONF_ID: removed_device_event_id,
+                    CONF_UNIQUE_ID: removed_device_serial,
+                },
+            ),
         ],
     )
 
@@ -89,8 +108,16 @@ async def test_humanifying_deconz_alarm_event(hass, aioclient_mock):
     assert events[0]["domain"] == "deconz"
     assert events[0]["message"] == "fired event 'armed_away'"
 
+    assert events[1]["name"] == "removed_device"
+    assert events[1]["domain"] == "deconz"
+    assert events[1]["message"] == "fired event 'armed_away'"
 
-async def test_humanifying_deconz_event(hass, aioclient_mock):
+
+async def test_humanifying_deconz_event(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    device_registry: dr.DeviceRegistry,
+) -> None:
     """Test humanifying deCONZ event."""
     data = {
         "sensors": {
@@ -129,8 +156,6 @@ async def test_humanifying_deconz_event(hass, aioclient_mock):
     with patch.dict(DECONZ_WEB_REQUEST, data):
         await setup_deconz_integration(hass, aioclient_mock)
 
-    device_registry = dr.async_get(hass)
-
     switch_event_id = slugify(data["sensors"]["1"]["name"])
     switch_serial = serial_from_unique_id(data["sensors"]["1"]["uniqueid"])
     switch_entry = device_registry.async_get_device(
@@ -155,8 +180,12 @@ async def test_humanifying_deconz_event(hass, aioclient_mock):
         identifiers={(DECONZ_DOMAIN, faulty_serial)}
     )
 
+    removed_device_event_id = "removed_device"
+    removed_device_serial = "00:00:00:00:00:00:00:05"
+
     hass.config.components.add("recorder")
     assert await async_setup_component(hass, "logbook", {})
+    await hass.async_block_till_done()
 
     events = mock_humanify(
         hass,
@@ -211,6 +240,16 @@ async def test_humanifying_deconz_event(hass, aioclient_mock):
                     CONF_UNIQUE_ID: faulty_serial,
                 },
             ),
+            # Event of a removed device
+            MockRow(
+                CONF_DECONZ_EVENT,
+                {
+                    CONF_DEVICE_ID: "ff99ff99ff99ff99ff99ff99ff99ff99",
+                    CONF_EVENT: 2000,
+                    CONF_ID: removed_device_event_id,
+                    CONF_UNIQUE_ID: removed_device_serial,
+                },
+            ),
         ],
     )
 
@@ -233,3 +272,7 @@ async def test_humanifying_deconz_event(hass, aioclient_mock):
     assert events[4]["name"] == "Faulty event"
     assert events[4]["domain"] == "deconz"
     assert events[4]["message"] == "fired an unknown event"
+
+    assert events[5]["name"] == "removed_device"
+    assert events[5]["domain"] == "deconz"
+    assert events[5]["message"] == "fired event '2000'"

@@ -1,4 +1,5 @@
 """Service for obtaining information about closer bus from Transport Yandex Service."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -29,7 +30,7 @@ CONF_STOP_ID = "stop_id"
 CONF_ROUTE = "routes"
 
 DEFAULT_NAME = "Yandex Transport"
-ICON = "mdi:bus"
+
 
 SCAN_INTERVAL = timedelta(minutes=1)
 
@@ -70,8 +71,9 @@ class DiscoverYandexTransport(SensorEntity):
     """Implementation of yandex_transport sensor."""
 
     _attr_attribution = "Data provided by maps.yandex.ru"
+    _attr_icon = "mdi:bus"
 
-    def __init__(self, requester: YandexMapsRequester, stop_id, routes, name):
+    def __init__(self, requester: YandexMapsRequester, stop_id, routes, name) -> None:
         """Initialize sensor."""
         self.requester = requester
         self._stop_id = stop_id
@@ -96,7 +98,10 @@ class DiscoverYandexTransport(SensorEntity):
             data = yandex_reply["data"]
         except KeyError as key_error:
             _LOGGER.warning(
-                "Exception KeyError was captured, missing key is %s. Yandex returned: %s",
+                (
+                    "Exception KeyError was captured, missing key is %s. Yandex"
+                    " returned: %s"
+                ),
                 key_error,
                 yandex_reply,
             )
@@ -165,8 +170,3 @@ class DiscoverYandexTransport(SensorEntity):
     def extra_state_attributes(self):
         """Return the state attributes."""
         return self._attrs
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return ICON

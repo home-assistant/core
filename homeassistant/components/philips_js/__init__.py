@@ -1,12 +1,19 @@
 """The Philips TV integration."""
+
 from __future__ import annotations
 
 import asyncio
 from collections.abc import Mapping
 from datetime import timedelta
 import logging
+from typing import Any
 
-from haphilipsjs import AutenticationFailure, ConnectionFailure, PhilipsTV
+from haphilipsjs import (
+    AutenticationFailure,
+    ConnectionFailure,
+    GeneralFailure,
+    PhilipsTV,
+)
 from haphilipsjs.typing import SystemType
 
 from homeassistant.config_entries import ConfigEntry
@@ -18,14 +25,17 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.debounce import Debouncer
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_ALLOW_NOTIFY, CONF_SYSTEM, DOMAIN
 
 PLATFORMS = [
-    Platform.MEDIA_PLAYER,
+    Platform.BINARY_SENSOR,
     Platform.LIGHT,
+    Platform.MEDIA_PLAYER,
     Platform.REMOTE,
     Platform.SWITCH,
 ]
@@ -76,12 +86,14 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
+class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):  # pylint: disable=hass-enforce-coordinator-module
     """Coordinator to update data."""
 
     config_entry: ConfigEntry
 
-    def __init__(self, hass, api: PhilipsTV, options: Mapping) -> None:
+    def __init__(
+        self, hass: HomeAssistant, api: PhilipsTV, options: Mapping[str, Any]
+    ) -> None:
         """Set up the coordinator."""
         self.api = api
         self.options = options
@@ -95,6 +107,19 @@ class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
             request_refresh_debouncer=Debouncer(
                 hass, LOGGER, cooldown=2.0, immediate=False
             ),
+        )
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device info."""
+        return DeviceInfo(
+            identifiers={
+                (DOMAIN, self.unique_id),
+            },
+            manufacturer="Philips",
+            model=self.system.get("model"),
+            name=self.system["name"],
+            sw_version=self.system.get("softwareversion"),
         )
 
     @property
@@ -168,4 +193,6 @@ class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
         except ConnectionFailure:
             pass
         except AutenticationFailure as exception:
+            raise ConfigEntryAuthFailed(str(exception)) from exception
+        except GeneralFailure as exception:
             raise UpdateFailed(str(exception)) from exception

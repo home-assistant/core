@@ -1,4 +1,5 @@
 """Support for Oncue sensors."""
+
 from __future__ import annotations
 
 from aiooncue import OncueDevice, OncueSensor
@@ -11,18 +12,17 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ENERGY_KILO_WATT_HOUR,
     PERCENTAGE,
-    PRESSURE_PSI,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
+    EntityCategory,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
+    UnitOfEnergy,
     UnitOfFrequency,
     UnitOfPower,
+    UnitOfPressure,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -47,7 +47,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key="EngineOilPressure",
-        native_unit_of_measurement=PRESSURE_PSI,
+        native_unit_of_measurement=UnitOfPressure.PSI,
         device_class=SensorDeviceClass.PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -152,7 +152,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key="GensetTotalEnergy",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
@@ -173,8 +173,8 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
 SENSOR_MAP = {description.key: description for description in SENSOR_TYPES}
 
 UNIT_MAPPINGS = {
-    "C": TEMP_CELSIUS,
-    "F": TEMP_FAHRENHEIT,
+    "C": UnitOfTemperature.CELSIUS,
+    "F": UnitOfTemperature.FAHRENHEIT,
 }
 
 
@@ -184,9 +184,11 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up sensors."""
-    coordinator: DataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator: DataUpdateCoordinator[dict[str, OncueDevice]] = hass.data[DOMAIN][
+        config_entry.entry_id
+    ]
     entities: list[OncueSensorEntity] = []
-    devices: dict[str, OncueDevice] = coordinator.data
+    devices = coordinator.data
     for device_id, device in devices.items():
         entities.extend(
             OncueSensorEntity(coordinator, device_id, device, sensor, SENSOR_MAP[key])
@@ -202,7 +204,7 @@ class OncueSensorEntity(OncueEntity, SensorEntity):
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: DataUpdateCoordinator[dict[str, OncueDevice]],
         device_id: str,
         device: OncueDevice,
         sensor: OncueSensor,

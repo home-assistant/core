@@ -1,5 +1,4 @@
-ARG BUILD_VERSION
-FROM homeassistant/armv7-homeassistant:$BUILD_VERSION
+ARG \
+    BUILD_FROM
 
-RUN apk --no-cache add \
-    usbutils
+FROM $BUILD_FROM

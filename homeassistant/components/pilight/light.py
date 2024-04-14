@@ -1,4 +1,5 @@
 """Support for switching devices via Pilight to on and off."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -77,7 +78,8 @@ class PilightLight(PilightBaseDevice, LightEntity):
             # Calculate pilight brightness (as a range of 0 to 15)
             # By creating a percentage
             percentage = self._brightness / 255
-            # Then calculate the dimmer range (aka amount of available brightness steps).
+            # Then calculate the dimmer range (aka amount
+            # of available brightness steps).
             dimrange = self._dimlevel_max - self._dimlevel_min
             # Finally calculate the pilight brightness.
             # We add dimlevel_min back in to ensure the minimum is always reached.

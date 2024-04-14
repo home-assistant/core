@@ -1,4 +1,5 @@
 """Support for Panasonic Blu-ray players."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -91,8 +92,7 @@ class PanasonicBluRay(MediaPlayerEntity):
         self._attr_media_duration = state[2]
 
     def turn_off(self) -> None:
-        """
-        Instruct the device to turn standby.
+        """Instruct the device to turn standby.
 
         Sending the "POWER" button will turn the device to standby - there
         is no way to turn it completely off remotely. However this works in

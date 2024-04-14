@@ -1,7 +1,8 @@
 """Test fixtures for the Home Assistant Yellow integration."""
+
 from collections.abc import Generator
 from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -20,14 +21,30 @@ def mock_zha_config_flow_setup() -> Generator[None, None, None]:
         MagicMock()
     )
 
+    with (
+        patch(
+            "bellows.zigbee.application.ControllerApplication.probe",
+            side_effect=mock_probe,
+        ),
+        patch(
+            "homeassistant.components.zha.radio_manager.ZhaRadioManager.connect_zigpy_app",
+            return_value=mock_connect_app,
+        ),
+        patch(
+            "homeassistant.components.zha.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        yield
+
+
+@pytest.fixture(autouse=True)
+def mock_zha_get_last_network_settings() -> Generator[None, None, None]:
+    """Mock zha.api.async_get_last_network_settings."""
+
     with patch(
-        "bellows.zigbee.application.ControllerApplication.probe", side_effect=mock_probe
-    ), patch(
-        "homeassistant.components.zha.radio_manager.ZhaRadioManager._connect_zigpy_app",
-        return_value=mock_connect_app,
-    ), patch(
-        "homeassistant.components.zha.async_setup_entry",
-        return_value=True,
+        "homeassistant.components.zha.api.async_get_last_network_settings",
+        AsyncMock(return_value=None),
     ):
         yield
 
@@ -67,6 +84,7 @@ def addon_store_info_fixture():
         "homeassistant.components.hassio.addon_manager.async_get_addon_store_info"
     ) as addon_store_info:
         addon_store_info.return_value = {
+            "available": True,
             "installed": None,
             "state": None,
             "version": "1.0.0",
@@ -81,6 +99,7 @@ def addon_info_fixture():
         "homeassistant.components.hassio.addon_manager.async_get_addon_info",
     ) as addon_info:
         addon_info.return_value = {
+            "available": True,
             "hostname": None,
             "options": {},
             "state": None,

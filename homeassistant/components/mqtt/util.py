@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import os
 from pathlib import Path
 import tempfile
@@ -9,9 +10,12 @@ from typing import Any
 
 import voluptuous as vol
 
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.async_ import create_eager_task
 
 from .const import (
     ATTR_PAYLOAD,
@@ -22,6 +26,7 @@ from .const import (
     CONF_CLIENT_CERT,
     CONF_CLIENT_KEY,
     DATA_MQTT,
+    DATA_MQTT_AVAILABLE,
     DEFAULT_ENCODING,
     DEFAULT_QOS,
     DEFAULT_RETAIN,
@@ -29,9 +34,52 @@ from .const import (
 )
 from .models import MqttData
 
+AVAILABILITY_TIMEOUT = 30.0
+
 TEMP_DIR_NAME = f"home-assistant-{DOMAIN}"
 
 _VALID_QOS_SCHEMA = vol.All(vol.Coerce(int), vol.In([0, 1, 2]))
+
+
+def platforms_from_config(config: list[ConfigType]) -> set[Platform | str]:
+    """Return the platforms to be set up."""
+    return {key for platform in config for key in platform}
+
+
+async def async_forward_entry_setup_and_setup_discovery(
+    hass: HomeAssistant, config_entry: ConfigEntry, platforms: set[Platform | str]
+) -> None:
+    """Forward the config entry setup to the platforms and set up discovery."""
+    mqtt_data = get_mqtt_data(hass)
+    platforms_loaded = mqtt_data.platforms_loaded
+    new_platforms: set[Platform | str] = platforms - platforms_loaded
+    tasks: list[asyncio.Task] = []
+    if "device_automation" in new_platforms:
+        # Local import to avoid circular dependencies
+        # pylint: disable-next=import-outside-toplevel
+        from . import device_automation
+
+        tasks.append(
+            create_eager_task(device_automation.async_setup_entry(hass, config_entry))
+        )
+    if "tag" in new_platforms:
+        # Local import to avoid circular dependencies
+        # pylint: disable-next=import-outside-toplevel
+        from . import tag
+
+        tasks.append(create_eager_task(tag.async_setup_entry(hass, config_entry)))
+    if new_entity_platforms := (new_platforms - {"tag", "device_automation"}):
+        tasks.append(
+            create_eager_task(
+                hass.config_entries.async_forward_entry_setups(
+                    config_entry, new_entity_platforms
+                )
+            )
+        )
+    if not tasks:
+        return
+    await asyncio.gather(*tasks)
+    platforms_loaded.update(new_platforms)
 
 
 def mqtt_config_entry_enabled(hass: HomeAssistant) -> bool | None:
@@ -39,6 +87,38 @@ def mqtt_config_entry_enabled(hass: HomeAssistant) -> bool | None:
     if not bool(hass.config_entries.async_entries(DOMAIN)):
         return None
     return not bool(hass.config_entries.async_entries(DOMAIN)[0].disabled_by)
+
+
+async def async_wait_for_mqtt_client(hass: HomeAssistant) -> bool:
+    """Wait for the MQTT client to become available.
+
+    Waits when mqtt set up is in progress,
+    It is not needed that the client is connected.
+    Returns True if the mqtt client is available.
+    Returns False when the client is not available.
+    """
+    if not mqtt_config_entry_enabled(hass):
+        return False
+
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    if entry.state == ConfigEntryState.LOADED:
+        return True
+
+    state_reached_future: asyncio.Future[bool]
+    if DATA_MQTT_AVAILABLE not in hass.data:
+        state_reached_future = hass.loop.create_future()
+        hass.data[DATA_MQTT_AVAILABLE] = state_reached_future
+    else:
+        state_reached_future = hass.data[DATA_MQTT_AVAILABLE]
+        if state_reached_future.done():
+            return state_reached_future.result()
+
+    try:
+        async with asyncio.timeout(AVAILABILITY_TIMEOUT):
+            # Await the client setup or an error state was received
+            return await state_reached_future
+    except TimeoutError:
+        return False
 
 
 def valid_topic(topic: Any) -> str:
@@ -56,9 +136,9 @@ def valid_topic(topic: Any) -> str:
         )
     if "\0" in validated_topic:
         raise vol.Invalid("MQTT topic name/filter must not contain null character.")
-    if any(char <= "\u001F" for char in validated_topic):
+    if any(char <= "\u001f" for char in validated_topic):
         raise vol.Invalid("MQTT topic name/filter must not contain control characters.")
-    if any("\u007f" <= char <= "\u009F" for char in validated_topic):
+    if any("\u007f" <= char <= "\u009f" for char in validated_topic):
         raise vol.Invalid("MQTT topic name/filter must not contain control characters.")
     if any("\ufdd0" <= char <= "\ufdef" for char in validated_topic):
         raise vol.Invalid("MQTT topic name/filter must not contain non-characters.")
@@ -84,8 +164,7 @@ def valid_subscribe_topic(topic: Any) -> str:
         if index != len(validated_topic) - 1:
             # If there are multiple wildcards, this will also trigger
             raise vol.Invalid(
-                "Multi-level wildcard must be the last "
-                "character in the topic filter."
+                "Multi-level wildcard must be the last character in the topic filter."
             )
         if len(validated_topic) > 1 and validated_topic[index - 1] != "/":
             raise vol.Invalid(
@@ -109,7 +188,7 @@ def valid_publish_topic(topic: Any) -> str:
     """Validate that we can publish using this MQTT topic."""
     validated_topic = valid_topic(topic)
     if "+" in validated_topic or "#" in validated_topic:
-        raise vol.Invalid("Wildcards can not be used in topic names")
+        raise vol.Invalid("Wildcards cannot be used in topic names")
     return validated_topic
 
 
@@ -137,13 +216,9 @@ def valid_birth_will(config: ConfigType) -> ConfigType:
     return config
 
 
-def get_mqtt_data(hass: HomeAssistant, ensure_exists: bool = False) -> MqttData:
+def get_mqtt_data(hass: HomeAssistant) -> MqttData:
     """Return typed MqttData from hass.data[DATA_MQTT]."""
-    mqtt_data: MqttData
-    if ensure_exists:
-        mqtt_data = hass.data.setdefault(DATA_MQTT, MqttData())
-        return mqtt_data
-    mqtt_data = hass.data[DATA_MQTT]
+    mqtt_data: MqttData = hass.data[DATA_MQTT]
     return mqtt_data
 
 

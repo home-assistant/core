@@ -1,20 +1,55 @@
 {
+  "config": {
+    "step": {},
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    }
+  },
   "system_health": {
     "info": {
       "can_reach_cert_server": "Reach Certificate Server",
       "can_reach_cloud": "Reach Home Assistant Cloud",
       "can_reach_cloud_auth": "Reach Authentication Server",
+      "certificate_status": "Certificate Status",
       "relayer_connected": "Relayer Connected",
+      "relayer_region": "Relayer Region",
       "remote_connected": "Remote Connected",
       "remote_enabled": "Remote Enabled",
       "remote_server": "Remote Server",
       "alexa_enabled": "Alexa Enabled",
       "google_enabled": "Google Enabled",
       "logged_in": "Logged In",
+      "instance_id": "Instance ID",
       "subscription_expiration": "Subscription Expiration"
     }
   },
   "issues": {
+    "deprecated_gender": {
+      "title": "The `{deprecated_option}` text-to-speech option is deprecated",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "[%key:component::cloud::issues::deprecated_voice::title%]",
+            "description": "The `{deprecated_option}` option for text-to-speech in the {integration_name} integration is deprecated and will be removed.\nPlease update your automations and scripts to replace the `{deprecated_option}` option with an option for a supported `{replacement_option}` instead."
+          }
+        }
+      }
+    },
+    "deprecated_tts_platform_config": {
+      "title": "The Cloud text-to-speech platform configuration is deprecated",
+      "description": "The whole `platform: cloud` entry under the `tts:` section in configuration.yaml is deprecated and should be removed. You can use the UI to change settings for the Cloud text-to-speech platform. Please adjust your configuration.yaml and restart Home Assistant to fix this issue."
+    },
+    "deprecated_voice": {
+      "title": "A deprecated voice was used",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "[%key:component::cloud::issues::deprecated_voice::title%]",
+            "description": "The `{deprecated_voice}`voice is deprecated and will be removed.\nPlease update your automations and scripts to replace the `{deprecated_voice}` with another voice like eg. `{replacement_voice}`."
+          }
+        }
+      }
+    },
     "legacy_subscription": {
       "title": "Legacy subscription detected",
       "fix_flow": {
@@ -27,6 +62,24 @@
           "operation_took_too_long": "The operation took too long. Please try again later."
         }
       }
+    },
+    "warn_bad_custom_domain_configuration": {
+      "title": "Detected wrong custom domain configuration",
+      "description": "The DNS configuration for your custom domain ({custom_domains}) is not correct. Please check the DNS configuration of your domain and make sure it points to the correct CNAME."
+    },
+    "reset_bad_custom_domain_configuration": {
+      "title": "Custom domain ignored",
+      "description": "The DNS configuration for your custom domain ({custom_domains}) is not correct. This domain has now been ignored and will not be used for Home Assistant Cloud. If you want to use this domain, please fix the DNS configuration and restart Home Assistant. If you do not need this anymore, you can remove it from the account page."
+    }
+  },
+  "services": {
+    "remote_connect": {
+      "name": "Remote connect",
+      "description": "Makes the instance UI accessible from outside of the local network by using Home Assistant Cloud."
+    },
+    "remote_disconnect": {
+      "name": "Remote disconnect",
+      "description": "Disconnects the Home Assistant UI from the Home Assistant Cloud. You will no longer be able to access your Home Assistant instance from outside your local network."
     }
   }
 }

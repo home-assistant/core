@@ -1,4 +1,5 @@
 """Test for the LCN sensor platform."""
+
 from pypck.inputs import ModStatusLedsAndLogicOps, ModStatusVar
 from pypck.lcn_addr import LcnAddr
 from pypck.lcn_defs import LedStatus, LogicOpStatus, Var, VarValue
@@ -8,8 +9,9 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 SENSOR_VAR1 = "sensor.sensor_var1"
@@ -18,7 +20,7 @@ SENSOR_LED6 = "sensor.sensor_led6"
 SENSOR_LOGICOP1 = "sensor.sensor_logicop1"
 
 
-async def test_setup_lcn_sensor(hass, entry, lcn_connection):
+async def test_setup_lcn_sensor(hass: HomeAssistant, entry, lcn_connection) -> None:
     """Test the setup of sensor."""
     for entity_id in (
         SENSOR_VAR1,
@@ -31,15 +33,15 @@ async def test_setup_lcn_sensor(hass, entry, lcn_connection):
         assert state.state == STATE_UNKNOWN
 
 
-async def test_entity_state(hass, lcn_connection):
+async def test_entity_state(hass: HomeAssistant, lcn_connection) -> None:
     """Test state of entity."""
     state = hass.states.get(SENSOR_VAR1)
     assert state
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == TEMP_CELSIUS
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.CELSIUS
 
     state = hass.states.get(SENSOR_SETPOINT1)
     assert state
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == TEMP_CELSIUS
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.CELSIUS
 
     state = hass.states.get(SENSOR_LED6)
     assert state
@@ -48,9 +50,10 @@ async def test_entity_state(hass, lcn_connection):
     assert state
 
 
-async def test_entity_attributes(hass, entry, lcn_connection):
+async def test_entity_attributes(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, entry, lcn_connection
+) -> None:
     """Test the attributes of an entity."""
-    entity_registry = er.async_get(hass)
 
     entity_var1 = entity_registry.async_get(SENSOR_VAR1)
     assert entity_var1
@@ -73,7 +76,9 @@ async def test_entity_attributes(hass, entry, lcn_connection):
     assert entity_logicop1.original_name == "Sensor_LogicOp1"
 
 
-async def test_pushed_variable_status_change(hass, entry, lcn_connection):
+async def test_pushed_variable_status_change(
+    hass: HomeAssistant, entry, lcn_connection
+) -> None:
     """Test the variable sensor changes its state on status received."""
     device_connection = get_device_connection(hass, (0, 7, False), entry)
     address = LcnAddr(0, 7, False)
@@ -97,7 +102,9 @@ async def test_pushed_variable_status_change(hass, entry, lcn_connection):
     assert float(state.state) == 42.0
 
 
-async def test_pushed_ledlogicop_status_change(hass, entry, lcn_connection):
+async def test_pushed_ledlogicop_status_change(
+    hass: HomeAssistant, entry, lcn_connection
+) -> None:
     """Test the led and logicop sensor changes its state on status received."""
     device_connection = get_device_connection(hass, (0, 7, False), entry)
     address = LcnAddr(0, 7, False)
@@ -122,7 +129,7 @@ async def test_pushed_ledlogicop_status_change(hass, entry, lcn_connection):
     assert state.state == "all"
 
 
-async def test_unload_config_entry(hass, entry, lcn_connection):
+async def test_unload_config_entry(hass: HomeAssistant, entry, lcn_connection) -> None:
     """Test the sensor is removed when the config entry is unloaded."""
     await hass.config_entries.async_unload(entry.entry_id)
     assert hass.states.get(SENSOR_VAR1).state == STATE_UNAVAILABLE

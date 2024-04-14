@@ -1,11 +1,17 @@
 """Support for Abode Security System binary sensors."""
+
 from __future__ import annotations
 
-from contextlib import suppress
 from typing import cast
 
-from abodepy.devices.binary_sensor import AbodeBinarySensor as ABBinarySensor
-import abodepy.helpers.constants as CONST
+from jaraco.abode.devices.sensor import BinarySensor
+from jaraco.abode.helpers.constants import (
+    TYPE_CONNECTIVITY,
+    TYPE_MOISTURE,
+    TYPE_MOTION,
+    TYPE_OCCUPANCY,
+    TYPE_OPENING,
+)
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -14,6 +20,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util.enum import try_parse_enum
 
 from . import AbodeDevice, AbodeSystem
 from .const import DOMAIN
@@ -26,11 +33,11 @@ async def async_setup_entry(
     data: AbodeSystem = hass.data[DOMAIN]
 
     device_types = [
-        CONST.TYPE_CONNECTIVITY,
-        CONST.TYPE_MOISTURE,
-        CONST.TYPE_MOTION,
-        CONST.TYPE_OCCUPANCY,
-        CONST.TYPE_OPENING,
+        TYPE_CONNECTIVITY,
+        TYPE_MOISTURE,
+        TYPE_MOTION,
+        TYPE_OCCUPANCY,
+        TYPE_OPENING,
     ]
 
     async_add_entities(
@@ -42,7 +49,8 @@ async def async_setup_entry(
 class AbodeBinarySensor(AbodeDevice, BinarySensorEntity):
     """A binary sensor implementation for Abode device."""
 
-    _device: ABBinarySensor
+    _attr_name = None
+    _device: BinarySensor
 
     @property
     def is_on(self) -> bool:
@@ -54,6 +62,4 @@ class AbodeBinarySensor(AbodeDevice, BinarySensorEntity):
         """Return the class of the binary sensor."""
         if self._device.get_value("is_window") == "1":
             return BinarySensorDeviceClass.WINDOW
-        with suppress(ValueError):
-            return BinarySensorDeviceClass(cast(str, self._device.generic_type))
-        return None
+        return try_parse_enum(BinarySensorDeviceClass, self._device.generic_type)

@@ -1,8 +1,10 @@
 """Provides device actions for Text."""
+
 from __future__ import annotations
 
 import voluptuous as vol
 
+from homeassistant.components.device_automation import async_validate_entity_schema
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_DEVICE_ID,
@@ -11,7 +13,7 @@ from homeassistant.const import (
     CONF_TYPE,
 )
 from homeassistant.core import Context, HomeAssistant
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
@@ -19,24 +21,31 @@ from .const import ATTR_VALUE, DOMAIN, SERVICE_SET_VALUE
 
 ATYP_SET_VALUE = "set_value"
 
-ACTION_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
+_ACTION_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_TYPE): ATYP_SET_VALUE,
-        vol.Required(CONF_ENTITY_ID): cv.entity_domain(DOMAIN),
+        vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
         vol.Required(ATTR_VALUE): cv.string,
     }
 )
+
+
+async def async_validate_action_config(
+    hass: HomeAssistant, config: ConfigType
+) -> ConfigType:
+    """Validate config."""
+    return async_validate_entity_schema(hass, config, _ACTION_SCHEMA)
 
 
 async def async_get_actions(
     hass: HomeAssistant, device_id: str
 ) -> list[dict[str, str]]:
     """List device actions for Text."""
-    registry = entity_registry.async_get(hass)
+    registry = er.async_get(hass)
     actions: list[dict[str, str]] = []
 
     # Get all the integrations entities for this device
-    for entry in entity_registry.async_entries_for_device(registry, device_id):
+    for entry in er.async_entries_for_device(registry, device_id):
         if entry.domain != DOMAIN:
             continue
 
@@ -44,7 +53,7 @@ async def async_get_actions(
             {
                 CONF_DEVICE_ID: device_id,
                 CONF_DOMAIN: DOMAIN,
-                CONF_ENTITY_ID: entry.entity_id,
+                CONF_ENTITY_ID: entry.id,
                 CONF_TYPE: ATYP_SET_VALUE,
             }
         )

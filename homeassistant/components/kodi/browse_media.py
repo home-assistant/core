@@ -1,4 +1,5 @@
 """Support for media browsing."""
+
 import asyncio
 import contextlib
 import logging
@@ -84,8 +85,7 @@ async def build_item_response(media_library, payload, get_thumbnail_url=None):
 
 
 async def item_payload(item, get_thumbnail_url=None):
-    """
-    Create response payload for a single media item.
+    """Create response payload for a single media item.
 
     Used by async_browse_media.
     """
@@ -179,8 +179,7 @@ def media_source_content_filter(item: BrowseMedia) -> bool:
 
 
 async def library_payload(hass):
-    """
-    Create response payload to describe contents of a specific library.
+    """Create response payload to describe contents of a specific library.
 
     Used by async_browse_media.
     """

@@ -1,4 +1,5 @@
 """Test the Garages Amsterdam config flow."""
+
 from http import HTTPStatus
 from unittest.mock import patch
 
@@ -17,8 +18,7 @@ async def test_full_flow(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result.get("type") == FlowResultType.FORM
-    assert "flow_id" in result
+    assert result.get("type") is FlowResultType.FORM
 
     with patch(
         "homeassistant.components.garages_amsterdam.async_setup_entry",
@@ -30,7 +30,7 @@ async def test_full_flow(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2.get("type") == FlowResultType.CREATE_ENTRY
+    assert result2.get("type") is FlowResultType.CREATE_ENTRY
     assert result2.get("title") == "IJDok"
     assert "result" in result2
     assert result2["result"].unique_id == "IJDok"
@@ -38,7 +38,7 @@ async def test_full_flow(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "side_effect,reason",
+    ("side_effect", "reason"),
     [
         (RuntimeError, "unknown"),
         (
@@ -59,5 +59,5 @@ async def test_error_handling(
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == reason

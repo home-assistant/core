@@ -1,4 +1,5 @@
 """Test the Light significant change platform."""
+
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
@@ -10,7 +11,7 @@ from homeassistant.components.light.significant_change import (
 )
 
 
-async def test_significant_change():
+async def test_significant_change() -> None:
     """Detect Light significant changes."""
     assert not async_check_significant_change(None, "on", {}, "on", {})
     assert async_check_significant_change(None, "on", {}, "off", {})

@@ -1,4 +1,5 @@
 """Support for Magic Home lights."""
+
 from __future__ import annotations
 
 from abc import abstractmethod
@@ -20,8 +21,9 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONF_MINOR_VERSION, DOMAIN, SIGNAL_STATE_UPDATED
@@ -54,6 +56,7 @@ def _async_device_info(
 class FluxBaseEntity(Entity):
     """Representation of a Flux entity without a coordinator."""
 
+    _attr_has_entity_name = True
     _attr_should_poll = False
 
     def __init__(
@@ -70,18 +73,18 @@ class FluxBaseEntity(Entity):
 class FluxEntity(CoordinatorEntity[FluxLedUpdateCoordinator]):
     """Representation of a Flux entity with a coordinator."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         coordinator: FluxLedUpdateCoordinator,
         base_unique_id: str,
-        name: str,
         key: str | None,
     ) -> None:
         """Initialize the light."""
         super().__init__(coordinator)
         self._device: AIOWifiLedBulb = coordinator.device
         self._responding = True
-        self._attr_name = name
         if key:
             self._attr_unique_id = f"{base_unique_id}_{key}"
         else:

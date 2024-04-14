@@ -1,7 +1,8 @@
 """Test the WS66i 6-Zone Amplifier config flow."""
+
 from unittest.mock import patch
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components.ws66i.const import (
     CONF_SOURCE_1,
     CONF_SOURCE_2,
@@ -14,6 +15,8 @@ from homeassistant.components.ws66i.const import (
     INIT_OPTIONS_DEFAULT,
 )
 from homeassistant.const import CONF_IP_ADDRESS
+from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from .test_media_player import AttrDict
 
@@ -22,21 +25,23 @@ from tests.common import MockConfigEntry
 CONFIG = {CONF_IP_ADDRESS: "1.1.1.1"}
 
 
-async def test_form(hass):
+async def test_form(hass: HomeAssistant) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.ws66i.config_flow.get_ws66i",
-    ) as mock_ws66i, patch(
-        "homeassistant.components.ws66i.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-
+    with (
+        patch(
+            "homeassistant.components.ws66i.config_flow.get_ws66i",
+        ) as mock_ws66i,
+        patch(
+            "homeassistant.components.ws66i.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         ws66i_instance = mock_ws66i.return_value
 
         result2 = await hass.config_entries.flow.async_configure(
@@ -47,14 +52,14 @@ async def test_form(hass):
         ws66i_instance.open.assert_called_once()
         ws66i_instance.close.assert_called_once()
 
-    assert result2["type"] == "create_entry"
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "WS66i Amp"
     assert result2["data"] == {CONF_IP_ADDRESS: CONFIG[CONF_IP_ADDRESS]}
 
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_cannot_connect(hass):
+async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     """Test cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -67,11 +72,11 @@ async def test_form_cannot_connect(hass):
             result["flow_id"], CONFIG
         )
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_wrong_ip(hass):
+async def test_form_wrong_ip(hass: HomeAssistant) -> None:
     """Test cannot connect error with bad IP."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -84,11 +89,11 @@ async def test_form_wrong_ip(hass):
             result["flow_id"], CONFIG
         )
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_generic_exception(hass):
+async def test_generic_exception(hass: HomeAssistant) -> None:
     """Test generic exception."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -101,11 +106,11 @@ async def test_generic_exception(hass):
             result["flow_id"], CONFIG
         )
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
 
 
-async def test_options_flow(hass):
+async def test_options_flow(hass: HomeAssistant) -> None:
     """Test config flow options."""
     conf = {CONF_IP_ADDRESS: "1.1.1.1", CONF_SOURCES: INIT_OPTIONS_DEFAULT}
 
@@ -126,7 +131,7 @@ async def test_options_flow(hass):
 
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "init"
 
         result = await hass.config_entries.options.async_configure(
@@ -141,7 +146,7 @@ async def test_options_flow(hass):
             },
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         assert config_entry.options[CONF_SOURCES] == {
             "1": "one",
             "2": "too",

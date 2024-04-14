@@ -1,4 +1,5 @@
 """Support to control a Zehnder ComfoAir Q350/450/600 ventilation unit."""
+
 import logging
 
 from pycomfoconnect import Bridge, ComfoConnect
@@ -30,8 +31,6 @@ DEFAULT_NAME = "ComfoAirQ"
 DEFAULT_PIN = 0
 DEFAULT_TOKEN = "00000000000000000000000000000001"
 DEFAULT_USER_AGENT = "Home Assistant"
-
-DEVICE = None
 
 CONFIG_SCHEMA = vol.Schema(
     {

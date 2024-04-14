@@ -1,4 +1,5 @@
 """Support for Acmeda Roller Blind Batteries."""
+
 from __future__ import annotations
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
@@ -25,7 +26,7 @@ async def async_setup_entry(
     current: set[int] = set()
 
     @callback
-    def async_add_acmeda_sensors():
+    def async_add_acmeda_sensors() -> None:
         async_add_acmeda_entities(
             hass, AcmedaBattery, config_entry, current, async_add_entities
         )
@@ -40,17 +41,12 @@ async def async_setup_entry(
 
 
 class AcmedaBattery(AcmedaBase, SensorEntity):
-    """Representation of a Acmeda cover device."""
+    """Representation of an Acmeda cover sensor."""
 
     _attr_device_class = SensorDeviceClass.BATTERY
     _attr_native_unit_of_measurement = PERCENTAGE
 
     @property
-    def name(self) -> str:
-        """Return the name of roller."""
-        return f"{super().name} Battery"
-
-    @property
     def native_value(self) -> float | int | None:
         """Return the state of the device."""
-        return self.roller.battery
+        return self.roller.battery  # type: ignore[no-any-return]

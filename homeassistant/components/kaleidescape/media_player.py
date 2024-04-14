@@ -1,4 +1,5 @@
 """Kaleidescape Media Player."""
+
 from __future__ import annotations
 
 import logging
@@ -56,6 +57,7 @@ class KaleidescapeMediaPlayer(KaleidescapeEntity, MediaPlayerEntity):
         | MediaPlayerEntityFeature.NEXT_TRACK
         | MediaPlayerEntityFeature.PREVIOUS_TRACK
     )
+    _attr_name = None
 
     async def async_turn_on(self) -> None:
         """Send leave standby command."""

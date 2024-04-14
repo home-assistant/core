@@ -1,4 +1,5 @@
 """Remote control support for Bravia TV."""
+
 from __future__ import annotations
 
 from collections.abc import Iterable
@@ -29,6 +30,8 @@ async def async_setup_entry(
 
 class BraviaTVRemote(BraviaTVEntity, RemoteEntity):
     """Representation of a Bravia TV Remote."""
+
+    _attr_name = None
 
     @property
     def is_on(self) -> bool:

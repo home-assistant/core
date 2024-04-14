@@ -1,0 +1,55 @@
+{
+  "kind": "youtube#channelListResponse",
+  "etag": "8HTiiXpKCq-GJvDVOd88e5o_KGc",
+  "pageInfo": {
+    "totalResults": 1,
+    "resultsPerPage": 5
+  },
+  "items": [
+    {
+      "kind": "youtube#channel",
+      "etag": "CG3vwkqpnD2Bj_MaPXmy9puO4Kc",
+      "id": "UC_x5XG1OV2P6uZZ5FSM9Ttw",
+      "snippet": {
+        "title": "Google for Developers",
+        "description": "Subscribe to join a community of creative developers and learn the latest in Google technology — from AI and cloud, to mobile and web.\n\nExplore more at developers.google.com\n\n",
+        "customUrl": "@googledevelopers",
+        "publishedAt": "2007-08-23T00:34:43Z",
+        "thumbnails": {
+          "default": {
+            "url": "https://yt3.ggpht.com/fca_HuJ99xUxflWdex0XViC3NfctBFreIl8y4i9z411asnGTWY-Ql3MeH_ybA4kNaOjY7kyA=s88-c-k-c0x00ffffff-no-rj",
+            "width": 88,
+            "height": 88
+          },
+          "medium": {
+            "url": "https://yt3.ggpht.com/fca_HuJ99xUxflWdex0XViC3NfctBFreIl8y4i9z411asnGTWY-Ql3MeH_ybA4kNaOjY7kyA=s240-c-k-c0x00ffffff-no-rj",
+            "width": 240,
+            "height": 240
+          },
+          "high": {
+            "url": "https://yt3.ggpht.com/fca_HuJ99xUxflWdex0XViC3NfctBFreIl8y4i9z411asnGTWY-Ql3MeH_ybA4kNaOjY7kyA=s800-c-k-c0x00ffffff-no-rj",
+            "width": 800,
+            "height": 800
+          }
+        },
+        "localized": {
+          "title": "Google for Developers",
+          "description": "Subscribe to join a community of creative developers and learn the latest in Google technology — from AI and cloud, to mobile and web.\n\nExplore more at developers.google.com\n\n"
+        },
+        "country": "US"
+      },
+      "contentDetails": {
+        "relatedPlaylists": {
+          "likes": "",
+          "uploads": "UU_x5XG1OV2P6uZZ5FSM9Ttw"
+        }
+      },
+      "statistics": {
+        "viewCount": "214141263",
+        "subscriberCount": "2290000",
+        "hiddenSubscriberCount": false,
+        "videoCount": "5798"
+      }
+    }
+  ]
+}

@@ -1,4 +1,5 @@
 """Support for LaMetric notifications."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -52,7 +53,7 @@ class LaMetricNotificationService(BaseNotificationService):
 
         sound = None
         if CONF_SOUND in data:
-            sound = Sound(id=data[CONF_SOUND], category=None)
+            sound = Sound(sound=data[CONF_SOUND], category=None)
 
         notification = Notification(
             icon_type=NotificationIconType(data.get(CONF_ICON_TYPE, "none")),

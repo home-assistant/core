@@ -1,14 +1,7 @@
-ARG BUILD_VERSION
-FROM homeassistant/armv7-homeassistant:$BUILD_VERSION
+ARG \
+    BUILD_FROM
+
+FROM $BUILD_FROM
 
 RUN apk --no-cache add \
-        raspberrypi \
-        raspberrypi-libs \
-        usbutils
-
-##
-# Set symlinks for raspberry pi binaries.
-RUN ln -sv /opt/vc/bin/raspistill /usr/local/bin/raspistill \
-    && ln -sv /opt/vc/bin/raspivid /usr/local/bin/raspivid \
-    && ln -sv /opt/vc/bin/raspividyuv /usr/local/bin/raspividyuv \
-    && ln -sv /opt/vc/bin/raspiyuv /usr/local/bin/raspiyuv
+        raspberrypi-utils

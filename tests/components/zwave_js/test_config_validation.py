@@ -1,11 +1,12 @@
 """Test the Z-Wave JS config validation helpers."""
+
 import pytest
 import voluptuous as vol
 
 from homeassistant.components.zwave_js.config_validation import boolean
 
 
-def test_boolean_validation():
+def test_boolean_validation() -> None:
     """Test boolean config validator."""
     # test bool
     assert boolean(True)

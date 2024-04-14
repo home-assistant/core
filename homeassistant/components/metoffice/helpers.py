@@ -1,4 +1,5 @@
 """Helpers used for Met Office integration."""
+
 from __future__ import annotations
 
 import logging
@@ -31,22 +32,22 @@ def fetch_site(
 def fetch_data(connection: datapoint.Manager, site: Site, mode: str) -> MetOfficeData:
     """Fetch weather and forecast from Datapoint API."""
     try:
-        forecast = connection.get_forecast_for_site(site.id, mode)
+        forecast = connection.get_forecast_for_site(site.location_id, mode)
     except (ValueError, datapoint.exceptions.APIException) as err:
         _LOGGER.error("Check Met Office connection: %s", err.args)
         raise UpdateFailed from err
-    else:
-        time_now = utcnow()
-        return MetOfficeData(
-            now=forecast.now(),
-            forecast=[
-                timestep
-                for day in forecast.days
-                for timestep in day.timesteps
-                if timestep.date > time_now
-                and (
-                    mode == MODE_3HOURLY or timestep.date.hour > 6
-                )  # ensures only one result per day in MODE_DAILY
-            ],
-            site=site,
-        )
+
+    time_now = utcnow()
+    return MetOfficeData(
+        now=forecast.now(),
+        forecast=[
+            timestep
+            for day in forecast.days
+            for timestep in day.timesteps
+            if timestep.date > time_now
+            and (
+                mode == MODE_3HOURLY or timestep.date.hour > 6
+            )  # ensures only one result per day in MODE_DAILY
+        ],
+        site=site,
+    )

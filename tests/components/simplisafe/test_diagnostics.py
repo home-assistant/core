@@ -1,15 +1,24 @@
 """Test SimpliSafe diagnostics."""
+
 from homeassistant.components.diagnostics import REDACTED
+from homeassistant.core import HomeAssistant
 
 from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.typing import ClientSessionGenerator
 
 
-async def test_entry_diagnostics(hass, config_entry, hass_client, setup_simplisafe):
+async def test_entry_diagnostics(
+    hass: HomeAssistant,
+    config_entry,
+    hass_client: ClientSessionGenerator,
+    setup_simplisafe,
+) -> None:
     """Test config entry diagnostics."""
     assert await get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {
         "entry": {
             "entry_id": config_entry.entry_id,
             "version": 1,
+            "minor_version": 1,
             "domain": "simplisafe",
             "title": REDACTED,
             "data": {"token": REDACTED, "username": REDACTED},

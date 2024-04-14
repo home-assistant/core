@@ -1,0 +1,51 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "username": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      },
+      "confirm": {
+        "description": "[%key:common::config_flow::description::confirm_setup%]"
+      }
+    },
+    "abort": {
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
+    },
+    "error": {
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "no_devices_found": "No devices were found. Make sure you have at least one Anova device online."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "cook_time": {
+        "name": "Cook time"
+      },
+      "state": {
+        "name": "State"
+      },
+      "mode": {
+        "name": "[%key:common::config_flow::data::mode%]"
+      },
+      "target_temperature": {
+        "name": "Target temperature"
+      },
+      "cook_time_remaining": {
+        "name": "Cook time remaining"
+      },
+      "heater_temperature": {
+        "name": "Heater temperature"
+      },
+      "triac_temperature": {
+        "name": "Triac temperature"
+      },
+      "water_temperature": {
+        "name": "Water temperature"
+      }
+    }
+  }
+}

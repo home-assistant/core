@@ -1,14 +1,18 @@
 """Helper to deal with YAML + storage."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
 import asyncio
 from collections.abc import Awaitable, Callable, Coroutine, Iterable
 from dataclasses import dataclass
+from functools import partial
 from itertools import groupby
 import logging
-from typing import Any, Optional, cast
+from operator import attrgetter
+from typing import Any, Generic, TypedDict
 
+from typing_extensions import TypeVar
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
@@ -31,8 +35,13 @@ CHANGE_ADDED = "added"
 CHANGE_UPDATED = "updated"
 CHANGE_REMOVED = "removed"
 
+_ItemT = TypeVar("_ItemT")
+_StoreT = TypeVar("_StoreT", bound="SerializedStorageCollection")
+_StorageCollectionT = TypeVar("_StorageCollectionT", bound="StorageCollection")
+_EntityT = TypeVar("_EntityT", bound=Entity, default=Entity)
 
-@dataclass
+
+@dataclass(slots=True)
 class CollectionChangeSet:
     """Class to represent a change set.
 
@@ -120,41 +129,42 @@ class CollectionEntity(Entity):
         """Handle updated configuration."""
 
 
-class ObservableCollection(ABC):
+class ObservableCollection(ABC, Generic[_ItemT]):
     """Base collection type that can be observed."""
 
-    def __init__(
-        self, logger: logging.Logger, id_manager: IDManager | None = None
-    ) -> None:
+    def __init__(self, id_manager: IDManager | None) -> None:
         """Initialize the base collection."""
-        self.logger = logger
         self.id_manager = id_manager or IDManager()
-        self.data: dict[str, dict] = {}
+        self.data: dict[str, _ItemT] = {}
         self.listeners: list[ChangeListener] = []
         self.change_set_listeners: list[ChangeSetListener] = []
 
         self.id_manager.add_collection(self.data)
 
     @callback
-    def async_items(self) -> list[dict]:
+    def async_items(self) -> list[_ItemT]:
         """Return list of items in collection."""
         return list(self.data.values())
 
     @callback
-    def async_add_listener(self, listener: ChangeListener) -> None:
+    def async_add_listener(self, listener: ChangeListener) -> Callable[[], None]:
         """Add a listener.
 
         Will be called with (change_type, item_id, updated_config).
         """
         self.listeners.append(listener)
+        return partial(self.listeners.remove, listener)
 
     @callback
-    def async_add_change_set_listener(self, listener: ChangeSetListener) -> None:
+    def async_add_change_set_listener(
+        self, listener: ChangeSetListener
+    ) -> Callable[[], None]:
         """Add a listener for a full change set.
 
         Will be called with [(change_type, item_id, updated_config), ...]
         """
         self.change_set_listeners.append(listener)
+        return partial(self.change_set_listeners.remove, listener)
 
     async def notify_changes(self, change_sets: Iterable[CollectionChangeSet]) -> None:
         """Notify listeners of a change."""
@@ -171,8 +181,17 @@ class ObservableCollection(ABC):
         )
 
 
-class YamlCollection(ObservableCollection):
+class YamlCollection(ObservableCollection[dict]):
     """Offer a collection based on static data."""
+
+    def __init__(
+        self,
+        logger: logging.Logger,
+        id_manager: IDManager | None = None,
+    ) -> None:
+        """Initialize the storage collection."""
+        super().__init__(id_manager)
+        self.logger = logger
 
     @staticmethod
     def create_entity(
@@ -202,26 +221,31 @@ class YamlCollection(ObservableCollection):
             self.data[item_id] = item
             change_sets.append(CollectionChangeSet(event, item_id, item))
 
-        for item_id in old_ids:
-            change_sets.append(
-                CollectionChangeSet(CHANGE_REMOVED, item_id, self.data.pop(item_id))
-            )
+        change_sets.extend(
+            CollectionChangeSet(CHANGE_REMOVED, item_id, self.data.pop(item_id))
+            for item_id in old_ids
+        )
 
         if change_sets:
             await self.notify_changes(change_sets)
 
 
-class StorageCollection(ObservableCollection, ABC):
+class SerializedStorageCollection(TypedDict):
+    """Serialized storage collection."""
+
+    items: list[dict[str, Any]]
+
+
+class StorageCollection(ObservableCollection[_ItemT], Generic[_ItemT, _StoreT]):
     """Offer a CRUD interface on top of JSON storage."""
 
     def __init__(
         self,
-        store: Store,
-        logger: logging.Logger,
+        store: Store[_StoreT],
         id_manager: IDManager | None = None,
     ) -> None:
         """Initialize the storage collection."""
-        super().__init__(logger, id_manager)
+        super().__init__(id_manager)
         self.store = store
 
     @staticmethod
@@ -236,19 +260,17 @@ class StorageCollection(ObservableCollection, ABC):
         """Home Assistant object."""
         return self.store.hass
 
-    async def _async_load_data(self) -> dict | None:
+    async def _async_load_data(self) -> _StoreT | None:
         """Load the data."""
-        return cast(Optional[dict], await self.store.async_load())
+        return await self.store.async_load()
 
     async def async_load(self) -> None:
         """Load the storage Manager."""
-        raw_storage = await self._async_load_data()
-
-        if raw_storage is None:
-            raw_storage = {"items": []}
+        if not (raw_storage := await self._async_load_data()):
+            return
 
         for item in raw_storage["items"]:
-            self.data[item[CONF_ID]] = item
+            self.data[item[CONF_ID]] = self._deserialize_item(item)
 
         await self.notify_changes(
             [
@@ -267,21 +289,35 @@ class StorageCollection(ObservableCollection, ABC):
         """Suggest an ID based on the config."""
 
     @abstractmethod
-    async def _update_data(self, data: dict, update_data: dict) -> dict:
-        """Return a new updated data object."""
+    async def _update_data(self, item: _ItemT, update_data: dict) -> _ItemT:
+        """Return a new updated item."""
 
-    async def async_create_item(self, data: dict) -> dict:
+    @abstractmethod
+    def _create_item(self, item_id: str, data: dict) -> _ItemT:
+        """Create an item from validated config."""
+
+    @abstractmethod
+    def _deserialize_item(self, data: dict) -> _ItemT:
+        """Create an item from its serialized representation."""
+
+    @abstractmethod
+    def _serialize_item(self, item_id: str, item: _ItemT) -> dict:
+        """Return the serialized representation of an item for storing.
+
+        The serialized representation must include the item_id in the "id" key.
+        """
+
+    async def async_create_item(self, data: dict) -> _ItemT:
         """Create a new item."""
-        item = await self._process_create_data(data)
-        item[CONF_ID] = self.id_manager.generate_id(self._get_suggested_id(item))
-        self.data[item[CONF_ID]] = item
+        validated_data = await self._process_create_data(data)
+        item_id = self.id_manager.generate_id(self._get_suggested_id(validated_data))
+        item = self._create_item(item_id, validated_data)
+        self.data[item_id] = item
         self._async_schedule_save()
-        await self.notify_changes(
-            [CollectionChangeSet(CHANGE_ADDED, item[CONF_ID], item)]
-        )
+        await self.notify_changes([CollectionChangeSet(CHANGE_ADDED, item_id, item)])
         return item
 
-    async def async_update_item(self, item_id: str, updates: dict) -> dict:
+    async def async_update_item(self, item_id: str, updates: dict) -> _ItemT:
         """Update item."""
         if item_id not in self.data:
             raise ItemNotFound(item_id)
@@ -314,13 +350,44 @@ class StorageCollection(ObservableCollection, ABC):
 
     @callback
     def _async_schedule_save(self) -> None:
-        """Schedule saving the area registry."""
+        """Schedule saving the collection."""
         self.store.async_delay_save(self._data_to_save, SAVE_DELAY)
 
     @callback
-    def _data_to_save(self) -> dict:
-        """Return data of area registry to store in a file."""
-        return {"items": list(self.data.values())}
+    def _base_data_to_save(self) -> SerializedStorageCollection:
+        """Return JSON-compatible data for storing to file."""
+        return {
+            "items": [
+                self._serialize_item(item_id, item)
+                for item_id, item in self.data.items()
+            ]
+        }
+
+    @abstractmethod
+    @callback
+    def _data_to_save(self) -> _StoreT:
+        """Return JSON-compatible date for storing to file."""
+
+
+class DictStorageCollection(StorageCollection[dict, SerializedStorageCollection]):
+    """A specialized StorageCollection where the items are untyped dicts."""
+
+    def _create_item(self, item_id: str, data: dict) -> dict:
+        """Create an item from its validated, serialized representation."""
+        return {CONF_ID: item_id} | data
+
+    def _deserialize_item(self, data: dict) -> dict:
+        """Create an item from its validated, serialized representation."""
+        return data
+
+    def _serialize_item(self, item_id: str, item: dict) -> dict:
+        """Return the serialized representation of an item for storing."""
+        return item
+
+    @callback
+    def _data_to_save(self) -> SerializedStorageCollection:
+        """Return JSON-compatible date for storing to file."""
+        return self._base_data_to_save()
 
 
 class IDLessCollection(YamlCollection):
@@ -353,88 +420,104 @@ class IDLessCollection(YamlCollection):
         )
 
 
+_GROUP_BY_KEY = attrgetter("change_type")
+
+
+@dataclass(slots=True, frozen=True)
+class _CollectionLifeCycle(Generic[_EntityT]):
+    """Life cycle for a collection of entities."""
+
+    domain: str
+    platform: str
+    entity_component: EntityComponent[_EntityT]
+    collection: StorageCollection | YamlCollection
+    entity_class: type[CollectionEntity]
+    ent_reg: entity_registry.EntityRegistry
+    entities: dict[str, CollectionEntity]
+
+    @callback
+    def async_setup(self) -> None:
+        """Set up the collection life cycle."""
+        self.collection.async_add_change_set_listener(self._collection_changed)
+
+    def _entity_removed(self, item_id: str) -> None:
+        """Remove entity from entities if it's removed or not added."""
+        self.entities.pop(item_id, None)
+
+    @callback
+    def _add_entity(self, change_set: CollectionChangeSet) -> CollectionEntity:
+        item_id = change_set.item_id
+        entity = self.collection.create_entity(self.entity_class, change_set.item)
+        self.entities[item_id] = entity
+        entity.async_on_remove(partial(self._entity_removed, item_id))
+        return entity
+
+    async def _remove_entity(self, change_set: CollectionChangeSet) -> None:
+        item_id = change_set.item_id
+        ent_reg = self.ent_reg
+        entities = self.entities
+        ent_to_remove = ent_reg.async_get_entity_id(self.domain, self.platform, item_id)
+        if ent_to_remove is not None:
+            ent_reg.async_remove(ent_to_remove)
+        elif entity := entities.get(item_id):
+            await entity.async_remove(force_remove=True)
+        # Unconditionally pop the entity from the entity list to avoid racing against
+        # the entity registry event handled by Entity._async_registry_updated
+        entities.pop(item_id, None)
+
+    async def _update_entity(self, change_set: CollectionChangeSet) -> None:
+        if entity := self.entities.get(change_set.item_id):
+            await entity.async_update_config(change_set.item)
+
+    async def _collection_changed(
+        self, change_sets: Iterable[CollectionChangeSet]
+    ) -> None:
+        """Handle a collection change."""
+        # Create a new bucket every time we have a different change type
+        # to ensure operations happen in order. We only group
+        # the same change type.
+        new_entities: list[CollectionEntity] = []
+        coros: list[Coroutine[Any, Any, CollectionEntity | None]] = []
+        grouped: Iterable[CollectionChangeSet]
+        for _, grouped in groupby(change_sets, _GROUP_BY_KEY):
+            for change_set in grouped:
+                change_type = change_set.change_type
+                if change_type == CHANGE_ADDED:
+                    new_entities.append(self._add_entity(change_set))
+                elif change_type == CHANGE_REMOVED:
+                    coros.append(self._remove_entity(change_set))
+                elif change_type == CHANGE_UPDATED:
+                    coros.append(self._update_entity(change_set))
+
+        if coros:
+            await asyncio.gather(*coros)
+
+        if new_entities:
+            await self.entity_component.async_add_entities(new_entities)
+
+
 @callback
 def sync_entity_lifecycle(
     hass: HomeAssistant,
     domain: str,
     platform: str,
-    entity_component: EntityComponent,
+    entity_component: EntityComponent[_EntityT],
     collection: StorageCollection | YamlCollection,
     entity_class: type[CollectionEntity],
 ) -> None:
     """Map a collection to an entity component."""
-    entities: dict[str, CollectionEntity] = {}
     ent_reg = entity_registry.async_get(hass)
-
-    async def _add_entity(change_set: CollectionChangeSet) -> CollectionEntity:
-        def entity_removed() -> None:
-            """Remove entity from entities if it's removed or not added."""
-            if change_set.item_id in entities:
-                entities.pop(change_set.item_id)
-
-        entities[change_set.item_id] = collection.create_entity(
-            entity_class, change_set.item
-        )
-        entities[change_set.item_id].async_on_remove(entity_removed)
-        return entities[change_set.item_id]
-
-    async def _remove_entity(change_set: CollectionChangeSet) -> None:
-        ent_to_remove = ent_reg.async_get_entity_id(
-            domain, platform, change_set.item_id
-        )
-        if ent_to_remove is not None:
-            ent_reg.async_remove(ent_to_remove)
-        elif change_set.item_id in entities:
-            await entities[change_set.item_id].async_remove(force_remove=True)
-        # Unconditionally pop the entity from the entity list to avoid racing against
-        # the entity registry event handled by Entity._async_registry_updated
-        if change_set.item_id in entities:
-            entities.pop(change_set.item_id)
-
-    async def _update_entity(change_set: CollectionChangeSet) -> None:
-        if change_set.item_id not in entities:
-            return
-        await entities[change_set.item_id].async_update_config(change_set.item)
-
-    _func_map: dict[
-        str,
-        Callable[[CollectionChangeSet], Coroutine[Any, Any, CollectionEntity | None]],
-    ] = {
-        CHANGE_ADDED: _add_entity,
-        CHANGE_REMOVED: _remove_entity,
-        CHANGE_UPDATED: _update_entity,
-    }
-
-    async def _collection_changed(change_sets: Iterable[CollectionChangeSet]) -> None:
-        """Handle a collection change."""
-        # Create a new bucket every time we have a different change type
-        # to ensure operations happen in order. We only group
-        # the same change type.
-        for _, grouped in groupby(
-            change_sets, lambda change_set: change_set.change_type
-        ):
-            new_entities = [
-                entity
-                for entity in await asyncio.gather(
-                    *(
-                        _func_map[change_set.change_type](change_set)
-                        for change_set in grouped
-                    )
-                )
-                if entity is not None
-            ]
-            if new_entities:
-                await entity_component.async_add_entities(new_entities)
-
-    collection.async_add_change_set_listener(_collection_changed)
+    _CollectionLifeCycle(
+        domain, platform, entity_component, collection, entity_class, ent_reg, {}
+    ).async_setup()
 
 
-class StorageCollectionWebsocket:
+class StorageCollectionWebsocket(Generic[_StorageCollectionT]):
     """Class to expose storage collection management over websocket."""
 
     def __init__(
         self,
-        storage_collection: StorageCollection,
+        storage_collection: _StorageCollectionT,
         api_prefix: str,
         model_name: str,
         create_schema: dict,
@@ -517,6 +600,7 @@ class StorageCollectionWebsocket:
             ),
         )
 
+    @callback
     def ws_list_item(
         self, hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
     ) -> None:
@@ -587,3 +671,7 @@ class StorageCollectionWebsocket:
             )
 
         connection.send_result(msg["id"])
+
+
+class DictStorageCollectionWebsocket(StorageCollectionWebsocket[DictStorageCollection]):
+    """Class to expose storage collection management over websocket."""

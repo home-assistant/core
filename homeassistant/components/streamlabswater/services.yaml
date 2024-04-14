@@ -1,13 +1,12 @@
 set_away_mode:
-  name: Set away mode
-  description: "Set the home/away mode for a Streamlabs Water Monitor."
   fields:
     away_mode:
-      name: Away mode
-      description: home or away
       required: true
       selector:
         select:
           options:
             - "away"
             - "home"
+    location_id:
+      selector:
+        text:

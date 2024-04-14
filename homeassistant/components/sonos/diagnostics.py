@@ -1,4 +1,5 @@
 """Provides diagnostics for Sonos."""
+
 from __future__ import annotations
 
 import time
@@ -65,17 +66,17 @@ async def async_get_config_entry_diagnostics(
 
 async def async_get_device_diagnostics(
     hass: HomeAssistant, config_entry: ConfigEntry, device: DeviceEntry
-) -> dict[str, Any] | None:
+) -> dict[str, Any]:
     """Return diagnostics for a device."""
     uid = next(
         (identifier[1] for identifier in device.identifiers if identifier[0] == DOMAIN),
         None,
     )
     if uid is None:
-        return None
+        return {}
 
     if (speaker := hass.data[DATA_SONOS].discovered.get(uid)) is None:
-        return None
+        return {}
 
     return await async_generate_speaker_info(hass, speaker)
 
@@ -112,7 +113,7 @@ async def async_generate_speaker_info(
     payload: dict[str, Any] = {}
 
     def get_contents(
-        item: int | float | str | dict[str, Any]
+        item: float | str | dict[str, Any],
     ) -> int | float | str | dict[str, Any]:
         if isinstance(item, (int, float, str)):
             return item

@@ -1,4 +1,5 @@
 """Support for Skybeacon temperature/humidity Bluetooth LE sensors."""
+
 from __future__ import annotations
 
 import logging
@@ -21,7 +22,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     PERCENTAGE,
     STATE_UNKNOWN,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -105,7 +106,7 @@ class SkybeaconTemp(SensorEntity):
     """Representation of a Skybeacon temperature sensor."""
 
     _attr_device_class = SensorDeviceClass.TEMPERATURE
-    _attr_native_unit_of_measurement = TEMP_CELSIUS
+    _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
 
     def __init__(self, name, mon):
         """Initialize a sensor."""
@@ -158,7 +159,7 @@ class Monitor(threading.Thread, SensorEntity):
                     )
                 if SKIP_HANDLE_LOOKUP:
                     # HACK: inject handle mapping collected offline
-                    # pylint: disable=protected-access
+                    # pylint: disable-next=protected-access
                     device._characteristics[UUID(BLE_TEMP_UUID)] = cached_char
                 # Magic: writing this makes device happy
                 device.char_write_handle(0x1B, bytearray([255]), False)

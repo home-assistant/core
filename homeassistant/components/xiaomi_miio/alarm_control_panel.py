@@ -1,4 +1,5 @@
 """Support for Xiomi Gateway alarm control panels."""
+
 from __future__ import annotations
 
 from functools import partial
@@ -17,7 +18,7 @@ from homeassistant.const import (
     STATE_ALARM_DISARMED,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import CONF_GATEWAY, DOMAIN

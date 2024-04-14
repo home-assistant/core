@@ -1,4 +1,5 @@
 """Support for Onkyo Receivers."""
+
 from __future__ import annotations
 
 import logging
@@ -14,6 +15,7 @@ from homeassistant.components.media_player import (
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
+    MediaType,
 )
 from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant, ServiceCall
@@ -141,7 +143,7 @@ def determine_zones(receiver):
             _LOGGER.debug("Zone 2 not available")
     except ValueError as error:
         if str(error) != TIMEOUT_MESSAGE:
-            raise error
+            raise
         _LOGGER.debug("Zone 2 timed out, assuming no functionality")
     try:
         _LOGGER.debug("Checking for zone 3 capability")
@@ -152,7 +154,7 @@ def determine_zones(receiver):
             _LOGGER.debug("Zone 3 not available")
     except ValueError as error:
         if str(error) != TIMEOUT_MESSAGE:
-            raise error
+            raise
         _LOGGER.debug("Zone 3 timed out, assuming no functionality")
     except AssertionError:
         _LOGGER.error("Zone 3 detection failed")
@@ -355,17 +357,18 @@ class OnkyoDevice(MediaPlayerEntity):
         self.command("system-power standby")
 
     def set_volume_level(self, volume: float) -> None:
-        """
-        Set volume level, input is range 0..1.
+        """Set volume level, input is range 0..1.
 
-        However full volume on the amp is usually far too loud so allow the user to specify the upper range
-        with CONF_MAX_VOLUME.  we change as per max_volume set by user. This means that if max volume is 80 then full
-        volume in HA will give 80% volume on the receiver. Then we convert
-        that to the correct scale for the receiver.
+        However full volume on the amp is usually far too loud so allow the user to
+        specify the upper range with CONF_MAX_VOLUME. We change as per max_volume
+        set by user. This means that if max volume is 80 then full volume in HA will
+        give 80% volume on the receiver. Then we convert that to the correct scale
+        for the receiver.
         """
         #        HA_VOL * (MAX VOL / 100) * MAX_RECEIVER_VOL
         self.command(
-            f"volume {int(volume * (self._max_volume / 100) * self._receiver_max_volume)}"
+            "volume"
+            f" {int(volume * (self._max_volume / 100) * self._receiver_max_volume)}"
         )
 
     def volume_up(self) -> None:
@@ -393,7 +396,9 @@ class OnkyoDevice(MediaPlayerEntity):
             source = self._reverse_mapping[source]
         self.command(f"input-selector {source}")
 
-    def play_media(self, media_type: str, media_id: str, **kwargs: Any) -> None:
+    def play_media(
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
+    ) -> None:
         """Play radio station by preset number."""
         source = self._reverse_mapping[self._attr_source]
         if media_type.lower() == "radio" and source in DEFAULT_PLAYABLE_SOURCES:
@@ -522,13 +527,13 @@ class OnkyoDeviceZone(OnkyoDevice):
         self.command(f"zone{self._zone}.power=standby")
 
     def set_volume_level(self, volume: float) -> None:
-        """
-        Set volume level, input is range 0..1.
+        """Set volume level, input is range 0..1.
 
-        However full volume on the amp is usually far too loud so allow the user to specify the upper range
-        with CONF_MAX_VOLUME.  we change as per max_volume set by user. This means that if max volume is 80 then full
-        volume in HA will give 80% volume on the receiver. Then we convert
-        that to the correct scale for the receiver.
+        However full volume on the amp is usually far too loud so allow the user to
+        specify the upper range with CONF_MAX_VOLUME. We change as per max_volume
+        set by user. This means that if max volume is 80 then full volume in HA
+        will give 80% volume on the receiver. Then we convert that to the correct
+        scale for the receiver.
         """
         # HA_VOL * (MAX VOL / 100) * MAX_RECEIVER_VOL
         self.command(

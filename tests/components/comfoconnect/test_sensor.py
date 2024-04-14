@@ -1,10 +1,12 @@
 """Tests for the comfoconnect sensor platform."""
+
 # import json
 from unittest.mock import patch
 
 import pytest
 
 from homeassistant.components.sensor import DOMAIN
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import assert_setup_component
@@ -50,7 +52,7 @@ async def setup_sensor(hass, mock_bridge_discover, mock_comfoconnect_command):
         await hass.async_block_till_done()
 
 
-async def test_sensors(hass, setup_sensor):
+async def test_sensors(hass: HomeAssistant, setup_sensor) -> None:
     """Test the sensors."""
     state = hass.states.get("sensor.comfoairq_inside_humidity")
     assert state is not None

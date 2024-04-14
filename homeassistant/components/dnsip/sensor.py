@@ -1,4 +1,5 @@
 """Get your own public IP address or that of any host."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -11,8 +12,7 @@ from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -23,6 +23,8 @@ from .const import (
     CONF_RESOLVER_IPV6,
     DOMAIN,
 )
+
+DEFAULT_RETRIES = 2
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,8 +53,8 @@ async def async_setup_entry(
 class WanIpSensor(SensorEntity):
     """Implementation of a DNS IP sensor."""
 
-    _attr_icon = "mdi:web"
     _attr_has_entity_name = True
+    _attr_translation_key = "dnsip"
 
     def __init__(
         self,
@@ -68,6 +70,7 @@ class WanIpSensor(SensorEntity):
         self.resolver = aiodns.DNSResolver()
         self.resolver.nameservers = [resolver]
         self.querytype = "AAAA" if ipv6 else "A"
+        self._retries = DEFAULT_RETRIES
         self._attr_extra_state_attributes = {
             "Resolver": resolver,
             "Querytype": self.querytype,
@@ -91,5 +94,8 @@ class WanIpSensor(SensorEntity):
         if response:
             self._attr_native_value = response[0].host
             self._attr_available = True
+            self._retries = DEFAULT_RETRIES
+        elif self._retries > 0:
+            self._retries -= 1
         else:
             self._attr_available = False

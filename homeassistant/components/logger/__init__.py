@@ -1,4 +1,5 @@
 """Support for setting the level of logging for components."""
+
 from __future__ import annotations
 
 import logging
@@ -6,6 +7,7 @@ import re
 
 import voluptuous as vol
 
+from homeassistant.const import EVENT_LOGGING_CHANGED  # noqa: F401
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
@@ -13,7 +15,6 @@ from homeassistant.helpers.typing import ConfigType
 from . import websocket_api
 from .const import (
     ATTR_LEVEL,
-    DEFAULT_LOGSEVERITY,
     DOMAIN,
     LOGGER_DEFAULT,
     LOGGER_FILTERS,
@@ -38,9 +39,7 @@ CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
             {
-                vol.Optional(
-                    LOGGER_DEFAULT, default=DEFAULT_LOGSEVERITY
-                ): _VALID_LOG_LEVEL,
+                vol.Optional(LOGGER_DEFAULT): _VALID_LOG_LEVEL,
                 vol.Optional(LOGGER_LOGS): vol.Schema({cv.string: _VALID_LOG_LEVEL}),
                 vol.Optional(LOGGER_FILTERS): vol.Schema({cv.string: [cv.is_regex]}),
             }
@@ -128,7 +127,6 @@ def _get_logger_class(hass_overrides: dict[str, int]) -> type[logging.Logger]:
 
             super().setLevel(level)
 
-        # pylint: disable=invalid-name
         def orig_setLevel(self, level: int | str) -> None:
             """Set the log level."""
             super().setLevel(level)

@@ -15,7 +15,7 @@ from homeassistant.components.number import (
     SERVICE_SET_VALUE as NUMBER_SERVICE_SET_VALUE,
 )
 from homeassistant.const import ATTR_ICON, CONF_ENTITY_ID, STATE_UNKNOWN
-from homeassistant.core import Context
+from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers.entity_registry import async_get
 
 from tests.common import assert_setup_component, async_capture_events
@@ -42,7 +42,7 @@ _VALUE_INPUT_NUMBER_CONFIG = {
 }
 
 
-async def test_missing_optional_config(hass):
+async def test_missing_optional_config(hass: HomeAssistant) -> None:
     """Test: missing optional template is ok."""
     with assert_setup_component(1, "template"):
         assert await setup.async_setup_component(
@@ -66,7 +66,7 @@ async def test_missing_optional_config(hass):
     _verify(hass, 4, 1, 0.0, 100.0)
 
 
-async def test_missing_required_keys(hass):
+async def test_missing_required_keys(hass: HomeAssistant) -> None:
     """Test: missing required fields will fail."""
     with assert_setup_component(0, "template"):
         assert await setup.async_setup_component(
@@ -101,7 +101,7 @@ async def test_missing_required_keys(hass):
     assert hass.states.async_all("number") == []
 
 
-async def test_all_optional_config(hass):
+async def test_all_optional_config(hass: HomeAssistant) -> None:
     """Test: including all optional templates is ok."""
     with assert_setup_component(1, "template"):
         assert await setup.async_setup_component(
@@ -127,7 +127,7 @@ async def test_all_optional_config(hass):
     _verify(hass, 4, 1, 3, 5)
 
 
-async def test_templates_with_entities(hass, calls):
+async def test_templates_with_entities(hass: HomeAssistant, calls) -> None:
     """Test templates with values from other entities."""
     with assert_setup_component(4, "input_number"):
         assert await setup.async_setup_component(
@@ -264,7 +264,7 @@ async def test_templates_with_entities(hass, calls):
     assert calls[-1].data["value"] == 2
 
 
-async def test_trigger_number(hass):
+async def test_trigger_number(hass: HomeAssistant) -> None:
     """Test trigger based template number."""
     events = async_capture_events(hass, "test_number_event")
     assert await setup.async_setup_component(
@@ -346,7 +346,7 @@ def _verify(
     assert attributes.get(ATTR_MIN) == float(expected_minimum)
 
 
-async def test_icon_template(hass):
+async def test_icon_template(hass: HomeAssistant) -> None:
     """Test template numbers with icon templates."""
     with assert_setup_component(1, "input_number"):
         assert await setup.async_setup_component(
@@ -403,7 +403,7 @@ async def test_icon_template(hass):
     assert state.attributes[ATTR_ICON] == "mdi:greater"
 
 
-async def test_icon_template_with_trigger(hass):
+async def test_icon_template_with_trigger(hass: HomeAssistant) -> None:
     """Test template numbers with icon templates."""
     with assert_setup_component(1, "input_number"):
         assert await setup.async_setup_component(

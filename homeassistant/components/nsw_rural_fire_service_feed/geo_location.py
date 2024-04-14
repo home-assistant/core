@@ -1,4 +1,5 @@
 """Support for NSW Rural Fire Service Feeds."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -177,7 +178,7 @@ class NswRuralFireServiceFeedEntityManager:
 
 
 class NswRuralFireServiceLocationEvent(GeolocationEvent):
-    """This represents an external event with NSW Rural Fire Service data."""
+    """Represents an external event with NSW Rural Fire Service data."""
 
     _attr_should_poll = False
     _attr_source = SOURCE

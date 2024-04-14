@@ -1,5 +1,8 @@
 """Diagnostics support for Nanoleaf."""
+
 from __future__ import annotations
+
+from typing import Any
 
 from aionanoleaf import Nanoleaf
 
@@ -14,7 +17,7 @@ from .const import DOMAIN
 async def async_get_config_entry_diagnostics(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-) -> dict:
+) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     device: Nanoleaf = hass.data[DOMAIN][config_entry.entry_id].device
 

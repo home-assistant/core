@@ -1,4 +1,5 @@
 """The tests for the Roku remote platform."""
+
 from unittest.mock import MagicMock
 
 from homeassistant.components.remote import (
@@ -15,8 +16,6 @@ from . import UPNP_SERIAL
 from tests.common import MockConfigEntry
 
 MAIN_ENTITY_ID = f"{REMOTE_DOMAIN}.my_roku_3"
-
-# pylint: disable=redefined-outer-name
 
 
 async def test_setup(hass: HomeAssistant, init_integration: MockConfigEntry) -> None:

@@ -1,8 +1,8 @@
 """The Deluge integration."""
+
 from __future__ import annotations
 
 import logging
-import socket
 from ssl import SSLError
 
 from deluge_client.client import DelugeRPCClient
@@ -17,8 +17,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONF_WEB_PORT, DEFAULT_NAME, DOMAIN
@@ -41,11 +40,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     api.web_port = entry.data[CONF_WEB_PORT]
     try:
         await hass.async_add_executor_job(api.connect)
-    except (
-        ConnectionRefusedError,
-        socket.timeout,
-        SSLError,
-    ) as ex:
+    except (ConnectionRefusedError, TimeoutError, SSLError) as ex:
         raise ConfigEntryNotReady("Connection to Deluge Daemon failed") from ex
     except Exception as ex:  # pylint:disable=broad-except
         if type(ex).__name__ == "BadLoginError":
@@ -80,7 +75,9 @@ class DelugeEntity(CoordinatorEntity[DelugeDataUpdateCoordinator]):
         super().__init__(coordinator)
         self._server_unique_id = coordinator.config_entry.entry_id
         self._attr_device_info = DeviceInfo(
-            configuration_url=f"http://{coordinator.api.host}:{coordinator.api.web_port}",
+            configuration_url=(
+                f"http://{coordinator.api.host}:{coordinator.api.web_port}"
+            ),
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
             manufacturer=DEFAULT_NAME,

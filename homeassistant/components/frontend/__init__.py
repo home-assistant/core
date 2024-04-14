@@ -1,4 +1,5 @@
 """Handle the frontend for Home Assistant."""
+
 from __future__ import annotations
 
 from collections.abc import Iterator
@@ -14,13 +15,19 @@ import voluptuous as vol
 from yarl import URL
 
 from homeassistant.components import onboarding, websocket_api
-from homeassistant.components.http.view import HomeAssistantView
+from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.config import async_hass_config_yaml
-from homeassistant.const import CONF_MODE, CONF_NAME, EVENT_THEMES_UPDATED
+from homeassistant.const import (
+    CONF_MODE,
+    CONF_NAME,
+    EVENT_PANELS_UPDATED,
+    EVENT_THEMES_UPDATED,
+)
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import service
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.icon import async_get_icons
 from homeassistant.helpers.json import json_dumps_sorted
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.translation import async_get_translations
@@ -40,7 +47,6 @@ CONF_EXTRA_MODULE_URL = "extra_module_url"
 CONF_EXTRA_JS_URL_ES5 = "extra_js_url_es5"
 CONF_FRONTEND_REPO = "development_repo"
 CONF_JS_VERSION = "javascript_version"
-EVENT_PANELS_UPDATED = "panels_updated"
 
 DEFAULT_THEME_COLOR = "#03A9F4"
 
@@ -146,7 +152,9 @@ class Manifest:
 MANIFEST_JSON = Manifest(
     {
         "background_color": "#FFFFFF",
-        "description": "Home automation platform that puts local control and privacy first.",
+        "description": (
+            "Home automation platform that puts local control and privacy first."
+        ),
         "dir": "ltr",
         "display": "standalone",
         "icons": [
@@ -154,9 +162,18 @@ MANIFEST_JSON = Manifest(
                 "src": f"/static/icons/favicon-{size}x{size}.png",
                 "sizes": f"{size}x{size}",
                 "type": "image/png",
-                "purpose": "maskable any",
+                "purpose": "any",
             }
             for size in (192, 384, 512, 1024)
+        ]
+        + [
+            {
+                "src": f"/static/icons/maskable_icon-{size}x{size}.png",
+                "sizes": f"{size}x{size}",
+                "type": "image/png",
+                "purpose": "maskable",
+            }
+            for size in (48, 72, 96, 128, 192, 384, 512)
         ],
         "screenshots": [
             {
@@ -169,6 +186,7 @@ MANIFEST_JSON = Manifest(
         "name": "Home Assistant",
         "short_name": "Assistant",
         "start_url": "/?homescreen=1",
+        "id": "/?homescreen=1",
         "theme_color": DEFAULT_THEME_COLOR,
         "prefer_related_applications": True,
         "related_applications": [
@@ -220,6 +238,9 @@ class Panel:
     # If the panel should only be visible to admins
     require_admin = False
 
+    # If the panel is a configuration panel for a integration
+    config_panel_domain: str | None = None
+
     def __init__(
         self,
         component_name: str,
@@ -228,6 +249,7 @@ class Panel:
         frontend_url_path: str | None,
         config: dict[str, Any] | None,
         require_admin: bool,
+        config_panel_domain: str | None,
     ) -> None:
         """Initialize a built-in panel."""
         self.component_name = component_name
@@ -236,6 +258,7 @@ class Panel:
         self.frontend_url_path = frontend_url_path or component_name
         self.config = config
         self.require_admin = require_admin
+        self.config_panel_domain = config_panel_domain
 
     @callback
     def to_response(self) -> PanelRespons:
@@ -247,6 +270,7 @@ class Panel:
             "config": self.config,
             "url_path": self.frontend_url_path,
             "require_admin": self.require_admin,
+            "config_panel_domain": self.config_panel_domain,
         }
 
 
@@ -262,6 +286,7 @@ def async_register_built_in_panel(
     require_admin: bool = False,
     *,
     update: bool = False,
+    config_panel_domain: str | None = None,
 ) -> None:
     """Register a built-in panel."""
     panel = Panel(
@@ -271,6 +296,7 @@ def async_register_built_in_panel(
         frontend_url_path,
         config,
         require_admin,
+        config_panel_domain,
     )
 
     panels = hass.data.setdefault(DATA_PANELS, {})
@@ -311,7 +337,7 @@ def _frontend_root(dev_repo_path: str | None) -> pathlib.Path:
     if dev_repo_path is not None:
         return pathlib.Path(dev_repo_path) / "hass_frontend"
     # Keep import here so that we can import frontend without installing reqs
-    # pylint: disable=import-outside-toplevel
+    # pylint: disable-next=import-outside-toplevel
     import hass_frontend
 
     return hass_frontend.where()
@@ -320,6 +346,7 @@ def _frontend_root(dev_repo_path: str | None) -> pathlib.Path:
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the serving of the frontend."""
     await async_setup_frontend_storage(hass)
+    websocket_api.async_register_command(hass, websocket_get_icons)
     websocket_api.async_register_command(hass, websocket_get_panels)
     websocket_api.async_register_command(hass, websocket_get_themes)
     websocket_api.async_register_command(hass, websocket_get_translations)
@@ -361,8 +388,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if os.path.isdir(local):
         hass.http.register_static_path("/local", local, not is_dev)
 
-    # Can be removed in 2023
-    hass.http.register_redirect("/config/server_control", "/developer-tools/yaml")
+    # Shopping list panel was replaced by todo panel in 2023.11
+    hass.http.register_redirect("/shopping-list", "/todo")
 
     hass.http.app.router.register_resource(IndexView(repo_path, hass))
 
@@ -528,8 +555,9 @@ class IndexView(web_urldispatcher.AbstractResource):
         """
         if (
             request.path != "/"
-            and len(request.url.parts) > 1
-            and request.url.parts[1] not in self.hass.data[DATA_PANELS]
+            and (parts := request.rel_url.parts)
+            and len(parts) > 1
+            and parts[1] not in self.hass.data[DATA_PANELS]
         ):
             return None, set()
 
@@ -568,7 +596,7 @@ class IndexView(web_urldispatcher.AbstractResource):
 
     async def get(self, request: web.Request) -> web.Response:
         """Serve the index page for panel pages."""
-        hass = request.app["hass"]
+        hass = request.app[KEY_HASS]
 
         if not onboarding.async_is_onboarded(hass):
             return web.Response(status=302, headers={"location": "/onboarding.html"})
@@ -577,15 +605,26 @@ class IndexView(web_urldispatcher.AbstractResource):
             self.get_template
         )
 
-        return web.Response(
+        extra_modules: frozenset[str]
+        extra_js_es5: frozenset[str]
+        if hass.config.safe_mode:
+            extra_modules = frozenset()
+            extra_js_es5 = frozenset()
+        else:
+            extra_modules = hass.data[DATA_EXTRA_MODULE_URL].urls
+            extra_js_es5 = hass.data[DATA_EXTRA_JS_URL_ES5].urls
+
+        response = web.Response(
             text=_async_render_index_cached(
                 template,
                 theme_color=MANIFEST_JSON["theme_color"],
-                extra_modules=hass.data[DATA_EXTRA_MODULE_URL].urls,
-                extra_js_es5=hass.data[DATA_EXTRA_JS_URL_ES5].urls,
+                extra_modules=extra_modules,
+                extra_js_es5=extra_js_es5,
             ),
             content_type="text/html",
         )
+        response.enable_compression()
+        return response
 
     def __len__(self) -> int:
         """Return length of resource."""
@@ -606,9 +645,33 @@ class ManifestJSONView(HomeAssistantView):
     @callback
     def get(self, request: web.Request) -> web.Response:
         """Return the manifest.json."""
-        return web.Response(
+        response = web.Response(
             text=MANIFEST_JSON.json, content_type="application/manifest+json"
         )
+        response.enable_compression()
+        return response
+
+
+@websocket_api.websocket_command(
+    {
+        "type": "frontend/get_icons",
+        vol.Required("category"): vol.In({"entity", "entity_component", "services"}),
+        vol.Optional("integration"): vol.All(cv.ensure_list, [str]),
+    }
+)
+@websocket_api.async_response
+async def websocket_get_icons(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Handle get icons command."""
+    resources = await async_get_icons(
+        hass,
+        msg["category"],
+        msg.get("integration"),
+    )
+    connection.send_message(
+        websocket_api.result_message(msg["id"], {"resources": resources})
+    )
 
 
 @callback
@@ -633,18 +696,13 @@ def websocket_get_themes(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle get themes command."""
-    if hass.config.safe_mode:
+    if hass.config.recovery_mode or hass.config.safe_mode:
         connection.send_message(
             websocket_api.result_message(
                 msg["id"],
                 {
-                    "themes": {
-                        "safe_mode": {
-                            "primary-color": "#db4437",
-                            "accent-color": "#ffca28",
-                        }
-                    },
-                    "default_theme": "safe_mode",
+                    "themes": {},
+                    "default_theme": "default",
                 },
             )
         )
@@ -700,7 +758,7 @@ async def websocket_get_version(
 
     for req in integration.requirements:
         if req.startswith("home-assistant-frontend=="):
-            frontend = req.split("==", 1)[1]
+            frontend = req.removeprefix("home-assistant-frontend==")
 
     if frontend is None:
         connection.send_error(msg["id"], "unknown_version", "Version not found")
@@ -717,3 +775,4 @@ class PanelRespons(TypedDict):
     config: dict[str, Any] | None
     url_path: str | None
     require_admin: bool
+    config_panel_domain: str | None

@@ -1,4 +1,5 @@
 """Device tracker platform that adds support for OwnTracks over MQTT."""
+
 from homeassistant.components.device_tracker import (
     ATTR_SOURCE_TYPE,
     DOMAIN,
@@ -13,8 +14,8 @@ from homeassistant.const import (
     ATTR_LONGITUDE,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
@@ -26,12 +27,11 @@ async def async_setup_entry(
 ) -> None:
     """Set up OwnTracks based off an entry."""
     # Restore previously loaded devices
-    dev_reg = device_registry.async_get(hass)
+    dev_reg = dr.async_get(hass)
     dev_ids = {
         identifier[1]
-        for device in dev_reg.devices.values()
+        for device in dev_reg.devices.get_devices_for_config_entry_id(entry.entry_id)
         for identifier in device.identifiers
-        if identifier[0] == OT_DOMAIN
     }
 
     entities = []
@@ -58,6 +58,9 @@ async def async_setup_entry(
 
 class OwnTracksEntity(TrackerEntity, RestoreEntity):
     """Represent a tracked device."""
+
+    _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(self, dev_id, data=None):
         """Set up OwnTracks entity."""
@@ -109,11 +112,6 @@ class OwnTracksEntity(TrackerEntity, RestoreEntity):
         return self._data.get("location_name")
 
     @property
-    def name(self):
-        """Return the name of the device."""
-        return self._data.get("host_name")
-
-    @property
     def source_type(self) -> SourceType:
         """Return the source type, eg gps or router, of the device."""
         return self._data.get("source_type", SourceType.GPS)
@@ -121,7 +119,10 @@ class OwnTracksEntity(TrackerEntity, RestoreEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
-        return DeviceInfo(identifiers={(OT_DOMAIN, self._dev_id)}, name=self.name)
+        device_info = DeviceInfo(identifiers={(OT_DOMAIN, self._dev_id)})
+        if "host_name" in self._data:
+            device_info["name"] = self._data["host_name"]
+        return device_info
 
     async def async_added_to_hass(self) -> None:
         """Call when entity about to be added to Home Assistant."""

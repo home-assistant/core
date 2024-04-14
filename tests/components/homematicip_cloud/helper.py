@@ -1,4 +1,5 @@
 """Helper for HomematicIP Cloud Tests."""
+
 import json
 from unittest.mock import Mock, patch
 
@@ -27,8 +28,7 @@ from tests.common import load_fixture
 HAPID = "3014F7110000000000000001"
 HAPPIN = "5678"
 AUTH_TOKEN = "1234"
-HOME_JSON = "homematicip_cloud.json"
-FIXTURE_DATA = load_fixture(HOME_JSON)
+FIXTURE_DATA = load_fixture("homematicip_cloud.json", "homematicip_cloud")
 
 
 def get_and_check_entity_basics(hass, mock_hap, entity_id, entity_name, device_model):
@@ -62,9 +62,7 @@ async def async_manipulate_test_data(
     fire_target = hmip_device if fire_device is None else fire_device
 
     if isinstance(fire_target, AsyncHome):
-        fire_target.fire_update_event(
-            fire_target._rawJSONData  # pylint: disable=protected-access
-        )
+        fire_target.fire_update_event(fire_target._rawJSONData)
     else:
         fire_target.fire_update_event()
 
@@ -117,8 +115,7 @@ class HomeFactory:
 
 
 class HomeTemplate(Home):
-    """
-    Home template as builder for home mock.
+    """Home template as builder for home mock.
 
     It is based on the upstream libs home class to generate hmip devices
     and groups based on the given homematicip_cloud.json.
@@ -174,23 +171,16 @@ class HomeTemplate(Home):
 
     def _generate_mocks(self):
         """Generate mocks for groups and devices."""
-        mock_devices = []
-        for device in self.devices:
-            mock_devices.append(_get_mock(device))
-        self.devices = mock_devices
+        self.devices = [_get_mock(device) for device in self.devices]
 
-        mock_groups = []
-        for group in self.groups:
-            mock_groups.append(_get_mock(group))
-        self.groups = mock_groups
+        self.groups = [_get_mock(group) for group in self.groups]
 
     def download_configuration(self):
         """Return the initial json config."""
         return self.init_json_state
 
     def get_async_home_mock(self):
-        """
-        Create Mock for Async_Home. based on template to be used for testing.
+        """Create Mock for Async_Home. based on template to be used for testing.
 
         It adds collections of mocked devices and groups to the home objects,
         and sets required attributes.
@@ -206,9 +196,7 @@ class HomeTemplate(Home):
 def _get_mock(instance):
     """Create a mock and copy instance attributes over mock."""
     if isinstance(instance, Mock):
-        instance.__dict__.update(
-            instance._mock_wraps.__dict__  # pylint: disable=protected-access
-        )
+        instance.__dict__.update(instance._mock_wraps.__dict__)
         return instance
 
     mock = Mock(spec=instance, wraps=instance)

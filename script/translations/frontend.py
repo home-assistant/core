@@ -1,10 +1,11 @@
 """Write updated translations to the frontend."""
+
 import argparse
 import json
 
 from .const import FRONTEND_DIR
 from .download import DOWNLOAD_DIR, run_download_docker
-from .util import get_base_arg_parser
+from .util import get_base_arg_parser, load_json_from_path
 
 FRONTEND_BACKEND_TRANSLATIONS = FRONTEND_DIR / "translations/backend"
 
@@ -29,7 +30,7 @@ def run():
         run_download_docker()
 
     for lang_file in DOWNLOAD_DIR.glob("*.json"):
-        translations = json.loads(lang_file.read_text())
+        translations = load_json_from_path(lang_file)
 
         to_write_translations = {"component": {}}
 

@@ -1,4 +1,5 @@
 """The repairs integration."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -27,14 +28,14 @@ class ConfirmRepairFlow(RepairsFlow):
         self, user_input: dict[str, str] | None = None
     ) -> data_entry_flow.FlowResult:
         """Handle the first step of a fix flow."""
-        return await (self.async_step_confirm())
+        return await self.async_step_confirm()
 
     async def async_step_confirm(
         self, user_input: dict[str, str] | None = None
     ) -> data_entry_flow.FlowResult:
         """Handle the confirm step of a fix flow."""
         if user_input is not None:
-            return self.async_create_entry(title="", data={})
+            return self.async_create_entry(data={})
 
         issue_registry = async_get_issue_registry(self.hass)
         description_placeholders = None
@@ -102,10 +103,13 @@ async def async_process_repairs_platforms(hass: HomeAssistant) -> None:
     """Start processing repairs platforms."""
     hass.data[DOMAIN]["platforms"] = {}
 
-    await async_process_integration_platforms(hass, DOMAIN, _register_repairs_platform)
+    await async_process_integration_platforms(
+        hass, DOMAIN, _register_repairs_platform, wait_for_platforms=True
+    )
 
 
-async def _register_repairs_platform(
+@callback
+def _register_repairs_platform(
     hass: HomeAssistant, integration_domain: str, platform: RepairsProtocol
 ) -> None:
     """Register a repairs platform."""

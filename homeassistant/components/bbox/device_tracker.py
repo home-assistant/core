@@ -1,4 +1,5 @@
 """Support for French FAI Bouygues Bbox routers."""
+
 from __future__ import annotations
 
 from collections import namedtuple
@@ -42,7 +43,7 @@ Device = namedtuple("Device", ["mac", "name", "ip", "last_update"])
 
 
 class BboxDeviceScanner(DeviceScanner):
-    """This class scans for devices connected to the bbox."""
+    """Scanner for devices connected to the bbox."""
 
     def __init__(self, config):
         """Get host from config."""

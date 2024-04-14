@@ -1,0 +1,36 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Setup Velux",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "issues": {
+    "deprecated_yaml_import_issue_cannot_connect": {
+      "title": "The Velux YAML configuration import cannot connect to server",
+      "description": "Configuring Velux using YAML is being removed but there was an connection error importing your YAML configuration.\n\nMake sure your home assistant can reach the KLF 200."
+    },
+    "deprecated_yaml_import_issue_unknown": {
+      "title": "The Velux YAML configuration import failed with unknown error raised by pyvlx",
+      "description": "Configuring Velux using YAML is being removed but there was an unknown error importing your YAML configuration.\n\nCheck your configuration or have a look at the documentation of the integration."
+    }
+  },
+  "services": {
+    "reboot_gateway": {
+      "name": "Reboot gateway",
+      "description": "Reboots the KLF200 Gateway."
+    }
+  }
+}

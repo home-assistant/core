@@ -1,10 +1,12 @@
 """Base class for protect data."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Generator, Iterable
-from datetime import timedelta
+from datetime import datetime, timedelta
+from functools import partial
 import logging
-from typing import Any, Union, cast
+from typing import Any, cast
 
 from pyunifiprotect import ProtectApiClient
 from pyunifiprotect.data import (
@@ -19,6 +21,7 @@ from pyunifiprotect.data import (
     WSSubscriptionMessage,
 )
 from pyunifiprotect.exceptions import ClientError, NotAuthorized
+from pyunifiprotect.utils import log_event
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
@@ -27,6 +30,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 
 from .const import (
+    AUTH_RETRIES,
     CONF_DISABLE_RTSP,
     CONF_MAX_MEDIA,
     DEFAULT_MAX_MEDIA,
@@ -39,7 +43,7 @@ from .const import (
 from .utils import async_dispatch_id as _ufpd, async_get_devices_by_type
 
 _LOGGER = logging.getLogger(__name__)
-ProtectDeviceType = Union[ProtectAdoptableDeviceModel, NVR]
+ProtectDeviceType = ProtectAdoptableDeviceModel | NVR
 
 
 @callback
@@ -128,7 +132,7 @@ class ProtectData:
         try:
             updates = await self.api.update(force=force)
         except NotAuthorized:
-            if self._auth_failures < 10:
+            if self._auth_failures < AUTH_RETRIES:
                 _LOGGER.exception("Auth error while updating")
                 self._auth_failures += 1
             else:
@@ -149,8 +153,7 @@ class ProtectData:
 
     @callback
     def async_add_pending_camera_id(self, camera_id: str) -> None:
-        """
-        Add pending camera.
+        """Add pending camera.
 
         A "pending camera" is one that has been adopted by not had its camera channels
         initialized yet. Will cause Websocket code to check for channels to be
@@ -174,7 +177,7 @@ class ProtectData:
     def _async_remove_device(self, device: ProtectAdoptableDeviceModel) -> None:
         registry = dr.async_get(self._hass)
         device_entry = registry.async_get_device(
-            identifiers=set(), connections={(dr.CONNECTION_NETWORK_MAC, device.mac)}
+            connections={(dr.CONNECTION_NETWORK_MAC, device.mac)}
         )
         if device_entry:
             _LOGGER.debug("Device removed: %s", device.id)
@@ -188,7 +191,7 @@ class ProtectData:
     ) -> None:
         self._async_signal_device_update(device)
         if (
-            device.model == ModelType.CAMERA
+            device.model is ModelType.CAMERA
             and device.id in self._pending_camera_ids
             and "channels" in changed_data
         ):
@@ -223,8 +226,10 @@ class ProtectData:
                 self._async_update_device(obj, message.changed_data)
 
         # trigger updates for camera that the event references
-        elif isinstance(obj, Event):
-            if obj.type == EventType.DEVICE_ADOPTED:
+        elif isinstance(obj, Event):  # type: ignore[unreachable]
+            if _LOGGER.isEnabledFor(logging.DEBUG):
+                log_event(obj)
+            if obj.type is EventType.DEVICE_ADOPTED:
                 if obj.metadata is not None and obj.metadata.device_id is not None:
                     device = self.api.bootstrap.get_device_from_id(
                         obj.metadata.device_id
@@ -240,7 +245,8 @@ class ProtectData:
         # alert user viewport needs restart so voice clients can get new options
         elif len(self.api.bootstrap.viewers) > 0 and isinstance(obj, Liveview):
             _LOGGER.warning(
-                "Liveviews updated. Restart Home Assistant to update Viewport select options"
+                "Liveviews updated. Restart Home Assistant to update Viewport select"
+                " options"
             )
 
     @callback
@@ -256,20 +262,26 @@ class ProtectData:
             self._async_signal_device_update(device)
 
     @callback
+    def _async_poll(self, now: datetime) -> None:
+        """Poll the Protect API.
+
+        If the websocket is connected, most of the time
+        this will be a no-op. If the websocket is disconnected,
+        this will trigger a reconnect and refresh.
+        """
+        self._hass.async_create_task(self.async_refresh(), eager_start=True)
+
+    @callback
     def async_subscribe_device_id(
         self, mac: str, update_callback: Callable[[ProtectDeviceType], None]
     ) -> CALLBACK_TYPE:
         """Add an callback subscriber."""
         if not self._subscriptions:
             self._unsub_interval = async_track_time_interval(
-                self._hass, self.async_refresh, self._update_interval
+                self._hass, self._async_poll, self._update_interval
             )
         self._subscriptions.setdefault(mac, []).append(update_callback)
-
-        def _unsubscribe() -> None:
-            self.async_unsubscribe_device_id(mac, update_callback)
-
-        return _unsubscribe
+        return partial(self.async_unsubscribe_device_id, mac, update_callback)
 
     @callback
     def async_unsubscribe_device_id(
@@ -286,12 +298,10 @@ class ProtectData:
     @callback
     def _async_signal_device_update(self, device: ProtectDeviceType) -> None:
         """Call the callbacks for a device_id."""
-
-        if not self._subscriptions.get(device.mac):
+        if not (subscriptions := self._subscriptions.get(device.mac)):
             return
-
         _LOGGER.debug("Updating device: %s (%s)", device.name, device.mac)
-        for update_callback in self._subscriptions[device.mac]:
+        for update_callback in subscriptions:
             update_callback(device)
 
 

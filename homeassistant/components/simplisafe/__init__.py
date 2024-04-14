@@ -1,8 +1,9 @@
 """Support for SimpliSafe alarm systems."""
+
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Coroutine, Iterable
 from datetime import timedelta
 from typing import Any, cast
 
@@ -66,12 +67,11 @@ from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
 )
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.service import (
     async_register_admin_service,
     verify_domain_control,
@@ -253,45 +253,6 @@ def _async_get_system_for_service_call(
 
 
 @callback
-def _async_log_deprecated_service_call(
-    hass: HomeAssistant,
-    call: ServiceCall,
-    alternate_service: str,
-    alternate_target: str,
-    breaks_in_ha_version: str,
-) -> None:
-    """Log a warning about a deprecated service call."""
-    deprecated_service = f"{call.domain}.{call.service}"
-
-    async_create_issue(
-        hass,
-        DOMAIN,
-        f"deprecated_service_{deprecated_service}",
-        breaks_in_ha_version=breaks_in_ha_version,
-        is_fixable=True,
-        is_persistent=True,
-        severity=IssueSeverity.WARNING,
-        translation_key="deprecated_service",
-        translation_placeholders={
-            "alternate_service": alternate_service,
-            "alternate_target": alternate_target,
-            "deprecated_service": deprecated_service,
-        },
-    )
-
-    LOGGER.warning(
-        (
-            'The "%s" service is deprecated and will be removed in %s; use the "%s" '
-            'service and pass it a target entity ID of "%s"'
-        ),
-        deprecated_service,
-        breaks_in_ha_version,
-        alternate_service,
-        alternate_target,
-    )
-
-
-@callback
 def _async_register_base_station(
     hass: HomeAssistant, entry: ConfigEntry, system: SystemType
 ) -> None:
@@ -308,7 +269,7 @@ def _async_register_base_station(
 
     # Check for an old system ID format and remove it:
     if old_base_station := device_registry.async_get_device(
-        {(DOMAIN, system.system_id)}  # type: ignore[arg-type]
+        identifiers={(DOMAIN, system.system_id)}  # type: ignore[arg-type]
     ):
         # Update the new base station with any properties the user might have configured
         # on the old base station:
@@ -376,7 +337,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     @callback
-    def extract_system(func: Callable) -> Callable:
+    def extract_system(
+        func: Callable[[ServiceCall, SystemType], Coroutine[Any, Any, None]],
+    ) -> Callable[[ServiceCall], Coroutine[Any, Any, None]]:
         """Define a decorator to get the correct system for a service call."""
 
         async def wrapper(call: ServiceCall) -> None:
@@ -489,12 +452,12 @@ class SimpliSafe:
         self.systems: dict[int, SystemType] = {}
 
         # This will get filled in by async_init:
-        self.coordinator: DataUpdateCoordinator | None = None
+        self.coordinator: DataUpdateCoordinator[None] | None = None
 
     @callback
     def _async_process_new_notifications(self, system: SystemType) -> None:
         """Act on any new system notifications."""
-        if self._hass.state != CoreState.running:
+        if self._hass.state is not CoreState.running:
             # If HASS isn't fully running yet, it may cause the SIMPLISAFE_NOTIFICATION
             # event to fire before dependent components (like automation) are fully
             # ready. If that's the case, skip:
@@ -692,7 +655,7 @@ class SimpliSafe:
                 raise UpdateFailed(f"SimpliSafe error while updating: {result}")
 
 
-class SimpliSafeEntity(CoordinatorEntity):
+class SimpliSafeEntity(CoordinatorEntity[DataUpdateCoordinator[None]]):
     """Define a base SimpliSafe entity."""
 
     _attr_has_entity_name = True

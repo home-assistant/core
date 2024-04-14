@@ -1,10 +1,11 @@
 """Config flow to configure the Synology DSM integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
-from ipaddress import ip_address
+from ipaddress import ip_address as ip
 import logging
-from typing import Any
+from typing import Any, cast
 from urllib.parse import urlparse
 
 from synology_dsm import SynologyDSM
@@ -17,9 +18,13 @@ from synology_dsm.exceptions import (
 )
 import voluptuous as vol
 
-from homeassistant import exceptions
-from homeassistant.components import ssdp
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
+from homeassistant.components import ssdp, zeroconf
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import (
     CONF_DISKS,
     CONF_HOST,
@@ -34,9 +39,11 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import DiscoveryInfoType
+from homeassistant.util.network import is_ip_address as is_ip
 
 from .const import (
     CONF_DEVICE_TOKEN,
@@ -55,6 +62,8 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 CONF_OTP_CODE = "otp_code"
+
+HTTP_SUFFIX = "._http._tcp.local."
 
 
 def _discovery_schema_with_defaults(discovery_info: DiscoveryInfoType) -> vol.Schema:
@@ -80,7 +89,7 @@ def _user_schema_with_defaults(user_input: dict[str, Any]) -> vol.Schema:
 
 
 def _ordered_shared_schema(
-    schema_input: dict[str, Any]
+    schema_input: dict[str, Any],
 ) -> dict[vol.Required | vol.Optional, Any]:
     return {
         vol.Required(CONF_USERNAME, default=schema_input.get(CONF_USERNAME, "")): str,
@@ -96,12 +105,9 @@ def _ordered_shared_schema(
     }
 
 
-def _is_valid_ip(text: str) -> bool:
-    try:
-        ip_address(text)
-    except ValueError:
-        return False
-    return True
+def format_synology_mac(mac: str) -> str:
+    """Format a mac address to the format used by Synology DSM."""
+    return mac.replace(":", "").replace("-", "").upper()
 
 
 class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -129,7 +135,7 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
         step_id: str,
         user_input: dict[str, Any] | None = None,
         errors: dict[str, str] | None = None,
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Show the setup form to the user."""
         if not user_input:
             user_input = {}
@@ -155,7 +161,7 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_validate_input_create_entry(
         self, user_input: dict[str, Any], step_id: str
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Process user input and create new or update existing config entry."""
         host = user_input[CONF_HOST]
         port = user_input.get(CONF_PORT)
@@ -172,15 +178,12 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
             else:
                 port = DEFAULT_PORT
 
-        api = SynologyDSM(
-            host, port, username, password, use_ssl, verify_ssl, timeout=30
-        )
+        session = async_get_clientsession(self.hass, verify_ssl)
+        api = SynologyDSM(session, host, port, username, password, use_ssl, timeout=30)
 
         errors = {}
         try:
-            serial = await self.hass.async_add_executor_job(
-                _login_and_fetch_syno_info, api, otp_code
-            )
+            serial = await _login_and_fetch_syno_info(api, otp_code)
         except SynologyDSMLogin2SARequiredException:
             return await self.async_step_2sa(user_input)
         except SynologyDSMLogin2SAFailedException:
@@ -222,62 +225,80 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
             config_data[CONF_VOLUMES] = user_input[CONF_VOLUMES]
 
         if existing_entry:
-            self.hass.config_entries.async_update_entry(
-                existing_entry, data=config_data
+            reason = (
+                "reauth_successful" if self.reauth_conf else "reconfigure_successful"
             )
-            await self.hass.config_entries.async_reload(existing_entry.entry_id)
-            if self.reauth_conf:
-                return self.async_abort(reason="reauth_successful")
-            return self.async_abort(reason="reconfigure_successful")
+            return self.async_update_reload_and_abort(
+                existing_entry, data=config_data, reason=reason
+            )
 
         return self.async_create_entry(title=friendly_name or host, data=config_data)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         step = "user"
         if not user_input:
             return self._show_form(step)
         return await self.async_validate_input_create_entry(user_input, step_id=step)
 
-    async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
-        """Handle a discovered synology_dsm."""
-        parsed_url = urlparse(discovery_info.ssdp_location)
-        friendly_name = (
-            discovery_info.upnp[ssdp.ATTR_UPNP_FRIENDLY_NAME].split("(", 1)[0].strip()
-        )
+    async def async_step_zeroconf(
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle a discovered synology_dsm via zeroconf."""
+        discovered_macs = [
+            format_synology_mac(mac)
+            for mac in discovery_info.properties.get("mac_address", "").split("|")
+            if mac
+        ]
+        if not discovered_macs:
+            return self.async_abort(reason="no_mac_address")
+        host = discovery_info.host
+        friendly_name = discovery_info.name.removesuffix(HTTP_SUFFIX)
+        return await self._async_from_discovery(host, friendly_name, discovered_macs)
 
-        discovered_mac = discovery_info.upnp[ssdp.ATTR_UPNP_SERIAL].upper()
+    async def async_step_ssdp(
+        self, discovery_info: ssdp.SsdpServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle a discovered synology_dsm via ssdp."""
+        parsed_url = urlparse(discovery_info.ssdp_location)
+        upnp_friendly_name: str = discovery_info.upnp[ssdp.ATTR_UPNP_FRIENDLY_NAME]
+        friendly_name = upnp_friendly_name.split("(", 1)[0].strip()
+        mac_address = discovery_info.upnp[ssdp.ATTR_UPNP_SERIAL]
+        discovered_macs = [format_synology_mac(mac_address)]
         # Synology NAS can broadcast on multiple IP addresses, since they can be connected to multiple ethernets.
         # The serial of the NAS is actually its MAC address.
+        host = cast(str, parsed_url.hostname)
+        return await self._async_from_discovery(host, friendly_name, discovered_macs)
 
-        await self.async_set_unique_id(discovered_mac)
-        existing_entry = self._async_get_existing_entry(discovered_mac)
-
-        if not existing_entry:
+    async def _async_from_discovery(
+        self, host: str, friendly_name: str, discovered_macs: list[str]
+    ) -> ConfigFlowResult:
+        """Handle a discovered synology_dsm via zeroconf or ssdp."""
+        existing_entry = None
+        for discovered_mac in discovered_macs:
+            await self.async_set_unique_id(discovered_mac)
+            if existing_entry := self._async_get_existing_entry(discovered_mac):
+                break
             self._abort_if_unique_id_configured()
-
-        fqdn_with_ssl_verification = (
-            existing_entry
-            and not _is_valid_ip(existing_entry.data[CONF_HOST])
-            and existing_entry.data[CONF_VERIFY_SSL]
-        )
 
         if (
             existing_entry
-            and existing_entry.data[CONF_HOST] != parsed_url.hostname
-            and not fqdn_with_ssl_verification
+            and is_ip(existing_entry.data[CONF_HOST])
+            and is_ip(host)
+            and existing_entry.data[CONF_HOST] != host
+            and ip(existing_entry.data[CONF_HOST]).version == ip(host).version
         ):
             _LOGGER.info(
-                "Update host from '%s' to '%s' for NAS '%s' via SSDP discovery",
+                "Update host from '%s' to '%s' for NAS '%s' via discovery",
                 existing_entry.data[CONF_HOST],
-                parsed_url.hostname,
+                host,
                 existing_entry.unique_id,
             )
             self.hass.config_entries.async_update_entry(
                 existing_entry,
-                data={**existing_entry.data, CONF_HOST: parsed_url.hostname},
+                data={**existing_entry.data, CONF_HOST: host},
             )
             return self.async_abort(reason="reconfigure_successful")
 
@@ -286,14 +307,14 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
 
         self.discovered_conf = {
             CONF_NAME: friendly_name,
-            CONF_HOST: parsed_url.hostname,
+            CONF_HOST: host,
         }
         self.context["title_placeholders"] = self.discovered_conf
         return await self.async_step_link()
 
     async def async_step_link(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Link a config entry from discovery."""
         step = "link"
         if not user_input:
@@ -301,7 +322,9 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
         user_input = {**self.discovered_conf, **user_input}
         return await self.async_validate_input_create_entry(user_input, step_id=step)
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
         self.reauth_conf = entry_data
         self.context["title_placeholders"][CONF_HOST] = entry_data[CONF_HOST]
@@ -310,7 +333,7 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Perform reauth confirm upon an API authentication error."""
         step = "reauth_confirm"
         if not user_input:
@@ -320,7 +343,7 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_2sa(
         self, user_input: dict[str, Any], errors: dict[str, str] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Enter 2SA code to anthenticate."""
         if not self.saved_user_input:
             self.saved_user_input = user_input
@@ -341,7 +364,7 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
         """See if we already have a configured NAS with this MAC address."""
         for entry in self._async_current_entries():
             if discovered_mac in [
-                mac.replace("-", "") for mac in entry.data.get(CONF_MAC, [])
+                format_synology_mac(mac) for mac in entry.data.get(CONF_MAC, [])
             ]:
                 return entry
         return None
@@ -356,7 +379,7 @@ class SynologyDSMOptionsFlowHandler(OptionsFlow):
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle options flow."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
@@ -386,13 +409,13 @@ class SynologyDSMOptionsFlowHandler(OptionsFlow):
         return self.async_show_form(step_id="init", data_schema=data_schema)
 
 
-def _login_and_fetch_syno_info(api: SynologyDSM, otp_code: str | None) -> str:
+async def _login_and_fetch_syno_info(api: SynologyDSM, otp_code: str | None) -> str:
     """Login to the NAS and fetch basic data."""
     # These do i/o
-    api.login(otp_code)
-    api.utilisation.update()
-    api.storage.update()
-    api.network.update()
+    await api.login(otp_code)
+    await api.utilisation.update()
+    await api.storage.update()
+    await api.network.update()
 
     if (
         not api.information.serial
@@ -402,8 +425,8 @@ def _login_and_fetch_syno_info(api: SynologyDSM, otp_code: str | None) -> str:
     ):
         raise InvalidData
 
-    return api.information.serial  # type: ignore[no-any-return]
+    return api.information.serial
 
 
-class InvalidData(exceptions.HomeAssistantError):
+class InvalidData(HomeAssistantError):
     """Error to indicate we get invalid data from the nas."""

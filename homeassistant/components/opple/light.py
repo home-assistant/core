@@ -1,4 +1,5 @@
 """Support for the Opple light."""
+
 from __future__ import annotations
 
 import logging
@@ -151,8 +152,7 @@ class OppleLight(LightEntity):
             _LOGGER.debug("Update light %s success: power off", self._device.ip)
         else:
             _LOGGER.debug(
-                "Update light %s success: power on brightness %s "
-                "color temperature %s",
+                "Update light %s success: power on brightness %s color temperature %s",
                 self._device.ip,
                 self._brightness,
                 self._color_temp,

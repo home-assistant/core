@@ -1,4 +1,5 @@
 """Config flow for Nanoleaf integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -9,12 +10,12 @@ from typing import Any, Final, cast
 from aionanoleaf import InvalidToken, Nanoleaf, Unauthorized, Unavailable
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components import ssdp, zeroconf
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_TOKEN
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.util.json import load_json, save_json
+from homeassistant.helpers.json import save_json
+from homeassistant.util.json import JsonObjectType, JsonValueType, load_json_object
 
 from .const import DOMAIN
 
@@ -30,24 +31,22 @@ USER_SCHEMA: Final = vol.Schema(
 )
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class NanoleafConfigFlow(ConfigFlow, domain=DOMAIN):
     """Nanoleaf config flow."""
 
-    reauth_entry: config_entries.ConfigEntry | None = None
+    reauth_entry: ConfigEntry | None = None
+
+    nanoleaf: Nanoleaf
+
+    # For discovery integration import
+    discovery_conf: JsonObjectType
+    device_id: str
 
     VERSION = 1
 
-    def __init__(self) -> None:
-        """Initialize a Nanoleaf flow."""
-        self.nanoleaf: Nanoleaf
-
-        # For discovery integration import
-        self.discovery_conf: dict
-        self.device_id: str
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle Nanoleaf flow initiated by the user."""
         if user_input is None:
             return self.async_show_form(
@@ -78,10 +77,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
         return await self.async_step_link()
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle Nanoleaf reauth flow if token is invalid."""
         self.reauth_entry = cast(
-            config_entries.ConfigEntry,
+            ConfigEntry,
             self.hass.config_entries.async_get_entry(self.context["entry_id"]),
         )
         self.nanoleaf = Nanoleaf(
@@ -92,21 +93,21 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle Nanoleaf Zeroconf discovery."""
         _LOGGER.debug("Zeroconf discovered: %s", discovery_info)
         return await self._async_homekit_zeroconf_discovery_handler(discovery_info)
 
     async def async_step_homekit(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle Nanoleaf Homekit discovery."""
         _LOGGER.debug("Homekit discovered: %s", discovery_info)
         return await self._async_homekit_zeroconf_discovery_handler(discovery_info)
 
     async def _async_homekit_zeroconf_discovery_handler(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle Nanoleaf Homekit and Zeroconf discovery."""
         return await self._async_discovery_handler(
             discovery_info.host,
@@ -114,7 +115,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             discovery_info.properties[zeroconf.ATTR_PROPERTIES_ID],
         )
 
-    async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
+    async def async_step_ssdp(
+        self, discovery_info: ssdp.SsdpServiceInfo
+    ) -> ConfigFlowResult:
         """Handle Nanoleaf SSDP discovery."""
         _LOGGER.debug("SSDP discovered: %s", discovery_info)
         return await self._async_discovery_handler(
@@ -125,7 +128,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _async_discovery_handler(
         self, host: str, name: str, device_id: str
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle Nanoleaf discovery."""
         # The name is unique and printed on the device and cannot be changed.
         await self.async_set_unique_id(name)
@@ -133,19 +136,19 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         # Import from discovery integration
         self.device_id = device_id
-        self.discovery_conf = cast(
-            dict,
-            await self.hass.async_add_executor_job(
-                load_json, self.hass.config.path(CONFIG_FILE)
-            ),
+        self.discovery_conf = await self.hass.async_add_executor_job(
+            load_json_object, self.hass.config.path(CONFIG_FILE)
         )
-        auth_token: str | None = self.discovery_conf.get(self.device_id, {}).get(
-            "token",  # >= 2021.4
-            self.discovery_conf.get(host, {}).get("token"),  # < 2021.4
-        )
+
+        auth_token: JsonValueType = None
+        if device_conf := self.discovery_conf.get(self.device_id):  # >= 2021.4
+            auth_token = cast(JsonObjectType, device_conf).get("token")
+        if not auth_token and (host_conf := self.discovery_conf.get(host)):  # < 2021.4
+            auth_token = cast(JsonObjectType, host_conf).get("token")
+
         if auth_token is not None:
             self.nanoleaf = Nanoleaf(
-                async_get_clientsession(self.hass), host, auth_token
+                async_get_clientsession(self.hass), host, cast(str, auth_token)
             )
             _LOGGER.warning(
                 "Importing Nanoleaf %s from the discovery integration", name
@@ -157,7 +160,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_link(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle Nanoleaf link step."""
         if user_input is None:
             return self.async_show_form(step_id="link")
@@ -189,7 +192,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_setup_finish(
         self, discovery_integration_import: bool = False
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Finish Nanoleaf config flow."""
         try:
             await self.nanoleaf.get_info()

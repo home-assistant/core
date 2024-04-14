@@ -1,4 +1,5 @@
 """Utils for Magic Home."""
+
 from __future__ import annotations
 
 from flux_led.aio import AIOWifiLedBulb
@@ -12,6 +13,8 @@ from .const import FLUX_COLOR_MODE_TO_HASS, MIN_RGB_BRIGHTNESS
 
 def _hass_color_modes(device: AIOWifiLedBulb) -> set[str]:
     color_modes = device.color_modes
+    if not color_modes:
+        return {ColorMode.ONOFF}
     return {_flux_color_mode_to_hass(mode, color_modes) for mode in color_modes}
 
 
@@ -60,7 +63,7 @@ def _str_to_multi_color_effect(effect_str: str) -> MultiColorEffects:
         if effect.name.lower() == effect_str:
             return effect
     # unreachable due to schema validation
-    assert False  # pragma: no cover
+    raise RuntimeError  # pragma: no cover
 
 
 def _is_zero_rgb_brightness(rgb: tuple[int, int, int]) -> bool:

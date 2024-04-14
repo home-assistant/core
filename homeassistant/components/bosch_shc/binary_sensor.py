@@ -1,4 +1,5 @@
 """Platform for binarysensor integration."""
+
 from __future__ import annotations
 
 from boschshcpy import SHCBatteryDevice, SHCSession, SHCShutterContact
@@ -22,42 +23,46 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the SHC binary sensor platform."""
-    entities: list[BinarySensorEntity] = []
     session: SHCSession = hass.data[DOMAIN][config_entry.entry_id][DATA_SESSION]
 
-    for binary_sensor in session.device_helper.shutter_contacts:
-        entities.append(
-            ShutterContactSensor(
-                device=binary_sensor,
-                parent_id=session.information.unique_id,
-                entry_id=config_entry.entry_id,
-            )
+    entities: list[BinarySensorEntity] = [
+        ShutterContactSensor(
+            device=binary_sensor,
+            parent_id=session.information.unique_id,
+            entry_id=config_entry.entry_id,
         )
+        for binary_sensor in (
+            session.device_helper.shutter_contacts
+            + session.device_helper.shutter_contacts2
+        )
+    ]
 
-    for binary_sensor in (
-        session.device_helper.motion_detectors
-        + session.device_helper.shutter_contacts
-        + session.device_helper.smoke_detectors
-        + session.device_helper.thermostats
-        + session.device_helper.twinguards
-        + session.device_helper.universal_switches
-        + session.device_helper.wallthermostats
-        + session.device_helper.water_leakage_detectors
-    ):
-        if binary_sensor.supports_batterylevel:
-            entities.append(
-                BatterySensor(
-                    device=binary_sensor,
-                    parent_id=session.information.unique_id,
-                    entry_id=config_entry.entry_id,
-                )
-            )
+    entities.extend(
+        BatterySensor(
+            device=binary_sensor,
+            parent_id=session.information.unique_id,
+            entry_id=config_entry.entry_id,
+        )
+        for binary_sensor in (
+            session.device_helper.motion_detectors
+            + session.device_helper.shutter_contacts
+            + session.device_helper.shutter_contacts2
+            + session.device_helper.smoke_detectors
+            + session.device_helper.thermostats
+            + session.device_helper.twinguards
+            + session.device_helper.universal_switches
+            + session.device_helper.wallthermostats
+            + session.device_helper.water_leakage_detectors
+        )
+    )
 
     async_add_entities(entities)
 
 
 class ShutterContactSensor(SHCEntity, BinarySensorEntity):
     """Representation of an SHC shutter contact sensor."""
+
+    _attr_name = None
 
     def __init__(self, device: SHCDevice, parent_id: str, entry_id: str) -> None:
         """Initialize an SHC shutter contact sensor.."""
@@ -86,7 +91,6 @@ class BatterySensor(SHCEntity, BinarySensorEntity):
     def __init__(self, device: SHCDevice, parent_id: str, entry_id: str) -> None:
         """Initialize an SHC battery reporting sensor."""
         super().__init__(device, parent_id, entry_id)
-        self._attr_name = f"{device.name} Battery"
         self._attr_unique_id = f"{device.serial}_battery"
 
     @property

@@ -1,25 +1,29 @@
 """Test the Google Assistant SDK config flow."""
-from unittest.mock import patch
 
-import oauth2client
+from unittest.mock import patch
 
 from homeassistant import config_entries
 from homeassistant.components.google_assistant_sdk.const import DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from .conftest import CLIENT_ID, ComponentSetup
 
 from tests.common import MockConfigEntry
+from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.typing import ClientSessionGenerator
 
+GOOGLE_AUTH_URI = "https://accounts.google.com/o/oauth2/v2/auth"
+GOOGLE_TOKEN_URI = "https://oauth2.googleapis.com/token"
 TITLE = "Google Assistant SDK"
 
 
 async def test_full_flow(
     hass: HomeAssistant,
-    hass_client_no_auth,
-    aioclient_mock,
-    current_request_with_host,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    current_request_with_host: None,
     setup_credentials,
 ) -> None:
     """Check full flow."""
@@ -35,7 +39,7 @@ async def test_full_flow(
     )
 
     assert result["url"] == (
-        f"{oauth2client.GOOGLE_AUTH_URI}?response_type=code&client_id={CLIENT_ID}"
+        f"{GOOGLE_AUTH_URI}?response_type=code&client_id={CLIENT_ID}"
         "&redirect_uri=https://example.com/auth/external/callback"
         f"&state={state}&scope=https://www.googleapis.com/auth/assistant-sdk-prototype"
         "&access_type=offline&prompt=consent"
@@ -47,7 +51,7 @@ async def test_full_flow(
     assert resp.headers["content-type"] == "text/html; charset=utf-8"
 
     aioclient_mock.post(
-        oauth2client.GOOGLE_TOKEN_URI,
+        GOOGLE_TOKEN_URI,
         json={
             "refresh_token": "mock-refresh-token",
             "access_token": "mock-access-token",
@@ -65,7 +69,7 @@ async def test_full_flow(
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert len(mock_setup.mock_calls) == 1
 
-    assert result.get("type") == "create_entry"
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert result.get("title") == TITLE
     assert "result" in result
     assert result.get("result").unique_id is None
@@ -78,9 +82,9 @@ async def test_full_flow(
 
 async def test_reauth(
     hass: HomeAssistant,
-    hass_client_no_auth,
-    aioclient_mock,
-    current_request_with_host,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    current_request_with_host: None,
     setup_credentials,
 ) -> None:
     """Test the reauthentication case updates the existing config entry."""
@@ -112,7 +116,7 @@ async def test_reauth(
         },
     )
     assert result["url"] == (
-        f"{oauth2client.GOOGLE_AUTH_URI}?response_type=code&client_id={CLIENT_ID}"
+        f"{GOOGLE_AUTH_URI}?response_type=code&client_id={CLIENT_ID}"
         "&redirect_uri=https://example.com/auth/external/callback"
         f"&state={state}&scope=https://www.googleapis.com/auth/assistant-sdk-prototype"
         "&access_type=offline&prompt=consent"
@@ -123,7 +127,7 @@ async def test_reauth(
     assert resp.headers["content-type"] == "text/html; charset=utf-8"
 
     aioclient_mock.post(
-        oauth2client.GOOGLE_TOKEN_URI,
+        GOOGLE_TOKEN_URI,
         json={
             "refresh_token": "mock-refresh-token",
             "access_token": "updated-access-token",
@@ -141,7 +145,7 @@ async def test_reauth(
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert len(mock_setup.mock_calls) == 1
 
-    assert result.get("type") == "abort"
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "reauth_successful"
 
     assert config_entry.unique_id is None
@@ -153,9 +157,9 @@ async def test_reauth(
 
 async def test_single_instance_allowed(
     hass: HomeAssistant,
-    hass_client_no_auth,
-    aioclient_mock,
-    current_request_with_host,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    current_request_with_host: None,
     setup_credentials,
 ) -> None:
     """Test case where config flow allows a single test."""
@@ -181,7 +185,7 @@ async def test_single_instance_allowed(
     )
 
     assert result["url"] == (
-        f"{oauth2client.GOOGLE_AUTH_URI}?response_type=code&client_id={CLIENT_ID}"
+        f"{GOOGLE_AUTH_URI}?response_type=code&client_id={CLIENT_ID}"
         "&redirect_uri=https://example.com/auth/external/callback"
         f"&state={state}&scope=https://www.googleapis.com/auth/assistant-sdk-prototype"
         "&access_type=offline&prompt=consent"
@@ -193,7 +197,7 @@ async def test_single_instance_allowed(
     assert resp.headers["content-type"] == "text/html; charset=utf-8"
 
     aioclient_mock.post(
-        oauth2client.GOOGLE_TOKEN_URI,
+        GOOGLE_TOKEN_URI,
         json={
             "refresh_token": "mock-refresh-token",
             "access_token": "mock-access-token",
@@ -203,7 +207,7 @@ async def test_single_instance_allowed(
     )
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert result.get("type") == "abort"
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "single_instance_allowed"
 
 
@@ -218,7 +222,7 @@ async def test_options_flow(
 
     # Trigger options flow, first time
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
     data_schema = result["data_schema"].schema
     assert set(data_schema) == {"language_code"}
@@ -227,12 +231,12 @@ async def test_options_flow(
         result["flow_id"],
         user_input={"language_code": "es-ES"},
     )
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert config_entry.options == {"language_code": "es-ES"}
 
     # Retrigger options flow, not change language
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
     data_schema = result["data_schema"].schema
     assert set(data_schema) == {"language_code"}
@@ -241,12 +245,12 @@ async def test_options_flow(
         result["flow_id"],
         user_input={"language_code": "es-ES"},
     )
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert config_entry.options == {"language_code": "es-ES"}
 
     # Retrigger options flow, change language
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
     data_schema = result["data_schema"].schema
     assert set(data_schema) == {"language_code"}
@@ -255,5 +259,5 @@ async def test_options_flow(
         result["flow_id"],
         user_input={"language_code": "en-US"},
     )
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert config_entry.options == {"language_code": "en-US"}

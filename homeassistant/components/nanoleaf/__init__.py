@@ -1,4 +1,5 @@
 """The Nanoleaf integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -41,7 +42,7 @@ class NanoleafEntryData:
     """Class for sharing data within the Nanoleaf integration."""
 
     device: Nanoleaf
-    coordinator: DataUpdateCoordinator
+    coordinator: DataUpdateCoordinator[None]
     event_listener: asyncio.Task
 
 

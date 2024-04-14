@@ -1,4 +1,5 @@
 """Constants for the HomematicIP Cloud component."""
+
 import logging
 
 from homeassistant.const import Platform
@@ -14,6 +15,7 @@ PLATFORMS = [
     Platform.CLIMATE,
     Platform.COVER,
     Platform.LIGHT,
+    Platform.LOCK,
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.WEATHER,

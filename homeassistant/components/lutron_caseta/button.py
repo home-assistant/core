@@ -1,4 +1,5 @@
 """Support for pico and keypad buttons."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -6,7 +7,7 @@ from typing import Any
 from homeassistant.components.button import ButtonEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import LutronCasetaDevice
@@ -29,7 +30,6 @@ async def async_setup_entry(
     entities: list[LutronCasetaButton] = []
 
     for device in button_devices.values():
-
         parent_keypad = keypads[device["parent_device"]]
         parent_device_info = parent_keypad["device_info"]
 
@@ -53,7 +53,8 @@ async def async_setup_entry(
                 .title()
             )
 
-        # Append the child device name to the end of the parent keypad name to create the entity name
+        # Append the child device name to the end of the parent keypad
+        # name to create the entity name
         full_name = f'{parent_device_info.get("name")} {device_name}'
         # Set the device_info to the same as the Parent Keypad
         # The entities will be nested inside the keypad device

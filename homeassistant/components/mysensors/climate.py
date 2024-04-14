@@ -1,4 +1,5 @@
 """MySensors platform that offers a Climate (MySensors-HVAC) component."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -12,7 +13,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, Platform, UnitOfTemperature
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.unit_system import METRIC_SYSTEM
@@ -66,15 +67,16 @@ async def async_setup_entry(
     )
 
 
-class MySensorsHVAC(mysensors.device.MySensorsEntity, ClimateEntity):
+class MySensorsHVAC(mysensors.device.MySensorsChildEntity, ClimateEntity):
     """Representation of a MySensors HVAC."""
 
     _attr_hvac_modes = OPERATION_LIST
+    _enable_turn_on_off_backwards_compatibility = False
 
     @property
     def supported_features(self) -> ClimateEntityFeature:
         """Return the list of supported features."""
-        features = ClimateEntityFeature(0)
+        features = ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
         set_req = self.gateway.const.SetReq
         if set_req.V_HVAC_SPEED in self._values:
             features = features | ClimateEntityFeature.FAN_MODE
@@ -144,7 +146,7 @@ class MySensorsHVAC(mysensors.device.MySensorsEntity, ClimateEntity):
     @property
     def hvac_mode(self) -> HVACMode:
         """Return current operation ie. heat, cool, idle."""
-        return self._values.get(self.value_type, HVACMode.HEAT)
+        return self._values.get(self.value_type, HVACMode.HEAT)  # type: ignore[no-any-return]
 
     @property
     def fan_mode(self) -> str | None:
@@ -213,7 +215,8 @@ class MySensorsHVAC(mysensors.device.MySensorsEntity, ClimateEntity):
             self._values[self.value_type] = hvac_mode
             self.async_write_ha_state()
 
-    async def async_update(self) -> None:
+    @callback
+    def _async_update(self) -> None:
         """Update the controller with the latest value from a sensor."""
-        await super().async_update()
+        super()._async_update()
         self._values[self.value_type] = DICT_MYS_TO_HA[self._values[self.value_type]]

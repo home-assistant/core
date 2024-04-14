@@ -1,8 +1,10 @@
 """Support for Fibaro sensors."""
+
 from __future__ import annotations
 
 from contextlib import suppress
-from typing import Any
+
+from pyfibaro.fibaro_device import DeviceModel
 
 from homeassistant.components.sensor import (
     ENTITY_ID_FORMAT,
@@ -25,7 +27,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import convert
 
-from . import FIBARO_DEVICES, FibaroDevice
+from . import FibaroController, FibaroDevice
 from .const import DOMAIN
 
 # List of known sensors which represents a fibaro device
@@ -104,19 +106,28 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Fibaro controller devices."""
-    entities: list[SensorEntity] = []
 
-    for device in hass.data[DOMAIN][entry.entry_id][FIBARO_DEVICES][Platform.SENSOR]:
-        entity_description = MAIN_SENSOR_TYPES.get(device.type)
+    controller: FibaroController = hass.data[DOMAIN][entry.entry_id]
+    entities: list[SensorEntity] = [
+        FibaroSensor(device, MAIN_SENSOR_TYPES.get(device.type))
+        for device in controller.fibaro_devices[Platform.SENSOR]
+    ]
 
-        # main sensors are created even if the entity type is not known
-        entities.append(FibaroSensor(device, entity_description))
-
-    for platform in (Platform.COVER, Platform.LIGHT, Platform.SENSOR, Platform.SWITCH):
-        for device in hass.data[DOMAIN][entry.entry_id][FIBARO_DEVICES][platform]:
-            for entity_description in ADDITIONAL_SENSOR_TYPES:
-                if entity_description.key in device.properties:
-                    entities.append(FibaroAdditionalSensor(device, entity_description))
+    entities.extend(
+        FibaroAdditionalSensor(device, entity_description)
+        for platform in (
+            Platform.BINARY_SENSOR,
+            Platform.CLIMATE,
+            Platform.COVER,
+            Platform.LIGHT,
+            Platform.LOCK,
+            Platform.SENSOR,
+            Platform.SWITCH,
+        )
+        for device in controller.fibaro_devices[platform]
+        for entity_description in ADDITIONAL_SENSOR_TYPES
+        if entity_description.key in device.properties
+    )
 
     async_add_entities(entities, True)
 
@@ -125,7 +136,9 @@ class FibaroSensor(FibaroDevice, SensorEntity):
     """Representation of a Fibaro Sensor."""
 
     def __init__(
-        self, fibaro_device: Any, entity_description: SensorEntityDescription | None
+        self,
+        fibaro_device: DeviceModel,
+        entity_description: SensorEntityDescription | None,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(fibaro_device)
@@ -138,20 +151,21 @@ class FibaroSensor(FibaroDevice, SensorEntity):
         with suppress(KeyError, ValueError):
             if not self.native_unit_of_measurement:
                 self._attr_native_unit_of_measurement = FIBARO_TO_HASS_UNIT.get(
-                    fibaro_device.properties.unit, fibaro_device.properties.unit
+                    fibaro_device.unit, fibaro_device.unit
                 )
 
     def update(self) -> None:
         """Update the state."""
-        with suppress(KeyError, ValueError):
-            self._attr_native_value = float(self.fibaro_device.properties.value)
+        super().update()
+        with suppress(TypeError):
+            self._attr_native_value = self.fibaro_device.value.float_value()
 
 
 class FibaroAdditionalSensor(FibaroDevice, SensorEntity):
     """Representation of a Fibaro Additional Sensor."""
 
     def __init__(
-        self, fibaro_device: Any, entity_description: SensorEntityDescription
+        self, fibaro_device: DeviceModel, entity_description: SensorEntityDescription
     ) -> None:
         """Initialize the sensor."""
         super().__init__(fibaro_device)
@@ -167,6 +181,7 @@ class FibaroAdditionalSensor(FibaroDevice, SensorEntity):
 
     def update(self) -> None:
         """Update the state."""
+        super().update()
         with suppress(KeyError, ValueError):
             self._attr_native_value = convert(
                 self.fibaro_device.properties[self.entity_description.key],

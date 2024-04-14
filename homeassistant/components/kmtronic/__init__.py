@@ -1,9 +1,10 @@
 """The kmtronic integration."""
+
+import asyncio
 from datetime import timedelta
 import logging
 
 import aiohttp
-import async_timeout
 from pykmtronic.auth import Auth
 from pykmtronic.hub import KMTronicHubAPI
 
@@ -33,7 +34,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def async_update_data():
         try:
-            async with async_timeout.timeout(10):
+            async with asyncio.timeout(10):
                 await hub.async_update_relays()
         except aiohttp.client_exceptions.ClientResponseError as err:
             raise UpdateFailed(f"Wrong credentials: {err}") from err

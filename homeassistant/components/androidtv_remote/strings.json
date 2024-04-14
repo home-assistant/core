@@ -1,0 +1,47 @@
+{
+  "config": {
+    "flow_title": "{name}",
+    "step": {
+      "user": {
+        "description": "Enter the IP address of the Android TV you want to add to Home Assistant. It will turn on and a pairing code will be displayed on it that you will need to enter in the next screen.",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        }
+      },
+      "zeroconf_confirm": {
+        "title": "Discovered Android TV",
+        "description": "Do you want to add the Android TV ({name}) to Home Assistant?  It will turn on and a pairing code will be displayed on it that you will need to enter in the next screen."
+      },
+      "pair": {
+        "description": "Enter the pairing code displayed on the Android TV ({name}).",
+        "data": {
+          "pin": "[%key:common::config_flow::data::pin%]"
+        }
+      },
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "You need to pair again with the Android TV ({name})."
+      }
+    },
+    "error": {
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "enable_ime": "Enable IME. Needed for getting the current app. Disable for devices that show 'Use keyboard on mobile device screen' instead of the on screen keyboard."
+        }
+      }
+    }
+  }
+}

@@ -1,4 +1,6 @@
 """Common fixtures for testing greeneye_monitor."""
+
+from collections.abc import Generator
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -6,7 +8,7 @@ import pytest
 
 from homeassistant.components.greeneye_monitor import DOMAIN
 from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.const import ELECTRIC_POTENTIAL_VOLT, POWER_WATT
+from homeassistant.const import UnitOfElectricPotential, UnitOfPower
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import (
     RegistryEntry,
@@ -27,7 +29,7 @@ def assert_sensor_state(
     assert state
     actual_state = state.state
     assert actual_state == expected_state
-    for (key, value) in attributes.items():
+    for key, value in attributes.items():
         assert key in state.attributes
         assert state.attributes[key] == value
 
@@ -61,7 +63,7 @@ def assert_power_sensor_registered(
 ) -> None:
     """Assert that a power sensor entity was registered properly."""
     sensor = assert_sensor_registered(hass, serial_number, "current", number, name)
-    assert sensor.unit_of_measurement == POWER_WATT
+    assert sensor.unit_of_measurement == UnitOfPower.WATT
     assert sensor.original_device_class is SensorDeviceClass.POWER
 
 
@@ -70,7 +72,7 @@ def assert_voltage_sensor_registered(
 ) -> None:
     """Assert that a voltage sensor entity was registered properly."""
     sensor = assert_sensor_registered(hass, serial_number, "volts", number, name)
-    assert sensor.unit_of_measurement == ELECTRIC_POTENTIAL_VOLT
+    assert sensor.unit_of_measurement == UnitOfElectricPotential.VOLT
     assert sensor.original_device_class is SensorDeviceClass.VOLTAGE
 
 
@@ -97,17 +99,18 @@ def assert_sensor_registered(
 
 
 @pytest.fixture
-def monitors() -> AsyncMock:
+def monitors() -> Generator[AsyncMock, None, None]:
     """Provide a mock greeneye.Monitors object that has listeners and can add new monitors."""
-    with patch("greeneye.Monitors", new=AsyncMock) as mock_monitors:
-        add_listeners(mock_monitors)
-        mock_monitors.monitors = {}
+    with patch("greeneye.Monitors", autospec=True) as mock_monitors:
+        mock = mock_monitors.return_value
+        add_listeners(mock)
+        mock.monitors = {}
 
         def add_monitor(monitor: MagicMock) -> None:
             """Add the given mock monitor as a monitor with the given serial number, notifying any listeners on the Monitors object."""
             serial_number = monitor.serial_number
-            mock_monitors.monitors[serial_number] = monitor
-            mock_monitors.notify_all_listeners(monitor)
+            mock.monitors[serial_number] = monitor
+            mock.notify_all_listeners(monitor)
 
-        mock_monitors.add_monitor = add_monitor
-        yield mock_monitors
+        mock.add_monitor = add_monitor
+        yield mock

@@ -1,4 +1,5 @@
 """Handle MySensors gateways."""
+
 from __future__ import annotations
 
 import asyncio
@@ -9,7 +10,6 @@ import socket
 import sys
 from typing import Any
 
-import async_timeout
 from mysensors import BaseAsyncGateway, Message, Sensor, mysensors
 import voluptuous as vol
 
@@ -17,16 +17,17 @@ from homeassistant.components.mqtt import (
     DOMAIN as MQTT_DOMAIN,
     ReceiveMessage as MQTTReceiveMessage,
     ReceivePayloadType,
+    async_publish,
+    async_subscribe,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import CONF_DEVICE, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from .const import (
     CONF_BAUD_RATE,
-    CONF_DEVICE,
     CONF_GATEWAY_TYPE,
     CONF_GATEWAY_TYPE_MQTT,
     CONF_GATEWAY_TYPE_SERIAL,
@@ -43,6 +44,7 @@ from .const import (
 )
 from .handler import HANDLERS
 from .helpers import (
+    discover_mysensors_node,
     discover_mysensors_platform,
     on_unload,
     validate_child,
@@ -69,9 +71,9 @@ def is_socket_address(value: str) -> str:
     """Validate that value is a valid address."""
     try:
         socket.getaddrinfo(value, None)
-        return value
     except OSError as err:
         raise vol.Invalid("Device is not a valid domain name or ip address") from err
+    return value
 
 
 async def try_connect(
@@ -107,16 +109,16 @@ async def try_connect(
         connect_task = None
         try:
             connect_task = asyncio.create_task(gateway.start())
-            async with async_timeout.timeout(GATEWAY_READY_TIMEOUT):
+            async with asyncio.timeout(GATEWAY_READY_TIMEOUT):
                 await gateway_ready.wait()
                 return True
-        except asyncio.TimeoutError:
+        except TimeoutError:
             _LOGGER.info("Try gateway connect failed with timeout")
             return False
         finally:
             if connect_task is not None and not connect_task.done():
                 connect_task.cancel()
-            asyncio.create_task(gateway.stop())
+            await gateway.stop()
     except OSError as err:
         _LOGGER.info("Try gateway connect failed with exception", exc_info=err)
         return False
@@ -127,7 +129,7 @@ async def setup_gateway(
 ) -> BaseAsyncGateway | None:
     """Set up the Gateway for the given ConfigEntry."""
 
-    ready_gateway = await _get_gateway(
+    return await _get_gateway(
         hass,
         gateway_type=entry.data[CONF_GATEWAY_TYPE],
         device=entry.data[CONF_DEVICE],
@@ -142,7 +144,6 @@ async def setup_gateway(
         topic_out_prefix=entry.data.get(CONF_TOPIC_OUT_PREFIX),
         retain=entry.data.get(CONF_RETAIN, False),
     )
-    return ready_gateway
 
 
 async def _get_gateway(
@@ -171,13 +172,10 @@ async def _get_gateway(
         # Naive check that doesn't consider config entry state.
         if MQTT_DOMAIN not in hass.config.components:
             return None
-        mqtt = hass.components.mqtt
 
         def pub_callback(topic: str, payload: str, qos: int, retain: bool) -> None:
             """Call MQTT publish function."""
-            hass.async_create_task(
-                mqtt.async_publish(hass, topic, payload, qos, retain)
-            )
+            hass.async_create_task(async_publish(hass, topic, payload, qos, retain))
 
         def sub_callback(
             topic: str, sub_cb: Callable[[str, ReceivePayloadType, int], None], qos: int
@@ -189,7 +187,7 @@ async def _get_gateway(
                 """Call callback."""
                 sub_cb(msg.topic, msg.payload, msg.qos)
 
-            hass.async_create_task(mqtt.async_subscribe(topic, internal_callback, qos))
+            hass.async_create_task(async_subscribe(hass, topic, internal_callback, qos))
 
         gateway = mysensors.AsyncMQTTGateway(
             pub_callback,
@@ -245,6 +243,7 @@ async def _discover_persistent_devices(
     for node_id in gateway.sensors:
         if not validate_node(gateway, node_id):
             continue
+        discover_mysensors_node(hass, entry.entry_id, node_id)
         node: Sensor = gateway.sensors[node_id]
         for child in node.children.values():  # child is of type ChildSensor
             validated = validate_child(entry.entry_id, gateway, node_id, child)
@@ -279,10 +278,8 @@ async def _gw_start(
 
     gateway.on_conn_made = gateway_connected
     # Don't use hass.async_create_task to avoid holding up setup indefinitely.
-    hass.data[DOMAIN][
-        MYSENSORS_GATEWAY_START_TASK.format(entry.entry_id)
-    ] = asyncio.create_task(
-        gateway.start()
+    hass.data[DOMAIN][MYSENSORS_GATEWAY_START_TASK.format(entry.entry_id)] = (
+        asyncio.create_task(gateway.start())
     )  # store the connect task so it can be cancelled in gw_stop
 
     async def stop_this_gw(_: Event) -> None:
@@ -299,9 +296,9 @@ async def _gw_start(
         # Gatways connected via mqtt doesn't send gateway ready message.
         return
     try:
-        async with async_timeout.timeout(GATEWAY_READY_TIMEOUT):
+        async with asyncio.timeout(GATEWAY_READY_TIMEOUT):
             await gateway_ready.wait()
-    except asyncio.TimeoutError:
+    except TimeoutError:
         _LOGGER.warning(
             "Gateway %s not connected after %s secs so continuing with setup",
             entry.data[CONF_DEVICE],
@@ -329,6 +326,6 @@ def _gw_callback_factory(
         if msg_handler is None:
             return
 
-        hass.async_create_task(msg_handler(hass, gateway_id, msg))
+        msg_handler(hass, gateway_id, msg)
 
     return mysensors_callback

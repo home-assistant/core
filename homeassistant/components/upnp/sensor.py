@@ -1,7 +1,9 @@
 """Support for UPnP/IGD Sensors."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -10,9 +12,13 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import TIME_SECONDS, UnitOfDataRate, UnitOfInformation
+from homeassistant.const import (
+    EntityCategory,
+    UnitOfDataRate,
+    UnitOfInformation,
+    UnitOfTime,
+)
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -36,7 +42,7 @@ from .coordinator import UpnpDataUpdateCoordinator
 from .entity import UpnpEntity, UpnpEntityDescription
 
 
-@dataclass
+@dataclass(frozen=True)
 class UpnpSensorEntityDescription(UpnpEntityDescription, SensorEntityDescription):
     """A class that describes a sensor UPnP entities."""
 
@@ -44,107 +50,96 @@ class UpnpSensorEntityDescription(UpnpEntityDescription, SensorEntityDescription
 SENSOR_DESCRIPTIONS: tuple[UpnpSensorEntityDescription, ...] = (
     UpnpSensorEntityDescription(
         key=BYTES_RECEIVED,
-        name=f"{UnitOfInformation.BYTES} received",
-        icon="mdi:server-network",
+        translation_key="data_received",
         device_class=SensorDeviceClass.DATA_SIZE,
         native_unit_of_measurement=UnitOfInformation.BYTES,
-        format="d",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=0,
     ),
     UpnpSensorEntityDescription(
         key=BYTES_SENT,
-        name=f"{UnitOfInformation.BYTES} sent",
-        icon="mdi:server-network",
+        translation_key="data_sent",
         device_class=SensorDeviceClass.DATA_SIZE,
         native_unit_of_measurement=UnitOfInformation.BYTES,
-        format="d",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=0,
     ),
     UpnpSensorEntityDescription(
         key=PACKETS_RECEIVED,
-        name=f"{DATA_PACKETS} received",
-        icon="mdi:server-network",
+        translation_key="packets_received",
         native_unit_of_measurement=DATA_PACKETS,
-        format="d",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=0,
     ),
     UpnpSensorEntityDescription(
         key=PACKETS_SENT,
-        name=f"{DATA_PACKETS} sent",
-        icon="mdi:server-network",
+        translation_key="packets_sent",
         native_unit_of_measurement=DATA_PACKETS,
-        format="d",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=0,
     ),
     UpnpSensorEntityDescription(
         key=ROUTER_IP,
-        name="External IP",
-        icon="mdi:server-network",
+        translation_key="external_ip",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     UpnpSensorEntityDescription(
         key=ROUTER_UPTIME,
-        name="Uptime",
-        icon="mdi:server-network",
-        native_unit_of_measurement=TIME_SECONDS,
+        translation_key="uptime",
+        native_unit_of_measurement=UnitOfTime.SECONDS,
         entity_registry_enabled_default=False,
-        format="d",
         entity_category=EntityCategory.DIAGNOSTIC,
+        suggested_display_precision=0,
     ),
     UpnpSensorEntityDescription(
         key=WAN_STATUS,
-        name="wan status",
-        icon="mdi:server-network",
+        translation_key="wan_status",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
     UpnpSensorEntityDescription(
         key=BYTES_RECEIVED,
+        translation_key="download_speed",
         value_key=KIBIBYTES_PER_SEC_RECEIVED,
         unique_id="KiB/sec_received",
-        name=f"{UnitOfDataRate.KIBIBYTES_PER_SECOND} received",
-        icon="mdi:server-network",
         device_class=SensorDeviceClass.DATA_RATE,
         native_unit_of_measurement=UnitOfDataRate.KIBIBYTES_PER_SECOND,
-        format=".1f",
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
     ),
     UpnpSensorEntityDescription(
         key=BYTES_SENT,
+        translation_key="upload_speed",
         value_key=KIBIBYTES_PER_SEC_SENT,
         unique_id="KiB/sec_sent",
-        name=f"{UnitOfDataRate.KIBIBYTES_PER_SECOND} sent",
-        icon="mdi:server-network",
         device_class=SensorDeviceClass.DATA_RATE,
         native_unit_of_measurement=UnitOfDataRate.KIBIBYTES_PER_SECOND,
-        format=".1f",
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
     ),
     UpnpSensorEntityDescription(
         key=PACKETS_RECEIVED,
+        translation_key="packet_download_speed",
         value_key=PACKETS_PER_SEC_RECEIVED,
         unique_id="packets/sec_received",
-        name=f"{DATA_RATE_PACKETS_PER_SECOND} received",
-        icon="mdi:server-network",
         native_unit_of_measurement=DATA_RATE_PACKETS_PER_SECOND,
-        format=".1f",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
     ),
     UpnpSensorEntityDescription(
         key=PACKETS_SENT,
+        translation_key="packet_upload_speed",
         value_key=PACKETS_PER_SEC_SENT,
         unique_id="packets/sec_sent",
-        name=f"{DATA_RATE_PACKETS_PER_SECOND} sent",
-        icon="mdi:server-network",
         native_unit_of_measurement=DATA_RATE_PACKETS_PER_SECOND,
-        format=".1f",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
     ),
 )
 
@@ -176,9 +171,8 @@ class UpnpSensor(UpnpEntity, SensorEntity):
     entity_description: UpnpSensorEntityDescription
 
     @property
-    def native_value(self) -> str | None:
+    def native_value(self) -> str | datetime | int | float | None:
         """Return the state of the device."""
-        value = self.coordinator.data[self.entity_description.value_key]
-        if value is None:
+        if (key := self.entity_description.value_key) is None:
             return None
-        return format(value, self.entity_description.format)
+        return self.coordinator.data[key]

@@ -1,10 +1,12 @@
 """The test for the Facebook notify module."""
+
 from http import HTTPStatus
 
 import pytest
 import requests_mock
 
 import homeassistant.components.facebook.notify as fb
+from homeassistant.core import HomeAssistant
 
 
 @pytest.fixture
@@ -14,7 +16,7 @@ def facebook():
     return fb.FacebookNotificationService(access_token)
 
 
-async def test_send_simple_message(hass, facebook):
+async def test_send_simple_message(hass: HomeAssistant, facebook) -> None:
     """Test sending a simple message with success."""
     with requests_mock.Mocker() as mock:
         mock.register_uri(requests_mock.POST, fb.BASE_URL, status_code=HTTPStatus.OK)
@@ -38,7 +40,7 @@ async def test_send_simple_message(hass, facebook):
         assert mock.last_request.qs == expected_params
 
 
-async def test_send_multiple_message(hass, facebook):
+async def test_send_multiple_message(hass: HomeAssistant, facebook) -> None:
     """Test sending a message to multiple targets."""
     with requests_mock.Mocker() as mock:
         mock.register_uri(requests_mock.POST, fb.BASE_URL, status_code=HTTPStatus.OK)
@@ -64,7 +66,7 @@ async def test_send_multiple_message(hass, facebook):
             assert request.qs == expected_params
 
 
-async def test_send_message_attachment(hass, facebook):
+async def test_send_message_attachment(hass: HomeAssistant, facebook) -> None:
     """Test sending a message with a remote attachment."""
     with requests_mock.Mocker() as mock:
         mock.register_uri(requests_mock.POST, fb.BASE_URL, status_code=HTTPStatus.OK)

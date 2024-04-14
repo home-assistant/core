@@ -1,4 +1,5 @@
 """Common stuff for Fritz!Tools tests."""
+
 from homeassistant.components import ssdp
 from homeassistant.components.fritz.const import DOMAIN
 from homeassistant.components.ssdp import ATTR_UPNP_FRIENDLY_NAME, ATTR_UPNP_UDN
@@ -26,10 +27,14 @@ MOCK_CONFIG = {
     }
 }
 MOCK_HOST = "fake_host"
-MOCK_IPS = {"fritz.box": "192.168.178.1", "printer": "192.168.178.2"}
+MOCK_IPS = {
+    "fritz.box": "192.168.178.1",
+    "printer": "192.168.178.2",
+    "server": "192.168.178.3",
+}
 MOCK_MODELNAME = "FRITZ!Box 7530 AX"
 MOCK_FIRMWARE = "256.07.29"
-MOCK_FIRMWARE_AVAILABLE = "256.07.50"
+MOCK_FIRMWARE_AVAILABLE = "7.50"
 MOCK_FIRMWARE_RELEASE_URL = (
     "http://download.avm.de/fritzbox/fritzbox-7530-ax/deutschland/fritz.os/info_de.txt"
 )
@@ -52,27 +57,8 @@ MOCK_FB_SERVICES: dict[str, dict] = {
         },
     },
     "Hosts1": {
-        "GetGenericHostEntry": [
-            {
-                "NewIPAddress": MOCK_IPS["fritz.box"],
-                "NewAddressSource": "Static",
-                "NewLeaseTimeRemaining": 0,
-                "NewMACAddress": MOCK_MESH_MASTER_MAC,
-                "NewInterfaceType": "",
-                "NewActive": True,
-                "NewHostName": "fritz.box",
-            },
-            {
-                "NewIPAddress": MOCK_IPS["printer"],
-                "NewAddressSource": "DHCP",
-                "NewLeaseTimeRemaining": 0,
-                "NewMACAddress": "AA:BB:CC:00:11:22",
-                "NewInterfaceType": "Ethernet",
-                "NewActive": True,
-                "NewHostName": "printer",
-            },
-        ],
         "X_AVM-DE_GetMeshListPath": {},
+        "X_AVM-DE_GetHostListPath": {},
     },
     "LANEthernetInterfaceConfig1": {
         "GetStatistics": {
@@ -151,6 +137,21 @@ MOCK_FB_SERVICES: dict[str, dict] = {
         },
         "GetPortMappingNumberOfEntries": {},
     },
+    "WLANConfiguration1": {
+        "GetInfo": {
+            "NewEnable": True,
+            "NewStatus": "Up",
+            "NewSSID": "MyWifi",
+            "NewBeaconType": "11iandWPA3",
+            "NewX_AVM-DE_PossibleBeaconTypes": "None,11i,11iandWPA3",
+            "NewStandard": "ax",
+            "NewBSSID": "1C:ED:6F:12:34:13",
+        },
+        "GetSSID": {
+            "NewSSID": "MyWifi",
+        },
+        "GetSecurityKeys": {"NewKeyPassphrase": "1234567890"},
+    },
     "X_AVM-DE_Homeauto1": {
         "GetGenericDeviceInfos": [
             {
@@ -194,7 +195,6 @@ MOCK_FB_SERVICES: dict[str, dict] = {
         }
     },
 }
-
 
 MOCK_MESH_DATA = {
     "schema_version": "1.9",
@@ -784,6 +784,122 @@ MOCK_MESH_DATA = {
     ],
 }
 
+MOCK_NEW_DEVICE_NODE = {
+    "uid": "n-900",
+    "device_name": "server",
+    "device_model": "",
+    "device_manufacturer": "",
+    "device_firmware_version": "",
+    "device_mac_address": "AA:BB:CC:33:44:55",
+    "is_meshed": False,
+    "mesh_role": "unknown",
+    "meshd_version": "0.0",
+    "node_interfaces": [
+        {
+            "uid": "ni-901",
+            "name": "eth0",
+            "type": "LAN",
+            "mac_address": "AA:BB:CC:33:44:55",
+            "blocking_state": "UNKNOWN",
+            "node_links": [
+                {
+                    "uid": "nl-902",
+                    "type": "LAN",
+                    "state": "CONNECTED",
+                    "last_connected": 1642872967,
+                    "node_1_uid": "n-1",
+                    "node_2_uid": "n-900",
+                    "node_interface_1_uid": "ni-31",
+                    "node_interface_2_uid": "ni-901",
+                    "max_data_rate_rx": 1000000,
+                    "max_data_rate_tx": 1000000,
+                    "cur_data_rate_rx": 0,
+                    "cur_data_rate_tx": 0,
+                    "cur_availability_rx": 99,
+                    "cur_availability_tx": 99,
+                }
+            ],
+        }
+    ],
+}
+
+MOCK_HOST_ATTRIBUTES_DATA = [
+    {
+        "Index": 1,
+        "IPAddress": MOCK_IPS["printer"],
+        "MACAddress": "AA:BB:CC:00:11:22",
+        "Active": True,
+        "HostName": "printer",
+        "InterfaceType": "Ethernet",
+        "X_AVM-DE_Port": 1,
+        "X_AVM-DE_Speed": 1000,
+        "X_AVM-DE_UpdateAvailable": False,
+        "X_AVM-DE_UpdateSuccessful": "unknown",
+        "X_AVM-DE_InfoURL": None,
+        "X_AVM-DE_MACAddressList": None,
+        "X_AVM-DE_Model": None,
+        "X_AVM-DE_URL": f"http://{MOCK_IPS['printer']}",
+        "X_AVM-DE_Guest": False,
+        "X_AVM-DE_RequestClient": "0",
+        "X_AVM-DE_VPN": False,
+        "X_AVM-DE_WANAccess": "granted",
+        "X_AVM-DE_Disallow": False,
+        "X_AVM-DE_IsMeshable": "0",
+        "X_AVM-DE_Priority": "0",
+        "X_AVM-DE_FriendlyName": "printer",
+        "X_AVM-DE_FriendlyNameIsWriteable": "1",
+    },
+    {
+        "Index": 2,
+        "IPAddress": MOCK_IPS["fritz.box"],
+        "MACAddress": MOCK_MESH_MASTER_MAC,
+        "Active": True,
+        "HostName": "fritz.box",
+        "InterfaceType": None,
+        "X_AVM-DE_Port": 0,
+        "X_AVM-DE_Speed": 0,
+        "X_AVM-DE_UpdateAvailable": False,
+        "X_AVM-DE_UpdateSuccessful": "unknown",
+        "X_AVM-DE_InfoURL": None,
+        "X_AVM-DE_MACAddressList": f"{MOCK_MESH_MASTER_MAC},{MOCK_MESH_MASTER_WIFI1_MAC}",
+        "X_AVM-DE_Model": None,
+        "X_AVM-DE_URL": f"http://{MOCK_IPS['fritz.box']}",
+        "X_AVM-DE_Guest": False,
+        "X_AVM-DE_RequestClient": "0",
+        "X_AVM-DE_VPN": False,
+        "X_AVM-DE_WANAccess": "granted",
+        "X_AVM-DE_Disallow": False,
+        "X_AVM-DE_IsMeshable": "1",
+        "X_AVM-DE_Priority": "0",
+        "X_AVM-DE_FriendlyName": "fritz.box",
+        "X_AVM-DE_FriendlyNameIsWriteable": "0",
+    },
+    {
+        "Index": 3,
+        "IPAddress": MOCK_IPS["server"],
+        "MACAddress": "AA:BB:CC:33:44:55",
+        "Active": True,
+        "HostName": "server",
+        "InterfaceType": "Ethernet",
+        "X_AVM-DE_Port": 1,
+        "X_AVM-DE_Speed": 1000,
+        "X_AVM-DE_UpdateAvailable": False,
+        "X_AVM-DE_UpdateSuccessful": "unknown",
+        "X_AVM-DE_InfoURL": None,
+        "X_AVM-DE_MACAddressList": None,
+        "X_AVM-DE_Model": None,
+        "X_AVM-DE_URL": f"http://{MOCK_IPS['server']}",
+        "X_AVM-DE_Guest": False,
+        "X_AVM-DE_RequestClient": "0",
+        "X_AVM-DE_VPN": False,
+        "X_AVM-DE_WANAccess": "granted",
+        "X_AVM-DE_Disallow": False,
+        "X_AVM-DE_IsMeshable": "0",
+        "X_AVM-DE_Priority": "0",
+        "X_AVM-DE_FriendlyName": "server",
+        "X_AVM-DE_FriendlyNameIsWriteable": "1",
+    },
+]
 
 MOCK_USER_DATA = MOCK_CONFIG[DOMAIN][CONF_DEVICES][0]
 MOCK_DEVICE_INFO = {

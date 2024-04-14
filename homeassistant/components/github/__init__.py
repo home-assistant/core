@@ -1,4 +1,5 @@
 """The GitHub integration."""
+
 from __future__ import annotations
 
 from aiogithubapi import GitHubAPI
@@ -25,7 +26,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     client = GitHubAPI(
         token=entry.data[CONF_ACCESS_TOKEN],
         session=async_get_clientsession(hass),
-        **{"client_name": SERVER_SOFTWARE},
+        client_name=SERVER_SOFTWARE,
     )
 
     repositories: list[str] = entry.options[CONF_REPOSITORIES]
@@ -64,9 +65,12 @@ def async_cleanup_device_registry(
     )
     for device in devices:
         for item in device.identifiers:
-            if DOMAIN == item[0] and item[1] not in entry.options[CONF_REPOSITORIES]:
+            if item[0] == DOMAIN and item[1] not in entry.options[CONF_REPOSITORIES]:
                 LOGGER.debug(
-                    "Unlinking device %s for untracked repository %s from config entry %s",
+                    (
+                        "Unlinking device %s for untracked repository %s from config"
+                        " entry %s"
+                    ),
                     device.id,
                     item[1],
                     entry.entry_id,

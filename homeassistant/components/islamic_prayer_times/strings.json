@@ -8,15 +8,84 @@
       }
     },
     "abort": {
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
     }
   },
   "options": {
     "step": {
       "init": {
         "data": {
-          "calculation_method": "Prayer calculation method"
+          "calculation_method": "Prayer calculation method",
+          "latitude_adjustment_method": "Latitude adjustment method",
+          "midnight_mode": "Midnight mode",
+          "school": "School"
         }
+      }
+    }
+  },
+  "selector": {
+    "calculation_method": {
+      "options": {
+        "jafari": "Shia Ithna-Ansari",
+        "karachi": "University of Islamic Sciences, Karachi",
+        "isna": "Islamic Society of North America",
+        "mwl": "Muslim World League",
+        "makkah": "Umm Al-Qura University, Makkah",
+        "egypt": "Egyptian General Authority of Survey",
+        "tehran": "Institute of Geophysics, University of Tehran",
+        "gulf": "Gulf Region",
+        "kuwait": "Kuwait",
+        "qatar": "Qatar",
+        "singapore": "Majlis Ugama Islam Singapura, Singapore",
+        "france": "Union Organization islamic de France",
+        "turkey": "Diyanet İşleri Başkanlığı, Turkey",
+        "russia": "Spiritual Administration of Muslims of Russia",
+        "moonsighting": "Moonsighting Committee Worldwide",
+        "custom": "Custom"
+      }
+    },
+    "latitude_adjustment_method": {
+      "options": {
+        "middle_of_the_night": "Middle of the night",
+        "one_seventh": "One seventh",
+        "angle_based": "Angle based"
+      }
+    },
+    "midnight_mode": {
+      "options": {
+        "standard": "Standard (mid sunset to sunrise)",
+        "jafari": "Jafari (mid sunset to fajr)"
+      }
+    },
+    "school": {
+      "options": {
+        "shafi": "Shafi",
+        "hanafi": "Hanafi"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "fajr": {
+        "name": "Fajr prayer"
+      },
+      "sunrise": {
+        "name": "Sunrise time"
+      },
+      "dhuhr": {
+        "name": "Dhuhr prayer"
+      },
+      "asr": {
+        "name": "Asr prayer"
+      },
+      "maghrib": {
+        "name": "Maghrib prayer"
+      },
+      "isha": {
+        "name": "Isha prayer"
+      },
+      "midnight": {
+        "name": "Midnight time"
       }
     }
   }

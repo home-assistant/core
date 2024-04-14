@@ -1,4 +1,5 @@
 """Support for Zabbix."""
+
 from contextlib import suppress
 import json
 import logging
@@ -123,7 +124,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         for key, value in state.attributes.items():
             # For each value we try to cast it as float
-            # But if we can not do it we store the value
+            # But if we cannot do it we store the value
             # as string
             attribute_id = f"{entity_id}/{key}"
             try:
@@ -139,9 +140,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         float_keys_count = len(float_keys)
         float_keys.update(floats)
         if len(float_keys) != float_keys_count:
-            floats_discovery = []
-            for float_key in float_keys:
-                floats_discovery.append({"{#KEY}": float_key})
+            floats_discovery = [{"{#KEY}": float_key} for float_key in float_keys]
             metric = ZabbixMetric(
                 publish_states_host,
                 "homeassistant.floats_discovery",

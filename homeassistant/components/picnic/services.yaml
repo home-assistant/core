@@ -1,34 +1,21 @@
 add_product:
-  name: Add a product to the cart
-  description: >-
-    Adds a product to the cart based on a search string or product ID.
-    The search string and product ID are exclusive.
-
   fields:
     config_entry_id:
-      name: Picnic service
-      description: The product will be added to the selected service.
       required: true
       selector:
         config_entry:
           integration: picnic
     product_id:
-      name: Product ID
-      description: The product ID of a Picnic product.
       required: false
       example: "10510201"
       selector:
         text:
     product_name:
-      name: Product name
-      description: Search for a product and add the first result
       required: false
       example: "Yoghurt"
       selector:
         text:
     amount:
-      name: Amount
-      description: Amount to add of the selected product
       required: false
       default: 1
       selector:

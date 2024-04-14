@@ -1,4 +1,5 @@
 """Fixtures for tests."""
+
 from itertools import cycle
 from unittest.mock import patch
 
@@ -8,7 +9,7 @@ from .const import DISCOVERY_INFO, IP
 from .mock import MockDevice
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_device():
     """Mock connecting to a devolo home network device."""
     device = MockDevice(ip=IP)
@@ -17,6 +18,20 @@ def mock_device():
         side_effect=cycle([device]),
     ):
         yield device
+
+
+@pytest.fixture
+def mock_repeater_device(mock_device: MockDevice):
+    """Mock connecting to a devolo home network repeater device."""
+    mock_device.plcnet = None
+    return mock_device
+
+
+@pytest.fixture
+def mock_nonwifi_device(mock_device: MockDevice):
+    """Mock connecting to a devolo home network device without wifi."""
+    mock_device.device.features = ["reset", "update", "led", "intmtg"]
+    return mock_device
 
 
 @pytest.fixture(name="info")

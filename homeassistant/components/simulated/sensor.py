@@ -1,4 +1,5 @@
 """Adds a simulated sensor."""
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -33,8 +34,6 @@ DEFAULT_PHASE = 0
 DEFAULT_SEED = 999
 DEFAULT_UNIT = "value"
 DEFAULT_RELATIVE_TO_EPOCH = True
-
-ICON = "mdi:chart-line"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -78,6 +77,8 @@ def setup_platform(
 
 class SimulatedSensor(SensorEntity):
     """Class for simulated sensor."""
+
+    _attr_icon = "mdi:chart-line"
 
     def __init__(
         self, name, unit, amp, mean, period, phase, fwhm, seed, relative_to_epoch
@@ -134,11 +135,6 @@ class SimulatedSensor(SensorEntity):
     def native_value(self):
         """Return the state of the sensor."""
         return self._state
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return ICON
 
     @property
     def native_unit_of_measurement(self):

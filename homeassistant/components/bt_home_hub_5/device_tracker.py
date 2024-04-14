@@ -1,4 +1,5 @@
 """Support for BT Home Hub 5."""
+
 from __future__ import annotations
 
 import logging
@@ -35,7 +36,7 @@ def get_scanner(
 
 
 class BTHomeHub5DeviceScanner(DeviceScanner):
-    """This class queries a BT Home Hub 5."""
+    """Class which queries a BT Home Hub 5."""
 
     def __init__(self, config):
         """Initialise the scanner."""

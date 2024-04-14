@@ -1,4 +1,5 @@
 """Buttons for the RainMachine integration."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
@@ -13,10 +14,10 @@ from homeassistant.components.button import (
     ButtonEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import RainMachineData, RainMachineEntity
@@ -24,20 +25,13 @@ from .const import DATA_PROVISION_SETTINGS, DOMAIN
 from .model import RainMachineEntityDescription
 
 
-@dataclass
-class RainMachineButtonDescriptionMixin:
-    """Define an entity description mixin for RainMachine buttons."""
-
-    push_action: Callable[[Controller], Awaitable]
-
-
-@dataclass
+@dataclass(frozen=True, kw_only=True)
 class RainMachineButtonDescription(
-    ButtonEntityDescription,
-    RainMachineEntityDescription,
-    RainMachineButtonDescriptionMixin,
+    ButtonEntityDescription, RainMachineEntityDescription
 ):
     """Describe a RainMachine button description."""
+
+    push_action: Callable[[Controller], Awaitable]
 
 
 BUTTON_KIND_REBOOT = "reboot"
@@ -51,7 +45,6 @@ async def _async_reboot(controller: Controller) -> None:
 BUTTON_DESCRIPTIONS = (
     RainMachineButtonDescription(
         key=BUTTON_KIND_REBOOT,
-        name="Reboot",
         api_category=DATA_PROVISION_SETTINGS,
         push_action=_async_reboot,
     ),

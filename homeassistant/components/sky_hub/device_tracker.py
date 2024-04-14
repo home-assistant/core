@@ -1,4 +1,5 @@
 """Support for Sky Hub."""
+
 from __future__ import annotations
 
 import logging
@@ -39,7 +40,7 @@ async def async_get_scanner(
 
 
 class SkyHubDeviceScanner(DeviceScanner):
-    """This class queries a Sky Hub router."""
+    """Class which queries a Sky Hub router."""
 
     def __init__(self, hub):
         """Initialise the scanner."""
@@ -53,11 +54,10 @@ class SkyHubDeviceScanner(DeviceScanner):
 
     async def async_get_device_name(self, device):
         """Return the name of the given device."""
-        name = next(
+        return next(
             (result.name for result in self.last_results if result.mac == device),
             None,
         )
-        return name
 
     async def async_get_extra_attributes(self, device):
         """Get extra attributes of a device."""

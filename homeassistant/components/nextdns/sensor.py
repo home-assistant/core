@@ -1,4 +1,5 @@
 """Support for the NextDNS service."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -19,9 +20,8 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE
+from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -39,7 +39,7 @@ from .const import (
 PARALLEL_UPDATES = 1
 
 
-@dataclass
+@dataclass(frozen=True)
 class NextDnsSensorRequiredKeysMixin(Generic[CoordinatorDataT]):
     """Class for NextDNS entity required keys."""
 
@@ -47,7 +47,7 @@ class NextDnsSensorRequiredKeysMixin(Generic[CoordinatorDataT]):
     value: Callable[[CoordinatorDataT], StateType]
 
 
-@dataclass
+@dataclass(frozen=True)
 class NextDnsSensorEntityDescription(
     SensorEntityDescription,
     NextDnsSensorRequiredKeysMixin[CoordinatorDataT],
@@ -60,8 +60,7 @@ SENSORS: tuple[NextDnsSensorEntityDescription, ...] = (
         key="all_queries",
         coordinator_type=ATTR_STATUS,
         entity_category=EntityCategory.DIAGNOSTIC,
-        icon="mdi:dns",
-        name="DNS queries",
+        translation_key="all_queries",
         native_unit_of_measurement="queries",
         state_class=SensorStateClass.TOTAL,
         value=lambda data: data.all_queries,
@@ -70,8 +69,7 @@ SENSORS: tuple[NextDnsSensorEntityDescription, ...] = (
         key="blocked_queries",
         coordinator_type=ATTR_STATUS,
         entity_category=EntityCategory.DIAGNOSTIC,
-        icon="mdi:dns",
-        name="DNS queries blocked",
+        translation_key="blocked_queries",
         native_unit_of_measurement="queries",
         state_class=SensorStateClass.TOTAL,
         value=lambda data: data.blocked_queries,
@@ -80,8 +78,7 @@ SENSORS: tuple[NextDnsSensorEntityDescription, ...] = (
         key="relayed_queries",
         coordinator_type=ATTR_STATUS,
         entity_category=EntityCategory.DIAGNOSTIC,
-        icon="mdi:dns",
-        name="DNS queries relayed",
+        translation_key="relayed_queries",
         native_unit_of_measurement="queries",
         state_class=SensorStateClass.TOTAL,
         value=lambda data: data.relayed_queries,
@@ -90,8 +87,7 @@ SENSORS: tuple[NextDnsSensorEntityDescription, ...] = (
         key="blocked_queries_ratio",
         coordinator_type=ATTR_STATUS,
         entity_category=EntityCategory.DIAGNOSTIC,
-        icon="mdi:dns",
-        name="DNS queries blocked ratio",
+        translation_key="blocked_queries_ratio",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: data.blocked_queries_ratio,
@@ -101,8 +97,7 @@ SENSORS: tuple[NextDnsSensorEntityDescription, ...] = (
         coordinator_type=ATTR_PROTOCOLS,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        icon="mdi:dns",
-        name="DNS-over-HTTPS queries",
+        translation_key="doh_queries",
         native_unit_of_measurement="queries",
         state_class=SensorStateClass.TOTAL,
         value=lambda data: data.doh_queries,
@@ -112,8 +107,7 @@ SENSORS: tuple[NextDnsSensorEntityDescription, ...] = (
         coordinator_type=ATTR_PROTOCOLS,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        icon="mdi:dns",
-        name="DNS-over-HTTP/3 queries",
+        translation_key="doh3_queries",
         native_unit_of_measurement="queries",
         state_class=SensorStateClass.TOTAL,
         value=lambda data: data.doh3_queries,
@@ -123,8 +117,7 @@ SENSORS: tuple[NextDnsSensorEntityDescription, ...] = (
         coordinator_type=ATTR_PROTOCOLS,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        icon="mdi:dns",
-        name="DNS-over-TLS queries",
+        translation_key="dot_queries",
         native_unit_of_measurement="queries",
         state_class=SensorStateClass.TOTAL,
         value=lambda data: data.dot_queries,
@@ -134,8 +127,7 @@ SENSORS: tuple[NextDnsSensorEntityDescription, ...] = (
         coordinator_type=ATTR_PROTOCOLS,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        icon="mdi:dns",
-        name="DNS-over-QUIC queries",
+        translation_key="doq_queries",
         native_unit_of_measurement="queries",
         state_class=SensorStateClass.TOTAL,
         value=lambda data: data.doq_queries,
@@ -145,8 +137,7 @@ SENSORS: tuple[NextDnsSensorEntityDescription, ...] = (
         coordinator_type=ATTR_PROTOCOLS,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        icon="mdi:dns",
-        name="TCP queries",
+        translation_key="tcp_queries",
         native_unit_of_measurement="queries",
         state_class=SensorStateClass.TOTAL,
         value=lambda data: data.tcp_queries,
@@ -156,8 +147,7 @@ SENSORS: tuple[NextDnsSensorEntityDescription, ...] = (
         coordinator_type=ATTR_PROTOCOLS,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        icon="mdi:dns",
-        name="UDP queries",
+        translation_key="udp_queries",
         native_unit_of_measurement="queries",
         state_class=SensorStateClass.TOTAL,
         value=lambda data: data.udp_queries,
@@ -166,9 +156,8 @@ SENSORS: tuple[NextDnsSensorEntityDescription, ...] = (
         key="doh_queries_ratio",
         coordinator_type=ATTR_PROTOCOLS,
         entity_registry_enabled_default=False,
-        icon="mdi:dns",
         entity_category=EntityCategory.DIAGNOSTIC,
-        name="DNS-over-HTTPS queries ratio",
+        translation_key="doh_queries_ratio",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: data.doh_queries_ratio,
@@ -177,9 +166,8 @@ SENSORS: tuple[NextDnsSensorEntityDescription, ...] = (
         key="doh3_queries_ratio",
         coordinator_type=ATTR_PROTOCOLS,
         entity_registry_enabled_default=False,
-        icon="mdi:dns",
         entity_category=EntityCategory.DIAGNOSTIC,
-        name="DNS-over-HTTP/3 queries ratio",
+        translation_key="doh3_queries_ratio",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: data.doh3_queries_ratio,
@@ -189,8 +177,7 @@ SENSORS: tuple[NextDnsSensorEntityDescription, ...] = (
         coordinator_type=ATTR_PROTOCOLS,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        icon="mdi:dns",
-        name="DNS-over-TLS queries ratio",
+        translation_key="dot_queries_ratio",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: data.dot_queries_ratio,
@@ -199,9 +186,8 @@ SENSORS: tuple[NextDnsSensorEntityDescription, ...] = (
         key="doq_queries_ratio",
         coordinator_type=ATTR_PROTOCOLS,
         entity_registry_enabled_default=False,
-        icon="mdi:dns",
         entity_category=EntityCategory.DIAGNOSTIC,
-        name="DNS-over-QUIC queries ratio",
+        translation_key="doq_queries_ratio",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: data.doq_queries_ratio,
@@ -211,8 +197,7 @@ SENSORS: tuple[NextDnsSensorEntityDescription, ...] = (
         coordinator_type=ATTR_PROTOCOLS,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        icon="mdi:dns",
-        name="TCP queries ratio",
+        translation_key="tcp_queries_ratio",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: data.tcp_queries_ratio,
@@ -222,8 +207,7 @@ SENSORS: tuple[NextDnsSensorEntityDescription, ...] = (
         coordinator_type=ATTR_PROTOCOLS,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        icon="mdi:dns",
-        name="UDP queries ratio",
+        translation_key="udp_queries_ratio",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: data.udp_queries_ratio,
@@ -233,8 +217,7 @@ SENSORS: tuple[NextDnsSensorEntityDescription, ...] = (
         coordinator_type=ATTR_ENCRYPTION,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        icon="mdi:lock",
-        name="Encrypted queries",
+        translation_key="encrypted_queries",
         native_unit_of_measurement="queries",
         state_class=SensorStateClass.TOTAL,
         value=lambda data: data.encrypted_queries,
@@ -244,8 +227,7 @@ SENSORS: tuple[NextDnsSensorEntityDescription, ...] = (
         coordinator_type=ATTR_ENCRYPTION,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        icon="mdi:lock-open",
-        name="Unencrypted queries",
+        translation_key="unencrypted_queries",
         native_unit_of_measurement="queries",
         state_class=SensorStateClass.TOTAL,
         value=lambda data: data.unencrypted_queries,
@@ -255,8 +237,7 @@ SENSORS: tuple[NextDnsSensorEntityDescription, ...] = (
         coordinator_type=ATTR_ENCRYPTION,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        icon="mdi:lock",
-        name="Encrypted queries ratio",
+        translation_key="encrypted_queries_ratio",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: data.encrypted_queries_ratio,
@@ -266,8 +247,7 @@ SENSORS: tuple[NextDnsSensorEntityDescription, ...] = (
         coordinator_type=ATTR_IP_VERSIONS,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        icon="mdi:ip",
-        name="IPv4 queries",
+        translation_key="ipv4_queries",
         native_unit_of_measurement="queries",
         state_class=SensorStateClass.TOTAL,
         value=lambda data: data.ipv4_queries,
@@ -277,8 +257,7 @@ SENSORS: tuple[NextDnsSensorEntityDescription, ...] = (
         coordinator_type=ATTR_IP_VERSIONS,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        icon="mdi:ip",
-        name="IPv6 queries",
+        translation_key="ipv6_queries",
         native_unit_of_measurement="queries",
         state_class=SensorStateClass.TOTAL,
         value=lambda data: data.ipv6_queries,
@@ -288,8 +267,7 @@ SENSORS: tuple[NextDnsSensorEntityDescription, ...] = (
         coordinator_type=ATTR_IP_VERSIONS,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        icon="mdi:ip",
-        name="IPv6 queries ratio",
+        translation_key="ipv6_queries_ratio",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: data.ipv6_queries_ratio,
@@ -299,8 +277,7 @@ SENSORS: tuple[NextDnsSensorEntityDescription, ...] = (
         coordinator_type=ATTR_DNSSEC,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        icon="mdi:lock-check",
-        name="DNSSEC validated queries",
+        translation_key="validated_queries",
         native_unit_of_measurement="queries",
         state_class=SensorStateClass.TOTAL,
         value=lambda data: data.validated_queries,
@@ -310,8 +287,7 @@ SENSORS: tuple[NextDnsSensorEntityDescription, ...] = (
         coordinator_type=ATTR_DNSSEC,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        icon="mdi:lock-alert",
-        name="DNSSEC not validated queries",
+        translation_key="not_validated_queries",
         native_unit_of_measurement="queries",
         state_class=SensorStateClass.TOTAL,
         value=lambda data: data.not_validated_queries,
@@ -321,8 +297,7 @@ SENSORS: tuple[NextDnsSensorEntityDescription, ...] = (
         coordinator_type=ATTR_DNSSEC,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        icon="mdi:lock-check",
-        name="DNSSEC validated queries ratio",
+        translation_key="validated_queries_ratio",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: data.validated_queries_ratio,
@@ -336,15 +311,12 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Add a NextDNS entities from a config_entry."""
-    sensors: list[NextDnsSensor] = []
     coordinators = hass.data[DOMAIN][entry.entry_id]
 
-    for description in SENSORS:
-        sensors.append(
-            NextDnsSensor(coordinators[description.coordinator_type], description)
-        )
-
-    async_add_entities(sensors)
+    async_add_entities(
+        NextDnsSensor(coordinators[description.coordinator_type], description)
+        for description in SENSORS
+    )
 
 
 class NextDnsSensor(

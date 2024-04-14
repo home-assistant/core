@@ -1,4 +1,5 @@
 """Support for the DirecTV receivers."""
+
 from __future__ import annotations
 
 import logging
@@ -59,18 +60,18 @@ async def async_setup_entry(
 ) -> None:
     """Set up the DirecTV config entry."""
     dtv = hass.data[DOMAIN][entry.entry_id]
-    entities = []
 
-    for location in dtv.device.locations:
-        entities.append(
+    async_add_entities(
+        (
             DIRECTVMediaPlayer(
                 dtv=dtv,
                 name=str.title(location.name),
                 address=location.address,
             )
-        )
-
-    async_add_entities(entities, True)
+            for location in dtv.device.locations
+        ),
+        True,
+    )
 
 
 class DIRECTVMediaPlayer(DIRECTVEntity, MediaPlayerEntity):
@@ -80,11 +81,11 @@ class DIRECTVMediaPlayer(DIRECTVEntity, MediaPlayerEntity):
         """Initialize DirecTV media player."""
         super().__init__(
             dtv=dtv,
+            name=name,
             address=address,
         )
 
         self._attr_unique_id = self._device_id
-        self._attr_name = name
         self._attr_device_class = MediaPlayerDeviceClass.RECEIVER
         self._attr_available = False
 
@@ -112,7 +113,8 @@ class DIRECTVMediaPlayer(DIRECTVEntity, MediaPlayerEntity):
             self._paused = self._last_position == self._program.position
             self._is_recorded = self._program.recorded
             self._last_position = self._program.position
-            self._last_update = state.at
+            if not self._paused:
+                self._last_update = dt_util.utcnow()
             self._attr_assumed_state = self._is_recorded
 
     @property
@@ -276,7 +278,7 @@ class DIRECTVMediaPlayer(DIRECTVEntity, MediaPlayerEntity):
     async def async_turn_on(self) -> None:
         """Turn on the receiver."""
         if self._is_client:
-            raise NotImplementedError()
+            raise NotImplementedError
 
         _LOGGER.debug("Turn on %s", self.name)
         await self.dtv.remote("poweron", self._address)
@@ -284,7 +286,7 @@ class DIRECTVMediaPlayer(DIRECTVEntity, MediaPlayerEntity):
     async def async_turn_off(self) -> None:
         """Turn off the receiver."""
         if self._is_client:
-            raise NotImplementedError()
+            raise NotImplementedError
 
         _LOGGER.debug("Turn off %s", self.name)
         await self.dtv.remote("poweroff", self._address)

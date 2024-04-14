@@ -1,4 +1,5 @@
 """Support for Nederlandse Spoorwegen public transport."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta
@@ -26,7 +27,6 @@ CONF_TO = "to"
 CONF_VIA = "via"
 CONF_TIME = "time"
 
-ICON = "mdi:train"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
 
@@ -64,7 +64,7 @@ def setup_platform(
         requests.exceptions.HTTPError,
     ) as error:
         _LOGGER.error("Could not connect to the internet: %s", error)
-        raise PlatformNotReady() from error
+        raise PlatformNotReady from error
     except RequestParametersError as error:
         _LOGGER.error("Could not fetch stations, please check configuration: %s", error)
         return
@@ -104,6 +104,7 @@ class NSDepartureSensor(SensorEntity):
     """Implementation of a NS Departure Sensor."""
 
     _attr_attribution = "Data provided by NS"
+    _attr_icon = "mdi:train"
 
     def __init__(self, nsapi, name, departure, heading, via, time):
         """Initialize the sensor."""
@@ -122,11 +123,6 @@ class NSDepartureSensor(SensorEntity):
         return self._name
 
     @property
-    def icon(self):
-        """Return the icon for the frontend."""
-        return ICON
-
-    @property
     def native_value(self):
         """Return the next departure time."""
         return self._state
@@ -139,8 +135,7 @@ class NSDepartureSensor(SensorEntity):
 
         if self._trips[0].trip_parts:
             route = [self._trips[0].departure]
-            for k in self._trips[0].trip_parts:
-                route.append(k.destination)
+            route.extend(k.destination for k in self._trips[0].trip_parts)
 
         # Static attributes
         attributes = {
@@ -229,7 +224,8 @@ class NSDepartureSensor(SensorEntity):
             self._trips = None
             return
 
-        # Set the search parameter to search from a specific trip time or to just search for next trip.
+        # Set the search parameter to search from a specific trip time
+        # or to just search for next trip.
         if self._time:
             trip_time = (
                 datetime.today()

@@ -1,4 +1,5 @@
 """Support for Freebox Delta, Revolution and Mini 4K."""
+
 from __future__ import annotations
 
 import logging
@@ -8,8 +9,8 @@ from freebox_api.exceptions import InsufficientPermissionsError
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -48,16 +49,17 @@ class FreeboxSwitch(SwitchEntity):
         """Initialize the switch."""
         self.entity_description = entity_description
         self._router = router
-        self._attr_device_info = self._router.device_info
-        self._attr_unique_id = f"{self._router.mac} {self.entity_description.name}"
+        self._attr_device_info = router.device_info
+        self._attr_unique_id = f"{router.mac} {entity_description.name}"
 
-    async def _async_set_state(self, enabled: bool):
+    async def _async_set_state(self, enabled: bool) -> None:
         """Turn the switch on or off."""
         try:
             await self._router.wifi.set_global_config({"enabled": enabled})
         except InsufficientPermissionsError:
             _LOGGER.warning(
-                "Home Assistant does not have permissions to modify the Freebox settings. Please refer to documentation"
+                "Home Assistant does not have permissions to modify the Freebox"
+                " settings. Please refer to documentation"
             )
 
     async def async_turn_on(self, **kwargs: Any) -> None:

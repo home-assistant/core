@@ -1,4 +1,5 @@
 """Sensor platform to display the current fuel prices at a NSW fuel station."""
+
 from __future__ import annotations
 
 import logging
@@ -117,7 +118,7 @@ class StationPriceSensor(
         return prices.get((self._station_id, self._fuel_type))
 
     @property
-    def extra_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict[str, int | str]:
         """Return the state attributes of the device."""
         return {
             ATTR_STATION_ID: self._station_id,

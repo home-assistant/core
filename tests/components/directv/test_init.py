@@ -1,4 +1,5 @@
 """Tests for the DirecTV integration."""
+
 from homeassistant.components.directv.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -6,8 +7,6 @@ from homeassistant.core import HomeAssistant
 from . import setup_integration
 
 from tests.test_util.aiohttp import AiohttpClientMocker
-
-# pylint: disable=redefined-outer-name
 
 
 async def test_config_entry_not_ready(

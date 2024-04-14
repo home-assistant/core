@@ -1,4 +1,5 @@
 """Provides the Toon DataUpdateCoordinator."""
+
 from __future__ import annotations
 
 import logging
@@ -54,7 +55,6 @@ class ToonDataUpdateCoordinator(DataUpdateCoordinator[Status]):
             self.hass.config_entries.async_update_entry(self.entry, data=data)
 
         if cloud.async_active_subscription(self.hass):
-
             if CONF_CLOUDHOOK_URL not in self.entry.data:
                 try:
                     webhook_url = await cloud.async_create_cloudhook(

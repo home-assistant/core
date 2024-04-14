@@ -1,4 +1,5 @@
 """Support for switches that can be controlled using the RaspyRFM rc module."""
+
 from __future__ import annotations
 
 from raspyrfm_client import RaspyRFMClient
@@ -98,7 +99,7 @@ class RaspyRFMSwitch(SwitchEntity):
 
     _attr_should_poll = False
 
-    def __init__(self, raspyrfm_client, name: str, gateway, controlunit):
+    def __init__(self, raspyrfm_client, name: str, gateway, controlunit) -> None:
         """Initialize the switch."""
         self._raspyrfm_client = raspyrfm_client
 
@@ -115,7 +116,7 @@ class RaspyRFMSwitch(SwitchEntity):
 
     @property
     def assumed_state(self):
-        """Return True when the current state can not be queried."""
+        """Return True when the current state cannot be queried."""
         return True
 
     @property

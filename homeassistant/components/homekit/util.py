@@ -1,4 +1,5 @@
 """Collection of useful functions for the HomeKit component."""
+
 from __future__ import annotations
 
 import io
@@ -35,9 +36,16 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PORT,
     CONF_TYPE,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
-from homeassistant.core import Event, HomeAssistant, State, callback, split_entity_id
+from homeassistant.core import (
+    Event,
+    EventStateChangedData,
+    HomeAssistant,
+    State,
+    callback,
+    split_entity_id,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.util.unit_conversion import TemperatureConverter
@@ -84,8 +92,6 @@ from .const import (
     FEATURE_PLAY_PAUSE,
     FEATURE_PLAY_STOP,
     FEATURE_TOGGLE_MUTE,
-    HOMEKIT_PAIRING_QR,
-    HOMEKIT_PAIRING_QR_SECRET,
     MAX_NAME_LENGTH,
     TYPE_FAUCET,
     TYPE_OUTLET,
@@ -95,8 +101,10 @@ from .const import (
     TYPE_VALVE,
     VIDEO_CODEC_COPY,
     VIDEO_CODEC_H264_OMX,
+    VIDEO_CODEC_H264_V4L2M2M,
     VIDEO_CODEC_LIBX264,
 )
+from .models import HomeKitEntryData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -107,7 +115,12 @@ MAX_VERSION_PART = 2**32 - 1
 
 
 MAX_PORT = 65535
-VALID_VIDEO_CODECS = [VIDEO_CODEC_LIBX264, VIDEO_CODEC_H264_OMX, AUDIO_CODEC_COPY]
+VALID_VIDEO_CODECS = [
+    VIDEO_CODEC_LIBX264,
+    VIDEO_CODEC_H264_OMX,
+    VIDEO_CODEC_H264_V4L2M2M,
+    AUDIO_CODEC_COPY,
+]
 VALID_AUDIO_CODECS = [AUDIO_CODEC_OPUS, VIDEO_CODEC_COPY]
 
 BASIC_INFO_SCHEMA = vol.Schema(
@@ -319,10 +332,7 @@ def validate_media_player_features(state: State, feature_list: str) -> bool:
         # Auto detected
         return True
 
-    error_list = []
-    for feature in feature_list:
-        if feature not in supported_modes:
-            error_list.append(feature)
+    error_list = [feature for feature in feature_list if feature not in supported_modes]
 
     if error_list:
         _LOGGER.error(
@@ -344,12 +354,14 @@ def async_show_setup_message(
     url.svg(buffer, scale=5, module_color="#000", background="#FFF")
     pairing_secret = secrets.token_hex(32)
 
-    hass.data[DOMAIN][entry_id][HOMEKIT_PAIRING_QR] = buffer.getvalue()
-    hass.data[DOMAIN][entry_id][HOMEKIT_PAIRING_QR_SECRET] = pairing_secret
+    entry_data: HomeKitEntryData = hass.data[DOMAIN][entry_id]
+
+    entry_data.pairing_qr = buffer.getvalue()
+    entry_data.pairing_qr_secret = pairing_secret
 
     message = (
         f"To set up {bridge_name} in the Home App, "
-        f"scan the QR code or enter the following code:\n"
+        "scan the QR code or enter the following code:\n"
         f"### {pin}\n"
         f"![image](/api/homekit/pairingqr?{entry_id}-{pairing_secret})"
     )
@@ -389,14 +401,22 @@ def cleanup_name_for_homekit(name: str | None) -> str:
     return name.translate(HOMEKIT_CHAR_TRANSLATIONS)[:MAX_NAME_LENGTH]
 
 
-def temperature_to_homekit(temperature: float | int, unit: str) -> float:
+def temperature_to_homekit(temperature: float, unit: str) -> float:
     """Convert temperature to Celsius for HomeKit."""
-    return round(TemperatureConverter.convert(temperature, unit, TEMP_CELSIUS), 1)
+    return round(
+        TemperatureConverter.convert(temperature, unit, UnitOfTemperature.CELSIUS), 1
+    )
 
 
-def temperature_to_states(temperature: float | int, unit: str) -> float:
+def temperature_to_states(temperature: float, unit: str) -> float:
     """Convert temperature back from Celsius to Home Assistant unit."""
-    return round(TemperatureConverter.convert(temperature, TEMP_CELSIUS, unit) * 2) / 2
+    return (
+        round(
+            TemperatureConverter.convert(temperature, UnitOfTemperature.CELSIUS, unit)
+            * 2
+        )
+        / 2
+    )
 
 
 def density_to_air_quality(density: float) -> int:
@@ -439,16 +459,21 @@ def density_to_air_quality_nitrogen_dioxide(density: float) -> int:
 
 
 def density_to_air_quality_voc(density: float) -> int:
-    """Map VOCs µg/m3 to HomeKit AirQuality level."""
-    if density <= 24:
+    """Map VOCs µg/m3 to HomeKit AirQuality level.
+
+    The VOC mappings use the IAQ guidelines for Europe released by the WHO (World Health Organization).
+    Referenced from Sensirion_Gas_Sensors_SGP3x_TVOC_Concept.pdf
+    https://github.com/paulvha/svm30/blob/master/extras/Sensirion_Gas_Sensors_SGP3x_TVOC_Concept.pdf
+    """
+    if density <= 250:  # WHO IAQ 1 (HomeKit: Excellent)
         return 1
-    if density <= 48:
+    if density <= 500:  # WHO IAQ 2 (HomeKit: Good)
         return 2
-    if density <= 64:
+    if density <= 1000:  # WHO IAQ 3 (HomeKit: Fair)
         return 3
-    if density <= 96:
+    if density <= 3000:  # WHO IAQ 4 (HomeKit: Inferior)
         return 4
-    return 5
+    return 5  # WHOA IAQ 5 (HomeKit: Poor)
 
 
 def get_persist_filename_for_entry_id(entry_id: str) -> str:
@@ -553,11 +578,12 @@ def _async_find_next_available_port(start_port: int, exclude_ports: set) -> int:
             continue
         try:
             test_socket.bind(("", port))
-            return port
         except OSError:
             if port == MAX_PORT:
                 raise
             continue
+        else:
+            return port
     raise RuntimeError("unreachable")
 
 
@@ -565,10 +591,9 @@ def pid_is_alive(pid: int) -> bool:
     """Check to see if a process is alive."""
     try:
         os.kill(pid, 0)
-        return True
     except OSError:
-        pass
-    return False
+        return False
+    return True
 
 
 def accessory_friendly_name(hass_name: str, accessory: Accessory) -> str:
@@ -593,16 +618,17 @@ def state_needs_accessory_mode(state: State) -> bool:
 
     return (
         state.domain == MEDIA_PLAYER_DOMAIN
-        and state.attributes.get(ATTR_DEVICE_CLASS) == MediaPlayerDeviceClass.TV
+        and state.attributes.get(ATTR_DEVICE_CLASS)
+        in (MediaPlayerDeviceClass.TV, MediaPlayerDeviceClass.RECEIVER)
         or state.domain == REMOTE_DOMAIN
         and state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         & RemoteEntityFeature.ACTIVITY
     )
 
 
-def state_changed_event_is_same_state(event: Event) -> bool:
+def state_changed_event_is_same_state(event: Event[EventStateChangedData]) -> bool:
     """Check if a state changed event is the same state."""
     event_data = event.data
-    old_state: State | None = event_data.get("old_state")
-    new_state: State | None = event_data.get("new_state")
+    old_state = event_data["old_state"]
+    new_state = event_data["new_state"]
     return bool(new_state and old_state and new_state.state == old_state.state)

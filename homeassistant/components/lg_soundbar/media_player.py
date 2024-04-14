@@ -1,4 +1,5 @@
 """Support for LG soundbars."""
+
 from __future__ import annotations
 
 import temescal
@@ -11,7 +12,10 @@ from homeassistant.components.media_player import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+from .const import DOMAIN
 
 
 async def async_setup_entry(
@@ -42,6 +46,8 @@ class LGDevice(MediaPlayerEntity):
         | MediaPlayerEntityFeature.SELECT_SOURCE
         | MediaPlayerEntityFeature.SELECT_SOUND_MODE
     )
+    _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(self, host, port, unique_id):
         """Initialize the LG speakers."""
@@ -66,6 +72,9 @@ class LGDevice(MediaPlayerEntity):
         self._bass = 0
         self._treble = 0
         self._device = None
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, unique_id)}, name=host
+        )
 
     async def async_added_to_hass(self) -> None:
         """Register the callback after hass is ready for it."""
@@ -82,7 +91,7 @@ class LGDevice(MediaPlayerEntity):
 
     def handle_event(self, response):
         """Handle responses from the speakers."""
-        data = response["data"] if "data" in response else {}
+        data = response.get("data") or {}
         if response["msg"] == "EQ_VIEW_INFO":
             if "i_bass" in data:
                 self._bass = data["i_bass"]
@@ -157,11 +166,11 @@ class LGDevice(MediaPlayerEntity):
     @property
     def sound_mode_list(self):
         """Return the available sound modes."""
-        modes = []
-        for equaliser in self._equalisers:
-            if equaliser < len(temescal.equalisers):
-                modes.append(temescal.equalisers[equaliser])
-        return sorted(modes)
+        return sorted(
+            temescal.equalisers[equaliser]
+            for equaliser in self._equalisers
+            if equaliser < len(temescal.equalisers)
+        )
 
     @property
     def source(self):
@@ -173,11 +182,11 @@ class LGDevice(MediaPlayerEntity):
     @property
     def source_list(self):
         """List of available input sources."""
-        sources = []
-        for function in self._functions:
-            if function < len(temescal.functions):
-                sources.append(temescal.functions[function])
-        return sorted(sources)
+        return sorted(
+            temescal.functions[function]
+            for function in self._functions
+            if function < len(temescal.functions)
+        )
 
     def set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""

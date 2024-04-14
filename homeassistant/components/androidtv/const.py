@@ -1,4 +1,5 @@
-"""Android TV component constants."""
+"""Android Debug Bridge component constants."""
+
 DOMAIN = "androidtv"
 
 ANDROID_DEV = DOMAIN

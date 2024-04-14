@@ -1,4 +1,5 @@
 """The IntelliFire integration."""
+
 from __future__ import annotations
 
 from aiohttp import ClientConnectionError
@@ -24,6 +25,7 @@ PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.CLIMATE,
     Platform.FAN,
+    Platform.LIGHT,
     Platform.NUMBER,
     Platform.SENSOR,
     Platform.SWITCH,

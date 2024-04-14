@@ -1,10 +1,10 @@
 """Support for schedules in Home Assistant."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
 from datetime import datetime, time, timedelta
 import itertools
-import logging
 from typing import Any, Literal
 
 import voluptuous as vol
@@ -21,18 +21,16 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers.collection import (
     CollectionEntity,
+    DictStorageCollection,
+    DictStorageCollectionWebsocket,
     IDManager,
-    StorageCollection,
-    StorageCollectionWebsocket,
+    SerializedStorageCollection,
     YamlCollection,
     sync_entity_lifecycle,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_point_in_utc_time
-from homeassistant.helpers.integration_platform import (
-    async_process_integration_platform_for_component,
-)
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
@@ -69,7 +67,8 @@ def valid_schedule(schedule: list[dict[str, str]]) -> list[dict[str, str]]:
     for time_range in schedule:
         if time_range[CONF_FROM] >= time_range[CONF_TO]:
             raise vol.Invalid(
-                f"Invalid time range, from {time_range[CONF_FROM]} is after {time_range[CONF_TO]}"
+                f"Invalid time range, from {time_range[CONF_FROM]} is after"
+                f" {time_range[CONF_TO]}"
             )
 
         # Check if the from time of the event is after the to time of the previous event
@@ -156,10 +155,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up an input select."""
     component = EntityComponent[Schedule](LOGGER, DOMAIN, hass)
 
-    # Process integration platforms right away since
-    # we will create entities before firing EVENT_COMPONENT_LOADED
-    await async_process_integration_platform_for_component(hass, DOMAIN)
-
     id_manager = IDManager()
 
     yaml_collection = YamlCollection(LOGGER, id_manager)
@@ -172,7 +167,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             version=STORAGE_VERSION,
             minor_version=STORAGE_VERSION_MINOR,
         ),
-        logging.getLogger(f"{__name__}.storage_collection"),
         id_manager,
     )
     sync_entity_lifecycle(hass, DOMAIN, DOMAIN, component, storage_collection, Schedule)
@@ -182,7 +176,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     await storage_collection.async_load()
 
-    StorageCollectionWebsocket(
+    DictStorageCollectionWebsocket(
         storage_collection,
         DOMAIN,
         DOMAIN,
@@ -209,7 +203,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-class ScheduleStorageCollection(StorageCollection):
+class ScheduleStorageCollection(DictStorageCollection):
     """Schedules stored in storage."""
 
     SCHEMA = vol.Schema(BASE_SCHEMA | STORAGE_SCHEDULE_SCHEMA)
@@ -225,12 +219,12 @@ class ScheduleStorageCollection(StorageCollection):
         name: str = info[CONF_NAME]
         return name
 
-    async def _update_data(self, data: dict, update_data: dict) -> dict:
+    async def _update_data(self, item: dict, update_data: dict) -> dict:
         """Return a new updated data object."""
         self.SCHEMA(update_data)
-        return data | update_data
+        return item | update_data
 
-    async def _async_load_data(self) -> dict | None:
+    async def _async_load_data(self) -> SerializedStorageCollection | None:
         """Load the data."""
         if data := await super()._async_load_data():
             data["items"] = [STORAGE_SCHEMA(item) for item in data["items"]]
@@ -239,6 +233,10 @@ class ScheduleStorageCollection(StorageCollection):
 
 class Schedule(CollectionEntity):
     """Schedule entity."""
+
+    _entity_component_unrecorded_attributes = frozenset(
+        {ATTR_EDITABLE, ATTR_NEXT_EVENT}
+    )
 
     _attr_has_entity_name = True
     _attr_should_poll = False
@@ -258,8 +256,7 @@ class Schedule(CollectionEntity):
     @classmethod
     def from_storage(cls, config: ConfigType) -> Schedule:
         """Return entity instance initialized from storage."""
-        schedule = cls(config, editable=True)
-        return schedule
+        return cls(config, editable=True)
 
     @classmethod
     def from_yaml(cls, config: ConfigType) -> Schedule:
@@ -331,7 +328,7 @@ class Schedule(CollectionEntity):
                         possible_next_event := (
                             datetime.combine(now.date(), timestamp, tzinfo=now.tzinfo)
                             + timedelta(days=day)
-                            if not timestamp == time.max
+                            if timestamp != time.max
                             # Special case for midnight of the following day.
                             else datetime.combine(now.date(), time(), tzinfo=now.tzinfo)
                             + timedelta(days=day + 1)

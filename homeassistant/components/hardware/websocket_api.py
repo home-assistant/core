@@ -1,4 +1,5 @@
 """The Hardware websocket API."""
+
 from __future__ import annotations
 
 import contextlib
@@ -20,7 +21,7 @@ from .hardware import async_process_hardware_platforms
 from .models import HardwareProtocol
 
 
-@dataclass
+@dataclass(slots=True)
 class SystemStatus:
     """System status."""
 
@@ -66,13 +67,13 @@ async def ws_info(
     connection.send_result(msg["id"], {"hardware": hardware_info})
 
 
+@callback
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "hardware/subscribe_system_status",
     }
 )
-@websocket_api.async_response
-async def ws_subscribe_system_status(
+def ws_subscribe_system_status(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Subscribe to system status updates."""

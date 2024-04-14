@@ -1,4 +1,5 @@
 """Support for departure information for public transport in Munich."""
+
 from __future__ import annotations
 
 from copy import deepcopy
@@ -9,7 +10,7 @@ import MVGLive
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import CONF_NAME, TIME_MINUTES
+from homeassistant.const import CONF_NAME, UnitOfTime
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -70,9 +71,8 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the MVGLive sensor."""
-    sensors = []
-    for nextdeparture in config[CONF_NEXT_DEPARTURE]:
-        sensors.append(
+    add_entities(
+        (
             MVGLiveSensor(
                 nextdeparture.get(CONF_STATION),
                 nextdeparture.get(CONF_DESTINATIONS),
@@ -83,8 +83,10 @@ def setup_platform(
                 nextdeparture.get(CONF_NUMBER),
                 nextdeparture.get(CONF_NAME),
             )
-        )
-    add_entities(sensors, True)
+            for nextdeparture in config[CONF_NEXT_DEPARTURE]
+        ),
+        True,
+    )
 
 
 class MVGLiveSensor(SensorEntity):
@@ -141,7 +143,7 @@ class MVGLiveSensor(SensorEntity):
     @property
     def native_unit_of_measurement(self):
         """Return the unit this state is expressed in."""
-        return TIME_MINUTES
+        return UnitOfTime.MINUTES
 
     def update(self) -> None:
         """Get the latest data and update the state."""

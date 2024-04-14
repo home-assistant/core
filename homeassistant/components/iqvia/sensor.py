@@ -1,8 +1,9 @@
 """Support for IQVIA sensors."""
+
 from __future__ import annotations
 
 from statistics import mean
-from typing import NamedTuple
+from typing import Any, NamedTuple, cast
 
 import numpy as np
 
@@ -46,7 +47,6 @@ ATTR_ZIP_CODE = "zip_code"
 
 API_CATEGORY_MAPPING = {
     TYPE_ALLERGY_TODAY: TYPE_ALLERGY_INDEX,
-    TYPE_ALLERGY_TOMORROW: TYPE_ALLERGY_INDEX,
     TYPE_ALLERGY_TOMORROW: TYPE_ALLERGY_INDEX,
     TYPE_ASTHMA_TODAY: TYPE_ASTHMA_INDEX,
     TYPE_ASTHMA_TOMORROW: TYPE_ASTHMA_INDEX,
@@ -212,12 +212,12 @@ class ForecastSensor(IQVIAEntity, SensorEntity):
             if not outlook_coordinator.last_update_success:
                 return
 
-            self._attr_extra_state_attributes[
-                ATTR_OUTLOOK
-            ] = outlook_coordinator.data.get("Outlook")
-            self._attr_extra_state_attributes[
-                ATTR_SEASON
-            ] = outlook_coordinator.data.get("Season")
+            self._attr_extra_state_attributes[ATTR_OUTLOOK] = (
+                outlook_coordinator.data.get("Outlook")
+            )
+            self._attr_extra_state_attributes[ATTR_SEASON] = (
+                outlook_coordinator.data.get("Season")
+            )
 
 
 class IndexSensor(IQVIAEntity, SensorEntity):
@@ -233,14 +233,10 @@ class IndexSensor(IQVIAEntity, SensorEntity):
             if self.entity_description.key in (
                 TYPE_ALLERGY_TODAY,
                 TYPE_ALLERGY_TOMORROW,
-            ):
-                data = self.coordinator.data.get("Location")
-            elif self.entity_description.key in (
                 TYPE_ASTHMA_TODAY,
                 TYPE_ASTHMA_TOMORROW,
+                TYPE_DISEASE_TODAY,
             ):
-                data = self.coordinator.data.get("Location")
-            elif self.entity_description.key == TYPE_DISEASE_TODAY:
                 data = self.coordinator.data.get("Location")
         except KeyError:
             return
@@ -248,10 +244,11 @@ class IndexSensor(IQVIAEntity, SensorEntity):
         key = self.entity_description.key.split("_")[-1].title()
 
         try:
-            [period] = [p for p in data["periods"] if p["Type"] == key]
-        except ValueError:
+            [period] = [p for p in data["periods"] if p["Type"] == key]  # type: ignore[index]
+        except TypeError:
             return
 
+        data = cast(dict[str, Any], data)
         [rating] = [
             i.label for i in RATING_MAPPING if i.minimum <= period["Index"] <= i.maximum
         ]
@@ -286,8 +283,8 @@ class IndexSensor(IQVIAEntity, SensorEntity):
                 )
         elif self.entity_description.key == TYPE_DISEASE_TODAY:
             for attrs in period["Triggers"]:
-                self._attr_extra_state_attributes[
-                    f"{attrs['Name'].lower()}_index"
-                ] = attrs["Index"]
+                self._attr_extra_state_attributes[f"{attrs['Name'].lower()}_index"] = (
+                    attrs["Index"]
+                )
 
         self._attr_native_value = period["Index"]

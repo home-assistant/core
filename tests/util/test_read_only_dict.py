@@ -1,4 +1,5 @@
 """Test read only dictionary."""
+
 import json
 
 import pytest
@@ -6,7 +7,7 @@ import pytest
 from homeassistant.util.read_only_dict import ReadOnlyDict
 
 
-def test_read_only_dict():
+def test_read_only_dict() -> None:
     """Test read only dictionary."""
     data = ReadOnlyDict({"hello": "world"})
 

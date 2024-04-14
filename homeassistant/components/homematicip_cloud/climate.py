@@ -1,4 +1,5 @@
 """Support for HomematicIP Cloud climate devices."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -26,7 +27,7 @@ from homeassistant.components.climate import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DOMAIN as HMIPC_DOMAIN, HomematicipGenericEntity
@@ -50,12 +51,12 @@ async def async_setup_entry(
 ) -> None:
     """Set up the HomematicIP climate from a config entry."""
     hap = hass.data[HMIPC_DOMAIN][config_entry.unique_id]
-    entities = []
-    for device in hap.home.groups:
-        if isinstance(device, AsyncHeatingGroup):
-            entities.append(HomematicipHeatingGroup(hap, device))
 
-    async_add_entities(entities)
+    async_add_entities(
+        HomematicipHeatingGroup(hap, device)
+        for device in hap.home.groups
+        if isinstance(device, AsyncHeatingGroup)
+    )
 
 
 class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
@@ -70,6 +71,7 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
         ClimateEntityFeature.PRESET_MODE | ClimateEntityFeature.TARGET_TEMPERATURE
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, hap: HomematicipHAP, device: AsyncHeatingGroup) -> None:
         """Initialize heating group."""
@@ -131,8 +133,7 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
 
     @property
     def hvac_action(self) -> HVACAction | None:
-        """
-        Return the current hvac_action.
+        """Return the current hvac_action.
 
         This is only relevant for radiator thermostats.
         """
@@ -181,7 +182,7 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
         ) or self._has_switch:
             if not profile_names:
                 presets.append(PRESET_NONE)
-            presets.append(PRESET_BOOST)
+            presets.extend([PRESET_BOOST, PRESET_ECO])
 
         presets.extend(profile_names)
 
@@ -224,6 +225,8 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
             await self._device.set_boost(False)
         if preset_mode == PRESET_BOOST:
             await self._device.set_boost()
+        if preset_mode == PRESET_ECO:
+            await self._device.set_control_mode(HMIP_ECO_CM)
         if preset_mode in self._device_profile_names:
             profile_idx = self._get_profile_idx_by_name(preset_mode)
             if self._device.controlMode != HMIP_AUTOMATIC_CM:
@@ -302,11 +305,7 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
     @property
     def _has_switch(self) -> bool:
         """Return, if a switch is in the hmip heating group."""
-        for device in self._device.devices:
-            if isinstance(device, Switch):
-                return True
-
-        return False
+        return any(isinstance(device, Switch) for device in self._device.devices)
 
     @property
     def _has_radiator_thermostat(self) -> bool:
@@ -316,7 +315,12 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
     @property
     def _first_radiator_thermostat(
         self,
-    ) -> AsyncHeatingThermostat | AsyncHeatingThermostatCompact | AsyncHeatingThermostatEvo | None:
+    ) -> (
+        AsyncHeatingThermostat
+        | AsyncHeatingThermostatCompact
+        | AsyncHeatingThermostatEvo
+        | None
+    ):
         """Return the first radiator thermostat from the hmip heating group."""
         for device in self._device.devices:
             if isinstance(

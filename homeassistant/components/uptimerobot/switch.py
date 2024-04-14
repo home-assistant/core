@@ -1,4 +1,5 @@
 """UptimeRobot switch platform."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -14,8 +15,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import UptimeRobotDataUpdateCoordinator
 from .const import API_ATTR_OK, DOMAIN, LOGGER
+from .coordinator import UptimeRobotDataUpdateCoordinator
 from .entity import UptimeRobotEntity
 
 
@@ -29,7 +30,6 @@ async def async_setup_entry(
             coordinator,
             SwitchEntityDescription(
                 key=str(monitor.id),
-                name=f"{monitor.friendly_name} Active",
                 device_class=SwitchDeviceClass.SWITCH,
             ),
             monitor=monitor,
@@ -41,7 +41,7 @@ async def async_setup_entry(
 class UptimeRobotSwitch(UptimeRobotEntity, SwitchEntity):
     """Representation of a UptimeRobot switch."""
 
-    _attr_icon = "mdi:cog"
+    _attr_translation_key = "monitor_status"
 
     @property
     def is_on(self) -> bool:

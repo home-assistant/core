@@ -1,8 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "no_status": "No status is reported from [%key:common::config_flow::data::host%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
@@ -17,10 +16,208 @@
       }
     }
   },
-  "issues": {
-    "deprecated_yaml": {
-      "title": "The APC UPS Daemon YAML configuration is being removed",
-      "description": "Configuring APC UPS Daemon using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the APC UPS Daemon YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
+  "entity": {
+    "binary_sensor": {
+      "online_status": {
+        "name": "Online status"
+      }
+    },
+    "sensor": {
+      "alarm_delay": {
+        "name": "Alarm delay"
+      },
+      "ambient_temperature": {
+        "name": "Ambient temperature"
+      },
+      "apc_status": {
+        "name": "Status data"
+      },
+      "apc_model": {
+        "name": "Model"
+      },
+      "bad_batteries": {
+        "name": "Bad batteries"
+      },
+      "battery_replacement_date": {
+        "name": "Battery replaced"
+      },
+      "battery_status": {
+        "name": "Battery status"
+      },
+      "battery_voltage": {
+        "name": "Battery voltage"
+      },
+      "cable_type": {
+        "name": "Cable type"
+      },
+      "total_time_on_battery": {
+        "name": "Total time on battery"
+      },
+      "date": {
+        "name": "Status date"
+      },
+      "dip_switch_settings": {
+        "name": "Dip switch settings"
+      },
+      "low_battery_signal": {
+        "name": "Low battery signal"
+      },
+      "driver": {
+        "name": "Driver"
+      },
+      "shutdown_delay": {
+        "name": "Shutdown delay"
+      },
+      "wake_delay": {
+        "name": "Wake delay"
+      },
+      "date_and_time": {
+        "name": "Date and time"
+      },
+      "external_batteries": {
+        "name": "External batteries"
+      },
+      "firmware_version": {
+        "name": "Firmware version"
+      },
+      "transfer_high": {
+        "name": "Transfer high"
+      },
+      "hostname": {
+        "name": "Hostname"
+      },
+      "humidity": {
+        "name": "Ambient humidity"
+      },
+      "internal_temperature": {
+        "name": "Internal temperature"
+      },
+      "last_self_test": {
+        "name": "Last self test"
+      },
+      "last_transfer": {
+        "name": "Last transfer"
+      },
+      "line_failure": {
+        "name": "Input voltage status"
+      },
+      "line_frequency": {
+        "name": "Line frequency"
+      },
+      "line_voltage": {
+        "name": "Input voltage"
+      },
+      "load_capacity": {
+        "name": "Load"
+      },
+      "apparent_power": {
+        "name": "Load apparent power"
+      },
+      "transfer_low": {
+        "name": "Transfer low"
+      },
+      "manufacture_date": {
+        "name": "Manufacture date"
+      },
+      "master_update": {
+        "name": "Master update"
+      },
+      "input_voltage_high": {
+        "name": "Input voltage high"
+      },
+      "max_time": {
+        "name": "Battery timeout"
+      },
+      "max_battery_charge": {
+        "name": "Battery shutdown"
+      },
+      "input_voltage_low": {
+        "name": "Input voltage low"
+      },
+      "min_time": {
+        "name": "Shutdown time"
+      },
+      "model": {
+        "name": "Model"
+      },
+      "battery_nominal_voltage": {
+        "name": "Battery nominal voltage"
+      },
+      "nominal_input_voltage": {
+        "name": "Nominal input voltage"
+      },
+      "nominal_output_voltage": {
+        "name": "Nominal output voltage"
+      },
+      "nominal_output_power": {
+        "name": "Nominal output power"
+      },
+      "nominal_apparent_power": {
+        "name": "Nominal apparent power"
+      },
+      "transfer_count": {
+        "name": "Transfer count"
+      },
+      "output_current": {
+        "name": "Output current"
+      },
+      "output_voltage": {
+        "name": "Output voltage"
+      },
+      "register_1_fault": {
+        "name": "Register 1 fault"
+      },
+      "register_2_fault": {
+        "name": "Register 2 fault"
+      },
+      "register_3_fault": {
+        "name": "Register 3 fault"
+      },
+      "restore_capacity": {
+        "name": "Restore requirement"
+      },
+      "self_test_result": {
+        "name": "Self test result"
+      },
+      "sensitivity": {
+        "name": "Sensitivity"
+      },
+      "serial_number": {
+        "name": "Serial number"
+      },
+      "startup_time": {
+        "name": "Startup time"
+      },
+      "online_status": {
+        "name": "Status flag"
+      },
+      "status": {
+        "name": "Status"
+      },
+      "self_test_interval": {
+        "name": "Self test interval"
+      },
+      "time_left": {
+        "name": "Time left"
+      },
+      "time_on_battery": {
+        "name": "Time on battery"
+      },
+      "ups_mode": {
+        "name": "Mode"
+      },
+      "ups_name": {
+        "name": "Name"
+      },
+      "version": {
+        "name": "Daemon version"
+      },
+      "transfer_from_battery": {
+        "name": "Transfer from battery"
+      },
+      "transfer_to_battery": {
+        "name": "Transfer to battery"
+      }
     }
   }
 }

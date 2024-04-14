@@ -1,4 +1,5 @@
 """Support for displaying details about a Gitter.im chat room."""
+
 from __future__ import annotations
 
 import logging
@@ -23,7 +24,6 @@ ATTR_USERNAME = "username"
 DEFAULT_NAME = "Gitter messages"
 DEFAULT_ROOM = "home-assistant/home-assistant"
 
-ICON = "mdi:message-cog"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -59,6 +59,8 @@ def setup_platform(
 class GitterSensor(SensorEntity):
     """Representation of a Gitter sensor."""
 
+    _attr_icon = "mdi:message-cog"
+
     def __init__(self, data, room, name, username):
         """Initialize the sensor."""
         self._name = name
@@ -92,11 +94,6 @@ class GitterSensor(SensorEntity):
             ATTR_ROOM: self._room,
             ATTR_MENTION: self._mention,
         }
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend, if any."""
-        return ICON
 
     def update(self) -> None:
         """Get the latest data and updates the state."""

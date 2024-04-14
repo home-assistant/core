@@ -1,8 +1,8 @@
 """The Recorder websocket API."""
+
 from __future__ import annotations
 
 from datetime import datetime as dt
-import logging
 from typing import Any, Literal, cast
 
 import voluptuous as vol
@@ -12,48 +12,65 @@ from homeassistant.components.websocket_api import messages
 from homeassistant.core import HomeAssistant, callback, valid_entity_id
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.json import JSON_DUMP
+from homeassistant.helpers.json import json_bytes
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import (
+    DataRateConverter,
     DistanceConverter,
+    DurationConverter,
+    ElectricCurrentConverter,
+    ElectricPotentialConverter,
     EnergyConverter,
+    InformationConverter,
     MassConverter,
     PowerConverter,
     PressureConverter,
     SpeedConverter,
     TemperatureConverter,
+    UnitlessRatioConverter,
     VolumeConverter,
+    VolumeFlowRateConverter,
 )
 
-from .const import MAX_QUEUE_BACKLOG
 from .models import StatisticPeriod
 from .statistics import (
     STATISTIC_UNIT_TO_UNIT_CONVERTER,
     async_add_external_statistics,
     async_change_statistics_unit,
     async_import_statistics,
+    async_list_statistic_ids,
     list_statistic_ids,
     statistic_during_period,
     statistics_during_period,
     validate_statistics,
 )
-from .util import (
-    PERIOD_SCHEMA,
-    async_migration_in_progress,
-    async_migration_is_live,
-    get_instance,
-    resolve_period,
-)
+from .util import PERIOD_SCHEMA, get_instance, resolve_period
 
-_LOGGER: logging.Logger = logging.getLogger(__package__)
+UNIT_SCHEMA = vol.Schema(
+    {
+        vol.Optional("data_rate"): vol.In(DataRateConverter.VALID_UNITS),
+        vol.Optional("distance"): vol.In(DistanceConverter.VALID_UNITS),
+        vol.Optional("duration"): vol.In(DurationConverter.VALID_UNITS),
+        vol.Optional("electric_current"): vol.In(ElectricCurrentConverter.VALID_UNITS),
+        vol.Optional("voltage"): vol.In(ElectricPotentialConverter.VALID_UNITS),
+        vol.Optional("energy"): vol.In(EnergyConverter.VALID_UNITS),
+        vol.Optional("information"): vol.In(InformationConverter.VALID_UNITS),
+        vol.Optional("mass"): vol.In(MassConverter.VALID_UNITS),
+        vol.Optional("power"): vol.In(PowerConverter.VALID_UNITS),
+        vol.Optional("pressure"): vol.In(PressureConverter.VALID_UNITS),
+        vol.Optional("speed"): vol.In(SpeedConverter.VALID_UNITS),
+        vol.Optional("temperature"): vol.In(TemperatureConverter.VALID_UNITS),
+        vol.Optional("unitless"): vol.In(UnitlessRatioConverter.VALID_UNITS),
+        vol.Optional("volume"): vol.In(VolumeConverter.VALID_UNITS),
+        vol.Optional("volume_flow_rate"): vol.In(VolumeFlowRateConverter.VALID_UNITS),
+    }
+)
 
 
 @callback
 def async_setup(hass: HomeAssistant) -> None:
     """Set up the recorder websocket API."""
     websocket_api.async_register_command(hass, ws_adjust_sum_statistics)
-    websocket_api.async_register_command(hass, ws_backup_end)
-    websocket_api.async_register_command(hass, ws_backup_start)
     websocket_api.async_register_command(hass, ws_change_statistics_unit)
     websocket_api.async_register_command(hass, ws_clear_statistics)
     websocket_api.async_register_command(hass, ws_get_statistic_during_period)
@@ -74,9 +91,9 @@ def _ws_get_statistic_during_period(
     statistic_id: str,
     types: set[Literal["max", "mean", "min", "change"]] | None,
     units: dict[str, str],
-) -> str:
+) -> bytes:
     """Fetch statistics and convert them to json in the executor."""
-    return JSON_DUMP(
+    return json_bytes(
         messages.result_message(
             msg_id,
             statistic_during_period(
@@ -89,22 +106,11 @@ def _ws_get_statistic_during_period(
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "recorder/statistic_during_period",
-        vol.Optional("statistic_id"): str,
+        vol.Required("statistic_id"): str,
         vol.Optional("types"): vol.All(
             [vol.Any("max", "mean", "min", "change")], vol.Coerce(set)
         ),
-        vol.Optional("units"): vol.Schema(
-            {
-                vol.Optional("distance"): vol.In(DistanceConverter.VALID_UNITS),
-                vol.Optional("energy"): vol.In(EnergyConverter.VALID_UNITS),
-                vol.Optional("mass"): vol.In(MassConverter.VALID_UNITS),
-                vol.Optional("power"): vol.In(PowerConverter.VALID_UNITS),
-                vol.Optional("pressure"): vol.In(PressureConverter.VALID_UNITS),
-                vol.Optional("speed"): vol.In(SpeedConverter.VALID_UNITS),
-                vol.Optional("temperature"): vol.In(TemperatureConverter.VALID_UNITS),
-                vol.Optional("volume"): vol.In(VolumeConverter.VALID_UNITS),
-            }
-        ),
+        vol.Optional("units"): UNIT_SCHEMA,
         **PERIOD_SCHEMA.schema,
     }
 )
@@ -127,7 +133,7 @@ async def ws_get_statistic_during_period(
             msg["id"],
             start_time,
             end_time,
-            msg.get("statistic_id"),
+            msg["statistic_id"],
             msg.get("types"),
             msg.get("units"),
         )
@@ -139,11 +145,11 @@ def _ws_get_statistics_during_period(
     msg_id: int,
     start_time: dt,
     end_time: dt | None,
-    statistic_ids: list[str] | None,
+    statistic_ids: set[str] | None,
     period: Literal["5minute", "day", "hour", "week", "month"],
     units: dict[str, str],
-    types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
-) -> str:
+    types: set[Literal["change", "last_reset", "max", "mean", "min", "state", "sum"]],
+) -> bytes:
     """Fetch statistics and convert them to json in the executor."""
     result = statistics_during_period(
         hass,
@@ -157,12 +163,12 @@ def _ws_get_statistics_during_period(
     for statistic_id in result:
         for item in result[statistic_id]:
             if (start := item.get("start")) is not None:
-                item["start"] = int(start.timestamp() * 1000)
+                item["start"] = int(start * 1000)
             if (end := item.get("end")) is not None:
-                item["end"] = int(end.timestamp() * 1000)
+                item["end"] = int(end * 1000)
             if (last_reset := item.get("last_reset")) is not None:
-                item["last_reset"] = int(last_reset.timestamp() * 1000)
-    return JSON_DUMP(messages.result_message(msg_id, result))
+                item["last_reset"] = int(last_reset * 1000)
+    return json_bytes(messages.result_message(msg_id, result))
 
 
 async def ws_handle_get_statistics_during_period(
@@ -188,7 +194,7 @@ async def ws_handle_get_statistics_during_period(
         end_time = None
 
     if (types := msg.get("types")) is None:
-        types = {"last_reset", "max", "mean", "min", "state", "sum"}
+        types = {"change", "last_reset", "max", "mean", "min", "state", "sum"}
     connection.send_message(
         await get_instance(hass).async_add_executor_job(
             _ws_get_statistics_during_period,
@@ -196,7 +202,7 @@ async def ws_handle_get_statistics_during_period(
             msg["id"],
             start_time,
             end_time,
-            msg.get("statistic_ids"),
+            set(msg["statistic_ids"]),
             msg.get("period"),
             msg.get("units"),
             types,
@@ -209,22 +215,11 @@ async def ws_handle_get_statistics_during_period(
         vol.Required("type"): "recorder/statistics_during_period",
         vol.Required("start_time"): str,
         vol.Optional("end_time"): str,
-        vol.Optional("statistic_ids"): [str],
+        vol.Required("statistic_ids"): vol.All([str], vol.Length(min=1)),
         vol.Required("period"): vol.Any("5minute", "hour", "day", "week", "month"),
-        vol.Optional("units"): vol.Schema(
-            {
-                vol.Optional("distance"): vol.In(DistanceConverter.VALID_UNITS),
-                vol.Optional("energy"): vol.In(EnergyConverter.VALID_UNITS),
-                vol.Optional("mass"): vol.In(MassConverter.VALID_UNITS),
-                vol.Optional("power"): vol.In(PowerConverter.VALID_UNITS),
-                vol.Optional("pressure"): vol.In(PressureConverter.VALID_UNITS),
-                vol.Optional("speed"): vol.In(SpeedConverter.VALID_UNITS),
-                vol.Optional("temperature"): vol.In(TemperatureConverter.VALID_UNITS),
-                vol.Optional("volume"): vol.In(VolumeConverter.VALID_UNITS),
-            }
-        ),
+        vol.Optional("units"): UNIT_SCHEMA,
         vol.Optional("types"): vol.All(
-            [vol.Any("last_reset", "max", "mean", "min", "state", "sum")],
+            [vol.Any("change", "last_reset", "max", "mean", "min", "state", "sum")],
             vol.Coerce(set),
         ),
     }
@@ -240,10 +235,13 @@ async def ws_get_statistics_during_period(
 def _ws_get_list_statistic_ids(
     hass: HomeAssistant,
     msg_id: int,
-    statistic_type: Literal["mean"] | Literal["sum"] | None = None,
-) -> str:
-    """Fetch a list of available statistic_id and convert them to json in the executor."""
-    return JSON_DUMP(
+    statistic_type: Literal["mean", "sum"] | None = None,
+) -> bytes:
+    """Fetch a list of available statistic_id and convert them to JSON.
+
+    Runs in the executor.
+    """
+    return json_bytes(
         messages.result_message(msg_id, list_statistic_ids(hass, None, statistic_type))
     )
 
@@ -325,11 +323,10 @@ async def ws_get_statistics_metadata(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Get metadata for a list of statistic_ids."""
-    instance = get_instance(hass)
-    statistic_ids = await instance.async_add_executor_job(
-        list_statistic_ids, hass, msg.get("statistic_ids")
-    )
-    connection.send_result(msg["id"], statistic_ids)
+    statistic_ids = msg.get("statistic_ids")
+    statistic_ids_set_or_none = set(statistic_ids) if statistic_ids else None
+    metadata = await async_list_statistic_ids(hass, statistic_ids_set_or_none)
+    connection.send_result(msg["id"], metadata)
 
 
 @websocket_api.require_admin
@@ -409,7 +406,7 @@ async def ws_adjust_sum_statistics(
 
     instance = get_instance(hass)
     metadatas = await instance.async_add_executor_job(
-        list_statistic_ids, hass, (msg["statistic_id"],)
+        list_statistic_ids, hass, {msg["statistic_id"]}
     )
     if not metadatas:
         connection.send_error(msg["id"], "unknown_statistic_id", "Unknown statistic ID")
@@ -490,55 +487,29 @@ def ws_info(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Return status of the recorder."""
-    instance = get_instance(hass)
-
-    backlog = instance.backlog if instance else None
-    migration_in_progress = async_migration_in_progress(hass)
-    migration_is_live = async_migration_is_live(hass)
-    recording = instance.recording if instance else False
-    thread_alive = instance.is_alive() if instance else False
+    if instance := get_instance(hass):
+        backlog = instance.backlog
+        migration_in_progress = instance.migration_in_progress
+        migration_is_live = instance.migration_is_live
+        recording = instance.recording
+        # We avoid calling is_alive() as it can block waiting
+        # for the thread state lock which will block the event loop.
+        is_running = instance.is_running
+        max_backlog = instance.max_backlog
+    else:
+        backlog = None
+        migration_in_progress = False
+        migration_is_live = False
+        recording = False
+        is_running = False
+        max_backlog = None
 
     recorder_info = {
         "backlog": backlog,
-        "max_backlog": MAX_QUEUE_BACKLOG,
+        "max_backlog": max_backlog,
         "migration_in_progress": migration_in_progress,
         "migration_is_live": migration_is_live,
         "recording": recording,
-        "thread_running": thread_alive,
+        "thread_running": is_running,
     }
     connection.send_result(msg["id"], recorder_info)
-
-
-@websocket_api.ws_require_user(only_supervisor=True)
-@websocket_api.websocket_command({vol.Required("type"): "backup/start"})
-@websocket_api.async_response
-async def ws_backup_start(
-    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
-) -> None:
-    """Backup start notification."""
-
-    _LOGGER.info("Backup start notification, locking database for writes")
-    instance = get_instance(hass)
-    try:
-        await instance.lock_database()
-    except TimeoutError as err:
-        connection.send_error(msg["id"], "timeout_error", str(err))
-        return
-    connection.send_result(msg["id"])
-
-
-@websocket_api.ws_require_user(only_supervisor=True)
-@websocket_api.websocket_command({vol.Required("type"): "backup/end"})
-@websocket_api.async_response
-async def ws_backup_end(
-    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
-) -> None:
-    """Backup end notification."""
-
-    instance = get_instance(hass)
-    _LOGGER.info("Backup end notification, releasing write lock")
-    if not instance.unlock_database():
-        connection.send_error(
-            msg["id"], "database_unlock_failed", "Failed to unlock database."
-        )
-    connection.send_result(msg["id"])

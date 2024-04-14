@@ -1,8 +1,8 @@
 """Support for interfacing with Monoprice Blackbird 4k 8x8 HDBaseT Matrix."""
+
 from __future__ import annotations
 
 import logging
-import socket
 
 from pyblackbird import get_blackbird
 from serial import SerialException
@@ -93,7 +93,7 @@ def setup_platform(
         try:
             blackbird = get_blackbird(host, False)
             connection = host
-        except socket.timeout:
+        except TimeoutError:
             _LOGGER.error("Error connecting to the Blackbird controller")
             return
 
@@ -164,10 +164,7 @@ class BlackbirdZone(MediaPlayerEntity):
             return
         self._attr_state = MediaPlayerState.ON if state.power else MediaPlayerState.OFF
         idx = state.av
-        if idx in self._source_id_name:
-            self._attr_source = self._source_id_name[idx]
-        else:
-            self._attr_source = None
+        self._attr_source = self._source_id_name.get(idx)
 
     @property
     def media_title(self):

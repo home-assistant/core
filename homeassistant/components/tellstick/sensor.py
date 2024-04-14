@@ -1,4 +1,5 @@
 """Support for Tellstick sensors."""
+
 from __future__ import annotations
 
 from collections import namedtuple
@@ -19,7 +20,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PROTOCOL,
     PERCENTAGE,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -37,7 +38,7 @@ CONF_ONLY_NAMED = "only_named"
 CONF_TEMPERATURE_SCALE = "temperature_scale"
 
 DEFAULT_DATATYPE_MASK = 127
-DEFAULT_TEMPERATURE_SCALE = TEMP_CELSIUS
+DEFAULT_TEMPERATURE_SCALE = UnitOfTemperature.CELSIUS
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -129,8 +130,8 @@ def setup_platform(
             sensor_name = str(tellcore_sensor.id)
         else:
             proto_id = f"{tellcore_sensor.protocol}{tellcore_sensor.id}"
-            proto_model_id = "{}{}{}".format(
-                tellcore_sensor.protocol, tellcore_sensor.model, tellcore_sensor.id
+            proto_model_id = (
+                f"{tellcore_sensor.protocol}{tellcore_sensor.model}{tellcore_sensor.id}"
             )
             if tellcore_sensor.id in named_sensors:
                 sensor_name = named_sensors[tellcore_sensor.id]

@@ -6,6 +6,7 @@ import pytest
 
 from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN, SERVICE_TURN_ON
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .test_gateway import (
@@ -14,8 +15,12 @@ from .test_gateway import (
     setup_deconz_integration,
 )
 
+from tests.test_util.aiohttp import AiohttpClientMocker
 
-async def test_no_scenes(hass, aioclient_mock):
+
+async def test_no_scenes(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test that scenes can be loaded without scenes being available."""
     await setup_deconz_integration(hass, aioclient_mock)
     assert len(hass.states.async_all()) == 0
@@ -51,12 +56,16 @@ TEST_DATA = [
 ]
 
 
-@pytest.mark.parametrize("raw_data, expected", TEST_DATA)
-async def test_scenes(hass, aioclient_mock, raw_data, expected):
+@pytest.mark.parametrize(("raw_data", "expected"), TEST_DATA)
+async def test_scenes(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    aioclient_mock: AiohttpClientMocker,
+    raw_data,
+    expected,
+) -> None:
     """Test successful creation of scene entities."""
-    ent_reg = er.async_get(hass)
-    dev_reg = dr.async_get(hass)
-
     with patch.dict(DECONZ_WEB_REQUEST, raw_data):
         config_entry = await setup_deconz_integration(hass, aioclient_mock)
 
@@ -69,14 +78,14 @@ async def test_scenes(hass, aioclient_mock, raw_data, expected):
 
     # Verify entity registry data
 
-    ent_reg_entry = ent_reg.async_get(expected["entity_id"])
+    ent_reg_entry = entity_registry.async_get(expected["entity_id"])
     assert ent_reg_entry.entity_category is expected["entity_category"]
     assert ent_reg_entry.unique_id == expected["unique_id"]
 
     # Verify device registry data
 
     assert (
-        len(dr.async_entries_for_config_entry(dev_reg, config_entry.entry_id))
+        len(dr.async_entries_for_config_entry(device_registry, config_entry.entry_id))
         == expected["device_count"]
     )
 
@@ -104,7 +113,9 @@ async def test_scenes(hass, aioclient_mock, raw_data, expected):
     assert len(hass.states.async_all()) == 0
 
 
-async def test_only_new_scenes_are_created(hass, aioclient_mock, mock_deconz_websocket):
+async def test_only_new_scenes_are_created(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_deconz_websocket
+) -> None:
     """Test that scenes works."""
     data = {
         "groups": {

@@ -1,4 +1,5 @@
 """Tests the lifx migration."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -31,7 +32,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 
 async def test_migration_device_online_end_to_end(
     hass: HomeAssistant, device_reg: DeviceRegistry, entity_reg: EntityRegistry
-):
+) -> None:
     """Test migration from single config entry."""
     config_entry = MockConfigEntry(
         domain=DOMAIN, title="LEGACY", data={}, unique_id=DOMAIN
@@ -84,7 +85,7 @@ async def test_migration_device_online_end_to_end(
 
 async def test_discovery_is_more_frequent_during_migration(
     hass: HomeAssistant, device_reg: DeviceRegistry, entity_reg: EntityRegistry
-):
+) -> None:
     """Test that discovery is more frequent during migration."""
     config_entry = MockConfigEntry(
         domain=DOMAIN, title="LEGACY", data={}, unique_id=DOMAIN
@@ -129,10 +130,13 @@ async def test_discovery_is_more_frequent_during_migration(
         def cleanup(self):
             """Mock cleanup."""
 
-    with _patch_device(device=bulb), _patch_config_flow_try_connect(
-        device=bulb
-    ), patch.object(discovery, "DEFAULT_TIMEOUT", 0), patch(
-        "homeassistant.components.lifx.discovery.LifxDiscovery", MockLifxDiscovery
+    with (
+        _patch_device(device=bulb),
+        _patch_config_flow_try_connect(device=bulb),
+        patch.object(discovery, "DEFAULT_TIMEOUT", 0),
+        patch(
+            "homeassistant.components.lifx.discovery.LifxDiscovery", MockLifxDiscovery
+        ),
     ):
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
@@ -143,21 +147,21 @@ async def test_discovery_is_more_frequent_during_migration(
         assert start_calls == 1
 
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5))
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         assert start_calls == 3
 
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=10))
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         assert start_calls == 4
 
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=15))
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         assert start_calls == 5
 
 
 async def test_migration_device_online_end_to_end_after_downgrade(
     hass: HomeAssistant, device_reg: DeviceRegistry, entity_reg: EntityRegistry
-):
+) -> None:
     """Test migration from single config entry can happen again after a downgrade."""
     config_entry = MockConfigEntry(
         domain=DOMAIN, title="LEGACY", data={}, unique_id=DOMAIN
@@ -206,7 +210,7 @@ async def test_migration_device_online_end_to_end_after_downgrade(
 
 async def test_migration_device_online_end_to_end_ignores_other_devices(
     hass: HomeAssistant, device_reg: DeviceRegistry, entity_reg: EntityRegistry
-):
+) -> None:
     """Test migration from single config entry."""
     legacy_config_entry = MockConfigEntry(
         domain=DOMAIN, title="LEGACY", data={}, unique_id=DOMAIN

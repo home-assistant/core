@@ -1,20 +1,22 @@
 """Test the NZBGet sensors."""
+
 from datetime import timedelta
 from unittest.mock import patch
 
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
-    DATA_MEGABYTES,
-    DATA_RATE_MEGABYTES_PER_SECOND,
+    UnitOfDataRate,
+    UnitOfInformation,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from . import init_integration
 
 
-async def test_sensors(hass, nzbget_api) -> None:
+async def test_sensors(hass: HomeAssistant, nzbget_api) -> None:
     """Test the creation and values of the sensors."""
     now = dt_util.utcnow().replace(microsecond=0)
     with patch("homeassistant.components.nzbget.sensor.utcnow", return_value=now):
@@ -28,32 +30,32 @@ async def test_sensors(hass, nzbget_api) -> None:
         "article_cache": (
             "ArticleCacheMB",
             "64",
-            DATA_MEGABYTES,
+            UnitOfInformation.MEGABYTES,
             SensorDeviceClass.DATA_SIZE,
         ),
         "average_speed": (
             "AverageDownloadRate",
-            "1.19",
-            DATA_RATE_MEGABYTES_PER_SECOND,
+            "1.250000",
+            UnitOfDataRate.MEGABYTES_PER_SECOND,
             SensorDeviceClass.DATA_RATE,
         ),
         "download_paused": ("DownloadPaused", "False", None, None),
         "speed": (
             "DownloadRate",
-            "2.38",
-            DATA_RATE_MEGABYTES_PER_SECOND,
+            "2.500000",
+            UnitOfDataRate.MEGABYTES_PER_SECOND,
             SensorDeviceClass.DATA_RATE,
         ),
         "size": (
             "DownloadedSizeMB",
             "256",
-            DATA_MEGABYTES,
+            UnitOfInformation.MEGABYTES,
             SensorDeviceClass.DATA_SIZE,
         ),
         "disk_free": (
             "FreeDiskSpaceMB",
             "1024",
-            DATA_MEGABYTES,
+            UnitOfInformation.MEGABYTES,
             SensorDeviceClass.DATA_SIZE,
         ),
         "post_processing_jobs": ("PostJobCount", "2", "Jobs", None),
@@ -61,19 +63,19 @@ async def test_sensors(hass, nzbget_api) -> None:
         "queue_size": (
             "RemainingSizeMB",
             "512",
-            DATA_MEGABYTES,
+            UnitOfInformation.MEGABYTES,
             SensorDeviceClass.DATA_SIZE,
         ),
         "uptime": ("UpTimeSec", uptime.isoformat(), None, SensorDeviceClass.TIMESTAMP),
         "speed_limit": (
             "DownloadLimit",
-            "0.95",
-            DATA_RATE_MEGABYTES_PER_SECOND,
+            "1.000000",
+            UnitOfDataRate.MEGABYTES_PER_SECOND,
             SensorDeviceClass.DATA_RATE,
         ),
     }
 
-    for (sensor_id, data) in sensors.items():
+    for sensor_id, data in sensors.items():
         entity_entry = registry.async_get(f"sensor.nzbgettest_{sensor_id}")
         assert entity_entry
         assert entity_entry.original_device_class == data[3]

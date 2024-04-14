@@ -1,4 +1,5 @@
 """Platform for light integration."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -19,25 +20,24 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Get all light devices and setup them via config entry."""
-    entities = []
 
-    for gateway in hass.data[DOMAIN][entry.entry_id]["gateways"]:
-        for device in gateway.multi_level_switch_devices:
-            for multi_level_switch in device.multi_level_switch_property.values():
-                if multi_level_switch.switch_type == "dimmer":
-                    entities.append(
-                        DevoloLightDeviceEntity(
-                            homecontrol=gateway,
-                            device_instance=device,
-                            element_uid=multi_level_switch.element_uid,
-                        )
-                    )
-
-    async_add_entities(entities)
+    async_add_entities(
+        DevoloLightDeviceEntity(
+            homecontrol=gateway,
+            device_instance=device,
+            element_uid=multi_level_switch.element_uid,
+        )
+        for gateway in hass.data[DOMAIN][entry.entry_id]["gateways"]
+        for device in gateway.multi_level_switch_devices
+        for multi_level_switch in device.multi_level_switch_property.values()
+        if multi_level_switch.switch_type == "dimmer"
+    )
 
 
 class DevoloLightDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, LightEntity):
     """Representation of a light within devolo Home Control."""
+
+    _attr_color_mode = ColorMode.BRIGHTNESS
 
     def __init__(
         self, homecontrol: HomeControl, device_instance: Zwave, element_uid: str
@@ -49,7 +49,6 @@ class DevoloLightDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, LightEntity):
             element_uid=element_uid,
         )
 
-        self._attr_color_mode = ColorMode.BRIGHTNESS
         self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
         self._binary_switch_property = device_instance.binary_switch_property.get(
             element_uid.replace("Dimmer", "BinarySwitch")
@@ -71,13 +70,12 @@ class DevoloLightDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, LightEntity):
             self._multi_level_switch_property.set(
                 round(kwargs[ATTR_BRIGHTNESS] / 255 * 100)
             )
+        elif self._binary_switch_property is not None:
+            # Turn on the light device to the latest known value. The value is known by the device itself.
+            self._binary_switch_property.set(True)
         else:
-            if self._binary_switch_property is not None:
-                # Turn on the light device to the latest known value. The value is known by the device itself.
-                self._binary_switch_property.set(True)
-            else:
-                # If there is no binary switch attached to the device, turn it on to 100 %.
-                self._multi_level_switch_property.set(100)
+            # If there is no binary switch attached to the device, turn it on to 100 %.
+            self._multi_level_switch_property.set(100)
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn device off."""

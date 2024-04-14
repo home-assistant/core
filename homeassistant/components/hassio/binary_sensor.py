@@ -1,4 +1,5 @@
 """Binary sensor platform for Hass.io addons."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -12,12 +13,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import ADDONS_COORDINATOR
-from .const import ATTR_STARTED, ATTR_STATE, DATA_KEY_ADDONS
+from .const import ADDONS_COORDINATOR, ATTR_STARTED, ATTR_STATE, DATA_KEY_ADDONS
 from .entity import HassioAddonEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class HassioBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Hassio binary sensor entity description."""
 
@@ -29,7 +29,7 @@ ADDON_ENTITY_DESCRIPTIONS = (
         device_class=BinarySensorDeviceClass.RUNNING,
         entity_registry_enabled_default=False,
         key=ATTR_STATE,
-        name="Running",
+        translation_key="state",
         target=ATTR_STARTED,
     ),
 )

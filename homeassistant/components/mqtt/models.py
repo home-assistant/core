@@ -1,4 +1,5 @@
 """Models used by multiple MQTT modules."""
+
 from __future__ import annotations
 
 from ast import literal_eval
@@ -7,25 +8,30 @@ from collections import deque
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass, field
 import datetime as dt
+from enum import StrEnum
 import logging
-from typing import TYPE_CHECKING, Any, TypedDict, Union
+from typing import TYPE_CHECKING, Any, TypedDict
 
-import attr
+import voluptuous as vol
 
-from homeassistant.backports.enum import StrEnum
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_NAME
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_NAME, Platform
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.exceptions import ServiceValidationError, TemplateError
 from homeassistant.helpers import template
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, TemplateVarsType
 
 if TYPE_CHECKING:
+    from paho.mqtt.client import MQTTMessage
+
     from .client import MQTT, Subscription
     from .debug_info import TimestampedPublishMessage
     from .device_trigger import Trigger
     from .discovery import MQTTDiscoveryPayload
     from .tag import MQTTTagScanner
+
+from .const import DOMAIN, TEMPLATE_ERRORS
 
 
 class PayloadSentinel(StrEnum):
@@ -39,29 +45,29 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_THIS = "this"
 
-PublishPayloadType = Union[str, bytes, int, float, None]
+PublishPayloadType = str | bytes | int | float | None
 
 
-@attr.s(slots=True, frozen=True)
+@dataclass
 class PublishMessage:
-    """MQTT Message."""
+    """MQTT Message for publishing."""
 
-    topic: str = attr.ib()
-    payload: PublishPayloadType = attr.ib()
-    qos: int = attr.ib()
-    retain: bool = attr.ib()
+    topic: str
+    payload: PublishPayloadType
+    qos: int
+    retain: bool
 
 
-@attr.s(slots=True, frozen=True)
+@dataclass(slots=True, frozen=True)
 class ReceiveMessage:
-    """MQTT Message."""
+    """MQTT Message received."""
 
-    topic: str = attr.ib()
-    payload: ReceivePayloadType = attr.ib()
-    qos: int = attr.ib()
-    retain: bool = attr.ib()
-    subscribed_topic: str = attr.ib(default=None)
-    timestamp: dt.datetime = attr.ib(default=None)
+    topic: str
+    payload: ReceivePayloadType
+    qos: int
+    retain: bool
+    subscribed_topic: str
+    timestamp: dt.datetime
 
 
 AsyncMessageCallbackType = Callable[[ReceiveMessage], Coroutine[Any, Any, None]]
@@ -95,6 +101,50 @@ class PendingDiscovered(TypedDict):
 
     pending: deque[MQTTDiscoveryPayload]
     unsub: CALLBACK_TYPE
+
+
+class MqttOriginInfo(TypedDict, total=False):
+    """Integration info of discovered entity."""
+
+    name: str
+    manufacturer: str
+    sw_version: str
+    hw_version: str
+    support_url: str
+
+
+class MqttCommandTemplateException(ServiceValidationError):
+    """Handle MqttCommandTemplate exceptions."""
+
+    _message: str
+
+    def __init__(
+        self,
+        *args: object,
+        base_exception: Exception,
+        command_template: str,
+        value: PublishPayloadType,
+        entity_id: str | None = None,
+    ) -> None:
+        """Initialize exception."""
+        super().__init__(base_exception, *args)
+        value_log = str(value)
+        self.translation_domain = DOMAIN
+        self.translation_key = "command_template_error"
+        self.translation_placeholders = {
+            "error": str(base_exception),
+            "entity_id": str(entity_id),
+            "command_template": command_template,
+        }
+        entity_id_log = "" if entity_id is None else f" for entity '{entity_id}'"
+        self._message = (
+            f"{type(base_exception).__name__}: {base_exception} rendering template{entity_id_log}"
+            f", template: '{command_template}' and payload: {value_log}"
+        )
+
+    def __str__(self) -> str:
+        """Return exception message string."""
+        return self._message
 
 
 class MqttCommandTemplate:
@@ -163,9 +213,49 @@ class MqttCommandTemplate:
             values,
             self._command_template,
         )
-        return _convert_outgoing_payload(
-            self._command_template.async_render(values, parse_result=False)
+        try:
+            return _convert_outgoing_payload(
+                self._command_template.async_render(values, parse_result=False)
+            )
+        except TemplateError as exc:
+            raise MqttCommandTemplateException(
+                base_exception=exc,
+                command_template=self._command_template.template,
+                value=value,
+                entity_id=self._entity.entity_id if self._entity is not None else None,
+            ) from exc
+
+
+class MqttValueTemplateException(TemplateError):
+    """Handle MqttValueTemplate exceptions."""
+
+    _message: str
+
+    def __init__(
+        self,
+        *args: object,
+        base_exception: Exception,
+        value_template: str,
+        default: ReceivePayloadType | PayloadSentinel,
+        payload: ReceivePayloadType,
+        entity_id: str | None = None,
+    ) -> None:
+        """Initialize exception."""
+        super().__init__(base_exception, *args)
+        entity_id_log = "" if entity_id is None else f" for entity '{entity_id}'"
+        default_log = str(default)
+        default_payload_log = (
+            "" if default is PayloadSentinel.NONE else f", default value: {default_log}"
         )
+        payload_log = str(payload)
+        self._message = (
+            f"{type(base_exception).__name__}: {base_exception} rendering template{entity_id_log}"
+            f", template: '{value_template}'{default_payload_log} and payload: {payload_log}"
+        )
+
+    def __str__(self) -> str:
+        """Return exception message string."""
+        return self._message
 
 
 class MqttValueTemplate:
@@ -229,23 +319,46 @@ class MqttValueTemplate:
                 values,
                 self._value_template,
             )
-            rendered_payload = (
-                self._value_template.async_render_with_possible_json_value(
-                    payload, variables=values
+            try:
+                rendered_payload = (
+                    self._value_template.async_render_with_possible_json_value(
+                        payload, variables=values
+                    )
                 )
-            )
+            except TEMPLATE_ERRORS as exc:
+                raise MqttValueTemplateException(
+                    base_exception=exc,
+                    value_template=self._value_template.template,
+                    default=default,
+                    payload=payload,
+                    entity_id=self._entity.entity_id if self._entity else None,
+                ) from exc
             return rendered_payload
 
         _LOGGER.debug(
-            "Rendering incoming payload '%s' with variables %s with default value '%s' and %s",
+            (
+                "Rendering incoming payload '%s' with variables %s with default value"
+                " '%s' and %s"
+            ),
             payload,
             values,
             default,
             self._value_template,
         )
-        rendered_payload = self._value_template.async_render_with_possible_json_value(
-            payload, default, variables=values
-        )
+        try:
+            rendered_payload = (
+                self._value_template.async_render_with_possible_json_value(
+                    payload, default, variables=values
+                )
+            )
+        except TEMPLATE_ERRORS as exc:
+            raise MqttValueTemplateException(
+                base_exception=exc,
+                value_template=self._value_template.template,
+                default=default,
+                payload=payload,
+                entity_id=self._entity.entity_id if self._entity else None,
+            ) from exc
         return rendered_payload
 
 
@@ -257,11 +370,20 @@ class EntityTopicState:
         self.subscribe_calls: dict[str, Entity] = {}
 
     @callback
-    def process_write_state_requests(self) -> None:
+    def process_write_state_requests(self, msg: MQTTMessage) -> None:
         """Process the write state requests."""
         while self.subscribe_calls:
             _, entity = self.subscribe_calls.popitem()
-            entity.async_write_ha_state()
+            try:
+                entity.async_write_ha_state()
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception(
+                    "Exception raised when updating state of %s, topic: "
+                    "'%s' with payload: %s",
+                    entity.entity_id,
+                    msg.topic,
+                    msg.payload,
+                )
 
     @callback
     def write_state_request(self, entity: Entity) -> None:
@@ -273,8 +395,8 @@ class EntityTopicState:
 class MqttData:
     """Keep the MQTT entry data."""
 
-    client: MQTT | None = None
-    config: ConfigType | None = None
+    client: MQTT
+    config: list[ConfigType]
     debug_info_entities: dict[str, EntityDebugInfo] = field(default_factory=dict)
     debug_info_triggers: dict[tuple[str, str], TriggerDebugInfo] = field(
         default_factory=dict
@@ -291,13 +413,10 @@ class MqttData:
     discovery_unsubscribe: list[CALLBACK_TYPE] = field(default_factory=list)
     integration_unsubscribe: dict[str, CALLBACK_TYPE] = field(default_factory=dict)
     last_discovery: float = 0.0
+    platforms_loaded: set[Platform | str] = field(default_factory=set)
     reload_dispatchers: list[CALLBACK_TYPE] = field(default_factory=list)
-    reload_entry: bool = False
-    reload_handlers: dict[str, Callable[[], Coroutine[Any, Any, None]]] = field(
-        default_factory=dict
-    )
-    reload_needed: bool = False
+    reload_handlers: dict[str, CALLBACK_TYPE] = field(default_factory=dict)
+    reload_schema: dict[str, vol.Schema] = field(default_factory=dict)
     state_write_requests: EntityTopicState = field(default_factory=EntityTopicState)
     subscriptions_to_restore: list[Subscription] = field(default_factory=list)
     tags: dict[str, dict[str, MQTTTagScanner]] = field(default_factory=dict)
-    updated_config: ConfigType = field(default_factory=dict)

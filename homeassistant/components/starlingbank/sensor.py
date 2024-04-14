@@ -1,4 +1,5 @@
 """Support for balance data via the Starling Bank API."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -26,7 +27,7 @@ CONF_SANDBOX = "sandbox"
 DEFAULT_SANDBOX = False
 DEFAULT_ACCOUNT_NAME = "Starling"
 
-ICON = "mdi:currency-gbp"
+
 SCAN_INTERVAL = timedelta(seconds=180)
 
 ACCOUNT_SCHEMA = vol.Schema(
@@ -53,18 +54,18 @@ def setup_platform(
 ) -> None:
     """Set up the Sterling Bank sensor platform."""
 
-    sensors = []
+    sensors: list[StarlingBalanceSensor] = []
     for account in config[CONF_ACCOUNTS]:
         try:
             starling_account = StarlingAccount(
                 account[CONF_ACCESS_TOKEN], sandbox=account[CONF_SANDBOX]
             )
-            for balance_type in account[CONF_BALANCE_TYPES]:
-                sensors.append(
-                    StarlingBalanceSensor(
-                        starling_account, account[CONF_NAME], balance_type
-                    )
+            sensors.extend(
+                StarlingBalanceSensor(
+                    starling_account, account[CONF_NAME], balance_type
                 )
+                for balance_type in account[CONF_BALANCE_TYPES]
+            )
         except requests.exceptions.HTTPError as error:
             _LOGGER.error(
                 "Unable to set up Starling account '%s': %s", account[CONF_NAME], error
@@ -75,6 +76,8 @@ def setup_platform(
 
 class StarlingBalanceSensor(SensorEntity):
     """Representation of a Starling balance sensor."""
+
+    _attr_icon = "mdi:currency-gbp"
 
     def __init__(self, starling_account, account_name, balance_data_type):
         """Initialize the sensor."""
@@ -99,11 +102,6 @@ class StarlingBalanceSensor(SensorEntity):
     def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         return self._starling_account.currency
-
-    @property
-    def icon(self):
-        """Return the entity icon."""
-        return ICON
 
     def update(self) -> None:
         """Fetch new state data for the sensor."""

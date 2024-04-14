@@ -1,4 +1,5 @@
 """BSBLAN platform to control a compatible Climate Device."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -17,15 +18,17 @@ from homeassistant.components.climate import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
+from homeassistant.util.enum import try_parse_enum
 
 from . import HomeAssistantBSBLANData
-from .const import ATTR_TARGET_TEMPERATURE, DOMAIN, LOGGER
+from .const import ATTR_TARGET_TEMPERATURE, DOMAIN
 from .entity import BSBLANEntity
 
 PARALLEL_UPDATES = 1
@@ -59,28 +62,33 @@ async def async_setup_entry(
                 data.static,
                 entry,
             )
-        ],
-        True,
+        ]
     )
 
 
-class BSBLANClimate(BSBLANEntity, CoordinatorEntity, ClimateEntity):
+class BSBLANClimate(
+    BSBLANEntity, CoordinatorEntity[DataUpdateCoordinator[State]], ClimateEntity
+):
     """Defines a BSBLAN climate device."""
 
-    coordinator: DataUpdateCoordinator[State]
     _attr_has_entity_name = True
+    _attr_name = None
     # Determine preset modes
     _attr_supported_features = (
-        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.PRESET_MODE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
     _attr_preset_modes = PRESET_MODES
 
     # Determine hvac modes
     _attr_hvac_modes = HVAC_MODES
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: DataUpdateCoordinator[State],
         client: BSBLAN,
         device: Device,
         info: Info,
@@ -103,6 +111,10 @@ class BSBLANClimate(BSBLANEntity, CoordinatorEntity, ClimateEntity):
     @property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
+        if self.coordinator.data.current_temperature.value == "---":
+            # device returns no current temperature
+            return None
+
         return float(self.coordinator.data.current_temperature.value)
 
     @property
@@ -111,12 +123,11 @@ class BSBLANClimate(BSBLANEntity, CoordinatorEntity, ClimateEntity):
         return float(self.coordinator.data.target_temperature.value)
 
     @property
-    def hvac_mode(self) -> str:
+    def hvac_mode(self) -> HVACMode | None:
         """Return hvac operation ie. heat, cool mode."""
         if self.coordinator.data.hvac_mode.value == PRESET_ECO:
             return HVACMode.AUTO
-
-        return self.coordinator.data.hvac_mode.value
+        return try_parse_enum(HVACMode, self.coordinator.data.hvac_mode.value)
 
     @property
     def preset_mode(self) -> str | None:
@@ -128,7 +139,7 @@ class BSBLANClimate(BSBLANEntity, CoordinatorEntity, ClimateEntity):
             return PRESET_ECO
         return PRESET_NONE
 
-    async def async_set_hvac_mode(self, hvac_mode: str) -> None:
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode."""
         await self.async_set_data(hvac_mode=hvac_mode)
 
@@ -138,7 +149,11 @@ class BSBLANClimate(BSBLANEntity, CoordinatorEntity, ClimateEntity):
         if self.hvac_mode == HVACMode.AUTO:
             await self.async_set_data(preset_mode=preset_mode)
         else:
-            LOGGER.error("Can't set preset mode when hvac mode is not auto")
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="set_preset_mode_error",
+                translation_placeholders={"preset_mode": preset_mode},
+            )
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperatures."""
@@ -159,6 +174,10 @@ class BSBLANClimate(BSBLANEntity, CoordinatorEntity, ClimateEntity):
                 data[ATTR_HVAC_MODE] = kwargs[ATTR_PRESET_MODE]
         try:
             await self.client.thermostat(**data)
-        except BSBLANError:
-            LOGGER.error("An error occurred while updating the BSBLAN device")
+        except BSBLANError as err:
+            raise HomeAssistantError(
+                "An error occurred while updating the BSBLAN device",
+                translation_domain=DOMAIN,
+                translation_key="set_data_error",
+            ) from err
         await self.coordinator.async_request_refresh()

@@ -1,0 +1,117 @@
+set_timer_level:
+  target:
+    entity:
+      integration: renson
+      domain: fan
+  fields:
+    timer_level:
+      required: true
+      default: "level1"
+      selector:
+        select:
+          translation_key: "level_setting"
+          options:
+            - "level1"
+            - "level2"
+            - "level3"
+            - "level4"
+            - "holiday"
+            - "breeze"
+    minutes:
+      required: true
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 1440
+          step: 10
+          unit_of_measurement: "min"
+          mode: slider
+
+set_breeze:
+  target:
+    entity:
+      integration: renson
+      domain: fan
+  fields:
+    breeze_level:
+      default: "level3"
+      selector:
+        select:
+          translation_key: "level_setting"
+          options:
+            - "level1"
+            - "level2"
+            - "level3"
+            - "level4"
+    temperature:
+      default: 18
+      selector:
+        number:
+          min: 15
+          max: 35
+          step: 1
+          unit_of_measurement: "°C"
+          mode: slider
+    activate:
+      required: true
+      default: false
+      selector:
+        boolean:
+
+set_pollution_settings:
+  target:
+    entity:
+      integration: renson
+      domain: fan
+  fields:
+    day_pollution_level:
+      default: "level3"
+      selector:
+        select:
+          translation_key: "level_setting"
+          options:
+            - "level1"
+            - "level2"
+            - "level3"
+            - "level4"
+    night_pollution_level:
+      default: "level2"
+      selector:
+        select:
+          translation_key: "level_setting"
+          options:
+            - "level1"
+            - "level2"
+            - "level3"
+            - "level4"
+    humidity_control:
+      default: true
+      selector:
+        boolean:
+    airquality_control:
+      default: true
+      selector:
+        boolean:
+    co2_control:
+      default: true
+      selector:
+        boolean:
+    co2_threshold:
+      default: 600
+      selector:
+        number:
+          min: 400
+          max: 2000
+          step: 50
+          unit_of_measurement: "ppm"
+          mode: slider
+    co2_hysteresis:
+      default: 100
+      selector:
+        number:
+          min: 50
+          max: 400
+          step: 50
+          unit_of_measurement: "ppm"
+          mode: slider

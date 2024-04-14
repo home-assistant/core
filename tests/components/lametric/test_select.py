@@ -1,4 +1,5 @@
 """Tests for the LaMetric select platform."""
+
 from unittest.mock import MagicMock
 
 from demetriek import BrightnessMode, LaMetricConnectionError, LaMetricError
@@ -13,33 +14,29 @@ from homeassistant.components.select import (
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
-    ATTR_ICON,
     ATTR_OPTION,
     STATE_UNAVAILABLE,
+    EntityCategory,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.entity import EntityCategory
 
-from tests.common import MockConfigEntry
+pytestmark = pytest.mark.usefixtures("init_integration")
 
 
 async def test_brightness_mode(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
     mock_lametric: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test the LaMetric brightness mode controls."""
-    device_registry = dr.async_get(hass)
-    entity_registry = er.async_get(hass)
-
     state = hass.states.get("select.frenck_s_lametric_brightness_mode")
     assert state
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME) == "Frenck's LaMetric Brightness mode"
     )
-    assert state.attributes.get(ATTR_ICON) == "mdi:brightness-auto"
     assert state.attributes.get(ATTR_OPTIONS) == ["auto", "manual"]
     assert state.state == BrightnessMode.AUTO
 
@@ -76,7 +73,6 @@ async def test_brightness_mode(
 
 async def test_select_error(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
     mock_lametric: MagicMock,
 ) -> None:
     """Test error handling of the LaMetric selects."""
@@ -107,7 +103,6 @@ async def test_select_error(
 
 async def test_select_connection_error(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
     mock_lametric: MagicMock,
 ) -> None:
     """Test connection error handling of the LaMetric selects."""

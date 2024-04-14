@@ -1,10 +1,11 @@
 """The tests for the Rfxtrx cover platform."""
+
 from unittest.mock import call
 
 import pytest
 
 from homeassistant.components.rfxtrx import DOMAIN
-from homeassistant.core import State
+from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
 
 from .conftest import create_rfx_test_cfg
@@ -12,7 +13,7 @@ from .conftest import create_rfx_test_cfg
 from tests.common import MockConfigEntry, mock_restore_cache
 
 
-async def test_one_cover(hass, rfxtrx):
+async def test_one_cover(hass: HomeAssistant, rfxtrx) -> None:
     """Test with 1 cover."""
     entry_data = create_rfx_test_cfg(devices={"0b1400cd0213c7f20d010f51": {}})
     mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
@@ -54,7 +55,7 @@ async def test_one_cover(hass, rfxtrx):
 
 
 @pytest.mark.parametrize("state", ["open", "closed"])
-async def test_state_restore(hass, rfxtrx, state):
+async def test_state_restore(hass: HomeAssistant, rfxtrx, state) -> None:
     """State restoration."""
 
     entity_id = "cover.lightwaverf_siemens_0213c7_242"
@@ -72,7 +73,7 @@ async def test_state_restore(hass, rfxtrx, state):
     assert hass.states.get(entity_id).state == state
 
 
-async def test_several_covers(hass, rfxtrx):
+async def test_several_covers(hass: HomeAssistant, rfxtrx) -> None:
     """Test with 3 covers."""
     entry_data = create_rfx_test_cfg(
         devices={
@@ -104,7 +105,7 @@ async def test_several_covers(hass, rfxtrx):
     assert state.attributes.get("friendly_name") == "RollerTrol 009ba8:1"
 
 
-async def test_discover_covers(hass, rfxtrx_automatic):
+async def test_discover_covers(hass: HomeAssistant, rfxtrx_automatic) -> None:
     """Test with discovery of covers."""
     rfxtrx = rfxtrx_automatic
 
@@ -119,7 +120,7 @@ async def test_discover_covers(hass, rfxtrx_automatic):
     assert state.state == "open"
 
 
-async def test_duplicate_cover(hass, rfxtrx):
+async def test_duplicate_cover(hass: HomeAssistant, rfxtrx) -> None:
     """Test with 2 duplicate covers."""
     entry_data = create_rfx_test_cfg(
         devices={
@@ -140,7 +141,7 @@ async def test_duplicate_cover(hass, rfxtrx):
     assert state.attributes.get("friendly_name") == "LightwaveRF, Siemens 0213c7:242"
 
 
-async def test_rfy_cover(hass, rfxtrx):
+async def test_rfy_cover(hass: HomeAssistant, rfxtrx) -> None:
     """Test Rfy venetian blind covers."""
     entry_data = create_rfx_test_cfg(
         devices={
@@ -203,9 +204,9 @@ async def test_rfy_cover(hass, rfxtrx):
         )
 
     assert rfxtrx.transport.send.mock_calls == [
-        call(bytearray(b"\x0C\x1a\x00\x00\x01\x02\x03\x01\x00\x00\x00\x00\x00")),
-        call(bytearray(b"\x0C\x1a\x00\x01\x01\x02\x03\x01\x01\x00\x00\x00\x00")),
-        call(bytearray(b"\x0C\x1a\x00\x02\x01\x02\x03\x01\x03\x00\x00\x00\x00")),
+        call(bytearray(b"\x0c\x1a\x00\x00\x01\x02\x03\x01\x00\x00\x00\x00\x00")),
+        call(bytearray(b"\x0c\x1a\x00\x01\x01\x02\x03\x01\x01\x00\x00\x00\x00")),
+        call(bytearray(b"\x0c\x1a\x00\x02\x01\x02\x03\x01\x03\x00\x00\x00\x00")),
     ]
 
     # Test a blind with venetian mode set to US
@@ -256,12 +257,12 @@ async def test_rfy_cover(hass, rfxtrx):
     )
 
     assert rfxtrx.transport.send.mock_calls == [
-        call(bytearray(b"\x0C\x1a\x00\x00\x01\x02\x03\x02\x00\x00\x00\x00\x00")),
-        call(bytearray(b"\x0C\x1a\x00\x01\x01\x02\x03\x02\x0F\x00\x00\x00\x00")),
-        call(bytearray(b"\x0C\x1a\x00\x02\x01\x02\x03\x02\x10\x00\x00\x00\x00")),
-        call(bytearray(b"\x0C\x1a\x00\x03\x01\x02\x03\x02\x11\x00\x00\x00\x00")),
-        call(bytearray(b"\x0C\x1a\x00\x04\x01\x02\x03\x02\x12\x00\x00\x00\x00")),
-        call(bytearray(b"\x0C\x1a\x00\x00\x01\x02\x03\x02\x00\x00\x00\x00\x00")),
+        call(bytearray(b"\x0c\x1a\x00\x00\x01\x02\x03\x02\x00\x00\x00\x00\x00")),
+        call(bytearray(b"\x0c\x1a\x00\x01\x01\x02\x03\x02\x0f\x00\x00\x00\x00")),
+        call(bytearray(b"\x0c\x1a\x00\x02\x01\x02\x03\x02\x10\x00\x00\x00\x00")),
+        call(bytearray(b"\x0c\x1a\x00\x03\x01\x02\x03\x02\x11\x00\x00\x00\x00")),
+        call(bytearray(b"\x0c\x1a\x00\x04\x01\x02\x03\x02\x12\x00\x00\x00\x00")),
+        call(bytearray(b"\x0c\x1a\x00\x00\x01\x02\x03\x02\x00\x00\x00\x00\x00")),
     ]
 
     # Test a blind with venetian mode set to EU
@@ -312,10 +313,10 @@ async def test_rfy_cover(hass, rfxtrx):
     )
 
     assert rfxtrx.transport.send.mock_calls == [
-        call(bytearray(b"\x0C\x1a\x00\x00\x01\x02\x03\x03\x00\x00\x00\x00\x00")),
-        call(bytearray(b"\x0C\x1a\x00\x01\x01\x02\x03\x03\x11\x00\x00\x00\x00")),
-        call(bytearray(b"\x0C\x1a\x00\x02\x01\x02\x03\x03\x12\x00\x00\x00\x00")),
-        call(bytearray(b"\x0C\x1a\x00\x03\x01\x02\x03\x03\x0F\x00\x00\x00\x00")),
-        call(bytearray(b"\x0C\x1a\x00\x04\x01\x02\x03\x03\x10\x00\x00\x00\x00")),
-        call(bytearray(b"\x0C\x1a\x00\x00\x01\x02\x03\x03\x00\x00\x00\x00\x00")),
+        call(bytearray(b"\x0c\x1a\x00\x00\x01\x02\x03\x03\x00\x00\x00\x00\x00")),
+        call(bytearray(b"\x0c\x1a\x00\x01\x01\x02\x03\x03\x11\x00\x00\x00\x00")),
+        call(bytearray(b"\x0c\x1a\x00\x02\x01\x02\x03\x03\x12\x00\x00\x00\x00")),
+        call(bytearray(b"\x0c\x1a\x00\x03\x01\x02\x03\x03\x0f\x00\x00\x00\x00")),
+        call(bytearray(b"\x0c\x1a\x00\x04\x01\x02\x03\x03\x10\x00\x00\x00\x00")),
+        call(bytearray(b"\x0c\x1a\x00\x00\x01\x02\x03\x03\x00\x00\x00\x00\x00")),
     ]

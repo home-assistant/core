@@ -1,0 +1,10 @@
+set_value:
+  target:
+    entity:
+      domain: date
+  fields:
+    date:
+      required: true
+      example: "2022/11/01"
+      selector:
+        date:

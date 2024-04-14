@@ -1,7 +1,9 @@
 """Test the Matter config flow."""
+
 from __future__ import annotations
 
 from collections.abc import Generator
+from ipaddress import ip_address
 from typing import Any
 from unittest.mock import DEFAULT, AsyncMock, MagicMock, call, patch
 
@@ -11,6 +13,7 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.components.hassio import HassioAPIError, HassioServiceInfo
 from homeassistant.components.matter.const import ADDON_SLUG, DOMAIN
+from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -86,7 +89,7 @@ async def test_manual_create_entry(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
     result = await hass.config_entries.flow.async_configure(
@@ -98,8 +101,8 @@ async def test_manual_create_entry(
     await hass.async_block_till_done()
 
     assert client_connect.call_count == 1
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "ws://localhost:5580/ws"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Matter"
     assert result["data"] == {
         "url": "ws://localhost:5580/ws",
         "integration_created_addon": False,
@@ -109,7 +112,7 @@ async def test_manual_create_entry(
 
 
 @pytest.mark.parametrize(
-    "error, side_effect",
+    ("error", "side_effect"),
     [
         ("cannot_connect", CannotConnect(Exception("Boom"))),
         ("invalid_server_version", InvalidServerVersion("Invalid version")),
@@ -136,7 +139,7 @@ async def test_manual_errors(
     )
 
     assert client_connect.call_count == 1
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error}
 
 
@@ -155,7 +158,7 @@ async def test_manual_already_configured(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
     result = await hass.config_entries.flow.async_configure(
@@ -167,12 +170,54 @@ async def test_manual_already_configured(
     await hass.async_block_till_done()
 
     assert client_connect.call_count == 1
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfiguration_successful"
     assert entry.data["url"] == "ws://localhost:5580/ws"
     assert entry.data["use_addon"] is False
     assert entry.data["integration_created_addon"] is False
-    assert entry.title == "ws://localhost:5580/ws"
+    assert entry.title == "Matter"
+    assert setup_entry.call_count == 1
+
+
+async def test_zeroconf_discovery(
+    hass: HomeAssistant,
+    client_connect: AsyncMock,
+    setup_entry: AsyncMock,
+) -> None:
+    """Test flow started from Zeroconf discovery."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=ZeroconfServiceInfo(
+            ip_address=ip_address("fd11:be53:8d46:0:729e:5a4f:539d:1ee6"),
+            ip_addresses=[ip_address("fd11:be53:8d46:0:729e:5a4f:539d:1ee6")],
+            port=5540,
+            hostname="CDEFGHIJ12345678.local.",
+            type="_matter._tcp.local.",
+            name="ABCDEFGH123456789-0000000012345678._matter._tcp.local.",
+            properties={"SII": "3300", "SAI": "1100", "T": "0"},
+        ),
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "manual"
+    assert result["errors"] is None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "url": "ws://localhost:5580/ws",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert client_connect.call_count == 1
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Matter"
+    assert result["data"] == {
+        "url": "ws://localhost:5580/ws",
+        "integration_created_addon": False,
+        "use_addon": False,
+    }
     assert setup_entry.call_count == 1
 
 
@@ -193,6 +238,7 @@ async def test_supervisor_discovery(
             config=ADDON_DISCOVERY_INFO,
             name="Matter Server",
             slug=ADDON_SLUG,
+            uuid="1234",
         ),
     )
 
@@ -201,8 +247,8 @@ async def test_supervisor_discovery(
 
     assert addon_info.call_count == 1
     assert client_connect.call_count == 0
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "ws://host1:5581/ws"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Matter"
     assert result["data"] == {
         "url": "ws://host1:5581/ws",
         "use_addon": True,
@@ -212,7 +258,7 @@ async def test_supervisor_discovery(
 
 
 @pytest.mark.parametrize(
-    "discovery_info, error",
+    ("discovery_info", "error"),
     [({"config": ADDON_DISCOVERY_INFO}, HassioAPIError())],
 )
 async def test_supervisor_discovery_addon_info_failed(
@@ -232,16 +278,17 @@ async def test_supervisor_discovery_addon_info_failed(
             config=ADDON_DISCOVERY_INFO,
             name="Matter Server",
             slug=ADDON_SLUG,
+            uuid="1234",
         ),
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "hassio_confirm"
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
     assert addon_info.call_count == 1
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "addon_info_failed"
 
 
@@ -262,17 +309,18 @@ async def test_clean_supervisor_discovery_on_user_create(
             config=ADDON_DISCOVERY_INFO,
             name="Matter Server",
             slug=ADDON_SLUG,
+            uuid="1234",
         ),
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "hassio_confirm"
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "on_supervisor"
 
     result = await hass.config_entries.flow.async_configure(
@@ -280,7 +328,7 @@ async def test_clean_supervisor_discovery_on_user_create(
     )
 
     assert addon_info.call_count == 0
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "manual"
 
     result = await hass.config_entries.flow.async_configure(
@@ -293,8 +341,8 @@ async def test_clean_supervisor_discovery_on_user_create(
 
     assert len(hass.config_entries.flow.async_progress()) == 0
     assert client_connect.call_count == 1
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "ws://localhost:5580/ws"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Matter"
     assert result["data"] == {
         "url": "ws://localhost:5580/ws",
         "use_addon": False,
@@ -313,7 +361,7 @@ async def test_abort_supervisor_discovery_with_existing_entry(
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={"url": "ws://localhost:5580/ws"},
-        title="ws://localhost:5580/ws",
+        title="Matter",
     )
     entry.add_to_hass(hass)
 
@@ -324,11 +372,12 @@ async def test_abort_supervisor_discovery_with_existing_entry(
             config=ADDON_DISCOVERY_INFO,
             name="Matter Server",
             slug=ADDON_SLUG,
+            uuid="1234",
         ),
     )
 
     assert addon_info.call_count == 0
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -343,7 +392,7 @@ async def test_abort_supervisor_discovery_with_existing_flow(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "on_supervisor"
 
     result = await hass.config_entries.flow.async_init(
@@ -353,11 +402,12 @@ async def test_abort_supervisor_discovery_with_existing_flow(
             config=ADDON_DISCOVERY_INFO,
             name="Matter Server",
             slug=ADDON_SLUG,
+            uuid="1234",
         ),
     )
 
     assert addon_info.call_count == 0
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_in_progress"
 
 
@@ -379,11 +429,12 @@ async def test_abort_supervisor_discovery_for_other_addon(
             },
             name="Other Matter Server",
             slug="other_addon",
+            uuid="1234",
         ),
     )
 
     assert addon_info.call_count == 0
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "not_matter_addon"
 
 
@@ -404,17 +455,18 @@ async def test_supervisor_discovery_addon_not_running(
             config=ADDON_DISCOVERY_INFO,
             name="Matter Server",
             slug=ADDON_SLUG,
+            uuid="1234",
         ),
     )
 
     assert addon_info.call_count == 0
     assert result["step_id"] == "hassio_confirm"
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
     assert addon_info.call_count == 1
-    assert result["type"] == FlowResultType.SHOW_PROGRESS
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "start_addon"
 
     await hass.async_block_till_done()
@@ -423,8 +475,8 @@ async def test_supervisor_discovery_addon_not_running(
 
     assert start_addon.call_args == call(hass, "core_matter_server")
     assert client_connect.call_count == 1
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "ws://host1:5581/ws"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Matter"
     assert result["data"] == {
         "url": "ws://host1:5581/ws",
         "use_addon": True,
@@ -452,26 +504,27 @@ async def test_supervisor_discovery_addon_not_installed(
             config=ADDON_DISCOVERY_INFO,
             name="Matter Server",
             slug=ADDON_SLUG,
+            uuid="1234",
         ),
     )
 
     assert addon_info.call_count == 0
     assert addon_store_info.call_count == 0
     assert result["step_id"] == "hassio_confirm"
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
     assert addon_info.call_count == 0
     assert addon_store_info.call_count == 1
     assert result["step_id"] == "install_addon"
-    assert result["type"] == FlowResultType.SHOW_PROGRESS
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
 
     await hass.async_block_till_done()
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert install_addon.call_args == call(hass, "core_matter_server")
-    assert result["type"] == FlowResultType.SHOW_PROGRESS
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "start_addon"
 
     await hass.async_block_till_done()
@@ -480,8 +533,8 @@ async def test_supervisor_discovery_addon_not_installed(
 
     assert start_addon.call_args == call(hass, "core_matter_server")
     assert client_connect.call_count == 1
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "ws://host1:5581/ws"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Matter"
     assert result["data"] == {
         "url": "ws://host1:5581/ws",
         "use_addon": True,
@@ -501,14 +554,14 @@ async def test_not_addon(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "on_supervisor"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"use_addon": False}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "manual"
 
     result = await hass.config_entries.flow.async_configure(
@@ -520,8 +573,8 @@ async def test_not_addon(
     await hass.async_block_till_done()
 
     assert client_connect.call_count == 1
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "ws://localhost:5581/ws"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Matter"
     assert result["data"] == {
         "url": "ws://localhost:5581/ws",
         "use_addon": False,
@@ -544,7 +597,7 @@ async def test_addon_running(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "on_supervisor"
 
     result = await hass.config_entries.flow.async_configure(
@@ -554,8 +607,8 @@ async def test_addon_running(
 
     assert addon_info.call_count == 1
     assert client_connect.call_count == 1
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "ws://host1:5581/ws"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Matter"
     assert result["data"] == {
         "url": "ws://host1:5581/ws",
         "use_addon": True,
@@ -565,8 +618,15 @@ async def test_addon_running(
 
 
 @pytest.mark.parametrize(
-    "discovery_info, discovery_info_error, client_connect_error, addon_info_error, "
-    "abort_reason, discovery_info_called, client_connect_called",
+    (
+        "discovery_info",
+        "discovery_info_error",
+        "client_connect_error",
+        "addon_info_error",
+        "abort_reason",
+        "discovery_info_called",
+        "client_connect_called",
+    ),
     [
         (
             {"config": ADDON_DISCOVERY_INFO},
@@ -628,7 +688,7 @@ async def test_addon_running_failures(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "on_supervisor"
 
     result = await hass.config_entries.flow.async_configure(
@@ -638,7 +698,7 @@ async def test_addon_running_failures(
     assert addon_info.call_count == 1
     assert get_addon_discovery_info.called is discovery_info_called
     assert client_connect.called is client_connect_called
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == abort_reason
 
 
@@ -656,7 +716,7 @@ async def test_addon_running_already_configured(
         data={
             "url": "ws://localhost:5580/ws",
         },
-        title="ws://localhost:5580/ws",
+        title="Matter",
     )
     entry.add_to_hass(hass)
 
@@ -664,7 +724,7 @@ async def test_addon_running_already_configured(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "on_supervisor"
 
     result = await hass.config_entries.flow.async_configure(
@@ -673,10 +733,10 @@ async def test_addon_running_already_configured(
     await hass.async_block_till_done()
 
     assert addon_info.call_count == 1
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfiguration_successful"
     assert entry.data["url"] == "ws://host1:5581/ws"
-    assert entry.title == "ws://host1:5581/ws"
+    assert entry.title == "Matter"
     assert setup_entry.call_count == 1
 
 
@@ -694,7 +754,7 @@ async def test_addon_installed(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "on_supervisor"
 
     result = await hass.config_entries.flow.async_configure(
@@ -702,7 +762,7 @@ async def test_addon_installed(
     )
 
     assert addon_info.call_count == 1
-    assert result["type"] == FlowResultType.SHOW_PROGRESS
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "start_addon"
 
     await hass.async_block_till_done()
@@ -710,8 +770,8 @@ async def test_addon_installed(
     await hass.async_block_till_done()
 
     assert start_addon.call_args == call(hass, "core_matter_server")
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "ws://host1:5581/ws"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Matter"
     assert result["data"] == {
         "url": "ws://host1:5581/ws",
         "use_addon": True,
@@ -721,8 +781,13 @@ async def test_addon_installed(
 
 
 @pytest.mark.parametrize(
-    "discovery_info, start_addon_error, client_connect_error, "
-    "discovery_info_called, client_connect_called",
+    (
+        "discovery_info",
+        "start_addon_error",
+        "client_connect_error",
+        "discovery_info_called",
+        "client_connect_called",
+    ),
     [
         (
             {"config": ADDON_DISCOVERY_INFO},
@@ -768,7 +833,7 @@ async def test_addon_installed_failures(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "on_supervisor"
 
     result = await hass.config_entries.flow.async_configure(
@@ -776,7 +841,7 @@ async def test_addon_installed_failures(
     )
 
     assert addon_info.call_count == 1
-    assert result["type"] == FlowResultType.SHOW_PROGRESS
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "start_addon"
 
     await hass.async_block_till_done()
@@ -785,7 +850,7 @@ async def test_addon_installed_failures(
     assert start_addon.call_args == call(hass, "core_matter_server")
     assert get_addon_discovery_info.called is discovery_info_called
     assert client_connect.called is client_connect_called
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "addon_start_failed"
 
 
@@ -804,7 +869,7 @@ async def test_addon_installed_already_configured(
         data={
             "url": "ws://localhost:5580/ws",
         },
-        title="ws://localhost:5580/ws",
+        title="Matter",
     )
     entry.add_to_hass(hass)
 
@@ -812,7 +877,7 @@ async def test_addon_installed_already_configured(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "on_supervisor"
 
     result = await hass.config_entries.flow.async_configure(
@@ -820,7 +885,7 @@ async def test_addon_installed_already_configured(
     )
 
     assert addon_info.call_count == 1
-    assert result["type"] == FlowResultType.SHOW_PROGRESS
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "start_addon"
 
     await hass.async_block_till_done()
@@ -828,10 +893,10 @@ async def test_addon_installed_already_configured(
     await hass.async_block_till_done()
 
     assert start_addon.call_args == call(hass, "core_matter_server")
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfiguration_successful"
     assert entry.data["url"] == "ws://host1:5581/ws"
-    assert entry.title == "ws://host1:5581/ws"
+    assert entry.title == "Matter"
     assert setup_entry.call_count == 1
 
 
@@ -851,7 +916,7 @@ async def test_addon_not_installed(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "on_supervisor"
 
     result = await hass.config_entries.flow.async_configure(
@@ -860,7 +925,7 @@ async def test_addon_not_installed(
 
     assert addon_info.call_count == 0
     assert addon_store_info.call_count == 1
-    assert result["type"] == FlowResultType.SHOW_PROGRESS
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "install_addon"
 
     # Make sure the flow continues when the progress task is done.
@@ -868,7 +933,7 @@ async def test_addon_not_installed(
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert install_addon.call_args == call(hass, "core_matter_server")
-    assert result["type"] == FlowResultType.SHOW_PROGRESS
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "start_addon"
 
     await hass.async_block_till_done()
@@ -876,8 +941,8 @@ async def test_addon_not_installed(
     await hass.async_block_till_done()
 
     assert start_addon.call_args == call(hass, "core_matter_server")
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "ws://host1:5581/ws"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Matter"
     assert result["data"] == {
         "url": "ws://host1:5581/ws",
         "use_addon": True,
@@ -900,14 +965,14 @@ async def test_addon_not_installed_failures(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "on_supervisor"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"use_addon": True}
     )
 
-    assert result["type"] == FlowResultType.SHOW_PROGRESS
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "install_addon"
 
     # Make sure the flow continues when the progress task is done.
@@ -916,7 +981,7 @@ async def test_addon_not_installed_failures(
 
     assert install_addon.call_args == call(hass, "core_matter_server")
     assert addon_info.call_count == 0
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "addon_install_failed"
 
 
@@ -938,7 +1003,7 @@ async def test_addon_not_installed_already_configured(
         data={
             "url": "ws://localhost:5580/ws",
         },
-        title="ws://localhost:5580/ws",
+        title="Matter",
     )
     entry.add_to_hass(hass)
 
@@ -946,7 +1011,7 @@ async def test_addon_not_installed_already_configured(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "on_supervisor"
 
     result = await hass.config_entries.flow.async_configure(
@@ -955,7 +1020,7 @@ async def test_addon_not_installed_already_configured(
 
     assert addon_info.call_count == 0
     assert addon_store_info.call_count == 1
-    assert result["type"] == FlowResultType.SHOW_PROGRESS
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "install_addon"
 
     # Make sure the flow continues when the progress task is done.
@@ -963,7 +1028,7 @@ async def test_addon_not_installed_already_configured(
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert install_addon.call_args == call(hass, "core_matter_server")
-    assert result["type"] == FlowResultType.SHOW_PROGRESS
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "start_addon"
 
     await hass.async_block_till_done()
@@ -972,8 +1037,8 @@ async def test_addon_not_installed_already_configured(
 
     assert start_addon.call_args == call(hass, "core_matter_server")
     assert client_connect.call_count == 1
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfiguration_successful"
     assert entry.data["url"] == "ws://host1:5581/ws"
-    assert entry.title == "ws://host1:5581/ws"
+    assert entry.title == "Matter"
     assert setup_entry.call_count == 1

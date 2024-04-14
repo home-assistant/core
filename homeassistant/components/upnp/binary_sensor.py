@@ -1,4 +1,5 @@
 """Support for UPnP/IGD Binary Sensors."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -9,8 +10,8 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import UpnpDataUpdateCoordinator
@@ -18,7 +19,7 @@ from .const import DOMAIN, LOGGER, WAN_STATUS
 from .entity import UpnpEntity, UpnpEntityDescription
 
 
-@dataclass
+@dataclass(frozen=True)
 class UpnpBinarySensorEntityDescription(
     UpnpEntityDescription, BinarySensorEntityDescription
 ):
@@ -28,7 +29,7 @@ class UpnpBinarySensorEntityDescription(
 SENSOR_DESCRIPTIONS: tuple[UpnpBinarySensorEntityDescription, ...] = (
     UpnpBinarySensorEntityDescription(
         key=WAN_STATUS,
-        name="wan status",
+        translation_key="wan_status",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),

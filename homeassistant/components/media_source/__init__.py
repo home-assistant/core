@@ -1,4 +1,5 @@
 """The media_source integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -18,6 +19,7 @@ from homeassistant.components.media_player.browse_media import (
 )
 from homeassistant.components.websocket_api import ActiveConnection
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.frame import report
 from homeassistant.helpers.integration_platform import (
     async_process_integration_platforms,
@@ -51,6 +53,9 @@ __all__ = [
     "MEDIA_CLASS_MAP",
     "MEDIA_MIME_TYPES",
 ]
+
+
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
 def is_media_source_id(media_content_id: str) -> bool:
@@ -144,7 +149,10 @@ async def async_resolve_media(
         raise Unresolvable("Media Source not loaded")
 
     if target_media_player is UNDEFINED:
-        report("calls media_source.async_resolve_media without passing an entity_id")
+        report(
+            "calls media_source.async_resolve_media without passing an entity_id",
+            {DOMAIN},
+        )
         target_media_player = None
 
     try:
@@ -189,7 +197,7 @@ async def websocket_resolve_media(
 ) -> None:
     """Resolve media."""
     try:
-        media = await async_resolve_media(hass, msg["media_content_id"])
+        media = await async_resolve_media(hass, msg["media_content_id"], None)
     except Unresolvable as err:
         connection.send_error(msg["id"], "resolve_media_failed", str(err))
         return

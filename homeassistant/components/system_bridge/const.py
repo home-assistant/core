@@ -5,9 +5,11 @@ DOMAIN = "system_bridge"
 MODULES = [
     "battery",
     "cpu",
-    "disk",
-    "display",
-    "gpu",
+    "disks",
+    "displays",
+    "gpus",
+    "media",
     "memory",
+    "processes",
     "system",
 ]

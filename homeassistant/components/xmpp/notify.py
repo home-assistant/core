@@ -1,4 +1,7 @@
 """Jabber (XMPP) notification service."""
+
+from __future__ import annotations
+
 from concurrent.futures import TimeoutError as FutTimeoutError
 from http import HTTPStatus
 import logging
@@ -31,8 +34,10 @@ from homeassistant.const import (
     CONF_ROOM,
     CONF_SENDER,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.template as template_helper
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -64,7 +69,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_get_service(hass, config, discovery_info=None):
+async def async_get_service(
+    hass: HomeAssistant,
+    config: ConfigType,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> XmppNotificationService:
     """Get the Jabber (XMPP) notification service."""
     return XmppNotificationService(
         config.get(CONF_SENDER),
@@ -190,9 +199,7 @@ async def async_send_message(  # noqa: C901
                         _LOGGER.info("Sending file to %s", recipient)
                         message = self.Message(sto=recipient, stype="chat")
                     message["body"] = url
-                    message["oob"][  # pylint: disable=invalid-sequence-index
-                        "url"
-                    ] = url
+                    message["oob"]["url"] = url
                     try:
                         message.send()
                     except (IqError, IqTimeout, XMPPError) as ex:
@@ -290,15 +297,13 @@ async def async_send_message(  # noqa: C901
 
             _LOGGER.info("Uploading file from URL, %s", filename)
 
-            url = await self["xep_0363"].upload_file(
+            return await self["xep_0363"].upload_file(
                 filename,
                 size=filesize,
                 input_file=result.content,
                 content_type=result.headers["Content-Type"],
                 timeout=timeout,
             )
-
-            return url
 
         async def upload_file_from_path(self, path, timeout=None):
             """Upload a file from a local file path via XEP_0363."""
@@ -321,15 +326,13 @@ async def async_send_message(  # noqa: C901
             filename = self.get_random_filename(data.get(ATTR_PATH))
             _LOGGER.debug("Uploading file with random filename %s", filename)
 
-            url = await self["xep_0363"].upload_file(
+            return await self["xep_0363"].upload_file(
                 filename,
                 size=filesize,
                 input_file=input_file,
                 content_type=content_type,
                 timeout=timeout,
             )
-
-            return url
 
         def send_text_message(self):
             """Send a text only message to a room or a recipient."""

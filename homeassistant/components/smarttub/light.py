@@ -1,4 +1,5 @@
 """Platform for light integration."""
+
 from typing import Any
 
 from smarttub import SpaLight
@@ -53,22 +54,14 @@ class SmartTubLight(SmartTubEntity, LightEntity):
         """Initialize the entity."""
         super().__init__(coordinator, light.spa, "light")
         self.light_zone = light.zone
+        self._attr_unique_id = f"{super().unique_id}-{light.zone}"
+        spa_name = get_spa_name(self.spa)
+        self._attr_name = f"{spa_name} Light {light.zone}"
 
     @property
     def light(self) -> SpaLight:
         """Return the underlying SpaLight object for this entity."""
         return self.coordinator.data[self.spa.id][ATTR_LIGHTS][self.light_zone]
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID for this light entity."""
-        return f"{super().unique_id}-{self.light_zone}"
-
-    @property
-    def name(self) -> str:
-        """Return a name for this light entity."""
-        spa_name = get_spa_name(self.spa)
-        return f"{spa_name} Light {self.light_zone}"
 
     @property
     def brightness(self):
@@ -103,13 +96,11 @@ class SmartTubLight(SmartTubEntity, LightEntity):
     @property
     def effect_list(self):
         """Return the list of supported effects."""
-        effects = [
+        return [
             effect
             for effect in map(self._light_mode_to_effect, SpaLight.LightMode)
             if effect is not None
         ]
-
-        return effects
 
     @staticmethod
     def _light_mode_to_effect(light_mode: SpaLight.LightMode):

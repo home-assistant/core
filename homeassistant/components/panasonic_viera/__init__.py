@@ -1,4 +1,5 @@
 """The Panasonic Viera integration."""
+
 from functools import partial
 import logging
 from urllib.error import HTTPError, URLError
@@ -99,7 +100,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         unique_id = config_entry.unique_id
         if device_info is None:
             _LOGGER.error(
-                "Couldn't gather device info; Please restart Home Assistant with your TV turned on and connected to your network"
+                "Couldn't gather device info; Please restart Home Assistant with your"
+                " TV turned on and connected to your network"
             )
         else:
             unique_id = device_info[ATTR_UDN]
@@ -175,8 +177,8 @@ class Remote:
             self._control = None
             self.state = STATE_OFF
             self.available = self._on_action is not None
-        except Exception as err:  # pylint: disable=broad-except
-            _LOGGER.exception("An unknown error occurred: %s", err)
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("An unknown error occurred")
             self._control = None
             self.state = STATE_OFF
             self.available = self._on_action is not None
@@ -245,9 +247,6 @@ class Remote:
         """Handle errors from func, set available and reconnect if needed."""
         try:
             result = await self._hass.async_add_executor_job(func, *args)
-            self.state = STATE_ON
-            self.available = True
-            return result
         except EncryptionRequired:
             _LOGGER.error(
                 "The connection couldn't be encrypted. Please reconfigure your TV"
@@ -258,12 +257,18 @@ class Remote:
             self.state = STATE_OFF
             self.available = True
             await self.async_create_remote_control()
+            return None
         except (URLError, OSError) as err:
             _LOGGER.debug("An error occurred: %s", err)
             self.state = STATE_OFF
             self.available = self._on_action is not None
             await self.async_create_remote_control()
-        except Exception as err:  # pylint: disable=broad-except
-            _LOGGER.exception("An unknown error occurred: %s", err)
+            return None
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("An unknown error occurred")
             self.state = STATE_OFF
             self.available = self._on_action is not None
+            return None
+        self.state = STATE_ON
+        self.available = True
+        return result

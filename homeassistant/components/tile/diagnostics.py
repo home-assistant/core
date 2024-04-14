@@ -1,18 +1,18 @@
 """Diagnostics support for Tile."""
+
 from __future__ import annotations
 
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_UUID
 from homeassistant.core import HomeAssistant
 
 from . import TileData
 from .const import DOMAIN
 
 CONF_ALTITUDE = "altitude"
-CONF_UUID = "uuid"
 
 TO_REDACT = {
     CONF_ALTITUDE,

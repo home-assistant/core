@@ -1,0 +1,32 @@
+# serializer version: 1
+# name: test_api_date_time_event
+  dict({
+    'ics': '''
+      BEGIN:VCALENDAR
+      PRODID:-//homeassistant.io//local_calendar 1.0//EN
+      VERSION:***
+      BEGIN:VEVENT
+      DTSTAMP:20230313T190500
+      UID:***
+      DTSTART:19970714T110000
+      DTEND:19970714T220000
+      SUMMARY:***
+      CREATED:20230313T190500
+      RRULE:FREQ=DAILY
+      SEQUENCE:***
+      END:VEVENT
+      END:VCALENDAR
+    ''',
+    'now': '2023-03-13T13:05:00-06:00',
+    'system_timezone': 'tzlocal()',
+    'timezone': 'America/Regina',
+  })
+# ---
+# name: test_empty_calendar
+  dict({
+    'ics': '',
+    'now': '2023-03-13T13:05:00-06:00',
+    'system_timezone': 'tzlocal()',
+    'timezone': 'America/Regina',
+  })
+# ---

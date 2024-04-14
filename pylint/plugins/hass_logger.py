@@ -1,4 +1,5 @@
 """Plugin for logger invocations."""
+
 from __future__ import annotations
 
 from astroid import nodes
@@ -9,7 +10,7 @@ LOGGER_NAMES = ("LOGGER", "_LOGGER")
 LOG_LEVEL_ALLOWED_LOWER_START = ("debug",)
 
 
-class HassLoggerFormatChecker(BaseChecker):  # type: ignore[misc]
+class HassLoggerFormatChecker(BaseChecker):
     """Checker for logger invocations."""
 
     name = "hass_logger"
@@ -29,13 +30,13 @@ class HassLoggerFormatChecker(BaseChecker):  # type: ignore[misc]
     options = ()
 
     def visit_call(self, node: nodes.Call) -> None:
-        """Called when a Call node is visited."""
+        """Check for improper log messages."""
         if not isinstance(node.func, nodes.Attribute) or not isinstance(
             node.func.expr, nodes.Name
         ):
             return
 
-        if not node.func.expr.name in LOGGER_NAMES:
+        if node.func.expr.name not in LOGGER_NAMES:
             return
 
         if not node.args:

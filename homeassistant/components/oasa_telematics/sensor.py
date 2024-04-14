@@ -1,4 +1,5 @@
 """Support for OASA Telematics from telematics.oasa.gr."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -34,7 +35,7 @@ CONF_STOP_ID = "stop_id"
 CONF_ROUTE_ID = "route_id"
 
 DEFAULT_NAME = "OASA Telematics"
-ICON = "mdi:bus"
+
 
 SCAN_INTERVAL = timedelta(seconds=60)
 
@@ -67,6 +68,7 @@ class OASATelematicsSensor(SensorEntity):
     """Implementation of the OASA Telematics sensor."""
 
     _attr_attribution = "Data retrieved from telematics.oasa.gr"
+    _attr_icon = "mdi:bus"
 
     def __init__(self, data, stop_id, route_id, name):
         """Initialize the sensor."""
@@ -120,11 +122,6 @@ class OASATelematicsSensor(SensorEntity):
             }
         )
         return {k: v for k, v in params.items() if v}
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return ICON
 
     def update(self) -> None:
         """Get the latest data from OASA API and update the states."""

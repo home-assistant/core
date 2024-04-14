@@ -1,4 +1,5 @@
 """Common stuff for Fritz!Tools tests."""
+
 import logging
 from unittest.mock import MagicMock, patch
 
@@ -6,7 +7,12 @@ from fritzconnection.core.processor import Service
 from fritzconnection.lib.fritzhosts import FritzHosts
 import pytest
 
-from .const import MOCK_FB_SERVICES, MOCK_MESH_DATA, MOCK_MODELNAME
+from .const import (
+    MOCK_FB_SERVICES,
+    MOCK_HOST_ATTRIBUTES_DATA,
+    MOCK_MESH_DATA,
+    MOCK_MODELNAME,
+)
 
 LOGGER = logging.getLogger(__name__)
 
@@ -21,7 +27,7 @@ class FritzServiceMock(Service):
         self.serviceId = serviceId
 
 
-class FritzConnectionMock:  # pylint: disable=too-few-public-methods
+class FritzConnectionMock:
     """FritzConnection mocking."""
 
     def __init__(self, services):
@@ -43,6 +49,10 @@ class FritzConnectionMock:  # pylint: disable=too-few-public-methods
         else:
             self.call_action = self._call_action
 
+    def override_services(self, services) -> None:
+        """Overrire services data."""
+        self._services = services
+
     def _call_action(self, service: str, action: str, **kwargs):
         LOGGER.debug(
             "_call_action service: %s, action: %s, **kwargs: %s",
@@ -57,7 +67,6 @@ class FritzConnectionMock:  # pylint: disable=too-few-public-methods
             service = service + "1"
 
         if kwargs:
-
             if (index := kwargs.get("NewIndex")) is None:
                 index = next(iter(kwargs.values()))
 
@@ -68,9 +77,11 @@ class FritzConnectionMock:  # pylint: disable=too-few-public-methods
 class FritzHostMock(FritzHosts):
     """FritzHosts mocking."""
 
-    def get_mesh_topology(self, raw=False):
-        """Retrurn mocked mesh data."""
-        return MOCK_MESH_DATA
+    get_mesh_topology = MagicMock()
+    get_mesh_topology.return_value = MOCK_MESH_DATA
+
+    get_hosts_attributes = MagicMock()
+    get_hosts_attributes.return_value = MOCK_HOST_ATTRIBUTES_DATA
 
 
 @pytest.fixture(name="fc_data")
@@ -79,7 +90,7 @@ def fc_data_mock():
     return MOCK_FB_SERVICES
 
 
-@pytest.fixture()
+@pytest.fixture
 def fc_class_mock(fc_data):
     """Fixture that sets up a mocked FritzConnection class."""
     with patch(
@@ -89,7 +100,7 @@ def fc_class_mock(fc_data):
         yield result
 
 
-@pytest.fixture()
+@pytest.fixture
 def fh_class_mock():
     """Fixture that sets up a mocked FritzHosts class."""
     with patch(

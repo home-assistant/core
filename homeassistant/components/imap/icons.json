@@ -1,0 +1,18 @@
+{
+  "entity": {
+    "sensor": {
+      "imap_mail_count": {
+        "default": "mdi:email-alert-outline",
+        "state": {
+          "0": "mdi:email-check-outline"
+        }
+      }
+    }
+  },
+  "services": {
+    "seen": "mdi:email-open-outline",
+    "move": "mdi:email-arrow-right-outline",
+    "delete": "mdi:trash-can-outline",
+    "fetch": "mdi:email-sync-outline"
+  }
+}

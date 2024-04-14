@@ -1,4 +1,5 @@
 """Tests for the lifx integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -17,6 +18,7 @@ LABEL = "My Bulb"
 GROUP = "My Group"
 SERIAL = "aa:bb:cc:dd:ee:cc"
 MAC_ADDRESS = "aa:bb:cc:dd:ee:cd"
+DHCP_FORMATTED_MAC = "aabbccddeecd"
 DEFAULT_ENTRY_TITLE = LABEL
 
 
@@ -241,8 +243,12 @@ def _patch_discovery(device: Light | None = None, no_device: bool = False):
 
     @contextmanager
     def _patcher():
-        with patch.object(discovery, "DEFAULT_TIMEOUT", 0), patch(
-            "homeassistant.components.lifx.discovery.LifxDiscovery", MockLifxDiscovery
+        with (
+            patch.object(discovery, "DEFAULT_TIMEOUT", 0),
+            patch(
+                "homeassistant.components.lifx.discovery.LifxDiscovery",
+                MockLifxDiscovery,
+            ),
         ):
             yield
 
@@ -254,7 +260,7 @@ def _patch_config_flow_try_connect(
 ):
     """Patch out discovery."""
 
-    class MockLifxConnecton:
+    class MockLifxConnection:
         """Mock lifx discovery."""
 
         def __init__(self, *args, **kwargs):
@@ -275,7 +281,7 @@ def _patch_config_flow_try_connect(
     def _patcher():
         with patch(
             "homeassistant.components.lifx.config_flow.LIFXConnection",
-            MockLifxConnecton,
+            MockLifxConnection,
         ):
             yield
 

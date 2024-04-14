@@ -1,26 +1,22 @@
 """Config flow for Aladdin Connect cover integration."""
+
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Mapping
-import logging
 from typing import Any
 
 from AIOAladdinConnect import AladdinConnectClient
-from AIOAladdinConnect.session_manager import InvalidPasswordError
-from aiohttp.client_exceptions import ClientConnectionError
+import AIOAladdinConnect.session_manager as Aladdin
+from aiohttp.client_exceptions import ClientError
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CLIENT_ID, DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
@@ -45,20 +41,22 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     )
     try:
         await acc.login()
-    except (ClientConnectionError, asyncio.TimeoutError) as ex:
-        raise ex
+    except (ClientError, TimeoutError, Aladdin.ConnectionError):
+        raise
 
-    except InvalidPasswordError as ex:
+    except Aladdin.InvalidPasswordError as ex:
         raise InvalidAuth from ex
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class AladdinConnectConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Aladdin Connect."""
 
     VERSION = 1
-    entry: config_entries.ConfigEntry | None
+    entry: ConfigEntry | None
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle re-authentication with Aladdin Connect."""
 
         self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
@@ -66,7 +64,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Confirm re-authentication with Aladdin Connect."""
         errors: dict[str, str] = {}
 
@@ -84,11 +82,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
 
-            except (ClientConnectionError, asyncio.TimeoutError):
+            except (ClientError, TimeoutError, Aladdin.ConnectionError):
                 errors["base"] = "cannot_connect"
 
             else:
-
                 self.hass.config_entries.async_update_entry(
                     self.entry,
                     data={
@@ -107,7 +104,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         if user_input is None:
             return self.async_show_form(
@@ -121,7 +118,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except InvalidAuth:
             errors["base"] = "invalid_auth"
 
-        except (ClientConnectionError, asyncio.TimeoutError):
+        except (ClientError, TimeoutError, Aladdin.ConnectionError):
             errors["base"] = "cannot_connect"
 
         else:
@@ -134,12 +131,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
-
-    async def async_step_import(
-        self, import_data: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Import Aladin Connect config from configuration.yaml."""
-        return await self.async_step_user(import_data)
 
 
 class InvalidAuth(HomeAssistantError):

@@ -1,6 +1,5 @@
 """Tests for the Moat BLE integration."""
 
-
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 
 NOT_MOAT_SERVICE_INFO = BluetoothServiceInfo(
@@ -19,7 +18,7 @@ MOAT_S2_SERVICE_INFO = BluetoothServiceInfo(
     service_data={
         "00005000-0000-1000-8000-00805f9b34fb": b"\xdfy\xe3\xa6\x12\xb3\xf5\x0b",
         "00001000-0000-1000-8000-00805f9b34fb": (
-            b"\xdfy\xe3\xa6\x12\xb3\x11S\xdbb\xfcbpq" b"\xf5\x0b\xff\xff"
+            b"\xdfy\xe3\xa6\x12\xb3\x11S\xdbb\xfcbpq\xf5\x0b\xff\xff"
         ),
     },
     service_uuids=[

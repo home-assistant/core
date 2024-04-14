@@ -1,4 +1,5 @@
 """Proxy camera platform that enables image processing of camera data."""
+
 from __future__ import annotations
 
 import asyncio
@@ -77,16 +78,16 @@ async def async_setup_platform(
 def _precheck_image(image, opts):
     """Perform some pre-checks on the given image."""
     if not opts:
-        raise ValueError()
+        raise ValueError
     try:
         img = Image.open(io.BytesIO(image))
     except OSError as err:
         _LOGGER.warning("Failed to open image")
-        raise ValueError() from err
+        raise ValueError from err
     imgfmt = str(img.format)
     if imgfmt not in ("PNG", "JPEG"):
         _LOGGER.warning("Image is of unsupported type: %s", imgfmt)
-        raise ValueError()
+        raise ValueError
     if img.mode != "RGB":
         img = img.convert("RGB")
     return img
@@ -118,8 +119,10 @@ def _resize_image(image, opts):
     newimage = imgbuf.getvalue()
     if not opts.force_resize and len(newimage) >= old_size:
         _LOGGER.debug(
-            "Using original image (%d bytes) "
-            "because resized image (%d bytes) is not smaller",
+            (
+                "Using original image (%d bytes) "
+                "because resized image (%d bytes) is not smaller"
+            ),
             old_size,
             len(newimage),
         )
@@ -289,7 +292,7 @@ class ProxyCamera(Camera):
             if not image:
                 return None
         except HomeAssistantError as err:
-            raise asyncio.CancelledError() from err
+            raise asyncio.CancelledError from err
 
         if self._mode == MODE_RESIZE:
             job = _resize_image

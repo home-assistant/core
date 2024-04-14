@@ -1,4 +1,5 @@
 """template conftest."""
+
 import pytest
 
 from homeassistant.setup import async_setup_component
@@ -30,4 +31,4 @@ async def start_ha(hass, count, domain, config, caplog):
 @pytest.fixture
 async def caplog_setup_text(caplog):
     """Return setup log of integration."""
-    yield caplog.text
+    return caplog.text

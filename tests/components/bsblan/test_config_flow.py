@@ -1,19 +1,15 @@
 """Tests for the BSBLan device config flow."""
+
 from unittest.mock import AsyncMock, MagicMock
 
 from bsblan import BSBLANConnectionError
 
-from homeassistant import data_entry_flow
 from homeassistant.components.bsblan import config_flow
 from homeassistant.components.bsblan.const import CONF_PASSKEY, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import (
-    RESULT_TYPE_ABORT,
-    RESULT_TYPE_CREATE_ENTRY,
-    RESULT_TYPE_FORM,
-)
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.device_registry import format_mac
 
 from tests.common import MockConfigEntry
@@ -21,7 +17,7 @@ from tests.common import MockConfigEntry
 
 async def test_full_user_flow_implementation(
     hass: HomeAssistant,
-    mock_bsblan_config_flow: MagicMock,
+    mock_bsblan: MagicMock,
     mock_setup_entry: AsyncMock,
 ) -> None:
     """Test the full manual user flow from start to finish."""
@@ -30,9 +26,8 @@ async def test_full_user_flow_implementation(
         context={"source": SOURCE_USER},
     )
 
-    assert result.get("type") == RESULT_TYPE_FORM
-    assert result.get("step_id") == SOURCE_USER
-    assert "flow_id" in result
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "user"
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -45,7 +40,7 @@ async def test_full_user_flow_implementation(
         },
     )
 
-    assert result2.get("type") == RESULT_TYPE_CREATE_ENTRY
+    assert result2.get("type") is FlowResultType.CREATE_ENTRY
     assert result2.get("title") == format_mac("00:80:41:19:69:90")
     assert result2.get("data") == {
         CONF_HOST: "127.0.0.1",
@@ -58,7 +53,7 @@ async def test_full_user_flow_implementation(
     assert result2["result"].unique_id == format_mac("00:80:41:19:69:90")
 
     assert len(mock_setup_entry.mock_calls) == 1
-    assert len(mock_bsblan_config_flow.device.mock_calls) == 1
+    assert len(mock_bsblan.device.mock_calls) == 1
 
 
 async def test_show_user_form(hass: HomeAssistant) -> None:
@@ -69,15 +64,15 @@ async def test_show_user_form(hass: HomeAssistant) -> None:
     )
 
     assert result["step_id"] == "user"
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] is FlowResultType.FORM
 
 
 async def test_connection_error(
     hass: HomeAssistant,
-    mock_bsblan_config_flow: MagicMock,
+    mock_bsblan: MagicMock,
 ) -> None:
     """Test we show user form on BSBLan connection error."""
-    mock_bsblan_config_flow.device.side_effect = BSBLANConnectionError
+    mock_bsblan.device.side_effect = BSBLANConnectionError
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -91,14 +86,14 @@ async def test_connection_error(
         },
     )
 
-    assert result.get("type") == RESULT_TYPE_FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("errors") == {"base": "cannot_connect"}
     assert result.get("step_id") == "user"
 
 
 async def test_user_device_exists_abort(
     hass: HomeAssistant,
-    mock_bsblan_config_flow: MagicMock,
+    mock_bsblan: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test we abort flow if BSBLAN device already configured."""
@@ -115,5 +110,5 @@ async def test_user_device_exists_abort(
         },
     )
 
-    assert result.get("type") == RESULT_TYPE_ABORT
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "already_configured"

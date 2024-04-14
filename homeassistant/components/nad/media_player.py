@@ -1,4 +1,5 @@
 """Support for interfacing with NAD receivers through RS-232."""
+
 from __future__ import annotations
 
 from nad_receiver import NADReceiver, NADReceiverTCP, NADReceiverTelnet
@@ -168,8 +169,7 @@ class NAD(MediaPlayerEntity):
             )
 
     def calc_volume(self, decibel):
-        """
-        Calculate the volume given the decibel.
+        """Calculate the volume given the decibel.
 
         Return the volume (0..1).
         """
@@ -178,8 +178,7 @@ class NAD(MediaPlayerEntity):
         )
 
     def calc_db(self, volume):
-        """
-        Calculate the decibel given the volume.
+        """Calculate the decibel given the volume.
 
         Return the dB.
         """

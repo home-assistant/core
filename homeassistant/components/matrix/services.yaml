@@ -1,24 +1,16 @@
 send_message:
-  name: Send message
-  description: Send message to target room(s)
   fields:
     message:
-      name: Message
-      description: The message to be sent.
       required: true
       example: This is a message I am sending to matrix
       selector:
         text:
     target:
-      name: Target
-      description: A list of room(s) to send the message to.
       required: true
       example: "#hasstest:matrix.org"
       selector:
         text:
     data:
-      name: Data
-      description: Extended information of notification. Supports list of images. Supports message format. Optional.
       example: "{'images': ['/tmp/test.jpg'], 'format': 'text'}"
       selector:
         object:

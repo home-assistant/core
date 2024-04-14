@@ -1,4 +1,5 @@
 """Support for Homekit Alarm Control Panel."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -26,8 +27,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import KNOWN_DEVICES
 from .connection import HKDevice
 from .entity import HomeKitEntity
-
-ICON = "mdi:security"
 
 CURRENT_STATE_MAP = {
     0: STATE_ALARM_ARMED_HOME,
@@ -85,11 +84,6 @@ class HomeKitAlarmControlPanelEntity(HomeKitEntity, AlarmControlPanelEntity):
             CharacteristicsTypes.SECURITY_SYSTEM_STATE_TARGET,
             CharacteristicsTypes.BATTERY_LEVEL,
         ]
-
-    @property
-    def icon(self) -> str:
-        """Return icon."""
-        return ICON
 
     @property
     def state(self) -> str:

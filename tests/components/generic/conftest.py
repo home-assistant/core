@@ -18,7 +18,7 @@ def fakeimgbytes_png():
     """Fake image in RAM for testing."""
     buf = BytesIO()
     Image.new("RGB", (1, 1)).save(buf, format="PNG")
-    yield bytes(buf.getbuffer())
+    return bytes(buf.getbuffer())
 
 
 @pytest.fixture(scope="package")
@@ -26,13 +26,13 @@ def fakeimgbytes_jpg():
     """Fake image in RAM for testing."""
     buf = BytesIO()  # fake image in ram for testing.
     Image.new("RGB", (1, 1)).save(buf, format="jpeg")
-    yield bytes(buf.getbuffer())
+    return bytes(buf.getbuffer())
 
 
 @pytest.fixture(scope="package")
 def fakeimgbytes_svg():
     """Fake image in RAM for testing."""
-    yield bytes(
+    return bytes(
         '<svg xmlns="http://www.w3.org/2000/svg"><circle r="50"/></svg>',
         encoding="utf-8",
     )
@@ -43,7 +43,7 @@ def fakeimgbytes_gif():
     """Fake image in RAM for testing."""
     buf = BytesIO()  # fake image in ram for testing.
     Image.new("RGB", (1, 1)).save(buf, format="gif")
-    yield bytes(buf.getbuffer())
+    return bytes(buf.getbuffer())
 
 
 @pytest.fixture
@@ -68,11 +68,10 @@ def mock_create_stream():
     mock_stream.add_provider.return_value = mock_provider
     mock_stream.start = AsyncMock()
     mock_stream.stop = AsyncMock()
-    fake_create_stream = patch(
+    return patch(
         "homeassistant.components.generic.config_flow.create_stream",
         return_value=mock_stream,
     )
-    return fake_create_stream
 
 
 @pytest.fixture

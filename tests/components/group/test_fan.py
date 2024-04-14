@@ -1,7 +1,8 @@
 """The tests for the group fan platform."""
+
+import asyncio
 from unittest.mock import patch
 
-import async_timeout
 import pytest
 
 from homeassistant import config as hass_config
@@ -34,7 +35,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import CoreState
+from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
@@ -112,7 +113,9 @@ async def setup_comp(hass, config_count):
 
 
 @pytest.mark.parametrize("config_count", [(CONFIG_ATTRIBUTES, 1)])
-async def test_state(hass, setup_comp):
+async def test_state(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, setup_comp
+) -> None:
     """Test handling of state.
 
     The group state is on if at least one group member is on.
@@ -201,14 +204,13 @@ async def test_state(hass, setup_comp):
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
 
     # Test entity registry integration
-    entity_registry = er.async_get(hass)
     entry = entity_registry.async_get(FAN_GROUP)
     assert entry
     assert entry.unique_id == "unique_identifier"
 
 
 @pytest.mark.parametrize("config_count", [(CONFIG_ATTRIBUTES, 1)])
-async def test_attributes(hass, setup_comp):
+async def test_attributes(hass: HomeAssistant, setup_comp) -> None:
     """Test handling of state attributes."""
     state = hass.states.get(FAN_GROUP)
     assert state.state == STATE_UNAVAILABLE
@@ -247,11 +249,7 @@ async def test_attributes(hass, setup_comp):
     assert state.attributes[ATTR_PERCENTAGE] == 50
     assert ATTR_ASSUMED_STATE not in state.attributes
 
-    # Add Entity that supports
-    # ### Test assumed state ###
-    # ##########################
-
-    # Add Entity with a different speed should set assumed state
+    # Add Entity with a different speed should not set assumed state
     hass.states.async_set(
         PERCENTAGE_LIMITED_FAN_ENTITY_ID,
         STATE_ON,
@@ -264,12 +262,12 @@ async def test_attributes(hass, setup_comp):
 
     state = hass.states.get(FAN_GROUP)
     assert state.state == STATE_ON
-    assert state.attributes[ATTR_ASSUMED_STATE] is True
+    assert ATTR_ASSUMED_STATE not in state.attributes
     assert state.attributes[ATTR_PERCENTAGE] == int((50 + 75) / 2)
 
 
 @pytest.mark.parametrize("config_count", [(CONFIG_FULL_SUPPORT, 2)])
-async def test_direction_oscillating(hass, setup_comp):
+async def test_direction_oscillating(hass: HomeAssistant, setup_comp) -> None:
     """Test handling of direction and oscillating attributes."""
 
     hass.states.async_set(
@@ -306,11 +304,7 @@ async def test_direction_oscillating(hass, setup_comp):
     assert state.attributes[ATTR_DIRECTION] == DIRECTION_FORWARD
     assert ATTR_ASSUMED_STATE not in state.attributes
 
-    # Add Entity that supports
-    # ### Test assumed state ###
-    # ##########################
-
-    # Add Entity with a different direction should set assumed state
+    # Add Entity with a different direction should not set assumed state
     hass.states.async_set(
         PERCENTAGE_FULL_FAN_ENTITY_ID,
         STATE_ON,
@@ -325,11 +319,10 @@ async def test_direction_oscillating(hass, setup_comp):
 
     state = hass.states.get(FAN_GROUP)
     assert state.state == STATE_ON
-    assert state.attributes[ATTR_ASSUMED_STATE] is True
+    assert ATTR_ASSUMED_STATE not in state.attributes
     assert ATTR_PERCENTAGE in state.attributes
     assert state.attributes[ATTR_PERCENTAGE] == 50
     assert state.attributes[ATTR_OSCILLATING] is True
-    assert ATTR_ASSUMED_STATE in state.attributes
 
     # Now that everything is the same, no longer assumed state
 
@@ -385,16 +378,16 @@ async def test_direction_oscillating(hass, setup_comp):
 
 
 @pytest.mark.parametrize("config_count", [(CONFIG_MISSING_FAN, 2)])
-async def test_state_missing_entity_id(hass, setup_comp):
+async def test_state_missing_entity_id(hass: HomeAssistant, setup_comp) -> None:
     """Test we can still setup with a missing entity id."""
     state = hass.states.get(FAN_GROUP)
     await hass.async_block_till_done()
     assert state.state == STATE_OFF
 
 
-async def test_setup_before_started(hass):
+async def test_setup_before_started(hass: HomeAssistant) -> None:
     """Test we can setup before starting."""
-    hass.state = CoreState.stopped
+    hass.set_state(CoreState.stopped)
     assert await async_setup_component(hass, DOMAIN, CONFIG_MISSING_FAN)
 
     await hass.async_block_till_done()
@@ -405,7 +398,7 @@ async def test_setup_before_started(hass):
 
 
 @pytest.mark.parametrize("config_count", [(CONFIG_MISSING_FAN, 2)])
-async def test_reload(hass, setup_comp):
+async def test_reload(hass: HomeAssistant, setup_comp) -> None:
     """Test the ability to reload fans."""
     await hass.async_block_till_done()
     await hass.async_start()
@@ -428,7 +421,7 @@ async def test_reload(hass, setup_comp):
 
 
 @pytest.mark.parametrize("config_count", [(CONFIG_FULL_SUPPORT, 2)])
-async def test_service_calls(hass, setup_comp):
+async def test_service_calls(hass: HomeAssistant, setup_comp) -> None:
     """Test calling services."""
     await hass.services.async_call(
         DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: FAN_GROUP}, blocking=True
@@ -534,7 +527,7 @@ async def test_service_calls(hass, setup_comp):
     assert fan_group_state.attributes[ATTR_DIRECTION] == DIRECTION_REVERSE
 
 
-async def test_nested_group(hass):
+async def test_nested_group(hass: HomeAssistant) -> None:
     """Test nested fan group."""
     await async_setup_component(
         hass,
@@ -576,7 +569,7 @@ async def test_nested_group(hass):
     assert state.attributes.get(ATTR_ENTITY_ID) == ["fan.bedroom_group"]
 
     # Test controlling the nested group
-    async with async_timeout.timeout(0.5):
+    async with asyncio.timeout(0.5):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_TURN_ON,

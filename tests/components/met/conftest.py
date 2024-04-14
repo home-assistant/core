@@ -1,4 +1,5 @@
 """Fixtures for Met weather testing."""
+
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -17,6 +18,7 @@ def mock_weather():
             "humidity": 50,
             "wind_speed": 10,
             "wind_bearing": "NE",
+            "dew_point": 12.1,
         }
         mock_data.get_forecast.return_value = {}
         yield mock_data

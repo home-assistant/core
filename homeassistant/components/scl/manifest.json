@@ -1,0 +1,6 @@
+{
+  "domain": "scl",
+  "name": "Seattle City Light (SCL)",
+  "integration_type": "virtual",
+  "supported_by": "opower"
+}

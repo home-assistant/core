@@ -1,5 +1,5 @@
 """Fixtures and test data for UniFi Protect methods."""
-# pylint: disable=protected-access
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -7,6 +7,8 @@ from datetime import datetime, timedelta
 from functools import partial
 from ipaddress import IPv4Address
 import json
+from pathlib import Path
+from tempfile import gettempdir
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -17,6 +19,7 @@ from pyunifiprotect.data import (
     Bootstrap,
     Camera,
     Chime,
+    CloudAccount,
     Doorlock,
     Light,
     Liveview,
@@ -105,6 +108,7 @@ def mock_ufp_client(bootstrap: Bootstrap):
     client.bootstrap = bootstrap
     client._bootstrap = bootstrap
     client.api_path = "/api"
+    client.cache_dir = Path(gettempdir()) / "ufp_cache"
     # functionality from API client tests actually need
     client._stream_response = partial(ProtectApiClient._stream_response, client)
     client.get_camera_video = partial(ProtectApiClient.get_camera_video, client)
@@ -116,6 +120,7 @@ def mock_ufp_client(bootstrap: Bootstrap):
     client.base_url = "https://127.0.0.1"
     client.connection_host = IPv4Address("127.0.0.1")
     client.get_nvr = AsyncMock(return_value=nvr)
+    client.get_bootstrap = AsyncMock(return_value=bootstrap)
     client.update = AsyncMock(return_value=bootstrap)
     client.async_disconnect_ws = AsyncMock()
     return client
@@ -127,9 +132,12 @@ def mock_entry(
 ):
     """Mock ProtectApiClient for testing."""
 
-    with _patch_discovery(no_device=True), patch(
-        "homeassistant.components.unifiprotect.utils.ProtectApiClient"
-    ) as mock_api:
+    with (
+        _patch_discovery(no_device=True),
+        patch(
+            "homeassistant.components.unifiprotect.utils.ProtectApiClient"
+        ) as mock_api,
+    ):
         ufp_config_entry.add_to_hass(hass)
 
         mock_api.return_value = ufp_client
@@ -214,6 +222,7 @@ def doorbell_fixture(camera: Camera, fixed_now: datetime):
     doorbell.feature_flags.has_lcd_screen = True
     doorbell.feature_flags.has_speaker = True
     doorbell.feature_flags.has_privacy_mask = True
+    doorbell.feature_flags.is_doorbell = True
     doorbell.feature_flags.has_chime = True
     doorbell.feature_flags.has_smart_detect = True
     doorbell.feature_flags.has_package_camera = True
@@ -341,3 +350,19 @@ def chime():
 def fixed_now_fixture():
     """Return datetime object that will be consistent throughout test."""
     return dt_util.utcnow()
+
+
+@pytest.fixture(name="cloud_account")
+def cloud_account() -> CloudAccount:
+    """Return UI Cloud Account."""
+
+    return CloudAccount(
+        id="42",
+        first_name="Test",
+        last_name="User",
+        email="test@example.com",
+        user_id="42",
+        name="Test User",
+        location=None,
+        profile_img=None,
+    )

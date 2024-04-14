@@ -244,7 +244,7 @@ class NestEventMediaStore(EventMediaStore):
         devices = {}
         for device in device_manager.devices.values():
             if device_entry := device_registry.async_get_device(
-                {(DOMAIN, device.name)}
+                identifiers={(DOMAIN, device.name)}
             ):
                 devices[device.name] = device_entry.id
         return devices
@@ -490,9 +490,10 @@ def _browse_clip_preview(
     event_id: MediaId, device: Device, event: ClipPreviewSession
 ) -> BrowseMediaSource:
     """Build a BrowseMediaSource for a specific clip preview event."""
-    types = []
-    for event_type in event.event_types:
-        types.append(MEDIA_SOURCE_EVENT_TITLE_MAP.get(event_type, "Event"))
+    types = [
+        MEDIA_SOURCE_EVENT_TITLE_MAP.get(event_type, "Event")
+        for event_type in event.event_types
+    ]
     return BrowseMediaSource(
         domain=DOMAIN,
         identifier=event_id.identifier,

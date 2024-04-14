@@ -1,4 +1,5 @@
 """WiZ integration binary sensor platform."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -66,7 +67,6 @@ class WizOccupancyEntity(WizEntity, BinarySensorEntity):
     """Representation of WiZ Occupancy sensor."""
 
     _attr_device_class = BinarySensorDeviceClass.OCCUPANCY
-    _attr_name = "Occupancy"
 
     def __init__(self, wiz_data: WizData, name: str) -> None:
         """Initialize an WiZ device."""

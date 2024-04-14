@@ -1,4 +1,5 @@
 """Support for hive water heaters."""
+
 from datetime import timedelta
 
 import voluptuous as vol
@@ -48,11 +49,8 @@ async def async_setup_entry(
 
     hive = hass.data[DOMAIN][entry.entry_id]
     devices = hive.session.deviceList.get("water_heater")
-    entities = []
     if devices:
-        for dev in devices:
-            entities.append(HiveWaterHeater(hive, dev))
-    async_add_entities(entities, True)
+        async_add_entities((HiveWaterHeater(hive, dev) for dev in devices), True)
 
     platform = entity_platform.async_get_current_platform()
 

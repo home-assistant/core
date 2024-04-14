@@ -1,4 +1,5 @@
 """API for Neato Botvac bound to Home Assistant OAuth."""
+
 from __future__ import annotations
 
 from asyncio import run_coroutine_threadsafe
@@ -28,7 +29,7 @@ class ConfigEntryAuth(pybotvac.OAuthSession):  # type: ignore[misc]
         super().__init__(self.session.token, vendor=pybotvac.Neato())
 
     def refresh_tokens(self) -> str:
-        """Refresh and return new Neato Botvac tokens using Home Assistant OAuth2 session."""
+        """Refresh and return new Neato Botvac tokens."""
         run_coroutine_threadsafe(
             self.session.async_ensure_token_valid(), self.hass.loop
         ).result()
@@ -39,7 +40,8 @@ class ConfigEntryAuth(pybotvac.OAuthSession):  # type: ignore[misc]
 class NeatoImplementation(AuthImplementation):
     """Neato implementation of LocalOAuth2Implementation.
 
-    We need this class because we have to add client_secret and scope to the authorization request.
+    We need this class because we have to add client_secret
+    and scope to the authorization request.
     """
 
     @property

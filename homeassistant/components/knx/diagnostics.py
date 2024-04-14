@@ -1,4 +1,5 @@
 """Diagnostics support for KNX."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -29,7 +30,7 @@ TO_REDACT = {
 
 async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, config_entry: ConfigEntry
-) -> dict:
+) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     diag: dict[str, Any] = {}
     knx_module = hass.data[DOMAIN]
@@ -39,6 +40,11 @@ async def async_get_config_entry_diagnostics(
     }
 
     diag["config_entry_data"] = async_redact_data(dict(config_entry.data), TO_REDACT)
+
+    if proj_info := knx_module.project.info:
+        diag["project_info"] = async_redact_data(proj_info, "name")
+    else:
+        diag["project_info"] = None
 
     raw_config = await conf_util.async_hass_config_yaml(hass)
     diag["configuration_yaml"] = raw_config.get(DOMAIN)

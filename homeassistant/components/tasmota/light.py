@@ -1,4 +1,5 @@
 """Support for Tasmota lights."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -56,12 +57,12 @@ async def async_setup_entry(
             [TasmotaLight(tasmota_entity=tasmota_entity, discovery_hash=discovery_hash)]
         )
 
-    hass.data[
-        DATA_REMOVE_DISCOVER_COMPONENT.format(light.DOMAIN)
-    ] = async_dispatcher_connect(
-        hass,
-        TASMOTA_DISCOVERY_ENTITY_NEW.format(light.DOMAIN),
-        async_discover,
+    hass.data[DATA_REMOVE_DISCOVER_COMPONENT.format(light.DOMAIN)] = (
+        async_dispatcher_connect(
+            hass,
+            TASMOTA_DISCOVERY_ENTITY_NEW.format(light.DOMAIN),
+            async_discover,
+        )
     )
 
 
@@ -124,8 +125,9 @@ class TasmotaLight(
         light_type = self._tasmota_entity.light_type
 
         if light_type in [LIGHT_TYPE_RGB, LIGHT_TYPE_RGBW, LIGHT_TYPE_RGBCW]:
-            # Mark HS support for RGBW light because we don't have direct control over the
-            # white channel, so the base component's RGB->RGBW translation does not work
+            # Mark HS support for RGBW light because we don't have direct
+            # control over the white channel, so the base component's RGB->RGBW
+            # translation does not work
             self._supported_color_modes.add(ColorMode.HS)
             self._color_mode = ColorMode.HS
 

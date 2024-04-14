@@ -14,21 +14,24 @@ async def test_qnap_buttons(hass: HomeAssistant) -> None:
 
     await async_init_integration(hass)
 
-    state = hass.states.get("button.qsw_m408_4c_reboot")
+    state = hass.states.get("button.qsw_m408_4c_restart")
     assert state
     assert state.state == STATE_UNKNOWN
 
-    with patch(
-        "homeassistant.components.qnap_qsw.QnapQswApi.get_users_verification",
-        return_value=USERS_VERIFICATION_MOCK,
-    ) as mock_users_verification, patch(
-        "homeassistant.components.qnap_qsw.QnapQswApi.post_system_command",
-        return_value=SYSTEM_COMMAND_MOCK,
-    ) as mock_post_system_command:
+    with (
+        patch(
+            "homeassistant.components.qnap_qsw.QnapQswApi.get_users_verification",
+            return_value=USERS_VERIFICATION_MOCK,
+        ) as mock_users_verification,
+        patch(
+            "homeassistant.components.qnap_qsw.QnapQswApi.post_system_command",
+            return_value=SYSTEM_COMMAND_MOCK,
+        ) as mock_post_system_command,
+    ):
         await hass.services.async_call(
             BUTTON_DOMAIN,
             SERVICE_PRESS,
-            {ATTR_ENTITY_ID: "button.qsw_m408_4c_reboot"},
+            {ATTR_ENTITY_ID: "button.qsw_m408_4c_restart"},
             blocking=True,
         )
         await hass.async_block_till_done()

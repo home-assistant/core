@@ -1,20 +1,26 @@
 """Support for the Lovelace UI."""
+
 import logging
 
 import voluptuous as vol
 
-from homeassistant.components import frontend, websocket_api
-from homeassistant.config import async_hass_config_yaml, async_process_component_config
+from homeassistant.components import frontend, onboarding, websocket_api
+from homeassistant.config import (
+    async_hass_config_yaml,
+    async_process_component_and_handle_errors,
+)
 from homeassistant.const import CONF_FILENAME, CONF_MODE, CONF_RESOURCES
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import collection, config_validation as cv
 from homeassistant.helpers.service import async_register_admin_service
+from homeassistant.helpers.translation import async_get_translations
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_integration
 
 from . import dashboard, resources, websocket
 from .const import (  # noqa: F401
+    CONF_ALLOW_SINGLE_WORD,
     CONF_ICON,
     CONF_REQUIRE_ADMIN,
     CONF_SHOW_IN_SIDEBAR,
@@ -85,7 +91,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         integration = await async_get_integration(hass, DOMAIN)
 
-        config = await async_process_component_config(hass, conf, integration)
+        config = await async_process_component_and_handle_errors(
+            hass, conf, integration
+        )
 
         if config is None:
             raise HomeAssistantError("Config validation failed")
@@ -113,12 +121,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         if yaml_resources is not None:
             _LOGGER.warning(
-                "Lovelace is running in storage mode. Define resources via user interface"
+                "Lovelace is running in storage mode. Define resources via user"
+                " interface"
             )
 
         resource_collection = resources.ResourceStorageCollection(hass, default_config)
 
-        collection.StorageCollectionWebsocket(
+        collection.DictStorageCollectionWebsocket(
             resource_collection,
             "lovelace/resources",
             "resource",
@@ -143,7 +152,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         "yaml_dashboards": config[DOMAIN].get(CONF_DASHBOARDS, {}),
     }
 
-    if hass.config.safe_mode:
+    if hass.config.recovery_mode:
         return True
 
     async def storage_dashboard_changed(change_type, item_id, item):
@@ -156,7 +165,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             return
 
         if change_type == collection.CHANGE_ADDED:
-
             existing = hass.data[DOMAIN]["dashboards"].get(url_path)
 
             if existing:
@@ -195,16 +203,25 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     # Process storage dashboards
     dashboards_collection = dashboard.DashboardsCollection(hass)
 
+    # This can be removed when the map integration is removed
+    hass.data[DOMAIN]["dashboards_collection"] = dashboards_collection
+
     dashboards_collection.async_add_listener(storage_dashboard_changed)
     await dashboards_collection.async_load()
 
-    collection.StorageCollectionWebsocket(
+    collection.DictStorageCollectionWebsocket(
         dashboards_collection,
         "lovelace/dashboards",
         "dashboard",
         STORAGE_DASHBOARD_CREATE_FIELDS,
         STORAGE_DASHBOARD_UPDATE_FIELDS,
     ).async_setup(hass, create_list=False)
+
+    def create_map_dashboard():
+        hass.async_create_task(_create_map_dashboard(hass))
+
+    if not onboarding.async_is_onboarded(hass):
+        onboarding.async_add_listener(hass, create_map_dashboard)
 
     return True
 
@@ -220,7 +237,8 @@ async def create_yaml_resource_col(hass, yaml_resources):
         else:
             if CONF_RESOURCES in ll_conf:
                 _LOGGER.warning(
-                    "Resources need to be specified in your configuration.yaml. Please see the docs"
+                    "Resources need to be specified in your configuration.yaml. Please"
+                    " see the docs"
                 )
                 yaml_resources = ll_conf[CONF_RESOURCES]
 
@@ -242,3 +260,25 @@ def _register_panel(hass, url_path, mode, config, update):
         kwargs["sidebar_icon"] = config.get(CONF_ICON, DEFAULT_ICON)
 
     frontend.async_register_built_in_panel(hass, DOMAIN, **kwargs)
+
+
+async def _create_map_dashboard(hass: HomeAssistant):
+    translations = await async_get_translations(
+        hass, hass.config.language, "dashboard", {onboarding.DOMAIN}
+    )
+    title = translations["component.onboarding.dashboard.map.title"]
+
+    dashboards_collection: dashboard.DashboardsCollection = hass.data[DOMAIN][
+        "dashboards_collection"
+    ]
+    await dashboards_collection.async_create_item(
+        {
+            CONF_ALLOW_SINGLE_WORD: True,
+            CONF_ICON: "mdi:map",
+            CONF_TITLE: title,
+            CONF_URL_PATH: "map",
+        }
+    )
+
+    map_store: dashboard.LovelaceStorage = hass.data[DOMAIN]["dashboards"]["map"]
+    await map_store.async_save({"strategy": {"type": "map"}})

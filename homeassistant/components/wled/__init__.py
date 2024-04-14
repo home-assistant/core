@@ -1,4 +1,5 @@
 """Support for WLED."""
+
 from __future__ import annotations
 
 from homeassistant.config_entries import ConfigEntry
@@ -27,8 +28,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     if coordinator.data.info.leds.cct:
         LOGGER.error(
-            "WLED device '%s' has a CCT channel, which is not supported by "
-            "this integration",
+            (
+                "WLED device '%s' has a CCT channel, which is not supported by "
+                "this integration"
+            ),
             entry.title,
         )
         return False

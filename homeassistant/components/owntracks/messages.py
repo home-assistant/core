@@ -1,4 +1,5 @@
 """OwnTracks Message handlers."""
+
 import json
 import logging
 
@@ -134,14 +135,17 @@ def _decrypt_payload(secret, topic, ciphertext):
     try:
         message = decrypt(ciphertext, key)
         message = message.decode("utf-8")
-        _LOGGER.debug("Decrypted payload: %s", message)
-        return message
     except ValueError:
         _LOGGER.warning(
-            "Ignoring encrypted payload because unable to decrypt using key for topic %s",
+            (
+                "Ignoring encrypted payload because unable to decrypt using key for"
+                " topic %s"
+            ),
             topic,
         )
         return None
+    _LOGGER.debug("Decrypted payload: %s", message)
+    return message
 
 
 def encrypt_message(secret, topic, message):
@@ -329,10 +333,7 @@ async def async_handle_waypoints_message(hass, context, message):
         if user not in context.waypoint_whitelist:
             return
 
-    if "waypoints" in message:
-        wayps = message["waypoints"]
-    else:
-        wayps = [message]
+    wayps = message.get("waypoints", [message])
 
     _LOGGER.info("Got %d waypoints from %s", len(wayps), message["topic"])
 

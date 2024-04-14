@@ -1,4 +1,5 @@
 """The tests for the Season integration."""
+
 from datetime import datetime
 
 from freezegun import freeze_time
@@ -71,7 +72,7 @@ def idfn(val):
         return val.strftime("%Y%m%d")
 
 
-@pytest.mark.parametrize("type,day,expected", NORTHERN_PARAMETERS, ids=idfn)
+@pytest.mark.parametrize(("type", "day", "expected"), NORTHERN_PARAMETERS, ids=idfn)
 async def test_season_northern_hemisphere(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -103,7 +104,7 @@ async def test_season_northern_hemisphere(
     assert entry.translation_key == "season"
 
 
-@pytest.mark.parametrize("type,day,expected", SOUTHERN_PARAMETERS, ids=idfn)
+@pytest.mark.parametrize(("type", "day", "expected"), SOUTHERN_PARAMETERS, ids=idfn)
 async def test_season_southern_hemisphere(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

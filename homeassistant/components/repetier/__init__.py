@@ -1,4 +1,5 @@
 """Support for Repetier-Server sensors."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -17,7 +18,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SENSORS,
     PERCENTAGE,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -124,14 +125,14 @@ def has_all_unique_names(value):
     return value
 
 
-@dataclass
+@dataclass(frozen=True)
 class RepetierRequiredKeysMixin:
     """Mixin for required keys."""
 
     type: str
 
 
-@dataclass
+@dataclass(frozen=True)
 class RepetierSensorEntityDescription(
     SensorEntityDescription, RepetierRequiredKeysMixin
 ):
@@ -142,21 +143,21 @@ SENSOR_TYPES: dict[str, RepetierSensorEntityDescription] = {
     "bed_temperature": RepetierSensorEntityDescription(
         key="bed_temperature",
         type="temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         name="_bed_",
         device_class=SensorDeviceClass.TEMPERATURE,
     ),
     "extruder_temperature": RepetierSensorEntityDescription(
         key="extruder_temperature",
         type="temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         name="_extruder_",
         device_class=SensorDeviceClass.TEMPERATURE,
     ),
     "chamber_temperature": RepetierSensorEntityDescription(
         key="chamber_temperature",
         type="temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         name="_chamber_",
         device_class=SensorDeviceClass.TEMPERATURE,
     ),

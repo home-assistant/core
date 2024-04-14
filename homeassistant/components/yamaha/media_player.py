@@ -1,4 +1,5 @@
 """Support for Yamaha Receivers."""
+
 from __future__ import annotations
 
 import logging
@@ -205,6 +206,11 @@ class YamahaDevice(MediaPlayerEntity):
         self._play_status = None
         self._name = name
         self._zone = receiver.zone
+        if self.receiver.serial_number is not None:
+            # Since not all receivers will have a serial number and set a unique id
+            # the default name of the integration may not be changed
+            # to avoid a breaking change.
+            self._attr_unique_id = f"{self.receiver.serial_number}_{self._zone}"
 
     def update(self) -> None:
         """Get the latest details from the device."""
@@ -212,8 +218,10 @@ class YamahaDevice(MediaPlayerEntity):
             self._play_status = self.receiver.play_status()
         except requests.exceptions.ConnectionError:
             _LOGGER.info("Receiver is offline: %s", self._name)
+            self._attr_available = False
             return
 
+        self._attr_available = True
         if self.receiver.on:
             if self._play_status is None:
                 self._attr_state = MediaPlayerState.ON
@@ -340,7 +348,9 @@ class YamahaDevice(MediaPlayerEntity):
         """Select input source."""
         self.receiver.input = self._reverse_mapping.get(source, source)
 
-    def play_media(self, media_type: str, media_id: str, **kwargs: Any) -> None:
+    def play_media(
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
+    ) -> None:
         """Play media from an ID.
 
         This exposes a pass through for various input sources in the

@@ -1,12 +1,14 @@
 """Tests for metoffice init."""
+
 from __future__ import annotations
 
 import datetime
 
-from freezegun import freeze_time
 import pytest
+import requests_mock
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .const import DOMAIN, METOFFICE_CONFIG_WAVERTREE, TEST_COORDINATES_WAVERTREE
@@ -14,9 +16,9 @@ from .const import DOMAIN, METOFFICE_CONFIG_WAVERTREE, TEST_COORDINATES_WAVERTRE
 from tests.common import MockConfigEntry
 
 
-@freeze_time(datetime.datetime(2020, 4, 25, 12, tzinfo=datetime.timezone.utc))
+@pytest.mark.freeze_time(datetime.datetime(2020, 4, 25, 12, tzinfo=datetime.UTC))
 @pytest.mark.parametrize(
-    "old_unique_id,new_unique_id,migration_needed",
+    ("old_unique_id", "new_unique_id", "migration_needed"),
     [
         (
             f"Station Name_{TEST_COORDINATES_WAVERTREE}",
@@ -87,12 +89,13 @@ from tests.common import MockConfigEntry
     ],
 )
 async def test_migrate_unique_id(
-    hass,
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     old_unique_id: str,
     new_unique_id: str,
     migration_needed: bool,
-    requests_mock,
-):
+    requests_mock: requests_mock.Mocker,
+) -> None:
     """Test unique id migration."""
 
     entry = MockConfigEntry(
@@ -101,9 +104,7 @@ async def test_migrate_unique_id(
     )
     entry.add_to_hass(hass)
 
-    ent_reg = er.async_get(hass)
-
-    entity: er.RegistryEntry = ent_reg.async_get_or_create(
+    entity: er.RegistryEntry = entity_registry.async_get_or_create(
         suggested_object_id="my_sensor",
         disabled_by=None,
         domain=SENSOR_DOMAIN,
@@ -117,9 +118,12 @@ async def test_migrate_unique_id(
     await hass.async_block_till_done()
 
     if migration_needed:
-        assert ent_reg.async_get_entity_id(SENSOR_DOMAIN, DOMAIN, old_unique_id) is None
+        assert (
+            entity_registry.async_get_entity_id(SENSOR_DOMAIN, DOMAIN, old_unique_id)
+            is None
+        )
 
     assert (
-        ent_reg.async_get_entity_id(SENSOR_DOMAIN, DOMAIN, new_unique_id)
+        entity_registry.async_get_entity_id(SENSOR_DOMAIN, DOMAIN, new_unique_id)
         == "sensor.my_sensor"
     )

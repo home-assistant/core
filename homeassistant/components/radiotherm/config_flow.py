@@ -1,19 +1,18 @@
 """Config flow for Radio Thermostat integration."""
+
 from __future__ import annotations
 
 import logging
-from socket import timeout
 from typing import Any
 from urllib.error import URLError
 
 from radiotherm.validate import RadiothermTstatError
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components import dhcp
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN
@@ -30,21 +29,23 @@ async def validate_connection(hass: HomeAssistant, host: str) -> RadioThermInitD
     """Validate the connection."""
     try:
         return await async_get_init_data(hass, host)
-    except (timeout, RadiothermTstatError, URLError, OSError) as ex:
+    except (TimeoutError, RadiothermTstatError, URLError, OSError) as ex:
         raise CannotConnect(f"Failed to connect to {host}: {ex}") from ex
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class RadioThermConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Radio Thermostat."""
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize ConfigFlow."""
         self.discovered_ip: str | None = None
         self.discovered_init_data: RadioThermInitData | None = None
 
-    async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
+    async def async_step_dhcp(
+        self, discovery_info: dhcp.DhcpServiceInfo
+    ) -> ConfigFlowResult:
         """Discover via DHCP."""
         self._async_abort_entries_match({CONF_HOST: discovery_info.ip})
         try:
@@ -83,28 +84,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             description_placeholders=placeholders,
         )
 
-    async def async_step_import(self, import_info: dict[str, Any]) -> FlowResult:
-        """Import from yaml."""
-        host = import_info[CONF_HOST]
-        self._async_abort_entries_match({CONF_HOST: host})
-        _LOGGER.debug("Importing entry for host: %s", host)
-        try:
-            init_data = await validate_connection(self.hass, host)
-        except CannotConnect as ex:
-            _LOGGER.debug("Importing failed for %s", host, exc_info=ex)
-            return self.async_abort(reason="cannot_connect")
-        await self.async_set_unique_id(init_data.mac, raise_on_progress=False)
-        self._abort_if_unique_id_configured(
-            updates={CONF_HOST: host}, reload_on_update=False
-        )
-        return self.async_create_entry(
-            title=init_data.name,
-            data={CONF_HOST: import_info[CONF_HOST]},
-        )
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors = {}
         if user_input is not None:

@@ -1,4 +1,5 @@
 """The tests for elkm1 logbook."""
+
 from homeassistant.components.elkm1.const import (
     ATTR_KEY,
     ATTR_KEY_NAME,
@@ -8,6 +9,7 @@ from homeassistant.components.elkm1.const import (
     EVENT_ELKM1_KEYPAD_KEY_PRESSED,
 )
 from homeassistant.const import CONF_HOST
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from . import _patch_discovery, _patch_elk
@@ -16,7 +18,7 @@ from tests.common import MockConfigEntry
 from tests.components.logbook.common import MockRow, mock_humanify
 
 
-async def test_humanify_elkm1_keypad_event(hass):
+async def test_humanify_elkm1_keypad_event(hass: HomeAssistant) -> None:
     """Test humanifying elkm1 keypad presses."""
     hass.config.components.add("recorder")
     assert await async_setup_component(hass, "logbook", {})

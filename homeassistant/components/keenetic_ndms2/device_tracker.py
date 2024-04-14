@@ -1,4 +1,5 @@
 """Support for Keenetic routers as device tracker."""
+
 from __future__ import annotations
 
 import logging
@@ -12,7 +13,7 @@ from homeassistant.components.device_tracker import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
@@ -40,14 +41,13 @@ async def async_setup_entry(
 
     update_from_router()
 
-    registry = entity_registry.async_get(hass)
+    registry = er.async_get(hass)
     # Restore devices that are not a part of active clients list.
     restored = []
-    for entity_entry in registry.entities.values():
-        if (
-            entity_entry.config_entry_id == config_entry.entry_id
-            and entity_entry.domain == DEVICE_TRACKER_DOMAIN
-        ):
+    for entity_entry in registry.entities.get_entries_for_config_entry_id(
+        config_entry.entry_id
+    ):
+        if entity_entry.domain == DEVICE_TRACKER_DOMAIN:
             mac = entity_entry.unique_id.partition("_")[0]
             if mac not in tracked:
                 tracked.add(mac)

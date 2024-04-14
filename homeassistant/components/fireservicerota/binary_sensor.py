@@ -1,4 +1,5 @@
 """Binary Sensor platform for FireServiceRota integration."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -35,6 +36,9 @@ async def async_setup_entry(
 class ResponseBinarySensor(CoordinatorEntity, BinarySensorEntity):
     """Representation of an FireServiceRota sensor."""
 
+    _attr_has_entity_name = True
+    _attr_translation_key = "duty"
+
     def __init__(
         self,
         coordinator: DataUpdateCoordinator,
@@ -44,35 +48,12 @@ class ResponseBinarySensor(CoordinatorEntity, BinarySensorEntity):
         """Initialize."""
         super().__init__(coordinator)
         self._client = client
-        self._unique_id = f"{entry.unique_id}_Duty"
-
-        self._state: bool | None = None
-
-    @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        return "Duty"
-
-    @property
-    def icon(self) -> str:
-        """Return the icon to use in the frontend."""
-        if self._state:
-            return "mdi:calendar-check"
-
-        return "mdi:calendar-remove"
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID for this binary sensor."""
-        return self._unique_id
+        self._attr_unique_id = f"{entry.unique_id}_Duty"
 
     @property
     def is_on(self) -> bool | None:
         """Return the state of the binary sensor."""
-
-        self._state = self._client.on_duty
-
-        return self._state
+        return self._client.on_duty
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -82,7 +63,7 @@ class ResponseBinarySensor(CoordinatorEntity, BinarySensorEntity):
             return attr
 
         data = self.coordinator.data
-        attr = {
+        return {
             key: data[key]
             for key in (
                 "start_time",
@@ -96,5 +77,3 @@ class ResponseBinarySensor(CoordinatorEntity, BinarySensorEntity):
             )
             if key in data
         }
-
-        return attr

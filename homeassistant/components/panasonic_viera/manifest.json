@@ -1,10 +1,10 @@
 {
   "domain": "panasonic_viera",
   "name": "Panasonic Viera",
-  "documentation": "https://www.home-assistant.io/integrations/panasonic_viera",
-  "requirements": ["panasonic_viera==0.3.6"],
   "codeowners": [],
   "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/panasonic_viera",
   "iot_class": "local_polling",
-  "loggers": ["panasonic_viera"]
+  "loggers": ["panasonic_viera"],
+  "requirements": ["panasonic-viera==0.3.6"]
 }

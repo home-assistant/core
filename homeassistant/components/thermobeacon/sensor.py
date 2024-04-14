@@ -1,7 +1,6 @@
 """Support for ThermoBeacon sensors."""
-from __future__ import annotations
 
-from typing import Optional, Union
+from __future__ import annotations
 
 from thermobeacon_ble import (
     SensorDeviceClass as ThermoBeaconSensorDeviceClass,
@@ -25,11 +24,11 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-    TEMP_CELSIUS,
+    EntityCategory,
     UnitOfElectricPotential,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.sensor import sensor_device_info_to_hass_device_info
 
@@ -67,7 +66,7 @@ SENSOR_DESCRIPTIONS = {
     ): SensorEntityDescription(
         key=f"{ThermoBeaconSensorDeviceClass.TEMPERATURE}_{Units.TEMP_CELSIUS}",
         device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     (
@@ -78,6 +77,8 @@ SENSOR_DESCRIPTIONS = {
         device_class=SensorDeviceClass.VOLTAGE,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
 }
 
@@ -128,9 +129,7 @@ async def async_setup_entry(
 
 
 class ThermoBeaconBluetoothSensorEntity(
-    PassiveBluetoothProcessorEntity[
-        PassiveBluetoothDataProcessor[Optional[Union[float, int]]]
-    ],
+    PassiveBluetoothProcessorEntity[PassiveBluetoothDataProcessor[float | int | None]],
     SensorEntity,
 ):
     """Representation of a ThermoBeacon sensor."""

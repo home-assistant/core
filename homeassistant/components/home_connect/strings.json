@@ -7,10 +7,127 @@
     },
     "abort": {
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
-      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]"
+      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
+      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
+      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
+      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
+      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]"
     },
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
+    }
+  },
+  "services": {
+    "start_program": {
+      "name": "Start program",
+      "description": "Selects a program and starts it.",
+      "fields": {
+        "device_id": {
+          "name": "Device ID",
+          "description": "Id of the device."
+        },
+        "program": { "name": "Program", "description": "Program to select." },
+        "key": { "name": "Option key", "description": "Key of the option." },
+        "value": {
+          "name": "Option value",
+          "description": "Value of the option."
+        },
+        "unit": { "name": "Option unit", "description": "Unit for the option." }
+      }
+    },
+    "select_program": {
+      "name": "Select program",
+      "description": "Selects a program without starting it.",
+      "fields": {
+        "device_id": {
+          "name": "Device ID",
+          "description": "[%key:component::home_connect::services::start_program::fields::device_id::description%]"
+        },
+        "program": {
+          "name": "[%key:component::home_connect::services::start_program::fields::program::name%]",
+          "description": "[%key:component::home_connect::services::start_program::fields::program::description%]"
+        },
+        "key": {
+          "name": "[%key:component::home_connect::services::start_program::fields::key::name%]",
+          "description": "[%key:component::home_connect::services::start_program::fields::key::description%]"
+        },
+        "value": {
+          "name": "[%key:component::home_connect::services::start_program::fields::value::name%]",
+          "description": "[%key:component::home_connect::services::start_program::fields::value::description%]"
+        },
+        "unit": {
+          "name": "[%key:component::home_connect::services::start_program::fields::unit::name%]",
+          "description": "[%key:component::home_connect::services::start_program::fields::unit::description%]"
+        }
+      }
+    },
+    "pause_program": {
+      "name": "Pause program",
+      "description": "Pauses the current running program.",
+      "fields": {
+        "device_id": {
+          "name": "Device ID",
+          "description": "[%key:component::home_connect::services::start_program::fields::device_id::description%]"
+        }
+      }
+    },
+    "resume_program": {
+      "name": "Resume program",
+      "description": "Resumes a paused program.",
+      "fields": {
+        "device_id": {
+          "name": "Device ID",
+          "description": "[%key:component::home_connect::services::start_program::fields::device_id::description%]"
+        }
+      }
+    },
+    "set_option_active": {
+      "name": "Set active program option",
+      "description": "Sets an option for the active program.",
+      "fields": {
+        "device_id": {
+          "name": "Device ID",
+          "description": "[%key:component::home_connect::services::start_program::fields::device_id::description%]"
+        },
+        "key": {
+          "name": "Key",
+          "description": "[%key:component::home_connect::services::start_program::fields::key::description%]"
+        },
+        "value": {
+          "name": "Value",
+          "description": "[%key:component::home_connect::services::start_program::fields::value::description%]"
+        }
+      }
+    },
+    "set_option_selected": {
+      "name": "Set selected program option",
+      "description": "Sets an option for the selected program.",
+      "fields": {
+        "device_id": {
+          "name": "Device ID",
+          "description": "[%key:component::home_connect::services::start_program::fields::device_id::description%]"
+        },
+        "key": {
+          "name": "Key",
+          "description": "[%key:component::home_connect::services::start_program::fields::key::description%]"
+        },
+        "value": {
+          "name": "Value",
+          "description": "[%key:component::home_connect::services::start_program::fields::value::description%]"
+        }
+      }
+    },
+    "change_setting": {
+      "name": "Change setting",
+      "description": "Changes a setting.",
+      "fields": {
+        "device_id": {
+          "name": "Device ID",
+          "description": "[%key:component::home_connect::services::start_program::fields::device_id::description%]"
+        },
+        "key": { "name": "Key", "description": "Key of the setting." },
+        "value": { "name": "Value", "description": "Value of the setting." }
+      }
     }
   }
 }

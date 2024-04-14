@@ -1,4 +1,5 @@
 """Support for update entities of a Pi-hole system."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -8,9 +9,8 @@ from hole import Hole
 
 from homeassistant.components.update import UpdateEntity, UpdateEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -18,7 +18,7 @@ from . import PiHoleEntity
 from .const import DATA_KEY_API, DATA_KEY_COORDINATOR, DOMAIN
 
 
-@dataclass
+@dataclass(frozen=True)
 class PiHoleUpdateEntityDescription(UpdateEntityDescription):
     """Describes PiHole update entity."""
 
@@ -31,7 +31,7 @@ class PiHoleUpdateEntityDescription(UpdateEntityDescription):
 UPDATE_ENTITY_TYPES: tuple[PiHoleUpdateEntityDescription, ...] = (
     PiHoleUpdateEntityDescription(
         key="core_update_available",
-        name="Core Update Available",
+        translation_key="core_update_available",
         title="Pi-hole Core",
         entity_category=EntityCategory.DIAGNOSTIC,
         installed_version=lambda versions: versions.get("core_current"),
@@ -40,7 +40,7 @@ UPDATE_ENTITY_TYPES: tuple[PiHoleUpdateEntityDescription, ...] = (
     ),
     PiHoleUpdateEntityDescription(
         key="web_update_available",
-        name="Web Update Available",
+        translation_key="web_update_available",
         title="Pi-hole Web interface",
         entity_category=EntityCategory.DIAGNOSTIC,
         installed_version=lambda versions: versions.get("web_current"),
@@ -49,7 +49,7 @@ UPDATE_ENTITY_TYPES: tuple[PiHoleUpdateEntityDescription, ...] = (
     ),
     PiHoleUpdateEntityDescription(
         key="ftl_update_available",
-        name="FTL Update Available",
+        translation_key="ftl_update_available",
         title="Pi-hole FTL DNS",
         entity_category=EntityCategory.DIAGNOSTIC,
         installed_version=lambda versions: versions.get("FTL_current"),
@@ -82,6 +82,7 @@ class PiHoleUpdateEntity(PiHoleEntity, UpdateEntity):
     """Representation of a Pi-hole update entity."""
 
     entity_description: PiHoleUpdateEntityDescription
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -95,8 +96,7 @@ class PiHoleUpdateEntity(PiHoleEntity, UpdateEntity):
         super().__init__(api, coordinator, name, server_unique_id)
         self.entity_description = description
 
-        self._attr_name = f"{name} {description.name}"
-        self._attr_unique_id = f"{self._server_unique_id}/{description.name}"
+        self._attr_unique_id = f"{self._server_unique_id}/{description.key}"
         self._attr_title = description.title
 
     @property

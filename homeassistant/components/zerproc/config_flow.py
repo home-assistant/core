@@ -1,4 +1,5 @@
 """Config flow for Zerproc."""
+
 import logging
 
 import pyzerproc
@@ -17,7 +18,7 @@ async def _async_has_devices(hass: HomeAssistant) -> bool:
         devices = await pyzerproc.discover()
         return len(devices) > 0
     except pyzerproc.ZerprocException:
-        _LOGGER.error("Unable to discover nearby Zerproc devices", exc_info=True)
+        _LOGGER.exception("Unable to discover nearby Zerproc devices")
         return False
 
 

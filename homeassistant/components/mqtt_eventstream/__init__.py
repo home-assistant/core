@@ -1,5 +1,7 @@
 """Connect two Home Assistant instances via MQTT."""
+
 import json
+import logging
 
 import voluptuous as vol
 
@@ -20,6 +22,8 @@ from homeassistant.core import EventOrigin, HomeAssistant, State, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.helpers.typing import ConfigType
+
+_LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "mqtt_eventstream"
 CONF_PUBLISH_TOPIC = "publish_topic"
@@ -54,6 +58,11 @@ BLOCKED_EVENTS = [
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the MQTT eventstream component."""
+    # Make sure MQTT integration is enabled and the client is available
+    if not await mqtt.async_wait_for_mqtt_client(hass):
+        _LOGGER.error("MQTT integration is not available")
+        return False
+
     conf = config.get(DOMAIN, {})
     pub_topic = conf.get(CONF_PUBLISH_TOPIC)
     sub_topic = conf.get(CONF_SUBSCRIBE_TOPIC)

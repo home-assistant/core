@@ -1,15 +1,12 @@
 """Matter sensors."""
+
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
-from functools import partial
-from typing import TYPE_CHECKING, Any
 
 from chip.clusters import Objects as clusters
 from chip.clusters.Types import Nullable, NullValue
-from matter_server.common.models import device_types
-from matter_server.common.models.device_type_instance import MatterDeviceTypeInstance
+from matter_server.client.models.clusters import EveEnergyCluster
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -19,21 +16,26 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    CONCENTRATION_PARTS_PER_MILLION,
     LIGHT_LUX,
     PERCENTAGE,
-    VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR,
+    EntityCategory,
     Platform,
+    UnitOfElectricCurrent,
+    UnitOfElectricPotential,
+    UnitOfEnergy,
+    UnitOfPower,
     UnitOfPressure,
     UnitOfTemperature,
+    UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
-from .entity import MatterEntity, MatterEntityDescriptionBaseClass
-
-if TYPE_CHECKING:
-    from .adapter import MatterAdapter
+from .entity import MatterEntity, MatterEntityDescription
+from .helpers import get_matter
+from .models import MatterDiscoverySchema
 
 
 async def async_setup_entry(
@@ -42,126 +44,222 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Matter sensors from Config Entry."""
-    matter: MatterAdapter = hass.data[DOMAIN][config_entry.entry_id]
+    matter = get_matter(hass)
     matter.register_platform_handler(Platform.SENSOR, async_add_entities)
+
+
+@dataclass(frozen=True)
+class MatterSensorEntityDescription(SensorEntityDescription, MatterEntityDescription):
+    """Describe Matter sensor entities."""
 
 
 class MatterSensor(MatterEntity, SensorEntity):
     """Representation of a Matter sensor."""
 
-    _attr_state_class = SensorStateClass.MEASUREMENT
     entity_description: MatterSensorEntityDescription
 
     @callback
     def _update_from_device(self) -> None:
         """Update from device."""
-        measurement: Nullable | float | None
-        measurement = _get_attribute_value(
-            self._device_type_instance,
-            # We always subscribe to a single value
-            self.entity_description.subscribe_attributes[0],
-        )
-
-        if measurement is NullValue or measurement is None:
-            measurement = None
-        else:
-            measurement = self.entity_description.measurement_to_ha(measurement)
-
-        self._attr_native_value = measurement
+        value: Nullable | float | None
+        value = self.get_matter_attribute_value(self._entity_info.primary_attribute)
+        if value in (None, NullValue):
+            value = None
+        elif value_convert := self.entity_description.measurement_to_ha:
+            value = value_convert(value)
+        self._attr_native_value = value
 
 
-def _get_attribute_value(
-    device_type_instance: MatterDeviceTypeInstance,
-    attribute: clusters.ClusterAttributeDescriptor,
-) -> Any:
-    """Return the value of an attribute."""
-    # Find the cluster for this attribute. We don't have a lookup table yet.
-    cluster_cls: clusters.Cluster = next(
-        cluster
-        for cluster in device_type_instance.device_type.clusters
-        if cluster.id == attribute.cluster_id
-    )
-
-    # Find the attribute descriptor so we know the instance variable to fetch
-    attribute_descriptor: clusters.ClusterObjectFieldDescriptor = next(
-        descriptor
-        for descriptor in cluster_cls.descriptor.Fields
-        if descriptor.Tag == attribute.attribute_id
-    )
-
-    cluster_data = device_type_instance.get_cluster(cluster_cls)
-    return getattr(cluster_data, attribute_descriptor.Label)
-
-
-@dataclass
-class MatterSensorEntityDescriptionMixin:
-    """Required fields for sensor device mapping."""
-
-    measurement_to_ha: Callable[[float], float]
-
-
-@dataclass
-class MatterSensorEntityDescription(
-    SensorEntityDescription,
-    MatterEntityDescriptionBaseClass,
-    MatterSensorEntityDescriptionMixin,
-):
-    """Matter Sensor entity description."""
-
-
-# You can't set default values on inherited data classes
-MatterSensorEntityDescriptionFactory = partial(
-    MatterSensorEntityDescription, entity_cls=MatterSensor
-)
-
-
-DEVICE_ENTITY: dict[
-    type[device_types.DeviceType],
-    MatterEntityDescriptionBaseClass | list[MatterEntityDescriptionBaseClass],
-] = {
-    device_types.TemperatureSensor: MatterSensorEntityDescriptionFactory(
-        key=device_types.TemperatureSensor,
-        name="Temperature",
-        measurement_to_ha=lambda x: x / 100,
-        subscribe_attributes=(
-            clusters.TemperatureMeasurement.Attributes.MeasuredValue,
+# Discovery schema(s) to map Matter Attributes to HA entities
+DISCOVERY_SCHEMAS = [
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="TemperatureSensor",
+            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+            device_class=SensorDeviceClass.TEMPERATURE,
+            measurement_to_ha=lambda x: x / 100,
+            state_class=SensorStateClass.MEASUREMENT,
         ),
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        device_class=SensorDeviceClass.TEMPERATURE,
+        entity_class=MatterSensor,
+        required_attributes=(clusters.TemperatureMeasurement.Attributes.MeasuredValue,),
     ),
-    device_types.PressureSensor: MatterSensorEntityDescriptionFactory(
-        key=device_types.PressureSensor,
-        name="Pressure",
-        measurement_to_ha=lambda x: x / 10,
-        subscribe_attributes=(clusters.PressureMeasurement.Attributes.MeasuredValue,),
-        native_unit_of_measurement=UnitOfPressure.KPA,
-        device_class=SensorDeviceClass.PRESSURE,
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="PressureSensor",
+            native_unit_of_measurement=UnitOfPressure.KPA,
+            device_class=SensorDeviceClass.PRESSURE,
+            measurement_to_ha=lambda x: x / 10,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.PressureMeasurement.Attributes.MeasuredValue,),
     ),
-    device_types.FlowSensor: MatterSensorEntityDescriptionFactory(
-        key=device_types.FlowSensor,
-        name="Flow",
-        measurement_to_ha=lambda x: x / 10,
-        subscribe_attributes=(clusters.FlowMeasurement.Attributes.MeasuredValue,),
-        native_unit_of_measurement=VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR,
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="FlowSensor",
+            native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+            translation_key="flow",
+            measurement_to_ha=lambda x: x / 10,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.FlowMeasurement.Attributes.MeasuredValue,),
     ),
-    device_types.HumiditySensor: MatterSensorEntityDescriptionFactory(
-        key=device_types.HumiditySensor,
-        name="Humidity",
-        measurement_to_ha=lambda x: x / 100,
-        subscribe_attributes=(
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="HumiditySensor",
+            native_unit_of_measurement=PERCENTAGE,
+            device_class=SensorDeviceClass.HUMIDITY,
+            measurement_to_ha=lambda x: x / 100,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(
             clusters.RelativeHumidityMeasurement.Attributes.MeasuredValue,
         ),
-        native_unit_of_measurement=PERCENTAGE,
-        device_class=SensorDeviceClass.HUMIDITY,
     ),
-    device_types.LightSensor: MatterSensorEntityDescriptionFactory(
-        key=device_types.LightSensor,
-        name="Light",
-        measurement_to_ha=lambda x: round(pow(10, ((x - 1) / 10000)), 1),
-        subscribe_attributes=(
-            clusters.IlluminanceMeasurement.Attributes.MeasuredValue,
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="LightSensor",
+            native_unit_of_measurement=LIGHT_LUX,
+            device_class=SensorDeviceClass.ILLUMINANCE,
+            measurement_to_ha=lambda x: round(pow(10, ((x - 1) / 10000)), 1),
+            state_class=SensorStateClass.MEASUREMENT,
         ),
-        native_unit_of_measurement=LIGHT_LUX,
-        device_class=SensorDeviceClass.ILLUMINANCE,
+        entity_class=MatterSensor,
+        required_attributes=(clusters.IlluminanceMeasurement.Attributes.MeasuredValue,),
     ),
-}
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="PowerSource",
+            native_unit_of_measurement=PERCENTAGE,
+            device_class=SensorDeviceClass.BATTERY,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            # value has double precision
+            measurement_to_ha=lambda x: int(x / 2),
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.PowerSource.Attributes.BatPercentRemaining,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="EveEnergySensorWatt",
+            device_class=SensorDeviceClass.POWER,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            native_unit_of_measurement=UnitOfPower.WATT,
+            suggested_display_precision=2,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(EveEnergyCluster.Attributes.Watt,),
+        # Add OnOff Attribute as optional attribute to poll
+        # the primary value when the relay is toggled
+        optional_attributes=(clusters.OnOff.Attributes.OnOff,),
+        should_poll=True,
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="EveEnergySensorVoltage",
+            device_class=SensorDeviceClass.VOLTAGE,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+            suggested_display_precision=0,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(EveEnergyCluster.Attributes.Voltage,),
+        should_poll=True,
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="EveEnergySensorWattAccumulated",
+            device_class=SensorDeviceClass.ENERGY,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+            suggested_display_precision=3,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(EveEnergyCluster.Attributes.WattAccumulated,),
+        should_poll=True,
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="EveEnergySensorWattCurrent",
+            device_class=SensorDeviceClass.CURRENT,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+            suggested_display_precision=2,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(EveEnergyCluster.Attributes.Current,),
+        # Add OnOff Attribute as optional attribute to poll
+        # the primary value when the relay is toggled
+        optional_attributes=(clusters.OnOff.Attributes.OnOff,),
+        should_poll=True,
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="CarbonDioxideSensor",
+            native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+            device_class=SensorDeviceClass.CO2,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(
+            clusters.CarbonDioxideConcentrationMeasurement.Attributes.MeasuredValue,
+        ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="PM1Sensor",
+            native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            device_class=SensorDeviceClass.PM1,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(
+            clusters.Pm1ConcentrationMeasurement.Attributes.MeasuredValue,
+        ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="PM25Sensor",
+            native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            device_class=SensorDeviceClass.PM25,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(
+            clusters.Pm25ConcentrationMeasurement.Attributes.MeasuredValue,
+        ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="PM10Sensor",
+            native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            device_class=SensorDeviceClass.PM10,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(
+            clusters.Pm10ConcentrationMeasurement.Attributes.MeasuredValue,
+        ),
+    ),
+]

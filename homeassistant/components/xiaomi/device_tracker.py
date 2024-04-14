@@ -1,4 +1,5 @@
 """Support for Xiaomi Mi routers."""
+
 from __future__ import annotations
 
 from http import HTTPStatus
@@ -36,7 +37,7 @@ def get_scanner(hass: HomeAssistant, config: ConfigType) -> XiaomiDeviceScanner 
 
 
 class XiaomiDeviceScanner(DeviceScanner):
-    """This class queries a Xiaomi Mi router.
+    """Class which queries a Xiaomi Mi router.
 
     Adapted from Luci scanner.
     """
@@ -167,7 +168,7 @@ def _get_token(host, username, password):
         except KeyError:
             error_message = (
                 "Xiaomi token cannot be refreshed, response from "
-                + "url: [%s] \nwith parameter: [%s] \nwas: [%s]"
+                "url: [%s] \nwith parameter: [%s] \nwas: [%s]"
             )
             _LOGGER.exception(error_message, url, data, result)
             return

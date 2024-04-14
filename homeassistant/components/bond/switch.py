@@ -1,4 +1,5 @@
 """Support for Bond generic devices."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -64,5 +65,6 @@ class BondSwitch(BondEntity, SwitchEntity):
             )
         except ClientResponseError as ex:
             raise HomeAssistantError(
-                f"The bond API returned an error calling set_power_state_belief for {self.entity_id}.  Code: {ex.code}  Message: {ex.message}"
+                "The bond API returned an error calling set_power_state_belief for"
+                f" {self.entity_id}.  Code: {ex.status}  Message: {ex.message}"
             ) from ex

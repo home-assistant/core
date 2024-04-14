@@ -1,12 +1,16 @@
 """Define tests for SimpliSafe setup."""
+
 from unittest.mock import patch
 
 from homeassistant.components.simplisafe import DOMAIN
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
 
-async def test_base_station_migration(hass, api, config, config_entry):
+async def test_base_station_migration(
+    hass: HomeAssistant, api, config, config_entry
+) -> None:
     """Test that errors are shown when duplicates are added."""
     old_identifers = (DOMAIN, 12345)
     new_identifiers = (DOMAIN, "12345")
@@ -19,19 +23,26 @@ async def test_base_station_migration(hass, api, config, config_entry):
         name="old",
     )
 
-    with patch(
-        "homeassistant.components.simplisafe.config_flow.API.async_from_auth",
-        return_value=api,
-    ), patch(
-        "homeassistant.components.simplisafe.API.async_from_auth",
-        return_value=api,
-    ), patch(
-        "homeassistant.components.simplisafe.API.async_from_refresh_token",
-        return_value=api,
-    ), patch(
-        "homeassistant.components.simplisafe.SimpliSafe._async_start_websocket_loop"
-    ), patch(
-        "homeassistant.components.simplisafe.PLATFORMS", []
+    with (
+        patch(
+            "homeassistant.components.simplisafe.config_flow.API.async_from_auth",
+            return_value=api,
+        ),
+        patch(
+            "homeassistant.components.simplisafe.API.async_from_auth",
+            return_value=api,
+        ),
+        patch(
+            "homeassistant.components.simplisafe.API.async_from_refresh_token",
+            return_value=api,
+        ),
+        patch(
+            "homeassistant.components.simplisafe.SimpliSafe._async_start_websocket_loop"
+        ),
+        patch(
+            "homeassistant.components.simplisafe.PLATFORMS",
+            [],
+        ),
     ):
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()

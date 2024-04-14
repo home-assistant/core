@@ -1,4 +1,5 @@
 """Play media via gstreamer."""
+
 from __future__ import annotations
 
 import logging
@@ -100,7 +101,7 @@ class GstreamerDevice(MediaPlayerEntity):
         self._player.volume = volume
 
     async def async_play_media(
-        self, media_type: str, media_id: str, **kwargs: Any
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Play media."""
         # Handle media_source
@@ -166,7 +167,9 @@ class GstreamerDevice(MediaPlayerEntity):
         return self._album
 
     async def async_browse_media(
-        self, media_content_type: str | None = None, media_content_id: str | None = None
+        self,
+        media_content_type: MediaType | str | None = None,
+        media_content_id: str | None = None,
     ) -> BrowseMedia:
         """Implement the websocket media browsing helper."""
         return await media_source.async_browse_media(

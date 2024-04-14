@@ -1,4 +1,5 @@
 """Support for Osram Lightify."""
+
 from __future__ import annotations
 
 import logging
@@ -82,8 +83,8 @@ def setup_platform(
     host = config[CONF_HOST]
     try:
         bridge = Lightify(host, log_level=logging.NOTSET)
-    except OSError as err:
-        _LOGGER.exception("Error connecting to bridge: %s due to: %s", host, err)
+    except OSError:
+        _LOGGER.exception("Error connecting to bridge %s", host)
         return
 
     setup_bridge(bridge, add_entities, config)
@@ -412,7 +413,9 @@ class OsramLightifyLight(Luminary):
         """Update static attributes of the luminary."""
         super().update_static_attributes()
         attrs = {
-            "device_type": f"{self._luminary.type_id()} ({self._luminary.devicename()})",
+            "device_type": (
+                f"{self._luminary.type_id()} ({self._luminary.devicename()})"
+            ),
             "firmware_version": self._luminary.version(),
         }
         if self._luminary.devicetype().name == "SENSOR":

@@ -1,4 +1,5 @@
 """Constants for the Zerproc integration."""
+
 DOMAIN = "zerproc"
 
 DATA_ADDRESSES = "addresses"

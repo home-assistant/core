@@ -1,0 +1,26 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "id": "Installation",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "air_quality_active": {
+        "name": "Air Quality active"
+      }
+    }
+  }
+}

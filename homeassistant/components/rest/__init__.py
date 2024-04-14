@@ -1,4 +1,5 @@
 """The rest component."""
+
 from __future__ import annotations
 
 import asyncio
@@ -40,8 +41,19 @@ from homeassistant.helpers.reload import (
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.util.async_ import create_eager_task
 
-from .const import COORDINATOR, DOMAIN, PLATFORM_IDX, REST, REST_DATA, REST_IDX
+from .const import (
+    CONF_ENCODING,
+    CONF_SSL_CIPHER_LIST,
+    COORDINATOR,
+    DEFAULT_SSL_CIPHER_LIST,
+    DOMAIN,
+    PLATFORM_IDX,
+    REST,
+    REST_DATA,
+    REST_IDX,
+)
 from .data import RestData
 from .schema import CONFIG_SCHEMA, RESOURCE_SCHEMA  # noqa: F401
 
@@ -119,10 +131,10 @@ async def _async_process_config(hass: HomeAssistant, config: ConfigType) -> bool
                 load_coroutines.append(load_coroutine)
 
     if refresh_coroutines:
-        await asyncio.gather(*refresh_coroutines)
+        await asyncio.gather(*(create_eager_task(coro) for coro in refresh_coroutines))
 
     if load_coroutines:
-        await asyncio.gather(*load_coroutines)
+        await asyncio.gather(*(create_eager_task(coro) for coro in load_coroutines))
 
     return True
 
@@ -149,7 +161,7 @@ def _rest_coordinator(
     """Wrap a DataUpdateCoordinator around the rest object."""
     if resource_template:
 
-        async def _async_refresh_with_resource_template():
+        async def _async_refresh_with_resource_template() -> None:
             rest.set_url(resource_template.async_render(parse_result=False))
             await rest.async_update()
 
@@ -173,12 +185,13 @@ def create_rest_data_from_config(hass: HomeAssistant, config: ConfigType) -> Res
     method: str = config[CONF_METHOD]
     payload: str | None = config.get(CONF_PAYLOAD)
     verify_ssl: bool = config[CONF_VERIFY_SSL]
+    ssl_cipher_list: str = config.get(CONF_SSL_CIPHER_LIST, DEFAULT_SSL_CIPHER_LIST)
     username: str | None = config.get(CONF_USERNAME)
     password: str | None = config.get(CONF_PASSWORD)
     headers: dict[str, str] | None = config.get(CONF_HEADERS)
     params: dict[str, str] | None = config.get(CONF_PARAMS)
     timeout: int = config[CONF_TIMEOUT]
-
+    encoding: str = config[CONF_ENCODING]
     if resource_template is not None:
         resource_template.hass = hass
         resource = resource_template.async_render(parse_result=False)
@@ -197,5 +210,15 @@ def create_rest_data_from_config(hass: HomeAssistant, config: ConfigType) -> Res
             auth = (username, password)
 
     return RestData(
-        hass, method, resource, auth, headers, params, payload, verify_ssl, timeout
+        hass,
+        method,
+        resource,
+        encoding,
+        auth,
+        headers,
+        params,
+        payload,
+        verify_ssl,
+        ssl_cipher_list,
+        timeout,
     )

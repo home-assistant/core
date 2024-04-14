@@ -1,17 +1,39 @@
 """Support for Axis switches."""
+
+from dataclasses import dataclass
 from typing import Any
 
-from axis.event_stream import CLASS_OUTPUT, AxisBinaryEvent, AxisEvent
+from axis.models.event import Event, EventTopic
 
-from homeassistant.components.switch import SwitchEntity
+from homeassistant.components.switch import (
+    SwitchDeviceClass,
+    SwitchEntity,
+    SwitchEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .axis_base import AxisEventBase
-from .const import DOMAIN as AXIS_DOMAIN
-from .device import AxisNetworkDevice
+from .entity import AxisEventDescription, AxisEventEntity
+from .hub import AxisHub
+
+
+@dataclass(frozen=True, kw_only=True)
+class AxisSwitchDescription(AxisEventDescription, SwitchEntityDescription):
+    """Axis switch entity description."""
+
+
+ENTITY_DESCRIPTIONS = (
+    AxisSwitchDescription(
+        key="Relay state control",
+        device_class=SwitchDeviceClass.OUTLET,
+        entity_category=EntityCategory.CONFIG,
+        event_topic=EventTopic.RELAY,
+        supported_fn=lambda hub, event: isinstance(int(event.id), int),
+        name_fn=lambda hub, event: hub.api.vapix.ports[event.id].name,
+    ),
+)
 
 
 async def async_setup_entry(
@@ -19,43 +41,35 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up a Axis switch."""
-    device: AxisNetworkDevice = hass.data[AXIS_DOMAIN][config_entry.unique_id]
-
-    @callback
-    def async_add_switch(event_id):
-        """Add switch from Axis device."""
-        event: AxisEvent = device.api.event[event_id]
-
-        if event.CLASS == CLASS_OUTPUT:
-            async_add_entities([AxisSwitch(event, device)])
-
-    config_entry.async_on_unload(
-        async_dispatcher_connect(hass, device.signal_new_event, async_add_switch)
+    """Set up the Axis switch platform."""
+    AxisHub.get_hub(hass, config_entry).entity_loader.register_platform(
+        async_add_entities, AxisSwitch, ENTITY_DESCRIPTIONS
     )
 
 
-class AxisSwitch(AxisEventBase, SwitchEntity):
+class AxisSwitch(AxisEventEntity, SwitchEntity):
     """Representation of a Axis switch."""
 
-    event: AxisBinaryEvent
+    entity_description: AxisSwitchDescription
 
-    def __init__(self, event: AxisEvent, device: AxisNetworkDevice) -> None:
+    def __init__(
+        self, hub: AxisHub, description: AxisSwitchDescription, event: Event
+    ) -> None:
         """Initialize the Axis switch."""
-        super().__init__(event, device)
+        super().__init__(hub, description, event)
 
-        if event.id and device.api.vapix.ports[event.id].name:
-            self._attr_name = device.api.vapix.ports[event.id].name
+        self._attr_is_on = event.is_tripped
 
-    @property
-    def is_on(self) -> bool:
-        """Return true if event is active."""
-        return self.event.is_tripped
+    @callback
+    def async_event_callback(self, event: Event) -> None:
+        """Update light state."""
+        self._attr_is_on = event.is_tripped
+        self.async_write_ha_state()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on switch."""
-        await self.device.api.vapix.ports[self.event.id].close()
+        await self.hub.api.vapix.ports.close(self._event_id)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off switch."""
-        await self.device.api.vapix.ports[self.event.id].open()
+        await self.hub.api.vapix.ports.open(self._event_id)

@@ -1,4 +1,5 @@
 """Geolocation support for GeoNet NZ Quakes Feeds."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -65,7 +66,7 @@ async def async_setup_entry(
 
 
 class GeonetnzQuakesEvent(GeolocationEvent):
-    """This represents an external event with GeoNet NZ Quakes feed data."""
+    """Represents an external event with GeoNet NZ Quakes feed data."""
 
     _attr_icon = "mdi:pulse"
     _attr_should_poll = False

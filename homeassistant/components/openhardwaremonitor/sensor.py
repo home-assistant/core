@@ -1,4 +1,5 @@
 """Support for Open Hardware Monitor Sensor Platform."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -79,6 +80,8 @@ class OpenHardwareMonitorDevice(SensorEntity):
     @property
     def native_value(self):
         """Return the state of the device."""
+        if self.value == "-":
+            return None
         return self.value
 
     @property
@@ -167,7 +170,7 @@ class OpenHardwareMonitorData:
         result = devices.copy()
 
         if json[OHM_CHILDREN]:
-            for child_index in range(0, len(json[OHM_CHILDREN])):
+            for child_index in range(len(json[OHM_CHILDREN])):
                 child_path = path.copy()
                 child_path.append(child_index)
 

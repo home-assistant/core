@@ -1,4 +1,5 @@
 """Details about the built-in battery."""
+
 from __future__ import annotations
 
 import logging
@@ -12,7 +13,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
 )
-from homeassistant.const import ATTR_NAME, CONF_NAME, PERCENTAGE
+from homeassistant.const import ATTR_NAME, ATTR_SERIAL_NUMBER, CONF_NAME, PERCENTAGE
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -31,7 +32,6 @@ ATTR_ENERGY_NOW = "energy_now"
 ATTR_MANUFACTURER = "manufacturer"
 ATTR_MODEL_NAME = "model_name"
 ATTR_POWER_NOW = "power_now"
-ATTR_SERIAL_NUMBER = "serial_number"
 ATTR_STATUS = "status"
 ATTR_VOLTAGE_MIN_DESIGN = "voltage_min_design"
 ATTR_VOLTAGE_NOW = "voltage_now"

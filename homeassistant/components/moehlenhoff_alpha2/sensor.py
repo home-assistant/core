@@ -25,7 +25,7 @@ async def async_setup_entry(
         Alpha2HeatControlValveOpeningSensor(coordinator, heat_control_id)
         for heat_control_id, heat_control in coordinator.data["heat_controls"].items()
         if heat_control["INUSE"]
-        and heat_control["_HEATAREA_ID"]
+        and heat_control["_HEATAREA_ID"] in coordinator.data["heat_areas"]
         and heat_control.get("ACTOR_PERCENT") is not None
     )
 
@@ -46,7 +46,10 @@ class Alpha2HeatControlValveOpeningSensor(
         self._attr_unique_id = f"{heat_control_id}:valve_opening"
         heat_control = self.coordinator.data["heat_controls"][heat_control_id]
         heat_area = self.coordinator.data["heat_areas"][heat_control["_HEATAREA_ID"]]
-        self._attr_name = f"{heat_area['HEATAREA_NAME']} heat control {heat_control['NR']} valve opening"
+        self._attr_name = (
+            f"{heat_area['HEATAREA_NAME']} heat control {heat_control['NR']} valve"
+            " opening"
+        )
 
     @property
     def native_value(self) -> int:

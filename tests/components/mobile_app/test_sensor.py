@@ -1,4 +1,5 @@
 """Entity tests for mobile_app."""
+
 from http import HTTPStatus
 from unittest.mock import patch
 
@@ -9,23 +10,31 @@ from homeassistant.const import (
     PERCENTAGE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
+    UnitOfTemperature,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
 
 @pytest.mark.parametrize(
-    "unit_system, state_unit, state1, state2",
-    (
-        (METRIC_SYSTEM, TEMP_CELSIUS, "100", "123"),
-        (US_CUSTOMARY_SYSTEM, TEMP_FAHRENHEIT, "212", "253"),
-    ),
+    ("unit_system", "state_unit", "state1", "state2"),
+    [
+        (METRIC_SYSTEM, UnitOfTemperature.CELSIUS, "100", "123"),
+        (US_CUSTOMARY_SYSTEM, UnitOfTemperature.FAHRENHEIT, "212", "253"),
+    ],
 )
 async def test_sensor(
-    hass, create_registrations, webhook_client, unit_system, state_unit, state1, state2
-):
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    create_registrations,
+    webhook_client,
+    unit_system,
+    state_unit,
+    state1,
+    state2,
+) -> None:
     """Test that sensors can be registered and updated."""
     hass.config.units = unit_system
 
@@ -45,8 +54,8 @@ async def test_sensor(
                 "type": "sensor",
                 "entity_category": "diagnostic",
                 "unique_id": "battery_temp",
-                "state_class": "total",
-                "unit_of_measurement": TEMP_CELSIUS,
+                "state_class": "measurement",
+                "unit_of_measurement": UnitOfTemperature.CELSIUS,
             },
         },
     )
@@ -65,15 +74,13 @@ async def test_sensor(
     # unit of temperature sensor is automatically converted to the system UoM
     assert entity.attributes["unit_of_measurement"] == state_unit
     assert entity.attributes["foo"] == "bar"
-    assert entity.attributes["state_class"] == "total"
+    assert entity.attributes["state_class"] == "measurement"
     assert entity.domain == "sensor"
     assert entity.name == "Test 1 Battery Temperature"
     assert entity.state == state1
 
     assert (
-        er.async_get(hass)
-        .async_get("sensor.test_1_battery_temperature")
-        .entity_category
+        entity_registry.async_get("sensor.test_1_battery_temperature").entity_category
         == "diagnostic"
     )
 
@@ -103,8 +110,7 @@ async def test_sensor(
     assert updated_entity.state == state2
     assert "foo" not in updated_entity.attributes
 
-    dev_reg = dr.async_get(hass)
-    assert len(dev_reg.devices) == len(create_registrations)
+    assert len(device_registry.devices) == len(create_registrations)
 
     # Reload to verify state is restored
     config_entry = hass.config_entries.async_entries("mobile_app")[1]
@@ -121,16 +127,28 @@ async def test_sensor(
 
 
 @pytest.mark.parametrize(
-    "unique_id, unit_system, state_unit, state1, state2",
-    (
-        ("battery_temperature", METRIC_SYSTEM, TEMP_CELSIUS, "100", "123"),
-        ("battery_temperature", US_CUSTOMARY_SYSTEM, TEMP_FAHRENHEIT, "212", "253"),
+    ("unique_id", "unit_system", "state_unit", "state1", "state2"),
+    [
+        ("battery_temperature", METRIC_SYSTEM, UnitOfTemperature.CELSIUS, "100", "123"),
+        (
+            "battery_temperature",
+            US_CUSTOMARY_SYSTEM,
+            UnitOfTemperature.FAHRENHEIT,
+            "212",
+            "253",
+        ),
         # The unique_id doesn't match that of the mobile app's battery temperature sensor
-        ("battery_temp", US_CUSTOMARY_SYSTEM, TEMP_FAHRENHEIT, "212", "123"),
-    ),
+        (
+            "battery_temp",
+            US_CUSTOMARY_SYSTEM,
+            UnitOfTemperature.FAHRENHEIT,
+            "212",
+            "123",
+        ),
+    ],
 )
 async def test_sensor_migration(
-    hass,
+    hass: HomeAssistant,
     create_registrations,
     webhook_client,
     unique_id,
@@ -138,7 +156,7 @@ async def test_sensor_migration(
     state_unit,
     state1,
     state2,
-):
+) -> None:
     """Test migration to RestoreSensor."""
     hass.config.units = unit_system
 
@@ -158,8 +176,8 @@ async def test_sensor_migration(
                 "type": "sensor",
                 "entity_category": "diagnostic",
                 "unique_id": unique_id,
-                "state_class": "total",
-                "unit_of_measurement": TEMP_CELSIUS,
+                "state_class": "measurement",
+                "unit_of_measurement": UnitOfTemperature.CELSIUS,
             },
         },
     )
@@ -178,7 +196,7 @@ async def test_sensor_migration(
     # unit of temperature sensor is automatically converted to the system UoM
     assert entity.attributes["unit_of_measurement"] == state_unit
     assert entity.attributes["foo"] == "bar"
-    assert entity.attributes["state_class"] == "total"
+    assert entity.attributes["state_class"] == "measurement"
     assert entity.domain == "sensor"
     assert entity.name == "Test 1 Battery Temperature"
     assert entity.state == state1
@@ -224,7 +242,9 @@ async def test_sensor_migration(
     assert "foo" not in updated_entity.attributes
 
 
-async def test_sensor_must_register(hass, create_registrations, webhook_client):
+async def test_sensor_must_register(
+    hass: HomeAssistant, create_registrations, webhook_client
+) -> None:
     """Test that sensors must be registered before updating."""
     webhook_id = create_registrations[1]["webhook_id"]
     webhook_url = f"/api/webhook/{webhook_id}"
@@ -243,7 +263,12 @@ async def test_sensor_must_register(hass, create_registrations, webhook_client):
     assert json["battery_state"]["error"]["code"] == "not_registered"
 
 
-async def test_sensor_id_no_dupes(hass, create_registrations, webhook_client, caplog):
+async def test_sensor_id_no_dupes(
+    hass: HomeAssistant,
+    create_registrations,
+    webhook_client,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test that a duplicate unique ID in registration updates the sensor."""
     webhook_id = create_registrations[1]["webhook_id"]
     webhook_url = f"/api/webhook/{webhook_id}"
@@ -305,7 +330,9 @@ async def test_sensor_id_no_dupes(hass, create_registrations, webhook_client, ca
     assert entity.state == "99"
 
 
-async def test_register_sensor_no_state(hass, create_registrations, webhook_client):
+async def test_register_sensor_no_state(
+    hass: HomeAssistant, create_registrations, webhook_client
+) -> None:
     """Test that sensors can be registered, when there is no (unknown) state."""
     webhook_id = create_registrations[1]["webhook_id"]
     webhook_url = f"/api/webhook/{webhook_id}"
@@ -362,7 +389,9 @@ async def test_register_sensor_no_state(hass, create_registrations, webhook_clie
     assert entity.state == STATE_UNKNOWN
 
 
-async def test_update_sensor_no_state(hass, create_registrations, webhook_client):
+async def test_update_sensor_no_state(
+    hass: HomeAssistant, create_registrations, webhook_client
+) -> None:
     """Test that sensors can be updated, when there is no (unknown) state."""
     webhook_id = create_registrations[1]["webhook_id"]
     webhook_url = f"/api/webhook/{webhook_id}"
@@ -408,7 +437,7 @@ async def test_update_sensor_no_state(hass, create_registrations, webhook_client
 
 
 @pytest.mark.parametrize(
-    "device_class,native_value,state_value",
+    ("device_class", "native_value", "state_value"),
     [
         (SensorDeviceClass.DATE, "2021-11-18", "2021-11-18"),
         (
@@ -434,8 +463,13 @@ async def test_update_sensor_no_state(hass, create_registrations, webhook_client
     ],
 )
 async def test_sensor_datetime(
-    hass, create_registrations, webhook_client, device_class, native_value, state_value
-):
+    hass: HomeAssistant,
+    create_registrations,
+    webhook_client,
+    device_class,
+    native_value,
+    state_value,
+) -> None:
     """Test that sensors can be registered and updated."""
     webhook_id = create_registrations[1]["webhook_id"]
     webhook_url = f"/api/webhook/{webhook_id}"
@@ -468,7 +502,12 @@ async def test_sensor_datetime(
     assert entity.state == state_value
 
 
-async def test_default_disabling_entity(hass, create_registrations, webhook_client):
+async def test_default_disabling_entity(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    create_registrations,
+    webhook_client,
+) -> None:
     """Test that sensors can be disabled by default upon registration."""
     webhook_id = create_registrations[1]["webhook_id"]
     webhook_url = f"/api/webhook/{webhook_id}"
@@ -496,12 +535,17 @@ async def test_default_disabling_entity(hass, create_registrations, webhook_clie
     assert entity is None
 
     assert (
-        er.async_get(hass).async_get("sensor.test_1_battery_state").disabled_by
+        entity_registry.async_get("sensor.test_1_battery_state").disabled_by
         == er.RegistryEntryDisabler.INTEGRATION
     )
 
 
-async def test_updating_disabled_sensor(hass, create_registrations, webhook_client):
+async def test_updating_disabled_sensor(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    create_registrations,
+    webhook_client,
+) -> None:
     """Test that sensors return error if disabled in instance."""
     webhook_id = create_registrations[1]["webhook_id"]
     webhook_url = f"/api/webhook/{webhook_id}"
@@ -542,7 +586,7 @@ async def test_updating_disabled_sensor(hass, create_registrations, webhook_clie
     assert json["battery_state"]["success"] is True
     assert "is_disabled" not in json["battery_state"]
 
-    er.async_get(hass).async_update_entity(
+    entity_registry.async_update_entity(
         "sensor.test_1_battery_state", disabled_by=er.RegistryEntryDisabler.USER
     )
 

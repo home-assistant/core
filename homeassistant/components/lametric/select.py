@@ -1,4 +1,5 @@
 """Support for LaMetric selects."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
@@ -9,8 +10,8 @@ from demetriek import BrightnessMode, Device, LaMetricDevice
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -19,29 +20,20 @@ from .entity import LaMetricEntity
 from .helpers import lametric_exception_handler
 
 
-@dataclass
-class LaMetricEntityDescriptionMixin:
-    """Mixin values for LaMetric entities."""
+@dataclass(frozen=True, kw_only=True)
+class LaMetricSelectEntityDescription(SelectEntityDescription):
+    """Class describing LaMetric select entities."""
 
     current_fn: Callable[[Device], str]
     select_fn: Callable[[LaMetricDevice, str], Awaitable[Any]]
 
 
-@dataclass
-class LaMetricSelectEntityDescription(
-    SelectEntityDescription, LaMetricEntityDescriptionMixin
-):
-    """Class describing LaMetric select entities."""
-
-
 SELECTS = [
     LaMetricSelectEntityDescription(
         key="brightness_mode",
-        name="Brightness mode",
-        icon="mdi:brightness-auto",
+        translation_key="brightness_mode",
         entity_category=EntityCategory.CONFIG,
         options=["auto", "manual"],
-        translation_key="brightness_mode",
         current_fn=lambda device: device.display.brightness_mode.value,
         select_fn=lambda api, opt: api.display(brightness_mode=BrightnessMode(opt)),
     ),

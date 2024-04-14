@@ -1,19 +1,222 @@
 """Test the Matter integration init."""
+
 from __future__ import annotations
 
 import asyncio
-from unittest.mock import AsyncMock, MagicMock, call
+from collections.abc import Generator
+from unittest.mock import AsyncMock, MagicMock, call, patch
 
-from matter_server.client.exceptions import InvalidServerVersion
+from matter_server.client.exceptions import CannotConnect, InvalidServerVersion
+from matter_server.client.models.node import MatterNode
+from matter_server.common.errors import MatterError
+from matter_server.common.helpers.util import dataclass_from_dict
+from matter_server.common.models import MatterNodeData
 import pytest
 
 from homeassistant.components.hassio import HassioAPIError
 from homeassistant.components.matter.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
+from homeassistant.setup import async_setup_component
+
+from .common import load_and_parse_node_fixture, setup_integration_with_node_fixture
 
 from tests.common import MockConfigEntry
+from tests.typing import WebSocketGenerator
+
+
+@pytest.fixture(name="connect_timeout")
+def connect_timeout_fixture() -> Generator[int, None, None]:
+    """Mock the connect timeout."""
+    with patch("homeassistant.components.matter.CONNECT_TIMEOUT", new=0) as timeout:
+        yield timeout
+
+
+@pytest.fixture(name="listen_ready_timeout")
+def listen_ready_timeout_fixture() -> Generator[int, None, None]:
+    """Mock the listen ready timeout."""
+    with patch(
+        "homeassistant.components.matter.LISTEN_READY_TIMEOUT", new=0
+    ) as timeout:
+        yield timeout
+
+
+async def test_entry_setup_unload(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+) -> None:
+    """Test the integration set up and unload."""
+    node_data = load_and_parse_node_fixture("onoff-light")
+    node = MatterNode(
+        dataclass_from_dict(
+            MatterNodeData,
+            node_data,
+        )
+    )
+    matter_client.get_nodes.return_value = [node]
+    matter_client.get_node.return_value = node
+    entry = MockConfigEntry(domain="matter", data={"url": "ws://localhost:5580/ws"})
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert matter_client.connect.call_count == 1
+    assert entry.state is ConfigEntryState.LOADED
+    entity_state = hass.states.get("light.mock_onoff_light")
+    assert entity_state
+    assert entity_state.state != STATE_UNAVAILABLE
+
+    await hass.config_entries.async_unload(entry.entry_id)
+
+    assert matter_client.disconnect.call_count == 1
+    assert entry.state is ConfigEntryState.NOT_LOADED
+    entity_state = hass.states.get("light.mock_onoff_light")
+    assert entity_state
+    assert entity_state.state == STATE_UNAVAILABLE
+
+
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
+async def test_home_assistant_stop(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    integration: MockConfigEntry,
+) -> None:
+    """Test clean up on home assistant stop."""
+    await hass.async_stop()
+
+    assert matter_client.disconnect.call_count == 1
+
+
+@pytest.mark.parametrize("error", [CannotConnect(Exception("Boom")), Exception("Boom")])
+async def test_connect_failed(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    error: Exception,
+) -> None:
+    """Test failure during client connection."""
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://localhost:5580/ws"})
+    entry.add_to_hass(hass)
+    matter_client.connect.side_effect = error
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_connect_timeout(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    connect_timeout: int,
+) -> None:
+    """Test timeout during client connection."""
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://localhost:5580/ws"})
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.parametrize("error", [MatterError("Boom"), Exception("Boom")])
+async def test_listen_failure_timeout(
+    hass: HomeAssistant,
+    listen_ready_timeout: int,
+    matter_client: MagicMock,
+    error: Exception,
+) -> None:
+    """Test client listen errors during the first timeout phase."""
+
+    async def start_listening(listen_ready: asyncio.Event) -> None:
+        """Mock the client start_listening method."""
+        # Set the connect side effect to stop an endless loop on reload.
+        matter_client.connect.side_effect = MatterError("Boom")
+        raise error
+
+    matter_client.start_listening.side_effect = start_listening
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://localhost:5580/ws"})
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.parametrize("error", [MatterError("Boom"), Exception("Boom")])
+async def test_listen_failure_config_entry_not_loaded(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    error: Exception,
+) -> None:
+    """Test client listen errors during the final phase before config entry loaded."""
+    listen_block = asyncio.Event()
+
+    async def start_listening(listen_ready: asyncio.Event) -> None:
+        """Mock the client start_listening method."""
+        listen_ready.set()
+        await listen_block.wait()
+        # Set the connect side effect to stop an endless loop on reload.
+        matter_client.connect.side_effect = MatterError("Boom")
+        raise error
+
+    def get_nodes() -> list[MagicMock]:
+        """Mock the client get_nodes method."""
+        listen_block.set()
+        return []
+
+    matter_client.start_listening.side_effect = start_listening
+    matter_client.get_nodes.side_effect = get_nodes
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://localhost:5580/ws"})
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert matter_client.disconnect.call_count == 1
+
+
+@pytest.mark.parametrize("error", [MatterError("Boom"), Exception("Boom")])
+async def test_listen_failure_config_entry_loaded(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    error: Exception,
+) -> None:
+    """Test client listen errors after config entry is loaded."""
+    listen_block = asyncio.Event()
+
+    async def start_listening(listen_ready: asyncio.Event) -> None:
+        """Mock the client start_listening method."""
+        listen_ready.set()
+        await listen_block.wait()
+        # Set the connect side effect to stop an endless loop on reload.
+        matter_client.connect.side_effect = MatterError("Boom")
+        raise error
+
+    matter_client.start_listening.side_effect = start_listening
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://localhost:5580/ws"})
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+
+    listen_block.set()
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert matter_client.disconnect.call_count == 1
 
 
 async def test_raise_addon_task_in_progress(
@@ -116,7 +319,7 @@ async def test_install_addon(
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
-    assert addon_store_info.call_count == 2
+    assert addon_store_info.call_count == 3
     assert install_addon.call_count == 1
     assert install_addon.call_args == call(hass, "core_matter_server")
     assert start_addon.call_count == 1
@@ -152,8 +355,14 @@ async def test_addon_info_failure(
 
 
 @pytest.mark.parametrize(
-    "addon_version, update_available, update_calls, backup_calls, "
-    "update_addon_side_effect, create_backup_side_effect",
+    (
+        "addon_version",
+        "update_available",
+        "update_calls",
+        "backup_calls",
+        "update_addon_side_effect",
+        "create_backup_side_effect",
+    ),
     [
         ("1.0.0", True, 1, 1, None, None),
         ("1.0.0", False, 0, 0, None, None),
@@ -202,6 +411,8 @@ async def test_update_addon(
     assert update_addon.call_count == update_calls
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_issue_registry_invalid_version(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -237,7 +448,7 @@ async def test_issue_registry_invalid_version(
 
 
 @pytest.mark.parametrize(
-    "stop_addon_side_effect, entry_state",
+    ("stop_addon_side_effect", "entry_state"),
     [
         (None, ConfigEntryState.NOT_LOADED),
         (HassioAPIError("Boom"), ConfigEntryState.LOADED),
@@ -396,3 +607,80 @@ async def test_remove_entry(
     assert entry.state is ConfigEntryState.NOT_LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
     assert "Failed to uninstall the Matter Server add-on" in caplog.text
+
+
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
+async def test_remove_config_entry_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    matter_client: MagicMock,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test that a device can be removed ok."""
+    assert await async_setup_component(hass, "config", {})
+    await setup_integration_with_node_fixture(hass, "device_diagnostics", matter_client)
+    await hass.async_block_till_done()
+
+    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
+    device_entry = dr.async_entries_for_config_entry(
+        device_registry, config_entry.entry_id
+    )[0]
+    entity_id = "light.m5stamp_lighting_app"
+
+    assert device_entry
+    assert entity_registry.async_get(entity_id)
+    assert hass.states.get(entity_id)
+
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {
+            "id": 5,
+            "type": "config/device_registry/remove_config_entry",
+            "config_entry_id": config_entry.entry_id,
+            "device_id": device_entry.id,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    await hass.async_block_till_done()
+
+    assert not device_registry.async_get(device_entry.id)
+    assert not entity_registry.async_get(entity_id)
+    assert not hass.states.get(entity_id)
+
+
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
+async def test_remove_config_entry_device_no_node(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    matter_client: MagicMock,
+    integration: MockConfigEntry,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test that a device can be removed ok without an existing node."""
+    assert await async_setup_component(hass, "config", {})
+    config_entry = integration
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={
+            (DOMAIN, "deviceid_00000000000004D2-0000000000000005-MatterNodeDevice")
+        },
+    )
+
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {
+            "id": 5,
+            "type": "config/device_registry/remove_config_entry",
+            "config_entry_id": config_entry.entry_id,
+            "device_id": device_entry.id,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    await hass.async_block_till_done()
+
+    assert not device_registry.async_get(device_entry.id)

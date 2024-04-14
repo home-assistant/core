@@ -1,6 +1,8 @@
 """The sensor entity for the Youless integration."""
+
 from __future__ import annotations
 
+from youless_api import YoulessAPI
 from youless_api.youless_sensor import YoulessSensor
 
 from homeassistant.components.sensor import (
@@ -11,12 +13,14 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DEVICE,
-    ENERGY_KILO_WATT_HOUR,
+    UnitOfElectricCurrent,
+    UnitOfElectricPotential,
+    UnitOfEnergy,
     UnitOfPower,
     UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import (
@@ -31,7 +35,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Initialize the integration."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: DataUpdateCoordinator[YoulessAPI] = hass.data[DOMAIN][entry.entry_id]
     device = entry.data[CONF_DEVICE]
     if (device := entry.data[CONF_DEVICE]) is None:
         device = entry.entry_id
@@ -51,16 +55,27 @@ async def async_setup_entry(
             DeliveryMeterSensor(coordinator, device, "high"),
             ExtraMeterSensor(coordinator, device, "total"),
             ExtraMeterPowerSensor(coordinator, device, "usage"),
+            PhasePowerSensor(coordinator, device, 1),
+            PhaseVoltageSensor(coordinator, device, 1),
+            PhaseCurrentSensor(coordinator, device, 1),
+            PhasePowerSensor(coordinator, device, 2),
+            PhaseVoltageSensor(coordinator, device, 2),
+            PhaseCurrentSensor(coordinator, device, 2),
+            PhasePowerSensor(coordinator, device, 3),
+            PhaseVoltageSensor(coordinator, device, 3),
+            PhaseCurrentSensor(coordinator, device, 3),
         ]
     )
 
 
-class YoulessBaseSensor(CoordinatorEntity, SensorEntity):
+class YoulessBaseSensor(
+    CoordinatorEntity[DataUpdateCoordinator[YoulessAPI]], SensorEntity
+):
     """The base sensor for Youless."""
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: DataUpdateCoordinator[YoulessAPI],
         device: str,
         device_group: str,
         friendly_name: str,
@@ -102,7 +117,9 @@ class GasSensor(YoulessBaseSensor):
     _attr_device_class = SensorDeviceClass.GAS
     _attr_state_class = SensorStateClass.TOTAL_INCREASING
 
-    def __init__(self, coordinator: DataUpdateCoordinator, device: str) -> None:
+    def __init__(
+        self, coordinator: DataUpdateCoordinator[YoulessAPI], device: str
+    ) -> None:
         """Instantiate a gas sensor."""
         super().__init__(coordinator, device, "gas", "Gas meter", "gas")
         self._attr_name = "Gas usage"
@@ -121,7 +138,9 @@ class CurrentPowerSensor(YoulessBaseSensor):
     _attr_device_class = SensorDeviceClass.POWER
     _attr_state_class = SensorStateClass.MEASUREMENT
 
-    def __init__(self, coordinator: DataUpdateCoordinator, device: str) -> None:
+    def __init__(
+        self, coordinator: DataUpdateCoordinator[YoulessAPI], device: str
+    ) -> None:
         """Instantiate the usage meter."""
         super().__init__(coordinator, device, "power", "Power usage", "usage")
         self._device = device
@@ -136,12 +155,12 @@ class CurrentPowerSensor(YoulessBaseSensor):
 class DeliveryMeterSensor(YoulessBaseSensor):
     """The Youless delivery meter value sensor."""
 
-    _attr_native_unit_of_measurement = ENERGY_KILO_WATT_HOUR
+    _attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
     _attr_device_class = SensorDeviceClass.ENERGY
     _attr_state_class = SensorStateClass.TOTAL_INCREASING
 
     def __init__(
-        self, coordinator: DataUpdateCoordinator, device: str, dev_type: str
+        self, coordinator: DataUpdateCoordinator[YoulessAPI], device: str, dev_type: str
     ) -> None:
         """Instantiate a delivery meter sensor."""
         super().__init__(
@@ -162,13 +181,13 @@ class DeliveryMeterSensor(YoulessBaseSensor):
 class EnergyMeterSensor(YoulessBaseSensor):
     """The Youless low meter value sensor."""
 
-    _attr_native_unit_of_measurement = ENERGY_KILO_WATT_HOUR
+    _attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
     _attr_device_class = SensorDeviceClass.ENERGY
     _attr_state_class = SensorStateClass.TOTAL_INCREASING
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: DataUpdateCoordinator[YoulessAPI],
         device: str,
         dev_type: str,
         state_class: SensorStateClass,
@@ -191,15 +210,96 @@ class EnergyMeterSensor(YoulessBaseSensor):
         return getattr(self.coordinator.data.power_meter, f"_{self._type}", None)
 
 
+class PhasePowerSensor(YoulessBaseSensor):
+    """The current power usage of a single phase."""
+
+    _attr_native_unit_of_measurement = UnitOfPower.WATT
+    _attr_device_class = SensorDeviceClass.POWER
+    _attr_state_class = SensorStateClass.MEASUREMENT
+
+    def __init__(
+        self, coordinator: DataUpdateCoordinator[YoulessAPI], device: str, phase: int
+    ) -> None:
+        """Initialize the power phase sensor."""
+        super().__init__(
+            coordinator, device, "power", "Energy usage", f"phase_{phase}_power"
+        )
+        self._attr_name = f"Phase {phase} power"
+        self._phase = phase
+
+    @property
+    def get_sensor(self) -> YoulessSensor | None:
+        """Get the sensor value from the coordinator."""
+        phase_sensor = getattr(self.coordinator.data, f"phase{self._phase}", None)
+        if phase_sensor is None:
+            return None
+
+        return phase_sensor.power
+
+
+class PhaseVoltageSensor(YoulessBaseSensor):
+    """The current voltage of a single phase."""
+
+    _attr_native_unit_of_measurement = UnitOfElectricPotential.VOLT
+    _attr_device_class = SensorDeviceClass.VOLTAGE
+    _attr_state_class = SensorStateClass.MEASUREMENT
+
+    def __init__(
+        self, coordinator: DataUpdateCoordinator[YoulessAPI], device: str, phase: int
+    ) -> None:
+        """Initialize the voltage phase sensor."""
+        super().__init__(
+            coordinator, device, "power", "Energy usage", f"phase_{phase}_voltage"
+        )
+        self._attr_name = f"Phase {phase} voltage"
+        self._phase = phase
+
+    @property
+    def get_sensor(self) -> YoulessSensor | None:
+        """Get the sensor value from the coordinator for phase voltage."""
+        phase_sensor = getattr(self.coordinator.data, f"phase{self._phase}", None)
+        if phase_sensor is None:
+            return None
+
+        return phase_sensor.voltage
+
+
+class PhaseCurrentSensor(YoulessBaseSensor):
+    """The current current of a single phase."""
+
+    _attr_native_unit_of_measurement = UnitOfElectricCurrent.AMPERE
+    _attr_device_class = SensorDeviceClass.CURRENT
+    _attr_state_class = SensorStateClass.MEASUREMENT
+
+    def __init__(
+        self, coordinator: DataUpdateCoordinator[YoulessAPI], device: str, phase: int
+    ) -> None:
+        """Initialize the current phase sensor."""
+        super().__init__(
+            coordinator, device, "power", "Energy usage", f"phase_{phase}_current"
+        )
+        self._attr_name = f"Phase {phase} current"
+        self._phase = phase
+
+    @property
+    def get_sensor(self) -> YoulessSensor | None:
+        """Get the sensor value from the coordinator for phase current."""
+        phase_sensor = getattr(self.coordinator.data, f"phase{self._phase}", None)
+        if phase_sensor is None:
+            return None
+
+        return phase_sensor.current
+
+
 class ExtraMeterSensor(YoulessBaseSensor):
     """The Youless extra meter value sensor (s0)."""
 
-    _attr_native_unit_of_measurement = ENERGY_KILO_WATT_HOUR
+    _attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
     _attr_device_class = SensorDeviceClass.ENERGY
     _attr_state_class = SensorStateClass.TOTAL_INCREASING
 
     def __init__(
-        self, coordinator: DataUpdateCoordinator, device: str, dev_type: str
+        self, coordinator: DataUpdateCoordinator[YoulessAPI], device: str, dev_type: str
     ) -> None:
         """Instantiate an extra meter sensor."""
         super().__init__(
@@ -225,7 +325,7 @@ class ExtraMeterPowerSensor(YoulessBaseSensor):
     _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(
-        self, coordinator: DataUpdateCoordinator, device: str, dev_type: str
+        self, coordinator: DataUpdateCoordinator[YoulessAPI], device: str, dev_type: str
     ) -> None:
         """Instantiate an extra meter power sensor."""
         super().__init__(

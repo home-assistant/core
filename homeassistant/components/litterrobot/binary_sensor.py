@@ -1,4 +1,5 @@
 """Support for Litter-Robot binary sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -13,8 +14,8 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -22,14 +23,14 @@ from .entity import LitterRobotEntity, _RobotT
 from .hub import LitterRobotHub
 
 
-@dataclass
+@dataclass(frozen=True)
 class RequiredKeysMixin(Generic[_RobotT]):
     """A class that describes robot binary sensor entity required keys."""
 
     is_on_fn: Callable[[_RobotT], bool]
 
 
-@dataclass
+@dataclass(frozen=True)
 class RobotBinarySensorEntityDescription(
     BinarySensorEntityDescription, RequiredKeysMixin[_RobotT]
 ):
@@ -48,28 +49,26 @@ class LitterRobotBinarySensorEntity(LitterRobotEntity[_RobotT], BinarySensorEnti
 
 
 BINARY_SENSOR_MAP: dict[type[Robot], tuple[RobotBinarySensorEntityDescription, ...]] = {
-    LitterRobot: (
+    LitterRobot: (  # type: ignore[type-abstract]  # only used for isinstance check
         RobotBinarySensorEntityDescription[LitterRobot](
             key="sleeping",
-            name="Sleeping",
-            icon="mdi:sleep",
+            translation_key="sleeping",
             entity_category=EntityCategory.DIAGNOSTIC,
             entity_registry_enabled_default=False,
             is_on_fn=lambda robot: robot.is_sleeping,
         ),
         RobotBinarySensorEntityDescription[LitterRobot](
             key="sleep_mode",
-            name="Sleep mode",
-            icon="mdi:sleep",
+            translation_key="sleep_mode",
             entity_category=EntityCategory.DIAGNOSTIC,
             entity_registry_enabled_default=False,
             is_on_fn=lambda robot: robot.sleep_mode_enabled,
         ),
     ),
-    Robot: (
+    Robot: (  # type: ignore[type-abstract]  # only used for isinstance check
         RobotBinarySensorEntityDescription[Robot](
             key="power_status",
-            name="Power status",
+            translation_key="power_status",
             device_class=BinarySensorDeviceClass.PLUG,
             entity_category=EntityCategory.DIAGNOSTIC,
             entity_registry_enabled_default=False,

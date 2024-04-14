@@ -1,4 +1,5 @@
 """Support for WiLight Cover."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -56,6 +57,8 @@ def hass_to_wilight_position(value: int) -> int:
 
 class WiLightCover(WiLightDevice, CoverEntity):
     """Representation of a WiLights cover."""
+
+    _attr_name = None
 
     @property
     def current_cover_position(self) -> int | None:

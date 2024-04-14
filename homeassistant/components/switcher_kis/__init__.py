@@ -1,4 +1,5 @@
 """The Switcher integration."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -12,7 +13,7 @@ from homeassistant.const import CONF_DEVICE_ID, EVENT_HOMEASSISTANT_STOP, Platfo
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import (
     config_validation as cv,
-    device_registry,
+    device_registry as dr,
     update_coordinator,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -39,7 +40,7 @@ PLATFORMS = [
 
 _LOGGER = logging.getLogger(__name__)
 
-CCONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = vol.Schema(
     vol.All(
         cv.deprecated(DOMAIN),
         {
@@ -89,16 +90,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         # New device - create device
         _LOGGER.info(
-            "Discovered Switcher device - id: %s, name: %s, type: %s (%s)",
+            "Discovered Switcher device - id: %s, key: %s, name: %s, type: %s (%s)",
             device.device_id,
+            device.device_key,
             device.name,
             device.device_type.value,
             device.device_type.hex_rep,
         )
 
-        coordinator = hass.data[DOMAIN][DATA_DEVICE][
-            device.device_id
-        ] = SwitcherDataUpdateCoordinator(hass, entry, device)
+        coordinator = hass.data[DOMAIN][DATA_DEVICE][device.device_id] = (
+            SwitcherDataUpdateCoordinator(hass, entry, device)
+        )
         coordinator.async_setup()
 
     # Must be ready before dispatcher is called
@@ -122,7 +124,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-class SwitcherDataUpdateCoordinator(update_coordinator.DataUpdateCoordinator):
+class SwitcherDataUpdateCoordinator(
+    update_coordinator.DataUpdateCoordinator[SwitcherBase]
+):  # pylint: disable=hass-enforce-coordinator-module
     """Switcher device data update coordinator."""
 
     def __init__(
@@ -138,10 +142,11 @@ class SwitcherDataUpdateCoordinator(update_coordinator.DataUpdateCoordinator):
         self.entry = entry
         self.data = device
 
-    async def _async_update_data(self) -> None:
+    async def _async_update_data(self) -> SwitcherBase:
         """Mark device offline if no data."""
         raise update_coordinator.UpdateFailed(
-            f"Device {self.name} did not send update for {MAX_UPDATE_INTERVAL_SEC} seconds"
+            f"Device {self.name} did not send update for"
+            f" {MAX_UPDATE_INTERVAL_SEC} seconds"
         )
 
     @property
@@ -162,10 +167,10 @@ class SwitcherDataUpdateCoordinator(update_coordinator.DataUpdateCoordinator):
     @callback
     def async_setup(self) -> None:
         """Set up the coordinator."""
-        dev_reg = device_registry.async_get(self.hass)
+        dev_reg = dr.async_get(self.hass)
         dev_reg.async_get_or_create(
             config_entry_id=self.entry.entry_id,
-            connections={(device_registry.CONNECTION_NETWORK_MAC, self.mac_address)},
+            connections={(dr.CONNECTION_NETWORK_MAC, self.mac_address)},
             identifiers={(DOMAIN, self.device_id)},
             manufacturer="Switcher",
             name=self.name,

@@ -1,10 +1,12 @@
 """Helper functions for the SIA integration."""
+
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import Any
 
 from pysiaalarm import SIAEvent
+from pysiaalarm.utils import MessageTypes
 
 from homeassistant.util.dt import utcnow
 
@@ -50,21 +52,24 @@ def get_unavailability_interval(ping: int) -> float:
 
 def get_attr_from_sia_event(event: SIAEvent) -> dict[str, Any]:
     """Create the attributes dict from a SIAEvent."""
+    timestamp = event.timestamp if event.timestamp else utcnow()
     return {
         ATTR_ZONE: event.ri,
         ATTR_CODE: event.code,
         ATTR_MESSAGE: event.message,
         ATTR_ID: event.id,
-        ATTR_TIMESTAMP: event.timestamp.isoformat()
-        if event.timestamp
-        else utcnow().isoformat(),
+        ATTR_TIMESTAMP: timestamp.isoformat()
+        if isinstance(timestamp, datetime)
+        else timestamp,
     }
 
 
 def get_event_data_from_sia_event(event: SIAEvent) -> dict[str, Any]:
     """Create a dict from the SIA Event for the HA Event."""
     return {
-        "message_type": event.message_type.value,
+        "message_type": event.message_type.value
+        if isinstance(event.message_type, MessageTypes)
+        else event.message_type,
         "receiver": event.receiver,
         "line": event.line,
         "account": event.account,
@@ -77,8 +82,8 @@ def get_event_data_from_sia_event(event: SIAEvent) -> dict[str, Any]:
         "message": event.message,
         "x_data": event.x_data,
         "timestamp": event.timestamp.isoformat()
-        if event.timestamp
-        else utcnow().isoformat(),
+        if isinstance(event.timestamp, datetime)
+        else event.timestamp,
         "event_qualifier": event.event_qualifier,
         "event_type": event.event_type,
         "partition": event.partition,

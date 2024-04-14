@@ -11,7 +11,7 @@
           "include_exclude_mode": "Inclusion Mode",
           "domains": "[%key:component::homekit::config::step::user::data::include_domains%]"
         },
-        "description": "HomeKit can be configured expose a bridge or a single accessory. In accessory mode, only a single entity can be used. Accessory mode is required for media players with the TV device class to function properly. Entities in the \u201cDomains to include\u201d will be included to HomeKit. You will be able to select which entities to include or exclude from this list on the next screen.",
+        "description": "HomeKit can be configured expose a bridge or a single accessory. In accessory mode, only a single entity can be used. Accessory mode is required for media players with the TV or RECEIVER device class to function properly. Entities in the \u201cDomains to include\u201d will be included to HomeKit. You will be able to select which entities to include or exclude from this list on the next screen.",
         "title": "Select mode and domains."
       },
       "accessory": {
@@ -24,14 +24,14 @@
         "data": {
           "entities": "Entities"
         },
-        "description": "All “{domains}” entities will be included unless specific entities are selected.",
+        "description": "Select entities from each domain in \u201c{domains}\u201d. The include will cover the entire domain if you do not select any entities for a given domain.",
         "title": "Select the entities to be included"
       },
       "exclude": {
         "data": {
           "entities": "[%key:component::homekit::options::step::include::data::entities%]"
         },
-        "description": "All “{domains}” entities will be included except for the excluded entities and categorized entities.",
+        "description": "All \u201c{domains}\u201d entities will be included except for the excluded entities and categorized entities.",
         "title": "Select the entities to be excluded"
       },
       "cameras": {
@@ -57,7 +57,7 @@
         "data": {
           "include_domains": "Domains to include"
         },
-        "description": "Choose the domains to be included. All supported entities in the domain will be included except for categorized entities. A separate HomeKit instance in accessory mode will be created for each tv media player, activity based remote, lock, and camera.",
+        "description": "Choose the domains to be included. All supported entities in the domain will be included except for categorized entities. A separate HomeKit instance in accessory mode will be created for each tv/receiver media player, activity based remote, lock, and camera.",
         "title": "Select domains to be included"
       },
       "pairing": {
@@ -67,6 +67,20 @@
     },
     "abort": {
       "port_name_in_use": "An accessory or bridge with the same name or port is already configured."
+    }
+  },
+  "services": {
+    "reload": {
+      "name": "[%key:common::action::reload%]",
+      "description": "Reloads homekit and re-process YAML-configuration."
+    },
+    "reset_accessory": {
+      "name": "Reset accessory",
+      "description": "Resets a HomeKit accessory."
+    },
+    "unpair": {
+      "name": "Unpair an accessory or bridge",
+      "description": "Forcefully removes all pairings from an accessory to allow re-pairing. Use this service if the accessory is no longer responsive, and you want to avoid deleting and re-adding the entry. Room locations, and accessory preferences will be lost."
     }
   }
 }

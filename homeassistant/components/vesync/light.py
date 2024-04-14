@@ -1,4 +1,5 @@
 """Support for VeSync bulbs and wall dimmers."""
+
 import logging
 from typing import Any
 
@@ -14,16 +15,9 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .common import VeSyncDevice
-from .const import DOMAIN, VS_DISCOVERY, VS_LIGHTS
+from .const import DEV_TYPE_TO_HA, DOMAIN, VS_DISCOVERY, VS_LIGHTS
 
 _LOGGER = logging.getLogger(__name__)
-
-DEV_TYPE_TO_HA = {
-    "ESD16": "walldimmer",
-    "ESWD16": "walldimmer",
-    "ESL100": "bulb-dimmable",
-    "ESL100CW": "bulb-tunable-white",
-}
 
 
 async def async_setup_entry(
@@ -65,6 +59,8 @@ def _setup_entities(devices, async_add_entities):
 
 class VeSyncBaseLight(VeSyncDevice, LightEntity):
     """Base class for VeSync Light Devices Representations."""
+
+    _attr_name = None
 
     @property
     def brightness(self) -> int:
@@ -121,7 +117,8 @@ class VeSyncBaseLight(VeSyncDevice, LightEntity):
             brightness = max(1, min(brightness, 100))
             # call pyvesync library api method to set brightness
             self.device.set_brightness(brightness)
-            # flag attribute_adjustment_only, so it doesn't turn_on the device redundantly
+            # flag attribute_adjustment_only, so it doesn't
+            # turn_on the device redundantly
             attribute_adjustment_only = True
         # check flag if should skip sending the turn_on command
         if attribute_adjustment_only:
@@ -156,7 +153,10 @@ class VeSyncTunableWhiteLightHA(VeSyncBaseLight, LightEntity):
         except ValueError:
             # deal if any unexpected/non numeric value
             _LOGGER.debug(
-                "VeSync - received unexpected 'color_temp_pct' value from pyvesync api: %s",
+                (
+                    "VeSync - received unexpected 'color_temp_pct' value from pyvesync"
+                    " api: %s"
+                ),
                 result,
             )
             return 0

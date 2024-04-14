@@ -1,5 +1,7 @@
 """Test different accessory types: Sensors."""
 
+from unittest.mock import patch
+
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.homekit import get_accessory
 from homeassistant.components.homekit.const import (
@@ -31,21 +33,20 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
+    UnitOfTemperature,
 )
-from homeassistant.core import CoreState
+from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 
-async def test_temperature(hass, hk_driver):
+async def test_temperature(hass: HomeAssistant, hk_driver) -> None:
     """Test if accessory is updated after state change."""
     entity_id = "sensor.temperature"
 
     hass.states.async_set(entity_id, None)
     await hass.async_block_till_done()
     acc = TemperatureSensor(hass, hk_driver, "Temperature", entity_id, 2, None)
-    await acc.run()
+    acc.run()
     await hass.async_block_till_done()
 
     assert acc.aid == 2
@@ -56,34 +57,40 @@ async def test_temperature(hass, hk_driver):
         assert acc.char_temp.properties[key] == value
 
     hass.states.async_set(
-        entity_id, STATE_UNKNOWN, {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS}
+        entity_id, STATE_UNKNOWN, {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS}
     )
     await hass.async_block_till_done()
     assert acc.char_temp.value == 0.0
 
-    hass.states.async_set(entity_id, "20", {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS})
+    hass.states.async_set(
+        entity_id, "20", {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS}
+    )
     await hass.async_block_till_done()
     assert acc.char_temp.value == 20
 
-    hass.states.async_set(entity_id, "0", {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS})
+    hass.states.async_set(
+        entity_id, "0", {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS}
+    )
     await hass.async_block_till_done()
     assert acc.char_temp.value == 0
 
-    hass.states.async_set(
-        entity_id, "75.2", {ATTR_UNIT_OF_MEASUREMENT: TEMP_FAHRENHEIT}
-    )
-    await hass.async_block_till_done()
-    assert acc.char_temp.value == 24
+    # The UOM changes, the accessory should reload itself
+    with patch.object(acc, "async_reload") as mock_reload:
+        hass.states.async_set(
+            entity_id, "75.2", {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT}
+        )
+        await hass.async_block_till_done()
+        assert mock_reload.called
 
 
-async def test_humidity(hass, hk_driver):
+async def test_humidity(hass: HomeAssistant, hk_driver) -> None:
     """Test if accessory is updated after state change."""
     entity_id = "sensor.humidity"
 
     hass.states.async_set(entity_id, None)
     await hass.async_block_till_done()
     acc = HumiditySensor(hass, hk_driver, "Humidity", entity_id, 2, None)
-    await acc.run()
+    acc.run()
     await hass.async_block_till_done()
 
     assert acc.aid == 2
@@ -104,14 +111,14 @@ async def test_humidity(hass, hk_driver):
     assert acc.char_humidity.value == 0
 
 
-async def test_air_quality(hass, hk_driver):
+async def test_air_quality(hass: HomeAssistant, hk_driver) -> None:
     """Test if accessory is updated after state change."""
     entity_id = "sensor.air_quality"
 
     hass.states.async_set(entity_id, None)
     await hass.async_block_till_done()
     acc = AirQualitySensor(hass, hk_driver, "Air Quality", entity_id, 2, None)
-    await acc.run()
+    acc.run()
     await hass.async_block_till_done()
 
     assert acc.aid == 2
@@ -136,14 +143,14 @@ async def test_air_quality(hass, hk_driver):
     assert acc.char_quality.value == 5
 
 
-async def test_pm10(hass, hk_driver):
+async def test_pm10(hass: HomeAssistant, hk_driver) -> None:
     """Test if accessory is updated after state change."""
     entity_id = "sensor.air_quality_pm10"
 
     hass.states.async_set(entity_id, None)
     await hass.async_block_till_done()
     acc = PM10Sensor(hass, hk_driver, "PM10 Sensor", entity_id, 2, None)
-    await acc.run()
+    acc.run()
     await hass.async_block_till_done()
 
     assert acc.aid == 2
@@ -183,14 +190,14 @@ async def test_pm10(hass, hk_driver):
     assert acc.char_quality.value == 5
 
 
-async def test_pm25(hass, hk_driver):
+async def test_pm25(hass: HomeAssistant, hk_driver) -> None:
     """Test if accessory is updated after state change."""
     entity_id = "sensor.air_quality_pm25"
 
     hass.states.async_set(entity_id, None)
     await hass.async_block_till_done()
     acc = PM25Sensor(hass, hk_driver, "PM25 Sensor", entity_id, 2, None)
-    await acc.run()
+    acc.run()
     await hass.async_block_till_done()
 
     assert acc.aid == 2
@@ -230,7 +237,7 @@ async def test_pm25(hass, hk_driver):
     assert acc.char_quality.value == 5
 
 
-async def test_no2(hass, hk_driver):
+async def test_no2(hass: HomeAssistant, hk_driver) -> None:
     """Test if accessory is updated after state change."""
     entity_id = "sensor.air_quality_nitrogen_dioxide"
 
@@ -239,7 +246,7 @@ async def test_no2(hass, hk_driver):
     acc = NitrogenDioxideSensor(
         hass, hk_driver, "Nitrogen Dioxide Sensor", entity_id, 2, None
     )
-    await acc.run()
+    acc.run()
     await hass.async_block_till_done()
 
     assert acc.aid == 2
@@ -279,7 +286,7 @@ async def test_no2(hass, hk_driver):
     assert acc.char_quality.value == 5
 
 
-async def test_voc(hass, hk_driver):
+async def test_voc(hass: HomeAssistant, hk_driver) -> None:
     """Test if accessory is updated after state change."""
     entity_id = "sensor.air_quality_volatile_organic_compounds"
 
@@ -288,7 +295,7 @@ async def test_voc(hass, hk_driver):
     acc = VolatileOrganicCompoundsSensor(
         hass, hk_driver, "Volatile Organic Compounds Sensor", entity_id, 2, None
     )
-    await acc.run()
+    acc.run()
     await hass.async_block_till_done()
 
     assert acc.aid == 2
@@ -302,40 +309,40 @@ async def test_voc(hass, hk_driver):
     assert acc.char_density.value == 0
     assert acc.char_quality.value == 0
 
-    hass.states.async_set(entity_id, "24")
+    hass.states.async_set(entity_id, "250")
     await hass.async_block_till_done()
-    assert acc.char_density.value == 24
+    assert acc.char_density.value == 250
     assert acc.char_quality.value == 1
 
-    hass.states.async_set(entity_id, "48")
+    hass.states.async_set(entity_id, "500")
     await hass.async_block_till_done()
-    assert acc.char_density.value == 48
+    assert acc.char_density.value == 500
     assert acc.char_quality.value == 2
 
-    hass.states.async_set(entity_id, "64")
+    hass.states.async_set(entity_id, "1000")
     await hass.async_block_till_done()
-    assert acc.char_density.value == 64
+    assert acc.char_density.value == 1000
     assert acc.char_quality.value == 3
 
-    hass.states.async_set(entity_id, "96")
+    hass.states.async_set(entity_id, "3000")
     await hass.async_block_till_done()
-    assert acc.char_density.value == 96
+    assert acc.char_density.value == 3000
     assert acc.char_quality.value == 4
 
-    hass.states.async_set(entity_id, "128")
+    hass.states.async_set(entity_id, "5000")
     await hass.async_block_till_done()
-    assert acc.char_density.value == 128
+    assert acc.char_density.value == 5000
     assert acc.char_quality.value == 5
 
 
-async def test_co(hass, hk_driver):
+async def test_co(hass: HomeAssistant, hk_driver) -> None:
     """Test if accessory is updated after state change."""
     entity_id = "sensor.co"
 
     hass.states.async_set(entity_id, None)
     await hass.async_block_till_done()
     acc = CarbonMonoxideSensor(hass, hk_driver, "CO", entity_id, 2, None)
-    await acc.run()
+    acc.run()
     await hass.async_block_till_done()
 
     assert acc.aid == 2
@@ -368,14 +375,14 @@ async def test_co(hass, hk_driver):
     assert acc.char_detected.value == 0
 
 
-async def test_co2(hass, hk_driver):
+async def test_co2(hass: HomeAssistant, hk_driver) -> None:
     """Test if accessory is updated after state change."""
     entity_id = "sensor.co2"
 
     hass.states.async_set(entity_id, None)
     await hass.async_block_till_done()
     acc = CarbonDioxideSensor(hass, hk_driver, "CO2", entity_id, 2, None)
-    await acc.run()
+    acc.run()
     await hass.async_block_till_done()
 
     assert acc.aid == 2
@@ -408,14 +415,14 @@ async def test_co2(hass, hk_driver):
     assert acc.char_detected.value == 0
 
 
-async def test_light(hass, hk_driver):
+async def test_light(hass: HomeAssistant, hk_driver) -> None:
     """Test if accessory is updated after state change."""
     entity_id = "sensor.light"
 
     hass.states.async_set(entity_id, None)
     await hass.async_block_till_done()
     acc = LightSensor(hass, hk_driver, "Light", entity_id, 2, None)
-    await acc.run()
+    acc.run()
     await hass.async_block_till_done()
 
     assert acc.aid == 2
@@ -436,7 +443,7 @@ async def test_light(hass, hk_driver):
     assert acc.char_light.value == 0.0001
 
 
-async def test_binary(hass, hk_driver):
+async def test_binary(hass: HomeAssistant, hk_driver) -> None:
     """Test if accessory is updated after state change."""
     entity_id = "binary_sensor.opening"
 
@@ -444,7 +451,7 @@ async def test_binary(hass, hk_driver):
     await hass.async_block_till_done()
 
     acc = BinarySensor(hass, hk_driver, "Window Opening", entity_id, 2, None)
-    await acc.run()
+    acc.run()
     await hass.async_block_till_done()
 
     assert acc.aid == 2
@@ -473,7 +480,7 @@ async def test_binary(hass, hk_driver):
     assert acc.char_detected.value == 0
 
 
-async def test_motion_uses_bool(hass, hk_driver):
+async def test_motion_uses_bool(hass: HomeAssistant, hk_driver) -> None:
     """Test if accessory is updated after state change."""
     entity_id = "binary_sensor.motion"
 
@@ -483,7 +490,7 @@ async def test_motion_uses_bool(hass, hk_driver):
     await hass.async_block_till_done()
 
     acc = BinarySensor(hass, hk_driver, "Motion Sensor", entity_id, 2, None)
-    await acc.run()
+    acc.run()
     await hass.async_block_till_done()
 
     assert acc.aid == 2
@@ -520,7 +527,7 @@ async def test_motion_uses_bool(hass, hk_driver):
     assert acc.char_detected.value is False
 
 
-async def test_binary_device_classes(hass, hk_driver):
+async def test_binary_device_classes(hass: HomeAssistant, hk_driver) -> None:
     """Test if services and characteristics are assigned correctly."""
     entity_id = "binary_sensor.demo"
     aid = 1
@@ -535,20 +542,20 @@ async def test_binary_device_classes(hass, hk_driver):
         assert acc.char_detected.display_name == char
 
 
-async def test_sensor_restore(hass, hk_driver, events):
+async def test_sensor_restore(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, hk_driver, events
+) -> None:
     """Test setting up an entity from state in the event registry."""
-    hass.state = CoreState.not_running
+    hass.set_state(CoreState.not_running)
 
-    registry = er.async_get(hass)
-
-    registry.async_get_or_create(
+    entity_registry.async_get_or_create(
         "sensor",
         "generic",
         "1234",
         suggested_object_id="temperature",
         original_device_class="temperature",
     )
-    registry.async_get_or_create(
+    entity_registry.async_get_or_create(
         "sensor",
         "generic",
         "12345",
@@ -566,14 +573,14 @@ async def test_sensor_restore(hass, hk_driver, events):
     assert acc.category == 10
 
 
-async def test_bad_name(hass, hk_driver):
+async def test_bad_name(hass: HomeAssistant, hk_driver) -> None:
     """Test an entity with a bad name."""
     entity_id = "sensor.humidity"
 
     hass.states.async_set(entity_id, "20")
     await hass.async_block_till_done()
     acc = HumiditySensor(hass, hk_driver, "[[Humid]]", entity_id, 2, None)
-    await acc.run()
+    acc.run()
     await hass.async_block_till_done()
 
     assert acc.aid == 2
@@ -583,14 +590,14 @@ async def test_bad_name(hass, hk_driver):
     assert acc.display_name == "--Humid--"
 
 
-async def test_empty_name(hass, hk_driver):
+async def test_empty_name(hass: HomeAssistant, hk_driver) -> None:
     """Test an entity with a empty name."""
     entity_id = "sensor.humidity"
 
     hass.states.async_set(entity_id, "20")
     await hass.async_block_till_done()
     acc = HumiditySensor(hass, hk_driver, None, entity_id, 2, None)
-    await acc.run()
+    acc.run()
     await hass.async_block_till_done()
 
     assert acc.aid == 2

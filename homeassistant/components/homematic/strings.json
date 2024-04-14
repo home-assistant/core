@@ -1,0 +1,126 @@
+{
+  "services": {
+    "virtualkey": {
+      "name": "Virtual key",
+      "description": "Presses a virtual key from CCU/Homegear or simulate keypress.",
+      "fields": {
+        "address": {
+          "name": "Address",
+          "description": "Address of homematic device or BidCoS-RF for virtual remote."
+        },
+        "channel": {
+          "name": "Channel",
+          "description": "Channel for calling a keypress."
+        },
+        "param": {
+          "name": "Param",
+          "description": "Event to send i.e. PRESS_LONG, PRESS_SHORT."
+        },
+        "interface": {
+          "name": "Interface",
+          "description": "Set an interface value."
+        }
+      }
+    },
+    "set_variable_value": {
+      "name": "Set variable value",
+      "description": "Sets the name of a node.",
+      "fields": {
+        "entity_id": {
+          "name": "Entity",
+          "description": "Name(s) of homematic central to set value."
+        },
+        "name": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "description": "Name of the variable to set."
+        },
+        "value": {
+          "name": "Value",
+          "description": "New value."
+        }
+      }
+    },
+    "set_device_value": {
+      "name": "Set device value",
+      "description": "Sets a device property on RPC XML interface.",
+      "fields": {
+        "address": {
+          "name": "Address",
+          "description": "[%key:component::homematic::services::virtualkey::fields::address::description%]"
+        },
+        "channel": {
+          "name": "Channel",
+          "description": "[%key:component::homematic::services::virtualkey::fields::channel::description%]"
+        },
+        "param": {
+          "name": "[%key:component::homematic::services::virtualkey::fields::param::name%]",
+          "description": "[%key:component::homematic::services::virtualkey::fields::param::description%]"
+        },
+        "interface": {
+          "name": "Interface",
+          "description": "[%key:component::homematic::services::virtualkey::fields::interface::description%]"
+        },
+        "value": {
+          "name": "Value",
+          "description": "[%key:component::homematic::services::set_variable_value::fields::value::description%]"
+        },
+        "value_type": {
+          "name": "Value type",
+          "description": "Type for new value."
+        }
+      }
+    },
+    "reconnect": {
+      "name": "Reconnect",
+      "description": "Reconnects to all Homematic Hubs."
+    },
+    "set_install_mode": {
+      "name": "Set install mode",
+      "description": "Set a RPC XML interface into installation mode.",
+      "fields": {
+        "interface": {
+          "name": "Interface",
+          "description": "Select the given interface into install mode."
+        },
+        "mode": {
+          "name": "[%key:common::config_flow::data::mode%]",
+          "description": "1= Normal mode / 2= Remove exists old links."
+        },
+        "time": {
+          "name": "Time",
+          "description": "Time to run in install mode."
+        },
+        "address": {
+          "name": "Address",
+          "description": "Address of homematic device or BidCoS-RF to learn."
+        }
+      }
+    },
+    "put_paramset": {
+      "name": "Put paramset",
+      "description": "Calls to putParamset in the RPC XML interface.",
+      "fields": {
+        "interface": {
+          "name": "Interface",
+          "description": "The interfaces name from the config."
+        },
+        "address": {
+          "name": "Address",
+          "description": "Address of Homematic device."
+        },
+        "paramset_key": {
+          "name": "Paramset key",
+          "description": "The paramset_key argument to putParamset."
+        },
+        "paramset": {
+          "name": "Paramset",
+          "description": "A paramset dictionary."
+        },
+        "rx_mode": {
+          "name": "RX mode",
+          "description": "The receive mode used."
+        }
+      }
+    }
+  }
+}

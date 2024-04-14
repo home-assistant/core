@@ -1,4 +1,5 @@
 """Support for Linksys Smart Wifi routers."""
+
 from __future__ import annotations
 
 from http import HTTPStatus
@@ -35,7 +36,7 @@ def get_scanner(
 
 
 class LinksysSmartWifiDeviceScanner(DeviceScanner):
-    """This class queries a Linksys Access Point."""
+    """Class which queries a Linksys Access Point."""
 
     def __init__(self, config):
         """Initialize the scanner."""

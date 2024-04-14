@@ -1,4 +1,5 @@
 """Test configuration for the Vultr tests."""
+
 import json
 from unittest.mock import patch
 
@@ -26,5 +27,3 @@ def valid_config(hass: HomeAssistant, requests_mock):
     ):
         # Setup hub
         vultr.setup(hass, VALID_CONFIG)
-
-    yield

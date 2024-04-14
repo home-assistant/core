@@ -13,8 +13,8 @@ from homeassistant.const import (
     UnitOfPower,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -70,7 +70,8 @@ TRENDS_SENSOR_TYPES = {
 SENSOR_VARIANTS = [(PRODUCTION_ID, PRODUCTION_NAME), (CONSUMPTION_ID, CONSUMPTION_NAME)]
 
 # Trend production/consumption variants
-TREND_SENSOR_VARIANTS = SENSOR_VARIANTS + [
+TREND_SENSOR_VARIANTS = [
+    *SENSOR_VARIANTS,
     (PRODUCTION_PCT_ID, PRODUCTION_PCT_NAME),
     (NET_PRODUCTION_ID, NET_PRODUCTION_NAME),
     (FROM_GRID_ID, FROM_GRID_NAME),
@@ -127,8 +128,10 @@ async def async_setup_entry(
             )
         )
 
-    for i in range(len(data.active_voltage)):
-        entities.append(SenseVoltageSensor(data, i, sense_monitor_id))
+    entities.extend(
+        SenseVoltageSensor(data, i, sense_monitor_id)
+        for i in range(len(data.active_voltage))
+    )
 
     for type_id, typ in TRENDS_SENSOR_TYPES.items():
         for variant_id, variant_name in TREND_SENSOR_VARIANTS:
@@ -210,6 +213,7 @@ class SenseVoltageSensor(SensorEntity):
     """Implementation of a Sense energy voltage sensor."""
 
     _attr_device_class = SensorDeviceClass.VOLTAGE
+    _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_native_unit_of_measurement = UnitOfElectricPotential.VOLT
     _attr_attribution = ATTRIBUTION
     _attr_should_poll = False
@@ -299,7 +303,9 @@ class SenseTrendsSensor(CoordinatorEntity, SensorEntity):
     @property
     def last_reset(self):
         """Return the time when the sensor was last reset, if any."""
-        return self._data.trend_start(self._sensor_type)
+        if self._attr_state_class == SensorStateClass.TOTAL:
+            return self._data.trend_start(self._sensor_type)
+        return None
 
 
 class SenseEnergyDevice(SensorEntity):

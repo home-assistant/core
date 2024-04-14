@@ -2,24 +2,113 @@
   "title": "Remote",
   "device_automation": {
     "action_type": {
-      "toggle": "Toggle {entity_name}",
-      "turn_on": "Turn on {entity_name}",
-      "turn_off": "Turn off {entity_name}"
+      "toggle": "[%key:common::device_automation::action_type::toggle%]",
+      "turn_on": "[%key:common::device_automation::action_type::turn_on%]",
+      "turn_off": "[%key:common::device_automation::action_type::turn_off%]"
     },
     "condition_type": {
-      "is_on": "{entity_name} is on",
-      "is_off": "{entity_name} is off"
+      "is_on": "[%key:common::device_automation::condition_type::is_on%]",
+      "is_off": "[%key:common::device_automation::condition_type::is_off%]"
     },
     "trigger_type": {
-      "changed_states": "{entity_name} turned on or off",
-      "turned_on": "{entity_name} turned on",
-      "turned_off": "{entity_name} turned off"
+      "changed_states": "[%key:common::device_automation::trigger_type::changed_states%]",
+      "turned_on": "[%key:common::device_automation::trigger_type::turned_on%]",
+      "turned_off": "[%key:common::device_automation::trigger_type::turned_off%]"
     }
   },
-  "state": {
+  "entity_component": {
     "_": {
-      "off": "[%key:common::state::off%]",
-      "on": "[%key:common::state::on%]"
+      "name": "[%key:component::remote::title%]",
+      "state": {
+        "off": "[%key:common::state::off%]",
+        "on": "[%key:common::state::on%]"
+      }
+    }
+  },
+  "services": {
+    "turn_on": {
+      "name": "[%key:common::action::turn_on%]",
+      "description": "Sends the power on command.",
+      "fields": {
+        "activity": {
+          "name": "Activity",
+          "description": "Activity ID or activity name to be started."
+        }
+      }
+    },
+    "toggle": {
+      "name": "[%key:common::action::toggle%]",
+      "description": "Toggles a device on/off."
+    },
+    "turn_off": {
+      "name": "[%key:common::action::turn_off%]",
+      "description": "Turns the device off."
+    },
+    "send_command": {
+      "name": "Send command",
+      "description": "Sends a command or a list of commands to a device.",
+      "fields": {
+        "device": {
+          "name": "Device",
+          "description": "Device ID to send command to."
+        },
+        "command": {
+          "name": "Command",
+          "description": "A single command or a list of commands to send."
+        },
+        "num_repeats": {
+          "name": "Repeats",
+          "description": "The number of times you want to repeat the commands."
+        },
+        "delay_secs": {
+          "name": "Delay seconds",
+          "description": "The time you want to wait in between repeated commands."
+        },
+        "hold_secs": {
+          "name": "Hold seconds",
+          "description": "The time you want to have it held before the release is send."
+        }
+      }
+    },
+    "learn_command": {
+      "name": "Learn command",
+      "description": "Learns a command or a list of commands from a device.",
+      "fields": {
+        "device": {
+          "name": "Device",
+          "description": "Device ID to learn command from."
+        },
+        "command": {
+          "name": "Command",
+          "description": "A single command or a list of commands to learn."
+        },
+        "command_type": {
+          "name": "Command type",
+          "description": "The type of command to be learned."
+        },
+        "alternative": {
+          "name": "Alternative",
+          "description": "If code must be stored as an alternative. This is useful for discrete codes. Discrete codes are used for toggles that only perform one function. For example, a code to only turn a device on. If it is on already, sending the code won't change the state."
+        },
+        "timeout": {
+          "name": "Timeout",
+          "description": "Timeout for the command to be learned."
+        }
+      }
+    },
+    "delete_command": {
+      "name": "Delete command",
+      "description": "Deletes a command or a list of commands from the database.",
+      "fields": {
+        "device": {
+          "name": "Device",
+          "description": "Device from which commands will be deleted."
+        },
+        "command": {
+          "name": "Command",
+          "description": "The single command or the list of commands to be deleted."
+        }
+      }
     }
   }
 }

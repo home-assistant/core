@@ -1,11 +1,10 @@
 """Utilities for Evil Genius Labs."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Coroutine
 from functools import wraps
-from typing import Any, TypeVar
-
-from typing_extensions import Concatenate, ParamSpec
+from typing import Any, Concatenate, ParamSpec, TypeVar
 
 from . import EvilGeniusEntity
 
@@ -15,7 +14,7 @@ _P = ParamSpec("_P")
 
 
 def update_when_done(
-    func: Callable[Concatenate[_EvilGeniusEntityT, _P], Awaitable[_R]]
+    func: Callable[Concatenate[_EvilGeniusEntityT, _P], Awaitable[_R]],
 ) -> Callable[Concatenate[_EvilGeniusEntityT, _P], Coroutine[Any, Any, _R]]:
     """Decorate function to trigger update when function is done."""
 

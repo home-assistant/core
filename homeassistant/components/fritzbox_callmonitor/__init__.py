@@ -1,4 +1,5 @@
 """The fritzbox_callmonitor integration."""
+
 import logging
 
 from fritzconnection.core.exceptions import FritzConnectionException, FritzSecurityError
@@ -36,7 +37,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         await hass.async_add_executor_job(fritzbox_phonebook.init_phonebook)
     except FritzSecurityError as ex:
         _LOGGER.error(
-            "User has insufficient permissions to access AVM FRITZ!Box settings and its phonebooks: %s",
+            (
+                "User has insufficient permissions to access AVM FRITZ!Box settings and"
+                " its phonebooks: %s"
+            ),
             ex,
         )
         return False

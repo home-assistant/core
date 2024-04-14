@@ -1,8 +1,9 @@
-"""
-Regression tests for Netamo Doorbell.
+"""Regression tests for Netamo Doorbell.
 
 https://github.com/home-assistant/core/issues/44596
 """
+
+from homeassistant.core import HomeAssistant
 
 from ..common import (
     HUB_TEST_ACCESSORY_ID,
@@ -15,7 +16,7 @@ from ..common import (
 )
 
 
-async def test_netamo_doorbell_setup(hass):
+async def test_netamo_doorbell_setup(hass: HomeAssistant) -> None:
     """Test that a Netamo Doorbell can be correctly setup in HA."""
     accessories = await setup_accessories_from_file(hass, "netamo_doorbell.json")
     await setup_test_accessories(hass, accessories)

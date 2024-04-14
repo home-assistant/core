@@ -1,4 +1,5 @@
 """Provides device automations for control of LG webOS Smart TV."""
+
 from __future__ import annotations
 
 import voluptuous as vol
@@ -16,7 +17,7 @@ from homeassistant.helpers.typing import ConfigType
 from . import trigger
 from .const import DOMAIN
 from .helpers import (
-    async_get_client_wrapper_by_device_entry,
+    async_get_client_by_device_entry,
     async_get_device_entry_by_device_id,
 )
 from .triggers.turn_on import (
@@ -43,7 +44,7 @@ async def async_validate_trigger_config(
         try:
             device = async_get_device_entry_by_device_id(hass, device_id)
             if DOMAIN in hass.data:
-                async_get_client_wrapper_by_device_entry(hass, device)
+                async_get_client_by_device_entry(hass, device)
         except ValueError as err:
             raise InvalidDeviceAutomationConfig(err) from err
 
@@ -54,8 +55,7 @@ async def async_get_triggers(
     _hass: HomeAssistant, device_id: str
 ) -> list[dict[str, str]]:
     """List device triggers for device."""
-    triggers = [async_get_turn_on_trigger(device_id)]
-    return triggers
+    return [async_get_turn_on_trigger(device_id)]
 
 
 async def async_attach_trigger(

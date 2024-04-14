@@ -1,8 +1,9 @@
 """Support for file notification."""
+
 from __future__ import annotations
 
 import os
-from typing import TextIO
+from typing import Any, TextIO
 
 import voluptuous as vol
 
@@ -48,16 +49,16 @@ class FileNotificationService(BaseNotificationService):
         self.filename = filename
         self.add_timestamp = add_timestamp
 
-    def send_message(self, message="", **kwargs) -> None:
+    def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to a file."""
         file: TextIO
-        if not self.hass.config.config_dir:
-            return
-
         filepath: str = os.path.join(self.hass.config.config_dir, self.filename)
         with open(filepath, "a", encoding="utf8") as file:
             if os.stat(filepath).st_size == 0:
-                title = f"{kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)} notifications (Log started: {dt_util.utcnow().isoformat()})\n{'-' * 80}\n"
+                title = (
+                    f"{kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)} notifications (Log"
+                    f" started: {dt_util.utcnow().isoformat()})\n{'-' * 80}\n"
+                )
                 file.write(title)
 
             if self.add_timestamp:

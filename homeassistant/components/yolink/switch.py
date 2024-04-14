@@ -1,10 +1,18 @@
 """YoLink Switch."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
+from yolink.client_request import ClientRequest
+from yolink.const import (
+    ATTR_DEVICE_MANIPULATOR,
+    ATTR_DEVICE_MULTI_OUTLET,
+    ATTR_DEVICE_OUTLET,
+    ATTR_DEVICE_SWITCH,
+)
 from yolink.device import YoLinkDevice
 from yolink.outlet_request_builder import OutletRequestBuilder
 
@@ -17,19 +25,12 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import (
-    ATTR_COORDINATORS,
-    ATTR_DEVICE_MANIPULATOR,
-    ATTR_DEVICE_MULTI_OUTLET,
-    ATTR_DEVICE_OUTLET,
-    ATTR_DEVICE_SWITCH,
-    DOMAIN,
-)
+from .const import DOMAIN
 from .coordinator import YoLinkCoordinator
 from .entity import YoLinkEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class YoLinkSwitchEntityDescription(SwitchEntityDescription):
     """YoLink SwitchEntityDescription."""
 
@@ -41,52 +42,52 @@ DEVICE_TYPES: tuple[YoLinkSwitchEntityDescription, ...] = (
     YoLinkSwitchEntityDescription(
         key="outlet_state",
         device_class=SwitchDeviceClass.OUTLET,
-        name="State",
+        name=None,
         exists_fn=lambda device: device.device_type == ATTR_DEVICE_OUTLET,
     ),
     YoLinkSwitchEntityDescription(
         key="manipulator_state",
-        name="State",
-        icon="mdi:pipe",
+        translation_key="manipulator_state",
+        name=None,
         exists_fn=lambda device: device.device_type == ATTR_DEVICE_MANIPULATOR,
     ),
     YoLinkSwitchEntityDescription(
         key="switch_state",
-        name="State",
+        name=None,
         device_class=SwitchDeviceClass.SWITCH,
         exists_fn=lambda device: device.device_type == ATTR_DEVICE_SWITCH,
     ),
     YoLinkSwitchEntityDescription(
         key="multi_outlet_usb_ports",
-        name="UsbPorts",
+        translation_key="usb_ports",
         device_class=SwitchDeviceClass.OUTLET,
         exists_fn=lambda device: device.device_type == ATTR_DEVICE_MULTI_OUTLET,
         plug_index=0,
     ),
     YoLinkSwitchEntityDescription(
         key="multi_outlet_plug_1",
-        name="Plug1",
+        translation_key="plug_1",
         device_class=SwitchDeviceClass.OUTLET,
         exists_fn=lambda device: device.device_type == ATTR_DEVICE_MULTI_OUTLET,
         plug_index=1,
     ),
     YoLinkSwitchEntityDescription(
         key="multi_outlet_plug_2",
-        name="Plug2",
+        translation_key="plug_2",
         device_class=SwitchDeviceClass.OUTLET,
         exists_fn=lambda device: device.device_type == ATTR_DEVICE_MULTI_OUTLET,
         plug_index=2,
     ),
     YoLinkSwitchEntityDescription(
         key="multi_outlet_plug_3",
-        name="Plug3",
+        translation_key="plug_3",
         device_class=SwitchDeviceClass.OUTLET,
         exists_fn=lambda device: device.device_type == ATTR_DEVICE_MULTI_OUTLET,
         plug_index=3,
     ),
     YoLinkSwitchEntityDescription(
         key="multi_outlet_plug_4",
-        name="Plug4",
+        translation_key="plug_4",
         device_class=SwitchDeviceClass.OUTLET,
         exists_fn=lambda device: device.device_type == ATTR_DEVICE_MULTI_OUTLET,
         plug_index=4,
@@ -107,22 +108,18 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up YoLink switch from a config entry."""
-    device_coordinators = hass.data[DOMAIN][config_entry.entry_id][ATTR_COORDINATORS]
+    device_coordinators = hass.data[DOMAIN][config_entry.entry_id].device_coordinators
     switch_device_coordinators = [
         device_coordinator
         for device_coordinator in device_coordinators.values()
         if device_coordinator.device.device_type in DEVICE_TYPE
     ]
-    entities = []
-    for switch_device_coordinator in switch_device_coordinators:
-        for description in DEVICE_TYPES:
-            if description.exists_fn(switch_device_coordinator.device):
-                entities.append(
-                    YoLinkSwitchEntity(
-                        config_entry, switch_device_coordinator, description
-                    )
-                )
-    async_add_entities(entities)
+    async_add_entities(
+        YoLinkSwitchEntity(config_entry, switch_device_coordinator, description)
+        for switch_device_coordinator in switch_device_coordinators
+        for description in DEVICE_TYPES
+        if description.exists_fn(switch_device_coordinator.device)
+    )
 
 
 class YoLinkSwitchEntity(YoLinkEntity, SwitchEntity):
@@ -141,9 +138,6 @@ class YoLinkSwitchEntity(YoLinkEntity, SwitchEntity):
         self.entity_description = description
         self._attr_unique_id = (
             f"{coordinator.device.device_id} {self.entity_description.key}"
-        )
-        self._attr_name = (
-            f"{coordinator.device.device_name} ({self.entity_description.name})"
         )
 
     def _get_state(
@@ -164,11 +158,17 @@ class YoLinkSwitchEntity(YoLinkEntity, SwitchEntity):
 
     async def call_state_change(self, state: str) -> None:
         """Call setState api to change switch state."""
-        await self.call_device(
-            OutletRequestBuilder.set_state_request(
+        client_request: ClientRequest = None
+        if self.coordinator.device.device_type in [
+            ATTR_DEVICE_OUTLET,
+            ATTR_DEVICE_MULTI_OUTLET,
+        ]:
+            client_request = OutletRequestBuilder.set_state_request(
                 state, self.entity_description.plug_index
             )
-        )
+        else:
+            client_request = ClientRequest("setState", {"state": state})
+        await self.call_device(client_request)
         self._attr_is_on = self._get_state(state, self.entity_description.plug_index)
         self.async_write_ha_state()
 

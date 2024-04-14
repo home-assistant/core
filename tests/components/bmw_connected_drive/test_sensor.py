@@ -1,5 +1,9 @@
 """Test BMW sensors."""
+
+from freezegun import freeze_time
 import pytest
+import respx
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.core import HomeAssistant
 from homeassistant.util.unit_system import (
@@ -11,8 +15,23 @@ from homeassistant.util.unit_system import (
 from . import setup_mocked_integration
 
 
+@freeze_time("2023-06-22 10:30:00+00:00")
+async def test_entity_state_attrs(
+    hass: HomeAssistant,
+    bmw_fixture: respx.Router,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test sensor options and values.."""
+
+    # Setup component
+    assert await setup_mocked_integration(hass)
+
+    # Get all select entities
+    assert hass.states.async_all("sensor") == snapshot
+
+
 @pytest.mark.parametrize(
-    "entity_id,unit_system,value,unit_of_measurement",
+    ("entity_id", "unit_system", "value", "unit_of_measurement"),
     [
         ("sensor.i3_rex_remaining_range_total", METRIC, "279", "km"),
         ("sensor.i3_rex_remaining_range_total", IMPERIAL, "173.36", "mi"),
@@ -26,8 +45,8 @@ from . import setup_mocked_integration
         ("sensor.i3_rex_remaining_fuel", IMPERIAL, "1.59", "gal"),
         ("sensor.i3_rex_remaining_range_fuel", METRIC, "105", "km"),
         ("sensor.i3_rex_remaining_range_fuel", IMPERIAL, "65.24", "mi"),
-        ("sensor.i3_rex_remaining_fuel_percent", METRIC, "65", "%"),
-        ("sensor.i3_rex_remaining_fuel_percent", IMPERIAL, "65", "%"),
+        ("sensor.m340i_xdrive_remaining_fuel_percent", METRIC, "80", "%"),
+        ("sensor.m340i_xdrive_remaining_fuel_percent", IMPERIAL, "80", "%"),
     ],
 )
 async def test_unit_conversion(

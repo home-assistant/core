@@ -1,9 +1,10 @@
 """Support for THOMSON routers."""
+
 from __future__ import annotations
 
 import logging
 import re
-import telnetlib
+import telnetlib  # pylint: disable=deprecated-module
 
 import voluptuous as vol
 
@@ -46,7 +47,7 @@ def get_scanner(hass: HomeAssistant, config: ConfigType) -> ThomsonDeviceScanner
 
 
 class ThomsonDeviceScanner(DeviceScanner):
-    """This class queries a router running THOMSON firmware."""
+    """Class which queries a router running THOMSON firmware."""
 
     def __init__(self, config):
         """Initialize the scanner."""

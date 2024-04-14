@@ -1,7 +1,9 @@
 """Support for Qwikswitch Sensors."""
+
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from pyqwikswitch.qwikswitch import SENSORS
 
@@ -34,7 +36,7 @@ async def async_setup_platform(
 class QSSensor(QSEntity, SensorEntity):
     """Sensor based on a Qwikswitch relay/dimmer module."""
 
-    _val = None
+    _val: Any | None = None
 
     def __init__(self, sensor):
         """Initialize the sensor."""
@@ -68,7 +70,7 @@ class QSSensor(QSEntity, SensorEntity):
     @property
     def native_value(self):
         """Return the value of the sensor."""
-        return str(self._val)
+        return None if self._val is None else str(self._val)
 
     @property
     def unique_id(self):

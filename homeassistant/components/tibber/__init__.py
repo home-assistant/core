@@ -1,5 +1,5 @@
 """Support for Tibber."""
-import asyncio
+
 import logging
 
 import aiohttp
@@ -53,16 +53,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         await tibber_connection.update_info()
-        if not tibber_connection.name:
-            raise ConfigEntryNotReady("Could not fetch Tibber data.")
 
-    except asyncio.TimeoutError as err:
-        raise ConfigEntryNotReady from err
-    except aiohttp.ClientError as err:
-        _LOGGER.error("Error connecting to Tibber: %s ", err)
-        return False
+    except (
+        TimeoutError,
+        aiohttp.ClientError,
+        tibber.RetryableHttpException,
+    ) as err:
+        raise ConfigEntryNotReady("Unable to connect") from err
     except tibber.InvalidLogin as exp:
         _LOGGER.error("Failed to login. %s", exp)
+        return False
+    except tibber.FatalHttpException:
         return False
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

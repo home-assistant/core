@@ -1,4 +1,5 @@
 """Support for Radarr binary sensors."""
+
 from __future__ import annotations
 
 from aiopyarr import Health
@@ -9,8 +10,8 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import RadarrEntity
@@ -18,7 +19,7 @@ from .const import DOMAIN, HEALTH_ISSUES
 
 BINARY_SENSOR_TYPE = BinarySensorEntityDescription(
     key="health",
-    name="Health",
+    translation_key="health",
     entity_category=EntityCategory.DIAGNOSTIC,
     device_class=BinarySensorDeviceClass.PROBLEM,
 )

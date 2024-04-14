@@ -1,8 +1,9 @@
 """Test Diagnostics utils."""
+
 from homeassistant.components.diagnostics import REDACTED, async_redact_data
 
 
-def test_redact():
+def test_redact() -> None:
     """Test the async_redact_data helper."""
     data = {
         "key1": "value1",

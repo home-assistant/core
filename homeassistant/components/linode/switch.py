@@ -1,4 +1,5 @@
 """Support for interacting with Linode nodes."""
+
 from __future__ import annotations
 
 import logging
@@ -57,7 +58,7 @@ def setup_platform(
 class LinodeSwitch(SwitchEntity):
     """Representation of a Linode Node switch."""
 
-    def __init__(self, li, node_id):  # pylint: disable=invalid-name
+    def __init__(self, li, node_id):
         """Initialize a new Linode sensor."""
         self._linode = li
         self._node_id = node_id

@@ -1,13 +1,14 @@
 """Test entity_registry API."""
-from unittest.mock import ANY
 
 import pytest
+from pytest_unordered import unordered
 
 from homeassistant.components.config import entity_registry
-from homeassistant.const import ATTR_ICON
+from homeassistant.const import ATTR_ICON, EntityCategory
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceEntryDisabler
 from homeassistant.helpers.entity_registry import (
-    EVENT_ENTITY_REGISTRY_UPDATED,
     RegistryEntry,
     RegistryEntryDisabler,
     RegistryEntryHider,
@@ -15,28 +16,27 @@ from homeassistant.helpers.entity_registry import (
 )
 
 from tests.common import (
+    ANY,
     MockConfigEntry,
     MockEntity,
     MockEntityPlatform,
-    mock_device_registry,
     mock_registry,
 )
+from tests.typing import MockHAClientWebSocket, WebSocketGenerator
 
 
 @pytest.fixture
-def client(hass, hass_ws_client):
+async def client(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> MockHAClientWebSocket:
     """Fixture that can interact with the config manager API."""
-    hass.loop.run_until_complete(entity_registry.async_setup(hass))
-    yield hass.loop.run_until_complete(hass_ws_client(hass))
+    entity_registry.async_setup(hass)
+    return await hass_ws_client(hass)
 
 
-@pytest.fixture
-def device_registry(hass):
-    """Return an empty, loaded, registry."""
-    return mock_device_registry(hass)
-
-
-async def test_list_entities(hass, client):
+async def test_list_entities(
+    hass: HomeAssistant, client: MockHAClientWebSocket
+) -> None:
     """Test list entries."""
     mock_registry(
         hass,
@@ -55,12 +55,13 @@ async def test_list_entities(hass, client):
         },
     )
 
-    await client.send_json({"id": 5, "type": "config/entity_registry/list"})
+    await client.send_json_auto_id({"type": "config/entity_registry/list"})
     msg = await client.receive_json()
 
     assert msg["result"] == [
         {
             "area_id": None,
+            "categories": {},
             "config_entry_id": None,
             "device_id": None,
             "disabled_by": None,
@@ -70,7 +71,9 @@ async def test_list_entities(hass, client):
             "hidden_by": None,
             "icon": None,
             "id": ANY,
+            "labels": [],
             "name": "Hello World",
+            "options": {},
             "original_name": None,
             "platform": "test_platform",
             "translation_key": None,
@@ -78,6 +81,7 @@ async def test_list_entities(hass, client):
         },
         {
             "area_id": None,
+            "categories": {},
             "config_entry_id": None,
             "device_id": None,
             "disabled_by": None,
@@ -87,13 +91,18 @@ async def test_list_entities(hass, client):
             "hidden_by": None,
             "icon": None,
             "id": ANY,
+            "labels": [],
             "name": None,
+            "options": {},
             "original_name": None,
             "platform": "test_platform",
             "translation_key": None,
             "unique_id": ANY,
         },
     ]
+
+    class Unserializable:
+        """Good luck serializing me."""
 
     mock_registry(
         hass,
@@ -104,19 +113,22 @@ async def test_list_entities(hass, client):
                 platform="test_platform",
                 name="Hello World",
             ),
+            "test_domain.name_2": RegistryEntry(
+                entity_id="test_domain.name_2",
+                unique_id="6789",
+                platform="test_platform",
+                name=Unserializable(),
+            ),
         },
     )
 
-    hass.bus.async_fire(
-        EVENT_ENTITY_REGISTRY_UPDATED,
-        {"action": "create", "entity_id": "test_domain.no_name"},
-    )
-    await client.send_json({"id": 6, "type": "config/entity_registry/list"})
+    await client.send_json_auto_id({"type": "config/entity_registry/list"})
     msg = await client.receive_json()
 
     assert msg["result"] == [
         {
             "area_id": None,
+            "categories": {},
             "config_entry_id": None,
             "device_id": None,
             "disabled_by": None,
@@ -126,7 +138,9 @@ async def test_list_entities(hass, client):
             "hidden_by": None,
             "icon": None,
             "id": ANY,
+            "labels": [],
             "name": "Hello World",
+            "options": {},
             "original_name": None,
             "platform": "test_platform",
             "translation_key": None,
@@ -135,7 +149,182 @@ async def test_list_entities(hass, client):
     ]
 
 
-async def test_get_entity(hass, client):
+async def test_list_entities_for_display(
+    hass: HomeAssistant, client: MockHAClientWebSocket
+) -> None:
+    """Test list entries."""
+    mock_registry(
+        hass,
+        {
+            "test_domain.test": RegistryEntry(
+                area_id="area52",
+                device_id="device123",
+                entity_category=EntityCategory.DIAGNOSTIC,
+                entity_id="test_domain.test",
+                has_entity_name=True,
+                icon="mdi:icon",
+                original_name="Hello World",
+                platform="test_platform",
+                translation_key="translations_galore",
+                unique_id="1234",
+            ),
+            "test_domain.nameless": RegistryEntry(
+                area_id="area52",
+                device_id="device123",
+                entity_id="test_domain.nameless",
+                has_entity_name=True,
+                icon=None,
+                original_name=None,
+                platform="test_platform",
+                unique_id="2345",
+            ),
+            "test_domain.renamed": RegistryEntry(
+                area_id="area52",
+                device_id="device123",
+                entity_id="test_domain.renamed",
+                has_entity_name=True,
+                name="User name",
+                original_name="Hello World",
+                platform="test_platform",
+                unique_id="3456",
+            ),
+            "test_domain.boring": RegistryEntry(
+                entity_id="test_domain.boring",
+                platform="test_platform",
+                unique_id="4567",
+            ),
+            "test_domain.disabled": RegistryEntry(
+                disabled_by=RegistryEntryDisabler.USER,
+                entity_id="test_domain.disabled",
+                hidden_by=RegistryEntryHider.USER,
+                platform="test_platform",
+                unique_id="789A",
+            ),
+            "test_domain.hidden": RegistryEntry(
+                entity_id="test_domain.hidden",
+                hidden_by=RegistryEntryHider.USER,
+                platform="test_platform",
+                unique_id="89AB",
+            ),
+            "sensor.default_precision": RegistryEntry(
+                entity_id="sensor.default_precision",
+                options={"sensor": {"suggested_display_precision": 0}},
+                platform="test_platform",
+                unique_id="9ABC",
+            ),
+            "sensor.user_precision": RegistryEntry(
+                entity_id="sensor.user_precision",
+                options={
+                    "sensor": {"display_precision": 0, "suggested_display_precision": 1}
+                },
+                platform="test_platform",
+                unique_id="ABCD",
+            ),
+        },
+    )
+
+    await client.send_json_auto_id({"type": "config/entity_registry/list_for_display"})
+    msg = await client.receive_json()
+
+    assert msg["result"] == {
+        "entity_categories": {"0": "config", "1": "diagnostic"},
+        "entities": [
+            {
+                "ai": "area52",
+                "di": "device123",
+                "ec": 1,
+                "ei": "test_domain.test",
+                "en": "Hello World",
+                "ic": "mdi:icon",
+                "lb": [],
+                "pl": "test_platform",
+                "tk": "translations_galore",
+            },
+            {
+                "ai": "area52",
+                "di": "device123",
+                "ei": "test_domain.nameless",
+                "en": None,
+                "lb": [],
+                "pl": "test_platform",
+            },
+            {
+                "ai": "area52",
+                "di": "device123",
+                "ei": "test_domain.renamed",
+                "lb": [],
+                "pl": "test_platform",
+            },
+            {
+                "ei": "test_domain.boring",
+                "lb": [],
+                "pl": "test_platform",
+            },
+            {
+                "ei": "test_domain.hidden",
+                "lb": [],
+                "hb": True,
+                "pl": "test_platform",
+            },
+            {
+                "dp": 0,
+                "ei": "sensor.default_precision",
+                "lb": [],
+                "pl": "test_platform",
+            },
+            {
+                "dp": 0,
+                "ei": "sensor.user_precision",
+                "lb": [],
+                "pl": "test_platform",
+            },
+        ],
+    }
+
+    class Unserializable:
+        """Good luck serializing me."""
+
+    mock_registry(
+        hass,
+        {
+            "test_domain.test": RegistryEntry(
+                area_id="area52",
+                device_id="device123",
+                entity_id="test_domain.test",
+                has_entity_name=True,
+                original_name="Hello World",
+                platform="test_platform",
+                unique_id="1234",
+            ),
+            "test_domain.name_2": RegistryEntry(
+                entity_id="test_domain.name_2",
+                has_entity_name=True,
+                original_name=Unserializable(),
+                platform="test_platform",
+                unique_id="6789",
+            ),
+        },
+    )
+
+    await client.send_json_auto_id({"type": "config/entity_registry/list_for_display"})
+    msg = await client.receive_json()
+
+    assert msg["result"] == {
+        "entity_categories": {"0": "config", "1": "diagnostic"},
+        "entities": [
+            {
+                "ai": "area52",
+                "di": "device123",
+                "ei": "test_domain.test",
+                "lb": [],
+                "en": "Hello World",
+                "pl": "test_platform",
+            },
+        ],
+    }
+
+
+async def test_get_entity(hass: HomeAssistant, client: MockHAClientWebSocket) -> None:
     """Test get entry."""
     mock_registry(
         hass,
@@ -154,14 +343,16 @@ async def test_get_entity(hass, client):
         },
     )
 
-    await client.send_json(
-        {"id": 5, "type": "config/entity_registry/get", "entity_id": "test_domain.name"}
+    await client.send_json_auto_id(
+        {"type": "config/entity_registry/get", "entity_id": "test_domain.name"}
     )
     msg = await client.receive_json()
 
     assert msg["result"] == {
+        "aliases": [],
         "area_id": None,
         "capabilities": None,
+        "categories": {},
         "config_entry_id": None,
         "device_class": None,
         "device_id": None,
@@ -172,6 +363,7 @@ async def test_get_entity(hass, client):
         "hidden_by": None,
         "icon": None,
         "id": ANY,
+        "labels": [],
         "name": "Hello World",
         "options": {},
         "original_device_class": None,
@@ -182,9 +374,8 @@ async def test_get_entity(hass, client):
         "unique_id": "1234",
     }
 
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 6,
             "type": "config/entity_registry/get",
             "entity_id": "test_domain.no_name",
         }
@@ -192,8 +383,10 @@ async def test_get_entity(hass, client):
     msg = await client.receive_json()
 
     assert msg["result"] == {
+        "aliases": [],
         "area_id": None,
         "capabilities": None,
+        "categories": {},
         "config_entry_id": None,
         "device_class": None,
         "device_id": None,
@@ -204,6 +397,7 @@ async def test_get_entity(hass, client):
         "hidden_by": None,
         "icon": None,
         "id": ANY,
+        "labels": [],
         "name": None,
         "options": {},
         "original_device_class": None,
@@ -215,7 +409,95 @@ async def test_get_entity(hass, client):
     }
 
 
-async def test_update_entity(hass, client):
+async def test_get_entities(hass: HomeAssistant, client: MockHAClientWebSocket) -> None:
+    """Test get entry."""
+    mock_registry(
+        hass,
+        {
+            "test_domain.name": RegistryEntry(
+                entity_id="test_domain.name",
+                unique_id="1234",
+                platform="test_platform",
+                name="Hello World",
+            ),
+            "test_domain.no_name": RegistryEntry(
+                entity_id="test_domain.no_name",
+                unique_id="6789",
+                platform="test_platform",
+            ),
+        },
+    )
+
+    await client.send_json_auto_id(
+        {
+            "type": "config/entity_registry/get_entries",
+            "entity_ids": [
+                "test_domain.name",
+                "test_domain.no_name",
+                "test_domain.no_such_entity",
+            ],
+        }
+    )
+    msg = await client.receive_json()
+
+    assert msg["result"] == {
+        "test_domain.name": {
+            "aliases": [],
+            "area_id": None,
+            "capabilities": None,
+            "categories": {},
+            "config_entry_id": None,
+            "device_class": None,
+            "device_id": None,
+            "disabled_by": None,
+            "entity_category": None,
+            "entity_id": "test_domain.name",
+            "has_entity_name": False,
+            "hidden_by": None,
+            "icon": None,
+            "id": ANY,
+            "labels": [],
+            "name": "Hello World",
+            "options": {},
+            "original_device_class": None,
+            "original_icon": None,
+            "original_name": None,
+            "platform": "test_platform",
+            "translation_key": None,
+            "unique_id": "1234",
+        },
+        "test_domain.no_name": {
+            "aliases": [],
+            "area_id": None,
+            "capabilities": None,
+            "categories": {},
+            "config_entry_id": None,
+            "device_class": None,
+            "device_id": None,
+            "disabled_by": None,
+            "entity_category": None,
+            "entity_id": "test_domain.no_name",
+            "has_entity_name": False,
+            "hidden_by": None,
+            "icon": None,
+            "id": ANY,
+            "labels": [],
+            "name": None,
+            "options": {},
+            "original_device_class": None,
+            "original_icon": None,
+            "original_name": None,
+            "platform": "test_platform",
+            "translation_key": None,
+            "unique_id": "6789",
+        },
+        "test_domain.no_such_entity": None,
+    }
+
+
+async def test_update_entity(
+    hass: HomeAssistant, client: MockHAClientWebSocket
+) -> None:
     """Test updating entity."""
     registry = mock_registry(
         hass,
@@ -239,16 +521,18 @@ async def test_update_entity(hass, client):
     assert state.name == "before update"
     assert state.attributes[ATTR_ICON] == "icon:before update"
 
-    # UPDATE AREA, DEVICE_CLASS, HIDDEN_BY, ICON AND NAME
-    await client.send_json(
+    # Update area, categories, device_class, hidden_by, icon, labels & name
+    await client.send_json_auto_id(
         {
-            "id": 6,
             "type": "config/entity_registry/update",
             "entity_id": "test_domain.world",
+            "aliases": ["alias_1", "alias_2"],
             "area_id": "mock-area-id",
+            "categories": {"scope1": "id", "scope2": "id"},
             "device_class": "custom_device_class",
             "hidden_by": "user",  # We exchange strings over the WS API, not enums
             "icon": "icon:after update",
+            "labels": ["label1", "label2"],
             "name": "after update",
         }
     )
@@ -257,8 +541,10 @@ async def test_update_entity(hass, client):
 
     assert msg["result"] == {
         "entity_entry": {
+            "aliases": unordered(["alias_1", "alias_2"]),
             "area_id": "mock-area-id",
             "capabilities": None,
+            "categories": {"scope1": "id", "scope2": "id"},
             "config_entry_id": None,
             "device_class": "custom_device_class",
             "device_id": None,
@@ -269,6 +555,7 @@ async def test_update_entity(hass, client):
             "hidden_by": "user",  # We exchange strings over the WS API, not enums
             "icon": "icon:after update",
             "id": ANY,
+            "labels": unordered(["label1", "label2"]),
             "name": "after update",
             "options": {},
             "original_device_class": None,
@@ -284,10 +571,9 @@ async def test_update_entity(hass, client):
     assert state.name == "after update"
     assert state.attributes[ATTR_ICON] == "icon:after update"
 
-    # UPDATE HIDDEN_BY TO ILLEGAL VALUE
-    await client.send_json(
+    # Update hidden_by to illegal value
+    await client.send_json_auto_id(
         {
-            "id": 7,
             "type": "config/entity_registry/update",
             "entity_id": "test_domain.world",
             "hidden_by": "ivy",
@@ -299,10 +585,9 @@ async def test_update_entity(hass, client):
 
     assert registry.entities["test_domain.world"].hidden_by is RegistryEntryHider.USER
 
-    # UPDATE DISABLED_BY TO USER
-    await client.send_json(
+    # Update disabled_by to user
+    await client.send_json_auto_id(
         {
-            "id": 8,
             "type": "config/entity_registry/update",
             "entity_id": "test_domain.world",
             "disabled_by": "user",  # We exchange strings over the WS API, not enums
@@ -317,10 +602,9 @@ async def test_update_entity(hass, client):
         registry.entities["test_domain.world"].disabled_by is RegistryEntryDisabler.USER
     )
 
-    # UPDATE DISABLED_BY TO NONE
-    await client.send_json(
+    # Update disabled_by to None
+    await client.send_json_auto_id(
         {
-            "id": 9,
             "type": "config/entity_registry/update",
             "entity_id": "test_domain.world",
             "disabled_by": None,
@@ -331,8 +615,10 @@ async def test_update_entity(hass, client):
 
     assert msg["result"] == {
         "entity_entry": {
+            "aliases": unordered(["alias_1", "alias_2"]),
             "area_id": "mock-area-id",
             "capabilities": None,
+            "categories": {"scope1": "id", "scope2": "id"},
             "config_entry_id": None,
             "device_class": "custom_device_class",
             "device_id": None,
@@ -343,6 +629,7 @@ async def test_update_entity(hass, client):
             "hidden_by": "user",  # We exchange strings over the WS API, not enums
             "icon": "icon:after update",
             "id": ANY,
+            "labels": unordered(["label1", "label2"]),
             "name": "after update",
             "options": {},
             "original_device_class": None,
@@ -355,10 +642,9 @@ async def test_update_entity(hass, client):
         "require_restart": True,
     }
 
-    # UPDATE ENTITY OPTION
-    await client.send_json(
+    # Update entity option
+    await client.send_json_auto_id(
         {
-            "id": 10,
             "type": "config/entity_registry/update",
             "entity_id": "test_domain.world",
             "options_domain": "sensor",
@@ -370,8 +656,10 @@ async def test_update_entity(hass, client):
 
     assert msg["result"] == {
         "entity_entry": {
+            "aliases": unordered(["alias_1", "alias_2"]),
             "area_id": "mock-area-id",
             "capabilities": None,
+            "categories": {"scope1": "id", "scope2": "id"},
             "config_entry_id": None,
             "device_class": "custom_device_class",
             "device_id": None,
@@ -382,6 +670,127 @@ async def test_update_entity(hass, client):
             "hidden_by": "user",  # We exchange strings over the WS API, not enums
             "icon": "icon:after update",
             "id": ANY,
+            "labels": unordered(["label1", "label2"]),
+            "name": "after update",
+            "options": {"sensor": {"unit_of_measurement": "beard_second"}},
+            "original_device_class": None,
+            "original_icon": None,
+            "original_name": None,
+            "platform": "test_platform",
+            "translation_key": None,
+            "unique_id": "1234",
+        },
+    }
+
+    # Add a category to the entity
+    await client.send_json_auto_id(
+        {
+            "type": "config/entity_registry/update",
+            "entity_id": "test_domain.world",
+            "categories": {"scope3": "id"},
+        }
+    )
+
+    msg = await client.receive_json()
+    assert msg["success"]
+
+    assert msg["result"] == {
+        "entity_entry": {
+            "aliases": unordered(["alias_1", "alias_2"]),
+            "area_id": "mock-area-id",
+            "capabilities": None,
+            "categories": {"scope1": "id", "scope2": "id", "scope3": "id"},
+            "config_entry_id": None,
+            "device_class": "custom_device_class",
+            "device_id": None,
+            "disabled_by": None,
+            "entity_category": None,
+            "entity_id": "test_domain.world",
+            "has_entity_name": False,
+            "hidden_by": "user",  # We exchange strings over the WS API, not enums
+            "icon": "icon:after update",
+            "id": ANY,
+            "labels": unordered(["label1", "label2"]),
+            "name": "after update",
+            "options": {"sensor": {"unit_of_measurement": "beard_second"}},
+            "original_device_class": None,
+            "original_icon": None,
+            "original_name": None,
+            "platform": "test_platform",
+            "translation_key": None,
+            "unique_id": "1234",
+        },
+    }
+
+    # Move the entity to a different category
+    await client.send_json_auto_id(
+        {
+            "type": "config/entity_registry/update",
+            "entity_id": "test_domain.world",
+            "categories": {"scope3": "other_id"},
+        }
+    )
+
+    msg = await client.receive_json()
+    assert msg["success"]
+
+    assert msg["result"] == {
+        "entity_entry": {
+            "aliases": unordered(["alias_1", "alias_2"]),
+            "area_id": "mock-area-id",
+            "capabilities": None,
+            "categories": {"scope1": "id", "scope2": "id", "scope3": "other_id"},
+            "config_entry_id": None,
+            "device_class": "custom_device_class",
+            "device_id": None,
+            "disabled_by": None,
+            "entity_category": None,
+            "entity_id": "test_domain.world",
+            "has_entity_name": False,
+            "hidden_by": "user",  # We exchange strings over the WS API, not enums
+            "icon": "icon:after update",
+            "id": ANY,
+            "labels": unordered(["label1", "label2"]),
+            "name": "after update",
+            "options": {"sensor": {"unit_of_measurement": "beard_second"}},
+            "original_device_class": None,
+            "original_icon": None,
+            "original_name": None,
+            "platform": "test_platform",
+            "translation_key": None,
+            "unique_id": "1234",
+        },
+    }
+
+    # Move the entity to a different category
+    await client.send_json_auto_id(
+        {
+            "type": "config/entity_registry/update",
+            "entity_id": "test_domain.world",
+            "categories": {"scope2": None},
+        }
+    )
+
+    msg = await client.receive_json()
+    assert msg["success"]
+
+    assert msg["result"] == {
+        "entity_entry": {
+            "aliases": unordered(["alias_1", "alias_2"]),
+            "area_id": "mock-area-id",
+            "capabilities": None,
+            "categories": {"scope1": "id", "scope3": "other_id"},
+            "config_entry_id": None,
+            "device_class": "custom_device_class",
+            "device_id": None,
+            "disabled_by": None,
+            "entity_category": None,
+            "entity_id": "test_domain.world",
+            "has_entity_name": False,
+            "hidden_by": "user",  # We exchange strings over the WS API, not enums
+            "icon": "icon:after update",
+            "id": ANY,
+            "labels": unordered(["label1", "label2"]),
             "name": "after update",
             "options": {"sensor": {"unit_of_measurement": "beard_second"}},
             "original_device_class": None,
@@ -394,7 +803,9 @@ async def test_update_entity(hass, client):
     }
 
 
-async def test_update_entity_require_restart(hass, client):
+async def test_update_entity_require_restart(
+    hass: HomeAssistant, client: MockHAClientWebSocket
+) -> None:
     """Test updating entity."""
     entity_id = "test_domain.test_platform_1234"
     config_entry = MockConfigEntry(domain="test_platform")
@@ -408,9 +819,8 @@ async def test_update_entity_require_restart(hass, client):
     assert state is not None
 
     # UPDATE DISABLED_BY TO NONE
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 8,
             "type": "config/entity_registry/update",
             "entity_id": entity_id,
             "disabled_by": None,
@@ -421,8 +831,10 @@ async def test_update_entity_require_restart(hass, client):
 
     assert msg["result"] == {
         "entity_entry": {
+            "aliases": [],
             "area_id": None,
             "capabilities": None,
+            "categories": {},
             "config_entry_id": config_entry.entry_id,
             "device_class": None,
             "device_id": None,
@@ -433,6 +845,7 @@ async def test_update_entity_require_restart(hass, client):
             "hidden_by": None,
             "icon": None,
             "id": ANY,
+            "labels": [],
             "name": None,
             "options": {},
             "original_device_class": None,
@@ -446,14 +859,18 @@ async def test_update_entity_require_restart(hass, client):
     }
 
 
-async def test_enable_entity_disabled_device(hass, client, device_registry):
+async def test_enable_entity_disabled_device(
+    hass: HomeAssistant,
+    client: MockHAClientWebSocket,
+    device_registry: dr.DeviceRegistry,
+) -> None:
     """Test enabling entity of disabled device."""
     entity_id = "test_domain.test_platform_1234"
     config_entry = MockConfigEntry(domain="test_platform")
     config_entry.add_to_hass(hass)
 
     device = device_registry.async_get_or_create(
-        config_entry_id="1234",
+        config_entry_id=config_entry.entry_id,
         connections={("ethernet", "12:34:56:78:90:AB:CD:EF")},
         identifiers={("bridgeid", "0123")},
         manufacturer="manufacturer",
@@ -479,9 +896,8 @@ async def test_enable_entity_disabled_device(hass, client, device_registry):
     assert entity_entry.disabled_by == RegistryEntryDisabler.DEVICE
 
     # UPDATE DISABLED_BY TO NONE
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 8,
             "type": "config/entity_registry/update",
             "entity_id": entity_id,
             "disabled_by": None,
@@ -493,7 +909,9 @@ async def test_enable_entity_disabled_device(hass, client, device_registry):
     assert not msg["success"]
 
 
-async def test_update_entity_no_changes(hass, client):
+async def test_update_entity_no_changes(
+    hass: HomeAssistant, client: MockHAClientWebSocket
+) -> None:
     """Test update entity with no changes."""
     mock_registry(
         hass,
@@ -515,9 +933,8 @@ async def test_update_entity_no_changes(hass, client):
     assert state is not None
     assert state.name == "name of entity"
 
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 6,
             "type": "config/entity_registry/update",
             "entity_id": "test_domain.world",
             "name": "name of entity",
@@ -528,8 +945,10 @@ async def test_update_entity_no_changes(hass, client):
 
     assert msg["result"] == {
         "entity_entry": {
+            "aliases": [],
             "area_id": None,
             "capabilities": None,
+            "categories": {},
             "config_entry_id": None,
             "device_class": None,
             "device_id": None,
@@ -540,6 +959,7 @@ async def test_update_entity_no_changes(hass, client):
             "hidden_by": None,
             "icon": None,
             "id": ANY,
+            "labels": [],
             "name": "name of entity",
             "options": {},
             "original_device_class": None,
@@ -555,11 +975,10 @@ async def test_update_entity_no_changes(hass, client):
     assert state.name == "name of entity"
 
 
-async def test_get_nonexisting_entity(client):
+async def test_get_nonexisting_entity(client: MockHAClientWebSocket) -> None:
     """Test get entry with nonexisting entity."""
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 6,
             "type": "config/entity_registry/get",
             "entity_id": "test_domain.no_name",
         }
@@ -569,11 +988,10 @@ async def test_get_nonexisting_entity(client):
     assert not msg["success"]
 
 
-async def test_update_nonexisting_entity(client):
+async def test_update_nonexisting_entity(client: MockHAClientWebSocket) -> None:
     """Test update a nonexisting entity."""
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 6,
             "type": "config/entity_registry/update",
             "entity_id": "test_domain.no_name",
             "name": "new-name",
@@ -584,7 +1002,9 @@ async def test_update_nonexisting_entity(client):
     assert not msg["success"]
 
 
-async def test_update_entity_id(hass, client):
+async def test_update_entity_id(
+    hass: HomeAssistant, client: MockHAClientWebSocket
+) -> None:
     """Test update entity id."""
     mock_registry(
         hass,
@@ -603,9 +1023,8 @@ async def test_update_entity_id(hass, client):
 
     assert hass.states.get("test_domain.world") is not None
 
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 6,
             "type": "config/entity_registry/update",
             "entity_id": "test_domain.world",
             "new_entity_id": "test_domain.planet",
@@ -616,8 +1035,10 @@ async def test_update_entity_id(hass, client):
 
     assert msg["result"] == {
         "entity_entry": {
+            "aliases": [],
             "area_id": None,
             "capabilities": None,
+            "categories": {},
             "config_entry_id": None,
             "device_class": None,
             "device_id": None,
@@ -628,6 +1049,7 @@ async def test_update_entity_id(hass, client):
             "hidden_by": None,
             "icon": None,
             "id": ANY,
+            "labels": [],
             "name": None,
             "options": {},
             "original_device_class": None,
@@ -643,7 +1065,9 @@ async def test_update_entity_id(hass, client):
     assert hass.states.get("test_domain.planet") is not None
 
 
-async def test_update_existing_entity_id(hass, client):
+async def test_update_existing_entity_id(
+    hass: HomeAssistant, client: MockHAClientWebSocket
+) -> None:
     """Test update entity id to an already registered entity id."""
     mock_registry(
         hass,
@@ -666,9 +1090,8 @@ async def test_update_existing_entity_id(hass, client):
     entities = [MockEntity(unique_id="1234"), MockEntity(unique_id="2345")]
     await platform.async_add_entities(entities)
 
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 6,
             "type": "config/entity_registry/update",
             "entity_id": "test_domain.world",
             "new_entity_id": "test_domain.planet",
@@ -680,7 +1103,9 @@ async def test_update_existing_entity_id(hass, client):
     assert not msg["success"]
 
 
-async def test_update_invalid_entity_id(hass, client):
+async def test_update_invalid_entity_id(
+    hass: HomeAssistant, client: MockHAClientWebSocket
+) -> None:
     """Test update entity id to an invalid entity id."""
     mock_registry(
         hass,
@@ -697,9 +1122,8 @@ async def test_update_invalid_entity_id(hass, client):
     entities = [MockEntity(unique_id="1234"), MockEntity(unique_id="2345")]
     await platform.async_add_entities(entities)
 
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 6,
             "type": "config/entity_registry/update",
             "entity_id": "test_domain.world",
             "new_entity_id": "another_domain.planet",
@@ -711,7 +1135,9 @@ async def test_update_invalid_entity_id(hass, client):
     assert not msg["success"]
 
 
-async def test_remove_entity(hass, client):
+async def test_remove_entity(
+    hass: HomeAssistant, client: MockHAClientWebSocket
+) -> None:
     """Test removing entity."""
     registry = mock_registry(
         hass,
@@ -726,9 +1152,8 @@ async def test_remove_entity(hass, client):
         },
     )
 
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 6,
             "type": "config/entity_registry/remove",
             "entity_id": "test_domain.world",
         }
@@ -740,13 +1165,14 @@ async def test_remove_entity(hass, client):
     assert len(registry.entities) == 0
 
 
-async def test_remove_non_existing_entity(hass, client):
+async def test_remove_non_existing_entity(
+    hass: HomeAssistant, client: MockHAClientWebSocket
+) -> None:
     """Test removing non existing entity."""
     mock_registry(hass, {})
 
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 6,
             "type": "config/entity_registry/remove",
             "entity_id": "test_domain.world",
         }

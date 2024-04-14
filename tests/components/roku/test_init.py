@@ -1,4 +1,5 @@
 """Tests for the Roku integration."""
+
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from rokuecp import RokuConnectionError
@@ -24,6 +25,25 @@ async def test_config_entry_not_ready(
 
     assert mock_request.call_count == 1
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_config_entry_no_unique_id(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_roku: AsyncMock,
+) -> None:
+    """Test the Roku configuration entry with missing unique id."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(mock_config_entry, unique_id=None)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.entry_id in hass.data[DOMAIN]
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert (
+        hass.data[DOMAIN][mock_config_entry.entry_id].device_id
+        == mock_config_entry.entry_id
+    )
 
 
 async def test_load_unload_config_entry(

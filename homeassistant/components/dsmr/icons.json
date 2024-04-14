@@ -1,0 +1,24 @@
+{
+  "entity": {
+    "sensor": {
+      "electricity_active_tariff": {
+        "default": "mdi:flash"
+      },
+      "short_power_failure_count": {
+        "default": "mdi:flash-off"
+      },
+      "long_power_failure_count": {
+        "default": "mdi:flash-off"
+      },
+      "voltage_swell_l1_count": {
+        "default": "mdi:pulse"
+      },
+      "voltage_swell_l2_count": {
+        "default": "mdi:pulse"
+      },
+      "voltage_swell_l3_count": {
+        "default": "mdi:pulse"
+      }
+    }
+  }
+}

@@ -1,11 +1,11 @@
 """Support for haveibeenpwned (email breaches) sensor."""
+
 from __future__ import annotations
 
 from datetime import timedelta
 from http import HTTPStatus
 import logging
 
-from aiohttp.hdrs import USER_AGENT
 import requests
 import voluptuous as vol
 
@@ -49,11 +49,7 @@ def setup_platform(
     api_key = config[CONF_API_KEY]
     data = HaveIBeenPwnedData(emails, api_key)
 
-    devices = []
-    for email in emails:
-        devices.append(HaveIBeenPwnedSensor(data, email))
-
-    add_entities(devices)
+    add_entities(HaveIBeenPwnedSensor(data, email) for email in emails)
 
 
 class HaveIBeenPwnedSensor(SensorEntity):
@@ -160,7 +156,7 @@ class HaveIBeenPwnedData:
         """Get the latest data for current email from REST service."""
         try:
             url = f"{URL}{self._email}?truncateResponse=false"
-            header = {USER_AGENT: HA_USER_AGENT, "hibp-api-key": self._api_key}
+            header = {"User-Agent": HA_USER_AGENT, "hibp-api-key": self._api_key}
             _LOGGER.debug("Checking for breaches for email: %s", self._email)
             req = requests.get(url, headers=header, allow_redirects=True, timeout=5)
 

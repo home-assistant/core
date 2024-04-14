@@ -1,4 +1,5 @@
 """Support for monitoring pyLoad."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -102,7 +103,7 @@ class PyLoadSensor(SensorEntity):
 
     def __init__(
         self, api: PyLoadAPI, sensor_type: SensorEntityDescription, client_name
-    ):
+    ) -> None:
         """Initialize a new pyLoad sensor."""
         self._attr_name = f"{client_name} {sensor_type.name}"
         self.type = sensor_type.key

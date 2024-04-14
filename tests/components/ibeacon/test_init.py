@@ -3,6 +3,7 @@
 import pytest
 
 from homeassistant.components.ibeacon.const import DOMAIN
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
@@ -10,6 +11,7 @@ from . import BLUECHARM_BEACON_SERVICE_INFO
 
 from tests.common import MockConfigEntry
 from tests.components.bluetooth import inject_bluetooth_service_info
+from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)
@@ -31,7 +33,11 @@ async def remove_device(ws_client, device_id, config_entry_id):
     return response["success"]
 
 
-async def test_device_remove_devices(hass, hass_ws_client):
+async def test_device_remove_devices(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
     """Test we can only remove a device that no longer exists."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -43,16 +49,14 @@ async def test_device_remove_devices(hass, hass_ws_client):
     await hass.async_block_till_done()
     inject_bluetooth_service_info(hass, BLUECHARM_BEACON_SERVICE_INFO)
     await hass.async_block_till_done()
-    device_registry = dr.async_get(hass)
 
     device_entry = device_registry.async_get_device(
-        {
+        identifiers={
             (
                 DOMAIN,
                 "426c7565-4368-6172-6d42-6561636f6e73_3838_4949_61DE521B-F0BF-9F44-64D4-75BBE1738105",
             )
         },
-        {},
     )
     assert (
         await remove_device(await hass_ws_client(hass), device_entry.id, entry.entry_id)

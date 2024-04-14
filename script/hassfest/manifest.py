@@ -1,7 +1,11 @@
 """Manifest validation."""
+
 from __future__ import annotations
 
+from enum import IntEnum
+import json
 from pathlib import Path
+import subprocess
 from typing import Any
 from urllib.parse import urlparse
 
@@ -23,7 +27,17 @@ DOCUMENTATION_URL_HOST = "www.home-assistant.io"
 DOCUMENTATION_URL_PATH_PREFIX = "/integrations/"
 DOCUMENTATION_URL_EXCEPTIONS = {"https://www.home-assistant.io/hassio"}
 
-SUPPORTED_QUALITY_SCALES = ["gold", "internal", "platinum", "silver"]
+
+class QualityScale(IntEnum):
+    """Supported manifest quality scales."""
+
+    INTERNAL = -1
+    SILVER = 1
+    GOLD = 2
+    PLATINUM = 3
+
+
+SUPPORTED_QUALITY_SCALES = [enum.name.lower() for enum in QualityScale]
 SUPPORTED_IOT_CLASSES = [
     "assumed_state",
     "calculated",
@@ -49,7 +63,6 @@ NO_IOT_CLASS = [
     "device_automation",
     "device_tracker",
     "diagnostics",
-    "discovery",
     "downloader",
     "ffmpeg",
     "file_upload",
@@ -59,6 +72,7 @@ NO_IOT_CLASS = [
     "history",
     "homeassistant",
     "homeassistant_alerts",
+    "homeassistant_green",
     "homeassistant_hardware",
     "homeassistant_sky_connect",
     "homeassistant_yellow",
@@ -85,8 +99,8 @@ NO_IOT_CLASS = [
     "proxy",
     "python_script",
     "raspberry_pi",
+    "recovery_mode",
     "repairs",
-    "safe_mode",
     "schedule",
     "script",
     "search",
@@ -148,8 +162,8 @@ def verify_version(value: str) -> str:
                 AwesomeVersionStrategy.PEP440,
             ],
         )
-    except AwesomeVersionException:
-        raise vol.Invalid(f"'{value}' is not a valid version.")
+    except AwesomeVersionException as err:
+        raise vol.Invalid(f"'{value}' is not a valid version.") from err
     return value
 
 
@@ -242,12 +256,8 @@ INTEGRATION_MANIFEST_SCHEMA = vol.Schema(
                 }
             )
         ],
-        vol.Required("documentation"): vol.All(
-            vol.Url(), documentation_url  # pylint: disable=no-value-for-parameter
-        ),
-        vol.Optional(
-            "issue_tracker"
-        ): vol.Url(),  # pylint: disable=no-value-for-parameter
+        vol.Required("documentation"): vol.All(vol.Url(), documentation_url),
+        vol.Optional("issue_tracker"): vol.Url(),
         vol.Optional("quality_scale"): vol.In(SUPPORTED_QUALITY_SCALES),
         vol.Optional("requirements"): [str],
         vol.Optional("dependencies"): [str],
@@ -256,6 +266,7 @@ INTEGRATION_MANIFEST_SCHEMA = vol.Schema(
         vol.Optional("loggers"): [str],
         vol.Optional("disabled"): str,
         vol.Optional("iot_class"): vol.In(SUPPORTED_IOT_CLASSES),
+        vol.Optional("single_config_entry"): bool,
     }
 )
 
@@ -282,13 +293,13 @@ def manifest_schema(value: dict[str, Any]) -> vol.Schema:
 CUSTOM_INTEGRATION_MANIFEST_SCHEMA = INTEGRATION_MANIFEST_SCHEMA.extend(
     {
         vol.Optional("version"): vol.All(str, verify_version),
+        vol.Optional("import_executor"): bool,
     }
 )
 
 
 def validate_version(integration: Integration) -> None:
-    """
-    Validate the version of the integration.
+    """Validate the version of the integration.
 
     Will be removed when the version key is no longer optional for custom integrations.
     """
@@ -309,25 +320,19 @@ def validate_manifest(integration: Integration, core_components_dir: Path) -> No
             "manifest", f"Invalid manifest: {humanize_error(integration.manifest, err)}"
         )
 
-    if integration.manifest["domain"] != integration.path.name:
+    if (domain := integration.manifest["domain"]) != integration.path.name:
         integration.add_error("manifest", "Domain does not match dir name")
 
-    if (
-        not integration.core
-        and (core_components_dir / integration.manifest["domain"]).exists()
-    ):
+    if not integration.core and (core_components_dir / domain).exists():
         integration.add_warning(
             "manifest", "Domain collides with built-in core integration"
         )
 
-    if (
-        integration.manifest["domain"] in NO_IOT_CLASS
-        and "iot_class" in integration.manifest
-    ):
+    if domain in NO_IOT_CLASS and "iot_class" in integration.manifest:
         integration.add_error("manifest", "Domain should not have an IoT Class")
 
     if (
-        integration.manifest["domain"] not in NO_IOT_CLASS
+        domain not in NO_IOT_CLASS
         and "iot_class" not in integration.manifest
         and integration.manifest.get("integration_type") != "virtual"
     ):
@@ -343,12 +348,65 @@ def validate_manifest(integration: Integration, core_components_dir: Path) -> No
             "Virtual integration points to non-existing supported_by integration",
         )
 
+    if (
+        (quality_scale := integration.manifest.get("quality_scale"))
+        and QualityScale[quality_scale.upper()] > QualityScale.SILVER
+        and not integration.manifest.get("codeowners")
+    ):
+        integration.add_error(
+            "manifest",
+            f"{quality_scale} integration does not have a code owner",
+        )
+
     if not integration.core:
         validate_version(integration)
+
+
+_SORT_KEYS = {"domain": ".domain", "name": ".name"}
+
+
+def _sort_manifest_keys(key: str) -> str:
+    return _SORT_KEYS.get(key, key)
+
+
+def sort_manifest(integration: Integration, config: Config) -> bool:
+    """Sort manifest."""
+    keys = list(integration.manifest.keys())
+    if (keys_sorted := sorted(keys, key=_sort_manifest_keys)) != keys:
+        manifest = {key: integration.manifest[key] for key in keys_sorted}
+        if config.action == "generate":
+            integration.manifest_path.write_text(json.dumps(manifest, indent=2))
+            text = "have been sorted"
+        else:
+            text = "are not sorted correctly"
+        integration.add_error(
+            "manifest",
+            f"Manifest keys {text}: domain, name, then alphabetical order",
+        )
+        return True
+    return False
 
 
 def validate(integrations: dict[str, Integration], config: Config) -> None:
     """Handle all integrations manifests."""
     core_components_dir = config.root / "homeassistant/components"
+    manifests_resorted = []
     for integration in integrations.values():
         validate_manifest(integration, core_components_dir)
+        if not integration.errors:
+            if sort_manifest(integration, config):
+                manifests_resorted.append(integration.manifest_path)
+    if config.action == "generate" and manifests_resorted:
+        subprocess.run(
+            [
+                "pre-commit",
+                "run",
+                "--hook-stage",
+                "manual",
+                "prettier",
+                "--files",
+                *manifests_resorted,
+            ],
+            stdout=subprocess.DEVNULL,
+            check=True,
+        )

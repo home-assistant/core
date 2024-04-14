@@ -1,7 +1,8 @@
 """Event parser and human readable log generator."""
+
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from typing import Any
 
 from homeassistant.components.sensor import ATTR_STATE_CLASS
@@ -16,6 +17,7 @@ from homeassistant.const import (
 from homeassistant.core import (
     CALLBACK_TYPE,
     Event,
+    EventStateChangedData,
     HomeAssistant,
     State,
     callback,
@@ -23,11 +25,11 @@ from homeassistant.core import (
     split_entity_id,
 )
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.entityfilter import EntityFilter
 from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.util.event_type import EventType
 
 from .const import ALWAYS_CONTINUOUS_DOMAINS, AUTOMATION_EVENTS, BUILT_IN_EVENTS, DOMAIN
-from .models import LazyEventPartialState
+from .models import LogbookConfig
 
 
 def async_filter_entities(hass: HomeAssistant, entity_ids: list[str]) -> list[str]:
@@ -36,7 +38,8 @@ def async_filter_entities(hass: HomeAssistant, entity_ids: list[str]) -> list[st
     return [
         entity_id
         for entity_id in entity_ids
-        if not _is_entity_id_filtered(hass, ent_reg, entity_id)
+        if split_entity_id(entity_id)[0] not in ALWAYS_CONTINUOUS_DOMAINS
+        and not is_sensor_continuous(hass, ent_reg, entity_id)
     ]
 
 
@@ -61,11 +64,10 @@ def _async_config_entries_for_ids(
 
 def async_determine_event_types(
     hass: HomeAssistant, entity_ids: list[str] | None, device_ids: list[str] | None
-) -> tuple[str, ...]:
+) -> tuple[EventType[Any] | str, ...]:
     """Reduce the event types based on the entity ids and device ids."""
-    external_events: dict[
-        str, tuple[str, Callable[[LazyEventPartialState], dict[str, Any]]]
-    ] = hass.data.get(DOMAIN, {})
+    logbook_config: LogbookConfig = hass.data[DOMAIN]
+    external_events = logbook_config.external_events
     if not entity_ids and not device_ids:
         return (*BUILT_IN_EVENTS, *external_events)
 
@@ -80,7 +82,7 @@ def async_determine_event_types(
     # to add them since we have historically included
     # them when matching only on entities
     #
-    intrested_event_types: set[str] = {
+    intrested_event_types: set[EventType[Any] | str] = {
         external_event
         for external_event, domain_call in external_events.items()
         if domain_call[0] in interested_domains
@@ -93,7 +95,7 @@ def async_determine_event_types(
 
 
 @callback
-def extract_attr(source: dict[str, Any], attr: str) -> list[str]:
+def extract_attr(source: Mapping[str, Any], attr: str) -> list[str]:
     """Extract an attribute as a list or string."""
     if (value := source.get(attr)) is None:
         return []
@@ -105,7 +107,7 @@ def extract_attr(source: dict[str, Any], attr: str) -> list[str]:
 @callback
 def event_forwarder_filtered(
     target: Callable[[Event], None],
-    entities_filter: EntityFilter | None,
+    entities_filter: Callable[[str], bool] | None,
     entity_ids: list[str] | None,
     device_ids: list[str] | None,
 ) -> Callable[[Event], None]:
@@ -158,9 +160,9 @@ def event_forwarder_filtered(
 def async_subscribe_events(
     hass: HomeAssistant,
     subscriptions: list[CALLBACK_TYPE],
-    target: Callable[[Event], None],
-    event_types: tuple[str, ...],
-    entities_filter: EntityFilter | None,
+    target: Callable[[Event[Any]], None],
+    event_types: tuple[EventType[Any] | str, ...],
+    entities_filter: Callable[[str], bool] | None,
     entity_ids: list[str] | None,
     device_ids: list[str] | None,
 ) -> None:
@@ -169,15 +171,13 @@ def async_subscribe_events(
     These are the events we need to listen for to do
     the live logbook stream.
     """
-    ent_reg = er.async_get(hass)
     assert is_callback(target), "target must be a callback"
     event_forwarder = event_forwarder_filtered(
         target, entities_filter, entity_ids, device_ids
     )
-    for event_type in event_types:
-        subscriptions.append(
-            hass.bus.async_listen(event_type, event_forwarder, run_immediately=True)
-        )
+    subscriptions.extend(
+        hass.bus.async_listen(event_type, event_forwarder) for event_type in event_types
+    )
 
     if device_ids and not entity_ids:
         # No entities to subscribe to but we are filtering
@@ -186,12 +186,12 @@ def async_subscribe_events(
         return
 
     @callback
-    def _forward_state_events_filtered(event: Event) -> None:
-        if event.data.get("old_state") is None or event.data.get("new_state") is None:
+    def _forward_state_events_filtered(event: Event[EventStateChangedData]) -> None:
+        if (old_state := event.data["old_state"]) is None or (
+            new_state := event.data["new_state"]
+        ) is None:
             return
-        new_state: State = event.data["new_state"]
-        old_state: State = event.data["old_state"]
-        if _is_state_filtered(ent_reg, new_state, old_state) or (
+        if _is_state_filtered(new_state, old_state) or (
             entities_filter and not entities_filter(new_state.entity_id)
         ):
             return
@@ -210,29 +210,45 @@ def async_subscribe_events(
         hass.bus.async_listen(
             EVENT_STATE_CHANGED,
             _forward_state_events_filtered,
-            run_immediately=True,
         )
     )
 
 
-def is_sensor_continuous(ent_reg: er.EntityRegistry, entity_id: str) -> bool:
-    """Determine if a sensor is continuous by checking its state class.
+def is_sensor_continuous(
+    hass: HomeAssistant, ent_reg: er.EntityRegistry, entity_id: str
+) -> bool:
+    """Determine if a sensor is continuous.
 
-    Sensors with a unit_of_measurement are also considered continuous, but are filtered
-    already by the SQL query generated by _get_events
+    Sensors with a unit_of_measurement or state_class are considered continuous.
+
+    The unit_of_measurement check will already happen if this is
+    called for historical data because the SQL query generated by _get_events
+    will filter out any sensors with a unit_of_measurement.
+
+    If the state still exists in the state machine, this function still
+    checks for ATTR_UNIT_OF_MEASUREMENT since the live mode is not filtered
+    by the SQL query.
     """
-    if not (entry := ent_reg.async_get(entity_id)):
-        # Entity not registered, so can't have a state class
-        return False
-    return (
-        entry.capabilities is not None
-        and entry.capabilities.get(ATTR_STATE_CLASS) is not None
+    # If it is in the state machine we can quick check if it
+    # has a unit_of_measurement or state_class, and filter if
+    # it does
+    if (state := hass.states.get(entity_id)) and (attributes := state.attributes):
+        return ATTR_UNIT_OF_MEASUREMENT in attributes or ATTR_STATE_CLASS in attributes
+    # If its not in the state machine, we need to check
+    # the entity registry to see if its a sensor
+    # filter with a state class. We do not check
+    # for unit_of_measurement since the SQL query
+    # will filter out any sensors with a unit_of_measurement
+    # and we should never get here in live mode because
+    # the state machine will always have the state.
+    return bool(
+        (entry := ent_reg.async_get(entity_id))
+        and entry.capabilities
+        and entry.capabilities.get(ATTR_STATE_CLASS)
     )
 
 
-def _is_state_filtered(
-    ent_reg: er.EntityRegistry, new_state: State, old_state: State
-) -> bool:
+def _is_state_filtered(new_state: State, old_state: State) -> bool:
     """Check if the logbook should filter a state.
 
     Used when we are in live mode to ensure
@@ -240,24 +256,8 @@ def _is_state_filtered(
     """
     return bool(
         new_state.state == old_state.state
-        or split_entity_id(new_state.entity_id)[0] in ALWAYS_CONTINUOUS_DOMAINS
         or new_state.last_changed != new_state.last_updated
+        or new_state.domain in ALWAYS_CONTINUOUS_DOMAINS
         or ATTR_UNIT_OF_MEASUREMENT in new_state.attributes
-        or is_sensor_continuous(ent_reg, new_state.entity_id)
-    )
-
-
-def _is_entity_id_filtered(
-    hass: HomeAssistant, ent_reg: er.EntityRegistry, entity_id: str
-) -> bool:
-    """Check if the logbook should filter an entity.
-
-    Used to setup listeners and which entities to select
-    from the database when a list of entities is requested.
-    """
-    return bool(
-        split_entity_id(entity_id)[0] in ALWAYS_CONTINUOUS_DOMAINS
-        or (state := hass.states.get(entity_id))
-        and (ATTR_UNIT_OF_MEASUREMENT in state.attributes)
-        or is_sensor_continuous(ent_reg, entity_id)
+        or ATTR_STATE_CLASS in new_state.attributes
     )

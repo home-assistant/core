@@ -1,0 +1,10 @@
+{
+  "domain": "recovery_mode",
+  "name": "Recovery Mode",
+  "codeowners": ["@home-assistant/core"],
+  "config_flow": false,
+  "dependencies": ["frontend", "persistent_notification", "cloud"],
+  "documentation": "https://www.home-assistant.io/integrations/recovery_mode",
+  "integration_type": "system",
+  "quality_scale": "internal"
+}

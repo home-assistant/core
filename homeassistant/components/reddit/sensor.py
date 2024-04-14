@@ -1,4 +1,5 @@
 """Support for Reddit."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -94,7 +95,7 @@ def setup_platform(
 class RedditSensor(SensorEntity):
     """Representation of a Reddit sensor."""
 
-    def __init__(self, reddit, subreddit: str, limit: int, sort_by: str):
+    def __init__(self, reddit, subreddit: str, limit: int, sort_by: str) -> None:
         """Initialize the Reddit sensor."""
         self._reddit = reddit
         self._subreddit = subreddit

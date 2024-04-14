@@ -1,4 +1,7 @@
 """HTML5 Push Messaging notification service."""
+
+from __future__ import annotations
+
 from contextlib import suppress
 from datetime import datetime, timedelta
 from functools import partial
@@ -17,7 +20,7 @@ import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
 from homeassistant.components import websocket_api
-from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.components.notify import (
     ATTR_DATA,
     ATTR_TARGET,
@@ -27,11 +30,13 @@ from homeassistant.components.notify import (
     BaseNotificationService,
 )
 from homeassistant.const import ATTR_NAME, URL_ROOT
-from homeassistant.core import ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.json import save_json
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import ensure_unique_string
-from homeassistant.util.json import load_json, save_json
+from homeassistant.util.json import JsonObjectType, load_json_object
 
 from .const import DOMAIN, SERVICE_DISMISS
 
@@ -109,7 +114,6 @@ SUBSCRIPTION_SCHEMA = vol.All(
     dict,
     vol.Schema(
         {
-            # pylint: disable=no-value-for-parameter
             vol.Required(ATTR_ENDPOINT): vol.Url(),
             vol.Required(ATTR_KEYS): KEYS_SCHEMA,
             vol.Optional(ATTR_EXPIRATIONTIME): vol.Any(None, cv.positive_int),
@@ -161,14 +165,15 @@ HTML5_SHOWNOTIFICATION_PARAMETERS = (
 )
 
 
-def get_service(hass, config, discovery_info=None):
+def get_service(
+    hass: HomeAssistant,
+    config: ConfigType,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> HTML5NotificationService | None:
     """Get the HTML5 push notification service."""
     json_path = hass.config.path(REGISTRATIONS_FILE)
 
     registrations = _load_config(json_path)
-
-    if registrations is None:
-        return None
 
     vapid_pub_key = config[ATTR_VAPID_PUB_KEY]
     vapid_prv_key = config[ATTR_VAPID_PRV_KEY]
@@ -189,10 +194,10 @@ def get_service(hass, config, discovery_info=None):
     )
 
 
-def _load_config(filename):
+def _load_config(filename: str) -> JsonObjectType:
     """Load configuration."""
     with suppress(HomeAssistantError):
-        return load_json(filename)
+        return load_json_object(filename)
     return {}
 
 
@@ -227,7 +232,7 @@ class HTML5PushRegistrationView(HomeAssistantView):
         self.registrations[name] = data
 
         try:
-            hass = request.app["hass"]
+            hass = request.app[KEY_HASS]
 
             await hass.async_add_executor_job(
                 save_json, self.json_path, self.registrations
@@ -275,7 +280,7 @@ class HTML5PushRegistrationView(HomeAssistantView):
         reg = self.registrations.pop(found)
 
         try:
-            hass = request.app["hass"]
+            hass = request.app[KEY_HASS]
 
             await hass.async_add_executor_job(
                 save_json, self.json_path, self.registrations
@@ -384,7 +389,7 @@ class HTML5PushCallbackView(HomeAssistantView):
             )
 
         event_name = f"{NOTIFY_CALLBACK_EVENT}.{event_payload[ATTR_TYPE]}"
-        request.app["hass"].bus.fire(event_name, event_payload)
+        request.app[KEY_HASS].bus.fire(event_name, event_payload)
         return self.json({"status": "ok", "event": event_payload[ATTR_TYPE]})
 
 

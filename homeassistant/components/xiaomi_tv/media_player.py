@@ -1,4 +1,5 @@
 """Add support for the Xiaomi TVs."""
+
 from __future__ import annotations
 
 import logging
@@ -75,8 +76,7 @@ class XiaomiTV(MediaPlayerEntity):
         self._attr_state = MediaPlayerState.OFF
 
     def turn_off(self) -> None:
-        """
-        Instruct the TV to turn sleep.
+        """Instruct the TV to turn sleep.
 
         This is done instead of turning off,
         because the TV won't accept any input when turned off. Thus, the user

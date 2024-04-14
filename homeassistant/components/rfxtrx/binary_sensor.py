@@ -1,4 +1,5 @@
 """Support for RFXtrx binary sensors."""
+
 from __future__ import annotations
 
 import logging
@@ -104,7 +105,6 @@ async def async_setup_entry(
         device_id: DeviceTuple,
         entity_info: dict[str, Any],
     ) -> list[Entity]:
-
         return [
             RfxtrxBinarySensor(
                 event.device,
@@ -131,6 +131,7 @@ class RfxtrxBinarySensor(RfxtrxEntity, BinarySensorEntity):
     """
 
     _attr_force_update = True
+    _attr_name = None
 
     def __init__(
         self,

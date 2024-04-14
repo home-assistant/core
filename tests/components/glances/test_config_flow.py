@@ -1,7 +1,12 @@
 """Tests for Glances config flow."""
+
 from unittest.mock import MagicMock
 
-from glances_api.exceptions import GlancesApiConnectionError
+from glances_api.exceptions import (
+    GlancesApiAuthorizationError,
+    GlancesApiConnectionError,
+    GlancesApiNoDataAvailable,
+)
 import pytest
 
 from homeassistant import config_entries
@@ -9,7 +14,7 @@ from homeassistant.components import glances
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from . import MOCK_USER_INPUT
+from . import HA_SENSOR_DATA, MOCK_USER_INPUT
 
 from tests.common import MockConfigEntry, patch
 
@@ -27,22 +32,32 @@ async def test_form(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         glances.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=MOCK_USER_INPUT
     )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "0.0.0.0"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "0.0.0.0:61208"
     assert result["data"] == MOCK_USER_INPUT
 
 
-async def test_form_cannot_connect(hass: HomeAssistant, mock_api: MagicMock) -> None:
-    """Test to return error if we cannot connect."""
+@pytest.mark.parametrize(
+    ("error", "message"),
+    [
+        (GlancesApiAuthorizationError, "invalid_auth"),
+        (GlancesApiConnectionError, "cannot_connect"),
+        (GlancesApiNoDataAvailable, "cannot_connect"),
+    ],
+)
+async def test_form_fails(
+    hass: HomeAssistant, error: Exception, message: str, mock_api: MagicMock
+) -> None:
+    """Test flow fails when api exception is raised."""
 
-    mock_api.return_value.get_data.side_effect = GlancesApiConnectionError
+    mock_api.return_value.get_ha_sensor_data.side_effect = error
     result = await hass.config_entries.flow.async_init(
         glances.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -50,8 +65,8 @@ async def test_form_cannot_connect(hass: HomeAssistant, mock_api: MagicMock) -> 
         result["flow_id"], user_input=MOCK_USER_INPUT
     )
 
-    assert result["type"] == FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": message}
 
 
 async def test_form_already_configured(hass: HomeAssistant) -> None:
@@ -65,5 +80,83 @@ async def test_form_already_configured(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=MOCK_USER_INPUT
     )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_reauth_success(hass: HomeAssistant) -> None:
+    """Test we can reauth."""
+    entry = MockConfigEntry(domain=glances.DOMAIN, data=MOCK_USER_INPUT)
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        glances.DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": entry.entry_id,
+        },
+        data=MOCK_USER_INPUT,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["description_placeholders"] == {"username": "username"}
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "password": "new-password",
+        },
+    )
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "reauth_successful"
+
+
+@pytest.mark.parametrize(
+    ("error", "message"),
+    [
+        (GlancesApiAuthorizationError, "invalid_auth"),
+        (GlancesApiConnectionError, "cannot_connect"),
+    ],
+)
+async def test_reauth_fails(
+    hass: HomeAssistant, error: Exception, message: str, mock_api: MagicMock
+) -> None:
+    """Test we can reauth."""
+    entry = MockConfigEntry(domain=glances.DOMAIN, data=MOCK_USER_INPUT)
+    entry.add_to_hass(hass)
+
+    mock_api.return_value.get_ha_sensor_data.side_effect = [error, HA_SENSOR_DATA]
+    result = await hass.config_entries.flow.async_init(
+        glances.DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": entry.entry_id,
+        },
+        data=MOCK_USER_INPUT,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["description_placeholders"] == {"username": "username"}
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "password": "new-password",
+        },
+    )
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": message}
+
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "password": "new-password",
+        },
+    )
+
+    assert result3["type"] is FlowResultType.ABORT
+    assert result3["reason"] == "reauth_successful"

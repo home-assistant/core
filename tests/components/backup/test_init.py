@@ -1,4 +1,5 @@
 """Tests for the Backup integration."""
+
 from unittest.mock import patch
 
 import pytest
@@ -14,11 +15,15 @@ async def test_setup_with_hassio(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the setup of the integration with hassio enabled."""
-    assert not await setup_backup_integration(hass=hass, with_hassio=True)
-    assert (
-        "The backup integration is not supported on this installation method, please remove it from your configuration"
-        in caplog.text
+    assert await setup_backup_integration(
+        hass=hass,
+        with_hassio=True,
+        configuration={DOMAIN: {}},
     )
+    assert (
+        "The backup integration is not supported on this installation method, please"
+        " remove it from your configuration"
+    ) in caplog.text
 
 
 async def test_create_service(

@@ -1,9 +1,10 @@
 """Support for Tuya siren."""
+
 from __future__ import annotations
 
 from typing import Any
 
-from tuya_iot import TuyaDevice, TuyaDeviceManager
+from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.siren import (
     SirenEntity,
@@ -27,7 +28,6 @@ SIRENS: dict[str, tuple[SirenEntityDescription, ...]] = {
     "dgnbj": (
         SirenEntityDescription(
             key=DPCode.ALARM_SWITCH,
-            name="Siren",
         ),
     ),
     # Siren Alarm
@@ -35,7 +35,6 @@ SIRENS: dict[str, tuple[SirenEntityDescription, ...]] = {
     "sgbj": (
         SirenEntityDescription(
             key=DPCode.ALARM_SWITCH,
-            name="Siren",
         ),
     ),
     # Smart Camera
@@ -43,7 +42,6 @@ SIRENS: dict[str, tuple[SirenEntityDescription, ...]] = {
     "sp": (
         SirenEntityDescription(
             key=DPCode.SIREN_SWITCH,
-            name="Siren",
         ),
     ),
 }
@@ -60,19 +58,17 @@ async def async_setup_entry(
         """Discover and add a discovered Tuya siren."""
         entities: list[TuyaSirenEntity] = []
         for device_id in device_ids:
-            device = hass_data.device_manager.device_map[device_id]
+            device = hass_data.manager.device_map[device_id]
             if descriptions := SIRENS.get(device.category):
-                for description in descriptions:
-                    if description.key in device.status:
-                        entities.append(
-                            TuyaSirenEntity(
-                                device, hass_data.device_manager, description
-                            )
-                        )
+                entities.extend(
+                    TuyaSirenEntity(device, hass_data.manager, description)
+                    for description in descriptions
+                    if description.key in device.status
+                )
 
         async_add_entities(entities)
 
-    async_discover_device([*hass_data.device_manager.device_map])
+    async_discover_device([*hass_data.manager.device_map])
 
     entry.async_on_unload(
         async_dispatcher_connect(hass, TUYA_DISCOVERY_NEW, async_discover_device)
@@ -83,11 +79,12 @@ class TuyaSirenEntity(TuyaEntity, SirenEntity):
     """Tuya Siren Entity."""
 
     _attr_supported_features = SirenEntityFeature.TURN_ON | SirenEntityFeature.TURN_OFF
+    _attr_name = None
 
     def __init__(
         self,
-        device: TuyaDevice,
-        device_manager: TuyaDeviceManager,
+        device: CustomerDevice,
+        device_manager: Manager,
         description: SirenEntityDescription,
     ) -> None:
         """Init Tuya Siren."""

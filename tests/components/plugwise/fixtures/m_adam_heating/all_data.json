@@ -1,141 +1,170 @@
-[
-  {
-    "smile_name": "Adam",
-    "gateway_id": "da224107914542988a88561b4452b0f6",
-    "heater_id": "056ee145a816487eaa69243c3280f8bf",
-    "cooling_present": false,
-    "notifications": {}
-  },
-  {
-    "ad4838d7d35c4d6ea796ee12ae5aedf8": {
-      "dev_class": "thermostat",
-      "location": "f2bf9048bef64cc5b6d5110154e33c81",
-      "model": "ThermoTouch",
-      "name": "Anna",
-      "vendor": "Plugwise",
-      "thermostat": {
-        "setpoint": 20.0,
-        "lower_bound": 1.0,
-        "upper_bound": 35.0,
-        "resolution": 0.01
-      },
+{
+  "devices": {
+    "056ee145a816487eaa69243c3280f8bf": {
       "available": true,
-      "preset_modes": ["home", "asleep", "away", "vacation", "no_frost"],
-      "active_preset": "asleep",
-      "available_schedules": ["Weekschema", "Badkamer", "Test"],
-      "selected_schedule": "None",
-      "last_used": "Weekschema",
-      "control_state": "heating",
-      "mode": "heat",
-      "sensors": { "temperature": 19.1, "setpoint": 20.0 }
+      "binary_sensors": {
+        "dhw_state": false,
+        "flame_state": false,
+        "heating_state": true
+      },
+      "dev_class": "heater_central",
+      "location": "bc93488efab249e5bc54fd7e175a6f91",
+      "max_dhw_temperature": {
+        "lower_bound": 40.0,
+        "resolution": 0.01,
+        "setpoint": 60.0,
+        "upper_bound": 60.0
+      },
+      "maximum_boiler_temperature": {
+        "lower_bound": 25.0,
+        "resolution": 0.01,
+        "setpoint": 50.0,
+        "upper_bound": 95.0
+      },
+      "model": "Generic heater",
+      "name": "OpenTherm",
+      "sensors": {
+        "intended_boiler_temperature": 38.1,
+        "water_temperature": 37.0
+      },
+      "switches": {
+        "dhw_cm_switch": false
+      }
     },
     "1772a4ea304041adb83f357b751341ff": {
+      "available": true,
       "dev_class": "thermo_sensor",
       "firmware": "2020-11-04T01:00:00+01:00",
       "hardware": "1",
       "location": "f871b8c4d63549319221e294e4f88074",
       "model": "Tom/Floor",
       "name": "Tom Badkamer",
-      "zigbee_mac_address": "ABCD012345670A01",
-      "vendor": "Plugwise",
-      "available": true,
       "sensors": {
-        "temperature": 18.6,
         "battery": 99,
-        "temperature_difference": 2.3,
-        "valve_position": 0.0
-      }
+        "temperature": 18.6,
+        "temperature_difference": -0.2,
+        "valve_position": 100
+      },
+      "temperature_offset": {
+        "lower_bound": -2.0,
+        "resolution": 0.1,
+        "setpoint": 0.1,
+        "upper_bound": 2.0
+      },
+      "vendor": "Plugwise",
+      "zigbee_mac_address": "000D6F000C8FF5EE"
+    },
+    "ad4838d7d35c4d6ea796ee12ae5aedf8": {
+      "active_preset": "home",
+      "available": true,
+      "available_schedules": [
+        "Badkamer",
+        "Test",
+        "Vakantie",
+        "Weekschema",
+        "off"
+      ],
+      "control_state": "preheating",
+      "dev_class": "thermostat",
+      "location": "f2bf9048bef64cc5b6d5110154e33c81",
+      "mode": "heat",
+      "model": "ThermoTouch",
+      "name": "Anna",
+      "preset_modes": ["no_frost", "asleep", "vacation", "home", "away"],
+      "select_schedule": "Weekschema",
+      "selected_schedule": "None",
+      "sensors": {
+        "setpoint": 20.0,
+        "temperature": 19.1
+      },
+      "thermostat": {
+        "lower_bound": 1.0,
+        "resolution": 0.01,
+        "setpoint": 20.0,
+        "upper_bound": 35.0
+      },
+      "vendor": "Plugwise"
+    },
+    "da224107914542988a88561b4452b0f6": {
+      "binary_sensors": {
+        "plugwise_notification": false
+      },
+      "dev_class": "gateway",
+      "firmware": "3.7.8",
+      "gateway_modes": ["away", "full", "vacation"],
+      "hardware": "AME Smile 2.0 board",
+      "location": "bc93488efab249e5bc54fd7e175a6f91",
+      "mac_address": "012345679891",
+      "model": "Gateway",
+      "name": "Adam",
+      "regulation_modes": ["bleeding_hot", "bleeding_cold", "off", "heating"],
+      "select_gateway_mode": "full",
+      "select_regulation_mode": "heating",
+      "sensors": {
+        "outdoor_temperature": -1.25
+      },
+      "vendor": "Plugwise",
+      "zigbee_mac_address": "000D6F000D5A168D"
     },
     "e2f4322d57924fa090fbbc48b3a140dc": {
+      "active_preset": "home",
+      "available": true,
+      "available_schedules": [
+        "Badkamer",
+        "Test",
+        "Vakantie",
+        "Weekschema",
+        "off"
+      ],
+      "control_state": "off",
       "dev_class": "zone_thermostat",
       "firmware": "2016-10-10T02:00:00+02:00",
       "hardware": "255",
       "location": "f871b8c4d63549319221e294e4f88074",
+      "mode": "auto",
       "model": "Lisa",
       "name": "Lisa Badkamer",
-      "zigbee_mac_address": "ABCD012345670A04",
-      "vendor": "Plugwise",
-      "thermostat": {
+      "preset_modes": ["no_frost", "asleep", "vacation", "home", "away"],
+      "select_schedule": "Badkamer",
+      "sensors": {
+        "battery": 38,
         "setpoint": 15.0,
+        "temperature": 17.9
+      },
+      "temperature_offset": {
+        "lower_bound": -2.0,
+        "resolution": 0.1,
+        "setpoint": 0.0,
+        "upper_bound": 2.0
+      },
+      "thermostat": {
         "lower_bound": 0.0,
-        "upper_bound": 99.9,
-        "resolution": 0.01
+        "resolution": 0.01,
+        "setpoint": 15.0,
+        "upper_bound": 99.9
       },
-      "available": true,
-      "preset_modes": ["home", "asleep", "away", "vacation", "no_frost"],
-      "active_preset": "home",
-      "available_schedules": ["Weekschema", "Badkamer", "Test"],
-      "selected_schedule": "Badkamer",
-      "last_used": "Badkamer",
-      "control_state": "off",
-      "mode": "auto",
-      "sensors": {
-        "temperature": 17.9,
-        "battery": 56,
-        "setpoint": 15.0
-      }
-    },
-    "da224107914542988a88561b4452b0f6": {
-      "dev_class": "gateway",
-      "firmware": "3.6.4",
-      "hardware": "AME Smile 2.0 board",
-      "location": "bc93488efab249e5bc54fd7e175a6f91",
-      "mac_address": "012345670001",
-      "model": "Gateway",
-      "name": "Adam",
-      "zigbee_mac_address": "ABCD012345670101",
       "vendor": "Plugwise",
-      "regulation_mode": "heating",
-      "regulation_modes": ["heating", "off", "bleeding_cold", "bleeding_hot"],
-      "binary_sensors": {
-        "plugwise_notification": false
-      },
-      "sensors": {
-        "outdoor_temperature": -1.25
-      }
-    },
-    "056ee145a816487eaa69243c3280f8bf": {
-      "dev_class": "heater_central",
-      "location": "bc93488efab249e5bc54fd7e175a6f91",
-      "model": "Generic heater",
-      "name": "OpenTherm",
-      "maximum_boiler_temperature": {
-        "setpoint": 60.0,
-        "lower_bound": 25.0,
-        "upper_bound": 95.0,
-        "resolution": 0.01
-      },
-      "domestic_hot_water_setpoint": {
-        "setpoint": 60.0,
-        "lower_bound": 40.0,
-        "upper_bound": 60.0,
-        "resolution": 0.01
-      },
-      "available": true,
-      "binary_sensors": {
-        "dhw_state": false,
-        "heating_state": true,
-        "flame_state": false
-      },
-      "sensors": {
-        "water_temperature": 37.0,
-        "intended_boiler_temperature": 38.1
-      },
-      "switches": {
-        "dhw_cm_switch": false
-      }
+      "zigbee_mac_address": "000D6F000C869B61"
     },
     "e8ef2a01ed3b4139a53bf749204fe6b4": {
       "dev_class": "switching",
-      "model": "Switchgroup",
-      "name": "Test",
       "members": [
         "2568cc4b9c1e401495d4741a5f89bee1",
         "29542b2b6a6a4169acecc15c72a599b8"
       ],
+      "model": "Switchgroup",
+      "name": "Test",
       "switches": {
         "relay": true
       }
     }
+  },
+  "gateway": {
+    "cooling_present": false,
+    "gateway_id": "da224107914542988a88561b4452b0f6",
+    "heater_id": "056ee145a816487eaa69243c3280f8bf",
+    "item_count": 147,
+    "notifications": {},
+    "smile_name": "Adam"
   }
-]
+}

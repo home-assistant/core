@@ -1,4 +1,5 @@
 """Common test objects."""
+
 import asyncio
 from datetime import timedelta
 import math
@@ -9,8 +10,11 @@ import zigpy.zcl
 import zigpy.zcl.foundation as zcl_f
 
 import homeassistant.components.zha.core.const as zha_const
-from homeassistant.components.zha.core.helpers import async_get_zha_config_value
-from homeassistant.helpers import entity_registry
+from homeassistant.components.zha.core.helpers import (
+    async_get_zha_config_value,
+    get_zha_gateway,
+)
+from homeassistant.helpers import entity_registry as er
 import homeassistant.util.dt as dt_util
 
 from tests.common import async_fire_time_changed
@@ -51,7 +55,6 @@ def patch_cluster(cluster):
     cluster.configure_reporting_multiple = AsyncMock(
         return_value=zcl_f.ConfigureReportingResponse.deserialize(b"\x00")[0]
     )
-    cluster.deserialize = Mock()
     cluster.handle_cluster_request = Mock()
     cluster.read_attributes = AsyncMock(wraps=cluster.read_attributes)
     cluster.read_attributes_raw = AsyncMock(side_effect=_read_attribute_raw)
@@ -77,20 +80,12 @@ def update_attribute_cache(cluster):
             attrid = zigpy.types.uint16_t(attrid)
         attrs.append(make_attribute(attrid, value))
 
-    hdr = make_zcl_header(zcl_f.Command.Report_Attributes)
+    hdr = make_zcl_header(zcl_f.GeneralCommand.Report_Attributes)
     hdr.frame_control.disable_default_response = True
     msg = zcl_f.GENERAL_COMMANDS[zcl_f.GeneralCommand.Report_Attributes].schema(
         attribute_reports=attrs
     )
     cluster.handle_message(hdr, msg)
-
-
-def get_zha_gateway(hass):
-    """Return ZHA gateway from hass.data."""
-    try:
-        return hass.data[zha_const.DATA_ZHA][zha_const.DATA_ZHA_GATEWAY]
-    except KeyError:
-        return None
 
 
 def make_attribute(attrid, value, status=0):
@@ -133,7 +128,7 @@ async def send_attributes_report(hass, cluster: zigpy.zcl.Cluster, attributes: d
     await hass.async_block_till_done()
 
 
-async def find_entity_id(domain, zha_device, hass, qualifier=None):
+def find_entity_id(domain, zha_device, hass, qualifier=None):
     """Find the entity id under the testing.
 
     This is used to get the entity id in order to get the state from the state
@@ -157,29 +152,25 @@ def find_entity_ids(domain, zha_device, hass):
     machine so that we can test state changes.
     """
 
-    registry = entity_registry.async_get(hass)
+    registry = er.async_get(hass)
     return [
         entity.entity_id
-        for entity in entity_registry.async_entries_for_device(
-            registry, zha_device.device_id
-        )
+        for entity in er.async_entries_for_device(registry, zha_device.device_id)
         if entity.domain == domain
     ]
 
 
 def async_find_group_entity_id(hass, domain, group):
     """Find the group entity id under test."""
-    entity_id = f"{domain}.fakemanufacturer_fakemodel_{group.name.lower().replace(' ','_')}_zha_group_0x{group.group_id:04x}"
+    entity_id = f"{domain}.coordinator_manufacturer_coordinator_model_{group.name.lower().replace(' ', '_')}"
 
     entity_ids = hass.states.async_entity_ids(domain)
-
-    if entity_id in entity_ids:
-        return entity_id
-    return None
+    assert entity_id in entity_ids
+    return entity_id
 
 
 async def async_enable_traffic(hass, zha_devices, enabled=True):
-    """Allow traffic to flow through the gateway and the zha device."""
+    """Allow traffic to flow through the gateway and the ZHA device."""
     for zha_device in zha_devices:
         zha_device.update_available(enabled)
     await hass.async_block_till_done()
@@ -212,7 +203,7 @@ async def async_test_rejoin(hass, zigpy_device, clusters, report_counts, ep_id=1
     zha_gateway = get_zha_gateway(hass)
     await zha_gateway.async_device_initialized(zigpy_device)
     await hass.async_block_till_done()
-    for cluster, reports in zip(clusters, report_counts):
+    for cluster, reports in zip(clusters, report_counts, strict=False):
         assert cluster.bind.call_count == 1
         assert cluster.bind.await_count == 1
         if reports:
@@ -253,10 +244,7 @@ def patch_zha_config(component: str, overrides: dict[tuple[str, str], Any]):
     def new_get_config(config_entry, section, config_key, default):
         if (section, config_key) in overrides:
             return overrides[section, config_key]
-        else:
-            return async_get_zha_config_value(
-                config_entry, section, config_key, default
-            )
+        return async_get_zha_config_value(config_entry, section, config_key, default)
 
     return patch(
         f"homeassistant.components.zha.{component}.async_get_zha_config_value",

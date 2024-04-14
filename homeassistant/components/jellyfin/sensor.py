@@ -1,4 +1,5 @@
 """Support for Jellyfin sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -16,18 +17,11 @@ from .entity import JellyfinEntity
 from .models import JellyfinData
 
 
-@dataclass
-class JellyfinSensorEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class JellyfinSensorEntityDescription(SensorEntityDescription):
+    """Describes Jellyfin sensor entity."""
 
     value_fn: Callable[[JellyfinDataT], StateType]
-
-
-@dataclass
-class JellyfinSensorEntityDescription(
-    SensorEntityDescription, JellyfinSensorEntityDescriptionMixin
-):
-    """Describes Jellyfin sensor entity."""
 
 
 def _count_now_playing(data: JellyfinDataT) -> int:
@@ -42,7 +36,8 @@ def _count_now_playing(data: JellyfinDataT) -> int:
 SENSOR_TYPES: dict[str, JellyfinSensorEntityDescription] = {
     "sessions": JellyfinSensorEntityDescription(
         key="watching",
-        icon="mdi:television-play",
+        translation_key="watching",
+        name=None,
         native_unit_of_measurement="Watching",
         value_fn=_count_now_playing,
     )

@@ -1,4 +1,5 @@
 """Support for lights."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -8,11 +9,13 @@ from fjaraskupan import COMMAND_LIGHT_ON_OFF
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import Coordinator, async_setup_entry_platform
+from . import async_setup_entry_platform
+from .coordinator import FjaraskupanCoordinator
 
 
 async def async_setup_entry(
@@ -22,20 +25,21 @@ async def async_setup_entry(
 ) -> None:
     """Set up tuya sensors dynamically through tuya discovery."""
 
-    def _constructor(coordinator: Coordinator) -> list[Entity]:
+    def _constructor(coordinator: FjaraskupanCoordinator) -> list[Entity]:
         return [Light(coordinator, coordinator.device_info)]
 
     async_setup_entry_platform(hass, config_entry, async_add_entities, _constructor)
 
 
-class Light(CoordinatorEntity[Coordinator], LightEntity):
+class Light(CoordinatorEntity[FjaraskupanCoordinator], LightEntity):
     """Light device."""
 
     _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(
         self,
-        coordinator: Coordinator,
+        coordinator: FjaraskupanCoordinator,
         device_info: DeviceInfo,
     ) -> None:
         """Init light entity."""
@@ -51,13 +55,13 @@ class Light(CoordinatorEntity[Coordinator], LightEntity):
             if ATTR_BRIGHTNESS in kwargs:
                 await device.send_dim(int(kwargs[ATTR_BRIGHTNESS] * (100.0 / 255.0)))
             else:
-                if not self.is_on:
-                    await device.send_command(COMMAND_LIGHT_ON_OFF)
+                await device.send_dim(100)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         if self.is_on:
             async with self.coordinator.async_connect_and_update() as device:
+                await device.send_dim(0)
                 await device.send_command(COMMAND_LIGHT_ON_OFF)
 
     @property

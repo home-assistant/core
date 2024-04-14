@@ -1,12 +1,14 @@
-"""The Home Assistant Sky Connect hardware platform."""
+"""The Home Assistant SkyConnect hardware platform."""
+
 from __future__ import annotations
 
 from homeassistant.components.hardware.models import HardwareInfo, USBInfo
 from homeassistant.core import HomeAssistant, callback
 
 from .const import DOMAIN
+from .util import get_hardware_variant
 
-DONGLE_NAME = "Home Assistant Sky Connect"
+DOCUMENTATION_URL = "https://skyconnect.home-assistant.io/documentation/"
 
 
 @callback
@@ -25,8 +27,8 @@ def async_info(hass: HomeAssistant) -> list[HardwareInfo]:
                 manufacturer=entry.data["manufacturer"],
                 description=entry.data["description"],
             ),
-            name=DONGLE_NAME,
-            url=None,
+            name=get_hardware_variant(entry).full_name,
+            url=DOCUMENTATION_URL,
         )
         for entry in entries
     ]

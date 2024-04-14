@@ -1,9 +1,10 @@
 """Data update coordinator for the Deluge integration."""
+
 from __future__ import annotations
 
 from datetime import timedelta
-import socket
 from ssl import SSLError
+from typing import Any
 
 from deluge_client.client import DelugeRPCClient, FailedToReconnectException
 
@@ -16,7 +17,9 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import DATA_KEYS, LOGGER
 
 
-class DelugeDataUpdateCoordinator(DataUpdateCoordinator):
+class DelugeDataUpdateCoordinator(
+    DataUpdateCoordinator[dict[Platform, dict[str, Any]]]
+):
     """Data update coordinator for the Deluge integration."""
 
     config_entry: ConfigEntry
@@ -34,7 +37,7 @@ class DelugeDataUpdateCoordinator(DataUpdateCoordinator):
         self.api = api
         self.config_entry = entry
 
-    async def _async_update_data(self) -> dict[Platform, dict[str, int | str]]:
+    async def _async_update_data(self) -> dict[Platform, dict[str, Any]]:
         """Get the latest data from Deluge and updates the state."""
         data = {}
         try:
@@ -49,7 +52,7 @@ class DelugeDataUpdateCoordinator(DataUpdateCoordinator):
             )
         except (
             ConnectionRefusedError,
-            socket.timeout,
+            TimeoutError,
             SSLError,
             FailedToReconnectException,
         ) as ex:
@@ -60,5 +63,5 @@ class DelugeDataUpdateCoordinator(DataUpdateCoordinator):
                     "Credentials for Deluge client are not valid"
                 ) from ex
             LOGGER.error("Unknown error connecting to Deluge: %s", ex)
-            raise ex
+            raise
         return data

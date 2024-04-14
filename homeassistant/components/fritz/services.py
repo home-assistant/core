@@ -1,4 +1,5 @@
 """Services for Fritz integration."""
+
 from __future__ import annotations
 
 import logging
@@ -54,7 +55,8 @@ async def async_setup_services(hass: HomeAssistant) -> None:
             )
         ):
             raise HomeAssistantError(
-                f"Failed to call service '{service_call.service}'. Config entry for target not found"
+                f"Failed to call service '{service_call.service}'. Config entry for"
+                " target not found"
             )
 
         for entry_id in fritzbox_entry_ids:

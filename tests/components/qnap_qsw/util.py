@@ -109,17 +109,17 @@ FIRMWARE_UPDATE_CHECK_MOCK = {
     API_ERROR_CODE: 200,
     API_ERROR_MESSAGE: "OK",
     API_RESULT: {
-        API_VERSION: "1.2.0",
-        API_NUMBER: "29649",
-        API_BUILD_NUMBER: "20220128",
-        API_DATE: "Fri, 28 Jan 2022 01:17:39 +0800",
+        API_VERSION: "1.3.0",
+        API_NUMBER: "527638",
+        API_BUILD_NUMBER: "20221123",
+        API_DATE: "Wed, 07, Dec 2022 16:30:00 +0800",
         API_DESCRIPTION: "",
         API_DOWNLOAD_URL: [
-            "https://download.qnap.com/Storage/Networking/QSW408FW/QSW-M408AC3-FW.v1.2.0_S20220128_29649.img",
-            "https://eu1.qnap.com/Storage/Networking/QSW408FW/QSW-M408AC3-FW.v1.2.0_S20220128_29649.img",
-            "https://us1.qnap.com/Storage/Networking/QSW408FW/QSW-M408AC3-FW.v1.2.0_S20220128_29649.img",
+            "https://download.qnap.com/Storage/Networking/QSW408FW/QSW-M408AC3-FW.v1.3.0_S20221123_527638.img",
+            "https://eu1.qnap.com/Storage/Networking/QSW408FW/QSW-M408AC3-FW.v1.3.0_S20221123_527638.img",
+            "https://us1.qnap.com/Storage/Networking/QSW408FW/QSW-M408AC3-FW.v1.3.0_S20221123_527638.img",
         ],
-        API_NEWER: False,
+        API_NEWER: True,
     },
 }
 
@@ -503,39 +503,51 @@ async def async_init_integration(
     )
     config_entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.qnap_qsw.QnapQswApi.get_firmware_condition",
-        return_value=FIRMWARE_CONDITION_MOCK,
-    ), patch(
-        "homeassistant.components.qnap_qsw.QnapQswApi.get_firmware_info",
-        return_value=FIRMWARE_INFO_MOCK,
-    ), patch(
-        "homeassistant.components.qnap_qsw.QnapQswApi.get_firmware_update_check",
-        return_value=FIRMWARE_UPDATE_CHECK_MOCK,
-    ), patch(
-        "homeassistant.components.qnap_qsw.QnapQswApi.get_lacp_info",
-        return_value=LACP_INFO_MOCK,
-    ), patch(
-        "homeassistant.components.qnap_qsw.QnapQswApi.get_ports_statistics",
-        return_value=PORTS_STATISTICS_MOCK,
-    ), patch(
-        "homeassistant.components.qnap_qsw.QnapQswApi.get_ports_status",
-        return_value=PORTS_STATUS_MOCK,
-    ), patch(
-        "homeassistant.components.qnap_qsw.QnapQswApi.get_system_board",
-        return_value=SYSTEM_BOARD_MOCK,
-    ), patch(
-        "homeassistant.components.qnap_qsw.QnapQswApi.get_system_sensor",
-        return_value=SYSTEM_SENSOR_MOCK,
-    ), patch(
-        "homeassistant.components.qnap_qsw.QnapQswApi.get_system_time",
-        return_value=SYSTEM_TIME_MOCK,
-    ), patch(
-        "homeassistant.components.qnap_qsw.QnapQswApi.get_users_verification",
-        return_value=USERS_VERIFICATION_MOCK,
-    ), patch(
-        "homeassistant.components.qnap_qsw.QnapQswApi.post_users_login",
-        return_value=USERS_LOGIN_MOCK,
+    with (
+        patch(
+            "homeassistant.components.qnap_qsw.QnapQswApi.get_firmware_condition",
+            return_value=FIRMWARE_CONDITION_MOCK,
+        ),
+        patch(
+            "homeassistant.components.qnap_qsw.QnapQswApi.get_firmware_info",
+            return_value=FIRMWARE_INFO_MOCK,
+        ),
+        patch(
+            "homeassistant.components.qnap_qsw.QnapQswApi.get_firmware_update_check",
+            return_value=FIRMWARE_UPDATE_CHECK_MOCK,
+        ),
+        patch(
+            "homeassistant.components.qnap_qsw.QnapQswApi.get_lacp_info",
+            return_value=LACP_INFO_MOCK,
+        ),
+        patch(
+            "homeassistant.components.qnap_qsw.QnapQswApi.get_ports_statistics",
+            return_value=PORTS_STATISTICS_MOCK,
+        ),
+        patch(
+            "homeassistant.components.qnap_qsw.QnapQswApi.get_ports_status",
+            return_value=PORTS_STATUS_MOCK,
+        ),
+        patch(
+            "homeassistant.components.qnap_qsw.QnapQswApi.get_system_board",
+            return_value=SYSTEM_BOARD_MOCK,
+        ),
+        patch(
+            "homeassistant.components.qnap_qsw.QnapQswApi.get_system_sensor",
+            return_value=SYSTEM_SENSOR_MOCK,
+        ),
+        patch(
+            "homeassistant.components.qnap_qsw.QnapQswApi.get_system_time",
+            return_value=SYSTEM_TIME_MOCK,
+        ),
+        patch(
+            "homeassistant.components.qnap_qsw.QnapQswApi.get_users_verification",
+            return_value=USERS_VERIFICATION_MOCK,
+        ),
+        patch(
+            "homeassistant.components.qnap_qsw.QnapQswApi.post_users_login",
+            return_value=USERS_LOGIN_MOCK,
+        ),
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()

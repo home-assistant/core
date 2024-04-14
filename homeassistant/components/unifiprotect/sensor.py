@@ -1,4 +1,5 @@
-"""This component provides sensors for UniFi Protect."""
+"""Component providing sensors for UniFi Protect."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -15,7 +16,6 @@ from pyunifiprotect.data import (
     ProtectDeviceModel,
     ProtectModelWithId,
     Sensor,
-    SmartDetectObjectType,
 )
 
 from homeassistant.components.sensor import (
@@ -29,15 +29,15 @@ from homeassistant.const import (
     LIGHT_LUX,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-    TEMP_CELSIUS,
-    TIME_SECONDS,
+    EntityCategory,
     UnitOfDataRate,
     UnitOfElectricPotential,
     UnitOfInformation,
+    UnitOfTemperature,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DISPATCH_ADOPT, DOMAIN
@@ -53,10 +53,9 @@ from .utils import async_dispatch_id as _ufpd, async_get_light_motion_current
 
 _LOGGER = logging.getLogger(__name__)
 OBJECT_TYPE_NONE = "none"
-DEVICE_CLASS_DETECTION = "unifiprotect__detection"
 
 
-@dataclass
+@dataclass(frozen=True, kw_only=True)
 class ProtectSensorEntityDescription(
     ProtectRequiredKeysMixin[T], SensorEntityDescription
 ):
@@ -67,13 +66,12 @@ class ProtectSensorEntityDescription(
     def get_ufp_value(self, obj: T) -> Any:
         """Return value from UniFi Protect device."""
         value = super().get_ufp_value(obj)
-
-        if isinstance(value, float) and self.precision:
-            value = round(value, self.precision)
+        if self.precision and value is not None:
+            return round(value, self.precision)
         return value
 
 
-@dataclass
+@dataclass(frozen=True, kw_only=True)
 class ProtectSensorEventEntityDescription(
     ProtectEventMixin[T], SensorEntityDescription
 ):
@@ -104,7 +102,6 @@ def _get_nvr_memory(obj: NVR) -> float | None:
 
 
 def _get_alarm_sound(obj: Sensor) -> str:
-
     alarm_type = OBJECT_TYPE_NONE
     if (
         obj.is_alarm_detected
@@ -196,8 +193,8 @@ CAMERA_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
         ufp_value="voltage",
-        # no feature flag, but voltage will be null if device does not have voltage sensor
-        # (i.e. is not G4 Doorbell or not on 1.20.1+)
+        # no feature flag, but voltage will be null if device does not have
+        # voltage sensor (i.e. is not G4 Doorbell or not on 1.20.1+)
         ufp_required_field="voltage",
         precision=2,
     ),
@@ -206,7 +203,7 @@ CAMERA_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         name="Last Doorbell Ring",
         device_class=SensorDeviceClass.TIMESTAMP,
         icon="mdi:doorbell-video",
-        ufp_required_field="feature_flags.has_chime",
+        ufp_required_field="feature_flags.is_doorbell",
         ufp_value="last_ring",
         entity_registry_enabled_default=False,
     ),
@@ -320,7 +317,7 @@ SENSE_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
     ProtectSensorEntityDescription(
         key="temperature_level",
         name="Temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         ufp_value="stats.temperature.value",
@@ -482,7 +479,7 @@ NVR_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
     ProtectSensorEntityDescription[NVR](
         key="record_capacity",
         name="Recording Capacity",
-        native_unit_of_measurement=TIME_SECONDS,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
         icon="mdi:record-rec",
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
@@ -504,7 +501,7 @@ NVR_DISABLED_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
     ProtectSensorEntityDescription(
         key="cpu_temperature",
         name="CPU Temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -526,22 +523,13 @@ NVR_DISABLED_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
 
 EVENT_SENSORS: tuple[ProtectSensorEventEntityDescription, ...] = (
     ProtectSensorEventEntityDescription(
-        key="detected_object",
-        name="Detected Object",
-        device_class=DEVICE_CLASS_DETECTION,
-        entity_registry_enabled_default=False,
-        ufp_value="is_smart_detected",
-        ufp_event_obj="last_smart_detect_event",
-    ),
-    ProtectSensorEventEntityDescription(
         key="smart_obj_licenseplate",
         name="License Plate Detected",
         icon="mdi:car",
         translation_key="license_plate",
-        ufp_smart_type=SmartDetectObjectType.LICENSE_PLATE,
-        ufp_value="is_smart_detected",
+        ufp_value="is_license_plate_currently_detected",
         ufp_required_field="can_detect_license_plate",
-        ufp_event_obj="last_smart_detect_event",
+        ufp_event_obj="last_license_plate_detect_event",
     ),
 )
 
@@ -630,7 +618,8 @@ async def async_setup_entry(
     """Set up sensors for UniFi Protect integration."""
     data: ProtectData = hass.data[DOMAIN][entry.entry_id]
 
-    async def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
+    @callback
+    def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
         entities = async_all_device_entities(
             data,
             ProtectDeviceSensor,
@@ -722,19 +711,19 @@ class ProtectDeviceSensor(ProtectDeviceEntity, SensorEntity):
 
     entity_description: ProtectSensorEntityDescription
 
-    def __init__(
-        self,
-        data: ProtectData,
-        device: ProtectAdoptableDeviceModel,
-        description: ProtectSensorEntityDescription,
-    ) -> None:
-        """Initialize an UniFi Protect sensor."""
-        super().__init__(data, device, description)
-
-    @callback
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
         super()._async_update_device_from_protect(device)
         self._attr_native_value = self.entity_description.get_ufp_value(self.device)
+
+    @callback
+    def _async_get_state_attrs(self) -> tuple[Any, ...]:
+        """Retrieve data that goes into the current state of the entity.
+
+        Called before and after updating entity and state is only written if there
+        is a change.
+        """
+
+        return (self._attr_available, self._attr_native_value)
 
 
 class ProtectNVRSensor(ProtectNVREntity, SensorEntity):
@@ -742,19 +731,19 @@ class ProtectNVRSensor(ProtectNVREntity, SensorEntity):
 
     entity_description: ProtectSensorEntityDescription
 
-    def __init__(
-        self,
-        data: ProtectData,
-        device: NVR,
-        description: ProtectSensorEntityDescription,
-    ) -> None:
-        """Initialize an UniFi Protect sensor."""
-        super().__init__(data, device, description)
-
-    @callback
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
         super()._async_update_device_from_protect(device)
         self._attr_native_value = self.entity_description.get_ufp_value(self.device)
+
+    @callback
+    def _async_get_state_attrs(self) -> tuple[Any, ...]:
+        """Retrieve data that goes into the current state of the entity.
+
+        Called before and after updating entity and state is only written if there
+        is a change.
+        """
+
+        return (self._attr_available, self._attr_native_value)
 
 
 class ProtectEventSensor(EventEntityMixin, SensorEntity):
@@ -762,33 +751,22 @@ class ProtectEventSensor(EventEntityMixin, SensorEntity):
 
     entity_description: ProtectSensorEventEntityDescription
 
-    def __init__(
-        self,
-        data: ProtectData,
-        device: ProtectAdoptableDeviceModel,
-        description: ProtectSensorEventEntityDescription,
-    ) -> None:
-        """Initialize an UniFi Protect sensor."""
-        super().__init__(data, device, description)
-
     @callback
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
         # do not call ProtectDeviceSensor method since we want event to get value here
         EventEntityMixin._async_update_device_from_protect(self, device)
-        is_on = self.entity_description.get_is_on(device)
+        event = self._event
+        entity_description = self.entity_description
+        is_on = entity_description.get_is_on(self.device, self._event)
         is_license_plate = (
-            self.entity_description.ufp_smart_type
-            == SmartDetectObjectType.LICENSE_PLATE
+            entity_description.ufp_event_obj == "last_license_plate_detect_event"
         )
         if (
             not is_on
-            or self._event is None
+            or event is None
             or (
                 is_license_plate
-                and (
-                    self._event.metadata is None
-                    or self._event.metadata.license_plate is None
-                )
+                and (event.metadata is None or event.metadata.license_plate is None)
             )
         ):
             self._attr_native_value = OBJECT_TYPE_NONE
@@ -798,6 +776,20 @@ class ProtectEventSensor(EventEntityMixin, SensorEntity):
 
         if is_license_plate:
             # type verified above
-            self._attr_native_value = self._event.metadata.license_plate.name  # type: ignore[union-attr]
+            self._attr_native_value = event.metadata.license_plate.name  # type: ignore[union-attr]
         else:
-            self._attr_native_value = self._event.smart_detect_types[0].value
+            self._attr_native_value = event.smart_detect_types[0].value
+
+    @callback
+    def _async_get_state_attrs(self) -> tuple[Any, ...]:
+        """Retrieve data that goes into the current state of the entity.
+
+        Called before and after updating entity and state is only written if there
+        is a change.
+        """
+
+        return (
+            self._attr_available,
+            self._attr_native_value,
+            self._attr_extra_state_attributes,
+        )

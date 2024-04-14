@@ -1,4 +1,5 @@
 """The NEW_NAME integration."""
+
 from __future__ import annotations
 
 from homeassistant.config_entries import ConfigEntry
@@ -25,14 +26,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
 
     # If using a requests-based API lib
-    hass.data[DOMAIN][entry.entry_id] = api.ConfigEntryAuth(hass, session)
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = api.ConfigEntryAuth(
+        hass, session
+    )
 
     # If using an aiohttp-based API lib
-    hass.data[DOMAIN][entry.entry_id] = api.AsyncConfigEntryAuth(
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = api.AsyncConfigEntryAuth(
         aiohttp_client.async_get_clientsession(hass), session
     )
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
