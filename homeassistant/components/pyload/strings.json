@@ -58,6 +58,14 @@
       "free_space": {
         "name": "Free space"
       }
+    },
+    "binary_sensor": {
+      "captcha": {
+        "name": "Captcha"
+      },
+      "download": {
+        "name": "Running"
+      }
     }
   },
   "issues": {
