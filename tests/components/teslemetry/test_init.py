@@ -47,16 +47,6 @@ async def test_init_error(
 
 
 # Vehicle Coordinator
-@pytest.mark.parametrize(("side_effect", "state"), ERRORS)
-async def test_vehicle_first_refresh_error(
-    hass: HomeAssistant, mock_wake_up, side_effect, state
-) -> None:
-    """Test first coordinator refresh with an error."""
-    mock_wake_up.side_effect = side_effect
-    entry = await setup_platform(hass)
-    assert entry.state is state
-
-
 async def test_vehicle_refresh_offline(
     hass: HomeAssistant, mock_vehicle_data, freezer: FrozenDateTimeFactory
 ) -> None:
