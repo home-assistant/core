@@ -12,9 +12,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
     CONF_SSL,
-    CONF_URL,
     CONF_USERNAME,
-    CONF_VERIFY_SSL,
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -42,10 +40,7 @@ async def test_form(
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == f"{TEST_USER_DATA[CONF_HOST]}:{TEST_USER_DATA[CONF_PORT]}"
-    assert result["data"] == {
-        **TEST_USER_DATA,
-        CONF_URL: f"https://{TEST_USER_DATA[CONF_HOST]}:{TEST_USER_DATA[CONF_PORT]}/",
-    }
+    assert result["data"] == TEST_USER_DATA
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -87,10 +82,7 @@ async def test_flow_user_error_and_recover(
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == f"{TEST_USER_DATA[CONF_HOST]}:{TEST_USER_DATA[CONF_PORT]}"
-    assert result["data"] == {
-        **TEST_USER_DATA,
-        CONF_URL: f"https://{TEST_USER_DATA[CONF_HOST]}:{TEST_USER_DATA[CONF_PORT]}/",
-    }
+    assert result["data"] == TEST_USER_DATA
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -123,7 +115,7 @@ async def test_flow_reauth(
     """Test reauth flow."""
 
     pyload_config_entry.add_to_hass(hass)
-
+    assert pyload_config_entry.data == TEST_USER_DATA
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={
@@ -138,7 +130,7 @@ async def test_flow_reauth(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_PASSWORD: "new-password"},
+        {CONF_USERNAME: "new-username", CONF_PASSWORD: "new-password"},
     )
 
     await hass.async_block_till_done()
@@ -147,6 +139,11 @@ async def test_flow_reauth(
     assert result["reason"] == "reauth_successful"
 
     assert len(hass.config_entries.async_entries()) == 1
+    assert pyload_config_entry.data == {
+        **TEST_USER_DATA,
+        CONF_PASSWORD: "new-password",
+        CONF_USERNAME: "new-username",
+    }
 
 
 async def test_flow_import(hass: HomeAssistant, mock_pyloadapi: AsyncMock) -> None:
@@ -167,11 +164,7 @@ async def test_flow_import(hass: HomeAssistant, mock_pyloadapi: AsyncMock) -> No
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == f"{TEST_USER_DATA[CONF_HOST]}:{TEST_USER_DATA[CONF_PORT]}"
-    assert result["data"] == {
-        **TEST_USER_DATA,
-        CONF_VERIFY_SSL: False,
-        CONF_URL: f"https://{TEST_USER_DATA[CONF_HOST]}:{TEST_USER_DATA[CONF_PORT]}/",
-    }
+    assert result["data"] == TEST_USER_DATA
 
     issue_registry = ir.async_get(hass)
     issue = issue_registry.async_get_issue(
@@ -237,7 +230,7 @@ async def test_flow_reauth_error_and_recover(
     """Test reauth flow."""
 
     pyload_config_entry.add_to_hass(hass)
-
+    assert pyload_config_entry.data == TEST_USER_DATA
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={
@@ -253,21 +246,114 @@ async def test_flow_reauth_error_and_recover(
     mock_pyloadapi.login.side_effect = raise_error
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_PASSWORD: "new-password"},
+        {CONF_PASSWORD: "new-password", CONF_USERNAME: "new-username"},
     )
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": text_error}
+    assert pyload_config_entry.data == TEST_USER_DATA
 
     mock_pyloadapi.login.side_effect = None
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_PASSWORD: "new-password"},
+        {CONF_PASSWORD: "new-password", CONF_USERNAME: "new-username"},
     )
 
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
+    assert len(hass.config_entries.async_entries()) == 1
+    assert pyload_config_entry.data == {
+        **TEST_USER_DATA,
+        CONF_PASSWORD: "new-password",
+        CONF_USERNAME: "new-username",
+    }
+
+
+async def test_flow_reconfigure(
+    hass: HomeAssistant,
+    mock_pyloadapi: AsyncMock,
+    pyload_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfigure flow."""
+
+    pyload_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_RECONFIGURE,
+            "entry_id": pyload_config_entry.entry_id,
+            "unique_id": pyload_config_entry.unique_id,
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], TEST_USER_DATA
+    )
+
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
 
     assert len(hass.config_entries.async_entries()) == 1
+    assert pyload_config_entry.data == TEST_USER_DATA
+
+
+@pytest.mark.parametrize(
+    ("raise_error", "text_error"),
+    [
+        (CannotConnect(), "cannot_connect"),
+        (InvalidAuth(), "invalid_auth"),
+        (ParserError(), "unknown"),
+        (IndexError(), "unknown"),
+    ],
+)
+async def test_flow_reconfigure_error_and_recover(
+    hass: HomeAssistant,
+    mock_pyloadapi: AsyncMock,
+    pyload_config_entry: MockConfigEntry,
+    raise_error,
+    text_error,
+) -> None:
+    """Test reauth flow."""
+
+    pyload_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_RECONFIGURE,
+            "entry_id": pyload_config_entry.entry_id,
+            "unique_id": pyload_config_entry.unique_id,
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure_confirm"
+
+    mock_pyloadapi.login.side_effect = raise_error
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {**TEST_USER_DATA, CONF_HOST: "2.2.2.2"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": text_error}
+    assert pyload_config_entry.data == TEST_USER_DATA
+
+    mock_pyloadapi.login.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {**TEST_USER_DATA, CONF_HOST: "2.2.2.2"}
+    )
+
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert len(hass.config_entries.async_entries()) == 1
+    assert pyload_config_entry.data == {**TEST_USER_DATA, CONF_HOST: "2.2.2.2"}

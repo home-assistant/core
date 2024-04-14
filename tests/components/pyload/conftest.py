@@ -12,7 +12,6 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
     CONF_SSL,
-    CONF_URL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
@@ -85,6 +84,4 @@ def mock_pyloadapi() -> Generator[AsyncMock, None, None]:
 def mock_pyload_config_entry() -> MockConfigEntry:
     """Mock bring configuration entry."""
     url = f"https://{TEST_USER_DATA[CONF_HOST]}:{TEST_USER_DATA[CONF_PORT]}/"
-    return MockConfigEntry(
-        domain=DOMAIN, data={**TEST_USER_DATA, CONF_URL: url}, unique_id=url
-    )
+    return MockConfigEntry(domain=DOMAIN, data=TEST_USER_DATA, unique_id=url)

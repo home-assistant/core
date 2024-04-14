@@ -15,6 +15,7 @@
         "title": "[%key:common::config_flow::title::reauth%]",
         "description": "Please reenter the password for: {username}",
         "data": {
+          "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
         }
       },
