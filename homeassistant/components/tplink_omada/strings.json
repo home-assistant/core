@@ -40,6 +40,31 @@
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "device_tracker": "Enable device tracking"
+        },
+        "title": "TP-Link Omada Options",
+        "description": "Select optional features to enable."
+      },
+      "device_tracker": {
+        "data": {
+          "tracked_clients": "Track by nearest access point",
+          "scanned_clients": "Track by network connection"
+        },
+        "data_description": {
+          "tracked_clients": "Select clients to track approximate location based on their nearest Wi-Fi access point.",
+          "scanned_clients": "Select clients to track home/away state from on Wi-Fi connection."
+        },
+        "title": "Device Tracker Options"
+      }
+    },
+    "error": {
+      "no_clients_selected": "No clients selected to track."
+    }
+  },
   "entity": {
     "switch": {
       "poe_control": {

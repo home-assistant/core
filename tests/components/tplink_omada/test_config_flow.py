@@ -1,7 +1,8 @@
 """Test the TP-Link Omada config flows."""
 
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
+from syrupy.assertion import SnapshotAssertion
 from tplink_omada_client import OmadaSite
 from tplink_omada_client.exceptions import (
     ConnectionFailed,
@@ -12,6 +13,9 @@ from tplink_omada_client.exceptions import (
 
 from homeassistant import config_entries
 from homeassistant.components.tplink_omada.config_flow import (
+    OPT_DEVICE_TRACKER,
+    OPT_SCANNED_CLIENTS,
+    OPT_TRACKED_CLIENTS,
     HubInfo,
     _validate_input,
     create_omada_client,
@@ -437,3 +441,161 @@ async def test_create_omada_client_with_ip_creates_clientsession(
     mock_create_clientsession.assert_called_once_with(
         hass, cookie_jar=mock_jar.return_value, verify_ssl=True
     )
+
+
+async def test_first_options_flow_with_no_tracker_creates_options(
+    hass: HomeAssistant,
+) -> None:
+    """Test we get the initial form if there are no Options configured."""
+    mock_entry = MockConfigEntry(
+        domain="tplink_omada",
+        data=dict(MOCK_ENTRY_DATA),
+        unique_id="USERID",
+    )
+    mock_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(mock_entry.entry_id)
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "init"
+    assert result["errors"] is None
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={OPT_DEVICE_TRACKER: False}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert mock_entry.options == {OPT_DEVICE_TRACKER: False}
+
+
+async def test_options_flow_defaults_form_with_selected_option(
+    hass: HomeAssistant,
+) -> None:
+    """Test we get the initial form with pre-filled options."""
+    mock_entry = MockConfigEntry(
+        domain="tplink_omada",
+        data=dict(MOCK_ENTRY_DATA),
+        options={OPT_DEVICE_TRACKER: True},
+        unique_id="USERID",
+    )
+    mock_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(mock_entry.entry_id)
+
+    assert result["type"] == FlowResultType.FORM
+    assert _get_schema_default(result["data_schema"].schema, OPT_DEVICE_TRACKER) is True
+    assert result["step_id"] == "init"
+    assert result["errors"] is None
+
+
+def _get_schema_default(schema, key_name):
+    for schema_key in schema:
+        if schema_key == key_name:
+            return schema_key.default()
+    raise KeyError(f"{key_name} not found in schema")
+
+
+async def test_options_flow_enable_device_tracker_gets_known_clients(
+    hass: HomeAssistant,
+    mock_omada_clients_only_client: MagicMock,
+    mock_omada_clients_only_site_client: MagicMock,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test that if the device tracker is enabled, we get a populated device tracker form."""
+    mock_entry = MockConfigEntry(
+        domain="tplink_omada",
+        data=dict(MOCK_ENTRY_DATA),
+        options={OPT_DEVICE_TRACKER: False},
+        unique_id="USERID",
+    )
+    mock_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(mock_entry.entry_id)
+    assert result["type"] == FlowResultType.FORM
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={OPT_DEVICE_TRACKER: True}
+    )
+
+    mock_omada_clients_only_site_client.get_known_clients.assert_called_once()
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "device_tracker"
+    schema = result["data_schema"].schema[OPT_TRACKED_CLIENTS]
+    assert schema.config == snapshot
+
+
+async def test_options_flow_enable_device_tracker_no_clients_selected_returns_error(
+    hass: HomeAssistant,
+    mock_omada_clients_only_client: MagicMock,
+    mock_omada_clients_only_site_client: MagicMock,
+) -> None:
+    """Test that if the user doesn't select any devices to track, they are given an error message."""
+    mock_entry = MockConfigEntry(
+        domain="tplink_omada",
+        data=dict(MOCK_ENTRY_DATA),
+        options={OPT_DEVICE_TRACKER: False},
+        unique_id="USERID",
+    )
+    mock_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(mock_entry.entry_id)
+    assert result["type"] == FlowResultType.FORM
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={OPT_DEVICE_TRACKER: True}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "device_tracker"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            OPT_TRACKED_CLIENTS: [],
+            OPT_SCANNED_CLIENTS: [],
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "device_tracker"
+    assert result["errors"] == {OPT_TRACKED_CLIENTS: "no_clients_selected"}
+
+
+async def test_options_flow_enable_device_tracker_creates_entry(
+    hass: HomeAssistant,
+    mock_omada_clients_only_client: MagicMock,
+    mock_omada_clients_only_site_client: MagicMock,
+) -> None:
+    """Test the options flow allows selection of tracked and scanned devices by Mac."""
+    mock_entry = MockConfigEntry(
+        domain="tplink_omada",
+        data=dict(MOCK_ENTRY_DATA),
+        options={OPT_DEVICE_TRACKER: False},
+        unique_id="USERID",
+    )
+    mock_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(mock_entry.entry_id)
+    assert result["type"] == FlowResultType.FORM
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={OPT_DEVICE_TRACKER: True}
+    )
+
+    mock_omada_clients_only_site_client.get_known_clients.assert_called_once()
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "device_tracker"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            OPT_TRACKED_CLIENTS: ["2E-DC-E1-C4-37-D3"],
+            OPT_SCANNED_CLIENTS: ["2C-71-FF-ED-34-83"],
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert mock_entry.options == {
+        OPT_DEVICE_TRACKER: True,
+        OPT_TRACKED_CLIENTS: ["2E-DC-E1-C4-37-D3"],
+        OPT_SCANNED_CLIENTS: ["2C-71-FF-ED-34-83"],
+    }

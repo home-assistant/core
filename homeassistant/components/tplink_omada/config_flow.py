@@ -11,6 +11,7 @@ from urllib.parse import urlsplit
 
 from aiohttp import CookieJar
 from tplink_omada_client import OmadaClient, OmadaSite
+from tplink_omada_client.clients import OmadaWirelessClient
 from tplink_omada_client.exceptions import (
     ConnectionFailed,
     LoginFailed,
@@ -19,9 +20,15 @@ from tplink_omada_client.exceptions import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+    OptionsFlowWithConfigEntry,
+)
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_VERIFY_SSL
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import (
     async_create_clientsession,
@@ -29,10 +36,17 @@ from homeassistant.helpers.aiohttp_client import (
 )
 
 from .const import DOMAIN
+from .controller import OmadaSiteController
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_SITE = "site"
+
+OPT_DEVICE_TRACKER = "device_tracker"
+OPT_TRACKED_CLIENTS = "tracked_clients"
+OPT_SCANNED_CLIENTS = "scanned_clients"
+
+_STEP_DEVICE_TRACKER = "device_tracker"
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
@@ -222,3 +236,104 @@ class TpLinkOmadaConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         return None
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> OptionsFlow:
+        """Create the options flow."""
+        return OptionsFlowHandler(config_entry)
+
+
+class OptionsFlowHandler(OptionsFlowWithConfigEntry):
+    """Options flow for TP-Link Omada."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage the top-level options."""
+
+        self.options.update(user_input or {})
+        device_tracker_enabled = self.options.get(OPT_DEVICE_TRACKER, False)
+
+        if user_input is None:
+            return self.async_show_form(
+                step_id="init",
+                data_schema=vol.Schema(
+                    {
+                        vol.Required(
+                            OPT_DEVICE_TRACKER,
+                            default=device_tracker_enabled,
+                        ): bool
+                    }
+                ),
+            )
+
+        if device_tracker_enabled:
+            return await self.async_step_device_tracker()
+
+        return self.async_create_entry(data=self.options)
+
+    async def async_step_device_tracker(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage the device tracker options."""
+        errors = {}
+
+        if user_input is not None:
+            self.options.update(user_input)
+            if (
+                len(self.options[OPT_TRACKED_CLIENTS]) == 0
+                and len(self.options[OPT_SCANNED_CLIENTS]) == 0
+            ):
+                errors[OPT_TRACKED_CLIENTS] = "no_clients_selected"
+
+        if user_input is None or errors:
+            controller: OmadaSiteController = self.hass.data[DOMAIN][
+                self.config_entry.entry_id
+            ]
+
+            site_client = controller.omada_client
+            # Get the known Wi-Fi clients, in alphabetical order moving un-named clients to the end of the list
+            clients: list[OmadaWirelessClient] = sorted(
+                [
+                    client
+                    async for client in site_client.get_known_clients()
+                    if isinstance(client, OmadaWirelessClient)
+                ],
+                key=lambda c: (0 if c.name != c.mac else 1, c.name),
+            )
+
+            schema = vol.Schema(
+                {
+                    vol.Optional(
+                        OPT_SCANNED_CLIENTS,
+                        default=self.options.get(OPT_SCANNED_CLIENTS, []),
+                    ): _get_clients_selector(clients),
+                    vol.Optional(
+                        OPT_TRACKED_CLIENTS,
+                        default=self.options.get(OPT_TRACKED_CLIENTS, []),
+                    ): _get_clients_selector(clients),
+                }
+            )
+
+            return self.async_show_form(
+                step_id=_STEP_DEVICE_TRACKER, data_schema=schema, errors=errors
+            )
+
+        return self.async_create_entry(data=self.options)
+
+
+def _get_clients_selector(
+    clients: list[OmadaWirelessClient],
+) -> selector.SelectSelector:
+    return selector.SelectSelector(
+        selector.SelectSelectorConfig(
+            options=[
+                selector.SelectOptionDict(value=c.mac, label=c.name) for c in clients
+            ],
+            multiple=True,
+            mode=selector.SelectSelectorMode.DROPDOWN,
+        )
+    )

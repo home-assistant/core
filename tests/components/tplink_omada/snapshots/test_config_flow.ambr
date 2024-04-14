@@ -1,0 +1,27 @@
+# serializer version: 1
+# name: test_options_flow_enable_device_tracker_gets_known_clients
+  dict({
+    'custom_value': False,
+    'mode': 'dropdown',
+    'multiple': True,
+    'options': list([
+      dict({
+        'label': 'Apple',
+        'value': '2E-DC-E1-C4-37-D3',
+      }),
+      dict({
+        'label': 'Banana',
+        'value': '2C-71-FF-ED-34-83',
+      }),
+      dict({
+        'label': 'Pear',
+        'value': '2C-D2-6B-BA-9C-94',
+      }),
+      dict({
+        'label': '16-32-50-ED-FB-15',
+        'value': '16-32-50-ED-FB-15',
+      }),
+    ]),
+    'sort': False,
+  })
+# ---

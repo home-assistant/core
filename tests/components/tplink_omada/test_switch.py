@@ -17,7 +17,7 @@ from tplink_omada_client.devices import (
 from tplink_omada_client.exceptions import InvalidDevice
 
 from homeassistant.components import switch
-from homeassistant.components.tplink_omada.controller import POLL_GATEWAY
+from homeassistant.components.tplink_omada.coordinator import POLL_GATEWAY
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
