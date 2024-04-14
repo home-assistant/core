@@ -206,6 +206,8 @@ def async_track_state_change(
     being None, async_track_state_change_event should be used instead
     as it is slightly faster.
 
+    This function is deprecated and will be removed in Assistant 2025.5.
+
     Must be run within the event loop.
     """
     frame.report(
