@@ -1979,7 +1979,7 @@ smhi-pkg==1.0.16
 snapcast==2.3.6
 
 # homeassistant.components.sonos
-soco==0.30.2
+soco==0.30.3
 
 # homeassistant.components.solaredge
 solaredge==0.0.2
