@@ -250,7 +250,8 @@ async def test_sensor_source_with_force_update(hass: HomeAssistant) -> None:
 
     state_normal = hass.states.get("sensor.test_normal")
     state_force = hass.states.get("sensor.test_force")
-    assert state_normal and state_force
+    assert state_normal
+    assert state_force
     assert state_normal.state == str(round(sum(repeating_values) / 3, 2))
     assert state_force.state == str(round(sum(repeating_values) / 9, 2))
     assert state_normal.attributes.get("buffer_usage_ratio") == round(3 / 20, 2)
@@ -952,15 +953,20 @@ async def test_unitless_source_sensor(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.test_unitless_1")
-    assert state and state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
+    assert state
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
     state = hass.states.get("sensor.test_unitless_2")
-    assert state and state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
+    assert state
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
     state = hass.states.get("sensor.test_unitless_3")
-    assert state and state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
+    assert state
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
     state = hass.states.get("sensor.test_unitless_4")
-    assert state and state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
+    assert state
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
     state = hass.states.get("sensor.test_unitless_5")
-    assert state and state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "%"
+    assert state
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "%"
 
 
 async def test_state_characteristics(hass: HomeAssistant) -> None:

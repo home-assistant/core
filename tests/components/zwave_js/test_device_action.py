@@ -545,7 +545,8 @@ async def test_get_action_capabilities(
             "type": "refresh_value",
         },
     )
-    assert capabilities and "extra_fields" in capabilities
+    assert capabilities
+    assert "extra_fields" in capabilities
 
     assert voluptuous_serialize.convert(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
@@ -573,7 +574,8 @@ async def test_get_action_capabilities(
             "type": "set_value",
         },
     )
-    assert capabilities and "extra_fields" in capabilities
+    assert capabilities
+    assert "extra_fields" in capabilities
 
     cc_options = [
         (133, "Association"),
@@ -628,7 +630,8 @@ async def test_get_action_capabilities(
             "subtype": "1 (Temperature Reporting Threshold)",
         },
     )
-    assert capabilities and "extra_fields" in capabilities
+    assert capabilities
+    assert "extra_fields" in capabilities
 
     assert voluptuous_serialize.convert(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
@@ -661,7 +664,8 @@ async def test_get_action_capabilities(
             "subtype": "10 (Temperature Reporting Filter)",
         },
     )
-    assert capabilities and "extra_fields" in capabilities
+    assert capabilities
+    assert "extra_fields" in capabilities
 
     assert voluptuous_serialize.convert(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
@@ -716,7 +720,8 @@ async def test_get_action_capabilities_lock_triggers(
             "type": "clear_lock_usercode",
         },
     )
-    assert capabilities and "extra_fields" in capabilities
+    assert capabilities
+    assert "extra_fields" in capabilities
 
     assert voluptuous_serialize.convert(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
@@ -733,7 +738,8 @@ async def test_get_action_capabilities_lock_triggers(
             "type": "set_lock_usercode",
         },
     )
-    assert capabilities and "extra_fields" in capabilities
+    assert capabilities
+    assert "extra_fields" in capabilities
 
     assert voluptuous_serialize.convert(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
@@ -767,7 +773,8 @@ async def test_get_action_capabilities_meter_triggers(
             "type": "reset_meter",
         },
     )
-    assert capabilities and "extra_fields" in capabilities
+    assert capabilities
+    assert "extra_fields" in capabilities
 
     assert voluptuous_serialize.convert(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer

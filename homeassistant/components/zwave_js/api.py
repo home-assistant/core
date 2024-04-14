@@ -1878,7 +1878,8 @@ async def websocket_get_log_config(
     driver: Driver,
 ) -> None:
     """Get log configuration for the Z-Wave JS driver."""
-    assert client and client.driver
+    assert client
+    assert client.driver
     connection.send_result(
         msg[ID],
         dataclasses.asdict(driver.log_config),
@@ -1940,7 +1941,8 @@ async def websocket_data_collection_status(
     driver: Driver,
 ) -> None:
     """Return data collection preference and status."""
-    assert client and client.driver
+    assert client
+    assert client.driver
     result = {
         OPTED_IN: entry.data.get(CONF_DATA_COLLECTION_OPTED_IN),
         ENABLED: await driver.async_is_statistics_enabled(),

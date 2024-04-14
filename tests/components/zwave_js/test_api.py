@@ -3441,7 +3441,8 @@ async def test_update_log_config(
     )
     msg = await ws_client.receive_json()
     assert not msg["success"]
-    assert "error" in msg and msg["error"]["code"] == "invalid_format"
+    assert "error" in msg
+    assert msg["error"]["code"] == "invalid_format"
 
     # Test error without service data
     await ws_client.send_json(
@@ -3454,7 +3455,8 @@ async def test_update_log_config(
     )
     msg = await ws_client.receive_json()
     assert not msg["success"]
-    assert "error" in msg and "must contain at least one of" in msg["error"]["message"]
+    assert "error" in msg
+    assert "must contain at least one of" in msg["error"]["message"]
 
     # Test error if we set logToFile to True without providing filename
     await ws_client.send_json(
@@ -3467,10 +3469,8 @@ async def test_update_log_config(
     )
     msg = await ws_client.receive_json()
     assert not msg["success"]
-    assert (
-        "error" in msg
-        and "must be provided if logging to file" in msg["error"]["message"]
-    )
+    assert "error" in msg
+    assert "must be provided if logging to file" in msg["error"]["message"]
 
     # Test FailedZWaveCommand is caught
     with patch(

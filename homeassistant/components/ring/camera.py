@@ -168,7 +168,8 @@ class RingCam(RingEntity[RingDoorBell], Camera):
         if self._last_event is None:
             return None
         event_id = self._last_event.get("id")
-        assert event_id and isinstance(event_id, int)
+        assert event_id
+        assert isinstance(event_id, int)
         return self._device.recording_url(event_id)
 
     @exception_wrap

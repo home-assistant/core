@@ -1148,7 +1148,8 @@ async def test_discovery_expansion(
     await hass.async_block_till_done()
 
     state = hass.states.get("switch.DiscoveryExpansionTest1")
-    assert state and state.state == STATE_UNAVAILABLE
+    assert state
+    assert state.state == STATE_UNAVAILABLE
 
     async_fire_mqtt_message(hass, "avail_item2/some/base/topic", "available")
     await hass.async_block_till_done()
@@ -1162,13 +1163,15 @@ async def test_discovery_expansion(
     async_fire_mqtt_message(hass, "test_topic/some/base/topic", "ON")
 
     state = hass.states.get("switch.DiscoveryExpansionTest1")
-    assert state and state.state == STATE_ON
+    assert state
+    assert state.state == STATE_ON
 
     async_fire_mqtt_message(hass, "some/base/topic/avail_item1", "not_available")
     await hass.async_block_till_done()
 
     state = hass.states.get("switch.DiscoveryExpansionTest1")
-    assert state and state.state == STATE_UNAVAILABLE
+    assert state
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_discovery_expansion_2(
@@ -1203,7 +1206,8 @@ async def test_discovery_expansion_2(
     await hass.async_block_till_done()
 
     state = hass.states.get("switch.DiscoveryExpansionTest1")
-    assert state and state.state == STATE_UNAVAILABLE
+    assert state
+    assert state.state == STATE_UNAVAILABLE
 
     async_fire_mqtt_message(hass, "some/base/topic/avail_item1", "available")
     await hass.async_block_till_done()
@@ -1282,7 +1286,8 @@ async def test_discovery_expansion_without_encoding_and_value_template_1(
     await hass.async_block_till_done()
 
     state = hass.states.get("switch.DiscoveryExpansionTest1")
-    assert state and state.state == STATE_UNAVAILABLE
+    assert state
+    assert state.state == STATE_UNAVAILABLE
 
     async_fire_mqtt_message(hass, "some/base/topic/avail_item1", b"\x01")
     await hass.async_block_till_done()
@@ -1296,7 +1301,8 @@ async def test_discovery_expansion_without_encoding_and_value_template_1(
     async_fire_mqtt_message(hass, "some/base/topic/avail_item1", b"\x00")
 
     state = hass.states.get("switch.DiscoveryExpansionTest1")
-    assert state and state.state == STATE_UNAVAILABLE
+    assert state
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_discovery_expansion_without_encoding_and_value_template_2(
@@ -1331,7 +1337,8 @@ async def test_discovery_expansion_without_encoding_and_value_template_2(
     await hass.async_block_till_done()
 
     state = hass.states.get("switch.DiscoveryExpansionTest1")
-    assert state and state.state == STATE_UNAVAILABLE
+    assert state
+    assert state.state == STATE_UNAVAILABLE
 
     async_fire_mqtt_message(hass, "some/base/topic/avail_item1", b"\x01")
     await hass.async_block_till_done()
@@ -1345,7 +1352,8 @@ async def test_discovery_expansion_without_encoding_and_value_template_2(
     async_fire_mqtt_message(hass, "some/base/topic/avail_item1", b"\x00")
 
     state = hass.states.get("switch.DiscoveryExpansionTest1")
-    assert state and state.state == STATE_UNAVAILABLE
+    assert state
+    assert state.state == STATE_UNAVAILABLE
 
 
 ABBREVIATIONS_WHITE_LIST = [
@@ -1431,7 +1439,8 @@ async def test_no_implicit_state_topic_switch(
     async_fire_mqtt_message(hass, "homeassistant/switch/bla/state", "ON")
 
     state = hass.states.get("switch.Test1")
-    assert state and state.state == STATE_UNKNOWN
+    assert state
+    assert state.state == STATE_UNKNOWN
 
 
 @pytest.mark.parametrize(
@@ -1782,4 +1791,5 @@ async def test_update_with_bad_config_not_breaks_discovery(
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.sbfspot_12345")
-    assert state and state.state == "new_value"
+    assert state
+    assert state.state == "new_value"

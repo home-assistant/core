@@ -324,9 +324,8 @@ async def test_get_state_intent(
 
     # yes
     assert result.response_type == intent.IntentResponseType.QUERY_ANSWER
-    assert result.matched_states and (
-        result.matched_states[0].entity_id == bedroom_light.entity_id
-    )
+    assert result.matched_states
+    assert result.matched_states[0].entity_id == bedroom_light.entity_id
     assert not result.unmatched_states
 
     # ---
@@ -345,9 +344,8 @@ async def test_get_state_intent(
     # no, it's on
     assert result.response_type == intent.IntentResponseType.QUERY_ANSWER
     assert not result.matched_states
-    assert result.unmatched_states and (
-        result.unmatched_states[0].entity_id == kitchen_light.entity_id
-    )
+    assert result.unmatched_states
+    assert result.unmatched_states[0].entity_id == kitchen_light.entity_id
 
     # ---
     # what is the value of the kitchen sensor?
@@ -361,9 +359,8 @@ async def test_get_state_intent(
     )
 
     assert result.response_type == intent.IntentResponseType.QUERY_ANSWER
-    assert result.matched_states and (
-        result.matched_states[0].entity_id == kitchen_sensor.entity_id
-    )
+    assert result.matched_states
+    assert result.matched_states[0].entity_id == kitchen_sensor.entity_id
     assert not result.unmatched_states
 
     # ---
@@ -381,9 +378,8 @@ async def test_get_state_intent(
 
     # yes
     assert result.response_type == intent.IntentResponseType.QUERY_ANSWER
-    assert result.matched_states and (
-        result.matched_states[0].entity_id == problem_sensor.entity_id
-    )
+    assert result.matched_states
+    assert result.matched_states[0].entity_id == problem_sensor.entity_id
     assert not result.unmatched_states
 
     # ---
@@ -400,9 +396,11 @@ async def test_get_state_intent(
 
     # yes, 2 of them
     assert result.response_type == intent.IntentResponseType.QUERY_ANSWER
-    assert len(result.matched_states) == 2 and {
-        state.entity_id for state in result.matched_states
-    } == {problem_sensor.entity_id, moisture_sensor.entity_id}
+    assert len(result.matched_states) == 2
+    assert {state.entity_id for state in result.matched_states} == {
+        problem_sensor.entity_id,
+        moisture_sensor.entity_id,
+    }
     assert not result.unmatched_states
 
     # ---
@@ -419,7 +417,8 @@ async def test_get_state_intent(
 
     # no
     assert result.response_type == intent.IntentResponseType.QUERY_ANSWER
-    assert not result.matched_states and not result.unmatched_states
+    assert not result.matched_states
+    assert not result.unmatched_states
 
     # Test unknown area failure
     with pytest.raises(intent.IntentHandleError):

@@ -460,7 +460,8 @@ async def test_received_rgbx_values_set_state_optimistic(
     """Test the state is set correctly when an rgbx update is received."""
     await mqtt_mock_entry()
     state = hass.states.get("light.test")
-    assert state and state.state is not None
+    assert state
+    assert state.state is not None
     async_fire_mqtt_message(hass, "test-topic", "ON")
     ## Test rgb processing
     async_fire_mqtt_message(hass, "rgb-state-topic", "255,255,255")

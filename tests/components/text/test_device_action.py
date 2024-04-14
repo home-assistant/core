@@ -251,7 +251,8 @@ async def test_capabilities(
         },
     )
 
-    assert capabilities and "extra_fields" in capabilities
+    assert capabilities
+    assert "extra_fields" in capabilities
 
     assert voluptuous_serialize.convert(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
@@ -273,7 +274,8 @@ async def test_capabilities_legacy(
         },
     )
 
-    assert capabilities and "extra_fields" in capabilities
+    assert capabilities
+    assert "extra_fields" in capabilities
 
     assert voluptuous_serialize.convert(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer

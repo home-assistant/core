@@ -830,7 +830,8 @@ async def test_create_network_backup(
     assert msg["id"] == 6
     assert msg["type"] == const.TYPE_RESULT
     assert msg["success"]
-    assert "backup" in msg["result"] and "is_complete" in msg["result"]
+    assert "backup" in msg["result"]
+    assert "is_complete" in msg["result"]
 
 
 async def test_restore_network_backup_success(

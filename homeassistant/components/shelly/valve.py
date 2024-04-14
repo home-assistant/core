@@ -58,7 +58,8 @@ def async_setup_block_entry(
 ) -> None:
     """Set up valve for device."""
     coordinator = get_entry_data(hass)[config_entry.entry_id].block
-    assert coordinator and coordinator.device.blocks
+    assert coordinator
+    assert coordinator.device.blocks
 
     if coordinator.model == MODEL_GAS:
         async_setup_block_attribute_entities(

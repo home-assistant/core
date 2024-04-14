@@ -750,7 +750,6 @@ ignore = [
     "PT004", # Fixture {fixture} does not return anything, add leading underscore
     "PT011", # pytest.raises({exception}) is too broad, set the `match` parameter or use a more specific exception
     "PT012", # `pytest.raises()` block should contain a single simple statement
-    "PT018", # Assertion should be broken down into multiple parts
     "RUF001", # String contains ambiguous unicode character.
     "RUF002", # Docstring contains ambiguous unicode character.
     "RUF003", # Comment contains ambiguous unicode character.

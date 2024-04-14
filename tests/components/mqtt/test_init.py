@@ -320,7 +320,8 @@ async def test_command_template_variables(
     await hass.async_block_till_done()
 
     state = hass.states.get("select.test_select")
-    assert state and state.state == "milk"
+    assert state
+    assert state.state == "milk"
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
     await hass.services.async_call(
@@ -338,7 +339,8 @@ async def test_command_template_variables(
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("select.test_select")
-    assert state and state.state == "beer"
+    assert state
+    assert state.state == "beer"
 
     # Test that TemplateStateFromEntityId is not called again
     with patch(
@@ -352,7 +354,8 @@ async def test_command_template_variables(
         )
         assert template_state_calls.call_count == 0
         state = hass.states.get("select.test_select")
-        assert state and state.state == "milk"
+        assert state
+        assert state.state == "milk"
 
 
 async def test_command_template_fails(hass: HomeAssistant) -> None:

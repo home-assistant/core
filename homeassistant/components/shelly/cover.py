@@ -42,7 +42,8 @@ def async_setup_block_entry(
 ) -> None:
     """Set up cover for device."""
     coordinator = get_entry_data(hass)[config_entry.entry_id].block
-    assert coordinator and coordinator.device.blocks
+    assert coordinator
+    assert coordinator.device.blocks
     blocks = [block for block in coordinator.device.blocks if block.type == "roller"]
 
     if not blocks:

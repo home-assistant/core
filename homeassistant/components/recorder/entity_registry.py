@@ -23,7 +23,8 @@ def async_setup(hass: HomeAssistant) -> None:
     ) -> None:
         instance = get_instance(hass)
         if TYPE_CHECKING:
-            assert event.data["action"] == "update" and "old_entity_id" in event.data
+            assert event.data["action"] == "update"
+            assert "old_entity_id" in event.data
         old_entity_id = event.data["old_entity_id"]
         new_entity_id = event.data["entity_id"]
         instance.async_update_statistics_metadata(

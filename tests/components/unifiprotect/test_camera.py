@@ -346,7 +346,8 @@ async def test_camera_generic_update(
     assert await async_setup_component(hass, "homeassistant", {})
 
     state = hass.states.get(entity_id)
-    assert state and state.state == "idle"
+    assert state
+    assert state.state == "idle"
 
     ufp.api.update = AsyncMock(return_value=None)
     await hass.services.async_call(
@@ -357,7 +358,8 @@ async def test_camera_generic_update(
     )
 
     state = hass.states.get(entity_id)
-    assert state and state.state == "idle"
+    assert state
+    assert state.state == "idle"
 
 
 async def test_camera_interval_update(
@@ -370,7 +372,8 @@ async def test_camera_interval_update(
     entity_id = "camera.test_camera_high_resolution_channel"
 
     state = hass.states.get(entity_id)
-    assert state and state.state == "idle"
+    assert state
+    assert state.state == "idle"
 
     new_camera = camera.copy()
     new_camera.is_recording = True
@@ -380,7 +383,8 @@ async def test_camera_interval_update(
     await time_changed(hass, DEFAULT_SCAN_INTERVAL)
 
     state = hass.states.get(entity_id)
-    assert state and state.state == "recording"
+    assert state
+    assert state.state == "recording"
 
 
 async def test_camera_bad_interval_update(
@@ -393,21 +397,24 @@ async def test_camera_bad_interval_update(
     entity_id = "camera.test_camera_high_resolution_channel"
 
     state = hass.states.get(entity_id)
-    assert state and state.state == "idle"
+    assert state
+    assert state.state == "idle"
 
     # update fails
     ufp.api.update = AsyncMock(side_effect=NvrError)
     await time_changed(hass, DEFAULT_SCAN_INTERVAL)
 
     state = hass.states.get(entity_id)
-    assert state and state.state == "unavailable"
+    assert state
+    assert state.state == "unavailable"
 
     # next update succeeds
     ufp.api.update = AsyncMock(return_value=ufp.api.bootstrap)
     await time_changed(hass, DEFAULT_SCAN_INTERVAL)
 
     state = hass.states.get(entity_id)
-    assert state and state.state == "idle"
+    assert state
+    assert state.state == "idle"
 
 
 async def test_camera_ws_update(
@@ -420,7 +427,8 @@ async def test_camera_ws_update(
     entity_id = "camera.test_camera_high_resolution_channel"
 
     state = hass.states.get(entity_id)
-    assert state and state.state == "idle"
+    assert state
+    assert state.state == "idle"
 
     new_camera = camera.copy()
     new_camera.is_recording = True
@@ -442,7 +450,8 @@ async def test_camera_ws_update(
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
-    assert state and state.state == "recording"
+    assert state
+    assert state.state == "recording"
 
 
 async def test_camera_ws_update_offline(
@@ -455,7 +464,8 @@ async def test_camera_ws_update_offline(
     entity_id = "camera.test_camera_high_resolution_channel"
 
     state = hass.states.get(entity_id)
-    assert state and state.state == "idle"
+    assert state
+    assert state.state == "idle"
 
     # camera goes offline
     new_camera = camera.copy()
@@ -470,7 +480,8 @@ async def test_camera_ws_update_offline(
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
-    assert state and state.state == "unavailable"
+    assert state
+    assert state.state == "unavailable"
 
     # camera comes back online
     new_camera.state = StateType.CONNECTED
@@ -484,7 +495,8 @@ async def test_camera_ws_update_offline(
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
-    assert state and state.state == "idle"
+    assert state
+    assert state.state == "idle"
 
 
 async def test_camera_enable_motion(

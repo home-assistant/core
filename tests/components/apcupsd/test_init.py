@@ -115,7 +115,8 @@ async def test_multiple_integrations(hass: HomeAssistant) -> None:
     device_slug = slugify(MOCK_STATUS["UPSNAME"])
     state1 = hass.states.get(f"sensor.{device_slug}_load")
     state2 = hass.states.get(f"sensor.{device_slug}_load_2")
-    assert state1 is not None and state2 is not None
+    assert state1 is not None
+    assert state2 is not None
     assert state1.state != state2.state
 
 
@@ -134,7 +135,8 @@ async def test_multiple_integrations_different_devices(hass: HomeAssistant) -> N
     # The device names are different, so they are prefixed differently.
     state1 = hass.states.get("sensor.myups1_load")
     state2 = hass.states.get("sensor.myups2_load")
-    assert state1 is not None and state2 is not None
+    assert state1 is not None
+    assert state2 is not None
 
 
 @pytest.mark.parametrize(

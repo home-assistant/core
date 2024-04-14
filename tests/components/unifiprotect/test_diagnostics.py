@@ -28,15 +28,18 @@ async def test_diagnostics(
 
     diag = await get_diagnostics_for_config_entry(hass, hass_client, ufp.entry)
 
-    assert "options" in diag and isinstance(diag["options"], dict)
+    assert "options" in diag
+    assert isinstance(diag["options"], dict)
     options = diag["options"]
     assert options[CONF_ALLOW_EA] is True
 
-    assert "bootstrap" in diag and isinstance(diag["bootstrap"], dict)
+    assert "bootstrap" in diag
+    assert isinstance(diag["bootstrap"], dict)
     bootstrap = diag["bootstrap"]
     nvr: NVR = ufp.api.bootstrap.nvr
     # validate some of the data
-    assert "nvr" in bootstrap and isinstance(bootstrap["nvr"], dict)
+    assert "nvr" in bootstrap
+    assert isinstance(bootstrap["nvr"], dict)
     nvr_dict = bootstrap["nvr"]
     # should have been anonymized
     assert nvr_dict["id"] != nvr.id
@@ -47,11 +50,9 @@ async def test_diagnostics(
     assert nvr_dict["version"] == str(nvr.version)
     assert nvr_dict["type"] == nvr.type
 
-    assert (
-        "lights" in bootstrap
-        and isinstance(bootstrap["lights"], list)
-        and len(bootstrap["lights"]) == 1
-    )
+    assert "lights" in bootstrap
+    assert isinstance(bootstrap["lights"], list)
+    assert len(bootstrap["lights"]) == 1
     light_dict = bootstrap["lights"][0]
     # should have been anonymized
     assert light_dict["id"] != light.id

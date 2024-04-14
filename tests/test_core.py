@@ -704,11 +704,9 @@ async def test_stage_shutdown_with_exit_code(hass: HomeAssistant) -> None:
     assert len(test_final_write) == 1
     assert len(test_all) == 2
 
-    assert (
-        event_call_counters[0] == 1
-        and event_call_counters[1] == 1
-        and event_call_counters[2] == 1
-    )
+    assert event_call_counters[0] == 1
+    assert event_call_counters[1] == 1
+    assert event_call_counters[2] == 1
 
 
 async def test_shutdown_calls_block_till_done_after_shutdown_run_callback_threadsafe(

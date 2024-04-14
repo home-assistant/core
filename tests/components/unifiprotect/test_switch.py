@@ -400,7 +400,8 @@ async def test_switch_camera_privacy(
     _, entity_id = ids_from_device_description(Platform.SWITCH, doorbell, description)
 
     state = hass.states.get(entity_id)
-    assert state and state.state == "off"
+    assert state
+    assert state.state == "off"
     assert ATTR_PREV_MIC not in state.attributes
     assert ATTR_PREV_RECORD not in state.attributes
 
@@ -422,7 +423,8 @@ async def test_switch_camera_privacy(
     ufp.ws_msg(mock_msg)
 
     state = hass.states.get(entity_id)
-    assert state and state.state == "on"
+    assert state
+    assert state.state == "on"
     assert state.attributes[ATTR_PREV_MIC] == previous_mic
     assert state.attributes[ATTR_PREV_RECORD] == previous_record.value
 

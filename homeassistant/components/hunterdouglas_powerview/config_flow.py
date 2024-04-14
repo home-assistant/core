@@ -151,7 +151,8 @@ class PowerviewConfigFlow(ConfigFlow, domain=DOMAIN):
         """Confirm dhcp or homekit discovery."""
         # If we already have the host configured do
         # not open connections to it if we can avoid it.
-        assert self.discovered_ip and self.discovered_name is not None
+        assert self.discovered_ip
+        assert self.discovered_name is not None
         self.context[CONF_HOST] = self.discovered_ip
         for progress in self._async_in_progress():
             if progress.get("context", {}).get(CONF_HOST) == self.discovered_ip:

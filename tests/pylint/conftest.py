@@ -18,7 +18,8 @@ def _load_plugin_from_file(module_name: str, file: str) -> ModuleType:
         module_name,
         str(BASE_PATH.joinpath(file)),
     )
-    assert spec and spec.loader
+    assert spec
+    assert spec.loader
 
     module = module_from_spec(spec)
     sys.modules[module_name] = module

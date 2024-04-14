@@ -544,7 +544,8 @@ async def test_get_trigger_capabilities_on(hass: HomeAssistant) -> None:
         },
     )
 
-    assert capabilities and "extra_fields" in capabilities
+    assert capabilities
+    assert "extra_fields" in capabilities
 
     assert voluptuous_serialize.convert(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
@@ -564,7 +565,8 @@ async def test_get_trigger_capabilities_off(hass: HomeAssistant) -> None:
         },
     )
 
-    assert capabilities and "extra_fields" in capabilities
+    assert capabilities
+    assert "extra_fields" in capabilities
 
     assert voluptuous_serialize.convert(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
@@ -584,7 +586,8 @@ async def test_get_trigger_capabilities_humidity(hass: HomeAssistant) -> None:
         },
     )
 
-    assert capabilities and "extra_fields" in capabilities
+    assert capabilities
+    assert "extra_fields" in capabilities
 
     assert voluptuous_serialize.convert(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer

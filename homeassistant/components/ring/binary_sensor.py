@@ -132,7 +132,8 @@ class RingBinarySensor(
         attrs["state"] = self._active_alert["state"]
         now = self._active_alert.get("now")
         expires_in = self._active_alert.get("expires_in")
-        assert now and expires_in
+        assert now
+        assert expires_in
         attrs["expires_at"] = datetime.fromtimestamp(now + expires_in).isoformat()
 
         return attrs

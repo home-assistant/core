@@ -453,7 +453,8 @@ async def test_get_condition_capabilities_node_status(
             "type": "node_status",
         },
     )
-    assert capabilities and "extra_fields" in capabilities
+    assert capabilities
+    assert "extra_fields" in capabilities
     assert voluptuous_serialize.convert(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
@@ -493,7 +494,8 @@ async def test_get_condition_capabilities_value(
             "type": "value",
         },
     )
-    assert capabilities and "extra_fields" in capabilities
+    assert capabilities
+    assert "extra_fields" in capabilities
 
     cc_options = [
         (133, "Association"),
@@ -549,7 +551,8 @@ async def test_get_condition_capabilities_config_parameter(
             "subtype": "1 (Temperature Reporting Threshold)",
         },
     )
-    assert capabilities and "extra_fields" in capabilities
+    assert capabilities
+    assert "extra_fields" in capabilities
 
     assert voluptuous_serialize.convert(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
@@ -580,7 +583,8 @@ async def test_get_condition_capabilities_config_parameter(
             "subtype": "10 (Temperature Reporting Filter)",
         },
     )
-    assert capabilities and "extra_fields" in capabilities
+    assert capabilities
+    assert "extra_fields" in capabilities
 
     assert voluptuous_serialize.convert(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer

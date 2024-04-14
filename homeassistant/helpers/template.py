@@ -696,7 +696,8 @@ class Template:
     ) -> RenderInfo:
         """Render the template and collect an entity filter."""
         self._renders += 1
-        assert self.hass and _render_info.get() is None
+        assert self.hass
+        assert _render_info.get() is None
 
         render_info = RenderInfo(self)
 

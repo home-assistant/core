@@ -111,16 +111,12 @@ async def test_send_simple_message(hass: HomeAssistant) -> None:
         assert mock.last_request.json() == expected_body
 
         expected_content_type = "application/json"
-        assert (
-            "Content-Type" in mock.last_request.headers
-            and mock.last_request.headers["Content-Type"] == expected_content_type
-        )
+        assert "Content-Type" in mock.last_request.headers
+        assert mock.last_request.headers["Content-Type"] == expected_content_type
 
         encoded_auth = base64.b64encode(
             f"{TEST_USERNAME}:{TEST_API_KEY}".encode()
         ).decode()
         expected_auth = f"Basic {encoded_auth}"
-        assert (
-            "Authorization" in mock.last_request.headers
-            and mock.last_request.headers["Authorization"] == expected_auth
-        )
+        assert "Authorization" in mock.last_request.headers
+        assert mock.last_request.headers["Authorization"] == expected_auth

@@ -333,7 +333,8 @@ async def test_get_transponder_trigger_capabilities(
             CONF_DEVICE_ID: device.id,
         },
     )
-    assert capabilities and "extra_fields" in capabilities
+    assert capabilities
+    assert "extra_fields" in capabilities
 
     assert voluptuous_serialize.convert(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
@@ -356,7 +357,8 @@ async def test_get_fingerprint_trigger_capabilities(
             CONF_DEVICE_ID: device.id,
         },
     )
-    assert capabilities and "extra_fields" in capabilities
+    assert capabilities
+    assert "extra_fields" in capabilities
 
     assert voluptuous_serialize.convert(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
@@ -379,7 +381,8 @@ async def test_get_transmitter_trigger_capabilities(
             CONF_DEVICE_ID: device.id,
         },
     )
-    assert capabilities and "extra_fields" in capabilities
+    assert capabilities
+    assert "extra_fields" in capabilities
 
     assert voluptuous_serialize.convert(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
@@ -412,7 +415,8 @@ async def test_get_send_keys_trigger_capabilities(
             CONF_DEVICE_ID: device.id,
         },
     )
-    assert capabilities and "extra_fields" in capabilities
+    assert capabilities
+    assert "extra_fields" in capabilities
 
     assert voluptuous_serialize.convert(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer

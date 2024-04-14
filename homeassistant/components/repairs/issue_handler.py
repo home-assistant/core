@@ -60,7 +60,8 @@ class RepairsFlowManager(data_entry_flow.FlowManager):
         data: dict[str, Any] | None = None,
     ) -> RepairsFlow:
         """Create a flow. platform is a repairs module."""
-        assert data and "issue_id" in data
+        assert data
+        assert "issue_id" in data
         issue_id = data["issue_id"]
 
         issue_registry = async_get_issue_registry(self.hass)

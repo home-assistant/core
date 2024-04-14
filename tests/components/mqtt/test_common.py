@@ -113,14 +113,16 @@ async def help_test_availability_when_connection_lost(
     await hass.async_block_till_done()
 
     state = hass.states.get(f"{domain}.test")
-    assert state and state.state != STATE_UNAVAILABLE
+    assert state
+    assert state.state != STATE_UNAVAILABLE
 
     mqtt_mock.connected = False
     async_dispatcher_send(hass, MQTT_DISCONNECTED)
     await hass.async_block_till_done()
 
     state = hass.states.get(f"{domain}.test")
-    assert state and state.state == STATE_UNAVAILABLE
+    assert state
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def help_test_availability_without_topic(
@@ -135,7 +137,8 @@ async def help_test_availability_without_topic(
     await hass.async_block_till_done()
 
     state = hass.states.get(f"{domain}.test")
-    assert state and state.state != STATE_UNAVAILABLE
+    assert state
+    assert state.state != STATE_UNAVAILABLE
 
 
 async def help_test_default_availability_payload(
@@ -159,30 +162,35 @@ async def help_test_default_availability_payload(
         await mqtt_mock_entry()
 
     state = hass.states.get(f"{domain}.test")
-    assert state and state.state == STATE_UNAVAILABLE
+    assert state
+    assert state.state == STATE_UNAVAILABLE
 
     async_fire_mqtt_message(hass, "availability-topic", "online")
 
     state = hass.states.get(f"{domain}.test")
-    assert state and state.state != STATE_UNAVAILABLE
+    assert state
+    assert state.state != STATE_UNAVAILABLE
     if no_assumed_state:
         assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     async_fire_mqtt_message(hass, "availability-topic", "offline")
 
     state = hass.states.get(f"{domain}.test")
-    assert state and state.state == STATE_UNAVAILABLE
+    assert state
+    assert state.state == STATE_UNAVAILABLE
 
     if state_topic is not None and state_message is not None:
         async_fire_mqtt_message(hass, state_topic, state_message)
 
         state = hass.states.get(f"{domain}.test")
-        assert state and state.state == STATE_UNAVAILABLE
+        assert state
+        assert state.state == STATE_UNAVAILABLE
 
         async_fire_mqtt_message(hass, "availability-topic", "online")
 
         state = hass.states.get(f"{domain}.test")
-        assert state and state.state != STATE_UNAVAILABLE
+        assert state
+        assert state.state != STATE_UNAVAILABLE
 
 
 async def help_test_default_availability_list_payload(
@@ -208,42 +216,49 @@ async def help_test_default_availability_list_payload(
         await mqtt_mock_entry()
 
     state = hass.states.get(f"{domain}.test")
-    assert state and state.state == STATE_UNAVAILABLE
+    assert state
+    assert state.state == STATE_UNAVAILABLE
 
     async_fire_mqtt_message(hass, "availability-topic1", "online")
 
     state = hass.states.get(f"{domain}.test")
-    assert state and state.state != STATE_UNAVAILABLE
+    assert state
+    assert state.state != STATE_UNAVAILABLE
     if no_assumed_state:
         assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     async_fire_mqtt_message(hass, "availability-topic1", "offline")
 
     state = hass.states.get(f"{domain}.test")
-    assert state and state.state == STATE_UNAVAILABLE
+    assert state
+    assert state.state == STATE_UNAVAILABLE
 
     async_fire_mqtt_message(hass, "availability-topic2", "online")
 
     state = hass.states.get(f"{domain}.test")
-    assert state and state.state != STATE_UNAVAILABLE
+    assert state
+    assert state.state != STATE_UNAVAILABLE
     if no_assumed_state:
         assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     async_fire_mqtt_message(hass, "availability-topic2", "offline")
 
     state = hass.states.get(f"{domain}.test")
-    assert state and state.state == STATE_UNAVAILABLE
+    assert state
+    assert state.state == STATE_UNAVAILABLE
 
     if state_topic is not None and state_message is not None:
         async_fire_mqtt_message(hass, state_topic, state_message)
 
         state = hass.states.get(f"{domain}.test")
-        assert state and state.state == STATE_UNAVAILABLE
+        assert state
+        assert state.state == STATE_UNAVAILABLE
 
         async_fire_mqtt_message(hass, "availability-topic1", "online")
 
         state = hass.states.get(f"{domain}.test")
-        assert state and state.state != STATE_UNAVAILABLE
+        assert state
+        assert state.state != STATE_UNAVAILABLE
 
 
 async def help_test_default_availability_list_payload_all(
@@ -270,43 +285,50 @@ async def help_test_default_availability_list_payload_all(
         await mqtt_mock_entry()
 
     state = hass.states.get(f"{domain}.test")
-    assert state and state.state == STATE_UNAVAILABLE
+    assert state
+    assert state.state == STATE_UNAVAILABLE
 
     async_fire_mqtt_message(hass, "availability-topic1", "online")
 
     state = hass.states.get(f"{domain}.test")
-    assert state and state.state == STATE_UNAVAILABLE
+    assert state
+    assert state.state == STATE_UNAVAILABLE
     if no_assumed_state:
         assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     async_fire_mqtt_message(hass, "availability-topic2", "online")
 
     state = hass.states.get(f"{domain}.test")
-    assert state and state.state != STATE_UNAVAILABLE
+    assert state
+    assert state.state != STATE_UNAVAILABLE
 
     async_fire_mqtt_message(hass, "availability-topic2", "offline")
 
     state = hass.states.get(f"{domain}.test")
-    assert state and state.state == STATE_UNAVAILABLE
+    assert state
+    assert state.state == STATE_UNAVAILABLE
     if no_assumed_state:
         assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     async_fire_mqtt_message(hass, "availability-topic2", "online")
 
     state = hass.states.get(f"{domain}.test")
-    assert state and state.state != STATE_UNAVAILABLE
+    assert state
+    assert state.state != STATE_UNAVAILABLE
 
     async_fire_mqtt_message(hass, "availability-topic1", "offline")
 
     state = hass.states.get(f"{domain}.test")
-    assert state and state.state == STATE_UNAVAILABLE
+    assert state
+    assert state.state == STATE_UNAVAILABLE
     if no_assumed_state:
         assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     async_fire_mqtt_message(hass, "availability-topic1", "online")
 
     state = hass.states.get(f"{domain}.test")
-    assert state and state.state != STATE_UNAVAILABLE
+    assert state
+    assert state.state != STATE_UNAVAILABLE
 
 
 async def help_test_default_availability_list_payload_any(
@@ -333,36 +355,42 @@ async def help_test_default_availability_list_payload_any(
         await mqtt_mock_entry()
 
     state = hass.states.get(f"{domain}.test")
-    assert state and state.state == STATE_UNAVAILABLE
+    assert state
+    assert state.state == STATE_UNAVAILABLE
 
     async_fire_mqtt_message(hass, "availability-topic1", "online")
 
     state = hass.states.get(f"{domain}.test")
-    assert state and state.state != STATE_UNAVAILABLE
+    assert state
+    assert state.state != STATE_UNAVAILABLE
     if no_assumed_state:
         assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     async_fire_mqtt_message(hass, "availability-topic2", "online")
 
     state = hass.states.get(f"{domain}.test")
-    assert state and state.state != STATE_UNAVAILABLE
+    assert state
+    assert state.state != STATE_UNAVAILABLE
 
     async_fire_mqtt_message(hass, "availability-topic2", "offline")
 
     state = hass.states.get(f"{domain}.test")
-    assert state and state.state != STATE_UNAVAILABLE
+    assert state
+    assert state.state != STATE_UNAVAILABLE
     if no_assumed_state:
         assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     async_fire_mqtt_message(hass, "availability-topic1", "offline")
 
     state = hass.states.get(f"{domain}.test")
-    assert state and state.state == STATE_UNAVAILABLE
+    assert state
+    assert state.state == STATE_UNAVAILABLE
 
     async_fire_mqtt_message(hass, "availability-topic1", "online")
 
     state = hass.states.get(f"{domain}.test")
-    assert state and state.state != STATE_UNAVAILABLE
+    assert state
+    assert state.state != STATE_UNAVAILABLE
     if no_assumed_state:
         assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
@@ -419,30 +447,35 @@ async def help_test_custom_availability_payload(
         await mqtt_mock_entry()
 
     state = hass.states.get(f"{domain}.test")
-    assert state and state.state == STATE_UNAVAILABLE
+    assert state
+    assert state.state == STATE_UNAVAILABLE
 
     async_fire_mqtt_message(hass, "availability-topic", "good")
 
     state = hass.states.get(f"{domain}.test")
-    assert state and state.state != STATE_UNAVAILABLE
+    assert state
+    assert state.state != STATE_UNAVAILABLE
     if no_assumed_state:
         assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     async_fire_mqtt_message(hass, "availability-topic", "nogood")
 
     state = hass.states.get(f"{domain}.test")
-    assert state and state.state == STATE_UNAVAILABLE
+    assert state
+    assert state.state == STATE_UNAVAILABLE
 
     if state_topic is not None and state_message is not None:
         async_fire_mqtt_message(hass, state_topic, state_message)
 
         state = hass.states.get(f"{domain}.test")
-        assert state and state.state == STATE_UNAVAILABLE
+        assert state
+        assert state.state == STATE_UNAVAILABLE
 
         async_fire_mqtt_message(hass, "availability-topic", "good")
 
         state = hass.states.get(f"{domain}.test")
-        assert state and state.state != STATE_UNAVAILABLE
+        assert state
+        assert state.state != STATE_UNAVAILABLE
 
 
 async def help_test_discovery_update_availability(
@@ -474,15 +507,18 @@ async def help_test_discovery_update_availability(
     await hass.async_block_till_done()
 
     state = hass.states.get(f"{domain}.test")
-    assert state and state.state == STATE_UNAVAILABLE
+    assert state
+    assert state.state == STATE_UNAVAILABLE
 
     async_fire_mqtt_message(hass, "availability-topic1", "online")
     state = hass.states.get(f"{domain}.test")
-    assert state and state.state != STATE_UNAVAILABLE
+    assert state
+    assert state.state != STATE_UNAVAILABLE
 
     async_fire_mqtt_message(hass, "availability-topic1", "offline")
     state = hass.states.get(f"{domain}.test")
-    assert state and state.state == STATE_UNAVAILABLE
+    assert state
+    assert state.state == STATE_UNAVAILABLE
 
     # Change availability_topic
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", data2)
@@ -491,17 +527,20 @@ async def help_test_discovery_update_availability(
     # Verify we are no longer subscribing to the old topic
     async_fire_mqtt_message(hass, "availability-topic1", "online")
     state = hass.states.get(f"{domain}.test")
-    assert state and state.state == STATE_UNAVAILABLE
+    assert state
+    assert state.state == STATE_UNAVAILABLE
 
     # Verify we are subscribing to the new topic
     async_fire_mqtt_message(hass, "availability-topic2", "online")
     state = hass.states.get(f"{domain}.test")
-    assert state and state.state != STATE_UNAVAILABLE
+    assert state
+    assert state.state != STATE_UNAVAILABLE
 
     # Verify we are subscribing to the new topic
     async_fire_mqtt_message(hass, "availability-topic3", "offline")
     state = hass.states.get(f"{domain}.test")
-    assert state and state.state == STATE_UNAVAILABLE
+    assert state
+    assert state.state == STATE_UNAVAILABLE
 
     # Change availability_topic
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", data3)
@@ -510,17 +549,20 @@ async def help_test_discovery_update_availability(
     # Verify we are no longer subscribing to the old topic
     async_fire_mqtt_message(hass, "availability-topic2", "online")
     state = hass.states.get(f"{domain}.test")
-    assert state and state.state == STATE_UNAVAILABLE
+    assert state
+    assert state.state == STATE_UNAVAILABLE
 
     # Verify we are no longer subscribing to the old topic
     async_fire_mqtt_message(hass, "availability-topic3", "online")
     state = hass.states.get(f"{domain}.test")
-    assert state and state.state == STATE_UNAVAILABLE
+    assert state
+    assert state.state == STATE_UNAVAILABLE
 
     # Verify we are subscribing to the new topic
     async_fire_mqtt_message(hass, "availability-topic4", "online")
     state = hass.states.get(f"{domain}.test")
-    assert state and state.state != STATE_UNAVAILABLE
+    assert state
+    assert state.state != STATE_UNAVAILABLE
 
 
 async def help_test_setting_attribute_via_mqtt_json_message(
@@ -542,7 +584,8 @@ async def help_test_setting_attribute_via_mqtt_json_message(
     async_fire_mqtt_message(hass, "attr-topic", '{ "val": "100" }')
     state = hass.states.get(f"{domain}.test")
 
-    assert state and state.attributes.get("val") == "100"
+    assert state
+    assert state.attributes.get("val") == "100"
 
 
 async def help_test_setting_blocked_attribute_via_mqtt_json_message(
@@ -570,12 +613,14 @@ async def help_test_setting_blocked_attribute_via_mqtt_json_message(
     for attr in MQTT_ATTRIBUTES_BLOCKED:
         async_fire_mqtt_message(hass, "attr-topic", json.dumps({attr: val}))
         state = hass.states.get(f"{domain}.test")
-        assert state and state.attributes.get(attr) != val
+        assert state
+        assert state.attributes.get(attr) != val
 
     for attr in extra_blocked_attribute_list:
         async_fire_mqtt_message(hass, "attr-topic", json.dumps({attr: val}))
         state = hass.states.get(f"{domain}.test")
-        assert state and state.attributes.get(attr) != val
+        assert state
+        assert state.attributes.get(attr) != val
 
 
 async def help_test_setting_attribute_with_template(
@@ -627,7 +672,8 @@ async def help_test_update_with_json_attrs_not_dict(
     async_fire_mqtt_message(hass, "attr-topic", '[ "list", "of", "things"]')
     state = hass.states.get(f"{domain}.test")
 
-    assert state and state.attributes.get("val") is None
+    assert state
+    assert state.attributes.get("val") is None
     assert "JSON result was not a dictionary" in caplog.text
 
 
@@ -651,7 +697,8 @@ async def help_test_update_with_json_attrs_bad_json(
     async_fire_mqtt_message(hass, "attr-topic", "This is not JSON")
 
     state = hass.states.get(f"{domain}.test")
-    assert state and state.attributes.get("val") is None
+    assert state
+    assert state.attributes.get("val") is None
     assert "Erroneous JSON: This is not JSON" in caplog.text
 
 
@@ -679,7 +726,8 @@ async def help_test_discovery_update_attr(
     await hass.async_block_till_done()
     async_fire_mqtt_message(hass, "attr-topic1", '{ "val": "100" }')
     state = hass.states.get(f"{domain}.test")
-    assert state and state.attributes.get("val") == "100"
+    assert state
+    assert state.attributes.get("val") == "100"
 
     # Change json_attributes_topic
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", data2)
@@ -688,12 +736,14 @@ async def help_test_discovery_update_attr(
     # Verify we are no longer subscribing to the old topic
     async_fire_mqtt_message(hass, "attr-topic1", '{ "val": "50" }')
     state = hass.states.get(f"{domain}.test")
-    assert state and state.attributes.get("val") != "50"
+    assert state
+    assert state.attributes.get("val") != "50"
 
     # Verify we are subscribing to the new topic
     async_fire_mqtt_message(hass, "attr-topic2", '{ "val": "75" }')
     state = hass.states.get(f"{domain}.test")
-    assert state and state.attributes.get("val") == "75"
+    assert state
+    assert state.attributes.get("val") == "75"
 
 
 async def help_test_unique_id(
@@ -1232,11 +1282,13 @@ async def help_test_entity_id_update_discovery_update(
 
     async_fire_mqtt_message(hass, topic, "online")
     state = hass.states.get(f"{domain}.test")
-    assert state and state.state != STATE_UNAVAILABLE
+    assert state
+    assert state.state != STATE_UNAVAILABLE
 
     async_fire_mqtt_message(hass, topic, "offline")
     state = hass.states.get(f"{domain}.test")
-    assert state and state.state == STATE_UNAVAILABLE
+    assert state
+    assert state.state == STATE_UNAVAILABLE
 
     entity_registry.async_update_entity(
         f"{domain}.test", new_entity_id=f"{domain}.milk"
@@ -1251,7 +1303,8 @@ async def help_test_entity_id_update_discovery_update(
 
     async_fire_mqtt_message(hass, f"{topic}_2", "online")
     state = hass.states.get(f"{domain}.milk")
-    assert state and state.state != STATE_UNAVAILABLE
+    assert state
+    assert state.state != STATE_UNAVAILABLE
 
 
 async def help_test_entity_debug_info(
@@ -1596,7 +1649,8 @@ async def help_test_entity_disabled_by_default(
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla1/config", data)
     await hass.async_block_till_done()
     entity_id = ent_registry.async_get_entity_id(domain, mqtt.DOMAIN, "veryunique1")
-    assert entity_id is not None and hass.states.get(entity_id) is None
+    assert entity_id is not None
+    assert hass.states.get(entity_id) is None
     assert dev_registry.async_get_device(identifiers={("mqtt", "helloworld")})
 
     # Discover an enabled entity, tied to the same device
@@ -1606,7 +1660,8 @@ async def help_test_entity_disabled_by_default(
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla2/config", data)
     await hass.async_block_till_done()
     entity_id = ent_registry.async_get_entity_id(domain, mqtt.DOMAIN, "veryunique2")
-    assert entity_id is not None and hass.states.get(entity_id) is not None
+    assert entity_id is not None
+    assert hass.states.get(entity_id) is not None
 
     # Remove the enabled entity, both entities and the device should be removed
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla2/config", "")
@@ -1637,9 +1692,11 @@ async def help_test_entity_category(
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/{unique_id}/config", data)
     await hass.async_block_till_done()
     entity_id = ent_registry.async_get_entity_id(domain, mqtt.DOMAIN, unique_id)
-    assert entity_id is not None and hass.states.get(entity_id)
+    assert entity_id is not None
+    assert hass.states.get(entity_id)
     entry = ent_registry.async_get(entity_id)
-    assert entry is not None and entry.entity_category is None
+    assert entry is not None
+    assert entry.entity_category is None
 
     # Discover an entity with entity category set to "diagnostic"
     unique_id = "veryunique2"
@@ -1649,9 +1706,11 @@ async def help_test_entity_category(
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/{unique_id}/config", data)
     await hass.async_block_till_done()
     entity_id = ent_registry.async_get_entity_id(domain, mqtt.DOMAIN, unique_id)
-    assert entity_id is not None and hass.states.get(entity_id)
+    assert entity_id is not None
+    assert hass.states.get(entity_id)
     entry = ent_registry.async_get(entity_id)
-    assert entry is not None and entry.entity_category == EntityCategory.DIAGNOSTIC
+    assert entry is not None
+    assert entry.entity_category == EntityCategory.DIAGNOSTIC
 
     # Discover an entity with entity category set to "no_such_category"
     unique_id = "veryunique3"
@@ -1928,7 +1987,8 @@ async def help_test_discovery_setup(
     )
     await hass.async_block_till_done()
     state = hass.states.get(f"{domain}.{name}")
-    assert state and state.state is not None
+    assert state
+    assert state.state is not None
 
 
 async def help_test_skipped_async_ha_write_state(

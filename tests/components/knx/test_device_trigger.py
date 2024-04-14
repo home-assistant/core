@@ -185,7 +185,8 @@ async def test_get_trigger_capabilities_node_status(
             "type": "telegram",
         },
     )
-    assert capabilities and "extra_fields" in capabilities
+    assert capabilities
+    assert "extra_fields" in capabilities
 
     assert voluptuous_serialize.convert(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer

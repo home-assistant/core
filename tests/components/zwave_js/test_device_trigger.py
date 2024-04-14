@@ -188,7 +188,8 @@ async def test_get_trigger_capabilities_notification_notification(
             "command_class": CommandClass.NOTIFICATION.value,
         },
     )
-    assert capabilities and "extra_fields" in capabilities
+    assert capabilities
+    assert "extra_fields" in capabilities
 
     assert voluptuous_serialize.convert(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
@@ -316,7 +317,8 @@ async def test_get_trigger_capabilities_entry_control_notification(
             "command_class": CommandClass.ENTRY_CONTROL.value,
         },
     )
-    assert capabilities and "extra_fields" in capabilities
+    assert capabilities
+    assert "extra_fields" in capabilities
 
     assert voluptuous_serialize.convert(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
@@ -544,7 +546,8 @@ async def test_get_trigger_capabilities_node_status(
             "type": "state.node_status",
         },
     )
-    assert capabilities and "extra_fields" in capabilities
+    assert capabilities
+    assert "extra_fields" in capabilities
 
     assert voluptuous_serialize.convert(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
@@ -735,7 +738,8 @@ async def test_get_trigger_capabilities_basic_value_notification(
             "subtype": "Endpoint 0",
         },
     )
-    assert capabilities and "extra_fields" in capabilities
+    assert capabilities
+    assert "extra_fields" in capabilities
 
     assert voluptuous_serialize.convert(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
@@ -916,7 +920,8 @@ async def test_get_trigger_capabilities_central_scene_value_notification(
             "subtype": "Endpoint 0 Scene 001",
         },
     )
-    assert capabilities and "extra_fields" in capabilities
+    assert capabilities
+    assert "extra_fields" in capabilities
 
     assert voluptuous_serialize.convert(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
@@ -1090,7 +1095,8 @@ async def test_get_trigger_capabilities_scene_activation_value_notification(
             "subtype": "Endpoint 0",
         },
     )
-    assert capabilities and "extra_fields" in capabilities
+    assert capabilities
+    assert "extra_fields" in capabilities
 
     assert voluptuous_serialize.convert(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
@@ -1312,7 +1318,8 @@ async def test_get_trigger_capabilities_value_updated_value(
             "endpoint": None,
         },
     )
-    assert capabilities and "extra_fields" in capabilities
+    assert capabilities
+    assert "extra_fields" in capabilities
 
     assert voluptuous_serialize.convert(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
@@ -1462,7 +1469,8 @@ async def test_get_trigger_capabilities_value_updated_config_parameter_range(
             "subtype": "6 (User Slot Status)",
         },
     )
-    assert capabilities and "extra_fields" in capabilities
+    assert capabilities
+    assert "extra_fields" in capabilities
 
     assert voluptuous_serialize.convert(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
@@ -1507,7 +1515,8 @@ async def test_get_trigger_capabilities_value_updated_config_parameter_enumerate
             "subtype": "3 (Beeper)",
         },
     )
-    assert capabilities and "extra_fields" in capabilities
+    assert capabilities
+    assert "extra_fields" in capabilities
 
     assert voluptuous_serialize.convert(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer

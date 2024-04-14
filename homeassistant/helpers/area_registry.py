@@ -321,7 +321,8 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
 
         if data is not None:
             for area in data["areas"]:
-                assert area["name"] is not None and area["id"] is not None
+                assert area["name"] is not None
+                assert area["id"] is not None
                 normalized_name = normalize_name(area["name"])
                 areas[area["id"]] = AreaEntry(
                     aliases=set(area["aliases"]),

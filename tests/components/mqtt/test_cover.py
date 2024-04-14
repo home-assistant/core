@@ -3074,7 +3074,8 @@ async def test_position_and_tilt_via_position_topic_template_return_json(
     current_tilt_position = hass.states.get("cover.test").attributes[
         ATTR_CURRENT_TILT_POSITION
     ]
-    assert current_cover_position == 0 and current_tilt_position == 0
+    assert current_cover_position == 0
+    assert current_tilt_position == 0
 
     async_fire_mqtt_message(hass, "get-position-topic", "99")
     current_cover_position = hass.states.get("cover.test").attributes[
@@ -3083,7 +3084,8 @@ async def test_position_and_tilt_via_position_topic_template_return_json(
     current_tilt_position = hass.states.get("cover.test").attributes[
         ATTR_CURRENT_TILT_POSITION
     ]
-    assert current_cover_position == 99 and current_tilt_position == 49
+    assert current_cover_position == 99
+    assert current_tilt_position == 49
 
 
 @pytest.mark.parametrize(

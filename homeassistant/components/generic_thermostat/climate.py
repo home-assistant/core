@@ -505,7 +505,8 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
                 if not long_enough:
                     return
 
-            assert self._cur_temp is not None and self._target_temp is not None
+            assert self._cur_temp is not None
+            assert self._target_temp is not None
             too_cold = self._target_temp >= self._cur_temp + self._cold_tolerance
             too_hot = self._cur_temp >= self._target_temp + self._hot_tolerance
             if self._is_device_active:

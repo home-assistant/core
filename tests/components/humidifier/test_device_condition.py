@@ -487,7 +487,8 @@ async def test_capabilities(
         },
     )
 
-    assert capabilities and "extra_fields" in capabilities
+    assert capabilities
+    assert "extra_fields" in capabilities
 
     assert (
         voluptuous_serialize.convert(
@@ -657,7 +658,8 @@ async def test_capabilities_legacy(
         },
     )
 
-    assert capabilities and "extra_fields" in capabilities
+    assert capabilities
+    assert "extra_fields" in capabilities
 
     assert (
         voluptuous_serialize.convert(
@@ -698,7 +700,8 @@ async def test_capabilities_missing_entity(
         }
     ]
 
-    assert capabilities and "extra_fields" in capabilities
+    assert capabilities
+    assert "extra_fields" in capabilities
 
     assert (
         voluptuous_serialize.convert(

@@ -343,7 +343,8 @@ async def test_get_trigger_capabilities(
             "entity_id": entity_entry.id,
         },
     )
-    assert capabilities and "extra_fields" in capabilities
+    assert capabilities
+    assert "extra_fields" in capabilities
 
     assert voluptuous_serialize.convert(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
@@ -382,7 +383,8 @@ async def test_get_trigger_capabilities_legacy(
             "entity_id": entity_entry.entity_id,
         },
     )
-    assert capabilities and "extra_fields" in capabilities
+    assert capabilities
+    assert "extra_fields" in capabilities
 
     assert voluptuous_serialize.convert(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer

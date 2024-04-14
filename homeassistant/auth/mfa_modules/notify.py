@@ -321,7 +321,8 @@ class NotifySetupFlow(SetupFlow):
         errors: dict[str, str] = {}
 
         hass = self._auth_module.hass
-        assert self._secret and self._count
+        assert self._secret
+        assert self._count
         if user_input:
             verified = await hass.async_add_executor_job(
                 _verify_otp, self._secret, user_input["code"], self._count
