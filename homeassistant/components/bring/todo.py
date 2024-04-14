@@ -20,6 +20,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.config_validation import make_entity_service_schema
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -27,7 +28,10 @@ from .const import (
     ATTR_ITEM_NAME,
     ATTR_NOTIFICATION_TYPE,
     DOMAIN,
+    MANUFACTURER,
+    SERVICE_NAME,
     SERVICE_PUSH_NOTIFICATION,
+    SERVICE_URL,
 )
 from .coordinator import BringData, BringDataUpdateCoordinator
 
@@ -95,6 +99,14 @@ class BringTodoListEntity(
         self._list_uuid = bring_list["listUuid"]
         self._attr_name = bring_list["name"]
         self._attr_unique_id = f"{unique_id}_{self._list_uuid}"
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            manufacturer=MANUFACTURER,
+            model=SERVICE_NAME,
+            name=SERVICE_NAME,
+            configuration_url=SERVICE_URL,
+            identifiers={(DOMAIN, unique_id)},
+        )
 
     @property
     def todo_items(self) -> list[TodoItem]:
