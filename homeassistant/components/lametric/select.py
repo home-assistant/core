@@ -1,4 +1,5 @@
 """Support for LaMetric selects."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
@@ -19,7 +20,7 @@ from .entity import LaMetricEntity
 from .helpers import lametric_exception_handler
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class LaMetricSelectEntityDescription(SelectEntityDescription):
     """Class describing LaMetric select entities."""
 
@@ -31,7 +32,6 @@ SELECTS = [
     LaMetricSelectEntityDescription(
         key="brightness_mode",
         translation_key="brightness_mode",
-        icon="mdi:brightness-auto",
         entity_category=EntityCategory.CONFIG,
         options=["auto", "manual"],
         current_fn=lambda device: device.display.brightness_mode.value,

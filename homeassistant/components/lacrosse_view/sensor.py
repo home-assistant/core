@@ -1,8 +1,9 @@
 """Sensor component for LaCrosse View."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 import logging
 
 from lacrosse_view import Sensor
@@ -35,18 +36,11 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
-class LaCrosseSensorEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class LaCrosseSensorEntityDescription(SensorEntityDescription):
+    """Description for LaCrosse View sensor."""
 
     value_fn: Callable[[Sensor, str], float | int | str | None]
-
-
-@dataclass
-class LaCrosseSensorEntityDescription(
-    SensorEntityDescription, LaCrosseSensorEntityDescriptionMixin
-):
-    """Description for LaCrosse View sensor."""
 
 
 def get_value(sensor: Sensor, field: str) -> float | int | str | None:
@@ -97,7 +91,7 @@ SENSOR_DESCRIPTIONS = {
         key="Rain",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=get_value,
-        native_unit_of_measurement=UnitOfPrecipitationDepth.INCHES,
+        native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
         device_class=SensorDeviceClass.PRECIPITATION,
     ),
     "WindHeading": LaCrosseSensorEntityDescription(
@@ -130,7 +124,7 @@ SENSOR_DESCRIPTIONS = {
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=get_value,
         device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
     ),
     "WindChill": LaCrosseSensorEntityDescription(
         key="WindChill",
@@ -138,8 +132,17 @@ SENSOR_DESCRIPTIONS = {
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=get_value,
         device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
     ),
+}
+# map of API returned unit of measurement strings to their corresponding unit of measurement
+UNIT_OF_MEASUREMENT_MAP = {
+    "degrees_celsius": UnitOfTemperature.CELSIUS,
+    "degrees_fahrenheit": UnitOfTemperature.FAHRENHEIT,
+    "inches": UnitOfPrecipitationDepth.INCHES,
+    "millimeters": UnitOfPrecipitationDepth.MILLIMETERS,
+    "kilometers_per_hour": UnitOfSpeed.KILOMETERS_PER_HOUR,
+    "miles_per_hour": UnitOfSpeed.MILES_PER_HOUR,
 }
 
 
@@ -162,15 +165,30 @@ async def async_setup_entry(
                 message = (
                     f"Unsupported sensor field: {field}\nPlease create an issue on "
                     "GitHub."
-                    " https://github.com/home-assistant/core/issues/new?assignees=&la"
-                    "bels=&template=bug_report.yml&integration_name=LaCrosse%20View&integrat"
-                    "ion_link=https://www.home-assistant.io/integrations/lacrosse_view/&addi"
-                    f"tional_information=Field:%20{field}%0ASensor%20Model:%20{sensor.model}&"
-                    f"title=LaCrosse%20View%20Unsupported%20sensor%20field:%20{field}"
+                    " https://github.com/home-assistant/core/issues/new?assignees="
+                    "&labels=&template=bug_report.yml&integration_name=LaCrosse%20View"
+                    "&integration_link="
+                    "https://www.home-assistant.io/integrations/lacrosse_view/"
+                    "&additional_information="
+                    f"Field:%20{field}%0ASensor%20Model:%20{sensor.model}"
+                    f"&title=LaCrosse%20View%20Unsupported%20sensor%20field:%20{field}"
                 )
 
                 _LOGGER.warning(message)
                 continue
+
+            # if the API returns a different unit of measurement from the description, update it
+            if sensor.data.get(field) is not None:
+                native_unit_of_measurement = UNIT_OF_MEASUREMENT_MAP.get(
+                    sensor.data[field].get("unit")
+                )
+
+                if native_unit_of_measurement is not None:
+                    description = replace(
+                        description,
+                        native_unit_of_measurement=native_unit_of_measurement,
+                    )
+
             sensor_list.append(
                 LaCrosseViewSensor(
                     coordinator=coordinator,

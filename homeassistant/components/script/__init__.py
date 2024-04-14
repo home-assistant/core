@@ -1,9 +1,11 @@
 """Support for scripts."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
 import asyncio
 from dataclasses import dataclass
+from functools import cached_property
 import logging
 from typing import Any, cast
 
@@ -55,6 +57,7 @@ from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.helpers.trace import trace_get, trace_path
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
+from homeassistant.util.async_ import create_eager_task
 from homeassistant.util.dt import parse_datetime
 
 from .config import ScriptConfig
@@ -151,6 +154,30 @@ def areas_in_script(hass: HomeAssistant, entity_id: str) -> list[str]:
 
 
 @callback
+def scripts_with_floor(hass: HomeAssistant, floor_id: str) -> list[str]:
+    """Return all scripts that reference the floor."""
+    return _scripts_with_x(hass, floor_id, "referenced_floors")
+
+
+@callback
+def floors_in_script(hass: HomeAssistant, entity_id: str) -> list[str]:
+    """Return all floors in a script."""
+    return _x_in_script(hass, entity_id, "referenced_floors")
+
+
+@callback
+def scripts_with_label(hass: HomeAssistant, label_id: str) -> list[str]:
+    """Return all scripts that reference the label."""
+    return _scripts_with_x(hass, label_id, "referenced_labels")
+
+
+@callback
+def labels_in_script(hass: HomeAssistant, entity_id: str) -> list[str]:
+    """Return all labels in a script."""
+    return _x_in_script(hass, entity_id, "referenced_labels")
+
+
+@callback
 def scripts_with_blueprint(hass: HomeAssistant, blueprint_path: str) -> list[str]:
     """Return all scripts that reference the blueprint."""
     if DOMAIN not in hass.data:
@@ -191,8 +218,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     await _async_process_config(hass, config, component)
 
     # Add some default blueprints to blueprints/script, does nothing
-    # if blueprints/script already exists
-    await async_get_blueprints(hass).async_populate()
+    # if blueprints/script already exists but still has to create
+    # an executor job to check if the folder exists so we run it in a
+    # separate task to avoid waiting for it to finish setting up
+    # since a tracked task will be waited at the end of startup
+    hass.async_create_task(
+        async_get_blueprints(hass).async_populate(), eager_start=True
+    )
 
     async def reload_service(service: ServiceCall) -> None:
         """Call a service to reload scripts."""
@@ -220,7 +252,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         await asyncio.wait(
             [
-                asyncio.create_task(script_entity.async_turn_off())
+                create_eager_task(script_entity.async_turn_off())
                 for script_entity in script_entities
             ]
         )
@@ -381,7 +413,17 @@ class BaseScriptEntity(ToggleEntity, ABC):
 
     raw_config: ConfigType | None
 
-    @property
+    @cached_property
+    @abstractmethod
+    def referenced_labels(self) -> set[str]:
+        """Return a set of referenced labels."""
+
+    @cached_property
+    @abstractmethod
+    def referenced_floors(self) -> set[str]:
+        """Return a set of referenced floors."""
+
+    @cached_property
     @abstractmethod
     def referenced_areas(self) -> set[str]:
         """Return a set of referenced areas."""
@@ -391,12 +433,12 @@ class BaseScriptEntity(ToggleEntity, ABC):
     def referenced_blueprint(self) -> str | None:
         """Return referenced blueprint or None."""
 
-    @property
+    @cached_property
     @abstractmethod
     def referenced_devices(self) -> set[str]:
         """Return a set of referenced devices."""
 
-    @property
+    @cached_property
     @abstractmethod
     def referenced_entities(self) -> set[str]:
         """Return a set of referenced entities."""
@@ -405,7 +447,7 @@ class BaseScriptEntity(ToggleEntity, ABC):
 class UnavailableScriptEntity(BaseScriptEntity):
     """A non-functional script entity with its state set to unavailable.
 
-    This class is instatiated when an script fails to validate.
+    This class is instantiated when an script fails to validate.
     """
 
     _attr_should_poll = False
@@ -417,16 +459,21 @@ class UnavailableScriptEntity(BaseScriptEntity):
         raw_config: ConfigType | None,
     ) -> None:
         """Initialize a script entity."""
-        self._name = raw_config.get(CONF_ALIAS, key) if raw_config else key
+        self._attr_name = raw_config.get(CONF_ALIAS, key) if raw_config else key
         self._attr_unique_id = key
         self.raw_config = raw_config
 
-    @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        return self._name
+    @cached_property
+    def referenced_labels(self) -> set[str]:
+        """Return a set of referenced labels."""
+        return set()
 
-    @property
+    @cached_property
+    def referenced_floors(self) -> set[str]:
+        """Return a set of referenced floors."""
+        return set()
+
+    @cached_property
     def referenced_areas(self) -> set[str]:
         """Return a set of referenced areas."""
         return set()
@@ -436,12 +483,12 @@ class UnavailableScriptEntity(BaseScriptEntity):
         """Return referenced blueprint or None."""
         return None
 
-    @property
+    @cached_property
     def referenced_devices(self) -> set[str]:
         """Return a set of referenced devices."""
         return set()
 
-    @property
+    @cached_property
     def referenced_entities(self) -> set[str]:
         """Return a set of referenced entities."""
         return set()
@@ -451,6 +498,7 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
     """Representation of a script entity."""
 
     icon = None
+    _attr_should_poll = False
 
     def __init__(self, hass, key, cfg, raw_config, blueprint_inputs):
         """Initialize the script."""
@@ -479,16 +527,7 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
         self.raw_config = raw_config
         self._trace_config = cfg[CONF_TRACE]
         self._blueprint_inputs = blueprint_inputs
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
-    def name(self):
-        """Return the name of the entity."""
-        return self.script.name
+        self._attr_name = self.script.name
 
     @property
     def extra_state_attributes(self):
@@ -509,7 +548,17 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
         """Return true if script is on."""
         return self.script.is_running
 
-    @property
+    @cached_property
+    def referenced_labels(self) -> set[str]:
+        """Return a set of referenced labels."""
+        return self.script.referenced_labels
+
+    @cached_property
+    def referenced_floors(self) -> set[str]:
+        """Return a set of referenced floors."""
+        return self.script.referenced_floors
+
+    @cached_property
     def referenced_areas(self) -> set[str]:
         """Return a set of referenced areas."""
         return self.script.referenced_areas
@@ -521,12 +570,12 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
             return None
         return self._blueprint_inputs[CONF_USE_BLUEPRINT][CONF_PATH]
 
-    @property
+    @cached_property
     def referenced_devices(self) -> set[str]:
         """Return a set of referenced devices."""
         return self.script.referenced_devices
 
-    @property
+    @cached_property
     def referenced_entities(self) -> set[str]:
         """Return a set of referenced entities."""
         return self.script.referenced_entities
@@ -569,7 +618,7 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
         script_stack_cv.set([])
 
         self._changed.clear()
-        self.hass.async_create_task(coro)
+        self.hass.async_create_task(coro, eager_start=True)
         # Wait for first state change so we can guarantee that
         # it is written to the State Machine before we return.
         await self._changed.wait()

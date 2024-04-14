@@ -1,4 +1,5 @@
 """Test Matter locks."""
+
 from unittest.mock import MagicMock, call
 
 from chip.clusters import Objects as clusters
@@ -14,6 +15,7 @@ from homeassistant.components.lock import (
 )
 from homeassistant.const import ATTR_CODE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 import homeassistant.helpers.entity_registry as er
 
 from .common import set_node_attribute, trigger_subscription_callback
@@ -113,7 +115,7 @@ async def test_lock_requires_pin(
     # set door state to unlocked
     set_node_attribute(door_lock, 1, 257, 0, 2)
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         # Lock door using invalid code format
         await trigger_subscription_callback(hass, matter_client)
         await hass.services.async_call(

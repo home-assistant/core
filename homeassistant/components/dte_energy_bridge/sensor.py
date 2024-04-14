@@ -1,4 +1,5 @@
 """Support for monitoring energy usage using the DTE energy bridge."""
+
 from __future__ import annotations
 
 from http import HTTPStatus

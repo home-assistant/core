@@ -1,6 +1,8 @@
 """Config flow for Google integration."""
+
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Mapping
 import logging
 from typing import Any
@@ -9,9 +11,8 @@ from gcal_sync.api import GoogleCalendarService
 from gcal_sync.exceptions import ApiException, ApiForbiddenException
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigEntry, ConfigFlowResult, OptionsFlow
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -68,10 +69,12 @@ class OAuth2FlowHandler(
 
     DOMAIN = DOMAIN
 
+    _exchange_finished_task: asyncio.Task[bool] | None = None
+
     def __init__(self) -> None:
         """Set up instance."""
         super().__init__()
-        self._reauth_config_entry: config_entries.ConfigEntry | None = None
+        self._reauth_config_entry: ConfigEntry | None = None
         self._device_flow: DeviceFlow | None = None
         # First attempt is device auth, then fallback to web auth
         self._web_auth = False
@@ -91,7 +94,7 @@ class OAuth2FlowHandler(
             "prompt": "consent",
         }
 
-    async def async_step_import(self, info: dict[str, Any]) -> FlowResult:
+    async def async_step_import(self, info: dict[str, Any]) -> ConfigFlowResult:
         """Import existing auth into a new config entry."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
@@ -105,7 +108,7 @@ class OAuth2FlowHandler(
 
     async def async_step_auth(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Create an entry for auth."""
         # The default behavior from the parent class is to redirect the
         # user with an external step. When using the device flow, we instead
@@ -115,7 +118,7 @@ class OAuth2FlowHandler(
         if self._web_auth:
             return await super().async_step_auth(user_input)
 
-        if user_input is not None:
+        if self._exchange_finished_task and self._exchange_finished_task.done():
             return self.async_show_progress_done(next_step_id="creation")
 
         if not self._device_flow:
@@ -150,15 +153,16 @@ class OAuth2FlowHandler(
                 return self.async_abort(reason="oauth_error")
             self._device_flow = device_flow
 
+            exchange_finished_evt = asyncio.Event()
+            self._exchange_finished_task = self.hass.async_create_task(
+                exchange_finished_evt.wait()
+            )
+
             def _exchange_finished() -> None:
                 self.external_data = {
                     DEVICE_AUTH_CREDS: device_flow.creds
                 }  # is None on timeout/expiration
-                self.hass.async_create_task(
-                    self.hass.config_entries.flow.async_configure(
-                        flow_id=self.flow_id, user_input={}
-                    )
-                )
+                exchange_finished_evt.set()
 
             device_flow.async_set_listener(_exchange_finished)
             device_flow.async_start_exchange()
@@ -170,17 +174,18 @@ class OAuth2FlowHandler(
                 "user_code": self._device_flow.user_code,
             },
             progress_action="exchange",
+            progress_task=self._exchange_finished_task,
         )
 
     async def async_step_creation(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle external yaml configuration."""
         if not self._web_auth and self.external_data.get(DEVICE_AUTH_CREDS) is None:
             return self.async_abort(reason="code_expired")
         return await super().async_step_creation(user_input)
 
-    async def async_oauth_create_entry(self, data: dict) -> FlowResult:
+    async def async_oauth_create_entry(self, data: dict) -> ConfigFlowResult:
         """Create an entry for the flow, or update existing entry."""
         data[CONF_CREDENTIAL_TYPE] = (
             CredentialType.WEB_AUTH if self._web_auth else CredentialType.DEVICE_AUTH
@@ -210,6 +215,12 @@ class OAuth2FlowHandler(
             _LOGGER.error("Error reading primary calendar: %s", err)
             return self.async_abort(reason="cannot_connect")
         await self.async_set_unique_id(primary_calendar.id)
+
+        if found := self.hass.config_entries.async_entry_for_domain_unique_id(
+            self.handler, primary_calendar.id
+        ):
+            _LOGGER.debug("Found existing '%s' entry: %s", primary_calendar.id, found)
+
         self._abort_if_unique_id_configured()
         return self.async_create_entry(
             title=primary_calendar.id,
@@ -219,7 +230,9 @@ class OAuth2FlowHandler(
             },
         )
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
         self._reauth_config_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
@@ -229,7 +242,7 @@ class OAuth2FlowHandler(
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Confirm reauth dialog."""
         if user_input is None:
             return self.async_show_form(step_id="reauth_confirm")
@@ -238,22 +251,22 @@ class OAuth2FlowHandler(
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
-    ) -> config_entries.OptionsFlow:
+        config_entry: ConfigEntry,
+    ) -> OptionsFlow:
         """Create an options flow."""
         return OptionsFlowHandler(config_entry)
 
 
-class OptionsFlowHandler(config_entries.OptionsFlow):
+class OptionsFlowHandler(OptionsFlow):
     """Google Calendar options flow."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+    def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
         self.config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage the options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)

@@ -1,4 +1,5 @@
 """Test Home Assistant yaml loader."""
+
 from collections.abc import Generator
 import importlib
 import io
@@ -15,10 +16,10 @@ import yaml as pyyaml
 from homeassistant.config import YAML_CONFIG_FILE, load_yaml_config_file
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-import homeassistant.util.yaml as yaml
+from homeassistant.util import yaml
 from homeassistant.util.yaml import loader as yaml_loader
 
-from tests.common import get_test_config_dir, patch_yaml_files
+from tests.common import extract_stack_to_frame, get_test_config_dir, patch_yaml_files
 
 
 @pytest.fixture(params=["enable_c_loader", "disable_c_loader"])
@@ -193,7 +194,7 @@ def test_include_dir_list_recursive(
         ),
         (
             {"/test/first.yaml": "1", "/test/second.yaml": None},
-            {"first": 1},
+            {"first": 1, "second": {}},
         ),
     ],
 )
@@ -516,9 +517,9 @@ class TestSecrets(unittest.TestCase):
 
     def test_secrets_are_not_dict(self):
         """Did secrets handle non-dict file."""
-        FILES[
-            self._secret_path
-        ] = "- http_pw: pwhttp\n  comp1_un: un1\n  comp1_pw: pw1\n"
+        FILES[self._secret_path] = (
+            "- http_pw: pwhttp\n  comp1_un: un1\n  comp1_pw: pw1\n"
+        )
         with pytest.raises(HomeAssistantError):
             load_yaml(
                 self._yaml_path,
@@ -610,21 +611,29 @@ def mock_integration_frame() -> Generator[Mock, None, None]:
         lineno="23",
         line="self.light.is_on",
     )
-    with patch(
-        "homeassistant.helpers.frame.extract_stack",
-        return_value=[
-            Mock(
-                filename="/home/paulus/homeassistant/core.py",
-                lineno="23",
-                line="do_something()",
+    with (
+        patch(
+            "homeassistant.helpers.frame.linecache.getline",
+            return_value=correct_frame.line,
+        ),
+        patch(
+            "homeassistant.helpers.frame.get_current_frame",
+            return_value=extract_stack_to_frame(
+                [
+                    Mock(
+                        filename="/home/paulus/homeassistant/core.py",
+                        lineno="23",
+                        line="do_something()",
+                    ),
+                    correct_frame,
+                    Mock(
+                        filename="/home/paulus/aiohue/lights.py",
+                        lineno="2",
+                        line="something()",
+                    ),
+                ]
             ),
-            correct_frame,
-            Mock(
-                filename="/home/paulus/aiohue/lights.py",
-                lineno="2",
-                line="something()",
-            ),
-        ],
+        ),
     ):
         yield correct_frame
 
@@ -647,8 +656,9 @@ async def test_deprecated_loaders(
     message: str,
 ) -> None:
     """Test instantiating the deprecated yaml loaders logs a warning."""
-    with pytest.raises(TypeError), patch(
-        "homeassistant.helpers.frame._REPORTED_INTEGRATIONS", set()
+    with (
+        pytest.raises(TypeError),
+        patch("homeassistant.helpers.frame._REPORTED_INTEGRATIONS", set()),
     ):
         loader_class()
     assert (f"Detected that integration 'hue' uses deprecated {message}") in caplog.text

@@ -1,4 +1,5 @@
 """samsungctl and samsungtvws bridge classes."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -34,6 +35,7 @@ from samsungtvws.remote import ChannelEmitCommand, SendRemoteKey
 from websockets.exceptions import ConnectionClosedError, WebSocketException
 
 from homeassistant.const import (
+    CONF_DESCRIPTION,
     CONF_HOST,
     CONF_ID,
     CONF_METHOD,
@@ -50,7 +52,6 @@ from homeassistant.helpers.device_registry import format_mac
 from homeassistant.util import dt as dt_util
 
 from .const import (
-    CONF_DESCRIPTION,
     CONF_SESSION_ID,
     ENCRYPTED_WEBSOCKET_PORT,
     LEGACY_PORT,

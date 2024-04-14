@@ -1,4 +1,5 @@
 """The tests for the input_test component."""
+
 import logging
 from unittest.mock import patch
 
@@ -96,7 +97,7 @@ async def test_restore_state(hass: HomeAssistant) -> None:
         (State("input_button.b1", "2021-01-01T23:59:59+00:00"),),
     )
 
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
     mock_component(hass, "recorder")
 
     await async_setup_component(hass, DOMAIN, {DOMAIN: {"b1": None, "b2": None}})

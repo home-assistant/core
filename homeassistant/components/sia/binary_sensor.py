@@ -1,4 +1,5 @@
 """Module for SIA Binary Sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Iterable
@@ -32,7 +33,7 @@ from .sia_entity_base import SIABaseEntity, SIAEntityDescription
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class SIABinarySensorEntityDescription(
     BinarySensorEntityDescription,
     SIAEntityDescription,

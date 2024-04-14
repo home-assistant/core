@@ -1,4 +1,5 @@
 """The tests for Media Extractor integration."""
+
 from typing import Any
 
 from tests.common import load_json_object_fixture

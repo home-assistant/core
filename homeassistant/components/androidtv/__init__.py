@@ -1,4 +1,5 @@
 """Support for functionality to interact with Android/Fire TV devices."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -28,7 +29,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -166,7 +167,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not aftv:
         raise ConfigEntryNotReady(error_message)
 
-    async def async_close_connection(event):
+    async def async_close_connection(event: Event) -> None:
         """Close Android Debug Bridge connection on HA Stop."""
         await aftv.adb_close()
 

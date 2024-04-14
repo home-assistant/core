@@ -1,4 +1,5 @@
 """Basic checks for HomeKitLock."""
+
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
 
@@ -28,7 +29,7 @@ def create_lock_service(accessory):
     return service
 
 
-async def test_switch_change_lock_state(hass: HomeAssistant, utcnow) -> None:
+async def test_switch_change_lock_state(hass: HomeAssistant) -> None:
     """Test that we can turn a HomeKit lock on and off again."""
     helper = await setup_test_component(hass, create_lock_service)
 
@@ -53,7 +54,7 @@ async def test_switch_change_lock_state(hass: HomeAssistant, utcnow) -> None:
     )
 
 
-async def test_switch_read_lock_state(hass: HomeAssistant, utcnow) -> None:
+async def test_switch_read_lock_state(hass: HomeAssistant) -> None:
     """Test that we can read the state of a HomeKit lock accessory."""
     helper = await setup_test_component(hass, create_lock_service)
 
@@ -118,7 +119,7 @@ async def test_switch_read_lock_state(hass: HomeAssistant, utcnow) -> None:
 
 
 async def test_migrate_unique_id(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, utcnow
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
     """Test a we can migrate a lock unique id."""
     aid = get_next_aid()

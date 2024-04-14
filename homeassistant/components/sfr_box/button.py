@@ -1,4 +1,5 @@
 """SFR Box button platform."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Coroutine
@@ -30,7 +31,7 @@ _P = ParamSpec("_P")
 
 
 def with_error_wrapping(
-    func: Callable[Concatenate[SFRBoxButton, _P], Awaitable[_T]]
+    func: Callable[Concatenate[SFRBoxButton, _P], Awaitable[_T]],
 ) -> Callable[Concatenate[SFRBoxButton, _P], Coroutine[Any, Any, _T]]:
     """Catch SFR errors."""
 
@@ -49,16 +50,11 @@ def with_error_wrapping(
     return wrapper
 
 
-@dataclass
-class SFRBoxButtonMixin:
-    """Mixin for SFR Box buttons."""
+@dataclass(frozen=True, kw_only=True)
+class SFRBoxButtonEntityDescription(ButtonEntityDescription):
+    """Description for SFR Box buttons."""
 
     async_press: Callable[[SFRBox], Coroutine[None, None, None]]
-
-
-@dataclass
-class SFRBoxButtonEntityDescription(ButtonEntityDescription, SFRBoxButtonMixin):
-    """Description for SFR Box buttons."""
 
 
 BUTTON_TYPES: tuple[SFRBoxButtonEntityDescription, ...] = (

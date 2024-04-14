@@ -1,4 +1,5 @@
 """Helper for aiohttp webclient stuff."""
+
 from __future__ import annotations
 
 import asyncio
@@ -21,6 +22,7 @@ from homeassistant.loader import bind_hass
 from homeassistant.util import ssl as ssl_util
 from homeassistant.util.json import json_loads
 
+from .backports.aiohttp_resolver import AsyncResolver
 from .frame import warn_use
 from .json import json_dumps
 
@@ -31,8 +33,9 @@ if TYPE_CHECKING:
 DATA_CONNECTOR = "aiohttp_connector"
 DATA_CLIENTSESSION = "aiohttp_clientsession"
 
-SERVER_SOFTWARE = "{0}/{1} aiohttp/{2} Python/{3[0]}.{3[1]}".format(
-    APPLICATION_NAME, __version__, aiohttp.__version__, sys.version_info
+SERVER_SOFTWARE = (
+    f"{APPLICATION_NAME}/{__version__} "
+    f"aiohttp/{aiohttp.__version__} Python/{sys.version_info[0]}.{sys.version_info[1]}"
 )
 
 ENABLE_CLEANUP_CLOSED = not (3, 11, 1) <= sys.version_info < (3, 11, 4)
@@ -123,15 +126,13 @@ def async_create_clientsession(
     if auto_cleanup:
         auto_cleanup_method = _async_register_clientsession_shutdown
 
-    clientsession = _async_create_clientsession(
+    return _async_create_clientsession(
         hass,
         verify_ssl,
         auto_cleanup_method=auto_cleanup_method,
         family=family,
         **kwargs,
     )
-
-    return clientsession
 
 
 @callback
@@ -187,13 +188,13 @@ async def async_aiohttp_proxy_web(
         # The user cancelled the request
         return None
 
-    except asyncio.TimeoutError as err:
+    except TimeoutError as err:
         # Timeout trying to start the web request
-        raise HTTPGatewayTimeout() from err
+        raise HTTPGatewayTimeout from err
 
     except aiohttp.ClientError as err:
         # Something went wrong with the connection
-        raise HTTPBadGateway() from err
+        raise HTTPBadGateway from err
 
     try:
         return await async_aiohttp_proxy_stream(
@@ -219,7 +220,7 @@ async def async_aiohttp_proxy_stream(
     await response.prepare(request)
 
     # Suppressing something went wrong fetching data, closed connection
-    with suppress(asyncio.TimeoutError, aiohttp.ClientError):
+    with suppress(TimeoutError, aiohttp.ClientError):
         while hass.is_running:
             async with asyncio.timeout(timeout):
                 data = await stream.read(buffer_size)
@@ -308,6 +309,7 @@ def _async_get_connector(
         ssl=ssl_context,
         limit=MAXIMUM_CONNECTIONS,
         limit_per_host=MAXIMUM_CONNECTIONS_PER_HOST,
+        resolver=AsyncResolver(),
     )
     connectors[connector_key] = connector
 

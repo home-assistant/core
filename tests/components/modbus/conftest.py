@@ -1,4 +1,5 @@
 """The tests for the Modbus sensor component."""
+
 import copy
 from dataclasses import dataclass
 from datetime import timedelta
@@ -10,7 +11,14 @@ from pymodbus.exceptions import ModbusException
 import pytest
 
 from homeassistant.components.modbus.const import MODBUS_DOMAIN as DOMAIN, TCP
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_TYPE
+from homeassistant.const import (
+    CONF_ADDRESS,
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PORT,
+    CONF_SENSORS,
+    CONF_TYPE,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -42,19 +50,33 @@ class ReadResult:
 @pytest.fixture(name="mock_pymodbus")
 def mock_pymodbus_fixture():
     """Mock pymodbus."""
-    mock_pb = mock.MagicMock()
-    with mock.patch(
-        "homeassistant.components.modbus.modbus.ModbusTcpClient",
-        return_value=mock_pb,
-        autospec=True,
-    ), mock.patch(
-        "homeassistant.components.modbus.modbus.ModbusSerialClient",
-        return_value=mock_pb,
-        autospec=True,
-    ), mock.patch(
-        "homeassistant.components.modbus.modbus.ModbusUdpClient",
-        return_value=mock_pb,
-        autospec=True,
+    mock_pb = mock.AsyncMock()
+    mock_pb.close = mock.MagicMock()
+    read_result = ReadResult([])
+    mock_pb.read_coils.return_value = read_result
+    mock_pb.read_discrete_inputs.return_value = read_result
+    mock_pb.read_input_registers.return_value = read_result
+    mock_pb.read_holding_registers.return_value = read_result
+    mock_pb.write_register.return_value = read_result
+    mock_pb.write_registers.return_value = read_result
+    mock_pb.write_coil.return_value = read_result
+    mock_pb.write_coils.return_value = read_result
+    with (
+        mock.patch(
+            "homeassistant.components.modbus.modbus.AsyncModbusTcpClient",
+            return_value=mock_pb,
+            autospec=True,
+        ),
+        mock.patch(
+            "homeassistant.components.modbus.modbus.AsyncModbusSerialClient",
+            return_value=mock_pb,
+            autospec=True,
+        ),
+        mock.patch(
+            "homeassistant.components.modbus.modbus.AsyncModbusUdpClient",
+            return_value=mock_pb,
+            autospec=True,
+        ),
     ):
         yield mock_pb
 
@@ -100,13 +122,20 @@ async def mock_modbus_fixture(
                 CONF_HOST: TEST_MODBUS_HOST,
                 CONF_PORT: TEST_PORT_TCP,
                 CONF_NAME: TEST_MODBUS_NAME,
+                CONF_SENSORS: [
+                    {
+                        CONF_NAME: "dummy",
+                        CONF_ADDRESS: 9999,
+                    }
+                ],
                 **conf,
             }
         ]
     }
-    mock_pb = mock.MagicMock()
+    mock_pb = mock.AsyncMock()
+    mock_pb.close = mock.MagicMock()
     with mock.patch(
-        "homeassistant.components.modbus.modbus.ModbusTcpClient",
+        "homeassistant.components.modbus.modbus.AsyncModbusTcpClient",
         return_value=mock_pb,
         autospec=True,
     ):
@@ -136,7 +165,7 @@ async def mock_pymodbus_exception_fixture(hass, do_exception, mock_modbus):
 @pytest.fixture(name="mock_pymodbus_return")
 async def mock_pymodbus_return_fixture(hass, register_words, mock_modbus):
     """Trigger update call with time_changed event."""
-    read_result = ReadResult(register_words) if register_words else None
+    read_result = ReadResult(register_words if register_words else [])
     mock_modbus.read_coils.return_value = read_result
     mock_modbus.read_discrete_inputs.return_value = read_result
     mock_modbus.read_input_registers.return_value = read_result
@@ -145,6 +174,7 @@ async def mock_pymodbus_return_fixture(hass, register_words, mock_modbus):
     mock_modbus.write_registers.return_value = read_result
     mock_modbus.write_coil.return_value = read_result
     mock_modbus.write_coils.return_value = read_result
+    return mock_modbus
 
 
 @pytest.fixture(name="mock_do_cycle")

@@ -1,4 +1,5 @@
 """Home Assistant representation of an UPnP/IGD."""
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -37,7 +38,7 @@ def get_preferred_location(locations: set[str]) -> str:
     """Get the preferred location (an IPv4 location) from a set of locations."""
     # Prefer IPv4 over IPv6.
     for location in locations:
-        if location.startswith("http://[") or location.startswith("https://["):
+        if location.startswith(("http://[", "https://[")):
             continue
 
         return location
@@ -73,9 +74,7 @@ async def async_create_device(hass: HomeAssistant, location: str) -> Device:
 
     # Create profile wrapper.
     igd_device = IgdDevice(upnp_device, None)
-    device = Device(hass, igd_device)
-
-    return device
+    return Device(hass, igd_device)
 
 
 class Device:
@@ -85,9 +84,9 @@ class Device:
         """Initialize UPnP/IGD device."""
         self.hass = hass
         self._igd_device = igd_device
-        self.coordinator: DataUpdateCoordinator[
-            dict[str, str | datetime | int | float | None]
-        ] | None = None
+        self.coordinator: (
+            DataUpdateCoordinator[dict[str, str | datetime | int | float | None]] | None
+        ) = None
         self.original_udn: str | None = None
 
     async def async_get_mac_address(self) -> str | None:
@@ -157,7 +156,7 @@ class Device:
         _LOGGER.debug("Getting data for device: %s", self)
         igd_state = await self._igd_device.async_get_traffic_and_status_data()
         status_info = igd_state.status_info
-        if status_info is not None and not isinstance(status_info, Exception):
+        if status_info is not None and not isinstance(status_info, BaseException):
             wan_status = status_info.connection_status
             router_uptime = status_info.uptime
         else:
@@ -165,7 +164,7 @@ class Device:
             router_uptime = None
 
         def get_value(value: Any) -> Any:
-            if value is None or isinstance(value, Exception):
+            if value is None or isinstance(value, BaseException):
                 return None
 
             return value

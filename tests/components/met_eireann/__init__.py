@@ -1,4 +1,5 @@
 """Tests for Met Éireann."""
+
 from unittest.mock import patch
 
 from homeassistant.components.met_eireann.const import DOMAIN

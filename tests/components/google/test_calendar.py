@@ -1,4 +1,5 @@
 """The tests for the google calendar platform."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
@@ -9,6 +10,7 @@ from unittest.mock import patch
 import urllib
 
 from aiohttp.client_exceptions import ClientError
+from freezegun.api import FrozenDateTimeFactory
 from gcal_sync.auth import API_BASE_URL
 import pytest
 
@@ -77,7 +79,9 @@ class Client:
         self.client = client
         self.id = 0
 
-    async def cmd(self, cmd: str, payload: dict[str, Any] = None) -> dict[str, Any]:
+    async def cmd(
+        self, cmd: str, payload: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
         """Send a command and receive the json result."""
         self.id += 1
         await self.client.send_json(
@@ -91,7 +95,7 @@ class Client:
         assert resp.get("id") == self.id
         return resp
 
-    async def cmd_result(self, cmd: str, payload: dict[str, Any] = None) -> Any:
+    async def cmd_result(self, cmd: str, payload: dict[str, Any] | None = None) -> Any:
         """Send a command and parse the result."""
         resp = await self.cmd(cmd, payload)
         assert resp.get("success")
@@ -570,7 +574,6 @@ async def test_scan_calendar_error(
     config_entry,
 ) -> None:
     """Test that the calendar update handles a server error."""
-    config_entry.add_to_hass(hass)
     mock_calendars_list({}, exc=ClientError())
     assert await component_setup()
 
@@ -578,11 +581,13 @@ async def test_scan_calendar_error(
 
 
 async def test_future_event_update_behavior(
-    hass: HomeAssistant, mock_events_list_items, component_setup
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_events_list_items,
+    component_setup,
 ) -> None:
     """Test an future event that becomes active."""
     now = dt_util.now()
-    now_utc = dt_util.utcnow()
     one_hour_from_now = now + datetime.timedelta(minutes=60)
     end_event = one_hour_from_now + datetime.timedelta(minutes=90)
     event = {
@@ -600,12 +605,9 @@ async def test_future_event_update_behavior(
 
     # Advance time until event has started
     now += datetime.timedelta(minutes=60)
-    now_utc += datetime.timedelta(minutes=60)
-    with patch("homeassistant.util.dt.utcnow", return_value=now_utc), patch(
-        "homeassistant.util.dt.now", return_value=now
-    ):
-        async_fire_time_changed(hass, now)
-        await hass.async_block_till_done()
+    freezer.move_to(now)
+    async_fire_time_changed(hass, now)
+    await hass.async_block_till_done()
 
     # Event has started
     state = hass.states.get(TEST_ENTITY)
@@ -613,11 +615,13 @@ async def test_future_event_update_behavior(
 
 
 async def test_future_event_offset_update_behavior(
-    hass: HomeAssistant, mock_events_list_items, component_setup
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_events_list_items,
+    component_setup,
 ) -> None:
     """Test an future event that becomes active."""
     now = dt_util.now()
-    now_utc = dt_util.utcnow()
     one_hour_from_now = now + datetime.timedelta(minutes=60)
     end_event = one_hour_from_now + datetime.timedelta(minutes=90)
     event_summary = "Test Event in Progress"
@@ -638,12 +642,9 @@ async def test_future_event_offset_update_behavior(
 
     # Advance time until event has started
     now += datetime.timedelta(minutes=45)
-    now_utc += datetime.timedelta(minutes=45)
-    with patch("homeassistant.util.dt.utcnow", return_value=now_utc), patch(
-        "homeassistant.util.dt.now", return_value=now
-    ):
-        async_fire_time_changed(hass, now)
-        await hass.async_block_till_done()
+    freezer.move_to(now)
+    async_fire_time_changed(hass, now)
+    await hass.async_block_till_done()
 
     # Event has not started, but the offset was reached
     state = hass.states.get(TEST_ENTITY)

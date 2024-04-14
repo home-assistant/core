@@ -1,10 +1,12 @@
 """Utility functions for the Open Thread Border Router integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
 import dataclasses
 from functools import wraps
 import logging
+import random
 from typing import Any, Concatenate, ParamSpec, TypeVar, cast
 
 import python_otbr_api
@@ -48,8 +50,19 @@ INSECURE_PASSPHRASES = (
 )
 
 
+def compose_default_network_name(pan_id: int) -> str:
+    """Generate a default network name."""
+    return f"ha-thread-{pan_id:04x}"
+
+
+def generate_random_pan_id() -> int:
+    """Generate a random PAN ID."""
+    # PAN ID is 2 bytes, 0xffff is reserved for broadcast
+    return random.randint(0, 0xFFFE)
+
+
 def _handle_otbr_error(
-    func: Callable[Concatenate[OTBRData, _P], Coroutine[Any, Any, _R]]
+    func: Callable[Concatenate[OTBRData, _P], Coroutine[Any, Any, _R]],
 ) -> Callable[Concatenate[OTBRData, _P], Coroutine[Any, Any, _R]]:
     """Handle OTBR errors."""
 

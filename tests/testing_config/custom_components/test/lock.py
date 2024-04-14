@@ -2,7 +2,8 @@
 
 Call init before using it in your tests to ensure clean test data.
 """
-from homeassistant.components.lock import SUPPORT_OPEN, LockEntity
+
+from homeassistant.components.lock import LockEntity, LockEntityFeature
 
 from tests.common import MockEntity
 
@@ -11,7 +12,7 @@ ENTITIES = {}
 
 def init(empty=False):
     """Initialize the platform with entities."""
-    global ENTITIES
+    global ENTITIES  # noqa: PLW0603
 
     ENTITIES = (
         {}
@@ -20,7 +21,7 @@ def init(empty=False):
             "support_open": MockLock(
                 name="Support open Lock",
                 is_locked=True,
-                supported_features=SUPPORT_OPEN,
+                supported_features=LockEntityFeature.OPEN,
                 unique_id="unique_support_open",
             ),
             "no_support_open": MockLock(

@@ -1,4 +1,5 @@
 """Tests for the wemo component."""
+
 import asyncio
 from datetime import timedelta
 from unittest.mock import create_autospec, patch
@@ -210,13 +211,15 @@ async def test_discovery(hass: HomeAssistant, pywemo_registry) -> None:
 
     pywemo_devices = [create_device(0), create_device(1)]
     # Setup the component and start discovery.
-    with patch(
-        "pywemo.discover_devices", return_value=pywemo_devices
-    ) as mock_discovery, patch(
-        "homeassistant.components.wemo.WemoDiscovery.discover_statics"
-    ) as mock_discover_statics, patch(
-        "homeassistant.components.wemo.binary_sensor.async_wemo_dispatcher_connect",
-        side_effect=async_connect,
+    with (
+        patch("pywemo.discover_devices", return_value=pywemo_devices) as mock_discovery,
+        patch(
+            "homeassistant.components.wemo.WemoDiscovery.discover_statics"
+        ) as mock_discover_statics,
+        patch(
+            "homeassistant.components.wemo.binary_sensor.async_wemo_dispatcher_connect",
+            side_effect=async_connect,
+        ),
     ):
         assert await async_setup_component(
             hass, DOMAIN, {DOMAIN: {CONF_DISCOVERY: True}}

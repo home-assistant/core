@@ -1,4 +1,5 @@
 """Support for AVM FRITZ!Box update platform."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -21,7 +22,7 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class FritzUpdateEntityDescription(UpdateEntityDescription, FritzEntityDescription):
     """Describes Fritz update entity."""
 

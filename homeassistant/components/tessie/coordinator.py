@@ -1,13 +1,15 @@
 """Tessie Data Coordinator."""
+
 from datetime import timedelta
 from http import HTTPStatus
 import logging
 from typing import Any
 
 from aiohttp import ClientResponseError
-from tessie_api import get_state
+from tessie_api import get_state, get_status
 
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -19,7 +21,7 @@ TESSIE_SYNC_INTERVAL = 10
 _LOGGER = logging.getLogger(__name__)
 
 
-class TessieDataUpdateCoordinator(DataUpdateCoordinator):
+class TessieStateUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching data from the Tessie API."""
 
     def __init__(
@@ -34,51 +36,50 @@ class TessieDataUpdateCoordinator(DataUpdateCoordinator):
             hass,
             _LOGGER,
             name="Tessie",
-            update_method=self.async_update_data,
             update_interval=timedelta(seconds=TESSIE_SYNC_INTERVAL),
         )
         self.api_key = api_key
         self.vin = vin
         self.session = async_get_clientsession(hass)
-        self.data = self._flattern(data)
-        self.did_first_update = False
+        self.data = self._flatten(data)
 
-    async def async_update_data(self) -> dict[str, Any]:
+    async def _async_update_data(self) -> dict[str, Any]:
         """Update vehicle data using Tessie API."""
         try:
+            status = await get_status(
+                session=self.session,
+                api_key=self.api_key,
+                vin=self.vin,
+            )
+            if status["status"] == TessieStatus.ASLEEP:
+                # Vehicle is asleep, no need to poll for data
+                self.data["state"] = status["status"]
+                return self.data
+
             vehicle = await get_state(
                 session=self.session,
                 api_key=self.api_key,
                 vin=self.vin,
-                use_cache=self.did_first_update,
+                use_cache=True,
             )
         except ClientResponseError as e:
-            if e.status == HTTPStatus.REQUEST_TIMEOUT:
-                # Vehicle is offline, only update state and dont throw error
-                self.data["state"] = TessieStatus.OFFLINE
-                return self.data
-            # Reauth will go here
-            raise e
+            if e.status == HTTPStatus.UNAUTHORIZED:
+                # Auth Token is no longer valid
+                raise ConfigEntryAuthFailed from e
+            raise
 
-        self.did_first_update = True
-        if vehicle["state"] == TessieStatus.ONLINE:
-            # Vehicle is online, all data is fresh
-            return self._flattern(vehicle)
+        return self._flatten(vehicle)
 
-        # Vehicle is asleep, only update state
-        self.data["state"] = vehicle["state"]
-        return self.data
-
-    def _flattern(
+    def _flatten(
         self, data: dict[str, Any], parent: str | None = None
     ) -> dict[str, Any]:
-        """Flattern the data structure."""
+        """Flatten the data structure."""
         result = {}
         for key, value in data.items():
             if parent:
-                key = f"{parent}-{key}"
+                key = f"{parent}_{key}"
             if isinstance(value, dict):
-                result.update(self._flattern(value, key))
+                result.update(self._flatten(value, key))
             else:
                 result[key] = value
         return result

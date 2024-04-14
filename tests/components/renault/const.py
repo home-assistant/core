@@ -1,4 +1,5 @@
 """Constants for the Renault integration tests."""
+
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.renault.const import (
     CONF_KAMEREON_ACCOUNT_ID,

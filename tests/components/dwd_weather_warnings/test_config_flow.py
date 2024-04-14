@@ -38,7 +38,7 @@ async def test_create_entry(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": SOURCE_USER}
     )
     await hass.async_block_till_done()
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
 
     with patch(
         "homeassistant.components.dwd_weather_warnings.config_flow.DwdWeatherWarningsAPI",
@@ -50,7 +50,7 @@ async def test_create_entry(hass: HomeAssistant) -> None:
 
     # Test for invalid region identifier.
     await hass.async_block_till_done()
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_identifier"}
 
     with patch(
@@ -63,7 +63,7 @@ async def test_create_entry(hass: HomeAssistant) -> None:
 
     # Test for successfully created entry.
     await hass.async_block_till_done()
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "807111000"
     assert result["data"] == {
         CONF_REGION_IDENTIFIER: "807111000",
@@ -85,7 +85,7 @@ async def test_config_flow_already_configured(hass: HomeAssistant) -> None:
     )
 
     await hass.async_block_till_done()
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
 
     with patch(
         "homeassistant.components.dwd_weather_warnings.config_flow.DwdWeatherWarningsAPI",
@@ -96,5 +96,5 @@ async def test_config_flow_already_configured(hass: HomeAssistant) -> None:
         )
 
     await hass.async_block_till_done()
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"

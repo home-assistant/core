@@ -1,4 +1,5 @@
 """Support for Tellstick switches using Tellstick Net."""
+
 from typing import Any
 
 from homeassistant.components import switch

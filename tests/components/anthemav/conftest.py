@@ -1,11 +1,12 @@
 """Fixtures for anthemav integration tests."""
+
 from collections.abc import Callable
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from homeassistant.components.anthemav.const import CONF_MODEL, DOMAIN
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PORT
+from homeassistant.components.anthemav.const import DOMAIN
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_MODEL, CONF_PORT
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry

@@ -1,0 +1,120 @@
+{
+  "entity": {
+    "sensor": {
+      "ups_status_display": {
+        "default": "mdi:information-outline"
+      },
+      "ups_status": {
+        "default": "mdi:information-outline"
+      },
+      "ups_alarm": {
+        "default": "mdi:alarm"
+      },
+      "ups_load": {
+        "default": "mdi:gauge"
+      },
+      "ups_load_high": {
+        "default": "mdi:gauge"
+      },
+      "ups_id": {
+        "default": "mdi:information-outline"
+      },
+      "ups_test_result": {
+        "default": "mdi:information-outline"
+      },
+      "ups_test_date": {
+        "default": "mdi:calendar"
+      },
+      "ups_display_language": {
+        "default": "mdi:information-outline"
+      },
+      "ups_contacts": {
+        "default": "mdi:information-outline"
+      },
+      "ups_efficiency": {
+        "default": "mdi:gauge"
+      },
+      "ups_beeper_status": {
+        "default": "mdi:information-outline"
+      },
+      "ups_type": {
+        "default": "mdi:information-outline"
+      },
+      "ups_watchdog_status": {
+        "default": "mdi:information-outline"
+      },
+      "ups_start_auto": {
+        "default": "mdi:information-outline"
+      },
+      "ups_start_battery": {
+        "default": "mdi:information-outline"
+      },
+      "ups_start_reboot": {
+        "default": "mdi:information-outline"
+      },
+      "ups_shutdown": {
+        "default": "mdi:information-outline"
+      },
+      "battery_charge_low": {
+        "default": "mdi:gauge"
+      },
+      "battery_charge_restart": {
+        "default": "mdi:gauge"
+      },
+      "battery_charge_warning": {
+        "default": "mdi:gauge"
+      },
+      "battery_charger_status": {
+        "default": "mdi:information-outline"
+      },
+      "battery_capacity": {
+        "default": "mdi:flash"
+      },
+      "battery_alarm_threshold": {
+        "default": "mdi:information-outline"
+      },
+      "battery_date": {
+        "default": "mdi:calendar"
+      },
+      "battery_mfr_date": {
+        "default": "mdi:calendar"
+      },
+      "battery_packs": {
+        "default": "mdi:information-outline"
+      },
+      "battery_packs_bad": {
+        "default": "mdi:information-outline"
+      },
+      "battery_type": {
+        "default": "mdi:information-outline"
+      },
+      "input_sensitivity": {
+        "default": "mdi:information-outline"
+      },
+      "input_transfer_reason": {
+        "default": "mdi:information-outline"
+      },
+      "input_frequency_status": {
+        "default": "mdi:information-outline"
+      },
+      "input_bypass_phases": {
+        "default": "mdi:information-outline"
+      },
+      "input_phases": {
+        "default": "mdi:information-outline"
+      },
+      "output_l1_power_percent": {
+        "default": "mdi:gauge"
+      },
+      "output_l2_power_percent": {
+        "default": "mdi:gauge"
+      },
+      "output_l3_power_percent": {
+        "default": "mdi:gauge"
+      },
+      "output_phases": {
+        "default": "mdi:information-outline"
+      }
+    }
+  }
+}

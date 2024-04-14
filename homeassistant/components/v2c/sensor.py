@@ -1,4 +1,5 @@
 """Support for V2C EVSE sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -25,22 +26,18 @@ from .entity import V2CBaseEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
-class V2CRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class V2CSensorEntityDescription(SensorEntityDescription):
+    """Describes an EVSE Power sensor entity."""
 
     value_fn: Callable[[TrydanData], float]
-
-
-@dataclass
-class V2CSensorEntityDescription(SensorEntityDescription, V2CRequiredKeysMixin):
-    """Describes an EVSE Power sensor entity."""
 
 
 TRYDAN_SENSORS = (
     V2CSensorEntityDescription(
         key="charge_power",
         translation_key="charge_power",
+        icon="mdi:ev-station",
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
@@ -99,7 +96,6 @@ class V2CSensorBaseEntity(V2CBaseEntity, SensorEntity):
     """Defines a base v2c sensor entity."""
 
     entity_description: V2CSensorEntityDescription
-    _attr_icon = "mdi:ev-station"
 
     def __init__(
         self,

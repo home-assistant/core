@@ -1,13 +1,14 @@
 """Component to interface with locks that can be controlled remotely."""
+
 from __future__ import annotations
 
-from dataclasses import dataclass
 from datetime import timedelta
 from enum import IntFlag
 import functools as ft
+from functools import cached_property
 import logging
 import re
-from typing import Any, final
+from typing import TYPE_CHECKING, Any, final
 
 import voluptuous as vol
 
@@ -25,15 +26,24 @@ from homeassistant.const import (
     STATE_UNLOCKING,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ServiceValidationError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
     make_entity_service_schema,
 )
+from homeassistant.helpers.deprecation import (
+    DeprecatedConstantEnum,
+    all_with_deprecated_constants,
+    check_if_deprecated_constant,
+    dir_with_deprecated_constants,
+)
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType, StateType
+
+from . import group as group_pre_import  # noqa: F401
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -58,7 +68,7 @@ class LockEntityFeature(IntFlag):
 
 # The SUPPORT_OPEN constant is deprecated as of Home Assistant 2022.5.
 # Please use the LockEntityFeature enum instead.
-SUPPORT_OPEN = 1
+_DEPRECATED_SUPPORT_OPEN = DeprecatedConstantEnum(LockEntityFeature.OPEN, "2025.1")
 
 PROP_TO_ATTR = {"changed_by": ATTR_CHANGED_BY, "code_format": ATTR_CODE_FORMAT}
 
@@ -101,12 +111,22 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await component.async_unload_entry(entry)
 
 
-@dataclass
-class LockEntityDescription(EntityDescription):
+class LockEntityDescription(EntityDescription, frozen_or_thawed=True):
     """A class that describes lock entities."""
 
 
-class LockEntity(Entity):
+CACHED_PROPERTIES_WITH_ATTR_ = {
+    "changed_by",
+    "code_format",
+    "is_locked",
+    "is_locking",
+    "is_unlocking",
+    "is_jammed",
+    "supported_features",
+}
+
+
+class LockEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """Base class for lock entities."""
 
     entity_description: LockEntityDescription
@@ -129,19 +149,26 @@ class LockEntity(Entity):
         if not code:
             code = self._lock_option_default_code
         if self.code_format_cmp and not self.code_format_cmp.match(code):
-            raise ValueError(
-                f"Code '{code}' for locking {self.entity_id} doesn't match pattern {self.code_format}"
+            if TYPE_CHECKING:
+                assert self.code_format
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="add_default_code",
+                translation_placeholders={
+                    "entity_id": self.entity_id,
+                    "code_format": self.code_format,
+                },
             )
         if code:
             data[ATTR_CODE] = code
         return data
 
-    @property
+    @cached_property
     def changed_by(self) -> str | None:
         """Last change triggered by."""
         return self._attr_changed_by
 
-    @property
+    @cached_property
     def code_format(self) -> str | None:
         """Regex for code format or None if no code is required."""
         return self._attr_code_format
@@ -160,22 +187,22 @@ class LockEntity(Entity):
             self.__code_format_cmp = re.compile(self.code_format)
         return self.__code_format_cmp
 
-    @property
+    @cached_property
     def is_locked(self) -> bool | None:
         """Return true if the lock is locked."""
         return self._attr_is_locked
 
-    @property
+    @cached_property
     def is_locking(self) -> bool | None:
         """Return true if the lock is locking."""
         return self._attr_is_locking
 
-    @property
+    @cached_property
     def is_unlocking(self) -> bool | None:
         """Return true if the lock is unlocking."""
         return self._attr_is_unlocking
 
-    @property
+    @cached_property
     def is_jammed(self) -> bool | None:
         """Return true if the lock is jammed (incomplete locking)."""
         return self._attr_is_jammed
@@ -187,7 +214,7 @@ class LockEntity(Entity):
 
     def lock(self, **kwargs: Any) -> None:
         """Lock the lock."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the lock."""
@@ -200,7 +227,7 @@ class LockEntity(Entity):
 
     def unlock(self, **kwargs: Any) -> None:
         """Unlock the lock."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the lock."""
@@ -213,7 +240,7 @@ class LockEntity(Entity):
 
     def open(self, **kwargs: Any) -> None:
         """Open the door latch."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_open(self, **kwargs: Any) -> None:
         """Open the door latch."""
@@ -243,10 +270,15 @@ class LockEntity(Entity):
             return None
         return STATE_LOCKED if locked else STATE_UNLOCKED
 
-    @property
+    @cached_property
     def supported_features(self) -> LockEntityFeature:
         """Return the list of supported features."""
-        return self._attr_supported_features
+        features = self._attr_supported_features
+        if type(features) is int:  # noqa: E721
+            new_features = LockEntityFeature(features)
+            self._report_deprecated_supported_features_values(new_features)
+            return new_features
+        return features
 
     async def async_internal_added_to_hass(self) -> None:
         """Call when the sensor entity is added to hass."""
@@ -278,3 +310,11 @@ class LockEntity(Entity):
             return
 
         self._lock_option_default_code = ""
+
+
+# These can be removed if no deprecated constant are in this module anymore
+__getattr__ = ft.partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = ft.partial(
+    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
+)
+__all__ = all_with_deprecated_constants(globals())

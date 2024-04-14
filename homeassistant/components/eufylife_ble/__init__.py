@@ -1,4 +1,5 @@
 """The EufyLife integration."""
+
 from __future__ import annotations
 
 from eufylife_ble_client import EufyLifeBLEDevice
@@ -6,10 +7,10 @@ from eufylife_ble_client import EufyLifeBLEDevice
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth.match import ADDRESS, BluetoothCallbackMatcher
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
+from homeassistant.const import CONF_MODEL, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant, callback
 
-from .const import CONF_MODEL, DOMAIN
+from .const import DOMAIN
 from .models import EufyLifeData
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]

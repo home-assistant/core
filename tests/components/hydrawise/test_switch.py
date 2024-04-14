@@ -51,7 +51,7 @@ async def test_manual_watering_services(
         blocking=True,
     )
     mock_pydrawise.start_zone.assert_called_once_with(
-        zones[0], custom_run_duration=DEFAULT_WATERING_TIME
+        zones[0], custom_run_duration=DEFAULT_WATERING_TIME.total_seconds()
     )
     state = hass.states.get("switch.zone_one_manual_watering")
     assert state is not None

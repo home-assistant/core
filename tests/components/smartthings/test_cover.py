@@ -3,6 +3,7 @@
 The only mocking required is of the underlying SmartThings API object so
 real HTTP calls are not initiated during testing.
 """
+
 from pysmartthings import Attribute, Capability
 
 from homeassistant.components.cover import (
@@ -139,7 +140,7 @@ async def test_set_cover_position_switch_level(
     assert state.attributes[ATTR_CURRENT_POSITION] == 10
     # Ensure API called
 
-    assert device._api.post_device_command.call_count == 1  # type: ignore
+    assert device._api.post_device_command.call_count == 1
 
 
 async def test_set_cover_position(hass: HomeAssistant, device_factory) -> None:
@@ -170,7 +171,7 @@ async def test_set_cover_position(hass: HomeAssistant, device_factory) -> None:
     assert state.attributes[ATTR_CURRENT_POSITION] == 10
     # Ensure API called
 
-    assert device._api.post_device_command.call_count == 1  # type: ignore
+    assert device._api.post_device_command.call_count == 1
 
 
 async def test_set_cover_position_unsupported(
@@ -195,7 +196,7 @@ async def test_set_cover_position_unsupported(
 
     # Ensure API was not called
 
-    assert device._api.post_device_command.call_count == 0  # type: ignore
+    assert device._api.post_device_command.call_count == 0
 
 
 async def test_update_to_open_from_signal(hass: HomeAssistant, device_factory) -> None:
@@ -243,7 +244,7 @@ async def test_unload_config_entry(hass: HomeAssistant, device_factory) -> None:
         "Garage", [Capability.garage_door_control], {Attribute.door: "open"}
     )
     config_entry = await setup_platform(hass, COVER_DOMAIN, devices=[device])
-    config_entry.state = ConfigEntryState.LOADED
+    config_entry.mock_state(hass, ConfigEntryState.LOADED)
     # Act
     await hass.config_entries.async_forward_entry_unload(config_entry, COVER_DOMAIN)
     # Assert

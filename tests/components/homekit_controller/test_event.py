@@ -1,4 +1,5 @@
 """Test homekit_controller stateless triggers."""
+
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
 
@@ -64,9 +65,7 @@ def create_doorbell(accessory):
     battery.add_char(CharacteristicsTypes.BATTERY_LEVEL)
 
 
-async def test_remote(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, utcnow
-) -> None:
+async def test_remote(hass: HomeAssistant, entity_registry: er.EntityRegistry) -> None:
     """Test that remote is supported."""
     helper = await setup_test_component(hass, create_remote)
 
@@ -109,9 +108,7 @@ async def test_remote(
         assert state.attributes["event_type"] == "long_press"
 
 
-async def test_button(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, utcnow
-) -> None:
+async def test_button(hass: HomeAssistant, entity_registry: er.EntityRegistry) -> None:
     """Test that a button is correctly enumerated."""
     helper = await setup_test_component(hass, create_button)
     entity_id = "event.testdevice_button_1"
@@ -148,7 +145,7 @@ async def test_button(
 
 
 async def test_doorbell(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, utcnow
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
     """Test that doorbell service is handled."""
     helper = await setup_test_component(hass, create_doorbell)

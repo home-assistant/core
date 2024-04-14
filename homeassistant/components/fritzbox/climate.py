@@ -1,4 +1,5 @@
 """Support for AVM FRITZ!SmartHome thermostat devices."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -28,6 +29,7 @@ from .const import (
     ATTR_STATE_HOLIDAY_MODE,
     ATTR_STATE_SUMMER_MODE,
     ATTR_STATE_WINDOW_OPEN,
+    LOGGER,
 )
 from .model import ClimateExtraAttributes
 
@@ -52,19 +54,21 @@ async def async_setup_entry(
     coordinator = get_coordinator(hass, entry.entry_id)
 
     @callback
-    def _add_entities() -> None:
+    def _add_entities(devices: set[str] | None = None) -> None:
         """Add devices."""
-        if not coordinator.new_devices:
+        if devices is None:
+            devices = coordinator.new_devices
+        if not devices:
             return
         async_add_entities(
             FritzboxThermostat(coordinator, ain)
-            for ain in coordinator.new_devices
+            for ain in devices
             if coordinator.data.devices[ain].has_thermostat
         )
 
     entry.async_on_unload(coordinator.async_add_listener(_add_entities))
 
-    _add_entities()
+    _add_entities(set(coordinator.data.devices))
 
 
 class FritzboxThermostat(FritzBoxDeviceEntity, ClimateEntity):
@@ -72,9 +76,13 @@ class FritzboxThermostat(FritzBoxDeviceEntity, ClimateEntity):
 
     _attr_precision = PRECISION_HALVES
     _attr_supported_features = (
-        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.PRESET_MODE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _enable_turn_on_off_backwards_compatibility = False
 
     @property
     def current_temperature(self) -> float:
@@ -122,6 +130,11 @@ class FritzboxThermostat(FritzBoxDeviceEntity, ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new operation mode."""
+        if self.hvac_mode == hvac_mode:
+            LOGGER.debug(
+                "%s is already in requested hvac mode %s", self.name, hvac_mode
+            )
+            return
         if hvac_mode == HVACMode.OFF:
             await self.async_set_temperature(temperature=OFF_REPORT_SET_TEMPERATURE)
         else:

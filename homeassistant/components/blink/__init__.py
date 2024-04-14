@@ -1,5 +1,5 @@
 """Support for Blink Home Camera System."""
-import asyncio
+
 from copy import deepcopy
 import logging
 
@@ -93,7 +93,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         await blink.start()
-    except (ClientError, asyncio.TimeoutError) as ex:
+    except (ClientError, TimeoutError) as ex:
         raise ConfigEntryNotReady("Can not connect to host") from ex
 
     if blink.auth.check_key_required():
@@ -107,7 +107,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    entry.async_on_unload(entry.add_update_listener(update_listener))
 
     return True
 
@@ -129,9 +128,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         hass.data[DOMAIN].pop(entry.entry_id)
     return unload_ok
-
-
-async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Handle options update."""
-    blink: Blink = hass.data[DOMAIN][entry.entry_id].api
-    blink.refresh_rate = entry.options[CONF_SCAN_INTERVAL]

@@ -1,4 +1,5 @@
 """Lock for Yale Alarm."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
@@ -79,14 +80,22 @@ class YaleDoorlock(YaleEntity, LockEntity):
                 )
         except YALE_ALL_ERRORS as error:
             raise HomeAssistantError(
-                f"Could not set lock for {self.lock_name}: {error}"
+                translation_domain=DOMAIN,
+                translation_key="set_lock",
+                translation_placeholders={
+                    "name": self.lock_name,
+                    "error": str(error),
+                },
             ) from error
 
         if lock_state:
             self.coordinator.data["lock_map"][self._attr_unique_id] = command
             self.async_write_ha_state()
             return
-        raise HomeAssistantError("Could not set lock, check system ready for lock.")
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="could_not_change_lock",
+        )
 
     @property
     def is_locked(self) -> bool | None:

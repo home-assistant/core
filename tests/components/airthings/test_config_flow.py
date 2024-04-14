@@ -1,10 +1,12 @@
 """Test the Airthings config flow."""
+
 from unittest.mock import patch
 
 import airthings
 
 from homeassistant import config_entries
-from homeassistant.components.airthings.const import CONF_ID, CONF_SECRET, DOMAIN
+from homeassistant.components.airthings.const import CONF_SECRET, DOMAIN
+from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -22,23 +24,26 @@ async def test_form(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
-    with patch(
-        "airthings.get_token",
-        return_value="test_token",
-    ), patch(
-        "homeassistant.components.airthings.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "airthings.get_token",
+            return_value="test_token",
+        ),
+        patch(
+            "homeassistant.components.airthings.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             TEST_DATA,
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Airthings"
     assert result2["data"] == TEST_DATA
     assert len(mock_setup_entry.mock_calls) == 1
@@ -59,7 +64,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
             TEST_DATA,
         )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
@@ -78,7 +83,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
             TEST_DATA,
         )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
@@ -97,7 +102,7 @@ async def test_form_unknown_error(hass: HomeAssistant) -> None:
             TEST_DATA,
         )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
 
 
@@ -116,5 +121,5 @@ async def test_flow_entry_already_exists(hass: HomeAssistant) -> None:
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data=TEST_DATA
         )
 
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"

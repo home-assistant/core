@@ -1,4 +1,5 @@
 """Constants for Roborock."""
+
 from vacuum_map_parser_base.config.drawable import Drawable
 
 from homeassistant.const import Platform
@@ -9,8 +10,8 @@ CONF_BASE_URL = "base_url"
 CONF_USER_DATA = "user_data"
 
 PLATFORMS = [
-    Platform.BUTTON,
     Platform.BINARY_SENSOR,
+    Platform.BUTTON,
     Platform.IMAGE,
     Platform.NUMBER,
     Platform.SELECT,
@@ -35,3 +36,4 @@ ATTR_CALIBRATION_POINTS = "calibration_points"
 ATTR_IS_SELECTED = "is_selected"
 ATTR_MAP_FLAG = "map_flag"
 ATTR_ROOMS = "rooms"
+GET_MAPS_SERVICE_NAME = "get_maps"

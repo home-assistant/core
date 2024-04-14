@@ -1,4 +1,5 @@
 """Support for update entities of a Pi-hole system."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -17,7 +18,7 @@ from . import PiHoleEntity
 from .const import DATA_KEY_API, DATA_KEY_COORDINATOR, DOMAIN
 
 
-@dataclass
+@dataclass(frozen=True)
 class PiHoleUpdateEntityDescription(UpdateEntityDescription):
     """Describes PiHole update entity."""
 

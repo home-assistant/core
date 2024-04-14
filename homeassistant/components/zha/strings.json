@@ -328,7 +328,7 @@
         },
         "manufacturer": {
           "name": "Manufacturer",
-          "description": "Manufacturer code."
+          "description": "Manufacturer code. Use a value of \"-1\" to force no code to be set."
         }
       }
     },
@@ -566,6 +566,9 @@
       },
       "ias_zone": {
         "name": "IAS zone"
+      },
+      "hand_open": {
+        "name": "Opened by hand"
       }
     },
     "button": {
@@ -724,6 +727,18 @@
       },
       "quick_start_time": {
         "name": "Quick start time"
+      },
+      "local_temperature_calibration": {
+        "name": "Local temperature offset"
+      },
+      "presence_detection_timeout": {
+        "name": "Presence detection timeout"
+      },
+      "max_heat_setpoint_limit": {
+        "name": "Max heat setpoint limit"
+      },
+      "min_heat_setpoint_limit": {
+        "name": "Min heat setpoint limit"
       }
     },
     "select": {
@@ -780,6 +795,21 @@
       },
       "preset": {
         "name": "Preset"
+      },
+      "detection_distance": {
+        "name": "Detection distance"
+      },
+      "switch_mode": {
+        "name": "Switch mode"
+      },
+      "decoupled_mode": {
+        "name": "Decoupled mode"
+      },
+      "detection_sensitivity": {
+        "name": "Detection Sensitivity"
+      },
+      "keypad_lockout": {
+        "name": "Keypad lockout"
       }
     },
     "sensor": {
@@ -819,6 +849,9 @@
       "tier6_summation_delivered": {
         "name": "Tier 6 summation delivered"
       },
+      "summation_received": {
+        "name": "Summation received"
+      },
       "device_temperature": {
         "name": "Device temperature"
       },
@@ -857,6 +890,24 @@
       },
       "smoke_density": {
         "name": "Smoke density"
+      },
+      "last_illumination_state": {
+        "name": "Last illumination state"
+      },
+      "pi_heating_demand": {
+        "name": "Pi heating demand"
+      },
+      "setpoint_change_source": {
+        "name": "Setpoint change source"
+      },
+      "power_source": {
+        "name": "Power source"
+      },
+      "window_covering_type": {
+        "name": "Window covering type"
+      },
+      "hooks_state": {
+        "name": "Hooks state"
       }
     },
     "switch": {
@@ -880,6 +931,12 @@
       },
       "invert_switch": {
         "name": "Invert switch"
+      },
+      "inverted": {
+        "name": "Inverted"
+      },
+      "hooks_locked": {
+        "name": "Hooks locked"
       },
       "smart_bulb_mode": {
         "name": "Smart bulb mode"

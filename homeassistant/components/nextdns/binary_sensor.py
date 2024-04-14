@@ -1,4 +1,5 @@
 """Support for the NextDNS service."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -24,14 +25,14 @@ from .const import ATTR_CONNECTION, DOMAIN
 PARALLEL_UPDATES = 1
 
 
-@dataclass
+@dataclass(frozen=True)
 class NextDnsBinarySensorRequiredKeysMixin(Generic[CoordinatorDataT]):
     """Mixin for required keys."""
 
     state: Callable[[CoordinatorDataT, str], bool]
 
 
-@dataclass
+@dataclass(frozen=True)
 class NextDnsBinarySensorEntityDescription(
     BinarySensorEntityDescription,
     NextDnsBinarySensorRequiredKeysMixin[CoordinatorDataT],
@@ -67,11 +68,9 @@ async def async_setup_entry(
         ATTR_CONNECTION
     ]
 
-    sensors: list[NextDnsBinarySensor] = []
-    for description in SENSORS:
-        sensors.append(NextDnsBinarySensor(coordinator, description))
-
-    async_add_entities(sensors)
+    async_add_entities(
+        NextDnsBinarySensor(coordinator, description) for description in SENSORS
+    )
 
 
 class NextDnsBinarySensor(

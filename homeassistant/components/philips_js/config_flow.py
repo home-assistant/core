@@ -1,4 +1,5 @@
 """Config flow for Philips TV integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -8,7 +9,7 @@ from typing import Any
 from haphilipsjs import ConnectionFailure, PairingFailure, PhilipsTV
 import voluptuous as vol
 
-from homeassistant import config_entries, core
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_API_VERSION,
     CONF_HOST,
@@ -16,7 +17,7 @@ from homeassistant.const import (
     CONF_PIN,
     CONF_USERNAME,
 )
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import selector
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaFlowFormStep,
@@ -49,7 +50,7 @@ OPTIONS_FLOW = {
 
 
 async def _validate_input(
-    hass: core.HomeAssistant, host: str, api_version: int
+    hass: HomeAssistant, host: str, api_version: int
 ) -> PhilipsTV:
     """Validate the user input allows us to connect."""
     hub = PhilipsTV(host, api_version)
@@ -63,7 +64,7 @@ async def _validate_input(
     return hub
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class PhilipsJSConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Philips TV."""
 
     VERSION = 1
@@ -74,9 +75,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._current: dict[str, Any] = {}
         self._hub: PhilipsTV | None = None
         self._pair_state: Any = None
-        self._entry: config_entries.ConfigEntry | None = None
+        self._entry: ConfigEntry | None = None
 
-    async def _async_create_current(self) -> FlowResult:
+    async def _async_create_current(self) -> ConfigFlowResult:
         system = self._current[CONF_SYSTEM]
         if self._entry:
             self.hass.config_entries.async_update_entry(
@@ -94,7 +95,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_pair(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Attempt to pair with device."""
         assert self._hub
 
@@ -145,7 +146,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._current[CONF_PASSWORD] = password
         return await self._async_create_current()
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle configuration by re-auth."""
         self._entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         self._current[CONF_HOST] = entry_data[CONF_HOST]
@@ -154,7 +157,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors = {}
         if user_input:
@@ -187,9 +190,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
     @staticmethod
-    @core.callback
+    @callback
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
+        config_entry: ConfigEntry,
     ) -> SchemaOptionsFlowHandler:
         """Get the options flow for this handler."""
         return SchemaOptionsFlowHandler(config_entry, OPTIONS_FLOW)

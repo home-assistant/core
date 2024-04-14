@@ -1,4 +1,5 @@
 """Module for SIA Alarm Control Panels."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -29,7 +30,7 @@ from .sia_entity_base import SIABaseEntity, SIAEntityDescription
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class SIAAlarmControlPanelEntityDescription(
     AlarmControlPanelEntityDescription,
     SIAEntityDescription,

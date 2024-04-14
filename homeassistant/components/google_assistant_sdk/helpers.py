@@ -1,4 +1,5 @@
 """Helper classes for Google Assistant SDK integration."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -69,7 +70,7 @@ async def async_send_text_commands(
     except aiohttp.ClientResponseError as err:
         if 400 <= err.status < 500:
             entry.async_start_reauth(hass)
-        raise err
+        raise
 
     credentials = Credentials(session.token[CONF_ACCESS_TOKEN])
     language_code = entry.options.get(CONF_LANGUAGE_CODE, default_language_code(hass))
@@ -104,7 +105,7 @@ async def async_send_text_commands(
         return command_response_list
 
 
-def default_language_code(hass: HomeAssistant):
+def default_language_code(hass: HomeAssistant) -> str:
     """Get default language code based on Home Assistant config."""
     language_code = f"{hass.config.language}-{hass.config.country}"
     if language_code in SUPPORTED_LANGUAGE_CODES:

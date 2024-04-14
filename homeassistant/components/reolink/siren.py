@@ -1,4 +1,5 @@
 """Component providing support for Reolink siren entities."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -23,7 +24,7 @@ from .const import DOMAIN
 from .entity import ReolinkChannelCoordinatorEntity, ReolinkChannelEntityDescription
 
 
-@dataclass
+@dataclass(frozen=True)
 class ReolinkSirenEntityDescription(
     SirenEntityDescription, ReolinkChannelEntityDescription
 ):
@@ -34,7 +35,6 @@ SIREN_ENTITIES = (
     ReolinkSirenEntityDescription(
         key="siren",
         translation_key="siren",
-        icon="mdi:alarm-light",
         supported=lambda api, ch: api.supported(ch, "siren_play"),
     ),
 )

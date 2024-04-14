@@ -1,4 +1,5 @@
 """Schemas used by insteon component."""
+
 from __future__ import annotations
 
 from binascii import Error as HexError, unhexlify
@@ -78,7 +79,7 @@ ADD_DEFAULT_LINKS_SCHEMA = vol.Schema({vol.Required(CONF_ENTITY_ID): cv.entity_i
 def normalize_byte_entry_to_int(entry: int | bytes | str):
     """Format a hex entry value."""
     if isinstance(entry, int):
-        if entry in range(0, 256):
+        if entry in range(256):
             return entry
         raise ValueError("Must be single byte")
     if isinstance(entry, str):
@@ -102,17 +103,18 @@ def add_device_override(config_data, new_override):
     except ValueError as err:
         raise ValueError("Incorrect values") from err
 
-    overrides = []
-
-    for override in config_data.get(CONF_OVERRIDE, []):
-        if override[CONF_ADDRESS] != address:
-            overrides.append(override)
-
-    curr_override = {}
-    curr_override[CONF_ADDRESS] = address
-    curr_override[CONF_CAT] = cat
-    curr_override[CONF_SUBCAT] = subcat
-    overrides.append(curr_override)
+    overrides = [
+        override
+        for override in config_data.get(CONF_OVERRIDE, [])
+        if override[CONF_ADDRESS] != address
+    ]
+    overrides.append(
+        {
+            CONF_ADDRESS: address,
+            CONF_CAT: cat,
+            CONF_SUBCAT: subcat,
+        }
+    )
 
     new_config = {}
     if config_data.get(CONF_X10):
@@ -123,21 +125,20 @@ def add_device_override(config_data, new_override):
 
 def add_x10_device(config_data, new_x10):
     """Add a new X10 device to X10 device list."""
-    x10_devices = []
-    for x10_device in config_data.get(CONF_X10, []):
-        if (
-            x10_device[CONF_HOUSECODE] != new_x10[CONF_HOUSECODE]
-            or x10_device[CONF_UNITCODE] != new_x10[CONF_UNITCODE]
-        ):
-            x10_devices.append(x10_device)
-
-    curr_device = {}
-    curr_device[CONF_HOUSECODE] = new_x10[CONF_HOUSECODE]
-    curr_device[CONF_UNITCODE] = new_x10[CONF_UNITCODE]
-    curr_device[CONF_PLATFORM] = new_x10[CONF_PLATFORM]
-    curr_device[CONF_DIM_STEPS] = new_x10[CONF_DIM_STEPS]
-    x10_devices.append(curr_device)
-
+    x10_devices = [
+        x10_device
+        for x10_device in config_data.get(CONF_X10, [])
+        if x10_device[CONF_HOUSECODE] != new_x10[CONF_HOUSECODE]
+        or x10_device[CONF_UNITCODE] != new_x10[CONF_UNITCODE]
+    ]
+    x10_devices.append(
+        {
+            CONF_HOUSECODE: new_x10[CONF_HOUSECODE],
+            CONF_UNITCODE: new_x10[CONF_UNITCODE],
+            CONF_PLATFORM: new_x10[CONF_PLATFORM],
+            CONF_DIM_STEPS: new_x10[CONF_DIM_STEPS],
+        }
+    )
     new_config = {}
     if config_data.get(CONF_OVERRIDE):
         new_config[CONF_OVERRIDE] = config_data[CONF_OVERRIDE]
@@ -222,17 +223,14 @@ def build_hub_schema(
 
 def build_remove_override_schema(data):
     """Build the schema to remove device overrides in config flow options."""
-    selection = []
-    for override in data:
-        selection.append(override[CONF_ADDRESS])
+    selection = [override[CONF_ADDRESS] for override in data]
     return vol.Schema({vol.Required(CONF_ADDRESS): vol.In(selection)})
 
 
 def build_remove_x10_schema(data):
     """Build the schema to remove an X10 device in config flow options."""
-    selection = []
-    for device in data:
-        housecode = device[CONF_HOUSECODE].upper()
-        unitcode = device[CONF_UNITCODE]
-        selection.append(f"Housecode: {housecode}, Unitcode: {unitcode}")
+    selection = [
+        f"Housecode: {device[CONF_HOUSECODE].upper()}, Unitcode: {device[CONF_UNITCODE]}"
+        for device in data
+    ]
     return vol.Schema({vol.Required(CONF_DEVICE): vol.In(selection)})

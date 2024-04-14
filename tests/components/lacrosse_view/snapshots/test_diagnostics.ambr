@@ -17,6 +17,7 @@
       'disabled_by': None,
       'domain': 'lacrosse_view',
       'entry_id': 'lacrosse_view_test_entry_id',
+      'minor_version': 1,
       'options': dict({
       }),
       'pref_disable_new_entities': False,

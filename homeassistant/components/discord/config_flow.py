@@ -1,4 +1,5 @@
 """Config flow for Discord integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -9,9 +10,8 @@ from aiohttp.client_exceptions import ClientConnectorError
 import nextcord
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_TOKEN, CONF_NAME
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN, URL_PLACEHOLDER
 
@@ -20,27 +20,27 @@ _LOGGER = logging.getLogger(__name__)
 CONFIG_SCHEMA = vol.Schema({vol.Required(CONF_API_TOKEN): str})
 
 
-class DiscordFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class DiscordFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Discord."""
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle a reauthorization flow request."""
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, str] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Confirm reauth dialog."""
         errors = {}
 
         if user_input:
             error, info = await _async_try_connect(user_input[CONF_API_TOKEN])
             if info and (entry := await self.async_set_unique_id(str(info.id))):
-                self.hass.config_entries.async_update_entry(
+                return self.async_update_reload_and_abort(
                     entry, data=entry.data | user_input
                 )
-                await self.hass.config_entries.async_reload(entry.entry_id)
-                return self.async_abort(reason="reauth_successful")
             if error:
                 errors["base"] = error
 
@@ -54,7 +54,7 @@ class DiscordFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         errors = {}
 
@@ -89,8 +89,8 @@ async def _async_try_connect(token: str) -> tuple[str | None, nextcord.AppInfo |
         return "invalid_auth", None
     except (ClientConnectorError, nextcord.HTTPException, nextcord.NotFound):
         return "cannot_connect", None
-    except Exception as ex:  # pylint: disable=broad-except
-        _LOGGER.exception("Unexpected exception: %s", ex)
+    except Exception:  # pylint: disable=broad-except
+        _LOGGER.exception("Unexpected exception")
         return "unknown", None
     await discord_bot.close()
     return None, info

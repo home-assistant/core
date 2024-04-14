@@ -32,7 +32,7 @@
           'none',
           'sleep',
         ]),
-        'supported_features': <ClimateEntityFeature: 57>,
+        'supported_features': <ClimateEntityFeature: 441>,
         'swing_mode': 'off',
         'swing_modes': list([
           'off',
@@ -46,6 +46,7 @@
       'context': <ANY>,
       'entity_id': 'climate.fake_device_1',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'off',
     }),
@@ -102,6 +103,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -110,7 +113,7 @@
       'original_name': None,
       'platform': 'gree',
       'previous_unique_id': None,
-      'supported_features': <ClimateEntityFeature: 57>,
+      'supported_features': <ClimateEntityFeature: 441>,
       'translation_key': None,
       'unique_id': 'aabbcc112233',
       'unit_of_measurement': None,

@@ -1,4 +1,5 @@
 """Support for Elgato button."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
@@ -23,7 +24,7 @@ from .coordinator import ElgatoDataUpdateCoordinator
 from .entity import ElgatoEntity
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class ElgatoButtonEntityDescription(ButtonEntityDescription):
     """Class describing Elgato button entities."""
 

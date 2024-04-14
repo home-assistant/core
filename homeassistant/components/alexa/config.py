@@ -1,4 +1,5 @@
 """Config helpers for Alexa."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -29,11 +30,19 @@ class AbstractConfig(ABC):
         """Initialize abstract config."""
         self.hass = hass
         self._enable_proactive_mode_lock = asyncio.Lock()
+        self._on_deinitialize: list[CALLBACK_TYPE] = []
 
     async def async_initialize(self) -> None:
         """Perform async initialization of config."""
         self._store = AlexaConfigStore(self.hass)
         await self._store.async_load()
+
+    @callback
+    def async_deinitialize(self) -> None:
+        """Remove listeners."""
+        _LOGGER.debug("async_deinitialize")
+        while self._on_deinitialize:
+            self._on_deinitialize.pop()()
 
     @property
     def supports_auth(self) -> bool:

@@ -1,4 +1,5 @@
 """Module which encapsulates the NVR/camera API and subscription."""
+
 from __future__ import annotations
 
 import asyncio
@@ -13,7 +14,13 @@ from reolink_aio.enums import SubType
 from reolink_aio.exceptions import NotSupportedError, ReolinkError, SubscriptionError
 
 from homeassistant.components import webhook
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_PROTOCOL,
+    CONF_USERNAME,
+)
 from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.device_registry import format_mac
@@ -21,7 +28,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 
-from .const import CONF_PROTOCOL, CONF_USE_HTTPS, DOMAIN
+from .const import CONF_USE_HTTPS, DOMAIN
 from .exceptions import ReolinkSetupException, ReolinkWebhookException, UserNotAdmin
 
 DEFAULT_TIMEOUT = 30
@@ -344,7 +351,7 @@ class ReolinkHost:
                 await self._api.subscribe(sub_type=SubType.long_poll)
             except NotSupportedError as err:
                 if initial:
-                    raise err
+                    raise
                 # make sure the long_poll_task is always created to try again later
                 if not self._lost_subscription:
                     self._lost_subscription = True
@@ -540,12 +547,12 @@ class ReolinkHost:
                 self._long_poll_error = True
                 await asyncio.sleep(LONG_POLL_ERROR_COOLDOWN)
                 continue
-            except Exception as ex:
+            except Exception:
                 _LOGGER.exception(
-                    "Unexpected exception while requesting ONVIF pull point: %s", ex
+                    "Unexpected exception while requesting ONVIF pull point"
                 )
                 await self._api.unsubscribe(sub_type=SubType.long_poll)
-                raise ex
+                raise
 
             self._long_poll_error = False
 
@@ -645,11 +652,9 @@ class ReolinkHost:
 
             message = data.decode("utf-8")
             channels = await self._api.ONVIF_event_callback(message)
-        except Exception as ex:  # pylint: disable=broad-except
+        except Exception:  # pylint: disable=broad-except
             _LOGGER.exception(
-                "Error processing ONVIF event for Reolink %s: %s",
-                self._api.nvr_name,
-                ex,
+                "Error processing ONVIF event for Reolink %s", self._api.nvr_name
             )
             return
 
