@@ -189,12 +189,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
         self._username = user_input[CONF_USERNAME]
         self._password = user_input[CONF_PASSWORD]
         self._use_tls = user_input[CONF_SSL]
-
-        port = user_input.get(CONF_PORT)
-        if port is None:
-            self._port = DEFAULT_HTTPS_PORT if self._use_tls else DEFAULT_HTTP_PORT
-        else:
-            self._port = port
+        self._port = DEFAULT_HTTPS_PORT if self._use_tls else DEFAULT_HTTP_PORT
 
         error = await self.hass.async_add_executor_job(self.fritz_tools_init)
 
@@ -216,19 +211,17 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
         else:
             advanced_data_schema = {}
 
-        data_schema = vol.Schema(
-            {
-                vol.Optional(CONF_HOST, default=DEFAULT_HOST): str,
-                **advanced_data_schema,
-                vol.Required(CONF_USERNAME): str,
-                vol.Required(CONF_PASSWORD): str,
-                vol.Optional(CONF_SSL, default=DEFAULT_SSL): bool,
-            }
-        )
-
         return self.async_show_form(
             step_id="user",
-            data_schema=data_schema,
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(CONF_HOST, default=DEFAULT_HOST): str,
+                    **advanced_data_schema,
+                    vol.Required(CONF_USERNAME): str,
+                    vol.Required(CONF_PASSWORD): str,
+                    vol.Optional(CONF_SSL, default=DEFAULT_SSL): bool,
+                }
+            ),
             errors=errors or {},
         )
 
@@ -287,6 +280,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
         self._username = entry_data[CONF_USERNAME]
         self._password = entry_data[CONF_PASSWORD]
         self._use_tls = entry_data[CONF_SSL]
+
         return await self.async_step_reauth_confirm()
 
     def _show_setup_form_reauth_confirm(
