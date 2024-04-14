@@ -739,7 +739,6 @@ ignore = [
     "D406", # Section name should end with a newline
     "D407", # Section name underlining
     "E501", # line too long
-    "E731", # do not assign a lambda expression, use a def
 
     "PLC1901", # {existing} can be simplified to {replacement} as an empty string is falsey; too many false positives
     "PLR0911", # Too many return statements ({returns} > {max_returns})
