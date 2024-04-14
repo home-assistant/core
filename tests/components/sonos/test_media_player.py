@@ -228,7 +228,7 @@ async def test_select_source(
     source,
     test_result,
 ) -> None:
-    """Test error handling when attempting to play a non-existent playlist ."""
+    """Test the select_source method with a variety of inputs."""
     soco_mock = soco_factory.mock_list.get("192.168.42.2")
 
     async def service_call():
