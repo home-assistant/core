@@ -73,7 +73,7 @@ async def test_vehicle_refresh_error(
     assert entry.state is state
 
 
-# Test Energy Coordinator
+# Test Energy Live Coordinator
 @pytest.mark.parametrize(("side_effect", "state"), ERRORS)
 async def test_energy_live_refresh_error(
     hass: HomeAssistant, mock_live_status, side_effect, state

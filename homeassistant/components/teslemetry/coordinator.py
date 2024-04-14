@@ -97,7 +97,7 @@ class TeslemetryEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]])
         """Update energy site data using Teslemetry API."""
 
         try:
-            data = await self.api.live_status()
+            data = (await self.api.live_status())["response"]
         except InvalidToken as e:
             raise ConfigEntryAuthFailed from e
         except SubscriptionRequired as e:
