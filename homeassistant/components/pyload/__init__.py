@@ -7,21 +7,14 @@ from pyloadapi.api import PyLoadAPI
 from pyloadapi.exceptions import CannotConnect, InvalidAuth, ParserError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_SSL,
-    CONF_USERNAME,
-    CONF_VERIFY_SSL,
-    Platform,
-)
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, CONF_VERIFY_SSL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 from .const import DOMAIN
 from .coordinator import PyLoadCoordinator
+from .util import api_url
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
@@ -33,14 +26,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.data.get(CONF_VERIFY_SSL, True),
         cookie_jar=CookieJar(unsafe=True),
     )
-    api_url = "http{}://{}:{}/".format(
-        ("s" if entry.data[CONF_SSL] else ""),
-        entry.data[CONF_HOST],
-        entry.data[CONF_PORT],
-    )
     pyload = PyLoadAPI(
         session,
-        api_url,
+        api_url(entry.data),
         entry.data[CONF_USERNAME],
         entry.data[CONF_PASSWORD],
     )

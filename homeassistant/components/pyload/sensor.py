@@ -10,15 +10,16 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_URL, UnitOfDataRate
+from homeassistant.const import UnitOfDataRate
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import DOMAIN, MANUFACTURER, NAME
 from .coordinator import PyLoadCoordinator
+from .util import api_url
 
 
 class PyLoadSensorEntity(StrEnum):
@@ -95,14 +96,16 @@ class PyLoadSensor(CoordinatorEntity, SensorEntity):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
+
         self.entity_description = entity_description
-        self._attr_unique_id = f"{entry.data[CONF_URL]}_{entity_description.key}"
+        self._attr_unique_id = f"{entry.entry_id}_{entity_description.key}"
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
-            name="pyLoad",
-            manufacturer="pyLoad Team",
-            configuration_url=entry.data[CONF_URL],
-            identifiers={(DOMAIN, entry.data[CONF_URL])},
+            manufacturer=MANUFACTURER,
+            model=NAME,
+            configuration_url=api_url(entry.data),
+            identifiers={(DOMAIN, entry.entry_id)},
+            translation_key=DOMAIN,
         )
 
     @property

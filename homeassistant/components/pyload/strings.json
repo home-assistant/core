@@ -81,5 +81,10 @@
     "parse_exception": {
       "message": "Unable to parse data from pyLoad API"
     }
+  },
+  "device": {
+    "pyload": {
+      "name": "pyLoad"
+    }
   }
 }

@@ -27,6 +27,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
 from .const import DEFAULT_PORT, DOMAIN
+from .util import api_url
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -209,14 +210,9 @@ class PyLoadConfigFlow(ConfigFlow, domain=DOMAIN):
             user_input.get(CONF_VERIFY_SSL, True),
             cookie_jar=CookieJar(unsafe=True),
         )
-        api_url = "http{}://{}:{}/".format(
-            ("s" if user_input[CONF_SSL] else ""),
-            user_input[CONF_HOST],
-            user_input[CONF_PORT],
-        )
         pyload = PyLoadAPI(
             session,
-            api_url,
+            api_url(user_input),
             user_input[CONF_USERNAME],
             user_input[CONF_PASSWORD],
         )
