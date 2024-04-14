@@ -8,7 +8,6 @@ import logging
 from typing import Any
 
 from soco import alarms
-import soco.config as soco_config
 from soco.core import (
     MUSIC_SRC_LINE_IN,
     MUSIC_SRC_RADIO,
@@ -54,7 +53,6 @@ from .const import (
     MODELS_LINEIN_ONLY,
     MODELS_TV_ONLY,
     PLAYABLE_MEDIA_TYPES,
-    SOCO_DEFAULT_SERVICE_TIMEOUT,
     SONOS_CREATE_MEDIA_PLAYER,
     SONOS_MEDIA_UPDATED,
     SONOS_STATE_PLAYING,
@@ -449,9 +447,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             MUSIC_SRC_LINE_IN,
         ]:
             # Internet radio takes longer and play_uri uses default timeout
-            soco_config.REQUEST_TIMEOUT = LONG_SERVICE_TIMEOUT
             soco.play_uri(uri, title=favorite.title)
-            soco_config.REQUEST_TIMEOUT = SOCO_DEFAULT_SERVICE_TIMEOUT
         else:
             soco.clear_queue()
             soco.add_to_queue(favorite.reference, timeout=LONG_SERVICE_TIMEOUT)

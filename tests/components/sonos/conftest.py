@@ -9,7 +9,7 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 import pytest
 from soco import SoCo
 from soco.alarms import Alarms
-from soco.data_structures import SearchResult
+from soco.data_structures import DidlFavorite, SearchResult
 from soco.events_base import Event as SonosEvent
 
 from homeassistant.components import ssdp, zeroconf
@@ -18,9 +18,7 @@ from homeassistant.components.sonos import DOMAIN
 from homeassistant.const import CONF_HOSTS
 from homeassistant.core import HomeAssistant
 
-from .mock_media import mock_sonos_favorites
-
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, load_fixture, load_json_value_fixture
 
 
 class SonosMockEventListener:
@@ -309,7 +307,12 @@ def config_fixture():
 @pytest.fixture(name="sonos_favorites")
 def sonos_favorites_fixture():
     """Create sonos favorites fixture."""
-    return SearchResult(mock_sonos_favorites, "favorites", 3, 3, 1)
+    favorite_list = []
+    favorites = load_json_value_fixture("sonos_favorites.json", "sonos")
+    for fav in favorites:
+        didl_fav = DidlFavorite.from_dict(fav)
+        favorite_list.append(didl_fav)
+    return SearchResult(favorite_list, "favorites", 3, 3, 1)
 
 
 @pytest.fixture(name="music_library")
