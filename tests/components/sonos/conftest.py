@@ -307,11 +307,8 @@ def config_fixture():
 @pytest.fixture(name="sonos_favorites")
 def sonos_favorites_fixture():
     """Create sonos favorites fixture."""
-    favorite_list = []
     favorites = load_json_value_fixture("sonos_favorites.json", "sonos")
-    for fav in favorites:
-        didl_fav = DidlFavorite.from_dict(fav)
-        favorite_list.append(didl_fav)
+    favorite_list = [DidlFavorite.from_dict(fav) for fav in favorites]
     return SearchResult(favorite_list, "favorites", 3, 3, 1)
 
 
