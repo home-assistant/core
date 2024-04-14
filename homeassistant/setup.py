@@ -428,8 +428,8 @@ async def _async_setup_component(  # noqa: C901
             await load_translations_task
 
     if integration.platforms_exists(("config_flow",)):
-        # If the integration has a config_flow wait for import flows.
-        # As these are all created with eager tasks, we do not sleep here
+        # If the integration has a config_flow, wait for import flows.
+        # As these are all created with eager tasks, we do not sleep here,
         # as the tasks will always be started before we reach this point.
         await hass.config_entries.flow.async_wait_import_flow_initialized(domain)
 
