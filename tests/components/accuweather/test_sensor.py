@@ -35,19 +35,15 @@ from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from . import init_integration
 
-from tests.common import (
-    async_fire_time_changed,
-    load_json_array_fixture,
-    load_json_object_fixture,
-)
+from tests.common import async_fire_time_changed, load_json_object_fixture
 
 
-async def test_sensor_without_forecast(
+async def test_sensor(
     hass: HomeAssistant,
     entity_registry_enabled_by_default: None,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test states of the sensor without forecast."""
+    """Test states of the sensor."""
     await init_integration(hass)
 
     state = hass.states.get("sensor.home_cloud_ceiling")
@@ -225,15 +221,6 @@ async def test_sensor_without_forecast(
     entry = entity_registry.async_get("sensor.home_wind_speed")
     assert entry
     assert entry.unique_id == "0123456-wind"
-
-
-async def test_sensor_with_forecast(
-    hass: HomeAssistant,
-    entity_registry_enabled_by_default: None,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test states of the sensor with forecast."""
-    await init_integration(hass, forecast=True)
 
     state = hass.states.get("sensor.home_hours_of_sun_today")
     assert state
@@ -601,22 +588,17 @@ async def test_availability(hass: HomeAssistant) -> None:
 
 async def test_manual_update_entity(hass: HomeAssistant) -> None:
     """Test manual update entity via service homeassistant/update_entity."""
-    await init_integration(hass, forecast=True)
+    await init_integration(hass)
 
     await async_setup_component(hass, "homeassistant", {})
 
     current = load_json_object_fixture("accuweather/current_conditions_data.json")
-    forecast = load_json_array_fixture("accuweather/forecast_data.json")
 
     with (
         patch(
             "homeassistant.components.accuweather.AccuWeather.async_get_current_conditions",
             return_value=current,
         ) as mock_current,
-        patch(
-            "homeassistant.components.accuweather.AccuWeather.async_get_daily_forecast",
-            return_value=forecast,
-        ) as mock_forecast,
         patch(
             "homeassistant.components.accuweather.AccuWeather.requests_remaining",
             new_callable=PropertyMock,
@@ -629,8 +611,7 @@ async def test_manual_update_entity(hass: HomeAssistant) -> None:
             {ATTR_ENTITY_ID: ["sensor.home_cloud_ceiling"]},
             blocking=True,
         )
-        assert mock_current.call_count == 1
-        assert mock_forecast.call_count == 1
+    assert mock_current.call_count == 1
 
 
 async def test_sensor_imperial_units(hass: HomeAssistant) -> None:
