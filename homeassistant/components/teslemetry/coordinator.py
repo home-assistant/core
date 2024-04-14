@@ -48,6 +48,8 @@ def flatten(data: dict[str, Any], parent: str | None = None) -> dict[str, Any]:
 class TeslemetryVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching data from the Teslemetry API."""
 
+    name = "Teslemetry Vehicle"
+
     def __init__(
         self, hass: HomeAssistant, api: VehicleSpecific, product: dict
     ) -> None:

@@ -85,7 +85,9 @@ async def test_vehicle_refresh_error(
 
 # Test Energy Coordinator
 @pytest.mark.parametrize(("side_effect", "state"), ERRORS)
-async def test_energy_live_refresh_error(hass: HomeAssistant, mock_live_status, side_effect, state) -> None:
+async def test_energy_live_refresh_error(
+    hass: HomeAssistant, mock_live_status, side_effect, state
+) -> None:
     """Test coordinator refresh with an error."""
     mock_live_status.side_effect = side_effect
     entry = await setup_platform(hass)
