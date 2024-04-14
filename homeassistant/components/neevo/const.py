@@ -1,5 +1,7 @@
 """Constants for the Nee-Vo Tank Monitoring integration."""
 
-DOMAIN = "neevo"
-TANKS = "tanks"
-COORDINATOR = "coordinator"
+from typing import Final
+
+DOMAIN: Final = "neevo"
+TANKS: Final = "tanks"
+COORDINATOR: Final = "coordinator"

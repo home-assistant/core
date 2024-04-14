@@ -31,10 +31,10 @@ from .const import COORDINATOR, DOMAIN, TANKS
 
 _LOGGER = logging.getLogger(__name__)
 
-PUSH_UPDATE = "neevo.push_update"
-INTERVAL = 60
+_PUSH_UPDATE = "neevo.push_update"
+_INTERVAL = 60
 
-PLATFORMS: list[Platform] = [Platform.SENSOR]
+_PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
@@ -69,7 +69,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         _LOGGER,
         name="Neevo",
         update_method=fetch_update,
-        update_interval=timedelta(minutes=INTERVAL),
+        update_interval=timedelta(minutes=_INTERVAL),
     )
 
     await coordinator.async_config_entry_first_refresh()
@@ -80,7 +80,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         TANKS: tanks,
     }
 
-    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(config_entry, _PLATFORMS)
 
     return True
 
@@ -88,7 +88,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(
-        config_entry, PLATFORMS
+        config_entry, _PLATFORMS
     )
     if unload_ok:
         hass.data[DOMAIN].pop(config_entry.entry_id)
@@ -112,7 +112,7 @@ class NeeVoEntity(CoordinatorEntity):
         """Subscribe to device events."""
         await super().async_added_to_hass()
         self.async_on_remove(
-            async_dispatcher_connect(self.hass, PUSH_UPDATE, self.on_update_received)
+            async_dispatcher_connect(self.hass, _PUSH_UPDATE, self.on_update_received)
         )
 
     @callback

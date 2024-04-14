@@ -28,6 +28,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         icon="mdi:propane-tank",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
     ),
     SensorEntityDescription(
         key="tank_last_pressure",
@@ -35,6 +36,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         icon="mdi:gauge",
         native_unit_of_measurement=UnitOfPressure.KPA,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
     ),
 )
 
@@ -71,21 +73,11 @@ class NeeVoSensor(NeeVoEntity, SensorEntity):
         self._attr_has_entity_name = True
         self._attr_name = f"{description.name}"
         self._attr_unique_id = f"{self._neevo.id}_{description.key}"
+        self._attr_native_value = getattr(self._neevo, self.entity_description.key)
 
-    @property
-    def native_value(self) -> float:
-        """Return sensors state."""
-        value = getattr(self._neevo, self.entity_description.key)
-        if isinstance(value, float):
-            value = round(value, 2)
-
-        return value
-
-    @property
-    def native_unit_of_measurement(self) -> str | None:
-        """Return the unit of measurement of this entity, if any."""
         if self.entity_description.key == "tank_last_pressure":
             if self._neevo.tank_last_pressure_unit is not None:
                 with suppress(TypeError):
-                    return UnitOfPressure(self._neevo.tank_last_pressure_unit)
-        return super().native_unit_of_measurement
+                    self._attr_native_unit_of_measurement = UnitOfPressure(
+                        self._neevo.tank_last_pressure_unit
+                    )

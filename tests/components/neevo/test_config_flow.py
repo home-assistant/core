@@ -27,7 +27,6 @@ async def test_bad_credentials(hass):
             "pyneevo.NeeVoApiInterface.login",
             side_effect=InvalidCredentialsError(),
         ),
-        patch("homeassistant.components.neevo.async_setup", return_value=True),
         patch("homeassistant.components.neevo.async_setup_entry", return_value=True),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -59,7 +58,6 @@ async def test_generic_error_from_library(hass):
             "pyneevo.NeeVoApiInterface.login",
             side_effect=PyNeeVoError(),
         ),
-        patch("homeassistant.components.neevo.async_setup", return_value=True),
         patch("homeassistant.components.neevo.async_setup_entry", return_value=True),
     ):
         result = await hass.config_entries.flow.async_configure(
