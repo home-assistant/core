@@ -26,11 +26,9 @@ def _component_icons_path(component: str, integration: Integration) -> str | Non
     Ex: components/hue/icons.json
     If component is just a single file, will return None.
     """
-    domain = component.rpartition(".")[-1]
-
     # If it's a component that is just one file, we don't support icons
     # Example custom_components/my_component.py
-    if integration.file_path.name != domain:
+    if integration.file_path.name != component:
         return None
 
     return str(integration.file_path / "icons.json")
@@ -54,12 +52,11 @@ async def _async_get_component_icons(
 
     # Determine files to load
     files_to_load = {}
-    for loaded in components:
-        domain = loaded.rpartition(".")[-1]
-        if (path := _component_icons_path(loaded, integrations[domain])) is None:
-            icons[loaded] = {}
+    for comp in components:
+        if (path := _component_icons_path(comp, integrations[comp])) is None:
+            icons[comp] = {}
         else:
-            files_to_load[loaded] = path
+            files_to_load[comp] = path
 
     # Load files
     if files_to_load and (
@@ -108,8 +105,7 @@ class _IconsCache:
         _LOGGER.debug("Cache miss for: %s", components)
 
         integrations: dict[str, Integration] = {}
-        domains = {loaded.rpartition(".")[-1] for loaded in components}
-        ints_or_excs = await async_get_integrations(self._hass, domains)
+        ints_or_excs = await async_get_integrations(self._hass, components)
         for domain, int_or_exc in ints_or_excs.items():
             if isinstance(int_or_exc, Exception):
                 raise int_or_exc

@@ -212,8 +212,7 @@ class _TranslationCache:
         languages = [LOCALE_EN] if language == LOCALE_EN else [LOCALE_EN, language]
 
         integrations: dict[str, Integration] = {}
-        domains = {loaded.partition(".")[0] for loaded in components}
-        ints_or_excs = await async_get_integrations(self.hass, domains)
+        ints_or_excs = await async_get_integrations(self.hass, components)
         for domain, int_or_exc in ints_or_excs.items():
             if isinstance(int_or_exc, Exception):
                 _LOGGER.warning(
