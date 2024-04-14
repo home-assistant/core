@@ -208,6 +208,7 @@ async def activate_automation(  # noqa: C901
             or new_state.state != to_state
         ):
             return
+
         entity = event_data["entity_id"]
         lights_are_on = any_light_on()
         light_needed = not (lights_are_on or is_up(hass))
