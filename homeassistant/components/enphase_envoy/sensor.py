@@ -146,6 +146,7 @@ PRODUCTION_PHASE_SENSORS = {
             sensor,
             key=f"{sensor.key}_l{phase + 1}",
             translation_key=f"{sensor.translation_key}_phase",
+            entity_registry_enabled_default=False,
             on_phase=on_phase,
             translation_placeholders={"phase_name": f"l{phase + 1}"},
         )
@@ -216,6 +217,7 @@ CONSUMPTION_PHASE_SENSORS = {
             sensor,
             key=f"{sensor.key}_l{phase + 1}",
             translation_key=f"{sensor.translation_key}_phase",
+            entity_registry_enabled_default=False,
             on_phase=on_phase,
             translation_placeholders={"phase_name": f"l{phase + 1}"},
         )
