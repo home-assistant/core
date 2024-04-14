@@ -428,10 +428,9 @@ async def _async_setup_component(  # noqa: C901
             await load_translations_task
 
     if integration.platforms_exists(("config_flow",)):
-        # If the integration has a config_flow, flush out async_setup calling create_task
-        # with an asyncio.sleep(0) so we can wait for import flows.
-        # Fragile but covered by test.
-        await asyncio.sleep(0)
+        # If the integration has a config_flow, wait for import flows.
+        # As these are all created with eager tasks, we do not sleep here,
+        # as the tasks will always be started before we reach this point.
         await hass.config_entries.flow.async_wait_import_flow_initialized(domain)
 
     # Add to components before the entry.async_setup
