@@ -45,7 +45,6 @@ from .const import (
     DISCOVERY_INTERVAL,
     DOMAIN,
     PLATFORMS,
-    SOCO_DEFAULT_SERVICE_TIMEOUT,
     SONOS_CHECK_ACTIVITY,
     SONOS_REBOOTED,
     SONOS_SPEAKER_ACTIVITY,
@@ -135,7 +134,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Sonos from a config entry."""
     soco_config.EVENTS_MODULE = events_asyncio
-    soco_config.REQUEST_TIMEOUT = SOCO_DEFAULT_SERVICE_TIMEOUT
+    soco_config.REQUEST_TIMEOUT = 9.5
     soco_config.ZGT_EVENT_FALLBACK = False
     zonegroupstate.EVENT_CACHE_TIMEOUT = SUBSCRIPTION_TIMEOUT
 
