@@ -2742,7 +2742,7 @@ class Config:
         # and should not be modified directly
         self.top_level_components: set[str] = set()
 
-        # List of loaded components
+        # Set of loaded components
         self.components: _ComponentSet = _ComponentSet(self.top_level_components)
 
         # API (HTTP) server configuration
