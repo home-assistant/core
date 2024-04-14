@@ -38,6 +38,8 @@ from .const import (
     CONF_OLD_DISCOVERY,
     DEFAULT_CONF_OLD_DISCOVERY,
     DEFAULT_HOST,
+    DEFAULT_HTTP_PORT,
+    DEFAULT_HTTPS_PORT,
     DEFAULT_SSL,
     DOMAIN,
     ERROR_AUTH_INVALID,
@@ -142,7 +144,6 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by discovery."""
         ssdp_location: ParseResult = urlparse(discovery_info.ssdp_location or "")
         self._host = ssdp_location.hostname
-        self._port = ssdp_location.port
         self._name = (
             discovery_info.upnp.get(ssdp.ATTR_UPNP_FRIENDLY_NAME)
             or discovery_info.upnp[ssdp.ATTR_UPNP_MODEL_NAME]
@@ -187,6 +188,13 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
 
         self._username = user_input[CONF_USERNAME]
         self._password = user_input[CONF_PASSWORD]
+        self._use_tls = user_input[CONF_SSL]
+
+        port = user_input.get(CONF_PORT)
+        if port is None:
+            self._port = DEFAULT_HTTPS_PORT if self._use_tls else DEFAULT_HTTP_PORT
+        else:
+            self._port = port
 
         error = await self.hass.async_add_executor_job(self.fritz_tools_init)
 
@@ -234,6 +242,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
                 {
                     vol.Required(CONF_USERNAME): str,
                     vol.Required(CONF_PASSWORD): str,
+                    vol.Optional(CONF_SSL, default=DEFAULT_SSL): bool,
                 }
             ),
             description_placeholders={"name": self._name},
@@ -247,10 +256,15 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self._show_setup_form_init()
         self._host = user_input[CONF_HOST]
-        self._port = user_input.get(CONF_PORT)
         self._username = user_input[CONF_USERNAME]
         self._password = user_input[CONF_PASSWORD]
         self._use_tls = user_input[CONF_SSL]
+
+        port = user_input.get(CONF_PORT)
+        if port is None:
+            self._port = DEFAULT_HTTPS_PORT if self._use_tls else DEFAULT_HTTP_PORT
+        else:
+            self._port = port
 
         if not (error := await self.hass.async_add_executor_job(self.fritz_tools_init)):
             self._name = self._model

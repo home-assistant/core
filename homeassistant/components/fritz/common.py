@@ -48,8 +48,6 @@ from .const import (
     DEFAULT_CONF_OLD_DISCOVERY,
     DEFAULT_DEVICE_NAME,
     DEFAULT_HOST,
-    DEFAULT_HTTP_PORT,
-    DEFAULT_HTTPS_PORT,
     DEFAULT_SSL,
     DEFAULT_USERNAME,
     DOMAIN,
@@ -186,7 +184,7 @@ class FritzBoxTools(
         self,
         hass: HomeAssistant,
         password: str,
-        port: int | None,
+        port: int,
         username: str = DEFAULT_USERNAME,
         host: str = DEFAULT_HOST,
         use_tls: bool = DEFAULT_SSL,
@@ -235,14 +233,9 @@ class FritzBoxTools(
     def setup(self) -> None:
         """Set up FritzboxTools class."""
 
-        if self.port is None:
-            port = DEFAULT_HTTPS_PORT if self.use_tls else DEFAULT_HTTP_PORT
-        else:
-            port = self.port
-
         self.connection = FritzConnection(
             address=self.host,
-            port=port,
+            port=self.port,
             user=self.username,
             password=self.password,
             use_tls=self.use_tls,
