@@ -7,7 +7,7 @@ from hassil.recognize import Intent, IntentData, MatchEntity, RecognizeResult
 import pytest
 
 from homeassistant.components import conversation
-from homeassistant.components.conversation import agent_manager, default_agent
+from homeassistant.components.conversation import default_agent
 from homeassistant.components.homeassistant.exposed_entities import (
     async_get_assistant_settings,
 )
@@ -152,9 +152,7 @@ async def test_conversation_agent(
     init_components,
 ) -> None:
     """Test DefaultAgent."""
-    agent = await agent_manager.get_agent_manager(hass).async_get_agent(
-        conversation.HOME_ASSISTANT_AGENT
-    )
+    agent = default_agent.async_get_default_agent(hass)
     with patch(
         "homeassistant.components.conversation.default_agent.get_languages",
         return_value=["dwarvish", "elvish", "entish"],
@@ -181,6 +179,7 @@ async def test_expose_flag_automatically_set(
 
     # After setting up conversation, the expose flag should now be set on all entities
     assert async_get_assistant_settings(hass, conversation.DOMAIN) == {
+        "conversation.home_assistant": {"should_expose": False},
         light.entity_id: {"should_expose": True},
         test.entity_id: {"should_expose": False},
     }
@@ -190,6 +189,7 @@ async def test_expose_flag_automatically_set(
     hass.states.async_set(new_light, "test")
     await hass.async_block_till_done()
     assert async_get_assistant_settings(hass, conversation.DOMAIN) == {
+        "conversation.home_assistant": {"should_expose": False},
         light.entity_id: {"should_expose": True},
         new_light: {"should_expose": True},
         test.entity_id: {"should_expose": False},
@@ -254,9 +254,7 @@ async def test_trigger_sentences(hass: HomeAssistant, init_components) -> None:
     trigger_sentences = ["It's party time", "It is time to party"]
     trigger_response = "Cowabunga!"
 
-    agent = await agent_manager.get_agent_manager(hass).async_get_agent(
-        conversation.HOME_ASSISTANT_AGENT
-    )
+    agent = default_agent.async_get_default_agent(hass)
     assert isinstance(agent, default_agent.DefaultAgent)
 
     callback = AsyncMock(return_value=trigger_response)
@@ -825,7 +823,7 @@ async def test_empty_aliases(
     area_kitchen = area_registry.async_get_or_create("kitchen_id")
     area_kitchen = area_registry.async_update(area_kitchen.id, name="kitchen")
     area_kitchen = area_registry.async_update(
-        area_kitchen.id, aliases={" "}, floor_id=floor_1
+        area_kitchen.id, aliases={" "}, floor_id=floor_1.floor_id
     )
 
     entry = MockConfigEntry()

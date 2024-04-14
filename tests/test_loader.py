@@ -274,7 +274,61 @@ async def test_get_integration_exceptions(hass: HomeAssistant) -> None:
 async def test_get_platform_caches_failures_when_component_loaded(
     hass: HomeAssistant,
 ) -> None:
-    """Test get_platform cache failures only when the component is loaded."""
+    """Test get_platform caches failures only when the component is loaded.
+
+    Only ModuleNotFoundError is cached, ImportError is not cached.
+    """
+    integration = await loader.async_get_integration(hass, "hue")
+
+    with (
+        pytest.raises(ModuleNotFoundError),
+        patch(
+            "homeassistant.loader.importlib.import_module",
+            side_effect=ModuleNotFoundError("Boom"),
+        ),
+    ):
+        assert integration.get_component() == hue
+
+    with (
+        pytest.raises(ModuleNotFoundError),
+        patch(
+            "homeassistant.loader.importlib.import_module",
+            side_effect=ModuleNotFoundError("Boom"),
+        ),
+    ):
+        assert integration.get_platform("light") == hue_light
+
+    # Hue is not loaded so we should still hit the import_module path
+    with (
+        pytest.raises(ModuleNotFoundError),
+        patch(
+            "homeassistant.loader.importlib.import_module",
+            side_effect=ModuleNotFoundError("Boom"),
+        ),
+    ):
+        assert integration.get_platform("light") == hue_light
+
+    assert integration.get_component() == hue
+
+    # Hue is loaded so we should cache the import_module failure now
+    with (
+        pytest.raises(ModuleNotFoundError),
+        patch(
+            "homeassistant.loader.importlib.import_module",
+            side_effect=ModuleNotFoundError("Boom"),
+        ),
+    ):
+        assert integration.get_platform("light") == hue_light
+
+    # Hue is loaded and the last call should have cached the import_module failure
+    with pytest.raises(ModuleNotFoundError):
+        assert integration.get_platform("light") == hue_light
+
+
+async def test_get_platform_only_cached_module_not_found_when_component_loaded(
+    hass: HomeAssistant,
+) -> None:
+    """Test get_platform cache only cache module not found when the component is loaded."""
     integration = await loader.async_get_integration(hass, "hue")
 
     with (
@@ -317,41 +371,43 @@ async def test_get_platform_caches_failures_when_component_loaded(
     ):
         assert integration.get_platform("light") == hue_light
 
-    # Hue is loaded and the last call should have cached the import_module failure
-    with pytest.raises(ImportError):
-        assert integration.get_platform("light") == hue_light
+    # ImportError is not cached because we only cache ModuleNotFoundError
+    assert integration.get_platform("light") == hue_light
 
 
 async def test_async_get_platform_caches_failures_when_component_loaded(
     hass: HomeAssistant,
 ) -> None:
-    """Test async_get_platform cache failures only when the component is loaded."""
+    """Test async_get_platform caches failures only when the component is loaded.
+
+    Only ModuleNotFoundError is cached, ImportError is not cached.
+    """
     integration = await loader.async_get_integration(hass, "hue")
 
     with (
-        pytest.raises(ImportError),
+        pytest.raises(ModuleNotFoundError),
         patch(
             "homeassistant.loader.importlib.import_module",
-            side_effect=ImportError("Boom"),
+            side_effect=ModuleNotFoundError("Boom"),
         ),
     ):
         assert integration.get_component() == hue
 
     with (
-        pytest.raises(ImportError),
+        pytest.raises(ModuleNotFoundError),
         patch(
             "homeassistant.loader.importlib.import_module",
-            side_effect=ImportError("Boom"),
+            side_effect=ModuleNotFoundError("Boom"),
         ),
     ):
         assert await integration.async_get_platform("light") == hue_light
 
     # Hue is not loaded so we should still hit the import_module path
     with (
-        pytest.raises(ImportError),
+        pytest.raises(ModuleNotFoundError),
         patch(
             "homeassistant.loader.importlib.import_module",
-            side_effect=ImportError("Boom"),
+            side_effect=ModuleNotFoundError("Boom"),
         ),
     ):
         assert await integration.async_get_platform("light") == hue_light
@@ -360,16 +416,16 @@ async def test_async_get_platform_caches_failures_when_component_loaded(
 
     # Hue is loaded so we should cache the import_module failure now
     with (
-        pytest.raises(ImportError),
+        pytest.raises(ModuleNotFoundError),
         patch(
             "homeassistant.loader.importlib.import_module",
-            side_effect=ImportError("Boom"),
+            side_effect=ModuleNotFoundError("Boom"),
         ),
     ):
         assert await integration.async_get_platform("light") == hue_light
 
     # Hue is loaded and the last call should have cached the import_module failure
-    with pytest.raises(ImportError):
+    with pytest.raises(ModuleNotFoundError):
         assert await integration.async_get_platform("light") == hue_light
 
     # The cache should never be filled because the import error is remembered
@@ -379,33 +435,36 @@ async def test_async_get_platform_caches_failures_when_component_loaded(
 async def test_async_get_platforms_caches_failures_when_component_loaded(
     hass: HomeAssistant,
 ) -> None:
-    """Test async_get_platforms cache failures only when the component is loaded."""
+    """Test async_get_platforms cache failures only when the component is loaded.
+
+    Only ModuleNotFoundError is cached, ImportError is not cached.
+    """
     integration = await loader.async_get_integration(hass, "hue")
 
     with (
-        pytest.raises(ImportError),
+        pytest.raises(ModuleNotFoundError),
         patch(
             "homeassistant.loader.importlib.import_module",
-            side_effect=ImportError("Boom"),
+            side_effect=ModuleNotFoundError("Boom"),
         ),
     ):
         assert integration.get_component() == hue
 
     with (
-        pytest.raises(ImportError),
+        pytest.raises(ModuleNotFoundError),
         patch(
             "homeassistant.loader.importlib.import_module",
-            side_effect=ImportError("Boom"),
+            side_effect=ModuleNotFoundError("Boom"),
         ),
     ):
         assert await integration.async_get_platforms(["light"]) == {"light": hue_light}
 
     # Hue is not loaded so we should still hit the import_module path
     with (
-        pytest.raises(ImportError),
+        pytest.raises(ModuleNotFoundError),
         patch(
             "homeassistant.loader.importlib.import_module",
-            side_effect=ImportError("Boom"),
+            side_effect=ModuleNotFoundError("Boom"),
         ),
     ):
         assert await integration.async_get_platforms(["light"]) == {"light": hue_light}
@@ -414,16 +473,16 @@ async def test_async_get_platforms_caches_failures_when_component_loaded(
 
     # Hue is loaded so we should cache the import_module failure now
     with (
-        pytest.raises(ImportError),
+        pytest.raises(ModuleNotFoundError),
         patch(
             "homeassistant.loader.importlib.import_module",
-            side_effect=ImportError("Boom"),
+            side_effect=ModuleNotFoundError("Boom"),
         ),
     ):
         assert await integration.async_get_platforms(["light"]) == {"light": hue_light}
 
     # Hue is loaded and the last call should have cached the import_module failure
-    with pytest.raises(ImportError):
+    with pytest.raises(ModuleNotFoundError):
         assert await integration.async_get_platforms(["light"]) == {"light": hue_light}
 
     # The cache should never be filled because the import error is remembered
@@ -1349,7 +1408,7 @@ async def test_async_get_component_concurrent_loads(
     modules_without_integration = {
         k: v
         for k, v in sys.modules.items()
-        if k != config_flow_module_name and k != integration.pkg_path
+        if k not in (config_flow_module_name, integration.pkg_path)
     }
     with (
         patch.dict(
@@ -1410,6 +1469,50 @@ async def test_async_get_component_deadlock_fallback(
     )
     assert "loaded_executor=False" in caplog.text
     assert module is module_mock
+
+
+async def test_async_get_component_deadlock_fallback_module_not_found(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Verify async_get_component fallback behavior.
+
+    Ensure that fallback is not triggered on ModuleNotFoundError.
+    """
+    executor_import_integration = _get_test_integration(
+        hass, "executor_import", True, import_executor=True
+    )
+    assert executor_import_integration.import_executor is True
+    module_mock = MagicMock(__file__="__init__.py")
+    import_attempts = 0
+
+    def mock_import(module: str, *args: Any, **kwargs: Any) -> Any:
+        nonlocal import_attempts
+        if module == "homeassistant.components.executor_import":
+            import_attempts += 1
+
+        if import_attempts == 1:
+            raise ModuleNotFoundError(
+                "homeassistant.components.executor_import not found",
+                name="homeassistant.components.executor_import",
+            )
+
+        return module_mock
+
+    assert "homeassistant.components.executor_import" not in sys.modules
+    assert "custom_components.executor_import" not in sys.modules
+    with (
+        patch("homeassistant.loader.importlib.import_module", mock_import),
+        pytest.raises(
+            ModuleNotFoundError, match="homeassistant.components.executor_import"
+        ),
+    ):
+        await executor_import_integration.async_get_component()
+
+    # We should not have tried to fall back to the event loop import
+    assert "loaded_executor=False" not in caplog.text
+    assert "homeassistant.components.executor_import" not in sys.modules
+    assert "custom_components.executor_import" not in sys.modules
+    assert import_attempts == 1
 
 
 async def test_async_get_component_raises_after_import_failure(
@@ -1490,6 +1593,52 @@ async def test_async_get_platform_deadlock_fallback(
     assert "executor=['config_flow']" in caplog.text
     assert "loop=['config_flow']" in caplog.text
     assert module is module_mock
+
+
+async def test_async_get_platform_deadlock_fallback_module_not_found(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Verify async_get_platform fallback behavior.
+
+    Ensure that fallback is not triggered on ModuleNotFoundError.
+    """
+    executor_import_integration = _get_test_integration(
+        hass, "executor_import", True, import_executor=True
+    )
+    assert executor_import_integration.import_executor is True
+    module_mock = MagicMock()
+    import_attempts = 0
+
+    def mock_import(module: str, *args: Any, **kwargs: Any) -> Any:
+        nonlocal import_attempts
+        if module == "homeassistant.components.executor_import.config_flow":
+            import_attempts += 1
+
+        if import_attempts == 1:
+            raise ModuleNotFoundError(
+                "Not found homeassistant.components.executor_import.config_flow",
+                name="homeassistant.components.executor_import.config_flow",
+            )
+
+        return module_mock
+
+    assert "homeassistant.components.executor_import" not in sys.modules
+    assert "custom_components.executor_import" not in sys.modules
+    with (
+        patch("homeassistant.loader.importlib.import_module", mock_import),
+        pytest.raises(
+            ModuleNotFoundError,
+            match="homeassistant.components.executor_import.config_flow",
+        ),
+    ):
+        await executor_import_integration.async_get_platform("config_flow")
+
+    # We should not have tried to fall back to the event loop import
+    assert "executor=['config_flow']" in caplog.text
+    assert "loop=['config_flow']" not in caplog.text
+    assert "homeassistant.components.executor_import" not in sys.modules
+    assert "custom_components.executor_import" not in sys.modules
+    assert import_attempts == 1
 
 
 async def test_async_get_platform_raises_after_import_failure(
@@ -1737,7 +1886,7 @@ async def test_async_get_platforms_concurrent_loads(
     modules_without_button = {
         k: v
         for k, v in sys.modules.items()
-        if k != button_module_name and k != integration.pkg_path
+        if k not in (button_module_name, integration.pkg_path)
     }
     with (
         patch.dict(

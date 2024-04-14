@@ -22,7 +22,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.dt import utcnow
 
-from . import SETTINGS, init_integration
+from . import init_integration, mock_nextdns
 
 from tests.common import async_fire_time_changed
 
@@ -693,19 +693,16 @@ async def test_availability(hass: HomeAssistant) -> None:
         side_effect=ApiError("API Error"),
     ):
         async_fire_time_changed(hass, future)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("switch.fake_profile_web3")
     assert state
     assert state.state == STATE_UNAVAILABLE
 
     future = utcnow() + timedelta(minutes=20)
-    with patch(
-        "homeassistant.components.nextdns.NextDns.get_settings",
-        return_value=SETTINGS,
-    ):
+    with mock_nextdns():
         async_fire_time_changed(hass, future)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("switch.fake_profile_web3")
     assert state

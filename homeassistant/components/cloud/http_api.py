@@ -223,7 +223,10 @@ class CloudLoginView(HomeAssistantView):
         cloud: Cloud[CloudClient] = hass.data[DOMAIN]
         await cloud.login(data["email"], data["password"])
 
-        new_cloud_pipeline_id = await async_create_cloud_pipeline(hass)
+        if "assist_pipeline" in hass.config.components:
+            new_cloud_pipeline_id = await async_create_cloud_pipeline(hass)
+        else:
+            new_cloud_pipeline_id = None
         return self.json({"success": True, "cloud_pipeline": new_cloud_pipeline_id})
 
 

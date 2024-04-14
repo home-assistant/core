@@ -47,9 +47,9 @@ async def test_setup(hass: HomeAssistant) -> None:
         )
 
     assert len(mock_ex.mock_calls) == 1
-    hass, script, source, data = mock_ex.mock_calls[0][1]
+    test_hass, script, source, data = mock_ex.mock_calls[0][1]
 
-    assert hass is hass
+    assert test_hass is hass
     assert script == "hello.py"
     assert source == "fake source"
     assert data == {"some": "data"}

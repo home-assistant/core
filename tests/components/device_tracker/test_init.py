@@ -5,12 +5,11 @@ import json
 import logging
 import os
 from types import ModuleType
-from unittest.mock import Mock, call, patch
+from unittest.mock import call, patch
 
 import pytest
 
-from homeassistant.components import zone
-import homeassistant.components.device_tracker as device_tracker
+from homeassistant.components import device_tracker, zone
 from homeassistant.components.device_tracker import SourceType, const, legacy
 from homeassistant.const import (
     ATTR_ENTITY_PICTURE,
@@ -26,6 +25,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import discovery
+from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -397,10 +397,16 @@ async def test_see_service_guard_config_entry(
     mock_device_tracker_conf: list[legacy.Device],
 ) -> None:
     """Test the guard if the device is registered in the entity registry."""
-    mock_entry = Mock()
     dev_id = "test"
     entity_id = f"{const.DOMAIN}.{dev_id}"
-    mock_registry(hass, {entity_id: mock_entry})
+    mock_registry(
+        hass,
+        {
+            entity_id: RegistryEntry(
+                entity_id=entity_id, unique_id=1, platform=const.DOMAIN
+            )
+        },
+    )
     devices = mock_device_tracker_conf
     assert await async_setup_component(hass, device_tracker.DOMAIN, TEST_PLATFORM)
     await hass.async_block_till_done()

@@ -155,7 +155,7 @@ async def test_flow_reauth(
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
         await hass.async_block_till_done()
 
-    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "reauth_successful"
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1

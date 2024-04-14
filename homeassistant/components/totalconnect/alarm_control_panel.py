@@ -116,6 +116,7 @@ class TotalConnectAlarm(
         return DeviceInfo(
             identifiers={(DOMAIN, self._device.serial_number)},
             name=self._device.name,
+            serial_number=self._device.serial_number,
         )
 
     @property

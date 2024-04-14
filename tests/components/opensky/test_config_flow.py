@@ -6,7 +6,6 @@ from unittest.mock import AsyncMock
 import pytest
 from python_opensky.exceptions import OpenSkyUnauthenticatedError
 
-from homeassistant import data_entry_flow
 from homeassistant.components.opensky.const import (
     CONF_ALTITUDE,
     CONF_CONTRIBUTING_USER,
@@ -43,7 +42,7 @@ async def test_full_user_flow(hass: HomeAssistant, mock_setup_entry) -> None:
             CONF_ALTITUDE: 0,
         },
     )
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "OpenSky"
     assert result["data"] == {
         CONF_LATITUDE: 0.0,
@@ -89,7 +88,7 @@ async def test_options_flow_failures(
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
@@ -98,7 +97,7 @@ async def test_options_flow_failures(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
     assert result["errors"]["base"] == error
     opensky_client.authenticate.side_effect = None
@@ -113,7 +112,7 @@ async def test_options_flow_failures(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         CONF_RADIUS: 10000,
         CONF_USERNAME: "homeassistant",
@@ -143,7 +142,7 @@ async def test_options_flow(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         CONF_RADIUS: 10000,
         CONF_USERNAME: "homeassistant",
