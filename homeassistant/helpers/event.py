@@ -40,6 +40,7 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.event_type import EventType
 
+from . import frame
 from .device_registry import (
     EVENT_DEVICE_REGISTRY_UPDATED,
     EventDeviceRegistryUpdatedData,
@@ -207,6 +208,12 @@ def async_track_state_change(
 
     Must be run within the event loop.
     """
+    frame.report(
+        "calls `async_track_state_change` instead of `async_track_state_change_event`"
+        " which is deprecated and will be removed in Assistant 2025.5",
+        error_if_core=False,
+    )
+
     if from_state is not None:
         match_from_state = process_state_match(from_state)
     if to_state is not None:
