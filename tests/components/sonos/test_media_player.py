@@ -177,7 +177,7 @@ async def test_play_media_music_library_playlist_dne(
 
 
 @pytest.mark.parametrize(
-    ("source", "test_result"),
+    ("source", "result"),
     [
         (
             SOURCE_LINEIN,
@@ -226,7 +226,7 @@ async def test_select_source(
     async_autosetup_sonos,
     caplog: pytest.LogCaptureFixture,
     source,
-    test_result,
+    result,
 ) -> None:
     """Test the select_source method with a variety of inputs."""
     soco_mock = soco_factory.mock_list.get("192.168.42.2")
@@ -242,33 +242,29 @@ async def test_select_source(
             blocking=True,
         )
 
-    if test_result.get("exception"):
+    if result.get("exception"):
         with pytest.raises(ServiceValidationError):
             await service_call()
     else:
         await service_call()
 
-    assert soco_mock.switch_to_line_in.call_count == test_result.get(
-        "switch_to_line_in", 0
-    )
-    assert soco_mock.switch_to_tv.call_count == test_result.get("switch_to_tv", 0)
-    assert soco_mock.clear_queue.call_count == test_result.get("clear_queue", 0)
-    if test_result.get("add_to_queue"):
-        assert soco_mock.add_to_queue.call_count == test_result.get("add_to_queue")
-        assert soco_mock.add_to_queue.call_args_list[0].args[
-            0
-        ].item_id == test_result.get("add_to_queue_item_id")
+    assert soco_mock.switch_to_line_in.call_count == result.get("switch_to_line_in", 0)
+    assert soco_mock.switch_to_tv.call_count == result.get("switch_to_tv", 0)
+    assert soco_mock.clear_queue.call_count == result.get("clear_queue", 0)
+    if result.get("add_to_queue"):
+        assert soco_mock.add_to_queue.call_count == result.get("add_to_queue")
+        assert soco_mock.add_to_queue.call_args_list[0].args[0].item_id == result.get(
+            "add_to_queue_item_id"
+        )
         assert (
             soco_mock.add_to_queue.call_args_list[0].kwargs["timeout"]
             == LONG_SERVICE_TIMEOUT
         )
-    if test_result.get("play_from_queue"):
-        assert soco_mock.play_from_queue.call_count == test_result.get(
-            "play_from_queue"
-        )
+    if result.get("play_from_queue"):
+        assert soco_mock.play_from_queue.call_count == result.get("play_from_queue")
         assert soco_mock.play_from_queue.call_args_list[0].args[0] == 0
-    if test_result.get("play_uri"):
-        assert soco_mock.play_uri.call_count == test_result.get("play_uri")
-        assert soco_mock.play_uri.call_args_list[0].args[0] == test_result.get(
+    if result.get("play_uri"):
+        assert soco_mock.play_uri.call_count == result.get("play_uri")
+        assert soco_mock.play_uri.call_args_list[0].args[0] == result.get(
             "play_uri_uri"
         )
