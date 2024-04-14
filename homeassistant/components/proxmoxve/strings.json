@@ -25,14 +25,14 @@
           "vms": "Virtual Machines",
           "containers": " Containers"
         }
-      },
-      "error": {
-        "unknown": "[%key:common::config_flow::error::unknown%]",
-        "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-        "ssl_error": "Unable to verify proxmox server SSL. Try Verify SSL unchecked.",
-        "unknown_error": "Error connecting to Proxmox. Please check the logs."
       }
+    },
+    "error": {
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "ssl_error": "Unable to verify proxmox server SSL. Try Verify SSL unchecked.",
+      "unknown_error": "Error connecting to Proxmox. Please check the logs."
     }
   }
 }
