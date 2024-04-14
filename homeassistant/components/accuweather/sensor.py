@@ -28,13 +28,12 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import AccuWeatherDataUpdateCoordinator
+from . import AccuWeatherData, AccuWeatherDataUpdateCoordinator
 from .const import (
     API_METRIC,
     ATTR_CATEGORY,
     ATTR_DIRECTION,
     ATTR_ENGLISH,
-    ATTR_FORECAST,
     ATTR_LEVEL,
     ATTR_SPEED,
     ATTR_VALUE,
@@ -453,19 +452,26 @@ async def async_setup_entry(
 ) -> None:
     """Add AccuWeather entities from a config_entry."""
 
-    coordinator: AccuWeatherDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    accuweather_data: AccuWeatherData = hass.data[DOMAIN][entry.entry_id]
+
+    observation_coordinator: AccuWeatherDataUpdateCoordinator = (
+        accuweather_data.coordinator_observation
+    )
+    forecast_daily_coordinator: AccuWeatherDataUpdateCoordinator = (
+        accuweather_data.coordinator_daily_forecast
+    )
 
     sensors = [
-        AccuWeatherSensor(coordinator, description) for description in SENSOR_TYPES
+        AccuWeatherSensor(observation_coordinator, description)
+        for description in SENSOR_TYPES
     ]
 
-    if coordinator.forecast:
-        for description in FORECAST_SENSOR_TYPES:
-            # Some air quality/allergy sensors are only available for certain
-            # locations.
-            if description.key not in coordinator.data[ATTR_FORECAST][description.day]:
-                continue
-            sensors.append(AccuWeatherSensor(coordinator, description))
+    for description in FORECAST_SENSOR_TYPES:
+        # Some air quality/allergy sensors are only available for certain
+        # locations.
+        if description.key not in forecast_daily_coordinator.data[description.day]:
+            continue
+        sensors.append(AccuWeatherSensor(forecast_daily_coordinator, description))
 
     async_add_entities(sensors)
 
@@ -522,13 +528,13 @@ class AccuWeatherSensor(
 
 
 def _get_sensor_data(
-    sensors: dict[str, Any],
+    sensors: Any,
     kind: str,
     forecast_day: int | None = None,
 ) -> Any:
     """Get sensor data."""
     if forecast_day is not None:
-        return sensors[ATTR_FORECAST][forecast_day][kind]
+        return sensors[forecast_day][kind]
 
     if kind == "Precipitation":
         return sensors["PrecipitationSummary"]["PastHour"]
