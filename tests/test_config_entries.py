@@ -803,7 +803,7 @@ async def test_saving_and_loading(
 
     # Ensure same order
     for orig, loaded in zip(
-        hass.config_entries.async_entries(), manager.async_entries()
+        hass.config_entries.async_entries(), manager.async_entries(), strict=False
     ):
         assert orig.as_dict() == loaded.as_dict()
 
