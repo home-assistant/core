@@ -21,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @callback
-def _component_icons_path(component: str, integration: Integration) -> pathlib.Path:
+def _component_icons_path(integration: Integration) -> pathlib.Path:
     """Return the icons json file location for a component.
 
     Ex: components/hue/icons.json
@@ -50,7 +50,7 @@ async def _async_get_component_icons(
 
     # Determine files to load
     files_to_load = {
-        comp: _component_icons_path(comp, integrations[comp]) for comp in components
+        comp: _component_icons_path(integrations[comp]) for comp in components
     }
 
     # Load files
@@ -118,11 +118,9 @@ class _IconsCache:
         icons: dict[str, dict[str, Any]],
     ) -> None:
         """Extract resources into the cache."""
-        categories: set[str] = set()
-
-        for resource in icons.values():
-            categories.update(resource)
-
+        categories = {
+            category for component in icons.values() for category in component
+        }
         for category in categories:
             self._cache.setdefault(category, {}).update(
                 build_resources(icons, components, category)
