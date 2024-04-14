@@ -8,8 +8,10 @@ from pyloadapi.exceptions import CannotConnect, InvalidAuth, ParserError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    CONF_HOST,
     CONF_PASSWORD,
-    CONF_URL,
+    CONF_PORT,
+    CONF_SSL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
     Platform,
@@ -31,9 +33,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.data.get(CONF_VERIFY_SSL, True),
         cookie_jar=CookieJar(unsafe=True),
     )
+    api_url = "http{}://{}:{}/".format(
+        ("s" if entry.data[CONF_SSL] else ""),
+        entry.data[CONF_HOST],
+        entry.data[CONF_PORT],
+    )
     pyload = PyLoadAPI(
         session,
-        entry.data[CONF_URL],
+        api_url,
         entry.data[CONF_USERNAME],
         entry.data[CONF_PASSWORD],
     )
