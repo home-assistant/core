@@ -160,6 +160,8 @@ class DPCode(StrEnum):
     CONTROL_BACK = "control_back"
     CONTROL_BACK_MODE = "control_back_mode"
     COUNTDOWN = "countdown"  # Countdown
+    COUNTDOWN_1 = "countdown_1"  # Remaining minutes of irrigation (Zone 1)
+    COUNTDOWN_2 = "countdown_2"  # Remaining minutes of irrigation (Zone 2)
     COUNTDOWN_LEFT = "countdown_left"
     COUNTDOWN_SET = "countdown_set"  # Countdown setting
     CRY_DETECTION_SWITCH = "cry_detection_switch"
@@ -335,6 +337,8 @@ class DPCode(StrEnum):
     TEMPER_ALARM = "temper_alarm"  # Tamper alarm
     TIME_TOTAL = "time_total"
     TIME_USE = "time_use"  # Total seconds of irrigation
+    USE_TIME_1 = "use_time_1"  # Total seconds of irrigation (Zone 1)
+    USE_TIME_2 = "use_time_2"  # Total seconds of irrigation (Zone 2)
     TOTAL_CLEAN_AREA = "total_clean_area"
     TOTAL_CLEAN_COUNT = "total_clean_count"
     TOTAL_CLEAN_TIME = "total_clean_time"

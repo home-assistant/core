@@ -77,6 +77,29 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
             translation_key="voice_times",
         ),
     ),
+    # Irrigator (dual channel)
+    # https://developer.tuya.com/en/docs/iot/categoryggq?id=Kaiuz1qib7z0k
+    "ggq": (
+        # Turns the switch off after the specified time (whether the switch was on or off before this was set)
+        NumberEntityDescription(
+            key=DPCode.COUNTDOWN_1,
+            translation_key="countdown_zone_1",
+            native_unit_of_measurement=UnitOfTime.MINUTES,
+            native_max_value=1440,
+            native_min_value=0,
+            native_step=1,
+            entity_category=EntityCategory.CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.COUNTDOWN_2,
+            translation_key="countdown_zone_2",
+            native_unit_of_measurement=UnitOfTime.MINUTES,
+            native_max_value=1440,
+            native_min_value=0,
+            native_step=1,
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
     # Human Presence Sensor
     # https://developer.tuya.com/en/docs/iot/categoryhps?id=Kaiuz42yhn1hs
     "hps": (

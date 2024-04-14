@@ -519,6 +519,24 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         *BATTERY_SENSORS,
     ),
+    # Irrigator (dual channel)
+    # https://developer.tuya.com/en/docs/iot/categoryggq?id=Kaiuz1qib7z0k
+    "ggq": (
+        # Total seconds of irrigation.
+        TuyaSensorEntityDescription(
+            key=DPCode.USE_TIME_1,
+            translation_key="total_watering_time_zone_1",
+            state_class=SensorStateClass.TOTAL_INCREASING,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.USE_TIME_2,
+            translation_key="total_watering_time_zone_2",
+            state_class=SensorStateClass.TOTAL_INCREASING,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+        *BATTERY_SENSORS,
+    ),
     # Water Detector
     # https://developer.tuya.com/en/docs/iot/categorysj?id=Kaiuz3iub2sli
     "sj": BATTERY_SENSORS,

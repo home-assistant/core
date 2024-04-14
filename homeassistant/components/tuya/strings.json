@@ -119,6 +119,12 @@
       }
     },
     "number": {
+      "countdown_zone_1": {
+        "name": "Turn off after (Zone 1)"
+      },
+      "countdown_zone_2": {
+        "name": "Turn off after (Zone 2)"
+      },
       "temperature": {
         "name": "[%key:component::sensor::entity_component::temperature::name%]"
       },
@@ -580,6 +586,12 @@
       "total_watering_time": {
         "name": "Total watering time"
       },
+      "total_watering_time_zone_1": {
+        "name": "Total watering time (Zone 1)"
+      },
+      "total_watering_time_zone_2": {
+        "name": "Total watering time (Zone 2)"
+      },
       "filter_utilization": {
         "name": "Filter utilization"
       },
@@ -703,6 +715,12 @@
       },
       "switch_8": {
         "name": "Switch 8"
+      },
+      "switch_zone_1": {
+        "name": "Switch (Zone 1)"
+      },
+      "switch_zone_2": {
+        "name": "Switch (Zone 2)"
       },
       "usb_1": {
         "name": "USB 1"
