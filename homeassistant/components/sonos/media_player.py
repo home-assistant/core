@@ -446,7 +446,6 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             MUSIC_SRC_RADIO,
             MUSIC_SRC_LINE_IN,
         ]:
-            # Internet radio takes longer and play_uri uses default timeout
             soco.play_uri(uri, title=favorite.title)
         else:
             soco.clear_queue()
