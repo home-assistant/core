@@ -7,6 +7,7 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from pytest_unordered import unordered
 import voluptuous as vol
 
 # To prevent circular import when running just this file
@@ -16,6 +17,7 @@ import homeassistant.components  # noqa: F401
 from homeassistant.components.group import DOMAIN as DOMAIN_GROUP, Group
 from homeassistant.components.logger import DOMAIN as DOMAIN_LOGGER
 from homeassistant.components.shell_command import DOMAIN as DOMAIN_SHELL_COMMAND
+from homeassistant.components.system_health import DOMAIN as DOMAIN_SYSTEM_HEALTH
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ENTITY_MATCH_ALL,
@@ -785,7 +787,7 @@ async def test_async_get_all_descriptions(hass: HomeAssistant) -> None:
     """Test async_get_all_descriptions."""
     group_config = {DOMAIN_GROUP: {}}
     assert await async_setup_component(hass, DOMAIN_GROUP, group_config)
-    assert await async_setup_component(hass, "system_health", {})
+    assert await async_setup_component(hass, DOMAIN_SYSTEM_HEALTH, {})
 
     with patch(
         "homeassistant.helpers.service._load_services_files",
@@ -795,17 +797,20 @@ async def test_async_get_all_descriptions(hass: HomeAssistant) -> None:
 
     # Test we only load services.yaml for integrations with services.yaml
     # And system_health has no services
-    assert proxy_load_services_files.mock_calls[0][1][1] == [
-        await async_get_integration(hass, "group")
-    ]
+    assert proxy_load_services_files.mock_calls[0][1][1] == unordered(
+        [
+            await async_get_integration(hass, DOMAIN_GROUP),
+            await async_get_integration(hass, "http"),  # system_health requires http
+        ]
+    )
 
-    assert len(descriptions) == 1
-
-    assert "description" in descriptions["group"]["reload"]
-    assert "fields" in descriptions["group"]["reload"]
+    assert len(descriptions) == 2
+    assert DOMAIN_GROUP in descriptions
+    assert "description" in descriptions[DOMAIN_GROUP]["reload"]
+    assert "fields" in descriptions[DOMAIN_GROUP]["reload"]
 
     # Does not have services
-    assert "system_health" not in descriptions
+    assert DOMAIN_SYSTEM_HEALTH not in descriptions
 
     logger_config = {DOMAIN_LOGGER: {}}
 
@@ -833,8 +838,8 @@ async def test_async_get_all_descriptions(hass: HomeAssistant) -> None:
         await async_setup_component(hass, DOMAIN_LOGGER, logger_config)
         descriptions = await service.async_get_all_descriptions(hass)
 
-    assert len(descriptions) == 2
-
+    assert len(descriptions) == 3
+    assert DOMAIN_LOGGER in descriptions
     assert descriptions[DOMAIN_LOGGER]["set_default_level"]["name"] == "Translated name"
     assert (
         descriptions[DOMAIN_LOGGER]["set_default_level"]["description"]
