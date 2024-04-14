@@ -79,7 +79,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     # The legacy Ecobee notify.notify service is deprecated
-    # was with HA Core 2025.5.0 and will be removed with HA core 2024.7.0
+    # was with HA Core 2024.5.0 and will be removed with HA core 2024.7.0
     entry_options: dict[str, str | int | float | None] = dict(entry.options or {})
     if entry_options.get(CONF_MIGRATE_NOTIFY):
         return True
