@@ -51,7 +51,7 @@ dependencies    = [
     "PyJWT==2.8.0",
     # PyJWT has loose dependency. We want the latest one.
     "cryptography==42.0.5",
-    "Pillow==10.2.0",
+    "Pillow==10.3.0",
     "pyOpenSSL==24.1.0",
     "orjson==3.9.15",
     "packaging>=23.1",
@@ -673,6 +673,7 @@ select = [
     "B026", # Star-arg unpacking after a keyword argument is strongly discouraged
     "B032", # Possible unintentional type annotation (using :). Did you mean to assign (using =)?
     "B904", # Use raise from to specify exception cause
+    "B905", # zip() without an explicit strict= parameter
     "C", # complexity
     "COM818", # Trailing comma on bare tuple prohibited
     "D", # docstrings
@@ -738,7 +739,6 @@ ignore = [
     "D406", # Section name should end with a newline
     "D407", # Section name underlining
     "E501", # line too long
-    "E731", # do not assign a lambda expression, use a def
 
     "PLC1901", # {existing} can be simplified to {replacement} as an empty string is falsey; too many false positives
     "PLR0911", # Too many return statements ({returns} > {max_returns})
@@ -760,8 +760,6 @@ ignore = [
     "SIM115", # Use context handler for opening files
     "TRY003", # Avoid specifying long messages outside the exception class
     "TRY400", # Use `logging.exception` instead of `logging.error`
-    "UP006", # keep type annotation style as is
-    "UP007", # keep type annotation style as is
     # Ignored due to performance: https://github.com/charliermarsh/ruff/issues/2923
     "UP038", # Use `X | Y` in `isinstance` call instead of `(X, Y)`
     # Ignored due to incompatible with mypy: https://github.com/python/mypy/issues/15238

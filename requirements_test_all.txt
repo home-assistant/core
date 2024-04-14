@@ -36,7 +36,7 @@ HATasmota==0.8.0
 # homeassistant.components.seven_segments
 # homeassistant.components.sighthound
 # homeassistant.components.tensorflow
-Pillow==10.2.0
+Pillow==10.3.0
 
 # homeassistant.components.plex
 PlexAPI==4.15.11
@@ -1293,7 +1293,7 @@ py-nightscout==1.2.2
 py-sucks==0.9.9
 
 # homeassistant.components.synology_dsm
-py-synologydsm-api==2.1.4
+py-synologydsm-api==2.4.2
 
 # homeassistant.components.seventeentrack
 py17track==2021.12.2
