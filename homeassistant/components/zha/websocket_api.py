@@ -1034,7 +1034,7 @@ async def async_binding_operation(
             )
         )
     res = await asyncio.gather(*(t[0] for t in bind_tasks), return_exceptions=True)
-    for outcome, log_msg in zip(res, bind_tasks):
+    for outcome, log_msg in zip(res, bind_tasks, strict=False):
         if isinstance(outcome, Exception):
             fmt = f"{log_msg[1]} failed: %s"
         else:
