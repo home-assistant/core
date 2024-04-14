@@ -34,7 +34,7 @@ GENERAL_SETTINGS: Final[dict[str, str]] = {
     "python_version": ".".join(str(x) for x in REQUIRED_PYTHON_VER[:2]),
     "plugins": "pydantic.mypy",
     "show_error_codes": "true",
-    "follow_imports": "silent",
+    "follow_imports": "normal",
     # Enable some checks globally.
     "local_partial_types": "true",
     "strict_equality": "true",
