@@ -8,13 +8,18 @@ import voluptuous as vol
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, discovery
+from homeassistant.helpers import (
+    config_validation as cv,
+    discovery,
+    issue_registry as ir,
+)
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import Throttle
 
 from .const import (
     _LOGGER,
     ATTR_CONFIG_ENTRY_ID,
+    CONF_MIGRATE_NOTIFY,
     CONF_REFRESH_TOKEN,
     DATA_ECOBEE_CONFIG,
     DATA_HASS_CONFIG,
@@ -73,6 +78,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
+    # The legacy Ecobee notify.notify service is deprecated
+    # was with HA Core 2025.5.0 and will be removed with HA core 2024.7.0
+    entry_options: dict[str, str | int | float | None] = dict(entry.options or {})
+    if entry_options.get(CONF_MIGRATE_NOTIFY):
+        return True
+
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        "migrate_notify",
+        breaks_in_ha_version="2024.7.0",
+        issue_domain=Platform.NOTIFY.value,
+        is_fixable=True,
+        is_persistent=False,
+        translation_key="migrate_notify",
+        severity=ir.IssueSeverity.WARNING,
+        data={"entry_id": entry.entry_id},
+    )
     hass.async_create_task(
         discovery.async_load_platform(
             hass,

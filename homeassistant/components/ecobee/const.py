@@ -24,6 +24,7 @@ DATA_ECOBEE_CONFIG = "ecobee_config"
 DATA_HASS_CONFIG = "ecobee_hass_config"
 ATTR_CONFIG_ENTRY_ID = "entry_id"
 
+CONF_MIGRATE_NOTIFY = "migrate_notify"
 CONF_REFRESH_TOKEN = "refresh_token"
 
 ECOBEE_MODEL_TO_NAME = {
@@ -46,6 +47,7 @@ PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.CLIMATE,
     Platform.HUMIDIFIER,
+    Platform.NOTIFY,
     Platform.NUMBER,
     Platform.SENSOR,
     Platform.WEATHER,
