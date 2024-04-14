@@ -64,10 +64,9 @@ class AccuWeatherDataUpdateCoordinator(TimestampDataUpdateCoordinator[Any]):
 
     async def _async_update_data(self) -> Any:
         """Update data via library."""
-        update_method = getattr(self.accuweather, self._update_method)
         try:
             async with timeout(10):
-                result = await update_method()
+                result = await getattr(self.accuweather, self._update_method)()
         except (
             ApiError,
             ClientConnectorError,
