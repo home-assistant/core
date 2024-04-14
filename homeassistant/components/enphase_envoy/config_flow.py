@@ -104,7 +104,7 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
         self.ip_address = discovery_info.host
         self._abort_if_unique_id_configured({CONF_HOST: self.ip_address})
         _LOGGER.debug(
-            "Zeroconf ip %s , fw %s, no existing entry with serial %s",
+            "Zeroconf ip %s, fw %s, no existing entry with serial %s",
             self.ip_address,
             self.protovers,
             serial,
