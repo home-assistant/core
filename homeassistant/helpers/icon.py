@@ -151,9 +151,7 @@ async def async_get_icons(
     if integrations:
         components = set(integrations)
     else:
-        components = {
-            component for component in hass.config.components if "." not in component
-        }
+        components = hass.config.top_level_components
 
     if ICON_CACHE in hass.data:
         cache: _IconsCache = hass.data[ICON_CACHE]
