@@ -3409,5 +3409,5 @@ async def test_async_listen_with_run_immediately_deprecated(
     func(EVENT_HOMEASSISTANT_START, _test, run_immediately=run_immediately)
     assert (
         f"Detected code that calls `{method}` with run_immediately, which is "
-        "deprecated and will be removed in Assistant 2025.5."
+        "deprecated and will be removed in Home Assistant 2025.5."
     ) in caplog.text
