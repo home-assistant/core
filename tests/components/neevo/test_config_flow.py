@@ -1,4 +1,5 @@
 """Test the Nee-Vo Tank Monitoring config flow."""
+
 from unittest.mock import patch
 
 from pyneevo import NeeVoApiInterface
@@ -21,11 +22,13 @@ async def test_bad_credentials(hass):
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == SOURCE_USER
 
-    with patch(
-        "pyneevo.NeeVoApiInterface.login",
-        side_effect=InvalidCredentialsError(),
-    ), patch("homeassistant.components.neevo.async_setup", return_value=True), patch(
-        "homeassistant.components.neevo.async_setup_entry", return_value=True
+    with (
+        patch(
+            "pyneevo.NeeVoApiInterface.login",
+            side_effect=InvalidCredentialsError(),
+        ),
+        patch("homeassistant.components.neevo.async_setup", return_value=True),
+        patch("homeassistant.components.neevo.async_setup_entry", return_value=True),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -51,9 +54,14 @@ async def test_generic_error_from_library(hass):
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == SOURCE_USER
 
-    with patch("pyneevo.NeeVoApiInterface.login", side_effect=PyNeeVoError(),), patch(
-        "homeassistant.components.neevo.async_setup", return_value=True
-    ), patch("homeassistant.components.neevo.async_setup_entry", return_value=True):
+    with (
+        patch(
+            "pyneevo.NeeVoApiInterface.login",
+            side_effect=PyNeeVoError(),
+        ),
+        patch("homeassistant.components.neevo.async_setup", return_value=True),
+        patch("homeassistant.components.neevo.async_setup_entry", return_value=True),
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={
@@ -78,11 +86,12 @@ async def test_auth_worked(hass):
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == SOURCE_USER
 
-    with patch(
-        "pyneevo.NeeVoApiInterface.login",
-        return_value=NeeVoApiInterface,
-    ), patch("homeassistant.components.neevo.async_setup", return_value=True), patch(
-        "homeassistant.components.neevo.async_setup_entry", return_value=True
+    with (
+        patch(
+            "pyneevo.NeeVoApiInterface.login",
+            return_value=NeeVoApiInterface,
+        ),
+        patch("homeassistant.components.neevo.async_setup_entry", return_value=True),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -115,11 +124,12 @@ async def test_already_configured(hass):
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == SOURCE_USER
 
-    with patch(
-        "pyneevo.NeeVoApiInterface.login",
-        return_value=NeeVoApiInterface,
-    ), patch("homeassistant.components.neevo.async_setup", return_value=True), patch(
-        "homeassistant.components.neevo.async_setup_entry", return_value=True
+    with (
+        patch(
+            "pyneevo.NeeVoApiInterface.login",
+            return_value=NeeVoApiInterface,
+        ),
+        patch("homeassistant.components.neevo.async_setup_entry", return_value=True),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
