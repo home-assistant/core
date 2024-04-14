@@ -866,6 +866,8 @@ omit =
     homeassistant/components/neato/switch.py
     homeassistant/components/neato/vacuum.py
     homeassistant/components/nederlandse_spoorwegen/sensor.py
+    homeassistant/components/neevo/__init__.py
+    homeassistant/components/neevo/sensor.py
     homeassistant/components/netdata/sensor.py
     homeassistant/components/netgear/__init__.py
     homeassistant/components/netgear/button.py
@@ -879,8 +881,6 @@ omit =
     homeassistant/components/netgear_lte/notify.py
     homeassistant/components/netio/switch.py
     homeassistant/components/neurio_energy/sensor.py
-    homeassistant/components/neevo/__init__.py
-    homeassistant/components/neevo/sensor.py
     homeassistant/components/nexia/climate.py
     homeassistant/components/nexia/entity.py
     homeassistant/components/nexia/switch.py
