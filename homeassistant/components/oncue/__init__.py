@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
-from aiooncue import LoginFailedException, Oncue
+from aiooncue import LoginFailedException, Oncue, OncueDevice
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
@@ -33,12 +33,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except LoginFailedException as ex:
         raise ConfigEntryAuthFailed from ex
 
+    async def _async_update() -> dict[str, OncueDevice]:
+        """Fetch data from Oncue."""
+        try:
+            return await client.async_fetch_all()
+        except LoginFailedException as ex:
+            raise ConfigEntryAuthFailed from ex
+
     coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
         name=f"Oncue {entry.data[CONF_USERNAME]}",
         update_interval=timedelta(minutes=10),
-        update_method=client.async_fetch_all,
+        update_method=_async_update,
         always_update=False,
     )
     await coordinator.async_config_entry_first_refresh()
