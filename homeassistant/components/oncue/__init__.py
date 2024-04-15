@@ -10,7 +10,7 @@ from aiooncue import LoginFailedException, Oncue
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -29,10 +29,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         await client.async_login()
     except CONNECTION_EXCEPTIONS as ex:
-        raise ConfigEntryNotReady(ex) from ex
+        raise ConfigEntryNotReady from ex
     except LoginFailedException as ex:
-        _LOGGER.error("Failed to login to oncue service: %s", ex)
-        return False
+        raise ConfigEntryAuthFailed from ex
 
     coordinator = DataUpdateCoordinator(
         hass,
