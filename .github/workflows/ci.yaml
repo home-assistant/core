@@ -484,6 +484,7 @@ jobs:
             libavfilter-dev \
             libavformat-dev \
             libavutil-dev \
+            libgammu-dev \
             libswresample-dev \
             libswscale-dev \
             libudev-dev
