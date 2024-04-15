@@ -32,7 +32,7 @@ COMMENT_REQUIREMENTS = (
     "pybluez",
     "pycocotools",
     "pycups",
-    "python-gammu",
+    # "python-gammu",
     "python-lirc",
     "pyuserinput",
     "tensorflow",
