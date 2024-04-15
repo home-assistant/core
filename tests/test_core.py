@@ -1794,7 +1794,7 @@ async def test_services_call_return_response_requires_blocking(
     """Test that non-blocking service calls cannot ask for response data."""
     await async_setup_component(hass, "homeassistant", {})
     async_mock_service(hass, "test_domain", "test_service")
-    with pytest.raises(ServiceValidationError, match="when blocking=False") as exc:
+    with pytest.raises(ServiceValidationError, match="blocking=False") as exc:
         await hass.services.async_call(
             "test_domain",
             "test_service",
@@ -1802,7 +1802,10 @@ async def test_services_call_return_response_requires_blocking(
             blocking=False,
             return_response=True,
         )
-    assert str(exc.value) == "Invalid argument return_response=True when blocking=False"
+    assert (
+        str(exc.value)
+        == "A non blocking service call with argument blocking=False can't be used together with argument return_response=True"
+    )
 
 
 @pytest.mark.parametrize(
@@ -1832,7 +1835,7 @@ async def test_serviceregistry_return_response_invalid(
         service_handler,
         supports_response=SupportsResponse.ONLY,
     )
-    with pytest.raises(ServiceValidationError, match=expected_error):
+    with pytest.raises(HomeAssistantError, match=expected_error):
         await hass.services.async_call(
             "test_domain",
             "test_service",
@@ -1846,7 +1849,7 @@ async def test_serviceregistry_return_response_invalid(
 @pytest.mark.parametrize(
     ("supports_response", "return_response", "expected_error"),
     [
-        (SupportsResponse.NONE, True, "not support responses"),
+        (SupportsResponse.NONE, True, "does not return responses"),
         (SupportsResponse.ONLY, False, "caller did not ask for responses"),
     ],
 )

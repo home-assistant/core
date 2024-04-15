@@ -2575,11 +2575,18 @@ class ServiceRegistry:
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
                     translation_key="service_should_be_blocking",
+                    translation_placeholders={
+                        "return_response": "return_response=True",
+                        "non_blocking_argument": "blocking=False",
+                    },
                 )
             if handler.supports_response is SupportsResponse.NONE:
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
-                    translation_key="service_not_supports_reponse",
+                    translation_key="service_does_not_supports_reponse",
+                    translation_placeholders={
+                        "return_response": "return_response=True"
+                    },
                 )
         elif handler.supports_response is SupportsResponse.ONLY:
             raise ServiceValidationError(
@@ -2631,7 +2638,7 @@ class ServiceRegistry:
         if not return_response:
             return None
         if not isinstance(response_data, dict):
-            raise ServiceValidationError(
+            raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="service_reponse_invalid",
                 translation_placeholders={
