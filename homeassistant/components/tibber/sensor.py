@@ -442,7 +442,7 @@ class TibberSensorElPrice(TibberSensor):
             "meteringPointData"
         ]["estimatedAnnualConsumption"]
         self._attr_extra_state_attributes["prices"] = []
-        for key in ["today", "tomorrow"]:
+        for key in ("today", "tomorrow"):
             for price in data["currentSubscription"]["priceInfo"][key]:
                 self._attr_extra_state_attributes["prices"].append(
                     {
