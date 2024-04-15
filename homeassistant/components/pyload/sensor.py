@@ -109,6 +109,13 @@ class PyLoadSensor(CoordinatorEntity, SensorEntity):
         )
 
     @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return bool(self.coordinator.data)
+
+    @property
     def native_value(self) -> StateType:
         """Return the state of the device."""
-        return self.coordinator.data[self.entity_description.key]
+        if self.coordinator.data:
+            return self.coordinator.data[self.entity_description.key]
+        return None

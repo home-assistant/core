@@ -54,7 +54,7 @@ PyFlume==0.6.5
 PyFronius==0.7.3
 
 # homeassistant.components.pyload
-PyLoadAPI==1.0.2
+PyLoadAPI==1.0.3
 
 # homeassistant.components.met_eireann
 PyMetEireann==2021.8.0
