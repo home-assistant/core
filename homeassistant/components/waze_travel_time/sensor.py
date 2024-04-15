@@ -236,7 +236,7 @@ class WazeTravelTimeData:
                 self.duration = route.duration
                 distance = route.distance
 
-                if units == IMPERIAL_UNITS:
+                if units != IMPERIAL_UNITS:
                     # Convert to miles.
                     self.distance = DistanceConverter.convert(
                         distance, UnitOfLength.KILOMETERS, UnitOfLength.MILES
