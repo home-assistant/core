@@ -19,7 +19,14 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, SERVICE_GET_TORRENTS, STATE_ATTR_TORRENT_INFO, TORRENT_FILTER
+from .const import (
+    DOMAIN,
+    SERVICE_GET_ALL_TORRENTS,
+    SERVICE_GET_TORRENTS,
+    STATE_ATTR_ALL_TORRENT_INFO,
+    STATE_ATTR_TORRENT_INFO,
+    TORRENT_FILTER,
+)
 from .coordinator import QBittorrentDataCoordinator
 from .helpers import format_torrents, setup_client
 
@@ -62,6 +69,25 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         DOMAIN,
         SERVICE_GET_TORRENTS,
         handle_get_torrents,
+        supports_response=SupportsResponse.ONLY,
+    )
+
+    async def handle_get_all_torrents(service_call: ServiceCall):
+        torrents = {}
+
+        for key, value in hass.data[DOMAIN].items():
+            coordinator: QBittorrentDataCoordinator = value
+            items = await coordinator.get_torrents(service_call.data[TORRENT_FILTER])
+            torrents[key] = format_torrents(items)
+
+        return {
+            STATE_ATTR_ALL_TORRENT_INFO: torrents,
+        }
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_GET_ALL_TORRENTS,
+        handle_get_all_torrents,
         supports_response=SupportsResponse.ONLY,
     )
 

@@ -63,6 +63,16 @@
           "description": "What kind of torrents you want to return, such as All or Active."
         }
       }
+    },
+    "get_all_torrents": {
+      "name": "Get all torrents",
+      "description": "Gets a list of current torrents from all instances of qBittorrent",
+      "fields": {
+        "torrent_filter": {
+          "name": "Torrent filter",
+          "description": "What kind of torrents you want to return, such as All or Active."
+        }
+      }
     }
   }
 }
