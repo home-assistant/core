@@ -471,12 +471,13 @@ async def async_setup_entry(
         for description in SENSOR_TYPES
     ]
 
-    for description in FORECAST_SENSOR_TYPES:
-        # Some air quality/allergy sensors are only available for certain
-        # locations.
-        if description.key not in forecast_daily_coordinator.data[description.day]:
-            continue
-        sensors.append(AccuWeatherSensor(forecast_daily_coordinator, description))
+    sensors.extend(
+        [
+            AccuWeatherSensor(forecast_daily_coordinator, description)
+            for description in FORECAST_SENSOR_TYPES
+            if description.key in forecast_daily_coordinator.data[description.day]
+        ]
+    )
 
     async_add_entities(sensors)
 
