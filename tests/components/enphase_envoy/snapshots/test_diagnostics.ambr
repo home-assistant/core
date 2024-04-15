@@ -348,7 +348,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.inverter_1_last_reported',
@@ -372,7 +372,15 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy][sensor.inverter_1_last_reported-state]
-  None
+  dict({
+    'attributes': dict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Inverter 1 Last reported',
+      'icon': 'mdi:flash',
+    }),
+    'entity_id': 'sensor.inverter_1_last_reported',
+    'state': '1970-01-01T00:00:01+00:00',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_1p_metered][config_entry]
   dict({
@@ -853,7 +861,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_frequency_net_consumption_ct',
@@ -864,6 +872,9 @@
     ]),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': 'frequency',
     'original_icon': 'mdi:flash',
@@ -877,7 +888,17 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_1p_metered][sensor.envoy_<<envoyserial>>_frequency_net_consumption_ct-state]
-  None
+  dict({
+    'attributes': dict({
+      'device_class': 'frequency',
+      'friendly_name': 'Envoy <<envoyserial>> Frequency net consumption CT',
+      'icon': 'mdi:flash',
+      'state_class': 'measurement',
+      'unit_of_measurement': 'Hz',
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_frequency_net_consumption_ct',
+    'state': '50.2',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_1p_metered][sensor.envoy_<<envoyserial>>_lifetime_energy_consumption-entry]
   dict({
@@ -1105,7 +1126,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_meter_status_flags_active_net_consumption_ct',
@@ -1129,7 +1150,14 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_1p_metered][sensor.envoy_<<envoyserial>>_meter_status_flags_active_net_consumption_ct-state]
-  None
+  dict({
+    'attributes': dict({
+      'friendly_name': 'Envoy <<envoyserial>> Meter status flags active net consumption CT',
+      'icon': 'mdi:flash',
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_meter_status_flags_active_net_consumption_ct',
+    'state': '0',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_1p_metered][sensor.envoy_<<envoyserial>>_meter_status_flags_active_production_ct-entry]
   dict({
@@ -1141,7 +1169,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_meter_status_flags_active_production_ct',
@@ -1165,7 +1193,14 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_1p_metered][sensor.envoy_<<envoyserial>>_meter_status_flags_active_production_ct-state]
-  None
+  dict({
+    'attributes': dict({
+      'friendly_name': 'Envoy <<envoyserial>> Meter status flags active production CT',
+      'icon': 'mdi:flash',
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_meter_status_flags_active_production_ct',
+    'state': '2',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_1p_metered][sensor.envoy_<<envoyserial>>_metering_status_net_consumption_ct-entry]
   dict({
@@ -1183,7 +1218,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_metering_status_net_consumption_ct',
@@ -1207,7 +1242,20 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_1p_metered][sensor.envoy_<<envoyserial>>_metering_status_net_consumption_ct-state]
-  None
+  dict({
+    'attributes': dict({
+      'device_class': 'enum',
+      'friendly_name': 'Envoy <<envoyserial>> Metering status net consumption CT',
+      'icon': 'mdi:flash',
+      'options': list([
+        'normal',
+        'not-metering',
+        'check-wiring',
+      ]),
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_metering_status_net_consumption_ct',
+    'state': 'normal',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_1p_metered][sensor.envoy_<<envoyserial>>_metering_status_production_ct-entry]
   dict({
@@ -1225,7 +1273,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_metering_status_production_ct',
@@ -1249,7 +1297,20 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_1p_metered][sensor.envoy_<<envoyserial>>_metering_status_production_ct-state]
-  None
+  dict({
+    'attributes': dict({
+      'device_class': 'enum',
+      'friendly_name': 'Envoy <<envoyserial>> Metering status production CT',
+      'icon': 'mdi:flash',
+      'options': list([
+        'normal',
+        'not-metering',
+        'check-wiring',
+      ]),
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_metering_status_production_ct',
+    'state': 'normal',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_1p_metered][sensor.envoy_<<envoyserial>>_voltage_net_consumption_ct-entry]
   dict({
@@ -1263,7 +1324,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_voltage_net_consumption_ct',
@@ -1274,6 +1335,9 @@
     ]),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': 'V',
       }),
@@ -1290,7 +1354,17 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_1p_metered][sensor.envoy_<<envoyserial>>_voltage_net_consumption_ct-state]
-  None
+  dict({
+    'attributes': dict({
+      'device_class': 'voltage',
+      'friendly_name': 'Envoy <<envoyserial>> Voltage net consumption CT',
+      'icon': 'mdi:flash',
+      'state_class': 'measurement',
+      'unit_of_measurement': 'V',
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_voltage_net_consumption_ct',
+    'state': '112',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_1p_metered][sensor.inverter_1-entry]
   dict({
@@ -1350,7 +1424,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.inverter_1_last_reported',
@@ -1374,7 +1448,15 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_1p_metered][sensor.inverter_1_last_reported-state]
-  None
+  dict({
+    'attributes': dict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Inverter 1 Last reported',
+      'icon': 'mdi:flash',
+    }),
+    'entity_id': 'sensor.inverter_1_last_reported',
+    'state': '1970-01-01T00:00:01+00:00',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][binary_sensor.encharge_<<envoyserial>>56_communicating-entry]
   dict({
@@ -3324,7 +3406,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_current_battery_discharge_l1',
@@ -3335,6 +3417,9 @@
     ]),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': 'kW',
       }),
@@ -3351,7 +3436,17 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_current_battery_discharge_l1-state]
-  None
+  dict({
+    'attributes': dict({
+      'device_class': 'power',
+      'friendly_name': 'Envoy <<envoyserial>> Current battery discharge l1',
+      'icon': 'mdi:flash',
+      'state_class': 'measurement',
+      'unit_of_measurement': 'kW',
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_current_battery_discharge_l1',
+    'state': '0.022',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_current_battery_discharge_l2-entry]
   dict({
@@ -3365,7 +3460,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_current_battery_discharge_l2',
@@ -3376,6 +3471,9 @@
     ]),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': 'kW',
       }),
@@ -3392,7 +3490,17 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_current_battery_discharge_l2-state]
-  None
+  dict({
+    'attributes': dict({
+      'device_class': 'power',
+      'friendly_name': 'Envoy <<envoyserial>> Current battery discharge l2',
+      'icon': 'mdi:flash',
+      'state_class': 'measurement',
+      'unit_of_measurement': 'kW',
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_current_battery_discharge_l2',
+    'state': '0.033',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_current_battery_discharge_l3-entry]
   dict({
@@ -3406,7 +3514,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_current_battery_discharge_l3',
@@ -3417,6 +3525,9 @@
     ]),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': 'kW',
       }),
@@ -3433,7 +3544,17 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_current_battery_discharge_l3-state]
-  None
+  dict({
+    'attributes': dict({
+      'device_class': 'power',
+      'friendly_name': 'Envoy <<envoyserial>> Current battery discharge l3',
+      'icon': 'mdi:flash',
+      'state_class': 'measurement',
+      'unit_of_measurement': 'kW',
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_current_battery_discharge_l3',
+    'state': '0.053',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_current_net_power_consumption-entry]
   dict({
@@ -3501,7 +3622,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_current_net_power_consumption_l1',
@@ -3512,6 +3633,9 @@
     ]),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': 'kW',
       }),
@@ -3528,7 +3652,17 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_current_net_power_consumption_l1-state]
-  None
+  dict({
+    'attributes': dict({
+      'device_class': 'power',
+      'friendly_name': 'Envoy <<envoyserial>> Current net power consumption l1',
+      'icon': 'mdi:flash',
+      'state_class': 'measurement',
+      'unit_of_measurement': 'kW',
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_current_net_power_consumption_l1',
+    'state': '0.021',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_current_net_power_consumption_l2-entry]
   dict({
@@ -3542,7 +3676,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_current_net_power_consumption_l2',
@@ -3553,6 +3687,9 @@
     ]),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': 'kW',
       }),
@@ -3569,7 +3706,17 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_current_net_power_consumption_l2-state]
-  None
+  dict({
+    'attributes': dict({
+      'device_class': 'power',
+      'friendly_name': 'Envoy <<envoyserial>> Current net power consumption l2',
+      'icon': 'mdi:flash',
+      'state_class': 'measurement',
+      'unit_of_measurement': 'kW',
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_current_net_power_consumption_l2',
+    'state': '0.031',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_current_net_power_consumption_l3-entry]
   dict({
@@ -3583,7 +3730,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_current_net_power_consumption_l3',
@@ -3594,6 +3741,9 @@
     ]),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': 'kW',
       }),
@@ -3610,7 +3760,17 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_current_net_power_consumption_l3-state]
-  None
+  dict({
+    'attributes': dict({
+      'device_class': 'power',
+      'friendly_name': 'Envoy <<envoyserial>> Current net power consumption l3',
+      'icon': 'mdi:flash',
+      'state_class': 'measurement',
+      'unit_of_measurement': 'kW',
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_current_net_power_consumption_l3',
+    'state': '0.051',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_current_power_consumption-entry]
   dict({
@@ -4896,7 +5056,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_frequency_net_consumption_ct',
@@ -4907,6 +5067,9 @@
     ]),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': 'frequency',
     'original_icon': 'mdi:flash',
@@ -4920,7 +5083,17 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_frequency_net_consumption_ct-state]
-  None
+  dict({
+    'attributes': dict({
+      'device_class': 'frequency',
+      'friendly_name': 'Envoy <<envoyserial>> Frequency net consumption CT',
+      'icon': 'mdi:flash',
+      'state_class': 'measurement',
+      'unit_of_measurement': 'Hz',
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_frequency_net_consumption_ct',
+    'state': '50.2',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_frequency_net_consumption_ct_l1-entry]
   dict({
@@ -4934,7 +5107,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_frequency_net_consumption_ct_l1',
@@ -4945,6 +5118,9 @@
     ]),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': 'frequency',
     'original_icon': 'mdi:flash',
@@ -4958,7 +5134,17 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_frequency_net_consumption_ct_l1-state]
-  None
+  dict({
+    'attributes': dict({
+      'device_class': 'frequency',
+      'friendly_name': 'Envoy <<envoyserial>> Frequency net consumption CT l1',
+      'icon': 'mdi:flash',
+      'state_class': 'measurement',
+      'unit_of_measurement': 'Hz',
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_frequency_net_consumption_ct_l1',
+    'state': '50.2',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_frequency_net_consumption_ct_l2-entry]
   dict({
@@ -4972,7 +5158,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_frequency_net_consumption_ct_l2',
@@ -4983,6 +5169,9 @@
     ]),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': 'frequency',
     'original_icon': 'mdi:flash',
@@ -4996,7 +5185,17 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_frequency_net_consumption_ct_l2-state]
-  None
+  dict({
+    'attributes': dict({
+      'device_class': 'frequency',
+      'friendly_name': 'Envoy <<envoyserial>> Frequency net consumption CT l2',
+      'icon': 'mdi:flash',
+      'state_class': 'measurement',
+      'unit_of_measurement': 'Hz',
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_frequency_net_consumption_ct_l2',
+    'state': '50.2',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_frequency_net_consumption_ct_l3-entry]
   dict({
@@ -5010,7 +5209,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_frequency_net_consumption_ct_l3',
@@ -5021,6 +5220,9 @@
     ]),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': 'frequency',
     'original_icon': 'mdi:flash',
@@ -5034,7 +5236,17 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_frequency_net_consumption_ct_l3-state]
-  None
+  dict({
+    'attributes': dict({
+      'device_class': 'frequency',
+      'friendly_name': 'Envoy <<envoyserial>> Frequency net consumption CT l3',
+      'icon': 'mdi:flash',
+      'state_class': 'measurement',
+      'unit_of_measurement': 'Hz',
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_frequency_net_consumption_ct_l3',
+    'state': '50.2',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_lifetime_battery_energy_charged-entry]
   dict({
@@ -5102,7 +5314,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_lifetime_battery_energy_charged_l1',
@@ -5113,6 +5325,9 @@
     ]),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': 'MWh',
       }),
@@ -5129,7 +5344,17 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_lifetime_battery_energy_charged_l1-state]
-  None
+  dict({
+    'attributes': dict({
+      'device_class': 'energy',
+      'friendly_name': 'Envoy <<envoyserial>> Lifetime battery energy charged l1',
+      'icon': 'mdi:flash',
+      'state_class': 'total_increasing',
+      'unit_of_measurement': 'MWh',
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_lifetime_battery_energy_charged_l1',
+    'state': '0.323451',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_lifetime_battery_energy_charged_l2-entry]
   dict({
@@ -5143,7 +5368,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_lifetime_battery_energy_charged_l2',
@@ -5154,6 +5379,9 @@
     ]),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': 'MWh',
       }),
@@ -5170,7 +5398,17 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_lifetime_battery_energy_charged_l2-state]
-  None
+  dict({
+    'attributes': dict({
+      'device_class': 'energy',
+      'friendly_name': 'Envoy <<envoyserial>> Lifetime battery energy charged l2',
+      'icon': 'mdi:flash',
+      'state_class': 'total_increasing',
+      'unit_of_measurement': 'MWh',
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_lifetime_battery_energy_charged_l2',
+    'state': '0.323452',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_lifetime_battery_energy_charged_l3-entry]
   dict({
@@ -5184,7 +5422,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_lifetime_battery_energy_charged_l3',
@@ -5195,6 +5433,9 @@
     ]),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': 'MWh',
       }),
@@ -5211,7 +5452,17 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_lifetime_battery_energy_charged_l3-state]
-  None
+  dict({
+    'attributes': dict({
+      'device_class': 'energy',
+      'friendly_name': 'Envoy <<envoyserial>> Lifetime battery energy charged l3',
+      'icon': 'mdi:flash',
+      'state_class': 'total_increasing',
+      'unit_of_measurement': 'MWh',
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_lifetime_battery_energy_charged_l3',
+    'state': '0.323453',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_lifetime_battery_energy_discharged-entry]
   dict({
@@ -5279,7 +5530,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_lifetime_battery_energy_discharged_l1',
@@ -5290,6 +5541,9 @@
     ]),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': 'MWh',
       }),
@@ -5306,7 +5560,17 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_lifetime_battery_energy_discharged_l1-state]
-  None
+  dict({
+    'attributes': dict({
+      'device_class': 'energy',
+      'friendly_name': 'Envoy <<envoyserial>> Lifetime battery energy discharged l1',
+      'icon': 'mdi:flash',
+      'state_class': 'total_increasing',
+      'unit_of_measurement': 'MWh',
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_lifetime_battery_energy_discharged_l1',
+    'state': '0.3<<envoyserial>>1',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_lifetime_battery_energy_discharged_l2-entry]
   dict({
@@ -5320,7 +5584,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_lifetime_battery_energy_discharged_l2',
@@ -5331,6 +5595,9 @@
     ]),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': 'MWh',
       }),
@@ -5347,7 +5614,17 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_lifetime_battery_energy_discharged_l2-state]
-  None
+  dict({
+    'attributes': dict({
+      'device_class': 'energy',
+      'friendly_name': 'Envoy <<envoyserial>> Lifetime battery energy discharged l2',
+      'icon': 'mdi:flash',
+      'state_class': 'total_increasing',
+      'unit_of_measurement': 'MWh',
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_lifetime_battery_energy_discharged_l2',
+    'state': '0.3<<envoyserial>>2',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_lifetime_battery_energy_discharged_l3-entry]
   dict({
@@ -5361,7 +5638,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_lifetime_battery_energy_discharged_l3',
@@ -5372,6 +5649,9 @@
     ]),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': 'MWh',
       }),
@@ -5388,7 +5668,17 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_lifetime_battery_energy_discharged_l3-state]
-  None
+  dict({
+    'attributes': dict({
+      'device_class': 'energy',
+      'friendly_name': 'Envoy <<envoyserial>> Lifetime battery energy discharged l3',
+      'icon': 'mdi:flash',
+      'state_class': 'total_increasing',
+      'unit_of_measurement': 'MWh',
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_lifetime_battery_energy_discharged_l3',
+    'state': '0.3<<envoyserial>>3',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_lifetime_energy_consumption-entry]
   dict({
@@ -5888,7 +6178,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_lifetime_net_energy_consumption_l1',
@@ -5899,6 +6189,9 @@
     ]),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': 'MWh',
       }),
@@ -5915,7 +6208,17 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_lifetime_net_energy_consumption_l1-state]
-  None
+  dict({
+    'attributes': dict({
+      'device_class': 'energy',
+      'friendly_name': 'Envoy <<envoyserial>> Lifetime net energy consumption l1',
+      'icon': 'mdi:flash',
+      'state_class': 'total_increasing',
+      'unit_of_measurement': 'MWh',
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_lifetime_net_energy_consumption_l1',
+    'state': '0.2<<envoyserial>>1',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_lifetime_net_energy_consumption_l2-entry]
   dict({
@@ -5929,7 +6232,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_lifetime_net_energy_consumption_l2',
@@ -5940,6 +6243,9 @@
     ]),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': 'MWh',
       }),
@@ -5956,7 +6262,17 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_lifetime_net_energy_consumption_l2-state]
-  None
+  dict({
+    'attributes': dict({
+      'device_class': 'energy',
+      'friendly_name': 'Envoy <<envoyserial>> Lifetime net energy consumption l2',
+      'icon': 'mdi:flash',
+      'state_class': 'total_increasing',
+      'unit_of_measurement': 'MWh',
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_lifetime_net_energy_consumption_l2',
+    'state': '0.2<<envoyserial>>2',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_lifetime_net_energy_consumption_l3-entry]
   dict({
@@ -5970,7 +6286,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_lifetime_net_energy_consumption_l3',
@@ -5981,6 +6297,9 @@
     ]),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': 'MWh',
       }),
@@ -5997,7 +6316,17 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_lifetime_net_energy_consumption_l3-state]
-  None
+  dict({
+    'attributes': dict({
+      'device_class': 'energy',
+      'friendly_name': 'Envoy <<envoyserial>> Lifetime net energy consumption l3',
+      'icon': 'mdi:flash',
+      'state_class': 'total_increasing',
+      'unit_of_measurement': 'MWh',
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_lifetime_net_energy_consumption_l3',
+    'state': '0.2<<envoyserial>>3',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_lifetime_net_energy_production-entry]
   dict({
@@ -6065,7 +6394,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_lifetime_net_energy_production_l1',
@@ -6076,6 +6405,9 @@
     ]),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': 'MWh',
       }),
@@ -6092,7 +6424,17 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_lifetime_net_energy_production_l1-state]
-  None
+  dict({
+    'attributes': dict({
+      'device_class': 'energy',
+      'friendly_name': 'Envoy <<envoyserial>> Lifetime net energy production l1',
+      'icon': 'mdi:flash',
+      'state_class': 'total_increasing',
+      'unit_of_measurement': 'MWh',
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_lifetime_net_energy_production_l1',
+    'state': '0.223451',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_lifetime_net_energy_production_l2-entry]
   dict({
@@ -6106,7 +6448,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_lifetime_net_energy_production_l2',
@@ -6117,6 +6459,9 @@
     ]),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': 'MWh',
       }),
@@ -6133,7 +6478,17 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_lifetime_net_energy_production_l2-state]
-  None
+  dict({
+    'attributes': dict({
+      'device_class': 'energy',
+      'friendly_name': 'Envoy <<envoyserial>> Lifetime net energy production l2',
+      'icon': 'mdi:flash',
+      'state_class': 'total_increasing',
+      'unit_of_measurement': 'MWh',
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_lifetime_net_energy_production_l2',
+    'state': '0.223452',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_lifetime_net_energy_production_l3-entry]
   dict({
@@ -6147,7 +6502,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_lifetime_net_energy_production_l3',
@@ -6158,6 +6513,9 @@
     ]),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': 'MWh',
       }),
@@ -6174,7 +6532,17 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_lifetime_net_energy_production_l3-state]
-  None
+  dict({
+    'attributes': dict({
+      'device_class': 'energy',
+      'friendly_name': 'Envoy <<envoyserial>> Lifetime net energy production l3',
+      'icon': 'mdi:flash',
+      'state_class': 'total_increasing',
+      'unit_of_measurement': 'MWh',
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_lifetime_net_energy_production_l3',
+    'state': '0.223453',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_meter_status_flags_active_net_consumption_ct-entry]
   dict({
@@ -6186,7 +6554,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_meter_status_flags_active_net_consumption_ct',
@@ -6210,7 +6578,14 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_meter_status_flags_active_net_consumption_ct-state]
-  None
+  dict({
+    'attributes': dict({
+      'friendly_name': 'Envoy <<envoyserial>> Meter status flags active net consumption CT',
+      'icon': 'mdi:flash',
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_meter_status_flags_active_net_consumption_ct',
+    'state': '0',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_meter_status_flags_active_net_consumption_ct_l1-entry]
   dict({
@@ -6222,7 +6597,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_meter_status_flags_active_net_consumption_ct_l1',
@@ -6246,7 +6621,14 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_meter_status_flags_active_net_consumption_ct_l1-state]
-  None
+  dict({
+    'attributes': dict({
+      'friendly_name': 'Envoy <<envoyserial>> Meter status flags active net consumption CT l1',
+      'icon': 'mdi:flash',
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_meter_status_flags_active_net_consumption_ct_l1',
+    'state': '0',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_meter_status_flags_active_net_consumption_ct_l2-entry]
   dict({
@@ -6258,7 +6640,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_meter_status_flags_active_net_consumption_ct_l2',
@@ -6282,7 +6664,14 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_meter_status_flags_active_net_consumption_ct_l2-state]
-  None
+  dict({
+    'attributes': dict({
+      'friendly_name': 'Envoy <<envoyserial>> Meter status flags active net consumption CT l2',
+      'icon': 'mdi:flash',
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_meter_status_flags_active_net_consumption_ct_l2',
+    'state': '0',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_meter_status_flags_active_net_consumption_ct_l3-entry]
   dict({
@@ -6294,7 +6683,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_meter_status_flags_active_net_consumption_ct_l3',
@@ -6318,7 +6707,14 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_meter_status_flags_active_net_consumption_ct_l3-state]
-  None
+  dict({
+    'attributes': dict({
+      'friendly_name': 'Envoy <<envoyserial>> Meter status flags active net consumption CT l3',
+      'icon': 'mdi:flash',
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_meter_status_flags_active_net_consumption_ct_l3',
+    'state': '0',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_meter_status_flags_active_production_ct-entry]
   dict({
@@ -6330,7 +6726,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_meter_status_flags_active_production_ct',
@@ -6354,7 +6750,14 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_meter_status_flags_active_production_ct-state]
-  None
+  dict({
+    'attributes': dict({
+      'friendly_name': 'Envoy <<envoyserial>> Meter status flags active production CT',
+      'icon': 'mdi:flash',
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_meter_status_flags_active_production_ct',
+    'state': '2',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_meter_status_flags_active_production_ct_l1-entry]
   dict({
@@ -6366,7 +6769,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_meter_status_flags_active_production_ct_l1',
@@ -6390,7 +6793,14 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_meter_status_flags_active_production_ct_l1-state]
-  None
+  dict({
+    'attributes': dict({
+      'friendly_name': 'Envoy <<envoyserial>> Meter status flags active production CT l1',
+      'icon': 'mdi:flash',
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_meter_status_flags_active_production_ct_l1',
+    'state': '1',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_meter_status_flags_active_production_ct_l2-entry]
   dict({
@@ -6402,7 +6812,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_meter_status_flags_active_production_ct_l2',
@@ -6426,7 +6836,14 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_meter_status_flags_active_production_ct_l2-state]
-  None
+  dict({
+    'attributes': dict({
+      'friendly_name': 'Envoy <<envoyserial>> Meter status flags active production CT l2',
+      'icon': 'mdi:flash',
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_meter_status_flags_active_production_ct_l2',
+    'state': '1',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_meter_status_flags_active_production_ct_l3-entry]
   dict({
@@ -6438,7 +6855,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_meter_status_flags_active_production_ct_l3',
@@ -6462,7 +6879,14 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_meter_status_flags_active_production_ct_l3-state]
-  None
+  dict({
+    'attributes': dict({
+      'friendly_name': 'Envoy <<envoyserial>> Meter status flags active production CT l3',
+      'icon': 'mdi:flash',
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_meter_status_flags_active_production_ct_l3',
+    'state': '0',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_meter_status_flags_active_storage_ct-entry]
   dict({
@@ -6474,7 +6898,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_meter_status_flags_active_storage_ct',
@@ -6498,7 +6922,14 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_meter_status_flags_active_storage_ct-state]
-  None
+  dict({
+    'attributes': dict({
+      'friendly_name': 'Envoy <<envoyserial>> Meter status flags active storage CT',
+      'icon': 'mdi:flash',
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_meter_status_flags_active_storage_ct',
+    'state': '0',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_meter_status_flags_active_storage_ct_l1-entry]
   dict({
@@ -6510,7 +6941,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_meter_status_flags_active_storage_ct_l1',
@@ -6534,7 +6965,14 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_meter_status_flags_active_storage_ct_l1-state]
-  None
+  dict({
+    'attributes': dict({
+      'friendly_name': 'Envoy <<envoyserial>> Meter status flags active storage CT l1',
+      'icon': 'mdi:flash',
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_meter_status_flags_active_storage_ct_l1',
+    'state': '0',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_meter_status_flags_active_storage_ct_l2-entry]
   dict({
@@ -6546,7 +6984,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_meter_status_flags_active_storage_ct_l2',
@@ -6570,7 +7008,14 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_meter_status_flags_active_storage_ct_l2-state]
-  None
+  dict({
+    'attributes': dict({
+      'friendly_name': 'Envoy <<envoyserial>> Meter status flags active storage CT l2',
+      'icon': 'mdi:flash',
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_meter_status_flags_active_storage_ct_l2',
+    'state': '0',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_meter_status_flags_active_storage_ct_l3-entry]
   dict({
@@ -6582,7 +7027,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_meter_status_flags_active_storage_ct_l3',
@@ -6606,7 +7051,14 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_meter_status_flags_active_storage_ct_l3-state]
-  None
+  dict({
+    'attributes': dict({
+      'friendly_name': 'Envoy <<envoyserial>> Meter status flags active storage CT l3',
+      'icon': 'mdi:flash',
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_meter_status_flags_active_storage_ct_l3',
+    'state': '0',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_metering_status_net_consumption_ct-entry]
   dict({
@@ -6624,7 +7076,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_metering_status_net_consumption_ct',
@@ -6648,7 +7100,20 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_metering_status_net_consumption_ct-state]
-  None
+  dict({
+    'attributes': dict({
+      'device_class': 'enum',
+      'friendly_name': 'Envoy <<envoyserial>> Metering status net consumption CT',
+      'icon': 'mdi:flash',
+      'options': list([
+        'normal',
+        'not-metering',
+        'check-wiring',
+      ]),
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_metering_status_net_consumption_ct',
+    'state': 'normal',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_metering_status_net_consumption_ct_l1-entry]
   dict({
@@ -6666,7 +7131,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_metering_status_net_consumption_ct_l1',
@@ -6690,7 +7155,20 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_metering_status_net_consumption_ct_l1-state]
-  None
+  dict({
+    'attributes': dict({
+      'device_class': 'enum',
+      'friendly_name': 'Envoy <<envoyserial>> Metering status net consumption CT l1',
+      'icon': 'mdi:flash',
+      'options': list([
+        'normal',
+        'not-metering',
+        'check-wiring',
+      ]),
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_metering_status_net_consumption_ct_l1',
+    'state': 'normal',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_metering_status_net_consumption_ct_l2-entry]
   dict({
@@ -6708,7 +7186,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_metering_status_net_consumption_ct_l2',
@@ -6732,7 +7210,20 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_metering_status_net_consumption_ct_l2-state]
-  None
+  dict({
+    'attributes': dict({
+      'device_class': 'enum',
+      'friendly_name': 'Envoy <<envoyserial>> Metering status net consumption CT l2',
+      'icon': 'mdi:flash',
+      'options': list([
+        'normal',
+        'not-metering',
+        'check-wiring',
+      ]),
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_metering_status_net_consumption_ct_l2',
+    'state': 'normal',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_metering_status_net_consumption_ct_l3-entry]
   dict({
@@ -6750,7 +7241,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_metering_status_net_consumption_ct_l3',
@@ -6774,7 +7265,20 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_metering_status_net_consumption_ct_l3-state]
-  None
+  dict({
+    'attributes': dict({
+      'device_class': 'enum',
+      'friendly_name': 'Envoy <<envoyserial>> Metering status net consumption CT l3',
+      'icon': 'mdi:flash',
+      'options': list([
+        'normal',
+        'not-metering',
+        'check-wiring',
+      ]),
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_metering_status_net_consumption_ct_l3',
+    'state': 'normal',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_metering_status_production_ct-entry]
   dict({
@@ -6792,7 +7296,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_metering_status_production_ct',
@@ -6816,7 +7320,20 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_metering_status_production_ct-state]
-  None
+  dict({
+    'attributes': dict({
+      'device_class': 'enum',
+      'friendly_name': 'Envoy <<envoyserial>> Metering status production CT',
+      'icon': 'mdi:flash',
+      'options': list([
+        'normal',
+        'not-metering',
+        'check-wiring',
+      ]),
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_metering_status_production_ct',
+    'state': 'normal',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_metering_status_production_ct_l1-entry]
   dict({
@@ -6834,7 +7351,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_metering_status_production_ct_l1',
@@ -6858,7 +7375,20 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_metering_status_production_ct_l1-state]
-  None
+  dict({
+    'attributes': dict({
+      'device_class': 'enum',
+      'friendly_name': 'Envoy <<envoyserial>> Metering status production CT l1',
+      'icon': 'mdi:flash',
+      'options': list([
+        'normal',
+        'not-metering',
+        'check-wiring',
+      ]),
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_metering_status_production_ct_l1',
+    'state': 'normal',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_metering_status_production_ct_l2-entry]
   dict({
@@ -6876,7 +7406,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_metering_status_production_ct_l2',
@@ -6900,7 +7430,20 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_metering_status_production_ct_l2-state]
-  None
+  dict({
+    'attributes': dict({
+      'device_class': 'enum',
+      'friendly_name': 'Envoy <<envoyserial>> Metering status production CT l2',
+      'icon': 'mdi:flash',
+      'options': list([
+        'normal',
+        'not-metering',
+        'check-wiring',
+      ]),
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_metering_status_production_ct_l2',
+    'state': 'normal',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_metering_status_production_ct_l3-entry]
   dict({
@@ -6918,7 +7461,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_metering_status_production_ct_l3',
@@ -6942,7 +7485,20 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_metering_status_production_ct_l3-state]
-  None
+  dict({
+    'attributes': dict({
+      'device_class': 'enum',
+      'friendly_name': 'Envoy <<envoyserial>> Metering status production CT l3',
+      'icon': 'mdi:flash',
+      'options': list([
+        'normal',
+        'not-metering',
+        'check-wiring',
+      ]),
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_metering_status_production_ct_l3',
+    'state': 'normal',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_metering_status_storage_ct-entry]
   dict({
@@ -6960,7 +7516,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_metering_status_storage_ct',
@@ -6984,7 +7540,20 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_metering_status_storage_ct-state]
-  None
+  dict({
+    'attributes': dict({
+      'device_class': 'enum',
+      'friendly_name': 'Envoy <<envoyserial>> Metering status storage CT',
+      'icon': 'mdi:flash',
+      'options': list([
+        'normal',
+        'not-metering',
+        'check-wiring',
+      ]),
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_metering_status_storage_ct',
+    'state': 'normal',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_metering_status_storage_ct_l1-entry]
   dict({
@@ -7002,7 +7571,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_metering_status_storage_ct_l1',
@@ -7026,7 +7595,20 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_metering_status_storage_ct_l1-state]
-  None
+  dict({
+    'attributes': dict({
+      'device_class': 'enum',
+      'friendly_name': 'Envoy <<envoyserial>> Metering status storage CT l1',
+      'icon': 'mdi:flash',
+      'options': list([
+        'normal',
+        'not-metering',
+        'check-wiring',
+      ]),
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_metering_status_storage_ct_l1',
+    'state': 'normal',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_metering_status_storage_ct_l2-entry]
   dict({
@@ -7044,7 +7626,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_metering_status_storage_ct_l2',
@@ -7068,7 +7650,20 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_metering_status_storage_ct_l2-state]
-  None
+  dict({
+    'attributes': dict({
+      'device_class': 'enum',
+      'friendly_name': 'Envoy <<envoyserial>> Metering status storage CT l2',
+      'icon': 'mdi:flash',
+      'options': list([
+        'normal',
+        'not-metering',
+        'check-wiring',
+      ]),
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_metering_status_storage_ct_l2',
+    'state': 'normal',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_metering_status_storage_ct_l3-entry]
   dict({
@@ -7086,7 +7681,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_metering_status_storage_ct_l3',
@@ -7110,7 +7705,20 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_metering_status_storage_ct_l3-state]
-  None
+  dict({
+    'attributes': dict({
+      'device_class': 'enum',
+      'friendly_name': 'Envoy <<envoyserial>> Metering status storage CT l3',
+      'icon': 'mdi:flash',
+      'options': list([
+        'normal',
+        'not-metering',
+        'check-wiring',
+      ]),
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_metering_status_storage_ct_l3',
+    'state': 'normal',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_reserve_battery_energy-entry]
   dict({
@@ -7214,7 +7822,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_voltage_net_consumption_ct',
@@ -7225,6 +7833,9 @@
     ]),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': 'V',
       }),
@@ -7241,7 +7852,17 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_voltage_net_consumption_ct-state]
-  None
+  dict({
+    'attributes': dict({
+      'device_class': 'voltage',
+      'friendly_name': 'Envoy <<envoyserial>> Voltage net consumption CT',
+      'icon': 'mdi:flash',
+      'state_class': 'measurement',
+      'unit_of_measurement': 'V',
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_voltage_net_consumption_ct',
+    'state': '112',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_voltage_net_consumption_ct_l1-entry]
   dict({
@@ -7255,7 +7876,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_voltage_net_consumption_ct_l1',
@@ -7266,6 +7887,9 @@
     ]),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': 'V',
       }),
@@ -7282,7 +7906,17 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_voltage_net_consumption_ct_l1-state]
-  None
+  dict({
+    'attributes': dict({
+      'device_class': 'voltage',
+      'friendly_name': 'Envoy <<envoyserial>> Voltage net consumption CT l1',
+      'icon': 'mdi:flash',
+      'state_class': 'measurement',
+      'unit_of_measurement': 'V',
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_voltage_net_consumption_ct_l1',
+    'state': '112',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_voltage_net_consumption_ct_l2-entry]
   dict({
@@ -7296,7 +7930,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_voltage_net_consumption_ct_l2',
@@ -7307,6 +7941,9 @@
     ]),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': 'V',
       }),
@@ -7323,7 +7960,17 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_voltage_net_consumption_ct_l2-state]
-  None
+  dict({
+    'attributes': dict({
+      'device_class': 'voltage',
+      'friendly_name': 'Envoy <<envoyserial>> Voltage net consumption CT l2',
+      'icon': 'mdi:flash',
+      'state_class': 'measurement',
+      'unit_of_measurement': 'V',
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_voltage_net_consumption_ct_l2',
+    'state': '112',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_voltage_net_consumption_ct_l3-entry]
   dict({
@@ -7337,7 +7984,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_voltage_net_consumption_ct_l3',
@@ -7348,6 +7995,9 @@
     ]),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': 'V',
       }),
@@ -7364,7 +8014,17 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_voltage_net_consumption_ct_l3-state]
-  None
+  dict({
+    'attributes': dict({
+      'device_class': 'voltage',
+      'friendly_name': 'Envoy <<envoyserial>> Voltage net consumption CT l3',
+      'icon': 'mdi:flash',
+      'state_class': 'measurement',
+      'unit_of_measurement': 'V',
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_voltage_net_consumption_ct_l3',
+    'state': '112',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_voltage_storage_ct-entry]
   dict({
@@ -7378,7 +8038,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_voltage_storage_ct',
@@ -7389,6 +8049,9 @@
     ]),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': 'V',
       }),
@@ -7405,7 +8068,17 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_voltage_storage_ct-state]
-  None
+  dict({
+    'attributes': dict({
+      'device_class': 'voltage',
+      'friendly_name': 'Envoy <<envoyserial>> Voltage storage CT',
+      'icon': 'mdi:flash',
+      'state_class': 'measurement',
+      'unit_of_measurement': 'V',
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_voltage_storage_ct',
+    'state': '113',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_voltage_storage_ct_l1-entry]
   dict({
@@ -7419,7 +8092,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_voltage_storage_ct_l1',
@@ -7430,6 +8103,9 @@
     ]),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': 'V',
       }),
@@ -7446,7 +8122,17 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_voltage_storage_ct_l1-state]
-  None
+  dict({
+    'attributes': dict({
+      'device_class': 'voltage',
+      'friendly_name': 'Envoy <<envoyserial>> Voltage storage CT l1',
+      'icon': 'mdi:flash',
+      'state_class': 'measurement',
+      'unit_of_measurement': 'V',
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_voltage_storage_ct_l1',
+    'state': '113',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_voltage_storage_ct_l2-entry]
   dict({
@@ -7460,7 +8146,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_voltage_storage_ct_l2',
@@ -7471,6 +8157,9 @@
     ]),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': 'V',
       }),
@@ -7487,7 +8176,17 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_voltage_storage_ct_l2-state]
-  None
+  dict({
+    'attributes': dict({
+      'device_class': 'voltage',
+      'friendly_name': 'Envoy <<envoyserial>> Voltage storage CT l2',
+      'icon': 'mdi:flash',
+      'state_class': 'measurement',
+      'unit_of_measurement': 'V',
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_voltage_storage_ct_l2',
+    'state': '112',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_voltage_storage_ct_l3-entry]
   dict({
@@ -7501,7 +8200,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_voltage_storage_ct_l3',
@@ -7512,6 +8211,9 @@
     ]),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': 'V',
       }),
@@ -7528,7 +8230,17 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.envoy_<<envoyserial>>_voltage_storage_ct_l3-state]
-  None
+  dict({
+    'attributes': dict({
+      'device_class': 'voltage',
+      'friendly_name': 'Envoy <<envoyserial>> Voltage storage CT l3',
+      'icon': 'mdi:flash',
+      'state_class': 'measurement',
+      'unit_of_measurement': 'V',
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_voltage_storage_ct_l3',
+    'state': '112',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.inverter_1-entry]
   dict({
@@ -7588,7 +8300,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.inverter_1_last_reported',
@@ -7612,7 +8324,15 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][sensor.inverter_1_last_reported-state]
-  None
+  dict({
+    'attributes': dict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Inverter 1 Last reported',
+      'icon': 'mdi:flash',
+    }),
+    'entity_id': 'sensor.inverter_1_last_reported',
+    'state': '1970-01-01T00:00:01+00:00',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_metered_batt_relay][switch.enpower_654321_charge_from_grid-entry]
   dict({
@@ -8038,7 +8758,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_current_net_power_consumption_l1',
@@ -8049,6 +8769,9 @@
     ]),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': 'kW',
       }),
@@ -8065,7 +8788,17 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_nobatt_metered_3p][sensor.envoy_<<envoyserial>>_current_net_power_consumption_l1-state]
-  None
+  dict({
+    'attributes': dict({
+      'device_class': 'power',
+      'friendly_name': 'Envoy <<envoyserial>> Current net power consumption l1',
+      'icon': 'mdi:flash',
+      'state_class': 'measurement',
+      'unit_of_measurement': 'kW',
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_current_net_power_consumption_l1',
+    'state': '0.021',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_nobatt_metered_3p][sensor.envoy_<<envoyserial>>_current_net_power_consumption_l2-entry]
   dict({
@@ -8079,7 +8812,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_current_net_power_consumption_l2',
@@ -8090,6 +8823,9 @@
     ]),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': 'kW',
       }),
@@ -8106,7 +8842,17 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_nobatt_metered_3p][sensor.envoy_<<envoyserial>>_current_net_power_consumption_l2-state]
-  None
+  dict({
+    'attributes': dict({
+      'device_class': 'power',
+      'friendly_name': 'Envoy <<envoyserial>> Current net power consumption l2',
+      'icon': 'mdi:flash',
+      'state_class': 'measurement',
+      'unit_of_measurement': 'kW',
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_current_net_power_consumption_l2',
+    'state': '0.031',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_nobatt_metered_3p][sensor.envoy_<<envoyserial>>_current_net_power_consumption_l3-entry]
   dict({
@@ -8120,7 +8866,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_current_net_power_consumption_l3',
@@ -8131,6 +8877,9 @@
     ]),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': 'kW',
       }),
@@ -8147,7 +8896,17 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_nobatt_metered_3p][sensor.envoy_<<envoyserial>>_current_net_power_consumption_l3-state]
-  None
+  dict({
+    'attributes': dict({
+      'device_class': 'power',
+      'friendly_name': 'Envoy <<envoyserial>> Current net power consumption l3',
+      'icon': 'mdi:flash',
+      'state_class': 'measurement',
+      'unit_of_measurement': 'kW',
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_current_net_power_consumption_l3',
+    'state': '0.051',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_nobatt_metered_3p][sensor.envoy_<<envoyserial>>_current_power_consumption-entry]
   dict({
@@ -9433,7 +10192,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_frequency_net_consumption_ct',
@@ -9444,6 +10203,9 @@
     ]),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': 'frequency',
     'original_icon': 'mdi:flash',
@@ -9457,7 +10219,17 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_nobatt_metered_3p][sensor.envoy_<<envoyserial>>_frequency_net_consumption_ct-state]
-  None
+  dict({
+    'attributes': dict({
+      'device_class': 'frequency',
+      'friendly_name': 'Envoy <<envoyserial>> Frequency net consumption CT',
+      'icon': 'mdi:flash',
+      'state_class': 'measurement',
+      'unit_of_measurement': 'Hz',
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_frequency_net_consumption_ct',
+    'state': '50.2',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_nobatt_metered_3p][sensor.envoy_<<envoyserial>>_frequency_net_consumption_ct_l1-entry]
   dict({
@@ -9471,7 +10243,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_frequency_net_consumption_ct_l1',
@@ -9482,6 +10254,9 @@
     ]),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': 'frequency',
     'original_icon': 'mdi:flash',
@@ -9495,7 +10270,17 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_nobatt_metered_3p][sensor.envoy_<<envoyserial>>_frequency_net_consumption_ct_l1-state]
-  None
+  dict({
+    'attributes': dict({
+      'device_class': 'frequency',
+      'friendly_name': 'Envoy <<envoyserial>> Frequency net consumption CT l1',
+      'icon': 'mdi:flash',
+      'state_class': 'measurement',
+      'unit_of_measurement': 'Hz',
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_frequency_net_consumption_ct_l1',
+    'state': '50.2',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_nobatt_metered_3p][sensor.envoy_<<envoyserial>>_frequency_net_consumption_ct_l2-entry]
   dict({
@@ -9509,7 +10294,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_frequency_net_consumption_ct_l2',
@@ -9520,6 +10305,9 @@
     ]),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': 'frequency',
     'original_icon': 'mdi:flash',
@@ -9533,7 +10321,17 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_nobatt_metered_3p][sensor.envoy_<<envoyserial>>_frequency_net_consumption_ct_l2-state]
-  None
+  dict({
+    'attributes': dict({
+      'device_class': 'frequency',
+      'friendly_name': 'Envoy <<envoyserial>> Frequency net consumption CT l2',
+      'icon': 'mdi:flash',
+      'state_class': 'measurement',
+      'unit_of_measurement': 'Hz',
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_frequency_net_consumption_ct_l2',
+    'state': '50.2',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_nobatt_metered_3p][sensor.envoy_<<envoyserial>>_frequency_net_consumption_ct_l3-entry]
   dict({
@@ -9547,7 +10345,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_frequency_net_consumption_ct_l3',
@@ -9558,6 +10356,9 @@
     ]),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': 'frequency',
     'original_icon': 'mdi:flash',
@@ -9571,7 +10372,17 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_nobatt_metered_3p][sensor.envoy_<<envoyserial>>_frequency_net_consumption_ct_l3-state]
-  None
+  dict({
+    'attributes': dict({
+      'device_class': 'frequency',
+      'friendly_name': 'Envoy <<envoyserial>> Frequency net consumption CT l3',
+      'icon': 'mdi:flash',
+      'state_class': 'measurement',
+      'unit_of_measurement': 'Hz',
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_frequency_net_consumption_ct_l3',
+    'state': '50.2',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_nobatt_metered_3p][sensor.envoy_<<envoyserial>>_lifetime_energy_consumption-entry]
   dict({
@@ -10071,7 +10882,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_lifetime_net_energy_consumption_l1',
@@ -10082,6 +10893,9 @@
     ]),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': 'MWh',
       }),
@@ -10098,7 +10912,17 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_nobatt_metered_3p][sensor.envoy_<<envoyserial>>_lifetime_net_energy_consumption_l1-state]
-  None
+  dict({
+    'attributes': dict({
+      'device_class': 'energy',
+      'friendly_name': 'Envoy <<envoyserial>> Lifetime net energy consumption l1',
+      'icon': 'mdi:flash',
+      'state_class': 'total_increasing',
+      'unit_of_measurement': 'MWh',
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_lifetime_net_energy_consumption_l1',
+    'state': '0.2<<envoyserial>>1',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_nobatt_metered_3p][sensor.envoy_<<envoyserial>>_lifetime_net_energy_consumption_l2-entry]
   dict({
@@ -10112,7 +10936,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_lifetime_net_energy_consumption_l2',
@@ -10123,6 +10947,9 @@
     ]),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': 'MWh',
       }),
@@ -10139,7 +10966,17 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_nobatt_metered_3p][sensor.envoy_<<envoyserial>>_lifetime_net_energy_consumption_l2-state]
-  None
+  dict({
+    'attributes': dict({
+      'device_class': 'energy',
+      'friendly_name': 'Envoy <<envoyserial>> Lifetime net energy consumption l2',
+      'icon': 'mdi:flash',
+      'state_class': 'total_increasing',
+      'unit_of_measurement': 'MWh',
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_lifetime_net_energy_consumption_l2',
+    'state': '0.2<<envoyserial>>2',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_nobatt_metered_3p][sensor.envoy_<<envoyserial>>_lifetime_net_energy_consumption_l3-entry]
   dict({
@@ -10153,7 +10990,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_lifetime_net_energy_consumption_l3',
@@ -10164,6 +11001,9 @@
     ]),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': 'MWh',
       }),
@@ -10180,7 +11020,17 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_nobatt_metered_3p][sensor.envoy_<<envoyserial>>_lifetime_net_energy_consumption_l3-state]
-  None
+  dict({
+    'attributes': dict({
+      'device_class': 'energy',
+      'friendly_name': 'Envoy <<envoyserial>> Lifetime net energy consumption l3',
+      'icon': 'mdi:flash',
+      'state_class': 'total_increasing',
+      'unit_of_measurement': 'MWh',
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_lifetime_net_energy_consumption_l3',
+    'state': '0.2<<envoyserial>>3',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_nobatt_metered_3p][sensor.envoy_<<envoyserial>>_lifetime_net_energy_production-entry]
   dict({
@@ -10248,7 +11098,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_lifetime_net_energy_production_l1',
@@ -10259,6 +11109,9 @@
     ]),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': 'MWh',
       }),
@@ -10275,7 +11128,17 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_nobatt_metered_3p][sensor.envoy_<<envoyserial>>_lifetime_net_energy_production_l1-state]
-  None
+  dict({
+    'attributes': dict({
+      'device_class': 'energy',
+      'friendly_name': 'Envoy <<envoyserial>> Lifetime net energy production l1',
+      'icon': 'mdi:flash',
+      'state_class': 'total_increasing',
+      'unit_of_measurement': 'MWh',
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_lifetime_net_energy_production_l1',
+    'state': '0.223451',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_nobatt_metered_3p][sensor.envoy_<<envoyserial>>_lifetime_net_energy_production_l2-entry]
   dict({
@@ -10289,7 +11152,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_lifetime_net_energy_production_l2',
@@ -10300,6 +11163,9 @@
     ]),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': 'MWh',
       }),
@@ -10316,7 +11182,17 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_nobatt_metered_3p][sensor.envoy_<<envoyserial>>_lifetime_net_energy_production_l2-state]
-  None
+  dict({
+    'attributes': dict({
+      'device_class': 'energy',
+      'friendly_name': 'Envoy <<envoyserial>> Lifetime net energy production l2',
+      'icon': 'mdi:flash',
+      'state_class': 'total_increasing',
+      'unit_of_measurement': 'MWh',
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_lifetime_net_energy_production_l2',
+    'state': '0.223452',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_nobatt_metered_3p][sensor.envoy_<<envoyserial>>_lifetime_net_energy_production_l3-entry]
   dict({
@@ -10330,7 +11206,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_lifetime_net_energy_production_l3',
@@ -10341,6 +11217,9 @@
     ]),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': 'MWh',
       }),
@@ -10357,7 +11236,17 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_nobatt_metered_3p][sensor.envoy_<<envoyserial>>_lifetime_net_energy_production_l3-state]
-  None
+  dict({
+    'attributes': dict({
+      'device_class': 'energy',
+      'friendly_name': 'Envoy <<envoyserial>> Lifetime net energy production l3',
+      'icon': 'mdi:flash',
+      'state_class': 'total_increasing',
+      'unit_of_measurement': 'MWh',
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_lifetime_net_energy_production_l3',
+    'state': '0.223453',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_nobatt_metered_3p][sensor.envoy_<<envoyserial>>_meter_status_flags_active_net_consumption_ct-entry]
   dict({
@@ -10369,7 +11258,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_meter_status_flags_active_net_consumption_ct',
@@ -10393,7 +11282,14 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_nobatt_metered_3p][sensor.envoy_<<envoyserial>>_meter_status_flags_active_net_consumption_ct-state]
-  None
+  dict({
+    'attributes': dict({
+      'friendly_name': 'Envoy <<envoyserial>> Meter status flags active net consumption CT',
+      'icon': 'mdi:flash',
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_meter_status_flags_active_net_consumption_ct',
+    'state': '0',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_nobatt_metered_3p][sensor.envoy_<<envoyserial>>_meter_status_flags_active_net_consumption_ct_l1-entry]
   dict({
@@ -10405,7 +11301,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_meter_status_flags_active_net_consumption_ct_l1',
@@ -10429,7 +11325,14 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_nobatt_metered_3p][sensor.envoy_<<envoyserial>>_meter_status_flags_active_net_consumption_ct_l1-state]
-  None
+  dict({
+    'attributes': dict({
+      'friendly_name': 'Envoy <<envoyserial>> Meter status flags active net consumption CT l1',
+      'icon': 'mdi:flash',
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_meter_status_flags_active_net_consumption_ct_l1',
+    'state': '0',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_nobatt_metered_3p][sensor.envoy_<<envoyserial>>_meter_status_flags_active_net_consumption_ct_l2-entry]
   dict({
@@ -10441,7 +11344,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_meter_status_flags_active_net_consumption_ct_l2',
@@ -10465,7 +11368,14 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_nobatt_metered_3p][sensor.envoy_<<envoyserial>>_meter_status_flags_active_net_consumption_ct_l2-state]
-  None
+  dict({
+    'attributes': dict({
+      'friendly_name': 'Envoy <<envoyserial>> Meter status flags active net consumption CT l2',
+      'icon': 'mdi:flash',
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_meter_status_flags_active_net_consumption_ct_l2',
+    'state': '0',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_nobatt_metered_3p][sensor.envoy_<<envoyserial>>_meter_status_flags_active_net_consumption_ct_l3-entry]
   dict({
@@ -10477,7 +11387,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_meter_status_flags_active_net_consumption_ct_l3',
@@ -10501,7 +11411,14 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_nobatt_metered_3p][sensor.envoy_<<envoyserial>>_meter_status_flags_active_net_consumption_ct_l3-state]
-  None
+  dict({
+    'attributes': dict({
+      'friendly_name': 'Envoy <<envoyserial>> Meter status flags active net consumption CT l3',
+      'icon': 'mdi:flash',
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_meter_status_flags_active_net_consumption_ct_l3',
+    'state': '0',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_nobatt_metered_3p][sensor.envoy_<<envoyserial>>_meter_status_flags_active_production_ct-entry]
   dict({
@@ -10513,7 +11430,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_meter_status_flags_active_production_ct',
@@ -10537,7 +11454,14 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_nobatt_metered_3p][sensor.envoy_<<envoyserial>>_meter_status_flags_active_production_ct-state]
-  None
+  dict({
+    'attributes': dict({
+      'friendly_name': 'Envoy <<envoyserial>> Meter status flags active production CT',
+      'icon': 'mdi:flash',
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_meter_status_flags_active_production_ct',
+    'state': '2',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_nobatt_metered_3p][sensor.envoy_<<envoyserial>>_meter_status_flags_active_production_ct_l1-entry]
   dict({
@@ -10549,7 +11473,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_meter_status_flags_active_production_ct_l1',
@@ -10573,7 +11497,14 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_nobatt_metered_3p][sensor.envoy_<<envoyserial>>_meter_status_flags_active_production_ct_l1-state]
-  None
+  dict({
+    'attributes': dict({
+      'friendly_name': 'Envoy <<envoyserial>> Meter status flags active production CT l1',
+      'icon': 'mdi:flash',
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_meter_status_flags_active_production_ct_l1',
+    'state': '1',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_nobatt_metered_3p][sensor.envoy_<<envoyserial>>_meter_status_flags_active_production_ct_l2-entry]
   dict({
@@ -10585,7 +11516,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_meter_status_flags_active_production_ct_l2',
@@ -10609,7 +11540,14 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_nobatt_metered_3p][sensor.envoy_<<envoyserial>>_meter_status_flags_active_production_ct_l2-state]
-  None
+  dict({
+    'attributes': dict({
+      'friendly_name': 'Envoy <<envoyserial>> Meter status flags active production CT l2',
+      'icon': 'mdi:flash',
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_meter_status_flags_active_production_ct_l2',
+    'state': '1',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_nobatt_metered_3p][sensor.envoy_<<envoyserial>>_meter_status_flags_active_production_ct_l3-entry]
   dict({
@@ -10621,7 +11559,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_meter_status_flags_active_production_ct_l3',
@@ -10645,7 +11583,14 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_nobatt_metered_3p][sensor.envoy_<<envoyserial>>_meter_status_flags_active_production_ct_l3-state]
-  None
+  dict({
+    'attributes': dict({
+      'friendly_name': 'Envoy <<envoyserial>> Meter status flags active production CT l3',
+      'icon': 'mdi:flash',
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_meter_status_flags_active_production_ct_l3',
+    'state': '0',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_nobatt_metered_3p][sensor.envoy_<<envoyserial>>_metering_status_net_consumption_ct-entry]
   dict({
@@ -10663,7 +11608,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_metering_status_net_consumption_ct',
@@ -10687,7 +11632,20 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_nobatt_metered_3p][sensor.envoy_<<envoyserial>>_metering_status_net_consumption_ct-state]
-  None
+  dict({
+    'attributes': dict({
+      'device_class': 'enum',
+      'friendly_name': 'Envoy <<envoyserial>> Metering status net consumption CT',
+      'icon': 'mdi:flash',
+      'options': list([
+        'normal',
+        'not-metering',
+        'check-wiring',
+      ]),
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_metering_status_net_consumption_ct',
+    'state': 'normal',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_nobatt_metered_3p][sensor.envoy_<<envoyserial>>_metering_status_net_consumption_ct_l1-entry]
   dict({
@@ -10705,7 +11663,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_metering_status_net_consumption_ct_l1',
@@ -10729,7 +11687,20 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_nobatt_metered_3p][sensor.envoy_<<envoyserial>>_metering_status_net_consumption_ct_l1-state]
-  None
+  dict({
+    'attributes': dict({
+      'device_class': 'enum',
+      'friendly_name': 'Envoy <<envoyserial>> Metering status net consumption CT l1',
+      'icon': 'mdi:flash',
+      'options': list([
+        'normal',
+        'not-metering',
+        'check-wiring',
+      ]),
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_metering_status_net_consumption_ct_l1',
+    'state': 'normal',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_nobatt_metered_3p][sensor.envoy_<<envoyserial>>_metering_status_net_consumption_ct_l2-entry]
   dict({
@@ -10747,7 +11718,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_metering_status_net_consumption_ct_l2',
@@ -10771,7 +11742,20 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_nobatt_metered_3p][sensor.envoy_<<envoyserial>>_metering_status_net_consumption_ct_l2-state]
-  None
+  dict({
+    'attributes': dict({
+      'device_class': 'enum',
+      'friendly_name': 'Envoy <<envoyserial>> Metering status net consumption CT l2',
+      'icon': 'mdi:flash',
+      'options': list([
+        'normal',
+        'not-metering',
+        'check-wiring',
+      ]),
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_metering_status_net_consumption_ct_l2',
+    'state': 'normal',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_nobatt_metered_3p][sensor.envoy_<<envoyserial>>_metering_status_net_consumption_ct_l3-entry]
   dict({
@@ -10789,7 +11773,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_metering_status_net_consumption_ct_l3',
@@ -10813,7 +11797,20 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_nobatt_metered_3p][sensor.envoy_<<envoyserial>>_metering_status_net_consumption_ct_l3-state]
-  None
+  dict({
+    'attributes': dict({
+      'device_class': 'enum',
+      'friendly_name': 'Envoy <<envoyserial>> Metering status net consumption CT l3',
+      'icon': 'mdi:flash',
+      'options': list([
+        'normal',
+        'not-metering',
+        'check-wiring',
+      ]),
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_metering_status_net_consumption_ct_l3',
+    'state': 'normal',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_nobatt_metered_3p][sensor.envoy_<<envoyserial>>_metering_status_production_ct-entry]
   dict({
@@ -10831,7 +11828,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_metering_status_production_ct',
@@ -10855,7 +11852,20 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_nobatt_metered_3p][sensor.envoy_<<envoyserial>>_metering_status_production_ct-state]
-  None
+  dict({
+    'attributes': dict({
+      'device_class': 'enum',
+      'friendly_name': 'Envoy <<envoyserial>> Metering status production CT',
+      'icon': 'mdi:flash',
+      'options': list([
+        'normal',
+        'not-metering',
+        'check-wiring',
+      ]),
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_metering_status_production_ct',
+    'state': 'normal',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_nobatt_metered_3p][sensor.envoy_<<envoyserial>>_metering_status_production_ct_l1-entry]
   dict({
@@ -10873,7 +11883,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_metering_status_production_ct_l1',
@@ -10897,7 +11907,20 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_nobatt_metered_3p][sensor.envoy_<<envoyserial>>_metering_status_production_ct_l1-state]
-  None
+  dict({
+    'attributes': dict({
+      'device_class': 'enum',
+      'friendly_name': 'Envoy <<envoyserial>> Metering status production CT l1',
+      'icon': 'mdi:flash',
+      'options': list([
+        'normal',
+        'not-metering',
+        'check-wiring',
+      ]),
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_metering_status_production_ct_l1',
+    'state': 'normal',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_nobatt_metered_3p][sensor.envoy_<<envoyserial>>_metering_status_production_ct_l2-entry]
   dict({
@@ -10915,7 +11938,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_metering_status_production_ct_l2',
@@ -10939,7 +11962,20 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_nobatt_metered_3p][sensor.envoy_<<envoyserial>>_metering_status_production_ct_l2-state]
-  None
+  dict({
+    'attributes': dict({
+      'device_class': 'enum',
+      'friendly_name': 'Envoy <<envoyserial>> Metering status production CT l2',
+      'icon': 'mdi:flash',
+      'options': list([
+        'normal',
+        'not-metering',
+        'check-wiring',
+      ]),
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_metering_status_production_ct_l2',
+    'state': 'normal',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_nobatt_metered_3p][sensor.envoy_<<envoyserial>>_metering_status_production_ct_l3-entry]
   dict({
@@ -10957,7 +11993,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_metering_status_production_ct_l3',
@@ -10981,7 +12017,20 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_nobatt_metered_3p][sensor.envoy_<<envoyserial>>_metering_status_production_ct_l3-state]
-  None
+  dict({
+    'attributes': dict({
+      'device_class': 'enum',
+      'friendly_name': 'Envoy <<envoyserial>> Metering status production CT l3',
+      'icon': 'mdi:flash',
+      'options': list([
+        'normal',
+        'not-metering',
+        'check-wiring',
+      ]),
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_metering_status_production_ct_l3',
+    'state': 'normal',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_nobatt_metered_3p][sensor.envoy_<<envoyserial>>_voltage_net_consumption_ct-entry]
   dict({
@@ -10995,7 +12044,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_voltage_net_consumption_ct',
@@ -11006,6 +12055,9 @@
     ]),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': 'V',
       }),
@@ -11022,7 +12074,17 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_nobatt_metered_3p][sensor.envoy_<<envoyserial>>_voltage_net_consumption_ct-state]
-  None
+  dict({
+    'attributes': dict({
+      'device_class': 'voltage',
+      'friendly_name': 'Envoy <<envoyserial>> Voltage net consumption CT',
+      'icon': 'mdi:flash',
+      'state_class': 'measurement',
+      'unit_of_measurement': 'V',
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_voltage_net_consumption_ct',
+    'state': '112',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_nobatt_metered_3p][sensor.envoy_<<envoyserial>>_voltage_net_consumption_ct_l1-entry]
   dict({
@@ -11036,7 +12098,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_voltage_net_consumption_ct_l1',
@@ -11047,6 +12109,9 @@
     ]),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': 'V',
       }),
@@ -11063,7 +12128,17 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_nobatt_metered_3p][sensor.envoy_<<envoyserial>>_voltage_net_consumption_ct_l1-state]
-  None
+  dict({
+    'attributes': dict({
+      'device_class': 'voltage',
+      'friendly_name': 'Envoy <<envoyserial>> Voltage net consumption CT l1',
+      'icon': 'mdi:flash',
+      'state_class': 'measurement',
+      'unit_of_measurement': 'V',
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_voltage_net_consumption_ct_l1',
+    'state': '112',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_nobatt_metered_3p][sensor.envoy_<<envoyserial>>_voltage_net_consumption_ct_l2-entry]
   dict({
@@ -11077,7 +12152,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_voltage_net_consumption_ct_l2',
@@ -11088,6 +12163,9 @@
     ]),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': 'V',
       }),
@@ -11104,7 +12182,17 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_nobatt_metered_3p][sensor.envoy_<<envoyserial>>_voltage_net_consumption_ct_l2-state]
-  None
+  dict({
+    'attributes': dict({
+      'device_class': 'voltage',
+      'friendly_name': 'Envoy <<envoyserial>> Voltage net consumption CT l2',
+      'icon': 'mdi:flash',
+      'state_class': 'measurement',
+      'unit_of_measurement': 'V',
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_voltage_net_consumption_ct_l2',
+    'state': '112',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_nobatt_metered_3p][sensor.envoy_<<envoyserial>>_voltage_net_consumption_ct_l3-entry]
   dict({
@@ -11118,7 +12206,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_voltage_net_consumption_ct_l3',
@@ -11129,6 +12217,9 @@
     ]),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': 'V',
       }),
@@ -11145,7 +12236,17 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_nobatt_metered_3p][sensor.envoy_<<envoyserial>>_voltage_net_consumption_ct_l3-state]
-  None
+  dict({
+    'attributes': dict({
+      'device_class': 'voltage',
+      'friendly_name': 'Envoy <<envoyserial>> Voltage net consumption CT l3',
+      'icon': 'mdi:flash',
+      'state_class': 'measurement',
+      'unit_of_measurement': 'V',
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_voltage_net_consumption_ct_l3',
+    'state': '112',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_nobatt_metered_3p][sensor.inverter_1-entry]
   dict({
@@ -11205,7 +12306,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.inverter_1_last_reported',
@@ -11229,7 +12330,15 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_nobatt_metered_3p][sensor.inverter_1_last_reported-state]
-  None
+  dict({
+    'attributes': dict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Inverter 1 Last reported',
+      'icon': 'mdi:flash',
+    }),
+    'entity_id': 'sensor.inverter_1_last_reported',
+    'state': '1970-01-01T00:00:01+00:00',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_tot_cons_metered][config_entry]
   dict({
@@ -11543,7 +12652,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_meter_status_flags_active_production_ct',
@@ -11567,7 +12676,14 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_tot_cons_metered][sensor.envoy_<<envoyserial>>_meter_status_flags_active_production_ct-state]
-  None
+  dict({
+    'attributes': dict({
+      'friendly_name': 'Envoy <<envoyserial>> Meter status flags active production CT',
+      'icon': 'mdi:flash',
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_meter_status_flags_active_production_ct',
+    'state': '2',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_tot_cons_metered][sensor.envoy_<<envoyserial>>_metering_status_production_ct-entry]
   dict({
@@ -11585,7 +12701,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.envoy_<<envoyserial>>_metering_status_production_ct',
@@ -11609,7 +12725,20 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_tot_cons_metered][sensor.envoy_<<envoyserial>>_metering_status_production_ct-state]
-  None
+  dict({
+    'attributes': dict({
+      'device_class': 'enum',
+      'friendly_name': 'Envoy <<envoyserial>> Metering status production CT',
+      'icon': 'mdi:flash',
+      'options': list([
+        'normal',
+        'not-metering',
+        'check-wiring',
+      ]),
+    }),
+    'entity_id': 'sensor.envoy_<<envoyserial>>_metering_status_production_ct',
+    'state': 'normal',
+  })
 # ---
 # name: test_entry_diagnostics[envoy_tot_cons_metered][sensor.inverter_1-entry]
   dict({
@@ -11669,7 +12798,7 @@
     }),
     'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
     'device_class': None,
-    'disabled_by': 'integration',
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.inverter_1_last_reported',
@@ -11693,5 +12822,13 @@
   })
 # ---
 # name: test_entry_diagnostics[envoy_tot_cons_metered][sensor.inverter_1_last_reported-state]
-  None
+  dict({
+    'attributes': dict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Inverter 1 Last reported',
+      'icon': 'mdi:flash',
+    }),
+    'entity_id': 'sensor.inverter_1_last_reported',
+    'state': '1970-01-01T00:00:01+00:00',
+  })
 # ---

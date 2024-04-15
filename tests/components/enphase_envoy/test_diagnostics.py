@@ -31,6 +31,7 @@ def limit_diagnostic_attrs(prop, path) -> bool:
 
 
 @pytest.mark.parametrize(("mock_envoy"), *ALL_FIXTURES, indirect=["mock_envoy"])
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_entry_diagnostics(
     hass: HomeAssistant,
     config_entry: ConfigEntry,

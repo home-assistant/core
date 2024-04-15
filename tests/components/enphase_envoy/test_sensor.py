@@ -21,7 +21,9 @@ from tests.components.enphase_envoy.conftest import ALL_FIXTURES, SENSOR_FIXTURE
 
 
 @pytest.mark.parametrize(
-    ("mock_envoy", "entity_count"), *SENSOR_FIXTURES, indirect=["mock_envoy"]
+    ("mock_envoy", "entity_count", "enabled_entity_count"),
+    *SENSOR_FIXTURES,
+    indirect=["mock_envoy"],
 )
 async def test_sensor(
     hass: HomeAssistant,
@@ -30,6 +32,7 @@ async def test_sensor(
     mock_envoy: AsyncMock,
     entity_registry: AsyncMock,
     entity_count: int,
+    enabled_entity_count: int,
 ) -> None:
     """Test enphase_envoy sensor entities."""
     await setup_with_selected_platforms(hass, config_entry, [Platform.SENSOR])
@@ -41,9 +44,46 @@ async def test_sensor(
         entity_registry, config_entry.entry_id
     )
 
-    if entity_count == 0:
-        assert len(entity_entries) == 0
-    else:
+    assert len(entity_entries) == enabled_entity_count
+
+    if entity_count > 0:
+        # compare registered entities against snapshot of prior run
+        assert entity_entries
+        for entity_entry in entity_entries:
+            assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
+            assert hass.states.get(entity_entry.entity_id) == snapshot(
+                name=f"{entity_entry.entity_id}-state"
+            )
+
+
+@pytest.mark.parametrize(
+    ("mock_envoy", "entity_count", "enabled_entity_count"),
+    *SENSOR_FIXTURES,
+    indirect=["mock_envoy"],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_all_enabled_sensors(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+    mock_envoy: AsyncMock,
+    entity_registry: AsyncMock,
+    entity_count: int,
+    enabled_entity_count: int,
+) -> None:
+    """Test enphase_envoy sensor entities."""
+    await setup_with_selected_platforms(hass, config_entry, [Platform.SENSOR])
+
+    # number entities states should be created from test data
+    assert len(hass.states.async_all()) == enabled_entity_count
+
+    entity_entries = er.async_entries_for_config_entry(
+        entity_registry, config_entry.entry_id
+    )
+
+    assert len(entity_entries) == enabled_entity_count
+
+    if enabled_entity_count > 0:
         # compare registered entities against snapshot of prior run
         assert entity_entries
         for entity_entry in entity_entries:
@@ -54,6 +94,7 @@ async def test_sensor(
 
 
 @pytest.mark.parametrize(("mock_envoy"), *ALL_FIXTURES, indirect=["mock_envoy"])
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor_production_consumption_data(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -92,7 +133,7 @@ async def test_sensor_production_consumption_data(
     )
 
     # production sensors is bare minimum and should be defined
-    for name, target in zip(PRODUCTION_NAMES, PRODUCTION_TARGETS):
+    for name, target in zip(PRODUCTION_NAMES, PRODUCTION_TARGETS, strict=False):
         assert target == float(hass.states.get(f"{entity_base}_{name}").state)
 
     CONSUMPTION_NAMES = (
@@ -111,7 +152,7 @@ async def test_sensor_production_consumption_data(
             data.watt_hours_last_7_days / 1000.0,
             data.watt_hours_lifetime / 1000000.0,
         )
-        for name, target in zip(CONSUMPTION_NAMES, CONSUMPTION_TARGETS):
+        for name, target in zip(CONSUMPTION_NAMES, CONSUMPTION_TARGETS, strict=False):
             assert target == float(hass.states.get(f"{entity_base}_{name}").state)
 
     if not mock_envoy.data.system_consumption:
@@ -138,7 +179,9 @@ async def test_sensor_production_consumption_data(
             )
         )
 
-        for name, target in zip(PRODUCTION_PHASE_NAMES, PRODUCTION_PHASE_TARGET):
+        for name, target in zip(
+            PRODUCTION_PHASE_NAMES, PRODUCTION_PHASE_TARGET, strict=False
+        ):
             assert target == float(hass.states.get(f"{entity_base}_{name}").state)
 
     if not mock_envoy.data.system_production_phases:
@@ -166,7 +209,9 @@ async def test_sensor_production_consumption_data(
             )
         )
 
-        for name, target in zip(CONSUMPTION_PHASE_NAMES, CONSUMPTION_PHASE_TARGET):
+        for name, target in zip(
+            CONSUMPTION_PHASE_NAMES, CONSUMPTION_PHASE_TARGET, strict=False
+        ):
             assert target == float(hass.states.get(f"{entity_base}_{name}").state)
 
     if not mock_envoy.data.system_consumption_phases:
@@ -176,6 +221,7 @@ async def test_sensor_production_consumption_data(
 
 
 @pytest.mark.parametrize(("mock_envoy"), *ALL_FIXTURES, indirect=["mock_envoy"])
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_grid_data(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -190,7 +236,6 @@ async def test_grid_data(
         entity_registry, config_entry.entry_id
     )
     if len(entity_entries) == 0:
-        # no entities to test with, other tests test this
         return
 
     entity_status = {}
@@ -199,94 +244,201 @@ async def test_grid_data(
 
     entity_base = f"{Platform.SENSOR}.envoy_{serial_number}"
 
-    CT_CONSUMPTION_NAMES = (
+    CT_CONSUMPTION_NAMES_FLOAT = (
         "lifetime_net_energy_consumption",
         "lifetime_net_energy_production",
         "current_net_power_consumption",
-    )
-    CT_CONSUMPTION_NAMES_DISABLED = (
         "frequency_net_consumption_ct",
         "voltage_net_consumption_ct",
-        "metering_status_net_consumption_ct",
         "meter_status_flags_active_net_consumption_ct",
     )
+    CT_CONSUMPTION_NAMES_STR = ("metering_status_net_consumption_ct",)
 
     if mock_envoy.data.ctmeter_consumption and (
         mock_envoy.consumption_meter_type == CtType.NET_CONSUMPTION
     ):
-        # these should be defined and have value from data
+        # if consumption meter data, entities should be created and have values
         data = mock_envoy.data.ctmeter_consumption
-        CT_CONSUMPTION_TARGETS = (
+
+        CT_CONSUMPTION_TARGETS_FLOAT = (
             data.energy_delivered / 1000000.0,
             data.energy_received / 1000000.0,
             data.active_power / 1000.0,
+            data.frequency,
+            data.voltage,
+            len(data.status_flags),
         )
-        for name, target in zip(CT_CONSUMPTION_NAMES, CT_CONSUMPTION_TARGETS):
+        for name, target in zip(
+            CT_CONSUMPTION_NAMES_FLOAT, CT_CONSUMPTION_TARGETS_FLOAT, strict=False
+        ):
             assert target == float(hass.states.get(f"{entity_base}_{name}").state)
 
-        # these should be disabled by default
-        for name in CT_CONSUMPTION_NAMES_DISABLED:
-            assert entity_status[f"{entity_base}_{name}"]
+        CT_CONSUMPTION_TARGETS_STR = (data.metering_status,)
+        for name, target in zip(
+            CT_CONSUMPTION_NAMES_STR, CT_CONSUMPTION_TARGETS_STR, strict=False
+        ):
+            assert target == hass.states.get(f"{entity_base}_{name}").state
 
-    CT_PRODUCTION_NAMES_DISABLED = (
-        "metering_status_production_ct",
-        "meter_status_flags_active_production_ct",
-    )
-    if mock_envoy.data.ctmeter_production:
-        # these should be disabled by default
-        for name in CT_PRODUCTION_NAMES_DISABLED:
-            assert entity_status[f"{entity_base}_{name}"]
+    CT_PRODUCTION_NAMES_FLOAT = ("meter_status_flags_active_production_ct",)
+    CT_PRODUCTION_NAMES_STR = ("metering_status_production_ct",)
 
-    CT_CONSUMPTION_PHASE_NAMES = [
+    if mock_envoy.data.ctmeter_production and (
+        mock_envoy.production_meter_type == CtType.PRODUCTION
+    ):
+        # if production meter data, entities should be created and have values
+        data = mock_envoy.data.ctmeter_production
+
+        CT_PRODUCTION_TARGETS_FLOAT = (len(data.status_flags),)
+        for name, target in zip(
+            CT_PRODUCTION_NAMES_FLOAT, CT_PRODUCTION_TARGETS_FLOAT, strict=False
+        ):
+            assert target == float(hass.states.get(f"{entity_base}_{name}").state)
+
+        CT_PRODUCTION_TARGETS_STR = (data.metering_status,)
+        for name, target in zip(
+            CT_PRODUCTION_NAMES_STR, CT_PRODUCTION_TARGETS_STR, strict=False
+        ):
+            assert target == hass.states.get(f"{entity_base}_{name}").state
+
+    CT_CONSUMPTION_NAMES_FLOAT_PHASE = [
         f"{name}_{phase.lower()}"
         for phase in PHASENAMES
-        for name in (CT_CONSUMPTION_NAMES + CT_CONSUMPTION_NAMES_DISABLED)
+        for name in CT_CONSUMPTION_NAMES_FLOAT
+    ]
+
+    CT_CONSUMPTION_NAMES_STR_PHASE = [
+        f"{name}_{phase.lower()}"
+        for phase in PHASENAMES
+        for name in CT_CONSUMPTION_NAMES_STR
     ]
 
     if mock_envoy.data.ctmeter_consumption_phases and (
         mock_envoy.consumption_meter_type == CtType.NET_CONSUMPTION
     ):
-        # these should be disabled by default
-        for name in CT_CONSUMPTION_PHASE_NAMES:
-            assert entity_status[f"{entity_base}_{name}"]
+        # if consumption meter phase data, entities should be created and have values
+        CT_CONSUMPTION_NAMES_FLOAT_PHASE_TARGET = list(
+            itertools.chain(
+                *[
+                    (
+                        phase_data.energy_delivered / 1000000.0,
+                        phase_data.energy_received / 1000000.0,
+                        phase_data.active_power / 1000.0,
+                        phase_data.frequency,
+                        phase_data.voltage,
+                        len(phase_data.status_flags),
+                    )
+                    for phase, phase_data in mock_envoy.data.ctmeter_consumption_phases.items()
+                ]
+            )
+        )
+        for name, target in zip(
+            CT_CONSUMPTION_NAMES_FLOAT_PHASE,
+            CT_CONSUMPTION_NAMES_FLOAT_PHASE_TARGET,
+            strict=False,
+        ):
+            assert target == float(hass.states.get(f"{entity_base}_{name}").state)
 
-    CT_PRODUCTION_PHASE_NAMES = [
+        CT_CONSUMPTION_NAMES_STR_PHASE_TARGET = list(
+            itertools.chain(
+                *[
+                    (phase_data.metering_status,)
+                    for phase, phase_data in mock_envoy.data.ctmeter_consumption_phases.items()
+                ]
+            )
+        )
+
+        for name, target in zip(
+            CT_CONSUMPTION_NAMES_STR_PHASE,
+            CT_CONSUMPTION_NAMES_STR_PHASE_TARGET,
+            strict=False,
+        ):
+            assert target == hass.states.get(f"{entity_base}_{name}").state
+
+    CT_PRODUCTION_NAMES_FLOAT_PHASE = [
         f"{name}_{phase.lower()}"
         for phase in PHASENAMES
-        for name in CT_PRODUCTION_NAMES_DISABLED
+        for name in CT_PRODUCTION_NAMES_FLOAT
     ]
 
-    if mock_envoy.data.ctmeter_production_phases:
-        # these should be disabled by default
-        for name in CT_PRODUCTION_PHASE_NAMES:
-            assert entity_status[f"{entity_base}_{name}"]
+    CT_PRODUCTION_NAMES_STR_PHASE = [
+        f"{name}_{phase.lower()}"
+        for phase in PHASENAMES
+        for name in CT_PRODUCTION_NAMES_STR
+    ]
 
-    if (not mock_envoy.data.ctmeter_consumption) and (
-        mock_envoy.consumption_meter_type == CtType.NET_CONSUMPTION
+    if mock_envoy.data.ctmeter_production_phases and (
+        mock_envoy.production_meter_type == CtType.PRODUCTION
     ):
-        # these should not be defined if no ct meter
-        for name in CT_CONSUMPTION_NAMES + CT_CONSUMPTION_NAMES_DISABLED:
+        # if production meter phase data, entities should be created and have values
+
+        CT_PRODUCTION_NAMES_FLOAT_PHASE_TARGET = list(
+            itertools.chain(
+                *[
+                    (len(phase_data.status_flags),)
+                    for phase, phase_data in mock_envoy.data.ctmeter_production_phases.items()
+                ]
+            )
+        )
+        for name, target in zip(
+            CT_PRODUCTION_NAMES_FLOAT_PHASE,
+            CT_PRODUCTION_NAMES_FLOAT_PHASE_TARGET,
+            strict=False,
+        ):
+            assert target == float(hass.states.get(f"{entity_base}_{name}").state)
+
+        CT_PRODUCTION_NAMES_STR_PHASE_TARGET = list(
+            itertools.chain(
+                *[
+                    (phase_data.metering_status,)
+                    for phase, phase_data in mock_envoy.data.ctmeter_production_phases.items()
+                ]
+            )
+        )
+
+        for name, target in zip(
+            CT_PRODUCTION_NAMES_STR_PHASE,
+            CT_PRODUCTION_NAMES_STR_PHASE_TARGET,
+            strict=False,
+        ):
+            assert target == hass.states.get(f"{entity_base}_{name}").state
+
+    if (not mock_envoy.data.ctmeter_consumption) or (
+        mock_envoy.consumption_meter_type != CtType.NET_CONSUMPTION
+    ):
+        # if no ct consumption meter data or not net meter, no entities should be created
+        for name in zip(
+            CT_CONSUMPTION_NAMES_FLOAT, CT_CONSUMPTION_NAMES_STR, strict=False
+        ):
             assert f"{entity_base}_{name}" not in entity_status
 
     if not mock_envoy.data.ctmeter_production:
-        # these should not be defined if no ctmeter
-        for name in CT_PRODUCTION_NAMES_DISABLED:
+        # if no ct production meter data, no entities should be created
+        for name in zip(
+            CT_PRODUCTION_NAMES_FLOAT, CT_PRODUCTION_NAMES_STR, strict=False
+        ):
             assert f"{entity_base}_{name}" not in entity_status
 
-    if (not mock_envoy.data.ctmeter_consumption_phases) and (
-        mock_envoy.consumption_meter_type == CtType.NET_CONSUMPTION
+    if (not mock_envoy.data.ctmeter_consumption_phases) or (
+        mock_envoy.consumption_meter_type != CtType.NET_CONSUMPTION
     ):
-        # these should not be defined if no ct meter phase
-        for name in CT_CONSUMPTION_PHASE_NAMES:
+        # if no ct consumption meter phase data or not net meter, no entities should be created
+        for name in zip(
+            CT_CONSUMPTION_NAMES_FLOAT_PHASE,
+            CT_CONSUMPTION_NAMES_STR_PHASE,
+            strict=False,
+        ):
             assert f"{entity_base}_{name}" not in entity_status
 
     if not mock_envoy.data.ctmeter_production_phases:
-        # these should not be defined if no ct meter phase
-        for name in CT_PRODUCTION_PHASE_NAMES:
+        # if no ct production meter, no entities should be created
+        for name in zip(
+            CT_PRODUCTION_NAMES_FLOAT_PHASE, CT_PRODUCTION_NAMES_STR_PHASE, strict=False
+        ):
             assert f"{entity_base}_{name}" not in entity_status
 
 
 @pytest.mark.parametrize(("mock_envoy"), *ALL_FIXTURES, indirect=["mock_envoy"])
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_battery_storage_data(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -310,51 +462,97 @@ async def test_battery_storage_data(
 
     entity_base = f"{Platform.SENSOR}.envoy_{serial_number}"
 
-    CT_STORAGE_NAMES = (
+    CT_STORAGE_NAMES_FLOAT = (
         "lifetime_battery_energy_discharged",
         "lifetime_battery_energy_charged",
         "current_battery_discharge",
-    )
-    CT_STORAGE_NAMES_DISABLED = (
         "voltage_storage_ct",
-        "metering_status_storage_ct",
         "meter_status_flags_active_storage_ct",
     )
+    CT_STORAGE_NAMES_STR = ("metering_status_storage_ct",)
 
     if mock_envoy.data.ctmeter_storage:
         # these should be defined and have value from data
         data = mock_envoy.data.ctmeter_storage
-        CT_STORAGE_TARGETS = (
+        CT_STORAGE_TARGETS_FLOAT = (
             data.energy_delivered / 1000000.0,
             data.energy_received / 1000000.0,
             data.active_power / 1000.0,
+            data.voltage,
+            len(data.status_flags),
         )
-        for name, target in zip(CT_STORAGE_NAMES, CT_STORAGE_TARGETS):
+        for name, target in zip(
+            CT_STORAGE_NAMES_FLOAT, CT_STORAGE_TARGETS_FLOAT, strict=False
+        ):
             assert target == float(hass.states.get(f"{entity_base}_{name}").state)
 
-        # these should be disabled by default
-        for name in CT_STORAGE_NAMES_DISABLED:
-            assert entity_status[f"{entity_base}_{name}"]
+        CT_STORAGE_TARGETS_STR = (data.metering_status,)
+        for name, target in zip(
+            CT_STORAGE_NAMES_STR, CT_STORAGE_TARGETS_STR, strict=False
+        ):
+            assert target == hass.states.get(f"{entity_base}_{name}").state
 
-    CT_STORAGE_PHASE_NAMES = [
+    CT_STORAGE_NAMES_FLOAT_PHASE = [
         f"{name}_{phase.lower()}"
         for phase in PHASENAMES
-        for name in (CT_STORAGE_NAMES + CT_STORAGE_NAMES_DISABLED)
+        for name in (CT_STORAGE_NAMES_FLOAT)
+    ]
+
+    CT_STORAGE_NAMES_STR_PHASE = [
+        f"{name}_{phase.lower()}"
+        for phase in PHASENAMES
+        for name in (CT_STORAGE_NAMES_STR)
     ]
 
     if mock_envoy.data.ctmeter_storage_phases:
-        # these should be disabled by default
-        for name in CT_STORAGE_PHASE_NAMES:
-            assert entity_status[f"{entity_base}_{name}"]
+        # if storage meter phase data, entities should be created and have values
+        CT_STORAGE_NAMES_FLOAT_PHASE_TARGET = list(
+            itertools.chain(
+                *[
+                    (
+                        phase_data.energy_delivered / 1000000.0,
+                        phase_data.energy_received / 1000000.0,
+                        phase_data.active_power / 1000.0,
+                        phase_data.voltage,
+                        len(phase_data.status_flags),
+                    )
+                    for phase, phase_data in mock_envoy.data.ctmeter_storage_phases.items()
+                ]
+            )
+        )
+        for name, target in zip(
+            CT_STORAGE_NAMES_FLOAT_PHASE,
+            CT_STORAGE_NAMES_FLOAT_PHASE_TARGET,
+            strict=False,
+        ):
+            assert target == float(hass.states.get(f"{entity_base}_{name}").state)
+
+        CT_STORAGE_NAMES_STR_PHASE_TARGET = list(
+            itertools.chain(
+                *[
+                    (phase_data.metering_status,)
+                    for phase, phase_data in mock_envoy.data.ctmeter_storage_phases.items()
+                ]
+            )
+        )
+
+        for name, target in zip(
+            CT_STORAGE_NAMES_STR_PHASE,
+            CT_STORAGE_NAMES_STR_PHASE_TARGET,
+            strict=False,
+        ):
+            assert target == hass.states.get(f"{entity_base}_{name}").state
 
     if not mock_envoy.data.ctmeter_storage:
-        # these should not be created
-        for name in CT_STORAGE_NAMES:
+        # if no storage ct meter  data these should not be created
+        for name in zip(CT_STORAGE_NAMES_FLOAT, CT_STORAGE_NAMES_STR, strict=False):
             assert f"{entity_base}_{name}" not in entity_status
 
     if not mock_envoy.data.ctmeter_storage_phases:
-        # these should not be created
-        for name in CT_STORAGE_PHASE_NAMES:
+        # if no storage ct meter phase data these should not be created
+        for name in zip(
+            CT_STORAGE_NAMES_FLOAT_PHASE, CT_STORAGE_NAMES_STR_PHASE, strict=False
+        ):
             assert f"{entity_base}_{name}" not in entity_status
 
 
@@ -433,7 +631,7 @@ async def test_sensor_encharge_aggregate_data(
             data.backup_reserve,
             data.max_available_capacity,
         )
-        for name, target in zip(ENCHARGE_NAMES, ENCHARGE_TARGETS):
+        for name, target in zip(ENCHARGE_NAMES, ENCHARGE_TARGETS, strict=False):
             assert target == float(hass.states.get(f"{entity_base}_{name}").state)
 
     if not mock_envoy.data.encharge_aggregate:
@@ -536,7 +734,7 @@ async def test_sensor_encharge_power_data(
         ]
 
         for sn, sn_target in ENCHARGE_TARGETS:
-            for name, target in zip(ENCHARGE_NAMES, sn_target):
+            for name, target in zip(ENCHARGE_NAMES, sn_target, strict=False):
                 assert target == float(
                     hass.states.get(f"{entity_base}{sn}_{name}").state
                 )
