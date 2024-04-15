@@ -17,6 +17,7 @@ from homeassistant.helpers import (
     entity_registry as er,
     floor_registry as fr,
     intent,
+    llm,
 )
 from homeassistant.setup import async_setup_component
 
@@ -264,6 +265,30 @@ def test_async_register(hass: HomeAssistant) -> None:
 
     assert hass.data[intent.DATA_KEY]["test_intent"] == handler
 
+    llm_tool = hass.data[llm.DATA_KEY]["test_intent"]
+    assert llm_tool.name == "test_intent"
+    assert isinstance(llm_tool, llm.IntentTool)
+
+
+def test_async_register_dynamic_service_intent_handler(hass: HomeAssistant) -> None:
+    """Test registering an intent and verifying that extra slots for llm tool are converted correctly."""
+    handler = intent.DynamicServiceIntentHandler(
+        "test_intent", extra_slots={"extra_slot": str}
+    )
+    handler.slot_schema = {"test_slot": str}
+
+    intent.async_register(hass, handler)
+
+    assert hass.data[intent.DATA_KEY]["test_intent"] == handler
+
+    llm_tool = hass.data[llm.DATA_KEY]["test_intent"]
+    assert llm_tool.name == "test_intent"
+    assert isinstance(llm_tool, llm.IntentTool)
+    assert llm_tool.parameters["properties"] == {
+        "extra_slot": {"type": "string"},
+        "test_slot": {"type": "string"},
+    }
+
 
 def test_async_register_overwrite(hass: HomeAssistant) -> None:
     """Test registering multiple intents with the same type, ensuring the last one overwrites the previous one and a warning is emitted."""
@@ -296,6 +321,7 @@ def test_async_remove(hass: HomeAssistant) -> None:
     intent.async_remove(hass, "test_intent")
 
     assert "test_intent" not in hass.data[intent.DATA_KEY]
+    assert "test_intent" not in hass.data[llm.DATA_KEY]
 
 
 def test_async_remove_no_existing_entry(hass: HomeAssistant) -> None:
