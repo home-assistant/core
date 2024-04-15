@@ -15,6 +15,7 @@ from homeassistant.const import ATTR_ENTITY_ID, STATE_LOCKED, STATE_UNLOCKED, Pl
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.issue_registry import async_get as async_get_issue_registry
 
 from .common import DOMAIN, assert_entities, setup_platform
 
@@ -89,6 +90,8 @@ async def test_speed_limit_lock(
 ) -> None:
     """Tests that the deprecated speed limit lock entity is correct."""
 
+    issue_registry = async_get_issue_registry(hass)
+
     # Create the deprecated speed limit lock entity
     entity = entity_registry.async_get_or_create(
         LOCK_DOMAIN,
@@ -104,6 +107,9 @@ async def test_speed_limit_lock(
         return_value=["item"],
     ):
         await setup_platform(hass, [Platform.LOCK])
+        assert issue_registry.async_get_issue(
+            DOMAIN, f"deprecated_speed_limit_{entity.entity_id}_item"
+        )
 
     # Test lock set value functions
     with patch(
@@ -117,6 +123,8 @@ async def test_speed_limit_lock(
         )
         assert hass.states.get(entity.entity_id).state == STATE_LOCKED
         mock_enable_speed_limit.assert_called_once()
+        # Assert issue has been raised in the issue register
+        assert issue_registry.async_get_issue(DOMAIN, "deprecated_speed_limit_locked")
 
     with patch(
         "homeassistant.components.tessie.lock.disable_speed_limit"
@@ -129,6 +137,7 @@ async def test_speed_limit_lock(
         )
         assert hass.states.get(entity.entity_id).state == STATE_UNLOCKED
         mock_disable_speed_limit.assert_called_once()
+        assert issue_registry.async_get_issue(DOMAIN, "deprecated_speed_limit_unlocked")
 
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
