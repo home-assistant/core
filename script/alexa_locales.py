@@ -13,7 +13,7 @@ SITE = (
 )
 
 
-def run_script():
+def run_script() -> None:
     """Run the script."""
     response = requests.get(SITE, timeout=10)
     soup = BeautifulSoup(response.text, "html.parser")
