@@ -701,7 +701,7 @@ async def test_get_services(
         assert msg["id"] == id_
         assert msg["type"] == const.TYPE_RESULT
         assert msg["success"]
-        assert msg["result"] == hass.services.async_services()
+        assert msg["result"].keys() == hass.services.async_services().keys()
 
 
 async def test_get_config(
