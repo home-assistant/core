@@ -1,6 +1,7 @@
 """Adapter to wrap the rachiopy api for home assistant."""
 
 from abc import abstractmethod
+from typing import Any
 
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
@@ -55,7 +56,9 @@ class RachioHoseTimerEntity(CoordinatorEntity[RachioUpdateCoordinator]):
 
     _attr_has_entity_name = True
 
-    def __init__(self, data, coordinator: RachioUpdateCoordinator) -> None:
+    def __init__(
+        self, data: dict[str, Any], coordinator: RachioUpdateCoordinator
+    ) -> None:
         """Initialize a Rachio smart hose timer entity."""
         super().__init__(coordinator)
         self.id = data[KEY_ID]
