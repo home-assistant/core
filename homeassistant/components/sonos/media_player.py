@@ -446,7 +446,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             MUSIC_SRC_RADIO,
             MUSIC_SRC_LINE_IN,
         ]:
-            soco.play_uri(uri, title=favorite.title)
+            soco.play_uri(uri, title=favorite.title, timeout=LONG_SERVICE_TIMEOUT)
         else:
             soco.clear_queue()
             soco.add_to_queue(favorite.reference, timeout=LONG_SERVICE_TIMEOUT)

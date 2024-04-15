@@ -196,6 +196,7 @@ async def test_play_media_music_library_playlist_dne(
             {
                 "play_uri": 1,
                 "play_uri_uri": "x-sonosapi-radio:ST%3aetc",
+                "play_uri_title": "James Taylor Radio",
             },
         ),
         (
@@ -203,6 +204,7 @@ async def test_play_media_music_library_playlist_dne(
             {
                 "play_uri": 1,
                 "play_uri_uri": "x-sonosapi-hls:Api%3atune%3aliveAudio%3ajazzcafe%3aetc",
+                "play_uri_title": "66 - Watercolors",
             },
         ),
         (
@@ -262,9 +264,12 @@ async def test_select_source(
         )
     if result.get("play_from_queue"):
         assert soco_mock.play_from_queue.call_count == result.get("play_from_queue")
+        soco_mock.play_from_queue.assert_called_with(0)
         assert soco_mock.play_from_queue.call_args_list[0].args[0] == 0
     if result.get("play_uri"):
         assert soco_mock.play_uri.call_count == result.get("play_uri")
-        assert soco_mock.play_uri.call_args_list[0].args[0] == result.get(
-            "play_uri_uri"
+        soco_mock.play_uri.assert_called_with(
+            result.get("play_uri_uri"),
+            title=result.get("play_uri_title"),
+            timeout=LONG_SERVICE_TIMEOUT,
         )
