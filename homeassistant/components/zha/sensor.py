@@ -503,6 +503,7 @@ class ElectricalMeasurement(PollableSensor):
         else:
             multiplier = self._multiplier
             divisor = self._divisor 
+        value = float(value * multiplier) / divisor
         if self._decimals > 0:
             return round(value, self._decimals)
         return round(value)
