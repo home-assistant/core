@@ -397,7 +397,7 @@ async def test_dhcp_flow(hass: HomeAssistant, mock_setup_entry: MagicMock) -> No
             None,
             None,
             TEST_HOST2,
-            [TEST_HOST, TEST_HOST2],
+            [TEST_HOST, TEST_HOST2, TEST_HOST2],
         ),
         (
             True,

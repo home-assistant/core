@@ -288,9 +288,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """Handle core config updated."""
         await home_zone.async_update_config(_home_conf(hass))
 
-    hass.bus.async_listen(
-        EVENT_CORE_CONFIG_UPDATE, core_config_updated, run_immediately=True
-    )
+    hass.bus.async_listen(EVENT_CORE_CONFIG_UPDATE, core_config_updated)
 
     hass.data[DOMAIN] = storage_collection
 

@@ -835,8 +835,8 @@ async def test_outlet_power_readings(
     """Test the outlet power reporting on PDU devices."""
     await setup_unifi_integration(hass, aioclient_mock, devices_response=[PDU_DEVICE_1])
 
-    assert len(hass.states.async_all()) == 11
-    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 5
+    assert len(hass.states.async_all()) == 13
+    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 7
 
     ent_reg_entry = entity_registry.async_get(f"sensor.{entity_id}")
     assert ent_reg_entry.unique_id == expected_unique_id
@@ -1069,3 +1069,47 @@ async def test_wlan_password(
     mock_unifi_websocket(message=MessageKey.WLAN_CONF_UPDATED, data=wlan_1)
     await hass.async_block_till_done()
     assert hass.states.get(sensor_password).state == password
+
+
+async def test_device_system_stats(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    aioclient_mock: AiohttpClientMocker,
+    mock_unifi_websocket,
+) -> None:
+    """Verify that device stats sensors are working as expected."""
+
+    device = {
+        "device_id": "mock-id",
+        "mac": "00:00:00:00:01:01",
+        "model": "US16P150",
+        "name": "Device",
+        "state": 1,
+        "version": "4.0.42.10433",
+        "system-stats": {"cpu": 5.8, "mem": 31.1, "uptime": 7316},
+    }
+
+    await setup_unifi_integration(hass, aioclient_mock, devices_response=[device])
+
+    assert len(hass.states.async_all()) == 8
+    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 4
+
+    assert hass.states.get("sensor.device_cpu_utilization").state == "5.8"
+    assert hass.states.get("sensor.device_memory_utilization").state == "31.1"
+
+    assert (
+        entity_registry.async_get("sensor.device_cpu_utilization").entity_category
+        is EntityCategory.DIAGNOSTIC
+    )
+
+    assert (
+        entity_registry.async_get("sensor.device_memory_utilization").entity_category
+        is EntityCategory.DIAGNOSTIC
+    )
+
+    # Verify new event change system-stats
+    device["system-stats"] = {"cpu": 7.7, "mem": 33.3, "uptime": 7316}
+    mock_unifi_websocket(message=MessageKey.DEVICE, data=device)
+
+    assert hass.states.get("sensor.device_cpu_utilization").state == "7.7"
+    assert hass.states.get("sensor.device_memory_utilization").state == "33.3"

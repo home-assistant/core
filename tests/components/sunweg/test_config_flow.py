@@ -59,7 +59,7 @@ async def test_server_unavailable(hass: HomeAssistant) -> None:
     assert result["errors"] == {"base": "timeout_connect"}
 
 
-async def test_reauth(hass: HomeAssistant) -> None:
+async def test_reauth(hass: HomeAssistant, plant_fixture, inverter_fixture) -> None:
     """Test reauth flow."""
     mock_entry = SUNWEG_MOCK_ENTRY
     mock_entry.add_to_hass(hass)
@@ -103,11 +103,18 @@ async def test_reauth(hass: HomeAssistant) -> None:
     assert result["step_id"] == "reauth_confirm"
     assert result["errors"] == {"base": "timeout_connect"}
 
-    with patch.object(APIHelper, "authenticate", return_value=True):
+    with (
+        patch.object(APIHelper, "authenticate", return_value=True),
+        patch.object(APIHelper, "listPlants", return_value=[plant_fixture]),
+        patch.object(APIHelper, "plant", return_value=plant_fixture),
+        patch.object(APIHelper, "inverter", return_value=inverter_fixture),
+        patch.object(APIHelper, "complete_inverter"),
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input=SUNWEG_USER_INPUT,
         )
+        await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
