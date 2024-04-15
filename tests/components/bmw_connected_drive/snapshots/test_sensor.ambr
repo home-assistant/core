@@ -4,34 +4,6 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'attribution': 'Data provided by MyBMW',
-        'friendly_name': 'iX xDrive50 Remaining range total',
-        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-        'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
-      }),
-      'context': <ANY>,
-      'entity_id': 'sensor.ix_xdrive50_remaining_range_total',
-      'last_changed': <ANY>,
-      'last_reported': <ANY>,
-      'last_updated': <ANY>,
-      'state': '340',
-    }),
-    StateSnapshot({
-      'attributes': ReadOnlyDict({
-        'attribution': 'Data provided by MyBMW',
-        'friendly_name': 'iX xDrive50 Mileage',
-        'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-        'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
-      }),
-      'context': <ANY>,
-      'entity_id': 'sensor.ix_xdrive50_mileage',
-      'last_changed': <ANY>,
-      'last_reported': <ANY>,
-      'last_updated': <ANY>,
-      'state': '1121',
-    }),
-    StateSnapshot({
-      'attributes': ReadOnlyDict({
-        'attribution': 'Data provided by MyBMW',
         'device_class': 'timestamp',
         'friendly_name': 'iX xDrive50 Charging end time',
       }),
@@ -57,6 +29,19 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'attribution': 'Data provided by MyBMW',
+        'friendly_name': 'iX xDrive50 Charging target',
+        'unit_of_measurement': '%',
+      }),
+      'context': <ANY>,
+      'entity_id': 'sensor.ix_xdrive50_charging_target',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': '80',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'attribution': 'Data provided by MyBMW',
         'device_class': 'battery',
         'friendly_name': 'iX xDrive50 Remaining battery percent',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -72,6 +57,34 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'attribution': 'Data provided by MyBMW',
+        'friendly_name': 'iX xDrive50 Mileage',
+        'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+        'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
+      }),
+      'context': <ANY>,
+      'entity_id': 'sensor.ix_xdrive50_mileage',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': '1121',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'attribution': 'Data provided by MyBMW',
+        'friendly_name': 'iX xDrive50 Remaining range total',
+        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+        'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
+      }),
+      'context': <ANY>,
+      'entity_id': 'sensor.ix_xdrive50_remaining_range_total',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': '340',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'attribution': 'Data provided by MyBMW',
         'friendly_name': 'iX xDrive50 Remaining range electric',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
@@ -82,47 +95,6 @@
       'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': '340',
-    }),
-    StateSnapshot({
-      'attributes': ReadOnlyDict({
-        'attribution': 'Data provided by MyBMW',
-        'friendly_name': 'iX xDrive50 Charging target',
-        'unit_of_measurement': '%',
-      }),
-      'context': <ANY>,
-      'entity_id': 'sensor.ix_xdrive50_charging_target',
-      'last_changed': <ANY>,
-      'last_reported': <ANY>,
-      'last_updated': <ANY>,
-      'state': '80',
-    }),
-    StateSnapshot({
-      'attributes': ReadOnlyDict({
-        'attribution': 'Data provided by MyBMW',
-        'friendly_name': 'i4 eDrive40 Remaining range total',
-        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-        'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
-      }),
-      'context': <ANY>,
-      'entity_id': 'sensor.i4_edrive40_remaining_range_total',
-      'last_changed': <ANY>,
-      'last_reported': <ANY>,
-      'last_updated': <ANY>,
-      'state': '472',
-    }),
-    StateSnapshot({
-      'attributes': ReadOnlyDict({
-        'attribution': 'Data provided by MyBMW',
-        'friendly_name': 'i4 eDrive40 Mileage',
-        'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-        'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
-      }),
-      'context': <ANY>,
-      'entity_id': 'sensor.i4_edrive40_mileage',
-      'last_changed': <ANY>,
-      'last_reported': <ANY>,
-      'last_updated': <ANY>,
-      'state': '1121',
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
@@ -152,6 +124,19 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'attribution': 'Data provided by MyBMW',
+        'friendly_name': 'i4 eDrive40 Charging target',
+        'unit_of_measurement': '%',
+      }),
+      'context': <ANY>,
+      'entity_id': 'sensor.i4_edrive40_charging_target',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': '80',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'attribution': 'Data provided by MyBMW',
         'device_class': 'battery',
         'friendly_name': 'i4 eDrive40 Remaining battery percent',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -163,6 +148,34 @@
       'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': '80',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'attribution': 'Data provided by MyBMW',
+        'friendly_name': 'i4 eDrive40 Mileage',
+        'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+        'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
+      }),
+      'context': <ANY>,
+      'entity_id': 'sensor.i4_edrive40_mileage',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': '1121',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'attribution': 'Data provided by MyBMW',
+        'friendly_name': 'i4 eDrive40 Remaining range total',
+        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+        'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
+      }),
+      'context': <ANY>,
+      'entity_id': 'sensor.i4_edrive40_remaining_range_total',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': '472',
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
@@ -181,15 +194,16 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'attribution': 'Data provided by MyBMW',
-        'friendly_name': 'i4 eDrive40 Charging target',
-        'unit_of_measurement': '%',
+        'friendly_name': 'M340i xDrive Mileage',
+        'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+        'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
       }),
       'context': <ANY>,
-      'entity_id': 'sensor.i4_edrive40_charging_target',
+      'entity_id': 'sensor.m340i_xdrive_mileage',
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
-      'state': '80',
+      'state': '1121',
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
@@ -208,16 +222,16 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'attribution': 'Data provided by MyBMW',
-        'friendly_name': 'M340i xDrive Mileage',
-        'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+        'friendly_name': 'M340i xDrive Remaining range fuel',
+        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
       }),
       'context': <ANY>,
-      'entity_id': 'sensor.m340i_xdrive_mileage',
+      'entity_id': 'sensor.m340i_xdrive_remaining_range_fuel',
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
-      'state': '1121',
+      'state': '629',
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
@@ -236,20 +250,6 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'attribution': 'Data provided by MyBMW',
-        'friendly_name': 'M340i xDrive Remaining range fuel',
-        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-        'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
-      }),
-      'context': <ANY>,
-      'entity_id': 'sensor.m340i_xdrive_remaining_range_fuel',
-      'last_changed': <ANY>,
-      'last_reported': <ANY>,
-      'last_updated': <ANY>,
-      'state': '629',
-    }),
-    StateSnapshot({
-      'attributes': ReadOnlyDict({
-        'attribution': 'Data provided by MyBMW',
         'friendly_name': 'M340i xDrive Remaining fuel percent',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': '%',
@@ -260,34 +260,6 @@
       'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': '80',
-    }),
-    StateSnapshot({
-      'attributes': ReadOnlyDict({
-        'attribution': 'Data provided by MyBMW',
-        'friendly_name': 'i3 (+ REX) Remaining range total',
-        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-        'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
-      }),
-      'context': <ANY>,
-      'entity_id': 'sensor.i3_rex_remaining_range_total',
-      'last_changed': <ANY>,
-      'last_reported': <ANY>,
-      'last_updated': <ANY>,
-      'state': '279',
-    }),
-    StateSnapshot({
-      'attributes': ReadOnlyDict({
-        'attribution': 'Data provided by MyBMW',
-        'friendly_name': 'i3 (+ REX) Mileage',
-        'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-        'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
-      }),
-      'context': <ANY>,
-      'entity_id': 'sensor.i3_rex_mileage',
-      'last_changed': <ANY>,
-      'last_reported': <ANY>,
-      'last_updated': <ANY>,
-      'state': '137009',
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
@@ -317,6 +289,19 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'attribution': 'Data provided by MyBMW',
+        'friendly_name': 'i3 (+ REX) Charging target',
+        'unit_of_measurement': '%',
+      }),
+      'context': <ANY>,
+      'entity_id': 'sensor.i3_rex_charging_target',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': '100',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'attribution': 'Data provided by MyBMW',
         'device_class': 'battery',
         'friendly_name': 'i3 (+ REX) Remaining battery percent',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -328,6 +313,34 @@
       'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': '82',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'attribution': 'Data provided by MyBMW',
+        'friendly_name': 'i3 (+ REX) Mileage',
+        'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+        'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
+      }),
+      'context': <ANY>,
+      'entity_id': 'sensor.i3_rex_mileage',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': '137009',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'attribution': 'Data provided by MyBMW',
+        'friendly_name': 'i3 (+ REX) Remaining range total',
+        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+        'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
+      }),
+      'context': <ANY>,
+      'entity_id': 'sensor.i3_rex_remaining_range_total',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': '279',
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
@@ -346,15 +359,16 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'attribution': 'Data provided by MyBMW',
-        'friendly_name': 'i3 (+ REX) Charging target',
-        'unit_of_measurement': '%',
+        'friendly_name': 'i3 (+ REX) Remaining range fuel',
+        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+        'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
       }),
       'context': <ANY>,
-      'entity_id': 'sensor.i3_rex_charging_target',
+      'entity_id': 'sensor.i3_rex_remaining_range_fuel',
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
-      'state': '100',
+      'state': '105',
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
@@ -369,20 +383,6 @@
       'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': '6',
-    }),
-    StateSnapshot({
-      'attributes': ReadOnlyDict({
-        'attribution': 'Data provided by MyBMW',
-        'friendly_name': 'i3 (+ REX) Remaining range fuel',
-        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-        'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
-      }),
-      'context': <ANY>,
-      'entity_id': 'sensor.i3_rex_remaining_range_fuel',
-      'last_changed': <ANY>,
-      'last_reported': <ANY>,
-      'last_updated': <ANY>,
-      'state': '105',
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({

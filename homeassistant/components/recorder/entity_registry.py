@@ -47,7 +47,6 @@ def async_setup(hass: HomeAssistant) -> None:
             er.EVENT_ENTITY_REGISTRY_UPDATED,
             _async_entity_id_changed,
             event_filter=entity_registry_changed_filter,
-            run_immediately=True,
         )
 
     async_at_start(hass, _setup_entity_registry_event_handler)

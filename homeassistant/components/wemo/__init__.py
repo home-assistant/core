@@ -96,9 +96,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         discovery_responder.stop()
         registry.stop()
 
-    hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STOP, _on_hass_stop, run_immediately=True
-    )
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _on_hass_stop)
 
     yaml_config = config.get(DOMAIN, {})
     hass.data[DOMAIN] = WemoData(
