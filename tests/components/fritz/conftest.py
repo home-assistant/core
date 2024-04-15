@@ -77,13 +77,11 @@ class FritzConnectionMock:
 class FritzHostMock(FritzHosts):
     """FritzHosts mocking."""
 
-    def get_mesh_topology(self, raw=False):
-        """Retrurn mocked mesh data."""
-        return MOCK_MESH_DATA
+    get_mesh_topology = MagicMock()
+    get_mesh_topology.return_value = MOCK_MESH_DATA
 
-    def get_hosts_attributes(self):
-        """Retrurn mocked host attributes data."""
-        return MOCK_HOST_ATTRIBUTES_DATA
+    get_hosts_attributes = MagicMock()
+    get_hosts_attributes.return_value = MOCK_HOST_ATTRIBUTES_DATA
 
 
 @pytest.fixture(name="fc_data")

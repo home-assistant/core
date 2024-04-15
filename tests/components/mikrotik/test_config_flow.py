@@ -133,7 +133,7 @@ async def test_host_already_configured(hass: HomeAssistant, auth_error) -> None:
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=DEMO_USER_INPUT
     )
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -184,7 +184,7 @@ async def test_reauth_success(hass: HomeAssistant, api) -> None:
         data=DEMO_USER_INPUT,
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     assert result["description_placeholders"] == {CONF_USERNAME: "username"}
 
@@ -195,7 +195,7 @@ async def test_reauth_success(hass: HomeAssistant, api) -> None:
         },
     )
 
-    assert result2["type"] == "abort"
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
 
 
@@ -216,7 +216,7 @@ async def test_reauth_failed(hass: HomeAssistant, auth_error) -> None:
         data=DEMO_USER_INPUT,
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -226,7 +226,7 @@ async def test_reauth_failed(hass: HomeAssistant, auth_error) -> None:
         },
     )
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {
         CONF_PASSWORD: "invalid_auth",
     }
@@ -249,7 +249,7 @@ async def test_reauth_failed_conn_error(hass: HomeAssistant, conn_error) -> None
         data=DEMO_USER_INPUT,
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -259,5 +259,5 @@ async def test_reauth_failed_conn_error(hass: HomeAssistant, conn_error) -> None
         },
     )
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}

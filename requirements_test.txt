@@ -23,12 +23,11 @@ pytest-cov==5.0.0
 pytest-freezer==0.4.8
 pytest-github-actions-annotate-failures==0.2.0
 pytest-socket==0.7.0
-pytest-test-groups==1.0.3
 pytest-sugar==1.0.0
 pytest-timeout==2.3.1
 pytest-unordered==0.6.0
 pytest-picked==0.5.0
-pytest-xdist==3.4.0
+pytest-xdist==3.5.0
 pytest==8.1.1
 requests-mock==1.11.0
 respx==0.21.0

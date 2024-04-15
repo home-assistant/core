@@ -84,13 +84,12 @@ async def option_init_result_fixture(hass: HomeAssistant) -> FlowResultType:
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
     flow = await hass.config_entries.options.async_init(entry.entry_id)
-    result = await hass.config_entries.options.async_configure(
+    return await hass.config_entries.options.async_configure(
         flow["flow_id"],
         user_input={
             CONF_ROUTE_MODE: ROUTE_MODE_FASTEST,
         },
     )
-    return result
 
 
 @pytest.fixture(name="origin_step_result")
@@ -102,7 +101,7 @@ async def origin_step_result_fixture(
         user_step_result["flow_id"], {"next_step_id": "origin_coordinates"}
     )
 
-    location_selector_result = await hass.config_entries.flow.async_configure(
+    return await hass.config_entries.flow.async_configure(
         origin_menu_result["flow_id"],
         {
             "origin": {
@@ -112,7 +111,6 @@ async def origin_step_result_fixture(
             }
         },
     )
-    return location_selector_result
 
 
 @pytest.mark.parametrize(
@@ -266,7 +264,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
@@ -289,7 +287,7 @@ async def test_form_unknown_error(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
 
 

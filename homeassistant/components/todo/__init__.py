@@ -3,8 +3,9 @@
 from collections.abc import Callable, Iterable
 import dataclasses
 import datetime
+from functools import cached_property
 import logging
-from typing import TYPE_CHECKING, Any, final
+from typing import Any, final
 
 import voluptuous as vol
 
@@ -40,12 +41,6 @@ from .const import (
     TodoItemStatus,
     TodoListEntityFeature,
 )
-
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
-
 
 _LOGGER = logging.getLogger(__name__)
 

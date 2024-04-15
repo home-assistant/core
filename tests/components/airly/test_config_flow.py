@@ -98,7 +98,7 @@ async def test_duplicate_error(
         DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
     )
 
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 

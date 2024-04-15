@@ -27,6 +27,7 @@ from homeassistant.components.stream import (
     CONF_USE_WALLCLOCK_AS_TIMESTAMPS,
 )
 from homeassistant.components.stream.worker import StreamWorkerError
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_AUTHENTICATION,
     CONF_NAME,
@@ -127,7 +128,7 @@ async def test_form_only_stillimage(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     data = TESTDATA.copy()
@@ -501,7 +502,7 @@ async def test_form_image_http_exceptions(
         )
     await hass.async_block_till_done()
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == expected_message
 
 
@@ -518,7 +519,7 @@ async def test_form_stream_invalidimage(
         )
     await hass.async_block_till_done()
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"still_image_url": "invalid_still_image"}
 
 
@@ -535,7 +536,7 @@ async def test_form_stream_invalidimage2(
         )
     await hass.async_block_till_done()
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"still_image_url": "unable_still_load_no_image"}
 
 
@@ -552,7 +553,7 @@ async def test_form_stream_invalidimage3(
         )
     await hass.async_block_till_done()
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"still_image_url": "invalid_still_image"}
 
 
@@ -571,7 +572,7 @@ async def test_form_stream_timeout(hass: HomeAssistant, fakeimg_png, user_flow) 
             user_flow["flow_id"],
             TESTDATA,
         )
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"stream_source": "timeout"}
 
 
@@ -588,7 +589,7 @@ async def test_form_stream_worker_error(
             user_flow["flow_id"],
             TESTDATA,
         )
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"stream_source": "Some message"}
 
 
@@ -606,7 +607,7 @@ async def test_form_stream_permission_error(
             user_flow["flow_id"],
             TESTDATA,
         )
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"stream_source": "stream_not_permitted"}
 
 
@@ -623,7 +624,7 @@ async def test_form_no_route_to_host(
             user_flow["flow_id"],
             TESTDATA,
         )
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"stream_source": "stream_no_route_to_host"}
 
 
@@ -640,7 +641,7 @@ async def test_form_stream_io_error(
             user_flow["flow_id"],
             TESTDATA,
         )
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"stream_source": "stream_io_error"}
 
 
@@ -804,11 +805,11 @@ async def test_unload_entry(hass: HomeAssistant, fakeimg_png) -> None:
 
     await hass.config_entries.async_setup(mock_entry.entry_id)
     await hass.async_block_till_done()
-    assert mock_entry.state is config_entries.ConfigEntryState.LOADED
+    assert mock_entry.state is ConfigEntryState.LOADED
 
     await hass.config_entries.async_unload(mock_entry.entry_id)
     await hass.async_block_till_done()
-    assert mock_entry.state is config_entries.ConfigEntryState.NOT_LOADED
+    assert mock_entry.state is ConfigEntryState.NOT_LOADED
 
 
 async def test_reload_on_title_change(hass: HomeAssistant) -> None:
@@ -823,7 +824,7 @@ async def test_reload_on_title_change(hass: HomeAssistant) -> None:
 
     await hass.config_entries.async_setup(mock_entry.entry_id)
     await hass.async_block_till_done()
-    assert mock_entry.state is config_entries.ConfigEntryState.LOADED
+    assert mock_entry.state is ConfigEntryState.LOADED
     assert hass.states.get("camera.my_title").attributes["friendly_name"] == "My Title"
 
     hass.config_entries.async_update_entry(mock_entry, title="New Title")

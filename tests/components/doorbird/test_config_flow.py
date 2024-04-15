@@ -72,7 +72,7 @@ async def test_user_form(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "create_entry"
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "1.2.3.4"
     assert result2["data"] == {
         "host": "1.2.3.4",
@@ -100,7 +100,7 @@ async def test_form_zeroconf_wrong_oui(hass: HomeAssistant) -> None:
             type="mock_type",
         ),
     )
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "not_doorbird_device"
 
 
@@ -120,7 +120,7 @@ async def test_form_zeroconf_link_local_ignored(hass: HomeAssistant) -> None:
             type="mock_type",
         ),
     )
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "link_local_address"
 
 
@@ -147,7 +147,7 @@ async def test_form_zeroconf_ipv4_address(hass: HomeAssistant) -> None:
             type="mock_type",
         ),
     )
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert config_entry.data[CONF_HOST] == "4.4.4.4"
 
@@ -168,7 +168,7 @@ async def test_form_zeroconf_non_ipv4_ignored(hass: HomeAssistant) -> None:
             type="mock_type",
         ),
     )
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "not_ipv4_address"
 
 
@@ -219,7 +219,7 @@ async def test_form_zeroconf_correct_oui(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "create_entry"
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "1.2.3.4"
     assert result2["data"] == {
         "host": "1.2.3.4",
@@ -307,7 +307,7 @@ async def test_form_user_invalid_auth(hass: HomeAssistant) -> None:
             VALID_CONFIG,
         )
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
 
 

@@ -56,14 +56,14 @@ async def test_form(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=None
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         step1_config.copy(),
     )
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == step_id
     result3 = await hass.config_entries.flow.async_configure(
         result2["flow_id"],
@@ -136,7 +136,7 @@ async def test_connection_error_sas(
         context={"source": config_entries.SOURCE_USER},
         data=BASE_CONFIG_SAS.copy(),
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
     mock_get_eventhub_properties.side_effect = side_effect
@@ -165,7 +165,7 @@ async def test_connection_error_cs(
         context={"source": config_entries.SOURCE_USER},
         data=BASE_CONFIG_CS.copy(),
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
     mock_from_connection_string.return_value.get_eventhub_properties.side_effect = (
         side_effect

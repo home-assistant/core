@@ -107,7 +107,7 @@ async def test_sensor_setup(hass: HomeAssistant, fc_class_mock, fh_class_mock) -
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     sensors = hass.states.async_all(SENSOR_DOMAIN)
     assert len(sensors) == len(SENSOR_TYPES)

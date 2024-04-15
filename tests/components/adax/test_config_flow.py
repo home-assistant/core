@@ -58,7 +58,7 @@ async def test_form(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result3["type"] == "create_entry"
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == str(TEST_DATA["account_id"])
     assert result3["data"] == {
         ACCOUNT_ID: TEST_DATA["account_id"],
@@ -124,7 +124,7 @@ async def test_flow_entry_already_exists(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result3["type"] == "abort"
+    assert result3["type"] is FlowResultType.ABORT
     assert result3["reason"] == "already_configured"
 
 
@@ -173,7 +173,7 @@ async def test_local_create_entry(hass: HomeAssistant) -> None:
         )
 
     test_data[CONNECTION_TYPE] = LOCAL
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "8383838"
     assert result["data"] == {
         "connection_type": "Local",
@@ -229,7 +229,7 @@ async def test_local_flow_entry_already_exists(hass: HomeAssistant) -> None:
             test_data,
         )
 
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 

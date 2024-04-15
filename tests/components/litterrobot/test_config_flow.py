@@ -22,7 +22,7 @@ async def test_form(hass: HomeAssistant, mock_account) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     with (
@@ -40,7 +40,7 @@ async def test_form(hass: HomeAssistant, mock_account) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "create_entry"
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == CONFIG[DOMAIN][CONF_USERNAME]
     assert result2["data"] == CONFIG[DOMAIN]
     assert len(mock_setup_entry.mock_calls) == 1
@@ -59,7 +59,7 @@ async def test_already_configured(hass: HomeAssistant) -> None:
         data=CONFIG[litterrobot.DOMAIN],
     )
 
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -77,7 +77,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
             result["flow_id"], CONFIG[DOMAIN]
         )
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
@@ -95,7 +95,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
             result["flow_id"], CONFIG[DOMAIN]
         )
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
@@ -112,7 +112,7 @@ async def test_form_unknown_error(hass: HomeAssistant) -> None:
             result["flow_id"], CONFIG[DOMAIN]
         )
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
 
 

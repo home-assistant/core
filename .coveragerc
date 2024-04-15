@@ -6,11 +6,12 @@
 source = homeassistant
 omit =
     homeassistant/__main__.py
+    homeassistant/helpers/backports/aiohttp_resolver.py
     homeassistant/helpers/signal.py
     homeassistant/scripts/__init__.py
+    homeassistant/scripts/benchmark/__init__.py
     homeassistant/scripts/check_config.py
     homeassistant/scripts/ensure_config.py
-    homeassistant/scripts/benchmark/__init__.py
     homeassistant/scripts/macos/__init__.py
 
     # omit pieces of code that rely on external devices being present
@@ -365,7 +366,6 @@ omit =
     homeassistant/components/epion/sensor.py
     homeassistant/components/epson/__init__.py
     homeassistant/components/epson/media_player.py
-    homeassistant/components/epsonworkforce/sensor.py
     homeassistant/components/eq3btsmart/__init__.py
     homeassistant/components/eq3btsmart/climate.py
     homeassistant/components/eq3btsmart/const.py
@@ -542,12 +542,9 @@ omit =
     homeassistant/components/hko/weather.py
     homeassistant/components/hlk_sw16/__init__.py
     homeassistant/components/hlk_sw16/switch.py
-    homeassistant/components/home_connect/__init__.py
-    homeassistant/components/home_connect/api.py
     homeassistant/components/home_connect/binary_sensor.py
     homeassistant/components/home_connect/entity.py
     homeassistant/components/home_connect/light.py
-    homeassistant/components/home_connect/sensor.py
     homeassistant/components/home_connect/switch.py
     homeassistant/components/homematic/__init__.py
     homeassistant/components/homematic/binary_sensor.py
@@ -1184,6 +1181,7 @@ omit =
     homeassistant/components/rympro/coordinator.py
     homeassistant/components/rympro/sensor.py
     homeassistant/components/sabnzbd/__init__.py
+    homeassistant/components/sabnzbd/coordinator.py
     homeassistant/components/sabnzbd/sensor.py
     homeassistant/components/saj/sensor.py
     homeassistant/components/satel_integra/*

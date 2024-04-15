@@ -649,7 +649,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
         context={"source": config_entries.SOURCE_REAUTH, "unique_id": MOCK_UUID},
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
     with patch(
@@ -664,7 +664,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"password": "invalid_auth"}
 
     with patch(
@@ -679,7 +679,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result3["type"] == "form"
+    assert result3["type"] is FlowResultType.FORM
     assert result3["errors"] == {"base": "cannot_connect"}
 
     with (
@@ -699,5 +699,5 @@ async def test_reauth(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert mock_setup_entry.called
-    assert result4["type"] == "abort"
+    assert result4["type"] is FlowResultType.ABORT
     assert result4["reason"] == "reauth_successful"
