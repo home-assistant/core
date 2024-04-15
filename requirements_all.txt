@@ -2796,7 +2796,7 @@ url-normalize==1.4.3
 uvcclient==0.11.0
 
 # homeassistant.components.roborock
-vacuum-map-parser-roborock==0.1.1
+vacuum-map-parser-roborock==0.1.2
 
 # homeassistant.components.vallox
 vallox-websocket-api==5.1.1
