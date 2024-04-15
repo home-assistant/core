@@ -34,5 +34,4 @@ CLIMATE_ACTIVITY_STATE: list[str] = [
     "heating",
     "inactive",
     "standby",
-    "unknown",
 ]

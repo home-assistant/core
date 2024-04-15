@@ -159,7 +159,7 @@ SENSOR_TYPES: list[BMWSensorEntityDescription] = [
         key_class="climate",
         device_class=SensorDeviceClass.ENUM,
         options=CLIMATE_ACTIVITY_STATE,
-        value=lambda x: x.value.lower(),
+        value=lambda x: x.lower() if x != "UNKNOWN" else None,
         is_available=lambda v: v.is_remote_climate_stop_enabled,
     ),
 ]

@@ -129,8 +129,7 @@
           "cooling": "Cooling",
           "heating": "Heating",
           "inactive": "Inactive",
-          "standby": "Standby",
-          "unknown": "Unknown"
+          "standby": "Standby"
         }
       }
     },
