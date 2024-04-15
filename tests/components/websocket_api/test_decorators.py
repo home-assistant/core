@@ -122,6 +122,23 @@ async def test_async_response_request_context(
     assert msg["error"]["code"] == "invalid_format"
     assert msg["error"]["message"] == "Message incorrectly formatted."
 
+    await websocket_client.send_json(
+        {
+            "id": 10,
+            "type": "test-get-request",
+            "not_valid": "dog",
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 10
+    assert not msg["success"]
+    assert msg["error"]["code"] == "invalid_format"
+    assert msg["error"]["message"] == (
+        "Message has unexpected keys. "
+        "Got {'id': 10, 'type': 'test-get-request', 'not_valid': 'dog'}"
+    )
+
 
 async def test_supervisor_only(hass: HomeAssistant, websocket_client) -> None:
     """Test that only the Supervisor can make requests."""
