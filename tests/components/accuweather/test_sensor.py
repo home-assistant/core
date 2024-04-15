@@ -3,7 +3,14 @@
 from datetime import timedelta
 from unittest.mock import PropertyMock, patch
 
-from homeassistant.components.accuweather.const import ATTRIBUTION
+from accuweather import ApiError, InvalidApiKeyError, RequestsExceededError
+from aiohttp.client_exceptions import ClientConnectorError
+import pytest
+
+from homeassistant.components.accuweather.const import (
+    ATTRIBUTION,
+    UPDATE_INTERVAL_DAILY_FORECAST,
+)
 from homeassistant.components.sensor import (
     ATTR_OPTIONS,
     ATTR_STATE_CLASS,
@@ -35,7 +42,11 @@ from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from . import init_integration
 
-from tests.common import async_fire_time_changed, load_json_object_fixture
+from tests.common import (
+    async_fire_time_changed,
+    load_json_array_fixture,
+    load_json_object_fixture,
+)
 
 
 async def test_sensor(
@@ -584,6 +595,75 @@ async def test_availability(hass: HomeAssistant) -> None:
         assert state
         assert state.state != STATE_UNAVAILABLE
         assert state.state == "3200.0"
+
+
+@pytest.mark.parametrize(
+    "exception",
+    [
+        ApiError,
+        ConnectionError,
+        ClientConnectorError,
+        InvalidApiKeyError,
+        RequestsExceededError,
+    ],
+)
+async def test_availability_forecast(hass: HomeAssistant, exception: Exception) -> None:
+    """Ensure that we mark the entities unavailable correctly when service is offline."""
+    current = load_json_object_fixture("accuweather/current_conditions_data.json")
+    forecast = load_json_array_fixture("accuweather/forecast_data.json")
+    entity_id = "sensor.home_hours_of_sun_day_2"
+
+    await init_integration(hass)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+    assert state.state == "5.7"
+
+    with (
+        patch(
+            "homeassistant.components.accuweather.AccuWeather.async_get_current_conditions",
+            return_value=current,
+        ),
+        patch(
+            "homeassistant.components.accuweather.AccuWeather.async_get_daily_forecast",
+            side_effect=exception,
+        ),
+        patch(
+            "homeassistant.components.accuweather.AccuWeather.requests_remaining",
+            new_callable=PropertyMock,
+            return_value=10,
+        ),
+    ):
+        async_fire_time_changed(hass, utcnow() + UPDATE_INTERVAL_DAILY_FORECAST)
+        await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+
+    with (
+        patch(
+            "homeassistant.components.accuweather.AccuWeather.async_get_current_conditions",
+            return_value=current,
+        ),
+        patch(
+            "homeassistant.components.accuweather.AccuWeather.async_get_daily_forecast",
+            return_value=forecast,
+        ),
+        patch(
+            "homeassistant.components.accuweather.AccuWeather.requests_remaining",
+            new_callable=PropertyMock,
+            return_value=10,
+        ),
+    ):
+        async_fire_time_changed(hass, utcnow() + UPDATE_INTERVAL_DAILY_FORECAST * 2)
+        await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+    assert state.state == "5.7"
 
 
 async def test_manual_update_entity(hass: HomeAssistant) -> None:
