@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock, Mock
 
+from awesomeversion.exceptions import AwesomeVersionStrategyException
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
@@ -145,7 +146,7 @@ async def test_create_issue_invalid_version(
         "translation_placeholders": {"abc": "123"},
     }
 
-    with pytest.raises(Exception):
+    with pytest.raises(AwesomeVersionStrategyException):
         async_create_issue(
             hass,
             issue["domain"],
