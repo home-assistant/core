@@ -1,0 +1,13 @@
+{
+  "exceptions": {
+    "authentication_exception": {
+      "message": "Authentication failed for {username}, check your login credentials"
+    },
+    "connection_exception": {
+      "message": "Unable to connect and retrieve data from pyLoad API"
+    },
+    "parse_exception": {
+      "message": "Unable to parse data from pyLoad API"
+    }
+  }
+}
