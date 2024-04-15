@@ -41,7 +41,7 @@ from .const import (
     Cause,
 )
 from .diagnostics import async_redact_auth_data
-from .entities import ENTITY_ADAPTERS, AlexaEntity, generate_alexa_id
+from .entities import ENTITY_ADAPTERS, AlexaEntity
 from .errors import AlexaInvalidEndpointError, NoTokenAvailable, RequireRelink
 
 if TYPE_CHECKING:
@@ -492,7 +492,7 @@ async def async_send_delete_message(
         if domain not in ENTITY_ADAPTERS:
             continue
 
-        endpoints.append({"endpointId": generate_alexa_id(entity_id)})
+        endpoints.append({"endpointId": config.generate_alexa_id(entity_id)})
 
     payload: dict[str, Any] = {
         "endpoints": endpoints,
