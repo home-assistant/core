@@ -494,11 +494,16 @@ class ElectricalMeasurement(PollableSensor):
                 self._cluster_handler, f"{self._div_mul_prefix}_multiplier"
             )
             divisor = getattr(self._cluster_handler, f"{self._div_mul_prefix}_divisor")
+            value = float(value * multiplier) / divisor
+            _decimals = len("65535")-len(str(round(value))) # uint16
+            if self._div_mul_prefix is "ac_power" or self._div_mul_prefix is "ac_current" :   
+                self._decimals = min(_decimals,3)        # _decimals max 3
+            elif self._div_mul_prefix is "ac_voltage" or self._div_mul_prefix is "ac_frequency" :
+                self._decimals = min(_decimals,2)        # _decimals max 2
         else:
             multiplier = self._multiplier
-            divisor = self._divisor
-        value = float(value * multiplier) / divisor
-        if value < 100 and divisor > 1:
+            divisor = self._divisor 
+        if self._decimals > 0:
             return round(value, self._decimals)
         return round(value)
 
