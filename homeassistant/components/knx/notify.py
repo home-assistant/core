@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 from xknx import XKNX
 from xknx.devices import Notification as XknxNotification
 
