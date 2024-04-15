@@ -29,7 +29,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.helpers.storage import STORAGE_DIR
@@ -197,17 +196,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         [
             platform
             for platform in SUPPORTED_PLATFORMS
-            if platform in config and platform not in (Platform.SENSOR, Platform.NOTIFY)
+            if platform in config and platform is not Platform.SENSOR
         ],
     )
-
-    # set up notify platform, no entry support for notify component yet
-    if NotifySchema.PLATFORM in config:
-        hass.async_create_task(
-            discovery.async_load_platform(
-                hass, Platform.NOTIFY, DOMAIN, {}, hass.data[DATA_HASS_CONFIG]
-            )
-        )
 
     await register_panel(hass)
 
@@ -232,7 +223,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 platform
                 for platform in SUPPORTED_PLATFORMS
                 if platform in hass.data[DATA_KNX_CONFIG]
-                and platform not in (Platform.SENSOR, Platform.NOTIFY)
+                and platform is not Platform.SENSOR
             ],
         ],
     )
