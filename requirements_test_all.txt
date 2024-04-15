@@ -1730,7 +1730,7 @@ python-ecobee-api==0.2.17
 python-fullykiosk==0.0.12
 
 # homeassistant.components.sms
-python-gammu==3.2.4
+# python-gammu==3.2.4
 
 # homeassistant.components.analytics_insights
 python-homeassistant-analytics==0.6.0
