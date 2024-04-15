@@ -51,6 +51,19 @@
     'state': 'on',
   })
 # ---
+# name: test_gateway_port_poe_switch
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Router Port 5 PoE',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.test_router_port_5_poe',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
 # name: test_poe_switches
   StateSnapshot({
     'attributes': ReadOnlyDict({

@@ -1,6 +1,6 @@
 {
   "domain": "motionblinds_ble",
-  "name": "Motionblinds BLE",
+  "name": "Motionblinds Bluetooth",
   "bluetooth": [
     {
       "local_name": "MOTION_*",

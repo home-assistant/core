@@ -67,7 +67,6 @@ def _mock_socket(failure_attempts: int = 0) -> MagicMock:
         attempts += 1
         if attempts <= failure_attempts:
             raise OSError
-        return
 
     mock_socket.bind = Mock(side_effect=_simulate_bind)
     return mock_socket

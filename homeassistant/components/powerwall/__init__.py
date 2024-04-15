@@ -5,7 +5,6 @@ from __future__ import annotations
 from contextlib import AsyncExitStack
 from datetime import timedelta
 import logging
-from typing import Optional
 
 from aiohttp import CookieJar
 from tesla_powerwall import (
@@ -244,7 +243,7 @@ async def _call_base_info(power_wall: Powerwall, host: str) -> PowerwallBaseInfo
     )
 
 
-async def get_backup_reserve_percentage(power_wall: Powerwall) -> Optional[float]:
+async def get_backup_reserve_percentage(power_wall: Powerwall) -> float | None:
     """Return the backup reserve percentage."""
     try:
         return await power_wall.get_backup_reserve_percentage()

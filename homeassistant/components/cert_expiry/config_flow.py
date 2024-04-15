@@ -43,7 +43,6 @@ class CertexpiryConfigFlow(ConfigFlow, domain=DOMAIN):
                 user_input[CONF_HOST],
                 user_input.get(CONF_PORT, DEFAULT_PORT),
             )
-            return True
         except ResolveFailed:
             self._errors[CONF_HOST] = "resolve_failed"
         except ConnectionTimeout:
@@ -51,6 +50,8 @@ class CertexpiryConfigFlow(ConfigFlow, domain=DOMAIN):
         except ConnectionRefused:
             self._errors[CONF_HOST] = "connection_refused"
         except ValidationFailure:
+            return True
+        else:
             return True
         return False
 

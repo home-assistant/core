@@ -7,6 +7,7 @@ from aiohttp import ClientResponseError
 from homeassistant import config_entries
 from homeassistant.components.habitica.const import DEFAULT_URL, DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
@@ -17,7 +18,7 @@ async def test_form(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     mock_obj = MagicMock()
@@ -42,7 +43,7 @@ async def test_form(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "create_entry"
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Default username"
     assert result2["data"] == {
         "url": DEFAULT_URL,
@@ -75,7 +76,7 @@ async def test_form_invalid_credentials(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_credentials"}
 
 
@@ -101,7 +102,7 @@ async def test_form_unexpected_exception(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
 
 
@@ -117,7 +118,7 @@ async def test_manual_flow_config_exist(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_IMPORT}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     mock_obj = MagicMock()
@@ -136,5 +137,5 @@ async def test_manual_flow_config_exist(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"

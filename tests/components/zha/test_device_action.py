@@ -6,11 +6,10 @@ import pytest
 from pytest_unordered import unordered
 from zhaquirks.inovelli.VZM31SN import InovelliVZM31SNv11
 import zigpy.profiles.zha
-import zigpy.zcl.clusters.general as general
-import zigpy.zcl.clusters.security as security
+from zigpy.zcl.clusters import general, security
 import zigpy.zcl.foundation as zcl_f
 
-import homeassistant.components.automation as automation
+from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.zha import DOMAIN
 from homeassistant.const import Platform

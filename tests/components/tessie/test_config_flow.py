@@ -27,7 +27,7 @@ async def test_form(hass: HomeAssistant, mock_get_state_of_all_vehicles) -> None
     result1 = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result1["type"] == FlowResultType.FORM
+    assert result1["type"] is FlowResultType.FORM
     assert not result1["errors"]
 
     with patch(
@@ -42,7 +42,7 @@ async def test_form(hass: HomeAssistant, mock_get_state_of_all_vehicles) -> None
         assert len(mock_setup_entry.mock_calls) == 1
         assert len(mock_get_state_of_all_vehicles.mock_calls) == 1
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Tessie"
     assert result2["data"] == TEST_CONFIG
 
@@ -70,7 +70,7 @@ async def test_form_errors(
         TEST_CONFIG,
     )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == error
 
     # Complete the flow
@@ -79,7 +79,7 @@ async def test_form_errors(
         result2["flow_id"],
         TEST_CONFIG,
     )
-    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_reauth(hass: HomeAssistant, mock_get_state_of_all_vehicles) -> None:
@@ -100,7 +100,7 @@ async def test_reauth(hass: HomeAssistant, mock_get_state_of_all_vehicles) -> No
         data=TEST_CONFIG,
     )
 
-    assert result1["type"] == FlowResultType.FORM
+    assert result1["type"] is FlowResultType.FORM
     assert result1["step_id"] == "reauth_confirm"
     assert not result1["errors"]
 
@@ -116,7 +116,7 @@ async def test_reauth(hass: HomeAssistant, mock_get_state_of_all_vehicles) -> No
         assert len(mock_setup_entry.mock_calls) == 1
         assert len(mock_get_state_of_all_vehicles.mock_calls) == 1
 
-    assert result2["type"] == FlowResultType.ABORT
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
     assert mock_entry.data == TEST_CONFIG
 
@@ -153,7 +153,7 @@ async def test_reauth_errors(
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == error
 
     # Complete the flow
@@ -163,6 +163,6 @@ async def test_reauth_errors(
         TEST_CONFIG,
     )
     assert "errors" not in result3
-    assert result3["type"] == FlowResultType.ABORT
+    assert result3["type"] is FlowResultType.ABORT
     assert result3["reason"] == "reauth_successful"
     assert mock_entry.data == TEST_CONFIG

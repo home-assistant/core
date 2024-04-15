@@ -757,7 +757,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '77',
   })
 # ---
 # name: test_sensors[sensor.test_battery_level-statealt]
@@ -770,7 +770,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '77',
   })
 # ---
 # name: test_sensors[sensor.test_battery_range-entry]
@@ -816,7 +816,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '266.87',
   })
 # ---
 # name: test_sensors[sensor.test_battery_range-statealt]
@@ -829,7 +829,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '266.87',
   })
 # ---
 # name: test_sensors[sensor.test_charge_cable-entry]
@@ -875,7 +875,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'IEC',
   })
 # ---
 # name: test_sensors[sensor.test_charge_cable-statealt]
@@ -888,7 +888,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'IEC',
   })
 # ---
 # name: test_sensors[sensor.test_charge_energy_added-entry]
@@ -934,7 +934,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '0',
   })
 # ---
 # name: test_sensors[sensor.test_charge_energy_added-statealt]
@@ -947,7 +947,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '0',
   })
 # ---
 # name: test_sensors[sensor.test_charge_rate-entry]
@@ -993,7 +993,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '0',
   })
 # ---
 # name: test_sensors[sensor.test_charge_rate-statealt]
@@ -1006,7 +1006,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '0',
   })
 # ---
 # name: test_sensors[sensor.test_charger_current-entry]
@@ -1052,7 +1052,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '0',
   })
 # ---
 # name: test_sensors[sensor.test_charger_current-statealt]
@@ -1065,7 +1065,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '0',
   })
 # ---
 # name: test_sensors[sensor.test_charger_power-entry]
@@ -1111,7 +1111,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '0',
   })
 # ---
 # name: test_sensors[sensor.test_charger_power-statealt]
@@ -1124,7 +1124,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '0',
   })
 # ---
 # name: test_sensors[sensor.test_charger_voltage-entry]
@@ -1170,7 +1170,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '2',
   })
 # ---
 # name: test_sensors[sensor.test_charger_voltage-statealt]
@@ -1183,7 +1183,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '2',
   })
 # ---
 # name: test_sensors[sensor.test_charging-entry]
@@ -1229,7 +1229,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'Stopped',
   })
 # ---
 # name: test_sensors[sensor.test_charging-statealt]
@@ -1242,7 +1242,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'Stopped',
   })
 # ---
 # name: test_sensors[sensor.test_distance_to_arrival-entry]
@@ -1288,7 +1288,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '0.039491',
   })
 # ---
 # name: test_sensors[sensor.test_distance_to_arrival-statealt]
@@ -1301,7 +1301,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '0',
   })
 # ---
 # name: test_sensors[sensor.test_driver_temperature_setting-entry]
@@ -1347,7 +1347,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '22',
   })
 # ---
 # name: test_sensors[sensor.test_driver_temperature_setting-statealt]
@@ -1360,7 +1360,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '22',
   })
 # ---
 # name: test_sensors[sensor.test_estimate_battery_range-entry]
@@ -1406,7 +1406,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '275.04',
   })
 # ---
 # name: test_sensors[sensor.test_estimate_battery_range-statealt]
@@ -1419,7 +1419,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '275.04',
   })
 # ---
 # name: test_sensors[sensor.test_fast_charger_type-entry]
@@ -1465,7 +1465,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'ACSingleWireCAN',
   })
 # ---
 # name: test_sensors[sensor.test_fast_charger_type-statealt]
@@ -1478,7 +1478,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'ACSingleWireCAN',
   })
 # ---
 # name: test_sensors[sensor.test_ideal_battery_range-entry]
@@ -1524,7 +1524,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '266.87',
   })
 # ---
 # name: test_sensors[sensor.test_ideal_battery_range-statealt]
@@ -1537,7 +1537,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '266.87',
   })
 # ---
 # name: test_sensors[sensor.test_inside_temperature-entry]
@@ -1583,7 +1583,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '29.8',
   })
 # ---
 # name: test_sensors[sensor.test_inside_temperature-statealt]
@@ -1596,7 +1596,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '29.8',
   })
 # ---
 # name: test_sensors[sensor.test_odometer-entry]
@@ -1642,7 +1642,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '6481.019282',
   })
 # ---
 # name: test_sensors[sensor.test_odometer-statealt]
@@ -1655,7 +1655,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '6481.019282',
   })
 # ---
 # name: test_sensors[sensor.test_outside_temperature-entry]
@@ -1701,7 +1701,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '30',
   })
 # ---
 # name: test_sensors[sensor.test_outside_temperature-statealt]
@@ -1714,7 +1714,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '30',
   })
 # ---
 # name: test_sensors[sensor.test_passenger_temperature_setting-entry]
@@ -1760,7 +1760,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '22',
   })
 # ---
 # name: test_sensors[sensor.test_passenger_temperature_setting-statealt]
@@ -1773,7 +1773,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '22',
   })
 # ---
 # name: test_sensors[sensor.test_power-entry]
@@ -1819,7 +1819,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '-7',
   })
 # ---
 # name: test_sensors[sensor.test_power-statealt]
@@ -1832,7 +1832,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '-7',
   })
 # ---
 # name: test_sensors[sensor.test_shift_state-entry]
@@ -2177,7 +2177,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '2.775',
   })
 # ---
 # name: test_sensors[sensor.test_tire_pressure_front_left-statealt]
@@ -2190,7 +2190,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '2.775',
   })
 # ---
 # name: test_sensors[sensor.test_tire_pressure_front_right-entry]
@@ -2236,7 +2236,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '2.8',
   })
 # ---
 # name: test_sensors[sensor.test_tire_pressure_front_right-statealt]
@@ -2249,7 +2249,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '2.8',
   })
 # ---
 # name: test_sensors[sensor.test_tire_pressure_rear_left-entry]
@@ -2295,7 +2295,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '2.775',
   })
 # ---
 # name: test_sensors[sensor.test_tire_pressure_rear_left-statealt]
@@ -2308,7 +2308,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '2.775',
   })
 # ---
 # name: test_sensors[sensor.test_tire_pressure_rear_right-entry]
@@ -2354,7 +2354,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '2.775',
   })
 # ---
 # name: test_sensors[sensor.test_tire_pressure_rear_right-statealt]
@@ -2367,7 +2367,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '2.775',
   })
 # ---
 # name: test_sensors[sensor.test_traffic_delay-entry]
@@ -2413,7 +2413,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '0',
   })
 # ---
 # name: test_sensors[sensor.test_traffic_delay-statealt]
@@ -2426,7 +2426,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '0',
   })
 # ---
 # name: test_sensors[sensor.test_usable_battery_level-entry]
@@ -2472,7 +2472,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '77',
   })
 # ---
 # name: test_sensors[sensor.test_usable_battery_level-statealt]
@@ -2485,7 +2485,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '77',
   })
 # ---
 # name: test_sensors[sensor.wall_connector_fault_state_code-entry]
