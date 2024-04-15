@@ -180,14 +180,14 @@ async def test_unload_entry(
     """Test unloading a config entry with a todo entity."""
 
     config_entry = await create_mock_platform(hass, [test_entity])
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     state = hass.states.get("todo.entity1")
     assert state
 
     assert await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
 
     state = hass.states.get("todo.entity1")
     assert not state

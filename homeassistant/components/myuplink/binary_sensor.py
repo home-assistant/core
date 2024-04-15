@@ -34,11 +34,7 @@ def get_description(device_point: DevicePoint) -> BinarySensorEntityDescription 
     2. Default to None
     """
     prefix, _, _ = device_point.category.partition(" ")
-    description = CATEGORY_BASED_DESCRIPTIONS.get(prefix, {}).get(
-        device_point.parameter_id
-    )
-
-    return description
+    return CATEGORY_BASED_DESCRIPTIONS.get(prefix, {}).get(device_point.parameter_id)
 
 
 async def async_setup_entry(

@@ -32,8 +32,8 @@ from tests.common import MockEntity
 async def async_turn_on(
     hass,
     entity_id=ENTITY_MATCH_ALL,
-    percentage: int = None,
-    preset_mode: str = None,
+    percentage: int | None = None,
+    preset_mode: str | None = None,
 ) -> None:
     """Turn all or specified fan on."""
     data = {
@@ -76,7 +76,7 @@ async def async_oscillate(
 
 
 async def async_set_preset_mode(
-    hass, entity_id=ENTITY_MATCH_ALL, preset_mode: str = None
+    hass, entity_id=ENTITY_MATCH_ALL, preset_mode: str | None = None
 ) -> None:
     """Set preset mode for all or specified fan."""
     data = {
@@ -90,7 +90,7 @@ async def async_set_preset_mode(
 
 
 async def async_set_percentage(
-    hass, entity_id=ENTITY_MATCH_ALL, percentage: int = None
+    hass, entity_id=ENTITY_MATCH_ALL, percentage: int | None = None
 ) -> None:
     """Set percentage for all or specified fan."""
     data = {
@@ -104,7 +104,7 @@ async def async_set_percentage(
 
 
 async def async_increase_speed(
-    hass, entity_id=ENTITY_MATCH_ALL, percentage_step: int = None
+    hass, entity_id=ENTITY_MATCH_ALL, percentage_step: int | None = None
 ) -> None:
     """Increase speed for all or specified fan."""
     data = {
@@ -121,7 +121,7 @@ async def async_increase_speed(
 
 
 async def async_decrease_speed(
-    hass, entity_id=ENTITY_MATCH_ALL, percentage_step: int = None
+    hass, entity_id=ENTITY_MATCH_ALL, percentage_step: int | None = None
 ) -> None:
     """Decrease speed for all or specified fan."""
     data = {
@@ -138,7 +138,7 @@ async def async_decrease_speed(
 
 
 async def async_set_direction(
-    hass, entity_id=ENTITY_MATCH_ALL, direction: str = None
+    hass, entity_id=ENTITY_MATCH_ALL, direction: str | None = None
 ) -> None:
     """Set direction for all or specified fan."""
     data = {

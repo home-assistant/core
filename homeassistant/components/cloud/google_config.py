@@ -453,7 +453,9 @@ class CloudGoogleConfig(AbstractConfig):
         self.async_schedule_google_sync_all()
 
     @callback
-    def _handle_entity_registry_updated(self, event: Event) -> None:
+    def _handle_entity_registry_updated(
+        self, event: Event[er.EventEntityRegistryUpdatedData]
+    ) -> None:
         """Handle when entity registry updated."""
         if (
             not self.enabled
@@ -476,7 +478,9 @@ class CloudGoogleConfig(AbstractConfig):
         self.async_schedule_google_sync_all()
 
     @callback
-    async def _handle_device_registry_updated(self, event: Event) -> None:
+    async def _handle_device_registry_updated(
+        self, event: Event[dr.EventDeviceRegistryUpdatedData]
+    ) -> None:
         """Handle when device registry updated."""
         if (
             not self.enabled

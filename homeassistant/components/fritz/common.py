@@ -928,6 +928,16 @@ class AvmWrapper(FritzBoxTools):  # pylint: disable=hass-enforce-coordinator-mod
             NewDisallow="0" if turn_on else "1",
         )
 
+    async def async_wake_on_lan(self, mac_address: str) -> dict[str, Any]:
+        """Call X_AVM-DE_WakeOnLANByMACAddress service."""
+
+        return await self._async_service_call(
+            "Hosts",
+            "1",
+            "X_AVM-DE_WakeOnLANByMACAddress",
+            NewMACAddress=mac_address,
+        )
+
 
 @dataclass
 class FritzData:
@@ -935,6 +945,7 @@ class FritzData:
 
     tracked: dict = field(default_factory=dict)
     profile_switches: dict = field(default_factory=dict)
+    wol_buttons: dict = field(default_factory=dict)
 
 
 class FritzDeviceBase(update_coordinator.CoordinatorEntity[AvmWrapper]):
