@@ -8,6 +8,6 @@
   "loggers": ["roborock"],
   "requirements": [
     "python-roborock==2.0.0",
-    "vacuum-map-parser-roborock==0.1.1"
+    "vacuum-map-parser-roborock==0.1.2"
   ]
 }

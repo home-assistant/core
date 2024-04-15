@@ -393,13 +393,7 @@ async def test_setup_component_invalid_token_scope(hass: HomeAssistant) -> None:
                 "type": "Bearer",
                 "expires_in": 60,
                 "expires_at": time() + 1000,
-                "scope": " ".join(
-                    [
-                        "read_smokedetector",
-                        "read_thermostat",
-                        "write_thermostat",
-                    ]
-                ),
+                "scope": "read_smokedetector read_thermostat write_thermostat",
             },
         },
         options={},

@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.3.5
+    rev: v0.3.7
     hooks:
       - id: ruff
         args:
@@ -15,7 +15,7 @@ repos:
           - --ignore-words-list=additionals,alle,alot,astroid,bund,caf,convencional,currenty,datas,farenheit,falsy,fo,frequence,haa,hass,iif,incomfort,ines,ist,nam,nd,pres,pullrequests,resset,rime,ser,serie,te,technik,ue,unsecure,vor,withing,zar
           - --skip="./.*,*.csv,*.json,*.ambr"
           - --quiet-level=2
-        exclude_types: [csv, json]
+        exclude_types: [csv, json, html]
         exclude: ^tests/fixtures/|homeassistant/generated/|tests/components/.*/snapshots/
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.4.0
