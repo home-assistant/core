@@ -423,6 +423,7 @@ async def test_zero_conf_while_form(
     )
     await hass.async_block_till_done()
     assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
     assert config_entry.data["host"] == "1.1.1.1"
     assert config_entry.unique_id == "1234"
     assert config_entry.title == "Envoy 1234"
@@ -466,7 +467,7 @@ async def test_zero_conf_malformed_serial_property(
     )
     assert result["type"] is FlowResultType.FORM
 
-    with pytest.raises(Exception):
+    with pytest.raises(KeyError) as ex:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_ZEROCONF},
@@ -481,6 +482,7 @@ async def test_zero_conf_malformed_serial_property(
             ),
         )
         await hass.async_block_till_done()
+    assert "serialnum" in str(ex.value)
 
 
 async def test_zero_conf_malformed_serial(
@@ -536,6 +538,7 @@ async def test_zero_conf_malformed_fw_property(
     )
     await hass.async_block_till_done()
     assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
     assert config_entry.data["host"] == "1.1.1.1"
     assert config_entry.unique_id == "1234"
     assert config_entry.title == "Envoy 1234"
