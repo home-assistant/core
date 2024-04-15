@@ -265,7 +265,6 @@ async def test_select_source(
     if result.get("play_from_queue"):
         assert soco_mock.play_from_queue.call_count == result.get("play_from_queue")
         soco_mock.play_from_queue.assert_called_with(0)
-        assert soco_mock.play_from_queue.call_args_list[0].args[0] == 0
     if result.get("play_uri"):
         assert soco_mock.play_uri.call_count == result.get("play_uri")
         soco_mock.play_uri.assert_called_with(
