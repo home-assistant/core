@@ -7,12 +7,11 @@ from dataclasses import dataclass
 from datetime import timedelta
 from typing import Any
 
-from adguardhome import AdGuardHome, AdGuardHomeConnectionError, AdGuardHomeError
+from adguardhome import AdGuardHome, AdGuardHomeError
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import AdGuardData
@@ -85,13 +84,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up AdGuard Home switch based on a config entry."""
     data: AdGuardData = hass.data[DOMAIN][entry.entry_id]
-
-    try:
-        version = await data.client.version()
-    except AdGuardHomeConnectionError as exception:
-        raise PlatformNotReady from exception
-
-    data.version = version
 
     async_add_entities(
         [AdGuardHomeSwitch(data, entry, description) for description in SWITCHES],

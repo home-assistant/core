@@ -50,7 +50,7 @@ class AdGuardData:
     """Adguard data type."""
 
     client: AdGuardHome
-    version: str | None = None
+    version: str
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -66,12 +66,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         session=session,
     )
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = AdGuardData(adguard)
-
     try:
-        await adguard.version()
+        version = await adguard.version()
     except AdGuardHomeConnectionError as exception:
         raise ConfigEntryNotReady from exception
+
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = AdGuardData(adguard, version)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
