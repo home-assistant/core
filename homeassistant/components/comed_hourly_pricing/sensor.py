@@ -15,7 +15,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.const import CONF_NAME, CONF_OFFSET
+from homeassistant.const import CONF_NAME, CONF_OFFSET, CURRENCY_CENT, UnitOfEnergy
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -36,12 +36,12 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=CONF_FIVE_MINUTE,
         name="ComEd 5 Minute Price",
-        native_unit_of_measurement="c",
+        native_unit_of_measurement=f"{CURRENCY_CENT}/{UnitOfEnergy.KILO_WATT_HOUR}",
     ),
     SensorEntityDescription(
         key=CONF_CURRENT_HOUR_AVERAGE,
         name="ComEd Current Hour Average Price",
-        native_unit_of_measurement="c",
+        native_unit_of_measurement=f"{CURRENCY_CENT}/{UnitOfEnergy.KILO_WATT_HOUR}",
     ),
 )
 
