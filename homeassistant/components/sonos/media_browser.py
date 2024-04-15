@@ -53,15 +53,18 @@ def get_thumbnail_url_full(
     media_content_type: str,
     media_content_id: str,
     media_image_id: str | None = None,
+    item: MusicServiceItem | None = None,
 ) -> str | None:
     """Get thumbnail URL."""
     if is_internal:
-        item = get_media(
-            media.library,
-            media_content_id,
-            media_content_type,
-        )
-        return urllib.parse.unquote(getattr(item, "album_art_uri", ""))
+        if not item:
+            item = get_media(
+                media.library,
+                media_content_id,
+                media_content_type,
+            )
+        s = getattr(item, "album_art_uri", "")
+        return s.replace("'", "%27").replace("(", "%28").replace(")", "%29")
 
     return urllib.parse.unquote(
         get_browse_image_url(
@@ -249,7 +252,7 @@ def item_payload(item: DidlObject, get_thumbnail_url=None) -> BrowseMedia:
     content_id = get_content_id(item)
     thumbnail = None
     if getattr(item, "album_art_uri", None):
-        thumbnail = get_thumbnail_url(media_class, content_id)
+        thumbnail = get_thumbnail_url(media_class, content_id, item=item)
 
     return BrowseMedia(
         title=item.title,
