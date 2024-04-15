@@ -54,6 +54,7 @@ from .const import (
     REMINDER_DATE,
     REMINDER_DATE_LANG,
     REMINDER_DATE_STRING,
+    SECTION_NAME,
     SERVICE_NEW_TASK,
     START,
     SUMMARY,
@@ -68,6 +69,7 @@ NEW_TASK_SERVICE_SCHEMA = vol.Schema(
         vol.Required(CONTENT): cv.string,
         vol.Optional(DESCRIPTION): cv.string,
         vol.Optional(PROJECT_NAME, default="inbox"): vol.All(cv.string, vol.Lower),
+        vol.Optional(SECTION_NAME): vol.All(cv.string, vol.Lower),
         vol.Optional(LABELS): cv.ensure_list_csv,
         vol.Optional(ASSIGNEE): cv.string,
         vol.Optional(PRIORITY): vol.All(vol.Coerce(int), vol.Range(min=1, max=4)),
@@ -201,7 +203,7 @@ async def async_setup_platform(
     async_register_services(hass, coordinator)
 
 
-def async_register_services(
+def async_register_services(  # noqa: C901
     hass: HomeAssistant, coordinator: TodoistCoordinator
 ) -> None:
     """Register services."""
@@ -222,12 +224,29 @@ def async_register_services(
         if project_id is None:
             raise HomeAssistantError(f"Invalid project name '{project_name}'")
 
+        # Optional section within project
+        section_id: str | None = None
+        if SECTION_NAME in call.data:
+            section_name = call.data[SECTION_NAME].lower()
+            sections = await coordinator.async_get_sections(project_id)
+            for section in sections:
+                if section_name == section.name.lower():
+                    section_id = section.id
+            if section_id is None:
+                raise HomeAssistantError(
+                    f"Invalid section '{section_name}' within project '{project_name}'"
+                )
+
         # Create the task
         content = call.data[CONTENT]
         data: dict[str, Any] = {"project_id": project_id}
 
         if description := call.data.get(DESCRIPTION):
             data["description"] = description
+
+        if section_id is not None:
+            data["section_id"] = section_id
+
         if task_labels := call.data.get(LABELS):
             data["labels"] = task_labels
 

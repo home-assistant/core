@@ -37,6 +37,10 @@
           "name": "Project",
           "description": "The name of the project this task should belong to."
         },
+        "section": {
+          "name": "Section",
+          "description": "The name of a section within the project to add the task to."
+        },
         "labels": {
           "name": "Labels",
           "description": "Any labels that you want to apply to this task, separated by a comma."
