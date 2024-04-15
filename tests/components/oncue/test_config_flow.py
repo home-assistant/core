@@ -43,7 +43,7 @@ async def test_form(hass: HomeAssistant) -> None:
         "username": "TEST-username",
         "password": "test-password",
     }
-    assert len(mock_setup_entry.mock_calls) == 1
+    assert mock_setup_entry.call_count == 1
 
 
 async def test_form_invalid_auth(hass: HomeAssistant) -> None:
@@ -188,4 +188,5 @@ async def test_reauth(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
-    assert len(mock_setup_entry.mock_calls) == 1
+    assert config_entry.data[CONF_PASSWORD] == "test-password"
+    assert mock_setup_entry.call_count == 1
