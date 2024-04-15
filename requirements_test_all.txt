@@ -341,7 +341,7 @@ aioruuvigateway==0.1.0
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==8.2.0
+aioshelly==9.0.0
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -652,7 +652,7 @@ elmax-api==0.0.4
 elvia==0.1.0
 
 # homeassistant.components.emulated_roku
-emulated-roku==0.2.1
+emulated-roku==0.3.0
 
 # homeassistant.components.huisbaasje
 energyflip-client==0.2.2
@@ -1543,7 +1543,7 @@ pymeteoclimatic==0.1.0
 pymochad==0.2.0
 
 # homeassistant.components.modbus
-pymodbus==3.6.7
+pymodbus==3.6.8
 
 # homeassistant.components.monoprice
 pymonoprice==0.4
@@ -1982,7 +1982,7 @@ smhi-pkg==1.0.16
 snapcast==2.3.6
 
 # homeassistant.components.sonos
-soco==0.30.2
+soco==0.30.3
 
 # homeassistant.components.solaredge
 solaredge==0.0.2
