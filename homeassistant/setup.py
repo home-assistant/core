@@ -493,7 +493,7 @@ async def async_prepare_setup_platform(
     # We do this before we import the platform so the platform already knows
     # where the top level component is.
     #
-    if load_top_level_component := domain not in hass.config.components:
+    if load_top_level_component := integration.domain not in hass.config.components:
         # Process deps and reqs as soon as possible, so that requirements are
         # available when we import the platform. We only do this if the integration
         # is not in hass.config.components yet, as we already processed them in
