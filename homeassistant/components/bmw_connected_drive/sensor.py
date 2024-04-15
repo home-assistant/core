@@ -23,7 +23,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import BMWBaseEntity
-from .const import DOMAIN, UNIT_MAP, CLIMATE_ACTIVITY_STATE
+from .const import CLIMATE_ACTIVITY_STATE, DOMAIN, UNIT_MAP
 from .coordinator import BMWDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -159,7 +159,7 @@ SENSOR_TYPES: list[BMWSensorEntityDescription] = [
         key_class="climate",
         device_class=SensorDeviceClass.ENUM,
         options=CLIMATE_ACTIVITY_STATE,
-        value=lambda x: x.lower() if x != "UNKNOWN" else None,
+        value=lambda x, _: x.lower() if x != "UNKNOWN" else None,
         is_available=lambda v: v.is_remote_climate_stop_enabled,
     ),
 ]
