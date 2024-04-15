@@ -46,14 +46,12 @@ async def test_sensor(
 
     assert len(entity_entries) == enabled_entity_count
 
-    if entity_count > 0:
-        # compare registered entities against snapshot of prior run
-        assert entity_entries
-        for entity_entry in entity_entries:
-            assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
-            assert hass.states.get(entity_entry.entity_id) == snapshot(
-                name=f"{entity_entry.entity_id}-state"
-            )
+    # compare registered entities against snapshot of prior run
+    for entity_entry in entity_entries:
+        assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
+        assert hass.states.get(entity_entry.entity_id) == snapshot(
+            name=f"{entity_entry.entity_id}-state"
+        )
 
 
 @pytest.mark.parametrize(
@@ -83,14 +81,12 @@ async def test_all_enabled_sensors(
 
     assert len(entity_entries) == enabled_entity_count
 
-    if enabled_entity_count > 0:
-        # compare registered entities against snapshot of prior run
-        assert entity_entries
-        for entity_entry in entity_entries:
-            assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
-            assert hass.states.get(entity_entry.entity_id) == snapshot(
-                name=f"{entity_entry.entity_id}-state"
-            )
+    # compare registered entities against snapshot of prior run
+    for entity_entry in entity_entries:
+        assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
+        assert hass.states.get(entity_entry.entity_id) == snapshot(
+            name=f"{entity_entry.entity_id}-state"
+        )
 
 
 @pytest.mark.parametrize(("mock_envoy"), *ALL_FIXTURES, indirect=["mock_envoy"])

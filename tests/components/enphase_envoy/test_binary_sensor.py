@@ -36,16 +36,14 @@ async def test_binary_sensor(
         entity_registry, config_entry.entry_id
     )
 
-    if entity_count == 0:
-        assert len(entity_entries) == 0
-    else:
-        # compare registered entities against snapshot of prior run
-        assert entity_entries
-        for entity_entry in entity_entries:
-            assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
-            assert hass.states.get(entity_entry.entity_id) == snapshot(
-                name=f"{entity_entry.entity_id}-state"
-            )
+    assert len(entity_entries) == entity_count
+
+    # compare registered entities against snapshot of prior run
+    for entity_entry in entity_entries:
+        assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
+        assert hass.states.get(entity_entry.entity_id) == snapshot(
+            name=f"{entity_entry.entity_id}-state"
+        )
 
 
 @pytest.mark.parametrize(("mock_envoy"), *ALL_FIXTURES, indirect=["mock_envoy"])
