@@ -32,7 +32,7 @@
     "zigpy-znp==0.12.1",
     "universal-silabs-flasher==0.0.18",
     "pyserial-asyncio-fast==0.11",
-    "zha==0.0.7"
+    "zha==0.0.8"
   ],
   "usb": [
     {

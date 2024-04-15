@@ -14,7 +14,6 @@ from zha.application.const import (
     ATTR_OUT_CLUSTERS,
     ATTR_PROFILE_ID,
     ATTR_VALUE,
-    CONF_ALARM_MASTER_CODE,
     UNKNOWN,
 )
 from zha.application.gateway import Gateway
@@ -30,6 +29,7 @@ from homeassistant.const import CONF_ID, CONF_NAME, CONF_UNIQUE_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
+from .const import CONF_ALARM_MASTER_CODE
 from .helpers import (
     ZHADeviceProxy,
     async_get_zha_device_proxy,
@@ -79,7 +79,7 @@ async def async_get_config_entry_diagnostics(
 
     return async_redact_data(
         {
-            "config": zha_data.data.yaml_config,
+            "config": zha_data.yaml_config,
             "config_entry": config_entry.as_dict(),
             "application_state": shallow_asdict(app.state),
             "energy_scan": {

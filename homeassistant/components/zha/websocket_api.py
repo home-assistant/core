@@ -31,31 +31,11 @@ from zha.application.const import (
     CLUSTER_COMMANDS_SERVER,
     CLUSTER_TYPE_IN,
     CLUSTER_TYPE_OUT,
-    CONF_ALARM_ARM_REQUIRES_CODE,
-    CONF_ALARM_FAILED_TRIES,
-    CONF_ALARM_MASTER_CODE,
-    CONF_ALWAYS_PREFER_XY_COLOR_MODE,
-    CONF_CONSIDER_UNAVAILABLE_BATTERY,
-    CONF_CONSIDER_UNAVAILABLE_MAINS,
-    CONF_DEFAULT_CONSIDER_UNAVAILABLE_BATTERY,
-    CONF_DEFAULT_CONSIDER_UNAVAILABLE_MAINS,
-    CONF_DEFAULT_LIGHT_TRANSITION,
-    CONF_ENABLE_ENHANCED_LIGHT_TRANSITION,
-    CONF_ENABLE_IDENTIFY_ON_JOIN,
-    CONF_ENABLE_LIGHT_TRANSITIONING_FLAG,
-    CONF_GROUP_MEMBERS_ASSUME_STATE,
-    CUSTOM_CONFIGURATION,
-    DOMAIN,
-    GROUP_ID,
-    GROUP_IDS,
-    GROUP_NAME,
-    MFG_CLUSTER_ID_START,
     WARNING_DEVICE_MODE_EMERGENCY,
     WARNING_DEVICE_SOUND_HIGH,
     WARNING_DEVICE_SQUAWK_MODE_ARMED,
     WARNING_DEVICE_STROBE_HIGH,
     WARNING_DEVICE_STROBE_YES,
-    ZHA_ALARM_OPTIONS,
     ZHA_CLUSTER_HANDLER_MSG,
 )
 from zha.application.gateway import Gateway
@@ -89,8 +69,20 @@ from .api import (
     async_get_active_network_settings,
     async_get_radio_type,
 )
-from .const import EZSP_OVERWRITE_EUI64
+from .const import (
+    CUSTOM_CONFIGURATION,
+    DOMAIN,
+    EZSP_OVERWRITE_EUI64,
+    GROUP_ID,
+    GROUP_IDS,
+    GROUP_NAME,
+    MFG_CLUSTER_ID_START,
+    ZHA_ALARM_OPTIONS,
+    ZHA_OPTIONS,
+)
 from .helpers import (
+    CONF_ZHA_ALARM_SCHEMA,
+    CONF_ZHA_OPTIONS_SCHEMA,
     EntityReference,
     ZHAGatewayProxy,
     async_cluster_exists,
@@ -253,37 +245,6 @@ SERVICE_SCHEMAS = {
     ),
 }
 
-CONF_ZHA_OPTIONS_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_DEFAULT_LIGHT_TRANSITION, default=0): vol.All(
-            vol.Coerce(float), vol.Range(min=0, max=2**16 / 10)
-        ),
-        vol.Required(CONF_ENABLE_ENHANCED_LIGHT_TRANSITION, default=False): cv.boolean,
-        vol.Required(CONF_ENABLE_LIGHT_TRANSITIONING_FLAG, default=True): cv.boolean,
-        vol.Required(CONF_ALWAYS_PREFER_XY_COLOR_MODE, default=True): cv.boolean,
-        vol.Required(CONF_GROUP_MEMBERS_ASSUME_STATE, default=True): cv.boolean,
-        vol.Required(CONF_ENABLE_IDENTIFY_ON_JOIN, default=True): cv.boolean,
-        vol.Optional(
-            CONF_CONSIDER_UNAVAILABLE_MAINS,
-            default=CONF_DEFAULT_CONSIDER_UNAVAILABLE_MAINS,
-        ): cv.positive_int,
-        vol.Optional(
-            CONF_CONSIDER_UNAVAILABLE_BATTERY,
-            default=CONF_DEFAULT_CONSIDER_UNAVAILABLE_BATTERY,
-        ): cv.positive_int,
-    }
-)
-
-CONF_ZHA_ALARM_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_ALARM_MASTER_CODE, default="1234"): cv.string,
-        vol.Required(CONF_ALARM_FAILED_TRIES, default=3): cv.positive_int,
-        vol.Required(CONF_ALARM_ARM_REQUIRES_CODE, default=False): cv.boolean,
-    }
-)
-
-
-ZHA_OPTIONS = "zha_options"
 
 ZHA_CONFIG_SCHEMAS = {
     ZHA_OPTIONS: CONF_ZHA_OPTIONS_SCHEMA,

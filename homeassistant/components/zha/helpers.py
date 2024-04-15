@@ -5,13 +5,15 @@ from __future__ import annotations
 import asyncio
 import collections
 from collections.abc import Callable
+import copy
 import dataclasses
 import enum
 import itertools
 import logging
 import re
 import time
-from typing import TYPE_CHECKING, Any, NamedTuple
+from types import MappingProxyType
+from typing import TYPE_CHECKING, Any, NamedTuple, cast
 
 import voluptuous as vol
 from zha.application.const import (
@@ -20,8 +22,8 @@ from zha.application.const import (
     ATTR_UNIQUE_ID,
     CLUSTER_TYPE_IN,
     CLUSTER_TYPE_OUT,
-    DATA_ZHA,
-    DEVICE_PAIRING_STATUS,
+    CONF_DEFAULT_CONSIDER_UNAVAILABLE_BATTERY,
+    CONF_DEFAULT_CONSIDER_UNAVAILABLE_MAINS,
     UNKNOWN_MANUFACTURER,
     UNKNOWN_MODEL,
     ZHA_EVENT,
@@ -36,6 +38,7 @@ from zha.application.const import (
     ZHA_GW_MSG_GROUP_MEMBER_REMOVED,
     ZHA_GW_MSG_GROUP_REMOVED,
     ZHA_GW_MSG_RAW_INIT,
+    RadioType,
 )
 from zha.application.gateway import (
     DeviceFullInitEvent,
@@ -47,12 +50,29 @@ from zha.application.gateway import (
     GroupEvent,
     RawDeviceInitializedEvent,
 )
-from zha.application.helpers import ZHAData
+from zha.application.helpers import (
+    AlarmControlPanelOptions,
+    CoordinatorConfiguration,
+    DeviceOptions,
+    DeviceOverridesConfiguration,
+    LightOptions,
+    QuirksConfiguration,
+    ZHAConfiguration,
+    ZHAData,
+)
 from zha.application.platforms import GroupEntity, PlatformEntity
 from zha.event import EventBase
 from zha.mixins import LogMixin
 from zha.zigbee.device import Device, ZHAEvent
 from zha.zigbee.group import Group, GroupMember
+from zigpy.config import (
+    CONF_DATABASE,
+    CONF_DEVICE,
+    CONF_DEVICE_PATH,
+    CONF_NWK,
+    CONF_NWK_CHANNEL,
+    CONF_NWK_VALIDATE_SETTINGS,
+)
 import zigpy.exceptions
 from zigpy.profiles import PROFILES
 import zigpy.types
@@ -62,6 +82,9 @@ import zigpy.zcl
 from zigpy.zcl.foundation import CommandSchema
 
 from homeassistant import __path__ as HOMEASSISTANT_PATH
+from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon import (
+    is_multiprotocol_url,
+)
 from homeassistant.components.system_log import LogEntry
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_NAME, Platform
@@ -73,6 +96,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     ATTR_ACTIVE_COORDINATOR,
@@ -94,7 +118,31 @@ from .const import (
     ATTR_ROUTES,
     ATTR_RSSI,
     ATTR_SIGNATURE,
+    CONF_ALARM_ARM_REQUIRES_CODE,
+    CONF_ALARM_FAILED_TRIES,
+    CONF_ALARM_MASTER_CODE,
+    CONF_ALWAYS_PREFER_XY_COLOR_MODE,
+    CONF_BAUDRATE,
+    CONF_CONSIDER_UNAVAILABLE_BATTERY,
+    CONF_CONSIDER_UNAVAILABLE_MAINS,
+    CONF_CUSTOM_QUIRKS_PATH,
+    CONF_DEFAULT_LIGHT_TRANSITION,
+    CONF_DEVICE_CONFIG,
+    CONF_ENABLE_ENHANCED_LIGHT_TRANSITION,
+    CONF_ENABLE_IDENTIFY_ON_JOIN,
+    CONF_ENABLE_LIGHT_TRANSITIONING_FLAG,
+    CONF_ENABLE_QUIRKS,
+    CONF_FLOW_CONTROL,
+    CONF_GROUP_MEMBERS_ASSUME_STATE,
+    CONF_RADIO_TYPE,
+    CONF_USE_THREAD,
+    CONF_ZIGPY,
+    CUSTOM_CONFIGURATION,
+    DATA_ZHA,
+    DEFAULT_DATABASE_NAME,
+    DEVICE_PAIRING_STATUS,
     DOMAIN,
+    ZHA_ALARM_OPTIONS,
 )
 
 if TYPE_CHECKING:
@@ -133,6 +181,7 @@ ZHA_GW_MSG_LOG_OUTPUT = "log_output"
 SIGNAL_REMOVE_ENTITIES = "zha_remove_entities"
 GROUP_ENTITY_DOMAINS = [Platform.LIGHT, Platform.SWITCH, Platform.FAN]
 SIGNAL_ADD_ENTITIES = "zha_add_entities"
+ZHA_OPTIONS = "zha_options"
 
 
 class GroupEntityReference(NamedTuple):
@@ -782,7 +831,12 @@ class LogRelayHandler(logging.Handler):
 class HAZHAData:
     """ZHA data stored in `hass.data`."""
 
-    data: ZHAData
+    yaml_config: ConfigType = dataclasses.field(default_factory=dict)
+    config_entry: ConfigEntry | None = dataclasses.field(default=None)
+    zha_lib_config: ZHAData | None = dataclasses.field(default=None)
+    device_trigger_cache: dict[str, tuple[str, dict]] = dataclasses.field(
+        default_factory=dict
+    )
     gateway_proxy: ZHAGatewayProxy | None = dataclasses.field(default=None)
     platforms: collections.defaultdict[Platform, list] = dataclasses.field(
         default_factory=lambda: collections.defaultdict(list)
@@ -809,7 +863,7 @@ class EntityData:
 def get_zha_data(hass: HomeAssistant) -> HAZHAData:
     """Get the global ZHA data object."""
     if DATA_ZHA not in hass.data:
-        hass.data[DATA_ZHA] = HAZHAData(data=ZHAData())
+        hass.data[DATA_ZHA] = HAZHAData()
 
     return hass.data[DATA_ZHA]
 
@@ -959,3 +1013,159 @@ async def async_add_entities(
     entities_to_add = [entity_class(entity_data) for entity_data in entities]
     _async_add_entities(entities_to_add, update_before_add=False)
     entities.clear()
+
+
+def _clean_serial_port_path(path: str) -> str:
+    """Clean the serial port path, applying corrections where necessary."""
+
+    if path.startswith("socket://"):
+        path = path.strip()
+
+    # Removes extraneous brackets from IP addresses (they don't parse in CPython 3.11.4)
+    if re.match(r"^socket://\[\d+\.\d+\.\d+\.\d+\]:\d+$", path):
+        path = path.replace("[", "").replace("]", "")
+
+    return path
+
+
+CONF_ZHA_OPTIONS_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_DEFAULT_LIGHT_TRANSITION, default=0): vol.All(
+            vol.Coerce(float), vol.Range(min=0, max=2**16 / 10)
+        ),
+        vol.Required(CONF_ENABLE_ENHANCED_LIGHT_TRANSITION, default=False): cv.boolean,
+        vol.Required(CONF_ENABLE_LIGHT_TRANSITIONING_FLAG, default=True): cv.boolean,
+        vol.Required(CONF_ALWAYS_PREFER_XY_COLOR_MODE, default=True): cv.boolean,
+        vol.Required(CONF_GROUP_MEMBERS_ASSUME_STATE, default=True): cv.boolean,
+        vol.Required(CONF_ENABLE_IDENTIFY_ON_JOIN, default=True): cv.boolean,
+        vol.Optional(
+            CONF_CONSIDER_UNAVAILABLE_MAINS,
+            default=CONF_DEFAULT_CONSIDER_UNAVAILABLE_MAINS,
+        ): cv.positive_int,
+        vol.Optional(
+            CONF_CONSIDER_UNAVAILABLE_BATTERY,
+            default=CONF_DEFAULT_CONSIDER_UNAVAILABLE_BATTERY,
+        ): cv.positive_int,
+    }
+)
+
+CONF_ZHA_ALARM_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_ALARM_MASTER_CODE, default="1234"): cv.string,
+        vol.Required(CONF_ALARM_FAILED_TRIES, default=3): cv.positive_int,
+        vol.Required(CONF_ALARM_ARM_REQUIRES_CODE, default=False): cv.boolean,
+    }
+)
+
+
+def create_zha_config(hass: HomeAssistant, ha_zha_data: HAZHAData) -> ZHAData:
+    """Create ZHA lib configuration from HA config objects."""
+
+    # ensure that we have the necessary HA configuration data
+    assert ha_zha_data.config_entry is not None
+    assert ha_zha_data.yaml_config is not None
+
+    # Remove brackets around IP addresses, this no longer works in CPython 3.11.4
+    # This will be removed in 2023.11.0
+    path = ha_zha_data.config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH]
+    cleaned_path = _clean_serial_port_path(path)
+
+    if path != cleaned_path:
+        _LOGGER.debug("Cleaned serial port path %r -> %r", path, cleaned_path)
+        ha_zha_data.config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH] = cleaned_path
+        hass.config_entries.async_update_entry(
+            ha_zha_data.config_entry, data=ha_zha_data.config_entry.data
+        )
+
+    # deep copy the yaml config to avoid modifying the original and to safely
+    # pass it to the ZHA library
+    app_config = copy.deepcopy(ha_zha_data.yaml_config.get(CONF_ZIGPY, {}))
+    database = app_config.get(
+        CONF_DATABASE,
+        hass.config.path(DEFAULT_DATABASE_NAME),
+    )
+    app_config[CONF_DATABASE] = database
+    app_config[CONF_DEVICE] = ha_zha_data.config_entry.data[CONF_DEVICE]
+
+    radio_type = RadioType[ha_zha_data.config_entry.data[CONF_RADIO_TYPE]]
+
+    if CONF_NWK_VALIDATE_SETTINGS not in app_config:
+        app_config[CONF_NWK_VALIDATE_SETTINGS] = True
+
+        # The bellows UART thread sometimes propagates a cancellation into the main Core
+        # event loop, when a connection to a TCP coordinator fails in a specific way
+        if (
+            CONF_USE_THREAD not in app_config
+            and radio_type is RadioType.ezsp
+            and app_config[CONF_DEVICE][CONF_DEVICE_PATH].startswith("socket://")
+        ):
+            app_config[CONF_USE_THREAD] = False
+
+    # Until we have a way to coordinate channels with the Thread half of multi-PAN,
+    # stick to the old zigpy default of channel 15 instead of dynamically scanning
+    if (
+        is_multiprotocol_url(app_config[CONF_DEVICE][CONF_DEVICE_PATH])
+        and app_config.get(CONF_NWK, {}).get(CONF_NWK_CHANNEL) is None
+    ):
+        app_config.setdefault(CONF_NWK, {})[CONF_NWK_CHANNEL] = 15
+
+    options: MappingProxyType[str, Any] = ha_zha_data.config_entry.options.get(
+        CUSTOM_CONFIGURATION, {}
+    )
+    zha_options = CONF_ZHA_OPTIONS_SCHEMA(options.get(ZHA_OPTIONS, {}))
+    ha_acp_options = CONF_ZHA_ALARM_SCHEMA(options.get(ZHA_ALARM_OPTIONS, {}))
+    light_options: LightOptions = LightOptions(
+        default_light_transition=zha_options.get(CONF_DEFAULT_LIGHT_TRANSITION),
+        enable_enhanced_light_transition=zha_options.get(
+            CONF_ENABLE_ENHANCED_LIGHT_TRANSITION
+        ),
+        enable_light_transitioning_flag=zha_options.get(
+            CONF_ENABLE_LIGHT_TRANSITIONING_FLAG
+        ),
+        always_prefer_xy_color_mode=zha_options.get(CONF_ALWAYS_PREFER_XY_COLOR_MODE),
+        group_members_assume_state=zha_options.get(CONF_GROUP_MEMBERS_ASSUME_STATE),
+    )
+    device_options: DeviceOptions = DeviceOptions(
+        enable_identify_on_join=zha_options.get(CONF_ENABLE_IDENTIFY_ON_JOIN),
+        consider_unavailable_mains=zha_options.get(CONF_CONSIDER_UNAVAILABLE_MAINS),
+        consider_unavailable_battery=zha_options.get(CONF_CONSIDER_UNAVAILABLE_BATTERY),
+    )
+    acp_options: AlarmControlPanelOptions = AlarmControlPanelOptions(
+        master_code=ha_acp_options.get(CONF_ALARM_MASTER_CODE),
+        failed_tries=ha_acp_options.get(CONF_ALARM_FAILED_TRIES),
+        arm_requires_code=ha_acp_options.get(CONF_ALARM_ARM_REQUIRES_CODE),
+    )
+    coord_config: CoordinatorConfiguration = CoordinatorConfiguration(
+        path=app_config[CONF_DEVICE][CONF_DEVICE_PATH],
+        baudrate=app_config[CONF_DEVICE][CONF_BAUDRATE],
+        flow_control=app_config[CONF_DEVICE][CONF_FLOW_CONTROL],
+        radio_type=radio_type.name,
+    )
+    quirks_config: QuirksConfiguration = QuirksConfiguration(
+        enabled=zha_options.get(CONF_ENABLE_QUIRKS),
+        custom_quirks_path=zha_options.get(CONF_CUSTOM_QUIRKS_PATH),
+    )
+    overrides_config: dict[str, DeviceOverridesConfiguration] = {}
+    overrides: dict[str, dict[str, Any]] = cast(
+        dict[str, dict[str, Any]], ha_zha_data.yaml_config.get(CONF_DEVICE_CONFIG)
+    )
+    if overrides is not None:
+        for unique_id, override in overrides.items():
+            overrides_config[unique_id] = DeviceOverridesConfiguration(
+                type=override["type"],
+            )
+
+    zha_data: ZHAData = ZHAData(
+        zigpy_config=app_config,
+        config=ZHAConfiguration(
+            light_options=light_options,
+            device_options=device_options,
+            alarm_control_panel_options=acp_options,
+            coordinator_configuration=coord_config,
+            quirks_configuration=quirks_config,
+            device_overrides=overrides_config,
+        ),
+    )
+
+    ha_zha_data.zha_lib_config = zha_data
+    return zha_data

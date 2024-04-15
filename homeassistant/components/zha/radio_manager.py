@@ -13,12 +13,7 @@ from typing import Any, Self
 
 from bellows.config import CONF_USE_THREAD
 import voluptuous as vol
-from zha.application.const import (
-    CONF_RADIO_TYPE,
-    CONF_ZIGPY,
-    DEFAULT_DATABASE_NAME,
-    RadioType,
-)
+from zha.application.const import RadioType
 from zigpy.application import ControllerApplication
 import zigpy.backups
 from zigpy.config import (
@@ -35,7 +30,12 @@ from homeassistant.components import usb
 from homeassistant.core import HomeAssistant
 
 from . import repairs
-from .const import EZSP_OVERWRITE_EUI64
+from .const import (
+    CONF_RADIO_TYPE,
+    CONF_ZIGPY,
+    DEFAULT_DATABASE_NAME,
+    EZSP_OVERWRITE_EUI64,
+)
 from .helpers import get_zha_data
 
 # Only the common radio types will be autoprobed, ordered by new device popularity.
@@ -161,7 +161,7 @@ class ZhaRadioManager:
         """Connect to the radio with the current config and then clean up."""
         assert self.radio_type is not None
 
-        config = get_zha_data(self.hass).data.yaml_config
+        config = get_zha_data(self.hass).yaml_config
         app_config = config.get(CONF_ZIGPY, {}).copy()
 
         database_path = config.get(
