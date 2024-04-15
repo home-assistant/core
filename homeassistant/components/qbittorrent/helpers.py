@@ -28,17 +28,14 @@ def seconds_to_hhmmss(seconds) -> str:
 def format_unix_timestamp(timestamp) -> str:
     """Format a UNIX timestamp to a human-readable date."""
     dt_object = datetime.fromtimestamp(timestamp, tz=UTC)
-    formatted_date = dt_object.strftime("%Y-%m-%dT%H:%M:%S%z")
-    return formatted_date
+    return dt_object.strftime("%Y-%m-%dT%H:%M:%S%z")
 
 
 def format_progress(torrent) -> str:
     """Format the progress of a torrent."""
     progress = torrent["progress"]
     progress = float(progress) * 100
-    progress = f"{progress:.2f}"
-
-    return progress
+    return f"{progress:.2f}"
 
 
 def format_torrents(torrents: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
