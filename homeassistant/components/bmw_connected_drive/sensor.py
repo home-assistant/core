@@ -157,7 +157,7 @@ SENSOR_TYPES: list[BMWSensorEntityDescription] = [
         key="activity",
         translation_key="climate_status",
         key_class="climate",
-        icon="mdi:fan",
+        is_available=lambda v: v.is_remote_climate_stop_enabled,
     ),
 ]
 
