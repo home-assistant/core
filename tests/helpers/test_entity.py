@@ -2329,30 +2329,30 @@ async def test_cached_entity_properties(
 
 async def test_cached_entity_property_delete_attr(hass: HomeAssistant) -> None:
     """Test deleting an _attr corresponding to a cached property."""
-    property = "has_entity_name"
+    property_name = "has_entity_name"
 
     ent = entity.Entity()
-    assert not hasattr(ent, f"_attr_{property}")
+    assert not hasattr(ent, f"_attr_{property_name}")
     with pytest.raises(AttributeError):
-        delattr(ent, f"_attr_{property}")
-    assert getattr(ent, property) is False
+        delattr(ent, f"_attr_{property_name}")
+    assert getattr(ent, property_name) is False
 
     with pytest.raises(AttributeError):
-        delattr(ent, f"_attr_{property}")
-    assert not hasattr(ent, f"_attr_{property}")
-    assert getattr(ent, property) is False
+        delattr(ent, f"_attr_{property_name}")
+    assert not hasattr(ent, f"_attr_{property_name}")
+    assert getattr(ent, property_name) is False
 
-    setattr(ent, f"_attr_{property}", True)
-    assert getattr(ent, property) is True
+    setattr(ent, f"_attr_{property_name}", True)
+    assert getattr(ent, property_name) is True
 
-    delattr(ent, f"_attr_{property}")
-    assert not hasattr(ent, f"_attr_{property}")
-    assert getattr(ent, property) is False
+    delattr(ent, f"_attr_{property_name}")
+    assert not hasattr(ent, f"_attr_{property_name}")
+    assert getattr(ent, property_name) is False
 
 
 async def test_cached_entity_property_class_attribute(hass: HomeAssistant) -> None:
     """Test entity properties on class level work in derived classes."""
-    property = "attribution"
+    property_name = "attribution"
     values = ["abcd", "efgh"]
 
     class EntityWithClassAttribute1(entity.Entity):
@@ -2407,15 +2407,15 @@ async def test_cached_entity_property_class_attribute(hass: HomeAssistant) -> No
     ]
 
     for ent in entities:
-        assert getattr(ent[0], property) == values[0]
-        assert getattr(ent[1], property) == values[0]
+        assert getattr(ent[0], property_name) == values[0]
+        assert getattr(ent[1], property_name) == values[0]
 
     # Test update
     for ent in entities:
-        setattr(ent[0], f"_attr_{property}", values[1])
+        setattr(ent[0], f"_attr_{property_name}", values[1])
     for ent in entities:
-        assert getattr(ent[0], property) == values[1]
-        assert getattr(ent[1], property) == values[0]
+        assert getattr(ent[0], property_name) == values[1]
+        assert getattr(ent[1], property_name) == values[0]
 
 
 async def test_cached_entity_property_override(hass: HomeAssistant) -> None:
