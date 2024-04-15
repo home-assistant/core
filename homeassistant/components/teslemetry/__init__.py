@@ -56,7 +56,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
         access_token=access_token,
     )
     try:
-        scopes = (await teslemetry.metadata())["scopes"]
+        metadata = await teslemetry.metadata()
+        scopes = metadata["scopes"]
+        uid = metadata["uid"]
         products = (await teslemetry.products())["response"]
     except InvalidToken as e:
         raise ConfigEntryAuthFailed from e
@@ -64,6 +66,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
         raise ConfigEntryAuthFailed from e
     except TeslaFleetError as e:
         raise ConfigEntryNotReady from e
+
+    # Update unique_id if not set
+    if entry.unique_id is None:
+        hass.config_entries.async_update_entry(entry, unique_id=uid)
 
     # Create array of classes
     vehicles: list[TeslemetryVehicleData] = []

@@ -23,15 +23,6 @@ from tests.common import MockConfigEntry
 BAD_CONFIG = {CONF_ACCESS_TOKEN: "bad_access_token"}
 
 
-@pytest.fixture(autouse=True)
-def mock_test():
-    """Mock Teslemetry api class."""
-    with patch(
-        "homeassistant.components.teslemetry.Teslemetry.test", return_value=True
-    ) as mock_test:
-        yield mock_test
-
-
 async def test_form(
     hass: HomeAssistant,
 ) -> None:
@@ -67,14 +58,16 @@ async def test_form(
         (TeslaFleetError, {"base": "unknown"}),
     ],
 )
-async def test_form_errors(hass: HomeAssistant, side_effect, error, mock_test) -> None:
+async def test_form_errors(
+    hass: HomeAssistant, side_effect, error, mock_metadata
+) -> None:
     """Test errors are handled."""
 
     result1 = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    mock_test.side_effect = side_effect
+    mock_metadata.side_effect = side_effect
     result2 = await hass.config_entries.flow.async_configure(
         result1["flow_id"],
         CONFIG,
@@ -84,7 +77,7 @@ async def test_form_errors(hass: HomeAssistant, side_effect, error, mock_test) -
     assert result2["errors"] == error
 
     # Complete the flow
-    mock_test.side_effect = None
+    mock_metadata.side_effect = None
     result3 = await hass.config_entries.flow.async_configure(
         result2["flow_id"],
         CONFIG,
@@ -92,7 +85,7 @@ async def test_form_errors(hass: HomeAssistant, side_effect, error, mock_test) -
     assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_reauth(hass: HomeAssistant, mock_test) -> None:
+async def test_reauth(hass: HomeAssistant, mock_metadata) -> None:
     """Test reauth flow."""
 
     mock_entry = MockConfigEntry(
@@ -124,7 +117,7 @@ async def test_reauth(hass: HomeAssistant, mock_test) -> None:
         )
         await hass.async_block_till_done()
         assert len(mock_setup_entry.mock_calls) == 1
-        assert len(mock_test.mock_calls) == 1
+        assert len(mock_metadata.mock_calls) == 1
 
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
@@ -141,7 +134,7 @@ async def test_reauth(hass: HomeAssistant, mock_test) -> None:
     ],
 )
 async def test_reauth_errors(
-    hass: HomeAssistant, mock_test, side_effect, error
+    hass: HomeAssistant, mock_metadata, side_effect, error
 ) -> None:
     """Test reauth flows that fail."""
 
@@ -162,7 +155,7 @@ async def test_reauth_errors(
         data=BAD_CONFIG,
     )
 
-    mock_test.side_effect = side_effect
+    mock_metadata.side_effect = side_effect
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         BAD_CONFIG,
@@ -173,7 +166,7 @@ async def test_reauth_errors(
     assert result2["errors"] == error
 
     # Complete the flow
-    mock_test.side_effect = None
+    mock_metadata.side_effect = None
     result3 = await hass.config_entries.flow.async_configure(
         result2["flow_id"],
         CONFIG,
@@ -182,3 +175,20 @@ async def test_reauth_errors(
     assert result3["type"] is FlowResultType.ABORT
     assert result3["reason"] == "reauth_successful"
     assert mock_entry.data == CONFIG
+
+
+async def test_unique_id_abort(
+    hass: HomeAssistant,
+) -> None:
+    """Test we get the form."""
+
+    result1 = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}, data=CONFIG
+    )
+    assert result1["type"] is FlowResultType.CREATE_ENTRY
+
+    # Setup a duplicate
+    result2 = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}, data=CONFIG
+    )
+    assert result2["type"] is FlowResultType.ABORT
