@@ -31,6 +31,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import TimestampDataUpdateCoordinator
 from homeassistant.util.dt import utc_from_timestamp
 
 from . import AccuWeatherData
@@ -42,6 +43,10 @@ from .const import (
     ATTRIBUTION,
     CONDITION_MAP,
     DOMAIN,
+)
+from .coordinator import (
+    AccuWeatherDailyForecastDataUpdateCoordinator,
+    AccuWeatherObservationDataUpdateCoordinator,
 )
 
 PARALLEL_UPDATES = 1
@@ -56,7 +61,14 @@ async def async_setup_entry(
     async_add_entities([AccuWeatherEntity(accuweather_data)])
 
 
-class AccuWeatherEntity(CoordinatorWeatherEntity):
+class AccuWeatherEntity(
+    CoordinatorWeatherEntity[
+        AccuWeatherObservationDataUpdateCoordinator,
+        AccuWeatherDailyForecastDataUpdateCoordinator,
+        TimestampDataUpdateCoordinator,
+        TimestampDataUpdateCoordinator,
+    ]
+):
     """Define an AccuWeather entity."""
 
     _attr_has_entity_name = True
