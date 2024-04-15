@@ -1142,8 +1142,8 @@ def create_zha_config(hass: HomeAssistant, ha_zha_data: HAZHAData) -> ZHAData:
         radio_type=radio_type.name,
     )
     quirks_config: QuirksConfiguration = QuirksConfiguration(
-        enabled=zha_options.get(CONF_ENABLE_QUIRKS),
-        custom_quirks_path=zha_options.get(CONF_CUSTOM_QUIRKS_PATH),
+        enabled=ha_zha_data.yaml_config.get(CONF_ENABLE_QUIRKS, True),
+        custom_quirks_path=ha_zha_data.yaml_config.get(CONF_CUSTOM_QUIRKS_PATH),
     )
     overrides_config: dict[str, DeviceOverridesConfiguration] = {}
     overrides: dict[str, dict[str, Any]] = cast(
