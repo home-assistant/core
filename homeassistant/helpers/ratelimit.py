@@ -30,7 +30,7 @@ class KeyedRateLimit:
     @callback
     def async_has_timer(self, key: Hashable) -> bool:
         """Check if a rate limit timer is running."""
-        return bool(self._rate_limit_timers and key in self._rate_limit_timers)
+        return key in self._rate_limit_timers
 
     @callback
     def async_triggered(self, key: Hashable, now: float | None = None) -> None:
