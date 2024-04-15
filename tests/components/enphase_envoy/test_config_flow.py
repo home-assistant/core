@@ -13,6 +13,8 @@ from homeassistant.components.enphase_envoy.const import DOMAIN, PLATFORMS
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from tests.common import MockConfigEntry
+
 
 async def test_form(hass: HomeAssistant, config, setup_enphase_envoy) -> None:
     """Test we get the form."""
@@ -395,6 +397,186 @@ async def test_zeroconf_host_already_exists(
 
     assert config_entry.unique_id == "1234"
     assert config_entry.title == "Envoy 1234"
+
+
+async def test_zero_conf_while_form(
+    hass: HomeAssistant, config_entry, setup_enphase_envoy
+) -> None:
+    """Test zeroconf while form is active."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=zeroconf.ZeroconfServiceInfo(
+            ip_address=ip_address("1.1.1.1"),
+            ip_addresses=[ip_address("1.1.1.1")],
+            hostname="mock_hostname",
+            name="mock_name",
+            port=None,
+            properties={"serialnum": "1234", "protovers": "7.0.1"},
+            type="mock_type",
+        ),
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.ABORT
+    assert config_entry.data["host"] == "1.1.1.1"
+    assert config_entry.unique_id == "1234"
+    assert config_entry.title == "Envoy 1234"
+
+
+async def test_zero_conf_second_envoy_while_form(
+    hass: HomeAssistant, config_entry, setup_enphase_envoy
+) -> None:
+    """Test zeroconf while form is active."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=zeroconf.ZeroconfServiceInfo(
+            ip_address=ip_address("4.4.4.4"),
+            ip_addresses=[ip_address("4.4.4.4")],
+            hostname="mock_hostname",
+            name="mock_name",
+            port=None,
+            properties={"serialnum": "4321", "protovers": "7.0.1"},
+            type="mock_type",
+        ),
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.FORM
+    assert config_entry.data["host"] == "1.1.1.1"
+    assert config_entry.unique_id == "1234"
+    assert config_entry.title == "Envoy 1234"
+
+
+async def test_zero_conf_malformed_serial_property(
+    hass: HomeAssistant, config_entry, setup_enphase_envoy
+) -> None:
+    """Test malformed zeroconf properties."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    with pytest.raises(Exception):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+            data=zeroconf.ZeroconfServiceInfo(
+                ip_address=ip_address("1.1.1.1"),
+                ip_addresses=[ip_address("1.1.1.1")],
+                hostname="mock_hostname",
+                name="mock_name",
+                port=None,
+                properties={"serilnum": "1234", "protovers": "7.1.2"},
+                type="mock_type",
+            ),
+        )
+        await hass.async_block_till_done()
+
+
+async def test_zero_conf_malformed_serial(
+    hass: HomeAssistant, config_entry, setup_enphase_envoy
+) -> None:
+    """Test malformed zeroconf properties."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=zeroconf.ZeroconfServiceInfo(
+            ip_address=ip_address("1.1.1.1"),
+            ip_addresses=[ip_address("1.1.1.1")],
+            hostname="mock_hostname",
+            name="mock_name",
+            port=None,
+            properties={"serialnum": "12%4", "protovers": "7.1.2"},
+            type="mock_type",
+        ),
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.FORM
+    assert config_entry.data["host"] == "1.1.1.1"
+    assert config_entry.unique_id == "1234"
+    assert config_entry.title == "Envoy 1234"
+
+
+async def test_zero_conf_malformed_fw_property(
+    hass: HomeAssistant, config_entry, setup_enphase_envoy
+) -> None:
+    """Test malformed zeroconf property."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=zeroconf.ZeroconfServiceInfo(
+            ip_address=ip_address("1.1.1.1"),
+            ip_addresses=[ip_address("1.1.1.1")],
+            hostname="mock_hostname",
+            name="mock_name",
+            port=None,
+            properties={"serialnum": "1234", "protvers": "7.1.2"},
+            type="mock_type",
+        ),
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.ABORT
+    assert config_entry.data["host"] == "1.1.1.1"
+    assert config_entry.unique_id == "1234"
+    assert config_entry.title == "Envoy 1234"
+
+
+async def test_zero_conf_old_blank_entry(
+    hass: HomeAssistant, setup_enphase_envoy
+) -> None:
+    """Test re-using old blank entry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "host": "1.1.1.1",
+            "username": "",
+            "password": "",
+            "name": "unknown",
+        },
+        unique_id=None,
+        title="Envoy",
+    )
+    entry.add_to_hass(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=zeroconf.ZeroconfServiceInfo(
+            ip_address=ip_address("1.1.1.1"),
+            ip_addresses=[ip_address("1.1.1.1"), ip_address("1.1.1.2")],
+            hostname="mock_hostname",
+            name="mock_name",
+            port=None,
+            properties={"serialnum": "1234", "protovers": "7.1.2"},
+            type="mock_type",
+        ),
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+    assert entry.data["host"] == "1.1.1.1"
+    assert entry.unique_id == "1234"
+    assert entry.title == "Envoy 1234"
 
 
 async def test_reauth(hass: HomeAssistant, config_entry, setup_enphase_envoy) -> None:
