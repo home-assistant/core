@@ -1,4 +1,5 @@
 """Config flow to configure the LG Netcast TV integration."""
+
 from __future__ import annotations
 
 import contextlib
@@ -79,7 +80,7 @@ class LGNetCast(config_entries.ConfigFlow, domain=DOMAIN):
                 self.hass,
                 HOMEASSISTANT_DOMAIN,
                 f"deprecated_yaml_{DOMAIN}",
-                breaks_in_ha_version="2024.6.0",
+                breaks_in_ha_version="2024.11.0",
                 is_fixable=False,
                 issue_domain=DOMAIN,
                 severity=IssueSeverity.WARNING,
@@ -98,7 +99,7 @@ class LGNetCast(config_entries.ConfigFlow, domain=DOMAIN):
                     self.hass,
                     DOMAIN,
                     "deprecated_yaml_import_issue_{err.reason}",
-                    breaks_in_ha_version="2024.6.0",
+                    breaks_in_ha_version="2024.11.0",
                     is_fixable=False,
                     issue_domain=DOMAIN,
                     severity=IssueSeverity.WARNING,
