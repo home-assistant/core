@@ -795,7 +795,7 @@ elvia==0.1.0
 emoji==2.8.0
 
 # homeassistant.components.emulated_roku
-emulated-roku==0.2.1
+emulated-roku==0.3.0
 
 # homeassistant.components.huisbaasje
 energyflip-client==0.2.2
