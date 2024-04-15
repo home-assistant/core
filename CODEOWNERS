@@ -683,8 +683,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/iqvia/ @bachya
 /tests/components/iqvia/ @bachya
 /homeassistant/components/irish_rail_transport/ @ttroy50
-/homeassistant/components/islamic_prayer_times/ @engrbm87
-/tests/components/islamic_prayer_times/ @engrbm87
+/homeassistant/components/islamic_prayer_times/ @engrbm87 @cpfair
+/tests/components/islamic_prayer_times/ @engrbm87 @cpfair
 /homeassistant/components/iss/ @DurgNomis-drol
 /tests/components/iss/ @DurgNomis-drol
 /homeassistant/components/isy994/ @bdraco @shbatm
