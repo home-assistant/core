@@ -167,7 +167,7 @@ RPC_SENSORS: Final = {
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     "external_power": RpcBinarySensorDescription(
-        key="devicepower:0",
+        key="devicepower",
         sub_key="external",
         name="External power",
         value=lambda status, _: status["present"],

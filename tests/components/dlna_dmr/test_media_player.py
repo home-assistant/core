@@ -85,9 +85,7 @@ async def setup_mock_component(hass: HomeAssistant, mock_entry: MockConfigEntry)
 
     entries = async_entries_for_config_entry(async_get_er(hass), mock_entry.entry_id)
     assert len(entries) == 1
-    entity_id = entries[0].entity_id
-
-    return entity_id
+    return entries[0].entity_id
 
 
 async def get_attrs(hass: HomeAssistant, entity_id: str) -> Mapping[str, Any]:
@@ -272,7 +270,7 @@ async def test_setup_entry_no_options(
 
 @pytest.mark.parametrize(
     "core_state",
-    (CoreState.not_running, CoreState.running),
+    [CoreState.not_running, CoreState.running],
 )
 async def test_setup_entry_with_options(
     hass: HomeAssistant,
@@ -1009,6 +1007,7 @@ async def test_shuffle_repeat_modes(
     dmr_device_mock.async_set_play_mode.reset_mock()
     dmr_device_mock.play_mode = PlayMode.RANDOM
     dmr_device_mock.valid_play_modes = {PlayMode.SHUFFLE, PlayMode.RANDOM}
+    await get_attrs(hass, mock_entity_id)
     await hass.services.async_call(
         MP_DOMAIN,
         ha_const.SERVICE_SHUFFLE_SET,
@@ -1022,6 +1021,7 @@ async def test_shuffle_repeat_modes(
     dmr_device_mock.async_set_play_mode.reset_mock()
     dmr_device_mock.play_mode = PlayMode.RANDOM
     dmr_device_mock.valid_play_modes = {PlayMode.REPEAT_ONE, PlayMode.REPEAT_ALL}
+    await get_attrs(hass, mock_entity_id)
     await hass.services.async_call(
         MP_DOMAIN,
         ha_const.SERVICE_REPEAT_SET,
@@ -1261,7 +1261,7 @@ async def test_playback_update_state(
 
 @pytest.mark.parametrize(
     "core_state",
-    (CoreState.not_running, CoreState.running),
+    [CoreState.not_running, CoreState.running],
 )
 async def test_unavailable_device(
     hass: HomeAssistant,
@@ -1388,7 +1388,7 @@ async def test_unavailable_device(
 
 @pytest.mark.parametrize(
     "core_state",
-    (CoreState.not_running, CoreState.running),
+    [CoreState.not_running, CoreState.running],
 )
 async def test_become_available(
     hass: HomeAssistant,
@@ -1479,7 +1479,7 @@ async def test_become_available(
 
 @pytest.mark.parametrize(
     "core_state",
-    (CoreState.not_running, CoreState.running),
+    [CoreState.not_running, CoreState.running],
 )
 async def test_alive_but_gone(
     hass: HomeAssistant,
@@ -2329,7 +2329,7 @@ async def test_config_update_mac_address(
 
 @pytest.mark.parametrize(
     "core_state",
-    (CoreState.not_running, CoreState.running),
+    [CoreState.not_running, CoreState.running],
 )
 async def test_connections_restored(
     hass: HomeAssistant,

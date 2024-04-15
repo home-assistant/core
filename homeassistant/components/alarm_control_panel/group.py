@@ -1,6 +1,5 @@
 """Describe group states."""
 
-
 from typing import TYPE_CHECKING
 
 from homeassistant.const import (

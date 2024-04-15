@@ -47,10 +47,10 @@ async def test_unload_entry(hass: HomeAssistant, mock_account: MagicMock) -> Non
 
 @pytest.mark.parametrize(
     ("side_effect", "expected_state"),
-    (
+    [
         (LitterRobotLoginException, ConfigEntryState.SETUP_ERROR),
         (LitterRobotException, ConfigEntryState.SETUP_RETRY),
-    ),
+    ],
 )
 async def test_entry_not_setup(
     hass: HomeAssistant,

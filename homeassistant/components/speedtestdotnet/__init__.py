@@ -25,9 +25,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             partial(speedtest.Speedtest, secure=True)
         )
         coordinator = SpeedTestDataCoordinator(hass, config_entry, api)
-        await hass.async_add_executor_job(coordinator.update_servers)
     except speedtest.SpeedtestException as err:
         raise ConfigEntryNotReady from err
+
+    hass.data[DOMAIN] = coordinator
 
     async def _async_finish_startup(hass: HomeAssistant) -> None:
         """Run this only when HA has finished its startup."""
@@ -35,8 +36,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     # Don't start a speedtest during startup
     async_at_started(hass, _async_finish_startup)
-
-    hass.data[DOMAIN] = coordinator
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
     config_entry.async_on_unload(config_entry.add_update_listener(update_listener))

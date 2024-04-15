@@ -439,9 +439,9 @@ def async_add_implementation_provider(
 
     If no implementation found, return None.
     """
-    hass.data.setdefault(DATA_PROVIDERS, {})[
-        provider_domain
-    ] = async_provide_implementation
+    hass.data.setdefault(DATA_PROVIDERS, {})[provider_domain] = (
+        async_provide_implementation
+    )
 
 
 class OAuth2AuthorizeCallbackView(http.HomeAssistantView):

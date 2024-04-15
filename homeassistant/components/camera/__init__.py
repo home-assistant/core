@@ -9,12 +9,12 @@ from contextlib import suppress
 from dataclasses import asdict
 from datetime import datetime, timedelta
 from enum import IntFlag
-from functools import partial
+from functools import cached_property, partial
 import logging
 import os
 from random import SystemRandom
 import time
-from typing import TYPE_CHECKING, Any, Final, cast, final
+from typing import Any, Final, cast, final
 
 from aiohttp import hdrs, web
 import attr
@@ -84,11 +84,6 @@ from .const import (  # noqa: F401
 )
 from .img_util import scale_jpeg_camera_image
 from .prefs import CameraPreferences, DynamicStreamSettings  # noqa: F401
-
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -516,14 +511,14 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         self._create_stream_lock: asyncio.Lock | None = None
         self._rtsp_to_webrtc = False
 
-    @property
+    @cached_property
     def entity_picture(self) -> str:
         """Return a link to the camera feed as entity picture."""
         if self._attr_entity_picture is not None:
             return self._attr_entity_picture
         return ENTITY_IMAGE_URL.format(self.entity_id, self.access_tokens[-1])
 
-    @property
+    @cached_property
     def use_stream_for_stills(self) -> bool:
         """Whether or not to use stream to generate stills."""
         return False
@@ -750,6 +745,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     def async_update_token(self) -> None:
         """Update the used token."""
         self.access_tokens.append(hex(_RND.getrandbits(256))[2:])
+        self.__dict__.pop("entity_picture", None)
 
     async def async_internal_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""

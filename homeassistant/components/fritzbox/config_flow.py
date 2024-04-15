@@ -82,13 +82,13 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
             fritzbox.login()
             fritzbox.get_device_elements()
             fritzbox.logout()
-            return RESULT_SUCCESS
         except LoginError:
             return RESULT_INVALID_AUTH
         except HTTPError:
             return RESULT_NOT_SUPPORTED
         except OSError:
             return RESULT_NO_DEVICES_FOUND
+        return RESULT_SUCCESS
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -141,7 +141,7 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="already_in_progress")
 
         # update old and user-configured config entries
-        for entry in self._async_current_entries():
+        for entry in self._async_current_entries(include_ignore=False):
             if entry.data[CONF_HOST] == host:
                 if uuid and not entry.unique_id:
                     self.hass.config_entries.async_update_entry(entry, unique_id=uuid)

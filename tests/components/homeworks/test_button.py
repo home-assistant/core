@@ -1,4 +1,5 @@
 """Tests for the Lutron Homeworks Series 4 and 8 button."""
+
 from unittest.mock import MagicMock
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS

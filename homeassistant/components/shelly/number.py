@@ -126,4 +126,4 @@ class BlockSleepingNumber(ShellySleepingBlockAttributeEntity, RestoreNumber):
                 f" {repr(err)}"
             ) from err
         except InvalidAuthError:
-            self.coordinator.entry.async_start_reauth(self.hass)
+            await self.coordinator.async_shutdown_device_and_start_reauth()

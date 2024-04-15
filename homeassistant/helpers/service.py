@@ -19,6 +19,7 @@ from homeassistant.const import (
     ATTR_DEVICE_ID,
     ATTR_ENTITY_ID,
     ATTR_FLOOR_ID,
+    ATTR_LABEL_ID,
     CONF_ENTITY_ID,
     CONF_SERVICE,
     CONF_SERVICE_DATA,
@@ -55,6 +56,7 @@ from . import (
     device_registry,
     entity_registry,
     floor_registry,
+    label_registry,
     template,
     translation,
 )
@@ -91,6 +93,7 @@ def _base_components() -> dict[str, ModuleType]:
         light,
         lock,
         media_player,
+        notify,
         remote,
         siren,
         todo,
@@ -110,6 +113,7 @@ def _base_components() -> dict[str, ModuleType]:
         "light": light,
         "lock": lock,
         "media_player": media_player,
+        "notify": notify,
         "remote": remote,
         "siren": siren,
         "todo": todo,
@@ -196,7 +200,7 @@ class ServiceParams(TypedDict):
 class ServiceTargetSelector:
     """Class to hold a target selector for a service."""
 
-    __slots__ = ("entity_ids", "device_ids", "area_ids", "floor_ids")
+    __slots__ = ("entity_ids", "device_ids", "area_ids", "floor_ids", "label_ids")
 
     def __init__(self, service_call: ServiceCall) -> None:
         """Extract ids from service call data."""
@@ -205,6 +209,7 @@ class ServiceTargetSelector:
         device_ids: str | list | None = service_call_data.get(ATTR_DEVICE_ID)
         area_ids: str | list | None = service_call_data.get(ATTR_AREA_ID)
         floor_ids: str | list | None = service_call_data.get(ATTR_FLOOR_ID)
+        label_ids: str | list | None = service_call_data.get(ATTR_LABEL_ID)
 
         self.entity_ids = (
             set(cv.ensure_list(entity_ids)) if _has_match(entity_ids) else set()
@@ -216,12 +221,19 @@ class ServiceTargetSelector:
         self.floor_ids = (
             set(cv.ensure_list(floor_ids)) if _has_match(floor_ids) else set()
         )
+        self.label_ids = (
+            set(cv.ensure_list(label_ids)) if _has_match(label_ids) else set()
+        )
 
     @property
     def has_any_selector(self) -> bool:
         """Determine if any selectors are present."""
         return bool(
-            self.entity_ids or self.device_ids or self.area_ids or self.floor_ids
+            self.entity_ids
+            or self.device_ids
+            or self.area_ids
+            or self.floor_ids
+            or self.label_ids
         )
 
 
@@ -232,7 +244,7 @@ class SelectedEntities:
     # Entities that were explicitly mentioned.
     referenced: set[str] = dataclasses.field(default_factory=set)
 
-    # Entities that were referenced via device/area/floor ID.
+    # Entities that were referenced via device/area/floor/label ID.
     # Should not trigger a warning when they don't exist.
     indirectly_referenced: set[str] = dataclasses.field(default_factory=set)
 
@@ -240,6 +252,7 @@ class SelectedEntities:
     missing_devices: set[str] = dataclasses.field(default_factory=set)
     missing_areas: set[str] = dataclasses.field(default_factory=set)
     missing_floors: set[str] = dataclasses.field(default_factory=set)
+    missing_labels: set[str] = dataclasses.field(default_factory=set)
 
     # Referenced devices
     referenced_devices: set[str] = dataclasses.field(default_factory=set)
@@ -253,6 +266,7 @@ class SelectedEntities:
             ("areas", self.missing_areas),
             ("devices", self.missing_devices),
             ("entities", missing_entities),
+            ("labels", self.missing_labels),
         ):
             if items:
                 parts.append(f"{label} {', '.join(sorted(items))}")
@@ -467,7 +481,7 @@ def _has_match(ids: str | list[str] | None) -> TypeGuard[str | list[str]]:
 
 
 @bind_hass
-def async_extract_referenced_entity_ids(
+def async_extract_referenced_entity_ids(  # noqa: C901
     hass: HomeAssistant, service_call: ServiceCall, expand_group: bool = True
 ) -> SelectedEntities:
     """Extract referenced entity IDs from a service call."""
@@ -483,17 +497,23 @@ def async_extract_referenced_entity_ids(
 
     selected.referenced.update(entity_ids)
 
-    if not selector.device_ids and not selector.area_ids and not selector.floor_ids:
+    if (
+        not selector.device_ids
+        and not selector.area_ids
+        and not selector.floor_ids
+        and not selector.label_ids
+    ):
         return selected
 
-    ent_reg = entity_registry.async_get(hass)
+    entities = entity_registry.async_get(hass).entities
     dev_reg = device_registry.async_get(hass)
     area_reg = area_registry.async_get(hass)
-    floor_reg = floor_registry.async_get(hass)
 
-    for floor_id in selector.floor_ids:
-        if floor_id not in floor_reg.floors:
-            selected.missing_floors.add(floor_id)
+    if selector.floor_ids:
+        floor_reg = floor_registry.async_get(hass)
+        for floor_id in selector.floor_ids:
+            if floor_id not in floor_reg.floors:
+                selected.missing_floors.add(floor_id)
 
     for area_id in selector.area_ids:
         if area_id not in area_reg.areas:
@@ -503,25 +523,47 @@ def async_extract_referenced_entity_ids(
         if device_id not in dev_reg.devices:
             selected.missing_devices.add(device_id)
 
+    if selector.label_ids:
+        label_reg = label_registry.async_get(hass)
+        for label_id in selector.label_ids:
+            if label_id not in label_reg.labels:
+                selected.missing_labels.add(label_id)
+
+            for entity_entry in entities.get_entries_for_label(label_id):
+                if (
+                    entity_entry.entity_category is None
+                    and entity_entry.hidden_by is None
+                ):
+                    selected.indirectly_referenced.add(entity_entry.entity_id)
+
+            for device_entry in dev_reg.devices.get_devices_for_label(label_id):
+                selected.referenced_devices.add(device_entry.id)
+
+            for area_entry in area_reg.areas.get_areas_for_label(label_id):
+                selected.referenced_areas.add(area_entry.id)
+
     # Find areas for targeted floors
     if selector.floor_ids:
-        for area_entry in area_reg.areas.values():
-            if area_entry.id and area_entry.floor_id in selector.floor_ids:
-                selected.referenced_areas.add(area_entry.id)
+        selected.referenced_areas.update(
+            area_entry.id
+            for floor_id in selector.floor_ids
+            for area_entry in area_reg.areas.get_areas_for_floor(floor_id)
+        )
 
     # Find devices for targeted areas
     selected.referenced_devices.update(selector.device_ids)
 
     selected.referenced_areas.update(selector.area_ids)
     if selected.referenced_areas:
-        for device_entry in dev_reg.devices.values():
-            if device_entry.area_id in selected.referenced_areas:
-                selected.referenced_devices.add(device_entry.id)
+        for area_id in selected.referenced_areas:
+            selected.referenced_devices.update(
+                device_entry.id
+                for device_entry in dev_reg.devices.get_devices_for_area_id(area_id)
+            )
 
     if not selected.referenced_areas and not selected.referenced_devices:
         return selected
 
-    entities = ent_reg.entities
     # Add indirectly referenced by area
     selected.indirectly_referenced.update(
         entry.entity_id
@@ -616,9 +658,9 @@ async def async_get_all_descriptions(
     hass: HomeAssistant,
 ) -> dict[str, dict[str, Any]]:
     """Return descriptions (i.e. user documentation) for all service calls."""
-    descriptions_cache: dict[
-        tuple[str, str], dict[str, Any] | None
-    ] = hass.data.setdefault(SERVICE_DESCRIPTION_CACHE, {})
+    descriptions_cache: dict[tuple[str, str], dict[str, Any] | None] = (
+        hass.data.setdefault(SERVICE_DESCRIPTION_CACHE, {})
+    )
 
     # We don't mutate services here so we avoid calling
     # async_services which makes a copy of every services
@@ -667,7 +709,7 @@ async def async_get_all_descriptions(
             contents = await hass.async_add_executor_job(
                 _load_services_files, hass, integrations
             )
-            loaded = dict(zip(domains_with_missing_services, contents))
+            loaded = dict(zip(domains_with_missing_services, contents, strict=False))
 
     # Load translations for all service domains
     translations = await translation.async_get_translations(
@@ -768,9 +810,9 @@ def async_set_service_schema(
     domain = domain.lower()
     service = service.lower()
 
-    descriptions_cache: dict[
-        tuple[str, str], dict[str, Any] | None
-    ] = hass.data.setdefault(SERVICE_DESCRIPTION_CACHE, {})
+    descriptions_cache: dict[tuple[str, str], dict[str, Any] | None] = (
+        hass.data.setdefault(SERVICE_DESCRIPTION_CACHE, {})
+    )
 
     description = {
         "name": schema.get("name", ""),
@@ -951,7 +993,7 @@ async def entity_service_call(
     )
 
     response_data: EntityServiceResponse = {}
-    for entity, result in zip(entities, results):
+    for entity, result in zip(entities, results, strict=False):
         if isinstance(result, BaseException):
             raise result from None
         response_data[entity.entity_id] = result

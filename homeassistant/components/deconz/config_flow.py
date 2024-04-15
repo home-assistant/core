@@ -52,11 +52,11 @@ CONF_MANUAL_INPUT = "Manually define gateway"
 
 
 @callback
-def get_master_gateway(hass: HomeAssistant) -> DeconzHub:
+def get_master_hub(hass: HomeAssistant) -> DeconzHub:
     """Return the gateway which is marked as master."""
-    for gateway in hass.data[DOMAIN].values():
-        if gateway.master:
-            return cast(DeconzHub, gateway)
+    for hub in hass.data[DOMAIN].values():
+        if hub.master:
+            return cast(DeconzHub, hub)
     raise ValueError
 
 

@@ -173,7 +173,7 @@ async def async_restore_traces(hass: HomeAssistant) -> None:
         restored_traces = {}
 
     for key, traces in restored_traces.items():
-        # Add stored traces in reversed order to priorize the newest traces
+        # Add stored traces in reversed order to prioritize the newest traces
         for json_trace in reversed(traces):
             if (
                 (stored_traces := _get_data(hass).get(key))

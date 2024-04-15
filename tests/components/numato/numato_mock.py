@@ -62,7 +62,8 @@ class NumatoModuleMock:
 
         Ignore the device list argument, mock discovers /dev/ttyACM0.
         """
-        self.devices[0] = NumatoModuleMock.NumatoDeviceMock("/dev/ttyACM0")
+        if not self.devices:
+            self.devices[0] = NumatoModuleMock.NumatoDeviceMock("/dev/ttyACM0")
 
     def cleanup(self):
         """Mockup for the numato device cleanup."""

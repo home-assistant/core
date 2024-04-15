@@ -79,9 +79,12 @@ def data_uv_index_fixture():
 @pytest.fixture(name="mock_pyopenuv")
 async def mock_pyopenuv_fixture(client):
     """Define a fixture to patch pyopenuv."""
-    with patch(
-        "homeassistant.components.openuv.config_flow.Client", return_value=client
-    ), patch("homeassistant.components.openuv.Client", return_value=client):
+    with (
+        patch(
+            "homeassistant.components.openuv.config_flow.Client", return_value=client
+        ),
+        patch("homeassistant.components.openuv.Client", return_value=client),
+    ):
         yield
 
 
