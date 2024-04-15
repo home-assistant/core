@@ -389,6 +389,7 @@ class TibberSensorElPrice(TibberSensor):
             "off_peak_1": None,
             "peak": None,
             "off_peak_2": None,
+            "prices": None,
         }
         self._attr_icon = ICON
         self._attr_unique_id = self._tibber_home.home_id
@@ -440,6 +441,16 @@ class TibberSensorElPrice(TibberSensor):
         self._attr_extra_state_attributes["estimated_annual_consumption"] = data[
             "meteringPointData"
         ]["estimatedAnnualConsumption"]
+        self._attr_extra_state_attributes["prices"] = []
+        for key in ["today", "tomorrow"]:
+            for price in data["currentSubscription"]["priceInfo"][key]:
+                self._attr_extra_state_attributes["prices"].append(
+                    {
+                        "start_time": price["startsAt"],
+                        "price_eur_per_kwh": price["total"],
+                        "level": price["level"],
+                    }
+                )
 
 
 class TibberDataSensor(TibberSensor, CoordinatorEntity["TibberDataCoordinator"]):
