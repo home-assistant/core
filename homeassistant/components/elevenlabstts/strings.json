@@ -1,0 +1,13 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "api_key": "API Key",
+          "voice": "Voice",
+          "model": "Model"
+        }
+      }
+    }
+  }
+}
