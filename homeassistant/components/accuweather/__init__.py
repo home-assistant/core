@@ -15,7 +15,10 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN, UPDATE_INTERVAL_DAILY_FORECAST, UPDATE_INTERVAL_OBSERVATION
-from .coordinator import AccuWeatherDataUpdateCoordinator
+from .coordinator import (
+    AccuWeatherDailyForecastDataUpdateCoordinator,
+    AccuWeatherObservationDataUpdateCoordinator,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,8 +29,8 @@ PLATFORMS = [Platform.SENSOR, Platform.WEATHER]
 class AccuWeatherData:
     """Data for AccuWeather integration."""
 
-    coordinator_observation: AccuWeatherDataUpdateCoordinator
-    coordinator_daily_forecast: AccuWeatherDataUpdateCoordinator
+    coordinator_observation: AccuWeatherObservationDataUpdateCoordinator
+    coordinator_daily_forecast: AccuWeatherDailyForecastDataUpdateCoordinator
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -42,22 +45,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     websession = async_get_clientsession(hass)
     accuweather = AccuWeather(api_key, websession, location_key=location_key)
 
-    coordinator_observation = AccuWeatherDataUpdateCoordinator(
+    coordinator_observation = AccuWeatherObservationDataUpdateCoordinator(
         hass,
         accuweather,
         name,
         "observation",
         UPDATE_INTERVAL_OBSERVATION,
-        "async_get_current_conditions",
     )
 
-    coordinator_daily_forecast = AccuWeatherDataUpdateCoordinator(
+    coordinator_daily_forecast = AccuWeatherDailyForecastDataUpdateCoordinator(
         hass,
         accuweather,
         name,
         "daily forecast",
         UPDATE_INTERVAL_DAILY_FORECAST,
-        "async_get_daily_forecast",
     )
 
     await coordinator_observation.async_config_entry_first_refresh()

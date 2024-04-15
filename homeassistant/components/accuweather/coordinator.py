@@ -17,6 +17,8 @@ from homeassistant.helpers.update_coordinator import (
 
 from .const import DOMAIN, MANUFACTURER
 
+EXCEPTIONS = (ApiError, ClientConnectorError, InvalidApiKeyError, RequestsExceededError)
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -30,11 +32,9 @@ class AccuWeatherDataUpdateCoordinator(TimestampDataUpdateCoordinator[Any]):
         name: str,
         coordinator_type: str,
         update_interval: timedelta,
-        update_method: str,
     ) -> None:
         """Initialize."""
         self.accuweather = accuweather
-        self._update_method = update_method
 
         if TYPE_CHECKING:
             assert accuweather.location_key is not None
@@ -62,17 +62,32 @@ class AccuWeatherDataUpdateCoordinator(TimestampDataUpdateCoordinator[Any]):
             update_interval=update_interval,
         )
 
-    async def _async_update_data(self) -> Any:
+
+class AccuWeatherObservationDataUpdateCoordinator(AccuWeatherDataUpdateCoordinator):
+    """Class to manage fetching AccuWeather data API."""
+
+    async def _async_update_data(self) -> dict[str, Any]:
         """Update data via library."""
         try:
             async with timeout(10):
-                result = await getattr(self.accuweather, self._update_method)()
-        except (
-            ApiError,
-            ClientConnectorError,
-            InvalidApiKeyError,
-            RequestsExceededError,
-        ) as error:
+                result = await self.accuweather.async_get_current_conditions()
+        except EXCEPTIONS as error:
+            raise UpdateFailed(error) from error
+
+        _LOGGER.debug("Requests remaining: %d", self.accuweather.requests_remaining)
+
+        return result
+
+
+class AccuWeatherDailyForecastDataUpdateCoordinator(AccuWeatherDataUpdateCoordinator):
+    """Class to manage fetching AccuWeather data API."""
+
+    async def _async_update_data(self) -> list[dict[str, Any]]:
+        """Update data via library."""
+        try:
+            async with timeout(10):
+                result = await self.accuweather.async_get_daily_forecast()
+        except EXCEPTIONS as error:
             raise UpdateFailed(error) from error
 
         _LOGGER.debug("Requests remaining: %d", self.accuweather.requests_remaining)

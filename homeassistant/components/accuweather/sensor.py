@@ -28,7 +28,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import AccuWeatherData, AccuWeatherDataUpdateCoordinator
+from . import AccuWeatherData
 from .const import (
     API_METRIC,
     ATTR_CATEGORY,
@@ -40,6 +40,11 @@ from .const import (
     ATTRIBUTION,
     DOMAIN,
     MAX_FORECAST_DAYS,
+)
+from .coordinator import (
+    AccuWeatherDailyForecastDataUpdateCoordinator,
+    AccuWeatherDataUpdateCoordinator,
+    AccuWeatherObservationDataUpdateCoordinator,
 )
 
 PARALLEL_UPDATES = 1
@@ -454,10 +459,10 @@ async def async_setup_entry(
 
     accuweather_data: AccuWeatherData = hass.data[DOMAIN][entry.entry_id]
 
-    observation_coordinator: AccuWeatherDataUpdateCoordinator = (
+    observation_coordinator: AccuWeatherObservationDataUpdateCoordinator = (
         accuweather_data.coordinator_observation
     )
-    forecast_daily_coordinator: AccuWeatherDataUpdateCoordinator = (
+    forecast_daily_coordinator: AccuWeatherDailyForecastDataUpdateCoordinator = (
         accuweather_data.coordinator_daily_forecast
     )
 
