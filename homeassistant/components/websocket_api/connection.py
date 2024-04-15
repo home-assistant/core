@@ -221,12 +221,7 @@ class ActiveConnection:
         handler, schema = handler_schema
 
         try:
-            if schema is False:
-                if len(msg) > 2:
-                    raise vol.Invalid("Message has unexpected keys")
-                handler(self.hass, self, msg)
-            else:
-                handler(self.hass, self, schema(msg))
+            handler(self.hass, self, msg if schema is False else schema(msg))
         except Exception as err:  # pylint: disable=broad-except
             self.async_handle_exception(msg, err)
 
