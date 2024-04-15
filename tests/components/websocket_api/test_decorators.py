@@ -135,7 +135,7 @@ async def test_async_response_request_context(
     assert not msg["success"]
     assert msg["error"]["code"] == "invalid_format"
     assert msg["error"]["message"] == (
-        "Message has unexpected keys. "
+        "extra keys not allowed. "
         "Got {'id': 10, 'type': 'test-get-request', 'not_valid': 'dog'}"
     )
 

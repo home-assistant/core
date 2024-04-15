@@ -223,7 +223,7 @@ class ActiveConnection:
         try:
             if schema is False:
                 if len(msg) > 2:
-                    raise vol.Invalid("Message has unexpected keys")
+                    raise vol.Invalid("extra keys not allowed")
                 handler(self.hass, self, msg)
             else:
                 handler(self.hass, self, schema(msg))
