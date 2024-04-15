@@ -44,21 +44,18 @@ async def test_attributes(hass: HomeAssistant) -> None:
 
     state = hass.states.get(DEVICE_ID)
     assert state.state == STATE_ON
-    if state.attributes.get(ATTR_CURRENT_HUMIDITY):
-        assert state.attributes.get(ATTR_CURRENT_HUMIDITY) == 15
-    assert state.attributes.get(ATTR_MIN_HUMIDITY) == DEFAULT_MIN_HUMIDITY
-    assert state.attributes.get(ATTR_MAX_HUMIDITY) == DEFAULT_MAX_HUMIDITY
-    assert state.attributes.get(ATTR_HUMIDITY) == 40
-    assert state.attributes.get(ATTR_AVAILABLE_MODES) == [
+    assert state.attributes[ATTR_CURRENT_HUMIDITY] == 15
+    assert state.attributes[ATTR_MIN_HUMIDITY] == DEFAULT_MIN_HUMIDITY
+    assert state.attributes[ATTR_MAX_HUMIDITY] == DEFAULT_MAX_HUMIDITY
+    assert state.attributes[ATTR_HUMIDITY] == 40
+    assert state.attributes[ATTR_AVAILABLE_MODES] == [
         MODE_OFF,
         MODE_AUTO,
         MODE_MANUAL,
     ]
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "ecobee"
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == HumidifierDeviceClass.HUMIDIFIER
-    assert (
-        state.attributes.get(ATTR_SUPPORTED_FEATURES) == HumidifierEntityFeature.MODES
-    )
+    assert state.attributes[ATTR_FRIENDLY_NAME] == "ecobee"
+    assert state.attributes[ATTR_DEVICE_CLASS] == HumidifierDeviceClass.HUMIDIFIER
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == HumidifierEntityFeature.MODES
 
 
 async def test_turn_on(hass: HomeAssistant) -> None:

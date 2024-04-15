@@ -782,7 +782,7 @@ class SpeechManager:
 
             return filename
 
-        audio_task = self.hass.async_create_task(get_tts_data())
+        audio_task = self.hass.async_create_task(get_tts_data(), eager_start=False)
 
         def handle_error(_future: asyncio.Future) -> None:
             """Handle error."""

@@ -6,9 +6,9 @@ from dataclasses import dataclass
 import logging
 from typing import Any
 
-from roborock.api import AttributeCache
 from roborock.command_cache import CacheableAttribute
 from roborock.exceptions import RoborockException
+from roborock.version_1_apis.roborock_client_v1 import AttributeCache
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -73,7 +73,9 @@ async def async_setup_entry(
         return_exceptions=True,
     )
     valid_entities: list[RoborockNumberEntity] = []
-    for (coordinator, description), result in zip(possible_entities, results):
+    for (coordinator, description), result in zip(
+        possible_entities, results, strict=False
+    ):
         if result is None or isinstance(result, RoborockException):
             _LOGGER.debug("Not adding entity because of %s", result)
         else:
