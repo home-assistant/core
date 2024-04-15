@@ -130,12 +130,14 @@ async def test_async_response_request_context(
         }
     )
 
-    # Extra keys in message are allowed and ignored
-    # to match the default of ALLOW_EXTRA
     msg = await websocket_client.receive_json()
     assert msg["id"] == 10
-    assert msg["success"]
-    assert msg["result"] == "/api/websocket"
+    assert not msg["success"]
+    assert msg["error"]["code"] == "invalid_format"
+    assert msg["error"]["message"] == (
+        "Message has unexpected keys. "
+        "Got {'id': 10, 'type': 'test-get-request', 'not_valid': 'dog'}"
+    )
 
 
 async def test_supervisor_only(hass: HomeAssistant, websocket_client) -> None:
