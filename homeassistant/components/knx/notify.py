@@ -51,6 +51,6 @@ class KNXNotify(NotifyEntity, KnxEntity):
         self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)
         self._attr_unique_id = str(self._device.remote_value.group_address)
 
-    async def async_send_message(self, message: str = "", **kwargs: Any) -> None:
+    async def async_send_message(self, message: str) -> None:
         """Send a notification to knx bus."""
         await self._device.set(message)
