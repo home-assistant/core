@@ -19,9 +19,10 @@ from homeassistant.util import Throttle
 from .const import (
     _LOGGER,
     ATTR_CONFIG_ENTRY_ID,
-    CONF_MIGRATE_NOTIFY,
     CONF_REFRESH_TOKEN,
     DATA_ECOBEE_CONFIG,
+    DATA_FLOW_MINOR_VERSION,
+    DATA_FLOW_VERSION,
     DATA_HASS_CONFIG,
     DOMAIN,
     PLATFORMS,
@@ -80,8 +81,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # The legacy Ecobee notify.notify service is deprecated
     # was with HA Core 2024.5.0 and will be removed with HA core 2024.7.0
-    entry_options: dict[str, str | int | float | None] = dict(entry.options or {})
-    if entry_options.get(CONF_MIGRATE_NOTIFY):
+    if (
+        entry.version == DATA_FLOW_VERSION
+        and entry.minor_version == DATA_FLOW_MINOR_VERSION
+    ):
         return True
 
     ir.async_create_issue(

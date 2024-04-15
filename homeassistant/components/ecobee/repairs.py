@@ -9,7 +9,7 @@ from homeassistant.components.repairs import ConfirmRepairFlow, RepairsFlow
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from .const import CONF_MIGRATE_NOTIFY
+from .const import DATA_FLOW_MINOR_VERSION, DATA_FLOW_VERSION
 
 
 class NotifyMigration(RepairsFlow):
@@ -30,11 +30,13 @@ class NotifyMigration(RepairsFlow):
     async def async_step_confirm(
         self, user_input: dict[str, str] | None = None
     ) -> data_entry_flow.FlowResult:
-        """Handle the confirm step of a fix flow."""
+        """Handle the confirm step of a fix flow by updating to the latest version."""
         if user_input is not None:
-            new_options = dict(self.entry.options or {})
-            new_options[CONF_MIGRATE_NOTIFY] = 1
-            self.hass.config_entries.async_update_entry(self.entry, options=new_options)
+            self.hass.config_entries.async_update_entry(
+                self.entry,
+                version=DATA_FLOW_VERSION,
+                minor_version=DATA_FLOW_MINOR_VERSION,
+            )
             return self.async_create_entry(data={})
 
         return self.async_show_menu(menu_options=["confirm", "ignore"])
