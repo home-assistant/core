@@ -2,8 +2,13 @@
   "config": {
     "step": {
       "user": {
+        "description": "Provide your ElevenLabs API-Key",
         "data": {
-          "api_key": "API Key",
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        }
+      },
+      "voice": {
+        "data": {
           "voice": "Voice",
           "model": "Model"
         }

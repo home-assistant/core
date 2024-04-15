@@ -39,7 +39,9 @@ class ElevenLabsConfigFlow(ConfigFlow, domain=DOMAIN):
         models: list[Model] = await models_async
         voice_names = [voice.name if voice.name else "Unknown" for voice in voices]
         self.voices = voice_names
-        model_names = [model.name if model.name else "Unknown" for model in models]
+        model_names = [
+            model.model_id if model.model_id else "Unknown" for model in models
+        ]
         self.models = model_names
 
     def _get_user_schema_authenticated(self) -> vol.Schema:
