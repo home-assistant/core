@@ -2592,6 +2592,7 @@ class ServiceRegistry:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="service_lacks_response_request",
+                translation_placeholders={"return_response": "return_response=True"},
             )
 
         if target:

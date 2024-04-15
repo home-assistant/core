@@ -196,7 +196,7 @@
       "message": "A service which does not return responses can't be called with {return_response}."
     },
     "service_lacks_response_request": {
-      "message": "The service call requires responses but caller did not ask for responses."
+      "message": "The service call requires responses and must be called with {return_response}."
     },
     "service_reponse_invalid": {
       "message": "Failed to process the returned service response data, expected a dictionary, but got {response_data_type}."
