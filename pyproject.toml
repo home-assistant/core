@@ -668,6 +668,7 @@ select = [
     "B007", # Loop control variable {name} not used within loop body
     "B014", # Exception handler with duplicate exception
     "B015", # Pointless comparison. Did you mean to assign a value? Otherwise, prepend assert or remove it.
+    "B017", # pytest.raises(BaseException) should be considered evil
     "B018", # Found useless attribute access. Either assign it to a variable or remove it.
     "B023", # Function definition does not bind loop variable {name}
     "B026", # Star-arg unpacking after a keyword argument is strongly discouraged
