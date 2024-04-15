@@ -82,16 +82,16 @@ class EcobeeNotifyEntity(NotifyEntity):
         self.data = data
         self.thermostat_index = thermostat_index
         self.thermostat = thermostat
-        self._attr_unique_id = self.thermostat["identifier"]
+        self._attr_unique_id = thermostat["identifier"]
         self.update_without_throttle = False
         model: str | None = None
         with suppress(KeyError):
-            model = f"{ECOBEE_MODEL_TO_NAME[self.thermostat['modelNumber']]} Thermostat"
+            model = f"{ECOBEE_MODEL_TO_NAME[thermostat['modelNumber']]} Thermostat"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self.thermostat["identifier"])},
+            identifiers={(DOMAIN, thermostat["identifier"])},
             manufacturer=MANUFACTURER,
             model=model,
-            name=self.thermostat["name"],
+            name=thermostat["name"],
         )
 
     def send_message(self, message: str) -> None:
