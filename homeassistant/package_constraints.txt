@@ -42,7 +42,7 @@ mutagen==1.47.0
 orjson==3.9.15
 packaging>=23.1
 paho-mqtt==1.6.1
-Pillow==10.2.0
+Pillow==10.3.0
 pip>=21.3.1
 psutil-home-assistant==0.0.1
 PyJWT==2.8.0
@@ -62,7 +62,7 @@ voluptuous-serialize==2.6.0
 voluptuous==0.13.1
 webrtc-noise-gain==1.2.3
 yarl==1.9.4
-zeroconf==0.132.0
+zeroconf==0.132.2
 
 # Constrain pycryptodome to avoid vulnerability
 # see https://github.com/home-assistant/core/pull/16238

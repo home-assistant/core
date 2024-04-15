@@ -127,6 +127,7 @@ async def handle_info(
                 for registration in registrations.values()
             )
         ),
+        strict=False,
     ):
         for key, value in domain_data["info"].items():
             if asyncio.iscoroutine(value):

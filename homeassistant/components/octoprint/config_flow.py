@@ -105,7 +105,9 @@ class OctoPrintConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_get_api_key(self, user_input=None):
         """Get an Application Api Key."""
         if not self.api_key_task:
-            self.api_key_task = self.hass.async_create_task(self._async_get_auth_key())
+            self.api_key_task = self.hass.async_create_task(
+                self._async_get_auth_key(), eager_start=False
+            )
         if not self.api_key_task.done():
             return self.async_show_progress(
                 step_id="get_api_key",
@@ -133,7 +135,7 @@ class OctoPrintConfigFlow(ConfigFlow, domain=DOMAIN):
             self.hass.config_entries.async_update_entry(existing_entry, data=user_input)
             # Reload the config entry otherwise devices will remain unavailable
             self.hass.async_create_task(
-                self.hass.config_entries.async_reload(existing_entry.entry_id)
+                self.hass.config_entries.async_reload(existing_entry.entry_id),
             )
 
             return self.async_abort(reason="reauth_successful")
