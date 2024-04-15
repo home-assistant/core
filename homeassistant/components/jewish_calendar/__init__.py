@@ -110,7 +110,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     # optionally specify latitude and longitude. So we can have a config_entry with
     # CONF_LAT/LON specified, one with CONF_LOCATION or None in which case we'll
     # take the Home location.
-    if config_entry.data.get(CONF_LATITUDE) or config_entry.data.get(CONF_LONGITUDE):
+    if CONF_LATITUDE in config_entry.data or CONF_LONGITUDE in config_entry.data:
         latitude = config_entry.data.get(CONF_LATITUDE, hass.config.latitude)
         longitude = config_entry.data.get(CONF_LONGITUDE, hass.config.longitude)
     elif config_entry.data.get(CONF_LOCATION):

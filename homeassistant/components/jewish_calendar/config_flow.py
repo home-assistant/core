@@ -12,7 +12,7 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
+    OptionsFlowWithConfigEntry,
 )
 from homeassistant.const import (
     CONF_ELEVATION,
@@ -56,7 +56,7 @@ class JewishCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
+    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlowWithConfigEntry:
         """Get the options flow for this handler."""
         return JewishCalendarOptionsFlowHandler(config_entry)
 
@@ -122,12 +122,8 @@ class JewishCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
         return await self.async_step_user(import_config)
 
 
-class JewishCalendarOptionsFlowHandler(OptionsFlow):
+class JewishCalendarOptionsFlowHandler(OptionsFlowWithConfigEntry):
     """Handle Jewish Calendar options."""
-
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize Jewish Calendar options flow."""
-        self.config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
