@@ -4,12 +4,15 @@ from pathlib import Path
 
 import pytest
 import requests_mock
+from syrupy import SnapshotAssertion
 
 from script.alexa_locales import SITE, run_script
 
 
 def test_alexa_locales(
-    capsys: pytest.CaptureFixture[str], requests_mock: requests_mock.Mocker
+    capsys: pytest.CaptureFixture[str],
+    requests_mock: requests_mock.Mocker,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test alexa_locales script."""
     fixture_file = (
@@ -23,4 +26,4 @@ def test_alexa_locales(
     run_script()
 
     captured = capsys.readouterr()
-    assert "Missing interfaces:" in captured.out
+    assert captured.out == snapshot
