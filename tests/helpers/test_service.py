@@ -1626,7 +1626,6 @@ async def test_reload_service_helper(hass: HomeAssistant) -> None:
 
     # Test redundant reload of multiple targets + single target
     reloaded.clear()
-    reloader = service.ReloadServiceHelper(reload_service_handler, reload_targets)
     tasks = [
         # This reload task will start executing first, (all)
         reloader.execute_service(ServiceCall("test", "test")),
@@ -1641,7 +1640,7 @@ async def test_reload_service_helper(hass: HomeAssistant) -> None:
     assert reloaded == unordered(["all", "target1", "target2", "target3", "target4"])
 
     # Test redundant reload of single targets
-    reloader = service.ReloadServiceHelper(reload_service_handler, reload_targets)
+    reloaded.clear()
     tasks = [
         # This reload task will start executing first, (target1)
         reloader.execute_service(ServiceCall("test", "test", {"target": "target1"})),
@@ -1682,7 +1681,6 @@ async def test_reload_service_helper(hass: HomeAssistant) -> None:
 
     # Test redundant reload of multiple targets + single target
     reloaded.clear()
-    reloader = service.ReloadServiceHelper(reload_service_handler, reload_targets)
     tasks = [
         # This reload task will start executing first, (all)
         reloader.execute_service(ServiceCall("test", "test")),
