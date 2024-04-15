@@ -28,7 +28,7 @@ async def test_load_unload_entry(hass: HomeAssistant) -> None:
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
     assert entry.entry_id in hass.data[DOMAIN]
 
     assert await hass.config_entries.async_unload(entry.entry_id)

@@ -13,6 +13,7 @@ from homeassistant.components.insteon.config_flow import (
     STEP_PLM,
     STEP_PLM_MANUALLY,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.components.insteon.const import CONF_HUB_VERSION, DOMAIN
 from homeassistant.const import CONF_DEVICE, CONF_HOST
 from homeassistant.core import HomeAssistant
@@ -67,11 +68,10 @@ async def _init_form(hass, modem_type):
     )
     assert result["type"] is FlowResultType.MENU
 
-    result2 = await hass.config_entries.flow.async_configure(
+    return await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {"next_step_id": modem_type},
     )
-    return result2
 
 
 async def _device_form(hass, flow_id, connection, user_input):
@@ -109,7 +109,7 @@ async def test_fail_on_existing(hass: HomeAssistant) -> None:
         options={},
     )
     config_entry.add_to_hass(hass)
-    assert config_entry.state is config_entries.ConfigEntryState.NOT_LOADED
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,

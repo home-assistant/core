@@ -8,6 +8,7 @@ from pytest_unordered import unordered
 
 from homeassistant import config_entries
 from homeassistant.components.template import DOMAIN, async_setup_entry
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -276,7 +277,7 @@ async def test_options(
             "{{ float(states('sensor.one'), default='') + float(states('sensor.two'), default='') }}",
             {},
             {"one": "30.0", "two": "20.0"},
-            ["", "50.0"],
+            ["", STATE_UNAVAILABLE, "50.0"],
             [{}, {}],
             [["one", "two"], ["one", "two"]],
         ),
@@ -342,20 +343,24 @@ async def test_config_flow_preview(
         hass.states.async_set(
             f"{template_type}.{input_entity}", input_states[input_entity], {}
         )
+        await hass.async_block_till_done()
 
-    msg = await client.receive_json()
-    assert msg["event"] == {
-        "attributes": {"friendly_name": "My template"}
-        | extra_attributes[0]
-        | extra_attributes[1],
-        "listeners": {
-            "all": False,
-            "domains": [],
-            "entities": unordered([f"{template_type}.{_id}" for _id in listeners[1]]),
-            "time": False,
-        },
-        "state": template_states[1],
-    }
+    for template_state in template_states[1:]:
+        msg = await client.receive_json()
+        assert msg["event"] == {
+            "attributes": {"friendly_name": "My template"}
+            | extra_attributes[0]
+            | extra_attributes[1],
+            "listeners": {
+                "all": False,
+                "domains": [],
+                "entities": unordered(
+                    [f"{template_type}.{_id}" for _id in listeners[1]]
+                ),
+                "time": False,
+            },
+            "state": template_state,
+        }
     assert len(hass.states.async_all()) == 2
 
 

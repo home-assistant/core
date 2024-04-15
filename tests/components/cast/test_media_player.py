@@ -271,9 +271,11 @@ async def test_start_discovery_called_once(
 ) -> None:
     """Test pychromecast.start_discovery called exactly once."""
     await async_setup_cast(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert castbrowser_mock.return_value.start_discovery.call_count == 1
 
     await async_setup_cast(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert castbrowser_mock.return_value.start_discovery.call_count == 1
 
 

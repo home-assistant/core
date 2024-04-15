@@ -203,8 +203,7 @@ class AmcrestChecker(ApiWrapper):
     async def async_command(self, *args: Any, **kwargs: Any) -> httpx.Response:
         """amcrest.ApiWrapper.command wrapper to catch errors."""
         async with self._async_command_wrapper():
-            ret = await super().async_command(*args, **kwargs)
-        return ret
+            return await super().async_command(*args, **kwargs)
 
     @asynccontextmanager
     async def async_stream_command(

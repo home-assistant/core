@@ -83,11 +83,11 @@ async def setup_platform(
     discovered_device: dict[str, Any],
     *,
     bond_device_id: str = "bond-device-id",
-    bond_version: dict[str, Any] = None,
-    props: dict[str, Any] = None,
-    state: dict[str, Any] = None,
-    bridge: dict[str, Any] = None,
-    token: dict[str, Any] = None,
+    bond_version: dict[str, Any] | None = None,
+    props: dict[str, Any] | None = None,
+    state: dict[str, Any] | None = None,
+    bridge: dict[str, Any] | None = None,
+    token: dict[str, Any] | None = None,
 ):
     """Set up the specified Bond platform."""
     mock_entry = MockConfigEntry(

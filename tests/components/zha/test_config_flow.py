@@ -35,6 +35,7 @@ from homeassistant.config_entries import (
     SOURCE_USB,
     SOURCE_USER,
     SOURCE_ZEROCONF,
+    ConfigEntryState,
 )
 from homeassistant.const import CONF_SOURCE
 from homeassistant.core import HomeAssistant
@@ -1552,7 +1553,7 @@ async def test_options_flow_defaults(
     mock_async_unload.assert_called_once_with(entry.entry_id)
 
     # Unload it ourselves
-    entry.mock_state(hass, config_entries.ConfigEntryState.NOT_LOADED)
+    entry.mock_state(hass, ConfigEntryState.NOT_LOADED)
 
     # Reconfigure ZHA
     assert result1["step_id"] == "prompt_migrate_or_reconfigure"
@@ -1735,7 +1736,7 @@ async def test_options_flow_restarts_running_zha_if_cancelled(
             flow["flow_id"], user_input={}
         )
 
-    entry.mock_state(hass, config_entries.ConfigEntryState.NOT_LOADED)
+    entry.mock_state(hass, ConfigEntryState.NOT_LOADED)
 
     assert result1["step_id"] == "prompt_migrate_or_reconfigure"
     result2 = await hass.config_entries.options.async_configure(
@@ -1790,7 +1791,7 @@ async def test_options_flow_migration_reset_old_adapter(
             flow["flow_id"], user_input={}
         )
 
-    entry.mock_state(hass, config_entries.ConfigEntryState.NOT_LOADED)
+    entry.mock_state(hass, ConfigEntryState.NOT_LOADED)
 
     assert result1["step_id"] == "prompt_migrate_or_reconfigure"
     result2 = await hass.config_entries.options.async_configure(
