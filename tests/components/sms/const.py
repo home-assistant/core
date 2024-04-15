@@ -1,4 +1,5 @@
 """Constants for tests of the SMS component."""
+
 import datetime
 
 SMS_STATUS_SINGLE = {
