@@ -59,6 +59,8 @@ class Tool:
         context: Context,
         language: str | None,
         assistant: str | None,
+        conversation_id: str | None,
+        device_id: str | None,
         **kwargs: Any,
     ) -> Any:
         """Call the tool."""
@@ -111,6 +113,8 @@ async def async_call_tool(
     context: Context | None = None,
     language: str | None = None,
     assistant: str | None = None,
+    conversation_id: str | None = None,
+    device_id: str | None = None,
 ) -> str:
     """Call a LLM tool, parse args and return the response."""
     if (tools := hass.data.get(DATA_KEY)) is None:
@@ -123,7 +127,15 @@ async def async_call_tool(
         tool = tools[tool_name]
         tool_args = json.loads(json_args)
         response = await tool.async_call(
-            hass, platform, text_input, context, language, assistant, **tool_args
+            hass,
+            platform,
+            text_input,
+            context,
+            language,
+            assistant,
+            conversation_id,
+            device_id,
+            **tool_args,
         )
         json_response = json.dumps(response)
 
@@ -315,6 +327,8 @@ class IntentTool(Tool):
         context: Context,
         language: str | None,
         assistant: str | None,
+        conversation_id: str | None,
+        device_id: str | None,
         **kwargs: Any,
     ) -> Any:
         """Handle the intent."""
