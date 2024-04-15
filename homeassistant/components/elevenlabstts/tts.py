@@ -71,20 +71,3 @@ class ElevenLabsTTSEntity(TextToSpeechEntity):
             _LOGGER.exception("Error during processing of TTS request %s")
             raise HomeAssistantError(exc) from exc
         return "mp3", bytes_combined
-
-    # async def async_get_tts_audio(
-    #    self, message: str, language: str, options: dict[str, Any]
-    # ) -> TtsAudioType:
-    #    """Load tts audio file from the engine."""
-    #    client = AsyncElevenLabs(api_key=self._api_key)
-    #    try:
-    #        audio = await client.generate(
-    #            text=message, voice=self._voice, model=self._model
-    #        )
-    #        bytes_combined = b"".join(audio)
-    #    except ApiError as exc:
-    #        _LOGGER.debug(
-    #            "Error during processing of TTS request %s", exc, exc_info=True
-    #        )
-    #        raise HomeAssistantError(exc) from exc
-    #    return "mp3", bytes_combined
