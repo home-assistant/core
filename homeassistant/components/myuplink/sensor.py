@@ -1,6 +1,6 @@
 """Sensor for myUplink."""
 
-from myuplink.models import DevicePoint
+from myuplink import DevicePoint
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -10,9 +10,15 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    Platform,
     UnitOfElectricCurrent,
+    UnitOfEnergy,
     UnitOfFrequency,
+    UnitOfPower,
+    UnitOfPressure,
     UnitOfTemperature,
+    UnitOfTime,
+    UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -21,6 +27,7 @@ from homeassistant.helpers.typing import StateType
 from . import MyUplinkDataCoordinator
 from .const import DOMAIN
 from .entity import MyUplinkEntity
+from .helpers import find_matching_platform, skip_entity
 
 DEVICE_POINT_UNIT_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
     "°C": SensorEntityDescription(
@@ -29,17 +36,62 @@ DEVICE_POINT_UNIT_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
+    "°F": SensorEntityDescription(
+        key="fahrenheit",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
+    ),
     "A": SensorEntityDescription(
         key="ampere",
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
     ),
+    "bar": SensorEntityDescription(
+        key="pressure",
+        device_class=SensorDeviceClass.PRESSURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfPressure.BAR,
+    ),
+    "h": SensorEntityDescription(
+        key="hours",
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTime.HOURS,
+        suggested_display_precision=1,
+    ),
     "Hz": SensorEntityDescription(
         key="hertz",
         device_class=SensorDeviceClass.FREQUENCY,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfFrequency.HERTZ,
+    ),
+    "kW": SensorEntityDescription(
+        key="power",
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
+    ),
+    "kWh": SensorEntityDescription(
+        key="energy",
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+    ),
+    "m3/h": SensorEntityDescription(
+        key="airflow",
+        translation_key="airflow",
+        device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+    ),
+    "s": SensorEntityDescription(
+        key="seconds",
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_display_precision=0,
     ),
 }
 
@@ -49,22 +101,22 @@ CATEGORY_BASED_DESCRIPTIONS: dict[str, dict[str, SensorEntityDescription]] = {
     "NIBEF": {
         "43108": SensorEntityDescription(
             key="fan_mode",
-            icon="mdi:fan",
+            translation_key="fan_mode",
         ),
         "43427": SensorEntityDescription(
             key="status_compressor",
+            translation_key="status_compressor",
             device_class=SensorDeviceClass.ENUM,
-            icon="mdi:heat-pump-outline",
         ),
         "49993": SensorEntityDescription(
             key="elect_add",
+            translation_key="elect_add",
             device_class=SensorDeviceClass.ENUM,
-            icon="mdi:heat-wave",
         ),
         "49994": SensorEntityDescription(
             key="priority",
+            translation_key="priority",
             device_class=SensorDeviceClass.ENUM,
-            icon="mdi:priority-high",
         ),
     },
     "NIBE": {},
@@ -103,32 +155,35 @@ async def async_setup_entry(
     # Setup device point sensors
     for device_id, point_data in coordinator.data.points.items():
         for point_id, device_point in point_data.items():
-            description = get_description(device_point)
-            entity_class = MyUplinkDevicePointSensor
-            if (
-                description is not None
-                and description.device_class == SensorDeviceClass.ENUM
-            ):
+            if skip_entity(device_point.category, device_point):
+                continue
+            if find_matching_platform(device_point) == Platform.SENSOR:
+                description = get_description(device_point)
+                entity_class = MyUplinkDevicePointSensor
+                if (
+                    description is not None
+                    and description.device_class == SensorDeviceClass.ENUM
+                ):
+                    entities.append(
+                        MyUplinkEnumRawSensor(
+                            coordinator=coordinator,
+                            device_id=device_id,
+                            device_point=device_point,
+                            entity_description=description,
+                            unique_id_suffix=f"{point_id}-raw",
+                        )
+                    )
+                    entity_class = MyUplinkEnumSensor
+
                 entities.append(
-                    MyUplinkEnumRawSensor(
+                    entity_class(
                         coordinator=coordinator,
                         device_id=device_id,
                         device_point=device_point,
                         entity_description=description,
-                        unique_id_suffix=f"{point_id}-raw",
+                        unique_id_suffix=point_id,
                     )
                 )
-                entity_class = MyUplinkEnumSensor
-
-            entities.append(
-                entity_class(
-                    coordinator=coordinator,
-                    device_id=device_id,
-                    device_point=device_point,
-                    entity_description=description,
-                    unique_id_suffix=point_id,
-                )
-            )
 
     async_add_entities(entities)
 
@@ -153,7 +208,8 @@ class MyUplinkDevicePointSensor(MyUplinkEntity, SensorEntity):
 
         # Internal properties
         self.point_id = device_point.parameter_id
-        self._attr_name = device_point.parameter_name.replace("\u002d", "")
+        # Remove soft hyphens
+        self._attr_name = device_point.parameter_name.replace("\u00ad", "")
 
         if entity_description is not None:
             self.entity_description = entity_description

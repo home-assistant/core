@@ -1,4 +1,5 @@
 """Support for RFXtrx sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -254,18 +255,15 @@ async def async_setup_entry(
         device_id: DeviceTuple,
         entity_info: dict[str, Any],
     ) -> list[Entity]:
-        entities: list[Entity] = []
-        for data_type in set(event.values) & set(SENSOR_TYPES_DICT):
-            entities.append(
-                RfxtrxSensor(
-                    event.device,
-                    device_id,
-                    SENSOR_TYPES_DICT[data_type],
-                    event=event if auto else None,
-                )
+        return [
+            RfxtrxSensor(
+                event.device,
+                device_id,
+                SENSOR_TYPES_DICT[data_type],
+                event=event if auto else None,
             )
-
-        return entities
+            for data_type in set(event.values) & set(SENSOR_TYPES_DICT)
+        ]
 
     await async_setup_platform_entry(
         hass, config_entry, async_add_entities, _supported, _constructor

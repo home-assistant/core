@@ -1,4 +1,5 @@
 """The media player tests for the forked_daapd media player platform."""
+
 from unittest.mock import patch
 
 import pytest

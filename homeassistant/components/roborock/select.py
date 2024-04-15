@@ -1,4 +1,5 @@
 """Support for Roborock select."""
+
 from collections.abc import Callable
 from dataclasses import dataclass
 
@@ -18,9 +19,9 @@ from .coordinator import RoborockDataUpdateCoordinator
 from .device import RoborockCoordinatedEntity
 
 
-@dataclass(frozen=True)
-class RoborockSelectDescriptionMixin:
-    """Define an entity description mixin for select entities."""
+@dataclass(frozen=True, kw_only=True)
+class RoborockSelectDescription(SelectEntityDescription):
+    """Class to describe a Roborock select entity."""
 
     # The command that the select entity will send to the api.
     api_command: RoborockCommand
@@ -28,15 +29,8 @@ class RoborockSelectDescriptionMixin:
     value_fn: Callable[[Status], str | None]
     # Gets all options of the select entity.
     options_lambda: Callable[[Status], list[str] | None]
-    # Takes the value from the select entiy and converts it for the api.
+    # Takes the value from the select entity and converts it for the api.
     parameter_lambda: Callable[[str, Status], list[int]]
-
-
-@dataclass(frozen=True)
-class RoborockSelectDescription(
-    SelectEntityDescription, RoborockSelectDescriptionMixin
-):
-    """Class to describe an Roborock select entity."""
 
     protocol_listener: RoborockDataProtocol | None = None
 

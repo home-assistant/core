@@ -1,4 +1,5 @@
 """Test the Z-Wave JS sensor platform."""
+
 import copy
 
 import pytest
@@ -221,7 +222,7 @@ async def test_disabled_notification_sensor(
 
     # Test enabling entity
     updated_entry = ent_reg.async_update_entity(
-        entity_entry.entity_id, **{"disabled_by": None}
+        entity_entry.entity_id, disabled_by=None
     )
     assert updated_entry != entity_entry
     assert updated_entry.disabled is False
@@ -277,7 +278,7 @@ async def test_config_parameter_sensor(
         assert entity_entry.entity_category == EntityCategory.DIAGNOSTIC
 
     for entity_id in (sensor_entity_id, sensor_with_states_entity_id):
-        updated_entry = ent_reg.async_update_entity(entity_id, **{"disabled_by": None})
+        updated_entry = ent_reg.async_update_entity(entity_id, disabled_by=None)
         assert updated_entry != entity_entry
         assert updated_entry.disabled is False
 
@@ -294,7 +295,7 @@ async def test_config_parameter_sensor(
     assert state.state == "C-Wire"
 
     updated_entry = ent_reg.async_update_entity(
-        entity_entry.entity_id, **{"disabled_by": None}
+        entity_entry.entity_id, disabled_by=None
     )
     assert updated_entry != entity_entry
     assert updated_entry.disabled is False
@@ -752,7 +753,7 @@ async def test_statistics_sensors_no_last_seen(
             assert entry.disabled
             assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
-            ent_reg.async_update_entity(entry.entity_id, **{"disabled_by": None})
+            ent_reg.async_update_entity(entry.entity_id, disabled_by=None)
 
     # reload integration and check if entity is correctly there
     await hass.config_entries.async_reload(integration.entry_id)

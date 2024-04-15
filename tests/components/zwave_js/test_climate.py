@@ -1,4 +1,7 @@
 """Test the Z-Wave JS climate platform."""
+
+import copy
+
 import pytest
 from zwave_js_server.const import CommandClass
 from zwave_js_server.const.command_class.thermostat import (
@@ -37,6 +40,8 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
@@ -86,6 +91,18 @@ async def test_thermostat_v2(
         | ClimateEntityFeature.TURN_OFF
         | ClimateEntityFeature.TURN_ON
     )
+
+    client.async_send_command.reset_mock()
+
+    # Check that turning the device on is a no-op because it is already on
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY},
+        blocking=True,
+    )
+
+    assert len(client.async_send_command.call_args_list) == 0
 
     client.async_send_command.reset_mock()
 
@@ -277,6 +294,68 @@ async def test_thermostat_v2(
 
     client.async_send_command.reset_mock()
 
+    # Test turning device off then on to see if the previous state is retained
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY},
+        blocking=True,
+    )
+
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == 13
+    assert args["valueId"] == {
+        "endpoint": 1,
+        "commandClass": 64,
+        "property": "mode",
+    }
+    assert args["value"] == 0
+
+    # Update state to off
+    event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": 13,
+            "args": {
+                "commandClassName": "Thermostat Mode",
+                "commandClass": 64,
+                "endpoint": 1,
+                "property": "mode",
+                "propertyName": "mode",
+                "newValue": 0,
+                "prevValue": 3,
+            },
+        },
+    )
+    node.receive_event(event)
+
+    client.async_send_command.reset_mock()
+
+    # Test turning device on
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY},
+        blocking=True,
+    )
+
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == 13
+    assert args["valueId"] == {
+        "endpoint": 1,
+        "commandClass": 64,
+        "property": "mode",
+    }
+    assert args["value"] == 3
+
+    client.async_send_command.reset_mock()
+
     # Test setting invalid fan mode
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
@@ -302,6 +381,145 @@ async def test_thermostat_v2(
     )
     await hass.async_block_till_done()
     assert "Error while refreshing value" in caplog.text
+
+
+async def test_thermostat_v2_turn_on_after_off(
+    hass: HomeAssistant, client, climate_radio_thermostat_ct100_plus, integration
+) -> None:
+    """Test thermostat v2 command class entity that is turned on after starting off."""
+    node = climate_radio_thermostat_ct100_plus
+
+    # Turn device off so we can test turning it back on to see if the turn on service
+    # attempts to find a value to set
+    event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": 13,
+            "args": {
+                "commandClassName": "Thermostat Mode",
+                "commandClass": 64,
+                "endpoint": 1,
+                "property": "mode",
+                "propertyName": "mode",
+                "newValue": 0,
+                "prevValue": 1,
+            },
+        },
+    )
+    node.receive_event(event)
+
+    client.async_send_command.reset_mock()
+
+    # Test turning device on
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY},
+        blocking=True,
+    )
+
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == 13
+    assert args["valueId"] == {
+        "endpoint": 1,
+        "commandClass": 64,
+        "property": "mode",
+    }
+    assert args["value"] == 3
+
+    client.async_send_command.reset_mock()
+
+
+async def test_thermostat_turn_on_after_off_no_heat_cool_auto(
+    hass: HomeAssistant, client, aeotec_radiator_thermostat_state, integration
+) -> None:
+    """Test thermostat that is turned on after starting off w/o heat, cool, or auto."""
+    node_state = copy.deepcopy(aeotec_radiator_thermostat_state)
+    # Only allow off and dry modes so we can test fallback logic when turning HVAC on
+    # without a last mode stored.
+    value = next(
+        value
+        for value in node_state["values"]
+        if value["commandClass"] == 64 and value["property"] == "mode"
+    )
+    value["metadata"]["states"] = {"0": "Off", "6": "Fan", "8": "Dry"}
+    value["value"] = 0
+    node = Node(client, node_state)
+    client.driver.controller.emit("node added", {"node": node})
+    await hass.async_block_till_done()
+    entity_id = "climate.thermostat_hvac"
+    assert hass.states.get(entity_id).state == HVACMode.OFF
+
+    client.async_send_command.reset_mock()
+
+    # Test turning device on sets it to first available mode (Energy heat)
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == 4
+    assert args["valueId"] == {
+        "endpoint": 0,
+        "commandClass": 64,
+        "property": "mode",
+    }
+    assert args["value"] == 6
+
+
+async def test_thermostat_turn_on_after_off_with_resume(
+    hass: HomeAssistant, client, aeotec_radiator_thermostat_state, integration
+) -> None:
+    """Test thermostat that is turned on after starting off with resume support."""
+    node_state = copy.deepcopy(aeotec_radiator_thermostat_state)
+    # Add resume thermostat mode so we can test that it prefers the resume mode
+    value = next(
+        value
+        for value in node_state["values"]
+        if value["commandClass"] == 64 and value["property"] == "mode"
+    )
+    value["metadata"]["states"] = {
+        "0": "Off",
+        "5": "Resume (on)",
+        "6": "Fan",
+        "8": "Dry",
+    }
+    value["value"] = 0
+    node = Node(client, node_state)
+    client.driver.controller.emit("node added", {"node": node})
+    await hass.async_block_till_done()
+    entity_id = "climate.thermostat_hvac"
+    assert hass.states.get(entity_id).state == HVACMode.OFF
+
+    client.async_send_command.reset_mock()
+
+    # Test turning device on sends resume command
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == 4
+    assert args["valueId"] == {
+        "endpoint": 0,
+        "commandClass": 64,
+        "property": "mode",
+    }
+    assert args["value"] == 5
 
 
 async def test_thermostat_different_endpoints(

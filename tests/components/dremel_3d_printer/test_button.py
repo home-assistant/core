@@ -1,4 +1,5 @@
 """Button tests for the Dremel 3D Printer integration."""
+
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -15,11 +16,11 @@ from tests.common import MockConfigEntry
 
 @pytest.mark.parametrize(
     ("button", "function"),
-    (
+    [
         ("cancel", "stop"),
         ("pause", "pause"),
         ("resume", "resume"),
-    ),
+    ],
 )
 async def test_buttons(
     hass: HomeAssistant,
@@ -43,10 +44,13 @@ async def test_buttons(
         )
     assert mock.call_count == 1
 
-    with patch(
-        f"homeassistant.components.dremel_3d_printer.Dremel3DPrinter.{function}_print",
-        side_effect=RuntimeError,
-    ) as mock, pytest.raises(HomeAssistantError):
+    with (
+        patch(
+            f"homeassistant.components.dremel_3d_printer.Dremel3DPrinter.{function}_print",
+            side_effect=RuntimeError,
+        ) as mock,
+        pytest.raises(HomeAssistantError),
+    ):
         await hass.services.async_call(
             BUTTON_DOMAIN,
             SERVICE_PRESS,

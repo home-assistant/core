@@ -7,8 +7,8 @@ from dataclasses import dataclass
 import datetime
 from functools import cached_property
 import logging
-from typing import TypeVar
 
+import aiohttp
 from pyrainbird.async_client import (
     AsyncRainbirdController,
     RainbirdApiException,
@@ -18,6 +18,7 @@ from pyrainbird.data import ModelAndVersion, Schedule
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -28,9 +29,14 @@ UPDATE_INTERVAL = datetime.timedelta(minutes=1)
 # changes, so we refresh it less often.
 CALENDAR_UPDATE_INTERVAL = datetime.timedelta(minutes=15)
 
-_LOGGER = logging.getLogger(__name__)
+# The valves state are not immediately reflected after issuing a command. We add
+# small delay to give additional time to reflect the new state.
+DEBOUNCER_COOLDOWN = 5
 
-_T = TypeVar("_T")
+# Rainbird devices can only accept a single request at a time
+CONECTION_LIMIT = 1
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
@@ -41,6 +47,13 @@ class RainbirdDeviceState:
     active_zones: set[int]
     rain: bool
     rain_delay: int
+
+
+def async_create_clientsession() -> aiohttp.ClientSession:
+    """Create a rainbird async_create_clientsession with a connection limit."""
+    return aiohttp.ClientSession(
+        connector=aiohttp.TCPConnector(limit=CONECTION_LIMIT),
+    )
 
 
 class RainbirdUpdateCoordinator(DataUpdateCoordinator[RainbirdDeviceState]):
@@ -60,6 +73,9 @@ class RainbirdUpdateCoordinator(DataUpdateCoordinator[RainbirdDeviceState]):
             _LOGGER,
             name=name,
             update_interval=UPDATE_INTERVAL,
+            request_refresh_debouncer=Debouncer(
+                hass, _LOGGER, cooldown=DEBOUNCER_COOLDOWN, immediate=False
+            ),
         )
         self._controller = controller
         self._unique_id = unique_id

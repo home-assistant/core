@@ -1,4 +1,5 @@
 """Component to embed TP-Link smart home devices."""
+
 from __future__ import annotations
 
 import asyncio
@@ -28,7 +29,6 @@ from homeassistant.const import (
     CONF_MODEL,
     CONF_PASSWORD,
     CONF_USERNAME,
-    EVENT_HOMEASSISTANT_STARTED,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
@@ -112,14 +112,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the TP-Link component."""
     hass.data.setdefault(DOMAIN, {})
 
-    if discovered_devices := await async_discover_devices(hass):
-        async_trigger_discovery(hass, discovered_devices)
-
     async def _async_discovery(*_: Any) -> None:
         if discovered := await async_discover_devices(hass):
             async_trigger_discovery(hass, discovered)
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _async_discovery)
+    hass.async_create_background_task(
+        _async_discovery(), "tplink first discovery", eager_start=True
+    )
     async_track_time_interval(
         hass, _async_discovery, DISCOVERY_INTERVAL, cancel_on_shutdown=True
     )

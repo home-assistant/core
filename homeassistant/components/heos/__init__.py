@@ -1,4 +1,5 @@
 """Denon HEOS Media Player."""
+
 from __future__ import annotations
 
 import asyncio
@@ -477,7 +478,6 @@ class SourceManager:
                     if controller.is_signed_in:
                         favorites = await controller.get_favorites()
                     inputs = await controller.get_input_sources()
-                    return favorites, inputs
                 except HeosError as error:
                     if retry_attempts < self.max_retry_attempts:
                         retry_attempts += 1
@@ -487,7 +487,9 @@ class SourceManager:
                         await asyncio.sleep(self.retry_delay)
                     else:
                         _LOGGER.error("Unable to update sources: %s", error)
-                        return
+                        return None
+                else:
+                    return favorites, inputs
 
         async def update_sources(event, data=None):
             if event in (

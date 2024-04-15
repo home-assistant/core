@@ -2,6 +2,7 @@
 
 Such systems include evohome, Round Thermostat, and others.
 """
+
 from __future__ import annotations
 
 from collections.abc import Awaitable

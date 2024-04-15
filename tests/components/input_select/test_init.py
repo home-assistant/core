@@ -1,4 +1,5 @@
 """The tests for the Input select component."""
+
 from unittest.mock import patch
 
 import pytest

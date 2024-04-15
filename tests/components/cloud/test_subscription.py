@@ -1,4 +1,5 @@
 """Test cloud subscription functions."""
+
 from unittest.mock import AsyncMock, Mock
 
 from hass_nabucasa import Cloud

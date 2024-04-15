@@ -1,4 +1,5 @@
 """Support for ASUSWRT routers."""
+
 from __future__ import annotations
 
 from homeassistant.components.device_tracker import ScannerEntity, SourceType
@@ -100,9 +101,9 @@ class AsusWrtDevice(ScannerEntity):
         self._device = self._router.devices[self._device.mac]
         self._attr_extra_state_attributes = {}
         if self._device.last_activity:
-            self._attr_extra_state_attributes[
-                ATTR_LAST_TIME_REACHABLE
-            ] = self._device.last_activity.isoformat(timespec="seconds")
+            self._attr_extra_state_attributes[ATTR_LAST_TIME_REACHABLE] = (
+                self._device.last_activity.isoformat(timespec="seconds")
+            )
         self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:

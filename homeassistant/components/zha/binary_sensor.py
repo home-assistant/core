@@ -1,9 +1,11 @@
 """Binary sensors on Zigbee Home Automation networks."""
+
 from __future__ import annotations
 
 import functools
-from typing import Any
+import logging
 
+from zigpy.quirks.v2 import BinarySensorMetadata
 import zigpy.types as t
 from zigpy.zcl.clusters.general import OnOff
 from zigpy.zcl.clusters.security import IasZone
@@ -26,10 +28,11 @@ from .core.const import (
     CLUSTER_HANDLER_OCCUPANCY,
     CLUSTER_HANDLER_ON_OFF,
     CLUSTER_HANDLER_ZONE,
+    ENTITY_METADATA,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
 )
-from .core.helpers import get_zha_data
+from .core.helpers import get_zha_data, validate_device_class
 from .core.registries import ZHA_ENTITIES
 from .entity import ZhaEntity
 
@@ -48,6 +51,8 @@ MULTI_MATCH = functools.partial(ZHA_ENTITIES.multipass_match, Platform.BINARY_SE
 CONFIG_DIAGNOSTIC_MATCH = functools.partial(
     ZHA_ENTITIES.config_diagnostic_match, Platform.BINARY_SENSOR
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -76,8 +81,22 @@ class BinarySensor(ZhaEntity, BinarySensorEntity):
 
     def __init__(self, unique_id, zha_device, cluster_handlers, **kwargs) -> None:
         """Initialize the ZHA binary sensor."""
-        super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
         self._cluster_handler = cluster_handlers[0]
+        if ENTITY_METADATA in kwargs:
+            self._init_from_quirks_metadata(kwargs[ENTITY_METADATA])
+        super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
+
+    def _init_from_quirks_metadata(self, entity_metadata: BinarySensorMetadata) -> None:
+        """Init this entity from the quirks metadata."""
+        super()._init_from_quirks_metadata(entity_metadata)
+        self._attribute_name = entity_metadata.attribute_name
+        if entity_metadata.device_class is not None:
+            self._attr_device_class = validate_device_class(
+                BinarySensorDeviceClass,
+                entity_metadata.device_class,
+                Platform.BINARY_SENSOR.value,
+                _LOGGER,
+            )
 
     async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""
@@ -198,36 +217,6 @@ class IASZone(BinarySensor):
         """Parse the raw attribute into a bool state."""
         return BinarySensor.parse(value & 3)  # use only bit 0 and 1 for alarm state
 
-    # temporary code to migrate old IasZone sensors to update attribute cache state once
-    # remove in 2024.4.0
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return state attributes."""
-        return {"migrated_to_cache": True}  # writing new state means we're migrated
-
-    # temporary migration code
-    @callback
-    def async_restore_last_state(self, last_state):
-        """Restore previous state."""
-        # trigger migration if extra state attribute is not present
-        if "migrated_to_cache" not in last_state.attributes:
-            self.migrate_to_zigpy_cache(last_state)
-
-    # temporary migration code
-    @callback
-    def migrate_to_zigpy_cache(self, last_state):
-        """Save old IasZone sensor state to attribute cache."""
-        # previous HA versions did not update the attribute cache for IasZone sensors, so do it once here
-        # a HA state write is triggered shortly afterwards and writes the "migrated_to_cache" extra state attribute
-        if last_state.state == STATE_ON:
-            migrated_state = IasZone.ZoneStatus.Alarm_1
-        else:
-            migrated_state = IasZone.ZoneStatus(0)
-
-        self._cluster_handler.cluster.update_attribute(
-            IasZone.attributes_by_name[self._attribute_name].id, migrated_state
-        )
-
 
 @STRICT_MATCH(cluster_handler_names=CLUSTER_HANDLER_ZONE, models={"WL4200", "WL4200S"})
 class SinopeLeakStatus(BinarySensor):
@@ -347,5 +336,4 @@ class AqaraE1CurtainMotorOpenedByHandBinarySensor(BinarySensor):
     _unique_id_suffix = "hand_open"
     _attribute_name = "hand_open"
     _attr_translation_key = "hand_open"
-    _attr_icon = "mdi:hand-wave"
     _attr_entity_category = EntityCategory.DIAGNOSTIC

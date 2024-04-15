@@ -1,4 +1,5 @@
 """Definition and setup of the Omnilogic Sensors for Home Assistant."""
+
 from typing import Any
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity

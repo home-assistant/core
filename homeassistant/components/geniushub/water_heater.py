@@ -1,4 +1,5 @@
 """Support for Genius Hub water_heater devices."""
+
 from __future__ import annotations
 
 from homeassistant.components.water_heater import (

@@ -1,6 +1,5 @@
 """Tests for sensors."""
 
-
 from habluetooth.advertisement_tracker import ADVERTISING_TIMES_NEEDED
 
 from homeassistant.components.bluetooth import async_set_fallback_availability_interval

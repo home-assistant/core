@@ -1,4 +1,5 @@
 """Tests for the diagnostics data provided by the TP-Link integration."""
+
 import json
 
 from kasa import SmartDevice

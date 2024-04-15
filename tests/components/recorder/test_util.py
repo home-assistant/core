@@ -1,4 +1,5 @@
 """Test util methods."""
+
 from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
 import os
@@ -45,9 +46,11 @@ from tests.typing import RecorderInstanceGenerator
 def test_session_scope_not_setup(hass_recorder: Callable[..., HomeAssistant]) -> None:
     """Try to create a session scope when not setup."""
     hass = hass_recorder()
-    with patch.object(
-        util.get_instance(hass), "get_session", return_value=None
-    ), pytest.raises(RuntimeError), util.session_scope(hass=hass):
+    with (
+        patch.object(util.get_instance(hass), "get_session", return_value=None),
+        pytest.raises(RuntimeError),
+        util.session_scope(hass=hass),
+    ):
         pass
 
 
@@ -59,14 +62,15 @@ def test_recorder_bad_execute(hass_recorder: Callable[..., HomeAssistant]) -> No
 
     def to_native(validate_entity_id=True):
         """Raise exception."""
-        raise SQLAlchemyError()
+        raise SQLAlchemyError
 
     mck1 = MagicMock()
     mck1.to_native = to_native
 
-    with pytest.raises(SQLAlchemyError), patch(
-        "homeassistant.components.recorder.core.time.sleep"
-    ) as e_mock:
+    with (
+        pytest.raises(SQLAlchemyError),
+        patch("homeassistant.components.recorder.core.time.sleep") as e_mock,
+    ):
         util.execute((mck1,), to_native=True)
 
     assert e_mock.call_count == 2
@@ -145,12 +149,15 @@ async def test_last_run_was_recently_clean(
     thirty_min_future_time = dt_util.utcnow() + timedelta(minutes=30)
 
     async with async_test_home_assistant() as hass:
-        with patch(
-            "homeassistant.components.recorder.util.last_run_was_recently_clean",
-            wraps=_last_run_was_recently_clean,
-        ) as last_run_was_recently_clean_mock, patch(
-            "homeassistant.components.recorder.core.dt_util.utcnow",
-            return_value=thirty_min_future_time,
+        with (
+            patch(
+                "homeassistant.components.recorder.util.last_run_was_recently_clean",
+                wraps=_last_run_was_recently_clean,
+            ) as last_run_was_recently_clean_mock,
+            patch(
+                "homeassistant.components.recorder.core.dt_util.utcnow",
+                return_value=thirty_min_future_time,
+            ),
         ):
             await async_setup_recorder_instance(hass, config)
             last_run_was_recently_clean_mock.assert_called_once()
@@ -751,17 +758,23 @@ def test_combined_checks(
         assert "restarted cleanly and passed the basic sanity check" in caplog.text
 
     caplog.clear()
-    with patch(
-        "homeassistant.components.recorder.util.last_run_was_recently_clean",
-        side_effect=sqlite3.DatabaseError,
-    ), pytest.raises(sqlite3.DatabaseError):
+    with (
+        patch(
+            "homeassistant.components.recorder.util.last_run_was_recently_clean",
+            side_effect=sqlite3.DatabaseError,
+        ),
+        pytest.raises(sqlite3.DatabaseError),
+    ):
         util.run_checks_on_open_db("fake_db_path", cursor)
 
     caplog.clear()
-    with patch(
-        "homeassistant.components.recorder.util.last_run_was_recently_clean",
-        side_effect=sqlite3.DatabaseError,
-    ), pytest.raises(sqlite3.DatabaseError):
+    with (
+        patch(
+            "homeassistant.components.recorder.util.last_run_was_recently_clean",
+            side_effect=sqlite3.DatabaseError,
+        ),
+        pytest.raises(sqlite3.DatabaseError),
+    ):
         util.run_checks_on_open_db("fake_db_path", cursor)
 
     cursor.execute("DROP TABLE events;")
@@ -912,7 +925,7 @@ def test_execute_stmt_lambda_element(
         start_time_ts = dt_util.utcnow().timestamp()
         stmt = lambda_stmt(
             lambda: _get_single_entity_start_time_stmt(
-                start_time_ts, metadata_id, False, False
+                start_time_ts, metadata_id, False, False, False
             )
         )
         rows = util.execute_stmt_lambda_element(session, stmt)

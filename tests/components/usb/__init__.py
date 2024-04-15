@@ -1,6 +1,5 @@
 """Tests for the USB Discovery integration."""
 
-
 from homeassistant.components.usb.models import USBDevice
 
 conbee_device = USBDevice(
