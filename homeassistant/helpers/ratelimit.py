@@ -41,10 +41,8 @@ class KeyedRateLimit:
     @callback
     def async_cancel_timer(self, key: Hashable) -> None:
         """Cancel a rate limit time that will call the action."""
-        if not self._rate_limit_timers or key not in self._rate_limit_timers:
-            return
-
-        self._rate_limit_timers.pop(key).cancel()
+        if handle := self._rate_limit_timers.pop(key, None):
+            handle.cancel()
 
     @callback
     def async_remove(self) -> None:
