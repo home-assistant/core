@@ -262,7 +262,7 @@ async def async_test_home_assistant(
 
         return orig_async_add_executor_job(target, *args)
 
-    def async_create_task(coroutine, name=None, eager_start=False):
+    def async_create_task(coroutine, name=None, eager_start=True):
         """Create task."""
         if isinstance(coroutine, Mock) and not isinstance(coroutine, AsyncMock):
             fut = asyncio.Future()

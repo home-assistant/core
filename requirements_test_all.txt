@@ -36,7 +36,7 @@ HATasmota==0.8.0
 # homeassistant.components.seven_segments
 # homeassistant.components.sighthound
 # homeassistant.components.tensorflow
-Pillow==10.2.0
+Pillow==10.3.0
 
 # homeassistant.components.plex
 PlexAPI==4.15.11
@@ -341,7 +341,7 @@ aioruuvigateway==0.1.0
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==8.2.0
+aioshelly==9.0.0
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -428,7 +428,7 @@ apprise==1.7.4
 aprslib==0.7.2
 
 # homeassistant.components.aranet
-aranet4==2.2.2
+aranet4==2.3.3
 
 # homeassistant.components.arcam_fmj
 arcam-fmj==1.4.0
@@ -652,7 +652,7 @@ elmax-api==0.0.4
 elvia==0.1.0
 
 # homeassistant.components.emulated_roku
-emulated-roku==0.2.1
+emulated-roku==0.3.0
 
 # homeassistant.components.huisbaasje
 energyflip-client==0.2.2
@@ -883,7 +883,7 @@ hole==0.8.0
 holidays==0.46
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240404.1
+home-assistant-frontend==20240404.2
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.4.3
@@ -1293,7 +1293,7 @@ py-nightscout==1.2.2
 py-sucks==0.9.9
 
 # homeassistant.components.synology_dsm
-py-synologydsm-api==2.1.4
+py-synologydsm-api==2.4.2
 
 # homeassistant.components.seventeentrack
 py17track==2021.12.2
@@ -1357,7 +1357,7 @@ pybalboa==1.0.1
 pyblackbird==0.6
 
 # homeassistant.components.neato
-pybotvac==0.0.24
+pybotvac==0.0.25
 
 # homeassistant.components.braviatv
 pybravia==0.3.3
@@ -1543,7 +1543,7 @@ pymeteoclimatic==0.1.0
 pymochad==0.2.0
 
 # homeassistant.components.modbus
-pymodbus==3.6.7
+pymodbus==3.6.8
 
 # homeassistant.components.monoprice
 pymonoprice==0.4
@@ -1773,7 +1773,7 @@ python-qbittorrent==0.4.3
 python-rabbitair==0.0.8
 
 # homeassistant.components.roborock
-python-roborock==1.0.0
+python-roborock==2.0.0
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.36
@@ -1982,7 +1982,7 @@ smhi-pkg==1.0.16
 snapcast==2.3.6
 
 # homeassistant.components.sonos
-soco==0.30.2
+soco==0.30.3
 
 # homeassistant.components.solaredge
 solaredge==0.0.2
@@ -2155,7 +2155,7 @@ url-normalize==1.4.3
 uvcclient==0.11.0
 
 # homeassistant.components.roborock
-vacuum-map-parser-roborock==0.1.1
+vacuum-map-parser-roborock==0.1.2
 
 # homeassistant.components.vallox
 vallox-websocket-api==5.1.1
@@ -2207,7 +2207,7 @@ webmin-xmlrpc==0.0.2
 webrtc-noise-gain==1.2.3
 
 # homeassistant.components.whirlpool
-whirlpool-sixth-sense==0.18.7
+whirlpool-sixth-sense==0.18.8
 
 # homeassistant.components.whois
 whois==0.9.27
@@ -2273,7 +2273,7 @@ yt-dlp==2024.04.09
 zamg==0.3.6
 
 # homeassistant.components.zeroconf
-zeroconf==0.132.0
+zeroconf==0.132.2
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1

@@ -13,8 +13,6 @@ from random import randint
 import time
 from typing import TYPE_CHECKING, Any, Concatenate, Generic, ParamSpec, TypeVar
 
-import attr
-
 from homeassistant.const import (
     EVENT_CORE_CONFIG_UPDATE,
     EVENT_STATE_CHANGED,
@@ -1626,16 +1624,16 @@ def async_track_time_interval(
 track_time_interval = threaded_listener_factory(async_track_time_interval)
 
 
-@attr.s
+@dataclass(slots=True)
 class SunListener:
     """Helper class to help listen to sun events."""
 
-    hass: HomeAssistant = attr.ib()
-    job: HassJob[[], Coroutine[Any, Any, None] | None] = attr.ib()
-    event: str = attr.ib()
-    offset: timedelta | None = attr.ib()
-    _unsub_sun: CALLBACK_TYPE | None = attr.ib(default=None)
-    _unsub_config: CALLBACK_TYPE | None = attr.ib(default=None)
+    hass: HomeAssistant
+    job: HassJob[[], Coroutine[Any, Any, None] | None]
+    event: str
+    offset: timedelta | None
+    _unsub_sun: CALLBACK_TYPE | None = None
+    _unsub_config: CALLBACK_TYPE | None = None
 
     @callback
     def async_attach(self) -> None:
