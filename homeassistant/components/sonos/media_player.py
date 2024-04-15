@@ -705,7 +705,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
 
     @soco_error()
     def partymode(self) -> None:
-        """Join all visible sevices in the party mode."""
+        """Join all visible services, devices in the party mode."""
         self.coordinator.soco.partymode()
 
     @property
