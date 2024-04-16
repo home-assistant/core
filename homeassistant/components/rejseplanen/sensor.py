@@ -41,6 +41,7 @@ CONF_STOP_ID = "stop_id"
 CONF_ROUTE = "route"
 CONF_DIRECTION = "direction"
 CONF_DEPARTURE_TYPE = "departure_type"
+CONF_TRACK = "track"
 
 DEFAULT_NAME = "Next departure"
 
@@ -56,6 +57,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_STOP_ID): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_ROUTE, default=[]): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(CONF_TRACK, default=[]): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_DIRECTION, default=[]): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_DEPARTURE_TYPE, default=[]): vol.All(
             cv.ensure_list, [vol.In([*BUS_TYPES, *TRAIN_TYPES, *METRO_TYPES])]
@@ -88,8 +90,9 @@ def setup_platform(
     route = config.get(CONF_ROUTE)
     direction = config[CONF_DIRECTION]
     departure_type = config[CONF_DEPARTURE_TYPE]
+    track = config[CONF_TRACK]
 
-    data = PublicTransportData(stop_id, route, direction, departure_type)
+    data = PublicTransportData(stop_id, route, direction, departure_type, track)
     add_devices(
         [RejseplanenTransportSensor(data, stop_id, route, direction, name)], True
     )
@@ -160,12 +163,13 @@ class RejseplanenTransportSensor(SensorEntity):
 class PublicTransportData:
     """The Class for handling the data retrieval."""
 
-    def __init__(self, stop_id, route, direction, departure_type):
+    def __init__(self, stop_id, route, direction, departure_type, track):
         """Initialize the data object."""
         self.stop_id = stop_id
         self.route = route
         self.direction = direction
         self.departure_type = departure_type
+        self.track = track
         self.info = []
 
     def update(self):
@@ -200,11 +204,13 @@ class PublicTransportData:
         # Filter result
         results = [d for d in results if "cancelled" not in d]
         if self.route:
-            results = [d for d in results if d["name"] in self.route]
+            results = [d for d in results if d.get("name") in self.route]
         if self.direction:
-            results = [d for d in results if d["direction"] in self.direction]
+            results = [d for d in results if d.get("direction") in self.direction]
         if self.departure_type:
-            results = [d for d in results if d["type"] in self.departure_type]
+            results = [d for d in results if d.get("type") in self.departure_type]
+        if self.track:
+            results = [d for d in results if d.get("rtTrack") in self.track]
 
         for item in results:
             route = item.get("name")
