@@ -74,10 +74,6 @@ async def async_setup_entry(
         raise ConfigEntryNotReady from exception
 
     entry.shared_data = AdGuardData(adguard, version)
-    if hass.data.get(DOMAIN) is None:
-        hass.data[DOMAIN] = 1
-    else:
-        hass.data[DOMAIN] += 1
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -127,9 +123,7 @@ async def async_unload_entry(
 ) -> bool:
     """Unload AdGuard Home config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        hass.data[DOMAIN] -= 1
-    if hass.data[DOMAIN] == 0:
+    if not hass.config_entries.async_entries(DOMAIN):
         hass.services.async_remove(DOMAIN, SERVICE_ADD_URL)
         hass.services.async_remove(DOMAIN, SERVICE_REMOVE_URL)
         hass.services.async_remove(DOMAIN, SERVICE_ENABLE_URL)
