@@ -84,10 +84,10 @@ class FirmwareGuess:
     """Firmware guess."""
 
     is_running: bool
-    application_type: ApplicationType
+    firmware_type: ApplicationType
 
 
-async def guess_firmware_type(hass: HomeAssistant, device_path: str) -> ApplicationType:
+async def guess_firmware_type(hass: HomeAssistant, device_path: str) -> FirmwareGuess:
     """Guess the firmware type based on installed addons and other integrations."""
     device_guesses: defaultdict[str | None, list[FirmwareGuess]] = defaultdict(list)
 
@@ -96,7 +96,7 @@ async def guess_firmware_type(hass: HomeAssistant, device_path: str) -> Applicat
         device_guesses[zha_path].append(
             FirmwareGuess(
                 is_running=(zha_config_entry.state == ConfigEntryState.LOADED),
-                application_type=ApplicationType.EZSP,
+                firmware_type=ApplicationType.EZSP,
             )
         )
 
@@ -113,7 +113,7 @@ async def guess_firmware_type(hass: HomeAssistant, device_path: str) -> Applicat
                 device_guesses[otbr_path].append(
                     FirmwareGuess(
                         is_running=(otbr_addon_info.state == AddonState.RUNNING),
-                        application_type=ApplicationType.SPINEL,
+                        firmware_type=ApplicationType.SPINEL,
                     )
                 )
 
@@ -129,13 +129,13 @@ async def guess_firmware_type(hass: HomeAssistant, device_path: str) -> Applicat
                 device_guesses[multipan_path].append(
                     FirmwareGuess(
                         is_running=(multipan_addon_info.state == AddonState.RUNNING),
-                        application_type=ApplicationType.CPC,
+                        firmware_type=ApplicationType.CPC,
                     )
                 )
 
     # Fall back to EZSP if we can't guess the firmware type
     if device_path not in device_guesses:
-        return ApplicationType.EZSP
+        return FirmwareGuess(is_running=False, firmware_type=ApplicationType.EZSP)
 
     # Prioritizes guesses that were pulled from a running addon or integration but keep
     # the sort order we defined above

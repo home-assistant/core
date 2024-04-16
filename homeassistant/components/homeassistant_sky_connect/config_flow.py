@@ -638,11 +638,11 @@ class HomeAssistantSkyConnectOptionsFlowHandler(
 
         if is_hassio(self.hass):
             otbr_manager = get_otbr_addon_manager(self.hass)
-            addon_info = await self._async_get_addon_info(otbr_manager)
+            otbr_addon_info = await self._async_get_addon_info(otbr_manager)
 
             if (
-                addon_info.state != AddonState.NOT_INSTALLED
-                and addon_info.options.get("device") == self._usb_info.device
+                otbr_addon_info.state != AddonState.NOT_INSTALLED
+                and otbr_addon_info.options.get("device") == self._usb_info.device
             ):
                 raise AbortFlow(
                     "otbr_still_using_stick",

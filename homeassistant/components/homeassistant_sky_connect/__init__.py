@@ -30,10 +30,10 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
     if config_entry.version == 1:
         # Core cannot stall addon startup so we can't probe the real firmware running on
         # the stick. Instead, we must make an educated guess!
-        firmware = await guess_firmware_type(hass, config_entry.data["device"])
+        firmware_guess = await guess_firmware_type(hass, config_entry.data["device"])
 
         new_data = {**config_entry.data}
-        new_data["firmware"] = firmware
+        new_data["firmware"] = firmware_guess.firmware_type
 
         # Rename `description` to `product`
         new_data["product"] = new_data.pop("description")
