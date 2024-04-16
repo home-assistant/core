@@ -12,8 +12,16 @@ on:
     paths:
       - ".github/workflows/wheels.yml"
       - "homeassistant/package_constraints.txt"
-      - "requirements_all.txt"
-      - "requirements.txt"
+      - "requirements_all_wheels_aarch64.txt"
+      - "requirements_all_wheels_amd64.txt"
+      - "requirements_all_wheels_armhf.txt"
+      - "requirements_all_wheels_armv7.txt"
+      - "requirements_all_wheels_i386.txt"
+      - "requirements_wheels_aarch64.txt"
+      - "requirements_wheels_amd64.txt"
+      - "requirements_wheels_armhf.txt"
+      - "requirements_wheels_armv7.txt"
+      - "requirements_wheels_i386.txt"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref_name}}
@@ -112,7 +120,7 @@ jobs:
           skip-binary: aiohttp
           constraints: "homeassistant/package_constraints.txt"
           requirements-diff: "requirements_diff.txt"
-          requirements: "requirements.txt"
+          requirements: "requirements_wheels_${{ matrix.arch }}.txt"
 
   integrations:
     name: Build wheels ${{ matrix.abi }} for ${{ matrix.arch }}
@@ -138,38 +146,13 @@ jobs:
         with:
           name: requirements_diff
 
-      - name: (Un)comment packages
-        run: |
-          requirement_files="requirements_all.txt requirements_diff.txt"
-          for requirement_file in ${requirement_files}; do
-            sed -i "s|# pyuserinput|pyuserinput|g" ${requirement_file}
-            sed -i "s|# evdev|evdev|g" ${requirement_file}
-            sed -i "s|# pycups|pycups|g" ${requirement_file}
-            sed -i "s|# decora-wifi|decora-wifi|g" ${requirement_file}
-            sed -i "s|# python-gammu|python-gammu|g" ${requirement_file}
-
-            # Some packages are not buildable on armhf anymore
-            if [ "${{ matrix.arch }}" = "armhf" ]; then
-
-              # Pandas has issues building on armhf, it is expected they
-              # will drop the platform in the near future (they consider it
-              # "flimsy" on 386). The following packages depend on pandas,
-              # so we comment them out.
-              sed -i "s|env-canada|# env-canada|g" ${requirement_file}
-              sed -i "s|noaa-coops|# noaa-coops|g" ${requirement_file}
-              sed -i "s|pyezviz|# pyezviz|g" ${requirement_file}
-              sed -i "s|pykrakenapi|# pykrakenapi|g" ${requirement_file}
-            fi
-
-          done
-
       - name: Split requirements all
         run: |
           # We split requirements all into multiple files.
           # This is to prevent the build from running out of memory when
           # resolving packages on 32-bits systems (like armhf, armv7).
 
-          split -l $(expr $(expr $(cat requirements_all.txt | wc -l) + 1) / 3) requirements_all.txt requirements_all.txt
+          split -l $(expr $(expr $(cat requirements_all.txt | wc -l) + 1) / 3) requirements_all_wheels_${{ matrix.arch }}.txt requirements_all.txt
 
       - name: Create requirements for cython<3
         run: |

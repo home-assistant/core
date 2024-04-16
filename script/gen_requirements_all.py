@@ -17,7 +17,16 @@ from typing import Any
 from homeassistant.util.yaml.loader import load_yaml
 from script.hassfest.model import Integration
 
-COMMENT_REQUIREMENTS = (
+
+def normalize(req: str) -> str:
+    """Normalize a requirement."""
+    return req.lower().replace("_", "-")
+
+
+# Requirements which can't be installed on all systems because they rely on additional
+# system packages. Requirements listed in COMMENT_REQUIREMENTS will be commented-out
+# in requirements_all.txt and requirements_test_all.txt.
+EXCLUDED_REQUIREMENTS_ALL = (
     "atenpdu",  # depends on pysnmp which is not maintained at this time
     "avea",  # depends on bluepy
     "avion",
@@ -38,8 +47,63 @@ COMMENT_REQUIREMENTS = (
     "tf-models-official",
 )
 
-COMMENT_REQUIREMENTS_NORMALIZED = {
-    commented.lower().replace("_", "-") for commented in COMMENT_REQUIREMENTS
+EXCLUDED_REQUIREMENTS_ALL_NORMALIZED = {
+    normalize(commented) for commented in EXCLUDED_REQUIREMENTS_ALL
+}
+
+# Requirements excluded by COMMENT_REQUIREMENTS which should be included when
+# building integration wheels for all architectures.
+INCLUDED_REQUIREMENTS_WHEELS = (
+    "decora-wifi",
+    "evdev",
+    "pycups",
+    "python-gammu",
+    "pyuserinput",
+)
+
+INCLUDED_REQUIREMENTS_WHEELS_NORMALIZED = {
+    normalize(requirement) for requirement in INCLUDED_REQUIREMENTS_WHEELS
+}
+
+# Requirements to exclude when building integration wheels for specific architectures.
+# Requirements listed in EXCLUDED_REQUIREMENTS_WHEELS will be commented-out in
+# requirements_all_wheels_{arch}.txt
+EXCLUDED_REQUIREMENTS_WHEELS = {
+    "aarch64": (),
+    # Pandas has issues building on armhf, it is expected they
+    # will drop the platform in the near future (they consider it
+    # "flimsy" on 386). The following packages depend on pandas,
+    # so we comment them out.
+    "armhf": ("env-canada", "noaa-coops", "pyezviz", "pykrakenapi"),
+    "armv7": (),
+    "amd64": (),
+    "i386": (),
+}
+
+EXCLUDED_REQUIREMENTS_WHEELS_NORMALIZED = {
+    arch: {normalize(requirement) for requirement in requirements}
+    for arch, requirements in EXCLUDED_REQUIREMENTS_WHEELS.items()
+}
+
+# Requirements to substitute when building core or integration wheels for specific
+# architectures. Requirements listed in SUBSTITUTED_REQUIREMENTS_WHEELS will be
+# substituted in requirements_wheels_{arch}.txt and requirements_all_wheels_{arch}.txt
+SUBSTITUTED_REQUIREMENTS_WHEELS = {
+    # Some speedups are only for 64-bit
+    "aarch64": {"aiohttp-zlib-ng": "aiohttp-zlib-ng[isal]"},
+    "armhf": {},
+    "armv7": {},
+    # Some speedups are only for 64-bit
+    "amd64": {"aiohttp-zlib-ng": "aiohttp-zlib-ng[isal]"},
+    "i386": {},
+}
+
+SUBSTITUTED_REQUIREMENTS_WHEELS_NORMALIZED = {
+    arch: {
+        normalize(requirement): substitute
+        for requirement, substitute in requirements.items()
+    }
+    for arch, requirements in SUBSTITUTED_REQUIREMENTS_WHEELS.items()
 }
 
 IGNORE_PIN = ("colorlog>2.1,<3", "urllib3")
@@ -267,7 +331,29 @@ def normalize_package_name(requirement: str) -> str:
 
 def comment_requirement(req: str) -> bool:
     """Comment out requirement. Some don't install on all systems."""
-    return normalize_package_name(req) in COMMENT_REQUIREMENTS_NORMALIZED
+    return normalize_package_name(req) in EXCLUDED_REQUIREMENTS_ALL_NORMALIZED
+
+
+def process_wheel_requirement(req: str, arch: str) -> str:
+    """Process requirement for a specific architecture."""
+    normalized_package_name = normalize_package_name(req)
+    if normalized_package_name in EXCLUDED_REQUIREMENTS_WHEELS_NORMALIZED[arch]:
+        return f"# {req}"
+    if normalized_package_name in SUBSTITUTED_REQUIREMENTS_WHEELS_NORMALIZED[arch]:
+        return SUBSTITUTED_REQUIREMENTS_WHEELS_NORMALIZED[arch][normalized_package_name]
+    if normalized_package_name in INCLUDED_REQUIREMENTS_WHEELS_NORMALIZED:
+        return req
+    if normalized_package_name in EXCLUDED_REQUIREMENTS_ALL_NORMALIZED:
+        return f"# {req}"
+    return req
+
+
+def process_core_wheel_requirement(req: str, arch: str) -> str:
+    """Process requirement for a specific architecture."""
+    normalized_package_name = normalize_package_name(req)
+    if normalized_package_name in SUBSTITUTED_REQUIREMENTS_WHEELS_NORMALIZED[arch]:
+        return SUBSTITUTED_REQUIREMENTS_WHEELS_NORMALIZED[arch][normalized_package_name]
+    return req
 
 
 def gather_modules() -> dict[str, list[str]] | None:
@@ -353,6 +439,16 @@ def generate_requirements_list(reqs: dict[str, list[str]]) -> str:
     return "".join(output)
 
 
+def generate_wheels_requirements_list(reqs: dict[str, list[str]], arch: str) -> str:
+    """Generate a pip file based on requirements."""
+    output = []
+    for pkg, requirements in sorted(reqs.items(), key=itemgetter(0)):
+        output.extend(f"\n# {req}" for req in sorted(requirements))
+        processed_pkg = process_wheel_requirement(pkg, arch)
+        output.append(f"\n{processed_pkg}\n")
+    return "".join(output)
+
+
 def requirements_output() -> str:
     """Generate output for requirements."""
     output = [
@@ -367,6 +463,21 @@ def requirements_output() -> str:
     return "".join(output)
 
 
+def requirements_wheels_output(arch: str) -> str:
+    """Generate output for requirements."""
+    output = [
+        GENERATED_MESSAGE,
+        "-c homeassistant/package_constraints.txt\n",
+        "\n",
+        "# Home Assistant Core\n",
+    ]
+    for req in core_requirements():
+        processed_req = process_core_wheel_requirement(req, arch)
+        output.append(f"{processed_req}\n")
+
+    return "".join(output)
+
+
 def requirements_all_output(reqs: dict[str, list[str]]) -> str:
     """Generate output for requirements_all."""
     output = [
@@ -375,6 +486,18 @@ def requirements_all_output(reqs: dict[str, list[str]]) -> str:
         "-r requirements.txt\n",
     ]
     output.append(generate_requirements_list(reqs))
+
+    return "".join(output)
+
+
+def requirements_all_wheels_output(reqs: dict[str, list[str]], arch: str) -> str:
+    """Generate output for requirements_wheels."""
+    output = [
+        f"# Home Assistant Core, full dependency set for building {arch} wheels\n",
+        GENERATED_MESSAGE,
+        "-r requirements.txt\n",
+    ]
+    output.append(generate_wheels_requirements_list(reqs, arch))
 
     return "".join(output)
 
@@ -471,14 +594,34 @@ def main(validate: bool) -> int:
         return 1
 
     reqs_file = requirements_output()
+    reqs_wheels_aarch64_file = requirements_wheels_output("aarch64")
+    reqs_wheels_armhf_file = requirements_wheels_output("armhf")
+    reqs_wheels_armv7_file = requirements_wheels_output("armv7")
+    reqs_wheels_amd64_file = requirements_wheels_output("amd64")
+    reqs_wheels_i386_file = requirements_wheels_output("i386")
     reqs_all_file = requirements_all_output(data)
+    reqs_all_wheels_aarch64_file = requirements_all_wheels_output(data, "aarch64")
+    reqs_all_wheels_armhf_file = requirements_all_wheels_output(data, "armhf")
+    reqs_all_wheels_armv7_file = requirements_all_wheels_output(data, "armv7")
+    reqs_all_wheels_amd64_file = requirements_all_wheels_output(data, "amd64")
+    reqs_all_wheels_i386_file = requirements_all_wheels_output(data, "i386")
     reqs_test_all_file = requirements_test_all_output(data)
     reqs_pre_commit_file = requirements_pre_commit_output()
     constraints = gather_constraints()
 
     files = (
         ("requirements.txt", reqs_file),
+        ("requirements_wheels_aarch64.txt", reqs_wheels_aarch64_file),
+        ("requirements_wheels_armhf.txt", reqs_wheels_armhf_file),
+        ("requirements_wheels_armv7.txt", reqs_wheels_armv7_file),
+        ("requirements_wheels_amd64.txt", reqs_wheels_amd64_file),
+        ("requirements_wheels_i386.txt", reqs_wheels_i386_file),
         ("requirements_all.txt", reqs_all_file),
+        ("requirements_all_wheels_aarch64.txt", reqs_all_wheels_aarch64_file),
+        ("requirements_all_wheels_armhf.txt", reqs_all_wheels_armhf_file),
+        ("requirements_all_wheels_armv7.txt", reqs_all_wheels_armv7_file),
+        ("requirements_all_wheels_amd64.txt", reqs_all_wheels_amd64_file),
+        ("requirements_all_wheels_i386.txt", reqs_all_wheels_i386_file),
         ("requirements_test_pre_commit.txt", reqs_pre_commit_file),
         ("requirements_test_all.txt", reqs_test_all_file),
         ("homeassistant/package_constraints.txt", constraints),
