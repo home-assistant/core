@@ -1413,6 +1413,7 @@ async def test_effects(hass: HomeAssistant) -> None:
             }
         },
     )
+    await hass.async_block_till_done()
 
     config_entry = MockConfigEntry(domain=DOMAIN, data=CONFIG_ENTRY_DATA)
     config_entry.add_to_hass(hass)

@@ -1,0 +1,59 @@
+# serializer version: 1
+# name: test_sensors[sensor.testproject_test_build_latest_build-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.testproject_test_build_latest_build',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Test Build latest build',
+    'platform': 'azure_devops',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'latest_build',
+    'unique_id': 'testorg_1234_9876_latest_build',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.testproject_test_build_latest_build-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'definition_id': 9876,
+      'definition_name': 'Test Build',
+      'finish_time': '2021-01-01T00:00:00Z',
+      'friendly_name': 'testproject Test Build latest build',
+      'id': 5678,
+      'queue_time': '2021-01-01T00:00:00Z',
+      'reason': 'manual',
+      'result': 'succeeded',
+      'source_branch': 'main',
+      'source_version': '123',
+      'start_time': '2021-01-01T00:00:00Z',
+      'status': 'completed',
+      'url': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.testproject_test_build_latest_build',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1',
+  })
+# ---

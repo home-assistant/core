@@ -18,7 +18,6 @@ from homeassistant.util.yaml.loader import load_yaml
 from script.hassfest.model import Integration
 
 COMMENT_REQUIREMENTS = (
-    "Adafruit-BBIO",
     "atenpdu",  # depends on pysnmp which is not maintained at this time
     "avea",  # depends on bluepy
     "avion",
@@ -263,9 +262,7 @@ def normalize_package_name(requirement: str) -> str:
         return ""
 
     # pipdeptree needs lowercase and dash instead of underscore as separator
-    package = match.group(1).lower().replace("_", "-")
-
-    return package
+    return match.group(1).lower().replace("_", "-")
 
 
 def comment_requirement(req: str) -> bool:

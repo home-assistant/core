@@ -299,11 +299,6 @@ class NWSWeather(CoordinatorWeatherEntity):
             forecast.append(data)
         return forecast
 
-    @property
-    def forecast(self) -> list[Forecast] | None:
-        """Return forecast."""
-        return self._forecast(self._forecast_legacy, DAYNIGHT)
-
     @callback
     def _async_forecast_hourly(self) -> list[Forecast] | None:
         """Return the hourly forecast in native units."""

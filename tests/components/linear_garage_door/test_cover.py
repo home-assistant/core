@@ -32,7 +32,7 @@ async def test_data(hass: HomeAssistant) -> None:
     entries = hass.config_entries.async_entries(DOMAIN)
     assert entries
     assert len(entries) == 1
-    assert entries[0].state == ConfigEntryState.LOADED
+    assert entries[0].state is ConfigEntryState.LOADED
     assert hass.states.get("cover.test_garage_1").state == STATE_OPEN
     assert hass.states.get("cover.test_garage_2").state == STATE_CLOSED
     assert hass.states.get("cover.test_garage_3").state == STATE_OPENING
