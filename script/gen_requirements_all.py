@@ -282,12 +282,14 @@ def normalize_package_name(requirement: str) -> str:
     return match.group(1).lower().replace("_", "-")
 
 
-def comment_requirement(req: str, package_allowlist: set[str] | None) -> bool:
+def allow_requirement(req: str, package_allowlist: set[str]) -> bool:
+    """Allow requirement for a specific pipe file."""
+    return normalize_package_name(req) in package_allowlist
+
+
+def comment_requirement(req: str) -> bool:
     """Comment out requirement. Some don't install on all systems."""
-    normalized_package_name = normalize_package_name(req)
-    if package_allowlist and normalized_package_name in package_allowlist:
-        return False
-    return normalized_package_name in COMMENT_REQUIREMENTS_NORMALIZED
+    return normalize_package_name(req) in COMMENT_REQUIREMENTS_NORMALIZED
 
 
 def gather_modules() -> dict[str, list[str]] | None:
@@ -360,18 +362,27 @@ def process_requirements(
         reqs.setdefault(req, []).append(package)
 
 
-def generate_requirements_list(
-    reqs: dict[str, list[str]], package_allowlist: set[str] | None = None
-) -> str:
+def generate_requirements_list(reqs: dict[str, list[str]]) -> str:
     """Generate a pip file based on requirements."""
     output = []
     for pkg, requirements in sorted(reqs.items(), key=itemgetter(0)):
         output.extend(f"\n# {req}" for req in sorted(requirements))
 
-        if comment_requirement(pkg, package_allowlist):
+        if comment_requirement(pkg):
             output.append(f"\n# {pkg}\n")
         else:
             output.append(f"\n{pkg}\n")
+    return "".join(output)
+
+
+def generate_allow_list(reqs: dict[str, list[str]], package_allowlist: set[str]) -> str:
+    """Generate a pip file only containing packages in package_allowlist."""
+    output = []
+    for pkg, requirements in sorted(reqs.items(), key=itemgetter(0)):
+        if not allow_requirement(pkg, package_allowlist):
+            continue
+        output.extend(f"\n# {req}" for req in sorted(requirements))
+        output.append(f"\n{pkg}\n")
     return "".join(output)
 
 
@@ -406,9 +417,9 @@ def requirements_wheels_output(reqs: dict[str, list[str]]) -> str:
     output = [
         "# Home Assistant Core, full dependency set for building wheels\n",
         GENERATED_MESSAGE,
-        "-r requirements.txt\n",
+        "-r requirements_all.txt\n",
     ]
-    output.append(generate_requirements_list(reqs, WHEELS_REQUIREMENTS_NORMALIZED))
+    output.append(generate_allow_list(reqs, WHEELS_REQUIREMENTS_NORMALIZED))
 
     return "".join(output)
 
