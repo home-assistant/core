@@ -12,16 +12,9 @@ on:
     paths:
       - ".github/workflows/wheels.yml"
       - "homeassistant/package_constraints.txt"
-      - "requirements_all_wheels_aarch64.txt"
-      - "requirements_all_wheels_amd64.txt"
-      - "requirements_all_wheels_armhf.txt"
-      - "requirements_all_wheels_armv7.txt"
-      - "requirements_all_wheels_i386.txt"
-      - "requirements_wheels_aarch64.txt"
-      - "requirements_wheels_amd64.txt"
-      - "requirements_wheels_armhf.txt"
-      - "requirements_wheels_armv7.txt"
-      - "requirements_wheels_i386.txt"
+      - "requirements_all_.txt"
+      - "requirements.txt"
+      - "script/gen_requirements_all.py"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref_name}}
@@ -37,6 +30,13 @@ jobs:
     steps:
       - name: Checkout the repository
         uses: actions/checkout@v4.1.2
+
+      - name: Set up Python ${{ env.DEFAULT_PYTHON }}
+        id: python
+        uses: actions/setup-python@v5.1.0
+        with:
+          python-version: ${{ env.DEFAULT_PYTHON }}
+          check-latest: true
 
       - name: Get information
         id: info
@@ -84,6 +84,24 @@ jobs:
           path: ./requirements_diff.txt
           overwrite: true
 
+      - name: Generate requirements
+        run: |
+          python -m script.gen_requirements_all wheels
+
+      - name: Upload requirements_all_wheels
+        uses: actions/upload-artifact@v4.3.1
+        with:
+          name: requirements_all_wheels
+          path: ./requirements_all_wheels_*.txt
+          overwrite: true
+
+      - name: Upload requirements_wheels
+        uses: actions/upload-artifact@v4.3.1
+        with:
+          name: requirements_wheels
+          path: ./requirements_wheels_*.txt
+          overwrite: true
+
   core:
     name: Build Core wheels ${{ matrix.abi }} for ${{ matrix.arch }} (musllinux_1_2)
     if: github.repository_owner == 'home-assistant'
@@ -107,6 +125,11 @@ jobs:
         uses: actions/download-artifact@v4.1.4
         with:
           name: requirements_diff
+
+      - name: Download requirements_wheels
+        uses: actions/download-artifact@v4.1.4
+        with:
+          name: requirements_wheels
 
       - name: Build wheels
         uses: home-assistant/wheels@2024.01.0
@@ -145,6 +168,11 @@ jobs:
         uses: actions/download-artifact@v4.1.4
         with:
           name: requirements_diff
+
+      - name: Download requirements_all_wheels
+        uses: actions/download-artifact@v4.1.4
+        with:
+          name: requirements_all_wheels
 
       - name: Split requirements all
         run: |

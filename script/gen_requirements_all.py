@@ -582,7 +582,7 @@ def diff_file(filename: str, content: str) -> list[str]:
     )
 
 
-def main(validate: bool) -> int:
+def main(validate: bool, wheels: bool) -> int:
     """Run the script."""
     if not os.path.isfile("requirements_all.txt"):
         print("Run this from HA root dir")
@@ -611,21 +611,25 @@ def main(validate: bool) -> int:
 
     files = (
         ("requirements.txt", reqs_file),
-        ("requirements_wheels_aarch64.txt", reqs_wheels_aarch64_file),
-        ("requirements_wheels_armhf.txt", reqs_wheels_armhf_file),
-        ("requirements_wheels_armv7.txt", reqs_wheels_armv7_file),
-        ("requirements_wheels_amd64.txt", reqs_wheels_amd64_file),
-        ("requirements_wheels_i386.txt", reqs_wheels_i386_file),
         ("requirements_all.txt", reqs_all_file),
-        ("requirements_all_wheels_aarch64.txt", reqs_all_wheels_aarch64_file),
-        ("requirements_all_wheels_armhf.txt", reqs_all_wheels_armhf_file),
-        ("requirements_all_wheels_armv7.txt", reqs_all_wheels_armv7_file),
-        ("requirements_all_wheels_amd64.txt", reqs_all_wheels_amd64_file),
-        ("requirements_all_wheels_i386.txt", reqs_all_wheels_i386_file),
         ("requirements_test_pre_commit.txt", reqs_pre_commit_file),
         ("requirements_test_all.txt", reqs_test_all_file),
         ("homeassistant/package_constraints.txt", constraints),
     )
+    if wheels:
+        files = (
+            *files,
+            ("requirements_wheels_aarch64.txt", reqs_wheels_aarch64_file),
+            ("requirements_wheels_armhf.txt", reqs_wheels_armhf_file),
+            ("requirements_wheels_armv7.txt", reqs_wheels_armv7_file),
+            ("requirements_wheels_amd64.txt", reqs_wheels_amd64_file),
+            ("requirements_wheels_i386.txt", reqs_wheels_i386_file),
+            ("requirements_all_wheels_aarch64.txt", reqs_all_wheels_aarch64_file),
+            ("requirements_all_wheels_armhf.txt", reqs_all_wheels_armhf_file),
+            ("requirements_all_wheels_armv7.txt", reqs_all_wheels_armv7_file),
+            ("requirements_all_wheels_amd64.txt", reqs_all_wheels_amd64_file),
+            ("requirements_all_wheels_i386.txt", reqs_all_wheels_i386_file),
+        )
 
     if validate:
         errors = []
@@ -654,4 +658,5 @@ def main(validate: bool) -> int:
 
 if __name__ == "__main__":
     _VAL = sys.argv[-1] == "validate"
-    sys.exit(main(_VAL))
+    _WHEELS = sys.argv[-1] == "wheels"
+    sys.exit(main(_VAL, _WHEELS))
