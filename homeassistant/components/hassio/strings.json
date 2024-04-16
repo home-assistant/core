@@ -190,7 +190,7 @@
     },
     "unsupported_virtualization_image": {
       "title": "Unsupported system - Incorrect OS image for virtualization",
-      "description": "System is unsupported because the Home Assistant OS image in use is not one intended for use in a virtualized system. Use the link to learn more and how to fix this."
+      "description": "System is unsupported because the Home Assistant OS image in use is not intended for use in a virtualized environment. Use the link to learn more and how to fix this."
     }
   },
   "entity": {
