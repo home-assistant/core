@@ -1330,9 +1330,7 @@ class EntityRegistry(BaseRegistry):
     def async_clear_label_id(self, label_id: str) -> None:
         """Clear label from registry entries."""
         for entry in self.entities.get_entries_for_label(label_id):
-            labels = entry.labels.copy()
-            labels.remove(label_id)
-            self.async_update_entity(entry.entity_id, labels=labels)
+            self.async_update_entity(entry.entity_id, labels=entry.labels - {label_id})
 
     @callback
     def async_clear_config_entry(self, config_entry_id: str) -> None:
