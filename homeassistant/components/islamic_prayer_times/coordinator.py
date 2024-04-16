@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 import logging
 from typing import Any, cast
 
@@ -70,8 +70,8 @@ class IslamicPrayerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, datetim
         """Return the school."""
         return self.config_entry.options.get(CONF_SCHOOL, DEFAULT_SCHOOL)
 
-    def get_new_prayer_times(self, date: datetime) -> dict[str, Any]:
-        """Fetch prayer times for today."""
+    def get_new_prayer_times(self, for_date: date) -> dict[str, Any]:
+        """Fetch prayer times for the specified date."""
         calc = PrayerTimesCalculator(
             latitude=self.latitude,
             longitude=self.longitude,
@@ -79,7 +79,7 @@ class IslamicPrayerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, datetim
             latitudeAdjustmentMethod=self.lat_adj_method,
             midnightMode=self.midnight_mode,
             school=self.school,
-            date=str(date.date()),
+            date=str(for_date),
             iso8601=True,
         )
         return cast(dict[str, Any], calc.fetch_prayer_times())
@@ -121,9 +121,9 @@ class IslamicPrayerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, datetim
 
         # Zero out the us component to maintain consistent rollover at T+1s
         now = dt_util.now().replace(microsecond=0)
-        yesterday_times = self.get_new_prayer_times(now - timedelta(days=1))
-        today_times = self.get_new_prayer_times(now)
-        tomorrow_times = self.get_new_prayer_times(now + timedelta(days=1))
+        yesterday_times = self.get_new_prayer_times((now - timedelta(days=1)).date())
+        today_times = self.get_new_prayer_times(now.date())
+        tomorrow_times = self.get_new_prayer_times((now + timedelta(days=1)).date())
 
         if (
             yesterday_midnight := dt_util.parse_datetime(yesterday_times["Midnight"])
