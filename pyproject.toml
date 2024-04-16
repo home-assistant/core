@@ -663,7 +663,7 @@ required-version = ">=0.3.7"
 
 [tool.ruff.lint]
 select = [
-    "A001",
+    "A001", # Variable {name} is shadowing a Python builtin
     "B002", # Python does not support the unary prefix increment
     "B005", # Using .strip() with multi-character strings is misleading
     "B007", # Loop control variable {name} not used within loop body
