@@ -17,11 +17,13 @@ from homeassistant.config_entries import (
 from homeassistant.const import (
     CONF_ELEVATION,
     CONF_LANGUAGE,
+    CONF_LATITUDE,
     CONF_LOCATION,
+    CONF_LONGITUDE,
     CONF_NAME,
     CONF_TIME_ZONE,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.selector import (
     BooleanSelector,
     LocationSelector,
@@ -47,6 +49,29 @@ LANGUAGE = [
 ]
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _get_data_schema(hass: HomeAssistant) -> vol.Schema:
+    default_location = {
+        CONF_LATITUDE: hass.config.latitude,
+        CONF_LONGITUDE: hass.config.longitude,
+    }
+    return vol.Schema(
+        {
+            vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
+            vol.Required(CONF_DIASPORA, default=DEFAULT_DIASPORA): BooleanSelector(),
+            vol.Required(CONF_LANGUAGE, default=DEFAULT_LANGUAGE): SelectSelector(
+                SelectSelectorConfig(options=LANGUAGE)
+            ),
+            vol.Required(CONF_LOCATION, default=default_location): LocationSelector(),
+            vol.Optional(CONF_ELEVATION, default=hass.config.elevation): int,
+            vol.Optional(CONF_TIME_ZONE, default=hass.config.time_zone): SelectSelector(
+                SelectSelectorConfig(
+                    options=sorted(zoneinfo.available_timezones()),
+                )
+            ),
+        }
+    )
 
 
 class JewishCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -84,34 +109,7 @@ class JewishCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
-                    vol.Required(
-                        CONF_DIASPORA, default=DEFAULT_DIASPORA
-                    ): BooleanSelector(),
-                    vol.Required(
-                        CONF_LANGUAGE, default=DEFAULT_LANGUAGE
-                    ): SelectSelector(SelectSelectorConfig(options=LANGUAGE)),
-                    vol.Required(
-                        CONF_LOCATION,
-                        default={
-                            "latitude": self.hass.config.latitude,
-                            "longitude": self.hass.config.longitude,
-                        },
-                    ): LocationSelector(),
-                    vol.Optional(
-                        CONF_ELEVATION, default=self.hass.config.elevation
-                    ): int,
-                    vol.Optional(
-                        CONF_TIME_ZONE, default=self.hass.config.time_zone
-                    ): SelectSelector(
-                        SelectSelectorConfig(
-                            options=sorted(zoneinfo.available_timezones()),
-                        )
-                    ),
-                }
-            ),
+            data_schema=_get_data_schema(self.hass),
             errors=errors,
         )
 

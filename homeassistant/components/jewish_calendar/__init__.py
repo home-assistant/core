@@ -113,7 +113,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     if CONF_LATITUDE in config_entry.data or CONF_LONGITUDE in config_entry.data:
         latitude = config_entry.data.get(CONF_LATITUDE, hass.config.latitude)
         longitude = config_entry.data.get(CONF_LONGITUDE, hass.config.longitude)
-    elif config_entry.data.get(CONF_LOCATION):
+    elif CONF_LOCATION in config_entry.data:
         latitude = config_entry.data[CONF_LOCATION][CONF_LATITUDE]
         longitude = config_entry.data[CONF_LOCATION][CONF_LONGITUDE]
     else:
