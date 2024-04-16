@@ -110,6 +110,4 @@ async def test_location(
 
     current = measurements.current
 
-    if current["indexes"][0]["description"] == NO_AIRLY_SENSORS:
-        return False
-    return True
+    return bool(current["indexes"][0]["description"] != NO_AIRLY_SENSORS)

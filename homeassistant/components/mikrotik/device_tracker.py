@@ -89,13 +89,11 @@ class MikrotikDataUpdateCoordinatorTracker(
     @property
     def is_connected(self) -> bool:
         """Return true if the client is connected to the network."""
-        if (
+        return bool(
             self.device.last_seen
-            and (dt_util.utcnow() - self.device.last_seen)
+            and dt_util.utcnow() - self.device.last_seen
             < self.coordinator.option_detection_time
-        ):
-            return True
-        return False
+        )
 
     @property
     def source_type(self) -> SourceType:

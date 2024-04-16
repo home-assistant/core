@@ -154,13 +154,11 @@ class Provider(ABC):
     @callback
     def check_metadata(self, metadata: SpeechMetadata) -> bool:
         """Check if given metadata supported by this provider."""
-        if (
-            metadata.language not in self.supported_languages
-            or metadata.format not in self.supported_formats
-            or metadata.codec not in self.supported_codecs
-            or metadata.bit_rate not in self.supported_bit_rates
-            or metadata.sample_rate not in self.supported_sample_rates
-            or metadata.channel not in self.supported_channels
-        ):
-            return False
-        return True
+        return (
+            metadata.language in self.supported_languages
+            and metadata.format in self.supported_formats
+            and metadata.codec in self.supported_codecs
+            and metadata.bit_rate in self.supported_bit_rates
+            and metadata.sample_rate in self.supported_sample_rates
+            and metadata.channel in self.supported_channels
+        )

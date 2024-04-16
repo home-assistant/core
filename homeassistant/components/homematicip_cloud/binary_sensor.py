@@ -466,12 +466,10 @@ class HomematicipSecurityZoneSensorGroup(HomematicipGenericEntity, BinarySensorE
         ):
             return True
 
-        if (
+        return (
             self._device.windowState is not None
             and self._device.windowState != WindowState.CLOSED
-        ):
-            return True
-        return False
+        )
 
 
 class HomematicipSecuritySensorGroup(
@@ -512,10 +510,7 @@ class HomematicipSecuritySensorGroup(
         ):
             return True
 
-        if (
+        return bool(
             self._device.smokeDetectorAlarmType is not None
             and self._device.smokeDetectorAlarmType != SmokeDetectorAlarmType.IDLE_OFF
-        ):
-            return True
-
-        return False
+        )

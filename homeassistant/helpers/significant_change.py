@@ -114,10 +114,7 @@ def _check_numeric_change(
     assert old_state is not None
     assert new_state is not None
 
-    if metric(old_state, new_state) >= change:
-        return True
-
-    return False
+    return metric(old_state, new_state) >= change
 
 
 def check_absolute_change(

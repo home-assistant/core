@@ -1190,12 +1190,10 @@ class CoordinatorWeatherEntity(
             or utcnow() - last_success_time >= coordinator.update_interval
         ):
             await coordinator.async_refresh()
-        if (
+        return not (
             not (last_success_time := coordinator.last_update_success_time)
             or utcnow() - last_success_time >= forecast_valid_time
-        ):
-            return False
-        return True
+        )
 
     @callback
     def _async_forecast_daily(self) -> list[Forecast] | None:

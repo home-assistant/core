@@ -246,7 +246,7 @@ class TodoListEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         items = self.todo_items
         if items is None:
             return None
-        return sum([item.status == TodoItemStatus.NEEDS_ACTION for item in items])
+        return sum(item.status == TodoItemStatus.NEEDS_ACTION for item in items)
 
     @cached_property
     def todo_items(self) -> list[TodoItem] | None:

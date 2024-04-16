@@ -331,10 +331,9 @@ class ExposedEntities:
         ):
             return True
 
-        if domain == "sensor" and device_class in DEFAULT_EXPOSED_SENSOR_DEVICE_CLASSES:
-            return True
-
-        return False
+        return (
+            domain == "sensor" and device_class in DEFAULT_EXPOSED_SENSOR_DEVICE_CLASSES
+        )
 
     def _update_exposed_entity(
         self, assistant: str, entity_id: str, key: str, value: Any

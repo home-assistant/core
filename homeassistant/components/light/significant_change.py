@@ -43,12 +43,7 @@ def async_check_significant_change(
     ):
         return True
 
-    if check_absolute_change(
-        # Default range 153..500
-        old_attrs.get(ATTR_COLOR_TEMP),
-        new_attrs.get(ATTR_COLOR_TEMP),
-        5,
-    ):
-        return True
-
-    return False
+    # Default range 153..500
+    return check_absolute_change(
+        old_attrs.get(ATTR_COLOR_TEMP), new_attrs.get(ATTR_COLOR_TEMP), 5
+    )

@@ -659,9 +659,12 @@ filterwarnings = [
 ]
 
 [tool.ruff]
+output-format = "concise"
 required-version = ">=0.3.7"
 
 [tool.ruff.lint]
+explicit-preview-rules = true
+preview = true
 select = [
     "B002", # Python does not support the unary prefix increment
     "B005", # Using .strip() with multi-character strings is misleading

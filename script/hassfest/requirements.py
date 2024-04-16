@@ -272,7 +272,4 @@ def install_requirements(integration: Integration, requirements: set[str]) -> bo
             if "Successfully installed" in result.stdout:
                 get_pipdeptree.cache_clear()
 
-    if integration.errors:
-        return False
-
-    return True
+    return not integration.errors

@@ -89,9 +89,7 @@ class EgardiaAlarm(alarm.AlarmControlPanelEntity):
     @property
     def should_poll(self) -> bool:
         """Poll if no report server is enabled."""
-        if not self._rs_enabled:
-            return True
-        return False
+        return not self._rs_enabled
 
     def handle_status_event(self, event):
         """Handle the Egardia system status event."""

@@ -201,6 +201,4 @@ class Flexit(ClimateEntity):
         result = await self._hub.async_pb_call(
             self._slave, register, value, CALL_TYPE_WRITE_REGISTER
         )
-        if not result:
-            return False
-        return True
+        return bool(result)

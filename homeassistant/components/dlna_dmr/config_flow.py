@@ -439,22 +439,14 @@ def _is_ignored_device(discovery_info: ssdp.SsdpServiceInfo) -> bool:
     manufacturer = (discovery_info.upnp.get(ssdp.ATTR_UPNP_MANUFACTURER) or "").lower()
     model = (discovery_info.upnp.get(ssdp.ATTR_UPNP_MODEL_NAME) or "").lower()
 
-    if manufacturer.startswith("xbmc") or model == "kodi":
-        # kodi
-        return True
-    if "philips" in manufacturer and "tv" in model:
-        # philips_js
-        # These TVs don't have a stable UDN, so also get discovered as a new
+    return (
+        (manufacturer.startswith("xbmc") or model == "kodi")  # kodi
+        # Philips TVs don't have a stable UDN, so also get discovered as a new
         # device every time they are turned on.
-        return True
-    if manufacturer.startswith("samsung") and "tv" in model:
-        # samsungtv
-        return True
-    if manufacturer.startswith("lg") and "tv" in model:
-        # webostv
-        return True
-
-    return False
+        or ("philips" in manufacturer and "tv" in model)  # philips_js
+        or (manufacturer.startswith("samsung") and "tv" in model)  # samsungtv
+        or (manufacturer.startswith("lg") and "tv" in model)  # webostv
+    )
 
 
 def _is_dmr_device(discovery_info: ssdp.SsdpServiceInfo) -> bool:
@@ -477,10 +469,7 @@ def _is_dmr_device(discovery_info: ssdp.SsdpServiceInfo) -> bool:
         # Only one service defined (etree_to_dict failed to make a list)
         discovery_service_ids = {services.get("serviceId")}
 
-    if not DmrDevice.SERVICE_IDS.issubset(discovery_service_ids):
-        return False
-
-    return True
+    return DmrDevice.SERVICE_IDS.issubset(discovery_service_ids)
 
 
 async def _async_get_mac_address(hass: HomeAssistant, host: str) -> str | None:

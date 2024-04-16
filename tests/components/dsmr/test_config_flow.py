@@ -81,7 +81,7 @@ async def test_setup_network_rfxtrx(
     rfxtrx_dsmr_connection_send_validate_fixture,
 ) -> None:
     """Test we can setup network."""
-    (connection_factory, transport, protocol) = dsmr_connection_send_validate_fixture
+    (_, _, protocol) = dsmr_connection_send_validate_fixture
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -229,7 +229,7 @@ async def test_setup_serial_rfxtrx(
     rfxtrx_dsmr_connection_send_validate_fixture,
 ) -> None:
     """Test we can setup serial."""
-    (connection_factory, transport, protocol) = dsmr_connection_send_validate_fixture
+    (_, _, protocol) = dsmr_connection_send_validate_fixture
 
     port = com_port()
 
@@ -324,7 +324,7 @@ async def test_setup_serial_fail(
     com_mock, hass: HomeAssistant, dsmr_connection_send_validate_fixture
 ) -> None:
     """Test failed serial connection."""
-    (connection_factory, transport, protocol) = dsmr_connection_send_validate_fixture
+    (_, transport, protocol) = dsmr_connection_send_validate_fixture
 
     port = com_port()
 
@@ -373,12 +373,8 @@ async def test_setup_serial_timeout(
     rfxtrx_dsmr_connection_send_validate_fixture,
 ) -> None:
     """Test failed serial connection."""
-    (connection_factory, transport, protocol) = dsmr_connection_send_validate_fixture
-    (
-        connection_factory,
-        transport,
-        rfxtrx_protocol,
-    ) = rfxtrx_dsmr_connection_send_validate_fixture
+    (_, _, protocol) = dsmr_connection_send_validate_fixture
+    (_, _, rfxtrx_protocol) = rfxtrx_dsmr_connection_send_validate_fixture
 
     port = com_port()
 
@@ -429,12 +425,8 @@ async def test_setup_serial_wrong_telegram(
     rfxtrx_dsmr_connection_send_validate_fixture,
 ) -> None:
     """Test failed telegram data."""
-    (connection_factory, transport, protocol) = dsmr_connection_send_validate_fixture
-    (
-        rfxtrx_connection_factory,
-        transport,
-        rfxtrx_protocol,
-    ) = rfxtrx_dsmr_connection_send_validate_fixture
+    (_, _, protocol) = dsmr_connection_send_validate_fixture
+    (_, _, rfxtrx_protocol) = rfxtrx_dsmr_connection_send_validate_fixture
 
     port = com_port()
 

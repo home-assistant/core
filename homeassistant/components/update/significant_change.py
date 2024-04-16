@@ -25,7 +25,4 @@ def async_check_significant_change(
     if old_attrs.get(ATTR_INSTALLED_VERSION) != new_attrs.get(ATTR_INSTALLED_VERSION):
         return True
 
-    if old_attrs.get(ATTR_LATEST_VERSION) != new_attrs.get(ATTR_LATEST_VERSION):
-        return True
-
-    return False
+    return old_attrs.get(ATTR_LATEST_VERSION) != new_attrs.get(ATTR_LATEST_VERSION)

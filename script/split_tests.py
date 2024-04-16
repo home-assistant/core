@@ -102,7 +102,7 @@ class TestFolder:
     @property
     def total_tests(self) -> int:
         """Return total tests."""
-        return sum([test.total_tests for test in self.children.values()])
+        return sum(test.total_tests for test in self.children.values())
 
     @property
     def added_to_bucket(self) -> bool:

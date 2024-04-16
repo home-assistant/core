@@ -253,10 +253,7 @@ class CloudPreferences:
     @property
     def remote_enabled(self) -> bool:
         """Return if remote is enabled on start."""
-        if not self._prefs.get(PREF_ENABLE_REMOTE, False):
-            return False
-
-        return True
+        return bool(self._prefs.get(PREF_ENABLE_REMOTE, False))
 
     @property
     def remote_domain(self) -> str | None:

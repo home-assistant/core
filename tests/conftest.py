@@ -271,14 +271,13 @@ def expected_lingering_timers() -> bool:
     This should be removed when all lingering timers have been cleaned up.
     """
     current_test = os.getenv("PYTEST_CURRENT_TEST")
-    if (
+
+    # As a starting point, we ignore non-platform components
+    return bool(
         current_test
         and current_test.startswith("tests/components/")
         and current_test.split("/")[2] not in BASE_PLATFORMS
-    ):
-        # As a starting point, we ignore non-platform components
-        return True
-    return False
+    )
 
 
 @pytest.fixture

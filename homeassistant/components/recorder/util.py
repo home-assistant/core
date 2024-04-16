@@ -279,10 +279,7 @@ def last_run_was_recently_clean(cursor: SQLiteCursor) -> bool:
 
     _LOGGER.debug("The last run ended at: %s (now: %s)", last_run_end_time, now)
 
-    if last_run_end_time + MAX_RESTART_TIME < now:
-        return False
-
-    return True
+    return last_run_end_time + MAX_RESTART_TIME >= now
 
 
 def basic_sanity_check(cursor: SQLiteCursor) -> bool:

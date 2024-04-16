@@ -172,13 +172,10 @@ class FinTsClient:
         if account_type := account_information.get("type"):
             return 1 <= account_type <= 9
 
-        if (
+        return (
             account_information["iban"] in self.account_config
             or account_information["account_number"] in self.account_config
-        ):
-            return True
-
-        return False
+        )
 
     def is_holdings_account(self, account: SEPAAccount) -> bool:
         """Determine if the given account of type holdings account."""
@@ -192,13 +189,10 @@ class FinTsClient:
         if account_type := account_information.get("type"):
             return 30 <= account_type <= 39
 
-        if (
+        return (
             account_information["iban"] in self.holdings_config
             or account_information["account_number"] in self.holdings_config
-        ):
-            return True
-
-        return False
+        )
 
     def detect_accounts(self) -> tuple[list, list]:
         """Identify the accounts of the bank."""

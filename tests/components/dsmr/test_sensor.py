@@ -39,7 +39,7 @@ async def test_default_setup(
     hass: HomeAssistant, entity_registry: er.EntityRegistry, dsmr_connection_fixture
 ) -> None:
     """Test the default setup."""
-    (connection_factory, transport, protocol) = dsmr_connection_fixture
+    (connection_factory, _, _) = dsmr_connection_fixture
 
     from dsmr_parser.obis_references import (
         CURRENT_ELECTRICITY_USAGE,
@@ -174,7 +174,7 @@ async def test_setup_only_energy(
     hass: HomeAssistant, entity_registry: er.EntityRegistry, dsmr_connection_fixture
 ) -> None:
     """Test the default setup."""
-    (connection_factory, transport, protocol) = dsmr_connection_fixture
+    (connection_factory, _, _) = dsmr_connection_fixture
 
     from dsmr_parser.obis_references import (
         CURRENT_ELECTRICITY_USAGE,
@@ -228,7 +228,7 @@ async def test_setup_only_energy(
 
 async def test_v4_meter(hass: HomeAssistant, dsmr_connection_fixture) -> None:
     """Test if v4 meter is correctly parsed."""
-    (connection_factory, transport, protocol) = dsmr_connection_fixture
+    (connection_factory, _, _) = dsmr_connection_fixture
 
     from dsmr_parser.obis_references import (
         ELECTRICITY_ACTIVE_TARIFF,
@@ -314,7 +314,7 @@ async def test_v5_meter(
     hass: HomeAssistant, dsmr_connection_fixture, value: Decimal, state: str
 ) -> None:
     """Test if v5 meter is correctly parsed."""
-    (connection_factory, transport, protocol) = dsmr_connection_fixture
+    (connection_factory, _, _) = dsmr_connection_fixture
 
     from dsmr_parser.obis_references import (
         ELECTRICITY_ACTIVE_TARIFF,
@@ -386,7 +386,7 @@ async def test_v5_meter(
 
 async def test_luxembourg_meter(hass: HomeAssistant, dsmr_connection_fixture) -> None:
     """Test if v5 meter is correctly parsed."""
-    (connection_factory, transport, protocol) = dsmr_connection_fixture
+    (connection_factory, _, _) = dsmr_connection_fixture
 
     from dsmr_parser.obis_references import (
         ELECTRICITY_EXPORTED_TOTAL,
@@ -475,7 +475,7 @@ async def test_luxembourg_meter(hass: HomeAssistant, dsmr_connection_fixture) ->
 
 async def test_belgian_meter(hass: HomeAssistant, dsmr_connection_fixture) -> None:
     """Test if Belgian meter is correctly parsed."""
-    (connection_factory, transport, protocol) = dsmr_connection_fixture
+    (connection_factory, _, _) = dsmr_connection_fixture
 
     from dsmr_parser.obis_references import (
         BELGIUM_CURRENT_AVERAGE_DEMAND,
@@ -677,7 +677,7 @@ async def test_belgian_meter(hass: HomeAssistant, dsmr_connection_fixture) -> No
 
 async def test_belgian_meter_alt(hass: HomeAssistant, dsmr_connection_fixture) -> None:
     """Test if Belgian meter is correctly parsed."""
-    (connection_factory, transport, protocol) = dsmr_connection_fixture
+    (connection_factory, _, _) = dsmr_connection_fixture
 
     from dsmr_parser.obis_references import (
         BELGIUM_MBUS1_DEVICE_TYPE,
@@ -840,7 +840,7 @@ async def test_belgian_meter_alt(hass: HomeAssistant, dsmr_connection_fixture) -
 
 async def test_belgian_meter_mbus(hass: HomeAssistant, dsmr_connection_fixture) -> None:
     """Test if Belgian meter is correctly parsed."""
-    (connection_factory, transport, protocol) = dsmr_connection_fixture
+    (connection_factory, _, _) = dsmr_connection_fixture
 
     from dsmr_parser.obis_references import (
         BELGIUM_MBUS1_DEVICE_TYPE,
@@ -961,7 +961,7 @@ async def test_belgian_meter_mbus(hass: HomeAssistant, dsmr_connection_fixture) 
 
 async def test_belgian_meter_low(hass: HomeAssistant, dsmr_connection_fixture) -> None:
     """Test if Belgian meter is correctly parsed."""
-    (connection_factory, transport, protocol) = dsmr_connection_fixture
+    (connection_factory, _, _) = dsmr_connection_fixture
 
     from dsmr_parser.obis_references import ELECTRICITY_ACTIVE_TARIFF
     from dsmr_parser.objects import CosemObject
@@ -1010,7 +1010,7 @@ async def test_belgian_meter_low(hass: HomeAssistant, dsmr_connection_fixture) -
 
 async def test_swedish_meter(hass: HomeAssistant, dsmr_connection_fixture) -> None:
     """Test if v5 meter is correctly parsed."""
-    (connection_factory, transport, protocol) = dsmr_connection_fixture
+    (connection_factory, _, _) = dsmr_connection_fixture
 
     from dsmr_parser.obis_references import (
         ELECTRICITY_EXPORTED_TOTAL,
@@ -1082,7 +1082,7 @@ async def test_swedish_meter(hass: HomeAssistant, dsmr_connection_fixture) -> No
 
 async def test_easymeter(hass: HomeAssistant, dsmr_connection_fixture) -> None:
     """Test if Q3D meter is correctly parsed."""
-    (connection_factory, transport, protocol) = dsmr_connection_fixture
+    (connection_factory, _, _) = dsmr_connection_fixture
 
     from dsmr_parser.obis_references import (
         ELECTRICITY_EXPORTED_TOTAL,
@@ -1157,7 +1157,7 @@ async def test_easymeter(hass: HomeAssistant, dsmr_connection_fixture) -> None:
 
 async def test_tcp(hass: HomeAssistant, dsmr_connection_fixture) -> None:
     """If proper config provided TCP connection should be made."""
-    (connection_factory, transport, protocol) = dsmr_connection_fixture
+    (connection_factory, _, _) = dsmr_connection_fixture
 
     entry_data = {
         "host": "localhost",
@@ -1183,7 +1183,7 @@ async def test_tcp(hass: HomeAssistant, dsmr_connection_fixture) -> None:
 
 async def test_rfxtrx_tcp(hass: HomeAssistant, rfxtrx_dsmr_connection_fixture) -> None:
     """If proper config provided RFXtrx TCP connection should be made."""
-    (connection_factory, transport, protocol) = rfxtrx_dsmr_connection_fixture
+    (connection_factory, _, _) = rfxtrx_dsmr_connection_fixture
 
     entry_data = {
         "host": "localhost",
@@ -1212,7 +1212,7 @@ async def test_connection_errors_retry(
     hass: HomeAssistant, dsmr_connection_fixture
 ) -> None:
     """Connection should be retried on error during setup."""
-    (connection_factory, transport, protocol) = dsmr_connection_fixture
+    (_, transport, protocol) = dsmr_connection_fixture
 
     entry_data = {
         "port": "/dev/ttyUSB0",
@@ -1254,7 +1254,7 @@ async def test_reconnect(hass: HomeAssistant, dsmr_connection_fixture) -> None:
     )
     from dsmr_parser.objects import CosemObject
 
-    (connection_factory, transport, protocol) = dsmr_connection_fixture
+    (connection_factory, _, protocol) = dsmr_connection_fixture
 
     entry_data = {
         "port": "/dev/ttyUSB0",
@@ -1332,7 +1332,7 @@ async def test_gas_meter_providing_energy_reading(
     hass: HomeAssistant, dsmr_connection_fixture
 ) -> None:
     """Test that gas providing energy readings use the correct device class."""
-    (connection_factory, transport, protocol) = dsmr_connection_fixture
+    (connection_factory, _, _) = dsmr_connection_fixture
 
     from dsmr_parser.obis_references import GAS_METER_READING
     from dsmr_parser.objects import MBusObject

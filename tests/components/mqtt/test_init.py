@@ -3252,7 +3252,7 @@ async def test_debug_info_filter_same(
     debug_info_data = debug_info.info_for_device(hass, device.id)
     assert len(debug_info_data["entities"][0]["subscriptions"]) == 1
     assert len(debug_info_data["entities"][0]["subscriptions"][0]["messages"]) == 2
-    assert {
+    assert debug_info_data["entities"][0]["subscriptions"][0] == {
         "topic": "sensor/#",
         "messages": [
             {
@@ -3270,7 +3270,7 @@ async def test_debug_info_filter_same(
                 "topic": "sensor/abc",
             },
         ],
-    } == debug_info_data["entities"][0]["subscriptions"][0]
+    }
 
 
 async def test_debug_info_same_topic(

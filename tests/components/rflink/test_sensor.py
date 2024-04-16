@@ -275,7 +275,7 @@ async def test_sensor_attributes(hass: HomeAssistant, monkeypatch) -> None:
     }
 
     # setup mocking rflink module
-    event_callback, _, _, _ = await mock_rflink(hass, config, DOMAIN, monkeypatch)
+    await mock_rflink(hass, config, DOMAIN, monkeypatch)
 
     # test sensor loaded from config
     meter_state = hass.states.get("sensor.meter_device")

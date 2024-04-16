@@ -71,9 +71,9 @@ async def test_auth(
     # Verify API requests are made with the correct credentials
     calls = aioclient_mock.mock_calls
     assert len(calls) == 2
-    (method, url, data, headers) = calls[0]
+    (_, _, _, headers) = calls[0]
     assert headers == {"Authorization": f"Bearer {FAKE_TOKEN}"}
-    (method, url, data, headers) = calls[1]
+    (_, _, _, headers) = calls[1]
     assert headers == {"Authorization": f"Bearer {FAKE_TOKEN}"}
 
     # Verify the subscriber was created with the correct credentials
@@ -139,7 +139,7 @@ async def test_auth_expired_token(
     calls = aioclient_mock.mock_calls
     assert len(calls) == 3
     # Verify refresh token call to get an updated token
-    (method, url, data, headers) = calls[0]
+    (_, _, data, headers) = calls[0]
     assert data == {
         "client_id": CLIENT_ID,
         "client_secret": CLIENT_SECRET,
@@ -147,9 +147,9 @@ async def test_auth_expired_token(
         "refresh_token": FAKE_REFRESH_TOKEN,
     }
     # Verify API requests are made with the new token
-    (method, url, data, headers) = calls[1]
+    (_, _, data, headers) = calls[1]
     assert headers == {"Authorization": f"Bearer {FAKE_UPDATED_TOKEN}"}
-    (method, url, data, headers) = calls[2]
+    (_, _, data, headers) = calls[2]
     assert headers == {"Authorization": f"Bearer {FAKE_UPDATED_TOKEN}"}
 
     # The subscriber is created with a token that is expired.  Verify that the

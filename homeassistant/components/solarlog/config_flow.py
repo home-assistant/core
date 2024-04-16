@@ -36,9 +36,7 @@ class SolarLogConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def _host_in_configuration_exists(self, host) -> bool:
         """Return True if host exists in configuration."""
-        if host in solarlog_entries(self.hass):
-            return True
-        return False
+        return host in solarlog_entries(self.hass)
 
     async def _test_connection(self, host):
         """Check if we can connect to the Solar-Log device."""

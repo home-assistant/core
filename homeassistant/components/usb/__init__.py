@@ -179,11 +179,10 @@ def _is_matching(device: USBDevice, matcher: USBMatcher | USBCallbackMatcher) ->
         device.manufacturer, matcher["manufacturer"]
     ):
         return False
-    if "description" in matcher and not _fnmatch_lower(
-        device.description, matcher["description"]
-    ):
-        return False
-    return True
+    return not (
+        "description" in matcher
+        and not _fnmatch_lower(device.description, matcher["description"])
+    )
 
 
 class USBDiscovery:

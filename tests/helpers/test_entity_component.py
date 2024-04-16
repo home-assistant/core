@@ -112,7 +112,7 @@ async def test_setup_does_discovery(
     await hass.async_block_till_done()
 
     assert mock_setup.called
-    assert ("platform_test", {}, {"msg": "discovery_info"}) == mock_setup.call_args[0]
+    assert mock_setup.call_args[0] == ("platform_test", {}, {"msg": "discovery_info"})
 
 
 @patch("homeassistant.helpers.entity_platform.async_track_time_interval")
@@ -186,9 +186,9 @@ async def test_extract_from_service_available_device(hass: HomeAssistant) -> Non
 
     call_1 = ServiceCall("test", "service", data={"entity_id": ENTITY_MATCH_ALL})
 
-    assert ["test_domain.test_1", "test_domain.test_3"] == sorted(
+    assert sorted(
         ent.entity_id for ent in (await component.async_extract_from_service(call_1))
-    )
+    ) == ["test_domain.test_1", "test_domain.test_3"]
 
     call_2 = ServiceCall(
         "test",
@@ -196,9 +196,9 @@ async def test_extract_from_service_available_device(hass: HomeAssistant) -> Non
         data={"entity_id": ["test_domain.test_3", "test_domain.test_4"]},
     )
 
-    assert ["test_domain.test_3"] == sorted(
+    assert sorted(
         ent.entity_id for ent in (await component.async_extract_from_service(call_2))
-    )
+    ) == ["test_domain.test_3"]
 
 
 async def test_platform_not_ready(hass: HomeAssistant) -> None:
@@ -281,9 +281,9 @@ async def test_extract_from_service_filter_out_non_existing_entities(
         {"entity_id": ["test_domain.test_2", "test_domain.non_exist"]},
     )
 
-    assert ["test_domain.test_2"] == [
+    assert [
         ent.entity_id for ent in await component.async_extract_from_service(call)
-    ]
+    ] == ["test_domain.test_2"]
 
 
 async def test_extract_from_service_no_group_expand(hass: HomeAssistant) -> None:
@@ -454,8 +454,11 @@ async def test_extract_all_omit_entity_id(
 
     call = ServiceCall("test", "service")
 
-    assert [] == sorted(
-        ent.entity_id for ent in await component.async_extract_from_service(call)
+    assert (
+        sorted(
+            ent.entity_id for ent in await component.async_extract_from_service(call)
+        )
+        == []
     )
 
 
@@ -471,9 +474,9 @@ async def test_extract_all_use_match_all(
 
     call = ServiceCall("test", "service", {"entity_id": "all"})
 
-    assert ["test_domain.test_1", "test_domain.test_2"] == sorted(
+    assert sorted(
         ent.entity_id for ent in await component.async_extract_from_service(call)
-    )
+    ) == ["test_domain.test_1", "test_domain.test_2"]
     assert (
         "Not passing an entity ID to a service to target all entities is deprecated"
     ) not in caplog.text

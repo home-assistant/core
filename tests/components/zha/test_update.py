@@ -287,7 +287,7 @@ async def test_firmware_update_success(
 
     async def endpoint_reply(cluster_id, tsn, data, command_id):
         if cluster_id == general.Ota.cluster_id:
-            hdr, cmd = cluster.deserialize(data)
+            _, cmd = cluster.deserialize(data)
             if isinstance(cmd, general.Ota.ImageNotifyCommand):
                 zigpy_device.packet_received(
                     make_packet(
@@ -479,7 +479,7 @@ async def test_firmware_update_raises(
 
     async def endpoint_reply(cluster_id, tsn, data, command_id):
         if cluster_id == general.Ota.cluster_id:
-            hdr, cmd = cluster.deserialize(data)
+            _, cmd = cluster.deserialize(data)
             if isinstance(cmd, general.Ota.ImageNotifyCommand):
                 zigpy_device.packet_received(
                     make_packet(
@@ -575,7 +575,7 @@ async def test_firmware_update_no_longer_compatible(
 
     async def endpoint_reply(cluster_id, tsn, data, command_id):
         if cluster_id == general.Ota.cluster_id:
-            hdr, cmd = cluster.deserialize(data)
+            _, cmd = cluster.deserialize(data)
             if isinstance(cmd, general.Ota.ImageNotifyCommand):
                 zigpy_device.packet_received(
                     make_packet(

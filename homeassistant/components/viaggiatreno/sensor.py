@@ -151,16 +151,12 @@ class ViaggiaTrenoSensor(SensorEntity):
     def has_arrived(data):
         """Check if the train has already arrived."""
         last_station = data["fermate"][-1]
-        if not last_station["effettiva"]:
-            return False
-        return True
+        return bool(last_station["effettiva"])
 
     @staticmethod
     def is_cancelled(data):
         """Check if the train is cancelled."""
-        if data["tipoTreno"] == "ST" and data["provvedimento"] == 1:
-            return True
-        return False
+        return data["tipoTreno"] == "ST" and data["provvedimento"] == 1
 
     async def async_update(self) -> None:
         """Update state."""

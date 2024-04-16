@@ -69,10 +69,7 @@ def is_language_match(lang_1: str, lang_2: str) -> bool:
         # Exact match
         return True
 
-    if tuple(sorted([lang_1, lang_2])) in SAME_LANGUAGES:
-        return True
-
-    return False
+    return tuple(sorted([lang_1, lang_2])) in SAME_LANGUAGES
 
 
 @dataclass

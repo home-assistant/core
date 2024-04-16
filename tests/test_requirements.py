@@ -338,9 +338,7 @@ async def test_get_integration_with_requirements_pip_install_fails_two_passes(
     )
 
     def _mock_install_package(package, **kwargs):
-        if package == "test-comp==1.0.0":
-            return True
-        return False
+        return package == "test-comp==1.0.0"
 
     # 1st pass
     with (

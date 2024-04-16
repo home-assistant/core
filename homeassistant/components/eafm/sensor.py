@@ -119,12 +119,9 @@ class Measurement(CoordinatorEntity, SensorEntity):
 
         # Sometimes lastestReading key is present but actually a URL rather than a piece of data
         # This is usually because the sensor has been archived
-        if not isinstance(
+        return isinstance(
             self.coordinator.data["measures"][self.key]["latestReading"], dict
-        ):
-            return False
-
-        return True
+        )
 
     @property
     def native_unit_of_measurement(self):

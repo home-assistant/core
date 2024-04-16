@@ -65,9 +65,7 @@ class AmbilightEffect:
         if self.mode in (EFFECT_AUTO, EFFECT_EXPERT):
             if self.style in ("FOLLOW_VIDEO", "FOLLOW_AUDIO"):
                 return powerstate in ("On", None)
-            if self.style == "OFF":
-                return False
-            return True
+            return self.style != "OFF"
 
         if self.mode == EFFECT_MODE:
             if self.style == "internal":

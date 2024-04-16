@@ -1231,13 +1231,11 @@ def async_setup_cleanup(hass: HomeAssistant, dev_reg: DeviceRegistry) -> None:
         event_data: entity_registry.EventEntityRegistryUpdatedData,
     ) -> bool:
         """Handle entity updated or removed filter."""
-        if (
+        return not (
             event_data["action"] == "update"
             and "device_id" not in event_data["changes"]
-        ) or event_data["action"] == "create":
-            return False
-
-        return True
+            or event_data["action"] == "create"
+        )
 
     if hass.is_running:
         hass.bus.async_listen(

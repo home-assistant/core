@@ -3307,7 +3307,7 @@ async def test_flow_same_device_multiple_sources(
         flow3 = manager.flow.async_init(
             "comp", context={"source": config_entries.SOURCE_HOMEKIT}
         )
-        result1, result2, result3 = await asyncio.gather(flow1, flow2, flow3)
+        _, result2, _ = await asyncio.gather(flow1, flow2, flow3)
 
         flows = hass.config_entries.flow.async_progress()
         assert len(flows) == 1

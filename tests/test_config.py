@@ -490,9 +490,10 @@ def test_load_yaml_config_preserves_key_order() -> None:
         fp.write("hello: 2\n")
         fp.write("world: 1\n")
 
-    assert [("hello", 2), ("world", 1)] == list(
-        config_util.load_yaml_config_file(YAML_PATH).items()
-    )
+    assert list(config_util.load_yaml_config_file(YAML_PATH).items()) == [
+        ("hello", 2),
+        ("world", 1),
+    ]
 
 
 async def test_create_default_config_returns_none_if_write_error(

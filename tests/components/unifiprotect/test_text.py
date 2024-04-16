@@ -73,9 +73,7 @@ async def test_text_camera_set(
     assert_entity_counts(hass, Platform.TEXT, 1, 1)
 
     description = CAMERA[0]
-    unique_id, entity_id = ids_from_device_description(
-        Platform.TEXT, doorbell, description
-    )
+    _, entity_id = ids_from_device_description(Platform.TEXT, doorbell, description)
 
     doorbell.__fields__["set_lcd_text"] = Mock(final=False)
     doorbell.set_lcd_text = AsyncMock()

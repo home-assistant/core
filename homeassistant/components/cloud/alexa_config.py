@@ -123,10 +123,7 @@ def entity_supported(hass: HomeAssistant, entity_id: str) -> bool:
     ):
         return True
 
-    if domain == "sensor" and device_class in SUPPORTED_SENSOR_DEVICE_CLASSES:
-        return True
-
-    return False
+    return domain == "sensor" and device_class in SUPPORTED_SENSOR_DEVICE_CLASSES
 
 
 class CloudAlexaConfig(alexa_config.AbstractConfig):

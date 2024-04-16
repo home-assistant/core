@@ -1277,10 +1277,7 @@ def _version_blocked(
     if blocked_integration.lowest_good_version is None:
         return True
 
-    if integration_version >= blocked_integration.lowest_good_version:
-        return False
-
-    return True
+    return not integration_version >= blocked_integration.lowest_good_version
 
 
 def _resolve_integrations_from_root(

@@ -272,7 +272,7 @@ async def test_failed_connection_plm_manually(hass: HomeAssistant) -> None:
 
     result = await _init_form(hass, STEP_PLM)
 
-    result2, _, _ = await _device_form(
+    _, _, _ = await _device_form(
         hass, result["flow_id"], mock_successful_connection, MOCK_USER_INPUT_PLM_MANUAL
     )
     result3, _, _ = await _device_form(

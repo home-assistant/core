@@ -471,10 +471,9 @@ def is_rpc_wifi_stations_disabled(
     config: dict[str, Any], _status: dict[str, Any], key: str
 ) -> bool:
     """Return true if rpc all WiFi stations are disabled."""
-    if config[key]["sta"]["enable"] is True or config[key]["sta1"]["enable"] is True:
-        return False
-
-    return True
+    return (
+        config[key]["sta"]["enable"] is False and config[key]["sta1"]["enable"] is False
+    )
 
 
 def get_http_port(data: MappingProxyType[str, Any]) -> int:

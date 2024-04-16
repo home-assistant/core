@@ -269,15 +269,12 @@ def _is_sensor_a_binary_sensor(isy_data: IsyData, node: Group | Node) -> bool:
         uom_list=BINARY_SENSOR_UOMS,
     ):
         return True
-    if _check_for_states_in_uom(
+    return _check_for_states_in_uom(
         isy_data,
         node,
         single_platform=Platform.BINARY_SENSOR,
         states_list=BINARY_SENSOR_ISY_STATES,
-    ):
-        return True
-
-    return False
+    )
 
 
 def _add_backlight_if_supported(isy_data: IsyData, node: Node) -> None:

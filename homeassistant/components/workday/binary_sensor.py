@@ -234,19 +234,13 @@ class IsWorkdaySensor(BinarySensorEntity):
         """Check if given day is in the includes list."""
         if day in self._workdays:
             return True
-        if "holiday" in self._workdays and now in self._obj_holidays:
-            return True
-
-        return False
+        return "holiday" in self._workdays and now in self._obj_holidays
 
     def is_exclude(self, day: str, now: date) -> bool:
         """Check if given day is in the excludes list."""
         if day in self._excludes:
             return True
-        if "holiday" in self._excludes and now in self._obj_holidays:
-            return True
-
-        return False
+        return "holiday" in self._excludes and now in self._obj_holidays
 
     async def async_update(self) -> None:
         """Get date and look whether it is a holiday."""

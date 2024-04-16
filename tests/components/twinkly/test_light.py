@@ -294,7 +294,7 @@ async def test_update_name(
     then the name of the entity is updated and it's also persisted,
     so it can be restored when starting HA while Twinkly is offline.
     """
-    entity, _, client, config_entry = await _create_entries(hass)
+    _, _, client, config_entry = await _create_entries(hass)
 
     client.change_name("new_device_name")
     freezer.tick(timedelta(seconds=30))

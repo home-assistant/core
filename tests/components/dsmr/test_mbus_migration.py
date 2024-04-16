@@ -18,7 +18,7 @@ async def test_migrate_gas_to_mbus(
     dsmr_connection_fixture,
 ) -> None:
     """Test migration of unique_id."""
-    (connection_factory, transport, protocol) = dsmr_connection_fixture
+    (connection_factory, _, _) = dsmr_connection_fixture
 
     from dsmr_parser.obis_references import (
         BELGIUM_MBUS1_DEVICE_TYPE,
@@ -116,7 +116,7 @@ async def test_migrate_gas_to_mbus_exists(
     dsmr_connection_fixture,
 ) -> None:
     """Test migration of unique_id."""
-    (connection_factory, transport, protocol) = dsmr_connection_fixture
+    (connection_factory, _, _) = dsmr_connection_fixture
 
     from dsmr_parser.obis_references import (
         BELGIUM_MBUS1_DEVICE_TYPE,

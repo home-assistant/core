@@ -63,12 +63,10 @@ class SomaTilt(SomaEntity, CoverEntity):
     @property
     def is_closed(self) -> bool:
         """Return if the cover tilt is closed."""
-        if (
+        return (
             self.current_position < self.CLOSED_DOWN_THRESHOLD
             or self.current_position > self.CLOSED_UP_THRESHOLD
-        ):
-            return True
-        return False
+        )
 
     def close_cover_tilt(self, **kwargs: Any) -> None:
         """Close the cover tilt."""

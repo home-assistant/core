@@ -417,9 +417,7 @@ async def ws_adjust_sum_statistics(
         if statistics_unit == adjustment_unit:
             return True
         converter = STATISTIC_UNIT_TO_UNIT_CONVERTER.get(statistics_unit)
-        if converter is not None and adjustment_unit in converter.VALID_UNITS:
-            return True
-        return False
+        return converter is not None and adjustment_unit in converter.VALID_UNITS
 
     stat_unit = metadata["statistics_unit_of_measurement"]
     adjustment_unit = msg["adjustment_unit_of_measurement"]

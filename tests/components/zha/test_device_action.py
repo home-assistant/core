@@ -364,7 +364,7 @@ async def test_action(hass: HomeAssistant, device_ias, device_inovelli) -> None:
 
 async def test_invalid_zha_event_type(hass: HomeAssistant, device_ias) -> None:
     """Test that unexpected types are not passed to `zha_send_event`."""
-    zigpy_device, zha_device = device_ias
+    _, zha_device = device_ias
     cluster_handler = zha_device._endpoints[1].client_cluster_handlers["1:0x0006"]
 
     # `zha_send_event` accepts only zigpy responses, lists, and dicts

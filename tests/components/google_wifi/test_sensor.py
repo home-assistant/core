@@ -110,7 +110,7 @@ def fake_delay(hass, ha_delay):
 
 def test_name(requests_mock: requests_mock.Mocker) -> None:
     """Test the name."""
-    api, sensor_dict = setup_api(None, MOCK_DATA, requests_mock)
+    _, sensor_dict = setup_api(None, MOCK_DATA, requests_mock)
     for name in sensor_dict:
         sensor = sensor_dict[name]["sensor"]
         test_name = sensor_dict[name]["name"]
@@ -121,7 +121,7 @@ def test_unit_of_measurement(
     hass: HomeAssistant, requests_mock: requests_mock.Mocker
 ) -> None:
     """Test the unit of measurement."""
-    api, sensor_dict = setup_api(hass, MOCK_DATA, requests_mock)
+    _, sensor_dict = setup_api(hass, MOCK_DATA, requests_mock)
     for name in sensor_dict:
         sensor = sensor_dict[name]["sensor"]
         assert sensor_dict[name]["units"] == sensor.unit_of_measurement
@@ -129,7 +129,7 @@ def test_unit_of_measurement(
 
 def test_icon(requests_mock: requests_mock.Mocker) -> None:
     """Test the icon."""
-    api, sensor_dict = setup_api(None, MOCK_DATA, requests_mock)
+    _, sensor_dict = setup_api(None, MOCK_DATA, requests_mock)
     for name in sensor_dict:
         sensor = sensor_dict[name]["sensor"]
         assert sensor_dict[name]["icon"] == sensor.icon
@@ -137,7 +137,7 @@ def test_icon(requests_mock: requests_mock.Mocker) -> None:
 
 def test_state(hass: HomeAssistant, requests_mock: requests_mock.Mocker) -> None:
     """Test the initial state."""
-    api, sensor_dict = setup_api(hass, MOCK_DATA, requests_mock)
+    _, sensor_dict = setup_api(hass, MOCK_DATA, requests_mock)
     now = datetime(1970, month=1, day=1)
     with patch("homeassistant.util.dt.now", return_value=now):
         for name in sensor_dict:
@@ -158,7 +158,7 @@ def test_update_when_value_is_none(
     hass: HomeAssistant, requests_mock: requests_mock.Mocker
 ) -> None:
     """Test state gets updated to unknown when sensor returns no data."""
-    api, sensor_dict = setup_api(hass, None, requests_mock)
+    _, sensor_dict = setup_api(hass, None, requests_mock)
     for name in sensor_dict:
         sensor = sensor_dict[name]["sensor"]
         fake_delay(hass, 2)
@@ -170,7 +170,7 @@ def test_update_when_value_changed(
     hass: HomeAssistant, requests_mock: requests_mock.Mocker
 ) -> None:
     """Test state gets updated when sensor returns a new status."""
-    api, sensor_dict = setup_api(hass, MOCK_DATA_NEXT, requests_mock)
+    _, sensor_dict = setup_api(hass, MOCK_DATA_NEXT, requests_mock)
     now = datetime(1970, month=1, day=1)
     with patch("homeassistant.util.dt.now", return_value=now):
         for name in sensor_dict:
@@ -195,7 +195,7 @@ def test_when_api_data_missing(
     hass: HomeAssistant, requests_mock: requests_mock.Mocker
 ) -> None:
     """Test state logs an error when data is missing."""
-    api, sensor_dict = setup_api(hass, MOCK_DATA_MISSING, requests_mock)
+    _, sensor_dict = setup_api(hass, MOCK_DATA_MISSING, requests_mock)
     now = datetime(1970, month=1, day=1)
     with patch("homeassistant.util.dt.now", return_value=now):
         for name in sensor_dict:
@@ -222,6 +222,6 @@ def test_update_when_unavailable(
 
 def update_side_effect(hass, requests_mock):
     """Mock representation of update function."""
-    api, sensor_dict = setup_api(hass, MOCK_DATA, requests_mock)
+    api, _ = setup_api(hass, MOCK_DATA, requests_mock)
     api.data = None
     api.available = False

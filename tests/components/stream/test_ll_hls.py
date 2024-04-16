@@ -190,9 +190,7 @@ async def test_ll_hls_stream(
         mdat_length = int.from_bytes(
             data[moof_length : moof_length + 4], byteorder="big"
         )
-        if mdat_length + moof_length != len(data):
-            return False
-        return True
+        return mdat_length + moof_length == len(data)
 
     # Parse playlist
     part_re = re.compile(

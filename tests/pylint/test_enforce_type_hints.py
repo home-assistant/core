@@ -360,7 +360,7 @@ def test_invalid_custom_config_flow_step(
     linter: UnittestLinter, type_hint_checker: BaseChecker
 ) -> None:
     """Ensure invalid hints are rejected for ConfigFlow step."""
-    class_node, func_node, arg_node = astroid.extract_node(
+    class_node, func_node, _ = astroid.extract_node(
         """
     class FlowHandler():
         pass

@@ -48,7 +48,7 @@ async def test_exclude_attributes(
     hass.bus.async_fire("test_event")
     await hass.async_block_till_done()
     assert len(calls) == 1
-    assert ["hello.world"] == calls[0].data.get(ATTR_ENTITY_ID)
+    assert calls[0].data.get(ATTR_ENTITY_ID) == ["hello.world"]
     await async_wait_recording_done(hass)
 
     states = await hass.async_add_executor_job(
