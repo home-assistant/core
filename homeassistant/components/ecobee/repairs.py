@@ -25,21 +25,18 @@ class NotifyMigration(RepairsFlow):
     ) -> data_entry_flow.FlowResult:
         """Handle the first step of a fix flow."""
 
-        return await self.async_step_confirm()
+        return self.async_show_menu(menu_options=["confirm", "ignore"])
 
     async def async_step_confirm(
         self, user_input: dict[str, str] | None = None
     ) -> data_entry_flow.FlowResult:
         """Handle the confirm step of a fix flow by updating to the latest version."""
-        if user_input is not None:
-            self.hass.config_entries.async_update_entry(
-                self.entry,
-                version=DATA_FLOW_VERSION,
-                minor_version=DATA_FLOW_MINOR_VERSION,
-            )
-            return self.async_create_entry(data={})
-
-        return self.async_show_menu(menu_options=["confirm", "ignore"])
+        self.hass.config_entries.async_update_entry(
+            self.entry,
+            version=DATA_FLOW_VERSION,
+            minor_version=DATA_FLOW_MINOR_VERSION,
+        )
+        return self.async_create_entry(data={})
 
     async def async_step_ignore(
         self, user_input: dict[str, str] | None = None
