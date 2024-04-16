@@ -66,7 +66,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     is_persistent=False,
                     severity=IssueSeverity.ERROR,
                     translation_key="import_failed_not_allowed_path",
-                    translation_placeholders={"path": path},
+                    translation_placeholders={
+                        "path": path,
+                        "config_variable": "allowlist_external_dirs",
+                    },
                 )
                 continue
             hass.async_create_task(
@@ -93,7 +96,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             is_persistent=False,
             severity=IssueSeverity.ERROR,
             translation_key="setup_not_allowed_path",
-            translation_placeholders={"path": path},
+            translation_placeholders={
+                "path": path,
+                "config_variable": "allowlist_external_dirs",
+            },
             learn_more_url="https://www.home-assistant.io/docs/configuration/basic/#allowlist_external_dirs",
         )
         return False
