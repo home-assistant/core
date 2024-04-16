@@ -67,6 +67,7 @@ SERVICE_SYNC = "sync"
 SERVICE_UNSYNC = "unsync"
 
 ATTR_QUERY_RESULT = "query_result"
+ATTR_QUERY_RESULT_JSON = "query_result_json"
 ATTR_SYNC_GROUP = "sync_group"
 
 SIGNAL_PLAYER_REDISCOVERED = "squeezebox_player_rediscovered"
@@ -83,6 +84,7 @@ ATTR_OTHER_PLAYER = "other_player"
 ATTR_TO_PROPERTY = [
     ATTR_QUERY_RESULT,
     ATTR_SYNC_GROUP,
+    ATTR_QUERY_RESULT_JSON
 ]
 
 SQUEEZEBOX_MODE = {
@@ -249,6 +251,7 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         """Initialize the SqueezeBox device."""
         self._player = player
         self._query_result = {}
+        self._query_result_json = {}
         self._remove_dispatcher = None
         self._attr_unique_id = format_mac(player.player_id)
         self._attr_device_info = DeviceInfo(
@@ -409,6 +412,11 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         """Return the result from the call_query service."""
         return self._query_result
 
+    @property
+    def query_result_json(self):
+        """Return the result from the call_query service."""
+        return self._query_result_json
+
     async def async_turn_off(self) -> None:
         """Turn off media player."""
         await self._player.async_set_power(False)
@@ -562,6 +570,10 @@ class SqueezeBoxEntity(MediaPlayerEntity):
             all_params.extend(parameters)
         self._query_result = await self._player.async_query(*all_params)
         _LOGGER.debug("call_query got result %s", self._query_result)
+        try:
+            self._query_result_json = json.dumps(self._query_result)
+        except:
+            self._query_result_json = "{}"
 
     async def async_join_players(self, group_members: list[str]) -> None:
         """Add other Squeezebox players to this player's sync group.
