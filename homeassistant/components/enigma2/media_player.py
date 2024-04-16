@@ -90,7 +90,7 @@ async def async_setup_platform(
         CONF_SSL: config[CONF_SSL],
         CONF_USE_CHANNEL_ICON: config[CONF_USE_CHANNEL_ICON],
         CONF_DEEP_STANDBY: config[CONF_DEEP_STANDBY],
-        CONF_SOURCE_BOUQUET: config.get(CONF_SOURCE_BOUQUET),
+        CONF_SOURCE_BOUQUET: config[CONF_SOURCE_BOUQUET],
     }
 
     hass.async_create_task(

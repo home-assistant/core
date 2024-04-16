@@ -58,10 +58,6 @@ CONFIG_SCHEMA = vol.Schema(
 class Enigma2ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Enigma2."""
 
-    errors: dict[str, str] = {}
-    _data: dict[str, Any] = {}
-    _options: dict[str, Any] = {}
-
     DATA_KEYS = (
         CONF_HOST,
         CONF_PORT,
@@ -71,6 +67,13 @@ class Enigma2ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         CONF_VERIFY_SSL,
     )
     OPTIONS_KEYS = (CONF_DEEP_STANDBY, CONF_SOURCE_BOUQUET, CONF_USE_CHANNEL_ICON)
+
+    def __init__(self) -> None:
+        """Initialize the config flow."""
+        super().__init__()
+        self.errors: dict[str, str] = {}
+        self._data: dict[str, Any] = {}
+        self._options: dict[str, Any] = {}
 
     async def validate_user_input(self, user_input: dict[str, Any]) -> dict[str, Any]:
         """Validate user input."""
