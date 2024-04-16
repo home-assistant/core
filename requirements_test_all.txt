@@ -1999,7 +1999,7 @@ spiderpy==1.6.1
 spotipy==2.23.0
 
 # homeassistant.components.sql
-sqlparse==0.4.4
+sqlparse==0.5.0
 
 # homeassistant.components.srp_energy
 srpenergy==1.3.6
