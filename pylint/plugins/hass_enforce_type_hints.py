@@ -23,6 +23,9 @@ _COMMON_ARGUMENTS: dict[str, list[str]] = {
     "hass": ["HomeAssistant", "HomeAssistant | None"]
 }
 _PLATFORMS: set[str] = {platform.value for platform in Platform}
+_KNOWN_GENERIC_TYPES: set[str] = {
+    "ConfigEntry",
+}
 
 
 class _Special(Enum):
@@ -2974,6 +2977,14 @@ def _is_valid_type(
         and not in_return
         and isinstance(node, nodes.Name)
         and node.name in ("float", "int")
+    ):
+        return True
+
+    # Allow subscripts for generic types
+    if (
+        isinstance(node, nodes.Subscript)
+        and isinstance(node.value, nodes.Name)
+        and node.value.name in _KNOWN_GENERIC_TYPES
     ):
         return True
 
