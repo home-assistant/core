@@ -16,8 +16,10 @@ from homeassistant.components.media_player import (
     MEDIA_PLAYER_PLAY_MEDIA_SCHEMA,
     SERVICE_PLAY_MEDIA,
 )
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
     HomeAssistant,
     ServiceCall,
     ServiceResponse,
@@ -25,6 +27,7 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -55,8 +58,37 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass: HomeAssistant, config: ConfigType) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up Media Extractor from a config entry."""
+
+    return True
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the media extractor service."""
+
+    if DOMAIN in config:
+        async_create_issue(
+            hass,
+            HOMEASSISTANT_DOMAIN,
+            f"deprecated_yaml_{DOMAIN}",
+            breaks_in_ha_version="2024.11.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_yaml",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "Media extractor",
+            },
+        )
+
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": SOURCE_IMPORT},
+            )
+        )
 
     async def extract_media_url(call: ServiceCall) -> ServiceResponse:
         """Extract media url."""
@@ -114,7 +146,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         supports_response=SupportsResponse.ONLY,
     )
 
-    hass.services.register(
+    hass.services.async_register(
         DOMAIN,
         SERVICE_PLAY_MEDIA,
         play_media,

@@ -36,6 +36,7 @@ async def test_play_media_service_is_registered(hass: HomeAssistant) -> None:
 
     assert hass.services.has_service(DOMAIN, SERVICE_PLAY_MEDIA)
     assert hass.services.has_service(DOMAIN, SERVICE_EXTRACT_MEDIA_URL)
+    assert len(hass.config_entries.async_entries(DOMAIN))
 
 
 @pytest.mark.parametrize(
