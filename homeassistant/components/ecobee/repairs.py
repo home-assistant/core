@@ -4,45 +4,31 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from homeassistant import data_entry_flow
 from homeassistant.components.repairs import RepairsFlow
+from homeassistant.components.repairs.issue_handler import ConfirmRepairFlow
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import issue_registry as ir
 
-from .const import DATA_FLOW_MINOR_VERSION, DATA_FLOW_VERSION
+from .const import DATA_FLOW_MINOR_VERSION, DATA_FLOW_VERSION, DOMAIN
 
 
-class NotifyMigration(RepairsFlow):
-    """Handler for an issue fixing flow."""
-
-    def __init__(self, entry: ConfigEntry) -> None:
-        """Initialize repair flow."""
-        self.entry = entry
-        super().__init__()
-
-    async def async_step_init(
-        self, user_input: dict[str, str] | None = None
-    ) -> data_entry_flow.FlowResult:
-        """Handle the first step of a fix flow."""
-
-        return self.async_show_menu(menu_options=["confirm", "ignore"])
-
-    async def async_step_confirm(
-        self, user_input: dict[str, str] | None = None
-    ) -> data_entry_flow.FlowResult:
-        """Handle the confirm step of a fix flow by updating to the latest version."""
-        self.hass.config_entries.async_update_entry(
-            self.entry,
-            version=DATA_FLOW_VERSION,
-            minor_version=DATA_FLOW_MINOR_VERSION,
-        )
-        return self.async_create_entry(data={})
-
-    async def async_step_ignore(
-        self, user_input: dict[str, str] | None = None
-    ) -> data_entry_flow.FlowResult:
-        """Handle the ignore step of a fix flow."""
-        return self.async_abort(reason="issue_ignored")
+@callback
+def migrate_notify_issue(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Ensure an issue is registered."""
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        "migrate_notify",
+        breaks_in_ha_version="2024.11.0",
+        issue_domain=Platform.NOTIFY.value,
+        is_fixable=True,
+        is_persistent=True,
+        translation_key="migrate_notify",
+        severity=ir.IssueSeverity.WARNING,
+        data={"entry_id": entry.entry_id},
+    )
 
 
 async def async_create_fix_flow(
@@ -60,4 +46,10 @@ async def async_create_fix_flow(
         assert entry is not None
 
     assert issue_id == "migrate_notify"
-    return NotifyMigration(entry)
+    # Update entry to latest version
+    hass.config_entries.async_update_entry(
+        entry,
+        version=DATA_FLOW_VERSION,
+        minor_version=DATA_FLOW_MINOR_VERSION,
+    )
+    return ConfirmRepairFlow()

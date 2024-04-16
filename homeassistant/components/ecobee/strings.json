@@ -166,18 +166,11 @@
   },
   "issues": {
     "migrate_notify": {
-      "title": "Migration Ecobee notify service",
+      "title": "Migration of Ecobee notify service",
       "fix_flow": {
-        "abort": {
-          "issue_ignored": "The legacy `notify` service not was disabled yet. Make automations are adjusted and fix this issue later."
-        },
         "step": {
-          "init": {
-            "description": "The Ecobee `notify` service has been migrated. Instead, a new `notify` entity per Thermostat is available now.\n\\nUpdate any automations to use the new `notify.send_message` exosed by these new entities. When is this done, fix this issue to disable the legacy notify service and restart Home Assistant.",
-            "menu_options": {
-              "confirm": "Disable legacy `notify` service",
-              "ignore": "Postpone migration"
-            },
+          "confirm": {
+            "description": "The Ecobee `notify` service has been migrated. A new `notify` entity per Thermostat is available now.\n\\nUpdate any automations to use the new `notify.send_message` exposed by these new entities. When is this done, fix this issue and restart Home Assistant.",
             "title": "Disable legacy Ecobee notify service"
           }
         }

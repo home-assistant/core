@@ -8,11 +8,7 @@ import voluptuous as vol
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import (
-    config_validation as cv,
-    discovery,
-    issue_registry as ir,
-)
+from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import Throttle
 
@@ -27,6 +23,7 @@ from .const import (
     DOMAIN,
     PLATFORMS,
 )
+from .repairs import migrate_notify_issue
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=180)
 
@@ -81,24 +78,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # The legacy Ecobee notify.notify service is deprecated
     # was with HA Core 2024.5.0 and will be removed with HA core 2024.11.0
-    if (
-        entry.version == DATA_FLOW_VERSION
-        and entry.minor_version == DATA_FLOW_MINOR_VERSION
-    ):
-        return True
-
-    ir.async_create_issue(
-        hass,
-        DOMAIN,
-        "migrate_notify",
-        breaks_in_ha_version="2024.11.0",
-        issue_domain=Platform.NOTIFY.value,
-        is_fixable=True,
-        is_persistent=False,
-        translation_key="migrate_notify",
-        severity=ir.IssueSeverity.WARNING,
-        data={"entry_id": entry.entry_id},
-    )
     hass.async_create_task(
         discovery.async_load_platform(
             hass,
@@ -108,6 +87,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass.data[DATA_HASS_CONFIG],
         )
     )
+    if (
+        entry.version == DATA_FLOW_VERSION
+        and entry.minor_version == DATA_FLOW_MINOR_VERSION
+    ):
+        return True
+
+    migrate_notify_issue(hass, entry)
 
     return True
 

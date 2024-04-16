@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from contextlib import suppress
+from functools import partial
 from typing import Any
 
 from homeassistant.components.notify import (
@@ -18,6 +19,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import Ecobee, EcobeeData
 from .const import DOMAIN, ECOBEE_MODEL_TO_NAME, MANUFACTURER
+from .repairs import migrate_notify_issue
 
 
 def get_service(
@@ -39,6 +41,14 @@ class EcobeeNotificationService(BaseNotificationService):
     def __init__(self, ecobee: Ecobee) -> None:
         """Initialize the service."""
         self.ecobee = ecobee
+
+    async def async_send_message(self, message: str = "", **kwargs: Any) -> None:
+        """Send a message and raise issue."""
+        entry = self.hass.config_entries.async_entries(DOMAIN)[0]
+        migrate_notify_issue(self.hass, entry)
+        await self.hass.async_add_executor_job(
+            partial(self.send_message, message, **kwargs)
+        )
 
     def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message."""
