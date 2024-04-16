@@ -25,7 +25,6 @@ class ElevenLabsConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for ElevenLabs text-to-speech."""
 
     VERSION = 1
-    MINOR_VERSION = 1
 
     user_info: dict[str, Any] | None = None
     voices: list[str] | None = None
