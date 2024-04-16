@@ -45,6 +45,7 @@ class SunWEGDataUpdateCoordinator(DataUpdateCoordinator[Plant]):
         """Fetch data from API endpoint."""
         try:
             if self.plant_id == DEFAULT_PLANT_ID:
+                # this only happens at homeassistant startup, that's why ConfigEntryError is raised in this block
                 plant_list = await self.hass.async_add_executor_job(self.api.listPlants)
                 if len(plant_list) == 0:
                     raise ConfigEntryError(
