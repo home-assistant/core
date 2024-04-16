@@ -43,6 +43,14 @@ jobs:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
 
+      - name: Create Python virtual environment
+        run: |
+          python -m venv venv
+          . venv/bin/activate
+          python --version
+          pip install "$(grep '^uv' < requirements_test.txt)"
+          uv pip install -r requirements_test.txt
+
       - name: Get information
         id: info
         uses: home-assistant/actions/helpers/info@master
@@ -91,6 +99,7 @@ jobs:
 
       - name: Generate requirements
         run: |
+          . venv/bin/activate
           python -m script.gen_requirements_all wheels
 
       - name: Upload requirements_all_wheels
