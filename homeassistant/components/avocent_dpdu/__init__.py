@@ -10,7 +10,7 @@ from homeassistant.helpers import device_registry as dr
 from .const import DOMAIN, LOGGER
 from .coordinator import AvocentDpduDataUpdateCoordinator
 
-PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.SWITCH]
+PLATFORMS: list[Platform] = [Platform.SWITCH]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
