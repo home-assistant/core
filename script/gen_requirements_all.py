@@ -18,7 +18,6 @@ from homeassistant.util.yaml.loader import load_yaml
 from script.hassfest.model import Integration
 
 COMMENT_REQUIREMENTS = (
-    "Adafruit-BBIO",
     "atenpdu",  # depends on pysnmp which is not maintained at this time
     "avea",  # depends on bluepy
     "avion",
