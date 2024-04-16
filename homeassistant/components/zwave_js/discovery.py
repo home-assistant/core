@@ -1376,7 +1376,9 @@ def check_value(value: ZwaveValue, schema: ZWaveValueDiscoverySchema) -> bool:
     if schema.value is not None and value.value not in schema.value:
         return False
     # check metadata_stateful
-    return not (schema.stateful is None or value.metadata.stateful == schema.stateful)
+    return not (
+        schema.stateful is not None and value.metadata.stateful != schema.stateful
+    )
 
 
 @callback
