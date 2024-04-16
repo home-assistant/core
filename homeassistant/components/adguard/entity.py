@@ -21,7 +21,7 @@ class AdGuardHomeEntity(Entity):
     def __init__(
         self,
         data: AdGuardData,
-        entry: ConfigEntry,
+        entry: ConfigEntry[AdGuardData],
     ) -> None:
         """Initialize the AdGuard Home entity."""
         self._entry = entry

@@ -85,11 +85,11 @@ SENSORS: tuple[AdGuardHomeEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: ConfigEntry[AdGuardData],
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up AdGuard Home sensor based on a config entry."""
-    data: AdGuardData = hass.data[DOMAIN][entry.entry_id]
+    data = entry.shared_data
 
     async_add_entities(
         [AdGuardHomeSensor(data, entry, description) for description in SENSORS],
@@ -105,7 +105,7 @@ class AdGuardHomeSensor(AdGuardHomeEntity, SensorEntity):
     def __init__(
         self,
         data: AdGuardData,
-        entry: ConfigEntry,
+        entry: ConfigEntry[AdGuardData],
         description: AdGuardHomeEntityDescription,
     ) -> None:
         """Initialize AdGuard Home sensor."""

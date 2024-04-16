@@ -53,7 +53,9 @@ class AdGuardData:
     version: str
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry[AdGuardData]
+) -> bool:
     """Set up AdGuard Home from a config entry."""
     session = async_get_clientsession(hass, entry.data[CONF_VERIFY_SSL])
     adguard = AdGuardHome(
@@ -71,7 +73,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except AdGuardHomeConnectionError as exception:
         raise ConfigEntryNotReady from exception
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = AdGuardData(adguard, version)
+    entry.shared_data = AdGuardData(adguard, version)
+    if hass.data.get(DOMAIN) is None:
+        hass.data[DOMAIN] = 1
+    else:
+        hass.data[DOMAIN] += 1
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -116,12 +122,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: ConfigEntry[AdGuardData]
+) -> bool:
     """Unload AdGuard Home config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-    if not hass.data[DOMAIN]:
+        hass.data[DOMAIN] -= 1
+    if hass.data[DOMAIN] == 0:
         hass.services.async_remove(DOMAIN, SERVICE_ADD_URL)
         hass.services.async_remove(DOMAIN, SERVICE_REMOVE_URL)
         hass.services.async_remove(DOMAIN, SERVICE_ENABLE_URL)
