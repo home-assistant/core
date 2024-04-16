@@ -108,6 +108,11 @@ omit =
     homeassistant/components/aurora/sensor.py
     homeassistant/components/avea/light.py
     homeassistant/components/avion/light.py
+    homeassistant/components/avocent_dpdu/__init__.py
+    homeassistant/components/avocent_dpdu/coordinator.py
+    homeassistant/components/avocent_dpdu/entity.py
+    homeassistant/components/avocent_dpdu/sensor.py
+    homeassistant/components/avocent_dpdu/switch.py
     homeassistant/components/awair/coordinator.py
     homeassistant/components/azure_service_bus/*
     homeassistant/components/baf/__init__.py

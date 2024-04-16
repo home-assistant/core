@@ -1,0 +1,13 @@
+{
+  "domain": "avocent_dpdu",
+  "name": "Avocent Direct PDU",
+  "codeowners": ["@wgprojects"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://www.home-assistant.io/integrations/avocent_dpdu",
+  "homekit": {},
+  "iot_class": "local_polling",
+  "requirements": ["avocentdpdu==1.1.0"],
+  "ssdp": [],
+  "zeroconf": []
+}

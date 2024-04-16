@@ -507,6 +507,9 @@ aurorapy==0.2.7
 # homeassistant.components.avion
 # avion==0.10
 
+# homeassistant.components.avocent_dpdu
+avocentdpdu==1.1.0
+
 # homeassistant.components.axis
 axis==61
 

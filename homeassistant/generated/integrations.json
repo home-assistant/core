@@ -576,6 +576,12 @@
       "config_flow": false,
       "iot_class": "assumed_state"
     },
+    "avocent_dpdu": {
+      "name": "Avocent Direct PDU",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "awair": {
       "name": "Awair",
       "integration_type": "hub",

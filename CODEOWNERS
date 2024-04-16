@@ -157,6 +157,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/automation/ @home-assistant/core
 /tests/components/automation/ @home-assistant/core
 /homeassistant/components/avea/ @pattyland
+/homeassistant/components/avocent_dpdu/ @wgprojects
+/tests/components/avocent_dpdu/ @wgprojects
 /homeassistant/components/awair/ @ahayworth @danielsjf
 /tests/components/awair/ @ahayworth @danielsjf
 /homeassistant/components/axis/ @Kane610
