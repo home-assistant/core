@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from abc import ABC, abstractmethod
 import asyncio
 import logging
 from typing import Any
@@ -31,7 +32,7 @@ from homeassistant.config_entries import (
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow
 
-from .const import DOMAIN, ZHA_DOMAIN, HardwareVariant
+from .const import DOCS_WEB_FLASHER_URL, DOMAIN, ZHA_DOMAIN, HardwareVariant
 from .util import (
     get_hardware_variant,
     get_otbr_addon_manager,
@@ -46,7 +47,7 @@ STEP_PICK_FIRMWARE_THREAD = "pick_firmware_thread"
 STEP_PICK_FIRMWARE_ZIGBEE = "pick_firmware_zigbee"
 
 
-class BaseFirmwareInstallFlow(ConfigEntryBaseFlow):
+class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
     """Base flow to install firmware."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -74,7 +75,7 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow):
                 if self._current_firmware_type is not None
                 else "unknown"
             ),
-            "docs_web_flasher_url": "https://skyconnect.home-assistant.io/firmware-update/",
+            "docs_web_flasher_url": DOCS_WEB_FLASHER_URL,
         }
 
         self.context["title_placeholders"] = placeholders
@@ -465,8 +466,10 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow):
             description_placeholders=self._get_translation_placeholders(),
         )
 
+    @abstractmethod
     def _async_flow_finished(self) -> ConfigFlowResult:
         """Finish the flow."""
+        # This should be implemented by a subclass
         raise NotImplementedError
 
 
