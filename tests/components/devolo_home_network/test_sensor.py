@@ -32,9 +32,11 @@ async def test_sensor_setup(hass: HomeAssistant) -> None:
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.states.get(f"{DOMAIN}.{device_name}_connected_wifi_clients") is not None
+    assert (
+        hass.states.get(f"{DOMAIN}.{device_name}_connected_wi_fi_clients") is not None
+    )
     assert hass.states.get(f"{DOMAIN}.{device_name}_connected_plc_devices") is None
-    assert hass.states.get(f"{DOMAIN}.{device_name}_neighboring_wifi_networks") is None
+    assert hass.states.get(f"{DOMAIN}.{device_name}_neighboring_wi_fi_networks") is None
     assert (
         hass.states.get(
             f"{DOMAIN}.{device_name}_plc_downlink_phy_rate_{PLCNET.devices[1].user_device_name}"
@@ -67,12 +69,12 @@ async def test_sensor_setup(hass: HomeAssistant) -> None:
     ("name", "get_method", "interval"),
     [
         (
-            "connected_wifi_clients",
+            "connected_wi_fi_clients",
             "async_get_wifi_connected_station",
             SHORT_UPDATE_INTERVAL,
         ),
         (
-            "neighboring_wifi_networks",
+            "neighboring_wi_fi_networks",
             "async_get_wifi_neighbor_access_points",
             LONG_UPDATE_INTERVAL,
         ),
