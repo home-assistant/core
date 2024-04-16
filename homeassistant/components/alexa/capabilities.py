@@ -303,7 +303,7 @@ class Alexa(AlexaCapability):
 
     To compare current supported locales in Home Assistant
     with Alexa supported locales, run the following script:
-    script/alexa_locales.py
+    python -m script.alexa_locales
     """
 
     supported_locales = {
