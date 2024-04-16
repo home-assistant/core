@@ -43,6 +43,7 @@ async def test_hassio_system_health(
         "agent_version": "1337",
         "disk_total": "32.0",
         "disk_used": "30.0",
+        "virtualization": "qemu",
     }
     hass.data["hassio_os_info"] = {"board": "odroid-n2"}
     hass.data["hassio_supervisor_info"] = {
@@ -72,6 +73,7 @@ async def test_hassio_system_health(
         "supported": True,
         "update_channel": "stable",
         "version_api": "ok",
+        "virtualization": "qemu",
     }
 
 

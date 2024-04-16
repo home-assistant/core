@@ -57,6 +57,7 @@ async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
         "disk_used": f"{host_info.get('disk_used')} GB",
         "healthy": healthy,
         "supported": supported,
+        "virtualization": host_info.get("virtualization"),
     }
 
     if info.get("hassos") is not None:
