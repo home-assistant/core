@@ -12,7 +12,7 @@ on:
     paths:
       - ".github/workflows/wheels.yml"
       - "homeassistant/package_constraints.txt"
-      - "requirements_all.txt"
+      - "requirements_wheels.txt"
       - "requirements.txt"
 
 concurrency:
@@ -140,16 +140,8 @@ jobs:
 
       - name: (Un)comment packages
         run: |
-          requirement_files="requirements_all.txt requirements_diff.txt"
+          requirement_files="requirements_wheels.txt requirements_diff.txt"
           for requirement_file in ${requirement_files}; do
-            sed -i "s|# fritzconnection|fritzconnection|g" ${requirement_file}
-            sed -i "s|# pyuserinput|pyuserinput|g" ${requirement_file}
-            sed -i "s|# evdev|evdev|g" ${requirement_file}
-            sed -i "s|# pycups|pycups|g" ${requirement_file}
-            sed -i "s|# homekit|homekit|g" ${requirement_file}
-            sed -i "s|# decora-wifi|decora-wifi|g" ${requirement_file}
-            sed -i "s|# python-gammu|python-gammu|g" ${requirement_file}
-
             # Some packages are not buildable on armhf anymore
             if [ "${{ matrix.arch }}" = "armhf" ]; then
 
@@ -176,7 +168,7 @@ jobs:
           # This is to prevent the build from running out of memory when
           # resolving packages on 32-bits systems (like armhf, armv7).
 
-          split -l $(expr $(expr $(cat requirements_all.txt | wc -l) + 1) / 3) requirements_all.txt requirements_all.txt
+          split -l $(expr $(expr $(cat requirements_wheels.txt | wc -l) + 1) / 3) requirements_wheels.txt requirements_wheels.txt
 
       - name: Create requirements for cython<3
         run: |
@@ -226,7 +218,7 @@ jobs:
           skip-binary: aiohttp;charset-normalizer;grpcio;SQLAlchemy;protobuf
           constraints: "homeassistant/package_constraints.txt"
           requirements-diff: "requirements_diff.txt"
-          requirements: "requirements_all.txtaa"
+          requirements: "requirements_wheels.txtaa"
 
       - name: Build wheels (part 2)
         uses: home-assistant/wheels@2024.01.0
@@ -240,7 +232,7 @@ jobs:
           skip-binary: aiohttp;charset-normalizer;grpcio;SQLAlchemy;protobuf
           constraints: "homeassistant/package_constraints.txt"
           requirements-diff: "requirements_diff.txt"
-          requirements: "requirements_all.txtab"
+          requirements: "requirements_wheels.txtab"
 
       - name: Build wheels (part 3)
         uses: home-assistant/wheels@2024.01.0
@@ -254,4 +246,4 @@ jobs:
           skip-binary: aiohttp;charset-normalizer;grpcio;SQLAlchemy;protobuf
           constraints: "homeassistant/package_constraints.txt"
           requirements-diff: "requirements_diff.txt"
-          requirements: "requirements_all.txtac"
+          requirements: "requirements_wheels.txtac"

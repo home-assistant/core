@@ -17,6 +17,8 @@ from typing import Any
 from homeassistant.util.yaml.loader import load_yaml
 from script.hassfest.model import Integration
 
+# Requirements which can't be installed on all systems because they rely on additional
+# system packages.
 COMMENT_REQUIREMENTS = (
     "Adafruit-BBIO",
     "atenpdu",  # depends on pysnmp which is not maintained at this time
@@ -41,6 +43,20 @@ COMMENT_REQUIREMENTS = (
 
 COMMENT_REQUIREMENTS_NORMALIZED = {
     commented.lower().replace("_", "-") for commented in COMMENT_REQUIREMENTS
+}
+
+# Requirements excluded by COMMENT_REQUIREMENTS which should be included when
+# building wheels
+WHEELS_REQUIREMENTS = (
+    "decora-wifi",
+    "evdev",
+    "pycups",
+    "python-gammu",
+    "pyuserinput",
+)
+
+WHEELS_REQUIREMENTS_NORMALIZED = {
+    requirement.lower().replace("_", "-") for requirement in WHEELS_REQUIREMENTS
 }
 
 IGNORE_PIN = ("colorlog>2.1,<3", "urllib3")
@@ -266,11 +282,12 @@ def normalize_package_name(requirement: str) -> str:
     return match.group(1).lower().replace("_", "-")
 
 
-def comment_requirement(req: str) -> bool:
+def comment_requirement(req: str, package_allowlist: set[str] | None) -> bool:
     """Comment out requirement. Some don't install on all systems."""
-    return any(
-        normalize_package_name(req) == ign for ign in COMMENT_REQUIREMENTS_NORMALIZED
-    )
+    normalized_package_name = normalize_package_name(req)
+    if package_allowlist and normalized_package_name in package_allowlist:
+        return False
+    return normalized_package_name in COMMENT_REQUIREMENTS_NORMALIZED
 
 
 def gather_modules() -> dict[str, list[str]] | None:
@@ -343,13 +360,15 @@ def process_requirements(
         reqs.setdefault(req, []).append(package)
 
 
-def generate_requirements_list(reqs: dict[str, list[str]]) -> str:
+def generate_requirements_list(
+    reqs: dict[str, list[str]], package_allowlist: set[str] | None = None
+) -> str:
     """Generate a pip file based on requirements."""
     output = []
     for pkg, requirements in sorted(reqs.items(), key=itemgetter(0)):
         output.extend(f"\n# {req}" for req in sorted(requirements))
 
-        if comment_requirement(pkg):
+        if comment_requirement(pkg, package_allowlist):
             output.append(f"\n# {pkg}\n")
         else:
             output.append(f"\n{pkg}\n")
@@ -378,6 +397,18 @@ def requirements_all_output(reqs: dict[str, list[str]]) -> str:
         "-r requirements.txt\n",
     ]
     output.append(generate_requirements_list(reqs))
+
+    return "".join(output)
+
+
+def requirements_wheels_output(reqs: dict[str, list[str]]) -> str:
+    """Generate output for requirements_wheels."""
+    output = [
+        "# Home Assistant Core, full dependency set for building wheels\n",
+        GENERATED_MESSAGE,
+        "-r requirements.txt\n",
+    ]
+    output.append(generate_requirements_list(reqs, WHEELS_REQUIREMENTS_NORMALIZED))
 
     return "".join(output)
 
@@ -475,6 +506,7 @@ def main(validate: bool) -> int:
 
     reqs_file = requirements_output()
     reqs_all_file = requirements_all_output(data)
+    reqs_wheels_file = requirements_wheels_output(data)
     reqs_test_all_file = requirements_test_all_output(data)
     reqs_pre_commit_file = requirements_pre_commit_output()
     constraints = gather_constraints()
@@ -482,6 +514,7 @@ def main(validate: bool) -> int:
     files = (
         ("requirements.txt", reqs_file),
         ("requirements_all.txt", reqs_all_file),
+        ("requirements_wheels.txt", reqs_wheels_file),
         ("requirements_test_pre_commit.txt", reqs_pre_commit_file),
         ("requirements_test_all.txt", reqs_test_all_file),
         ("homeassistant/package_constraints.txt", constraints),
