@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from typing import Any
+from typing import Any, cast
 
 from pyatmo import DeviceType, Home, Module, Room
-from pyatmo.modules.base_class import NetatmoBase
+from pyatmo.modules.base_class import NetatmoBase, Place
 from pyatmo.modules.device_types import DEVICE_DESCRIPTION_MAP
 
+from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -16,6 +17,7 @@ from homeassistant.helpers.entity import Entity
 
 from .const import (
     CONF_URL_ENERGY,
+    CONF_URL_WEATHER,
     DATA_DEVICE_IDS,
     DEFAULT_ATTRIBUTION,
     DOMAIN,
@@ -166,3 +168,39 @@ class NetatmoModuleEntity(NetatmoDeviceEntity):
     def device_type(self) -> DeviceType:
         """Return the device type."""
         return self.device.device_type
+
+
+class NetatmoWeatherModuleEntity(NetatmoModuleEntity):
+    """Netatmo weather module entity base class."""
+
+    _attr_configuration_url = CONF_URL_WEATHER
+
+    def __init__(self, device: NetatmoDevice) -> None:
+        """Set up a Netatmo weather module entity."""
+        super().__init__(device)
+        category = getattr(self.device.device_category, "name")
+        self._publishers.extend(
+            [
+                {
+                    "name": category,
+                    SIGNAL_NAME: category,
+                },
+            ]
+        )
+
+        if hasattr(self.device, "place"):
+            place = cast(Place, getattr(self.device, "place"))
+            if hasattr(place, "location") and place.location is not None:
+                self._attr_extra_state_attributes.update(
+                    {
+                        ATTR_LATITUDE: place.location.latitude,
+                        ATTR_LONGITUDE: place.location.longitude,
+                    }
+                )
+
+    @property
+    def device_type(self) -> DeviceType:
+        """Return the Netatmo device type."""
+        if "." not in self.device.device_type:
+            return super().device_type
+        return DeviceType(self.device.device_type.partition(".")[2])

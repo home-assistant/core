@@ -244,6 +244,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "ambient_network": {
+      "name": "Ambient Weather Network",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "ambient_station": {
       "name": "Ambient Weather Station",
       "integration_type": "hub",
@@ -957,7 +963,8 @@
     "color_extractor": {
       "name": "ColorExtractor",
       "integration_type": "hub",
-      "config_flow": true
+      "config_flow": true,
+      "single_config_entry": true
     },
     "comed": {
       "name": "Commonwealth Edison (ComEd)",
@@ -2878,7 +2885,7 @@
     "islamic_prayer_times": {
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "cloud_polling"
+      "iot_class": "calculated"
     },
     "ismartwindow": {
       "name": "iSmartWindow",
@@ -3176,8 +3183,8 @@
       "name": "LG",
       "integrations": {
         "lg_netcast": {
-          "integration_type": "hub",
-          "config_flow": false,
+          "integration_type": "device",
+          "config_flow": true,
           "iot_class": "local_polling",
           "name": "LG Netcast"
         },
