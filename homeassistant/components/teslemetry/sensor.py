@@ -449,6 +449,11 @@ class TeslemetryVehicleSensorEntity(TeslemetryVehicleEntity, SensorEntity):
         """Initialize the sensor."""
         super().__init__(vehicle, description.key)
 
+    @property
+    def native_value(self) -> StateType:
+        """Return the state of the sensor."""
+        return self._value
+
 
 class TeslemetryVehicleTimeSensorEntity(TeslemetryVehicleEntity, SensorEntity):
     """Base class for Teslemetry vehicle metric sensors."""
