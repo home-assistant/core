@@ -1,4 +1,5 @@
 """Support for Lektrico charging station sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -33,7 +34,7 @@ from .const import DOMAIN
 from .entity import LektricoEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class LektricoSensorEntityDescription(SensorEntityDescription):
     """A class that describes the Lektrico sensor entities."""
 
@@ -263,7 +264,7 @@ async def async_setup_entry(
             SENSORS_FOR_LB_DEVICES + SENSORS_FOR_3_PHASE + SENSORS_FOR_LB_3_PHASE
         )
     else:
-        raise PlatformNotReady()
+        raise PlatformNotReady
 
     async_add_entities(
         LektricoSensor(
