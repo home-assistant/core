@@ -93,10 +93,10 @@
     "power_factor": {
       "default": "mdi:angle-acute"
     },
-    "preciptation": {
+    "precipitation": {
       "default": "mdi:weather-rainy"
     },
-    "preciptation_intensity": {
+    "precipitation_intensity": {
       "default": "mdi:weather-pouring"
     },
     "pressure": {

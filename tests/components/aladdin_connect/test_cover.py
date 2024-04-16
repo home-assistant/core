@@ -1,4 +1,5 @@
 """Test the Aladdin Connect Cover."""
+
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from AIOAladdinConnect import session_manager
@@ -113,7 +114,7 @@ async def test_cover_operation(
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert COVER_DOMAIN in hass.config.components
 

@@ -1,4 +1,5 @@
 """Support for Arris TG2492LG router."""
+
 from __future__ import annotations
 
 from arris_tg2492lg import ConnectBox, Device
@@ -48,11 +49,10 @@ class ArrisDeviceScanner(DeviceScanner):
 
     def get_device_name(self, device: str) -> str | None:
         """Return the name of the given device or None if we don't know."""
-        name = next(
+        return next(
             (result.hostname for result in self.last_results if result.mac == device),
             None,
         )
-        return name
 
     def _update_info(self) -> None:
         """Ensure the information from the Arris TG2492LG router is up to date."""

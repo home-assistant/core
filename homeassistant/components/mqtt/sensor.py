@@ -1,4 +1,5 @@
 """Support for MQTT sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -17,6 +18,7 @@ from homeassistant.components.sensor import (
     RestoreSensor,
     SensorDeviceClass,
     SensorExtraStoredData,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -83,11 +85,27 @@ _PLATFORM_SCHEMA_BASE = MQTT_RO_SCHEMA.extend(
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
+
+def validate_sensor_state_class_config(config: ConfigType) -> ConfigType:
+    """Validate the sensor state class config."""
+    if (
+        CONF_LAST_RESET_VALUE_TEMPLATE in config
+        and (state_class := config.get(CONF_STATE_CLASS)) != SensorStateClass.TOTAL
+    ):
+        raise vol.Invalid(
+            f"The option `{CONF_LAST_RESET_VALUE_TEMPLATE}` cannot be used "
+            f"together with state class `{state_class}`"
+        )
+
+    return config
+
+
 PLATFORM_SCHEMA_MODERN = vol.All(
     # Deprecated in HA Core 2021.11.0 https://github.com/home-assistant/core/pull/54840
     # Removed in HA Core 2023.6.0
     cv.removed(CONF_LAST_RESET_TOPIC),
     _PLATFORM_SCHEMA_BASE,
+    validate_sensor_state_class_config,
 )
 
 DISCOVERY_SCHEMA = vol.All(
@@ -95,6 +113,7 @@ DISCOVERY_SCHEMA = vol.All(
     # Removed in HA Core 2023.6.0
     cv.removed(CONF_LAST_RESET_TOPIC),
     _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA),
+    validate_sensor_state_class_config,
 )
 
 

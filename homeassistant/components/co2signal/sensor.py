@@ -1,4 +1,5 @@
 """Support for the CO2signal platform."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -28,9 +29,9 @@ class CO2SensorEntityDescription(SensorEntityDescription):
 
     # For backwards compat, allow description to override unique ID key to use
     unique_id: str | None = None
-    unit_of_measurement_fn: Callable[
-        [CarbonIntensityResponse], str | None
-    ] | None = None
+    unit_of_measurement_fn: Callable[[CarbonIntensityResponse], str | None] | None = (
+        None
+    )
     value_fn: Callable[[CarbonIntensityResponse], float | None]
 
 
@@ -67,7 +68,6 @@ class CO2Sensor(CoordinatorEntity[CO2SignalCoordinator], SensorEntity):
     entity_description: CO2SensorEntityDescription
     _attr_attribution = ATTRIBUTION
     _attr_has_entity_name = True
-    _attr_icon = "mdi:molecule-co2"
     _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(

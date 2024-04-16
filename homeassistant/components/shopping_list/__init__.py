@@ -1,4 +1,5 @@
 """Support to manage a shopping list."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -414,7 +415,7 @@ class ShoppingListView(http.HomeAssistantView):
     @callback
     def get(self, request: web.Request) -> web.Response:
         """Retrieve shopping list items."""
-        return self.json(request.app["hass"].data[DOMAIN].items)
+        return self.json(request.app[http.KEY_HASS].data[DOMAIN].items)
 
 
 class UpdateShoppingListItemView(http.HomeAssistantView):
@@ -426,7 +427,7 @@ class UpdateShoppingListItemView(http.HomeAssistantView):
     async def post(self, request: web.Request, item_id: str) -> web.Response:
         """Update a shopping list item."""
         data = await request.json()
-        hass: HomeAssistant = request.app["hass"]
+        hass = request.app[http.KEY_HASS]
 
         try:
             item = await hass.data[DOMAIN].async_update(item_id, data)
@@ -446,7 +447,7 @@ class CreateShoppingListItemView(http.HomeAssistantView):
     @RequestDataValidator(vol.Schema({vol.Required("name"): str}))
     async def post(self, request: web.Request, data: dict[str, str]) -> web.Response:
         """Create a new shopping list item."""
-        hass: HomeAssistant = request.app["hass"]
+        hass = request.app[http.KEY_HASS]
         item = await hass.data[DOMAIN].async_add(data["name"])
         return self.json(item)
 
@@ -459,7 +460,7 @@ class ClearCompletedItemsView(http.HomeAssistantView):
 
     async def post(self, request: web.Request) -> web.Response:
         """Retrieve if API is running."""
-        hass: HomeAssistant = request.app["hass"]
+        hass = request.app[http.KEY_HASS]
         await hass.data[DOMAIN].async_clear_completed()
         return self.json_message("Cleared completed items.")
 

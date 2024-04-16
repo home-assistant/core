@@ -3,6 +3,7 @@
 For more details on this platform, please refer to the documentation
 at https://home-assistant.io/components/zha.climate/
 """
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta
@@ -141,6 +142,7 @@ class Thermostat(ZhaEntity, ClimateEntity):
     _attr_precision = PRECISION_TENTHS
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_translation_key: str = "thermostat"
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, unique_id, zha_device, cluster_handlers, **kwargs):
         """Initialize ZHA Thermostat instance."""
@@ -148,7 +150,11 @@ class Thermostat(ZhaEntity, ClimateEntity):
         self._thrm = self.cluster_handlers.get(CLUSTER_HANDLER_THERMOSTAT)
         self._preset = PRESET_NONE
         self._presets = []
-        self._supported_flags = ClimateEntityFeature.TARGET_TEMPERATURE
+        self._supported_flags = (
+            ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.TURN_OFF
+            | ClimateEntityFeature.TURN_ON
+        )
         self._fan = self.cluster_handlers.get(CLUSTER_HANDLER_FAN)
 
     @property

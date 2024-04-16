@@ -1,4 +1,5 @@
 """Constants for Minecraft Server integration tests."""
+
 from mcstatus.motd import Motd
 from mcstatus.status_response import (
     BedrockStatusPlayers,

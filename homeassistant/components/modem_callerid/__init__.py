@@ -1,4 +1,5 @@
 """The Modem Caller ID integration."""
+
 from phone_modem import PhoneModem
 
 from homeassistant.config_entries import ConfigEntry

@@ -1,17 +1,16 @@
 """Define tests for device-related endpoints."""
+
 from datetime import timedelta
 from unittest.mock import patch
 
 from aioflo.errors import RequestError
-import pytest
+from freezegun.api import FrozenDateTimeFactory
 
 from homeassistant.components.flo.const import DOMAIN as FLO_DOMAIN
 from homeassistant.components.flo.device import FloDeviceDataUpdateCoordinator
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.setup import async_setup_component
-from homeassistant.util import dt as dt_util
 
 from .common import TEST_PASSWORD, TEST_USER_ID
 
@@ -24,6 +23,7 @@ async def test_device(
     config_entry,
     aioclient_mock_fixture,
     aioclient_mock: AiohttpClientMocker,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test Flo by Moen devices."""
     config_entry.add_to_hass(hass)
@@ -83,14 +83,47 @@ async def test_device(
 
     call_count = aioclient_mock.call_count
 
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=90))
+    freezer.tick(timedelta(seconds=90))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert aioclient_mock.call_count == call_count + 6
 
-    # test error sending device ping
+
+async def test_device_failures(
+    hass: HomeAssistant,
+    config_entry,
+    aioclient_mock_fixture,
+    aioclient_mock: AiohttpClientMocker,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test Flo by Moen devices buffer API failures."""
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    def assert_state(state: str) -> None:
+        assert (
+            hass.states.get("sensor.smart_water_shutoff_current_system_mode").state
+            == state
+        )
+
+    assert_state("home")
+
+    async def move_time_and_assert_state(state: str) -> None:
+        freezer.tick(timedelta(seconds=65))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        assert_state(state)
+
+    aioclient_mock.clear_requests()
     with patch(
-        "homeassistant.components.flo.device.FloDeviceDataUpdateCoordinator.send_presence_ping",
+        "aioflo.presence.Presence.ping",
         side_effect=RequestError,
-    ), pytest.raises(UpdateFailed):
-        await valve._async_update_data()
+    ):
+        # simulate 4 updates failing. The failures should be buffered so that it takes 4
+        # consecutive failures to mark the device and entities as unavailable.
+        await move_time_and_assert_state("home")
+        await move_time_and_assert_state("home")
+        await move_time_and_assert_state("home")
+        await move_time_and_assert_state(STATE_UNAVAILABLE)

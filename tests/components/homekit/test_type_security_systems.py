@@ -1,4 +1,5 @@
 """Test different accessory types: Security Systems."""
+
 from pyhap.loader import get_loader
 import pytest
 
@@ -34,7 +35,7 @@ async def test_switch_set_state(hass: HomeAssistant, hk_driver, events) -> None:
     hass.states.async_set(entity_id, None)
     await hass.async_block_till_done()
     acc = SecuritySystem(hass, hk_driver, "SecuritySystem", entity_id, 2, config)
-    await acc.run()
+    acc.run()
     await hass.async_block_till_done()
 
     assert acc.aid == 2
@@ -145,7 +146,7 @@ async def test_arming(hass: HomeAssistant, hk_driver, events) -> None:
     hass.states.async_set(entity_id, None)
 
     acc = SecuritySystem(hass, hk_driver, "SecuritySystem", entity_id, 2, {})
-    await acc.run()
+    acc.run()
     await hass.async_block_till_done()
 
     hass.states.async_set(entity_id, STATE_ALARM_ARMED_AWAY)
@@ -293,7 +294,7 @@ async def test_supported_states(hass: HomeAssistant, hk_driver, events) -> None:
 
         aid += 1
         acc = SecuritySystem(hass, hk_driver, "SecuritySystem", entity_id, aid, config)
-        await acc.run()
+        acc.run()
         await hass.async_block_till_done()
 
         valid_current_values = acc.char_current_state.properties.get("ValidValues")

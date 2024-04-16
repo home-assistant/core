@@ -1,4 +1,5 @@
 """Config flow for Google Tasks."""
+
 import logging
 from typing import Any
 
@@ -7,8 +8,8 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from googleapiclient.http import HttpRequest
 
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from .const import DOMAIN, OAUTH2_SCOPES
@@ -36,7 +37,7 @@ class OAuth2FlowHandler(
             "prompt": "consent",
         }
 
-    async def async_oauth_create_entry(self, data: dict[str, Any]) -> FlowResult:
+    async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
         """Create an entry for the flow."""
         try:
             resource = build(
@@ -52,7 +53,7 @@ class OAuth2FlowHandler(
                 reason="access_not_configured",
                 description_placeholders={"message": error},
             )
-        except Exception as ex:  # pylint: disable=broad-except
-            self.logger.exception("Unknown error occurred: %s", ex)
+        except Exception:  # pylint: disable=broad-except
+            self.logger.exception("Unknown error occurred")
             return self.async_abort(reason="unknown")
         return self.async_create_entry(title=self.flow_impl.name, data=data)

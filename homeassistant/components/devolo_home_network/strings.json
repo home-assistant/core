@@ -78,5 +78,19 @@
         "name": "Enable LEDs"
       }
     }
+  },
+  "exceptions": {
+    "connection_failed": {
+      "message": "Unable to connect to {ip_address}"
+    },
+    "no_response": {
+      "message": "Device {title} did not respond"
+    },
+    "password_protected": {
+      "message": "Device {title} requires re-authenticatication to set or change the password"
+    },
+    "password_wrong": {
+      "message": "The used password is wrong"
+    }
   }
 }

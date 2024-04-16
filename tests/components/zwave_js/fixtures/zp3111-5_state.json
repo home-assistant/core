@@ -694,7 +694,8 @@
     "commandsRX": 0,
     "commandsDroppedRX": 0,
     "commandsDroppedTX": 0,
-    "timeoutResponse": 0
+    "timeoutResponse": 0,
+    "lastSeen": "2024-01-01T12:00:00+00"
   },
   "highestSecurityClass": -1,
   "isControllerNode": false

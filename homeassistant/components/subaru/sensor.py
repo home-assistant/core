@@ -1,4 +1,5 @@
 """Support for Subaru sensors."""
+
 from __future__ import annotations
 
 import logging
@@ -57,7 +58,6 @@ SAFETY_SENSORS = [
         key=sc.ODOMETER,
         translation_key="odometer",
         device_class=SensorDeviceClass.DISTANCE,
-        icon="mdi:road-variant",
         native_unit_of_measurement=UnitOfLength.KILOMETERS,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
@@ -68,7 +68,6 @@ API_GEN_2_SENSORS = [
     SensorEntityDescription(
         key=sc.AVG_FUEL_CONSUMPTION,
         translation_key="average_fuel_consumption",
-        icon="mdi:leaf",
         native_unit_of_measurement=FUEL_CONSUMPTION_LITERS_PER_HUNDRED_KILOMETERS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -76,7 +75,6 @@ API_GEN_2_SENSORS = [
         key=sc.DIST_TO_EMPTY,
         translation_key="range",
         device_class=SensorDeviceClass.DISTANCE,
-        icon="mdi:gas-station",
         native_unit_of_measurement=UnitOfLength.KILOMETERS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -115,7 +113,6 @@ API_GEN_3_SENSORS = [
     SensorEntityDescription(
         key=sc.REMAINING_FUEL_PERCENT,
         translation_key="fuel_level",
-        icon="mdi:gas-station",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -127,7 +124,6 @@ EV_SENSORS = [
         key=sc.EV_DISTANCE_TO_EMPTY,
         translation_key="ev_range",
         device_class=SensorDeviceClass.DISTANCE,
-        icon="mdi:ev-station",
         native_unit_of_measurement=UnitOfLength.MILES,
         state_class=SensorStateClass.MEASUREMENT,
     ),

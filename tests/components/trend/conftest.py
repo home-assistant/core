@@ -1,4 +1,5 @@
 """Fixtures for the trend component tests."""
+
 from collections.abc import Awaitable, Callable
 from typing import Any
 
@@ -37,14 +38,17 @@ async def mock_setup_component(
     """Set up the trend component."""
 
     async def _setup_func(component_params: dict[str, Any]) -> None:
-        config_entry.title = "test_trend_sensor"
-        config_entry.options = {
-            **config_entry.options,
-            **component_params,
-            "name": "test_trend_sensor",
-            "entity_id": "sensor.test_state",
-        }
         config_entry.add_to_hass(hass)
+        hass.config_entries.async_update_entry(
+            config_entry,
+            options={
+                **config_entry.options,
+                **component_params,
+                "name": "test_trend_sensor",
+                "entity_id": "sensor.test_state",
+            },
+            title="test_trend_sensor",
+        )
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 

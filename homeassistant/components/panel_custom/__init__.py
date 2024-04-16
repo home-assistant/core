@@ -1,4 +1,5 @@
 """Register a custom front end panel."""
+
 from __future__ import annotations
 
 import logging

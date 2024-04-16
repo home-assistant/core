@@ -37,6 +37,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -45,7 +47,7 @@
     'original_name': None,
     'platform': 'ccm15',
     'previous_unique_id': None,
-    'supported_features': <ClimateEntityFeature: 41>,
+    'supported_features': <ClimateEntityFeature: 425>,
     'translation_key': None,
     'unique_id': '1.1.1.1.0',
     'unit_of_measurement': None,
@@ -89,6 +91,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -97,7 +101,7 @@
     'original_name': None,
     'platform': 'ccm15',
     'previous_unique_id': None,
-    'supported_features': <ClimateEntityFeature: 41>,
+    'supported_features': <ClimateEntityFeature: 425>,
     'translation_key': None,
     'unique_id': '1.1.1.1.1',
     'unit_of_measurement': None,
@@ -125,7 +129,7 @@
       ]),
       'max_temp': 35,
       'min_temp': 7,
-      'supported_features': <ClimateEntityFeature: 41>,
+      'supported_features': <ClimateEntityFeature: 425>,
       'swing_mode': 'off',
       'swing_modes': list([
         'off',
@@ -137,6 +141,7 @@
     'context': <ANY>,
     'entity_id': 'climate.midea_0',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
@@ -163,7 +168,7 @@
       ]),
       'max_temp': 35,
       'min_temp': 7,
-      'supported_features': <ClimateEntityFeature: 41>,
+      'supported_features': <ClimateEntityFeature: 425>,
       'swing_mode': 'off',
       'swing_modes': list([
         'off',
@@ -175,6 +180,7 @@
     'context': <ANY>,
     'entity_id': 'climate.midea_1',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'cool',
   })
@@ -217,6 +223,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -225,7 +233,7 @@
     'original_name': None,
     'platform': 'ccm15',
     'previous_unique_id': None,
-    'supported_features': <ClimateEntityFeature: 41>,
+    'supported_features': <ClimateEntityFeature: 425>,
     'translation_key': None,
     'unique_id': '1.1.1.1.0',
     'unit_of_measurement': None,
@@ -269,6 +277,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -277,7 +287,7 @@
     'original_name': None,
     'platform': 'ccm15',
     'previous_unique_id': None,
-    'supported_features': <ClimateEntityFeature: 41>,
+    'supported_features': <ClimateEntityFeature: 425>,
     'translation_key': None,
     'unique_id': '1.1.1.1.1',
     'unit_of_measurement': None,
@@ -302,7 +312,7 @@
       ]),
       'max_temp': 35,
       'min_temp': 7,
-      'supported_features': <ClimateEntityFeature: 41>,
+      'supported_features': <ClimateEntityFeature: 425>,
       'swing_modes': list([
         'off',
         'on',
@@ -312,6 +322,7 @@
     'context': <ANY>,
     'entity_id': 'climate.midea_0',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
@@ -335,7 +346,7 @@
       ]),
       'max_temp': 35,
       'min_temp': 7,
-      'supported_features': <ClimateEntityFeature: 41>,
+      'supported_features': <ClimateEntityFeature: 425>,
       'swing_modes': list([
         'off',
         'on',
@@ -345,6 +356,7 @@
     'context': <ANY>,
     'entity_id': 'climate.midea_1',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })

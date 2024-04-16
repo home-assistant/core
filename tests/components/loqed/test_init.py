@@ -50,8 +50,11 @@ async def test_setup_webhook_in_bridge(
     webhooks_fixture = json.loads(load_fixture("loqed/get_all_webhooks.json"))
     lock.getWebhooks = AsyncMock(side_effect=[[], webhooks_fixture])
 
-    with patch("loqedAPI.loqed.LoqedAPI.async_get_lock", return_value=lock), patch(
-        "loqedAPI.loqed.LoqedAPI.async_get_lock_details", return_value=lock_status
+    with (
+        patch("loqedAPI.loqed.LoqedAPI.async_get_lock", return_value=lock),
+        patch(
+            "loqedAPI.loqed.LoqedAPI.async_get_lock_details", return_value=lock_status
+        ),
     ):
         await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
@@ -86,13 +89,19 @@ async def test_setup_cloudhook_in_bridge(
     webhooks_fixture = json.loads(load_fixture("loqed/get_all_webhooks.json"))
     lock.getWebhooks = AsyncMock(side_effect=[[], webhooks_fixture])
 
-    with patch("loqedAPI.loqed.LoqedAPI.async_get_lock", return_value=lock), patch(
-        "loqedAPI.loqed.LoqedAPI.async_get_lock_details", return_value=lock_status
-    ), patch(
-        "homeassistant.components.cloud.async_active_subscription", return_value=True
-    ), patch(
-        "homeassistant.components.cloud.async_create_cloudhook",
-        return_value=webhooks_fixture[0]["url"],
+    with (
+        patch("loqedAPI.loqed.LoqedAPI.async_get_lock", return_value=lock),
+        patch(
+            "loqedAPI.loqed.LoqedAPI.async_get_lock_details", return_value=lock_status
+        ),
+        patch(
+            "homeassistant.components.cloud.async_active_subscription",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.cloud.async_create_cloudhook",
+            return_value=webhooks_fixture[0]["url"],
+        ),
     ):
         await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
@@ -113,13 +122,19 @@ async def test_setup_cloudhook_from_entry_in_bridge(
 
     lock.getWebhooks = AsyncMock(side_effect=[[], webhooks_fixture])
 
-    with patch("loqedAPI.loqed.LoqedAPI.async_get_lock", return_value=lock), patch(
-        "loqedAPI.loqed.LoqedAPI.async_get_lock_details", return_value=lock_status
-    ), patch(
-        "homeassistant.components.cloud.async_active_subscription", return_value=True
-    ), patch(
-        "homeassistant.components.cloud.async_create_cloudhook",
-        return_value=webhooks_fixture[0]["url"],
+    with (
+        patch("loqedAPI.loqed.LoqedAPI.async_get_lock", return_value=lock),
+        patch(
+            "loqedAPI.loqed.LoqedAPI.async_get_lock_details", return_value=lock_status
+        ),
+        patch(
+            "homeassistant.components.cloud.async_active_subscription",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.cloud.async_create_cloudhook",
+            return_value=webhooks_fixture[0]["url"],
+        ),
     ):
         await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()

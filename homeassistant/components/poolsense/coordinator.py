@@ -1,4 +1,5 @@
 """DataUpdateCoordinator for poolsense integration."""
+
 import asyncio
 from datetime import timedelta
 import logging

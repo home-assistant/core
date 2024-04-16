@@ -1,4 +1,5 @@
 """Tedee sensor entities."""
+
 from collections.abc import Callable
 from dataclasses import dataclass
 
@@ -11,7 +12,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, UnitOfTime
+from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -33,15 +34,16 @@ ENTITIES: tuple[TedeeSensorEntityDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda lock: lock.battery_level,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     TedeeSensorEntityDescription(
         key="pullspring_duration",
         translation_key="pullspring_duration",
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.SECONDS,
-        state_class=SensorStateClass.TOTAL,
-        icon="mdi:timer-lock-open",
+        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda lock: lock.duration_pullspring,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
 
@@ -54,21 +56,17 @@ async def async_setup_entry(
     """Set up the Tedee sensor entity."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
 
-    for entity_description in ENTITIES:
-        async_add_entities(
-            [
-                TedeeSensorEntity(lock, coordinator, entity_description)
-                for lock in coordinator.data.values()
-            ]
-        )
+    async_add_entities(
+        TedeeSensorEntity(lock, coordinator, entity_description)
+        for lock in coordinator.data.values()
+        for entity_description in ENTITIES
+    )
 
     def _async_add_new_lock(lock_id: int) -> None:
         lock = coordinator.data[lock_id]
         async_add_entities(
-            [
-                TedeeSensorEntity(lock, coordinator, entity_description)
-                for entity_description in ENTITIES
-            ]
+            TedeeSensorEntity(lock, coordinator, entity_description)
+            for entity_description in ENTITIES
         )
 
     coordinator.new_lock_callbacks.append(_async_add_new_lock)

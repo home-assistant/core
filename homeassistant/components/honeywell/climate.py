@@ -1,12 +1,13 @@
 """Support for Honeywell (US) Total Connect Comfort climate systems."""
+
 from __future__ import annotations
 
-import asyncio
 import datetime
 from typing import Any
 
 from aiohttp import ClientConnectionError
 from aiosomecomfort import (
+    APIRateLimited,
     AuthError,
     ConnectionError as AscConnectionError,
     SomeComfortError,
@@ -34,7 +35,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -51,7 +52,7 @@ ATTR_FAN_ACTION = "fan_action"
 
 ATTR_PERMANENT_HOLD = "permanent_hold"
 
-PRESET_HOLD = "Hold"
+PRESET_HOLD = "hold"
 
 HEATING_MODES = {"heat", "emheat", "auto"}
 COOLING_MODES = {"cool", "auto"}
@@ -142,6 +143,8 @@ class HoneywellUSThermostat(ClimateEntity):
 
     _attr_has_entity_name = True
     _attr_name = None
+    _attr_translation_key = "honeywell"
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,
@@ -166,6 +169,7 @@ class HoneywellUSThermostat(ClimateEntity):
             manufacturer="Honeywell",
         )
 
+        self._attr_translation_placeholders = {"name": device.name}
         self._attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
         if device.temperature_unit == "C":
             self._attr_temperature_unit = UnitOfTemperature.CELSIUS
@@ -186,6 +190,10 @@ class HoneywellUSThermostat(ClimateEntity):
             | ClimateEntityFeature.TARGET_TEMPERATURE
             | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
         )
+        if len(self.hvac_modes) > 1 and HVACMode.OFF in self.hvac_modes:
+            self._attr_supported_features |= (
+                ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
+            )
 
         if device._data.get("canControlHumidification"):
             self._attr_supported_features |= ClimateEntityFeature.TARGET_HUMIDITY
@@ -303,7 +311,7 @@ class HoneywellUSThermostat(ClimateEntity):
         if self._is_permanent_hold():
             return PRESET_HOLD
 
-        return None
+        return PRESET_NONE
 
     @property
     def is_aux_heat(self) -> bool | None:
@@ -350,7 +358,7 @@ class HoneywellUSThermostat(ClimateEntity):
             else:
                 if mode == "cool":
                     await self._device.set_setpoint_cool(temperature)
-                if mode == "heat":
+                if mode in ["heat", "emheat"]:
                     await self._device.set_setpoint_heat(temperature)
 
         except UnexpectedResponse as err:
@@ -473,6 +481,16 @@ class HoneywellUSThermostat(ClimateEntity):
 
     async def async_turn_aux_heat_on(self) -> None:
         """Turn auxiliary heater on."""
+        ir.async_create_issue(
+            self.hass,
+            DOMAIN,
+            "service_deprecation",
+            breaks_in_ha_version="2024.10.0",
+            is_fixable=True,
+            is_persistent=True,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="service_deprecation",
+        )
         try:
             await self._device.set_system_mode("emheat")
         except SomeComfortError as err:
@@ -482,6 +500,18 @@ class HoneywellUSThermostat(ClimateEntity):
 
     async def async_turn_aux_heat_off(self) -> None:
         """Turn auxiliary heater off."""
+
+        ir.async_create_issue(
+            self.hass,
+            DOMAIN,
+            "service_deprecation",
+            breaks_in_ha_version="2024.10.0",
+            is_fixable=True,
+            is_persistent=True,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="service_deprecation",
+        )
+
         try:
             if HVACMode.HEAT in self.hvac_modes:
                 await self.async_set_hvac_mode(HVACMode.HEAT)
@@ -499,10 +529,11 @@ class HoneywellUSThermostat(ClimateEntity):
                 await self._device.refresh()
 
             except (
+                TimeoutError,
+                AscConnectionError,
+                APIRateLimited,
                 AuthError,
                 ClientConnectionError,
-                AscConnectionError,
-                asyncio.TimeoutError,
             ):
                 self._retry += 1
                 self._attr_available = self._retry <= RETRY
@@ -517,8 +548,12 @@ class HoneywellUSThermostat(ClimateEntity):
         except UnauthorizedError:
             await _login()
             return
-
-        except (AscConnectionError, ClientConnectionError, asyncio.TimeoutError):
+        except (
+            TimeoutError,
+            AscConnectionError,
+            APIRateLimited,
+            ClientConnectionError,
+        ):
             self._retry += 1
             self._attr_available = self._retry <= RETRY
             return

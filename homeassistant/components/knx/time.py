@@ -1,4 +1,5 @@
 """Support for KNX/IP time."""
+
 from __future__ import annotations
 
 from datetime import time as dt_time

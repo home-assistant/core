@@ -1,4 +1,5 @@
 """The test for the sensibo entity."""
+
 from __future__ import annotations
 
 from unittest.mock import patch
@@ -72,10 +73,13 @@ async def test_entity_failed_service_calls(
     state = hass.states.get("climate.hallway")
     assert state.attributes["fan_mode"] == "low"
 
-    with patch(
-        "homeassistant.components.sensibo.util.SensiboClient.async_set_ac_state_property",
-        side_effect=p_error,
-    ), pytest.raises(HomeAssistantError):
+    with (
+        patch(
+            "homeassistant.components.sensibo.util.SensiboClient.async_set_ac_state_property",
+            side_effect=p_error,
+        ),
+        pytest.raises(HomeAssistantError),
+    ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_FAN_MODE,

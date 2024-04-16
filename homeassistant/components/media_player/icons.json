@@ -3,7 +3,7 @@
     "_": {
       "default": "mdi:cast",
       "state": {
-        "off": "mdi:cast",
+        "off": "mdi:cast-off",
         "paused": "mdi:cast-connected",
         "playing": "mdi:cast-connected"
       }
@@ -52,7 +52,7 @@
     "unjoin": "mdi:ungroup",
     "volume_down": "mdi:volume-minus",
     "volume_mute": "mdi:volume-mute",
-    "volume_set": "mdi:volume",
+    "volume_set": "mdi:volume-medium",
     "volume_up": "mdi:volume-plus"
   }
 }

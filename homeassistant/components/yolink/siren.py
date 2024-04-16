@@ -1,4 +1,5 @@
 """YoLink Siren."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -54,16 +55,12 @@ async def async_setup_entry(
         for device_coordinator in device_coordinators.values()
         if device_coordinator.device.device_type in DEVICE_TYPE
     ]
-    entities = []
-    for siren_device_coordinator in siren_device_coordinators:
-        for description in DEVICE_TYPES:
-            if description.exists_fn(siren_device_coordinator.device):
-                entities.append(
-                    YoLinkSirenEntity(
-                        config_entry, siren_device_coordinator, description
-                    )
-                )
-    async_add_entities(entities)
+    async_add_entities(
+        YoLinkSirenEntity(config_entry, siren_device_coordinator, description)
+        for siren_device_coordinator in siren_device_coordinators
+        for description in DEVICE_TYPES
+        if description.exists_fn(siren_device_coordinator.device)
+    )
 
 
 class YoLinkSirenEntity(YoLinkEntity, SirenEntity):

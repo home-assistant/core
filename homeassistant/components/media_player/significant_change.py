@@ -1,4 +1,5 @@
 """Helper to test significant Media Player state changes."""
+
 from __future__ import annotations
 
 from typing import Any

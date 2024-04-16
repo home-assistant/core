@@ -1,4 +1,5 @@
 """Support for Insteon covers via PowerLinc Modem."""
+
 import math
 from typing import Any
 

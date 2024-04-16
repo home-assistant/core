@@ -1,9 +1,10 @@
 """Data update coordinator for trigger based template entities."""
+
 from collections.abc import Callable
 import logging
 
 from homeassistant.const import EVENT_HOMEASSISTANT_START
-from homeassistant.core import CoreState, callback
+from homeassistant.core import Context, CoreState, callback
 from homeassistant.helpers import discovery, trigger as trigger_helper
 from homeassistant.helpers.script import Script
 from homeassistant.helpers.typing import ConfigType
@@ -58,7 +59,8 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
                         DOMAIN,
                         {"coordinator": self, "entities": self.config[platform_domain]},
                         hass_config,
-                    )
+                    ),
+                    eager_start=True,
                 )
 
     async def _attach_triggers(self, start_event=None) -> None:
@@ -74,21 +76,31 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
         if start_event is not None:
             self._unsub_start = None
 
+        if self._script:
+            action: Callable = self._handle_triggered_with_script
+        else:
+            action = self._handle_triggered
+
         self._unsub_trigger = await trigger_helper.async_initialize_triggers(
             self.hass,
             self.config[CONF_TRIGGER],
-            self._handle_triggered,
+            action,
             DOMAIN,
             self.name,
             self.logger.log,
             start_event is not None,
         )
 
-    async def _handle_triggered(self, run_variables, context=None):
-        if self._script:
-            script_result = await self._script.async_run(run_variables, context)
-            if script_result:
-                run_variables = script_result.variables
+    async def _handle_triggered_with_script(self, run_variables, context=None):
+        # Create a context referring to the trigger context.
+        trigger_context_id = None if context is None else context.id
+        script_context = Context(parent_id=trigger_context_id)
+        if script_result := await self._script.async_run(run_variables, script_context):
+            run_variables = script_result.variables
+        self._handle_triggered(run_variables, context)
+
+    @callback
+    def _handle_triggered(self, run_variables, context=None):
         self.async_set_updated_data(
             {"run_variables": run_variables, "context": context}
         )

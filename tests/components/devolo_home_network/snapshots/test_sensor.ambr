@@ -3,11 +3,11 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock Title Connected PLC devices',
-      'icon': 'mdi:lan',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_title_connected_plc_devices',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1',
   })
@@ -29,11 +29,13 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:lan',
+    'original_icon': None,
     'original_name': 'Connected PLC devices',
     'platform': 'devolo_home_network',
     'previous_unique_id': None,
@@ -47,12 +49,12 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock Title Connected Wifi clients',
-      'icon': 'mdi:wifi',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_title_connected_wifi_clients',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1',
   })
@@ -76,11 +78,13 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:wifi',
+    'original_icon': None,
     'original_name': 'Connected Wifi clients',
     'platform': 'devolo_home_network',
     'previous_unique_id': None,
@@ -94,11 +98,11 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock Title Neighboring Wifi networks',
-      'icon': 'mdi:wifi-marker',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_title_neighboring_wifi_networks',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1',
   })
@@ -120,11 +124,13 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:wifi-marker',
+    'original_icon': None,
     'original_name': 'Neighboring Wifi networks',
     'platform': 'devolo_home_network',
     'previous_unique_id': None,
@@ -144,6 +150,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.mock_title_plc_downlink_phy_rate_test2',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '100.0',
   })
@@ -165,6 +172,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
       'sensor': dict({
@@ -192,6 +201,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.mock_title_plc_downlink_phy_rate_test2',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '100.0',
   })
@@ -213,6 +223,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
       'sensor': dict({
