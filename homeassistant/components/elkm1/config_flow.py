@@ -174,9 +174,7 @@ class Elkm1ConfigFlow(ConfigFlow, domain=DOMAIN):
                 or hostname_from_url(entry.data[CONF_HOST]) == host
             ):
                 if async_update_entry_from_discovery(self.hass, entry, device):
-                    self.hass.async_create_task(
-                        self.hass.config_entries.async_reload(entry.entry_id)
-                    )
+                    self.hass.config_entries.async_schedule_reload(entry.entry_id)
                 return self.async_abort(reason="already_configured")
         self.context[CONF_HOST] = host
         for progress in self._async_in_progress():

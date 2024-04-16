@@ -52,4 +52,4 @@ async def test_updating_failed(
         assert await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
 
-    assert mock_config_entry.state == ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY

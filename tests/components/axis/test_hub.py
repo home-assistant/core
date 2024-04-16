@@ -91,9 +91,9 @@ async def test_device_support_mqtt(
     hass: HomeAssistant, mqtt_mock: MqttMockHAClient, setup_config_entry
 ) -> None:
     """Successful setup."""
-    mqtt_mock.async_subscribe.assert_called_with(f"{MAC}/#", mock.ANY, 0, "utf-8")
+    mqtt_mock.async_subscribe.assert_called_with(f"axis/{MAC}/#", mock.ANY, 0, "utf-8")
 
-    topic = f"{MAC}/event/tns:onvif/Device/tns:axis/Sensor/PIR/$source/sensor/0"
+    topic = f"axis/{MAC}/event/tns:onvif/Device/tns:axis/Sensor/PIR/$source/sensor/0"
     message = (
         b'{"timestamp": 1590258472044, "topic": "onvif:Device/axis:Sensor/PIR",'
         b' "message": {"source": {"sensor": "0"}, "key": {}, "data": {"state": "1"}}}'

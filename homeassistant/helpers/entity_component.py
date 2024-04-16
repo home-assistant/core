@@ -120,9 +120,7 @@ class EntityComponent(Generic[_EntityT]):
         Note: this is only required if the integration never calls
         `setup` or `async_setup`.
         """
-        self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STOP, self._async_shutdown, run_immediately=True
-        )
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._async_shutdown)
 
     def setup(self, config: ConfigType) -> None:
         """Set up a full entity component.

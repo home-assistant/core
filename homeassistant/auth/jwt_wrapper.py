@@ -78,7 +78,7 @@ class _PyJWTWithVerify(PyJWT):
         key: str,
         algorithms: list[str],
         issuer: str | None = None,
-        leeway: int | float | timedelta = 0,
+        leeway: float | timedelta = 0,
         options: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Verify a JWT's signature and claims."""

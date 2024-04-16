@@ -278,7 +278,7 @@ async def test_setup_nvr_errors_during_indexing(
     mock_remote.return_value.index.side_effect = None
 
     async_fire_time_changed(hass, now + timedelta(seconds=31))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     camera_states = hass.states.async_all("camera")
 
@@ -313,7 +313,7 @@ async def test_setup_nvr_errors_during_initialization(
     mock_remote.side_effect = None
 
     async_fire_time_changed(hass, now + timedelta(seconds=31))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     camera_states = hass.states.async_all("camera")
 
@@ -362,7 +362,7 @@ async def test_motion_recording_mode_properties(
     ] = True
 
     async_fire_time_changed(hass, now + timedelta(seconds=31))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("camera.front")
 
@@ -375,7 +375,7 @@ async def test_motion_recording_mode_properties(
     mock_remote.return_value.get_camera.return_value["recordingIndicator"] = "DISABLED"
 
     async_fire_time_changed(hass, now + timedelta(seconds=61))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("camera.front")
 
@@ -387,7 +387,7 @@ async def test_motion_recording_mode_properties(
     )
 
     async_fire_time_changed(hass, now + timedelta(seconds=91))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("camera.front")
 
@@ -399,7 +399,7 @@ async def test_motion_recording_mode_properties(
     )
 
     async_fire_time_changed(hass, now + timedelta(seconds=121))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("camera.front")
 

@@ -181,7 +181,7 @@ class LgTVDevice(MediaPlayerEntity):
                         channel_name = channel.find("chname")
                         if channel_name is not None:
                             channel_names.append(str(channel_name.text))
-                    self._sources = dict(zip(channel_names, channel_list))
+                    self._sources = dict(zip(channel_names, channel_list, strict=False))
                     # sort source names by the major channel number
                     source_tuples = [
                         (k, source.find("major").text)

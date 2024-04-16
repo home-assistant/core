@@ -9,8 +9,8 @@ import pytest
 import zigpy.quirks as zigpy_quirks
 
 from homeassistant.components.zha.binary_sensor import IASZone
+from homeassistant.components.zha.core import registries
 from homeassistant.components.zha.core.const import ATTR_QUIRK_ID
-import homeassistant.components.zha.core.registries as registries
 from homeassistant.helpers import entity_registry as er
 
 if typing.TYPE_CHECKING:

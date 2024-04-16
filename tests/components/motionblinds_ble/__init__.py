@@ -1,1 +1,1 @@
-"""Tests for the Motionblinds BLE integration."""
+"""Tests for the Motionblinds Bluetooth integration."""

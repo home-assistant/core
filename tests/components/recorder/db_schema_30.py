@@ -375,6 +375,9 @@ class States(Base):  # type: ignore[misc,valid-type]
     last_changed_ts = Column(
         TIMESTAMP_TYPE
     )  # *** Not originally in v30, only added for recorder to startup ok
+    last_reported_ts = Column(
+        TIMESTAMP_TYPE
+    )  # *** Not originally in v30, only added for recorder to startup ok
     last_updated = Column(DATETIME_TYPE, default=dt_util.utcnow, index=True)
     last_updated_ts = Column(
         TIMESTAMP_TYPE, default=time.time, index=True
