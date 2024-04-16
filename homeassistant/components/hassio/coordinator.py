@@ -42,6 +42,7 @@ from .const import (
     DATA_KEY_OS,
     DATA_KEY_SUPERVISOR,
     DATA_KEY_SUPERVISOR_ISSUES,
+    DATA_NETWORK_INFO,
     DATA_OS_INFO,
     DATA_STORE,
     DATA_SUPERVISOR_INFO,
@@ -96,6 +97,16 @@ def get_supervisor_info(hass: HomeAssistant) -> dict[str, Any] | None:
     Async friendly.
     """
     return hass.data.get(DATA_SUPERVISOR_INFO)
+
+
+@callback
+@bind_hass
+def get_network_info(hass: HomeAssistant) -> dict[str, Any] | None:
+    """Return Host Network information.
+
+    Async friendly.
+    """
+    return hass.data.get(DATA_NETWORK_INFO)
 
 
 @callback
