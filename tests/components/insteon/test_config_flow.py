@@ -13,8 +13,8 @@ from homeassistant.components.insteon.config_flow import (
     STEP_PLM,
     STEP_PLM_MANUALLY,
 )
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.components.insteon.const import CONF_HUB_VERSION, DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_DEVICE, CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
