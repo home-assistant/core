@@ -15,6 +15,12 @@ def string_fixture() -> String:
 
 
 @pytest.fixture
+def string_fixture_alternative() -> String:
+    """Define String alternative fixture."""
+    return String("STR1A", 450.3, 23.4, 0)
+
+
+@pytest.fixture
 def mppt_fixture(string_fixture) -> MPPT:
     """Define MPPT fixture."""
     mppt = MPPT("mppt")
@@ -23,9 +29,23 @@ def mppt_fixture(string_fixture) -> MPPT:
 
 
 @pytest.fixture
+def mppt_fixture_alternative(string_fixture_alternative) -> MPPT:
+    """Define MPPT alternative fixture."""
+    mppt = MPPT("mppt")
+    mppt.strings.append(string_fixture_alternative)
+    return mppt
+
+
+@pytest.fixture
 def phase_fixture() -> Phase:
     """Define Phase fixture."""
     return Phase("PhaseA", 120.0, 3.2, 0, 0)
+
+
+@pytest.fixture
+def phase_fixture_alternative() -> Phase:
+    """Define Phase alternative fixture."""
+    return Phase("PhaseAlt", 120.0, 3.2, 0, 0)
 
 
 @pytest.fixture
@@ -52,6 +72,51 @@ def inverter_fixture(phase_fixture, mppt_fixture) -> Inverter:
 
 
 @pytest.fixture
+def inverter_fixture_alternative(
+    phase_fixture_alternative, mppt_fixture_alternative
+) -> Inverter:
+    """Define inverter alternative fixture."""
+    inverter = Inverter(
+        21255,
+        "INVERSOR01",
+        "J63T233018RE074",
+        Status.OK,
+        23.2,
+        0.0,
+        "MWh",
+        0.0,
+        "kWh",
+        0,
+        0.0,
+        1,
+        "kW",
+    )
+    inverter.phases.append(phase_fixture_alternative)
+    inverter.mppts.append(mppt_fixture_alternative)
+    return inverter
+
+
+@pytest.fixture
+def inverter_fixture_invalid() -> Inverter:
+    """Define inverter fixture with different id."""
+    return Inverter(
+        21256,
+        "INVERSOR01",
+        "J63T233018RE074",
+        Status.OK,
+        23.2,
+        0.0,
+        "MWh",
+        0.0,
+        "kWh",
+        0,
+        0.0,
+        1,
+        "kW",
+    )
+
+
+@pytest.fixture
 def plant_fixture(inverter_fixture) -> Plant:
     """Define Plant fixture."""
     plant = Plant(
@@ -72,8 +137,8 @@ def plant_fixture(inverter_fixture) -> Plant:
 
 
 @pytest.fixture
-def plant_fixture_alternative(inverter_fixture) -> Plant:
-    """Define Plant fixture."""
+def plant_fixture_alternative(inverter_fixture_alternative) -> Plant:
+    """Define Plant alternative fixture."""
     plant = Plant(
         123456,
         "Plant #123",
@@ -87,7 +152,7 @@ def plant_fixture_alternative(inverter_fixture) -> Plant:
         0.012296,
         None,
     )
-    plant.inverters.append(inverter_fixture)
+    plant.inverters.append(inverter_fixture_alternative)
     return plant
 
 

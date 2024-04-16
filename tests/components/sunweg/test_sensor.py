@@ -78,6 +78,7 @@ async def test_sensor_inverter(
     snapshot: SnapshotAssertion,
     freezer: FrozenDateTimeFactory,
     plant_fixture,
+    inverter_fixture_invalid,
 ) -> None:
     """Test sensor type inverter."""
     mock_entry = SUNWEG_MOCK_ENTRY
@@ -91,7 +92,7 @@ async def test_sensor_inverter(
     ):
         assert await async_setup_component(hass, DOMAIN, mock_entry.data)
         freezer.tick(SCAN_INTERVAL)
-        async_fire_time_changed(hass, dt_util.now() + timedelta(minutes=20))
+        async_fire_time_changed(hass, dt_util.now() + timedelta(minutes=10))
         await hass.async_block_till_done(wait_background_tasks=True)
 
         state = hass.states.get("sensor.inversor01_energy_today")
@@ -118,12 +119,26 @@ async def test_sensor_inverter(
         assert state.state == snapshot
         assert state.attributes == snapshot
 
+        plant = plant_fixture
+        plant.inverters.clear()
+        plant.inverters.append(inverter_fixture_invalid)
+
+        with patch.object(APIHelper, "plant", return_value=plant):
+            freezer.tick(SCAN_INTERVAL)
+            async_fire_time_changed(hass, dt_util.now() + timedelta(minutes=20))
+            await hass.async_block_till_done(wait_background_tasks=True)
+
+            state = hass.states.get("sensor.inversor01_energy_today")
+            assert state.state == snapshot
+            assert state.attributes == snapshot
+
 
 async def test_sensor_phase(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
     freezer: FrozenDateTimeFactory,
     plant_fixture,
+    plant_fixture_alternative,
 ) -> None:
     """Test sensor type phase."""
     mock_entry = SUNWEG_MOCK_ENTRY
@@ -137,7 +152,7 @@ async def test_sensor_phase(
     ):
         assert await async_setup_component(hass, DOMAIN, mock_entry.data)
         freezer.tick(SCAN_INTERVAL)
-        async_fire_time_changed(hass, dt_util.now() + timedelta(minutes=20))
+        async_fire_time_changed(hass, dt_util.now() + timedelta(minutes=10))
         await hass.async_block_till_done(wait_background_tasks=True)
 
         state = hass.states.get("sensor.inversor01_phasea_voltage")
@@ -148,12 +163,22 @@ async def test_sensor_phase(
         assert state.state == snapshot
         assert state.attributes == snapshot
 
+        with patch.object(APIHelper, "plant", return_value=plant_fixture_alternative):
+            freezer.tick(SCAN_INTERVAL)
+            async_fire_time_changed(hass, dt_util.now() + timedelta(minutes=20))
+            await hass.async_block_till_done()
+
+            state = hass.states.get("sensor.inversor01_phasea_voltage")
+            assert state.state == snapshot
+            assert state.attributes == snapshot
+
 
 async def test_sensor_string(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
     freezer: FrozenDateTimeFactory,
     plant_fixture,
+    plant_fixture_alternative,
 ) -> None:
     """Test sensor type string."""
     mock_entry = SUNWEG_MOCK_ENTRY
@@ -167,7 +192,7 @@ async def test_sensor_string(
     ):
         assert await async_setup_component(hass, DOMAIN, mock_entry.data)
         freezer.tick(SCAN_INTERVAL)
-        async_fire_time_changed(hass, dt_util.now() + timedelta(minutes=20))
+        async_fire_time_changed(hass, dt_util.now() + timedelta(minutes=10))
         await hass.async_block_till_done(wait_background_tasks=True)
 
         state = hass.states.get("sensor.inversor01_str1_voltage")
@@ -177,3 +202,13 @@ async def test_sensor_string(
         state = hass.states.get("sensor.inversor01_str1_amperage")
         assert state.state == snapshot
         assert state.attributes == snapshot
+
+        with (
+            patch.object(APIHelper, "plant", return_value=plant_fixture_alternative),
+        ):
+            freezer.tick(SCAN_INTERVAL)
+            async_fire_time_changed(hass, dt_util.now() + timedelta(minutes=20))
+            await hass.async_block_till_done()
+            state = hass.states.get("sensor.inversor01_str1_voltage")
+            assert state.state == snapshot
+            assert state.attributes == snapshot

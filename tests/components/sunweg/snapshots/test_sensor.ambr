@@ -20,6 +20,18 @@
     'icon': 'mdi:solar-power',
   })
 # ---
+# name: test_sensor_inverter.12
+  'unknown'
+# ---
+# name: test_sensor_inverter.13
+  ReadOnlyDict({
+    'device_class': 'energy',
+    'friendly_name': 'INVERSOR01 Energy today',
+    'icon': 'mdi:solar-power',
+    'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    'unit_of_measurement': 'None',
+  })
+# ---
 # name: test_sensor_inverter.2
   '0.0'
 # ---
@@ -88,6 +100,17 @@
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
+# name: test_sensor_phase.4
+  'unknown'
+# ---
+# name: test_sensor_phase.5
+  ReadOnlyDict({
+    'device_class': 'voltage',
+    'friendly_name': 'INVERSOR01 PhaseA Voltage',
+    'icon': 'mdi:solar-power',
+    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+  })
+# ---
 # name: test_sensor_string
   '450.3'
 # ---
@@ -108,6 +131,17 @@
     'friendly_name': 'INVERSOR01 STR1 Amperage',
     'icon': 'mdi:solar-power',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+  })
+# ---
+# name: test_sensor_string.4
+  'unknown'
+# ---
+# name: test_sensor_string.5
+  ReadOnlyDict({
+    'device_class': 'voltage',
+    'friendly_name': 'INVERSOR01 STR1 Voltage',
+    'icon': 'mdi:solar-power',
+    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
 # name: test_sensor_total
