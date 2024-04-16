@@ -28,7 +28,7 @@ async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
     info = get_info(hass) or {}
     host_info = get_host_info(hass) or {}
     supervisor_info = get_supervisor_info(hass)
-    network_info = get_network_info(hass)
+    network_info = get_network_info(hass) or {}
 
     healthy: bool | dict[str, str]
     if supervisor_info is not None and supervisor_info.get("healthy"):
