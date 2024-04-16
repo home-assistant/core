@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from homeassistant import data_entry_flow
-from homeassistant.components.repairs import ConfirmRepairFlow, RepairsFlow
+from homeassistant.components.repairs import RepairsFlow
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
@@ -59,7 +59,5 @@ async def async_create_fix_flow(
     if TYPE_CHECKING:
         assert entry is not None
 
-    if issue_id == "migrate_notify":
-        return NotifyMigration(entry)
-
-    return ConfirmRepairFlow()
+    assert issue_id == "migrate_notify"
+    return NotifyMigration(entry)
