@@ -9,12 +9,12 @@
     "condition_type": {
       "is_locked": "{entity_name} is locked",
       "is_unlocked": "{entity_name} is unlocked",
-      "is_open": "{entity_name} is unlocked"
+      "is_open": "{entity_name} is open"
     },
     "trigger_type": {
       "locked": "{entity_name} locked",
       "unlocked": "{entity_name} unlocked",
-      "open": "{entity_name} open"
+      "open": "{entity_name} opened"
     }
   },
   "entity_component": {
