@@ -1,4 +1,5 @@
 """Support for Lutron events."""
+
 from enum import StrEnum
 
 from pylutron import Button, Keypad, Lutron, LutronEvent
