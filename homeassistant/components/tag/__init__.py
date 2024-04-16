@@ -25,6 +25,7 @@ from .const import DEFAULT_NAME, DEVICE_ID, DOMAIN, EVENT_TAG_SCANNED, TAG_ID
 _LOGGER = logging.getLogger(__name__)
 
 LAST_SCANNED = "last_scanned"
+LAST_SCANNED_BY_DEVICE_ID = "last_scanned_by_device_id"
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 
@@ -258,7 +259,7 @@ class TagEntity(Entity):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the sun."""
-        return {TAG_ID: self._tag_id, DEVICE_ID: self._last_device_id}
+        return {TAG_ID: self._tag_id, LAST_SCANNED_BY_DEVICE_ID: self._last_device_id}
 
     async def async_add_initial_state(self) -> None:
         """Add initial state."""

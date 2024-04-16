@@ -7,8 +7,8 @@
           "tag_id": {
             "name": "Tag ID"
           },
-          "device_id": {
-            "name": "Device ID"
+          "last_scanned_by_device_id": {
+            "name": "Last scanned by device ID"
           }
         }
       }

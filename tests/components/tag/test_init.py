@@ -175,7 +175,7 @@ async def test_entity(
     assert entity.state == now.isoformat(timespec="milliseconds")
     assert entity.attributes == {
         "tag_id": "test tag id",
-        "device_id": "device id",
+        "last_scanned_by_device_id": "device id",
         "friendly_name": "test tag name",
     }
 
