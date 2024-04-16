@@ -18,6 +18,9 @@ on:
       - "requirements.txt"
       - "script/gen_requirements_all.py"
 
+env:
+  DEFAULT_PYTHON: "3.12"
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref_name}}
   cancel-in-progress: true
