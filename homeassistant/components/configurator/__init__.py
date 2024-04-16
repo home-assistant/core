@@ -250,7 +250,7 @@ class Configurator:
 
         # field validation goes here?
         if callback and (
-            job := self.hass.async_add_hass_job(
+            job := self.hass.async_run_hass_job(
                 HassJob(callback), call.data.get(ATTR_FIELDS, {})
             )
         ):

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from pyprusalink.types import PrinterState
+
 from homeassistant.components.camera import Camera
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -38,6 +40,7 @@ class PrusaLinkJobPreviewEntity(PrusaLinkEntity, Camera):
         """Get if camera is available."""
         return (
             super().available
+            and self.coordinator.data.get("state") != PrinterState.IDLE.value
             and (file := self.coordinator.data.get("file"))
             and file.get("refs", {}).get("thumbnail")
         )

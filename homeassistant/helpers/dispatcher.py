@@ -3,41 +3,22 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
-from dataclasses import dataclass
 from functools import partial
 import logging
-from typing import Any, Generic, TypeVarTuple, overload
+from typing import Any, TypeVarTuple, overload
 
 from homeassistant.core import HassJob, HomeAssistant, callback
 from homeassistant.loader import bind_hass
 from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.logging import catch_log_exception
 
+# Explicit reexport of 'SignalType' for backwards compatibility
+from homeassistant.util.signal_type import SignalType as SignalType  # noqa: PLC0414
+
 _Ts = TypeVarTuple("_Ts")
 
 _LOGGER = logging.getLogger(__name__)
 DATA_DISPATCHER = "dispatcher"
-
-
-@dataclass(frozen=True)
-class SignalType(Generic[*_Ts]):
-    """Generic string class for signal to improve typing."""
-
-    name: str
-
-    def __hash__(self) -> int:
-        """Return hash of name."""
-
-        return hash(self.name)
-
-    def __eq__(self, other: Any) -> bool:
-        """Check equality for dict keys to be compatible with str."""
-
-        if isinstance(other, str):
-            return self.name == other
-        if isinstance(other, SignalType):
-            return self.name == other.name
-        return False
 
 
 _DispatcherDataType = dict[

@@ -152,9 +152,9 @@ class FroniusInverterUpdateCoordinator(FroniusCoordinatorBase):
                 data = await self.solar_net.fronius.current_inverter_data(
                     self.inverter_info.solar_net_id
                 )
-            except BadStatusError as err:
+            except BadStatusError:
                 if silent_retry == (self.SILENT_RETRIES - 1):
-                    raise err
+                    raise
                 continue
             break
         # wrap a single devices data in a dict with solar_net_id key for
