@@ -28,7 +28,7 @@ from .const import (
     STATUS_ONLINE,
 )
 from .device import RachioPerson
-from .entity import RachioDevice, RachioHoseTimerDevice
+from .entity import RachioDevice, RachioHoseTimerEntity
 from .webhooks import (
     SUBTYPE_COLD_REBOOT,
     SUBTYPE_OFFLINE,
@@ -151,7 +151,7 @@ class RachioRainSensor(RachioControllerBinarySensor):
         )
 
 
-class RachioHoseTimerBattery(RachioHoseTimerDevice, BinarySensorEntity):
+class RachioHoseTimerBattery(RachioHoseTimerEntity, BinarySensorEntity):
     """Represents a battery sensor for a smart hose timer."""
 
     _attr_device_class = BinarySensorDeviceClass.BATTERY
