@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import date
 import decimal
 import logging
+import re
 from typing import Any
 
 import sqlalchemy
@@ -75,11 +76,16 @@ async def async_setup_platform(
         return
 
     name: Template = conf[CONF_NAME]
-    query_str: str = conf[CONF_QUERY]
+    query_str: Template | str = conf[CONF_QUERY]
     value_template: Template | None = conf.get(CONF_VALUE_TEMPLATE)
     column_name: str = conf[CONF_COLUMN_NAME]
     unique_id: str | None = conf.get(CONF_UNIQUE_ID)
     db_url: str = resolve_db_url(hass, conf.get(CONF_DB_URL))
+
+    if not isinstance(query_str, Template):
+        query_str = Template(query_str)
+
+    query_str.hass = hass
 
     if value_template is not None:
         value_template.hass = hass
@@ -110,9 +116,12 @@ async def async_setup_entry(
 
     db_url: str = resolve_db_url(hass, entry.options.get(CONF_DB_URL))
     name: str = entry.options[CONF_NAME]
-    query_str: str = entry.options[CONF_QUERY]
+    query_str: Template = Template(entry.options[CONF_QUERY])
     template: str | None = entry.options.get(CONF_VALUE_TEMPLATE)
     column_name: str = entry.options[CONF_COLUMN_NAME]
+
+    query_str.ensure_valid()
+    query_str.hass = hass
 
     value_template: Template | None = None
     if template is not None:
@@ -177,7 +186,7 @@ def _async_get_or_init_domain_data(hass: HomeAssistant) -> SQLData:
 async def async_setup_sensor(
     hass: HomeAssistant,
     trigger_entity_config: ConfigType,
-    query_str: str,
+    query_str: Template,
     column_name: str,
     value_template: Template | None,
     unique_id: str | None,
@@ -214,9 +223,9 @@ async def async_setup_sensor(
     else:
         return
 
-    upper_query = query_str.upper()
+    upper_query = query_str.template.upper()
     if uses_recorder_db:
-        redacted_query = redact_credentials(query_str)
+        redacted_query = redact_credentials(query_str.template)
 
         issue_key = unique_id if unique_id else redacted_query
         # If the query has a unique id and they fix it we can dismiss the issue
@@ -253,9 +262,13 @@ async def async_setup_sensor(
     # MSSQL uses TOP and not LIMIT
     if not ("LIMIT" in upper_query or "SELECT TOP" in upper_query):
         if "mssql" in db_url:
-            query_str = upper_query.replace("SELECT", "SELECT TOP 1")
+            query_str = Template(
+                re.sub(r"(?i)^\s*SELECT", "SELECT TOP 1", query_str.template)
+            )
         else:
-            query_str = query_str.replace(";", "") + " LIMIT 1;"
+            query_str = Template(query_str.template.replace(";", "") + " LIMIT 1;")
+
+        query_str.hass = hass
 
     async_add_entities(
         [
@@ -314,7 +327,7 @@ class SQLSensor(ManualTriggerSensorEntity):
         self,
         trigger_entity_config: ConfigType,
         sessmaker: scoped_session,
-        query: str,
+        query: Template,
         column: str,
         value_template: Template | None,
         yaml: bool,
@@ -328,7 +341,9 @@ class SQLSensor(ManualTriggerSensorEntity):
         self.sessionmaker = sessmaker
         self._attr_extra_state_attributes = {}
         self._use_database_executor = use_database_executor
-        self._lambda_stmt = _generate_lambda_stmt(query)
+        self._lambda_stmt = _generate_lambda_stmt(query.async_render())
+
+        _LOGGER.info("Executing statement: %s", self._lambda_stmt)
         if not yaml and (unique_id := trigger_entity_config.get(CONF_UNIQUE_ID)):
             self._attr_name = None
             self._attr_has_entity_name = True
@@ -397,7 +412,7 @@ class SQLSensor(ManualTriggerSensorEntity):
             self._attr_native_value = data
 
         if data is None:
-            _LOGGER.warning("%s returned no results", self._query)
+            _LOGGER.warning("%s returned no results", self._query.template)
 
         sess.close()
         return data

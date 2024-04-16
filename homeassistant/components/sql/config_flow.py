@@ -50,7 +50,7 @@ OPTIONS_SCHEMA: vol.Schema = vol.Schema(
         ): selector.TextSelector(),
         vol.Required(
             CONF_QUERY,
-        ): selector.TextSelector(selector.TextSelectorConfig(multiline=True)),
+        ): selector.TemplateSelector(),
         vol.Optional(
             CONF_UNIT_OF_MEASUREMENT,
         ): selector.TextSelector(),
@@ -82,7 +82,9 @@ OPTIONS_SCHEMA: vol.Schema = vol.Schema(
 
 CONFIG_SCHEMA: vol.Schema = vol.Schema(
     {
-        vol.Required(CONF_NAME, default="Select SQL Query"): selector.TextSelector(),
+        vol.Required(
+            CONF_NAME, default="Select SQL Query"
+        ): selector.TemplateSelector(),
     }
 ).extend(OPTIONS_SCHEMA.schema)
 
