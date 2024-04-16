@@ -45,8 +45,7 @@ class EcobeeNotificationService(BaseNotificationService):
     async def async_send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message and raise issue."""
         data: EcobeeData = self.hass.data[DOMAIN]
-        # pylint: disable-next=protected-access
-        migrate_notify_issue(self.hass, data._entry)
+        migrate_notify_issue(self.hass, data.entry)
         await self.hass.async_add_executor_job(
             partial(self.send_message, message, **kwargs)
         )

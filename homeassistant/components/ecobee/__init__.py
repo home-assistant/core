@@ -109,7 +109,7 @@ class EcobeeData:
     ) -> None:
         """Initialize the Ecobee data object."""
         self._hass = hass
-        self._entry = entry
+        self.entry = entry
         self.ecobee = Ecobee(
             config={ECOBEE_API_KEY: api_key, ECOBEE_REFRESH_TOKEN: refresh_token}
         )
@@ -129,7 +129,7 @@ class EcobeeData:
         _LOGGER.debug("Refreshing ecobee tokens and updating config entry")
         if await self._hass.async_add_executor_job(self.ecobee.refresh_tokens):
             self._hass.config_entries.async_update_entry(
-                self._entry,
+                self.entry,
                 data={
                     CONF_API_KEY: self.ecobee.config[ECOBEE_API_KEY],
                     CONF_REFRESH_TOKEN: self.ecobee.config[ECOBEE_REFRESH_TOKEN],
