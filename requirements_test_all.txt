@@ -36,7 +36,7 @@ HATasmota==0.8.0
 # homeassistant.components.seven_segments
 # homeassistant.components.sighthound
 # homeassistant.components.tensorflow
-Pillow==10.2.0
+Pillow==10.3.0
 
 # homeassistant.components.plex
 PlexAPI==4.15.11
@@ -169,6 +169,7 @@ aioairzone-cloud==0.5.1
 # homeassistant.components.airzone
 aioairzone==0.7.6
 
+# homeassistant.components.ambient_network
 # homeassistant.components.ambient_station
 aioambient==2024.01.0
 
@@ -237,16 +238,6 @@ aioharmony==0.2.10
 
 # homeassistant.components.homekit_controller
 aiohomekit==3.1.5
-
-# homeassistant.components.http
-aiohttp-fast-url-dispatcher==0.3.0
-
-# homeassistant.components.http
-aiohttp-zlib-ng==0.3.1
-
-# homeassistant.components.emulated_hue
-# homeassistant.components.http
-aiohttp_cors==0.7.0
 
 # homeassistant.components.hue
 aiohue==4.7.1
@@ -341,7 +332,7 @@ aioruuvigateway==0.1.0
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==8.2.0
+aioshelly==9.0.0
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -652,7 +643,7 @@ elmax-api==0.0.4
 elvia==0.1.0
 
 # homeassistant.components.emulated_roku
-emulated-roku==0.2.1
+emulated-roku==0.3.0
 
 # homeassistant.components.huisbaasje
 energyflip-client==0.2.2
@@ -936,7 +927,7 @@ influxdb==5.3.1
 inkbird-ble==0.5.6
 
 # homeassistant.components.insteon
-insteon-frontend-home-assistant==0.4.0
+insteon-frontend-home-assistant==0.5.0
 
 # homeassistant.components.intellifire
 intellifire4py==2.2.2
@@ -1237,7 +1228,7 @@ poolsense==0.0.8
 praw==7.5.0
 
 # homeassistant.components.islamic_prayer_times
-prayer-times-calculator==0.0.12
+prayer-times-calculator-offline==1.0.3
 
 # homeassistant.components.prometheus
 prometheus-client==0.17.1
@@ -1293,7 +1284,7 @@ py-nightscout==1.2.2
 py-sucks==0.9.9
 
 # homeassistant.components.synology_dsm
-py-synologydsm-api==2.1.4
+py-synologydsm-api==2.4.2
 
 # homeassistant.components.seventeentrack
 py17track==2021.12.2
@@ -1512,6 +1503,9 @@ pylast==5.1.0
 # homeassistant.components.launch_library
 pylaunches==1.4.0
 
+# homeassistant.components.lg_netcast
+pylgnetcast==0.3.9
+
 # homeassistant.components.forked_daapd
 pylibrespot-java==0.1.1
 
@@ -1543,7 +1537,7 @@ pymeteoclimatic==0.1.0
 pymochad==0.2.0
 
 # homeassistant.components.modbus
-pymodbus==3.6.7
+pymodbus==3.6.8
 
 # homeassistant.components.monoprice
 pymonoprice==0.4
@@ -1982,7 +1976,7 @@ smhi-pkg==1.0.16
 snapcast==2.3.6
 
 # homeassistant.components.sonos
-soco==0.30.2
+soco==0.30.3
 
 # homeassistant.components.solaredge
 solaredge==0.0.2
@@ -2009,7 +2003,7 @@ spiderpy==1.6.1
 spotipy==2.23.0
 
 # homeassistant.components.sql
-sqlparse==0.4.4
+sqlparse==0.5.0
 
 # homeassistant.components.srp_energy
 srpenergy==1.3.6
@@ -2054,7 +2048,7 @@ sunweg==2.1.1
 surepy==0.9.0
 
 # homeassistant.components.switchbot_cloud
-switchbot-api==2.0.0
+switchbot-api==2.1.0
 
 # homeassistant.components.system_bridge
 systembridgeconnector==4.0.3
@@ -2155,7 +2149,7 @@ url-normalize==1.4.3
 uvcclient==0.11.0
 
 # homeassistant.components.roborock
-vacuum-map-parser-roborock==0.1.1
+vacuum-map-parser-roborock==0.1.2
 
 # homeassistant.components.vallox
 vallox-websocket-api==5.1.1
