@@ -1,4 +1,5 @@
 """Helper for httpx."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -25,8 +26,9 @@ KEEP_ALIVE_TIMEOUT = 15
 DATA_ASYNC_CLIENT = "httpx_async_client"
 DATA_ASYNC_CLIENT_NOVERIFY = "httpx_async_client_noverify"
 DEFAULT_LIMITS = limits = httpx.Limits(keepalive_expiry=KEEP_ALIVE_TIMEOUT)
-SERVER_SOFTWARE = "{0}/{1} httpx/{2} Python/{3[0]}.{3[1]}".format(
-    APPLICATION_NAME, __version__, httpx.__version__, sys.version_info
+SERVER_SOFTWARE = (
+    f"{APPLICATION_NAME}/{__version__} "
+    f"httpx/{httpx.__version__} Python/{sys.version_info[0]}.{sys.version_info[1]}"
 )
 USER_AGENT = "User-Agent"
 
@@ -55,7 +57,7 @@ class HassHttpXAsyncClient(httpx.AsyncClient):
         """Prevent an integration from reopen of the client via context manager."""
         return self
 
-    async def __aexit__(self, *args: Any) -> None:
+    async def __aexit__(self, *args: object) -> None:
         """Prevent an integration from close of the client via context manager."""
 
 

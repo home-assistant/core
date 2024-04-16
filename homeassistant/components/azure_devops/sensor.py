@@ -1,4 +1,5 @@
 """Support for Azure DevOps sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -38,19 +39,23 @@ async def async_setup_entry(
         AzureDevOpsSensor(
             coordinator,
             AzureDevOpsSensorEntityDescription(
-                key=f"{build.project.id}_{build.definition.id}_latest_build",
+                key=f"{build.project.project_id}_{build.definition.build_id}_latest_build",
                 translation_key="latest_build",
                 translation_placeholders={"definition_name": build.definition.name},
                 attrs=lambda build: {
-                    "definition_id": build.definition.id,
-                    "definition_name": build.definition.name,
-                    "id": build.id,
+                    "definition_id": (
+                        build.definition.build_id if build.definition else None
+                    ),
+                    "definition_name": (
+                        build.definition.name if build.definition else None
+                    ),
+                    "id": build.build_id,
                     "reason": build.reason,
                     "result": build.result,
                     "source_branch": build.source_branch,
                     "source_version": build.source_version,
                     "status": build.status,
-                    "url": build.links.web,
+                    "url": build.links.web if build.links else None,
                     "queue_time": build.queue_time,
                     "start_time": build.start_time,
                     "finish_time": build.finish_time,

@@ -6,38 +6,23 @@ from typing import Any
 
 import axis
 from axis.errors import Unauthorized
+from axis.interfaces.mqtt import mqtt_json_to_event
+from axis.models.mqtt import ClientState
 from axis.stream_manager import Signal, State
-from axis.vapix.interfaces.mqtt import mqtt_json_to_event
-from axis.vapix.models.mqtt import ClientState
 
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt import DOMAIN as MQTT_DOMAIN
 from homeassistant.components.mqtt.models import ReceiveMessage
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_MODEL,
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_TRIGGER_TIME,
-    CONF_USERNAME,
-)
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.setup import async_when_setup
 
-from ..const import (
-    ATTR_MANUFACTURER,
-    CONF_STREAM_PROFILE,
-    CONF_VIDEO_SOURCE,
-    DEFAULT_STREAM_PROFILE,
-    DEFAULT_TRIGGER_TIME,
-    DEFAULT_VIDEO_SOURCE,
-    DOMAIN as AXIS_DOMAIN,
-)
+from ..const import ATTR_MANUFACTURER, DOMAIN as AXIS_DOMAIN
+from .config import AxisConfig
+from .entity_loader import AxisEntityLoader
 
 
 class AxisHub:
@@ -48,12 +33,14 @@ class AxisHub:
     ) -> None:
         """Initialize the device."""
         self.hass = hass
-        self.config_entry = config_entry
+        self.config = AxisConfig.from_config_entry(config_entry)
+        self.entity_loader = AxisEntityLoader(self)
         self.api = api
 
         self.available = True
         self.fw_version = api.vapix.firmware_version
         self.product_type = api.vapix.product_type
+        self.unique_id = format_mac(api.vapix.serial_number)
 
         self.additional_diagnostics: dict[str, Any] = {}
 
@@ -64,77 +51,17 @@ class AxisHub:
         hub: AxisHub = hass.data[AXIS_DOMAIN][config_entry.entry_id]
         return hub
 
-    @property
-    def host(self) -> str:
-        """Return the host address of this device."""
-        host: str = self.config_entry.data[CONF_HOST]
-        return host
-
-    @property
-    def port(self) -> int:
-        """Return the HTTP port of this device."""
-        port: int = self.config_entry.data[CONF_PORT]
-        return port
-
-    @property
-    def username(self) -> str:
-        """Return the username of this device."""
-        username: str = self.config_entry.data[CONF_USERNAME]
-        return username
-
-    @property
-    def password(self) -> str:
-        """Return the password of this device."""
-        password: str = self.config_entry.data[CONF_PASSWORD]
-        return password
-
-    @property
-    def model(self) -> str:
-        """Return the model of this device."""
-        model: str = self.config_entry.data[CONF_MODEL]
-        return model
-
-    @property
-    def name(self) -> str:
-        """Return the name of this device."""
-        name: str = self.config_entry.data[CONF_NAME]
-        return name
-
-    @property
-    def unique_id(self) -> str | None:
-        """Return the unique ID (serial number) of this device."""
-        return self.config_entry.unique_id
-
-    # Options
-
-    @property
-    def option_stream_profile(self) -> str:
-        """Config entry option defining what stream profile camera platform should use."""
-        return self.config_entry.options.get(
-            CONF_STREAM_PROFILE, DEFAULT_STREAM_PROFILE
-        )
-
-    @property
-    def option_trigger_time(self) -> int:
-        """Config entry option defining minimum number of seconds to keep trigger high."""
-        return self.config_entry.options.get(CONF_TRIGGER_TIME, DEFAULT_TRIGGER_TIME)
-
-    @property
-    def option_video_source(self) -> str:
-        """Config entry option defining what video source camera platform should use."""
-        return self.config_entry.options.get(CONF_VIDEO_SOURCE, DEFAULT_VIDEO_SOURCE)
-
     # Signals
 
     @property
     def signal_reachable(self) -> str:
         """Device specific event to signal a change in connection status."""
-        return f"axis_reachable_{self.unique_id}"
+        return f"axis_reachable_{self.config.entry.entry_id}"
 
     @property
     def signal_new_address(self) -> str:
         """Device specific event to signal a change in device address."""
-        return f"axis_new_address_{self.unique_id}"
+        return f"axis_new_address_{self.config.entry.entry_id}"
 
     # Callbacks
 
@@ -161,20 +88,21 @@ class AxisHub:
         cannot be used with weak references.
         """
         hub = AxisHub.get_hub(hass, config_entry)
-        hub.api.config.host = hub.host
+        hub.config = AxisConfig.from_config_entry(config_entry)
+        hub.api.config.host = hub.config.host
         async_dispatcher_send(hass, hub.signal_new_address)
 
     async def async_update_device_registry(self) -> None:
         """Update device registry."""
         device_registry = dr.async_get(self.hass)
         device_registry.async_get_or_create(
-            config_entry_id=self.config_entry.entry_id,
+            config_entry_id=self.config.entry.entry_id,
             configuration_url=self.api.config.url,
-            connections={(CONNECTION_NETWORK_MAC, self.unique_id)},  # type: ignore[arg-type]
-            identifiers={(AXIS_DOMAIN, self.unique_id)},  # type: ignore[arg-type]
+            connections={(CONNECTION_NETWORK_MAC, self.unique_id)},
+            identifiers={(AXIS_DOMAIN, self.unique_id)},
             manufacturer=ATTR_MANUFACTURER,
-            model=f"{self.model} {self.product_type}",
-            name=self.name,
+            model=f"{self.config.model} {self.product_type}",
+            name=self.config.name,
             sw_version=self.fw_version,
         )
 
@@ -186,9 +114,9 @@ class AxisHub:
             # This means the user has too low privileges
             return
         if status.status.state == ClientState.ACTIVE:
-            self.config_entry.async_on_unload(
+            self.config.entry.async_on_unload(
                 await mqtt.async_subscribe(
-                    hass, f"{self.api.vapix.serial_number}/#", self.mqtt_message
+                    hass, f"{status.config.device_topic_prefix}/#", self.mqtt_message
                 )
             )
 
@@ -196,7 +124,8 @@ class AxisHub:
     def mqtt_message(self, message: ReceiveMessage) -> None:
         """Receive Axis MQTT message."""
         self.disconnect_from_stream()
-
+        if message.topic.endswith("event/connection"):
+            return
         event = mqtt_json_to_event(message.payload)
         self.api.event.handler(event)
 
@@ -205,6 +134,8 @@ class AxisHub:
     @callback
     def setup(self) -> None:
         """Set up the device events."""
+        self.entity_loader.initialize_platforms()
+
         self.api.stream.connection_status_callback.append(
             self.connection_status_callback
         )

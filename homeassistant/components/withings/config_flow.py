@@ -1,4 +1,5 @@
 """Config flow for Withings."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -12,7 +13,7 @@ from homeassistant.config_entries import ConfigEntry, ConfigFlowResult
 from homeassistant.const import CONF_TOKEN, CONF_WEBHOOK_ID
 from homeassistant.helpers import config_entry_oauth2_flow
 
-from .const import CONF_USE_WEBHOOK, DEFAULT_TITLE, DOMAIN
+from .const import DEFAULT_TITLE, DOMAIN
 
 
 class WithingsFlowHandler(
@@ -33,14 +34,8 @@ class WithingsFlowHandler(
     def extra_authorize_data(self) -> dict[str, str]:
         """Extra data that needs to be appended to the authorize url."""
         return {
-            "scope": ",".join(
-                [
-                    AuthScope.USER_INFO,
-                    AuthScope.USER_METRICS,
-                    AuthScope.USER_ACTIVITY,
-                    AuthScope.USER_SLEEP_EVENTS,
-                ]
-            )
+            "scope": f"{AuthScope.USER_INFO},{AuthScope.USER_METRICS},"
+            f"{AuthScope.USER_ACTIVITY},{AuthScope.USER_SLEEP_EVENTS}"
         }
 
     async def async_step_reauth(
@@ -70,7 +65,6 @@ class WithingsFlowHandler(
             return self.async_create_entry(
                 title=DEFAULT_TITLE,
                 data={**data, CONF_WEBHOOK_ID: async_generate_id()},
-                options={CONF_USE_WEBHOOK: False},
             )
 
         if self.reauth_entry.unique_id == user_id:

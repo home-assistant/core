@@ -1,4 +1,5 @@
 """Climate platform for Teslemetry integration."""
+
 from __future__ import annotations
 
 from typing import Any

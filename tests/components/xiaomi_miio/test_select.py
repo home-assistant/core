@@ -46,12 +46,17 @@ async def setup_test(hass: HomeAssistant):
     mock_airfresh.status().display_orientation = DisplayOrientation.Portrait
     mock_airfresh.status().ptc_level = PtcLevel.Low
 
-    with patch(
-        "homeassistant.components.xiaomi_miio.get_platforms",
-        return_value=[
-            Platform.SELECT,
-        ],
-    ), patch("homeassistant.components.xiaomi_miio.AirFreshT2017") as mock_airfresh_cls:
+    with (
+        patch(
+            "homeassistant.components.xiaomi_miio.get_platforms",
+            return_value=[
+                Platform.SELECT,
+            ],
+        ),
+        patch(
+            "homeassistant.components.xiaomi_miio.AirFreshT2017"
+        ) as mock_airfresh_cls,
+    ):
         mock_airfresh_cls.return_value = mock_airfresh
         yield mock_airfresh
 

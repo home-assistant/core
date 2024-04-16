@@ -1,4 +1,5 @@
 """Sensor platform for Hyperion."""
+
 from __future__ import annotations
 
 import functools

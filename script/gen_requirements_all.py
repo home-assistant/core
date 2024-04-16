@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Generate updated constraint and requirements files."""
+
 from __future__ import annotations
 
 import difflib
@@ -28,7 +29,6 @@ COMMENT_REQUIREMENTS = (
     "decora-wifi",
     "evdev",
     "face-recognition",
-    "opencv-python-headless",
     "pybluez",
     "pycocotools",
     "pycups",
@@ -98,7 +98,7 @@ regex==2021.8.28
 # these requirements are quite loose. As the entire stack has some outstanding issues, and
 # even newer versions seem to introduce new issues, it's useful for us to pin all these
 # requirements so we can directly link HA versions to these library versions.
-anyio==4.1.0
+anyio==4.3.0
 h11==0.14.0
 httpcore==1.0.4
 
@@ -176,6 +176,13 @@ pandas==2.1.4
 
 # chacha20poly1305-reuseable==0.12.0 is incompatible with cryptography==42.0.x
 chacha20poly1305-reuseable>=0.12.1
+
+# pycountry<23.12.11 imports setuptools at run time
+# https://github.com/pycountry/pycountry/blob/ea69bab36f00df58624a0e490fdad4ccdc14268b/HISTORY.txt#L39
+pycountry>=23.12.11
+
+# scapy<2.5.0 will not work with python3.12
+scapy>=2.5.0
 """
 
 GENERATED_MESSAGE = (
@@ -256,9 +263,7 @@ def normalize_package_name(requirement: str) -> str:
         return ""
 
     # pipdeptree needs lowercase and dash instead of underscore as separator
-    package = match.group(1).lower().replace("_", "-")
-
-    return package
+    return match.group(1).lower().replace("_", "-")
 
 
 def comment_requirement(req: str) -> bool:
@@ -342,8 +347,7 @@ def generate_requirements_list(reqs: dict[str, list[str]]) -> str:
     """Generate a pip file based on requirements."""
     output = []
     for pkg, requirements in sorted(reqs.items(), key=itemgetter(0)):
-        for req in sorted(requirements):
-            output.append(f"\n# {req}")
+        output.extend(f"\n# {req}" for req in sorted(requirements))
 
         if comment_requirement(pkg):
             output.append(f"\n# {pkg}\n")
@@ -430,15 +434,17 @@ def gather_constraints() -> str:
     return (
         GENERATED_MESSAGE
         + "\n".join(
-            sorted(
-                {
-                    *core_requirements(),
-                    *gather_recursive_requirements("default_config"),
-                    *gather_recursive_requirements("mqtt"),
-                },
-                key=str.lower,
-            )
-            + [""]
+            [
+                *sorted(
+                    {
+                        *core_requirements(),
+                        *gather_recursive_requirements("default_config"),
+                        *gather_recursive_requirements("mqtt"),
+                    },
+                    key=str.lower,
+                ),
+                "",
+            ]
         )
         + CONSTRAINT_BASE
     )

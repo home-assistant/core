@@ -1,4 +1,5 @@
 """Test the zerproc lights."""
+
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -52,11 +53,13 @@ async def mock_light(hass, mock_entry):
 
     mock_state = pyzerproc.LightState(False, (0, 0, 0))
 
-    with patch(
-        "homeassistant.components.zerproc.light.pyzerproc.discover",
-        return_value=[light],
-    ), patch.object(light, "connect"), patch.object(
-        light, "get_state", return_value=mock_state
+    with (
+        patch(
+            "homeassistant.components.zerproc.light.pyzerproc.discover",
+            return_value=[light],
+        ),
+        patch.object(light, "connect"),
+        patch.object(light, "get_state", return_value=mock_state),
     ):
         await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()

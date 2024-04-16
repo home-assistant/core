@@ -1,4 +1,5 @@
 """Config flow for SwitchBee Smart Home integration."""
+
 from __future__ import annotations
 
 import logging

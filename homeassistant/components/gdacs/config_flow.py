@@ -1,4 +1,5 @@
 """Config flow to configure the GDACS integration."""
+
 import logging
 from typing import Any
 

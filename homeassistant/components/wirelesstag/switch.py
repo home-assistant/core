@@ -1,4 +1,5 @@
 """Switch implementation for Wireless Sensor Tags (wirelesstag.net)."""
+
 from __future__ import annotations
 
 from typing import Any

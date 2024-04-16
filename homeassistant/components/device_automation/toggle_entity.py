@@ -1,4 +1,5 @@
 """Device automation helpers for toggle entity."""
+
 from __future__ import annotations
 
 import voluptuous as vol

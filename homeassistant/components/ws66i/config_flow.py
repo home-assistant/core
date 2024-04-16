@@ -1,4 +1,5 @@
 """Config flow for WS66i 6-Zone Amplifier integration."""
+
 from __future__ import annotations
 
 import logging
@@ -127,11 +128,9 @@ class WS66iConfigFlow(ConfigFlow, domain=DOMAIN):
 
 @callback
 def _key_for_source(index, source, previous_sources):
-    key = vol.Required(
+    return vol.Required(
         source, description={"suggested_value": previous_sources[str(index)]}
     )
-
-    return key
 
 
 class Ws66iOptionsFlowHandler(OptionsFlow):

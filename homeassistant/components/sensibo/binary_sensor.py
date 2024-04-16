@@ -1,4 +1,5 @@
 """Binary Sensor platform for Sensibo integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -24,32 +25,18 @@ from .entity import SensiboDeviceBaseEntity, SensiboMotionBaseEntity
 PARALLEL_UPDATES = 0
 
 
-@dataclass(frozen=True)
-class MotionBaseEntityDescriptionMixin:
-    """Mixin for required Sensibo base description keys."""
+@dataclass(frozen=True, kw_only=True)
+class SensiboMotionBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Describes Sensibo Motion sensor entity."""
 
     value_fn: Callable[[MotionSensor], bool | None]
 
 
-@dataclass(frozen=True)
-class DeviceBaseEntityDescriptionMixin:
-    """Mixin for required Sensibo base description keys."""
+@dataclass(frozen=True, kw_only=True)
+class SensiboDeviceBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Describes Sensibo Motion sensor entity."""
 
     value_fn: Callable[[SensiboDevice], bool | None]
-
-
-@dataclass(frozen=True)
-class SensiboMotionBinarySensorEntityDescription(
-    BinarySensorEntityDescription, MotionBaseEntityDescriptionMixin
-):
-    """Describes Sensibo Motion sensor entity."""
-
-
-@dataclass(frozen=True)
-class SensiboDeviceBinarySensorEntityDescription(
-    BinarySensorEntityDescription, DeviceBaseEntityDescriptionMixin
-):
-    """Describes Sensibo Motion sensor entity."""
 
 
 FILTER_CLEAN_REQUIRED_DESCRIPTION = SensiboDeviceBinarySensorEntityDescription(

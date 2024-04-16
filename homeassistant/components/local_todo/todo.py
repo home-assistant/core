@@ -18,6 +18,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util import dt as dt_util
 
 from .const import CONF_TODO_LIST_NAME, DOMAIN
 from .store import LocalTodoListStore
@@ -124,6 +125,9 @@ class LocalTodoListEntity(TodoListEntity):
         self._attr_name = name.capitalize()
         self._attr_unique_id = unique_id
 
+    def _new_todo_store(self) -> TodoStore:
+        return TodoStore(self._calendar, tzinfo=dt_util.DEFAULT_TIME_ZONE)
+
     async def async_update(self) -> None:
         """Update entity state based on the local To-do items."""
         todo_items = []
@@ -147,20 +151,20 @@ class LocalTodoListEntity(TodoListEntity):
     async def async_create_todo_item(self, item: TodoItem) -> None:
         """Add an item to the To-do list."""
         todo = _convert_item(item)
-        TodoStore(self._calendar).add(todo)
+        self._new_todo_store().add(todo)
         await self.async_save()
         await self.async_update_ha_state(force_refresh=True)
 
     async def async_update_todo_item(self, item: TodoItem) -> None:
         """Update an item to the To-do list."""
         todo = _convert_item(item)
-        TodoStore(self._calendar).edit(todo.uid, todo)
+        self._new_todo_store().edit(todo.uid, todo)
         await self.async_save()
         await self.async_update_ha_state(force_refresh=True)
 
     async def async_delete_todo_items(self, uids: list[str]) -> None:
         """Delete an item from the To-do list."""
-        store = TodoStore(self._calendar)
+        store = self._new_todo_store()
         for uid in uids:
             store.delete(uid)
         await self.async_save()

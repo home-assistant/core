@@ -1,4 +1,5 @@
 """Helpers for managing a pairing with a HomeKit accessory or bridge."""
+
 from __future__ import annotations
 
 import asyncio
@@ -144,6 +145,7 @@ class HKDevice:
             cooldown=DEBOUNCE_COOLDOWN,
             immediate=False,
             function=self.async_update,
+            background=True,
         )
 
         self._availability_callbacks: set[CALLBACK_TYPE] = set()
@@ -196,13 +198,19 @@ class HKDevice:
             self._subscribe_timer()
             self._subscribe_timer = None
 
-    async def _async_subscribe(self, _now: datetime) -> None:
+    @callback
+    def _async_subscribe(self, _now: datetime) -> None:
         """Subscribe to characteristics."""
         self._subscribe_timer = None
         if self._pending_subscribes:
             subscribes = self._pending_subscribes.copy()
             self._pending_subscribes.clear()
-            await self.pairing.subscribe(subscribes)
+            self.config_entry.async_create_task(
+                self.hass,
+                self.pairing.subscribe(subscribes),
+                name=f"hkc subscriptions {self.unique_id}",
+                eager_start=True,
+            )
 
     def remove_watchable_characteristics(
         self, characteristics: list[tuple[int, int]]
@@ -339,8 +347,11 @@ class HKDevice:
     @callback
     def _async_schedule_update(self, now: datetime) -> None:
         """Schedule an update."""
-        self.hass.async_create_task(
-            self._debounced_update.async_call(), eager_start=True
+        self.config_entry.async_create_background_task(
+            self.hass,
+            self._debounced_update.async_call(),
+            name=f"hkc {self.unique_id} alive poll",
+            eager_start=True,
         )
 
     async def async_add_new_entities(self) -> None:
@@ -372,6 +383,7 @@ class HKDevice:
             model=accessory.model,
             sw_version=accessory.firmware_revision,
             hw_version=accessory.hardware_revision,
+            serial_number=accessory.serial_number,
         )
 
         if accessory.aid != 1:
@@ -692,8 +704,8 @@ class HKDevice:
 
     def process_config_changed(self, config_num: int) -> None:
         """Handle a config change notification from the pairing."""
-        self.hass.async_create_task(
-            self.async_update_new_accessories_state(), eager_start=True
+        self.config_entry.async_create_task(
+            self.hass, self.async_update_new_accessories_state(), eager_start=True
         )
 
     async def async_update_new_accessories_state(self) -> None:

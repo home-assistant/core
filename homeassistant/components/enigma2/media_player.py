@@ -1,4 +1,5 @@
 """Support for Enigma2 media players."""
+
 from __future__ import annotations
 
 import contextlib

@@ -1,4 +1,5 @@
 """Commands part of Websocket API."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -20,6 +21,7 @@ from homeassistant.const import (
 from homeassistant.core import (
     Context,
     Event,
+    EventStateChangedData,
     HomeAssistant,
     ServiceResponse,
     State,
@@ -35,7 +37,6 @@ from homeassistant.exceptions import (
 from homeassistant.helpers import config_validation as cv, entity, template
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import (
-    EventStateChangedData,
     TrackTemplate,
     TrackTemplateResult,
     async_track_template_result,
@@ -47,7 +48,6 @@ from homeassistant.helpers.json import (
     json_bytes,
 )
 from homeassistant.helpers.service import async_get_all_descriptions
-from homeassistant.helpers.typing import EventType
 from homeassistant.loader import (
     Integration,
     IntegrationNotFound,
@@ -55,7 +55,7 @@ from homeassistant.loader import (
     async_get_integration_descriptions,
     async_get_integrations,
 )
-from homeassistant.setup import DATA_SETUP_TIME, async_get_loaded_integrations
+from homeassistant.setup import async_get_loaded_integrations, async_get_setup_timings
 from homeassistant.util.json import format_unserializable_data
 
 from . import const, decorators, messages
@@ -165,7 +165,7 @@ def handle_subscribe_events(
         )
 
     connection.subscriptions[msg["id"]] = hass.bus.async_listen(
-        event_type, forward_events, run_immediately=True
+        event_type, forward_events
     )
 
     connection.send_result(msg["id"])
@@ -289,7 +289,7 @@ async def handle_call_service(
             translation_placeholders=err.translation_placeholders,
         )
     except HomeAssistantError as err:
-        connection.logger.exception(err)
+        connection.logger.exception("Unexpected exception")
         connection.send_error(
             msg["id"],
             const.ERR_HOME_ASSISTANT_ERROR,
@@ -299,7 +299,7 @@ async def handle_call_service(
             translation_placeholders=err.translation_placeholders,
         )
     except Exception as err:  # pylint: disable=broad-except
-        connection.logger.exception(err)
+        connection.logger.exception("Unexpected exception")
         connection.send_error(msg["id"], const.ERR_UNKNOWN_ERROR, str(err))
 
 
@@ -367,7 +367,7 @@ def _forward_entity_changes(
     entity_ids: set[str],
     user: User,
     msg_id: int,
-    event: Event,
+    event: Event[EventStateChangedData],
 ) -> None:
     """Forward entity state changed events to websocket."""
     entity_id = event.data["entity_id"]
@@ -410,7 +410,6 @@ def handle_subscribe_entities(
             connection.user,
             msg["id"],
         ),
-        run_immediately=True,
     )
     connection.send_result(msg["id"])
 
@@ -539,12 +538,11 @@ def handle_integration_setup_info(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle integrations command."""
-    setup_time: dict[str, float] = hass.data[DATA_SETUP_TIME]
     connection.send_result(
         msg["id"],
         [
             {"domain": integration, "seconds": seconds}
-            for integration, seconds in setup_time.items()
+            for integration, seconds in async_get_setup_timings(hass).items()
         ],
     )
 
@@ -621,7 +619,7 @@ async def handle_render_template(
 
     @callback
     def _template_listener(
-        event: EventType[EventStateChangedData] | None,
+        event: Event[EventStateChangedData] | None,
         updates: list[TrackTemplateResult],
     ) -> None:
         track_template_result = updates.pop()

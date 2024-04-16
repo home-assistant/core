@@ -1,4 +1,5 @@
 """The Airzone Cloud integration."""
+
 from __future__ import annotations
 
 from aioairzone_cloud.cloudapi import AirzoneCloudApi
@@ -16,6 +17,7 @@ PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
     Platform.CLIMATE,
     Platform.SENSOR,
+    Platform.WATER_HEATER,
 ]
 
 

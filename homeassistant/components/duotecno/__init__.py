@@ -1,4 +1,5 @@
 """The duotecno integration."""
+
 from __future__ import annotations
 
 from duotecno.controller import PyDuotecno

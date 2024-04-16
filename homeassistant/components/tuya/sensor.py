@@ -1,4 +1,5 @@
 """Support for Tuya sensors."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -1086,11 +1087,11 @@ async def async_setup_entry(
         for device_id in device_ids:
             device = hass_data.manager.device_map[device_id]
             if descriptions := SENSORS.get(device.category):
-                for description in descriptions:
-                    if description.key in device.status:
-                        entities.append(
-                            TuyaSensorEntity(device, hass_data.manager, description)
-                        )
+                entities.extend(
+                    TuyaSensorEntity(device, hass_data.manager, description)
+                    for description in descriptions
+                    if description.key in device.status
+                )
 
         async_add_entities(entities)
 

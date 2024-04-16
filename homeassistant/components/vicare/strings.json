@@ -286,6 +286,21 @@
           "standby": "Standby"
         }
       },
+      "ess_discharge_today": {
+        "name": "Battery discharge today"
+      },
+      "ess_discharge_this_week": {
+        "name": "Battery discharge this week"
+      },
+      "ess_discharge_this_month": {
+        "name": "Battery discharge this month"
+      },
+      "ess_discharge_this_year": {
+        "name": "Battery discharge this year"
+      },
+      "ess_discharge_total": {
+        "name": "Battery discharge total"
+      },
       "pcc_current_power_exchange": {
         "name": "Grid power exchange"
       },

@@ -1,4 +1,5 @@
 """Test config entries API."""
+
 from collections import OrderedDict
 from http import HTTPStatus
 from unittest.mock import ANY, AsyncMock, patch
@@ -12,6 +13,7 @@ from homeassistant.components.config import config_entries
 from homeassistant.config_entries import HANDLERS, ConfigFlow
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_flow, config_validation as cv
 from homeassistant.loader import IntegrationNotFound
 from homeassistant.setup import async_setup_component
@@ -130,6 +132,8 @@ async def test_get_entries(hass: HomeAssistant, client, clear_handlers) -> None:
             "pref_disable_polling": False,
             "disabled_by": None,
             "reason": None,
+            "error_reason_translation_key": None,
+            "error_reason_translation_placeholders": None,
         },
         {
             "domain": "comp2",
@@ -144,6 +148,8 @@ async def test_get_entries(hass: HomeAssistant, client, clear_handlers) -> None:
             "pref_disable_polling": False,
             "disabled_by": None,
             "reason": "Unsupported API",
+            "error_reason_translation_key": None,
+            "error_reason_translation_placeholders": None,
         },
         {
             "domain": "comp3",
@@ -158,6 +164,8 @@ async def test_get_entries(hass: HomeAssistant, client, clear_handlers) -> None:
             "pref_disable_polling": False,
             "disabled_by": core_ce.ConfigEntryDisabler.USER,
             "reason": None,
+            "error_reason_translation_key": None,
+            "error_reason_translation_placeholders": None,
         },
         {
             "domain": "comp4",
@@ -172,6 +180,8 @@ async def test_get_entries(hass: HomeAssistant, client, clear_handlers) -> None:
             "pref_disable_polling": False,
             "disabled_by": None,
             "reason": None,
+            "error_reason_translation_key": None,
+            "error_reason_translation_placeholders": None,
         },
         {
             "domain": "comp5",
@@ -186,6 +196,8 @@ async def test_get_entries(hass: HomeAssistant, client, clear_handlers) -> None:
             "pref_disable_polling": False,
             "disabled_by": None,
             "reason": None,
+            "error_reason_translation_key": None,
+            "error_reason_translation_placeholders": None,
         },
     ]
 
@@ -328,11 +340,11 @@ async def test_reload_entry_in_setup_retry(
 
 @pytest.mark.parametrize(
     ("type_filter", "result"),
-    (
+    [
         (None, {"hello", "another", "world"}),
         ("integration", {"hello", "another"}),
         ("helper", {"world"}),
-    ),
+    ],
 )
 async def test_available_flows(
     hass: HomeAssistant, client, type_filter, result
@@ -535,6 +547,8 @@ async def test_create_account(
             "pref_disable_polling": False,
             "title": "Test Entry",
             "reason": None,
+            "error_reason_translation_key": None,
+            "error_reason_translation_placeholders": None,
         },
         "description": None,
         "description_placeholders": None,
@@ -614,6 +628,8 @@ async def test_two_step_flow(
                 "pref_disable_polling": False,
                 "title": "user-title",
                 "reason": None,
+                "error_reason_translation_key": None,
+                "error_reason_translation_placeholders": None,
             },
             "description": None,
             "description_placeholders": None,
@@ -1057,6 +1073,8 @@ async def test_get_single(
         "pref_disable_new_entities": False,
         "pref_disable_polling": False,
         "reason": None,
+        "error_reason_translation_key": None,
+        "error_reason_translation_placeholders": None,
         "source": "user",
         "state": "loaded",
         "supports_reconfigure": False,
@@ -1288,7 +1306,7 @@ async def test_ignore_flow(
         result = await hass.config_entries.flow.async_init(
             "test", context={"source": core_ce.SOURCE_USER}
         )
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
 
         await ws_client.send_json(
             {
@@ -1392,6 +1410,8 @@ async def test_get_matching_entries_ws(
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "reason": None,
+            "error_reason_translation_key": None,
+            "error_reason_translation_placeholders": None,
             "source": "bla",
             "state": "not_loaded",
             "supports_reconfigure": False,
@@ -1407,6 +1427,8 @@ async def test_get_matching_entries_ws(
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "reason": "Unsupported API",
+            "error_reason_translation_key": None,
+            "error_reason_translation_placeholders": None,
             "source": "bla2",
             "state": "setup_error",
             "supports_reconfigure": False,
@@ -1422,6 +1444,8 @@ async def test_get_matching_entries_ws(
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "reason": None,
+            "error_reason_translation_key": None,
+            "error_reason_translation_placeholders": None,
             "source": "bla3",
             "state": "not_loaded",
             "supports_reconfigure": False,
@@ -1437,6 +1461,8 @@ async def test_get_matching_entries_ws(
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "reason": None,
+            "error_reason_translation_key": None,
+            "error_reason_translation_placeholders": None,
             "source": "bla4",
             "state": "not_loaded",
             "supports_reconfigure": False,
@@ -1452,6 +1478,8 @@ async def test_get_matching_entries_ws(
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "reason": None,
+            "error_reason_translation_key": None,
+            "error_reason_translation_placeholders": None,
             "source": "bla5",
             "state": "not_loaded",
             "supports_reconfigure": False,
@@ -1478,6 +1506,8 @@ async def test_get_matching_entries_ws(
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "reason": None,
+            "error_reason_translation_key": None,
+            "error_reason_translation_placeholders": None,
             "source": "bla",
             "state": "not_loaded",
             "supports_reconfigure": False,
@@ -1503,6 +1533,8 @@ async def test_get_matching_entries_ws(
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "reason": None,
+            "error_reason_translation_key": None,
+            "error_reason_translation_placeholders": None,
             "source": "bla4",
             "state": "not_loaded",
             "supports_reconfigure": False,
@@ -1518,6 +1550,8 @@ async def test_get_matching_entries_ws(
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "reason": None,
+            "error_reason_translation_key": None,
+            "error_reason_translation_placeholders": None,
             "source": "bla5",
             "state": "not_loaded",
             "supports_reconfigure": False,
@@ -1543,6 +1577,8 @@ async def test_get_matching_entries_ws(
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "reason": None,
+            "error_reason_translation_key": None,
+            "error_reason_translation_placeholders": None,
             "source": "bla",
             "state": "not_loaded",
             "supports_reconfigure": False,
@@ -1558,6 +1594,8 @@ async def test_get_matching_entries_ws(
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "reason": None,
+            "error_reason_translation_key": None,
+            "error_reason_translation_placeholders": None,
             "source": "bla3",
             "state": "not_loaded",
             "supports_reconfigure": False,
@@ -1589,6 +1627,8 @@ async def test_get_matching_entries_ws(
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "reason": None,
+            "error_reason_translation_key": None,
+            "error_reason_translation_placeholders": None,
             "source": "bla",
             "state": "not_loaded",
             "supports_reconfigure": False,
@@ -1604,6 +1644,8 @@ async def test_get_matching_entries_ws(
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "reason": "Unsupported API",
+            "error_reason_translation_key": None,
+            "error_reason_translation_placeholders": None,
             "source": "bla2",
             "state": "setup_error",
             "supports_reconfigure": False,
@@ -1619,6 +1661,8 @@ async def test_get_matching_entries_ws(
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "reason": None,
+            "error_reason_translation_key": None,
+            "error_reason_translation_placeholders": None,
             "source": "bla3",
             "state": "not_loaded",
             "supports_reconfigure": False,
@@ -1634,6 +1678,8 @@ async def test_get_matching_entries_ws(
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "reason": None,
+            "error_reason_translation_key": None,
+            "error_reason_translation_placeholders": None,
             "source": "bla4",
             "state": "not_loaded",
             "supports_reconfigure": False,
@@ -1649,6 +1695,8 @@ async def test_get_matching_entries_ws(
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "reason": None,
+            "error_reason_translation_key": None,
+            "error_reason_translation_placeholders": None,
             "source": "bla5",
             "state": "not_loaded",
             "supports_reconfigure": False,
@@ -1748,6 +1796,8 @@ async def test_subscribe_entries_ws(
                 "pref_disable_new_entities": False,
                 "pref_disable_polling": False,
                 "reason": None,
+                "error_reason_translation_key": None,
+                "error_reason_translation_placeholders": None,
                 "source": "bla",
                 "state": "not_loaded",
                 "supports_reconfigure": False,
@@ -1766,6 +1816,8 @@ async def test_subscribe_entries_ws(
                 "pref_disable_new_entities": False,
                 "pref_disable_polling": False,
                 "reason": "Unsupported API",
+                "error_reason_translation_key": None,
+                "error_reason_translation_placeholders": None,
                 "source": "bla2",
                 "state": "setup_error",
                 "supports_reconfigure": False,
@@ -1784,6 +1836,8 @@ async def test_subscribe_entries_ws(
                 "pref_disable_new_entities": False,
                 "pref_disable_polling": False,
                 "reason": None,
+                "error_reason_translation_key": None,
+                "error_reason_translation_placeholders": None,
                 "source": "bla3",
                 "state": "not_loaded",
                 "supports_reconfigure": False,
@@ -1806,6 +1860,8 @@ async def test_subscribe_entries_ws(
                 "pref_disable_new_entities": False,
                 "pref_disable_polling": False,
                 "reason": None,
+                "error_reason_translation_key": None,
+                "error_reason_translation_placeholders": None,
                 "source": "bla",
                 "state": "not_loaded",
                 "supports_reconfigure": False,
@@ -1829,6 +1885,8 @@ async def test_subscribe_entries_ws(
                 "pref_disable_new_entities": False,
                 "pref_disable_polling": False,
                 "reason": None,
+                "error_reason_translation_key": None,
+                "error_reason_translation_placeholders": None,
                 "source": "bla",
                 "state": "not_loaded",
                 "supports_reconfigure": False,
@@ -1852,6 +1910,8 @@ async def test_subscribe_entries_ws(
                 "pref_disable_new_entities": False,
                 "pref_disable_polling": False,
                 "reason": None,
+                "error_reason_translation_key": None,
+                "error_reason_translation_placeholders": None,
                 "source": "bla",
                 "state": "not_loaded",
                 "supports_reconfigure": False,
@@ -1934,6 +1994,8 @@ async def test_subscribe_entries_ws_filtered(
                 "pref_disable_new_entities": False,
                 "pref_disable_polling": False,
                 "reason": None,
+                "error_reason_translation_key": None,
+                "error_reason_translation_placeholders": None,
                 "source": "bla",
                 "state": "not_loaded",
                 "supports_reconfigure": False,
@@ -1952,6 +2014,8 @@ async def test_subscribe_entries_ws_filtered(
                 "pref_disable_new_entities": False,
                 "pref_disable_polling": False,
                 "reason": None,
+                "error_reason_translation_key": None,
+                "error_reason_translation_placeholders": None,
                 "source": "bla3",
                 "state": "not_loaded",
                 "supports_reconfigure": False,
@@ -1976,6 +2040,8 @@ async def test_subscribe_entries_ws_filtered(
                 "pref_disable_new_entities": False,
                 "pref_disable_polling": False,
                 "reason": None,
+                "error_reason_translation_key": None,
+                "error_reason_translation_placeholders": None,
                 "source": "bla",
                 "state": "not_loaded",
                 "supports_reconfigure": False,
@@ -1998,6 +2064,8 @@ async def test_subscribe_entries_ws_filtered(
                 "pref_disable_new_entities": False,
                 "pref_disable_polling": False,
                 "reason": None,
+                "error_reason_translation_key": None,
+                "error_reason_translation_placeholders": None,
                 "source": "bla3",
                 "state": "not_loaded",
                 "supports_reconfigure": False,
@@ -2022,6 +2090,8 @@ async def test_subscribe_entries_ws_filtered(
                 "pref_disable_new_entities": False,
                 "pref_disable_polling": False,
                 "reason": None,
+                "error_reason_translation_key": None,
+                "error_reason_translation_placeholders": None,
                 "source": "bla",
                 "state": "not_loaded",
                 "supports_reconfigure": False,
@@ -2045,6 +2115,8 @@ async def test_subscribe_entries_ws_filtered(
                 "pref_disable_new_entities": False,
                 "pref_disable_polling": False,
                 "reason": None,
+                "error_reason_translation_key": None,
+                "error_reason_translation_placeholders": None,
                 "source": "bla",
                 "state": "not_loaded",
                 "supports_reconfigure": False,
@@ -2224,6 +2296,8 @@ async def test_supports_reconfigure(
             "pref_disable_polling": False,
             "title": "Test Entry",
             "reason": None,
+            "error_reason_translation_key": None,
+            "error_reason_translation_placeholders": None,
         },
         "description": None,
         "description_placeholders": None,

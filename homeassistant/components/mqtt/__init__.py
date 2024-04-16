@@ -1,11 +1,12 @@
 """Support for MQTT message handling."""
+
 from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
 from datetime import datetime
 import logging
-from typing import TYPE_CHECKING, Any, TypeVar, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import voluptuous as vol
 
@@ -83,7 +84,6 @@ from .const import (  # noqa: F401
     DOMAIN,
     MQTT_CONNECTED,
     MQTT_DISCONNECTED,
-    PLATFORMS,
     RELOADABLE_PLATFORMS,
     TEMPLATE_ERRORS,
 )
@@ -98,9 +98,11 @@ from .models import (  # noqa: F401
 )
 from .util import (  # noqa: F401
     async_create_certificate_temp_files,
+    async_forward_entry_setup_and_setup_discovery,
     async_wait_for_mqtt_client,
     get_mqtt_data,
     mqtt_config_entry_enabled,
+    platforms_from_config,
     valid_publish_topic,
     valid_qos_schema,
     valid_subscribe_topic,
@@ -140,8 +142,6 @@ CONFIG_ENTRY_CONFIG_KEYS = [
     CONF_USERNAME,
     CONF_WILL_MESSAGE,
 ]
-
-_T = TypeVar("_T")
 
 REMOVED_OPTIONS = vol.All(
     cv.removed(CONF_BIRTH_MESSAGE),  # Removed in HA Core 2023.4
@@ -329,8 +329,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             except vol.Invalid as err:
                 err_str = str(err)
                 raise ServiceValidationError(
-                    f"Unable to publish: topic template '{msg_topic_template}' produced an "
-                    f"invalid topic '{rendered_topic}' after rendering ({err_str})",
                     translation_domain=DOMAIN,
                     translation_key="invalid_publish_topic",
                     translation_placeholders={
@@ -403,19 +401,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 )
             except ConfigValidationError as ex:
                 raise ServiceValidationError(
-                    str(ex),
                     translation_domain=ex.translation_domain,
                     translation_key=ex.translation_key,
                     translation_placeholders=ex.translation_placeholders,
                 ) from ex
 
+            new_config: list[ConfigType] = config_yaml.get(DOMAIN, [])
+            platforms_used = platforms_from_config(new_config)
+            new_platforms = platforms_used - mqtt_data.platforms_loaded
+            await async_forward_entry_setup_and_setup_discovery(
+                hass, entry, new_platforms
+            )
             # Check the schema before continuing reload
             await async_check_config_schema(hass, config_yaml)
 
             # Remove repair issues
             _async_remove_mqtt_issues(hass, mqtt_data)
 
-            mqtt_data.config = config_yaml.get(DOMAIN, {})
+            mqtt_data.config = new_config
 
             # Reload the modern yaml platforms
             mqtt_platforms = async_get_platforms(hass, DOMAIN)
@@ -437,37 +440,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         async_register_admin_service(hass, DOMAIN, SERVICE_RELOAD, _reload_config)
 
-    async def async_forward_entry_setup_and_setup_discovery(
-        config_entry: ConfigEntry,
-        conf: ConfigType,
-    ) -> None:
-        """Forward the config entry setup to the platforms and set up discovery."""
-        # Local import to avoid circular dependencies
-        # pylint: disable-next=import-outside-toplevel
-        from . import device_automation, tag
-
-        # Forward the entry setup to the MQTT platforms
-        await asyncio.gather(
-            *(
-                [
-                    device_automation.async_setup_entry(hass, config_entry),
-                    tag.async_setup_entry(hass, config_entry),
-                ]
-                + [
-                    hass.config_entries.async_forward_entry_setup(entry, component)
-                    for component in PLATFORMS
-                ]
-            )
+    platforms_used = platforms_from_config(mqtt_data.config)
+    await async_forward_entry_setup_and_setup_discovery(hass, entry, platforms_used)
+    # Setup reload service after all platforms have loaded
+    await async_setup_reload_service()
+    # Setup discovery
+    if conf.get(CONF_DISCOVERY, DEFAULT_DISCOVERY):
+        await discovery.async_start(
+            hass, conf.get(CONF_DISCOVERY_PREFIX, DEFAULT_PREFIX), entry
         )
-        # Setup discovery
-        if conf.get(CONF_DISCOVERY, DEFAULT_DISCOVERY):
-            await discovery.async_start(
-                hass, conf.get(CONF_DISCOVERY_PREFIX, DEFAULT_PREFIX), entry
-            )
-        # Setup reload service after all platforms have loaded
-        await async_setup_reload_service()
-
-    await async_forward_entry_setup_and_setup_discovery(entry, conf)
 
     return True
 
@@ -604,9 +585,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await asyncio.gather(
         *(
             hass.config_entries.async_forward_entry_unload(entry, component)
-            for component in PLATFORMS
+            for component in mqtt_data.platforms_loaded
         )
     )
+    mqtt_data.platforms_loaded = set()
     await asyncio.sleep(0)
     # Unsubscribe reload dispatchers
     while reload_dispatchers := mqtt_data.reload_dispatchers:

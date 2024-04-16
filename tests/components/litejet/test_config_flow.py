@@ -1,12 +1,14 @@
 """The tests for the litejet component."""
+
 from unittest.mock import patch
 
 from serial import SerialException
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components.litejet.const import CONF_DEFAULT_TRANSITION, DOMAIN
 from homeassistant.const import CONF_PORT
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
@@ -17,7 +19,7 @@ async def test_show_config_form(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
 
@@ -29,7 +31,7 @@ async def test_create_entry(hass: HomeAssistant, mock_litejet) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=test_data
     )
 
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "/dev/test"
     assert result["data"] == test_data
 
@@ -48,7 +50,7 @@ async def test_flow_entry_already_exists(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=test_data
     )
 
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
 
 
@@ -63,7 +65,7 @@ async def test_flow_open_failed(hass: HomeAssistant) -> None:
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data=test_data
         )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"][CONF_PORT] == "open_failed"
 
 
@@ -74,7 +76,7 @@ async def test_options(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
@@ -82,5 +84,5 @@ async def test_options(hass: HomeAssistant) -> None:
         user_input={CONF_DEFAULT_TRANSITION: 12},
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {CONF_DEFAULT_TRANSITION: 12}

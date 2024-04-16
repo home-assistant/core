@@ -1,4 +1,5 @@
 """Test different accessory types: Remotes."""
+
 from unittest.mock import patch
 
 import pytest

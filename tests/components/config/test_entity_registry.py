@@ -1,4 +1,5 @@
 """Test entity_registry API."""
+
 import pytest
 from pytest_unordered import unordered
 
@@ -60,6 +61,7 @@ async def test_list_entities(
     assert msg["result"] == [
         {
             "area_id": None,
+            "categories": {},
             "config_entry_id": None,
             "device_id": None,
             "disabled_by": None,
@@ -79,6 +81,7 @@ async def test_list_entities(
         },
         {
             "area_id": None,
+            "categories": {},
             "config_entry_id": None,
             "device_id": None,
             "disabled_by": None,
@@ -125,6 +128,7 @@ async def test_list_entities(
     assert msg["result"] == [
         {
             "area_id": None,
+            "categories": {},
             "config_entry_id": None,
             "device_id": None,
             "disabled_by": None,
@@ -348,6 +352,7 @@ async def test_get_entity(hass: HomeAssistant, client: MockHAClientWebSocket) ->
         "aliases": [],
         "area_id": None,
         "capabilities": None,
+        "categories": {},
         "config_entry_id": None,
         "device_class": None,
         "device_id": None,
@@ -381,6 +386,7 @@ async def test_get_entity(hass: HomeAssistant, client: MockHAClientWebSocket) ->
         "aliases": [],
         "area_id": None,
         "capabilities": None,
+        "categories": {},
         "config_entry_id": None,
         "device_class": None,
         "device_id": None,
@@ -439,6 +445,7 @@ async def test_get_entities(hass: HomeAssistant, client: MockHAClientWebSocket) 
             "aliases": [],
             "area_id": None,
             "capabilities": None,
+            "categories": {},
             "config_entry_id": None,
             "device_class": None,
             "device_id": None,
@@ -463,6 +470,7 @@ async def test_get_entities(hass: HomeAssistant, client: MockHAClientWebSocket) 
             "aliases": [],
             "area_id": None,
             "capabilities": None,
+            "categories": {},
             "config_entry_id": None,
             "device_class": None,
             "device_id": None,
@@ -513,16 +521,18 @@ async def test_update_entity(
     assert state.name == "before update"
     assert state.attributes[ATTR_ICON] == "icon:before update"
 
-    # UPDATE AREA, DEVICE_CLASS, HIDDEN_BY, ICON AND NAME
+    # Update area, categories, device_class, hidden_by, icon, labels & name
     await client.send_json_auto_id(
         {
             "type": "config/entity_registry/update",
             "entity_id": "test_domain.world",
             "aliases": ["alias_1", "alias_2"],
             "area_id": "mock-area-id",
+            "categories": {"scope1": "id", "scope2": "id"},
             "device_class": "custom_device_class",
             "hidden_by": "user",  # We exchange strings over the WS API, not enums
             "icon": "icon:after update",
+            "labels": ["label1", "label2"],
             "name": "after update",
         }
     )
@@ -534,6 +544,7 @@ async def test_update_entity(
             "aliases": unordered(["alias_1", "alias_2"]),
             "area_id": "mock-area-id",
             "capabilities": None,
+            "categories": {"scope1": "id", "scope2": "id"},
             "config_entry_id": None,
             "device_class": "custom_device_class",
             "device_id": None,
@@ -544,7 +555,7 @@ async def test_update_entity(
             "hidden_by": "user",  # We exchange strings over the WS API, not enums
             "icon": "icon:after update",
             "id": ANY,
-            "labels": [],
+            "labels": unordered(["label1", "label2"]),
             "name": "after update",
             "options": {},
             "original_device_class": None,
@@ -560,7 +571,7 @@ async def test_update_entity(
     assert state.name == "after update"
     assert state.attributes[ATTR_ICON] == "icon:after update"
 
-    # UPDATE HIDDEN_BY TO ILLEGAL VALUE
+    # Update hidden_by to illegal value
     await client.send_json_auto_id(
         {
             "type": "config/entity_registry/update",
@@ -574,7 +585,7 @@ async def test_update_entity(
 
     assert registry.entities["test_domain.world"].hidden_by is RegistryEntryHider.USER
 
-    # UPDATE DISABLED_BY TO USER
+    # Update disabled_by to user
     await client.send_json_auto_id(
         {
             "type": "config/entity_registry/update",
@@ -591,7 +602,7 @@ async def test_update_entity(
         registry.entities["test_domain.world"].disabled_by is RegistryEntryDisabler.USER
     )
 
-    # UPDATE DISABLED_BY TO NONE
+    # Update disabled_by to None
     await client.send_json_auto_id(
         {
             "type": "config/entity_registry/update",
@@ -607,6 +618,7 @@ async def test_update_entity(
             "aliases": unordered(["alias_1", "alias_2"]),
             "area_id": "mock-area-id",
             "capabilities": None,
+            "categories": {"scope1": "id", "scope2": "id"},
             "config_entry_id": None,
             "device_class": "custom_device_class",
             "device_id": None,
@@ -617,7 +629,7 @@ async def test_update_entity(
             "hidden_by": "user",  # We exchange strings over the WS API, not enums
             "icon": "icon:after update",
             "id": ANY,
-            "labels": [],
+            "labels": unordered(["label1", "label2"]),
             "name": "after update",
             "options": {},
             "original_device_class": None,
@@ -630,7 +642,7 @@ async def test_update_entity(
         "require_restart": True,
     }
 
-    # UPDATE ENTITY OPTION
+    # Update entity option
     await client.send_json_auto_id(
         {
             "type": "config/entity_registry/update",
@@ -647,6 +659,7 @@ async def test_update_entity(
             "aliases": unordered(["alias_1", "alias_2"]),
             "area_id": "mock-area-id",
             "capabilities": None,
+            "categories": {"scope1": "id", "scope2": "id"},
             "config_entry_id": None,
             "device_class": "custom_device_class",
             "device_id": None,
@@ -657,7 +670,127 @@ async def test_update_entity(
             "hidden_by": "user",  # We exchange strings over the WS API, not enums
             "icon": "icon:after update",
             "id": ANY,
-            "labels": [],
+            "labels": unordered(["label1", "label2"]),
+            "name": "after update",
+            "options": {"sensor": {"unit_of_measurement": "beard_second"}},
+            "original_device_class": None,
+            "original_icon": None,
+            "original_name": None,
+            "platform": "test_platform",
+            "translation_key": None,
+            "unique_id": "1234",
+        },
+    }
+
+    # Add a category to the entity
+    await client.send_json_auto_id(
+        {
+            "type": "config/entity_registry/update",
+            "entity_id": "test_domain.world",
+            "categories": {"scope3": "id"},
+        }
+    )
+
+    msg = await client.receive_json()
+    assert msg["success"]
+
+    assert msg["result"] == {
+        "entity_entry": {
+            "aliases": unordered(["alias_1", "alias_2"]),
+            "area_id": "mock-area-id",
+            "capabilities": None,
+            "categories": {"scope1": "id", "scope2": "id", "scope3": "id"},
+            "config_entry_id": None,
+            "device_class": "custom_device_class",
+            "device_id": None,
+            "disabled_by": None,
+            "entity_category": None,
+            "entity_id": "test_domain.world",
+            "has_entity_name": False,
+            "hidden_by": "user",  # We exchange strings over the WS API, not enums
+            "icon": "icon:after update",
+            "id": ANY,
+            "labels": unordered(["label1", "label2"]),
+            "name": "after update",
+            "options": {"sensor": {"unit_of_measurement": "beard_second"}},
+            "original_device_class": None,
+            "original_icon": None,
+            "original_name": None,
+            "platform": "test_platform",
+            "translation_key": None,
+            "unique_id": "1234",
+        },
+    }
+
+    # Move the entity to a different category
+    await client.send_json_auto_id(
+        {
+            "type": "config/entity_registry/update",
+            "entity_id": "test_domain.world",
+            "categories": {"scope3": "other_id"},
+        }
+    )
+
+    msg = await client.receive_json()
+    assert msg["success"]
+
+    assert msg["result"] == {
+        "entity_entry": {
+            "aliases": unordered(["alias_1", "alias_2"]),
+            "area_id": "mock-area-id",
+            "capabilities": None,
+            "categories": {"scope1": "id", "scope2": "id", "scope3": "other_id"},
+            "config_entry_id": None,
+            "device_class": "custom_device_class",
+            "device_id": None,
+            "disabled_by": None,
+            "entity_category": None,
+            "entity_id": "test_domain.world",
+            "has_entity_name": False,
+            "hidden_by": "user",  # We exchange strings over the WS API, not enums
+            "icon": "icon:after update",
+            "id": ANY,
+            "labels": unordered(["label1", "label2"]),
+            "name": "after update",
+            "options": {"sensor": {"unit_of_measurement": "beard_second"}},
+            "original_device_class": None,
+            "original_icon": None,
+            "original_name": None,
+            "platform": "test_platform",
+            "translation_key": None,
+            "unique_id": "1234",
+        },
+    }
+
+    # Move the entity to a different category
+    await client.send_json_auto_id(
+        {
+            "type": "config/entity_registry/update",
+            "entity_id": "test_domain.world",
+            "categories": {"scope2": None},
+        }
+    )
+
+    msg = await client.receive_json()
+    assert msg["success"]
+
+    assert msg["result"] == {
+        "entity_entry": {
+            "aliases": unordered(["alias_1", "alias_2"]),
+            "area_id": "mock-area-id",
+            "capabilities": None,
+            "categories": {"scope1": "id", "scope3": "other_id"},
+            "config_entry_id": None,
+            "device_class": "custom_device_class",
+            "device_id": None,
+            "disabled_by": None,
+            "entity_category": None,
+            "entity_id": "test_domain.world",
+            "has_entity_name": False,
+            "hidden_by": "user",  # We exchange strings over the WS API, not enums
+            "icon": "icon:after update",
+            "id": ANY,
+            "labels": unordered(["label1", "label2"]),
             "name": "after update",
             "options": {"sensor": {"unit_of_measurement": "beard_second"}},
             "original_device_class": None,
@@ -701,6 +834,7 @@ async def test_update_entity_require_restart(
             "aliases": [],
             "area_id": None,
             "capabilities": None,
+            "categories": {},
             "config_entry_id": config_entry.entry_id,
             "device_class": None,
             "device_id": None,
@@ -814,6 +948,7 @@ async def test_update_entity_no_changes(
             "aliases": [],
             "area_id": None,
             "capabilities": None,
+            "categories": {},
             "config_entry_id": None,
             "device_class": None,
             "device_id": None,
@@ -903,6 +1038,7 @@ async def test_update_entity_id(
             "aliases": [],
             "area_id": None,
             "capabilities": None,
+            "categories": {},
             "config_entry_id": None,
             "device_class": None,
             "device_id": None,

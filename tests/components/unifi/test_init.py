@@ -1,4 +1,5 @@
 """Test UniFi Network integration setup process."""
+
 from typing import Any
 from unittest.mock import patch
 
@@ -41,10 +42,13 @@ async def test_setup_entry_fails_config_entry_not_ready(hass: HomeAssistant) -> 
 
 async def test_setup_entry_fails_trigger_reauth_flow(hass: HomeAssistant) -> None:
     """Failed authentication trigger a reauthentication flow."""
-    with patch(
-        "homeassistant.components.unifi.get_unifi_api",
-        side_effect=AuthenticationRequired,
-    ), patch.object(hass.config_entries.flow, "async_init") as mock_flow_init:
+    with (
+        patch(
+            "homeassistant.components.unifi.get_unifi_api",
+            side_effect=AuthenticationRequired,
+        ),
+        patch.object(hass.config_entries.flow, "async_init") as mock_flow_init,
+    ):
         await setup_unifi_integration(hass)
         mock_flow_init.assert_called_once()
 

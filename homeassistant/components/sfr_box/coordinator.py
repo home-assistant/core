@@ -1,4 +1,5 @@
 """SFR Box coordinator."""
+
 from collections.abc import Callable, Coroutine
 from datetime import timedelta
 import logging
@@ -36,4 +37,4 @@ class SFRDataUpdateCoordinator(DataUpdateCoordinator[_T]):
         try:
             return await self._method(self.box)
         except SFRBoxError as err:
-            raise UpdateFailed() from err
+            raise UpdateFailed from err

@@ -1,4 +1,5 @@
 """Tests for the IPP sensor platform."""
+
 from unittest.mock import AsyncMock
 
 import pytest

@@ -1,4 +1,5 @@
 """Test the Bring! config flow."""
+
 from unittest.mock import AsyncMock
 
 from bring_api.exceptions import (
@@ -31,7 +32,7 @@ async def test_form(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     result = await hass.config_entries.flow.async_init(
@@ -43,7 +44,7 @@ async def test_form(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCK_DATA_STEP["email"]
     assert result["data"] == MOCK_DATA_STEP
     assert len(mock_setup_entry.mock_calls) == 1
@@ -72,7 +73,7 @@ async def test_flow_user_init_data_unknown_error_and_recover(
         user_input=MOCK_DATA_STEP,
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"]["base"] == text_error
 
     # Recover
@@ -85,7 +86,7 @@ async def test_flow_user_init_data_unknown_error_and_recover(
         user_input=MOCK_DATA_STEP,
     )
 
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].title == MOCK_DATA_STEP["email"]
 
     assert result["data"] == MOCK_DATA_STEP
@@ -109,5 +110,5 @@ async def test_flow_user_init_data_already_configured(
         user_input=MOCK_DATA_STEP,
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"

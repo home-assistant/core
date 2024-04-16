@@ -1,4 +1,5 @@
 """Test HTML5 notify platform."""
+
 from http import HTTPStatus
 import json
 from unittest.mock import MagicMock, mock_open, patch
@@ -16,9 +17,11 @@ CONFIG_FILE = "file.conf"
 
 VAPID_CONF = {
     "platform": "html5",
-    "vapid_pub_key": "BJMA2gDZEkHaXRhf1fhY_"
-    + "QbKbhVIHlSJXI0bFyo0eJXnUPOjdgycCAbj-2bMKMKNKs"
-    + "_rM8JoSnyKGCXAY2dbONI",
+    "vapid_pub_key": (
+        "BJMA2gDZEkHaXRhf1fhY_"
+        "QbKbhVIHlSJXI0bFyo0eJXnUPOjdgycCAbj-2bMKMKNKs"
+        "_rM8JoSnyKGCXAY2dbONI"
+    ),
     "vapid_prv_key": "ZwPgwKpESGuGLMZYU39vKgrekrWzCijo-LsBM3CZ9-c",
     "vapid_email": "someone@example.com",
 }

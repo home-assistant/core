@@ -1,4 +1,5 @@
 """Tests for the Modern Forms switch platform."""
+
 from unittest.mock import patch
 
 from aiomodernforms import ModernFormsConnectionError
@@ -129,9 +130,12 @@ async def test_switch_connection_error(
     """Test error handling of the Modern Forms switches."""
     await init_integration(hass, aioclient_mock)
 
-    with patch("homeassistant.components.modern_forms.ModernFormsDevice.update"), patch(
-        "homeassistant.components.modern_forms.ModernFormsDevice.away",
-        side_effect=ModernFormsConnectionError,
+    with (
+        patch("homeassistant.components.modern_forms.ModernFormsDevice.update"),
+        patch(
+            "homeassistant.components.modern_forms.ModernFormsDevice.away",
+            side_effect=ModernFormsConnectionError,
+        ),
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,

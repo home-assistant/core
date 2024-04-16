@@ -1,4 +1,5 @@
 """The tests for the automation component."""
+
 import asyncio
 from datetime import timedelta
 import logging
@@ -7,8 +8,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from homeassistant import config_entries
-import homeassistant.components.automation as automation
+from homeassistant.components import automation
 from homeassistant.components.automation import (
     ATTR_SOURCE,
     DOMAIN,
@@ -17,6 +17,7 @@ from homeassistant.components.automation import (
     SERVICE_TRIGGER,
     AutomationEntity,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_NAME,
@@ -770,7 +771,7 @@ async def test_automation_stops(hass: HomeAssistant, calls, service) -> None:
     assert len(calls) == (1 if service == "turn_off_no_stop" else 0)
 
 
-@pytest.mark.parametrize("extra_config", ({}, {"id": "sun"}))
+@pytest.mark.parametrize("extra_config", [{}, {"id": "sun"}])
 async def test_reload_unchanged_does_not_stop(
     hass: HomeAssistant, calls, extra_config
 ) -> None:
@@ -1210,7 +1211,7 @@ async def test_reload_identical_automations_without_id(
 
 @pytest.mark.parametrize(
     "automation_config",
-    (
+    [
         {
             "trigger": {"platform": "event", "event_type": "test_event"},
             "action": [{"service": "test.automation"}],
@@ -1277,7 +1278,7 @@ async def test_reload_identical_automations_without_id(
                 },
             },
         },
-    ),
+    ],
 )
 async def test_reload_unchanged_automation(
     hass: HomeAssistant, calls, automation_config
@@ -1313,7 +1314,7 @@ async def test_reload_unchanged_automation(
         assert len(calls) == 2
 
 
-@pytest.mark.parametrize("extra_config", ({}, {"id": "sun"}))
+@pytest.mark.parametrize("extra_config", [{}, {"id": "sun"}])
 async def test_reload_automation_when_blueprint_changes(
     hass: HomeAssistant, calls, extra_config
 ) -> None:
@@ -1350,14 +1351,17 @@ async def test_reload_automation_when_blueprint_changes(
         blueprint_config["action"] = [blueprint_config["action"]]
         blueprint_config["action"].append(blueprint_config["action"][-1])
 
-        with patch(
-            "homeassistant.config.load_yaml_config_file",
-            autospec=True,
-            return_value=config,
-        ), patch(
-            "homeassistant.components.blueprint.models.yaml.load_yaml_dict",
-            autospec=True,
-            return_value=blueprint_config,
+        with (
+            patch(
+                "homeassistant.config.load_yaml_config_file",
+                autospec=True,
+                return_value=config,
+            ),
+            patch(
+                "homeassistant.components.blueprint.models.yaml.load_yaml_dict",
+                autospec=True,
+                return_value=blueprint_config,
+            ),
         ):
             await hass.services.async_call(
                 automation.DOMAIN, SERVICE_RELOAD, blocking=True
@@ -1610,7 +1614,7 @@ async def test_automation_not_trigger_on_bootstrap(hass: HomeAssistant) -> None:
 
 @pytest.mark.parametrize(
     ("broken_config", "problem", "details"),
-    (
+    [
         (
             {},
             "could not be validated",
@@ -1651,7 +1655,7 @@ async def test_automation_not_trigger_on_bootstrap(hass: HomeAssistant) -> None:
             "failed to setup actions",
             "Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd.",
         ),
-    ),
+    ],
 )
 async def test_automation_bad_config_validation(
     hass: HomeAssistant,
@@ -1809,6 +1813,10 @@ async def test_extraction_functions_not_setup(hass: HomeAssistant) -> None:
     assert automation.devices_in_automation(hass, "automation.test") == []
     assert automation.automations_with_entity(hass, "light.in_both") == []
     assert automation.entities_in_automation(hass, "automation.test") == []
+    assert automation.automations_with_floor(hass, "floor-in-both") == []
+    assert automation.floors_in_automation(hass, "automation.test") == []
+    assert automation.automations_with_label(hass, "label-in-both") == []
+    assert automation.labels_in_automation(hass, "automation.test") == []
 
 
 async def test_extraction_functions_unknown_automation(hass: HomeAssistant) -> None:
@@ -1818,6 +1826,8 @@ async def test_extraction_functions_unknown_automation(hass: HomeAssistant) -> N
     assert automation.blueprint_in_automation(hass, "automation.unknown") is None
     assert automation.devices_in_automation(hass, "automation.unknown") == []
     assert automation.entities_in_automation(hass, "automation.unknown") == []
+    assert automation.floors_in_automation(hass, "automation.unknown") == []
+    assert automation.labels_in_automation(hass, "automation.unknown") == []
 
 
 async def test_extraction_functions_unavailable_automation(hass: HomeAssistant) -> None:
@@ -1843,6 +1853,10 @@ async def test_extraction_functions_unavailable_automation(hass: HomeAssistant) 
     assert automation.devices_in_automation(hass, entity_id) == []
     assert automation.automations_with_entity(hass, "light.in_both") == []
     assert automation.entities_in_automation(hass, entity_id) == []
+    assert automation.automations_with_floor(hass, "floor-in-both") == []
+    assert automation.floors_in_automation(hass, entity_id) == []
+    assert automation.automations_with_label(hass, "label-in-both") == []
+    assert automation.labels_in_automation(hass, entity_id) == []
 
 
 async def test_extraction_functions(
@@ -1850,7 +1864,7 @@ async def test_extraction_functions(
 ) -> None:
     """Test extraction functions."""
     config_entry = MockConfigEntry(domain="fake_integration", data={})
-    config_entry.mock_state(hass, config_entries.ConfigEntryState.LOADED)
+    config_entry.mock_state(hass, ConfigEntryState.LOADED)
     config_entry.add_to_hass(hass)
 
     condition_device = device_registry.async_get_or_create(
@@ -1941,6 +1955,14 @@ async def test_extraction_functions(
                         {
                             "service": "test.test",
                             "target": {"area_id": "area-in-both"},
+                        },
+                        {
+                            "service": "test.test",
+                            "target": {"floor_id": "floor-in-both"},
+                        },
+                        {
+                            "service": "test.test",
+                            "target": {"label_id": "label-in-both"},
                         },
                     ],
                 },
@@ -2061,6 +2083,22 @@ async def test_extraction_functions(
                             "service": "test.test",
                             "target": {"area_id": "area-in-last"},
                         },
+                        {
+                            "service": "test.test",
+                            "target": {"floor_id": "floor-in-both"},
+                        },
+                        {
+                            "service": "test.test",
+                            "target": {"floor_id": "floor-in-last"},
+                        },
+                        {
+                            "service": "test.test",
+                            "target": {"label_id": "label-in-both"},
+                        },
+                        {
+                            "service": "test.test",
+                            "target": {"label_id": "label-in-last"},
+                        },
                     ],
                 },
             ]
@@ -2102,6 +2140,22 @@ async def test_extraction_functions(
     assert set(automation.areas_in_automation(hass, "automation.test3")) == {
         "area-in-both",
         "area-in-last",
+    }
+    assert set(automation.automations_with_floor(hass, "floor-in-both")) == {
+        "automation.test1",
+        "automation.test3",
+    }
+    assert set(automation.floors_in_automation(hass, "automation.test3")) == {
+        "floor-in-both",
+        "floor-in-last",
+    }
+    assert set(automation.automations_with_label(hass, "label-in-both")) == {
+        "automation.test1",
+        "automation.test3",
+    }
+    assert set(automation.labels_in_automation(hass, "automation.test3")) == {
+        "label-in-both",
+        "label-in-last",
     }
     assert automation.blueprint_in_automation(hass, "automation.test3") is None
 
@@ -2389,7 +2443,7 @@ async def test_blueprint_automation(hass: HomeAssistant, calls) -> None:
 
 @pytest.mark.parametrize(
     ("blueprint_inputs", "problem", "details"),
-    (
+    [
         (
             # No input
             {},
@@ -2415,7 +2469,7 @@ async def test_blueprint_automation(hass: HomeAssistant, calls) -> None:
                 " data['action'][0]['service']"
             ),
         ),
-    ),
+    ],
 )
 async def test_blueprint_automation_bad_config(
     hass: HomeAssistant,
@@ -2598,21 +2652,21 @@ async def test_trigger_condition_explicit_id(hass: HomeAssistant, calls) -> None
 
 @pytest.mark.parametrize(
     ("automation_mode", "automation_runs"),
-    (
+    [
         (SCRIPT_MODE_PARALLEL, 2),
         (SCRIPT_MODE_QUEUED, 2),
         (SCRIPT_MODE_RESTART, 2),
         (SCRIPT_MODE_SINGLE, 1),
-    ),
+    ],
 )
 @pytest.mark.parametrize(
     ("script_mode", "script_warning_msg"),
-    (
+    [
         (SCRIPT_MODE_PARALLEL, "script1: Maximum number of runs exceeded"),
         (SCRIPT_MODE_QUEUED, "script1: Disallowed recursion detected"),
         (SCRIPT_MODE_RESTART, "script1: Disallowed recursion detected"),
         (SCRIPT_MODE_SINGLE, "script1: Already running"),
-    ),
+    ],
 )
 @pytest.mark.parametrize("wait_for_stop_scripts_after_shutdown", [True])
 async def test_recursive_automation_starting_script(
@@ -2701,6 +2755,7 @@ async def test_recursive_automation_starting_script(
         async def async_automation_triggered(event):
             """Listen to automation_triggered event from the automation integration."""
             automation_triggered.append(event)
+            await asyncio.sleep(0)  # Yield to allow other tasks to run
             hass.states.async_set("sensor.test", str(len(automation_triggered)))
 
         hass.services.async_register("test", "script_done", async_service_handler)
@@ -2845,3 +2900,83 @@ def test_deprecated_constants(
     import_and_test_deprecated_constant(
         caplog, automation, constant_name, replacement.__name__, replacement, "2025.1"
     )
+
+
+async def test_automation_turns_off_other_automation(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test an automation that turns off another automation."""
+    hass.set_state(CoreState.not_running)
+    calls = async_mock_service(hass, "persistent_notification", "create")
+    hass.states.async_set("binary_sensor.presence", "on")
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "platform": "state",
+                        "entity_id": "binary_sensor.presence",
+                        "from": "on",
+                    },
+                    "action": {
+                        "service": "automation.turn_off",
+                        "target": {
+                            "entity_id": "automation.automation_1",
+                        },
+                        "data": {
+                            "stop_actions": True,
+                        },
+                    },
+                    "id": "automation_0",
+                    "mode": "single",
+                },
+                {
+                    "trigger": {
+                        "platform": "state",
+                        "entity_id": "binary_sensor.presence",
+                        "from": "on",
+                        "for": {
+                            "hours": 0,
+                            "minutes": 0,
+                            "seconds": 5,
+                        },
+                    },
+                    "action": {
+                        "service": "persistent_notification.create",
+                        "metadata": {},
+                        "data": {
+                            "message": "Test race",
+                        },
+                    },
+                    "id": "automation_1",
+                    "mode": "single",
+                },
+            ]
+        },
+    )
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    hass.states.async_set("binary_sensor.presence", "off")
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=5))
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    await hass.services.async_call(
+        "automation",
+        "turn_on",
+        {"entity_id": "automation.automation_1"},
+        blocking=True,
+    )
+    hass.states.async_set("binary_sensor.presence", "off")
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=5))
+    await hass.async_block_till_done()
+    assert len(calls) == 0

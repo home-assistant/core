@@ -1,4 +1,5 @@
 """Helpers for the data entry flow."""
+
 from __future__ import annotations
 
 from http import HTTPStatus
@@ -61,7 +62,7 @@ class FlowManagerIndexView(_BaseFlowManagerView[_FlowManagerT]):
     @RequestDataValidator(
         vol.Schema(
             {
-                vol.Required("handler"): vol.Any(str, list),
+                vol.Required("handler"): str,
                 vol.Optional("show_advanced_options", default=False): cv.boolean,
             },
             extra=vol.ALLOW_EXTRA,
@@ -79,14 +80,9 @@ class FlowManagerIndexView(_BaseFlowManagerView[_FlowManagerT]):
         self, request: web.Request, data: dict[str, Any]
     ) -> web.Response:
         """Handle a POST request."""
-        if isinstance(data["handler"], list):
-            handler = tuple(data["handler"])
-        else:
-            handler = data["handler"]
-
         try:
             result = await self._flow_mgr.async_init(
-                handler,  # type: ignore[arg-type]
+                data["handler"],
                 context=self.get_context(data),
             )
         except data_entry_flow.UnknownHandler:

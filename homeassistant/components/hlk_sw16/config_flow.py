@@ -1,4 +1,5 @@
 """Config flow for HLK-SW16."""
+
 import asyncio
 
 from hlk_sw16 import create_hlk_sw16_connection

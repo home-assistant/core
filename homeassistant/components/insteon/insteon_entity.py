@@ -1,4 +1,5 @@
 """Insteon base entity."""
+
 import functools
 import logging
 

@@ -1,4 +1,5 @@
 """The tests for the Rfxtrx sensor platform."""
+
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory

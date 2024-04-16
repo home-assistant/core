@@ -1,4 +1,5 @@
 """Switch platform for Sensibo integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
@@ -24,22 +25,15 @@ from .entity import SensiboDeviceBaseEntity, async_handle_api_call
 PARALLEL_UPDATES = 0
 
 
-@dataclass(frozen=True)
-class DeviceBaseEntityDescriptionMixin:
-    """Mixin for required Sensibo Device description keys."""
+@dataclass(frozen=True, kw_only=True)
+class SensiboDeviceSwitchEntityDescription(SwitchEntityDescription):
+    """Describes Sensibo Switch entity."""
 
     value_fn: Callable[[SensiboDevice], bool | None]
     extra_fn: Callable[[SensiboDevice], dict[str, str | bool | None]] | None
     command_on: str
     command_off: str
     data_key: str
-
-
-@dataclass(frozen=True)
-class SensiboDeviceSwitchEntityDescription(
-    SwitchEntityDescription, DeviceBaseEntityDescriptionMixin
-):
-    """Describes Sensibo Switch entity."""
 
 
 DEVICE_SWITCH_TYPES: tuple[SensiboDeviceSwitchEntityDescription, ...] = (
@@ -181,8 +175,6 @@ class SensiboDeviceSwitch(SensiboDeviceBaseEntity, SwitchEntity):
         """Make service call to api for setting Climate React."""
         if self.device_data.smart_type is None:
             raise HomeAssistantError(
-                "Use Sensibo Enable Climate React Service once to enable switch or the"
-                " Sensibo app",
                 translation_domain=DOMAIN,
                 translation_key="climate_react_not_available",
             )

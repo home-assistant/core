@@ -1,4 +1,5 @@
 """Demo lock platform that implements locks."""
+
 from __future__ import annotations
 
 import asyncio

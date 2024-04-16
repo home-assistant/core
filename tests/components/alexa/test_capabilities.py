@@ -1,4 +1,5 @@
 """Test Alexa capabilities."""
+
 from typing import Any
 from unittest.mock import patch
 

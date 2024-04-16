@@ -1,4 +1,5 @@
 """The Matrix bot component."""
+
 from __future__ import annotations
 
 import asyncio
@@ -307,7 +308,9 @@ class MatrixBot:
     async def _resolve_room_aliases(self, listening_rooms: list[RoomAnyID]) -> None:
         """Resolve any RoomAliases into RoomIDs for the purpose of client interactions."""
         resolved_rooms = [
-            self.hass.async_create_task(self._resolve_room_alias(room_alias_or_id))
+            self.hass.async_create_task(
+                self._resolve_room_alias(room_alias_or_id), eager_start=False
+            )
             for room_alias_or_id in listening_rooms
         ]
         for resolved_room in asyncio.as_completed(resolved_rooms):
@@ -329,7 +332,9 @@ class MatrixBot:
     async def _join_rooms(self) -> None:
         """Join the Matrix rooms that we listen for commands in."""
         rooms = [
-            self.hass.async_create_task(self._join_room(room_id, room_alias_or_id))
+            self.hass.async_create_task(
+                self._join_room(room_id, room_alias_or_id), eager_start=False
+            )
             for room_alias_or_id, room_id in self._listening_rooms.items()
         ]
         await asyncio.wait(rooms)
@@ -431,18 +436,17 @@ class MatrixBot:
         self, target_rooms: Sequence[RoomAnyID], message_type: str, content: dict
     ) -> None:
         """Wrap _handle_room_send for multiple target_rooms."""
-        _tasks = []
-        for target_room in target_rooms:
-            _tasks.append(
-                self.hass.async_create_task(
-                    self._handle_room_send(
-                        target_room=target_room,
-                        message_type=message_type,
-                        content=content,
-                    )
-                )
+        await asyncio.wait(
+            self.hass.async_create_task(
+                self._handle_room_send(
+                    target_room=target_room,
+                    message_type=message_type,
+                    content=content,
+                ),
+                eager_start=False,
             )
-        await asyncio.wait(_tasks)
+            for target_room in target_rooms
+        )
 
     async def _send_image(
         self, image_path: str, target_rooms: Sequence[RoomAnyID]
@@ -515,7 +519,9 @@ class MatrixBot:
             and len(target_rooms) > 0
         ):
             image_tasks = [
-                self.hass.async_create_task(self._send_image(image_path, target_rooms))
+                self.hass.async_create_task(
+                    self._send_image(image_path, target_rooms), eager_start=False
+                )
                 for image_path in image_paths
             ]
             await asyncio.wait(image_tasks)

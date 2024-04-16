@@ -6,6 +6,7 @@ tests use a fixture that mocks out events returned by the calendar entity,
 and create events using a relative time offset and then advance the clock
 forward exercising the triggers.
 """
+
 from __future__ import annotations
 
 from collections.abc import AsyncIterator, Callable, Generator
@@ -19,8 +20,7 @@ import zoneinfo
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components import calendar
-import homeassistant.components.automation as automation
+from homeassistant.components import automation, calendar
 from homeassistant.components.calendar.trigger import EVENT_END, EVENT_START
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF
 from homeassistant.core import HomeAssistant
@@ -56,7 +56,7 @@ class FakeSchedule:
     """Test fixture class for return events in a specific date range."""
 
     def __init__(self, hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
-        """Initiailize FakeSchedule."""
+        """Initialize FakeSchedule."""
         self.hass = hass
         self.freezer = freezer
 
