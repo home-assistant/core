@@ -30,7 +30,7 @@ class KeyedRateLimit:
     @callback
     def async_has_timer(self, key: Hashable) -> bool:
         """Check if a rate limit timer is running."""
-        return bool(self._rate_limit_timers and key in self._rate_limit_timers)
+        return key in self._rate_limit_timers
 
     @callback
     def async_triggered(self, key: Hashable, now: float | None = None) -> None:
@@ -41,10 +41,8 @@ class KeyedRateLimit:
     @callback
     def async_cancel_timer(self, key: Hashable) -> None:
         """Cancel a rate limit time that will call the action."""
-        if not self._rate_limit_timers or key not in self._rate_limit_timers:
-            return
-
-        self._rate_limit_timers.pop(key).cancel()
+        if handle := self._rate_limit_timers.pop(key, None):
+            handle.cancel()
 
     @callback
     def async_remove(self) -> None:

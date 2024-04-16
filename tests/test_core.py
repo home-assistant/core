@@ -794,7 +794,7 @@ async def test_async_create_task_pending_tasks_coro(hass: HomeAssistant) -> None
         call_count.append("call")
 
     for _ in range(2):
-        hass.async_create_task(test_coro())
+        hass.async_create_task(test_coro(), eager_start=False)
 
     assert len(hass._tasks) == 2
     await hass.async_block_till_done()
@@ -2376,11 +2376,11 @@ async def test_log_blocking_events(
     async def _wait_a_bit_2():
         await asyncio.sleep(0.1)
 
-    hass.async_create_task(_wait_a_bit_1())
+    hass.async_create_task(_wait_a_bit_1(), eager_start=False)
     await hass.async_block_till_done()
 
     with patch.object(ha, "BLOCK_LOG_TIMEOUT", 0.0001):
-        hass.async_create_task(_wait_a_bit_2())
+        hass.async_create_task(_wait_a_bit_2(), eager_start=False)
         await hass.async_block_till_done()
 
     assert "_wait_a_bit_2" in caplog.text
@@ -2400,14 +2400,14 @@ async def test_chained_logging_hits_log_timeout(
         created += 1
         if created > 1000:
             return
-        hass.async_create_task(_task_chain_2())
+        hass.async_create_task(_task_chain_2(), eager_start=False)
 
     async def _task_chain_2():
         nonlocal created
         created += 1
         if created > 1000:
             return
-        hass.async_create_task(_task_chain_1())
+        hass.async_create_task(_task_chain_1(), eager_start=False)
 
     with patch.object(ha, "BLOCK_LOG_TIMEOUT", 0.0):
         hass.async_create_task(_task_chain_1())
@@ -2429,16 +2429,16 @@ async def test_chained_logging_misses_log_timeout(
         created += 1
         if created > 10:
             return
-        hass.async_create_task(_task_chain_2())
+        hass.async_create_task(_task_chain_2(), eager_start=False)
 
     async def _task_chain_2():
         nonlocal created
         created += 1
         if created > 10:
             return
-        hass.async_create_task(_task_chain_1())
+        hass.async_create_task(_task_chain_1(), eager_start=False)
 
-    hass.async_create_task(_task_chain_1())
+    hass.async_create_task(_task_chain_1(), eager_start=False)
     await hass.async_block_till_done()
 
     assert "_task_chain_" not in caplog.text
@@ -3409,5 +3409,5 @@ async def test_async_listen_with_run_immediately_deprecated(
     func(EVENT_HOMEASSISTANT_START, _test, run_immediately=run_immediately)
     assert (
         f"Detected code that calls `{method}` with run_immediately, which is "
-        "deprecated and will be removed in Assistant 2025.5."
+        "deprecated and will be removed in Home Assistant 2025.5."
     ) in caplog.text
