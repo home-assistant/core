@@ -331,17 +331,25 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         await async_get_blueprints(hass).async_reset_cache()
         if (conf := await component.async_prepare_reload(skip_reset=True)) is None:
             return
-        await _async_process_config(hass, conf, component)
+        if automation_id := service_call.data.get(CONF_ID):
+            await _async_process_single_config(hass, conf, component, automation_id)
+        else:
+            await _async_process_config(hass, conf, component)
         hass.bus.async_fire(EVENT_AUTOMATION_RELOADED, context=service_call.context)
 
-    reload_helper = ReloadServiceHelper(reload_service_handler)
+    def reload_targets(service_call: ServiceCall) -> set[str | None]:
+        if automation_id := service_call.data.get(CONF_ID):
+            return {automation_id}
+        return {automation.unique_id for automation in component.entities}
+
+    reload_helper = ReloadServiceHelper(reload_service_handler, reload_targets)
 
     async_register_admin_service(
         hass,
         DOMAIN,
         SERVICE_RELOAD,
         reload_helper.execute_service,
-        schema=vol.Schema({}),
+        schema=vol.Schema({vol.Optional(CONF_ID): str}),
     )
 
     websocket_api.async_register_command(hass, websocket_config)
@@ -859,6 +867,7 @@ class AutomationEntityConfig:
 async def _prepare_automation_config(
     hass: HomeAssistant,
     config: ConfigType,
+    wanted_automation_id: str | None,
 ) -> list[AutomationEntityConfig]:
     """Parse configuration and prepare automation entity configuration."""
     automation_configs: list[AutomationEntityConfig] = []
@@ -866,6 +875,10 @@ async def _prepare_automation_config(
     conf: list[ConfigType] = config[DOMAIN]
 
     for list_no, config_block in enumerate(conf):
+        automation_id: str | None = config_block.get(CONF_ID)
+        if wanted_automation_id is not None and automation_id != wanted_automation_id:
+            continue
+
         raw_config = cast(AutomationConfig, config_block).raw_config
         raw_blueprint_inputs = cast(AutomationConfig, config_block).raw_blueprint_inputs
         validation_failed = cast(AutomationConfig, config_block).validation_failed
@@ -1025,7 +1038,7 @@ async def _async_process_config(
 
         return automation_matches, config_matches
 
-    automation_configs = await _prepare_automation_config(hass, config)
+    automation_configs = await _prepare_automation_config(hass, config, None)
     automations: list[BaseAutomationEntity] = list(component.entities)
 
     # Find automations and configurations which have matches
@@ -1046,6 +1059,41 @@ async def _async_process_config(
         if idx not in config_matches
     ]
     entities = await _create_automation_entities(hass, updated_automation_configs)
+    await component.async_add_entities(entities)
+
+
+def _automation_matches_config(
+    automation: BaseAutomationEntity | None, config: AutomationEntityConfig | None
+) -> bool:
+    """Return False if an automation's config has been changed."""
+    if not automation:
+        return False
+    if not config:
+        return False
+    name = _automation_name(config)
+    return automation.name == name and automation.raw_config == config.raw_config
+
+
+async def _async_process_single_config(
+    hass: HomeAssistant,
+    config: dict[str, Any],
+    component: EntityComponent[BaseAutomationEntity],
+    automation_id: str,
+) -> None:
+    """Process config and add a single automation."""
+
+    automation_configs = await _prepare_automation_config(hass, config, automation_id)
+    automation = next(
+        (x for x in component.entities if x.unique_id == automation_id), None
+    )
+    automation_config = automation_configs[0] if automation_configs else None
+
+    if _automation_matches_config(automation, automation_config):
+        return
+
+    if automation:
+        await automation.async_remove()
+    entities = await _create_automation_entities(hass, automation_configs)
     await component.async_add_entities(entities)
 
 

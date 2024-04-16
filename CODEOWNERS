@@ -90,6 +90,8 @@ build.json @home-assistant/supervisor
 /tests/components/amberelectric/ @madpilot
 /homeassistant/components/ambiclimate/ @danielhiversen
 /tests/components/ambiclimate/ @danielhiversen
+/homeassistant/components/ambient_network/ @thomaskistler
+/tests/components/ambient_network/ @thomaskistler
 /homeassistant/components/ambient_station/ @bachya
 /tests/components/ambient_station/ @bachya
 /homeassistant/components/amcrest/ @flacjacket
@@ -683,8 +685,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/iqvia/ @bachya
 /tests/components/iqvia/ @bachya
 /homeassistant/components/irish_rail_transport/ @ttroy50
-/homeassistant/components/islamic_prayer_times/ @engrbm87
-/tests/components/islamic_prayer_times/ @engrbm87
+/homeassistant/components/islamic_prayer_times/ @engrbm87 @cpfair
+/tests/components/islamic_prayer_times/ @engrbm87 @cpfair
 /homeassistant/components/iss/ @DurgNomis-drol
 /tests/components/iss/ @DurgNomis-drol
 /homeassistant/components/isy994/ @bdraco @shbatm
@@ -753,7 +755,8 @@ build.json @home-assistant/supervisor
 /tests/components/leaone/ @bdraco
 /homeassistant/components/led_ble/ @bdraco
 /tests/components/led_ble/ @bdraco
-/homeassistant/components/lg_netcast/ @Drafteed
+/homeassistant/components/lg_netcast/ @Drafteed @splinter98
+/tests/components/lg_netcast/ @Drafteed @splinter98
 /homeassistant/components/lidarr/ @tkdrob
 /tests/components/lidarr/ @tkdrob
 /homeassistant/components/light/ @home-assistant/core
@@ -1023,8 +1026,8 @@ build.json @home-assistant/supervisor
 /tests/components/persistent_notification/ @home-assistant/core
 /homeassistant/components/philips_js/ @elupus
 /tests/components/philips_js/ @elupus
-/homeassistant/components/pi_hole/ @johnluetke @shenxn
-/tests/components/pi_hole/ @johnluetke @shenxn
+/homeassistant/components/pi_hole/ @shenxn
+/tests/components/pi_hole/ @shenxn
 /homeassistant/components/picnic/ @corneyl
 /tests/components/picnic/ @corneyl
 /homeassistant/components/pilight/ @trekky12
