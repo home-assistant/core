@@ -80,23 +80,24 @@ async def test_expired_token_refresh_failure(
 
 
 @pytest.mark.parametrize(
-    ("exception"),
-    [ApiException, AuthException],
+    ("exception", "entry_state"),
+    [
+        (ApiException, ConfigEntryState.SETUP_RETRY),
+        (AuthException, ConfigEntryState.SETUP_ERROR),
+    ],
 )
 async def test_update_failed(
     hass: HomeAssistant,
     mock_automower_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    caplog: pytest.LogCaptureFixture,
     exception: Exception,
+    entry_state: ConfigEntryState,
 ) -> None:
     """Test update failed."""
     mock_automower_client.get_status.side_effect = exception("Test error")
     await setup_integration(hass, mock_config_entry)
-    assert "return await self.api.get_status()" not in caplog.text
-    assert len(mock_automower_client.get_status.mock_calls) == 1
     entry = hass.config_entries.async_entries(DOMAIN)[0]
-    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert entry.state is entry_state
 
 
 async def test_websocket_not_available(

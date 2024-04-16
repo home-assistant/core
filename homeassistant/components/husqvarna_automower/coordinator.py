@@ -14,6 +14,7 @@ from aioautomower.session import AutomowerSession
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -48,8 +49,10 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, MowerAttrib
             self.ws_connected = True
         try:
             return await self.api.get_status()
-        except (ApiException, AuthException) as err:
+        except ApiException as err:
             raise UpdateFailed(err) from err
+        except AuthException as err:
+            raise ConfigEntryAuthFailed(err) from err
 
     @callback
     def callback(self, ws_data: dict[str, MowerAttributes]) -> None:
