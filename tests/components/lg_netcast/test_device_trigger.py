@@ -1,6 +1,5 @@
 """The tests for LG NEtcast device triggers."""
 
-
 import pytest
 
 from homeassistant.components import automation

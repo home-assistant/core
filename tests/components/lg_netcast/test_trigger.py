@@ -1,4 +1,5 @@
 """The tests for LG Netcast device triggers."""
+
 from unittest.mock import patch
 
 import pytest

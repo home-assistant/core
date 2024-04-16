@@ -1,4 +1,5 @@
 """Tests for LG Netcast TV."""
+
 from unittest.mock import patch
 from xml.etree import ElementTree
 

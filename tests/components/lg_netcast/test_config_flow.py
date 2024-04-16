@@ -1,6 +1,5 @@
 """Define tests for the LG Netcast config flow."""
 
-
 from datetime import timedelta
 from unittest.mock import DEFAULT, patch
 
@@ -232,9 +231,12 @@ async def test_display_access_token_aborted(hass: HomeAssistant):
         hass.async_create_task(action())
         return DEFAULT
 
-    with _patch_lg_netcast(session_error=True), patch(
-        "homeassistant.components.lg_netcast.config_flow.async_track_time_interval"
-    ) as mock_interval:
+    with (
+        _patch_lg_netcast(session_error=True),
+        patch(
+            "homeassistant.components.lg_netcast.config_flow.async_track_time_interval"
+        ) as mock_interval,
+    ):
         mock_interval.side_effect = _async_track_time_interval
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data={CONF_HOST: IP_ADDRESS}

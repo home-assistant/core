@@ -112,7 +112,7 @@ class LGNetCast(config_entries.ConfigFlow, domain=DOMAIN):
                 )
             else:
                 _create_issue()
-            raise err
+            raise
 
         _create_issue()
 
