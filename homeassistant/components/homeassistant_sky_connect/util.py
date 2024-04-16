@@ -10,16 +10,25 @@ from typing import cast
 from universal_silabs_flasher.const import ApplicationType
 
 from homeassistant.components import usb
-from homeassistant.components.hassio import (
-    AddonError,
-    AddonManager,
-    AddonState,
-    is_hassio,
+from homeassistant.components.hassio import AddonError, AddonState, is_hassio
+from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon import (
+    WaitingAddonManager,
+    get_multiprotocol_addon_manager,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.singleton import singleton
 
-from .const import ZHA_DOMAIN, HardwareVariant
+from .const import (
+    OTBR_ADDON_MANAGER_DATA,
+    OTBR_ADDON_NAME,
+    OTBR_ADDON_SLUG,
+    ZHA_DOMAIN,
+    ZIGBEE_FLASHER_ADDON_MANAGER_DATA,
+    ZIGBEE_FLASHER_ADDON_NAME,
+    ZIGBEE_FLASHER_ADDON_SLUG,
+    HardwareVariant,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,6 +55,30 @@ def get_zha_device_path(config_entry: ConfigEntry) -> str:
     return cast(str, config_entry.data["device"]["path"])
 
 
+@singleton(OTBR_ADDON_MANAGER_DATA)
+@callback
+def get_otbr_addon_manager(hass: HomeAssistant) -> WaitingAddonManager:
+    """Get the OTBR add-on manager."""
+    return WaitingAddonManager(
+        hass,
+        _LOGGER,
+        OTBR_ADDON_NAME,
+        OTBR_ADDON_SLUG,
+    )
+
+
+@singleton(ZIGBEE_FLASHER_ADDON_MANAGER_DATA)
+@callback
+def get_zigbee_flasher_addon_manager(hass: HomeAssistant) -> WaitingAddonManager:
+    """Get the flasher add-on manager."""
+    return WaitingAddonManager(
+        hass,
+        _LOGGER,
+        ZIGBEE_FLASHER_ADDON_NAME,
+        ZIGBEE_FLASHER_ADDON_SLUG,
+    )
+
+
 @dataclass(slots=True, kw_only=True)
 class FirmwareGuess:
     """Firmware guess."""
@@ -68,12 +101,7 @@ async def guess_firmware_type(hass: HomeAssistant, device_path: str) -> Applicat
         )
 
     if is_hassio(hass):
-        otbr_addon_manager = AddonManager(
-            hass=hass,
-            logger=_LOGGER,
-            addon_name="OpenThread Border Router",
-            addon_slug="core_openthread_border_router",
-        )
+        otbr_addon_manager = get_otbr_addon_manager(hass)
 
         try:
             otbr_addon_info = await otbr_addon_manager.async_get_addon_info()
@@ -89,12 +117,7 @@ async def guess_firmware_type(hass: HomeAssistant, device_path: str) -> Applicat
                     )
                 )
 
-        multipan_addon_manager = AddonManager(
-            hass=hass,
-            logger=_LOGGER,
-            addon_name="Silicon Labs Multiprotocol",
-            addon_slug="core_silabs_multiprotocol",
-        )
+        multipan_addon_manager = await get_multiprotocol_addon_manager(hass)
 
         try:
             multipan_addon_info = await multipan_addon_manager.async_get_addon_info()

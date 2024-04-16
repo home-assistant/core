@@ -17,9 +17,6 @@ from homeassistant.components.hassio import (
     is_hassio,
 )
 from homeassistant.components.homeassistant_hardware import silabs_multiprotocol_addon
-from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon import (
-    WaitingAddonManager,
-)
 from homeassistant.components.zha.repairs.wrong_silabs_firmware import (
     probe_silabs_firmware_type,
 )
@@ -31,47 +28,22 @@ from homeassistant.config_entries import (
     OptionsFlow,
     OptionsFlowWithConfigEntry,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow
-from homeassistant.helpers.singleton import singleton
 
 from .const import DOMAIN, ZHA_DOMAIN, HardwareVariant
-from .util import get_hardware_variant, get_usb_service_info, get_zha_device_path
+from .util import (
+    get_hardware_variant,
+    get_otbr_addon_manager,
+    get_usb_service_info,
+    get_zha_device_path,
+    get_zigbee_flasher_addon_manager,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_OTBR_ADDON_MANAGER = "openthread_border_router"
-DATA_ZIGBEE_FLASHER_ADDON_MANAGER = "silabs_flasher"
-
-OTBR_ADDON_SLUG = "core_openthread_border_router"
-ZIGBEE_FLASHER_ADDON_SLUG = "core_silabs_flasher"
-
 STEP_PICK_FIRMWARE_THREAD = "pick_firmware_thread"
 STEP_PICK_FIRMWARE_ZIGBEE = "pick_firmware_zigbee"
-
-
-@singleton(DATA_OTBR_ADDON_MANAGER)
-@callback
-def get_otbr_addon_manager(hass: HomeAssistant) -> WaitingAddonManager:
-    """Get the OTBR add-on manager."""
-    return WaitingAddonManager(
-        hass,
-        _LOGGER,
-        "OpenThread Border Router",
-        OTBR_ADDON_SLUG,
-    )
-
-
-@singleton(DATA_ZIGBEE_FLASHER_ADDON_MANAGER)
-@callback
-def get_zigbee_flasher_addon_manager(hass: HomeAssistant) -> WaitingAddonManager:
-    """Get the flasher add-on manager."""
-    return WaitingAddonManager(
-        hass,
-        _LOGGER,
-        "Silicon Labs Flasher",
-        ZIGBEE_FLASHER_ADDON_SLUG,
-    )
 
 
 class BaseFirmwareInstallFlow(ConfigEntryBaseFlow):
