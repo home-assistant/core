@@ -1,7 +1,5 @@
 """Support for Enigma2 devices."""
 
-import logging
-
 from openwebif.api import OpenWebIfDevice
 from yarl import URL
 
@@ -20,7 +18,6 @@ from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 from .const import DOMAIN
 
-_LOGGER = logging.getLogger(__name__)
 PLATFORMS = [Platform.MEDIA_PLAYER]
 
 

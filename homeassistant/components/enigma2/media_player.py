@@ -37,6 +37,15 @@ from .const import (
     CONF_MAC_ADDRESS,
     CONF_SOURCE_BOUQUET,
     CONF_USE_CHANNEL_ICON,
+    DEFAULT_DEEP_STANDBY,
+    DEFAULT_MAC_ADDRESS,
+    DEFAULT_NAME,
+    DEFAULT_PASSWORD,
+    DEFAULT_PORT,
+    DEFAULT_SOURCE_BOUQUET,
+    DEFAULT_SSL,
+    DEFAULT_USE_CHANNEL_ICON,
+    DEFAULT_USERNAME,
     DOMAIN,
 )
 
@@ -50,15 +59,17 @@ _LOGGER = getLogger(__name__)
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_PORT): cv.port,
-        vol.Optional(CONF_USERNAME): cv.string,
-        vol.Optional(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_SSL): cv.boolean,
-        vol.Optional(CONF_USE_CHANNEL_ICON): cv.boolean,
-        vol.Optional(CONF_DEEP_STANDBY): cv.boolean,
-        vol.Optional(CONF_MAC_ADDRESS): cv.string,
-        vol.Optional(CONF_SOURCE_BOUQUET): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
+        vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.string,
+        vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
+        vol.Optional(
+            CONF_USE_CHANNEL_ICON, default=DEFAULT_USE_CHANNEL_ICON
+        ): cv.boolean,
+        vol.Optional(CONF_DEEP_STANDBY, default=DEFAULT_DEEP_STANDBY): cv.boolean,
+        vol.Optional(CONF_MAC_ADDRESS, default=DEFAULT_MAC_ADDRESS): cv.string,
+        vol.Optional(CONF_SOURCE_BOUQUET, default=DEFAULT_SOURCE_BOUQUET): cv.string,
     }
 )
 
@@ -71,17 +82,14 @@ async def async_setup_platform(
 ) -> None:
     """Set up of an enigma2 media player."""
 
-    host = config[CONF_HOST]
-
     entry_data = {
-        CONF_NAME: config.get(CONF_NAME),
-        CONF_HOST: host,
-        CONF_PORT: config.get(CONF_PORT),
-        CONF_USERNAME: config.get(CONF_USERNAME),
-        CONF_PASSWORD: config.get(CONF_PASSWORD),
-        CONF_SSL: config.get(CONF_SSL),
-        CONF_USE_CHANNEL_ICON: config.get(CONF_USE_CHANNEL_ICON),
-        CONF_DEEP_STANDBY: config.get(CONF_DEEP_STANDBY),
+        CONF_HOST: config[CONF_HOST],
+        CONF_PORT: config[CONF_PORT],
+        CONF_USERNAME: config[CONF_USERNAME],
+        CONF_PASSWORD: config[CONF_PASSWORD],
+        CONF_SSL: config[CONF_SSL],
+        CONF_USE_CHANNEL_ICON: config[CONF_USE_CHANNEL_ICON],
+        CONF_DEEP_STANDBY: config[CONF_DEEP_STANDBY],
         CONF_SOURCE_BOUQUET: config.get(CONF_SOURCE_BOUQUET),
     }
 
@@ -110,7 +118,7 @@ class Enigma2Device(MediaPlayerEntity):
     """Representation of an Enigma2 box."""
 
     _attr_has_entity_name = True
-    _attr_translation_key = "player"
+    _attr_name = None
 
     _attr_media_content_type = MediaType.TVSHOW
     _attr_supported_features = (

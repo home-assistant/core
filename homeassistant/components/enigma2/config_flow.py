@@ -1,7 +1,5 @@
 """Config flow for Enigma2."""
 
-from collections.abc import Mapping
-import logging
 from typing import Any
 
 from aiohttp.client_exceptions import ClientError
@@ -14,7 +12,6 @@ from homeassistant.components.homeassistant import DOMAIN as HOMEASSISTANT_DOMAI
 from homeassistant.config_entries import SOURCE_USER, ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_HOST,
-    CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_SSL,
@@ -27,7 +24,6 @@ from homeassistant.helpers.issue_registry import IssueSeverity, async_create_iss
 
 from .const import (
     CONF_DEEP_STANDBY,
-    CONF_MAC_ADDRESS,
     CONF_SOURCE_BOUQUET,
     CONF_USE_CHANNEL_ICON,
     DEFAULT_PORT,
@@ -35,8 +31,6 @@ from .const import (
     DEFAULT_VERIFY_SSL,
     DOMAIN,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -57,21 +51,6 @@ CONFIG_SCHEMA = vol.Schema(
         vol.Required(
             CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL
         ): selector.BooleanSelector(),
-    }
-)
-
-IMPORT_CONFIG_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_NAME): str,
-        vol.Required(CONF_HOST): str,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
-        vol.Optional(CONF_USERNAME): str,
-        vol.Optional(CONF_PASSWORD): str,
-        vol.Optional(CONF_SSL, default=False): bool,
-        vol.Optional(CONF_DEEP_STANDBY): bool,
-        vol.Optional(CONF_SOURCE_BOUQUET): str,
-        vol.Optional(CONF_USE_CHANNEL_ICON): bool,
-        vol.Optional(CONF_MAC_ADDRESS): str,
     }
 )
 
@@ -174,7 +153,3 @@ class Enigma2ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         }
 
         return await self.async_step_user(self._data)
-
-    def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
-        """Return config entry title."""
-        return str(options[CONF_HOST])
