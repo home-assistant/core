@@ -10,6 +10,7 @@
     'context': <ANY>,
     'entity_id': 'cover.test',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'open',
   })

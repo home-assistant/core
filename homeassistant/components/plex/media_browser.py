@@ -293,18 +293,16 @@ def generate_plex_uri(server_id, media_id, params=None):
 
 def root_payload(hass, is_internal, platform=None):
     """Return root payload for Plex."""
-    children = []
-
-    for server_id in get_plex_data(hass)[SERVERS]:
-        children.append(
-            browse_media(
-                hass,
-                is_internal,
-                "server",
-                generate_plex_uri(server_id, ""),
-                platform=platform,
-            )
+    children = [
+        browse_media(
+            hass,
+            is_internal,
+            "server",
+            generate_plex_uri(server_id, ""),
+            platform=platform,
         )
+        for server_id in get_plex_data(hass)[SERVERS]
+    ]
 
     if len(children) == 1:
         return children[0]

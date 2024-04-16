@@ -6,9 +6,9 @@ from abc import ABC, abstractmethod
 import asyncio
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
-from functools import partial
+from functools import cached_property, partial
 import logging
-from typing import TYPE_CHECKING, Any, Protocol, cast
+from typing import Any, Protocol, cast
 
 import voluptuous as vol
 
@@ -111,12 +111,6 @@ from .const import (
 )
 from .helpers import async_get_blueprints
 from .trace import trace_automation
-
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
-
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
@@ -234,6 +228,30 @@ def areas_in_automation(hass: HomeAssistant, entity_id: str) -> list[str]:
 
 
 @callback
+def automations_with_floor(hass: HomeAssistant, floor_id: str) -> list[str]:
+    """Return all automations that reference the floor."""
+    return _automations_with_x(hass, floor_id, "referenced_floors")
+
+
+@callback
+def floors_in_automation(hass: HomeAssistant, entity_id: str) -> list[str]:
+    """Return all floors in an automation."""
+    return _x_in_automation(hass, entity_id, "referenced_floors")
+
+
+@callback
+def automations_with_label(hass: HomeAssistant, label_id: str) -> list[str]:
+    """Return all automations that reference the label."""
+    return _automations_with_x(hass, label_id, "referenced_labels")
+
+
+@callback
+def labels_in_automation(hass: HomeAssistant, entity_id: str) -> list[str]:
+    """Return all labels in an automation."""
+    return _x_in_automation(hass, entity_id, "referenced_labels")
+
+
+@callback
 def automations_with_blueprint(hass: HomeAssistant, blueprint_path: str) -> list[str]:
     """Return all automations that reference the blueprint."""
     if DOMAIN not in hass.data:
@@ -274,8 +292,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     await _async_process_config(hass, config, component)
 
     # Add some default blueprints to blueprints/automation, does nothing
-    # if blueprints/automation already exists
-    await async_get_blueprints(hass).async_populate()
+    # if blueprints/automation already exists but still has to create
+    # an executor job to check if the folder exists so we run it in a
+    # separate task to avoid waiting for it to finish setting up
+    # since a tracked task will be waited at the end of startup
+    hass.async_create_task(
+        async_get_blueprints(hass).async_populate(), eager_start=True
+    )
 
     async def trigger_service_handler(
         entity: BaseAutomationEntity, service_call: ServiceCall
@@ -343,6 +366,16 @@ class BaseAutomationEntity(ToggleEntity, ABC):
 
     @cached_property
     @abstractmethod
+    def referenced_labels(self) -> set[str]:
+        """Return a set of referenced labels."""
+
+    @cached_property
+    @abstractmethod
+    def referenced_floors(self) -> set[str]:
+        """Return a set of referenced floors."""
+
+    @cached_property
+    @abstractmethod
     def referenced_areas(self) -> set[str]:
         """Return a set of referenced areas."""
 
@@ -374,7 +407,7 @@ class BaseAutomationEntity(ToggleEntity, ABC):
 class UnavailableAutomationEntity(BaseAutomationEntity):
     """A non-functional automation entity with its state set to unavailable.
 
-    This class is instatiated when an automation fails to validate.
+    This class is instantiated when an automation fails to validate.
     """
 
     _attr_should_poll = False
@@ -387,14 +420,19 @@ class UnavailableAutomationEntity(BaseAutomationEntity):
         raw_config: ConfigType | None,
     ) -> None:
         """Initialize an automation entity."""
-        self._name = name
+        self._attr_name = name
         self._attr_unique_id = automation_id
         self.raw_config = raw_config
 
-    @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        return self._name
+    @cached_property
+    def referenced_labels(self) -> set[str]:
+        """Return a set of referenced labels."""
+        return set()
+
+    @cached_property
+    def referenced_floors(self) -> set[str]:
+        """Return a set of referenced floors."""
+        return set()
 
     @cached_property
     def referenced_areas(self) -> set[str]:
@@ -445,7 +483,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         trace_config: ConfigType,
     ) -> None:
         """Initialize an automation entity."""
-        self._name = name
+        self._attr_name = name
         self._trigger_config = trigger_config
         self._async_detach_triggers: CALLBACK_TYPE | None = None
         self._cond_func = cond_func
@@ -460,11 +498,6 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         self._blueprint_inputs = blueprint_inputs
         self._trace_config = trace_config
         self._attr_unique_id = automation_id
-
-    @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        return self._name
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -482,6 +515,16 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
     def is_on(self) -> bool:
         """Return True if entity is on."""
         return self._async_detach_triggers is not None or self._is_enabled
+
+    @property
+    def referenced_labels(self) -> set[str]:
+        """Return a set of referenced labels."""
+        return self.action_script.referenced_labels
+
+    @property
+    def referenced_floors(self) -> set[str]:
+        """Return a set of referenced floors."""
+        return self.action_script.referenced_floors
 
     @cached_property
     def referenced_areas(self) -> set[str]:
@@ -561,18 +604,20 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
             )
 
         if enable_automation:
-            await self.async_enable()
+            await self._async_enable()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on and update the state."""
-        await self.async_enable()
+        await self._async_enable()
+        self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         if CONF_STOP_ACTIONS in kwargs:
-            await self.async_disable(kwargs[CONF_STOP_ACTIONS])
+            await self._async_disable(kwargs[CONF_STOP_ACTIONS])
         else:
-            await self.async_disable()
+            await self._async_disable()
+        self.async_write_ha_state()
 
     async def async_trigger(
         self,
@@ -679,7 +724,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
                     translation_placeholders={
                         "service": f"{err.domain}.{err.service}",
                         "entity_id": self.entity_id,
-                        "name": self.name or self.entity_id,
+                        "name": self._attr_name or self.entity_id,
                         "edit": f"/config/automation/edit/{self.unique_id}",
                     },
                 )
@@ -700,44 +745,43 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
     async def async_will_remove_from_hass(self) -> None:
         """Remove listeners when removing automation from Home Assistant."""
         await super().async_will_remove_from_hass()
-        await self.async_disable()
+        await self._async_disable()
 
-    async def _async_enable_automation(self) -> None:
+    async def _async_enable_automation(self, event: Event) -> None:
         """Start automation on startup."""
         # Don't do anything if no longer enabled or already attached
         if not self._is_enabled or self._async_detach_triggers is not None:
             return
 
         self._async_detach_triggers = await self._async_attach_triggers(True)
+        self.async_write_ha_state()
 
-    @callback
-    def _async_create_enable_automation_task(self, event: Event) -> None:
-        """Create a task to enable the automation."""
-        self.hass.async_create_task(self._async_enable_automation(), eager_start=True)
-
-    async def async_enable(self) -> None:
+    async def _async_enable(self) -> None:
         """Enable this automation entity.
 
-        This method is a coroutine.
+        This method is not expected to write state to the
+        state machine.
         """
         if self._is_enabled:
             return
 
         self._is_enabled = True
-
         # HomeAssistant is starting up
         if self.hass.state is not CoreState.not_running:
             self._async_detach_triggers = await self._async_attach_triggers(False)
-            self.async_write_ha_state()
             return
 
         self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STARTED, self._async_create_enable_automation_task
+            EVENT_HOMEASSISTANT_STARTED,
+            self._async_enable_automation,
         )
-        self.async_write_ha_state()
 
-    async def async_disable(self, stop_actions: bool = DEFAULT_STOP_ACTIONS) -> None:
-        """Disable the automation entity."""
+    async def _async_disable(self, stop_actions: bool = DEFAULT_STOP_ACTIONS) -> None:
+        """Disable the automation entity.
+
+        This method is not expected to write state to the
+        state machine.
+        """
         if not self._is_enabled and not self.action_script.runs:
             return
 
@@ -750,18 +794,31 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         if stop_actions:
             await self.action_script.async_stop()
 
-        self.async_write_ha_state()
-
     def _log_callback(self, level: int, msg: str, **kwargs: Any) -> None:
         """Log helper callback."""
         self._logger.log(level, "%s %s", msg, self.name, **kwargs)
+
+    async def _async_trigger_if_enabled(
+        self,
+        run_variables: dict[str, Any],
+        context: Context | None = None,
+        skip_condition: bool = False,
+    ) -> ScriptRunResult | None:
+        """Trigger automation if enabled.
+
+        If the trigger starts but has a delay, the automation will be triggered
+        when the delay has passed so we need to make sure its still enabled before
+        executing the action.
+        """
+        if not self._is_enabled:
+            return None
+        return await self.async_trigger(run_variables, context, skip_condition)
 
     async def _async_attach_triggers(
         self, home_assistant_start: bool
     ) -> Callable[[], None] | None:
         """Set up the triggers."""
         this = None
-        self.async_write_ha_state()
         if state := self.hass.states.get(self.entity_id):
             this = state.as_dict()
         variables = {"this": this}
@@ -779,7 +836,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         return await async_initialize_triggers(
             self.hass,
             self._trigger_config,
-            self.async_trigger,
+            self._async_trigger_if_enabled,
             DOMAIN,
             str(self.name),
             self._log_callback,

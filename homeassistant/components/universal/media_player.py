@@ -79,13 +79,12 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import (
-    EventStateChangedData,
     TrackTemplate,
     TrackTemplateResult,
     async_track_state_change_event,
@@ -658,7 +657,7 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         component: EntityComponent[MediaPlayerEntity] = self.hass.data[DOMAIN]
         if entity_id and (entity := component.get_entity(entity_id)):
             return await entity.async_browse_media(media_content_type, media_content_id)
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_update(self) -> None:
         """Update state in HA."""

@@ -13,6 +13,7 @@ from homeassistant.const import CONF_ATTRIBUTE, CONF_FOR, CONF_PLATFORM, MATCH_A
 from homeassistant.core import (
     CALLBACK_TYPE,
     Event,
+    EventStateChangedData,
     HassJob,
     HomeAssistant,
     State,
@@ -24,7 +25,6 @@ from homeassistant.helpers import (
     template,
 )
 from homeassistant.helpers.event import (
-    EventStateChangedData,
     async_track_same_state,
     async_track_state_change_event,
     process_state_match,
@@ -184,7 +184,6 @@ async def async_attach_trigger(
                     }
                 },
                 event.context,
-                eager_start=True,
             )
 
         if not time_delta:

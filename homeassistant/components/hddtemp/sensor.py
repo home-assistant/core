@@ -66,11 +66,7 @@ def setup_platform(
     if not disks:
         disks = [next(iter(hddtemp.data)).split("|")[0]]
 
-    dev = []
-    for disk in disks:
-        dev.append(HddTempSensor(name, disk, hddtemp))
-
-    add_entities(dev, True)
+    add_entities((HddTempSensor(name, disk, hddtemp) for disk in disks), True)
 
 
 class HddTempSensor(SensorEntity):

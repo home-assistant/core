@@ -7,7 +7,7 @@ from datetime import timedelta
 import logging
 
 import aiohttp
-from ovoenergy import OVODailyUsage
+from ovoenergy.models import OVODailyUsage
 from ovoenergy.ovoenergy import OVOEnergy
 
 from homeassistant.config_entries import ConfigEntry

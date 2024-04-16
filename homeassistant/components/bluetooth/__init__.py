@@ -197,7 +197,8 @@ async def _async_start_adapter_discovery(
 
     cancel = usb.async_register_scan_request_callback(hass, _async_trigger_discovery)
     hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STOP, hass_callback(lambda event: cancel())
+        EVENT_HOMEASSISTANT_STOP,
+        hass_callback(lambda event: cancel()),
     )
 
 

@@ -12,24 +12,18 @@ from pydeconz.interfaces.groups import GroupHandler
 from pydeconz.models.event import EventType
 
 from homeassistant.config_entries import SOURCE_HASSIO, ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from ..const import (
-    CONF_ALLOW_CLIP_SENSOR,
-    CONF_ALLOW_DECONZ_GROUPS,
-    CONF_ALLOW_NEW_DEVICES,
     CONF_MASTER_GATEWAY,
-    DEFAULT_ALLOW_CLIP_SENSOR,
-    DEFAULT_ALLOW_DECONZ_GROUPS,
-    DEFAULT_ALLOW_NEW_DEVICES,
     DOMAIN as DECONZ_DOMAIN,
     HASSIO_CONFIGURATION_URL,
     PLATFORMS,
 )
+from .config import DeconzConfig
 
 if TYPE_CHECKING:
     from ..deconz_event import (
@@ -77,6 +71,7 @@ class DeconzHub:
     ) -> None:
         """Initialize the system."""
         self.hass = hass
+        self.config = DeconzConfig.from_config_entry(config_entry)
         self.config_entry = config_entry
         self.api = api
 
@@ -99,25 +94,16 @@ class DeconzHub:
         self.deconz_groups: set[tuple[Callable[[EventType, str], None], str]] = set()
         self.ignored_devices: set[tuple[Callable[[EventType, str], None], str]] = set()
 
-        self.option_allow_clip_sensor = self.config_entry.options.get(
-            CONF_ALLOW_CLIP_SENSOR, DEFAULT_ALLOW_CLIP_SENSOR
-        )
-        self.option_allow_deconz_groups = config_entry.options.get(
-            CONF_ALLOW_DECONZ_GROUPS, DEFAULT_ALLOW_DECONZ_GROUPS
-        )
-        self.option_allow_new_devices = config_entry.options.get(
-            CONF_ALLOW_NEW_DEVICES, DEFAULT_ALLOW_NEW_DEVICES
-        )
+    @callback
+    @staticmethod
+    def get_hub(hass: HomeAssistant, config_entry: ConfigEntry) -> DeconzHub:
+        """Return hub with a matching config entry ID."""
+        return cast(DeconzHub, hass.data[DECONZ_DOMAIN][config_entry.entry_id])
 
     @property
     def bridgeid(self) -> str:
         """Return the unique identifier of the gateway."""
         return cast(str, self.config_entry.unique_id)
-
-    @property
-    def host(self) -> str:
-        """Return the host of the gateway."""
-        return cast(str, self.config_entry.data[CONF_HOST])
 
     @property
     def master(self) -> bool:
@@ -143,7 +129,7 @@ class DeconzHub:
             """
             if (
                 not initializing
-                and not self.option_allow_new_devices
+                and not self.config.allow_new_devices
                 and not self.ignore_state_updates
             ):
                 self.ignored_devices.add((async_add_device, device_id))
@@ -151,14 +137,14 @@ class DeconzHub:
 
             if isinstance(deconz_device_interface, GroupHandler):
                 self.deconz_groups.add((async_add_device, device_id))
-                if not self.option_allow_deconz_groups:
+                if not self.config.allow_deconz_groups:
                     return
 
             if isinstance(deconz_device_interface, SENSORS):
                 device = deconz_device_interface[device_id]
                 if device.type.startswith("CLIP") and not always_ignore_clip_sensors:
                     self.clip_sensors.add((async_add_device, device_id))
-                    if not self.option_allow_clip_sensor:
+                    if not self.config.allow_clip_sensor:
                         return
 
             add_device_callback(EventType.ADDED, device_id)
@@ -205,7 +191,7 @@ class DeconzHub:
         )
 
         # Gateway service
-        configuration_url = f"http://{self.host}:{self.config_entry.data[CONF_PORT]}"
+        configuration_url = f"http://{self.config.host}:{self.config.port}"
         if self.config_entry.source == SOURCE_HASSIO:
             configuration_url = HASSIO_CONFIGURATION_URL
         device_registry.async_get_or_create(
@@ -222,7 +208,7 @@ class DeconzHub:
 
     @staticmethod
     async def async_config_entry_updated(
-        hass: HomeAssistant, entry: ConfigEntry
+        hass: HomeAssistant, config_entry: ConfigEntry
     ) -> None:
         """Handle signals of config entry being updated.
 
@@ -231,32 +217,29 @@ class DeconzHub:
         Causes for this is either discovery updating host address or
         config entry options changing.
         """
-        if entry.entry_id not in hass.data[DECONZ_DOMAIN]:
+        if config_entry.entry_id not in hass.data[DECONZ_DOMAIN]:
             # A race condition can occur if multiple config entries are
             # unloaded in parallel
             return
-        gateway = get_gateway_from_config_entry(hass, entry)
-
-        if gateway.api.host != gateway.host:
-            gateway.api.close()
-            gateway.api.host = gateway.host
-            gateway.api.start()
+        hub = DeconzHub.get_hub(hass, config_entry)
+        previous_config = hub.config
+        hub.config = DeconzConfig.from_config_entry(config_entry)
+        if previous_config.host != hub.config.host:
+            hub.api.close()
+            hub.api.host = hub.config.host
+            hub.api.start()
             return
 
-        await gateway.options_updated()
+        await hub.options_updated(previous_config)
 
-    async def options_updated(self) -> None:
+    async def options_updated(self, previous_config: DeconzConfig) -> None:
         """Manage entities affected by config entry options."""
         deconz_ids = []
 
         # Allow CLIP sensors
 
-        option_allow_clip_sensor = self.config_entry.options.get(
-            CONF_ALLOW_CLIP_SENSOR, DEFAULT_ALLOW_CLIP_SENSOR
-        )
-        if option_allow_clip_sensor != self.option_allow_clip_sensor:
-            self.option_allow_clip_sensor = option_allow_clip_sensor
-            if option_allow_clip_sensor:
+        if self.config.allow_clip_sensor != previous_config.allow_clip_sensor:
+            if self.config.allow_clip_sensor:
                 for add_device, device_id in self.clip_sensors:
                     add_device(EventType.ADDED, device_id)
             else:
@@ -268,12 +251,8 @@ class DeconzHub:
 
         # Allow Groups
 
-        option_allow_deconz_groups = self.config_entry.options.get(
-            CONF_ALLOW_DECONZ_GROUPS, DEFAULT_ALLOW_DECONZ_GROUPS
-        )
-        if option_allow_deconz_groups != self.option_allow_deconz_groups:
-            self.option_allow_deconz_groups = option_allow_deconz_groups
-            if option_allow_deconz_groups:
+        if self.config.allow_deconz_groups != previous_config.allow_deconz_groups:
+            if self.config.allow_deconz_groups:
                 for add_device, device_id in self.deconz_groups:
                     add_device(EventType.ADDED, device_id)
             else:
@@ -281,12 +260,8 @@ class DeconzHub:
 
         # Allow adding new devices
 
-        option_allow_new_devices = self.config_entry.options.get(
-            CONF_ALLOW_NEW_DEVICES, DEFAULT_ALLOW_NEW_DEVICES
-        )
-        if option_allow_new_devices != self.option_allow_new_devices:
-            self.option_allow_new_devices = option_allow_new_devices
-            if option_allow_new_devices:
+        if self.config.allow_new_devices != previous_config.allow_new_devices:
+            if self.config.allow_new_devices:
                 self.load_ignored_devices()
 
         # Remove entities based on above categories
@@ -323,11 +298,3 @@ class DeconzHub:
 
         self.deconz_ids = {}
         return True
-
-
-@callback
-def get_gateway_from_config_entry(
-    hass: HomeAssistant, config_entry: ConfigEntry
-) -> DeconzHub:
-    """Return gateway with a matching config entry ID."""
-    return cast(DeconzHub, hass.data[DECONZ_DOMAIN][config_entry.entry_id])
