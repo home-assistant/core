@@ -7,6 +7,7 @@ import datetime
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -121,7 +122,11 @@ class SunWEGSensor(CoordinatorEntity[SunWEGDataUpdateCoordinator], SensorEntity)
             description.icon if description.icon is not None else "mdi:solar-power"
         )
 
-        self._attr_device_info = coordinator.device_info
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, str(coordinator.plant_id))},
+            manufacturer="SunWEG",
+            name=coordinator.plant_name,
+        )
 
     @callback
     def _handle_coordinator_update(self) -> None:

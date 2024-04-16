@@ -8,7 +8,6 @@ from sunweg.plant import Plant
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryError
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -35,11 +34,6 @@ class SunWEGDataUpdateCoordinator(DataUpdateCoordinator[Plant]):
         self.api = api
         self.plant_id = plant_id
         self.plant_name = plant_name
-        self.device_info = DeviceInfo(
-            identifiers={(DOMAIN, str(plant_id))},
-            manufacturer="SunWEG",
-            name=self.plant_name,
-        )
 
     async def _async_update_data(self) -> Plant:
         """Fetch data from API endpoint."""
