@@ -50,7 +50,6 @@ class LektricoDeviceDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self) -> lektricowifi.Info:
         """Async Update device state."""
         try:
-            info = await self.device.device_info(self.device_type)
-            return info
+            return await self.device.device_info(self.device_type)
         except DeviceConnectionError as lek_ex:
             raise UpdateFailed(lek_ex) from lek_ex

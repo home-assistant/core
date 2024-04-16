@@ -1,4 +1,5 @@
 """Entity classes for the Lektrico integration."""
+
 from __future__ import annotations
 
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -26,5 +27,5 @@ class LektricoEntity(CoordinatorEntity[LektricoDeviceDataUpdateCoordinator]):
             model=f"{coordinator.device_type.upper()} {coordinator.serial_number} rev.{coordinator.board_revision}",
             name=friendly_name,
             manufacturer="Lektrico",
-            sw_version=coordinator.data.fw_version,
+            sw_version=coordinator.data.get("fw_version"),
         )
