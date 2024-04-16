@@ -1883,8 +1883,9 @@ async def test_reload_service_helper(hass: HomeAssistant) -> None:
     tasks = [
         # This reload task will start executing first, (target1)
         reloader.execute_service(ServiceCall("test", "test", {"target": "target1"})),
-        # These reload tasks will be deduplicated while the first task is reloaded,
-        # (target2, target3, target4, target1)
+        # These reload tasks will be deduplicated to (target2, target3, target4, target1)
+        # while the first task is reloaded, note that target1 can't be deduplicated
+        # because it's already being reloaded.
         reloader.execute_service(ServiceCall("test", "test", {"target": "target2"})),
         reloader.execute_service(ServiceCall("test", "test", {"target": "target3"})),
         reloader.execute_service(ServiceCall("test", "test", {"target": "target4"})),
@@ -1903,8 +1904,8 @@ async def test_reload_service_helper(hass: HomeAssistant) -> None:
     tasks = [
         # This reload task will start executing first, (target1)
         reloader.execute_service(ServiceCall("test", "test", {"target": "target1"})),
-        # These reload tasks will be deduplicated while the first task is reloaded,
-        # (target2, target3, target4, all)
+        # These reload tasks will be deduplicated to (target2, target3, target4, all)
+        # while the first task is reloaded.
         reloader.execute_service(ServiceCall("test", "test", {"target": "target2"})),
         reloader.execute_service(ServiceCall("test", "test", {"target": "target3"})),
         reloader.execute_service(ServiceCall("test", "test", {"target": "target4"})),
@@ -1918,8 +1919,8 @@ async def test_reload_service_helper(hass: HomeAssistant) -> None:
     tasks = [
         # This reload task will start executing first, (all)
         reloader.execute_service(ServiceCall("test", "test")),
-        # These reload tasks will be deduplicated while the first task is reloaded,
-        # (target1, target2, target3, target4)
+        # These reload tasks will be deduplicated to (target1, target2, target3, target4)
+        # while the first task is reloaded.
         reloader.execute_service(ServiceCall("test", "test", {"target": "target1"})),
         reloader.execute_service(ServiceCall("test", "test", {"target": "target2"})),
         reloader.execute_service(ServiceCall("test", "test", {"target": "target3"})),
@@ -1933,8 +1934,9 @@ async def test_reload_service_helper(hass: HomeAssistant) -> None:
     tasks = [
         # This reload task will start executing first, (target1)
         reloader.execute_service(ServiceCall("test", "test", {"target": "target1"})),
-        # These reload tasks will be deduplicated while the first task is reloaded,
-        # (target2, target3, target4, target1)
+        # These reload tasks will be deduplicated to (target2, target3, target4, target1)
+        # while the first task is reloaded, note that target1 can't be deduplicated
+        # because it's already being reloaded.
         reloader.execute_service(ServiceCall("test", "test", {"target": "target2"})),
         reloader.execute_service(ServiceCall("test", "test", {"target": "target3"})),
         reloader.execute_service(ServiceCall("test", "test", {"target": "target4"})),
@@ -1957,8 +1959,8 @@ async def test_reload_service_helper(hass: HomeAssistant) -> None:
     tasks = [
         # This reload task will start executing first, (target1)
         reloader.execute_service(ServiceCall("test", "test", {"target": "target1"})),
-        # These reload tasks will be deduplicated while the first task is reloaded,
-        # (target2, target3, target4, all)
+        # These reload tasks will be deduplicated to (target2, target3, target4, all)
+        # while the first task is reloaded.
         reloader.execute_service(ServiceCall("test", "test", {"target": "target2"})),
         reloader.execute_service(ServiceCall("test", "test", {"target": "target3"})),
         reloader.execute_service(ServiceCall("test", "test", {"target": "target4"})),
@@ -1973,8 +1975,8 @@ async def test_reload_service_helper(hass: HomeAssistant) -> None:
     tasks = [
         # This reload task will start executing first, (all)
         reloader.execute_service(ServiceCall("test", "test")),
-        # These reload tasks will be deduplicated while the first task is reloaded,
-        # (target1, target2, target3, target4)
+        # These reload tasks will be deduplicated to (target1, target2, target3, target4)
+        # while the first task is reloaded.
         reloader.execute_service(ServiceCall("test", "test", {"target": "target1"})),
         reloader.execute_service(ServiceCall("test", "test", {"target": "target2"})),
         reloader.execute_service(ServiceCall("test", "test", {"target": "target3"})),
