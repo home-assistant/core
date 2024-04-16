@@ -144,6 +144,10 @@ class PyLoadSensor(SensorEntity):
                     translation_key="authentication_exception",
                     translation_placeholders={CONF_USERNAME: self.api.username},
                 ) from e
+            else:
+                raise UpdateFailed(
+                    "Unable to retrieve data due to cookie expiration but re-authentication was successful."
+                )
         except CannotConnect as e:
             raise UpdateFailed(
                 "Unable to connect and retrieve data from pyLoad API"
