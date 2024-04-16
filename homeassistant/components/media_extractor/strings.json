@@ -24,7 +24,7 @@
         },
         "format_query": {
           "name": "Format query",
-          "description": "Query to select the quality of the result."
+          "description": "Youtube-dl query to select the quality of the result."
         }
       }
     }

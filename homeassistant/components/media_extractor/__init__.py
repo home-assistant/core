@@ -58,7 +58,7 @@ CONFIG_SCHEMA = vol.Schema(
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the media extractor service."""
 
-    async def extract_media(call: ServiceCall) -> ServiceResponse:
+    async def extract_media_url(call: ServiceCall) -> ServiceResponse:
         """Extract media url."""
         youtube_dl = YoutubeDL(
             {"quiet": True, "logger": _LOGGER, "format": call.data[ATTR_FORMAT_QUERY]}
@@ -102,7 +102,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.services.async_register(
         DOMAIN,
         SERVICE_EXTRACT_MEDIA_URL,
-        extract_media,
+        extract_media_url,
         schema=vol.Schema(
             {
                 vol.Required(ATTR_URL): cv.string,
