@@ -47,15 +47,8 @@ ORIG_WRITE_TAGS = tts.SpeechManager.write_tags
 class DefaultEntity(tts.TextToSpeechEntity):
     """Test entity."""
 
-    @property
-    def supported_languages(self) -> list[str]:
-        """Return a list of supported languages."""
-        return SUPPORT_LANGUAGES
-
-    @property
-    def default_language(self) -> str:
-        """Return the default language."""
-        return DEFAULT_LANG
+    _attr_supported_languages = SUPPORT_LANGUAGES
+    _attr_default_language = DEFAULT_LANG
 
 
 async def test_default_entity_attributes() -> None:
@@ -523,10 +516,7 @@ class MockProviderWithDefaults(MockProvider):
 class MockEntityWithDefaults(MockTTSEntity):
     """Mock entity with default options."""
 
-    @property
-    def default_options(self):
-        """Return a mapping with the default options."""
-        return {"voice": "alex"}
+    _attr_default_options = {"voice": "alex"}
 
 
 @pytest.mark.parametrize(

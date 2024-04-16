@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-from abc import abstractmethod
 import asyncio
 from collections.abc import Mapping
 from datetime import datetime
-from functools import partial
+from functools import cached_property, partial
 import hashlib
 from http import HTTPStatus
 import io
@@ -379,6 +378,11 @@ class TextToSpeechEntity(RestoreEntity):
     _attr_should_poll = False
     __last_tts_loaded: str | None = None
 
+    _attr_default_language: str
+    _attr_supported_languages: list[str]
+    _attr_supported_options: list[str] | None = None
+    _attr_default_options: Mapping[str, Any] | None = None
+
     @property
     @final
     def state(self) -> str | None:
@@ -387,25 +391,25 @@ class TextToSpeechEntity(RestoreEntity):
             return None
         return self.__last_tts_loaded
 
-    @property
-    @abstractmethod
+    @cached_property
     def supported_languages(self) -> list[str]:
         """Return a list of supported languages."""
+        return self._attr_supported_languages
 
-    @property
-    @abstractmethod
+    @cached_property
     def default_language(self) -> str:
         """Return the default language."""
+        return self._attr_default_language
 
-    @property
+    @cached_property
     def supported_options(self) -> list[str] | None:
         """Return a list of supported options like voice, emotions."""
-        return None
+        return self._attr_supported_options
 
-    @property
+    @cached_property
     def default_options(self) -> Mapping[str, Any] | None:
         """Return a mapping with the default options."""
-        return None
+        return self._attr_default_options
 
     @callback
     def async_get_supported_voices(self, language: str) -> list[Voice] | None:
