@@ -503,7 +503,7 @@ async def test_if_fires_on_state_change_with_for(
                         "service": "test.automation",
                         "data_template": {
                             "some": "turn_on {{ trigger.%s }}"
-                            % "}} - {{ trigger.".join(
+                            % "}} - {{ trigger.".join(  # noqa: FLY002
                                 (
                                     "platform",
                                     "entity_id",
