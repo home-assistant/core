@@ -23,11 +23,6 @@ async def async_setup_entry(
     """Set up the Avocent switches from a config entry."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-    # entities: list[AvocentDpduSwitchEntity] = []
-    # for outlet in coordinator.api.switches():
-    #     entities.append(AvocentDpduSwitchEntity(outlet, coordinator))
-    # async_add_entities(entities)
-
     async_add_entities(
         [
             AvocentDpduSwitchEntity(outlet, coordinator)
