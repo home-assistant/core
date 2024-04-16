@@ -438,7 +438,7 @@ async def test_zero_conf_second_envoy_while_form(
     )
     assert result["type"] is FlowResultType.FORM
 
-    result = await hass.config_entries.flow.async_init(
+    result2 = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
@@ -452,10 +452,34 @@ async def test_zero_conf_second_envoy_while_form(
         ),
     )
     await hass.async_block_till_done()
-    assert result["type"] is FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert config_entry.data["host"] == "1.1.1.1"
     assert config_entry.unique_id == "1234"
     assert config_entry.title == "Envoy 1234"
+
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"],
+        {
+            "host": "4.4.4.4",
+            "username": "test-username",
+            "password": "test-password",
+        },
+    )
+    await hass.async_block_till_done()
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+    assert result3["title"] == "Envoy 4321"
+    assert result3["result"].unique_id == "4321"
+
+    result4 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "host": "1.1.1.1",
+            "username": "test-username",
+            "password": "test-password",
+        },
+    )
+    await hass.async_block_till_done()
+    assert result4["type"] is FlowResultType.ABORT
 
 
 async def test_zero_conf_malformed_serial_property(
@@ -468,7 +492,7 @@ async def test_zero_conf_malformed_serial_property(
     assert result["type"] is FlowResultType.FORM
 
     with pytest.raises(KeyError) as ex:
-        result = await hass.config_entries.flow.async_init(
+        await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_ZEROCONF},
             data=zeroconf.ZeroconfServiceInfo(
@@ -484,6 +508,17 @@ async def test_zero_conf_malformed_serial_property(
         await hass.async_block_till_done()
     assert "serialnum" in str(ex.value)
 
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "host": "1.1.1.1",
+            "username": "test-username",
+            "password": "test-password",
+        },
+    )
+    await hass.async_block_till_done()
+    assert result3["type"] is FlowResultType.ABORT
+
 
 async def test_zero_conf_malformed_serial(
     hass: HomeAssistant, config_entry, setup_enphase_envoy
@@ -494,7 +529,7 @@ async def test_zero_conf_malformed_serial(
     )
     assert result["type"] is FlowResultType.FORM
 
-    result = await hass.config_entries.flow.async_init(
+    result2 = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
@@ -508,10 +543,19 @@ async def test_zero_conf_malformed_serial(
         ),
     )
     await hass.async_block_till_done()
-    assert result["type"] is FlowResultType.FORM
-    assert config_entry.data["host"] == "1.1.1.1"
-    assert config_entry.unique_id == "1234"
-    assert config_entry.title == "Envoy 1234"
+    assert result2["type"] is FlowResultType.FORM
+
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"],
+        {
+            "host": "1.1.1.1",
+            "username": "test-username",
+            "password": "test-password",
+        },
+    )
+    await hass.async_block_till_done()
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+    assert result3["title"] == "Envoy 12%4"
 
 
 async def test_zero_conf_malformed_fw_property(
