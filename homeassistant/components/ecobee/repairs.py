@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 from homeassistant.components.repairs import RepairsFlow
 from homeassistant.components.repairs.issue_handler import ConfirmRepairFlow
 from homeassistant.config_entries import ConfigEntry
@@ -27,7 +25,6 @@ def migrate_notify_issue(hass: HomeAssistant, entry: ConfigEntry) -> None:
         is_persistent=True,
         translation_key="migrate_notify",
         severity=ir.IssueSeverity.WARNING,
-        data={"entry_id": entry.entry_id},
     )
 
 
@@ -37,18 +34,10 @@ async def async_create_fix_flow(
     data: dict[str, str | int | float | None] | None,
 ) -> RepairsFlow:
     """Create flow."""
-    if TYPE_CHECKING:
-        assert data is not None
-        assert isinstance(data["entry_id"], str)
-
-    entry = hass.config_entries.async_get_entry(data["entry_id"])
-    if TYPE_CHECKING:
-        assert entry is not None
-
     assert issue_id == "migrate_notify"
     # Update entry to latest version
     hass.config_entries.async_update_entry(
-        entry,
+        hass.data[DOMAIN].entry,
         version=DATA_FLOW_VERSION,
         minor_version=DATA_FLOW_MINOR_VERSION,
     )
