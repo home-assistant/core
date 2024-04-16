@@ -614,7 +614,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         try:
             return name.format(**translation_placeholders)
         except KeyError as err:
-            if get_release_channel() != ReleaseChannel.STABLE:
+            if get_release_channel() is ReleaseChannel.STABLE:
                 raise HomeAssistantError("Missing placeholder %s" % err) from err
             report_issue = async_suggest_report_issue(
                 self.hass, integration_domain=domain
@@ -969,12 +969,16 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                         tuple(conn)  # type: ignore[misc]
                         for conn in device["connections"]
                     },
-                    disabled_by=DeviceEntryDisabler(device["disabled_by"])
-                    if device["disabled_by"]
-                    else None,
-                    entry_type=DeviceEntryType(device["entry_type"])
-                    if device["entry_type"]
-                    else None,
+                    disabled_by=(
+                        DeviceEntryDisabler(device["disabled_by"])
+                        if device["disabled_by"]
+                        else None
+                    ),
+                    entry_type=(
+                        DeviceEntryType(device["entry_type"])
+                        if device["entry_type"]
+                        else None
+                    ),
                     hw_version=device["hw_version"],
                     id=device["id"],
                     identifiers={

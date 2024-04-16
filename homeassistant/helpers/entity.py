@@ -658,7 +658,7 @@ class Entity(
             return name.format(**self.translation_placeholders)
         except KeyError as err:
             if not self._name_translation_placeholders_reported:
-                if get_release_channel() != ReleaseChannel.STABLE:
+                if get_release_channel() is ReleaseChannel.STABLE:
                     raise HomeAssistantError("Missing placeholder %s" % err) from err
                 report_issue = self._suggest_report_issue()
                 _LOGGER.warning(
