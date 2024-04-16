@@ -1,7 +1,5 @@
 """Platform for sensor integration."""
 
-from __future__ import annotations
-
 from switchbot_api import Device, SwitchBotAPI
 
 from homeassistant.components.sensor import (
