@@ -75,7 +75,11 @@ def make_device_data(
             devices_data.switches.append(
                 prepare_device(hass, api, device, coordinators_by_id, config)
             )
-        if isinstance(device, Device) and device.device_type == "MeterPlus":
+        if isinstance(device, Device) and device.device_type in [
+            "Meter",
+            "MeterPlus",
+            "WoIOSensor",
+        ]:
             devices_data.sensors.append(
                 prepare_device(hass, api, device, coordinators_by_id, config)
             )
