@@ -399,9 +399,7 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
             """Update areas that have a label that has been removed."""
             label_id = event.data["label_id"]
             for area in self.areas.get_areas_for_label(label_id):
-                labels = area.labels.copy()
-                labels.remove(label_id)
-                self.async_update(area.id, labels=labels)
+                self.async_update(area.id, labels=area.labels - {label_id})
 
         self.hass.bus.async_listen(
             event_type=lr.EVENT_LABEL_REGISTRY_UPDATED,
