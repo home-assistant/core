@@ -9,12 +9,10 @@ on:
     branches:
       - dev
       - rc
-    # TEMPORARY FOR TESTING
-    pull_request: ~
     paths:
       - ".github/workflows/wheels.yml"
       - "homeassistant/package_constraints.txt"
-      - "requirements_all_.txt"
+      - "requirements_all.txt"
       - "requirements.txt"
       - "script/gen_requirements_all.py"
 
