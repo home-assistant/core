@@ -487,14 +487,6 @@ async def async_prepare_setup_platform(
         log_error("Integration not found")
         return None
 
-    # Process deps and reqs as soon as possible, so that requirements are
-    # available when we import the platform.
-    try:
-        await async_process_deps_reqs(hass, hass_config, integration)
-    except HomeAssistantError as err:
-        log_error(str(err))
-        return None
-
     # Platforms cannot exist on their own, they are part of their integration.
     # If the integration is not set up yet, and can be set up, set it up.
     #
@@ -502,6 +494,16 @@ async def async_prepare_setup_platform(
     # where the top level component is.
     #
     if load_top_level_component := integration.domain not in hass.config.components:
+        # Process deps and reqs as soon as possible, so that requirements are
+        # available when we import the platform. We only do this if the integration
+        # is not in hass.config.components yet, as we already processed them in
+        # async_setup_component if it is.
+        try:
+            await async_process_deps_reqs(hass, hass_config, integration)
+        except HomeAssistantError as err:
+            log_error(str(err))
+            return None
+
         try:
             component = await integration.async_get_component()
         except ImportError as exc:

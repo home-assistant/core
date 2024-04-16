@@ -238,16 +238,6 @@ aioharmony==0.2.10
 # homeassistant.components.homekit_controller
 aiohomekit==3.1.5
 
-# homeassistant.components.http
-aiohttp-fast-url-dispatcher==0.3.0
-
-# homeassistant.components.http
-aiohttp-zlib-ng==0.3.1
-
-# homeassistant.components.emulated_hue
-# homeassistant.components.http
-aiohttp_cors==0.7.0
-
 # homeassistant.components.hue
 aiohue==4.7.1
 
@@ -1237,7 +1227,7 @@ poolsense==0.0.8
 praw==7.5.0
 
 # homeassistant.components.islamic_prayer_times
-prayer-times-calculator==0.0.12
+prayer-times-calculator-offline==1.0.3
 
 # homeassistant.components.prometheus
 prometheus-client==0.17.1
@@ -2054,7 +2044,7 @@ sunweg==2.1.1
 surepy==0.9.0
 
 # homeassistant.components.switchbot_cloud
-switchbot-api==2.0.0
+switchbot-api==2.1.0
 
 # homeassistant.components.system_bridge
 systembridgeconnector==4.0.3
@@ -2155,7 +2145,7 @@ url-normalize==1.4.3
 uvcclient==0.11.0
 
 # homeassistant.components.roborock
-vacuum-map-parser-roborock==0.1.1
+vacuum-map-parser-roborock==0.1.2
 
 # homeassistant.components.vallox
 vallox-websocket-api==5.1.1
