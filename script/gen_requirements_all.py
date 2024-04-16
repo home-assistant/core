@@ -17,9 +17,25 @@ from typing import Any
 from homeassistant.util.yaml.loader import load_yaml
 from script.hassfest.model import Integration
 
+# Requirements excluded by COMMENT_REQUIREMENTS which should be included when
+# building wheels
+EXTRA_WHEELS_REQUIREMENTS = (
+    "decora-wifi",
+    "evdev",
+    "pycups",
+    "python-gammu",
+    "pyuserinput",
+)
+
+EXTRA_WHEELS_REQUIREMENTS_NORMALIZED = {
+    requirement.lower().replace("_", "-") for requirement in EXTRA_WHEELS_REQUIREMENTS
+}
+
 # Requirements which can't be installed on all systems because they rely on additional
-# system packages.
-COMMENT_REQUIREMENTS = (
+# system packages. Requirements listed in COMMENT_REQUIREMENTS will be commented-out
+# in requirements_all.txt and requirements_test_all.txt
+COMMENT_REQUIREMENTS_ALL = (
+    *EXTRA_WHEELS_REQUIREMENTS,
     "Adafruit-BBIO",
     "atenpdu",  # depends on pysnmp which is not maintained at this time
     "avea",  # depends on bluepy
@@ -28,35 +44,17 @@ COMMENT_REQUIREMENTS = (
     "beewi-smartclim",  # depends on bluepy
     "bluepy",
     "decora",
-    "decora-wifi",
-    "evdev",
     "face-recognition",
     "pybluez",
     "pycocotools",
-    "pycups",
     "python-gammu",
     "python-lirc",
-    "pyuserinput",
     "tensorflow",
     "tf-models-official",
 )
 
-COMMENT_REQUIREMENTS_NORMALIZED = {
-    commented.lower().replace("_", "-") for commented in COMMENT_REQUIREMENTS
-}
-
-# Requirements excluded by COMMENT_REQUIREMENTS which should be included when
-# building wheels
-WHEELS_REQUIREMENTS = (
-    "decora-wifi",
-    "evdev",
-    "pycups",
-    "python-gammu",
-    "pyuserinput",
-)
-
-WHEELS_REQUIREMENTS_NORMALIZED = {
-    requirement.lower().replace("_", "-") for requirement in WHEELS_REQUIREMENTS
+COMMENT_REQUIREMENTS_ALL_NORMALIZED = {
+    commented.lower().replace("_", "-") for commented in COMMENT_REQUIREMENTS_ALL
 }
 
 IGNORE_PIN = ("colorlog>2.1,<3", "urllib3")
@@ -289,7 +287,7 @@ def allow_requirement(req: str, package_allowlist: set[str]) -> bool:
 
 def comment_requirement(req: str) -> bool:
     """Comment out requirement. Some don't install on all systems."""
-    return normalize_package_name(req) in COMMENT_REQUIREMENTS_NORMALIZED
+    return normalize_package_name(req) in COMMENT_REQUIREMENTS_ALL_NORMALIZED
 
 
 def gather_modules() -> dict[str, list[str]] | None:
@@ -419,7 +417,7 @@ def requirements_wheels_output(reqs: dict[str, list[str]]) -> str:
         GENERATED_MESSAGE,
         "-r requirements_all.txt\n",
     ]
-    output.append(generate_allow_list(reqs, WHEELS_REQUIREMENTS_NORMALIZED))
+    output.append(generate_allow_list(reqs, EXTRA_WHEELS_REQUIREMENTS_NORMALIZED))
 
     return "".join(output)
 
@@ -525,7 +523,7 @@ def main(validate: bool) -> int:
     files = (
         ("requirements.txt", reqs_file),
         ("requirements_all.txt", reqs_all_file),
-        ("requirements_wheels.txt", reqs_wheels_file),
+        ("requirements_extra_wheels.txt", reqs_wheels_file),
         ("requirements_test_pre_commit.txt", reqs_pre_commit_file),
         ("requirements_test_all.txt", reqs_test_all_file),
         ("homeassistant/package_constraints.txt", constraints),
