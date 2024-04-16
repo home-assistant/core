@@ -1239,21 +1239,21 @@ def async_setup_cleanup(hass: HomeAssistant, dev_reg: DeviceRegistry) -> None:
 
         return True
 
-    if hass.is_running:
+    def _async_listen_for_cleanup() -> None:
+        """Listen for entity registry changes."""
         hass.bus.async_listen(
             entity_registry.EVENT_ENTITY_REGISTRY_UPDATED,
             _async_entity_registry_changed,
             event_filter=entity_registry_changed_filter,
         )
+
+    if hass.is_running:
+        _async_listen_for_cleanup()
         return
 
     async def startup_clean(event: Event) -> None:
         """Clean up on startup."""
-        hass.bus.async_listen(
-            entity_registry.EVENT_ENTITY_REGISTRY_UPDATED,
-            _async_entity_registry_changed,
-            event_filter=entity_registry_changed_filter,
-        )
+        _async_listen_for_cleanup()
         await debounced_cleanup.async_call()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, startup_clean)
