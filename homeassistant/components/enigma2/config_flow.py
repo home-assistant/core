@@ -8,7 +8,6 @@ from openwebif.error import InvalidAuthError
 import voluptuous as vol
 from yarl import URL
 
-from homeassistant.components.homeassistant import DOMAIN as HOMEASSISTANT_DOMAIN
 from homeassistant.config_entries import SOURCE_USER, ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_HOST,
@@ -18,6 +17,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN
 from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
@@ -132,7 +132,7 @@ class Enigma2ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         if errors := await self.validate_user_input(user_input):
             async_create_issue(
                 self.hass,
-                DOMAIN,
+                HOMEASSISTANT_DOMAIN,
                 f"deprecated_yaml_{DOMAIN}_import_issue_{errors["base"]}",
                 breaks_in_ha_version="2024.11.0",
                 is_fixable=False,
