@@ -11,6 +11,7 @@
     "delete_command": "mdi:delete",
     "learn_command": "mdi:school",
     "send_command": "mdi:remote",
+    "sweep_frequency": "mdi:sine-wave",
     "toggle": "mdi:remote",
     "turn_off": "mdi:remote-off",
     "turn_on": "mdi:remote"

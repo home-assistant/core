@@ -86,6 +86,10 @@
           "name": "Command type",
           "description": "The type of command to be learned."
         },
+        "frequency": {
+          "name": "Frequency",
+          "description": "Frequency of the command to be learned."
+        },
         "alternative": {
           "name": "Alternative",
           "description": "If code must be stored as an alternative. This is useful for discrete codes. Discrete codes are used for toggles that only perform one function. For example, a code to only turn a device on. If it is on already, sending the code won't change the state."
