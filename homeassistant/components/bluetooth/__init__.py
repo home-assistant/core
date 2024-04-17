@@ -315,16 +315,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     mode = BluetoothScanningMode.PASSIVE if passive else BluetoothScanningMode.ACTIVE
     manager: HomeAssistantBluetoothManager = hass.data[DATA_MANAGER]
     scanner = HaScanner(mode, adapter, address)
+    scanner.async_setup()
     try:
-        scanner.async_setup()
-    except RuntimeError as err:
+        await scanner.async_start()
+    except (RuntimeError, ScannerStartError) as err:
         raise ConfigEntryNotReady(
             f"{adapter_human_name(adapter, address)}: {err}"
         ) from err
-    try:
-        await scanner.async_start()
-    except ScannerStartError as err:
-        raise ConfigEntryNotReady from err
     adapters = await manager.async_get_bluetooth_adapters()
     details = adapters[adapter]
     slots: int = details.get(ADAPTER_CONNECTION_SLOTS) or DEFAULT_CONNECTION_SLOTS
