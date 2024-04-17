@@ -172,7 +172,7 @@ jobs:
 
       - name: Split requirements all
         run: |
-          # We split requirements all into two different files.
+          # We split requirements all into multiple files.
           # This is to prevent the build from running out of memory when
           # resolving packages on 32-bits systems (like armhf, armv7).
 
