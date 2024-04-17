@@ -105,7 +105,6 @@ jobs:
         with:
           name: requirements_all_wheels
           path: ./requirements_all_wheels_*.txt
-          overwrite: true
 
   core:
     name: Build Core wheels ${{ matrix.abi }} for ${{ matrix.arch }} (musllinux_1_2)
