@@ -222,7 +222,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==24.0.0
+aioesphomeapi==24.1.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -843,7 +843,7 @@ ha-philipsjs==3.1.1
 habitipy==0.2.0
 
 # homeassistant.components.bluetooth
-habluetooth==2.4.2
+habluetooth==2.5.2
 
 # homeassistant.components.cloud
 hass-nabucasa==0.78.0
@@ -1722,6 +1722,9 @@ python-ecobee-api==0.2.17
 
 # homeassistant.components.fully_kiosk
 python-fullykiosk==0.0.12
+
+# homeassistant.components.sms
+# python-gammu==3.2.4
 
 # homeassistant.components.analytics_insights
 python-homeassistant-analytics==0.6.0
