@@ -45,6 +45,14 @@ def adapter_display_info(adapter: str, details: AdapterDetails) -> str:
     return f"{name} {manufacturer} {model}"
 
 
+def adapter_title(adapter: str, details: AdapterDetails) -> str:
+    """Return the adapter title."""
+    unique_name = adapter_unique_name(adapter, details[ADAPTER_ADDRESS])
+    model = adapter_model(details)
+    manufacturer = details[ADAPTER_MANUFACTURER] or "Unknown"
+    return f"{manufacturer} {model} ({unique_name})"
+
+
 class BluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
     """Config flow for Bluetooth."""
 
@@ -98,7 +106,7 @@ class BluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(address, raise_on_progress=False)
             self._abort_if_unique_id_configured()
             return self.async_create_entry(
-                title=adapter_unique_name(adapter, address), data={}
+                title=adapter_title(adapter, details), data={}
             )
 
         return self.async_show_form(
@@ -113,11 +121,12 @@ class BluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             assert self._adapters is not None
             adapter = user_input[CONF_ADAPTER]
-            address = self._adapters[adapter][ADAPTER_ADDRESS]
+            details = self._adapters[adapter]
+            address = details[ADAPTER_ADDRESS]
             await self.async_set_unique_id(address, raise_on_progress=False)
             self._abort_if_unique_id_configured()
             return self.async_create_entry(
-                title=adapter_unique_name(adapter, address), data={}
+                title=adapter_title(adapter, details), data={}
             )
 
         configured_addresses = self._async_current_ids()
