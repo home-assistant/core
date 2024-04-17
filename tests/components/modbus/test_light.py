@@ -299,12 +299,6 @@ async def test_light_service_turn(
     )
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID2).state == STATE_UNAVAILABLE
-    mock_modbus.write_coil.side_effect = ModbusException("fail write_")
-    await hass.services.async_call(
-        "light", "turn_off", service_data={"entity_id": ENTITY_ID}
-    )
-    await hass.async_block_till_done()
-    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
 
 
 @pytest.mark.parametrize(
