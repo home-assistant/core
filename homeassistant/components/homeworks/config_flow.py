@@ -93,7 +93,7 @@ BUTTON_EDIT = {
 }
 
 
-validate_addr = cv.matches_regex(r"\[\d\d:\d\d:\d\d:\d\d\]")
+validate_addr = cv.matches_regex(r"\[(?:\d\d:)?\d\d:\d\d:\d\d\]")
 
 
 async def validate_add_controller(
