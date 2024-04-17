@@ -280,9 +280,7 @@ async def async_setup_internal(hass: HomeAssistant, entry: ConfigEntry) -> None:
     hass.data[DOMAIN][DATA_RFXOBJECT] = rfx_object
 
     entry.async_on_unload(
-        hass.bus.async_listen(
-            dr.EVENT_DEVICE_REGISTRY_UPDATED, _updated_device, run_immediately=False
-        )
+        hass.bus.async_listen(dr.EVENT_DEVICE_REGISTRY_UPDATED, _updated_device)
     )
 
     def _shutdown_rfxtrx(event: Event) -> None:
@@ -414,7 +412,7 @@ def find_possible_pt2262_device(device_ids: set[str], device_id: str) -> str | N
     for dev_id in device_ids:
         if len(dev_id) == len(device_id):
             size = None
-            for i, (char1, char2) in enumerate(zip(dev_id, device_id)):
+            for i, (char1, char2) in enumerate(zip(dev_id, device_id, strict=False)):
                 if char1 != char2:
                     break
                 size = i

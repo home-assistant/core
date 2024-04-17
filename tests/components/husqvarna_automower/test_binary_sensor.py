@@ -1,6 +1,5 @@
 """Tests for binary sensor platform."""
 
-from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
 from aioautomower.model import MowerActivities
@@ -9,6 +8,7 @@ from freezegun.api import FrozenDateTimeFactory
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.husqvarna_automower.const import DOMAIN
+from homeassistant.components.husqvarna_automower.coordinator import SCAN_INTERVAL
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -51,7 +51,7 @@ async def test_binary_sensor_states(
     ]:
         values[TEST_MOWER_ID].mower.activity = activity
         mock_automower_client.get_status.return_value = values
-        freezer.tick(timedelta(minutes=5))
+        freezer.tick(SCAN_INTERVAL)
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
         state = hass.states.get(f"binary_sensor.{entity}")
