@@ -1,6 +1,5 @@
 """Test the IntelliFire config flow."""
 
-
 from homeassistant.components.intellifire.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
