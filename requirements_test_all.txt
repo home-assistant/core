@@ -512,7 +512,7 @@ boschshcpy==0.2.91
 bring-api==0.5.7
 
 # homeassistant.components.broadlink
-broadlink==0.18.3
+broadlink==0.19.0
 
 # homeassistant.components.brother
 brother==4.1.0
