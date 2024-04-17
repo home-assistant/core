@@ -1,4 +1,5 @@
 """Tests for the Bluetooth integration models."""
+
 from __future__ import annotations
 
 from unittest.mock import patch
@@ -115,10 +116,15 @@ async def test_wrapped_bleak_client_local_adapter_only(
     )
 
     client = HaBleakClientWrapper(switchbot_device)
-    with patch(
-        "bleak.backends.bluezdbus.client.BleakClientBlueZDBus.connect",
-        return_value=True,
-    ), patch("bleak.backends.bluezdbus.client.BleakClientBlueZDBus.is_connected", True):
+    with (
+        patch(
+            "bleak.backends.bluezdbus.client.BleakClientBlueZDBus.connect",
+            return_value=True,
+        ),
+        patch(
+            "bleak.backends.bluezdbus.client.BleakClientBlueZDBus.is_connected", True
+        ),
+    ):
         assert await client.connect() is True
         assert client.is_connected is True
     client.set_disconnected_callback(lambda client: None)
@@ -200,10 +206,15 @@ async def test_wrapped_bleak_client_set_disconnected_callback_after_connected(
         "esp32_has_connection_slot",
     )
     client = HaBleakClientWrapper(switchbot_proxy_device_has_connection_slot)
-    with patch(
-        "bleak.backends.bluezdbus.client.BleakClientBlueZDBus.connect",
-        return_value=True,
-    ), patch("bleak.backends.bluezdbus.client.BleakClientBlueZDBus.is_connected", True):
+    with (
+        patch(
+            "bleak.backends.bluezdbus.client.BleakClientBlueZDBus.connect",
+            return_value=True,
+        ),
+        patch(
+            "bleak.backends.bluezdbus.client.BleakClientBlueZDBus.is_connected", True
+        ),
+    ):
         assert await client.connect() is True
         assert client.is_connected is True
     client.set_disconnected_callback(lambda client: None)
@@ -239,9 +250,10 @@ async def test_ble_device_with_proxy_client_out_of_connections_no_scanners(
     ]
 
     client = HaBleakClientWrapper(switchbot_proxy_device_no_connection_slot)
-    with patch(
-        "bleak.backends.bluezdbus.client.BleakClientBlueZDBus.connect"
-    ), pytest.raises(BleakError):
+    with (
+        patch("bleak.backends.bluezdbus.client.BleakClientBlueZDBus.connect"),
+        pytest.raises(BleakError),
+    ):
         await client.connect()
     assert client.is_connected is False
     client.set_disconnected_callback(lambda client: None)
@@ -303,9 +315,10 @@ async def test_ble_device_with_proxy_client_out_of_connections(
     ]
 
     client = HaBleakClientWrapper(switchbot_proxy_device_no_connection_slot)
-    with patch(
-        "bleak.backends.bluezdbus.client.BleakClientBlueZDBus.connect"
-    ), pytest.raises(BleakError):
+    with (
+        patch("bleak.backends.bluezdbus.client.BleakClientBlueZDBus.connect"),
+        pytest.raises(BleakError),
+    ):
         await client.connect()
     assert client.is_connected is False
     client.set_disconnected_callback(lambda client: None)

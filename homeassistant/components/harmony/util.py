@@ -1,4 +1,5 @@
 """The Logitech Harmony Hub integration utils."""
+
 import aioharmony.exceptions as harmony_exceptions
 from aioharmony.harmonyapi import HarmonyAPI
 

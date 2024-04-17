@@ -1,4 +1,5 @@
 """Common test objects."""
+
 import copy
 import json
 from unittest.mock import ANY

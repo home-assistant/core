@@ -1,4 +1,5 @@
 """Support for SolarEdge-local Monitoring API."""
+
 from __future__ import annotations
 
 from contextlib import suppress

@@ -1,4 +1,5 @@
 """Camera that loads a picture from a local file."""
+
 from __future__ import annotations
 
 import logging

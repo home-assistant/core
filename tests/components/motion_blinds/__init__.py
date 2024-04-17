@@ -1,1 +1,1 @@
-"""Tests for the Motion Blinds integration."""
+"""Tests for the Motionblinds integration."""

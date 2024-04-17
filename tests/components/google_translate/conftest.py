@@ -1,4 +1,5 @@
 """Common fixtures for the Google Translate text-to-speech tests."""
+
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 

@@ -1,4 +1,5 @@
 """Support for Fibaro thermostats."""
+
 from __future__ import annotations
 
 from contextlib import suppress
@@ -143,10 +144,7 @@ class FibaroThermostat(FibaroDevice, ClimateEntity):
         for device in siblings:
             # Detecting temperature device, one strong and one weak way of
             # doing so, so we prefer the hard evidence, if there is such.
-            if device.type == "com.fibaro.temperatureSensor":
-                self._temp_sensor_device = FibaroDevice(device)
-                tempunit = device.unit
-            elif (
+            if device.type == "com.fibaro.temperatureSensor" or (
                 self._temp_sensor_device is None
                 and device.has_unit
                 and (device.value.has_value or device.has_heating_thermostat_setpoint)

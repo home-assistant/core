@@ -1,4 +1,5 @@
 """Config flow for Roborock."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -16,17 +17,15 @@ from roborock.exceptions import (
 from roborock.web_api import RoborockApiClient
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_USERNAME
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import CONF_BASE_URL, CONF_ENTRY_CODE, CONF_USER_DATA, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class RoborockFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Roborock."""
 
     VERSION = 1
@@ -39,7 +38,7 @@ class RoborockFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         errors: dict[str, str] = {}
 
@@ -70,18 +69,18 @@ class RoborockFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "unknown_url"
         except RoborockInvalidEmail:
             errors["base"] = "invalid_email_format"
-        except RoborockException as ex:
-            _LOGGER.exception(ex)
+        except RoborockException:
+            _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown_roborock"
-        except Exception as ex:  # pylint: disable=broad-except
-            _LOGGER.exception(ex)
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         return errors
 
     async def async_step_code(
         self,
         user_input: dict[str, Any] | None = None,
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         errors: dict[str, str] = {}
         assert self._client
@@ -93,11 +92,11 @@ class RoborockFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 login_data = await self._client.code_login(code)
             except RoborockInvalidCode:
                 errors["base"] = "invalid_code"
-            except RoborockException as ex:
-                _LOGGER.exception(ex)
+            except RoborockException:
+                _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown_roborock"
-            except Exception as ex:  # pylint: disable=broad-except
-                _LOGGER.exception(ex)
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
                 if self.reauth_entry is not None:
@@ -120,7 +119,9 @@ class RoborockFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
         self._username = entry_data[CONF_USERNAME]
         assert self._username
@@ -132,7 +133,7 @@ class RoborockFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Confirm reauth dialog."""
         errors: dict[str, str] = {}
         if user_input is not None:
@@ -143,7 +144,7 @@ class RoborockFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     def _create_entry(
         self, client: RoborockApiClient, username: str, user_data: UserData
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Finished config flow and create entry."""
         return self.async_create_entry(
             title=username,

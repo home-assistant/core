@@ -1,4 +1,5 @@
 """Plugin for checking if coordinator is in its own module."""
+
 from __future__ import annotations
 
 from astroid import nodes

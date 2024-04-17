@@ -1,4 +1,5 @@
 """Class representing a Devialet update coordinator."""
+
 from datetime import timedelta
 import logging
 

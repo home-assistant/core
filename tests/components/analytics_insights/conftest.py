@@ -1,4 +1,5 @@
 """Common fixtures for the Homeassistant Analytics tests."""
+
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
@@ -28,12 +29,15 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 @pytest.fixture
 def mock_analytics_client() -> Generator[AsyncMock, None, None]:
     """Mock a Homeassistant Analytics client."""
-    with patch(
-        "homeassistant.components.analytics_insights.HomeassistantAnalyticsClient",
-        autospec=True,
-    ) as mock_client, patch(
-        "homeassistant.components.analytics_insights.config_flow.HomeassistantAnalyticsClient",
-        new=mock_client,
+    with (
+        patch(
+            "homeassistant.components.analytics_insights.HomeassistantAnalyticsClient",
+            autospec=True,
+        ) as mock_client,
+        patch(
+            "homeassistant.components.analytics_insights.config_flow.HomeassistantAnalyticsClient",
+            new=mock_client,
+        ),
     ):
         client = mock_client.return_value
         client.get_current_analytics.return_value = CurrentAnalytics.from_json(

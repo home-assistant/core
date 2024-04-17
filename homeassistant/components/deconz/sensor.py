@@ -48,14 +48,12 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-import homeassistant.helpers.entity_registry as er
 from homeassistant.helpers.typing import StateType
 import homeassistant.util.dt as dt_util
 
-from .const import ATTR_DARK, ATTR_ON, DOMAIN as DECONZ_DOMAIN
+from .const import ATTR_DARK, ATTR_ON
 from .deconz_device import DeconzDevice
-from .gateway import DeconzGateway, get_gateway_from_config_entry
-from .util import serial_from_unique_id
+from .hub import DeconzHub
 
 PROVIDES_EXTRA_ATTRIBUTES = (
     "battery",
@@ -291,37 +289,14 @@ ENTITY_DESCRIPTIONS: tuple[DeconzSensorDescription, ...] = (
 )
 
 
-@callback
-def async_update_unique_id(
-    hass: HomeAssistant, unique_id: str, description: DeconzSensorDescription
-) -> None:
-    """Update unique ID to always have a suffix.
-
-    Introduced with release 2022.9.
-    """
-    ent_reg = er.async_get(hass)
-
-    new_unique_id = f"{unique_id}-{description.key}"
-    if ent_reg.async_get_entity_id(DOMAIN, DECONZ_DOMAIN, new_unique_id):
-        return
-
-    if description.old_unique_id_suffix:
-        unique_id = (
-            f"{serial_from_unique_id(unique_id)}-{description.old_unique_id_suffix}"
-        )
-
-    if entity_id := ent_reg.async_get_entity_id(DOMAIN, DECONZ_DOMAIN, unique_id):
-        ent_reg.async_update_entity(entity_id, new_unique_id=new_unique_id)
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the deCONZ sensors."""
-    gateway = get_gateway_from_config_entry(hass, config_entry)
-    gateway.entities[DOMAIN] = set()
+    hub = DeconzHub.get_hub(hass, config_entry)
+    hub.entities[DOMAIN] = set()
 
     known_device_entities: dict[str, set[str]] = {
         description.key: set()
@@ -332,7 +307,7 @@ async def async_setup_entry(
     @callback
     def async_add_sensor(_: EventType, sensor_id: str) -> None:
         """Add sensor from deCONZ."""
-        sensor = gateway.api.sensors[sensor_id]
+        sensor = hub.api.sensors[sensor_id]
         entities: list[DeconzSensor] = []
 
         for description in ENTITY_DESCRIPTIONS:
@@ -357,23 +332,21 @@ async def async_setup_entry(
                     continue
                 known_device_entities[description.key].add(unique_id)
                 if no_sensor_data and description.key == "battery":
-                    async_update_unique_id(hass, sensor.unique_id, description)
                     DeconzBatteryTracker(
-                        sensor_id, gateway, description, async_add_entities
+                        sensor_id, hub, description, async_add_entities
                     )
                     continue
 
             if no_sensor_data:
                 continue
 
-            async_update_unique_id(hass, sensor.unique_id, description)
-            entities.append(DeconzSensor(sensor, gateway, description))
+            entities.append(DeconzSensor(sensor, hub, description))
 
         async_add_entities(entities)
 
-    gateway.register_platform_add_device_callback(
+    hub.register_platform_add_device_callback(
         async_add_sensor,
-        gateway.api.sensors,
+        hub.api.sensors,
     )
 
 
@@ -386,7 +359,7 @@ class DeconzSensor(DeconzDevice[SensorResources], SensorEntity):
     def __init__(
         self,
         device: SensorResources,
-        gateway: DeconzGateway,
+        hub: DeconzHub,
         description: DeconzSensorDescription,
     ) -> None:
         """Initialize deCONZ sensor."""
@@ -395,7 +368,7 @@ class DeconzSensor(DeconzDevice[SensorResources], SensorEntity):
         self._update_key = description.update_key
         if description.name_suffix:
             self._name_suffix = description.name_suffix
-        super().__init__(device, gateway)
+        super().__init__(device, hub)
 
         if (
             self.entity_description.key in PROVIDES_EXTRA_ATTRIBUTES
@@ -440,7 +413,7 @@ class DeconzSensor(DeconzDevice[SensorResources], SensorEntity):
             attr[ATTR_VOLTAGE] = self._device.voltage
 
         elif isinstance(self._device, Switch):
-            for event in self.gateway.events:
+            for event in self.hub.events:
                 if self._device == event.device:
                     attr[ATTR_EVENT_ID] = event.event_id
 
@@ -453,13 +426,13 @@ class DeconzBatteryTracker:
     def __init__(
         self,
         sensor_id: str,
-        gateway: DeconzGateway,
+        hub: DeconzHub,
         description: DeconzSensorDescription,
         async_add_entities: AddEntitiesCallback,
     ) -> None:
         """Set up tracker."""
-        self.sensor = gateway.api.sensors[sensor_id]
-        self.gateway = gateway
+        self.sensor = hub.api.sensors[sensor_id]
+        self.hub = hub
         self.description = description
         self.async_add_entities = async_add_entities
         self.unsubscribe = self.sensor.subscribe(self.async_update_callback)
@@ -470,5 +443,5 @@ class DeconzBatteryTracker:
         if self.description.update_key in self.sensor.changed_keys:
             self.unsubscribe()
             self.async_add_entities(
-                [DeconzSensor(self.sensor, self.gateway, self.description)]
+                [DeconzSensor(self.sensor, self.hub, self.description)]
             )

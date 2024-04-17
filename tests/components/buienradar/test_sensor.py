@@ -1,4 +1,5 @@
 """The tests for the Buienradar sensor platform."""
+
 from http import HTTPStatus
 
 from homeassistant.components.buienradar.const import DOMAIN

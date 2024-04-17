@@ -1,4 +1,5 @@
 """Define a config flow manager for AirVisual Pro."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -13,10 +14,8 @@ from pyairvisual.node import (
 )
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN, LOGGER
 
@@ -72,7 +71,7 @@ async def async_validate_credentials(
     return ValidationResult(errors=errors)
 
 
-class AirVisualProFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class AirVisualProFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle an AirVisual Pro config flow."""
 
     VERSION = 1
@@ -81,11 +80,15 @@ class AirVisualProFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize."""
         self._reauth_entry: ConfigEntry | None = None
 
-    async def async_step_import(self, import_config: dict[str, Any]) -> FlowResult:
+    async def async_step_import(
+        self, import_config: dict[str, Any]
+    ) -> ConfigFlowResult:
         """Import a config entry from configuration.yaml."""
         return await self.async_step_user(import_config)
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle configuration by re-auth."""
         self._reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
@@ -94,7 +97,7 @@ class AirVisualProFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the re-auth step."""
         if user_input is None:
             return self.async_show_form(
@@ -124,7 +127,7 @@ class AirVisualProFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         if not user_input:
             return self.async_show_form(step_id="user", data_schema=STEP_USER_SCHEMA)

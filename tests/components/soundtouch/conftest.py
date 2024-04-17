@@ -1,4 +1,5 @@
 """Fixtures for Bose SoundTouch integration tests."""
+
 import pytest
 from requests_mock import Mocker
 

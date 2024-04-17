@@ -1,4 +1,5 @@
 """The Nettigo Air Monitor component."""
+
 from __future__ import annotations
 
 import asyncio

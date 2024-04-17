@@ -1,4 +1,5 @@
 """Fixtures for Hass.io."""
+
 import os
 import re
 from unittest.mock import Mock, patch
@@ -28,12 +29,17 @@ def disable_security_filter():
 @pytest.fixture
 def hassio_env():
     """Fixture to inject hassio env."""
-    with patch.dict(os.environ, {"SUPERVISOR": "127.0.0.1"}), patch(
-        "homeassistant.components.hassio.HassIO.is_connected",
-        return_value={"result": "ok", "data": {}},
-    ), patch.dict(os.environ, {"SUPERVISOR_TOKEN": SUPERVISOR_TOKEN}), patch(
-        "homeassistant.components.hassio.HassIO.get_info",
-        Mock(side_effect=HassioAPIError()),
+    with (
+        patch.dict(os.environ, {"SUPERVISOR": "127.0.0.1"}),
+        patch(
+            "homeassistant.components.hassio.HassIO.is_connected",
+            return_value={"result": "ok", "data": {}},
+        ),
+        patch.dict(os.environ, {"SUPERVISOR_TOKEN": SUPERVISOR_TOKEN}),
+        patch(
+            "homeassistant.components.hassio.HassIO.get_info",
+            Mock(side_effect=HassioAPIError()),
+        ),
     ):
         yield
 
@@ -41,22 +47,29 @@ def hassio_env():
 @pytest.fixture
 def hassio_stubs(hassio_env, hass, hass_client, aioclient_mock):
     """Create mock hassio http client."""
-    with patch(
-        "homeassistant.components.hassio.HassIO.update_hass_api",
-        return_value={"result": "ok"},
-    ) as hass_api, patch(
-        "homeassistant.components.hassio.HassIO.update_hass_timezone",
-        return_value={"result": "ok"},
-    ), patch(
-        "homeassistant.components.hassio.HassIO.get_info",
-        side_effect=HassioAPIError(),
-    ), patch(
-        "homeassistant.components.hassio.HassIO.get_ingress_panels",
-        return_value={"panels": []},
-    ), patch(
-        "homeassistant.components.hassio.issues.SupervisorIssues.setup",
-    ), patch(
-        "homeassistant.components.hassio.HassIO.refresh_updates",
+    with (
+        patch(
+            "homeassistant.components.hassio.HassIO.update_hass_api",
+            return_value={"result": "ok"},
+        ) as hass_api,
+        patch(
+            "homeassistant.components.hassio.HassIO.update_hass_timezone",
+            return_value={"result": "ok"},
+        ),
+        patch(
+            "homeassistant.components.hassio.HassIO.get_info",
+            side_effect=HassioAPIError(),
+        ),
+        patch(
+            "homeassistant.components.hassio.HassIO.get_ingress_panels",
+            return_value={"panels": []},
+        ),
+        patch(
+            "homeassistant.components.hassio.issues.SupervisorIssues.setup",
+        ),
+        patch(
+            "homeassistant.components.hassio.HassIO.refresh_updates",
+        ),
     ):
         hass.set_state(CoreState.starting)
         hass.loop.run_until_complete(async_setup_component(hass, "hassio", {}))

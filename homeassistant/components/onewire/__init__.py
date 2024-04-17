@@ -1,4 +1,5 @@
 """The 1-Wire component."""
+
 import logging
 
 from pyownet import protocol
@@ -25,7 +26,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         CannotConnect,  # Failed to connect to the server
         protocol.OwnetError,  # Connected to server, but failed to list the devices
     ) as exc:
-        raise ConfigEntryNotReady() from exc
+        raise ConfigEntryNotReady from exc
 
     hass.data[DOMAIN][entry.entry_id] = onewire_hub
 
