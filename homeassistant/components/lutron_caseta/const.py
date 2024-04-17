@@ -33,7 +33,7 @@ ACTION_RELEASE = "release"
 
 CONF_SUBTYPE = "subtype"
 
-BRIDGE_TIMEOUT = 35
+BRIDGE_TIMEOUT = 60
 
 UNASSIGNED_AREA = "Unassigned"
 
