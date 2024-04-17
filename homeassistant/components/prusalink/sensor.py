@@ -146,13 +146,19 @@ SENSORS: dict[str, tuple[PrusaLinkSensorEntityDescription, ...]] = {
             translation_key="progress",
             native_unit_of_measurement=PERCENTAGE,
             value_fn=lambda data: cast(float, data["progress"]),
-            available_fn=lambda data: data.get("progress") is not None,
+            available_fn=lambda data: (
+                data.get("progress") is not None
+                and data.get("state") != PrinterState.IDLE.value
+            ),
         ),
         PrusaLinkSensorEntityDescription[JobInfo](
             key="job.filename",
             translation_key="filename",
             value_fn=lambda data: cast(str, data["file"]["display_name"]),
-            available_fn=lambda data: data.get("file") is not None,
+            available_fn=lambda data: (
+                data.get("file") is not None
+                and data.get("state") != PrinterState.IDLE.value
+            ),
         ),
         PrusaLinkSensorEntityDescription[JobInfo](
             key="job.start",
@@ -162,7 +168,10 @@ SENSORS: dict[str, tuple[PrusaLinkSensorEntityDescription, ...]] = {
                 lambda data: (utcnow() - timedelta(seconds=data["time_printing"])),
                 timedelta(minutes=2),
             ),
-            available_fn=lambda data: data.get("time_printing") is not None,
+            available_fn=lambda data: (
+                data.get("time_printing") is not None
+                and data.get("state") != PrinterState.IDLE.value
+            ),
         ),
         PrusaLinkSensorEntityDescription[JobInfo](
             key="job.finish",
@@ -172,7 +181,10 @@ SENSORS: dict[str, tuple[PrusaLinkSensorEntityDescription, ...]] = {
                 lambda data: (utcnow() + timedelta(seconds=data["time_remaining"])),
                 timedelta(minutes=2),
             ),
-            available_fn=lambda data: data.get("time_remaining") is not None,
+            available_fn=lambda data: (
+                data.get("time_remaining") is not None
+                and data.get("state") != PrinterState.IDLE.value
+            ),
         ),
     ),
 }

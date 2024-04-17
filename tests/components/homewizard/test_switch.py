@@ -42,7 +42,6 @@ pytestmark = [
             [
                 "switch.device",
                 "switch.device_switch_lock",
-                "switch.device_cloud_connection",
             ],
         ),
         (
@@ -93,6 +92,7 @@ async def test_entities_not_created_for_device(
         ("HWE-SKT-21", "switch.device", "state_set", "power_on"),
         ("HWE-SKT-21", "switch.device_switch_lock", "state_set", "switch_lock"),
         ("HWE-SKT-21", "switch.device_cloud_connection", "system_set", "cloud_enabled"),
+        ("HWE-WTR", "switch.device_cloud_connection", "system_set", "cloud_enabled"),
         ("SDM230", "switch.device_cloud_connection", "system_set", "cloud_enabled"),
         ("SDM630", "switch.device_cloud_connection", "system_set", "cloud_enabled"),
         ("HWE-KWH1", "switch.device_cloud_connection", "system_set", "cloud_enabled"),

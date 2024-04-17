@@ -348,11 +348,14 @@ async def test_restore_history_remote_adapter(
         if address != "E3:A5:63:3E:5E:23":
             timestamps[address] = now
 
-    with patch(
-        "bluetooth_adapters.systems.linux.LinuxAdapters.history",
-        {},
-    ), patch(
-        "bluetooth_adapters.systems.linux.LinuxAdapters.refresh",
+    with (
+        patch(
+            "bluetooth_adapters.systems.linux.LinuxAdapters.history",
+            {},
+        ),
+        patch(
+            "bluetooth_adapters.systems.linux.LinuxAdapters.refresh",
+        ),
     ):
         assert await async_setup_component(hass, bluetooth.DOMAIN, {})
         await hass.async_block_till_done()

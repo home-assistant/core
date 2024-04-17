@@ -38,6 +38,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, split_entity_id
 from homeassistant.helpers import entity_registry as er
 import homeassistant.util.dt as dt_util
+from homeassistant.util.event_type import EventType
 
 from .const import (
     ATTR_MESSAGE,
@@ -75,7 +76,8 @@ class LogbookRun:
 
     context_lookup: dict[bytes | None, Row | EventAsRow | None]
     external_events: dict[
-        str, tuple[str, Callable[[LazyEventPartialState], dict[str, Any]]]
+        EventType[Any] | str,
+        tuple[str, Callable[[LazyEventPartialState], dict[str, Any]]],
     ]
     event_cache: EventCache
     entity_name_cache: EntityNameCache
@@ -90,7 +92,7 @@ class EventProcessor:
     def __init__(
         self,
         hass: HomeAssistant,
-        event_types: tuple[str, ...],
+        event_types: tuple[EventType[Any] | str, ...],
         entity_ids: list[str] | None = None,
         device_ids: list[str] | None = None,
         context_id: str | None = None,

@@ -74,8 +74,8 @@ def test_setup_params(hass: HomeAssistant) -> None:
     assert state.attributes.get(ATTR_TEMPERATURE) == 21
     assert state.attributes.get(ATTR_CURRENT_TEMPERATURE) == 22
     assert state.attributes.get(ATTR_FAN_MODE) == "on_high"
-    assert state.attributes.get(ATTR_HUMIDITY) == 67
-    assert state.attributes.get(ATTR_CURRENT_HUMIDITY) == 54
+    assert state.attributes.get(ATTR_HUMIDITY) == 67.4
+    assert state.attributes.get(ATTR_CURRENT_HUMIDITY) == 54.2
     assert state.attributes.get(ATTR_SWING_MODE) == "off"
     assert state.attributes.get(ATTR_HVAC_MODES) == [
         HVACMode.OFF,
@@ -219,7 +219,7 @@ async def test_set_temp_with_hvac_mode(hass: HomeAssistant) -> None:
 async def test_set_target_humidity_bad_attr(hass: HomeAssistant) -> None:
     """Test setting the target humidity without required attribute."""
     state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get(ATTR_HUMIDITY) == 67
+    assert state.attributes.get(ATTR_HUMIDITY) == 67.4
 
     with pytest.raises(vol.Invalid):
         await hass.services.async_call(
@@ -230,13 +230,13 @@ async def test_set_target_humidity_bad_attr(hass: HomeAssistant) -> None:
         )
 
     state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get(ATTR_HUMIDITY) == 67
+    assert state.attributes.get(ATTR_HUMIDITY) == 67.4
 
 
 async def test_set_target_humidity(hass: HomeAssistant) -> None:
     """Test the setting of the target humidity."""
     state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get(ATTR_HUMIDITY) == 67
+    assert state.attributes.get(ATTR_HUMIDITY) == 67.4
 
     await hass.services.async_call(
         DOMAIN,

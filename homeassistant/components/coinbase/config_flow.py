@@ -50,8 +50,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 def get_user_from_client(api_key, api_token):
     """Get the user name from Coinbase API credentials."""
     client = Client(api_key, api_token)
-    user = client.get_current_user()
-    return user
+    return client.get_current_user()
 
 
 async def validate_api(hass: HomeAssistant, data):

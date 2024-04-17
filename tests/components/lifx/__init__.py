@@ -243,8 +243,12 @@ def _patch_discovery(device: Light | None = None, no_device: bool = False):
 
     @contextmanager
     def _patcher():
-        with patch.object(discovery, "DEFAULT_TIMEOUT", 0), patch(
-            "homeassistant.components.lifx.discovery.LifxDiscovery", MockLifxDiscovery
+        with (
+            patch.object(discovery, "DEFAULT_TIMEOUT", 0),
+            patch(
+                "homeassistant.components.lifx.discovery.LifxDiscovery",
+                MockLifxDiscovery,
+            ),
         ):
             yield
 
