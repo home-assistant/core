@@ -52,9 +52,9 @@
       "fix_flow": {
         "step": {
           "fix_menu": {
-            "description": "At `{reference}`, we detected another active data disk (containing a filesystem `hassos-data` from another Home Assistant installation).\n\nYou need to decide what to do with it, otherwise Home Assistant might choose the wrong data disk at system reboot..\n\nIf you don't want to use this data disk, unplug it from your system. If you leave it plugged in, choose one of the following options:",
+            "description": "At `{reference}`, we detected another active data disk (containing a file system `hassos-data` from another Home Assistant installation).\n\nYou need to decide what to do with it. Otherwise Home Assistant might choose the wrong data disk at system reboot..\n\nIf you don't want to use this data disk, unplug it from your system. If you leave it plugged in, choose one of the following options:",
             "menu_options": {
-              "system_rename_data_disk": "Mark as inactive data disk (rename filesystem)",
+              "system_rename_data_disk": "Mark as inactive data disk (rename file system)",
               "system_adopt_data_disk": "Use the detected data disk instead of the current system"
             }
           },
