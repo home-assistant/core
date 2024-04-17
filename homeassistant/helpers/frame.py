@@ -75,7 +75,7 @@ def get_integration_logger(fallback_name: str) -> logging.Logger:
 def get_current_frame(depth: int = 0) -> FrameType:
     """Return the current frame."""
     # Add one to depth since get_current_frame is included
-    return sys._getframe(depth + 1)  # pylint: disable=protected-access
+    return sys._getframe(depth + 1)  # noqa: SLF001
 
 
 def get_integration_frame(exclude_integrations: set | None = None) -> IntegrationFrame:

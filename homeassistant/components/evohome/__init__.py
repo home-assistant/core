@@ -444,7 +444,7 @@ class EvoBroker:
         self._location: evo.Location = client.locations[loc_idx]
 
         self.config = client.installation_info[loc_idx][GWS][0][TCS][0]
-        self.tcs: evo.ControlSystem = self._location._gateways[0]._control_systems[0]
+        self.tcs: evo.ControlSystem = self._location._gateways[0]._control_systems[0]  # noqa: SLF001
         self.tcs_utc_offset = timedelta(minutes=self._location.timeZone[UTC_OFFSET])
         self.temps: dict[str, float | None] = {}
 

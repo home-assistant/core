@@ -1064,8 +1064,7 @@ async def async_get_forecasts_service(
     if native_forecast_list is None:
         converted_forecast_list = []
     else:
-        # pylint: disable-next=protected-access
-        converted_forecast_list = weather._convert_forecast(native_forecast_list)
+        converted_forecast_list = weather._convert_forecast(native_forecast_list)  # noqa: SLF001
     return {
         "forecast": converted_forecast_list,
     }

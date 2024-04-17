@@ -215,8 +215,8 @@ class GeniusBroker:
         """Make any useful debug log entries."""
         _LOGGER.debug(
             "Raw JSON: \n\nclient._zones = %s \n\nclient._devices = %s",
-            self.client._zones,  # pylint: disable=protected-access
-            self.client._devices,  # pylint: disable=protected-access
+            self.client._zones,  # noqa: SLF001
+            self.client._devices,  # noqa: SLF001
         )
 
 
@@ -309,8 +309,7 @@ class GeniusZone(GeniusEntity):
 
         mode = payload["data"][ATTR_ZONE_MODE]
 
-        # pylint: disable-next=protected-access
-        if mode == "footprint" and not self._zone._has_pir:
+        if mode == "footprint" and not self._zone._has_pir:  # noqa: SLF001
             raise TypeError(
                 f"'{self.entity_id}' cannot support footprint mode (it has no PIR)"
             )

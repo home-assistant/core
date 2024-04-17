@@ -24,7 +24,7 @@ EXECUTOR_SHUTDOWN_TIMEOUT = 10
 
 def _log_thread_running_at_shutdown(name: str, ident: int) -> None:
     """Log the stack of a thread that was still running at shutdown."""
-    frames = sys._current_frames()  # pylint: disable=protected-access
+    frames = sys._current_frames()  # noqa: SLF001
     stack = frames.get(ident)
     formatted_stack = traceback.format_stack(stack)
     _LOGGER.warning(

@@ -195,13 +195,13 @@ class HoneywellUSThermostat(ClimateEntity):
                 ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
             )
 
-        if device._data.get("canControlHumidification"):
+        if device._data.get("canControlHumidification"):  # noqa: SLF001
             self._attr_supported_features |= ClimateEntityFeature.TARGET_HUMIDITY
 
         if device.raw_ui_data.get("SwitchEmergencyHeatAllowed"):
             self._attr_supported_features |= ClimateEntityFeature.AUX_HEAT
 
-        if not device._data.get("hasFan"):
+        if not device._data.get("hasFan"):  # noqa: SLF001
             return
 
         # not all honeywell fans support all modes

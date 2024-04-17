@@ -571,7 +571,7 @@ class PlexServer:
     @property
     def url_in_use(self):
         """Return URL used for connected Plex server."""
-        return self._plex_server._baseurl  # pylint: disable=protected-access
+        return self._plex_server._baseurl  # noqa: SLF001
 
     @property
     def option_ignore_new_shared_users(self):

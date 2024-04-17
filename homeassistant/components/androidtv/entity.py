@@ -82,14 +82,12 @@ def adb_decorator(
                     err,
                 )
                 await self.aftv.adb_close()
-                # pylint: disable-next=protected-access
                 self._attr_available = False
                 return None
             except Exception:
                 # An unforeseen exception occurred. Close the ADB connection so that
                 # it doesn't happen over and over again, then raise the exception.
                 await self.aftv.adb_close()
-                # pylint: disable-next=protected-access
                 self._attr_available = False
                 raise
 

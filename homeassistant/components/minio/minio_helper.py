@@ -46,8 +46,7 @@ def get_minio_notification_response(
 ):
     """Start listening to minio events. Copied from minio-py."""
     query = {"prefix": prefix, "suffix": suffix, "events": events}
-    # pylint: disable-next=protected-access
-    return minio_client._url_open(
+    return minio_client._url_open(  # noqa: SLF001
         "GET", bucket_name=bucket_name, query=query, preload_content=False
     )
 

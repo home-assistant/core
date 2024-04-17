@@ -310,6 +310,7 @@ disable = [
     "no-else-continue", # RET507
     "no-else-raise", # RET506
     "no-else-return", # RET505
+    "protected-access", # SLF001
     # "no-self-use", # PLR6301  # Optional plugin, not enabled
 
     # Handled by mypy
@@ -399,9 +400,8 @@ enable = [
 ]
 per-file-ignores = [
     # hass-component-root-import: Tests test non-public APIs
-    # protected-access: Tests do often test internals a lot
     # redefined-outer-name: Tests reference fixtures in the test function
-    "/tests/:hass-component-root-import,protected-access,redefined-outer-name",
+    "/tests/:hass-component-root-import,redefined-outer-name",
 ]
 
 [tool.pylint.REPORTS]
@@ -724,6 +724,7 @@ select = [
     "S608", # hardcoded-sql-expression
     "S609", # unix-command-wildcard-injection
     "SIM", # flake8-simplify
+    "SLF", # flake8-self
     "SLOT", # flake8-slots
     "T100", # Trace found: {name} used
     "T20", # flake8-print

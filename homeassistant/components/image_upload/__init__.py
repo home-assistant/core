@@ -160,7 +160,7 @@ class ImageUploadView(HomeAssistantView):
     async def post(self, request: web.Request) -> web.Response:
         """Handle upload."""
         # Increase max payload
-        request._client_max_size = MAX_SIZE  # pylint: disable=protected-access
+        request._client_max_size = MAX_SIZE  # noqa: SLF001
 
         data = await request.post()
         item = await request.app[KEY_HASS].data[DOMAIN].async_create_item(data)

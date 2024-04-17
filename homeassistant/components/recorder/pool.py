@@ -93,7 +93,7 @@ class RecorderPool(SingletonThreadPool, NullPool):  # type: ignore[misc]
             exclude_integrations={"recorder"},
             error_if_core=False,
         )
-        return NullPool._create_connection(self)
+        return NullPool._create_connection(self)  # noqa: SLF001
 
 
 class MutexPool(StaticPool):

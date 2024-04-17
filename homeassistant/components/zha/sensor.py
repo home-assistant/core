@@ -376,7 +376,7 @@ class EnumSensor(Sensor):
 
     def _init_from_quirks_metadata(self, entity_metadata: ZCLEnumMetadata) -> None:
         """Init this entity from the quirks metadata."""
-        ZhaEntity._init_from_quirks_metadata(self, entity_metadata)  # pylint: disable=protected-access
+        ZhaEntity._init_from_quirks_metadata(self, entity_metadata)  # noqa: SLF001
         self._attribute_name = entity_metadata.attribute_name
         self._enum = entity_metadata.enum
 

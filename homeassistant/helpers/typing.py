@@ -32,7 +32,7 @@ class UndefinedType(Enum):
     _singleton = 0
 
 
-UNDEFINED = UndefinedType._singleton  # pylint: disable=protected-access
+UNDEFINED = UndefinedType._singleton  # noqa: SLF001
 
 
 # The following types should not used and

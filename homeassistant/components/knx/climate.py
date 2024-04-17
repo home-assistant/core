@@ -153,7 +153,7 @@ class KNXClimate(KnxEntity, ClimateEntity):
             f"{self._device.temperature.group_address_state}_"
             f"{self._device.target_temperature.group_address_state}_"
             f"{self._device.target_temperature.group_address}_"
-            f"{self._device._setpoint_shift.group_address}"
+            f"{self._device._setpoint_shift.group_address}"  # noqa: SLF001
         )
         self.default_hvac_mode: HVACMode = config[
             ClimateSchema.CONF_DEFAULT_CONTROLLER_MODE

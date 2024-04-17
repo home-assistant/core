@@ -1190,12 +1190,11 @@ class HomeAssistant:
 
     def _cancel_cancellable_timers(self) -> None:
         """Cancel timer handles marked as cancellable."""
-        # pylint: disable-next=protected-access
-        handles: Iterable[asyncio.TimerHandle] = self.loop._scheduled  # type: ignore[attr-defined]
+        handles: Iterable[asyncio.TimerHandle] = self.loop._scheduled  # type: ignore[attr-defined] # noqa: SLF001
         for handle in handles:
             if (
                 not handle.cancelled()
-                and (args := handle._args)  # pylint: disable=protected-access
+                and (args := handle._args)  # noqa: SLF001
                 and type(job := args[0]) is HassJob
                 and job.cancel_on_shutdown
             ):
@@ -1307,7 +1306,7 @@ class Event(Generic[_DataT]):
             # _as_dict is marked as protected
             # to avoid callers outside of this module
             # from misusing it by mistake.
-            "context": self.context._as_dict,  # pylint: disable=protected-access
+            "context": self.context._as_dict,  # noqa: SLF001
         }
 
     def as_dict(self) -> ReadOnlyDict[str, Any]:
@@ -1790,7 +1789,7 @@ class State:
             # _as_dict is marked as protected
             # to avoid callers outside of this module
             # from misusing it by mistake.
-            "context": self.context._as_dict,  # pylint: disable=protected-access
+            "context": self.context._as_dict,  # noqa: SLF001
         }
 
     def as_dict(
@@ -1845,7 +1844,7 @@ class State:
             # _as_dict is marked as protected
             # to avoid callers outside of this module
             # from misusing it by mistake.
-            context = state_context._as_dict  # pylint: disable=protected-access
+            context = state_context._as_dict  # noqa: SLF001
         compressed_state: CompressedState = {
             COMPRESSED_STATE_STATE: self.state,
             COMPRESSED_STATE_ATTRIBUTES: self.attributes,
@@ -2105,7 +2104,7 @@ class StateMachine:
             "old_state": old_state,
             "new_state": None,
         }
-        self._bus._async_fire(  # pylint: disable=protected-access
+        self._bus._async_fire(  # noqa: SLF001
             EVENT_STATE_CHANGED,
             state_changed_data,
             context=context,
@@ -2218,7 +2217,7 @@ class StateMachine:
             # mypy does not understand this is only possible if old_state is not None
             old_last_reported = old_state.last_reported  # type: ignore[union-attr]
             old_state.last_reported = now  # type: ignore[union-attr]
-            self._bus._async_fire(  # pylint: disable=protected-access
+            self._bus._async_fire(  # noqa: SLF001
                 EVENT_STATE_REPORTED,
                 {
                     "entity_id": entity_id,
@@ -2261,7 +2260,7 @@ class StateMachine:
             "old_state": old_state,
             "new_state": state,
         }
-        self._bus._async_fire(  # pylint: disable=protected-access
+        self._bus._async_fire(  # noqa: SLF001
             EVENT_STATE_CHANGED,
             state_changed_data,
             context=context,
@@ -2604,7 +2603,7 @@ class ServiceRegistry:
             domain, service, processed_data, context, return_response
         )
 
-        self._hass.bus._async_fire(  # pylint: disable=protected-access
+        self._hass.bus._async_fire(  # noqa: SLF001
             EVENT_CALL_SERVICE,
             {
                 ATTR_DOMAIN: domain,
@@ -2933,7 +2932,7 @@ class Config:
             "elevation": self.elevation,
             # We don't want any integrations to use the name of the unit system
             # so we are using the private attribute here
-            "unit_system_v2": self.units._name,  # pylint: disable=protected-access
+            "unit_system_v2": self.units._name,  # noqa: SLF001
             "location_name": self.location_name,
             "time_zone": self.time_zone,
             "external_url": self.external_url,

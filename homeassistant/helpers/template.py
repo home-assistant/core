@@ -700,15 +700,14 @@ class Template:
 
         render_info = RenderInfo(self)
 
-        # pylint: disable=protected-access
         if self.is_static:
-            render_info._result = self.template.strip()
-            render_info._freeze_static()
+            render_info._result = self.template.strip()  # noqa: SLF001
+            render_info._freeze_static()  # noqa: SLF001
             return render_info
 
         token = _render_info.set(render_info)
         try:
-            render_info._result = self.async_render(
+            render_info._result = self.async_render(  # noqa: SLF001
                 variables, strict=strict, log_fn=log_fn, **kwargs
             )
         except TemplateError as ex:
@@ -716,7 +715,7 @@ class Template:
         finally:
             _render_info.reset(token)
 
-        render_info._freeze()
+        render_info._freeze()  # noqa: SLF001
         return render_info
 
     def render_with_possible_json_value(self, value, error_value=_SENTINEL):
@@ -1167,7 +1166,7 @@ def _state_generator(
     #
     container: Iterable[State]
     if domain is None:
-        container = states._states.values()  # pylint: disable=protected-access
+        container = states._states.values()  # noqa: SLF001
     else:
         container = states.async_all(domain)
     for state in container:

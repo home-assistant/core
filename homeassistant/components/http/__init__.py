@@ -556,8 +556,7 @@ class HomeAssistantHTTP:
         # However in Home Assistant components can be discovered after boot.
         # This will now raise a RunTimeError.
         # To work around this we now prevent the router from getting frozen
-        # pylint: disable-next=protected-access
-        self.app._router.freeze = lambda: None  # type: ignore[method-assign]
+        self.app._router.freeze = lambda: None  # type: ignore[method-assign]  # noqa: SLF001
 
         self.runner = web.AppRunner(
             self.app, handler_cancellation=True, shutdown_timeout=10

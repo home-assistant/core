@@ -754,7 +754,7 @@ class ProtectEventSensor(EventEntityMixin, SensorEntity):
     @callback
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
         # do not call ProtectDeviceSensor method since we want event to get value here
-        EventEntityMixin._async_update_device_from_protect(self, device)
+        EventEntityMixin._async_update_device_from_protect(self, device)  # noqa: SLF001
         event = self._event
         entity_description = self.entity_description
         is_on = entity_description.get_is_on(self.device, self._event)

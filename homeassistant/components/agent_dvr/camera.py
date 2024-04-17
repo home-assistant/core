@@ -80,11 +80,11 @@ class AgentCamera(MjpegCamera):
         """Initialize as a subclass of MjpegCamera."""
         self.device = device
         self._removed = False
-        self._attr_unique_id = f"{device._client.unique}_{device.typeID}_{device.id}"
+        self._attr_unique_id = f"{device.client.unique}_{device.typeID}_{device.id}"
         super().__init__(
             name=device.name,
-            mjpeg_url=f"{device.client._server_url}{device.mjpeg_image_url}&size={device.mjpegStreamWidth}x{device.mjpegStreamHeight}",
-            still_image_url=f"{device.client._server_url}{device.still_image_url}&size={device.mjpegStreamWidth}x{device.mjpegStreamHeight}",
+            mjpeg_url=f"{device.client._server_url}{device.mjpeg_image_url}&size={device.mjpegStreamWidth}x{device.mjpegStreamHeight}",  # noqa: SLF001
+            still_image_url=f"{device.client._server_url}{device.still_image_url}&size={device.mjpegStreamWidth}x{device.mjpegStreamHeight}",  # noqa: SLF001
         )
         self._attr_device_info = DeviceInfo(
             identifiers={(AGENT_DOMAIN, self.unique_id)},

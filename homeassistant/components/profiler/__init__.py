@@ -229,7 +229,7 @@ async def async_setup_entry(  # noqa: C901
 
     async def _async_dump_thread_frames(call: ServiceCall) -> None:
         """Log all thread frames."""
-        frames = sys._current_frames()  # pylint: disable=protected-access
+        frames = sys._current_frames()  # noqa: SLF001
         main_thread = threading.main_thread()
         for thread in threading.enumerate():
             if thread == main_thread:
