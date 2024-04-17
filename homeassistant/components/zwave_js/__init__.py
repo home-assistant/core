@@ -307,7 +307,8 @@ class DriverEvents:
             controller.on(
                 "node added",
                 lambda event: self.hass.async_create_task(
-                    self.controller_events.async_on_node_added(event["node"])
+                    self.controller_events.async_on_node_added(event["node"]),
+                    eager_start=False,
                 ),
             )
         )
@@ -415,7 +416,8 @@ class ControllerEvents:
             node.on(
                 "ready",
                 lambda event: self.hass.async_create_task(
-                    self.node_events.async_on_node_ready(event["node"])
+                    self.node_events.async_on_node_ready(event["node"]),
+                    eager_start=False,
                 ),
             )
         )

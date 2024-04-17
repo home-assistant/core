@@ -350,11 +350,9 @@ class RachioBaseStation:
     def __init__(
         self, rachio: Rachio, data: dict[str, Any], coordinator: RachioUpdateCoordinator
     ) -> None:
-        """Initialize a hose time base station."""
+        """Initialize a smart hose timer base station."""
         self.rachio = rachio
         self._id = data[KEY_ID]
-        self.serial_number = data[KEY_SERIAL_NUMBER]
-        self.mac_address = data[KEY_MAC_ADDRESS]
         self.coordinator = coordinator
 
     def start_watering(self, valve_id: str, duration: int) -> None:

@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 import pytest
 
+from homeassistant.components.http.const import StrictConnectionMode
 from homeassistant.config import YAML_CONFIG_FILE
 from homeassistant.scripts import check_config
 
@@ -134,6 +135,7 @@ def test_secrets(mock_is_file, event_loop, mock_hass_config_yaml: None) -> None:
         "login_attempts_threshold": -1,
         "server_port": 8123,
         "ssl_profile": "modern",
+        "strict_connection": StrictConnectionMode.DISABLED,
         "use_x_frame_options": True,
         "server_host": ["0.0.0.0", "::"],
     }
