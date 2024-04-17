@@ -24,7 +24,7 @@ def normalize(req: str) -> str:
 
 
 # Requirements which can't be installed on all systems because they rely on additional
-# system packages. Requirements listed in COMMENT_REQUIREMENTS will be commented-out
+# system packages. Requirements listed in EXCLUDED_REQUIREMENTS_ALL will be commented-out
 # in requirements_all.txt and requirements_test_all.txt.
 EXCLUDED_REQUIREMENTS_ALL = (
     "atenpdu",  # depends on pysnmp which is not maintained at this time
