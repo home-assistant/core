@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from sanix.models import Measurement
 
-from homeassistant.components.sanix.const import CONF_SERIAL_NO, DOMAIN
+from homeassistant.components.sanix.const import CONF_SERIAL_NUMBER, DOMAIN
 from homeassistant.const import CONF_TOKEN
 
 from tests.common import MockConfigEntry, load_json_object_fixture
@@ -38,7 +38,7 @@ def mock_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         title="Sanix",
         unique_id="1810088",
-        data={CONF_SERIAL_NO: "1234", CONF_TOKEN: "abcd"},
+        data={CONF_SERIAL_NUMBER: "1234", CONF_TOKEN: "abcd"},
     )
 
 

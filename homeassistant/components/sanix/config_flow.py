@@ -10,14 +10,14 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_TOKEN
 
-from .const import CONF_SERIAL_NO, DOMAIN, MANUFACTURER
+from .const import CONF_SERIAL_NUMBER, DOMAIN, MANUFACTURER
 
 _LOGGER = logging.getLogger(__name__)
 
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_SERIAL_NO): str,
+        vol.Required(CONF_SERIAL_NUMBER): str,
         vol.Required(CONF_TOKEN): str,
     }
 )
@@ -35,10 +35,10 @@ class SanixConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input:
-            await self.async_set_unique_id(user_input[CONF_SERIAL_NO])
+            await self.async_set_unique_id(user_input[CONF_SERIAL_NUMBER])
             self._abort_if_unique_id_configured()
 
-            sanix_api = Sanix(user_input[CONF_SERIAL_NO], user_input[CONF_TOKEN])
+            sanix_api = Sanix(user_input[CONF_SERIAL_NUMBER], user_input[CONF_TOKEN])
 
             try:
                 await self.hass.async_add_executor_job(sanix_api.fetch_data)

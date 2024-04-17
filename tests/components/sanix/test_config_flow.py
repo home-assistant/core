@@ -5,7 +5,11 @@ from unittest.mock import MagicMock
 import pytest
 from sanix.exceptions import SanixException, SanixInvalidAuthException
 
-from homeassistant.components.sanix.const import CONF_SERIAL_NO, DOMAIN, MANUFACTURER
+from homeassistant.components.sanix.const import (
+    CONF_SERIAL_NUMBER,
+    DOMAIN,
+    MANUFACTURER,
+)
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
@@ -13,7 +17,7 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
-CONFIG = {CONF_SERIAL_NO: "1810088", CONF_TOKEN: "75868dcf8ea4c64e2063f6c4e70132d2"}
+CONFIG = {CONF_SERIAL_NUMBER: "1810088", CONF_TOKEN: "75868dcf8ea4c64e2063f6c4e70132d2"}
 
 
 async def test_create_entry(
@@ -34,7 +38,7 @@ async def test_create_entry(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == MANUFACTURER
     assert result["data"] == {
-        CONF_SERIAL_NO: "1810088",
+        CONF_SERIAL_NUMBER: "1810088",
         CONF_TOKEN: "75868dcf8ea4c64e2063f6c4e70132d2",
     }
 
@@ -81,7 +85,7 @@ async def test_form_exceptions(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Sanix"
     assert result["data"] == {
-        CONF_SERIAL_NO: "1810088",
+        CONF_SERIAL_NUMBER: "1810088",
         CONF_TOKEN: "75868dcf8ea4c64e2063f6c4e70132d2",
     }
     assert len(mock_setup_entry.mock_calls) == 1

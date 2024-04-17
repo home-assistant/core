@@ -1,6 +1,6 @@
 """Constants for the Sanix integration."""
 
-CONF_SERIAL_NO = "serial_no"
+CONF_SERIAL_NUMBER = "serial_number"
 
 DOMAIN = "sanix"
 MANUFACTURER = "Sanix"
