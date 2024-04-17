@@ -139,10 +139,7 @@ class TemplateLock(TemplateEntity, LockEntity):
     @property
     def code_format(self) -> str | None:
         """Regex for code format or None if no code is required."""
-        if self._code_format is not None:
-            return self._code_format
-
-        return super().code_format
+        return self._code_format
 
     @callback
     def _async_setup_templates(self) -> None:
