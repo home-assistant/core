@@ -41,7 +41,6 @@ class SanixSensorEntityDescription(SensorEntityDescription):
 SENSOR_TYPES: tuple[SanixSensorEntityDescription, ...] = (
     SanixSensorEntityDescription(
         key=ATTR_API_BATTERY,
-        translation_key=ATTR_API_BATTERY,
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
@@ -49,7 +48,6 @@ SENSOR_TYPES: tuple[SanixSensorEntityDescription, ...] = (
     ),
     SanixSensorEntityDescription(
         key=ATTR_API_DISTANCE,
-        translation_key=ATTR_API_DISTANCE,
         native_unit_of_measurement=UnitOfLength.CENTIMETERS,
         device_class=SensorDeviceClass.DISTANCE,
         state_class=SensorStateClass.MEASUREMENT,
