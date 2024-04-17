@@ -139,21 +139,24 @@ def validate_requirements(integration: Integration) -> None:
         return
 
     # Check for requirements incompatible with standard library.
-    standard_library_violation = False
+    standard_library_violations = set()
     for req in all_integration_requirements:
         if req in sys.stdlib_module_names:
-            standard_library_violation = True
+            standard_library_violations.add(req)
 
     if (
-        standard_library_violation
+        standard_library_violations
         and integration.domain not in IGNORE_STANDARD_LIBRARY_VIOLATIONS
     ):
         integration.add_error(
             "requirements",
-            f"Package {req} is not compatible with the Python standard library",
+            (
+                f"Package {req} has dependencies {standard_library_violations} which "
+                "are not compatible with the Python standard library"
+            ),
         )
     elif (
-        not standard_library_violation
+        not standard_library_violations
         and integration.domain in IGNORE_STANDARD_LIBRARY_VIOLATIONS
     ):
         integration.add_error(
