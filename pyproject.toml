@@ -757,6 +757,7 @@ ignore = [
     "RUF003", # Comment contains ambiguous unicode character.
     "RUF015", # Prefer next(...) over single element slice
     "SIM102", # Use a single if statement instead of nested if statements
+    "SIM103", # Return the condition {condition} directly
     "SIM108", # Use ternary operator {contents} instead of if-else-block
     "SIM115", # Use context handler for opening files
     "TRY003", # Avoid specifying long messages outside the exception class
