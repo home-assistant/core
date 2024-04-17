@@ -154,7 +154,7 @@ class ViCareFan(ViCareEntity, FanEntity):
         if percentage == 0:
             _LOGGER.error("Ventilation device cannot be turned off")
 
-        if self._attributes["active_vicare_mode"] is not VentilationMode.PERMANENT:
+        if self._attributes["active_vicare_mode"] is not str(VentilationMode.PERMANENT):
             self.set_preset_mode(VentilationMode.PERMANENT)
 
         level = percentage_to_ordered_list_item(ORDERED_NAMED_FAN_SPEEDS, percentage)

@@ -14,6 +14,8 @@ from homeassistant.components.homeassistant import (
     DOMAIN as HA_DOMAIN,
     SERVICE_UPDATE_ENTITY,
 )
+from homeassistant.components.vicare.fan import ORDERED_NAMED_FAN_SPEEDS
+from homeassistant.components.vicare.types import VentilationMode
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -36,6 +38,8 @@ async def test_fan_update(
     )
 
     assert hass.states.get("fan.model0_ventilation") == snapshot
+    assert VentilationMode.PERMANENT == "permanent"
+    assert "levelTwo" in ORDERED_NAMED_FAN_SPEEDS
 
 
 @pytest.mark.parametrize(
@@ -45,7 +49,11 @@ async def test_fan_update(
     ],
 )
 async def test_fan_set_percentage(
-    hass: HomeAssistant, mock_vicare_fan: MagicMock, percentage, expected_fan_mode
+    hass: HomeAssistant,
+    mock_vicare_fan: MagicMock,
+    percentage,
+    snapshot: SnapshotAssertion,
+    expected_fan_mode,
 ) -> None:
     """Verify set_percentage works properly through the entire range of FanModes."""
     await hass.services.async_call(
@@ -54,4 +62,6 @@ async def test_fan_set_percentage(
         {ATTR_ENTITY_ID: ["fan.model0_ventilation"], ATTR_PERCENTAGE: percentage},
         blocking=True,
     )
+    await hass.async_block_till_done()
+    assert hass.states.get("fan.model0_ventilation") == snapshot
     # TODO: verify expected_fan_mode in MockService

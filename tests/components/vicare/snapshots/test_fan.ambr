@@ -1,4 +1,44 @@
 # serializer version: 1
+# name: test_fan_set_percentage[100-levelFour]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'active_vicare_mode': 'permanent',
+      'active_vicare_program': 'levelOne',
+      'friendly_name': 'model0 Ventilation',
+      'percentage': None,
+      'percentage_step': 25.0,
+      'preset_mode': 'permanent',
+      'preset_modes': list([
+        <VentilationMode.PERMANENT: 'permanent'>,
+        <VentilationMode.VENTILATION: 'ventilation'>,
+        <VentilationMode.SENSOR_DRIVEN: 'sensorDriven'>,
+        <VentilationMode.SENSOR_OVERRIDE: 'sensorOverride'>,
+      ]),
+      'supported_features': <FanEntityFeature: 9>,
+      'vicare_modes': list([
+        'permanent',
+        'ventilation',
+        'sensorOverride',
+        'sensorDriven',
+      ]),
+      'vicare_programs': list([
+        'standby',
+        'forcedLevelFour',
+        'levelFour',
+        'levelOne',
+        'levelThree',
+        'levelTwo',
+        'silent',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'fan.model0_ventilation',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
 # name: test_fan_update
   StateSnapshot({
     'attributes': ReadOnlyDict({
