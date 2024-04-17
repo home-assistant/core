@@ -457,6 +457,7 @@ FLOWS = {
         "rympro",
         "sabnzbd",
         "samsungtv",
+        "sanix",
         "schlage",
         "scrape",
         "screenlogic",
