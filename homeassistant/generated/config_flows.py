@@ -148,6 +148,7 @@ FLOWS = {
         "emulated_roku",
         "energenie_power_sockets",
         "energyzero",
+        "enigma2",
         "enocean",
         "enphase_envoy",
         "environment_canada",
