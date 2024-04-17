@@ -2427,7 +2427,7 @@ refoss-ha==1.2.0
 regenmaschine==2024.03.0
 
 # homeassistant.components.renault
-renault-api==0.2.1
+renault-api==0.2.2
 
 # homeassistant.components.renson
 renson-endura-delta==1.7.1
@@ -2491,6 +2491,9 @@ samsungctl[websocket]==0.7.1
 
 # homeassistant.components.samsungtv
 samsungtvws[async,encrypted]==2.6.0
+
+# homeassistant.components.sanix
+sanix==1.0.5
 
 # homeassistant.components.satel_integra
 satel-integra==0.3.7
