@@ -67,13 +67,13 @@ class EsphomeValve(EsphomeEntity[ValveInfo, ValveState], ValveEntity):
     @esphome_state_property
     def is_opening(self) -> bool:
         """Return if the valve is opening or not."""
-        return self._state.current_operation == ValveOperation.IS_OPENING
+        return self._state.current_operation is ValveOperation.IS_OPENING
 
     @property
     @esphome_state_property
     def is_closing(self) -> bool:
         """Return if the valve is closing or not."""
-        return self._state.current_operation == ValveOperation.IS_CLOSING
+        return self._state.current_operation is ValveOperation.IS_CLOSING
 
     @property
     @esphome_state_property
