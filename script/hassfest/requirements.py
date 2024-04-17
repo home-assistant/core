@@ -163,7 +163,8 @@ def validate_requirements(integration: Integration) -> None:
             "requirements",
             (
                 f"Integration {integration.domain} no longer has requirements which are"
-                " incompatible with the Python standard library"
+                " incompatible with the Python standard library, remove it from "
+                "IGNORE_STANDARD_LIBRARY_VIOLATIONS"
             ),
         )
 
