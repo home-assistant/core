@@ -1,4 +1,5 @@
 """Support for NX584 alarm control panels."""
+
 from __future__ import annotations
 
 from datetime import timedelta

@@ -1,4 +1,5 @@
 """Constants for Discovergy integration tests."""
+
 import datetime
 
 from pydiscovergy.models import Location, Meter, Reading
@@ -8,7 +9,7 @@ GET_METERS = [
         meter_id="f8d610b7a8cc4e73939fa33b990ded54",
         serial_number="abc123",
         full_serial_number="abc123",
-        type="TST",
+        meter_type="TST",
         measurement_type="ELECTRICITY",
         load_profile_type="SLP",
         location=Location(
@@ -34,7 +35,7 @@ GET_METERS = [
         meter_id="d81a652fe0824f9a9d336016587d3b9d",
         serial_number="def456",
         full_serial_number="def456",
-        type="PIP",
+        meter_type="PIP",
         measurement_type="GAS",
         load_profile_type="SLP",
         location=Location(

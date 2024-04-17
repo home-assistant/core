@@ -1,4 +1,5 @@
 """Support for ZoneMinder."""
+
 import logging
 
 from requests.exceptions import ConnectionError as RequestsConnectionError

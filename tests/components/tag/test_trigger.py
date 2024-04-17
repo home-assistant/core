@@ -1,7 +1,8 @@
 """Tests for tag triggers."""
+
 import pytest
 
-import homeassistant.components.automation as automation
+from homeassistant.components import automation
 from homeassistant.components.tag import async_scan_tag
 from homeassistant.components.tag.const import DEVICE_ID, DOMAIN, TAG_ID
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF

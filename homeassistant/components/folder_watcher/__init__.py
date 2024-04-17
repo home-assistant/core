@@ -1,4 +1,5 @@
 """Component for monitoring activity on a folder."""
+
 from __future__ import annotations
 
 import logging

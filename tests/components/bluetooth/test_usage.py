@@ -1,4 +1,5 @@
 """Tests for the Bluetooth integration."""
+
 from unittest.mock import patch
 
 import bleak

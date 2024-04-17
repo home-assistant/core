@@ -1,7 +1,9 @@
 """Test config validators."""
+
 from collections import OrderedDict
 from datetime import date, datetime, timedelta
 import enum
+import logging
 import os
 from socket import _GLOBAL_DEFAULT_TIMEOUT
 from unittest.mock import Mock, patch
@@ -95,8 +97,9 @@ def test_isfile() -> None:
 
     # patching methods that allow us to fake a file existing
     # with write access
-    with patch("os.path.isfile", Mock(return_value=True)), patch(
-        "os.access", Mock(return_value=True)
+    with (
+        patch("os.path.isfile", Mock(return_value=True)),
+        patch("os.access", Mock(return_value=True)),
     ):
         schema("test.txt")
 
@@ -541,7 +544,7 @@ def test_string(hass: HomeAssistant) -> None:
 
     # Test subclasses of str are returned
     class MyString(str):
-        pass
+        __slots__ = ()
 
     my_string = MyString("hello")
     assert schema(my_string) is my_string
@@ -986,7 +989,11 @@ def test_deprecated_with_default(caplog: pytest.LogCaptureFixture, schema) -> No
     deprecated_schema = vol.All(cv.deprecated("mars", default=False), schema)
 
     test_data = {"mars": True}
-    output = deprecated_schema(test_data.copy())
+    with patch(
+        "homeassistant.helpers.config_validation.get_integration_logger",
+        return_value=logging.getLogger(__name__),
+    ):
+        output = deprecated_schema(test_data.copy())
     assert len(caplog.records) == 1
     assert caplog.records[0].name == __name__
     assert (
@@ -1062,21 +1069,19 @@ def test_deprecated_with_replacement_key_and_default(
 
 
 def test_deprecated_cant_find_module() -> None:
-    """Test if the current module cannot be inspected."""
-    with patch("inspect.getmodule", return_value=None):
-        # This used to raise.
-        cv.deprecated(
-            "mars",
-            replacement_key="jupiter",
-            default=False,
-        )
+    """Test if the current module cannot be found."""
+    # This used to raise.
+    cv.deprecated(
+        "mars",
+        replacement_key="jupiter",
+        default=False,
+    )
 
-    with patch("inspect.getmodule", return_value=None):
-        # This used to raise.
-        cv.removed(
-            "mars",
-            default=False,
-        )
+    # This used to raise.
+    cv.removed(
+        "mars",
+        default=False,
+    )
 
 
 def test_deprecated_or_removed_logger_with_config_attributes(
@@ -1393,7 +1398,7 @@ def test_key_value_schemas_with_default() -> None:
 
 @pytest.mark.parametrize(
     ("config", "error"),
-    (
+    [
         ({"delay": "{{ invalid"}, "should be format 'HH:MM'"),
         ({"wait_template": "{{ invalid"}, "invalid template"),
         ({"condition": "invalid"}, "Unexpected value for condition: 'invalid'"),
@@ -1428,7 +1433,7 @@ def test_key_value_schemas_with_default() -> None:
             },
             "not allowed to add a response to an error stop action",
         ),
-    ),
+    ],
 )
 def test_script(caplog: pytest.LogCaptureFixture, config: dict, error: str) -> None:
     """Test script validation is user friendly."""
@@ -1551,8 +1556,7 @@ def test_empty_schema(caplog: pytest.LogCaptureFixture) -> None:
 
 def test_empty_schema_cant_find_module() -> None:
     """Test if the current module cannot be inspected."""
-    with patch("inspect.getmodule", return_value=None):
-        cv.empty_config_schema("test_domain")({"test_domain": {"foo": "bar"}})
+    cv.empty_config_schema("test_domain")({"test_domain": {"foo": "bar"}})
 
 
 def test_config_entry_only_schema(
@@ -1582,16 +1586,13 @@ def test_config_entry_only_schema(
 
 def test_config_entry_only_schema_cant_find_module() -> None:
     """Test if the current module cannot be inspected."""
-    with patch("inspect.getmodule", return_value=None):
-        cv.config_entry_only_config_schema("test_domain")(
-            {"test_domain": {"foo": "bar"}}
-        )
+    cv.config_entry_only_config_schema("test_domain")({"test_domain": {"foo": "bar"}})
 
 
 def test_config_entry_only_schema_no_hass(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Test if the the hass context is not set in our context."""
+    """Test if the hass context is not set in our context."""
     with patch(
         "homeassistant.helpers.config_validation.async_get_hass",
         side_effect=HomeAssistantError,
@@ -1647,3 +1648,49 @@ def test_domain() -> None:
     assert cv.domain_key("hue1") == "hue1"
     assert cv.domain_key("hue 1") == "hue"
     assert cv.domain_key("hue  1") == "hue"
+
+
+def test_color_hex() -> None:
+    """Test color validation in hex format."""
+    assert cv.color_hex("#123456") == "#123456"
+    assert cv.color_hex("#FFaaFF") == "#FFaaFF"
+    assert cv.color_hex("#FFFFFF") == "#FFFFFF"
+    assert cv.color_hex("#000000") == "#000000"
+
+    msg = r"Color should be in the format #RRGGBB"
+    with pytest.raises(vol.Invalid, match=msg):
+        cv.color_hex("#777")
+
+    with pytest.raises(vol.Invalid, match=msg):
+        cv.color_hex("FFFFF")
+
+    with pytest.raises(vol.Invalid, match=msg):
+        cv.color_hex("FFFFFF")
+
+    with pytest.raises(vol.Invalid, match=msg):
+        cv.color_hex("#FFFFFFF")
+
+    with pytest.raises(vol.Invalid, match=msg):
+        cv.color_hex(123456)
+
+
+def test_determine_script_action_ambiguous():
+    """Test determine script action with ambiguous actions."""
+    assert (
+        cv.determine_script_action(
+            {
+                "type": "is_power",
+                "condition": "device",
+                "device_id": "9c2bda81bc7997c981f811c32cafdb22",
+                "entity_id": "2ee287ec70dd0c6db187b539bee429b7",
+                "domain": "sensor",
+                "below": "15",
+            }
+        )
+        == "condition"
+    )
+
+
+def test_determine_script_action_non_ambiguous():
+    """Test determine script action with a non ambiguous action."""
+    assert cv.determine_script_action({"delay": "00:00:05"}) == "delay"

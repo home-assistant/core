@@ -1,10 +1,11 @@
 """Support for Ambiclimate devices."""
+
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.typing import ConfigType
 
 from . import config_flow
@@ -41,5 +42,18 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Ambiclimate from a config entry."""
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        DOMAIN,
+        breaks_in_ha_version="2024.4.0",
+        is_fixable=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="integration_removed",
+        translation_placeholders={
+            "entries": "/config/integrations/integration/ambiclimate",
+        },
+    )
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True

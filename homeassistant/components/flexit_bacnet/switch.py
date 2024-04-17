@@ -1,4 +1,5 @@
 """The Flexit Nordic (BACnet) integration."""
+
 import asyncio.exceptions
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
@@ -35,7 +36,6 @@ SWITCHES: tuple[FlexitSwitchEntityDescription, ...] = (
     FlexitSwitchEntityDescription(
         key="electric_heater",
         translation_key="electric_heater",
-        icon="mdi:radiator",
         is_on_fn=lambda data: data.electric_heater,
         turn_on_fn=lambda data: data.enable_electric_heater(),
         turn_off_fn=lambda data: data.disable_electric_heater(),

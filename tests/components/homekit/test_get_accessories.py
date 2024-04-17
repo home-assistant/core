@@ -1,4 +1,5 @@
 """Package to test the get_accessory method."""
+
 from unittest.mock import Mock, patch
 
 import pytest

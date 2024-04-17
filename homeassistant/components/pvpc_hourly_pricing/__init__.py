@@ -1,4 +1,5 @@
 """The pvpc_hourly_pricing integration to collect Spain official electric prices."""
+
 from datetime import timedelta
 import logging
 

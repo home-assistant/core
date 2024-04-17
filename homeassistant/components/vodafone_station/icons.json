@@ -1,0 +1,44 @@
+{
+  "entity": {
+    "device_tracker": {
+      "device_tracker": {
+        "default": "mdi:lan-disconnect",
+        "state": {
+          "home": "mdi:lan-connect"
+        }
+      }
+    },
+    "sensor": {
+      "external_ipv4": {
+        "default": "mdi:earth"
+      },
+      "external_ipv6": {
+        "default": "mdi:earth"
+      },
+      "external_ip_key": {
+        "default": "mdi:earth"
+      },
+      "active_connection": {
+        "default": "mdi:wan"
+      },
+      "fw_version": {
+        "default": "mdi:new-box"
+      },
+      "phone_num1": {
+        "default": "mdi:phone"
+      },
+      "phone_num2": {
+        "default": "mdi:phone"
+      },
+      "sys_cpu_usage": {
+        "default": "mdi:chip"
+      },
+      "sys_memory_usage": {
+        "default": "mdi:memory"
+      },
+      "sys_reboot_cause": {
+        "default": "mdi:restart-alert"
+      }
+    }
+  }
+}

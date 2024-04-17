@@ -1,4 +1,5 @@
 """Base entity for poolsense integration."""
+
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 

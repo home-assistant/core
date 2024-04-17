@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from linear_garage_door.errors import InvalidLoginError, ResponseError
+from linear_garage_door.errors import InvalidLoginError
 
 from homeassistant.components.linear_garage_door.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -38,37 +38,11 @@ async def test_invalid_password(
     entries = hass.config_entries.async_entries(DOMAIN)
     assert entries
     assert len(entries) == 1
-    assert entries[0].state == ConfigEntryState.SETUP_ERROR
+    assert entries[0].state is ConfigEntryState.SETUP_ERROR
     flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
     assert flows
     assert len(flows) == 1
     assert flows[0]["context"]["source"] == "reauth"
-
-
-async def test_response_error(hass: HomeAssistant) -> None:
-    """Test response error."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            "email": "test-email",
-            "password": "test-password",
-            "site_id": "test-site-id",
-            "device_id": "test-uuid",
-        },
-    )
-    config_entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.linear_garage_door.coordinator.Linear.login",
-        side_effect=ResponseError,
-    ):
-        assert not await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert entries
-    assert len(entries) == 1
-    assert entries[0].state == ConfigEntryState.SETUP_RETRY
 
 
 async def test_invalid_login(
@@ -96,4 +70,4 @@ async def test_invalid_login(
     entries = hass.config_entries.async_entries(DOMAIN)
     assert entries
     assert len(entries) == 1
-    assert entries[0].state == ConfigEntryState.SETUP_RETRY
+    assert entries[0].state is ConfigEntryState.SETUP_RETRY

@@ -1,4 +1,5 @@
 """Tests for the WLED update platform."""
+
 from unittest.mock import MagicMock
 
 import pytest

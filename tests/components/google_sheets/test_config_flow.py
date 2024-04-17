@@ -1,4 +1,5 @@
 """Test the Google Sheets config flow."""
+
 from collections.abc import Generator
 from unittest.mock import Mock, patch
 
@@ -12,6 +13,7 @@ from homeassistant.components.application_credentials import (
 )
 from homeassistant.components.google_sheets.const import DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.setup import async_setup_component
 
@@ -103,7 +105,7 @@ async def test_full_flow(
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_client.mock_calls) == 2
 
-    assert result.get("type") == "create_entry"
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert result.get("title") == TITLE
     assert "result" in result
     assert result.get("result").unique_id == SHEET_ID
@@ -162,7 +164,7 @@ async def test_create_sheet_error(
     )
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert result.get("type") == "abort"
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "create_spreadsheet_failure"
 
 
@@ -237,7 +239,7 @@ async def test_reauth(
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert len(mock_setup.mock_calls) == 1
 
-    assert result.get("type") == "abort"
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "reauth_successful"
 
     assert config_entry.unique_id == SHEET_ID
@@ -312,7 +314,7 @@ async def test_reauth_abort(
     )
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert result.get("type") == "abort"
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "open_spreadsheet_failure"
 
 
@@ -375,5 +377,5 @@ async def test_already_configured(
     )
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert result.get("type") == "abort"
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "already_configured"

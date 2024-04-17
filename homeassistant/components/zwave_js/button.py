@@ -1,4 +1,5 @@
 """Representation of Z-Wave buttons."""
+
 from __future__ import annotations
 
 from zwave_js_server.client import Client as ZwaveClient

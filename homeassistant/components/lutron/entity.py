@@ -41,11 +41,11 @@ class LutronBaseEntity(Entity):
         self.schedule_update_ha_state()
 
     @property
-    def unique_id(self) -> str | None:
+    def unique_id(self) -> str:
         """Return a unique ID."""
-        # Temporary fix for https://github.com/thecynic/pylutron/issues/70
+
         if self._lutron_device.uuid is None:
-            return None
+            return f"{self._controller.guid}_{self._lutron_device.legacy_uuid}"
         return f"{self._controller.guid}_{self._lutron_device.uuid}"
 
     def update(self) -> None:
@@ -63,7 +63,7 @@ class LutronDevice(LutronBaseEntity):
         """Initialize the device."""
         super().__init__(area_name, lutron_device, controller)
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, lutron_device.uuid)},
+            identifiers={(DOMAIN, self.unique_id)},
             manufacturer="Lutron",
             name=lutron_device.name,
             suggested_area=area_name,

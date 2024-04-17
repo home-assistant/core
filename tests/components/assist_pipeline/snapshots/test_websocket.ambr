@@ -33,7 +33,7 @@
   dict({
     'conversation_id': None,
     'device_id': None,
-    'engine': 'homeassistant',
+    'engine': 'conversation.home_assistant',
     'intent_input': 'test transcript',
     'language': 'en',
   })
@@ -114,7 +114,7 @@
   dict({
     'conversation_id': None,
     'device_id': None,
-    'engine': 'homeassistant',
+    'engine': 'conversation.home_assistant',
     'intent_input': 'test transcript',
     'language': 'en',
   })
@@ -207,7 +207,7 @@
   dict({
     'conversation_id': None,
     'device_id': None,
-    'engine': 'homeassistant',
+    'engine': 'conversation.home_assistant',
     'intent_input': 'test transcript',
     'language': 'en',
   })
@@ -381,6 +381,7 @@
     'wake_word_output': dict({
       'timestamp': 0,
       'wake_word_id': 'test_ww',
+      'wake_word_phrase': 'Test Wake Word',
     }),
   })
 # ---
@@ -408,7 +409,7 @@
   dict({
     'conversation_id': None,
     'device_id': None,
-    'engine': 'homeassistant',
+    'engine': 'conversation.home_assistant',
     'intent_input': 'test transcript',
     'language': 'en',
   })
@@ -614,7 +615,7 @@
   dict({
     'conversation_id': None,
     'device_id': None,
-    'engine': 'homeassistant',
+    'engine': 'conversation.home_assistant',
     'intent_input': 'Are the lights on?',
     'language': 'en',
   })
@@ -636,7 +637,7 @@
   dict({
     'conversation_id': None,
     'device_id': None,
-    'engine': 'homeassistant',
+    'engine': 'conversation.home_assistant',
     'intent_input': 'Are the lights on?',
     'language': 'en',
   })
@@ -664,7 +665,7 @@
   dict({
     'conversation_id': None,
     'device_id': None,
-    'engine': 'homeassistant',
+    'engine': 'conversation.home_assistant',
     'intent_input': 'never mind',
     'language': 'en',
   })
@@ -694,6 +695,46 @@
 # ---
 # name: test_pipeline_empty_tts_output.3
   None
+# ---
+# name: test_stt_cooldown_different_ids
+  dict({
+    'language': 'en',
+    'pipeline': <ANY>,
+    'runner_data': dict({
+      'stt_binary_handler_id': 1,
+      'timeout': 300,
+    }),
+  })
+# ---
+# name: test_stt_cooldown_different_ids.1
+  dict({
+    'language': 'en',
+    'pipeline': <ANY>,
+    'runner_data': dict({
+      'stt_binary_handler_id': 1,
+      'timeout': 300,
+    }),
+  })
+# ---
+# name: test_stt_cooldown_same_id
+  dict({
+    'language': 'en',
+    'pipeline': <ANY>,
+    'runner_data': dict({
+      'stt_binary_handler_id': 1,
+      'timeout': 300,
+    }),
+  })
+# ---
+# name: test_stt_cooldown_same_id.1
+  dict({
+    'language': 'en',
+    'pipeline': <ANY>,
+    'runner_data': dict({
+      'stt_binary_handler_id': 1,
+      'timeout': 300,
+    }),
+  })
 # ---
 # name: test_stt_provider_missing
   dict({
@@ -758,7 +799,7 @@
   dict({
     'conversation_id': 'mock-conversation-id',
     'device_id': 'mock-device-id',
-    'engine': 'homeassistant',
+    'engine': 'conversation.home_assistant',
     'intent_input': 'Are the lights on?',
     'language': 'en',
   })
@@ -926,15 +967,14 @@
     'wake_word_output': dict({
       'timestamp': 0,
       'wake_word_id': 'test_ww',
+      'wake_word_phrase': 'Test Wake Word',
     }),
   })
 # ---
 # name: test_wake_word_cooldown_different_entities.5
   dict({
-    'wake_word_output': dict({
-      'timestamp': 0,
-      'wake_word_id': 'test_ww',
-    }),
+    'code': 'duplicate_wake_up_detected',
+    'message': 'Duplicate wake-up detected for Test Wake Word',
   })
 # ---
 # name: test_wake_word_cooldown_different_ids
@@ -988,6 +1028,7 @@
     'wake_word_output': dict({
       'timestamp': 0,
       'wake_word_id': 'test_ww',
+      'wake_word_phrase': 'Test Wake Word',
     }),
   })
 # ---
@@ -996,6 +1037,7 @@
     'wake_word_output': dict({
       'timestamp': 0,
       'wake_word_id': 'test_ww_2',
+      'wake_word_phrase': 'Test Wake Word 2',
     }),
   })
 # ---
@@ -1043,5 +1085,20 @@
       'sample_rate': 16000,
     }),
     'timeout': 3,
+  })
+# ---
+# name: test_wake_word_cooldown_same_id.4
+  dict({
+    'wake_word_output': dict({
+      'timestamp': 0,
+      'wake_word_id': 'test_ww',
+      'wake_word_phrase': 'Test Wake Word',
+    }),
+  })
+# ---
+# name: test_wake_word_cooldown_same_id.5
+  dict({
+    'code': 'duplicate_wake_up_detected',
+    'message': 'Duplicate wake-up detected for Test Wake Word',
   })
 # ---

@@ -1,4 +1,5 @@
 """Tests for tedee lock."""
+
 from datetime import timedelta
 from unittest.mock import MagicMock
 

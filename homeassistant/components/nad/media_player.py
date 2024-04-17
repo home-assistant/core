@@ -1,4 +1,5 @@
 """Support for interfacing with NAD receivers through RS-232."""
+
 from __future__ import annotations
 
 from nad_receiver import NADReceiver, NADReceiverTCP, NADReceiverTelnet

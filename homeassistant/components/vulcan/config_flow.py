@@ -1,4 +1,5 @@
 """Adds config flow for Vulcan."""
+
 from collections.abc import Mapping
 import logging
 from typing import Any
@@ -16,9 +17,8 @@ from vulcan import (
     Vulcan,
 )
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PIN, CONF_REGION, CONF_TOKEN
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from . import DOMAIN
@@ -33,7 +33,7 @@ LOGIN_SCHEMA = {
 }
 
 
-class VulcanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class VulcanFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a Uonet+ Vulcan config flow."""
 
     VERSION = 1
@@ -111,9 +111,9 @@ class VulcanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         students = {}
         if self.students is not None:
             for student in self.students:
-                students[
-                    str(student.pupil.id)
-                ] = f"{student.pupil.first_name} {student.pupil.last_name}"
+                students[str(student.pupil.id)] = (
+                    f"{student.pupil.first_name} {student.pupil.last_name}"
+                )
         if user_input is not None:
             student_id = user_input["student"]
             await self.async_set_unique_id(str(student_id))
@@ -190,9 +190,7 @@ class VulcanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_add_next_config_entry(self, user_input=None):
         """Flow initialized when user is adding next entry of that integration."""
 
-        existing_entries = []
-        for entry in self.hass.config_entries.async_entries(DOMAIN):
-            existing_entries.append(entry)
+        existing_entries = self.hass.config_entries.async_entries(DOMAIN)
 
         errors = {}
 
@@ -205,13 +203,14 @@ class VulcanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             account = Account.load(existing_entries[0].data["account"])
             client = Vulcan(keystore, account, async_get_clientsession(self.hass))
             students = await client.get_students()
-            new_students = []
-            existing_entry_ids = []
-            for entry in self.hass.config_entries.async_entries(DOMAIN):
-                existing_entry_ids.append(entry.data["student_id"])
-            for student in students:
-                if str(student.pupil.id) not in existing_entry_ids:
-                    new_students.append(student)
+            existing_entry_ids = [
+                entry.data["student_id"] for entry in existing_entries
+            ]
+            new_students = [
+                student
+                for student in students
+                if str(student.pupil.id) not in existing_entry_ids
+            ]
             if not new_students:
                 return self.async_abort(reason="all_student_already_configured")
             if len(new_students) == 1:
@@ -241,7 +240,9 @@ class VulcanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
         return await self.async_step_reauth_confirm()
 
@@ -275,9 +276,7 @@ class VulcanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 keystore = credentials["keystore"]
                 client = Vulcan(keystore, account, async_get_clientsession(self.hass))
                 students = await client.get_students()
-                existing_entries = []
-                for entry in self.hass.config_entries.async_entries(DOMAIN):
-                    existing_entries.append(entry)
+                existing_entries = self.hass.config_entries.async_entries(DOMAIN)
                 matching_entries = False
                 for student in students:
                     for entry in existing_entries:

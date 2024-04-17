@@ -1,4 +1,5 @@
 """Entity for the SleepIQ integration."""
+
 from abc import abstractmethod
 from typing import TypeVar
 

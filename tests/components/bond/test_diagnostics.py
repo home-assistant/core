@@ -1,4 +1,5 @@
 """Test bond diagnostics."""
+
 from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
 from homeassistant.core import HomeAssistant
 
