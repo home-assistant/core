@@ -8,10 +8,10 @@ from contextlib import suppress
 from dataclasses import dataclass
 from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal, InvalidOperation as DecimalInvalidOperation
-from functools import partial
+from functools import cached_property, partial
 import logging
 from math import ceil, floor, isfinite, log10
-from typing import TYPE_CHECKING, Any, Final, Self, cast, final, override
+from typing import Any, Final, Self, cast, final, override
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (  # noqa: F401
@@ -90,11 +90,6 @@ from .const import (  # noqa: F401
     SensorStateClass,
 )
 from .websocket_api import async_setup as async_setup_ws_api
-
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
 
 _LOGGER: Final = logging.getLogger(__name__)
 

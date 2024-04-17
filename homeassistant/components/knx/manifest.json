@@ -12,7 +12,7 @@
   "quality_scale": "platinum",
   "requirements": [
     "xknx==2.12.2",
-    "xknxproject==3.7.0",
+    "xknxproject==3.7.1",
     "knx-frontend==2024.1.20.105944"
   ],
   "single_config_entry": true

@@ -5,8 +5,9 @@ from __future__ import annotations
 import asyncio
 from datetime import timedelta
 import functools as ft
+from functools import cached_property
 import logging
-from typing import TYPE_CHECKING, Any, Literal, final
+from typing import Any, Literal, final
 
 import voluptuous as vol
 
@@ -116,11 +117,6 @@ from .const import (  # noqa: F401
     HVACAction,
     HVACMode,
 )
-
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
 
 DEFAULT_MIN_TEMP = 7
 DEFAULT_MAX_TEMP = 35
