@@ -80,6 +80,12 @@ learn_command:
           options:
             - "ir"
             - "rf"
+    frequency:
+      selector:
+        number:
+          min: 0
+          step: 0.01
+          unit_of_measurement: MHz
     alternative:
       selector:
         boolean:
@@ -105,3 +111,20 @@ delete_command:
       example: "Mute"
       selector:
         object:
+
+sweep_frequency:
+  target:
+    entity:
+      domain: remote
+  fields:
+    device:
+      example: "television"
+      selector:
+        text:
+    timeout:
+      selector:
+        number:
+          min: 0
+          max: 60
+          step: 5
+          unit_of_measurement: seconds

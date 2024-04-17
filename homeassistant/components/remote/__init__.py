@@ -48,6 +48,7 @@ ATTR_DEVICE = "device"
 ATTR_NUM_REPEATS = "num_repeats"
 ATTR_DELAY_SECS = "delay_secs"
 ATTR_HOLD_SECS = "hold_secs"
+ATTR_FREQUENCY = "frequency"
 ATTR_ALTERNATIVE = "alternative"
 ATTR_TIMEOUT = "timeout"
 
@@ -61,6 +62,7 @@ MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 SERVICE_SEND_COMMAND = "send_command"
 SERVICE_LEARN_COMMAND = "learn_command"
 SERVICE_DELETE_COMMAND = "delete_command"
+SERVICE_SWEEP_FREQUENCY = "sweep_frequency"
 SERVICE_SYNC = "sync"
 
 DEFAULT_NUM_REPEATS = 1
@@ -74,6 +76,7 @@ class RemoteEntityFeature(IntFlag):
     LEARN_COMMAND = 1
     DELETE_COMMAND = 2
     ACTIVITY = 4
+    SWEEP_FREQUENCY = 8
 
 
 # These SUPPORT_* constants are deprecated as of Home Assistant 2022.5.
@@ -139,6 +142,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             vol.Optional(ATTR_DEVICE): cv.string,
             vol.Optional(ATTR_COMMAND): vol.All(cv.ensure_list, [cv.string]),
             vol.Optional(ATTR_COMMAND_TYPE): cv.string,
+            vol.Optional(ATTR_FREQUENCY): cv.positive_float,
             vol.Optional(ATTR_ALTERNATIVE): cv.boolean,
             vol.Optional(ATTR_TIMEOUT): cv.positive_int,
         },
@@ -152,6 +156,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             vol.Optional(ATTR_DEVICE): cv.string,
         },
         "async_delete_command",
+    )
+
+    component.async_register_entity_service(
+        SERVICE_SWEEP_FREQUENCY,
+        {
+            vol.Optional(ATTR_DEVICE): cv.string,
+            vol.Optional(ATTR_TIMEOUT): cv.positive_int,
+        },
+        "async_sweep_frequency",
     )
 
     return True
@@ -255,6 +268,14 @@ class RemoteEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_)
         await self.hass.async_add_executor_job(
             ft.partial(self.delete_command, **kwargs)
         )
+
+    def sweep_frequency(self, **kwargs: Any) -> None:
+        """Sweep remote control frequency."""
+        raise NotImplementedError
+
+    async def async_sweep_frequency(self, **kwargs: Any) -> None:
+        """Sweep remote control frequency."""
+        await self.hass.async_add_executor_job(ft.partial(self.sweep_frequency, **kwargs))
 
 
 # These can be removed if no deprecated constant are in this module anymore
