@@ -42,7 +42,7 @@ def adapter_display_info(adapter: str, details: AdapterDetails) -> str:
     name = adapter_human_name(adapter, details[ADAPTER_ADDRESS])
     model = adapter_model(details)
     manufacturer = details[ADAPTER_MANUFACTURER] or "Unknown"
-    return f"{name} {model} {manufacturer}"
+    return f"{name} {manufacturer} {model}"
 
 
 class BluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
