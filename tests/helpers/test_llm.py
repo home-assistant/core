@@ -172,6 +172,17 @@ async def test_call_tool_exception(hass: HomeAssistant) -> None:
     assert response == '{"error": "RuntimeError", "error_text": "Test exception"}'
 
 
+async def test_call_tool_no_existing(hass: HomeAssistant) -> None:
+    """Test calling an llm tool where no config exists."""
+    response = await llm.async_call_tool(
+        hass,
+        "test_platform",
+        "test_tool",
+    )
+
+    assert response == '{"error": "KeyError", "error_text": "\'test_tool\'"}'
+
+
 def test_format_state(hass: HomeAssistant) -> None:
     """Test foratting of an entity state."""
     state1 = State(
@@ -400,6 +411,8 @@ async def test_intent_tool_with_area_and_floor(
     area_kitchen = area_registry.async_update(
         area_kitchen.id, aliases={"küche"}, floor_id=floor_1.floor_id
     )
+    area_registry.async_get_or_create("bedroom")
+    floor_registry.async_create("second floor")
 
     test_context = Context()
     with patch(
