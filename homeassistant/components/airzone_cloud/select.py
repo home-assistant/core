@@ -25,7 +25,7 @@ from .entity import AirzoneEntity, AirzoneZoneEntity
 
 
 @dataclass(frozen=True, kw_only=True)
-class AirzoneSelectDescription(SelectEntityDescription, AirzoneSelectDescriptionMixin):
+class AirzoneSelectDescription(SelectEntityDescription):
     """Class to describe an Airzone select entity."""
 
     api_param: str
