@@ -126,7 +126,7 @@ def validate_requirements(integration: Integration) -> None:
                 f"Failed to normalize package name from requirement {req}",
             )
             return
-        if (package == ign for ign in IGNORE_PACKAGES):
+        if package in IGNORE_PACKAGES:
             continue
         integration_requirements.add(req)
         integration_packages.add(package)
@@ -150,7 +150,7 @@ def validate_requirements(integration: Integration) -> None:
 
     # Check for requirements incompatible with standard library.
     for req in all_integration_requirements:
-        if req in sys.stlib_module_names:
+        if req in sys.stdlib_module_names:
             integration.add_error(
                 "requirements",
                 f"Package {req} is not compatible with the Python standard library",
