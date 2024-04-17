@@ -5,6 +5,7 @@ from base64 import b64encode
 from collections import defaultdict
 from collections.abc import Iterable
 from datetime import timedelta
+from functools import partial
 from itertools import product
 import logging
 from typing import Any
@@ -24,12 +25,14 @@ from homeassistant.components.remote import (
     ATTR_COMMAND_TYPE,
     ATTR_DELAY_SECS,
     ATTR_DEVICE,
+    ATTR_FREQUENCY,
     ATTR_NUM_REPEATS,
     DEFAULT_DELAY_SECS,
     DOMAIN as RM_DOMAIN,
     SERVICE_DELETE_COMMAND,
     SERVICE_LEARN_COMMAND,
     SERVICE_SEND_COMMAND,
+    SERVICE_SWEEP_FREQUENCY,
     RemoteEntity,
     RemoteEntityFeature,
 )
@@ -80,11 +83,16 @@ SERVICE_LEARN_SCHEMA = COMMAND_SCHEMA.extend(
     {
         vol.Required(ATTR_DEVICE): vol.All(cv.string, vol.Length(min=1)),
         vol.Optional(ATTR_COMMAND_TYPE, default=COMMAND_TYPE_IR): vol.In(COMMAND_TYPES),
+        vol.Optional(ATTR_FREQUENCY): cv.positive_float,
         vol.Optional(ATTR_ALTERNATIVE, default=False): cv.boolean,
     }
 )
 
 SERVICE_DELETE_SCHEMA = COMMAND_SCHEMA.extend(
+    {vol.Required(ATTR_DEVICE): vol.All(cv.string, vol.Length(min=1))}
+)
+
+SERVICE_SWEEP_FREQUENCY_SCHEMA = COMMAND_SCHEMA.extend(
     {vol.Required(ATTR_DEVICE): vol.All(cv.string, vol.Length(min=1))}
 )
 
@@ -122,7 +130,9 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
 
         self._attr_is_on = True
         self._attr_supported_features = (
-            RemoteEntityFeature.LEARN_COMMAND | RemoteEntityFeature.DELETE_COMMAND
+            RemoteEntityFeature.LEARN_COMMAND
+            | RemoteEntityFeature.DELETE_COMMAND
+            | RemoteEntityFeature.SWEEP_FREQUENCY
         )
         self._attr_unique_id = device.unique_id
 
@@ -267,6 +277,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
         command_type = kwargs[ATTR_COMMAND_TYPE]
         subdevice = kwargs[ATTR_DEVICE]
         toggle = kwargs[ATTR_ALTERNATIVE]
+        frequency = kwargs.get(ATTR_FREQUENCY)
         service = f"{RM_DOMAIN}.{SERVICE_LEARN_COMMAND}"
         device = self._device
 
@@ -284,7 +295,9 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
                 learn_command = self._async_learn_ir_command
 
             elif hasattr(device.api, "sweep_frequency"):
-                learn_command = self._async_learn_rf_command
+                learn_command = partial(
+                    self._async_learn_rf_command, frequency=frequency
+                )
 
             else:
                 err_msg = f"{self.entity_id} doesn't support learning RF commands"
@@ -351,47 +364,16 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
                 self.hass, notification_id="learn_command"
             )
 
-    async def _async_learn_rf_command(self, command):
+    async def _async_learn_rf_command(self, command, frequency=None):
         """Learn a radiofrequency command."""
         device = self._device
 
-        try:
-            await device.async_request(device.api.sweep_frequency)
-
-        except (BroadlinkException, OSError) as err:
-            _LOGGER.debug("Failed to sweep frequency: %s", err)
-            raise
-
-        persistent_notification.async_create(
-            self.hass,
-            f"Press and hold the '{command}' button.",
-            title="Sweep frequency",
-            notification_id="sweep_frequency",
-        )
+        if not frequency:
+            frequency = self._async_sweep_frequency()
+            await asyncio.sleep(2)
 
         try:
-            start_time = dt_util.utcnow()
-            while (dt_util.utcnow() - start_time) < LEARNING_TIMEOUT:
-                await asyncio.sleep(1)
-                found = await device.async_request(device.api.check_frequency)[0]
-                if found:
-                    break
-            else:
-                await device.async_request(device.api.cancel_sweep_frequency)
-                raise TimeoutError(
-                    "No radiofrequency found within "
-                    f"{LEARNING_TIMEOUT.total_seconds()} seconds"
-                )
-
-        finally:
-            persistent_notification.async_dismiss(
-                self.hass, notification_id="sweep_frequency"
-            )
-
-        await asyncio.sleep(1)
-
-        try:
-            await device.async_request(device.api.find_rf_packet)
+            await device.async_request(device.api.find_rf_packet, frequency=frequency)
 
         except (BroadlinkException, OSError) as err:
             _LOGGER.debug("Failed to enter learning mode: %s", err)
@@ -399,7 +381,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
 
         persistent_notification.async_create(
             self.hass,
-            f"Press the '{command}' button again.",
+            f"Press the '{command}' button.",
             title="Learn command",
             notification_id="learn_command",
         )
@@ -475,3 +457,72 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
                 self._flag_storage.async_delay_save(self._get_flags, FLAG_SAVE_DELAY)
 
         self._code_storage.async_delay_save(self._get_codes, CODE_SAVE_DELAY)
+
+    async def async_sweep_frequency(self, **kwargs: Any) -> None:
+        """Sweep remote control frequency."""
+        kwargs = SERVICE_LEARN_SCHEMA(kwargs)
+        subdevice = kwargs[ATTR_DEVICE]
+        service = f"{RM_DOMAIN}.{SERVICE_SWEEP_FREQUENCY}"
+        device = self._device
+
+        if not self._attr_is_on:
+            _LOGGER.warning(
+                "%s canceled: %s entity is turned off", service, self.entity_id
+            )
+            return
+
+        async with self._lock:
+            if not hasattr(device.api, "sweep_frequency"):
+                err_msg = f"{self.entity_id} doesn't support sweeping frequency"
+                _LOGGER.error("Failed to call %s: %s", service, err_msg)
+                raise ValueError(err_msg)
+
+            frequency = await self._async_sweep_frequency()
+
+            persistent_notification.async_create(
+                self.hass,
+                f"The frequency of the device '{subdevice}' is {frequency} MHz.",
+                title="Sweep frequency success",
+                notification_id="sweep_frequency_success",
+            )
+
+    async def _async_sweep_frequency(self) -> float:
+        """Sweep remote control frequency."""
+        device = self._device
+        found = False
+        frequency = 0
+
+        try:
+            await device.async_request(device.api.sweep_frequency)
+
+        except (BroadlinkException, OSError) as err:
+            _LOGGER.debug("Failed to sweep frequency: %s", err)
+            raise
+
+        persistent_notification.async_create(
+            self.hass,
+            "Press and hold any button on the remote for 5 seconds.",
+            title="Sweep frequency",
+            notification_id="sweep_frequency",
+        )
+
+        try:
+            start_time = dt_util.utcnow()
+            while (dt_util.utcnow() - start_time) < LEARNING_TIMEOUT:
+                await asyncio.sleep(1)
+                found, frequency = await device.async_request(
+                    device.api.check_frequency
+                )
+                if found:
+                    return frequency
+
+            await device.async_request(device.api.cancel_sweep_frequency)
+            raise TimeoutError(
+                "No radiofrequency found within "
+                f"{LEARNING_TIMEOUT.total_seconds()} seconds"
+            )
+
+        finally:
+            persistent_notification.async_dismiss(
+                self.hass, notification_id="sweep_frequency"
+            )
