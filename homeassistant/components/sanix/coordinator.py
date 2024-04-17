@@ -1,4 +1,5 @@
 """Sanix Coordinator."""
+
 from datetime import timedelta
 import logging
 

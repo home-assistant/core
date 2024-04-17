@@ -1,4 +1,5 @@
 """Tests for Sanix."""
+
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry

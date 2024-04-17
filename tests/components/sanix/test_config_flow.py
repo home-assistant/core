@@ -1,4 +1,5 @@
 """Define tests for the Sanix config flow."""
+
 from unittest.mock import MagicMock
 
 import pytest

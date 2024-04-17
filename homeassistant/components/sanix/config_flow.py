@@ -1,4 +1,5 @@
 """Config flow for Sanix integration."""
+
 import logging
 from typing import Any
 
@@ -6,9 +7,8 @@ from sanix import Sanix
 from sanix.exceptions import SanixException, SanixInvalidAuthException
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_TOKEN
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import CONF_SERIAL_NO, DOMAIN, MANUFACTURER
 
@@ -23,14 +23,14 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class SanixConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Sanix."""
 
     VERSION = 1
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
 

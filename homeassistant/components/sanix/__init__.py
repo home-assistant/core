@@ -1,4 +1,5 @@
 """The Sanix integration."""
+
 from sanix import Sanix
 
 from homeassistant.config_entries import ConfigEntry
