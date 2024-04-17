@@ -8,7 +8,6 @@ import logging
 from typing import Any, cast
 
 import pyatmo
-from pyatmo import DeviceType
 from pyatmo.modules import PublicWeatherArea
 
 from homeassistant.components.sensor import (
@@ -48,7 +47,6 @@ from homeassistant.helpers.typing import StateType
 from .const import (
     CONF_URL_ENERGY,
     CONF_URL_PUBLIC_WEATHER,
-    CONF_URL_WEATHER,
     CONF_WEATHER_AREAS,
     DATA_HANDLER,
     DOMAIN,
@@ -59,25 +57,38 @@ from .const import (
     SIGNAL_NAME,
 )
 from .data_handler import HOME, PUBLIC, NetatmoDataHandler, NetatmoDevice, NetatmoRoom
-from .entity import NetatmoBaseEntity, NetatmoModuleEntity, NetatmoRoomEntity
+from .entity import (
+    NetatmoBaseEntity,
+    NetatmoModuleEntity,
+    NetatmoRoomEntity,
+    NetatmoWeatherModuleEntity,
+)
 from .helper import NetatmoArea
 
 _LOGGER = logging.getLogger(__name__)
+
+DIRECTION_OPTIONS = [
+    "n",
+    "ne",
+    "e",
+    "se",
+    "s",
+    "sw",
+    "w",
+    "nw",
+]
 
 
 def process_health(health: StateType) -> str | None:
     """Process health index and return string for display."""
     if not isinstance(health, int):
         return None
-    if health == 0:
-        return "Healthy"
-    if health == 1:
-        return "Fine"
-    if health == 2:
-        return "Fair"
-    if health == 3:
-        return "Poor"
-    return "Unhealthy"
+    return {
+        0: "healthy",
+        1: "fine",
+        2: "fair",
+        3: "poor",
+    }.get(health, "unhealthy")
 
 
 def process_rf(strength: StateType) -> str | None:
@@ -196,6 +207,9 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
     NetatmoSensorEntityDescription(
         key="windangle",
         netatmo_name="wind_direction",
+        device_class=SensorDeviceClass.ENUM,
+        options=DIRECTION_OPTIONS,
+        value_fn=lambda x: x.lower() if isinstance(x, str) else None,
     ),
     NetatmoSensorEntityDescription(
         key="windangle_value",
@@ -215,6 +229,9 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
         key="gustangle",
         netatmo_name="gust_direction",
         entity_registry_enabled_default=False,
+        device_class=SensorDeviceClass.ENUM,
+        options=DIRECTION_OPTIONS,
+        value_fn=lambda x: x.lower() if isinstance(x, str) else None,
     ),
     NetatmoSensorEntityDescription(
         key="gustangle_value",
@@ -254,6 +271,8 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
     NetatmoSensorEntityDescription(
         key="health_idx",
         netatmo_name="health_idx",
+        device_class=SensorDeviceClass.ENUM,
+        options=["healthy", "fine", "fair", "poor", "unhealthy"],
         value_fn=process_health,
     ),
     NetatmoSensorEntityDescription(
@@ -491,11 +510,10 @@ async def async_setup_entry(
     await add_public_entities(False)
 
 
-class NetatmoWeatherSensor(NetatmoModuleEntity, SensorEntity):
+class NetatmoWeatherSensor(NetatmoWeatherModuleEntity, SensorEntity):
     """Implementation of a Netatmo weather/home coach sensor."""
 
     entity_description: NetatmoSensorEntityDescription
-    _attr_configuration_url = CONF_URL_WEATHER
 
     def __init__(
         self,
@@ -506,33 +524,7 @@ class NetatmoWeatherSensor(NetatmoModuleEntity, SensorEntity):
         super().__init__(netatmo_device)
         self.entity_description = description
         self._attr_translation_key = description.netatmo_name
-        category = getattr(self.device.device_category, "name")
-        self._publishers.extend(
-            [
-                {
-                    "name": category,
-                    SIGNAL_NAME: category,
-                },
-            ]
-        )
         self._attr_unique_id = f"{self.device.entity_id}-{description.key}"
-
-        if hasattr(self.device, "place"):
-            place = cast(pyatmo.modules.base_class.Place, getattr(self.device, "place"))
-            if hasattr(place, "location") and place.location is not None:
-                self._attr_extra_state_attributes.update(
-                    {
-                        ATTR_LATITUDE: place.location.latitude,
-                        ATTR_LONGITUDE: place.location.longitude,
-                    }
-                )
-
-    @property
-    def device_type(self) -> DeviceType:
-        """Return the Netatmo device type."""
-        if "." not in self.device.device_type:
-            return super().device_type
-        return DeviceType(self.device.device_type.partition(".")[2])
 
     @property
     def available(self) -> bool:
