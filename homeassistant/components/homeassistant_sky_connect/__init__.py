@@ -33,7 +33,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         firmware_guess = await guess_firmware_type(hass, config_entry.data["device"])
 
         new_data = {**config_entry.data}
-        new_data["firmware"] = firmware_guess.firmware_type
+        new_data["firmware"] = firmware_guess.firmware_type.value
 
         # Rename `description` to `product`
         new_data["product"] = new_data.pop("description")
