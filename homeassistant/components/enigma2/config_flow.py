@@ -75,7 +75,7 @@ class Enigma2ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         self._data: dict[str, Any] = {}
         self._options: dict[str, Any] = {}
 
-    async def validate_user_input(self, user_input: dict[str, Any]) -> dict[str, Any]:
+    async def validate_user_input(self, user_input: dict[str, Any]) -> None:
         """Validate user input."""
 
         self.errors = {}
@@ -106,7 +106,7 @@ class Enigma2ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(about["info"]["ifaces"][0]["mac"])
             self._abort_if_unique_id_configured()
 
-        return user_input
+        self._data = user_input
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -115,22 +115,44 @@ class Enigma2ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_show_form(step_id=SOURCE_USER, data_schema=CONFIG_SCHEMA)
 
-        data = await self.validate_user_input(user_input)
+        await self.validate_user_input(user_input)
         if "base" in self.errors:
             return self.async_show_form(
                 step_id=SOURCE_USER, data_schema=CONFIG_SCHEMA, errors=self.errors
             )
         return self.async_create_entry(
-            data=data, title=data[CONF_HOST], options=self._options
+            data=self._data, title=self._data[CONF_HOST], options=self._options
         )
 
     async def async_step_import(self, user_input: dict[str, Any]) -> ConfigFlowResult:
-        """Validate import."""
+        """Handle the import step."""
         if CONF_PORT not in user_input:
             user_input[CONF_PORT] = DEFAULT_PORT
         if CONF_SSL not in user_input:
             user_input[CONF_SSL] = DEFAULT_SSL
         user_input[CONF_VERIFY_SSL] = DEFAULT_VERIFY_SSL
+
+        self._data = {
+            key: user_input[key] for key in user_input if key in self.DATA_KEYS
+        }
+        self._options = {
+            key: user_input[key] for key in user_input if key in self.OPTIONS_KEYS
+        }
+
+        await self.validate_user_input(self._data)
+
+        if "base" in self.errors:
+            async_create_issue(
+                self.hass,
+                DOMAIN,
+                f"deprecated_yaml_{DOMAIN}_import_issue",
+                breaks_in_ha_version="2024.11.0",
+                is_fixable=False,
+                issue_domain=DOMAIN,
+                severity=IssueSeverity.WARNING,
+                translation_key="deprecated_yaml_import_issue",
+            )
+            return self.async_abort(reason=self.errors["base"])
 
         async_create_issue(
             self.hass,
@@ -147,12 +169,6 @@ class Enigma2ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 "integration_title": "Enigma2",
             },
         )
-
-        self._data = {
-            key: user_input[key] for key in user_input if key in self.DATA_KEYS
-        }
-        self._options = {
-            key: user_input[key] for key in user_input if key in self.OPTIONS_KEYS
-        }
-
-        return await self.async_step_user(self._data)
+        return self.async_create_entry(
+            data=self._data, title=self._data[CONF_HOST], options=self._options
+        )
