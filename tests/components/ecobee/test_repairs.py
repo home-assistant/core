@@ -3,11 +3,7 @@
 from http import HTTPStatus
 from unittest.mock import MagicMock
 
-from homeassistant.components.ecobee import (
-    DATA_FLOW_MINOR_VERSION,
-    DATA_FLOW_VERSION,
-    DOMAIN,
-)
+from homeassistant.components.ecobee import DOMAIN
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.components.repairs import DOMAIN as REPAIRS_DOMAIN
 from homeassistant.components.repairs.issue_handler import (
@@ -33,13 +29,25 @@ async def test_ecobee_repair_flow(
     hass_client: ClientSessionGenerator,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
-    """Test the legacy notify service still works before migration and repair flow is triggered."""
+    """Test the ecobee notify service repair flow is triggered."""
     assert await async_setup_component(hass, REPAIRS_DOMAIN, {REPAIRS_DOMAIN: {}})
-    entry = await setup_platform(hass, NOTIFY_DOMAIN, version=1, minor_version=1)
+    await setup_platform(hass, NOTIFY_DOMAIN)
     await async_process_repairs_platforms(hass)
 
     ws_client = await hass_ws_client(hass)
     http_client = await hass_client()
+
+    # Simulate legacy service being used
+    assert hass.services.has_service(NOTIFY_DOMAIN, DOMAIN)
+    await hass.services.async_call(
+        NOTIFY_DOMAIN,
+        DOMAIN,
+        service_data={"message": "It is too cold!", "target": THERMOSTAT_ID},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    mock_ecobee.send_message.assert_called_with(THERMOSTAT_ID, "It is too cold!")
+    mock_ecobee.send_message.reset_mock()
 
     # Assert the issue is present
     await ws_client.send_json({"id": 1, "type": "repairs/list_issues"})
@@ -66,55 +74,9 @@ async def test_ecobee_repair_flow(
     assert data["type"] == "create_entry"
     # Test confirm step in repair flow
     await hass.async_block_till_done()
-    version = (DATA_FLOW_VERSION, DATA_FLOW_MINOR_VERSION)
-    assert entry.version == version[0]
-    assert entry.minor_version == version[1]
 
     # Assert the issue is no longer present
     await ws_client.send_json({"id": 2, "type": "repairs/list_issues"})
     msg = await ws_client.receive_json()
     assert msg["success"]
     assert len(msg["result"]["issues"]) == 0
-
-
-async def test_ecobee_notify_migrated_reissue(
-    hass: HomeAssistant,
-    mock_ecobee: MagicMock,
-    hass_ws_client: WebSocketGenerator,
-) -> None:
-    """Test the legacy notify service still works before migration and repair flow is triggered."""
-    assert await async_setup_component(hass, REPAIRS_DOMAIN, {REPAIRS_DOMAIN: {}})
-    await setup_platform(
-        hass,
-        NOTIFY_DOMAIN,
-        version=DATA_FLOW_VERSION,
-        minor_version=DATA_FLOW_MINOR_VERSION,
-    )
-
-    await async_process_repairs_platforms(hass)
-
-    ws_client = await hass_ws_client(hass)
-
-    # Assert no issue is present
-    await ws_client.send_json({"id": 1, "type": "repairs/list_issues"})
-    msg = await ws_client.receive_json()
-    assert msg["success"]
-    assert len(msg["result"]["issues"]) == 0
-
-    # Simulate legacy service being used
-    assert hass.services.has_service(NOTIFY_DOMAIN, DOMAIN)
-    await hass.services.async_call(
-        NOTIFY_DOMAIN,
-        DOMAIN,
-        service_data={"message": "It is too cold!", "target": THERMOSTAT_ID},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
-    mock_ecobee.send_message.assert_called_with(THERMOSTAT_ID, "It is too cold!")
-    mock_ecobee.send_message.reset_mock()
-
-    # Assert the issue is present
-    await ws_client.send_json({"id": 2, "type": "repairs/list_issues"})
-    msg = await ws_client.receive_json()
-    assert msg["success"]
-    assert len(msg["result"]["issues"]) == 1

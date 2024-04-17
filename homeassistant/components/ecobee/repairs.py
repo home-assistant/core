@@ -9,7 +9,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import issue_registry as ir
 
-from .const import DATA_FLOW_MINOR_VERSION, DATA_FLOW_VERSION, DOMAIN
+from .const import DOMAIN
 
 
 @callback
@@ -35,10 +35,4 @@ async def async_create_fix_flow(
 ) -> RepairsFlow:
     """Create flow."""
     assert issue_id == "migrate_notify"
-    # Update entry to latest version
-    hass.config_entries.async_update_entry(
-        hass.data[DOMAIN].entry,
-        version=DATA_FLOW_VERSION,
-        minor_version=DATA_FLOW_MINOR_VERSION,
-    )
     return ConfirmRepairFlow()

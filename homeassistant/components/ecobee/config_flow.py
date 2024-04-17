@@ -13,20 +13,11 @@ from homeassistant.const import CONF_API_KEY
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.json import load_json_object
 
-from .const import (
-    _LOGGER,
-    CONF_REFRESH_TOKEN,
-    DATA_ECOBEE_CONFIG,
-    DATA_FLOW_VERSION,
-    DOMAIN,
-)
+from .const import _LOGGER, CONF_REFRESH_TOKEN, DATA_ECOBEE_CONFIG, DOMAIN
 
 
 class EcobeeFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle an ecobee config flow."""
-
-    VERSION = DATA_FLOW_VERSION
-    MINOR_VERSION = DATA_FLOW_VERSION
 
     def __init__(self) -> None:
         """Initialize the ecobee flow."""

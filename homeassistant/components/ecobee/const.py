@@ -19,9 +19,6 @@ from homeassistant.const import Platform
 
 _LOGGER = logging.getLogger(__package__)
 
-DATA_FLOW_VERSION = 1
-DATA_FLOW_MINOR_VERSION = 2
-
 DOMAIN = "ecobee"
 DATA_ECOBEE_CONFIG = "ecobee_config"
 DATA_HASS_CONFIG = "ecobee_hass_config"

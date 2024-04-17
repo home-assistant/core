@@ -17,13 +17,10 @@ from .const import (
     ATTR_CONFIG_ENTRY_ID,
     CONF_REFRESH_TOKEN,
     DATA_ECOBEE_CONFIG,
-    DATA_FLOW_MINOR_VERSION,
-    DATA_FLOW_VERSION,
     DATA_HASS_CONFIG,
     DOMAIN,
     PLATFORMS,
 )
-from .repairs import migrate_notify_issue
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=180)
 
@@ -87,13 +84,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass.data[DATA_HASS_CONFIG],
         )
     )
-    if (
-        entry.version == DATA_FLOW_VERSION
-        and entry.minor_version == DATA_FLOW_MINOR_VERSION
-    ):
-        return True
-
-    migrate_notify_issue(hass, entry)
 
     return True
 
