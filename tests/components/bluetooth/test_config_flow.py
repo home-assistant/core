@@ -113,8 +113,8 @@ async def test_async_step_user_linux_two_adapters(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "multiple_adapters"
     assert result["data_schema"].schema["adapter"].container == {
-        "hci0": "hci0 (00:00:00:00:00:01) Bluetooth Adapter 5.0 (cc01:aa01) ACME",
-        "hci1": "hci1 (00:00:00:00:00:02) Bluetooth Adapter 5.0 (cc01:aa01) ACME",
+        "hci0": "hci0 (00:00:00:00:00:01) ACME Bluetooth Adapter 5.0 (cc01:aa01)",
+        "hci1": "hci1 (00:00:00:00:00:02) ACME Bluetooth Adapter 5.0 (cc01:aa01)",
     }
     with (
         patch("homeassistant.components.bluetooth.async_setup", return_value=True),
