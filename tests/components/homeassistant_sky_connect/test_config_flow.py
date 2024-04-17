@@ -1,6 +1,9 @@
 """Test the Home Assistant SkyConnect config flow."""
 
-from unittest.mock import Mock, call, patch
+import asyncio
+from collections.abc import Awaitable, Callable
+from typing import Any
+from unittest.mock import AsyncMock, Mock, call, patch
 
 import pytest
 from universal_silabs_flasher.const import ApplicationType
@@ -36,6 +39,15 @@ USB_DATA_ZBT1 = usb.UsbServiceInfo(
     manufacturer="Nabu Casa",
     description="Home Assistant Connect ZBT-1",
 )
+
+
+def delayed_side_effect() -> Callable[..., Awaitable[None]]:
+    """Slows down eager tasks by delaying for an event loop tick."""
+
+    async def side_effect(*args: Any, **kwargs: Any) -> None:
+        await asyncio.sleep(0)
+
+    return side_effect
 
 
 @pytest.mark.parametrize(
@@ -74,6 +86,12 @@ async def test_config_flow_zigbee(
 
     # Set up Zigbee firmware
     mock_flasher_manager = Mock(spec_set=get_zigbee_flasher_addon_manager(hass))
+    mock_flasher_manager.async_install_addon_waiting = AsyncMock(
+        side_effect=delayed_side_effect()
+    )
+    mock_flasher_manager.async_start_addon_waiting = AsyncMock(
+        side_effect=delayed_side_effect()
+    )
 
     with (
         patch(
@@ -200,6 +218,12 @@ async def test_config_flow_thread(
 
     # Set up Thread firmware
     mock_otbr_manager = Mock(spec_set=get_otbr_addon_manager(hass))
+    mock_otbr_manager.async_install_addon_waiting = AsyncMock(
+        side_effect=delayed_side_effect()
+    )
+    mock_otbr_manager.async_start_addon_waiting = AsyncMock(
+        side_effect=delayed_side_effect()
+    )
 
     with (
         patch(
