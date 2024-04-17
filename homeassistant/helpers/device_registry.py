@@ -614,7 +614,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         try:
             return name.format(**translation_placeholders)
         except KeyError as err:
-            if get_release_channel() is ReleaseChannel.STABLE:
+            if get_release_channel() is not ReleaseChannel.STABLE:
                 raise HomeAssistantError("Missing placeholder %s" % err) from err
             report_issue = async_suggest_report_issue(
                 self.hass, integration_domain=domain
