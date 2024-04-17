@@ -512,7 +512,7 @@ boschshcpy==0.2.91
 bring-api==0.5.7
 
 # homeassistant.components.broadlink
-broadlink==0.18.3
+broadlink==0.19.0
 
 # homeassistant.components.brother
 brother==4.1.0
@@ -788,7 +788,7 @@ google-cloud-pubsub==2.13.11
 google-generativeai==0.3.1
 
 # homeassistant.components.nest
-google-nest-sdm==3.0.3
+google-nest-sdm==3.0.4
 
 # homeassistant.components.google_travel_time
 googlemaps==2.5.1

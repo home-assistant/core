@@ -9,6 +9,7 @@ DOMAINS_AND_TYPES = {
     Platform.REMOTE: {"RM4MINI", "RM4PRO", "RMMINI", "RMMINIB", "RMPRO"},
     Platform.SENSOR: {
         "A1",
+        "MP1S",
         "RM4MINI",
         "RM4PRO",
         "RMPRO",
@@ -20,6 +21,7 @@ DOMAINS_AND_TYPES = {
     Platform.SWITCH: {
         "BG1",
         "MP1",
+        "MP1S",
         "RM4MINI",
         "RM4PRO",
         "RMMINI",
