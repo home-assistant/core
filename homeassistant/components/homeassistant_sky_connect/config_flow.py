@@ -151,12 +151,6 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Pick Zigbee firmware."""
-
-        # Don't re-install Zigbee firmware. Removing this check would upgrade all new
-        # adapters to the latest version on first install.
-        if self._current_firmware_type == ApplicationType.EZSP:
-            return await self.async_step_confirm_zigbee()
-
         if not is_hassio(self.hass):
             return self.async_abort(
                 reason="not_hassio",
@@ -230,6 +224,7 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
             **addon_info.options,
             "device": self._usb_info.device,
             "baudrate": 115200,
+            "bootloader_baudrate": 115200,
             "flow_control": True,
         }
 
