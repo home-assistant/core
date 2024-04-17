@@ -3,6 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
+from bring_api.types import BringAuthResponse
 import pytest
 
 from homeassistant.components.bring import DOMAIN
@@ -40,7 +41,18 @@ def mock_bring_client() -> Generator[AsyncMock, None, None]:
     ):
         client = mock_client.return_value
         client.uuid = UUID
-        client.login.return_value = True
+        client.login.return_value = BringAuthResponse(
+            uuid=UUID,
+            publicUuid=UUID,
+            email=EMAIL,
+            name="",
+            photoPath="",
+            bringListUUID=UUID,
+            access_token="",
+            refresh_token="",
+            token_type="",
+            expires_in=20,
+        )
         client.load_lists.return_value = {"lists": []}
         yield client
 
