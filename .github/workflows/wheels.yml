@@ -98,7 +98,7 @@ jobs:
       - name: Generate requirements
         run: |
           . venv/bin/activate
-          python -m script.gen_requirements_all wheels
+          python -m script.gen_requirements_all ci
 
       - name: Upload requirements_all_wheels
         uses: actions/upload-artifact@v4.3.1

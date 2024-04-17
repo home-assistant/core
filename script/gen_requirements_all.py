@@ -61,49 +61,64 @@ INCLUDED_REQUIREMENTS_WHEELS = (
     "pyuserinput",
 )
 
-INCLUDED_REQUIREMENTS_WHEELS_NORMALIZED = {
-    normalize(requirement) for requirement in INCLUDED_REQUIREMENTS_WHEELS
+# Requirements to exclude when running github actions.
+# Requirements listed in EXCLUDED_REQUIREMENTS_CI will be included in
+# requirements_all_{action}.txt
+INCLUDED_REQUIREMENTS_ACTIONS = {
+    "pytest": ("python-gammu",),
+    "wheels_aarch64": INCLUDED_REQUIREMENTS_WHEELS,
+    "wheels_armhf": INCLUDED_REQUIREMENTS_WHEELS,
+    "wheels_armv7": INCLUDED_REQUIREMENTS_WHEELS,
+    "wheels_amd64": INCLUDED_REQUIREMENTS_WHEELS,
+    "wheels_i386": INCLUDED_REQUIREMENTS_WHEELS,
 }
 
-# Requirements to exclude when building integration wheels for specific architectures.
-# Requirements listed in EXCLUDED_REQUIREMENTS_WHEELS will be commented-out in
-# requirements_all_wheels_{arch}.txt
-EXCLUDED_REQUIREMENTS_WHEELS = {
-    "aarch64": (),
+INCLUDED_REQUIREMENTS_ACTIONS_NORMALIZED = {
+    action: {normalize(requirement) for requirement in requirements}
+    for action, requirements in INCLUDED_REQUIREMENTS_ACTIONS.items()
+}
+
+# Requirements to exclude when running github actions.
+# Requirements listed in EXCLUDED_REQUIREMENTS_CI will be commented-out in
+# requirements_all_{action}.txt
+EXCLUDED_REQUIREMENTS_ACTIONS = {
+    "pytest": (),
+    "wheels_aarch64": (),
     # Pandas has issues building on armhf, it is expected they
     # will drop the platform in the near future (they consider it
     # "flimsy" on 386). The following packages depend on pandas,
     # so we comment them out.
-    "armhf": ("env-canada", "noaa-coops", "pyezviz", "pykrakenapi"),
-    "armv7": (),
-    "amd64": (),
-    "i386": (),
+    "wheels_armhf": ("env-canada", "noaa-coops", "pyezviz", "pykrakenapi"),
+    "wheels_armv7": (),
+    "wheels_amd64": (),
+    "wheels_i386": (),
 }
 
-EXCLUDED_REQUIREMENTS_WHEELS_NORMALIZED = {
-    arch: {normalize(requirement) for requirement in requirements}
-    for arch, requirements in EXCLUDED_REQUIREMENTS_WHEELS.items()
+EXCLUDED_REQUIREMENTS_ACTIONS_NORMALIZED = {
+    action: {normalize(requirement) for requirement in requirements}
+    for action, requirements in EXCLUDED_REQUIREMENTS_ACTIONS.items()
 }
 
-# Requirements to substitute when building core or integration wheels for specific
-# architectures. Requirements listed in SUBSTITUTED_REQUIREMENTS_WHEELS will be
-# substituted in requirements_wheels_{arch}.txt and requirements_all_wheels_{arch}.txt
-SUBSTITUTED_REQUIREMENTS_WHEELS = {
+# Requirements to substitute when running github actions. Requirements listed in
+# SUBSTITUTED_REQUIREMENTS_WHEELS will be substituted in requirements_{action}.txt
+# and requirements_all_{action}.txt
+SUBSTITUTED_REQUIREMENTS_ACTIONS = {
     # Some speedups are only for 64-bit
-    "aarch64": {"aiohttp-zlib-ng": "aiohttp-zlib-ng[isal]"},
-    "armhf": {},
-    "armv7": {},
+    "wheels_aarch64": {"aiohttp-zlib-ng": "aiohttp-zlib-ng[isal]"},
+    "wheels_armhf": {},
+    "wheels_armv7": {},
     # Some speedups are only for 64-bit
-    "amd64": {"aiohttp-zlib-ng": "aiohttp-zlib-ng[isal]"},
-    "i386": {},
+    "wheels_amd64": {"aiohttp-zlib-ng": "aiohttp-zlib-ng[isal]"},
+    "wheels_i386": {},
+    "pytest": {},
 }
 
-SUBSTITUTED_REQUIREMENTS_WHEELS_NORMALIZED = {
-    arch: {
+SUBSTITUTED_REQUIREMENTS_ACTIONS_NORMALIZED = {
+    action: {
         normalize(requirement): substitute
         for requirement, substitute in requirements.items()
     }
-    for arch, requirements in SUBSTITUTED_REQUIREMENTS_WHEELS.items()
+    for action, requirements in SUBSTITUTED_REQUIREMENTS_ACTIONS.items()
 }
 
 IGNORE_PIN = ("colorlog>2.1,<3", "urllib3")
@@ -334,25 +349,29 @@ def comment_requirement(req: str) -> bool:
     return normalize_package_name(req) in EXCLUDED_REQUIREMENTS_ALL_NORMALIZED
 
 
-def process_wheel_requirement(req: str, arch: str) -> str:
-    """Process requirement for a specific architecture."""
+def process_action_requirement(req: str, action: str) -> str:
+    """Process requirement for a specific github action."""
     normalized_package_name = normalize_package_name(req)
-    if normalized_package_name in EXCLUDED_REQUIREMENTS_WHEELS_NORMALIZED[arch]:
+    if normalized_package_name in EXCLUDED_REQUIREMENTS_ACTIONS_NORMALIZED[action]:
         return f"# {req}"
-    if normalized_package_name in SUBSTITUTED_REQUIREMENTS_WHEELS_NORMALIZED[arch]:
-        return SUBSTITUTED_REQUIREMENTS_WHEELS_NORMALIZED[arch][normalized_package_name]
-    if normalized_package_name in INCLUDED_REQUIREMENTS_WHEELS_NORMALIZED:
+    if normalized_package_name in SUBSTITUTED_REQUIREMENTS_ACTIONS_NORMALIZED[action]:
+        return SUBSTITUTED_REQUIREMENTS_ACTIONS_NORMALIZED[action][
+            normalized_package_name
+        ]
+    if normalized_package_name in INCLUDED_REQUIREMENTS_ACTIONS_NORMALIZED[action]:
         return req
     if normalized_package_name in EXCLUDED_REQUIREMENTS_ALL_NORMALIZED:
         return f"# {req}"
     return req
 
 
-def process_core_wheel_requirement(req: str, arch: str) -> str:
-    """Process requirement for a specific architecture."""
+def process_core_action_requirement(req: str, action: str) -> str:
+    """Process requirement for a specific github action."""
     normalized_package_name = normalize_package_name(req)
-    if normalized_package_name in SUBSTITUTED_REQUIREMENTS_WHEELS_NORMALIZED[arch]:
-        return SUBSTITUTED_REQUIREMENTS_WHEELS_NORMALIZED[arch][normalized_package_name]
+    if normalized_package_name in SUBSTITUTED_REQUIREMENTS_ACTIONS_NORMALIZED[action]:
+        return SUBSTITUTED_REQUIREMENTS_ACTIONS_NORMALIZED[action][
+            normalized_package_name
+        ]
     return req
 
 
@@ -439,12 +458,12 @@ def generate_requirements_list(reqs: dict[str, list[str]]) -> str:
     return "".join(output)
 
 
-def generate_wheels_requirements_list(reqs: dict[str, list[str]], arch: str) -> str:
+def generate_action_requirements_list(reqs: dict[str, list[str]], action: str) -> str:
     """Generate a pip file based on requirements."""
     output = []
     for pkg, requirements in sorted(reqs.items(), key=itemgetter(0)):
         output.extend(f"\n# {req}" for req in sorted(requirements))
-        processed_pkg = process_wheel_requirement(pkg, arch)
+        processed_pkg = process_action_requirement(pkg, action)
         output.append(f"\n{processed_pkg}\n")
     return "".join(output)
 
@@ -463,7 +482,7 @@ def requirements_output() -> str:
     return "".join(output)
 
 
-def requirements_wheels_output(arch: str) -> str:
+def requirements_action_output(action: str) -> str:
     """Generate output for requirements."""
     output = [
         GENERATED_MESSAGE,
@@ -472,7 +491,7 @@ def requirements_wheels_output(arch: str) -> str:
         "# Home Assistant Core\n",
     ]
     for req in core_requirements():
-        processed_req = process_core_wheel_requirement(req, arch)
+        processed_req = process_core_action_requirement(req, action)
         output.append(f"{processed_req}\n")
 
     return "".join(output)
@@ -490,14 +509,14 @@ def requirements_all_output(reqs: dict[str, list[str]]) -> str:
     return "".join(output)
 
 
-def requirements_all_wheels_output(reqs: dict[str, list[str]], arch: str) -> str:
-    """Generate output for requirements_wheels."""
+def requirements_all_action_output(reqs: dict[str, list[str]], action: str) -> str:
+    """Generate output for requirements_all_{action}."""
     output = [
-        f"# Home Assistant Core, full dependency set for building {arch} wheels\n",
+        f"# Home Assistant Core, full dependency set for {action}\n",
         GENERATED_MESSAGE,
         "-r requirements.txt\n",
     ]
-    output.append(generate_wheels_requirements_list(reqs, arch))
+    output.append(generate_action_requirements_list(reqs, action))
 
     return "".join(output)
 
@@ -582,7 +601,7 @@ def diff_file(filename: str, content: str) -> list[str]:
     )
 
 
-def main(validate: bool, wheels: bool) -> int:
+def main(validate: bool, ci: bool) -> int:
     """Run the script."""
     if not os.path.isfile("requirements_all.txt"):
         print("Run this from HA root dir")
@@ -594,17 +613,20 @@ def main(validate: bool, wheels: bool) -> int:
         return 1
 
     reqs_file = requirements_output()
-    reqs_wheels_aarch64_file = requirements_wheels_output("aarch64")
-    reqs_wheels_armhf_file = requirements_wheels_output("armhf")
-    reqs_wheels_armv7_file = requirements_wheels_output("armv7")
-    reqs_wheels_amd64_file = requirements_wheels_output("amd64")
-    reqs_wheels_i386_file = requirements_wheels_output("i386")
+    reqs_wheels_aarch64_file = requirements_action_output("wheels_aarch64")
+    reqs_wheels_armhf_file = requirements_action_output("wheels_armhf")
+    reqs_wheels_armv7_file = requirements_action_output("wheels_armv7")
+    reqs_wheels_amd64_file = requirements_action_output("wheels_amd64")
+    reqs_wheels_i386_file = requirements_action_output("wheels_i386")
     reqs_all_file = requirements_all_output(data)
-    reqs_all_wheels_aarch64_file = requirements_all_wheels_output(data, "aarch64")
-    reqs_all_wheels_armhf_file = requirements_all_wheels_output(data, "armhf")
-    reqs_all_wheels_armv7_file = requirements_all_wheels_output(data, "armv7")
-    reqs_all_wheels_amd64_file = requirements_all_wheels_output(data, "amd64")
-    reqs_all_wheels_i386_file = requirements_all_wheels_output(data, "i386")
+    reqs_all_pytest_file = requirements_all_action_output(data, "pytest")
+    reqs_all_wheels_aarch64_file = requirements_all_action_output(
+        data, "wheels_aarch64"
+    )
+    reqs_all_wheels_armhf_file = requirements_all_action_output(data, "wheels_armhf")
+    reqs_all_wheels_armv7_file = requirements_all_action_output(data, "wheels_armv7")
+    reqs_all_wheels_amd64_file = requirements_all_action_output(data, "wheels_amd64")
+    reqs_all_wheels_i386_file = requirements_all_action_output(data, "wheels_i386")
     reqs_test_all_file = requirements_test_all_output(data)
     reqs_pre_commit_file = requirements_pre_commit_output()
     constraints = gather_constraints()
@@ -616,7 +638,7 @@ def main(validate: bool, wheels: bool) -> int:
         ("requirements_test_all.txt", reqs_test_all_file),
         ("homeassistant/package_constraints.txt", constraints),
     )
-    if wheels:
+    if ci:
         files = (
             *files,
             ("requirements_wheels_aarch64.txt", reqs_wheels_aarch64_file),
@@ -624,6 +646,7 @@ def main(validate: bool, wheels: bool) -> int:
             ("requirements_wheels_armv7.txt", reqs_wheels_armv7_file),
             ("requirements_wheels_amd64.txt", reqs_wheels_amd64_file),
             ("requirements_wheels_i386.txt", reqs_wheels_i386_file),
+            ("requirements_all_pytest.txt", reqs_all_pytest_file),
             ("requirements_all_wheels_aarch64.txt", reqs_all_wheels_aarch64_file),
             ("requirements_all_wheels_armhf.txt", reqs_all_wheels_armhf_file),
             ("requirements_all_wheels_armv7.txt", reqs_all_wheels_armv7_file),
@@ -658,5 +681,5 @@ def main(validate: bool, wheels: bool) -> int:
 
 if __name__ == "__main__":
     _VAL = sys.argv[-1] == "validate"
-    _WHEELS = sys.argv[-1] == "wheels"
-    sys.exit(main(_VAL, _WHEELS))
+    _CI = sys.argv[-1] == "ci"
+    sys.exit(main(_VAL, _CI))
