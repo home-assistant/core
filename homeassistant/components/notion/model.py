@@ -1,7 +1,8 @@
 """Define Notion model mixins."""
+
 from dataclasses import dataclass
 
-from aionotion.sensor.models import ListenerKind
+from aionotion.listener.models import ListenerKind
 
 
 @dataclass(frozen=True, kw_only=True)

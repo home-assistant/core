@@ -1,5 +1,6 @@
 """Tests for Shelly button platform."""
-from __future__ import annotations
+
+from unittest.mock import Mock
 
 import pytest
 
@@ -7,38 +8,54 @@ from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRE
 from homeassistant.components.shelly.const import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity_registry import EntityRegistry
 
 from . import init_integration
 
 
-async def test_block_button(hass: HomeAssistant, mock_block_device) -> None:
+async def test_block_button(
+    hass: HomeAssistant, mock_block_device: Mock, entity_registry: EntityRegistry
+) -> None:
     """Test block device reboot button."""
     await init_integration(hass, 1)
 
+    entity_id = "button.test_name_reboot"
+
     # reboot button
-    assert hass.states.get("button.test_name_reboot").state == STATE_UNKNOWN
+    assert hass.states.get(entity_id).state == STATE_UNKNOWN
+
+    entry = entity_registry.async_get(entity_id)
+    assert entry
+    assert entry.unique_id == "123456789ABC_reboot"
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
         SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.test_name_reboot"},
+        {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
     assert mock_block_device.trigger_reboot.call_count == 1
 
 
-async def test_rpc_button(hass: HomeAssistant, mock_rpc_device) -> None:
+async def test_rpc_button(
+    hass: HomeAssistant, mock_rpc_device: Mock, entity_registry: EntityRegistry
+) -> None:
     """Test rpc device OTA button."""
     await init_integration(hass, 2)
 
+    entity_id = "button.test_name_reboot"
+
     # reboot button
-    assert hass.states.get("button.test_name_reboot").state == STATE_UNKNOWN
+    assert hass.states.get(entity_id).state == STATE_UNKNOWN
+
+    entry = entity_registry.async_get(entity_id)
+    assert entry
+    assert entry.unique_id == "123456789ABC_reboot"
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
         SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.test_name_reboot"},
+        {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
     assert mock_rpc_device.trigger_reboot.call_count == 1
@@ -54,8 +71,9 @@ async def test_rpc_button(hass: HomeAssistant, mock_rpc_device) -> None:
 )
 async def test_migrate_unique_id(
     hass: HomeAssistant,
-    mock_block_device,
-    mock_rpc_device,
+    mock_block_device: Mock,
+    mock_rpc_device: Mock,
+    entity_registry: EntityRegistry,
     caplog: pytest.LogCaptureFixture,
     gen: int,
     old_unique_id: str,
@@ -65,8 +83,7 @@ async def test_migrate_unique_id(
     """Test migration of unique_id."""
     entry = await init_integration(hass, gen, skip_setup=True)
 
-    entity_registry = er.async_get(hass)
-    entity: er.RegistryEntry = entity_registry.async_get_or_create(
+    entity = entity_registry.async_get_or_create(
         suggested_object_id="test_name_reboot",
         disabled_by=None,
         domain=BUTTON_DOMAIN,

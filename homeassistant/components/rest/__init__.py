@@ -1,4 +1,5 @@
 """The rest component."""
+
 from __future__ import annotations
 
 import asyncio
@@ -40,6 +41,7 @@ from homeassistant.helpers.reload import (
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.util.async_ import create_eager_task
 
 from .const import (
     CONF_ENCODING,
@@ -129,10 +131,10 @@ async def _async_process_config(hass: HomeAssistant, config: ConfigType) -> bool
                 load_coroutines.append(load_coroutine)
 
     if refresh_coroutines:
-        await asyncio.gather(*refresh_coroutines)
+        await asyncio.gather(*(create_eager_task(coro) for coro in refresh_coroutines))
 
     if load_coroutines:
-        await asyncio.gather(*load_coroutines)
+        await asyncio.gather(*(create_eager_task(coro) for coro in load_coroutines))
 
     return True
 

@@ -1,6 +1,5 @@
 """Test const module."""
 
-
 from enum import Enum
 
 import pytest
@@ -18,10 +17,7 @@ from tests.common import (
 def _create_tuples(
     value: Enum | list[Enum], constant_prefix: str
 ) -> list[tuple[Enum, str]]:
-    result = []
-    for enum in value:
-        result.append((enum, constant_prefix))
-    return result
+    return [(enum, constant_prefix) for enum in value]
 
 
 def test_all() -> None:
@@ -131,7 +127,16 @@ def test_all() -> None:
         ],
         "PRECIPITATION_",
     )
-    + _create_tuples(const.UnitOfSpeed, "SPEED_")
+    + _create_tuples(
+        [
+            const.UnitOfSpeed.FEET_PER_SECOND,
+            const.UnitOfSpeed.METERS_PER_SECOND,
+            const.UnitOfSpeed.KILOMETERS_PER_HOUR,
+            const.UnitOfSpeed.KNOTS,
+            const.UnitOfSpeed.MILES_PER_HOUR,
+        ],
+        "SPEED_",
+    )
     + _create_tuples(
         [
             const.UnitOfVolumetricFlux.MILLIMETERS_PER_DAY,

@@ -1,4 +1,5 @@
 """Component providing binary sensors for UniFi Protect."""
+
 from __future__ import annotations
 
 import dataclasses
@@ -273,6 +274,15 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         ufp_value="is_glass_break_detection_on",
         ufp_perm=PermRequired.NO_WRITE,
     ),
+    ProtectBinaryEntityDescription(
+        key="track_person",
+        name="Tracking: Person",
+        icon="mdi:walk",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        ufp_required_field="is_ptz",
+        ufp_value="is_person_tracking_enabled",
+        ufp_perm=PermRequired.NO_WRITE,
+    ),
 )
 
 LIGHT_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
@@ -448,6 +458,7 @@ EVENT_SENSORS: tuple[ProtectBinaryEventEntityDescription, ...] = (
         name="Package Detected",
         icon="mdi:package-variant-closed",
         ufp_value="is_package_currently_detected",
+        entity_registry_enabled_default=False,
         ufp_required_field="can_detect_package",
         ufp_enabled="is_package_detection_on",
         ufp_event_obj="last_package_detect_event",
@@ -591,7 +602,8 @@ async def async_setup_entry(
     """Set up binary sensors for UniFi Protect integration."""
     data: ProtectData = hass.data[DOMAIN][entry.entry_id]
 
-    async def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
+    @callback
+    def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
         entities: list[ProtectDeviceEntity] = async_all_device_entities(
             data,
             ProtectDeviceBinarySensor,

@@ -1,4 +1,5 @@
 """Purge old data helper."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -9,8 +10,6 @@ import time
 from typing import TYPE_CHECKING
 
 from sqlalchemy.orm.session import Session
-
-import homeassistant.util.dt as dt_util
 
 from .db_schema import Events, States, StatesMeta
 from .models import DatabaseEngine
@@ -251,7 +250,7 @@ def _select_state_attributes_ids_to_purge(
     state_ids = set()
     attributes_ids = set()
     for state_id, attributes_id in session.execute(
-        find_states_to_purge(dt_util.utc_to_timestamp(purge_before), max_bind_vars)
+        find_states_to_purge(purge_before.timestamp(), max_bind_vars)
     ).all():
         state_ids.add(state_id)
         if attributes_id:
@@ -271,7 +270,7 @@ def _select_event_data_ids_to_purge(
     event_ids = set()
     data_ids = set()
     for event_id, data_id in session.execute(
-        find_events_to_purge(dt_util.utc_to_timestamp(purge_before), max_bind_vars)
+        find_events_to_purge(purge_before.timestamp(), max_bind_vars)
     ).all():
         event_ids.add(event_id)
         if data_id:
@@ -464,7 +463,7 @@ def _select_legacy_detached_state_and_attributes_and_data_ids_to_purge(
     """
     states = session.execute(
         find_legacy_detached_states_and_attributes_to_purge(
-            dt_util.utc_to_timestamp(purge_before), max_bind_vars
+            purge_before.timestamp(), max_bind_vars
         )
     ).all()
     _LOGGER.debug("Selected %s state ids to remove", len(states))
@@ -489,7 +488,7 @@ def _select_legacy_event_state_and_attributes_and_data_ids_to_purge(
     """
     events = session.execute(
         find_legacy_event_state_and_attributes_and_data_ids_to_purge(
-            dt_util.utc_to_timestamp(purge_before), max_bind_vars
+            purge_before.timestamp(), max_bind_vars
         )
     ).all()
     _LOGGER.debug("Selected %s event ids to remove", len(events))
@@ -695,7 +694,7 @@ def _purge_filtered_states(
     )
     if not to_purge:
         return True
-    state_ids, attributes_ids, event_ids = zip(*to_purge)
+    state_ids, attributes_ids, event_ids = zip(*to_purge, strict=False)
     filtered_event_ids = {id_ for id_ in event_ids if id_ is not None}
     _LOGGER.debug(
         "Selected %s state_ids to remove that should be filtered", len(state_ids)
@@ -736,7 +735,7 @@ def _purge_filtered_events(
     )
     if not to_purge:
         return True
-    event_ids, data_ids = zip(*to_purge)
+    event_ids, data_ids = zip(*to_purge, strict=False)
     event_ids_set = set(event_ids)
     _LOGGER.debug(
         "Selected %s event_ids to remove that should be filtered", len(event_ids_set)

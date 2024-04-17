@@ -1,4 +1,5 @@
 """Support for the Daikin HVAC."""
+
 from __future__ import annotations
 
 import logging
@@ -128,6 +129,7 @@ class DaikinClimate(ClimateEntity):
     _attr_target_temperature_step = 1
     _attr_fan_modes: list[str]
     _attr_swing_modes: list[str]
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, api: DaikinApi) -> None:
         """Initialize the climate device."""
@@ -176,9 +178,9 @@ class DaikinClimate(ClimateEntity):
             # temperature
             elif attr == ATTR_TEMPERATURE:
                 try:
-                    values[
-                        HA_ATTR_TO_DAIKIN[ATTR_TARGET_TEMPERATURE]
-                    ] = format_target_temperature(value)
+                    values[HA_ATTR_TO_DAIKIN[ATTR_TARGET_TEMPERATURE]] = (
+                        format_target_temperature(value)
+                    )
                 except ValueError:
                     _LOGGER.error("Invalid temperature %s", value)
 

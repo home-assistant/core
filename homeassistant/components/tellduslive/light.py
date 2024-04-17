@@ -1,4 +1,5 @@
 """Support for Tellstick lights using Tellstick Net."""
+
 import logging
 from typing import Any
 

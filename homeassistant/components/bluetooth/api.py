@@ -2,6 +2,7 @@
 
 These APIs are the only documented way to interact with the bluetooth integration.
 """
+
 from __future__ import annotations
 
 import asyncio

@@ -1,4 +1,5 @@
 """Config flow for Opower integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -15,10 +16,9 @@ from opower import (
 )
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 from .const import CONF_TOTP_SECRET, CONF_UTILITY, DOMAIN
@@ -55,19 +55,19 @@ async def _validate_login(
     return errors
 
 
-class OpowerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class OpowerConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Opower."""
 
     VERSION = 1
 
     def __init__(self) -> None:
         """Initialize a new OpowerConfigFlow."""
-        self.reauth_entry: config_entries.ConfigEntry | None = None
+        self.reauth_entry: ConfigEntry | None = None
         self.utility_info: dict[str, Any] | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
@@ -91,7 +91,7 @@ class OpowerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_mfa(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle MFA step."""
         assert self.utility_info is not None
         errors: dict[str, str] = {}
@@ -120,14 +120,16 @@ class OpowerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     @callback
-    def _async_create_opower_entry(self, data: dict[str, Any]) -> FlowResult:
+    def _async_create_opower_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
         """Create the config entry."""
         return self.async_create_entry(
             title=f"{data[CONF_UTILITY]} ({data[CONF_USERNAME]})",
             data=data,
         )
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle configuration by re-auth."""
         self.reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
@@ -136,7 +138,7 @@ class OpowerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Dialog that informs the user that reauth is required."""
         assert self.reauth_entry
         errors: dict[str, str] = {}

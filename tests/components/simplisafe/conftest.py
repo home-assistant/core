@@ -1,4 +1,5 @@
 """Define test fixtures for SimpliSafe."""
+
 import json
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -94,20 +95,26 @@ def reauth_config_fixture():
 @pytest.fixture(name="setup_simplisafe")
 async def setup_simplisafe_fixture(hass, api, config):
     """Define a fixture to set up SimpliSafe."""
-    with patch(
-        "homeassistant.components.simplisafe.config_flow.API.async_from_auth",
-        return_value=api,
-    ), patch(
-        "homeassistant.components.simplisafe.API.async_from_auth",
-        return_value=api,
-    ), patch(
-        "homeassistant.components.simplisafe.API.async_from_refresh_token",
-        return_value=api,
-    ), patch(
-        "homeassistant.components.simplisafe.SimpliSafe._async_start_websocket_loop"
-    ), patch(
-        "homeassistant.components.simplisafe.PLATFORMS",
-        [],
+    with (
+        patch(
+            "homeassistant.components.simplisafe.config_flow.API.async_from_auth",
+            return_value=api,
+        ),
+        patch(
+            "homeassistant.components.simplisafe.API.async_from_auth",
+            return_value=api,
+        ),
+        patch(
+            "homeassistant.components.simplisafe.API.async_from_refresh_token",
+            return_value=api,
+        ),
+        patch(
+            "homeassistant.components.simplisafe.SimpliSafe._async_start_websocket_loop"
+        ),
+        patch(
+            "homeassistant.components.simplisafe.PLATFORMS",
+            [],
+        ),
     ):
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()

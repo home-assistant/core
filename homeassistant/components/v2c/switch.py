@@ -1,4 +1,5 @@
 """Switch platform for V2C EVSE."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
@@ -27,25 +28,19 @@ from .entity import V2CBaseEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
-class V2CRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class V2CSwitchEntityDescription(SwitchEntityDescription):
+    """Describes a V2C EVSE switch entity."""
 
     value_fn: Callable[[TrydanData], bool]
     turn_on_fn: Callable[[Trydan], Coroutine[Any, Any, Any]]
     turn_off_fn: Callable[[Trydan], Coroutine[Any, Any, Any]]
 
 
-@dataclass(frozen=True)
-class V2CSwitchEntityDescription(SwitchEntityDescription, V2CRequiredKeysMixin):
-    """Describes a V2C EVSE switch entity."""
-
-
 TRYDAN_SWITCHES = (
     V2CSwitchEntityDescription(
         key="paused",
         translation_key="paused",
-        icon="mdi:pause",
         value_fn=lambda evse_data: evse_data.paused == PauseState.PAUSED,
         turn_on_fn=lambda evse: evse.pause(),
         turn_off_fn=lambda evse: evse.resume(),
@@ -53,7 +48,6 @@ TRYDAN_SWITCHES = (
     V2CSwitchEntityDescription(
         key="locked",
         translation_key="locked",
-        icon="mdi:lock",
         value_fn=lambda evse_data: evse_data.locked == LockState.ENABLED,
         turn_on_fn=lambda evse: evse.lock(),
         turn_off_fn=lambda evse: evse.unlock(),
@@ -61,7 +55,6 @@ TRYDAN_SWITCHES = (
     V2CSwitchEntityDescription(
         key="timer",
         translation_key="timer",
-        icon="mdi:timer",
         value_fn=lambda evse_data: evse_data.timer == ChargePointTimerState.TIMER_ON,
         turn_on_fn=lambda evse: evse.timer(),
         turn_off_fn=lambda evse: evse.timer_disable(),
@@ -69,7 +62,6 @@ TRYDAN_SWITCHES = (
     V2CSwitchEntityDescription(
         key="dynamic",
         translation_key="dynamic",
-        icon="mdi:gauge",
         value_fn=lambda evse_data: evse_data.dynamic == DynamicState.ENABLED,
         turn_on_fn=lambda evse: evse.dynamic(),
         turn_off_fn=lambda evse: evse.dynamic_disable(),

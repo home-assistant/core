@@ -1,4 +1,5 @@
 """Support for Xiaomi event entities."""
+
 from __future__ import annotations
 
 from dataclasses import replace
@@ -18,6 +19,11 @@ from . import format_discovered_event_class, format_event_dispatcher_name
 from .const import (
     DOMAIN,
     EVENT_CLASS_BUTTON,
+    EVENT_CLASS_CUBE,
+    EVENT_CLASS_DIMMER,
+    EVENT_CLASS_ERROR,
+    EVENT_CLASS_FINGERPRINT,
+    EVENT_CLASS_LOCK,
     EVENT_CLASS_MOTION,
     EVENT_PROPERTIES,
     EVENT_TYPE,
@@ -36,10 +42,88 @@ DESCRIPTIONS_BY_EVENT_CLASS = {
         ],
         device_class=EventDeviceClass.BUTTON,
     ),
+    EVENT_CLASS_CUBE: EventEntityDescription(
+        key=EVENT_CLASS_CUBE,
+        translation_key="cube",
+        event_types=[
+            "rotate_left",
+            "rotate_right",
+        ],
+    ),
+    EVENT_CLASS_DIMMER: EventEntityDescription(
+        key=EVENT_CLASS_DIMMER,
+        translation_key="dimmer",
+        event_types=[
+            "press",
+            "long_press",
+            "rotate_left",
+            "rotate_right",
+            "rotate_left_pressed",
+            "rotate_right_pressed",
+        ],
+    ),
+    EVENT_CLASS_ERROR: EventEntityDescription(
+        key=EVENT_CLASS_ERROR,
+        translation_key="error",
+        event_types=[
+            "frequent_unlocking_with_incorrect_password",
+            "frequent_unlocking_with_wrong_fingerprints",
+            "operation_timeout_password_input_timeout",
+            "lock_picking",
+            "reset_button_is_pressed",
+            "the_wrong_key_is_frequently_unlocked",
+            "foreign_body_in_the_keyhole",
+            "the_key_has_not_been_taken_out",
+            "error_nfc_frequently_unlocks",
+            "timeout_is_not_locked_as_required",
+            "failure_to_unlock_frequently_in_multiple_ways",
+            "unlocking_the_face_frequently_fails",
+            "failure_to_unlock_the_vein_frequently",
+            "hijacking_alarm",
+            "unlock_inside_the_door_after_arming",
+            "palmprints_frequently_fail_to_unlock",
+            "the_safe_was_moved",
+            "the_battery_level_is_less_than_10_percent",
+            "the_battery_is_less_than_5_percent",
+            "the_fingerprint_sensor_is_abnormal",
+            "the_accessory_battery_is_low",
+            "mechanical_failure",
+            "the_lock_sensor_is_faulty",
+        ],
+    ),
+    EVENT_CLASS_FINGERPRINT: EventEntityDescription(
+        key=EVENT_CLASS_FINGERPRINT,
+        translation_key="fingerprint",
+        event_types=[
+            "match_successful",
+            "match_failed",
+            "low_quality_too_light_fuzzy",
+            "insufficient_area",
+            "skin_is_too_dry",
+            "skin_is_too_wet",
+        ],
+    ),
+    EVENT_CLASS_LOCK: EventEntityDescription(
+        key=EVENT_CLASS_LOCK,
+        translation_key="lock",
+        event_types=[
+            "lock_outside_the_door",
+            "unlock_outside_the_door",
+            "lock_inside_the_door",
+            "unlock_inside_the_door",
+            "locked",
+            "turn_on_antilock",
+            "release_the_antilock",
+            "turn_on_child_lock",
+            "turn_off_child_lock",
+            "abnormal",
+        ],
+    ),
     EVENT_CLASS_MOTION: EventEntityDescription(
         key=EVENT_CLASS_MOTION,
         translation_key="motion",
         event_types=["motion_detected"],
+        device_class=EventDeviceClass.MOTION,
     ),
 }
 

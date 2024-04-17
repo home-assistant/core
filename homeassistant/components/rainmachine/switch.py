@@ -1,4 +1,5 @@
 """Component providing support for RainMachine programs and zones."""
+
 from __future__ import annotations
 
 import asyncio

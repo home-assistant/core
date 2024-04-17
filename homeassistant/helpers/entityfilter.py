@@ -1,4 +1,5 @@
 """Helper class to implement include/exclude of entities and domains."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -141,10 +142,9 @@ def _convert_globs_to_pattern(globs: list[str] | None) -> re.Pattern[str] | None
     if globs is None:
         return None
 
-    translated_patterns: list[str] = []
-    for glob in set(globs):
-        if pattern := fnmatch.translate(glob):
-            translated_patterns.append(pattern)
+    translated_patterns: list[str] = [
+        pattern for glob in set(globs) if (pattern := fnmatch.translate(glob))
+    ]
 
     if not translated_patterns:
         return None

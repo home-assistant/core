@@ -1,4 +1,5 @@
 """Tests for the Nina integration."""
+
 import json
 from typing import Any
 

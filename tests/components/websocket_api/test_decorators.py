@@ -1,4 +1,5 @@
 """Test decorators."""
+
 from homeassistant.components import http, websocket_api
 from homeassistant.core import HomeAssistant
 

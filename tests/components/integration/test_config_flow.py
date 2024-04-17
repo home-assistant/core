@@ -1,4 +1,5 @@
 """Test the Integration - Riemann sum integral config flow."""
+
 from unittest.mock import patch
 
 import pytest
@@ -11,7 +12,7 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 
-@pytest.mark.parametrize("platform", ("sensor",))
+@pytest.mark.parametrize("platform", ["sensor"])
 async def test_config_flow(hass: HomeAssistant, platform) -> None:
     """Test the config flow."""
     input_sensor_entity_id = "sensor.input"
@@ -19,7 +20,7 @@ async def test_config_flow(hass: HomeAssistant, platform) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
     with patch(
@@ -38,7 +39,7 @@ async def test_config_flow(hass: HomeAssistant, platform) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "My integration"
     assert result["data"] == {}
     assert result["options"] == {
@@ -73,7 +74,7 @@ def get_suggested(schema, key):
     raise Exception
 
 
-@pytest.mark.parametrize("platform", ("sensor",))
+@pytest.mark.parametrize("platform", ["sensor"])
 async def test_options(hass: HomeAssistant, platform) -> None:
     """Test reconfiguring."""
     # Setup the config entry
@@ -95,7 +96,7 @@ async def test_options(hass: HomeAssistant, platform) -> None:
     await hass.async_block_till_done()
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
     schema = result["data_schema"].schema
     assert get_suggested(schema, "round") == 1.0
@@ -106,7 +107,7 @@ async def test_options(hass: HomeAssistant, platform) -> None:
             "round": 2.0,
         },
     )
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         "method": "left",
         "name": "My integration",

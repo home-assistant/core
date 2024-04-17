@@ -1,4 +1,5 @@
 """The habitica integration."""
+
 import logging
 
 from habitipy.aio import HabitipyAsync

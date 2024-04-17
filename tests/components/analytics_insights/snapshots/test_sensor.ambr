@@ -12,12 +12,14 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': None,
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'sensor.homeassistant_analytics_hacs_custom',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -42,6 +44,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.homeassistant_analytics_hacs_custom',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '157481',
   })
@@ -59,12 +62,14 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': None,
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'sensor.homeassistant_analytics_myq',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -89,6 +94,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.homeassistant_analytics_myq',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
@@ -106,12 +112,14 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': None,
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'sensor.homeassistant_analytics_spotify',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -136,6 +144,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.homeassistant_analytics_spotify',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '24388',
   })
@@ -153,12 +162,14 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': None,
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'sensor.homeassistant_analytics_youtube',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -183,6 +194,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.homeassistant_analytics_youtube',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '339',
   })

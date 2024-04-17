@@ -1,4 +1,5 @@
 """Tests for the Jellyfin integration."""
+
 from unittest.mock import MagicMock
 
 from homeassistant.components.jellyfin.const import DOMAIN
@@ -66,6 +67,7 @@ async def test_invalid_auth(
 
     mock_config_entry.add_to_hass(hass)
     assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1

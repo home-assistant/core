@@ -1,10 +1,12 @@
 """Icon helper methods."""
+
 from __future__ import annotations
 
 import asyncio
 from collections.abc import Iterable
 from functools import lru_cache
 import logging
+import pathlib
 from typing import Any
 
 from homeassistant.core import HomeAssistant, callback
@@ -19,23 +21,17 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @callback
-def _component_icons_path(component: str, integration: Integration) -> str | None:
+def _component_icons_path(integration: Integration) -> pathlib.Path:
     """Return the icons json file location for a component.
 
     Ex: components/hue/icons.json
-    If component is just a single file, will return None.
     """
-    domain = component.rpartition(".")[-1]
-
-    # If it's a component that is just one file, we don't support icons
-    # Example custom_components/my_component.py
-    if integration.file_path.name != domain:
-        return None
-
-    return str(integration.file_path / "icons.json")
+    return integration.file_path / "icons.json"
 
 
-def _load_icons_files(icons_files: dict[str, str]) -> dict[str, dict[str, Any]]:
+def _load_icons_files(
+    icons_files: dict[str, pathlib.Path],
+) -> dict[str, dict[str, Any]]:
     """Load and parse icons.json files."""
     return {
         component: load_json_object(icons_file)
@@ -52,19 +48,15 @@ async def _async_get_component_icons(
     icons: dict[str, Any] = {}
 
     # Determine files to load
-    files_to_load = {}
-    for loaded in components:
-        domain = loaded.rpartition(".")[-1]
-        if (path := _component_icons_path(loaded, integrations[domain])) is None:
-            icons[loaded] = {}
-        else:
-            files_to_load[loaded] = path
+    files_to_load = {
+        comp: _component_icons_path(integrations[comp]) for comp in components
+    }
 
     # Load files
-    if files_to_load and (
-        load_icons_job := hass.async_add_executor_job(_load_icons_files, files_to_load)
-    ):
-        icons |= await load_icons_job
+    if files_to_load:
+        icons.update(
+            await hass.async_add_executor_job(_load_icons_files, files_to_load)
+        )
 
     return icons
 
@@ -104,14 +96,10 @@ class _IconsCache:
 
     async def _async_load(self, components: set[str]) -> None:
         """Populate the cache for a given set of components."""
-        _LOGGER.debug(
-            "Cache miss for: %s",
-            ", ".join(components),
-        )
+        _LOGGER.debug("Cache miss for: %s", components)
 
         integrations: dict[str, Integration] = {}
-        domains = list({loaded.rpartition(".")[-1] for loaded in components})
-        ints_or_excs = await async_get_integrations(self._hass, domains)
+        ints_or_excs = await async_get_integrations(self._hass, components)
         for domain, int_or_exc in ints_or_excs.items():
             if isinstance(int_or_exc, Exception):
                 raise int_or_exc
@@ -129,16 +117,13 @@ class _IconsCache:
         icons: dict[str, dict[str, Any]],
     ) -> None:
         """Extract resources into the cache."""
-        resource: dict[str, Any] | str
-        categories: set[str] = set()
-        for resource in icons.values():
-            categories.update(resource)
-
+        categories = {
+            category for component in icons.values() for category in component
+        }
         for category in categories:
-            new_resources = build_resources(icons, components, category)
-            for component, resource in new_resources.items():
-                category_cache: dict[str, Any] = self._cache.setdefault(category, {})
-                category_cache[component] = resource
+            self._cache.setdefault(category, {}).update(
+                build_resources(icons, components, category)
+            )
 
 
 async def async_get_icons(
@@ -154,9 +139,7 @@ async def async_get_icons(
     if integrations:
         components = set(integrations)
     else:
-        components = {
-            component for component in hass.config.components if "." not in component
-        }
+        components = hass.config.top_level_components
 
     if ICON_CACHE in hass.data:
         cache: _IconsCache = hass.data[ICON_CACHE]

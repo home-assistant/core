@@ -1,4 +1,5 @@
 """Dataclass models for the Anova integration."""
+
 from dataclasses import dataclass
 
 from anova_wifi import AnovaPrecisionCooker

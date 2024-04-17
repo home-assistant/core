@@ -1,5 +1,5 @@
 """Test the imap config flow."""
-import asyncio
+
 import ssl
 from unittest.mock import AsyncMock, patch
 
@@ -7,7 +7,7 @@ from aioimaplib import AioImapException
 import pytest
 import voluptuous as vol
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components.imap.const import (
     CONF_CHARSET,
     CONF_FOLDER,
@@ -29,11 +29,13 @@ MOCK_CONFIG = {
     "charset": "utf-8",
     "folder": "INBOX",
     "search": "UnSeen UnDeleted",
+    "event_message_data": ["text", "headers"],
 }
 
 MOCK_OPTIONS = {
     "folder": "INBOX",
     "search": "UnSeen UnDeleted",
+    "event_message_data": ["text", "headers"],
 }
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
@@ -44,7 +46,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
     with patch(
@@ -59,7 +61,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "email@email.com"
     assert result2["data"] == MOCK_CONFIG
     assert len(mock_setup_entry.mock_calls) == 1
@@ -73,7 +75,7 @@ async def test_entry_already_configured(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -89,7 +91,7 @@ async def test_entry_already_configured(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.ABORT
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "already_configured"
 
 
@@ -107,7 +109,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
             result["flow_id"], MOCK_CONFIG
         )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {
         CONF_USERNAME: "invalid_auth",
         CONF_PASSWORD: "invalid_auth",
@@ -117,7 +119,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("exc", "error"),
     [
-        (asyncio.TimeoutError, "cannot_connect"),
+        (TimeoutError, "cannot_connect"),
         (AioImapException(""), "cannot_connect"),
         (ssl.SSLError, "ssl_error"),
     ],
@@ -138,7 +140,7 @@ async def test_form_cannot_connect(
             result["flow_id"], MOCK_CONFIG
         )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": error}
 
     # make sure we do not lose the user input if somethings gets wrong
@@ -165,7 +167,7 @@ async def test_form_invalid_charset(hass: HomeAssistant) -> None:
             result["flow_id"], MOCK_CONFIG
         )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {CONF_CHARSET: "invalid_charset"}
 
 
@@ -183,7 +185,7 @@ async def test_form_invalid_folder(hass: HomeAssistant) -> None:
             result["flow_id"], MOCK_CONFIG
         )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {CONF_FOLDER: "invalid_folder"}
 
 
@@ -201,7 +203,7 @@ async def test_form_invalid_search(hass: HomeAssistant) -> None:
             result["flow_id"], MOCK_CONFIG
         )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {CONF_SEARCH: "invalid_search"}
 
 
@@ -222,7 +224,7 @@ async def test_reauth_success(hass: HomeAssistant, mock_setup_entry: AsyncMock) 
         data=MOCK_CONFIG,
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     assert result["description_placeholders"] == {CONF_USERNAME: "email@email.com"}
 
@@ -241,7 +243,7 @@ async def test_reauth_success(hass: HomeAssistant, mock_setup_entry: AsyncMock) 
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.ABORT
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -263,7 +265,7 @@ async def test_reauth_failed(hass: HomeAssistant) -> None:
         data=MOCK_CONFIG,
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
     with patch(
@@ -277,7 +279,7 @@ async def test_reauth_failed(hass: HomeAssistant) -> None:
             },
         )
 
-        assert result2["type"] == FlowResultType.FORM
+        assert result2["type"] is FlowResultType.FORM
         assert result2["errors"] == {
             CONF_USERNAME: "invalid_auth",
             CONF_PASSWORD: "invalid_auth",
@@ -301,12 +303,12 @@ async def test_reauth_failed_conn_error(hass: HomeAssistant) -> None:
         data=MOCK_CONFIG,
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
     with patch(
         "homeassistant.components.imap.config_flow.connect_to_server",
-        side_effect=asyncio.TimeoutError,
+        side_effect=TimeoutError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -315,7 +317,7 @@ async def test_reauth_failed_conn_error(hass: HomeAssistant) -> None:
             },
         )
 
-        assert result2["type"] == FlowResultType.FORM
+        assert result2["type"] is FlowResultType.FORM
         assert result2["errors"] == {"base": "cannot_connect"}
 
 
@@ -328,7 +330,7 @@ async def test_options_form(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
     new_config = MOCK_OPTIONS.copy()
@@ -344,7 +346,7 @@ async def test_options_form(hass: HomeAssistant) -> None:
             result["flow_id"], new_config
         )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {CONF_SEARCH: "invalid_search"}
 
     new_config["search"] = "UnSeen UnDeleted"
@@ -358,7 +360,7 @@ async def test_options_form(hass: HomeAssistant) -> None:
             new_config,
         )
         await hass.async_block_till_done()
-    assert result3["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["data"] == {}
     for key, value in new_config.items():
         assert entry.data[key] == value
@@ -381,7 +383,7 @@ async def test_key_options_in_options_form(hass: HomeAssistant) -> None:
     # so that it conflicts with that of entry1
     result = await hass.config_entries.options.async_init(entry2.entry_id)
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
     new_config = MOCK_OPTIONS.copy()
@@ -395,26 +397,26 @@ async def test_key_options_in_options_form(hass: HomeAssistant) -> None:
             new_config,
         )
         await hass.async_block_till_done()
-    assert result2["type"] == data_entry_flow.FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "already_configured"}
 
 
 @pytest.mark.parametrize(
     ("advanced_options", "assert_result"),
     [
-        ({"max_message_size": 8192}, data_entry_flow.FlowResultType.CREATE_ENTRY),
-        ({"max_message_size": 1024}, data_entry_flow.FlowResultType.FORM),
-        ({"max_message_size": 65536}, data_entry_flow.FlowResultType.FORM),
+        ({"max_message_size": 8192}, FlowResultType.CREATE_ENTRY),
+        ({"max_message_size": 1024}, FlowResultType.FORM),
+        ({"max_message_size": 65536}, FlowResultType.FORM),
         (
             {"custom_event_data_template": "{{ subject }}"},
-            data_entry_flow.FlowResultType.CREATE_ENTRY,
+            FlowResultType.CREATE_ENTRY,
         ),
         (
             {"custom_event_data_template": "{{ invalid_syntax"},
-            data_entry_flow.FlowResultType.FORM,
+            FlowResultType.FORM,
         ),
-        ({"enable_push": True}, data_entry_flow.FlowResultType.CREATE_ENTRY),
-        ({"enable_push": False}, data_entry_flow.FlowResultType.CREATE_ENTRY),
+        ({"enable_push": True}, FlowResultType.CREATE_ENTRY),
+        ({"enable_push": False}, FlowResultType.CREATE_ENTRY),
     ],
     ids=[
         "valid_message_size",
@@ -429,7 +431,7 @@ async def test_key_options_in_options_form(hass: HomeAssistant) -> None:
 async def test_advanced_options_form(
     hass: HomeAssistant,
     advanced_options: dict[str, str],
-    assert_result: data_entry_flow.FlowResultType,
+    assert_result: FlowResultType,
 ) -> None:
     """Test we show the advanced options."""
 
@@ -442,7 +444,7 @@ async def test_advanced_options_form(
         context={"source": config_entries.SOURCE_USER, "show_advanced_options": True},
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
     new_config = MOCK_OPTIONS.copy()
@@ -460,14 +462,14 @@ async def test_advanced_options_form(
             assert result2["type"] == assert_result
 
             if result2.get("errors") is not None:
-                assert assert_result == data_entry_flow.FlowResultType.FORM
+                assert assert_result is FlowResultType.FORM
             else:
                 # Check if entry was updated
                 for key, value in new_config.items():
                     assert entry.data[key] == value
     except vol.Invalid:
         # Check if form was expected with these options
-        assert assert_result == data_entry_flow.FlowResultType.FORM
+        assert assert_result is FlowResultType.FORM
 
 
 @pytest.mark.parametrize("cipher_list", ["python_default", "modern", "intermediate"])
@@ -483,7 +485,7 @@ async def test_config_flow_with_cipherlist_and_ssl_verify(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER, "show_advanced_options": True},
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
     with patch(
@@ -498,7 +500,39 @@ async def test_config_flow_with_cipherlist_and_ssl_verify(
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "email@email.com"
+    assert result2["data"] == config
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.parametrize("event_message_data", [[], ["headers"], ["text", "headers"]])
+async def test_config_flow_with_event_message_data(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, event_message_data: list
+) -> None:
+    """Test with different message data."""
+    config = MOCK_CONFIG.copy()
+    config["event_message_data"] = event_message_data
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER, "show_advanced_options": False},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] is None
+
+    with patch(
+        "homeassistant.components.imap.config_flow.connect_to_server"
+    ) as mock_client:
+        mock_client.return_value.search.return_value = (
+            "OK",
+            [b""],
+        )
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], config
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "email@email.com"
     assert result2["data"] == config
     assert len(mock_setup_entry.mock_calls) == 1
@@ -515,19 +549,19 @@ async def test_config_flow_from_with_advanced_settings(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER, "show_advanced_options": True},
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
     with patch(
         "homeassistant.components.imap.config_flow.connect_to_server",
-        side_effect=asyncio.TimeoutError,
+        side_effect=TimeoutError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], config
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"]["base"] == "cannot_connect"
     assert "ssl_cipher_list" in result2["data_schema"].schema
 
@@ -544,7 +578,7 @@ async def test_config_flow_from_with_advanced_settings(
         )
         await hass.async_block_till_done()
 
-    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == "email@email.com"
     assert result3["data"] == config
     assert len(mock_setup_entry.mock_calls) == 1

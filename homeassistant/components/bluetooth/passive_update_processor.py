@@ -1,4 +1,5 @@
 """Passive update processors for the Bluetooth integration."""
+
 from __future__ import annotations
 
 import dataclasses
@@ -115,11 +116,10 @@ def deserialize_entity_description(
 
 def serialize_entity_description(description: EntityDescription) -> dict[str, Any]:
     """Serialize an entity description."""
-    as_dict = dataclasses.asdict(description)
     return {
-        field.name: as_dict[field.name]
+        field.name: value
         for field in cached_fields(type(description))
-        if field.default != as_dict.get(field.name)
+        if (value := getattr(description, field.name)) != field.default
     }
 
 
@@ -128,9 +128,9 @@ class PassiveBluetoothDataUpdate(Generic[_T]):
     """Generic bluetooth data."""
 
     devices: dict[str | None, DeviceInfo] = dataclasses.field(default_factory=dict)
-    entity_descriptions: dict[
-        PassiveBluetoothEntityKey, EntityDescription
-    ] = dataclasses.field(default_factory=dict)
+    entity_descriptions: dict[PassiveBluetoothEntityKey, EntityDescription] = (
+        dataclasses.field(default_factory=dict)
+    )
     entity_names: dict[PassiveBluetoothEntityKey, str | None] = dataclasses.field(
         default_factory=dict
     )
@@ -271,7 +271,8 @@ async def async_setup(hass: HomeAssistant) -> None:
         await _async_save_processor_data(None)
 
     hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STOP, _async_save_processor_data_at_stop
+        EVENT_HOMEASSISTANT_STOP,
+        _async_save_processor_data_at_stop,
     )
 
 
@@ -373,11 +374,9 @@ class PassiveBluetoothProcessorCoordinator(
 
         try:
             update = self._update_method(service_info)
-        except Exception as err:  # pylint: disable=broad-except
+        except Exception:  # pylint: disable=broad-except
             self.last_update_success = False
-            self.logger.exception(
-                "Unexpected error updating %s data: %s", self.name, err
-            )
+            self.logger.exception("Unexpected error updating %s data", self.name)
             return
 
         if not self.last_update_success:
@@ -585,10 +584,10 @@ class PassiveBluetoothDataProcessor(Generic[_T]):
         """Handle a Bluetooth event."""
         try:
             new_data = self.update_method(update)
-        except Exception as err:  # pylint: disable=broad-except
+        except Exception:  # pylint: disable=broad-except
             self.last_update_success = False
             self.coordinator.logger.exception(
-                "Unexpected error updating %s data: %s", self.coordinator.name, err
+                "Unexpected error updating %s data", self.coordinator.name
             )
             return
 
@@ -649,7 +648,8 @@ class PassiveBluetoothProcessorEntity(Entity, Generic[_PassiveBluetoothDataProce
             self._attr_device_info[ATTR_NAME] = self.processor.coordinator.name
         if device_id is None:
             self._attr_device_info[ATTR_CONNECTIONS] = {(CONNECTION_BLUETOOTH, address)}
-        self._attr_name = processor.entity_names.get(entity_key)
+        if (name := processor.entity_names.get(entity_key)) is not None:
+            self._attr_name = name
 
     @property
     def available(self) -> bool:

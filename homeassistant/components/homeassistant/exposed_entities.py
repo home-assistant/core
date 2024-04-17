@@ -1,4 +1,5 @@
 """Control which entities are exposed to voice assistants."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
@@ -258,7 +259,7 @@ class ExposedEntities:
         if assistant in registry_entry.options:
             if "should_expose" in registry_entry.options[assistant]:
                 should_expose = registry_entry.options[assistant]["should_expose"]
-                return should_expose
+                return should_expose  # noqa: RET504
 
         if self.async_get_expose_new_entities(assistant):
             should_expose = self._is_default_exposed(entity_id, registry_entry)
@@ -285,7 +286,7 @@ class ExposedEntities:
         ) and assistant in exposed_entity.assistants:
             if "should_expose" in exposed_entity.assistants[assistant]:
                 should_expose = exposed_entity.assistants[assistant]["should_expose"]
-                return should_expose
+                return should_expose  # noqa: RET504
 
         if self.async_get_expose_new_entities(assistant):
             should_expose = self._is_default_exposed(entity_id, None)

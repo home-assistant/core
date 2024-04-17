@@ -1,4 +1,5 @@
 """Tests for the NZBGet integration."""
+
 from unittest.mock import patch
 
 from homeassistant.components.nzbget.const import DOMAIN

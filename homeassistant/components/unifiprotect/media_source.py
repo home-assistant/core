@@ -47,6 +47,7 @@ class SimpleEventType(str, Enum):
     RING = "ring"
     MOTION = "motion"
     SMART = "smart"
+    AUDIO = "audio"
 
 
 class IdentifierType(str, Enum):
@@ -64,21 +65,29 @@ class IdentifierTimeType(str, Enum):
     RANGE = "range"
 
 
-EVENT_MAP = {
-    SimpleEventType.ALL: None,
-    SimpleEventType.RING: EventType.RING,
-    SimpleEventType.MOTION: EventType.MOTION,
-    SimpleEventType.SMART: EventType.SMART_DETECT,
+EVENT_MAP: dict[SimpleEventType, set[EventType]] = {
+    SimpleEventType.ALL: {
+        EventType.RING,
+        EventType.MOTION,
+        EventType.SMART_DETECT,
+        EventType.SMART_DETECT_LINE,
+        EventType.SMART_AUDIO_DETECT,
+    },
+    SimpleEventType.RING: {EventType.RING},
+    SimpleEventType.MOTION: {EventType.MOTION},
+    SimpleEventType.SMART: {EventType.SMART_DETECT, EventType.SMART_DETECT_LINE},
+    SimpleEventType.AUDIO: {EventType.SMART_AUDIO_DETECT},
 }
 EVENT_NAME_MAP = {
     SimpleEventType.ALL: "All Events",
     SimpleEventType.RING: "Ring Events",
     SimpleEventType.MOTION: "Motion Events",
-    SimpleEventType.SMART: "Smart Detections",
+    SimpleEventType.SMART: "Object Detections",
+    SimpleEventType.AUDIO: "Audio Detections",
 }
 
 
-def get_ufp_event(event_type: SimpleEventType) -> EventType | None:
+def get_ufp_event(event_type: SimpleEventType) -> set[EventType]:
     """Get UniFi Protect event type from SimpleEventType."""
 
     return EVENT_MAP[event_type]
@@ -130,6 +139,51 @@ def _format_duration(duration: timedelta) -> str:
         formatted += f"{seconds}s "
 
     return formatted.strip()
+
+
+@callback
+def _get_object_name(event: Event | dict[str, Any]) -> str:
+    if isinstance(event, Event):
+        event = event.unifi_dict()
+
+    names = []
+    types = set(event["smartDetectTypes"])
+    metadata = event.get("metadata") or {}
+    for thumb in metadata.get("detectedThumbnails", []):
+        thumb_type = thumb.get("type")
+        if thumb_type not in types:
+            continue
+
+        types.remove(thumb_type)
+        if thumb_type == SmartDetectObjectType.VEHICLE.value:
+            attributes = thumb.get("attributes") or {}
+            color = attributes.get("color", {}).get("val", "")
+            vehicle_type = attributes.get("vehicleType", {}).get("val", "vehicle")
+            license_plate = metadata.get("licensePlate", {}).get("name")
+
+            name = f"{color} {vehicle_type}".strip().title()
+            if license_plate:
+                types.remove(SmartDetectObjectType.LICENSE_PLATE.value)
+                name = f"{name}: {license_plate}"
+            names.append(name)
+        else:
+            smart_type = SmartDetectObjectType(thumb_type)
+            names.append(smart_type.name.title().replace("_", " "))
+
+    for raw in types:
+        smart_type = SmartDetectObjectType(raw)
+        names.append(smart_type.name.title().replace("_", " "))
+
+    return ", ".join(sorted(names))
+
+
+@callback
+def _get_audio_name(event: Event | dict[str, Any]) -> str:
+    if isinstance(event, Event):
+        event = event.unifi_dict()
+
+    smart_types = [SmartDetectObjectType(e) for e in event["smartDetectTypes"]]
+    return ", ".join([s.name.title().replace("_", " ") for s in smart_types])
 
 
 class ProtectMediaSource(MediaSource):
@@ -365,9 +419,7 @@ class ProtectMediaSource(MediaSource):
 
         if camera is not None:
             title = f"{camera.display_name} > {title}"
-        title = f"{data.api.bootstrap.nvr.display_name} > {title}"
-
-        return title
+        return f"{data.api.bootstrap.nvr.display_name} > {title}"
 
     async def _build_event(
         self,
@@ -384,7 +436,7 @@ class ProtectMediaSource(MediaSource):
             end = event.end
         else:
             event_id = event["id"]
-            event_type = event["type"]
+            event_type = EventType(event["type"])
             start = from_js_time(event["start"])
             end = from_js_time(event["end"])
 
@@ -393,19 +445,14 @@ class ProtectMediaSource(MediaSource):
         title = dt_util.as_local(start).strftime("%x %X")
         duration = end - start
         title += f" {_format_duration(duration)}"
-        if event_type == EventType.RING.value:
+        if event_type in EVENT_MAP[SimpleEventType.RING]:
             event_text = "Ring Event"
-        elif event_type == EventType.MOTION.value:
+        elif event_type in EVENT_MAP[SimpleEventType.MOTION]:
             event_text = "Motion Event"
-        elif event_type == EventType.SMART_DETECT.value:
-            if isinstance(event, Event):
-                smart_types = event.smart_detect_types
-            else:
-                smart_types = [
-                    SmartDetectObjectType(e) for e in event["smartDetectTypes"]
-                ]
-            smart_type_names = [s.name.title().replace("_", " ") for s in smart_types]
-            event_text = f"Smart Detection - {','.join(smart_type_names)}"
+        elif event_type in EVENT_MAP[SimpleEventType.SMART]:
+            event_text = f"Object Detection - {_get_object_name(event)}"
+        elif event_type in EVENT_MAP[SimpleEventType.AUDIO]:
+            event_text = f"Audio Detection - {_get_audio_name(event)}"
         title += f" {event_text}"
 
         nvr = data.api.bootstrap.nvr
@@ -442,20 +489,13 @@ class ProtectMediaSource(MediaSource):
         start: datetime,
         end: datetime,
         camera_id: str | None = None,
-        event_type: EventType | None = None,
+        event_types: set[EventType] | None = None,
         reserve: bool = False,
     ) -> list[BrowseMediaSource]:
         """Build media source for a given range of time and event type."""
 
-        if event_type is None:
-            types = [
-                EventType.RING,
-                EventType.MOTION,
-                EventType.SMART_DETECT,
-            ]
-        else:
-            types = [event_type]
-
+        event_types = event_types or get_ufp_event(SimpleEventType.ALL)
+        types = list(event_types)
         sources: list[BrowseMediaSource] = []
         events = await data.api.get_events_raw(
             start=start, end=end, types=types, limit=data.max_events
@@ -515,9 +555,8 @@ class ProtectMediaSource(MediaSource):
             "start": now - timedelta(days=days),
             "end": now,
             "reserve": True,
+            "event_types": get_ufp_event(event_type),
         }
-        if event_type != SimpleEventType.ALL:
-            args["event_type"] = get_ufp_event(event_type)
 
         camera: Camera | None = None
         if camera_id != "all":
@@ -646,9 +685,8 @@ class ProtectMediaSource(MediaSource):
             "start": start_dt,
             "end": end_dt,
             "reserve": False,
+            "event_types": get_ufp_event(event_type),
         }
-        if event_type != SimpleEventType.ALL:
-            args["event_type"] = get_ufp_event(event_type)
 
         camera: Camera | None = None
         if camera_id != "all":
@@ -798,6 +836,9 @@ class ProtectMediaSource(MediaSource):
             source.children.append(
                 await self._build_events_type(data, camera_id, SimpleEventType.SMART)
             )
+            source.children.append(
+                await self._build_events_type(data, camera_id, SimpleEventType.AUDIO)
+            )
 
         if is_doorbell or has_smart:
             source.children.insert(
@@ -825,7 +866,7 @@ class ProtectMediaSource(MediaSource):
     async def _build_console(self, data: ProtectData) -> BrowseMediaSource:
         """Build media source for a single UniFi Protect NVR."""
 
-        base = BrowseMediaSource(
+        return BrowseMediaSource(
             domain=DOMAIN,
             identifier=f"{data.api.bootstrap.nvr.id}:browse",
             media_class=MediaClass.DIRECTORY,
@@ -836,8 +877,6 @@ class ProtectMediaSource(MediaSource):
             children_media_class=MediaClass.VIDEO,
             children=await self._build_cameras(data),
         )
-
-        return base
 
     async def _build_sources(self) -> BrowseMediaSource:
         """Return all media source for all UniFi Protect NVRs."""

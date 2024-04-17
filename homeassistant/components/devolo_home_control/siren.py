@@ -1,4 +1,5 @@
 """Platform for siren integration."""
+
 from typing import Any
 
 from devolo_home_control_api.devices.zwave import Zwave
@@ -17,21 +18,18 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Get all binary sensor and multi level sensor devices and setup them via config entry."""
-    entities = []
 
-    for gateway in hass.data[DOMAIN][entry.entry_id]["gateways"]:
-        for device in gateway.multi_level_switch_devices:
-            for multi_level_switch in device.multi_level_switch_property:
-                if multi_level_switch.startswith("devolo.SirenMultiLevelSwitch"):
-                    entities.append(
-                        DevoloSirenDeviceEntity(
-                            homecontrol=gateway,
-                            device_instance=device,
-                            element_uid=multi_level_switch,
-                        )
-                    )
-
-    async_add_entities(entities)
+    async_add_entities(
+        DevoloSirenDeviceEntity(
+            homecontrol=gateway,
+            device_instance=device,
+            element_uid=multi_level_switch,
+        )
+        for gateway in hass.data[DOMAIN][entry.entry_id]["gateways"]
+        for device in gateway.multi_level_switch_devices
+        for multi_level_switch in device.multi_level_switch_property
+        if multi_level_switch.startswith("devolo.SirenMultiLevelSwitch")
+    )
 
 
 class DevoloSirenDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, SirenEntity):

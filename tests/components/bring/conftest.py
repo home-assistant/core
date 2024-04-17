@@ -1,6 +1,7 @@
 """Common fixtures for the Bring! tests."""
+
 from collections.abc import Generator
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -16,7 +17,7 @@ UUID = "00000000-00000000-00000000-00000000"
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[Mock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock, None, None]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.bring.async_setup_entry", return_value=True
@@ -25,19 +26,22 @@ def mock_setup_entry() -> Generator[Mock, None, None]:
 
 
 @pytest.fixture
-def mock_bring_client() -> Generator[Mock, None, None]:
+def mock_bring_client() -> Generator[AsyncMock, None, None]:
     """Mock a Bring client."""
-    with patch(
-        "homeassistant.components.bring.Bring",
-        autospec=True,
-    ) as mock_client, patch(
-        "homeassistant.components.bring.config_flow.Bring",
-        new=mock_client,
+    with (
+        patch(
+            "homeassistant.components.bring.Bring",
+            autospec=True,
+        ) as mock_client,
+        patch(
+            "homeassistant.components.bring.config_flow.Bring",
+            new=mock_client,
+        ),
     ):
         client = mock_client.return_value
         client.uuid = UUID
         client.login.return_value = True
-        client.loadLists.return_value = {"lists": []}
+        client.load_lists.return_value = {"lists": []}
         yield client
 
 

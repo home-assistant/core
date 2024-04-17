@@ -1,4 +1,5 @@
 """Test fixtures for aemet."""
+
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 

@@ -1,4 +1,5 @@
 """Support for MQTT lawn mowers."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -173,7 +174,7 @@ class MqttLawnMower(MqttEntity, LawnMowerEntity, RestoreEntity):
                 self._attr_activity = LawnMowerActivity(payload)
             except ValueError:
                 _LOGGER.error(
-                    "Invalid activity for %s: '%s' (valid activies: %s)",
+                    "Invalid activity for %s: '%s' (valid activities: %s)",
                     self.entity_id,
                     payload,
                     [option.value for option in LawnMowerActivity],

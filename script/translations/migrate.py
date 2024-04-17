@@ -1,4 +1,5 @@
 """Migrate things."""
+
 import json
 import pathlib
 from pprint import pprint
@@ -268,9 +269,9 @@ def find_frontend_states():
             for device_class, dev_class_states in domain_to_write.items():
                 to_device_class = "_" if device_class == "default" else device_class
                 for key in dev_class_states:
-                    to_migrate[
-                        f"{from_key_base}::{device_class}::{key}"
-                    ] = f"{to_key_base}::{to_device_class}::{key}"
+                    to_migrate[f"{from_key_base}::{device_class}::{key}"] = (
+                        f"{to_key_base}::{to_device_class}::{key}"
+                    )
 
             # Rewrite "default" device class to _
             if "default" in domain_to_write:

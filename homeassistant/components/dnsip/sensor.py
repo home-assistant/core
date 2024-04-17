@@ -1,4 +1,5 @@
 """Get your own public IP address or that of any host."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -52,8 +53,8 @@ async def async_setup_entry(
 class WanIpSensor(SensorEntity):
     """Implementation of a DNS IP sensor."""
 
-    _attr_icon = "mdi:web"
     _attr_has_entity_name = True
+    _attr_translation_key = "dnsip"
 
     def __init__(
         self,

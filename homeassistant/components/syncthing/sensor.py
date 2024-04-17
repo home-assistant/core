@@ -1,4 +1,5 @@
 """Support for monitoring the Syncthing instance."""
+
 import aiosyncthing
 
 from homeassistant.components.sensor import SensorEntity
@@ -13,9 +14,6 @@ from homeassistant.helpers.event import async_track_time_interval
 from .const import (
     DOMAIN,
     FOLDER_PAUSED_RECEIVED,
-    FOLDER_SENSOR_ALERT_ICON,
-    FOLDER_SENSOR_DEFAULT_ICON,
-    FOLDER_SENSOR_ICONS,
     FOLDER_SUMMARY_RECEIVED,
     SCAN_INTERVAL,
     SERVER_AVAILABLE,
@@ -57,6 +55,7 @@ class FolderSensor(SensorEntity):
     """A Syncthing folder sensor."""
 
     _attr_should_poll = False
+    _attr_translation_key = "syncthing"
 
     STATE_ATTRIBUTES = {
         "errors": "errors",
@@ -115,15 +114,6 @@ class FolderSensor(SensorEntity):
     def available(self):
         """Could the device be accessed during the last update call."""
         return self._state is not None
-
-    @property
-    def icon(self):
-        """Return the icon for this sensor."""
-        if self._state is None:
-            return FOLDER_SENSOR_DEFAULT_ICON
-        if self.state in FOLDER_SENSOR_ICONS:
-            return FOLDER_SENSOR_ICONS[self.state]
-        return FOLDER_SENSOR_ALERT_ICON
 
     @property
     def extra_state_attributes(self):

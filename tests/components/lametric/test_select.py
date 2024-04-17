@@ -1,4 +1,5 @@
 """Tests for the LaMetric select platform."""
+
 from unittest.mock import MagicMock
 
 from demetriek import BrightnessMode, LaMetricConnectionError, LaMetricError
@@ -13,7 +14,6 @@ from homeassistant.components.select import (
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
-    ATTR_ICON,
     ATTR_OPTION,
     STATE_UNAVAILABLE,
     EntityCategory,
@@ -37,7 +37,6 @@ async def test_brightness_mode(
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME) == "Frenck's LaMetric Brightness mode"
     )
-    assert state.attributes.get(ATTR_ICON) == "mdi:brightness-auto"
     assert state.attributes.get(ATTR_OPTIONS) == ["auto", "manual"]
     assert state.state == BrightnessMode.AUTO
 
