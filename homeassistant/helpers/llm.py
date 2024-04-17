@@ -19,6 +19,7 @@ from . import (
     area_registry as ar,
     config_validation as cv,
     entity_registry as er,
+    floor_registry as fr,
     intent,
     template,
 )
@@ -26,6 +27,8 @@ from . import (
 _LOGGER = logging.getLogger(__name__)
 
 DATA_KEY = "llm_tool"
+
+NO_PARAMETERS = {"type": "object", "properties": {}, "required": []}
 
 
 class Tool:
@@ -44,8 +47,12 @@ class Tool:
             "parameters": self.parameters,
         }
 
-    def __init__(self, name: str, description: str, parameters: dict[str, Any]) -> None:
+    def __init__(
+        self, name: str, description: str, parameters: dict[str, Any] | None = None
+    ) -> None:
         """Init the class."""
+        if parameters is None:
+            parameters = NO_PARAMETERS
         self.name = name
         self.description = description
         self.parameters = parameters
@@ -262,6 +269,8 @@ def _format_state(hass: HomeAssistant, entity_state: State) -> dict[str, Any]:
     if registry_entry := entity_registry.async_get(entity_state.entity_id):
         if area_name := template.area_name(hass, entity_state.entity_id):
             result["area"] = area_name
+        if floor_name := template.floor_name(hass, entity_state.entity_id):
+            result["floor"] = floor_name
         if len(registry_entry.aliases):
             result["aliases"] = list(registry_entry.aliases)
 
@@ -349,12 +358,36 @@ class IntentTool(Tool):
 
                     for area_alias in maybe_area.aliases:
                         if id_or_name == area_alias.casefold():
-                            return maybe_area
+                            area = maybe_area
+                            break
             if area:
                 slots["area"]["value"] = area.id
                 slots["area"]["text"] = area.name
             else:
                 slots["area"]["text"] = id_or_name
+
+        if "floor" in slots:
+            floors = fr.async_get(hass)
+            id_or_name = slots["floor"]["value"]
+
+            floor = floors.async_get_floor(
+                id_or_name
+            ) or floors.async_get_floor_by_name(id_or_name)
+            if not floor:
+                # Check floor aliases
+                for maybe_floor in floors.floors.values():
+                    if not maybe_floor.aliases:
+                        continue
+
+                    for floor_alias in maybe_floor.aliases:
+                        if id_or_name == floor_alias.casefold():
+                            floor = maybe_floor
+                            break
+            if floor:
+                slots["floor"]["value"] = floor.floor_id
+                slots["floor"]["text"] = floor.name
+            else:
+                slots["floor"]["text"] = id_or_name
 
         intent_response = await intent.async_handle(
             hass, platform, self.name, slots, text_input, context, language, assistant
