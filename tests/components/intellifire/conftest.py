@@ -103,7 +103,6 @@ def mock_login_with_bad_credentials() -> Generator[AsyncMock, None, None]:
             side_effect_func.called = True
             raise LoginError
         # Simulate async function
-        return
 
     with patch(
         "homeassistant.components.intellifire.config_flow.IntelliFireCloudInterface.login_with_credentials",
