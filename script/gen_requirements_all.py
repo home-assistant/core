@@ -61,7 +61,7 @@ INCLUDED_REQUIREMENTS_WHEELS = (
     "pyuserinput",
 )
 
-# Requirements to exclude when running github actions.
+# Excluded requirements to include when running github actions.
 # Requirements listed in EXCLUDED_REQUIREMENTS_CI will be included in
 # requirements_all_{action}.txt
 INCLUDED_REQUIREMENTS_ACTIONS = {
