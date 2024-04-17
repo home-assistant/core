@@ -145,5 +145,5 @@ async def test_form_import_errors(
             data=TEST_IMPORT_FULL,
         )
 
-    assert result["type"] == FlowResultType.FORM
-    assert result["errors"] == {"base": error_type}
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == error_type
