@@ -544,8 +544,12 @@ async def test_options_add_remove_light_flow(
     )
 
 
+@pytest.mark.parametrize("keypad_address", ["[02:08:03:01]", "[02:08:03]"])
 async def test_options_add_remove_keypad_flow(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_homeworks: MagicMock
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_homeworks: MagicMock,
+    keypad_address: str,
 ) -> None:
     """Test options flow to add and remove a keypad."""
     mock_config_entry.add_to_hass(hass)
@@ -566,7 +570,7 @@ async def test_options_add_remove_keypad_flow(
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            CONF_ADDR: "[02:08:03:01]",
+            CONF_ADDR: keypad_address,
             CONF_NAME: "Hall Keypad",
         },
     )
@@ -592,7 +596,7 @@ async def test_options_add_remove_keypad_flow(
                 ],
                 "name": "Foyer Keypad",
             },
-            {"addr": "[02:08:03:01]", "buttons": [], "name": "Hall Keypad"},
+            {"addr": keypad_address, "buttons": [], "name": "Hall Keypad"},
         ],
         "port": 1234,
     }
@@ -612,7 +616,7 @@ async def test_options_add_remove_keypad_flow(
     assert result["step_id"] == "remove_keypad"
     assert result["data_schema"].schema["index"].options == {
         "0": "Foyer Keypad ([02:08:02:01])",
-        "1": "Hall Keypad ([02:08:03:01])",
+        "1": f"Hall Keypad ({keypad_address})",
     }
 
     result = await hass.config_entries.options.async_configure(
@@ -625,7 +629,7 @@ async def test_options_add_remove_keypad_flow(
             {"addr": "[02:08:01:01]", "name": "Foyer Sconces", "rate": 1.0},
         ],
         "host": "192.168.0.1",
-        "keypads": [{"addr": "[02:08:03:01]", "buttons": [], "name": "Hall Keypad"}],
+        "keypads": [{"addr": keypad_address, "buttons": [], "name": "Hall Keypad"}],
         "port": 1234,
     }
     await hass.async_block_till_done()
