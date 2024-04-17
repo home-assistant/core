@@ -41,7 +41,7 @@ def adapter_display_info(adapter: str, details: AdapterDetails) -> str:
     """Return the adapter display info."""
     name = adapter_human_name(adapter, details[ADAPTER_ADDRESS])
     model = adapter_model(details)
-    manufacturer = details[ADAPTER_MANUFACTURER]
+    manufacturer = details[ADAPTER_MANUFACTURER] or "Unknown"
     return f"{name} {model} {manufacturer}"
 
 
