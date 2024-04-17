@@ -214,8 +214,7 @@ class _TranslationCache:
         languages = [LOCALE_EN] if language == LOCALE_EN else [LOCALE_EN, language]
 
         integrations: dict[str, Integration] = {}
-        domains = {loaded.partition(".")[0] for loaded in components}
-        ints_or_excs = await async_get_integrations(self.hass, domains)
+        ints_or_excs = await async_get_integrations(self.hass, components)
         for domain, int_or_exc in ints_or_excs.items():
             if isinstance(int_or_exc, Exception):
                 _LOGGER.warning(
@@ -346,7 +345,7 @@ async def async_get_translations(
     elif integrations is not None:
         components = set(integrations)
     else:
-        components = {comp for comp in hass.config.components if "." not in comp}
+        components = hass.config.top_level_components
 
     return await _async_get_translations_cache(hass).async_fetch(
         language, category, components
@@ -365,11 +364,7 @@ def async_get_cached_translations(
     If integration is specified, return translations for it.
     Otherwise, default to all loaded integrations.
     """
-    if integration is not None:
-        components = {integration}
-    else:
-        components = {comp for comp in hass.config.components if "." not in comp}
-
+    components = {integration} if integration else hass.config.top_level_components
     return _async_get_translations_cache(hass).get_cached(
         language, category, components
     )
