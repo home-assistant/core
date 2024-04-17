@@ -2670,6 +2670,41 @@ class ServiceRegistry:
         return await self._hass.async_add_executor_job(target, service_call)
 
 
+class _ComponentSet(set[str]):
+    """Set of loaded components.
+
+    This set contains both top level components and platforms.
+
+    Examples:
+    `light`, `switch`, `hue`, `mjpeg.camera`, `universal.media_player`,
+    `homeassistant.scene`
+
+    The top level components set only contains the top level components.
+
+    """
+
+    def __init__(self, top_level_components: set[str]) -> None:
+        """Initialize the component set."""
+        self._top_level_components = top_level_components
+
+    def add(self, component: str) -> None:
+        """Add a component to the store."""
+        if "." not in component:
+            self._top_level_components.add(component)
+        return super().add(component)
+
+    def remove(self, component: str) -> None:
+        """Remove a component from the store."""
+        if "." in component:
+            raise ValueError("_ComponentSet does not support removing sub-components")
+        self._top_level_components.remove(component)
+        return super().remove(component)
+
+    def discard(self, component: str) -> None:
+        """Remove a component from the store."""
+        raise NotImplementedError("_ComponentSet does not support discard, use remove")
+
+
 class Config:
     """Configuration settings for Home Assistant."""
 
@@ -2702,8 +2737,13 @@ class Config:
         # List of packages to skip when installing requirements on startup
         self.skip_pip_packages: list[str] = []
 
-        # List of loaded components
-        self.components: set[str] = set()
+        # Set of loaded top level components
+        # This set is updated by _ComponentSet
+        # and should not be modified directly
+        self.top_level_components: set[str] = set()
+
+        # Set of loaded components
+        self.components: _ComponentSet = _ComponentSet(self.top_level_components)
 
         # API (HTTP) server configuration
         self.api: ApiConfig | None = None
