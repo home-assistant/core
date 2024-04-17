@@ -7,6 +7,7 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from pytest_unordered import unordered
 import voluptuous as vol
 
 # To prevent circular import when running just this file
@@ -16,6 +17,7 @@ import homeassistant.components  # noqa: F401
 from homeassistant.components.group import DOMAIN as DOMAIN_GROUP, Group
 from homeassistant.components.logger import DOMAIN as DOMAIN_LOGGER
 from homeassistant.components.shell_command import DOMAIN as DOMAIN_SHELL_COMMAND
+from homeassistant.components.system_health import DOMAIN as DOMAIN_SYSTEM_HEALTH
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ENTITY_MATCH_ALL,
@@ -266,6 +268,120 @@ def floor_area_mock(hass: HomeAssistant) -> None:
     )
 
 
+@pytest.fixture
+def label_mock(hass: HomeAssistant) -> None:
+    """Mock including label info."""
+    hass.states.async_set("light.bowl", STATE_ON)
+    hass.states.async_set("light.ceiling", STATE_OFF)
+    hass.states.async_set("light.kitchen", STATE_OFF)
+
+    area_with_labels = ar.AreaEntry(
+        id="area-with-labels",
+        name="Area with labels",
+        aliases={},
+        normalized_name="with_labels",
+        floor_id=None,
+        icon=None,
+        labels={"label_area"},
+        picture=None,
+    )
+    area_without_labels = ar.AreaEntry(
+        id="area-no-labels",
+        name="Area without labels",
+        aliases={},
+        normalized_name="without_labels",
+        floor_id=None,
+        icon=None,
+        labels=set(),
+        picture=None,
+    )
+    mock_area_registry(
+        hass,
+        {
+            area_with_labels.id: area_with_labels,
+            area_without_labels.id: area_without_labels,
+        },
+    )
+
+    device_has_label1 = dr.DeviceEntry(labels={"label1"})
+    device_has_label2 = dr.DeviceEntry(labels={"label2"})
+    device_has_labels = dr.DeviceEntry(
+        labels={"label1", "label2"}, area_id=area_with_labels.id
+    )
+    device_no_labels = dr.DeviceEntry(
+        id="device-no-labels", area_id=area_without_labels.id
+    )
+
+    mock_device_registry(
+        hass,
+        {
+            device_has_label1.id: device_has_label1,
+            device_has_label2.id: device_has_label2,
+            device_has_labels.id: device_has_labels,
+            device_no_labels.id: device_no_labels,
+        },
+    )
+
+    entity_with_my_label = er.RegistryEntry(
+        entity_id="light.with_my_label",
+        unique_id="with_my_label",
+        platform="test",
+        labels={"my-label"},
+    )
+    hidden_entity_with_my_label = er.RegistryEntry(
+        entity_id="light.hidden_with_my_label",
+        unique_id="hidden_with_my_label",
+        platform="test",
+        labels={"my-label"},
+        hidden_by=er.RegistryEntryHider.USER,
+    )
+    config_entity_with_my_label = er.RegistryEntry(
+        entity_id="light.config_with_my_label",
+        unique_id="config_with_my_label",
+        platform="test",
+        labels={"my-label"},
+        entity_category=EntityCategory.CONFIG,
+    )
+    entity_with_label1_from_device = er.RegistryEntry(
+        entity_id="light.with_label1_from_device",
+        unique_id="with_label1_from_device",
+        platform="test",
+        device_id=device_has_label1.id,
+    )
+    entity_with_label1_and_label2_from_device = er.RegistryEntry(
+        entity_id="light.with_label1_and_label2_from_device",
+        unique_id="with_label1_and_label2_from_device",
+        platform="test",
+        labels={"label1"},
+        device_id=device_has_label2.id,
+    )
+    entity_with_labels_from_device = er.RegistryEntry(
+        entity_id="light.with_labels_from_device",
+        unique_id="with_labels_from_device",
+        platform="test",
+        device_id=device_has_labels.id,
+    )
+    entity_with_no_labels = er.RegistryEntry(
+        entity_id="light.no_labels",
+        unique_id="no_labels",
+        platform="test",
+        device_id=device_no_labels.id,
+    )
+
+    mock_registry(
+        hass,
+        {
+            config_entity_with_my_label.entity_id: config_entity_with_my_label,
+            entity_with_label1_and_label2_from_device.entity_id: entity_with_label1_and_label2_from_device,
+            entity_with_label1_from_device.entity_id: entity_with_label1_from_device,
+            entity_with_labels_from_device.entity_id: entity_with_labels_from_device,
+            entity_with_my_label.entity_id: entity_with_my_label,
+            entity_with_no_labels.entity_id: entity_with_no_labels,
+            hidden_entity_with_my_label.entity_id: hidden_entity_with_my_label,
+        },
+    )
+
+
 async def test_call_from_config(hass: HomeAssistant) -> None:
     """Test the sync wrapper of service.async_call_from_config."""
     calls = async_mock_service(hass, "test_domain", "test_service")
@@ -487,7 +603,7 @@ async def test_service_call_entry_id(
     assert dict(calls[0].data) == {"entity_id": ["hello.world"]}
 
 
-@pytest.mark.parametrize("target", ("all", "none"))
+@pytest.mark.parametrize("target", ["all", "none"])
 async def test_service_call_all_none(hass: HomeAssistant, target) -> None:
     """Test service call targeting all."""
     calls = async_mock_service(hass, "test_domain", "test_service")
@@ -629,11 +745,49 @@ async def test_extract_entity_ids_from_floor(hass: HomeAssistant) -> None:
     )
 
 
+@pytest.mark.usefixtures("label_mock")
+async def test_extract_entity_ids_from_labels(hass: HomeAssistant) -> None:
+    """Test extract_entity_ids method with labels."""
+    call = ServiceCall("light", "turn_on", {"label_id": "my-label"})
+
+    assert {
+        "light.with_my_label",
+    } == await service.async_extract_entity_ids(hass, call)
+
+    call = ServiceCall("light", "turn_on", {"label_id": "label1"})
+
+    assert {
+        "light.with_label1_from_device",
+        "light.with_labels_from_device",
+        "light.with_label1_and_label2_from_device",
+    } == await service.async_extract_entity_ids(hass, call)
+
+    call = ServiceCall("light", "turn_on", {"label_id": ["label2"]})
+
+    assert {
+        "light.with_labels_from_device",
+        "light.with_label1_and_label2_from_device",
+    } == await service.async_extract_entity_ids(hass, call)
+
+    call = ServiceCall("light", "turn_on", {"label_id": ["label_area"]})
+
+    assert {
+        "light.with_labels_from_device",
+    } == await service.async_extract_entity_ids(hass, call)
+
+    assert (
+        await service.async_extract_entity_ids(
+            hass, ServiceCall("light", "turn_on", {"label_id": ENTITY_MATCH_NONE})
+        )
+        == set()
+    )
+
+
 async def test_async_get_all_descriptions(hass: HomeAssistant) -> None:
     """Test async_get_all_descriptions."""
     group_config = {DOMAIN_GROUP: {}}
     assert await async_setup_component(hass, DOMAIN_GROUP, group_config)
-    assert await async_setup_component(hass, "system_health", {})
+    assert await async_setup_component(hass, DOMAIN_SYSTEM_HEALTH, {})
 
     with patch(
         "homeassistant.helpers.service._load_services_files",
@@ -643,17 +797,20 @@ async def test_async_get_all_descriptions(hass: HomeAssistant) -> None:
 
     # Test we only load services.yaml for integrations with services.yaml
     # And system_health has no services
-    assert proxy_load_services_files.mock_calls[0][1][1] == [
-        await async_get_integration(hass, "group")
-    ]
+    assert proxy_load_services_files.mock_calls[0][1][1] == unordered(
+        [
+            await async_get_integration(hass, DOMAIN_GROUP),
+            await async_get_integration(hass, "http"),  # system_health requires http
+        ]
+    )
 
-    assert len(descriptions) == 1
-
-    assert "description" in descriptions["group"]["reload"]
-    assert "fields" in descriptions["group"]["reload"]
+    assert len(descriptions) == 2
+    assert DOMAIN_GROUP in descriptions
+    assert "description" in descriptions[DOMAIN_GROUP]["reload"]
+    assert "fields" in descriptions[DOMAIN_GROUP]["reload"]
 
     # Does not have services
-    assert "system_health" not in descriptions
+    assert DOMAIN_SYSTEM_HEALTH not in descriptions
 
     logger_config = {DOMAIN_LOGGER: {}}
 
@@ -681,8 +838,8 @@ async def test_async_get_all_descriptions(hass: HomeAssistant) -> None:
         await async_setup_component(hass, DOMAIN_LOGGER, logger_config)
         descriptions = await service.async_get_all_descriptions(hass)
 
-    assert len(descriptions) == 2
-
+    assert len(descriptions) == 3
+    assert DOMAIN_LOGGER in descriptions
     assert descriptions[DOMAIN_LOGGER]["set_default_level"]["name"] == "Translated name"
     assert (
         descriptions[DOMAIN_LOGGER]["set_default_level"]["description"]
@@ -775,12 +932,15 @@ async def test_async_get_all_descriptions_failing_integration(
 
     logger_config = {DOMAIN_LOGGER: {}}
     await async_setup_component(hass, DOMAIN_LOGGER, logger_config)
-    with patch(
-        "homeassistant.helpers.service.async_get_integrations",
-        return_value={"logger": ImportError},
-    ), patch(
-        "homeassistant.helpers.service.translation.async_get_translations",
-        return_value={},
+    with (
+        patch(
+            "homeassistant.helpers.service.async_get_integrations",
+            return_value={"logger": ImportError},
+        ),
+        patch(
+            "homeassistant.helpers.service.translation.async_get_translations",
+            return_value={},
+        ),
     ):
         descriptions = await service.async_get_all_descriptions(hass)
 
@@ -1142,9 +1302,12 @@ async def test_call_context_target_specific_no_auth(
     hass: HomeAssistant, mock_handle_entity_call, mock_entities
 ) -> None:
     """Check targeting specific entities without auth."""
-    with pytest.raises(exceptions.Unauthorized) as err, patch(
-        "homeassistant.auth.AuthManager.async_get_user",
-        return_value=Mock(permissions=PolicyPermissions({}, None), is_admin=False),
+    with (
+        pytest.raises(exceptions.Unauthorized) as err,
+        patch(
+            "homeassistant.auth.AuthManager.async_get_user",
+            return_value=Mock(permissions=PolicyPermissions({}, None), is_admin=False),
+        ),
     ):
         await service.entity_service_call(
             hass,
@@ -1578,6 +1741,49 @@ async def test_extract_from_service_area_id(
     ]
 
 
+@pytest.mark.usefixtures("label_mock")
+async def test_extract_from_service_label_id(hass: HomeAssistant) -> None:
+    """Test the extraction using label ID as reference."""
+    entities = [
+        MockEntity(name="with_my_label", entity_id="light.with_my_label"),
+        MockEntity(name="no_labels", entity_id="light.no_labels"),
+        MockEntity(
+            name="with_labels_from_device", entity_id="light.with_labels_from_device"
+        ),
+    ]
+
+    call = ServiceCall("light", "turn_on", {"label_id": "label_area"})
+    extracted = await service.async_extract_entities(hass, entities, call)
+    assert len(extracted) == 1
+    assert extracted[0].entity_id == "light.with_labels_from_device"
+
+    call = ServiceCall("light", "turn_on", {"label_id": "my-label"})
+    extracted = await service.async_extract_entities(hass, entities, call)
+    assert len(extracted) == 1
+    assert extracted[0].entity_id == "light.with_my_label"
+
+    call = ServiceCall("light", "turn_on", {"label_id": ["my-label", "label1"]})
+    extracted = await service.async_extract_entities(hass, entities, call)
+    assert len(extracted) == 2
+    assert sorted(ent.entity_id for ent in extracted) == [
+        "light.with_labels_from_device",
+        "light.with_my_label",
+    ]
+
+    call = ServiceCall(
+        "light",
+        "turn_on",
+        {"label_id": ["my-label", "label1"], "device_id": "device-no-labels"},
+    )
+    extracted = await service.async_extract_entities(hass, entities, call)
+    assert len(extracted) == 3
+    assert sorted(ent.entity_id for ent in extracted) == [
+        "light.no_labels",
+        "light.with_labels_from_device",
+        "light.with_my_label",
+    ]
+
+
 async def test_entity_service_call_warn_referenced(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -1590,13 +1796,14 @@ async def test_entity_service_call_warn_referenced(
             "entity_id": "non.existent",
             "device_id": "non-existent-device",
             "floor_id": "non-existent-floor",
+            "label_id": "non-existent-label",
         },
     )
     await service.entity_service_call(hass, {}, "", call)
     assert (
         "Referenced floors non-existent-floor, areas non-existent-area, "
-        "devices non-existent-device, entities non.existent are missing "
-        "or not currently available"
+        "devices non-existent-device, entities non.existent, "
+        "labels non-existent-label are missing or not currently available"
     ) in caplog.text
 
 
@@ -1612,14 +1819,15 @@ async def test_async_extract_entities_warn_referenced(
             "entity_id": "non.existent",
             "device_id": "non-existent-device",
             "floor_id": "non-existent-floor",
+            "label_id": "non-existent-label",
         },
     )
     extracted = await service.async_extract_entities(hass, {}, call)
     assert len(extracted) == 0
     assert (
         "Referenced floors non-existent-floor, areas non-existent-area, "
-        "devices non-existent-device, entities non.existent are missing "
-        "or not currently available"
+        "devices non-existent-device, entities non.existent, "
+        "labels non-existent-label are missing or not currently available"
     ) in caplog.text
 
 
@@ -1644,3 +1852,139 @@ async def test_async_extract_config_entry_ids(hass: HomeAssistant) -> None:
     )
 
     assert await service.async_extract_config_entry_ids(hass, call) == {"abc"}
+
+
+async def test_reload_service_helper(hass: HomeAssistant) -> None:
+    """Test the reload service helper."""
+
+    active_reload_calls = 0
+    reloaded = []
+
+    async def reload_service_handler(service_call: ServiceCall) -> None:
+        """Remove all automations and load new ones from config."""
+        nonlocal active_reload_calls
+        # Assert the reload helper prevents parallel reloads
+        assert not active_reload_calls
+        active_reload_calls += 1
+        if not (target := service_call.data.get("target")):
+            reloaded.append("all")
+        else:
+            reloaded.append(target)
+        await asyncio.sleep(0.01)
+        active_reload_calls -= 1
+
+    def reload_targets(service_call: ServiceCall) -> set[str | None]:
+        if target_id := service_call.data.get("target"):
+            return {target_id}
+        return {"target1", "target2", "target3", "target4"}
+
+    # Test redundant reload of single targets
+    reloader = service.ReloadServiceHelper(reload_service_handler, reload_targets)
+    tasks = [
+        # This reload task will start executing first, (target1)
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target1"})),
+        # These reload tasks will be deduplicated to (target2, target3, target4, target1)
+        # while the first task is reloaded, note that target1 can't be deduplicated
+        # because it's already being reloaded.
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target2"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target3"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target4"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target1"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target2"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target3"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target4"})),
+    ]
+    await asyncio.gather(*tasks)
+    assert reloaded == unordered(
+        ["target1", "target2", "target3", "target4", "target1"]
+    )
+
+    # Test redundant reload of multiple targets + single target
+    reloaded.clear()
+    tasks = [
+        # This reload task will start executing first, (target1)
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target1"})),
+        # These reload tasks will be deduplicated to (target2, target3, target4, all)
+        # while the first task is reloaded.
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target2"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target3"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target4"})),
+        reloader.execute_service(ServiceCall("test", "test")),
+    ]
+    await asyncio.gather(*tasks)
+    assert reloaded == unordered(["target1", "target2", "target3", "target4", "all"])
+
+    # Test redundant reload of multiple targets + single target
+    reloaded.clear()
+    tasks = [
+        # This reload task will start executing first, (all)
+        reloader.execute_service(ServiceCall("test", "test")),
+        # These reload tasks will be deduplicated to (target1, target2, target3, target4)
+        # while the first task is reloaded.
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target1"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target2"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target3"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target4"})),
+    ]
+    await asyncio.gather(*tasks)
+    assert reloaded == unordered(["all", "target1", "target2", "target3", "target4"])
+
+    # Test redundant reload of single targets
+    reloaded.clear()
+    tasks = [
+        # This reload task will start executing first, (target1)
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target1"})),
+        # These reload tasks will be deduplicated to (target2, target3, target4, target1)
+        # while the first task is reloaded, note that target1 can't be deduplicated
+        # because it's already being reloaded.
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target2"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target3"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target4"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target1"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target2"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target3"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target4"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target1"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target2"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target3"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target4"})),
+    ]
+    await asyncio.gather(*tasks)
+    assert reloaded == unordered(
+        ["target1", "target2", "target3", "target4", "target1"]
+    )
+
+    # Test redundant reload of multiple targets + single target
+    reloaded.clear()
+    tasks = [
+        # This reload task will start executing first, (target1)
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target1"})),
+        # These reload tasks will be deduplicated to (target2, target3, target4, all)
+        # while the first task is reloaded.
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target2"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target3"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target4"})),
+        reloader.execute_service(ServiceCall("test", "test")),
+        reloader.execute_service(ServiceCall("test", "test")),
+    ]
+    await asyncio.gather(*tasks)
+    assert reloaded == unordered(["target1", "target2", "target3", "target4", "all"])
+
+    # Test redundant reload of multiple targets + single target
+    reloaded.clear()
+    tasks = [
+        # This reload task will start executing first, (all)
+        reloader.execute_service(ServiceCall("test", "test")),
+        # These reload tasks will be deduplicated to (target1, target2, target3, target4)
+        # while the first task is reloaded.
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target1"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target2"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target3"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target4"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target1"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target2"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target3"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target4"})),
+    ]
+    await asyncio.gather(*tasks)
+    assert reloaded == unordered(["all", "target1", "target2", "target3", "target4"])

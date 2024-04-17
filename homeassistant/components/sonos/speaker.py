@@ -407,7 +407,9 @@ class SonosSpeaker:
     @callback
     def async_renew_failed(self, exception: Exception) -> None:
         """Handle a failed subscription renewal."""
-        self.hass.async_create_task(self._async_renew_failed(exception))
+        self.hass.async_create_task(
+            self._async_renew_failed(exception), eager_start=True
+        )
 
     async def _async_renew_failed(self, exception: Exception) -> None:
         """Mark the speaker as offline after a subscription renewal failure.
@@ -449,7 +451,9 @@ class SonosSpeaker:
         """Add the soco instance associated with the event to the callback."""
         if "alarm_list_version" not in event.variables:
             return
-        self.hass.async_create_task(self.alarms.async_process_event(event, self))
+        self.hass.async_create_task(
+            self.alarms.async_process_event(event, self), eager_start=True
+        )
 
     @callback
     def async_dispatch_device_properties(self, event: SonosEvent) -> None:
@@ -479,7 +483,9 @@ class SonosSpeaker:
             return
         if "container_update_i_ds" not in event.variables:
             return
-        self.hass.async_create_task(self.favorites.async_process_event(event, self))
+        self.hass.async_create_task(
+            self.favorites.async_process_event(event, self), eager_start=True
+        )
 
     @callback
     def async_dispatch_media_update(self, event: SonosEvent) -> None:
@@ -601,7 +607,7 @@ class SonosSpeaker:
         self.available = True
         if not was_available:
             self.async_write_entity_states()
-            self.hass.async_create_task(self.async_subscribe())
+            self.hass.async_create_task(self.async_subscribe(), eager_start=True)
 
     @callback
     def async_check_activity(self, now: datetime.datetime) -> None:
@@ -818,7 +824,9 @@ class SonosSpeaker:
         if "zone_player_uui_ds_in_group" not in event.variables:
             return
         self.event_stats.process(event)
-        self.hass.async_create_task(self.create_update_groups_coro(event))
+        self.hass.async_create_task(
+            self.create_update_groups_coro(event), eager_start=True
+        )
 
     def create_update_groups_coro(self, event: SonosEvent | None = None) -> Coroutine:
         """Handle callback for topology change event."""
@@ -837,7 +845,7 @@ class SonosSpeaker:
                         if p.uid != coordinator_uid and p.is_visible
                     ]
 
-            return [coordinator_uid] + joined_uids
+            return [coordinator_uid, *joined_uids]
 
         async def _async_extract_group(event: SonosEvent | None) -> list[str]:
             """Extract group layout from a topology event."""

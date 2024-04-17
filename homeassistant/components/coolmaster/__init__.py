@@ -37,7 +37,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if not info:
             raise ConfigEntryNotReady
     except OSError as error:
-        raise ConfigEntryNotReady() from error
+        raise ConfigEntryNotReady from error
     coordinator = CoolmasterDataUpdateCoordinator(hass, coolmaster)
     hass.data.setdefault(DOMAIN, {})
     await coordinator.async_config_entry_first_refresh()

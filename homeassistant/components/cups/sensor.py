@@ -74,7 +74,7 @@ def setup_platform(
         data.update()
         if data.available is False:
             _LOGGER.error("Unable to connect to CUPS server: %s:%s", host, port)
-            raise PlatformNotReady()
+            raise PlatformNotReady
         assert data.printers is not None
 
         dev: list[SensorEntity] = []
@@ -97,7 +97,7 @@ def setup_platform(
     data.update()
     if data.available is False:
         _LOGGER.error("Unable to connect to IPP printer: %s:%s", host, port)
-        raise PlatformNotReady()
+        raise PlatformNotReady
 
     dev = []
     for printer in printers:

@@ -77,10 +77,10 @@ class HassIOIngress(HomeAssistantView):
         try:
             target_url = URL(url)
         except ValueError as err:
-            raise HTTPBadRequest() from err
+            raise HTTPBadRequest from err
 
         if not target_url.path.startswith(base_path):
-            raise HTTPBadRequest()
+            raise HTTPBadRequest
 
         return target_url
 
@@ -99,7 +99,7 @@ class HassIOIngress(HomeAssistantView):
         except aiohttp.ClientError as err:
             _LOGGER.debug("Ingress error with %s / %s: %s", token, path, err)
 
-        raise HTTPBadGateway() from None
+        raise HTTPBadGateway from None
 
     get = _handle
     post = _handle
@@ -197,7 +197,6 @@ class HassIOIngress(HomeAssistantView):
                     content_type or simple_response.content_type
                 ):
                     simple_response.enable_compression()
-                await simple_response.prepare(request)
                 return simple_response
 
             # Stream response
@@ -247,7 +246,7 @@ def _init_header(request: web.Request, token: str) -> CIMultiDict | dict[str, st
     assert request.transport
     if (peername := request.transport.get_extra_info("peername")) is None:
         _LOGGER.error("Can't set forward_for header, missing peername")
-        raise HTTPBadRequest()
+        raise HTTPBadRequest
 
     headers[hdrs.X_FORWARDED_FOR] = _forwarded_for_header(forward_for, peername[0])
 

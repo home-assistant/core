@@ -152,7 +152,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 },
             )
             ir.async_delete_issue(hass, DOMAIN, "ea_channel_warning")
-            _LOGGER.exception("Error setting up UniFi Protect integration: %s", err)
+            _LOGGER.exception("Error setting up UniFi Protect integration")
         raise
 
     return True

@@ -1,4 +1,5 @@
 """Tests for the category registry."""
+
 import re
 from typing import Any
 

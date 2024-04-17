@@ -141,7 +141,7 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
                 getattr, self.api, "devices"
             )
             if not devices:
-                raise PyiCloudNoDevicesException()
+                raise PyiCloudNoDevicesException
         except (PyiCloudServiceNotActivatedException, PyiCloudNoDevicesException):
             _LOGGER.error("No device found in the iCloud account: %s", self._username)
             self.api = None

@@ -18,7 +18,6 @@ from homeassistant.util.yaml.loader import load_yaml
 from script.hassfest.model import Integration
 
 COMMENT_REQUIREMENTS = (
-    "Adafruit-BBIO",
     "atenpdu",  # depends on pysnmp which is not maintained at this time
     "avea",  # depends on bluepy
     "avion",
@@ -98,9 +97,9 @@ regex==2021.8.28
 # these requirements are quite loose. As the entire stack has some outstanding issues, and
 # even newer versions seem to introduce new issues, it's useful for us to pin all these
 # requirements so we can directly link HA versions to these library versions.
-anyio==4.1.0
+anyio==4.3.0
 h11==0.14.0
-httpcore==1.0.4
+httpcore==1.0.5
 
 # Ensure we have a hyperframe version that works in Python 3.10
 # 5.2.0 fixed a collections abc deprecation
@@ -180,6 +179,9 @@ chacha20poly1305-reuseable>=0.12.1
 # pycountry<23.12.11 imports setuptools at run time
 # https://github.com/pycountry/pycountry/blob/ea69bab36f00df58624a0e490fdad4ccdc14268b/HISTORY.txt#L39
 pycountry>=23.12.11
+
+# scapy<2.5.0 will not work with python3.12
+scapy>=2.5.0
 """
 
 GENERATED_MESSAGE = (
@@ -259,17 +261,13 @@ def normalize_package_name(requirement: str) -> str:
     if not match:
         return ""
 
-    # pipdeptree needs lowercase and dash instead of underscore as separator
-    package = match.group(1).lower().replace("_", "-")
-
-    return package
+    # pipdeptree needs lowercase and dash instead of underscore or period as separator
+    return match.group(1).lower().replace("_", "-").replace(".", "-")
 
 
 def comment_requirement(req: str) -> bool:
     """Comment out requirement. Some don't install on all systems."""
-    return any(
-        normalize_package_name(req) == ign for ign in COMMENT_REQUIREMENTS_NORMALIZED
-    )
+    return normalize_package_name(req) in COMMENT_REQUIREMENTS_NORMALIZED
 
 
 def gather_modules() -> dict[str, list[str]] | None:
@@ -433,15 +431,17 @@ def gather_constraints() -> str:
     return (
         GENERATED_MESSAGE
         + "\n".join(
-            sorted(
-                {
-                    *core_requirements(),
-                    *gather_recursive_requirements("default_config"),
-                    *gather_recursive_requirements("mqtt"),
-                },
-                key=str.lower,
-            )
-            + [""]
+            [
+                *sorted(
+                    {
+                        *core_requirements(),
+                        *gather_recursive_requirements("default_config"),
+                        *gather_recursive_requirements("mqtt"),
+                    },
+                    key=str.lower,
+                ),
+                "",
+            ]
         )
         + CONSTRAINT_BASE
     )

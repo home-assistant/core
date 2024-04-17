@@ -31,11 +31,14 @@ from homeassistant.helpers.reload import async_reload_integration_platforms
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
-# Ensure group config_flow is imported so it does not need the import
-# executor since config_flows are preloaded when the component is loaded.
-# Even though group is pre-imported above we would have still had to wait
-# for the config flow to be imported when the import executor is the most
-# busy.
+#
+# Below we ensure the config_flow is imported so it does not need the import
+# executor later.
+#
+# Since group is pre-imported, the loader will not get a chance to pre-import
+# the config flow as there is no run time import of the group component in the
+# executor.
+#
 from . import config_flow as config_flow_pre_import  # noqa: F401
 from .const import (  # noqa: F401
     ATTR_ADD_ENTITIES,
@@ -46,7 +49,7 @@ from .const import (  # noqa: F401
     ATTR_ORDER,
     ATTR_REMOVE_ENTITIES,
     CONF_HIDE_MEMBERS,
-    DOMAIN,  # noqa: F401
+    DOMAIN,
     GROUP_ORDER,
     REG_KEY,
 )
@@ -274,11 +277,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 await group.async_update_tracked_entity_ids(entity_ids)
 
             if ATTR_NAME in service.data:
-                group.name = service.data[ATTR_NAME]
+                group.set_name(service.data[ATTR_NAME])
                 need_update = True
 
             if ATTR_ICON in service.data:
-                group.icon = service.data[ATTR_ICON]
+                group.set_icon(service.data[ATTR_ICON])
                 need_update = True
 
             if ATTR_ALL in service.data:

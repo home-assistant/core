@@ -195,9 +195,9 @@ class ProtectDeviceEntity(Entity):
         super().__init__()
         self.data: ProtectData = data
         self.device = device
-        self._async_get_ufp_enabled: Callable[
-            [ProtectAdoptableDeviceModel], bool
-        ] | None = None
+        self._async_get_ufp_enabled: (
+            Callable[[ProtectAdoptableDeviceModel], bool] | None
+        ) = None
 
         if description is None:
             self._attr_unique_id = f"{self.device.mac}"

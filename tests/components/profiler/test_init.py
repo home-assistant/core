@@ -7,7 +7,9 @@ import os
 from pathlib import Path
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 from lru import LRU
+import objgraph
 import pytest
 
 from homeassistant.components.profiler import (
@@ -99,7 +101,9 @@ async def test_memory_usage(hass: HomeAssistant, tmp_path: Path) -> None:
 
 
 async def test_object_growth_logging(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test we can setup and the service and we can dump objects to the log."""
 
@@ -112,30 +116,31 @@ async def test_object_growth_logging(
     assert hass.services.has_service(DOMAIN, SERVICE_START_LOG_OBJECTS)
     assert hass.services.has_service(DOMAIN, SERVICE_STOP_LOG_OBJECTS)
 
-    with patch("objgraph.growth"):
+    with patch.object(objgraph, "growth"):
         await hass.services.async_call(
-            DOMAIN, SERVICE_START_LOG_OBJECTS, {CONF_SCAN_INTERVAL: 10}, blocking=True
+            DOMAIN, SERVICE_START_LOG_OBJECTS, {CONF_SCAN_INTERVAL: 1}, blocking=True
         )
         with pytest.raises(HomeAssistantError, match="Object logging already started"):
             await hass.services.async_call(
                 DOMAIN,
                 SERVICE_START_LOG_OBJECTS,
-                {CONF_SCAN_INTERVAL: 10},
+                {CONF_SCAN_INTERVAL: 1},
                 blocking=True,
             )
 
         assert "Growth" in caplog.text
+        await hass.async_block_till_done(wait_background_tasks=True)
         caplog.clear()
 
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=11))
-        await hass.async_block_till_done()
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=2))
+        await hass.async_block_till_done(wait_background_tasks=True)
         assert "Growth" in caplog.text
 
     await hass.services.async_call(DOMAIN, SERVICE_STOP_LOG_OBJECTS, {}, blocking=True)
     caplog.clear()
 
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=21))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert "Growth" not in caplog.text
 
     with pytest.raises(HomeAssistantError, match="Object logging not running"):
@@ -143,17 +148,18 @@ async def test_object_growth_logging(
             DOMAIN, SERVICE_STOP_LOG_OBJECTS, {}, blocking=True
         )
 
-    with patch("objgraph.growth"):
+    with patch.object(objgraph, "growth"):
         await hass.services.async_call(
             DOMAIN, SERVICE_START_LOG_OBJECTS, {CONF_SCAN_INTERVAL: 10}, blocking=True
         )
+        await hass.async_block_till_done(wait_background_tasks=True)
         caplog.clear()
 
     assert await hass.config_entries.async_unload(entry.entry_id)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=31))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert "Growth" not in caplog.text
 
 
@@ -326,18 +332,19 @@ async def test_log_object_sources(
         caplog.clear()
 
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=11))
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         assert "No new object growth found" in caplog.text
 
     fake_object2 = FakeObject()
 
-    with patch("gc.collect"), patch(
-        "gc.get_objects", return_value=[fake_object, fake_object2]
+    with (
+        patch("gc.collect"),
+        patch("gc.get_objects", return_value=[fake_object, fake_object2]),
     ):
         caplog.clear()
 
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=21))
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         assert "New object FakeObject (1/2)" in caplog.text
 
     many_objects = [FakeObject() for _ in range(30)]
@@ -345,7 +352,7 @@ async def test_log_object_sources(
         caplog.clear()
 
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=31))
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         assert "New object FakeObject (2/30)" in caplog.text
         assert "New objects overflowed by {'FakeObject': 25}" in caplog.text
 
@@ -355,7 +362,7 @@ async def test_log_object_sources(
     caplog.clear()
 
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=41))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert "FakeObject" not in caplog.text
     assert "No new object growth found" not in caplog.text
 
@@ -363,7 +370,7 @@ async def test_log_object_sources(
     await hass.async_block_till_done()
 
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=51))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert "FakeObject" not in caplog.text
     assert "No new object growth found" not in caplog.text
 

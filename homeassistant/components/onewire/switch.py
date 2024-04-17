@@ -208,8 +208,10 @@ class OneWireSwitch(OneWireEntity, SwitchEntity):
     entity_description: OneWireSwitchEntityDescription
 
     @property
-    def is_on(self) -> bool:
-        """Return true if sensor is on."""
+    def is_on(self) -> bool | None:
+        """Return true if switch is on."""
+        if self._state is None:
+            return None
         return bool(self._state)
 
     def turn_on(self, **kwargs: Any) -> None:

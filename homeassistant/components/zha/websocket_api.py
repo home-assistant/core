@@ -1034,7 +1034,7 @@ async def async_binding_operation(
             )
         )
     res = await asyncio.gather(*(t[0] for t in bind_tasks), return_exceptions=True)
-    for outcome, log_msg in zip(res, bind_tasks):
+    for outcome, log_msg in zip(res, bind_tasks, strict=False):
         if isinstance(outcome, Exception):
             fmt = f"{log_msg[1]} failed: %s"
         else:
@@ -1098,7 +1098,7 @@ async def websocket_update_zha_configuration(
     """Update the ZHA configuration."""
     zha_gateway = get_zha_gateway(hass)
     options = zha_gateway.config_entry.options
-    data_to_save = {**options, **{CUSTOM_CONFIGURATION: msg["data"]}}
+    data_to_save = {**options, CUSTOM_CONFIGURATION: msg["data"]}
 
     for section, schema in ZHA_CONFIG_SCHEMAS.items():
         for entry in schema.schema:

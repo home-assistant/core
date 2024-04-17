@@ -229,9 +229,12 @@ async def test_append_sheet_api_error(
     response = Response()
     response.status_code = 503
 
-    with pytest.raises(HomeAssistantError), patch(
-        "homeassistant.components.google_sheets.Client.request",
-        side_effect=APIError(response),
+    with (
+        pytest.raises(HomeAssistantError),
+        patch(
+            "homeassistant.components.google_sheets.Client.request",
+            side_effect=APIError(response),
+        ),
     ):
         await hass.services.async_call(
             DOMAIN,

@@ -337,7 +337,6 @@ class EcovacsVacuum(
             params = {}
         elif isinstance(params, list):
             raise ServiceValidationError(
-                "Params must be a dict!",
                 translation_domain=DOMAIN,
                 translation_key="vacuum_send_command_params_dict",
             )
@@ -345,7 +344,6 @@ class EcovacsVacuum(
         if command in ["spot_area", "custom_area"]:
             if params is None:
                 raise ServiceValidationError(
-                    f"Params are required for {command}!",
                     translation_domain=DOMAIN,
                     translation_key="vacuum_send_command_params_required",
                     translation_placeholders={"command": command},
@@ -354,7 +352,6 @@ class EcovacsVacuum(
                 info = self._device.device_info
                 name = info.get("nick", info["name"])
                 raise ServiceValidationError(
-                    f"Vacuum {name} does not support area capability!",
                     translation_domain=DOMAIN,
                     translation_key="vacuum_send_command_area_not_supported",
                     translation_placeholders={"name": name},

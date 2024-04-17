@@ -488,7 +488,7 @@ async def test_sensor_disabled(
 
     # Test enabling entity
     updated_entry = entity_registry.async_update_entity(
-        entry.entity_id, **{"disabled_by": None}
+        entry.entity_id, disabled_by=None
     )
 
     assert updated_entry != entry
@@ -507,9 +507,12 @@ async def test_incompleta_data_after_device_restart(hass: HomeAssistant) -> None
 
     future = utcnow() + timedelta(minutes=6)
     update_response = Mock(json=AsyncMock(return_value=INCOMPLETE_NAM_DATA))
-    with patch("homeassistant.components.nam.NettigoAirMonitor.initialize"), patch(
-        "homeassistant.components.nam.NettigoAirMonitor._async_http_request",
-        return_value=update_response,
+    with (
+        patch("homeassistant.components.nam.NettigoAirMonitor.initialize"),
+        patch(
+            "homeassistant.components.nam.NettigoAirMonitor._async_http_request",
+            return_value=update_response,
+        ),
     ):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
@@ -529,9 +532,12 @@ async def test_availability(hass: HomeAssistant) -> None:
     assert state.state == "7.6"
 
     future = utcnow() + timedelta(minutes=6)
-    with patch("homeassistant.components.nam.NettigoAirMonitor.initialize"), patch(
-        "homeassistant.components.nam.NettigoAirMonitor._async_http_request",
-        side_effect=ApiError("API Error"),
+    with (
+        patch("homeassistant.components.nam.NettigoAirMonitor.initialize"),
+        patch(
+            "homeassistant.components.nam.NettigoAirMonitor._async_http_request",
+            side_effect=ApiError("API Error"),
+        ),
     ):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
@@ -542,9 +548,12 @@ async def test_availability(hass: HomeAssistant) -> None:
 
     future = utcnow() + timedelta(minutes=12)
     update_response = Mock(json=AsyncMock(return_value=nam_data))
-    with patch("homeassistant.components.nam.NettigoAirMonitor.initialize"), patch(
-        "homeassistant.components.nam.NettigoAirMonitor._async_http_request",
-        return_value=update_response,
+    with (
+        patch("homeassistant.components.nam.NettigoAirMonitor.initialize"),
+        patch(
+            "homeassistant.components.nam.NettigoAirMonitor._async_http_request",
+            return_value=update_response,
+        ),
     ):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
@@ -562,10 +571,13 @@ async def test_manual_update_entity(hass: HomeAssistant) -> None:
     await async_setup_component(hass, "homeassistant", {})
 
     update_response = Mock(json=AsyncMock(return_value=nam_data))
-    with patch("homeassistant.components.nam.NettigoAirMonitor.initialize"), patch(
-        "homeassistant.components.nam.NettigoAirMonitor._async_http_request",
-        return_value=update_response,
-    ) as mock_get_data:
+    with (
+        patch("homeassistant.components.nam.NettigoAirMonitor.initialize"),
+        patch(
+            "homeassistant.components.nam.NettigoAirMonitor._async_http_request",
+            return_value=update_response,
+        ) as mock_get_data,
+    ):
         await hass.services.async_call(
             "homeassistant",
             "update_entity",

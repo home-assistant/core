@@ -11,6 +11,4 @@ def load_setup_fixture(
 ) -> Setup:
     """Return setup from fixture."""
     setup_json = load_json_object_fixture(fixture)
-    setup = Setup(**humps.decamelize(setup_json))
-
-    return setup
+    return Setup(**humps.decamelize(setup_json))
