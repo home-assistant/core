@@ -187,6 +187,10 @@
     "unsupported_systemd_resolved": {
       "title": "Unsupported system - Systemd-Resolved issues",
       "description": "System is unsupported because Systemd Resolved is missing, inactive or misconfigured. Use the link to learn more and how to fix this."
+    },
+    "unsupported_virtualization_image": {
+      "title": "Unsupported system - Incorrect OS image for virtualization",
+      "description": "System is unsupported because the Home Assistant OS image in use is not intended for use in a virtualized environment. Use the link to learn more and how to fix this."
     }
   },
   "entity": {
