@@ -132,7 +132,7 @@ class Enigma2ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         if errors := await self.validate_user_input(user_input):
             async_create_issue(
                 self.hass,
-                HOMEASSISTANT_DOMAIN,
+                DOMAIN,
                 f"deprecated_yaml_{DOMAIN}_import_issue_{errors["base"]}",
                 breaks_in_ha_version="2024.11.0",
                 is_fixable=False,

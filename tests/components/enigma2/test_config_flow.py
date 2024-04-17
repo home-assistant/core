@@ -157,7 +157,7 @@ async def test_form_import_errors(
         )
 
     issue = issue_registry.async_get_issue(
-        HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}_import_issue_{error_type}"
+        DOMAIN, f"deprecated_yaml_{DOMAIN}_import_issue_{error_type}"
     )
 
     assert issue
