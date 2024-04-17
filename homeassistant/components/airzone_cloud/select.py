@@ -32,7 +32,7 @@ class AirzoneSelectDescription(SelectEntityDescription):
     options_dict: dict[str, str]
 
 
-AIR_QUALITY_DICT: Final[dict[str, str]] = {
+AIR_QUALITY_MAP: Final[dict[str, str]] = {
     "off": AirQualityMode.OFF,
     "on": AirQualityMode.ON,
     "auto": AirQualityMode.AUTO,
@@ -44,8 +44,8 @@ ZONE_SELECT_TYPES: Final[tuple[AirzoneSelectDescription, ...]] = (
         api_param=API_AQ_MODE_CONF,
         entity_category=EntityCategory.CONFIG,
         key=AZD_AQ_MODE_CONF,
-        options=list(AIR_QUALITY_DICT),
-        options_dict=AIR_QUALITY_DICT,
+        options=list(AIR_QUALITY_MAP),
+        options_dict=AIR_QUALITY_MAP,
         translation_key="air_quality",
     ),
 )
