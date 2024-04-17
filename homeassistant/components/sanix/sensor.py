@@ -31,7 +31,7 @@ from .const import DOMAIN, MANUFACTURER
 from .coordinator import SanixCoordinator
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class SanixSensorEntityDescription(SensorEntityDescription):
     """Class describing Sanix Sensor entities."""
 
@@ -113,8 +113,8 @@ class SanixSensorEntity(CoordinatorEntity[SanixCoordinator], SensorEntity):
         self.entity_description = description
 
         self._attr_device_info = DeviceInfo(
-            entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, serial_no)},
+            entry_type=DeviceEntryType.SERVICE,
             manufacturer=MANUFACTURER,
             serial_number=serial_no,
         )

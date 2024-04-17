@@ -11,29 +11,27 @@ from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import MockConfigEntry, patch
+from tests.common import MockConfigEntry
 
 CONFIG = {CONF_SERIAL_NO: "1810088", CONF_TOKEN: "75868dcf8ea4c64e2063f6c4e70132d2"}
 
 
-async def test_create_entry(hass: HomeAssistant, mock_sanix: MagicMock) -> None:
+async def test_create_entry(
+    hass: HomeAssistant, mock_sanix: MagicMock, mock_setup_entry
+) -> None:
     """Test that the user step works."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    with patch(
-        "homeassistant.components.sanix.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            CONFIG,
-        )
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        CONFIG,
+    )
+    await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == MANUFACTURER
     assert result["data"] == {
         CONF_SERIAL_NO: "1810088",
@@ -51,7 +49,11 @@ async def test_create_entry(hass: HomeAssistant, mock_sanix: MagicMock) -> None:
     ],
 )
 async def test_form_exceptions(
-    hass: HomeAssistant, exception: Exception, error: str, mock_sanix: MagicMock
+    hass: HomeAssistant,
+    exception: Exception,
+    error: str,
+    mock_sanix: MagicMock,
+    mock_setup_entry,
 ) -> None:
     """Test Form exceptions."""
 
@@ -67,20 +69,16 @@ async def test_form_exceptions(
 
     mock_sanix.return_value.fetch_data.side_effect = None
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error}
 
-    with patch(
-        "homeassistant.components.sanix.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            CONFIG,
-        )
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        CONFIG,
+    )
+    await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Sanix"
     assert result["data"] == {
         CONF_SERIAL_NO: "1810088",
@@ -89,10 +87,12 @@ async def test_form_exceptions(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_duplicate_error(hass: HomeAssistant, mock_sanix: MagicMock) -> None:
+async def test_duplicate_error(
+    hass: HomeAssistant, mock_sanix: MagicMock, mock_config_entry: MockConfigEntry
+) -> None:
     """Test that errors are shown when duplicates are added."""
 
-    MockConfigEntry(domain=DOMAIN, unique_id="1810088", data=CONFIG).add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -104,5 +104,5 @@ async def test_duplicate_error(hass: HomeAssistant, mock_sanix: MagicMock) -> No
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
