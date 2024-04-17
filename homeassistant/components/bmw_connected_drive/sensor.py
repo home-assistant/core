@@ -12,6 +12,7 @@ from bimmer_connected.models import ValueWithUnit
 from bimmer_connected.vehicle import MyBMWVehicle
 from bimmer_connected.vehicle.climate import ClimateActivityState
 from bimmer_connected.models import StrEnum
+from bimmer_connected.vehicle.fuel_and_battery import ChargingState
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -75,6 +76,8 @@ SENSOR_TYPES: list[BMWSensorEntityDescription] = [
         key="charging_status",
         translation_key="charging_status",
         key_class="fuel_and_battery",
+        device_class=SensorDeviceClass.ENUM,
+        options=[s.value.lower() for s in ChargingState if s != ChargingState.UNKNOWN],
         is_available=lambda v: v.is_lsc_enabled and v.has_electric_drivetrain,
     ),
     BMWSensorEntityDescription(
