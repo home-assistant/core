@@ -107,13 +107,6 @@ jobs:
           path: ./requirements_all_wheels_*.txt
           overwrite: true
 
-      - name: Upload requirements_wheels
-        uses: actions/upload-artifact@v4.3.1
-        with:
-          name: requirements_wheels
-          path: ./requirements_wheels_*.txt
-          overwrite: true
-
   core:
     name: Build Core wheels ${{ matrix.abi }} for ${{ matrix.arch }} (musllinux_1_2)
     if: github.repository_owner == 'home-assistant'
@@ -138,11 +131,6 @@ jobs:
         with:
           name: requirements_diff
 
-      - name: Download requirements_wheels
-        uses: actions/download-artifact@v4.1.4
-        with:
-          name: requirements_wheels
-
       - name: Build wheels
         uses: home-assistant/wheels@2024.01.0
         with:
@@ -155,7 +143,7 @@ jobs:
           skip-binary: aiohttp
           constraints: "homeassistant/package_constraints.txt"
           requirements-diff: "requirements_diff.txt"
-          requirements: "requirements_wheels_${{ matrix.arch }}.txt"
+          requirements: "requirements.txt"
 
   integrations:
     name: Build wheels ${{ matrix.abi }} for ${{ matrix.arch }}

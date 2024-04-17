@@ -99,28 +99,6 @@ EXCLUDED_REQUIREMENTS_ACTIONS_NORMALIZED = {
     for action, requirements in EXCLUDED_REQUIREMENTS_ACTIONS.items()
 }
 
-# Requirements to substitute when running github actions. Requirements listed in
-# SUBSTITUTED_REQUIREMENTS_WHEELS will be substituted in requirements_{action}.txt
-# and requirements_all_{action}.txt
-SUBSTITUTED_REQUIREMENTS_ACTIONS = {
-    # Some speedups are only for 64-bit
-    "wheels_aarch64": {"aiohttp-zlib-ng": "aiohttp-zlib-ng[isal]"},
-    "wheels_armhf": {},
-    "wheels_armv7": {},
-    # Some speedups are only for 64-bit
-    "wheels_amd64": {"aiohttp-zlib-ng": "aiohttp-zlib-ng[isal]"},
-    "wheels_i386": {},
-    "pytest": {},
-}
-
-SUBSTITUTED_REQUIREMENTS_ACTIONS_NORMALIZED = {
-    action: {
-        normalize(requirement): substitute
-        for requirement, substitute in requirements.items()
-    }
-    for action, requirements in SUBSTITUTED_REQUIREMENTS_ACTIONS.items()
-}
-
 IGNORE_PIN = ("colorlog>2.1,<3", "urllib3")
 
 URL_PIN = (
@@ -354,24 +332,10 @@ def process_action_requirement(req: str, action: str) -> str:
     normalized_package_name = normalize_package_name(req)
     if normalized_package_name in EXCLUDED_REQUIREMENTS_ACTIONS_NORMALIZED[action]:
         return f"# {req}"
-    if normalized_package_name in SUBSTITUTED_REQUIREMENTS_ACTIONS_NORMALIZED[action]:
-        return SUBSTITUTED_REQUIREMENTS_ACTIONS_NORMALIZED[action][
-            normalized_package_name
-        ]
     if normalized_package_name in INCLUDED_REQUIREMENTS_ACTIONS_NORMALIZED[action]:
         return req
     if normalized_package_name in EXCLUDED_REQUIREMENTS_ALL_NORMALIZED:
         return f"# {req}"
-    return req
-
-
-def process_core_action_requirement(req: str, action: str) -> str:
-    """Process requirement for a specific github action."""
-    normalized_package_name = normalize_package_name(req)
-    if normalized_package_name in SUBSTITUTED_REQUIREMENTS_ACTIONS_NORMALIZED[action]:
-        return SUBSTITUTED_REQUIREMENTS_ACTIONS_NORMALIZED[action][
-            normalized_package_name
-        ]
     return req
 
 
@@ -478,21 +442,6 @@ def requirements_output() -> str:
     ]
     output.append("\n".join(core_requirements()))
     output.append("\n")
-
-    return "".join(output)
-
-
-def requirements_action_output(action: str) -> str:
-    """Generate output for requirements."""
-    output = [
-        GENERATED_MESSAGE,
-        "-c homeassistant/package_constraints.txt\n",
-        "\n",
-        "# Home Assistant Core\n",
-    ]
-    for req in core_requirements():
-        processed_req = process_core_action_requirement(req, action)
-        output.append(f"{processed_req}\n")
 
     return "".join(output)
 
@@ -613,11 +562,6 @@ def main(validate: bool, ci: bool) -> int:
         return 1
 
     reqs_file = requirements_output()
-    reqs_wheels_aarch64_file = requirements_action_output("wheels_aarch64")
-    reqs_wheels_armhf_file = requirements_action_output("wheels_armhf")
-    reqs_wheels_armv7_file = requirements_action_output("wheels_armv7")
-    reqs_wheels_amd64_file = requirements_action_output("wheels_amd64")
-    reqs_wheels_i386_file = requirements_action_output("wheels_i386")
     reqs_all_file = requirements_all_output(data)
     reqs_all_pytest_file = requirements_all_action_output(data, "pytest")
     reqs_all_wheels_aarch64_file = requirements_all_action_output(
@@ -641,11 +585,6 @@ def main(validate: bool, ci: bool) -> int:
     if ci:
         files = (
             *files,
-            ("requirements_wheels_aarch64.txt", reqs_wheels_aarch64_file),
-            ("requirements_wheels_armhf.txt", reqs_wheels_armhf_file),
-            ("requirements_wheels_armv7.txt", reqs_wheels_armv7_file),
-            ("requirements_wheels_amd64.txt", reqs_wheels_amd64_file),
-            ("requirements_wheels_i386.txt", reqs_wheels_i386_file),
             ("requirements_all_pytest.txt", reqs_all_pytest_file),
             ("requirements_all_wheels_aarch64.txt", reqs_all_wheels_aarch64_file),
             ("requirements_all_wheels_armhf.txt", reqs_all_wheels_armhf_file),
