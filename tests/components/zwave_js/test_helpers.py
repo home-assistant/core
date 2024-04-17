@@ -5,10 +5,15 @@ import voluptuous as vol
 from homeassistant.components.zwave_js.helpers import (
     async_get_node_status_sensor_entity_id,
     async_get_nodes_from_area_id,
+    async_get_nodes_from_label_id,
     get_value_state_schema,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import area_registry as ar, device_registry as dr
+from homeassistant.helpers import (
+    area_registry as ar,
+    device_registry as dr,
+    label_registry as lr,
+)
 
 from tests.common import MockConfigEntry
 
@@ -30,6 +35,13 @@ async def test_async_get_nodes_from_area_id(hass: HomeAssistant) -> None:
     area_reg = ar.async_get(hass)
     area = area_reg.async_create("test")
     assert not async_get_nodes_from_area_id(hass, area.id)
+
+
+async def test_async_get_nodes_from_label_id(hass: HomeAssistant) -> None:
+    """Test async_get_nodes_from_label_id."""
+    label_reg = lr.async_get(hass)
+    label = label_reg.async_create("test")
+    assert not async_get_nodes_from_label_id(hass, label.label_id)
 
 
 async def test_get_value_state_schema_boolean_config_value(

@@ -38,12 +38,18 @@ from homeassistant.components.zwave_js.const import (
     SERVICE_SET_VALUE,
 )
 from homeassistant.components.zwave_js.helpers import get_device_id
-from homeassistant.const import ATTR_AREA_ID, ATTR_DEVICE_ID, ATTR_ENTITY_ID
+from homeassistant.const import (
+    ATTR_AREA_ID,
+    ATTR_DEVICE_ID,
+    ATTR_ENTITY_ID,
+    ATTR_LABEL_ID,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.area_registry import async_get as async_get_area_reg
 from homeassistant.helpers.device_registry import async_get as async_get_dev_reg
 from homeassistant.helpers.entity_registry import async_get as async_get_ent_reg
+from homeassistant.helpers.label_registry import async_get as async_get_label_reg
 from homeassistant.setup import async_setup_component
 
 from .common import (
@@ -187,6 +193,35 @@ async def test_set_config_parameter(
         SERVICE_SET_CONFIG_PARAMETER,
         {
             ATTR_AREA_ID: area.id,
+            ATTR_CONFIG_PARAMETER: "Temperature Threshold (Unit)",
+            ATTR_CONFIG_VALUE: "Fahrenheit",
+        },
+        blocking=True,
+    )
+
+    assert len(client.async_send_command_no_wait.call_args_list) == 1
+    args = client.async_send_command_no_wait.call_args[0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == 52
+    assert args["valueId"] == {
+        "commandClass": 112,
+        "endpoint": 0,
+        "property": 41,
+        "propertyKey": 15,
+    }
+    assert args["value"] == 2
+
+    client.async_send_command_no_wait.reset_mock()
+
+    # Test using label ID
+    label_reg = async_get_label_reg(hass)
+    label = label_reg.async_create("test")
+    ent_reg.async_update_entity(entity_entry.entity_id, labels={label.label_id})
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_CONFIG_PARAMETER,
+        {
+            ATTR_LABEL_ID: label.label_id,
             ATTR_CONFIG_PARAMETER: "Temperature Threshold (Unit)",
             ATTR_CONFIG_VALUE: "Fahrenheit",
         },
@@ -663,6 +698,34 @@ async def test_bulk_set_config_parameters(
 
     client.async_send_command_no_wait.reset_mock()
 
+    # Test using label ID
+    label_reg = async_get_label_reg(hass)
+    label = label_reg.async_create("test")
+    dev_reg.async_update_device(device.id, labels={label.label_id})
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_BULK_SET_PARTIAL_CONFIG_PARAMETERS,
+        {
+            ATTR_LABEL_ID: label.label_id,
+            ATTR_CONFIG_PARAMETER: 102,
+            ATTR_CONFIG_VALUE: 241,
+        },
+        blocking=True,
+    )
+
+    assert len(client.async_send_command_no_wait.call_args_list) == 1
+    args = client.async_send_command_no_wait.call_args[0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == 52
+    assert args["valueId"] == {
+        "commandClass": 112,
+        "endpoint": 0,
+        "property": 102,
+    }
+    assert args["value"] == 241
+
+    client.async_send_command_no_wait.reset_mock()
+
     await hass.services.async_call(
         DOMAIN,
         SERVICE_BULK_SET_PARTIAL_CONFIG_PARAMETERS,
@@ -1059,6 +1122,36 @@ async def test_set_value(
 
     client.async_send_command.reset_mock()
 
+    # Test using label ID
+    label_reg = async_get_label_reg(hass)
+    label = label_reg.async_create("test")
+    dev_reg.async_update_device(device.id, labels={label.label_id})
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_VALUE,
+        {
+            ATTR_LABEL_ID: label.label_id,
+            ATTR_COMMAND_CLASS: 117,
+            ATTR_PROPERTY: "local",
+            ATTR_VALUE: "0x2",
+            ATTR_WAIT_FOR_RESULT: 1,
+        },
+        blocking=True,
+    )
+
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == 5
+    assert args["valueId"] == {
+        "commandClass": 117,
+        "endpoint": 0,
+        "property": "local",
+    }
+    assert args["value"] == 2
+
+    client.async_send_command.reset_mock()
+
     # Test groups get expanded
     assert await async_setup_component(hass, "group", {})
     await Group.async_create_group(
@@ -1345,6 +1438,49 @@ async def test_multicast_set_value(
         SERVICE_MULTICAST_SET_VALUE,
         {
             ATTR_AREA_ID: area.id,
+            ATTR_COMMAND_CLASS: 67,
+            ATTR_PROPERTY: "setpoint",
+            ATTR_PROPERTY_KEY: 1,
+            ATTR_VALUE: "0x2",
+        },
+        blocking=True,
+    )
+
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
+    assert args["command"] == "multicast_group.set_value"
+    assert args["nodeIDs"] == [
+        climate_eurotronic_spirit_z.node_id,
+        climate_danfoss_lc_13.node_id,
+    ]
+    assert args["valueId"] == {
+        "commandClass": 67,
+        "property": "setpoint",
+        "propertyKey": 1,
+    }
+    assert args["value"] == 2
+
+    client.async_send_command.reset_mock()
+
+    # Test using label ID
+    dev_reg = async_get_dev_reg(hass)
+    device_eurotronic = dev_reg.async_get_device(
+        identifiers={get_device_id(client.driver, climate_eurotronic_spirit_z)}
+    )
+    assert device_eurotronic
+    device_danfoss = dev_reg.async_get_device(
+        identifiers={get_device_id(client.driver, climate_danfoss_lc_13)}
+    )
+    assert device_danfoss
+    label_reg = async_get_label_reg(hass)
+    label = label_reg.async_create("test")
+    dev_reg.async_update_device(device_eurotronic.id, labels={label.label_id})
+    dev_reg.async_update_device(device_danfoss.id, labels={label.label_id})
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_MULTICAST_SET_VALUE,
+        {
+            ATTR_LABEL_ID: label.label_id,
             ATTR_COMMAND_CLASS: 67,
             ATTR_PROPERTY: "setpoint",
             ATTR_PROPERTY_KEY: 1,
@@ -1729,6 +1865,31 @@ async def test_ping(
         DOMAIN,
         SERVICE_PING,
         {ATTR_AREA_ID: area.id},
+        blocking=True,
+    )
+
+    assert len(client.async_send_command.call_args_list) == 2
+    args = client.async_send_command.call_args_list[0][0][0]
+    assert args["command"] == "node.ping"
+    assert (
+        args["nodeId"]
+        == climate_radio_thermostat_ct100_plus_different_endpoints.node_id
+    )
+    args = client.async_send_command.call_args_list[1][0][0]
+    assert args["command"] == "node.ping"
+    assert args["nodeId"] == climate_danfoss_lc_13.node_id
+
+    client.async_send_command.reset_mock()
+
+    # Test successful ping call with label
+    label_reg = async_get_label_reg(hass)
+    label = label_reg.async_create("test")
+    dev_reg.async_update_device(device_radio_thermostat.id, labels={label.label_id})
+    dev_reg.async_update_device(device_danfoss.id, labels={label.label_id})
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_PING,
+        {ATTR_LABEL_ID: label.label_id},
         blocking=True,
     )
 
