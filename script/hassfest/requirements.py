@@ -32,6 +32,7 @@ IGNORE_VIOLATIONS = {
     # Still has standard library requirements.
     "acmeda",
     "blink",
+    "electrasmart",
     "ezviz",
     "hdmi_cec",
     "juicenet",
