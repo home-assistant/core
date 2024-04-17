@@ -61,7 +61,7 @@ async def async_setup_entry(
 
 
 class MqttNotify(MqttEntity, NotifyEntity):
-    """Representation of a switch that can be toggled using MQTT."""
+    """Representation of a notification entity service that can send messages using MQTT."""
 
     _default_name = DEFAULT_NAME
     _entity_id_format = notify.ENTITY_ID_FORMAT
