@@ -1,7 +1,6 @@
 """Configuration for 17Track tests."""
 
 from collections.abc import Generator
-from typing import Optional
 from unittest.mock import AsyncMock, patch
 
 from py17track.package import Package
@@ -129,7 +128,7 @@ def mock_seventeentrack():
 def get_package(
     tracking_number: str = "456",
     destination_country: int = 206,
-    friendly_name: Optional[str] = "friendly name 1",
+    friendly_name: str | None = "friendly name 1",
     info_text: str = "info text 1",
     location: str = "location 1",
     timestamp: str = "2020-08-10 10:32",
