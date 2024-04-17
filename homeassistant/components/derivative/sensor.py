@@ -238,6 +238,9 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
             except AssertionError as err:
                 _LOGGER.error("Could not calculate derivative: %s", err)
 
+            if (new_derivative < 0):
+                return
+
             # add latest derivative to the window list
             self._state_list.append(
                 (old_state.last_updated, new_state.last_updated, new_derivative)
