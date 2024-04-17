@@ -121,8 +121,8 @@ async def async_setup_entry(
                         },
                     ),
                     value_fn=_get_marker_value_fn(
-                        index, 
-                        lambda marker: marker.level if marker.level >= 0 else None
+                        index,
+                        lambda marker: marker.level if marker.level >= 0 else None,
                     ),
                 ),
             )
