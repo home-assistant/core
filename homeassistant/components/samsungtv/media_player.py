@@ -54,7 +54,6 @@ SUPPORT_SAMSUNGTV = (
     | MediaPlayerEntityFeature.SELECT_SOURCE
     | MediaPlayerEntityFeature.STOP
     | MediaPlayerEntityFeature.TURN_OFF
-    | MediaPlayerEntityFeature.TURN_ON
     | MediaPlayerEntityFeature.VOLUME_MUTE
     | MediaPlayerEntityFeature.VOLUME_SET
     | MediaPlayerEntityFeature.VOLUME_STEP
