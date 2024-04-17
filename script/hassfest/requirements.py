@@ -28,16 +28,9 @@ PACKAGE_REGEX = re.compile(
 PIP_REGEX = re.compile(r"^(--.+\s)?([-_\.\w\d]+.*(?:==|>=|<=|~=|!=|<|>|===)?.*$)")
 PIP_VERSION_RANGE_SEPARATOR = re.compile(r"^(==|>=|<=|~=|!=|<|>|===)?(.*)$")
 
-IGNORE_VIOLATIONS = {
-    # Still has standard library requirements.
-    "acmeda",
-    "blink",
+IGNORE_STANDARD_LIBRARY_VIOLATIONS = {
+    # Integrations which have standard library requirements.
     "electrasmart",
-    "ezviz",
-    "hdmi_cec",
-    "juicenet",
-    "lupusec",
-    "rainbird",
     "slide",
     "suez_water",
 }
@@ -113,10 +106,6 @@ def validate_requirements(integration: Integration) -> None:
     if not validate_requirements_format(integration):
         return
 
-    # Some integrations have not been fixed yet so are allowed to have violations.
-    if integration.domain in IGNORE_VIOLATIONS:
-        return
-
     integration_requirements = set()
     integration_packages = set()
     for req in integration.requirements:
@@ -150,12 +139,34 @@ def validate_requirements(integration: Integration) -> None:
         return
 
     # Check for requirements incompatible with standard library.
+    standard_library_violations = set()
     for req in all_integration_requirements:
         if req in sys.stdlib_module_names:
-            integration.add_error(
-                "requirements",
-                f"Package {req} is not compatible with the Python standard library",
-            )
+            standard_library_violations.add(req)
+
+    if (
+        standard_library_violations
+        and integration.domain not in IGNORE_STANDARD_LIBRARY_VIOLATIONS
+    ):
+        integration.add_error(
+            "requirements",
+            (
+                f"Package {req} has dependencies {standard_library_violations} which "
+                "are not compatible with the Python standard library"
+            ),
+        )
+    elif (
+        not standard_library_violations
+        and integration.domain in IGNORE_STANDARD_LIBRARY_VIOLATIONS
+    ):
+        integration.add_error(
+            "requirements",
+            (
+                f"Integration {integration.domain} no longer has requirements which are"
+                " incompatible with the Python standard library, remove it from "
+                "IGNORE_STANDARD_LIBRARY_VIOLATIONS"
+            ),
+        )
 
 
 @cache
