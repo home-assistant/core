@@ -2081,6 +2081,59 @@ async def test_invoke_cc_api(
     client.async_send_command.reset_mock()
     client.async_send_command_no_wait.reset_mock()
 
+    # Test successful invoke_cc_api call without an endpoint (include label)
+    label_reg = async_get_label_reg(hass)
+    label = label_reg.async_create("test")
+    dev_reg.async_update_device(device_danfoss.id, labels=label.label_id)
+
+    client.async_send_command.return_value = {"response": True}
+    client.async_send_command_no_wait.return_value = {"response": True}
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_INVOKE_CC_API,
+        {
+            ATTR_LABEL_ID: label.label_id,
+            ATTR_DEVICE_ID: [
+                device_radio_thermostat.id,
+                "fake_device_id",
+            ],
+            ATTR_ENTITY_ID: [
+                "sensor.not_real",
+                "select.living_connect_z_thermostat_local_protection_state",
+                "sensor.living_connect_z_thermostat_node_status",
+            ],
+            ATTR_COMMAND_CLASS: 67,
+            ATTR_METHOD_NAME: "someMethod",
+            ATTR_PARAMETERS: [1, 2],
+        },
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
+    assert args["command"] == "endpoint.invoke_cc_api"
+    assert args["commandClass"] == 67
+    assert args["endpoint"] == 0
+    assert args["methodName"] == "someMethod"
+    assert args["args"] == [1, 2]
+    assert (
+        args["nodeId"]
+        == climate_radio_thermostat_ct100_plus_different_endpoints.node_id
+    )
+
+    assert len(client.async_send_command_no_wait.call_args_list) == 1
+    args = client.async_send_command_no_wait.call_args[0][0]
+    assert args["command"] == "endpoint.invoke_cc_api"
+    assert args["commandClass"] == 67
+    assert args["endpoint"] == 0
+    assert args["methodName"] == "someMethod"
+    assert args["args"] == [1, 2]
+    assert args["nodeId"] == climate_danfoss_lc_13.node_id
+
+    client.async_send_command.reset_mock()
+    client.async_send_command_no_wait.reset_mock()
+
     # Test failed invoke_cc_api call on one node. We return the error on
     # the first node in the call to make sure that gather works as expected
     client.async_send_command.return_value = {"response": True}
