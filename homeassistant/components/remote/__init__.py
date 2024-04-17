@@ -90,6 +90,9 @@ _DEPRECATED_SUPPORT_DELETE_COMMAND = DeprecatedConstantEnum(
 _DEPRECATED_SUPPORT_ACTIVITY = DeprecatedConstantEnum(
     RemoteEntityFeature.ACTIVITY, "2025.1"
 )
+_DEPRECATED_SUPPORT_SWEEP_FREQUENCY = DeprecatedConstantEnum(
+    RemoteEntityFeature.SWEEP_FREQUENCY, "2025.1"
+)
 
 
 REMOTE_SERVICE_ACTIVITY_SCHEMA = make_entity_service_schema(
