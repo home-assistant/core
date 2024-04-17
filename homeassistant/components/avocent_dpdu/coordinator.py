@@ -6,7 +6,7 @@ from typing import Any
 from avocentdpdu.avocentdpdu import AvocentDPDU
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_COUNT, CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -41,8 +41,7 @@ class AvocentDpduDataUpdateCoordinator(DataUpdateCoordinator):
             host=entry.data[CONF_HOST],
             username=entry.data[CONF_USERNAME],
             password=entry.data[CONF_PASSWORD],
-            number_outlets=entry.data[CONF_COUNT],
-            timeout=50,
+            timeout=10,
         )
 
     async def _connect(self) -> None:

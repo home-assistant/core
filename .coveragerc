@@ -111,7 +111,6 @@ omit =
     homeassistant/components/avocent_dpdu/__init__.py
     homeassistant/components/avocent_dpdu/coordinator.py
     homeassistant/components/avocent_dpdu/entity.py
-    homeassistant/components/avocent_dpdu/sensor.py
     homeassistant/components/avocent_dpdu/switch.py
     homeassistant/components/awair/coordinator.py
     homeassistant/components/azure_service_bus/*

@@ -448,7 +448,7 @@ auroranoaa==0.0.3
 aurorapy==0.2.7
 
 # homeassistant.components.avocent_dpdu
-avocentdpdu==1.1.0
+avocentdpdu==2.0.1
 
 # homeassistant.components.axis
 axis==61

@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, patch
 
 from homeassistant import config_entries
 from homeassistant.components.avocent_dpdu.const import DOMAIN
-from homeassistant.const import CONF_COUNT, CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -34,7 +34,6 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
                     CONF_HOST: "1.1.1.1",
                     CONF_USERNAME: "test-username",
                     CONF_PASSWORD: "test-password",
-                    CONF_COUNT: 8,
                 },
             )
             await hass.async_block_till_done()
@@ -45,7 +44,6 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
             CONF_HOST: "1.1.1.1",
             CONF_USERNAME: "test-username",
             CONF_PASSWORD: "test-password",
-            CONF_COUNT: 8,
         }
         assert len(mock_setup_entry.mock_calls) == 1
 
@@ -72,7 +70,6 @@ async def test_form_invalid_auth(
                     CONF_HOST: "1.1.1.1",
                     CONF_USERNAME: "test-username",
                     CONF_PASSWORD: "test-password",
-                    CONF_COUNT: 8,
                 },
             )
 
@@ -96,7 +93,6 @@ async def test_form_invalid_auth(
                     CONF_HOST: "1.1.1.1",
                     CONF_USERNAME: "test-username",
                     CONF_PASSWORD: "test-password",
-                    CONF_COUNT: 8,
                 },
             )
             await hass.async_block_till_done()
@@ -107,7 +103,6 @@ async def test_form_invalid_auth(
             CONF_HOST: "1.1.1.1",
             CONF_USERNAME: "test-username",
             CONF_PASSWORD: "test-password",
-            CONF_COUNT: 8,
         }
         assert len(mock_setup_entry.mock_calls) == 1
 
@@ -130,7 +125,6 @@ async def test_form_cannot_connect(
                 CONF_HOST: "1.1.1.1",
                 CONF_USERNAME: "test-username",
                 CONF_PASSWORD: "test-password",
-                CONF_COUNT: 8,
             },
         )
 
@@ -155,7 +149,6 @@ async def test_form_cannot_connect(
                     CONF_HOST: "1.1.1.1",
                     CONF_USERNAME: "test-username",
                     CONF_PASSWORD: "test-password",
-                    CONF_COUNT: 8,
                 },
             )
             await hass.async_block_till_done()
@@ -166,6 +159,5 @@ async def test_form_cannot_connect(
             CONF_HOST: "1.1.1.1",
             CONF_USERNAME: "test-username",
             CONF_PASSWORD: "test-password",
-            CONF_COUNT: 8,
         }
         assert len(mock_setup_entry.mock_calls) == 1

@@ -8,24 +8,17 @@ from avocentdpdu.avocentdpdu import AvocentDPDU
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_COUNT, CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import (
-    DEFAULT_NUM_OUTLETS,
-    DEFAULT_PASSWORD,
-    DEFAULT_USERNAME,
-    DOMAIN,
-    LOGGER,
-)
+from .const import DEFAULT_PASSWORD, DEFAULT_USERNAME, DOMAIN, LOGGER
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
         vol.Required(CONF_USERNAME, default=DEFAULT_USERNAME): str,
         vol.Required(CONF_PASSWORD, default=DEFAULT_PASSWORD): str,
-        vol.Required(CONF_COUNT, default=DEFAULT_NUM_OUTLETS): vol.In([8, 16]),
     }
 )
 
@@ -39,7 +32,6 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         host=data[CONF_HOST],
         username=data[CONF_USERNAME],
         password=data[CONF_PASSWORD],
-        number_outlets=data[CONF_COUNT],
         timeout=10,
     )
     try:

@@ -49,13 +49,13 @@ class AvocentDpduSwitchEntity(OutletEntity, SwitchEntity):
         self.outlet = outlet
 
         self._attr_unique_id = (
-            f"{format_mac(coordinator.api.mac)}-{self.outlet.get_name()}"
+            f"{format_mac(coordinator.api.mac)}-{self.outlet.outlet_idx}"
         )
 
     @property
     def name(self) -> str:
         """Avocent name for this outlet."""
-        return self.outlet.name
+        return self.outlet.get_name()
 
     @property
     def is_on(self) -> bool:
