@@ -248,13 +248,13 @@ def is_regex(value: Any) -> re.Pattern[Any]:
     """Validate that a string is a valid regular expression."""
     try:
         r = re.compile(value)
-        return r
     except TypeError as err:
         raise vol.Invalid(
             f"value {value} is of the wrong type for a regular expression"
         ) from err
     except re.error as err:
         raise vol.Invalid(f"value {value} is not a valid regular expression") from err
+    return r
 
 
 def isfile(value: Any) -> str:
@@ -284,18 +284,15 @@ def isdir(value: Any) -> str:
 
 
 @overload
-def ensure_list(value: None) -> list[Any]:
-    ...
+def ensure_list(value: None) -> list[Any]: ...
 
 
 @overload
-def ensure_list(value: list[_T]) -> list[_T]:
-    ...
+def ensure_list(value: list[_T]) -> list[_T]: ...
 
 
 @overload
-def ensure_list(value: list[_T] | _T) -> list[_T]:
-    ...
+def ensure_list(value: list[_T] | _T) -> list[_T]: ...
 
 
 def ensure_list(value: _T | None) -> list[_T] | list[Any]:
@@ -674,9 +671,9 @@ def template(value: Any | None) -> template_helper.Template:
 
     try:
         template_value.ensure_valid()
-        return template_value
     except TemplateError as ex:
         raise vol.Invalid(f"invalid template ({ex})") from ex
+    return template_value
 
 
 def dynamic_template(value: Any | None) -> template_helper.Template:
@@ -696,9 +693,9 @@ def dynamic_template(value: Any | None) -> template_helper.Template:
 
     try:
         template_value.ensure_valid()
-        return template_value
     except TemplateError as ex:
         raise vol.Invalid(f"invalid template ({ex})") from ex
+    return template_value
 
 
 def template_complex(value: Any) -> Any:
@@ -1353,7 +1350,8 @@ SERVICE_SCHEMA = vol.All(
 )
 
 NUMERIC_STATE_THRESHOLD_SCHEMA = vol.Any(
-    vol.Coerce(float), vol.All(str, entity_domain(["input_number", "number", "sensor"]))
+    vol.Coerce(float),
+    vol.All(str, entity_domain(["input_number", "number", "sensor", "zone"])),
 )
 
 CONDITION_BASE_SCHEMA = {
@@ -1857,6 +1855,12 @@ def determine_script_action(action: dict[str, Any]) -> str:
     """Determine action type."""
     if not (actions := ACTIONS_SET.intersection(action)):
         raise ValueError("Unable to determine action")
+    if len(actions) > 1:
+        # Ambiguous action, select the first one in the
+        # order of the ACTIONS_MAP
+        for action_key, _script_action in ACTIONS_MAP.items():
+            if action_key in actions:
+                return _script_action
     return ACTIONS_MAP[actions.pop()]
 
 

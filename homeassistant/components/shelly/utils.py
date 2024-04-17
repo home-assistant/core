@@ -480,3 +480,23 @@ def is_rpc_wifi_stations_disabled(
 def get_http_port(data: MappingProxyType[str, Any]) -> int:
     """Get port from config entry data."""
     return cast(int, data.get(CONF_PORT, DEFAULT_HTTP_PORT))
+
+
+async def async_shutdown_device(device: BlockDevice | RpcDevice) -> None:
+    """Shutdown a Shelly device."""
+    if isinstance(device, RpcDevice):
+        await device.shutdown()
+    if isinstance(device, BlockDevice):
+        device.shutdown()
+
+
+@callback
+def async_remove_shelly_rpc_entities(
+    hass: HomeAssistant, domain: str, mac: str, keys: list[str]
+) -> None:
+    """Remove RPC based Shelly entity."""
+    entity_reg = er_async_get(hass)
+    for key in keys:
+        if entity_id := entity_reg.async_get_entity_id(domain, DOMAIN, f"{mac}-{key}"):
+            LOGGER.debug("Removing entity: %s", entity_id)
+            entity_reg.async_remove(entity_id)

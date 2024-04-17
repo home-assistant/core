@@ -7,12 +7,9 @@ import pytest
 from voluptuous.error import MultipleInvalid
 
 from homeassistant import config as hass_config
-import homeassistant.components.input_number as input_number
-import homeassistant.components.input_select as input_select
-import homeassistant.components.media_player as media_player
+from homeassistant.components import input_number, input_select, media_player, switch
 from homeassistant.components.media_player import MediaClass, MediaPlayerEntityFeature
 from homeassistant.components.media_player.browse_media import BrowseMedia
-import homeassistant.components.switch as switch
 import homeassistant.components.universal.media_player as universal
 from homeassistant.const import (
     SERVICE_RELOAD,
@@ -1123,12 +1120,15 @@ async def test_browse_media(hass: HomeAssistant) -> None:
     ump.entity_id = media_player.ENTITY_ID_FORMAT.format(config["name"])
     await ump.async_update()
 
-    with patch(
-        "homeassistant.components.demo.media_player.MediaPlayerEntity.supported_features",
-        MediaPlayerEntityFeature.BROWSE_MEDIA,
-    ), patch(
-        "homeassistant.components.demo.media_player.MediaPlayerEntity.async_browse_media",
-        return_value=MOCK_BROWSE_MEDIA,
+    with (
+        patch(
+            "homeassistant.components.demo.media_player.MediaPlayerEntity.supported_features",
+            MediaPlayerEntityFeature.BROWSE_MEDIA,
+        ),
+        patch(
+            "homeassistant.components.demo.media_player.MediaPlayerEntity.async_browse_media",
+            return_value=MOCK_BROWSE_MEDIA,
+        ),
     ):
         result = await ump.async_browse_media()
         assert result == MOCK_BROWSE_MEDIA
@@ -1155,12 +1155,15 @@ async def test_browse_media_override(hass: HomeAssistant) -> None:
     ump.entity_id = media_player.ENTITY_ID_FORMAT.format(config["name"])
     await ump.async_update()
 
-    with patch(
-        "homeassistant.components.demo.media_player.MediaPlayerEntity.supported_features",
-        MediaPlayerEntityFeature.BROWSE_MEDIA,
-    ), patch(
-        "homeassistant.components.demo.media_player.MediaPlayerEntity.async_browse_media",
-        return_value=MOCK_BROWSE_MEDIA,
+    with (
+        patch(
+            "homeassistant.components.demo.media_player.MediaPlayerEntity.supported_features",
+            MediaPlayerEntityFeature.BROWSE_MEDIA,
+        ),
+        patch(
+            "homeassistant.components.demo.media_player.MediaPlayerEntity.async_browse_media",
+            return_value=MOCK_BROWSE_MEDIA,
+        ),
     ):
         result = await ump.async_browse_media()
         assert result == MOCK_BROWSE_MEDIA

@@ -100,7 +100,7 @@ def get_time_zone(time_zone_str: str) -> dt.tzinfo | None:
 
 # We use a partial here since it is implemented in native code
 # and avoids the global lookup of UTC
-utcnow: partial[dt.datetime] = partial(dt.datetime.now, UTC)
+utcnow = partial(dt.datetime.now, UTC)
 utcnow.__doc__ = "Get now in UTC time."
 
 
@@ -179,20 +179,17 @@ def start_of_local_day(dt_or_d: dt.date | dt.datetime | None = None) -> dt.datet
 # All rights reserved.
 # https://github.com/django/django/blob/main/LICENSE
 @overload
-def parse_datetime(dt_str: str) -> dt.datetime | None:
-    ...
+def parse_datetime(dt_str: str) -> dt.datetime | None: ...
 
 
 @overload
-def parse_datetime(dt_str: str, *, raise_on_error: Literal[True]) -> dt.datetime:
-    ...
+def parse_datetime(dt_str: str, *, raise_on_error: Literal[True]) -> dt.datetime: ...
 
 
 @overload
 def parse_datetime(
-    dt_str: str, *, raise_on_error: Literal[False] | bool
-) -> dt.datetime | None:
-    ...
+    dt_str: str, *, raise_on_error: Literal[False]
+) -> dt.datetime | None: ...
 
 
 def parse_datetime(dt_str: str, *, raise_on_error: bool = False) -> dt.datetime | None:
