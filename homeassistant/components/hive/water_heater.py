@@ -74,7 +74,7 @@ class HiveWaterHeater(HiveEntity, WaterHeaterEntity):
     def __init__(self, hive, hive_device):                                          
         """Initialise hive water heater."""                             
         super().__init__(hive, hive_device)                                      
-        self.current_state = 'Unknown'
+        self.current_state = None
 
     _attr_supported_features = WaterHeaterEntityFeature.OPERATION_MODE
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
