@@ -674,3 +674,116 @@ async def test_supervisor_issue_docker_config_repair_flow(
         str(aioclient_mock.mock_calls[-1][1])
         == "http://127.0.0.1/resolution/suggestion/1235"
     )
+
+
+async def test_supervisor_issue_repair_flow_multiple_data_disks(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    hass_client: ClientSessionGenerator,
+    issue_registry: ir.IssueRegistry,
+    all_setup_requests,
+) -> None:
+    """Test fix flow for multiple data disks supervisor issue."""
+    mock_resolution_info(
+        aioclient_mock,
+        issues=[
+            {
+                "uuid": "1234",
+                "type": "multiple_data_disks",
+                "context": "system",
+                "reference": "/dev/sda1",
+                "suggestions": [
+                    {
+                        "uuid": "1235",
+                        "type": "rename_data_disk",
+                        "context": "system",
+                        "reference": "/dev/sda1",
+                    },
+                    {
+                        "uuid": "1236",
+                        "type": "adopt_data_disk",
+                        "context": "system",
+                        "reference": "/dev/sda1",
+                    },
+                ],
+            },
+        ],
+    )
+
+    assert await async_setup_component(hass, "hassio", {})
+
+    repair_issue = issue_registry.async_get_issue(domain="hassio", issue_id="1234")
+    assert repair_issue
+
+    client = await hass_client()
+
+    resp = await client.post(
+        "/api/repairs/issues/fix",
+        json={"handler": "hassio", "issue_id": repair_issue.issue_id},
+    )
+
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+
+    flow_id = data["flow_id"]
+    assert data == {
+        "type": "menu",
+        "flow_id": flow_id,
+        "handler": "hassio",
+        "step_id": "fix_menu",
+        "data_schema": [
+            {
+                "type": "select",
+                "options": [
+                    ["system_rename_data_disk", "system_rename_data_disk"],
+                    ["system_adopt_data_disk", "system_adopt_data_disk"],
+                ],
+                "name": "next_step_id",
+            }
+        ],
+        "menu_options": ["system_rename_data_disk", "system_adopt_data_disk"],
+        "description_placeholders": {"reference": "/dev/sda1"},
+    }
+
+    resp = await client.post(
+        f"/api/repairs/issues/fix/{flow_id}",
+        json={"next_step_id": "system_adopt_data_disk"},
+    )
+
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+
+    flow_id = data["flow_id"]
+    assert data == {
+        "type": "form",
+        "flow_id": flow_id,
+        "handler": "hassio",
+        "step_id": "system_adopt_data_disk",
+        "data_schema": [],
+        "errors": None,
+        "description_placeholders": {"reference": "/dev/sda1"},
+        "last_step": True,
+        "preview": None,
+    }
+
+    resp = await client.post(f"/api/repairs/issues/fix/{flow_id}")
+
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+
+    flow_id = data["flow_id"]
+    assert data == {
+        "type": "create_entry",
+        "flow_id": flow_id,
+        "handler": "hassio",
+        "description": None,
+        "description_placeholders": None,
+    }
+
+    assert not issue_registry.async_get_issue(domain="hassio", issue_id="1234")
+
+    assert aioclient_mock.mock_calls[-1][0] == "post"
+    assert (
+        str(aioclient_mock.mock_calls[-1][1])
+        == "http://127.0.0.1/resolution/suggestion/1236"
+    )

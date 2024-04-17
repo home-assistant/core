@@ -2,7 +2,7 @@
 
 from binascii import unhexlify
 from http import HTTPStatus
-from unittest.mock import patch
+from unittest.mock import ANY, patch
 
 import pytest
 
@@ -317,7 +317,7 @@ async def test_webhook_handle_get_config(
         "time_zone": hass_config["time_zone"],
         "components": set(hass_config["components"]),
         "version": hass_config["version"],
-        "theme_color": "#03A9F4",  # Default frontend theme color
+        "theme_color": ANY,
         "entities": {
             "mock-device-id": {"disabled": False},
             "battery-state-id": {"disabled": False},

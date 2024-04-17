@@ -280,6 +280,9 @@ STATIC_VALIDATION_ACTION_TYPES = (
     cv.SCRIPT_ACTION_WAIT_TEMPLATE,
 )
 
+REPEAT_WARN_ITERATIONS = 5000
+REPEAT_TERMINATE_ITERATIONS = 10000
+
 
 async def async_validate_actions_config(
     hass: HomeAssistant, actions: list[ConfigType]
@@ -817,8 +820,7 @@ class _ScriptRun:
 
             return True
 
-        result = traced_test_conditions(self._hass, self._variables)
-        return result
+        return traced_test_conditions(self._hass, self._variables)
 
     @async_trace_path("repeat")
     async def _async_repeat_step(self):  # noqa: C901
@@ -840,6 +842,7 @@ class _ScriptRun:
 
         # pylint: disable-next=protected-access
         script = self._script._get_repeat_script(self._step)
+        warned_too_many_loops = False
 
         async def async_run_sequence(iteration, extra_msg=""):
             self._log("Repeating %s: Iteration %i%s", description, iteration, extra_msg)
@@ -910,6 +913,36 @@ class _ScriptRun:
                     _LOGGER.warning("Error in 'while' evaluation:\n%s", ex)
                     break
 
+                if iteration > 1:
+                    if iteration > REPEAT_WARN_ITERATIONS:
+                        if not warned_too_many_loops:
+                            warned_too_many_loops = True
+                            _LOGGER.warning(
+                                "While condition %s in script `%s` looped %s times",
+                                repeat[CONF_WHILE],
+                                self._script.name,
+                                REPEAT_WARN_ITERATIONS,
+                            )
+
+                        if iteration > REPEAT_TERMINATE_ITERATIONS:
+                            _LOGGER.critical(
+                                "While condition %s in script `%s` "
+                                "terminated because it looped %s times",
+                                repeat[CONF_WHILE],
+                                self._script.name,
+                                REPEAT_TERMINATE_ITERATIONS,
+                            )
+                            raise _AbortScript(
+                                f"While condition {repeat[CONF_WHILE]} "
+                                "terminated because it looped "
+                                f" {REPEAT_TERMINATE_ITERATIONS} times"
+                            )
+
+                    # If the user creates a script with a tight loop,
+                    # yield to the event loop so the system stays
+                    # responsive while all the cpu time is consumed.
+                    await asyncio.sleep(0)
+
                 await async_run_sequence(iteration)
 
         elif CONF_UNTIL in repeat:
@@ -927,6 +960,35 @@ class _ScriptRun:
                 except exceptions.ConditionError as ex:
                     _LOGGER.warning("Error in 'until' evaluation:\n%s", ex)
                     break
+
+                if iteration >= REPEAT_WARN_ITERATIONS:
+                    if not warned_too_many_loops:
+                        warned_too_many_loops = True
+                        _LOGGER.warning(
+                            "Until condition %s in script `%s` looped %s times",
+                            repeat[CONF_UNTIL],
+                            self._script.name,
+                            REPEAT_WARN_ITERATIONS,
+                        )
+
+                    if iteration >= REPEAT_TERMINATE_ITERATIONS:
+                        _LOGGER.critical(
+                            "Until condition %s in script `%s` "
+                            "terminated because it looped %s times",
+                            repeat[CONF_UNTIL],
+                            self._script.name,
+                            REPEAT_TERMINATE_ITERATIONS,
+                        )
+                        raise _AbortScript(
+                            f"Until condition {repeat[CONF_UNTIL]} "
+                            "terminated because it looped "
+                            f"{REPEAT_TERMINATE_ITERATIONS} times"
+                        )
+
+                # If the user creates a script with a tight loop,
+                # yield to the event loop so the system stays responsive
+                # while all the cpu time is consumed.
+                await asyncio.sleep(0)
 
         if saved_repeat_vars:
             self._variables["repeat"] = saved_repeat_vars
@@ -1188,7 +1250,7 @@ async def _async_stop_scripts_after_shutdown(
         _LOGGER.warning("Stopping scripts running too long after shutdown: %s", names)
         await asyncio.gather(
             *(
-                script["instance"].async_stop(update_state=False)
+                create_eager_task(script["instance"].async_stop(update_state=False))
                 for script in running_scripts
             )
         )
@@ -1207,7 +1269,10 @@ async def _async_stop_scripts_at_shutdown(hass: HomeAssistant, event: Event) -> 
         names = ", ".join([script["instance"].name for script in running_scripts])
         _LOGGER.debug("Stopping scripts running at shutdown: %s", names)
         await asyncio.gather(
-            *(script["instance"].async_stop() for script in running_scripts)
+            *(
+                create_eager_task(script["instance"].async_stop())
+                for script in running_scripts
+            )
         )
 
 
@@ -1633,6 +1698,9 @@ class Script:
             # return false after the other script runs were stopped until our task
             # resumes running.
             self._log("Restarting")
+            # Important: yield to the event loop to allow the script to start in case
+            # the script is restarting itself.
+            await asyncio.sleep(0)
             await self.async_stop(update_state=False, spare=run)
 
         if started_action:
@@ -1662,11 +1730,13 @@ class Script:
         # asyncio.shield as asyncio.shield yields to the event loop, which would cause
         # us to wait for script runs added after the call to async_stop.
         aws = [
-            asyncio.create_task(run.async_stop()) for run in self._runs if run != spare
+            create_eager_task(run.async_stop()) for run in self._runs if run != spare
         ]
         if not aws:
             return
-        await asyncio.shield(self._async_stop(aws, update_state, spare))
+        await asyncio.shield(
+            create_eager_task(self._async_stop(aws, update_state, spare))
+        )
 
     async def _async_get_condition(self, config):
         if isinstance(config, template.Template):

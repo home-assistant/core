@@ -87,7 +87,7 @@ async def test_form_options(
 
     await hass.async_block_till_done()
 
-    assert config_entry.state == config_entries.ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
 
 async def test_form_invalid_auth(hass: HomeAssistant) -> None:

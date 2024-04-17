@@ -207,12 +207,8 @@ class USBDiscovery:
     async def async_setup(self) -> None:
         """Set up USB Discovery."""
         await self._async_start_monitor()
-        self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STARTED, self.async_start, run_immediately=True
-        )
-        self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STOP, self.async_stop, run_immediately=True
-        )
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, self.async_start)
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.async_stop)
 
     async def async_start(self, event: Event) -> None:
         """Start USB Discovery and run a manual scan."""
@@ -242,9 +238,7 @@ class USBDiscovery:
         def _stop_observer(event: Event) -> None:
             observer.stop()
 
-        self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STOP, _stop_observer, run_immediately=True
-        )
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop_observer)
         self.observer_active = True
 
     def _get_monitor_observer(self) -> MonitorObserver | None:

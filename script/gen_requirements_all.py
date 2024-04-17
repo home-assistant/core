@@ -18,7 +18,6 @@ from homeassistant.util.yaml.loader import load_yaml
 from script.hassfest.model import Integration
 
 COMMENT_REQUIREMENTS = (
-    "Adafruit-BBIO",
     "atenpdu",  # depends on pysnmp which is not maintained at this time
     "avea",  # depends on bluepy
     "avion",
@@ -100,7 +99,7 @@ regex==2021.8.28
 # requirements so we can directly link HA versions to these library versions.
 anyio==4.3.0
 h11==0.14.0
-httpcore==1.0.4
+httpcore==1.0.5
 
 # Ensure we have a hyperframe version that works in Python 3.10
 # 5.2.0 fixed a collections abc deprecation
@@ -263,9 +262,7 @@ def normalize_package_name(requirement: str) -> str:
         return ""
 
     # pipdeptree needs lowercase and dash instead of underscore as separator
-    package = match.group(1).lower().replace("_", "-")
-
-    return package
+    return match.group(1).lower().replace("_", "-")
 
 
 def comment_requirement(req: str) -> bool:

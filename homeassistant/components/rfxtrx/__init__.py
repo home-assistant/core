@@ -412,7 +412,7 @@ def find_possible_pt2262_device(device_ids: set[str], device_id: str) -> str | N
     for dev_id in device_ids:
         if len(dev_id) == len(device_id):
             size = None
-            for i, (char1, char2) in enumerate(zip(dev_id, device_id)):
+            for i, (char1, char2) in enumerate(zip(dev_id, device_id, strict=False)):
                 if char1 != char2:
                     break
                 size = i

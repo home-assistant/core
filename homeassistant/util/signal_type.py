@@ -19,7 +19,7 @@ class _SignalTypeBase(Generic[*_Ts]):
 
         return hash(self.name)
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         """Check equality for dict keys to be compatible with str."""
 
         if isinstance(other, str):

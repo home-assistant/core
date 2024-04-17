@@ -23,6 +23,7 @@ from homeassistant.core import (
     CALLBACK_TYPE,
     Context,
     Event,
+    EventStateChangedData,
     HomeAssistant,
     State,
     callback,
@@ -32,7 +33,6 @@ from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import (
-    EventStateChangedData,
     TrackTemplate,
     TrackTemplateResult,
     TrackTemplateResultInfo,

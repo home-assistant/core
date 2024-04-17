@@ -95,7 +95,7 @@ async def test_setup_without_port_device_offline(hass: HomeAssistant) -> None:
 
     config_entries_domain = hass.config_entries.async_entries(SAMSUNGTV_DOMAIN)
     assert len(config_entries_domain) == 1
-    assert config_entries_domain[0].state == ConfigEntryState.SETUP_RETRY
+    assert config_entries_domain[0].state is ConfigEntryState.SETUP_RETRY
 
 
 @pytest.mark.usefixtures("remotews", "remoteencws_failing", "rest_api")
@@ -166,7 +166,7 @@ async def test_reauth_triggered_encrypted(hass: HomeAssistant) -> None:
     del encrypted_entry_data[CONF_SESSION_ID]
 
     entry = await setup_samsungtv_entry(hass, encrypted_entry_data)
-    assert entry.state == ConfigEntryState.SETUP_ERROR
+    assert entry.state is ConfigEntryState.SETUP_ERROR
     flows_in_progress = [
         flow
         for flow in hass.config_entries.flow.async_progress()
