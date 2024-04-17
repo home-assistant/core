@@ -275,7 +275,9 @@ class RemoteEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_)
 
     async def async_sweep_frequency(self, **kwargs: Any) -> None:
         """Sweep remote control frequency."""
-        await self.hass.async_add_executor_job(ft.partial(self.sweep_frequency, **kwargs))
+        await self.hass.async_add_executor_job(
+            ft.partial(self.sweep_frequency, **kwargs)
+        )
 
 
 # These can be removed if no deprecated constant are in this module anymore

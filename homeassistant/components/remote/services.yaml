@@ -84,6 +84,7 @@ learn_command:
       selector:
         number:
           min: 0
+          max: 3072
           step: 0.01
           unit_of_measurement: MHz
     alternative:
