@@ -56,6 +56,7 @@ class EsphomeValve(EsphomeEntity[ValveInfo, ValveState], ValveEntity):
             ValveDeviceClass, static_info.device_class
         )
         self._attr_assumed_state = static_info.assumed_state
+        self._attr_reports_position = static_info.supports_position
 
     @property
     @esphome_state_property
@@ -74,12 +75,6 @@ class EsphomeValve(EsphomeEntity[ValveInfo, ValveState], ValveEntity):
     def is_closing(self) -> bool:
         """Return if the valve is closing or not."""
         return self._state.current_operation is ValveOperation.IS_CLOSING
-
-    @property
-    @esphome_state_property
-    def reports_position(self) -> bool:
-        """Return True if entity reports position, False otherwise."""
-        return self._static_info.supports_position
 
     @property
     @esphome_state_property
