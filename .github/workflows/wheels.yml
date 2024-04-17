@@ -144,8 +144,18 @@ jobs:
           name: requirements_wheels
 
       - name: Build wheels
-        run: |
-          cat "requirements_wheels_${{ matrix.arch }}.txt"
+        uses: home-assistant/wheels@2024.01.0
+        with:
+          abi: ${{ matrix.abi }}
+          tag: musllinux_1_2
+          arch: ${{ matrix.arch }}
+          wheels-key: ${{ secrets.WHEELS_KEY }}
+          env-file: true
+          apk: "libffi-dev;openssl-dev;yaml-dev;nasm"
+          skip-binary: aiohttp
+          constraints: "homeassistant/package_constraints.txt"
+          requirements-diff: "requirements_diff.txt"
+          requirements: "requirements_wheels_${{ matrix.arch }}.txt"
 
   integrations:
     name: Build wheels ${{ matrix.abi }} for ${{ matrix.arch }}
@@ -206,17 +216,58 @@ jobs:
           sed -i "/numpy/d" homeassistant/package_constraints.txt
 
       - name: Build wheels (old cython)
-        run: |
-          cat requirements_old-cython.txt
+        uses: home-assistant/wheels@2024.01.0
+        with:
+          abi: ${{ matrix.abi }}
+          tag: musllinux_1_2
+          arch: ${{ matrix.arch }}
+          wheels-key: ${{ secrets.WHEELS_KEY }}
+          env-file: true
+          apk: "bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;libpng-dev;libjpeg-turbo-dev;tiff-dev;cups-dev;gmp-dev;mpfr-dev;mpc1-dev;ffmpeg-dev;gammu-dev;yaml-dev;openblas-dev;fftw-dev;lapack-dev;gfortran;blas-dev;eigen-dev;freetype-dev;glew-dev;harfbuzz-dev;hdf5-dev;libdc1394-dev;libtbb-dev;mesa-dev;openexr-dev;openjpeg-dev;uchardet-dev"
+          skip-binary: aiohttp;charset-normalizer;grpcio;SQLAlchemy;protobuf
+          constraints: "homeassistant/package_constraints.txt"
+          requirements-diff: "requirements_diff.txt"
+          requirements: "requirements_old-cython.txt"
+          pip: "'cython<3'"
 
       - name: Build wheels (part 1)
-        run: |
-          cat requirements_all.txtaa
+        uses: home-assistant/wheels@2024.01.0
+        with:
+          abi: ${{ matrix.abi }}
+          tag: musllinux_1_2
+          arch: ${{ matrix.arch }}
+          wheels-key: ${{ secrets.WHEELS_KEY }}
+          env-file: true
+          apk: "bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;libpng-dev;libjpeg-turbo-dev;tiff-dev;cups-dev;gmp-dev;mpfr-dev;mpc1-dev;ffmpeg-dev;gammu-dev;yaml-dev;openblas-dev;fftw-dev;lapack-dev;gfortran;blas-dev;eigen-dev;freetype-dev;glew-dev;harfbuzz-dev;hdf5-dev;libdc1394-dev;libtbb-dev;mesa-dev;openexr-dev;openjpeg-dev;uchardet-dev;nasm"
+          skip-binary: aiohttp;charset-normalizer;grpcio;SQLAlchemy;protobuf
+          constraints: "homeassistant/package_constraints.txt"
+          requirements-diff: "requirements_diff.txt"
+          requirements: "requirements_all.txtaa"
 
       - name: Build wheels (part 2)
-        run: |
-          cat requirements_all.txtab
+        uses: home-assistant/wheels@2024.01.0
+        with:
+          abi: ${{ matrix.abi }}
+          tag: musllinux_1_2
+          arch: ${{ matrix.arch }}
+          wheels-key: ${{ secrets.WHEELS_KEY }}
+          env-file: true
+          apk: "bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;libpng-dev;libjpeg-turbo-dev;tiff-dev;cups-dev;gmp-dev;mpfr-dev;mpc1-dev;ffmpeg-dev;gammu-dev;yaml-dev;openblas-dev;fftw-dev;lapack-dev;gfortran;blas-dev;eigen-dev;freetype-dev;glew-dev;harfbuzz-dev;hdf5-dev;libdc1394-dev;libtbb-dev;mesa-dev;openexr-dev;openjpeg-dev;uchardet-dev;nasm"
+          skip-binary: aiohttp;charset-normalizer;grpcio;SQLAlchemy;protobuf
+          constraints: "homeassistant/package_constraints.txt"
+          requirements-diff: "requirements_diff.txt"
+          requirements: "requirements_all.txtab"
 
       - name: Build wheels (part 3)
-        run: |
-          cat requirements_all.txtac
+        uses: home-assistant/wheels@2024.01.0
+        with:
+          abi: ${{ matrix.abi }}
+          tag: musllinux_1_2
+          arch: ${{ matrix.arch }}
+          wheels-key: ${{ secrets.WHEELS_KEY }}
+          env-file: true
+          apk: "bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;libpng-dev;libjpeg-turbo-dev;tiff-dev;cups-dev;gmp-dev;mpfr-dev;mpc1-dev;ffmpeg-dev;gammu-dev;yaml-dev;openblas-dev;fftw-dev;lapack-dev;gfortran;blas-dev;eigen-dev;freetype-dev;glew-dev;harfbuzz-dev;hdf5-dev;libdc1394-dev;libtbb-dev;mesa-dev;openexr-dev;openjpeg-dev;uchardet-dev;nasm"
+          skip-binary: aiohttp;charset-normalizer;grpcio;SQLAlchemy;protobuf
+          constraints: "homeassistant/package_constraints.txt"
+          requirements-diff: "requirements_diff.txt"
+          requirements: "requirements_all.txtac"
