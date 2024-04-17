@@ -50,7 +50,7 @@ class MockConnection(Connection):
     async def verify_connectivity(self):
         """Verify that we have functioning communication."""
 
-    def mock_coil_update(self, coil_id: int, value: int | float | str | None):
+    def mock_coil_update(self, coil_id: int, value: float | str | None):
         """Trigger an out of band coil update."""
         coil = self.heatpump.get_coil_by_address(coil_id)
         self.coils[coil_id] = value
