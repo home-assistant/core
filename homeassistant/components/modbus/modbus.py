@@ -239,14 +239,10 @@ async def async_modbus_setup(
             hass,
             DOMAIN,
             "deprecated_restart",
-            breaks_in_ha_version="2024.10.0",
+            breaks_in_ha_version="2024.11.0",
             is_fixable=False,
             severity=IssueSeverity.WARNING,
             translation_key="deprecated_restart",
-            translation_placeholders={
-                "integration": DOMAIN,
-                "url": "https://www.home-assistant.io/integrations/modbus",
-            },
         )
         _LOGGER.warning(
             "`modbus:restart`: is deprecated and will be removed in version 2024.10"
