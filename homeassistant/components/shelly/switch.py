@@ -43,6 +43,7 @@ from .utils import (
     is_block_channel_type_light,
     is_rpc_channel_type_light,
     is_rpc_thermostat_internal_actuator,
+    is_rpc_thermostat_mode,
 )
 
 
@@ -141,8 +142,8 @@ def async_setup_rpc_entry(
             # - thermostat mode using the internal relay as an actuator
             # - thermostat mode using an external (from another device) relay as
             #   an actuator
-            if f"thermostat:{id_}" not in coordinator.device.status:
-                # There is no thermostat in the status, we need to remove a climate
+            if not is_rpc_thermostat_mode(id_, coordinator.device.status):
+                # The device is not in thermostat mode, we need to remove a climate
                 # entity
                 unique_id = f"{coordinator.mac}-thermostat:{id_}"
                 async_remove_shelly_entity(hass, "climate", unique_id)
