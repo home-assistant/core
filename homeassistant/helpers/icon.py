@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections import defaultdict
 from collections.abc import Iterable
 from functools import lru_cache
 import logging
@@ -70,7 +71,7 @@ class _IconsCache:
         """Initialize the cache."""
         self._hass = hass
         self._loaded: set[str] = set()
-        self._cache: dict[str, dict[str, Any]] = {}
+        self._cache: defaultdict[str, dict[str, Any]] = defaultdict(dict)
         self._lock = asyncio.Lock()
 
     async def async_fetch(
@@ -121,9 +122,7 @@ class _IconsCache:
             category for component in icons.values() for category in component
         }
         for category in categories:
-            self._cache.setdefault(category, {}).update(
-                build_resources(icons, components, category)
-            )
+            self._cache[category].update(build_resources(icons, components, category))
 
 
 async def async_get_icons(

@@ -1,6 +1,7 @@
 """Test the translation helper."""
 
 import asyncio
+from collections import defaultdict
 from os import path
 import pathlib
 from typing import Any
@@ -698,7 +699,7 @@ async def test_get_translations_still_has_title_without_translations_files(
         ),
         patch(
             "homeassistant.helpers.translation._load_translations_files_by_language",
-            return_value={},
+            return_value=defaultdict(lambda: defaultdict(dict)),
         ),
         patch(
             "homeassistant.helpers.translation.async_get_integrations",
