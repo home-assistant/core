@@ -166,9 +166,7 @@ async def _async_start_adapter_discovery(
         """Shutdown debouncer."""
         discovery_debouncer.async_shutdown()
 
-    hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STOP, _async_shutdown_debouncer, run_immediately=True
-    )
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_shutdown_debouncer)
 
     async def _async_call_debouncer(now: datetime.datetime) -> None:
         """Call the debouncer at a later time."""
@@ -201,7 +199,6 @@ async def _async_start_adapter_discovery(
     hass.bus.async_listen_once(
         EVENT_HOMEASSISTANT_STOP,
         hass_callback(lambda event: cancel()),
-        run_immediately=True,
     )
 
 
@@ -318,16 +315,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     mode = BluetoothScanningMode.PASSIVE if passive else BluetoothScanningMode.ACTIVE
     manager: HomeAssistantBluetoothManager = hass.data[DATA_MANAGER]
     scanner = HaScanner(mode, adapter, address)
+    scanner.async_setup()
     try:
-        scanner.async_setup()
-    except RuntimeError as err:
+        await scanner.async_start()
+    except (RuntimeError, ScannerStartError) as err:
         raise ConfigEntryNotReady(
             f"{adapter_human_name(adapter, address)}: {err}"
         ) from err
-    try:
-        await scanner.async_start()
-    except ScannerStartError as err:
-        raise ConfigEntryNotReady from err
     adapters = await manager.async_get_bluetooth_adapters()
     details = adapters[adapter]
     slots: int = details.get(ADAPTER_CONNECTION_SLOTS) or DEFAULT_CONNECTION_SLOTS
@@ -335,6 +329,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await async_update_device(hass, entry, adapter, details)
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = scanner
     entry.async_on_unload(entry.add_update_listener(async_update_listener))
+    entry.async_on_unload(scanner.async_stop)
     return True
 
 

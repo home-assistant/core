@@ -150,9 +150,9 @@ class Group(Entity):
         This Object has factory function for creation.
         """
         self.hass = hass
-        self._name = name
+        self._attr_name = name
         self._state: str | None = None
-        self._icon = icon
+        self._attr_icon = icon
         self._set_tracked(entity_ids)
         self._on_off: dict[str, bool] = {}
         self._assumed: dict[str, bool] = {}
@@ -234,30 +234,18 @@ class Group(Entity):
         await async_get_component(hass).async_add_entities([group])
         return group
 
-    @property
-    def name(self) -> str:
-        """Return the name of the group."""
-        return self._name
-
-    @name.setter
-    def name(self, value: str) -> None:
+    def set_name(self, value: str) -> None:
         """Set Group name."""
-        self._name = value
+        self._attr_name = value
 
     @property
     def state(self) -> str | None:
         """Return the state of the group."""
         return self._state
 
-    @property
-    def icon(self) -> str | None:
-        """Return the icon of the group."""
-        return self._icon
-
-    @icon.setter
-    def icon(self, value: str | None) -> None:
+    def set_icon(self, value: str | None) -> None:
         """Set Icon for group."""
-        self._icon = value
+        self._attr_icon = value
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
