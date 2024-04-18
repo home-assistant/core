@@ -19,6 +19,8 @@ from .const import _LOGGER, CONF_REFRESH_TOKEN, DATA_ECOBEE_CONFIG, DOMAIN
 class EcobeeFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle an ecobee config flow."""
 
+    VERSION = 1
+
     def __init__(self) -> None:
         """Initialize the ecobee flow."""
         self._ecobee = None

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from contextlib import suppress
 from functools import partial
 from typing import Any
 
@@ -13,12 +12,12 @@ from homeassistant.components.notify import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import Ecobee, EcobeeData
-from .const import DOMAIN, ECOBEE_MODEL_TO_NAME, MANUFACTURER
+from .const import DOMAIN
+from .entity import EcobeeBaseEntity
 from .repairs import migrate_notify_issue
 
 
@@ -68,40 +67,27 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the ecobee thermostat."""
-
     data: EcobeeData = hass.data[DOMAIN]
-    entities = []
+    async_add_entities(
+        [
+            EcobeeNotifyEntity(data, index)
+            for index in range(len(data.ecobee.thermostats))
+        ],
+        True,
+    )
 
-    for index in range(len(data.ecobee.thermostats)):
-        thermostat = data.ecobee.get_thermostat(index)
-        entities.append(EcobeeNotifyEntity(data, index, thermostat))
 
-    async_add_entities(entities, True)
-
-
-class EcobeeNotifyEntity(NotifyEntity):
+class EcobeeNotifyEntity(EcobeeBaseEntity, NotifyEntity):
     """Implement the notification entity for the Ecobee thermostat."""
 
     _attr_name = None
     _attr_has_entity_name = True
 
-    def __init__(
-        self, data: EcobeeData, thermostat_index: int, thermostat: dict
-    ) -> None:
+    def __init__(self, data: EcobeeData, thermostat_index: int) -> None:
         """Initialize the thermostat."""
-        self.data = data
-        self.thermostat_index = thermostat_index
-        self.thermostat = thermostat
-        self._attr_unique_id = thermostat["identifier"]
-        self.update_without_throttle = False
-        model: str | None = None
-        with suppress(KeyError):
-            model = f"{ECOBEE_MODEL_TO_NAME[thermostat['modelNumber']]} Thermostat"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, thermostat["identifier"])},
-            manufacturer=MANUFACTURER,
-            model=model,
-            name=thermostat["name"],
+        super().__init__(data, thermostat_index)
+        self._attr_unique_id = (
+            f"{self.thermostat["identifier"]}_notify_{thermostat_index}"
         )
 
     def send_message(self, message: str) -> None:
