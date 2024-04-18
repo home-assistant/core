@@ -2,6 +2,7 @@
 
 from abc import abstractmethod
 import logging
+from typing import Any
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -27,6 +28,7 @@ from .const import (
     SIGNAL_RACHIO_RAIN_SENSOR_UPDATE,
     STATUS_ONLINE,
 )
+from .coordinator import RachioUpdateCoordinator
 from .device import RachioPerson
 from .entity import RachioDevice, RachioHoseTimerEntity
 from .webhooks import (
@@ -156,7 +158,9 @@ class RachioHoseTimerBattery(RachioHoseTimerEntity, BinarySensorEntity):
 
     _attr_device_class = BinarySensorDeviceClass.BATTERY
 
-    def __init__(self, data, coordinator) -> None:
+    def __init__(
+        self, data: dict[str, Any], coordinator: RachioUpdateCoordinator
+    ) -> None:
         """Initialize a smart hose timer battery sensor."""
         super().__init__(data, coordinator)
         self._attr_unique_id = f"{self.id}-battery"
