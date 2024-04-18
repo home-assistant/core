@@ -54,9 +54,9 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
         """Instantiate base flow."""
         super().__init__(*args, **kwargs)
 
-        self._current_firmware_type: ApplicationType | None = None
         self._usb_info: usb.UsbServiceInfo | None = None
         self._hw_variant: HardwareVariant | None = None
+        self._probed_firmware_type: ApplicationType | None = None
 
         self.addon_install_task: asyncio.Task | None = None
         self.addon_start_task: asyncio.Task | None = None
@@ -71,8 +71,8 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
                 else "unknown"
             ),
             "firmware_type": (
-                self._current_firmware_type.value
-                if self._current_firmware_type is not None
+                self._probed_firmware_type.value
+                if self._probed_firmware_type is not None
                 else "unknown"
             ),
             "docs_web_flasher_url": DOCS_WEB_FLASHER_URL,
@@ -117,7 +117,7 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
         """Pick Thread or Zigbee firmware."""
         assert self._usb_info is not None
 
-        self._current_firmware_type = await probe_silabs_firmware_type(
+        self._probed_firmware_type = await probe_silabs_firmware_type(
             self._usb_info.device,
             probe_methods=(
                 # We probe in order of frequency: Zigbee, Thread, then multi-PAN
@@ -128,7 +128,7 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
             ),
         )
 
-        if self._current_firmware_type not in (
+        if self._probed_firmware_type not in (
             ApplicationType.EZSP,
             ApplicationType.SPINEL,
             ApplicationType.CPC,
@@ -319,7 +319,7 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
         """Confirm Zigbee setup."""
         assert self._usb_info is not None
         assert self._hw_variant is not None
-        self._current_firmware_type = ApplicationType.EZSP
+        self._probed_firmware_type = ApplicationType.EZSP
 
         if user_input is not None:
             await self.hass.config_entries.flow.async_init(
@@ -473,7 +473,7 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
         assert self._usb_info is not None
         assert self._hw_variant is not None
 
-        self._current_firmware_type = ApplicationType.SPINEL
+        self._probed_firmware_type = ApplicationType.SPINEL
 
         if user_input is not None:
             # OTBR discovery is done automatically via hassio
@@ -558,7 +558,7 @@ class HomeAssistantSkyConnectConfigFlow(
         """Create the config entry."""
         assert self._usb_info is not None
         assert self._hw_variant is not None
-        assert self._current_firmware_type is not None
+        assert self._probed_firmware_type is not None
 
         return self.async_create_entry(
             title=self._hw_variant.full_name,
@@ -569,7 +569,7 @@ class HomeAssistantSkyConnectConfigFlow(
                 "manufacturer": self._usb_info.manufacturer,
                 "product": self._usb_info.description,
                 "device": self._usb_info.device,
-                "firmware": self._current_firmware_type.value,
+                "firmware": self._probed_firmware_type.value,
             },
         )
 
@@ -624,9 +624,7 @@ class HomeAssistantSkyConnectOptionsFlowHandler(
         super().__init__(*args, **kwargs)
 
         self._usb_info = get_usb_service_info(self.config_entry)
-        self._current_firmware_type = ApplicationType(
-            self.config_entry.data["firmware"]
-        )
+        self._probed_firmware_type = ApplicationType(self.config_entry.data["firmware"])
         self._hw_variant = HardwareVariant.from_usb_product_name(
             self.config_entry.data["product"]
         )
@@ -696,13 +694,13 @@ class HomeAssistantSkyConnectOptionsFlowHandler(
         """Create the config entry."""
         assert self._usb_info is not None
         assert self._hw_variant is not None
-        assert self._current_firmware_type is not None
+        assert self._probed_firmware_type is not None
 
         self.hass.config_entries.async_update_entry(
             entry=self.config_entry,
             data={
                 **self.config_entry.data,
-                "firmware": self._current_firmware_type.value,
+                "firmware": self._probed_firmware_type.value,
             },
             options=self.config_entry.options,
         )

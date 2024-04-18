@@ -110,13 +110,13 @@ async def test_guess_firmware_type(hass: HomeAssistant) -> None:
 
     ZHA_CONFIG_ENTRY.mock_state(hass, ConfigEntryState.NOT_LOADED)
     assert (await guess_firmware_type(hass, path)) == FirmwareGuess(
-        is_running=False, firmware_type=ApplicationType.EZSP
+        is_running=False, firmware_type=ApplicationType.EZSP, source="zha"
     )
 
     # When ZHA is running, we indicate as such when guessing
     ZHA_CONFIG_ENTRY.mock_state(hass, ConfigEntryState.LOADED)
     assert (await guess_firmware_type(hass, path)) == FirmwareGuess(
-        is_running=True, firmware_type=ApplicationType.EZSP
+        is_running=True, firmware_type=ApplicationType.EZSP, source="zha"
     )
 
     mock_otbr_addon_manager = AsyncMock()
@@ -199,5 +199,5 @@ async def test_guess_firmware_type(hass: HomeAssistant) -> None:
 
         # Which will lose out to multi-PAN
         assert (await guess_firmware_type(hass, path)) == FirmwareGuess(
-            is_running=True, firmware_type=ApplicationType.CPC, source="multipan"
+            is_running=True, firmware_type=ApplicationType.CPC, source="multiprotocol"
         )

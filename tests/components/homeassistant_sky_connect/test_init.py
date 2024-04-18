@@ -35,6 +35,7 @@ async def test_config_entry_migration_v2(hass: HomeAssistant) -> None:
         return_value=FirmwareGuess(
             is_running=True,
             firmware_type=ApplicationType.SPINEL,
+            source="otbr",
         ),
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
