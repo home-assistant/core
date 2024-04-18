@@ -1,4 +1,5 @@
 """Support for RESTful API."""
+
 from __future__ import annotations
 
 import logging
@@ -54,6 +55,10 @@ class RestData:
         self.data: str | None = None
         self.last_exception: Exception | None = None
         self.headers: httpx.Headers | None = None
+
+    def set_payload(self, payload: str) -> None:
+        """Set request data."""
+        self._request_data = payload
 
     @property
     def url(self) -> str:

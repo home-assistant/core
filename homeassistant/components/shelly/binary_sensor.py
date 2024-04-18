@@ -1,4 +1,5 @@
 """Binary sensor for Shelly."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -38,19 +39,19 @@ from .utils import (
 )
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class BlockBinarySensorDescription(
     BlockEntityDescription, BinarySensorEntityDescription
 ):
     """Class to describe a BLOCK binary sensor."""
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class RpcBinarySensorDescription(RpcEntityDescription, BinarySensorEntityDescription):
     """Class to describe a RPC binary sensor."""
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class RestBinarySensorDescription(RestEntityDescription, BinarySensorEntityDescription):
     """Class to describe a REST binary sensor."""
 
@@ -166,7 +167,7 @@ RPC_SENSORS: Final = {
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     "external_power": RpcBinarySensorDescription(
-        key="devicepower:0",
+        key="devicepower",
         sub_key="external",
         name="External power",
         value=lambda status, _: status["present"],
@@ -205,6 +206,14 @@ RPC_SENSORS: Final = {
         sub_key="alarm",
         name="Smoke",
         device_class=BinarySensorDeviceClass.SMOKE,
+    ),
+    "restart": RpcBinarySensorDescription(
+        key="sys",
+        sub_key="restart_required",
+        name="Restart required",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 }
 

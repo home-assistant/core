@@ -35,7 +35,7 @@ async def test_form(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert not result.get("errors")
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -46,7 +46,7 @@ async def test_form(
     )
     await hass.async_block_till_done()
 
-    assert result2.get("type") == FlowResultType.CREATE_ENTRY
+    assert result2.get("type") is FlowResultType.CREATE_ENTRY
     assert result2.get("title") == "Todoist"
     assert result2.get("data") == {
         CONF_TOKEN: TOKEN,
@@ -68,7 +68,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
         },
     )
 
-    assert result2.get("type") == FlowResultType.FORM
+    assert result2.get("type") is FlowResultType.FORM
     assert result2.get("errors") == {"base": "invalid_api_key"}
 
 
@@ -86,7 +86,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         },
     )
 
-    assert result2.get("type") == FlowResultType.FORM
+    assert result2.get("type") is FlowResultType.FORM
     assert result2.get("errors") == {"base": "cannot_connect"}
 
 
@@ -106,7 +106,7 @@ async def test_unknown_error(hass: HomeAssistant, api: AsyncMock) -> None:
         },
     )
 
-    assert result2.get("type") == FlowResultType.FORM
+    assert result2.get("type") is FlowResultType.FORM
     assert result2.get("errors") == {"base": "unknown"}
 
 
@@ -119,5 +119,5 @@ async def test_already_configured(hass: HomeAssistant, setup_integration: None) 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "single_instance_allowed"

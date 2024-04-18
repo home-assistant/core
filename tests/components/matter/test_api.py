@@ -1,4 +1,5 @@
 """Test the api module."""
+
 from unittest.mock import AsyncMock, MagicMock, call
 
 from matter_server.client.models.node import (
@@ -229,6 +230,7 @@ async def test_node_diagnostics(
         mac_address="00:11:22:33:44:55",
         available=True,
         active_fabrics=[MatterFabricData(2, 4939, 1, vendor_name="Nabu Casa")],
+        active_fabric_index=0,
     )
     matter_client.node_diagnostics = AsyncMock(return_value=mock_diagnostics)
 

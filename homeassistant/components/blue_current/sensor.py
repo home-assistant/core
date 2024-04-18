@@ -1,4 +1,5 @@
 """Support for Blue Current sensors."""
+
 from __future__ import annotations
 
 from homeassistant.components.sensor import (
@@ -124,14 +125,12 @@ SENSORS = (
     ),
     SensorEntityDescription(
         key="vehicle_status",
-        icon="mdi:car",
         device_class=SensorDeviceClass.ENUM,
         options=["standby", "vehicle_detected", "ready", "no_power", "vehicle_error"],
         translation_key="vehicle_status",
     ),
     SensorEntityDescription(
         key="activity",
-        icon="mdi:ev-station",
         device_class=SensorDeviceClass.ENUM,
         options=["available", "charging", "unavailable", "error", "offline"],
         translation_key="activity",
@@ -139,7 +138,6 @@ SENSORS = (
     SensorEntityDescription(
         key="max_usage",
         translation_key="max_usage",
-        icon="mdi:gauge-full",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
@@ -147,7 +145,6 @@ SENSORS = (
     SensorEntityDescription(
         key="smartcharging_max_usage",
         translation_key="smartcharging_max_usage",
-        icon="mdi:gauge-full",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.CURRENT,
@@ -156,7 +153,6 @@ SENSORS = (
     SensorEntityDescription(
         key="max_offline",
         translation_key="max_offline",
-        icon="mdi:gauge-full",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.CURRENT,
@@ -165,7 +161,6 @@ SENSORS = (
     SensorEntityDescription(
         key="current_left",
         translation_key="current_left",
-        icon="mdi:gauge",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.CURRENT,
@@ -222,13 +217,13 @@ async def async_setup_entry(
 ) -> None:
     """Set up Blue Current sensors."""
     connector: Connector = hass.data[DOMAIN][entry.entry_id]
-    sensor_list: list[SensorEntity] = []
-    for evse_id in connector.charge_points:
-        for sensor in SENSORS:
-            sensor_list.append(ChargePointSensor(connector, sensor, evse_id))
+    sensor_list: list[SensorEntity] = [
+        ChargePointSensor(connector, sensor, evse_id)
+        for evse_id in connector.charge_points
+        for sensor in SENSORS
+    ]
 
-    for grid_sensor in GRID_SENSORS:
-        sensor_list.append(GridSensor(connector, grid_sensor))
+    sensor_list.extend(GridSensor(connector, sensor) for sensor in GRID_SENSORS)
 
     async_add_entities(sensor_list)
 

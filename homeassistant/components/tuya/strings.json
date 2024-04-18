@@ -14,12 +14,14 @@
         }
       },
       "scan": {
-        "description": "Use Smart Life app or Tuya Smart app to scan the following QR-code to complete the login:\n\n {qrcode} \n\nContinue to the next step once you have completed this step in the app."
+        "description": "Use Smart Life app or Tuya Smart app to scan the following QR-code to complete the login.\n\nContinue to the next step once you have completed this step in the app."
       }
     },
     "error": {
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "login_error": "Login error ({code}): {msg}",
+      "login_error": "Login error ({code}): {msg}"
+    },
+    "abort": {
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },

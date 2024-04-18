@@ -1,4 +1,5 @@
 """Tests for the Jellyfin media_player platform."""
+
 from datetime import timedelta
 from unittest.mock import MagicMock
 

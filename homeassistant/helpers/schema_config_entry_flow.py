@@ -1,8 +1,9 @@
 """Helpers for creating schema based data entry flows."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from collections.abc import Callable, Coroutine, Mapping
+from collections.abc import Callable, Container, Coroutine, Mapping
 import copy
 from dataclasses import dataclass
 import types
@@ -10,9 +11,15 @@ from typing import Any, cast
 
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+    OptionsFlowWithConfigEntry,
+)
 from homeassistant.core import HomeAssistant, callback, split_entity_id
-from homeassistant.data_entry_flow import FlowResult, UnknownHandler
+from homeassistant.data_entry_flow import UnknownHandler
 
 from . import entity_registry as er, selector
 from .typing import UNDEFINED, UndefinedType
@@ -31,9 +38,11 @@ class SchemaFlowStep:
 class SchemaFlowFormStep(SchemaFlowStep):
     """Define a config or options flow form step."""
 
-    schema: vol.Schema | Callable[
-        [SchemaCommonFlowHandler], Coroutine[Any, Any, vol.Schema | None]
-    ] | None = None
+    schema: (
+        vol.Schema
+        | Callable[[SchemaCommonFlowHandler], Coroutine[Any, Any, vol.Schema | None]]
+        | None
+    ) = None
     """Optional voluptuous schema, or function which returns a schema or None, for
     requesting and validating user input.
 
@@ -43,9 +52,13 @@ class SchemaFlowFormStep(SchemaFlowStep):
     user input is requested.
     """
 
-    validate_user_input: Callable[
-        [SchemaCommonFlowHandler, dict[str, Any]], Coroutine[Any, Any, dict[str, Any]]
-    ] | None = None
+    validate_user_input: (
+        Callable[
+            [SchemaCommonFlowHandler, dict[str, Any]],
+            Coroutine[Any, Any, dict[str, Any]],
+        ]
+        | None
+    ) = None
     """Optional function to validate user input.
 
     - The `validate_user_input` function is called if the schema validates successfully.
@@ -54,9 +67,9 @@ class SchemaFlowFormStep(SchemaFlowStep):
     - The `validate_user_input` should raise `SchemaFlowError` if user input is invalid.
     """
 
-    next_step: Callable[
-        [dict[str, Any]], Coroutine[Any, Any, str | None]
-    ] | str | None = None
+    next_step: (
+        Callable[[dict[str, Any]], Coroutine[Any, Any, str | None]] | str | None
+    ) = None
     """Optional property to identify next step.
 
     - If `next_step` is a function, it is called if the schema validates successfully or
@@ -66,9 +79,11 @@ class SchemaFlowFormStep(SchemaFlowStep):
     - If `next_step` is None, the flow is ended with `FlowResultType.CREATE_ENTRY`.
     """
 
-    suggested_values: Callable[
-        [SchemaCommonFlowHandler], Coroutine[Any, Any, dict[str, Any]]
-    ] | None | UndefinedType = UNDEFINED
+    suggested_values: (
+        Callable[[SchemaCommonFlowHandler], Coroutine[Any, Any, dict[str, Any]]]
+        | None
+        | UndefinedType
+    ) = UNDEFINED
     """Optional property to populate suggested values.
 
     - If `suggested_values` is UNDEFINED, each key in the schema will get a suggested
@@ -87,7 +102,7 @@ class SchemaFlowMenuStep(SchemaFlowStep):
     """Define a config or options flow menu step."""
 
     # Menu options
-    options: list[str] | dict[str, str]
+    options: Container[str]
 
 
 class SchemaCommonFlowHandler:
@@ -126,7 +141,7 @@ class SchemaCommonFlowHandler:
 
     async def async_step(
         self, step_id: str, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a step."""
         if isinstance(self._flow[step_id], SchemaFlowFormStep):
             return await self._async_form_step(step_id, user_input)
@@ -141,7 +156,7 @@ class SchemaCommonFlowHandler:
 
     async def _async_form_step(
         self, step_id: str, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a form step."""
         form_step: SchemaFlowFormStep = cast(SchemaFlowFormStep, self._flow[step_id])
 
@@ -204,7 +219,7 @@ class SchemaCommonFlowHandler:
 
     async def _show_next_step_or_create_entry(
         self, form_step: SchemaFlowFormStep
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         next_step_id_or_end_flow: str | None
 
         if callable(form_step.next_step):
@@ -222,7 +237,7 @@ class SchemaCommonFlowHandler:
         next_step_id: str,
         error: SchemaFlowError | None = None,
         user_input: dict[str, Any] | None = None,
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Show form for next step."""
         if isinstance(self._flow[next_step_id], SchemaFlowMenuStep):
             menu_step = cast(SchemaFlowMenuStep, self._flow[next_step_id])
@@ -271,7 +286,7 @@ class SchemaCommonFlowHandler:
 
     async def _async_menu_step(
         self, step_id: str, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a menu step."""
         menu_step: SchemaFlowMenuStep = cast(SchemaFlowMenuStep, self._flow[step_id])
         return self._handler.async_show_menu(
@@ -280,7 +295,7 @@ class SchemaCommonFlowHandler:
         )
 
 
-class SchemaConfigFlowHandler(config_entries.ConfigFlow, ABC):
+class SchemaConfigFlowHandler(ConfigFlow, ABC):
     """Handle a schema based config flow."""
 
     config_flow: Mapping[str, SchemaFlowStep]
@@ -294,8 +309,8 @@ class SchemaConfigFlowHandler(config_entries.ConfigFlow, ABC):
 
         @callback
         def _async_get_options_flow(
-            config_entry: config_entries.ConfigEntry,
-        ) -> config_entries.OptionsFlow:
+            config_entry: ConfigEntry,
+        ) -> OptionsFlow:
             """Get the options flow for this handler."""
             if cls.options_flow is None:
                 raise UnknownHandler
@@ -324,9 +339,7 @@ class SchemaConfigFlowHandler(config_entries.ConfigFlow, ABC):
 
     @classmethod
     @callback
-    def async_supports_options_flow(
-        cls, config_entry: config_entries.ConfigEntry
-    ) -> bool:
+    def async_supports_options_flow(cls, config_entry: ConfigEntry) -> bool:
         """Return options flow support for this handler."""
         return cls.options_flow is not None
 
@@ -335,17 +348,16 @@ class SchemaConfigFlowHandler(config_entries.ConfigFlow, ABC):
         step_id: str,
     ) -> Callable[
         [SchemaConfigFlowHandler, dict[str, Any] | None],
-        Coroutine[Any, Any, FlowResult],
+        Coroutine[Any, Any, ConfigFlowResult],
     ]:
         """Generate a step handler."""
 
         async def _async_step(
             self: SchemaConfigFlowHandler, user_input: dict[str, Any] | None = None
-        ) -> FlowResult:
+        ) -> ConfigFlowResult:
             """Handle a config flow step."""
             # pylint: disable-next=protected-access
-            result = await self._common_handler.async_step(step_id, user_input)
-            return result
+            return await self._common_handler.async_step(step_id, user_input)
 
         return _async_step
 
@@ -382,7 +394,7 @@ class SchemaConfigFlowHandler(config_entries.ConfigFlow, ABC):
         self,
         data: Mapping[str, Any],
         **kwargs: Any,
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Finish config flow and create a config entry."""
         self.async_config_flow_finished(data)
         return super().async_create_entry(
@@ -390,12 +402,12 @@ class SchemaConfigFlowHandler(config_entries.ConfigFlow, ABC):
         )
 
 
-class SchemaOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
+class SchemaOptionsFlowHandler(OptionsFlowWithConfigEntry):
     """Handle a schema based options flow."""
 
     def __init__(
         self,
-        config_entry: config_entries.ConfigEntry,
+        config_entry: ConfigEntry,
         options_flow: Mapping[str, SchemaFlowStep],
         async_options_flow_finished: Callable[[HomeAssistant, Mapping[str, Any]], None]
         | None = None,
@@ -430,17 +442,16 @@ class SchemaOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
         step_id: str,
     ) -> Callable[
         [SchemaConfigFlowHandler, dict[str, Any] | None],
-        Coroutine[Any, Any, FlowResult],
+        Coroutine[Any, Any, ConfigFlowResult],
     ]:
         """Generate a step handler."""
 
         async def _async_step(
             self: SchemaConfigFlowHandler, user_input: dict[str, Any] | None = None
-        ) -> FlowResult:
+        ) -> ConfigFlowResult:
             """Handle an options flow step."""
             # pylint: disable-next=protected-access
-            result = await self._common_handler.async_step(step_id, user_input)
-            return result
+            return await self._common_handler.async_step(step_id, user_input)
 
         return _async_step
 
@@ -449,7 +460,7 @@ class SchemaOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
         self,
         data: Mapping[str, Any],
         **kwargs: Any,
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Finish config flow and create a config entry."""
         if self._async_options_flow_finished:
             self._async_options_flow_finished(self.hass, data)

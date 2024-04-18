@@ -1,4 +1,5 @@
 """The tests for the Async Media player helper functions."""
+
 import pytest
 
 import homeassistant.components.media_player as mp

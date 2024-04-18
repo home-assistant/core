@@ -1,4 +1,5 @@
 """General cluster handlers module for Zigbee Home Automation."""
+
 from __future__ import annotations
 
 from collections.abc import Coroutine
@@ -56,7 +57,6 @@ from ..const import (
     SIGNAL_MOVE_LEVEL,
     SIGNAL_SET_LEVEL,
     SIGNAL_UPDATE_DEVICE,
-    UNKNOWN as ZHA_UNKNOWN,
 )
 from . import (
     AttrReportConfig,
@@ -538,14 +538,9 @@ class OtaClusterHandler(ClusterHandler):
     }
 
     @property
-    def current_file_version(self) -> str:
+    def current_file_version(self) -> int | None:
         """Return cached value of current_file_version attribute."""
-        current_file_version = self.cluster.get(
-            Ota.AttributeDefs.current_file_version.name
-        )
-        if current_file_version is not None:
-            return f"0x{int(current_file_version):08x}"
-        return ZHA_UNKNOWN
+        return self.cluster.get(Ota.AttributeDefs.current_file_version.name)
 
 
 @registries.CLIENT_CLUSTER_HANDLER_REGISTRY.register(Ota.cluster_id)
@@ -558,37 +553,39 @@ class OtaClientClusterHandler(ClientClusterHandler):
         Ota.AttributeDefs.current_file_version.name: True,
     }
 
+    @callback
+    def attribute_updated(self, attrid: int, value: Any, timestamp: Any) -> None:
+        """Handle an attribute updated on this cluster."""
+        # We intentionally avoid the `ClientClusterHandler` attribute update handler:
+        # it emits a logbook event on every update, which pollutes the logbook
+        ClusterHandler.attribute_updated(self, attrid, value, timestamp)
+
     @property
-    def current_file_version(self) -> str:
+    def current_file_version(self) -> int | None:
         """Return cached value of current_file_version attribute."""
-        current_file_version = self.cluster.get(
-            Ota.AttributeDefs.current_file_version.name
-        )
-        if current_file_version is not None:
-            return f"0x{int(current_file_version):08x}"
-        return ZHA_UNKNOWN
+        return self.cluster.get(Ota.AttributeDefs.current_file_version.name)
 
     @callback
     def cluster_command(
         self, tsn: int, command_id: int, args: list[Any] | None
     ) -> None:
         """Handle OTA commands."""
-        if command_id in self.cluster.server_commands:
-            cmd_name = self.cluster.server_commands[command_id].name
-        else:
-            cmd_name = command_id
+        if command_id not in self.cluster.server_commands:
+            return
 
         signal_id = self._endpoint.unique_id.split("-")[0]
+        cmd_name = self.cluster.server_commands[command_id].name
+
         if cmd_name == Ota.ServerCommandDefs.query_next_image.name:
             assert args
-            self.async_send_signal(SIGNAL_UPDATE_DEVICE.format(signal_id), args[3])
 
-    async def async_check_for_update(self):
-        """Check for firmware availability by issuing an image notify command."""
-        await self.cluster.image_notify(
-            payload_type=(self.cluster.ImageNotifyCommand.PayloadType.QueryJitter),
-            query_jitter=100,
-        )
+            current_file_version = args[3]
+            self.cluster.update_attribute(
+                Ota.AttributeDefs.current_file_version.id, current_file_version
+            )
+            self.async_send_signal(
+                SIGNAL_UPDATE_DEVICE.format(signal_id), current_file_version
+            )
 
 
 @registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(Partition.cluster_id)

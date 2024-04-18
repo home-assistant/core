@@ -1,4 +1,5 @@
 """Standard conversation implementation for Home Assistant."""
+
 from __future__ import annotations
 
 import asyncio
@@ -12,25 +13,18 @@ import re
 from typing import IO, Any
 
 from hassil.expression import Expression, ListReference, Sequence
-from hassil.intents import (
-    Intents,
-    ResponseType,
-    SlotList,
-    TextSlotList,
-    WildcardSlotList,
-)
+from hassil.intents import Intents, SlotList, TextSlotList, WildcardSlotList
 from hassil.recognize import (
     MISSING_ENTITY,
     RecognizeResult,
-    UnmatchedEntity,
     UnmatchedTextEntity,
     recognize_all,
 )
 from hassil.util import merge_dict
-from home_assistant_intents import get_intents, get_languages
+from home_assistant_intents import ErrorKey, get_intents, get_languages
 import yaml
 
-from homeassistant import core, setup
+from homeassistant import core
 from homeassistant.components.homeassistant.exposed_entities import (
     async_listen_entity_updates,
     async_should_expose,
@@ -40,29 +34,38 @@ from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
     entity_registry as er,
+    floor_registry as fr,
     intent,
     start,
     template,
     translation,
 )
-from homeassistant.helpers.event import (
-    EventStateChangedData,
-    async_track_state_added_domain,
-)
-from homeassistant.helpers.typing import EventType
+from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.event import async_track_state_added_domain
 from homeassistant.util.json import JsonObjectType, json_loads_object
 
-from .agent import AbstractConversationAgent, ConversationInput, ConversationResult
 from .const import DEFAULT_EXPOSED_ATTRIBUTES, DOMAIN
+from .entity import ConversationEntity
+from .models import ConversationInput, ConversationResult
 
 _LOGGER = logging.getLogger(__name__)
 _DEFAULT_ERROR_TEXT = "Sorry, I couldn't understand that"
 _ENTITY_REGISTRY_UPDATE_FIELDS = ["aliases", "name", "original_name"]
 
 REGEX_TYPE = type(re.compile(""))
-TRIGGER_CALLBACK_TYPE = Callable[[str, RecognizeResult], Awaitable[str | None]]
+TRIGGER_CALLBACK_TYPE = Callable[
+    [str, RecognizeResult, str | None], Awaitable[str | None]
+]
 METADATA_CUSTOM_SENTENCE = "hass_custom_sentence"
 METADATA_CUSTOM_FILE = "hass_custom_file"
+
+DATA_DEFAULT_ENTITY = "conversation_default_entity"
+
+
+@core.callback
+def async_get_default_agent(hass: core.HomeAssistant) -> DefaultAgent:
+    """Get the default agent."""
+    return hass.data[DATA_DEFAULT_ENTITY]
 
 
 def json_load(fp: IO[str]) -> JsonObjectType:
@@ -113,15 +116,24 @@ def _get_language_variations(language: str) -> Iterable[str]:
         yield lang
 
 
-@core.callback
-def async_setup(hass: core.HomeAssistant) -> None:
+async def async_setup_default_agent(
+    hass: core.HomeAssistant,
+    entity_component: EntityComponent[ConversationEntity],
+    config_intents: dict[str, Any],
+) -> None:
     """Set up entity registry listener for the default agent."""
+    entity = DefaultAgent(hass, config_intents)
+    await entity_component.async_add_entities([entity])
+    hass.data[DATA_DEFAULT_ENTITY] = entity
+
     entity_registry = er.async_get(hass)
     for entity_id in entity_registry.entities:
         async_should_expose(hass, DOMAIN, entity_id)
 
     @core.callback
-    def async_entity_state_listener(event: EventType[EventStateChangedData]) -> None:
+    def async_entity_state_listener(
+        event: core.Event[core.EventStateChangedData],
+    ) -> None:
         """Set expose flag on new entities."""
         async_should_expose(hass, DOMAIN, event.data["entity_id"])
 
@@ -135,55 +147,73 @@ def async_setup(hass: core.HomeAssistant) -> None:
     start.async_at_started(hass, async_hass_started)
 
 
-class DefaultAgent(AbstractConversationAgent):
+class DefaultAgent(ConversationEntity):
     """Default agent for conversation agent."""
 
-    def __init__(self, hass: core.HomeAssistant) -> None:
+    _attr_name = "Home Assistant"
+
+    def __init__(
+        self, hass: core.HomeAssistant, config_intents: dict[str, Any]
+    ) -> None:
         """Initialize the default agent."""
         self.hass = hass
         self._lang_intents: dict[str, LanguageIntents] = {}
         self._lang_lock: dict[str, asyncio.Lock] = defaultdict(asyncio.Lock)
 
         # intent -> [sentences]
-        self._config_intents: dict[str, Any] = {}
+        self._config_intents: dict[str, Any] = config_intents
         self._slot_lists: dict[str, SlotList] | None = None
 
         # Sentences that will trigger a callback (skipping intent recognition)
         self._trigger_sentences: list[TriggerData] = []
         self._trigger_intents: Intents | None = None
+        self._unsub_clear_slot_list: list[Callable[[], None]] | None = None
 
     @property
     def supported_languages(self) -> list[str]:
         """Return a list of supported languages."""
         return get_languages()
 
-    async def async_initialize(self, config_intents: dict[str, Any] | None) -> None:
-        """Initialize the default agent."""
-        if "intent" not in self.hass.config.components:
-            await setup.async_setup_component(self.hass, "intent", {})
+    @core.callback
+    def _filter_entity_registry_changes(
+        self, event_data: er.EventEntityRegistryUpdatedData
+    ) -> bool:
+        """Filter entity registry changed events."""
+        return event_data["action"] == "update" and any(
+            field in event_data["changes"] for field in _ENTITY_REGISTRY_UPDATE_FIELDS
+        )
 
-        # Intents from config may only contains sentences for HA config's language
-        if config_intents:
-            self._config_intents = config_intents
+    @core.callback
+    def _filter_state_changes(self, event_data: core.EventStateChangedData) -> bool:
+        """Filter state changed events."""
+        return not event_data["old_state"] or not event_data["new_state"]
 
-        self.hass.bus.async_listen(
-            ar.EVENT_AREA_REGISTRY_UPDATED,
-            self._async_handle_area_registry_changed,  # type: ignore[arg-type]
-            run_immediately=True,
-        )
-        self.hass.bus.async_listen(
-            er.EVENT_ENTITY_REGISTRY_UPDATED,
-            self._async_handle_entity_registry_changed,  # type: ignore[arg-type]
-            run_immediately=True,
-        )
-        self.hass.bus.async_listen(
-            EVENT_STATE_CHANGED,
-            self._async_handle_state_changed,  # type: ignore[arg-type]
-            run_immediately=True,
-        )
-        async_listen_entity_updates(
-            self.hass, DOMAIN, self._async_exposed_entities_updated
-        )
+    @core.callback
+    def _listen_clear_slot_list(self) -> None:
+        """Listen for changes that can invalidate slot list."""
+        assert self._unsub_clear_slot_list is None
+
+        self._unsub_clear_slot_list = [
+            self.hass.bus.async_listen(
+                ar.EVENT_AREA_REGISTRY_UPDATED,
+                self._async_clear_slot_list,
+            ),
+            self.hass.bus.async_listen(
+                fr.EVENT_FLOOR_REGISTRY_UPDATED,
+                self._async_clear_slot_list,
+            ),
+            self.hass.bus.async_listen(
+                er.EVENT_ENTITY_REGISTRY_UPDATED,
+                self._async_clear_slot_list,
+                event_filter=self._filter_entity_registry_changes,
+            ),
+            self.hass.bus.async_listen(
+                EVENT_STATE_CHANGED,
+                self._async_clear_slot_list,
+                event_filter=self._filter_state_changes,
+            ),
+            async_listen_entity_updates(self.hass, DOMAIN, self._async_clear_slot_list),
+        ]
 
     async def async_recognize(
         self, user_input: ConversationInput
@@ -208,7 +238,7 @@ class DefaultAgent(AbstractConversationAgent):
         slot_lists = self._make_slot_lists()
         intent_context = self._make_intent_context(user_input)
 
-        result = await self.hass.async_add_executor_job(
+        return await self.hass.async_add_executor_job(
             self._recognize,
             user_input,
             lang_intents,
@@ -216,8 +246,6 @@ class DefaultAgent(AbstractConversationAgent):
             intent_context,
             language,
         )
-
-        return result
 
     async def async_process(self, user_input: ConversationInput) -> ConversationResult:
         """Process a sentence."""
@@ -229,24 +257,45 @@ class DefaultAgent(AbstractConversationAgent):
         # Check if a trigger matched
         if isinstance(result, SentenceTriggerResult):
             # Gather callback responses in parallel
-            trigger_responses = await asyncio.gather(
-                *(
-                    self._trigger_sentences[trigger_id].callback(
-                        result.sentence, trigger_result
-                    )
-                    for trigger_id, trigger_result in result.matched_triggers.items()
+            trigger_callbacks = [
+                self._trigger_sentences[trigger_id].callback(
+                    result.sentence, trigger_result, user_input.device_id
                 )
-            )
+                for trigger_id, trigger_result in result.matched_triggers.items()
+            ]
 
-            # Use last non-empty result as response
+            # Use first non-empty result as response.
+            #
+            # There may be multiple copies of a trigger running when editing in
+            # the UI, so it's critical that we filter out empty responses here.
             response_text: str | None = None
-            for trigger_response in trigger_responses:
-                response_text = response_text or trigger_response
+            response_set_by_trigger = False
+            for trigger_future in asyncio.as_completed(trigger_callbacks):
+                trigger_response = await trigger_future
+                if trigger_response is None:
+                    continue
+
+                response_text = trigger_response
+                response_set_by_trigger = True
+                break
 
             # Convert to conversation result
             response = intent.IntentResponse(language=language)
             response.response_type = intent.IntentResponseType.ACTION_DONE
-            response.async_set_speech(response_text or "")
+
+            if response_set_by_trigger:
+                # Response was explicitly set to empty
+                response_text = response_text or ""
+            elif not response_text:
+                # Use translated acknowledgment for pipeline language
+                translations = await translation.async_get_translations(
+                    self.hass, language, DOMAIN, [DOMAIN]
+                )
+                response_text = translations.get(
+                    f"component.{DOMAIN}.agent.done", "Done"
+                )
+
+            response.async_set_speech(response_text)
 
             return ConversationResult(response=response)
 
@@ -259,7 +308,7 @@ class DefaultAgent(AbstractConversationAgent):
             return _make_error_result(
                 language,
                 intent.IntentResponseErrorCode.NO_INTENT_MATCH,
-                self._get_error_text(ResponseType.NO_INTENT, lang_intents),
+                self._get_error_text(ErrorKey.NO_INTENT, lang_intents),
                 conversation_id,
             )
 
@@ -268,14 +317,14 @@ class DefaultAgent(AbstractConversationAgent):
             _LOGGER.debug(
                 "Recognized intent '%s' for template '%s' but had unmatched: %s",
                 result.intent.name,
-                result.intent_sentence.text
-                if result.intent_sentence is not None
-                else "",
+                (
+                    result.intent_sentence.text
+                    if result.intent_sentence is not None
+                    else ""
+                ),
                 result.unmatched_entities_list,
             )
-            error_response_type, error_response_args = _get_unmatched_response(
-                result.unmatched_entities
-            )
+            error_response_type, error_response_args = _get_unmatched_response(result)
             return _make_error_result(
                 language,
                 intent.IntentResponseErrorCode.NO_VALID_TARGETS,
@@ -291,7 +340,8 @@ class DefaultAgent(AbstractConversationAgent):
 
         # Slot values to pass to the intent
         slots = {
-            entity.name: {"value": entity.value} for entity in result.entities_list
+            entity.name: {"value": entity.value, "text": entity.text or entity.value}
+            for entity in result.entities_list
         }
 
         try:
@@ -318,6 +368,20 @@ class DefaultAgent(AbstractConversationAgent):
                 ),
                 conversation_id,
             )
+        except intent.DuplicateNamesMatchedError as duplicate_names_error:
+            # Intent was valid, but two or more entities with the same name matched.
+            (
+                error_response_type,
+                error_response_args,
+            ) = _get_duplicate_names_matched_response(duplicate_names_error)
+            return _make_error_result(
+                language,
+                intent.IntentResponseErrorCode.NO_VALID_TARGETS,
+                self._get_error_text(
+                    error_response_type, lang_intents, **error_response_args
+                ),
+                conversation_id,
+            )
         except intent.IntentHandleError:
             # Intent was valid and entities matched constraints, but an error
             # occurred during handling.
@@ -325,7 +389,7 @@ class DefaultAgent(AbstractConversationAgent):
             return _make_error_result(
                 language,
                 intent.IntentResponseErrorCode.FAILED_TO_HANDLE,
-                self._get_error_text(ResponseType.HANDLE_ERROR, lang_intents),
+                self._get_error_text(ErrorKey.HANDLE_ERROR, lang_intents),
                 conversation_id,
             )
         except intent.IntentUnexpectedError:
@@ -333,7 +397,7 @@ class DefaultAgent(AbstractConversationAgent):
             return _make_error_result(
                 language,
                 intent.IntentResponseErrorCode.UNKNOWN,
-                self._get_error_text(ResponseType.HANDLE_ERROR, lang_intents),
+                self._get_error_text(ErrorKey.HANDLE_ERROR, lang_intents),
                 conversation_id,
             )
 
@@ -480,9 +544,11 @@ class DefaultAgent(AbstractConversationAgent):
                     for entity_name, entity_value in recognize_result.entities.items()
                 },
                 # First matched or unmatched state
-                "state": template.TemplateState(self.hass, state1)
-                if state1 is not None
-                else None,
+                "state": (
+                    template.TemplateState(self.hass, state1)
+                    if state1 is not None
+                    else None
+                ),
                 "query": {
                     # Entity states that matched the query (e.g, "on")
                     "matched": [
@@ -522,6 +588,9 @@ class DefaultAgent(AbstractConversationAgent):
         if lang_intents is None:
             # No intents loaded
             _LOGGER.warning("No intents were loaded for language: %s", language)
+            return
+
+        self._make_slot_lists()
 
     async def async_get_or_load_intents(self, language: str) -> LanguageIntents | None:
         """Load all intents of a language with lock."""
@@ -681,37 +750,15 @@ class DefaultAgent(AbstractConversationAgent):
         return lang_intents
 
     @core.callback
-    def _async_handle_area_registry_changed(
-        self, event: EventType[ar.EventAreaRegistryUpdatedData]
-    ) -> None:
-        """Clear area area cache when the area registry has changed."""
+    def _async_clear_slot_list(self, event: core.Event[Any] | None = None) -> None:
+        """Clear slot lists when a registry has changed."""
         self._slot_lists = None
+        assert self._unsub_clear_slot_list is not None
+        for unsub in self._unsub_clear_slot_list:
+            unsub()
+        self._unsub_clear_slot_list = None
 
     @core.callback
-    def _async_handle_entity_registry_changed(
-        self, event: EventType[er.EventEntityRegistryUpdatedData]
-    ) -> None:
-        """Clear names list cache when an entity registry entry has changed."""
-        if event.data["action"] != "update" or not any(
-            field in event.data["changes"] for field in _ENTITY_REGISTRY_UPDATE_FIELDS
-        ):
-            return
-        self._slot_lists = None
-
-    @core.callback
-    def _async_handle_state_changed(
-        self, event: EventType[EventStateChangedData]
-    ) -> None:
-        """Clear names list cache when a state is added or removed from the state machine."""
-        if event.data["old_state"] and event.data["new_state"]:
-            return
-        self._slot_lists = None
-
-    @core.callback
-    def _async_exposed_entities_updated(self) -> None:
-        """Handle updated preferences."""
-        self._slot_lists = None
-
     def _make_slot_lists(self) -> dict[str, SlotList]:
         """Create slot lists with areas and entity names/aliases."""
         if self._slot_lists is not None:
@@ -724,7 +771,12 @@ class DefaultAgent(AbstractConversationAgent):
             if async_should_expose(self.hass, DOMAIN, state.entity_id)
         ]
 
-        # Gather exposed entity names
+        # Gather exposed entity names.
+        #
+        # NOTE: We do not pass entity ids in here because multiple entities may
+        # have the same name. The intent matcher doesn't gather all matching
+        # values for a list, just the first. So we will need to match by name no
+        # matter what.
         entity_names = []
         for state in states:
             # Checked against "requires_context" and "excludes_context" in hassil
@@ -753,7 +805,12 @@ class DefaultAgent(AbstractConversationAgent):
             # Default name
             entity_names.append((state.name, state.name, context))
 
-        # Expose all areas
+        _LOGGER.debug("Exposed entities: %s", entity_names)
+
+        # Expose all areas.
+        #
+        # We pass in area id here with the expectation that no two areas will
+        # share the same name or alias.
         areas = ar.async_get(self.hass)
         area_names = []
         for area in areas.async_list_areas():
@@ -765,13 +822,28 @@ class DefaultAgent(AbstractConversationAgent):
 
                     area_names.append((alias, area.id))
 
-        _LOGGER.debug("Exposed entities: %s", entity_names)
+        # Expose all floors.
+        #
+        # We pass in floor id here with the expectation that no two floors will
+        # share the same name or alias.
+        floors = fr.async_get(self.hass)
+        floor_names = []
+        for floor in floors.async_list_floors():
+            floor_names.append((floor.name, floor.floor_id))
+            if floor.aliases:
+                for alias in floor.aliases:
+                    if not alias.strip():
+                        continue
+
+                    floor_names.append((alias, floor.floor_id))
 
         self._slot_lists = {
             "area": TextSlotList.from_tuples(area_names, allow_template=False),
             "name": TextSlotList.from_tuples(entity_names, allow_template=False),
+            "floor": TextSlotList.from_tuples(floor_names, allow_template=False),
         }
 
+        self._listen_clear_slot_list()
         return self._slot_lists
 
     def _make_intent_context(
@@ -791,11 +863,11 @@ class DefaultAgent(AbstractConversationAgent):
         if device_area is None:
             return None
 
-        return {"area": device_area.id}
+        return {"area": {"value": device_area.id, "text": device_area.name}}
 
     def _get_error_text(
         self,
-        response_type: ResponseType,
+        error_key: ErrorKey,
         lang_intents: LanguageIntents | None,
         **response_args,
     ) -> str:
@@ -803,7 +875,7 @@ class DefaultAgent(AbstractConversationAgent):
         if lang_intents is None:
             return _DEFAULT_ERROR_TEXT
 
-        response_key = response_type.value
+        response_key = error_key.value
         response_str = (
             lang_intents.error_responses.get(response_key) or _DEFAULT_ERROR_TEXT
         )
@@ -823,8 +895,7 @@ class DefaultAgent(AbstractConversationAgent):
         # Force rebuild on next use
         self._trigger_intents = None
 
-        unregister = functools.partial(self._unregister_trigger, trigger_data)
-        return unregister
+        return functools.partial(self._unregister_trigger, trigger_data)
 
     def _rebuild_trigger_intents(self) -> None:
         """Rebuild the HassIL intents object from the current trigger sentences."""
@@ -916,59 +987,97 @@ def _make_error_result(
     return ConversationResult(response, conversation_id)
 
 
-def _get_unmatched_response(
-    unmatched_entities: dict[str, UnmatchedEntity],
-) -> tuple[ResponseType, dict[str, Any]]:
-    error_response_type = ResponseType.NO_INTENT
-    error_response_args: dict[str, Any] = {}
+def _get_unmatched_response(result: RecognizeResult) -> tuple[ErrorKey, dict[str, Any]]:
+    """Get key and template arguments for error when there are unmatched intent entities/slots."""
 
-    if unmatched_name := unmatched_entities.get("name"):
-        # Unmatched device or entity
-        assert isinstance(unmatched_name, UnmatchedTextEntity)
-        error_response_type = ResponseType.NO_ENTITY
-        error_response_args["entity"] = unmatched_name.text
+    # Filter out non-text and missing context entities
+    unmatched_text: dict[str, str] = {
+        key: entity.text.strip()
+        for key, entity in result.unmatched_entities.items()
+        if isinstance(entity, UnmatchedTextEntity) and entity.text != MISSING_ENTITY
+    }
 
-    elif unmatched_area := unmatched_entities.get("area"):
-        # Unmatched area
-        assert isinstance(unmatched_area, UnmatchedTextEntity)
-        error_response_type = ResponseType.NO_AREA
-        error_response_args["area"] = unmatched_area.text
+    if unmatched_area := unmatched_text.get("area"):
+        # area only
+        return ErrorKey.NO_AREA, {"area": unmatched_area}
 
-    return error_response_type, error_response_args
+    if unmatched_floor := unmatched_text.get("floor"):
+        # floor only
+        return ErrorKey.NO_FLOOR, {"floor": unmatched_floor}
+
+    # Area may still have matched
+    matched_area: str | None = None
+    if matched_area_entity := result.entities.get("area"):
+        matched_area = matched_area_entity.text.strip()
+
+    if unmatched_name := unmatched_text.get("name"):
+        if matched_area:
+            # device in area
+            return ErrorKey.NO_ENTITY_IN_AREA, {
+                "entity": unmatched_name,
+                "area": matched_area,
+            }
+
+        # device only
+        return ErrorKey.NO_ENTITY, {"entity": unmatched_name}
+
+    # Default error
+    return ErrorKey.NO_INTENT, {}
 
 
 def _get_no_states_matched_response(
     no_states_error: intent.NoStatesMatchedError,
-) -> tuple[ResponseType, dict[str, Any]]:
-    """Return error response type and template arguments for error."""
-    if not (
-        no_states_error.area
-        and (no_states_error.device_classes or no_states_error.domains)
-    ):
-        # Device class and domain must be paired with an area for the error
-        # message.
-        return ResponseType.NO_INTENT, {}
+) -> tuple[ErrorKey, dict[str, Any]]:
+    """Return key and template arguments for error when intent returns no matching states."""
 
-    error_response_args: dict[str, Any] = {"area": no_states_error.area}
-
-    # Check device classes first, since it's more specific than domain
+    # Device classes should be checked before domains
     if no_states_error.device_classes:
-        # No exposed entities of a particular class in an area.
-        # Example: "close the bedroom windows"
-        #
-        # Only use the first device class for the error message
-        error_response_args["device_class"] = next(iter(no_states_error.device_classes))
+        device_class = next(iter(no_states_error.device_classes))  # first device class
+        if no_states_error.area:
+            # device_class in area
+            return ErrorKey.NO_DEVICE_CLASS_IN_AREA, {
+                "device_class": device_class,
+                "area": no_states_error.area,
+            }
 
-        return ResponseType.NO_DEVICE_CLASS, error_response_args
+        # device_class only
+        return ErrorKey.NO_DEVICE_CLASS, {"device_class": device_class}
 
-    # No exposed entities of a domain in an area.
-    # Example: "turn on lights in kitchen"
-    assert no_states_error.domains
-    #
-    # Only use the first domain for the error message
-    error_response_args["domain"] = next(iter(no_states_error.domains))
+    if no_states_error.domains:
+        domain = next(iter(no_states_error.domains))  # first domain
+        if no_states_error.area:
+            # domain in area
+            return ErrorKey.NO_DOMAIN_IN_AREA, {
+                "domain": domain,
+                "area": no_states_error.area,
+            }
 
-    return ResponseType.NO_DOMAIN, error_response_args
+        if no_states_error.floor:
+            # domain in floor
+            return ErrorKey.NO_DOMAIN_IN_FLOOR, {
+                "domain": domain,
+                "floor": no_states_error.floor,
+            }
+
+        # domain only
+        return ErrorKey.NO_DOMAIN, {"domain": domain}
+
+    # Default error
+    return ErrorKey.NO_INTENT, {}
+
+
+def _get_duplicate_names_matched_response(
+    duplicate_names_error: intent.DuplicateNamesMatchedError,
+) -> tuple[ErrorKey, dict[str, Any]]:
+    """Return key and template arguments for error when intent returns duplicate matches."""
+
+    if duplicate_names_error.area:
+        return ErrorKey.DUPLICATE_ENTITIES_IN_AREA, {
+            "entity": duplicate_names_error.name,
+            "area": duplicate_names_error.area,
+        }
+
+    return ErrorKey.DUPLICATE_ENTITIES, {"entity": duplicate_names_error.name}
 
 
 def _collect_list_references(expression: Expression, list_names: set[str]) -> None:

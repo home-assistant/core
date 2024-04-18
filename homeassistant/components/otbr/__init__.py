@@ -1,7 +1,6 @@
 """The Open Thread Border Router integration."""
-from __future__ import annotations
 
-import asyncio
+from __future__ import annotations
 
 import aiohttp
 import python_otbr_api
@@ -42,7 +41,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except (
         HomeAssistantError,
         aiohttp.ClientError,
-        asyncio.TimeoutError,
+        TimeoutError,
     ) as err:
         raise ConfigEntryNotReady("Unable to connect") from err
     if border_agent_id is None:

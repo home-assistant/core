@@ -1,4 +1,5 @@
 """Connect to a MySensors gateway via pymysensors API."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping

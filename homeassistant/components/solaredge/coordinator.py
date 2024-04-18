@@ -1,4 +1,5 @@
 """Provides the data update coordinators for SolarEdge."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod

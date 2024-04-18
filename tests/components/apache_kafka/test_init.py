@@ -1,4 +1,5 @@
 """The tests for the Apache Kafka component."""
+
 from __future__ import annotations
 
 from asyncio import AbstractEventLoop
@@ -8,7 +9,7 @@ from unittest.mock import patch
 
 import pytest
 
-import homeassistant.components.apache_kafka as apache_kafka
+from homeassistant.components import apache_kafka
 from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -42,9 +43,11 @@ class MockKafkaClient:
 @pytest.fixture(name="mock_client")
 def mock_client_fixture():
     """Mock the apache kafka client."""
-    with patch(f"{PRODUCER_PATH}.start") as start, patch(
-        f"{PRODUCER_PATH}.send_and_wait"
-    ) as send_and_wait, patch(f"{PRODUCER_PATH}.__init__", return_value=None) as init:
+    with (
+        patch(f"{PRODUCER_PATH}.start") as start,
+        patch(f"{PRODUCER_PATH}.send_and_wait") as send_and_wait,
+        patch(f"{PRODUCER_PATH}.__init__", return_value=None) as init,
+    ):
         yield MockKafkaClient(init, start, send_and_wait)
 
 

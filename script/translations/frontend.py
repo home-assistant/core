@@ -1,4 +1,5 @@
 """Write updated translations to the frontend."""
+
 import argparse
 import json
 

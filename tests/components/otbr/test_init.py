@@ -1,4 +1,5 @@
 """Test the Open Thread Border Router integration."""
+
 import asyncio
 from http import HTTPStatus
 from typing import Any
@@ -63,16 +64,22 @@ async def test_import_dataset(hass: HomeAssistant, mock_async_zeroconf: None) ->
     )
     config_entry.add_to_hass(hass)
 
-    with patch(
-        "python_otbr_api.OTBR.get_active_dataset_tlvs", return_value=DATASET_CH16
-    ), patch(
-        "python_otbr_api.OTBR.get_border_agent_id", return_value=TEST_BORDER_AGENT_ID
-    ), patch(
-        "python_otbr_api.OTBR.get_extended_address",
-        return_value=TEST_BORDER_AGENT_EXTENDED_ADDRESS,
-    ), patch(
-        "homeassistant.components.thread.dataset_store.BORDER_AGENT_DISCOVERY_TIMEOUT",
-        0.1,
+    with (
+        patch(
+            "python_otbr_api.OTBR.get_active_dataset_tlvs", return_value=DATASET_CH16
+        ),
+        patch(
+            "python_otbr_api.OTBR.get_border_agent_id",
+            return_value=TEST_BORDER_AGENT_ID,
+        ),
+        patch(
+            "python_otbr_api.OTBR.get_extended_address",
+            return_value=TEST_BORDER_AGENT_EXTENDED_ADDRESS,
+        ),
+        patch(
+            "homeassistant.components.thread.dataset_store.BORDER_AGENT_DISCOVERY_TIMEOUT",
+            0.1,
+        ),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
 
@@ -134,16 +141,22 @@ async def test_import_share_radio_channel_collision(
         title="My OTBR",
     )
     config_entry.add_to_hass(hass)
-    with patch(
-        "python_otbr_api.OTBR.get_active_dataset_tlvs", return_value=DATASET_CH16
-    ), patch(
-        "python_otbr_api.OTBR.get_border_agent_id", return_value=TEST_BORDER_AGENT_ID
-    ), patch(
-        "python_otbr_api.OTBR.get_extended_address",
-        return_value=TEST_BORDER_AGENT_EXTENDED_ADDRESS,
-    ), patch(
-        "homeassistant.components.thread.dataset_store.DatasetStore.async_add"
-    ) as mock_add:
+    with (
+        patch(
+            "python_otbr_api.OTBR.get_active_dataset_tlvs", return_value=DATASET_CH16
+        ),
+        patch(
+            "python_otbr_api.OTBR.get_border_agent_id",
+            return_value=TEST_BORDER_AGENT_ID,
+        ),
+        patch(
+            "python_otbr_api.OTBR.get_extended_address",
+            return_value=TEST_BORDER_AGENT_EXTENDED_ADDRESS,
+        ),
+        patch(
+            "homeassistant.components.thread.dataset_store.DatasetStore.async_add"
+        ) as mock_add,
+    ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
 
     mock_add.assert_called_once_with(
@@ -177,16 +190,20 @@ async def test_import_share_radio_no_channel_collision(
         title="My OTBR",
     )
     config_entry.add_to_hass(hass)
-    with patch(
-        "python_otbr_api.OTBR.get_active_dataset_tlvs", return_value=dataset
-    ), patch(
-        "python_otbr_api.OTBR.get_border_agent_id", return_value=TEST_BORDER_AGENT_ID
-    ), patch(
-        "python_otbr_api.OTBR.get_extended_address",
-        return_value=TEST_BORDER_AGENT_EXTENDED_ADDRESS,
-    ), patch(
-        "homeassistant.components.thread.dataset_store.DatasetStore.async_add"
-    ) as mock_add:
+    with (
+        patch("python_otbr_api.OTBR.get_active_dataset_tlvs", return_value=dataset),
+        patch(
+            "python_otbr_api.OTBR.get_border_agent_id",
+            return_value=TEST_BORDER_AGENT_ID,
+        ),
+        patch(
+            "python_otbr_api.OTBR.get_extended_address",
+            return_value=TEST_BORDER_AGENT_EXTENDED_ADDRESS,
+        ),
+        patch(
+            "homeassistant.components.thread.dataset_store.DatasetStore.async_add"
+        ) as mock_add,
+    ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
 
     mock_add.assert_called_once_with(
@@ -218,16 +235,20 @@ async def test_import_insecure_dataset(hass: HomeAssistant, dataset: bytes) -> N
         title="My OTBR",
     )
     config_entry.add_to_hass(hass)
-    with patch(
-        "python_otbr_api.OTBR.get_active_dataset_tlvs", return_value=dataset
-    ), patch(
-        "python_otbr_api.OTBR.get_border_agent_id", return_value=TEST_BORDER_AGENT_ID
-    ), patch(
-        "python_otbr_api.OTBR.get_extended_address",
-        return_value=TEST_BORDER_AGENT_EXTENDED_ADDRESS,
-    ), patch(
-        "homeassistant.components.thread.dataset_store.DatasetStore.async_add"
-    ) as mock_add:
+    with (
+        patch("python_otbr_api.OTBR.get_active_dataset_tlvs", return_value=dataset),
+        patch(
+            "python_otbr_api.OTBR.get_border_agent_id",
+            return_value=TEST_BORDER_AGENT_ID,
+        ),
+        patch(
+            "python_otbr_api.OTBR.get_extended_address",
+            return_value=TEST_BORDER_AGENT_EXTENDED_ADDRESS,
+        ),
+        patch(
+            "homeassistant.components.thread.dataset_store.DatasetStore.async_add"
+        ) as mock_add,
+    ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
 
     mock_add.assert_called_once_with(
@@ -244,7 +265,7 @@ async def test_import_insecure_dataset(hass: HomeAssistant, dataset: bytes) -> N
 @pytest.mark.parametrize(
     "error",
     [
-        asyncio.TimeoutError,
+        TimeoutError,
         python_otbr_api.OTBRError,
         aiohttp.ClientError,
     ],
@@ -273,11 +294,14 @@ async def test_border_agent_id_not_supported(hass: HomeAssistant) -> None:
         title="My OTBR",
     )
     config_entry.add_to_hass(hass)
-    with patch(
-        "python_otbr_api.OTBR.get_active_dataset_tlvs", return_value=DATASET_CH16
-    ), patch(
-        "python_otbr_api.OTBR.get_border_agent_id",
-        side_effect=python_otbr_api.GetBorderAgentIdNotSupportedError,
+    with (
+        patch(
+            "python_otbr_api.OTBR.get_active_dataset_tlvs", return_value=DATASET_CH16
+        ),
+        patch(
+            "python_otbr_api.OTBR.get_border_agent_id",
+            side_effect=python_otbr_api.GetBorderAgentIdNotSupportedError,
+        ),
     ):
         assert not await hass.config_entries.async_setup(config_entry.entry_id)
 
@@ -411,10 +435,11 @@ async def test_remove_extra_entries(
     config_entry1.add_to_hass(hass)
     config_entry2.add_to_hass(hass)
     assert len(hass.config_entries.async_entries(otbr.DOMAIN)) == 2
-    with patch(
-        "python_otbr_api.OTBR.get_active_dataset_tlvs", return_value=DATASET_CH16
-    ), patch(
-        "homeassistant.components.otbr.util.compute_pskc"
+    with (
+        patch(
+            "python_otbr_api.OTBR.get_active_dataset_tlvs", return_value=DATASET_CH16
+        ),
+        patch("homeassistant.components.otbr.util.compute_pskc"),
     ):  # Patch to speed up tests
         assert await async_setup_component(hass, otbr.DOMAIN, {})
     assert len(hass.config_entries.async_entries(otbr.DOMAIN)) == 1

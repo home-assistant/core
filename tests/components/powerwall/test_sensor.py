@@ -1,4 +1,5 @@
 """The sensor tests for the powerwall platform."""
+
 from datetime import timedelta
 from unittest.mock import Mock, patch
 
@@ -33,11 +34,14 @@ async def test_sensors(
 
     config_entry = MockConfigEntry(domain=DOMAIN, data={CONF_IP_ADDRESS: "1.2.3.4"})
     config_entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.powerwall.config_flow.Powerwall",
-        return_value=mock_powerwall,
-    ), patch(
-        "homeassistant.components.powerwall.Powerwall", return_value=mock_powerwall
+    with (
+        patch(
+            "homeassistant.components.powerwall.config_flow.Powerwall",
+            return_value=mock_powerwall,
+        ),
+        patch(
+            "homeassistant.components.powerwall.Powerwall", return_value=mock_powerwall
+        ),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -157,7 +161,6 @@ async def test_sensors(
         float(hass.states.get("sensor.mysite_tg0123456789ab_battery_remaining").state)
         == 14.715
     )
-    assert float(hass.states.get("sensor.mysite_tg0123456789ab_charge").state) == 100.0
     assert (
         str(hass.states.get("sensor.mysite_tg0123456789ab_grid_state").state)
         == "grid_compliant"
@@ -187,7 +190,6 @@ async def test_sensors(
         float(hass.states.get("sensor.mysite_tg9876543210ba_battery_remaining").state)
         == 15.137
     )
-    assert float(hass.states.get("sensor.mysite_tg9876543210ba_charge").state) == 100.0
     assert (
         str(hass.states.get("sensor.mysite_tg9876543210ba_grid_state").state)
         == "grid_compliant"
@@ -204,11 +206,14 @@ async def test_sensor_backup_reserve_unavailable(hass: HomeAssistant) -> None:
 
     config_entry = MockConfigEntry(domain=DOMAIN, data={CONF_IP_ADDRESS: "1.2.3.4"})
     config_entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.powerwall.config_flow.Powerwall",
-        return_value=mock_powerwall,
-    ), patch(
-        "homeassistant.components.powerwall.Powerwall", return_value=mock_powerwall
+    with (
+        patch(
+            "homeassistant.components.powerwall.config_flow.Powerwall",
+            return_value=mock_powerwall,
+        ),
+        patch(
+            "homeassistant.components.powerwall.Powerwall", return_value=mock_powerwall
+        ),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -224,11 +229,14 @@ async def test_sensors_with_empty_meters(hass: HomeAssistant) -> None:
 
     config_entry = MockConfigEntry(domain=DOMAIN, data={CONF_IP_ADDRESS: "1.2.3.4"})
     config_entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.powerwall.config_flow.Powerwall",
-        return_value=mock_powerwall,
-    ), patch(
-        "homeassistant.components.powerwall.Powerwall", return_value=mock_powerwall
+    with (
+        patch(
+            "homeassistant.components.powerwall.config_flow.Powerwall",
+            return_value=mock_powerwall,
+        ),
+        patch(
+            "homeassistant.components.powerwall.Powerwall", return_value=mock_powerwall
+        ),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -262,11 +270,14 @@ async def test_unique_id_migrate(
     )
     assert old_mysite_load_power_entity.entity_id == "sensor.mysite_load_power"
 
-    with patch(
-        "homeassistant.components.powerwall.config_flow.Powerwall",
-        return_value=mock_powerwall,
-    ), patch(
-        "homeassistant.components.powerwall.Powerwall", return_value=mock_powerwall
+    with (
+        patch(
+            "homeassistant.components.powerwall.config_flow.Powerwall",
+            return_value=mock_powerwall,
+        ),
+        patch(
+            "homeassistant.components.powerwall.Powerwall", return_value=mock_powerwall
+        ),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()

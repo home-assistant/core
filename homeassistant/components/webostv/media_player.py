@@ -1,4 +1,5 @@
 """Support for interface with an LG webOS Smart TV."""
+
 from __future__ import annotations
 
 import asyncio
@@ -474,7 +475,7 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
         content = None
 
         websession = async_get_clientsession(self.hass)
-        with suppress(asyncio.TimeoutError):
+        with suppress(TimeoutError):
             async with asyncio.timeout(10):
                 response = await websession.get(url, ssl=False)
                 if response.status == HTTPStatus.OK:

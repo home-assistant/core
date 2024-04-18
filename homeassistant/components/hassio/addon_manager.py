@@ -1,4 +1,5 @@
 """Provide add-on management."""
+
 from __future__ import annotations
 
 import asyncio
@@ -380,7 +381,7 @@ class AddonManager:
                     self._logger.error(err)
                     break
 
-        return self._hass.async_create_task(addon_operation())
+        return self._hass.async_create_task(addon_operation(), eager_start=False)
 
 
 class AddonError(HomeAssistantError):

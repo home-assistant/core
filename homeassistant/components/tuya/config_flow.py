@@ -1,16 +1,15 @@
 """Config flow for Tuya."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
-from io import BytesIO
 from typing import Any
 
-import segno
 from tuya_sharing import LoginControl
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.helpers import selector
 
 from .const import (
     CONF_ENDPOINT,
@@ -33,7 +32,6 @@ class TuyaConfigFlow(ConfigFlow, domain=DOMAIN):
 
     __user_code: str
     __qr_code: str
-    __qr_image: str
     __reauth_entry: ConfigEntry | None = None
 
     def __init__(self) -> None:
@@ -42,7 +40,7 @@ class TuyaConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Step user."""
         errors = {}
         placeholders = {}
@@ -77,14 +75,22 @@ class TuyaConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_scan(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Step scan."""
         if user_input is None:
             return self.async_show_form(
                 step_id="scan",
-                description_placeholders={
-                    TUYA_RESPONSE_QR_CODE: self.__qr_image,
-                },
+                data_schema=vol.Schema(
+                    {
+                        vol.Optional("QR"): selector.QrCodeSelector(
+                            config=selector.QrCodeSelectorConfig(
+                                data=f"tuyaSmart--qrLogin?token={self.__qr_code}",
+                                scale=5,
+                                error_correction_level=selector.QrErrorCorrectionLevel.QUARTILE,
+                            )
+                        )
+                    }
+                ),
             )
 
         ret, info = await self.hass.async_add_executor_job(
@@ -94,11 +100,23 @@ class TuyaConfigFlow(ConfigFlow, domain=DOMAIN):
             self.__user_code,
         )
         if not ret:
+            # Try to get a new QR code on failure
+            await self.__async_get_qr_code(self.__user_code)
             return self.async_show_form(
                 step_id="scan",
                 errors={"base": "login_error"},
+                data_schema=vol.Schema(
+                    {
+                        vol.Optional("QR"): selector.QrCodeSelector(
+                            config=selector.QrCodeSelectorConfig(
+                                data=f"tuyaSmart--qrLogin?token={self.__qr_code}",
+                                scale=5,
+                                error_correction_level=selector.QrErrorCorrectionLevel.QUARTILE,
+                            )
+                        )
+                    }
+                ),
                 description_placeholders={
-                    TUYA_RESPONSE_QR_CODE: self.__qr_image,
                     TUYA_RESPONSE_MSG: info.get(TUYA_RESPONSE_MSG, "Unknown error"),
                     TUYA_RESPONSE_CODE: info.get(TUYA_RESPONSE_CODE, 0),
                 },
@@ -128,7 +146,7 @@ class TuyaConfigFlow(ConfigFlow, domain=DOMAIN):
             data=entry_data,
         )
 
-    async def async_step_reauth(self, _: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(self, _: Mapping[str, Any]) -> ConfigFlowResult:
         """Handle initiation of re-authentication with Tuya."""
         self.__reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
@@ -145,7 +163,7 @@ class TuyaConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth_user_code(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle re-authentication with a Tuya."""
         errors = {}
         placeholders = {}
@@ -189,24 +207,4 @@ class TuyaConfigFlow(ConfigFlow, domain=DOMAIN):
         if success := response.get(TUYA_RESPONSE_SUCCESS, False):
             self.__user_code = user_code
             self.__qr_code = response[TUYA_RESPONSE_RESULT][TUYA_RESPONSE_QR_CODE]
-            self.__qr_image = _generate_qr_code(self.__qr_code)
         return success, response
-
-
-def _generate_qr_code(data: str) -> str:
-    """Create an SVG QR code that can be scanned with the Smart Life app."""
-    qr_code = segno.make(f"tuyaSmart--qrLogin?token={data}", error="h")
-    with BytesIO() as buffer:
-        qr_code.save(
-            buffer,
-            kind="svg",
-            border=5,
-            scale=5,
-            xmldecl=False,
-            svgns=False,
-            svgclass=None,
-            lineclass=None,
-            svgversion=2,
-            dark="#1abcf2",
-        )
-        return str(buffer.getvalue().decode("ascii"))

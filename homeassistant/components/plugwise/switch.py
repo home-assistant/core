@@ -1,4 +1,5 @@
 """Plugwise Switch component for HomeAssistant."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

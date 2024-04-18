@@ -1,4 +1,5 @@
 """Support for Atlantic Pass APC Heating Control."""
+
 from __future__ import annotations
 
 from typing import Any, cast
@@ -49,7 +50,15 @@ OVERKIZ_TO_PRESET_MODES: dict[str, str] = {
     OverkizCommandParam.INTERNAL_SCHEDULING: PRESET_HOME,
 }
 
-PRESET_MODES_TO_OVERKIZ = {v: k for k, v in OVERKIZ_TO_PRESET_MODES.items()}
+PRESET_MODES_TO_OVERKIZ: dict[str, str] = {
+    PRESET_COMFORT: OverkizCommandParam.COMFORT,
+    PRESET_AWAY: OverkizCommandParam.ABSENCE,
+    PRESET_ECO: OverkizCommandParam.ECO,
+    PRESET_FROST_PROTECTION: OverkizCommandParam.FROSTPROTECTION,
+    PRESET_EXTERNAL: OverkizCommandParam.EXTERNAL_SCHEDULING,
+    PRESET_HOME: OverkizCommandParam.INTERNAL_SCHEDULING,
+}
+
 
 OVERKIZ_TO_PROFILE_MODES: dict[str, str] = {
     OverkizCommandParam.OFF: PRESET_SLEEP,
@@ -83,6 +92,7 @@ class AtlanticPassAPCHeatingZone(OverkizEntity, ClimateEntity):
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_translation_key = DOMAIN
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self, device_url: str, coordinator: OverkizDataUpdateCoordinator
@@ -98,7 +108,9 @@ class AtlanticPassAPCHeatingZone(OverkizEntity, ClimateEntity):
     @property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
-        if temperature := self.temperature_device.states[OverkizState.CORE_TEMPERATURE]:
+        if self.temperature_device is not None and (
+            temperature := self.temperature_device.states[OverkizState.CORE_TEMPERATURE]
+        ):
             return cast(float, temperature.value)
 
         return None
@@ -147,7 +159,7 @@ class AtlanticPassAPCHeatingZone(OverkizEntity, ClimateEntity):
         await self.async_set_heating_mode(PRESET_MODES_TO_OVERKIZ[preset_mode])
 
     @property
-    def preset_mode(self) -> str:
+    def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., home, away, temp."""
         heating_mode = cast(
             str, self.executor.select_state(OverkizState.IO_PASS_APC_HEATING_MODE)
@@ -167,7 +179,7 @@ class AtlanticPassAPCHeatingZone(OverkizEntity, ClimateEntity):
         return OVERKIZ_TO_PRESET_MODES[heating_mode]
 
     @property
-    def target_temperature(self) -> float:
+    def target_temperature(self) -> float | None:
         """Return hvac target temperature."""
         current_heating_profile = self.current_heating_profile
         if current_heating_profile in OVERKIZ_TEMPERATURE_STATE_BY_PROFILE:

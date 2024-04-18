@@ -1,4 +1,5 @@
 """Test fixtures for calendar sensor platforms."""
+
 from collections.abc import Generator
 import datetime
 import secrets
@@ -99,8 +100,20 @@ def config_flow_fixture(hass: HomeAssistant) -> Generator[None, None, None]:
         yield
 
 
+@pytest.fixture(name="config_entry")
+async def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
+    """Create a mock config entry."""
+    config_entry = MockConfigEntry(domain=TEST_DOMAIN)
+    config_entry.add_to_hass(hass)
+    return config_entry
+
+
 @pytest.fixture
-def mock_setup_integration(hass: HomeAssistant, config_flow_fixture: None) -> None:
+def mock_setup_integration(
+    hass: HomeAssistant,
+    config_flow_fixture: None,
+    test_entities: list[CalendarEntity],
+) -> None:
     """Fixture to set up a mock integration."""
 
     async def async_setup_entry_init(
@@ -129,20 +142,16 @@ def mock_setup_integration(hass: HomeAssistant, config_flow_fixture: None) -> No
         ),
     )
 
-
-async def create_mock_platform(
-    hass: HomeAssistant,
-    entities: list[CalendarEntity],
-) -> MockConfigEntry:
-    """Create a calendar platform with the specified entities."""
-
     async def async_setup_entry_platform(
         hass: HomeAssistant,
         config_entry: ConfigEntry,
         async_add_entities: AddEntitiesCallback,
     ) -> None:
         """Set up test event platform via config entry."""
-        async_add_entities(entities)
+        new_entities = create_test_entities()
+        test_entities.clear()
+        test_entities.extend(new_entities)
+        async_add_entities(test_entities)
 
     mock_platform(
         hass,
@@ -150,17 +159,15 @@ async def create_mock_platform(
         MockPlatform(async_setup_entry=async_setup_entry_platform),
     )
 
-    config_entry = MockConfigEntry(domain=TEST_DOMAIN)
-    config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    return config_entry
-
 
 @pytest.fixture(name="test_entities")
 def mock_test_entities() -> list[MockCalendarEntity]:
-    """Fixture to create fake entities used in the test."""
+    """Fixture that holdes the fake entities created during the test."""
+    return []
+
+
+def create_test_entities() -> list[MockCalendarEntity]:
+    """Create test entities used during the test."""
     half_hour_from_now = dt_util.now() + datetime.timedelta(minutes=30)
     entity1 = MockCalendarEntity(
         "Calendar 1",

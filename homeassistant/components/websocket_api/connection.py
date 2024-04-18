@@ -1,18 +1,18 @@
 """Connection session."""
+
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Callable, Hashable
 from contextvars import ContextVar
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal
 
 from aiohttp import web
 import voluptuous as vol
 
 from homeassistant.auth.models import RefreshToken, User
-from homeassistant.components.http import current_request
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
+from homeassistant.helpers.http import current_request
 from homeassistant.util.json import JsonValueType
 
 from . import const, messages
@@ -65,9 +65,9 @@ class ActiveConnection:
         self.last_id = 0
         self.can_coalesce = False
         self.supported_features: dict[str, float] = {}
-        self.handlers: dict[str, tuple[MessageHandler, vol.Schema]] = self.hass.data[
-            const.DOMAIN
-        ]
+        self.handlers: dict[str, tuple[MessageHandler, vol.Schema | Literal[False]]] = (
+            self.hass.data[const.DOMAIN]
+        )
         self.binary_handlers: list[BinaryHandler | None] = []
         current_connection.set(self)
 
@@ -185,6 +185,7 @@ class ActiveConnection:
             or (
                 not (cur_id := msg.get("id"))
                 or type(cur_id) is not int  # noqa: E721
+                or cur_id < 0
                 or not (type_ := msg.get("type"))
                 or type(type_) is not str  # noqa: E721
             )
@@ -220,7 +221,12 @@ class ActiveConnection:
         handler, schema = handler_schema
 
         try:
-            handler(self.hass, self, schema(msg))
+            if schema is False:
+                if len(msg) > 2:
+                    raise vol.Invalid("extra keys not allowed")
+                handler(self.hass, self, msg)
+            else:
+                handler(self.hass, self, schema(msg))
         except Exception as err:  # pylint: disable=broad-except
             self.async_handle_exception(msg, err)
 
@@ -266,7 +272,7 @@ class ActiveConnection:
         elif isinstance(err, vol.Invalid):
             code = const.ERR_INVALID_FORMAT
             err_message = vol.humanize.humanize_error(msg, err)
-        elif isinstance(err, asyncio.TimeoutError):
+        elif isinstance(err, TimeoutError):
             code = const.ERR_TIMEOUT
             err_message = "Timeout"
         elif isinstance(err, HomeAssistantError):

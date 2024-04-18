@@ -1,16 +1,16 @@
 """Test Rainforest RAVEn config flow."""
-import asyncio
+
 from unittest.mock import patch
 
 from aioraven.device import RAVEnConnectionError
 import pytest
 import serial.tools.list_ports
 
-from homeassistant import data_entry_flow
 from homeassistant.components.rainforest_raven.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USB, SOURCE_USER
 from homeassistant.const import CONF_DEVICE, CONF_MAC, CONF_SOURCE
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from . import create_mock_device
 from .const import DEVICE_NAME, DISCOVERY_INFO, METER_LIST
@@ -48,8 +48,8 @@ def mock_device_comm_error(mock_device):
 @pytest.fixture
 def mock_device_timeout(mock_device):
     """Mock a device which times out when queried."""
-    mock_device.get_meter_list.side_effect = asyncio.TimeoutError
-    mock_device.get_meter_info.side_effect = asyncio.TimeoutError
+    mock_device.get_meter_list.side_effect = TimeoutError
+    mock_device.get_meter_info.side_effect = TimeoutError
     return mock_device
 
 
@@ -74,7 +74,7 @@ async def test_flow_usb(hass: HomeAssistant, mock_comports, mock_device):
         DOMAIN, context={CONF_SOURCE: SOURCE_USB}, data=DISCOVERY_INFO
     )
     assert result
-    assert result.get("type") == data_entry_flow.FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert not result.get("errors")
     assert result.get("flow_id")
     assert result.get("step_id") == "meters"
@@ -83,7 +83,7 @@ async def test_flow_usb(hass: HomeAssistant, mock_comports, mock_device):
         result["flow_id"], user_input={CONF_MAC: [METER_LIST.meter_mac_ids[0].hex()]}
     )
     assert result
-    assert result.get("type") == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
 
 
 async def test_flow_usb_cannot_connect(
@@ -94,7 +94,7 @@ async def test_flow_usb_cannot_connect(
         DOMAIN, context={CONF_SOURCE: SOURCE_USB}, data=DISCOVERY_INFO
     )
     assert result
-    assert result.get("type") == data_entry_flow.FlowResultType.ABORT
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "cannot_connect"
 
 
@@ -106,7 +106,7 @@ async def test_flow_usb_timeout_connect(
         DOMAIN, context={CONF_SOURCE: SOURCE_USB}, data=DISCOVERY_INFO
     )
     assert result
-    assert result.get("type") == data_entry_flow.FlowResultType.ABORT
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "timeout_connect"
 
 
@@ -118,7 +118,7 @@ async def test_flow_usb_comm_error(
         DOMAIN, context={CONF_SOURCE: SOURCE_USB}, data=DISCOVERY_INFO
     )
     assert result
-    assert result.get("type") == data_entry_flow.FlowResultType.ABORT
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "cannot_connect"
 
 
@@ -129,7 +129,7 @@ async def test_flow_user(hass: HomeAssistant, mock_comports, mock_device):
         context={CONF_SOURCE: SOURCE_USER},
     )
     assert result
-    assert result.get("type") == data_entry_flow.FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert not result.get("errors")
     assert result.get("flow_id")
     assert result.get("step_id") == "user"
@@ -141,7 +141,7 @@ async def test_flow_user(hass: HomeAssistant, mock_comports, mock_device):
         },
     )
     assert result
-    assert result.get("type") == data_entry_flow.FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert not result.get("errors")
     assert result.get("flow_id")
     assert result.get("step_id") == "meters"
@@ -150,7 +150,7 @@ async def test_flow_user(hass: HomeAssistant, mock_comports, mock_device):
         result["flow_id"], user_input={CONF_MAC: [METER_LIST.meter_mac_ids[0].hex()]}
     )
     assert result
-    assert result.get("type") == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
 
 
 async def test_flow_user_no_available_devices(hass: HomeAssistant, mock_comports):
@@ -165,7 +165,7 @@ async def test_flow_user_no_available_devices(hass: HomeAssistant, mock_comports
         context={CONF_SOURCE: SOURCE_USER},
     )
     assert result
-    assert result.get("type") == data_entry_flow.FlowResultType.ABORT
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "no_devices_found"
 
 
@@ -176,7 +176,7 @@ async def test_flow_user_in_progress(hass: HomeAssistant, mock_comports):
         context={CONF_SOURCE: SOURCE_USER},
     )
     assert result
-    assert result.get("type") == data_entry_flow.FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert not result.get("errors")
     assert result.get("flow_id")
     assert result.get("step_id") == "user"
@@ -186,7 +186,7 @@ async def test_flow_user_in_progress(hass: HomeAssistant, mock_comports):
         context={CONF_SOURCE: SOURCE_USER},
     )
     assert result
-    assert result.get("type") == data_entry_flow.FlowResultType.ABORT
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "already_in_progress"
 
 
@@ -202,7 +202,7 @@ async def test_flow_user_cannot_connect(
         },
     )
     assert result
-    assert result.get("type") == data_entry_flow.FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("errors") == {CONF_DEVICE: "cannot_connect"}
 
 
@@ -218,7 +218,7 @@ async def test_flow_user_timeout_connect(
         },
     )
     assert result
-    assert result.get("type") == data_entry_flow.FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("errors") == {CONF_DEVICE: "timeout_connect"}
 
 
@@ -234,5 +234,5 @@ async def test_flow_user_comm_error(
         },
     )
     assert result
-    assert result.get("type") == data_entry_flow.FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("errors") == {CONF_DEVICE: "cannot_connect"}

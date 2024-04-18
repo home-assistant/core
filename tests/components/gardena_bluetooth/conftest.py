@@ -1,4 +1,5 @@
 """Common fixtures for the Gardena Bluetooth tests."""
+
 from collections.abc import Awaitable, Callable, Generator
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
@@ -87,11 +88,11 @@ def mock_client(
             val = mock_read_char_raw[uuid]
             if isinstance(val, Exception):
                 raise val
-            return val
         except KeyError:
             if default is SENTINEL:
                 raise CharacteristicNotFound from KeyError
             return default
+        return val
 
     def _all_char():
         return set(mock_read_char_raw.keys())
@@ -100,10 +101,13 @@ def mock_client(
     client.read_char_raw.side_effect = _read_char_raw
     client.get_all_characteristics_uuid.side_effect = _all_char
 
-    with patch(
-        "homeassistant.components.gardena_bluetooth.config_flow.Client",
-        return_value=client,
-    ), patch("homeassistant.components.gardena_bluetooth.Client", return_value=client):
+    with (
+        patch(
+            "homeassistant.components.gardena_bluetooth.config_flow.Client",
+            return_value=client,
+        ),
+        patch("homeassistant.components.gardena_bluetooth.Client", return_value=client),
+    ):
         yield client
 
 

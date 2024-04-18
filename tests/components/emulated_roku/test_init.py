@@ -1,4 +1,5 @@
 """Test emulated_roku component setup process."""
+
 from unittest.mock import AsyncMock, Mock, patch
 
 from homeassistant.components import emulated_roku
@@ -8,9 +9,12 @@ from homeassistant.setup import async_setup_component
 
 async def test_config_required_fields(hass: HomeAssistant, mock_get_source_ip) -> None:
     """Test that configuration is successful with required fields."""
-    with patch.object(emulated_roku, "configured_servers", return_value=[]), patch(
-        "homeassistant.components.emulated_roku.binding.EmulatedRokuServer",
-        return_value=Mock(start=AsyncMock(), close=AsyncMock()),
+    with (
+        patch.object(emulated_roku, "configured_servers", return_value=[]),
+        patch(
+            "homeassistant.components.emulated_roku.binding.EmulatedRokuServer",
+            return_value=Mock(start=AsyncMock(), close=AsyncMock()),
+        ),
     ):
         assert (
             await async_setup_component(
@@ -35,11 +39,14 @@ async def test_config_already_registered_not_configured(
     hass: HomeAssistant, mock_get_source_ip
 ) -> None:
     """Test that an already registered name causes the entry to be ignored."""
-    with patch(
-        "homeassistant.components.emulated_roku.binding.EmulatedRokuServer",
-        return_value=Mock(start=AsyncMock(), close=AsyncMock()),
-    ) as instantiate, patch.object(
-        emulated_roku, "configured_servers", return_value=["Emulated Roku Test"]
+    with (
+        patch(
+            "homeassistant.components.emulated_roku.binding.EmulatedRokuServer",
+            return_value=Mock(start=AsyncMock(), close=AsyncMock()),
+        ) as instantiate,
+        patch.object(
+            emulated_roku, "configured_servers", return_value=["Emulated Roku Test"]
+        ),
     ):
         assert (
             await async_setup_component(

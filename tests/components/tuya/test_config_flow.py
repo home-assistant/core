@@ -1,4 +1,5 @@
 """Tests for the Tuya config flow."""
+
 from __future__ import annotations
 
 from unittest.mock import MagicMock
@@ -11,7 +12,7 @@ from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import ANY, MockConfigEntry
+from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
@@ -27,7 +28,7 @@ async def test_user_flow(
         context={"source": SOURCE_USER},
     )
 
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "user"
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -35,16 +36,15 @@ async def test_user_flow(
         user_input={CONF_USER_CODE: "12345"},
     )
 
-    assert result2.get("type") == FlowResultType.FORM
+    assert result2.get("type") is FlowResultType.FORM
     assert result2.get("step_id") == "scan"
-    assert result2.get("description_placeholders") == {"qrcode": ANY}
 
     result3 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={},
     )
 
-    assert result3.get("type") == FlowResultType.CREATE_ENTRY
+    assert result3.get("type") is FlowResultType.CREATE_ENTRY
     assert result3 == snapshot
 
 
@@ -58,7 +58,7 @@ async def test_user_flow_failed_qr_code(
         context={"source": SOURCE_USER},
     )
 
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "user"
 
     # Something went wrong getting the QR code (like an invalid user code)
@@ -69,7 +69,7 @@ async def test_user_flow_failed_qr_code(
         user_input={CONF_USER_CODE: "12345"},
     )
 
-    assert result2.get("type") == FlowResultType.FORM
+    assert result2.get("type") is FlowResultType.FORM
     assert result2.get("errors") == {"base": "login_error"}
 
     # This time it worked out
@@ -86,7 +86,7 @@ async def test_user_flow_failed_qr_code(
         user_input={},
     )
 
-    assert result3.get("type") == FlowResultType.CREATE_ENTRY
+    assert result3.get("type") is FlowResultType.CREATE_ENTRY
 
 
 async def test_user_flow_failed_scan(
@@ -99,7 +99,7 @@ async def test_user_flow_failed_scan(
         context={"source": SOURCE_USER},
     )
 
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "user"
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -107,7 +107,7 @@ async def test_user_flow_failed_scan(
         user_input={CONF_USER_CODE: "12345"},
     )
 
-    assert result2.get("type") == FlowResultType.FORM
+    assert result2.get("type") is FlowResultType.FORM
     assert result2.get("step_id") == "scan"
 
     # Access has been denied, or the code hasn't been scanned yet
@@ -122,7 +122,7 @@ async def test_user_flow_failed_scan(
         user_input={},
     )
 
-    assert result3.get("type") == FlowResultType.FORM
+    assert result3.get("type") is FlowResultType.FORM
     assert result3.get("errors") == {"base": "login_error"}
 
     # This time it worked out
@@ -133,7 +133,7 @@ async def test_user_flow_failed_scan(
         user_input={},
     )
 
-    assert result4.get("type") == FlowResultType.CREATE_ENTRY
+    assert result4.get("type") is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures("mock_tuya_login_control")
@@ -155,16 +155,15 @@ async def test_reauth_flow(
         data=mock_config_entry.data,
     )
 
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "scan"
-    assert result.get("description_placeholders") == {"qrcode": ANY}
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={},
     )
 
-    assert result2.get("type") == FlowResultType.ABORT
+    assert result2.get("type") is FlowResultType.ABORT
     assert result2.get("reason") == "reauth_successful"
 
     assert mock_config_entry == snapshot
@@ -196,7 +195,7 @@ async def test_reauth_flow_migration(
         data=mock_old_config_entry.data,
     )
 
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "reauth_user_code"
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -204,16 +203,15 @@ async def test_reauth_flow_migration(
         user_input={CONF_USER_CODE: "12345"},
     )
 
-    assert result2.get("type") == FlowResultType.FORM
+    assert result2.get("type") is FlowResultType.FORM
     assert result2.get("step_id") == "scan"
-    assert result2.get("description_placeholders") == {"qrcode": ANY}
 
     result3 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={},
     )
 
-    assert result3.get("type") == FlowResultType.ABORT
+    assert result3.get("type") is FlowResultType.ABORT
     assert result3.get("reason") == "reauth_successful"
 
     # Ensure the old data is gone, new data is present
@@ -249,7 +247,7 @@ async def test_reauth_flow_failed_qr_code(
         user_input={CONF_USER_CODE: "12345"},
     )
 
-    assert result2.get("type") == FlowResultType.FORM
+    assert result2.get("type") is FlowResultType.FORM
     assert result2.get("errors") == {"base": "login_error"}
 
     # This time it worked out
@@ -266,5 +264,5 @@ async def test_reauth_flow_failed_qr_code(
         user_input={},
     )
 
-    assert result3.get("type") == FlowResultType.ABORT
+    assert result3.get("type") is FlowResultType.ABORT
     assert result3.get("reason") == "reauth_successful"
