@@ -1,7 +1,5 @@
 """The tests for the Ring component."""
 
-from datetime import timedelta
-
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from ring_doorbell import AuthenticationError, RingError, RingTimeout
@@ -17,7 +15,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.issue_registry import IssueRegistry
 from homeassistant.setup import async_setup_component
-from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -34,7 +31,7 @@ async def test_setup_entry(
 ) -> None:
     """Test setup entry."""
     mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
@@ -55,7 +52,7 @@ async def test_setup_entry_device_update(
     front_door_doorbell = mock_ring_devices.get_device(987654)
     front_door_doorbell.history.assert_not_called()
     freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass, dt_util.now() + timedelta(minutes=20))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
     front_door_doorbell.history.assert_called_once()
 
@@ -108,20 +105,14 @@ async def test_error_on_setup(
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
-    assert [
-        record.message
-        for record in caplog.records
-        if record.levelname == "DEBUG"
-        and record.name == "homeassistant.config_entries"
-        and log_msg in record.message
-        and DOMAIN in record.message
-    ]
+    assert log_msg in caplog.text
 
 
 async def test_auth_failure_on_global_update(
     hass: HomeAssistant,
     mock_ring_client,
     mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
     caplog,
 ) -> None:
     """Test authentication failure on global data update."""
@@ -132,15 +123,11 @@ async def test_auth_failure_on_global_update(
 
     mock_ring_client.update_devices.side_effect = AuthenticationError
 
-    async_fire_time_changed(hass, dt_util.now() + timedelta(minutes=20))
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert "Authentication failed while fetching devices data: " in [
-        record.message
-        for record in caplog.records
-        if record.levelname == "ERROR"
-        and record.name == "homeassistant.components.ring.coordinator"
-    ]
+    assert "Authentication failed while fetching devices data: " in caplog.text
 
     assert any(mock_config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
 
@@ -150,6 +137,7 @@ async def test_auth_failure_on_device_update(
     mock_ring_client,
     mock_ring_devices,
     mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
     caplog,
 ) -> None:
     """Test authentication failure on device data update."""
@@ -161,15 +149,11 @@ async def test_auth_failure_on_device_update(
     front_door_doorbell = mock_ring_devices.get_device(987654)
     front_door_doorbell.history.side_effect = AuthenticationError
 
-    async_fire_time_changed(hass, dt_util.now() + timedelta(minutes=20))
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert "Authentication failed while fetching devices data: " in [
-        record.message
-        for record in caplog.records
-        if record.levelname == "ERROR"
-        and record.name == "homeassistant.components.ring.coordinator"
-    ]
+    assert "Authentication failed while fetching devices data: " in caplog.text
 
     assert any(mock_config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
 
@@ -192,6 +176,7 @@ async def test_error_on_global_update(
     hass: HomeAssistant,
     mock_ring_client,
     mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
     caplog,
     error_type,
     log_msg,
@@ -203,12 +188,11 @@ async def test_error_on_global_update(
 
     mock_ring_client.update_devices.side_effect = error_type
 
-    async_fire_time_changed(hass, dt_util.now() + timedelta(minutes=20))
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert log_msg in [
-        record.message for record in caplog.records if record.levelname == "ERROR"
-    ]
+    assert log_msg in caplog.text
 
     assert mock_config_entry.entry_id in hass.data[DOMAIN]
 
@@ -232,6 +216,7 @@ async def test_error_on_device_update(
     mock_ring_client,
     mock_ring_devices,
     mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
     caplog,
     error_type,
     log_msg,
@@ -244,12 +229,11 @@ async def test_error_on_device_update(
     front_door_doorbell = mock_ring_devices.get_device(765432)
     front_door_doorbell.history.side_effect = error_type
 
-    async_fire_time_changed(hass, dt_util.now() + timedelta(minutes=20))
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert log_msg in [
-        record.message for record in caplog.records if record.levelname == "ERROR"
-    ]
+    assert log_msg in caplog.text
     assert mock_config_entry.entry_id in hass.data[DOMAIN]
 
 

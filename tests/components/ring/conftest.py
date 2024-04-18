@@ -58,27 +58,50 @@ def mock_ring_devices():
         other = devices["other"]
         chimes = devices["chimes"]
 
-        get_device = lambda _, id: [
-            device for device in device_list if device.id == id
-        ][0]
-        get_video_device = lambda _, id: [
-            device
-            for device in device_list
-            if (
-                device.id == id
-                and device.family in {"stickup_cams", "doorbots", "authorized_doorbots"}
+        def get_device(self, device_api_ai: int):
+            return next(
+                iter([device for device in device_list if device.id == device_api_ai])
             )
-        ][0]
-        get_stickup_cam = lambda _, id: [
-            device
-            for device in device_list
-            if (device.id == id and device.family == "stickup_cams")
-        ][0]
-        get_other = lambda _, id: [
-            device
-            for device in device_list
-            if (device.id == id and device.family == "others")
-        ][0]
+
+        def get_video_device(self, device_api_ai: int):
+            return next(
+                iter(
+                    [
+                        device
+                        for device in device_list
+                        if (
+                            device.id == device_api_ai
+                            and device.family
+                            in {"stickup_cams", "doorbots", "authorized_doorbots"}
+                        )
+                    ]
+                )
+            )
+
+        def get_stickup_cam(self, device_api_ai: int):
+            return next(
+                iter(
+                    [
+                        device
+                        for device in device_list
+                        if (
+                            device.id == device_api_ai
+                            and device.family == "stickup_cams"
+                        )
+                    ]
+                )
+            )
+
+        def get_other(self, device_api_ai: int):
+            return next(
+                iter(
+                    [
+                        device
+                        for device in device_list
+                        if (device.id == device_api_ai and device.family == "others")
+                    ]
+                )
+            )
 
     return FakeRingDevices()
 

@@ -72,6 +72,7 @@ async def test_health_sensor(
     hass: HomeAssistant,
     mock_ring_client,
     freezer: FrozenDateTimeFactory,
+    entity_registry: er.EntityRegistry,
     device_id,
     device_name,
     sensor_name,
@@ -80,7 +81,6 @@ async def test_health_sensor(
     """Test the Ring health sensors."""
     entity_id = f"sensor.{device_name}_{sensor_name}"
     # Enable the sensor as the health sensors are disabled by default
-    entity_registry = er.async_get(hass)
     entity_entry = entity_registry.async_get_or_create(
         "sensor",
         "ring",
