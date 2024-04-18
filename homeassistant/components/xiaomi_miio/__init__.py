@@ -299,9 +299,9 @@ async def async_create_miio_device_and_coordinator(
 
     # List of models requiring specific lazy_discover setting
     LAZY_DISCOVER_FOR_MODEL = {
+        "zhimi.fan.za3": True,
         "zhimi.fan.za5": True,
         "zhimi.airpurifier.za1": True,
-        "zhimi.fan.za3": True
     }
     lazy_discover = LAZY_DISCOVER_FOR_MODEL.get(model, False)
 
