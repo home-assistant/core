@@ -121,7 +121,6 @@ async def test_config_flow_zigbee(
             result["flow_id"],
             user_input={"next_step_id": STEP_PICK_FIRMWARE_ZIGBEE},
         )
-
         assert result["type"] is FlowResultType.SHOW_PROGRESS
         assert result["progress_action"] == "install_addon"
         assert result["step_id"] == "install_zigbee_flasher_addon"
@@ -129,11 +128,7 @@ async def test_config_flow_zigbee(
         await hass.async_block_till_done(wait_background_tasks=True)
 
         # Progress the flow, we are now configuring the addon and running it
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={},
-        )
-
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
         assert result["type"] is FlowResultType.SHOW_PROGRESS
         assert result["step_id"] == "run_zigbee_flasher_addon"
         assert result["progress_action"] == "run_zigbee_flasher_addon"
@@ -151,24 +146,23 @@ async def test_config_flow_zigbee(
         await hass.async_block_till_done(wait_background_tasks=True)
 
         # Progress the flow, we are now uninstalling the addon
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={},
-        )
-
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
         assert result["type"] is FlowResultType.SHOW_PROGRESS
         assert result["step_id"] == "uninstall_zigbee_flasher_addon"
         assert result["progress_action"] == "uninstall_zigbee_flasher_addon"
-        assert mock_flasher_manager.async_uninstall_addon_waiting.mock_calls == [call()]
 
         await hass.async_block_till_done(wait_background_tasks=True)
 
-        # We are finally done
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={},
-        )
+        # We are finally done with the addon
+        assert mock_flasher_manager.async_uninstall_addon_waiting.mock_calls == [call()]
 
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "confirm_zigbee"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
     config_entry = result["result"]
@@ -273,10 +267,7 @@ async def test_config_flow_thread(
         )
 
         # Progress the flow, it is now configuring the addon and running it
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={},
-        )
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
         assert result["type"] is FlowResultType.SHOW_PROGRESS
         assert result["step_id"] == "start_otbr_addon"
@@ -295,12 +286,14 @@ async def test_config_flow_thread(
 
         await hass.async_block_till_done(wait_background_tasks=True)
 
-        # We are finally done
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={},
-        )
+        # The addon is now running
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "confirm_otbr"
 
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
     config_entry = result["result"]

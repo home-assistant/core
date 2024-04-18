@@ -319,6 +319,7 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
         """Confirm Zigbee setup."""
         assert self._usb_info is not None
         assert self._hw_variant is not None
+        self._current_firmware_type = ApplicationType.EZSP
 
         if user_input is not None:
             await self.hass.config_entries.flow.async_init(
