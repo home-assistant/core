@@ -32,7 +32,7 @@ from tests.common import MockConfigEntry, load_fixture
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock]:
+def mock_setup_entry() -> Generator[AsyncMock, None, None]:
     """Mock setting up a config entry."""
     with patch(
         "homeassistant.components.intellifire.async_setup_entry", return_value=True
@@ -41,9 +41,6 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-<<<<<<< HEAD
-def mock_fireplace_finder_none() -> Generator[MagicMock]:
-=======
 def mock_cloud_api_interface_user_data_1() -> IntelliFireUserData:
     """Fixture to mock the user_data property of IntelliFireCloudInterface."""
     fixture_data = load_fixture("intellifire/user_data_1.json")
@@ -187,7 +184,6 @@ def mock_poll_local_fireplace_exception() -> Generator[AsyncMock, None, None]:
 
 @pytest.fixture
 def mock_fireplace_finder_none() -> Generator[None, MagicMock, None]:
->>>>>>> ad89fdec56 (rebase)
     """Mock fireplace finder."""
     mock_found_fireplaces = Mock()
     mock_found_fireplaces.ips = []
@@ -198,7 +194,71 @@ def mock_fireplace_finder_none() -> Generator[None, MagicMock, None]:
 
 
 @pytest.fixture
-def mock_fireplace_finder_single() -> Generator[MagicMock]:
+def mock_config_entry_current() -> MockConfigEntry:
+    """Return a mock config entry."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        version=1,
+        data={
+            CONF_IP_ADDRESS: "192.168.2.108",
+            CONF_USERNAME: "grumpypanda@china.cn",
+            CONF_PASSWORD: "you-stole-my-pandas",
+            CONF_SERIAL: "3FB284769E4736F30C8973A7ED358123",
+            CONF_WEB_CLIENT_ID: "FA2B1C3045601234D0AE17D72F8E975",
+            CONF_API_KEY: "B5C4DA27AAEF31D1FB21AFF9BFA6BCD2",
+            CONF_AUTH_COOKIE: "B984F21A6378560019F8A1CDE41B6782",
+            CONF_USER_ID: "52C3F9E8B9D3AC99F8E4D12345678901FE9A2BC7D85F7654E28BF98BCD123456",
+        },
+        options={CONF_READ_MODE: API_MODE_LOCAL, CONF_CONTROL_MODE: API_MODE_CLOUD},
+        unique_id="serial",
+    )
+
+
+@pytest.fixture
+def mock_config_entry_old() -> MockConfigEntry:
+    """For migration testing."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        version=1,
+        title="Fireplace 3FB284769E4736F30C8973A7ED358123",
+        data={
+            CONF_HOST: "192.168.2.108",
+            CONF_USERNAME: "grumpypanda@china.cn",
+            CONF_PASSWORD: "you-stole-my-pandas",
+            CONF_USER_ID: "52C3F9E8B9D3AC99F8E4D12345678901FE9A2BC7D85F7654E28BF98BCD123456",
+        },
+    )
+
+
+@pytest.fixture
+def mock_config_entry_super_old() -> MockConfigEntry:
+    """For migration testing."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        version=1,
+        title="Fireplace 3FB284769E4736F30C8973A7ED358123",
+        data={CONF_HOST: "192.168.2.108"},
+    )
+
+
+@pytest.fixture
+def mock_config_entry_v1_bad_title() -> MockConfigEntry:
+    """For migration testing."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        version=1,
+        title="Fireplace Of Doom",
+        data={
+            CONF_HOST: "192.168.2.108",
+            CONF_USERNAME: "grumpypanda@china.cn",
+            CONF_PASSWORD: "you-stole-my-pandas",
+            CONF_USER_ID: "52C3F9E8B9D3AC99F8E4D12345678901FE9A2BC7D85F7654E28BF98BCD123456",
+        },
+    )
+
+
+@pytest.fixture
+def mock_fireplace_finder_single() -> Generator[None, MagicMock, None]:
     """Mock fireplace finder."""
     mock_found_fireplaces = Mock()
     mock_found_fireplaces.ips = ["192.168.1.69"]
@@ -209,7 +269,7 @@ def mock_fireplace_finder_single() -> Generator[MagicMock]:
 
 
 @pytest.fixture
-def mock_intellifire_config_flow() -> Generator[MagicMock]:
+def mock_intellifire_config_flow() -> Generator[None, MagicMock, None]:
     """Return a mocked IntelliFire client."""
     data_mock = Mock()
     data_mock.serial = "12345"
