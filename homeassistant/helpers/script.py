@@ -652,6 +652,11 @@ class _ScriptRun:
             self._variables["wait"]["completed"] = True
             return
 
+        if timeout == 0:
+            self._changed()
+            self._async_handle_timeout()
+            return
+
         futures, timeout_handle, timeout_future = self._async_futures_with_timeout(
             timeout
         )
@@ -1078,6 +1083,11 @@ class _ScriptRun:
         self._variables["wait"] = {"remaining": timeout, "trigger": None}
         trace_set_result(wait=self._variables["wait"])
 
+        if timeout == 0:
+            self._changed()
+            self._async_handle_timeout()
+            return
+
         futures, timeout_handle, timeout_future = self._async_futures_with_timeout(
             timeout
         )
@@ -1108,6 +1118,14 @@ class _ScriptRun:
             futures, timeout_handle, timeout_future, remove_triggers
         )
 
+    def _async_handle_timeout(self) -> None:
+        """Handle timeout."""
+        self._variables["wait"]["remaining"] = 0.0
+        if not self._action.get(CONF_CONTINUE_ON_TIMEOUT, True):
+            self._log(_TIMEOUT_MSG)
+            trace_set_result(wait=self._variables["wait"], timeout=True)
+            raise _AbortScript from TimeoutError()
+
     async def _async_wait_with_optional_timeout(
         self,
         futures: list[asyncio.Future[None]],
@@ -1118,11 +1136,7 @@ class _ScriptRun:
         try:
             await asyncio.wait(futures, return_when=asyncio.FIRST_COMPLETED)
             if timeout_future and timeout_future.done():
-                self._variables["wait"]["remaining"] = 0.0
-                if not self._action.get(CONF_CONTINUE_ON_TIMEOUT, True):
-                    self._log(_TIMEOUT_MSG)
-                    trace_set_result(wait=self._variables["wait"], timeout=True)
-                    raise _AbortScript from TimeoutError()
+                self._async_handle_timeout()
         finally:
             if timeout_future and not timeout_future.done() and timeout_handle:
                 timeout_handle.cancel()
