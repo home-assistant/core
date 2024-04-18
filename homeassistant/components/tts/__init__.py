@@ -383,6 +383,23 @@ class TextToSpeechEntity(RestoreEntity):
     _attr_supported_options: list[str] | None = None
     _attr_default_options: Mapping[str, Any] | None = None
 
+    @classmethod
+    def __init_subclass__(cls) -> None:
+        if not (
+            hasattr(cls, "_attr_default_language")
+            or type(cls.default_language) is property  # type: ignore[comparison-overlap]
+        ):
+            raise AttributeError(
+                "You need to either set the '_attr_default_language' variable or overwrite the 'default_language' property"
+            )
+        if not (
+            hasattr(cls, "_attr_supported_languages")
+            or type(cls.supported_languages) is property  # type: ignore[comparison-overlap]
+        ):
+            raise AttributeError(
+                "You need to either set the '_attr_supported_languages' variable or overwrite the 'supported_languages' property"
+            )
+
     @property
     @final
     def state(self) -> str | None:
