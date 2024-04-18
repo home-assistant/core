@@ -1243,11 +1243,35 @@ SCHEDULING_POLICY: Final = "scheduling_policy"
 RESCHEDULING_POLICY: Final = "rescheduling_policy"
 RV: Final = "rv"
 EARLY_START: Final = "early_start"
+SJFWO: Final = "sjfwo"
+SJFW: Final = "sjfw"
+
+RESCHEDULING_TRIGGER: Final = "rescheduling_trigger"
+REACTIVE: Final = "reactive"
+ANTICIPATORY: Final = "anticipatory"
+PROACTIVE: Final = "proactive"
+
+RESCHEDULING_WINDOW: Final = "rescheduling_window"
+
+ROUTINE_PRIORITY_POLICY: Final = "routine_priority_policy"
+SHORTEST: Final = "shortest"
+LONGEST: Final = "longest"
+EARLIEST: Final = "earliest"
+LATEST: Final = "latest"
+RANDOM: Final = "random"
 
 RESCHEDULING_ESTIMATION: Final = "rescheduling_estimation"
 
 RESCHEDULING_ACCURACY: Final = "rescheduling_accuracy"
 RESCHEDULE_ALL: Final = "reschedule_all"
 RESCHEDULE_SOME: Final = "reschedule_some"
+
+HOLE_FILLING_METRIC: Final = "hole_filling_metric"
+LOCAL_FIRST: Final = "local_first"
+LOCAL_SHORTEST: Final = "local_shortest"
+LOCAL_LONGEST: Final = "local_longest"
+GLOBAL_FIRST: Final = "global_first"
+GLOBAL_SHORTEST: Final = "global_shortest"
+GLOBAL_LONGEST: Final = "global_longest"
 
 TIMELINE_UNIT: Final = 1

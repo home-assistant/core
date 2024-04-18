@@ -21,6 +21,8 @@ from homeassistant.const import (
     CONF_CONTINUE_ON_ERROR,
     CONF_ENTITY_ID,
     CONF_RESPONSE_VARIABLE,
+    CONF_SERVICE,
+    CONF_SERVICE_DATA,
 )
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import (
@@ -29,6 +31,8 @@ from homeassistant.helpers import (
     service,
 )
 from homeassistant.util import slugify
+
+from .const import CONF_TRANSITION
 
 _KT = TypeVar("_KT")
 _VT = TypeVar("_VT")
@@ -107,7 +111,7 @@ class BaseRoutineEntity:
 
         new_routine_id = self._routine_id + "-" + generate_short_uuid()
 
-        routine_entity = {}
+        routine_entity = dict[str, ActionEntity]()
 
         for action_id, entity in self.actions.items():
             if not entity.is_end_node:
@@ -250,6 +254,11 @@ class RoutineEntity(BaseRoutineEntity):
         """Get routine id."""
         return self._routine_id
 
+    @property
+    def start_time(self) -> float | None:
+        """Get start time."""
+        return self._start_time
+
     def _set_logger(self, logger: logging.Logger | None = None) -> None:
         """Set logger."""
         if logger:
@@ -305,6 +314,40 @@ class ActionEntity:
     def action_id(self) -> str:
         """Get action id."""
         return self._action_id
+
+    @property
+    def service(self) -> str | None:
+        """Get service."""
+        return self.action.get(CONF_SERVICE, None)
+
+    @property
+    def service_data(self) -> dict[str, Any] | None:
+        """Get service data."""
+        return self.action.get(CONF_SERVICE_DATA, None)
+
+    @property
+    def transition(self) -> float | None:
+        """Get transition."""
+        if self.service_data is None or CONF_TRANSITION not in self.service_data:
+            return None
+        return self.service_data.get(CONF_TRANSITION, None)
+
+    @property
+    def service(self) -> str | None:
+        """Get service."""
+        return self.action.get(CONF_SERVICE, None)
+
+    @property
+    def service_data(self) -> dict[str, Any] | None:
+        """Get service data."""
+        return self.action.get(CONF_SERVICE_DATA, None)
+
+    @property
+    def transition(self) -> float | None:
+        """Get transition."""
+        if self.service_data is None or CONF_TRANSITION not in self.service_data:
+            return None
+        return self.service_data.get(CONF_TRANSITION, None)
 
     @property
     def is_end_node(self) -> bool:
@@ -579,7 +622,7 @@ class Queue(Generic[_KT, _VT]):
         for key in self._keys:
             yield self._data[key]
 
-    def get(self, key, default=None) -> _VT | None:
+    def get(self, key: _KT, default=None) -> _VT | None:
         """Get the value with the key."""
         try:
             return self._data[key]
@@ -607,7 +650,7 @@ class Queue(Generic[_KT, _VT]):
         self._keys = []
         self._data = {}
 
-    def update(self, queue: Queue):
+    def update(self, queue: Queue[_KT, _VT]) -> None:
         """Extend the queue."""
         for key, value in queue.items():
             self._keys.append(key)

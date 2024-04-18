@@ -121,6 +121,13 @@ def generate_duration(seconds: float = 2.0) -> timedelta:
     return timedelta(seconds=seconds)
 
 
+def time_range_to_timedelta(time_range: tuple[str, str]) -> timedelta:
+    """Get the duration of the time range."""
+    st = string_to_datetime(time_range[0])
+    end = string_to_datetime(time_range[1])
+    return end - st
+
+
 def string_to_datetime(dt: str) -> datetime:
     """Convert string into datetime."""
     return datetime.strptime(
@@ -609,13 +616,16 @@ class LineageTable:
     def __init__(self) -> None:
         """Initialize linage table entity."""
 
-        # locks: key is the entity_id and value is the routine id that is holding the lock now
+        # locks: key is the entity_id and value is the routine id that is holding the
+        # lock now, if any routine is
         self._locks: dict[str, str | None] = {}
 
-        # lock_queues: key is the entity_id and each element stored in the queue is the (action id, action lock info) tuple that is holding or waiting for the lock
+        # lock_queues: key is the entity_id and each element stored in the queue is the
+        # (action id, action lock info) tuple that is holding or waiting for the lock
         self._lock_queues: dict[str, Queue[str, ActionInfo]] = {}
 
-        # free_slots: key is the entity_id and each element stored in the queue is a slot from the start time to the end time
+        # free_slots: key is the entity_id and each element stored in the queue is a
+        # slot where the start time is the key and the end time is the value
         self._free_slots: dict[str, Queue[str, str]] = {}
 
     @property
@@ -644,7 +654,7 @@ class LineageTable:
         return self._free_slots
 
     @free_slots.setter
-    def free_slots(self, fs: dict[str, Queue]) -> None:
+    def free_slots(self, fs: dict[str, Queue[str, str]]) -> None:
         """Set free slots."""
         self._free_slots = fs
 
@@ -1043,9 +1053,13 @@ class BaseScheduler:
         self, action: ActionInfo, entity_id: str, lock_leasing: str
     ) -> bool:
         """Check if action is running."""
-        action_info: ActionInfo = self._lineage_table.lock_queues[entity_id].get(
-            action.action_id
-        )
+        if not action.action_id:
+            return False
+        
+        action_info = self._lineage_table.lock_queues[entity_id].get(action.action_id)
+
+        if not action_info:
+            return False
 
         if lock_leasing == "pre" and action_info:
             return action_info.action_state in (RASC_ACK, RASC_START, RASC_COMPLETE)
@@ -1951,7 +1965,7 @@ class RascalScheduler(BaseScheduler):
         self._lock_waitlist = dict[str, list[str]]()
         self._wait_queue = Queue[str, RoutineEntity]()
         self._hass.bus.async_listen(RASC_RESPONSE, self.handle_event)
-        self._scheduling_policy = config[SCHEDULING_POLICY]
+        self._scheduling_policy: str = config[SCHEDULING_POLICY]
         self._scheduler: BaseScheduler | None = self._get_scheduler()
         self._reschedule_handler: Callable[
             [Event], Coroutine[Any, Any, None]
@@ -1961,6 +1975,16 @@ class RascalScheduler(BaseScheduler):
     def lineage_table(self) -> LineageTable:
         """Get lineage table."""
         return self._lineage_table
+
+    @lineage_table.setter
+    def lineage_table(self, lt: LineageTable) -> None:
+        """Set lineage table."""
+        self._lineage_table = lt
+
+    @property
+    def serialization_order(self) -> Queue[str, RoutineEntity]:
+        """Get serialization order."""
+        return self._serialization_order
 
     @property
     def wait_queue(self) -> Queue[str, RoutineEntity]:
@@ -2022,31 +2046,6 @@ class RascalScheduler(BaseScheduler):
                 self._serialization_order,
                 self._scheduling_policy,
             )
-
-        return None
-
-    @property
-    def reschedule_handler(self) -> Callable[[Event], Coroutine[Any, Any, None]] | None:
-        """Return the reschedule handler function.
-
-        The reschedule handler function is responsible for handling events for the rescheduler.
-
-        Returns:
-            Callable[[Event], Coroutine[Any, Any, None]]: The reschedule handler function.
-        """
-        return self._reschedule_handler
-
-    @reschedule_handler.setter
-    def reschedule_handler(
-        self, handler: Callable[[Event], Coroutine[Any, Any, None]]
-    ) -> None:
-        """Set the handler function for the scheduler.
-
-        Args:
-            handler (Callable[[Event], Coroutine[Any, Any, None]]): The handler function of the rescheduled.
-        """
-        if not self._reschedule_handler:
-            self._reschedule_handler = handler
 
         return None
 
@@ -2722,9 +2721,33 @@ class RascalScheduler(BaseScheduler):
         if wait_seconds > 0:
             await asyncio.sleep(wait_seconds)
 
+    def _is_action_state(self, action: ActionEntity, entity: str, state: str) -> bool:
+        """Check if the action is completed."""
+        if action.action_id is None:
+            return False
+        lock = self._lineage_table.lock_queues[
+            get_entity_id_from_number(self._hass, entity)
+        ][action.action_id]
+        if lock is not None:
+            if lock.action_state != state:
+                return False
+        return True
+
+    def is_action_ack(self, action: ActionEntity, entity: str) -> bool:
+        """Check if the action is acked."""
+        return self._is_action_state(action, entity, RASC_ACK)
+
+    def is_action_start(self, action: ActionEntity, entity: str) -> bool:
+        """Check if the action has started."""
+        return self._is_action_state(action, entity, RASC_START)
+
+    def is_action_complete(self, action: ActionEntity, entity: str) -> bool:
+        """Check if the action is completed."""
+        return self._is_action_state(action, entity, RASC_START)
+
     def _is_all_actions_state(self, action: ActionEntity, state: str) -> bool:
-        """Check if the given action is completed."""
-        if not action.action_id:
+        """Check if the action is at the requested state on all affected entities."""
+        if action.action_id is None:
             return False
         for entity in get_target_entities(self._hass, action.action):
             lock = self._lineage_table.lock_queues[
