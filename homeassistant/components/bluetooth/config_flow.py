@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+import platform
 from typing import Any, cast
 
 from bluetooth_adapters import (
     ADAPTER_ADDRESS,
+    DEFAULT_ADDRESS,
     AdapterDetails,
     adapter_human_name,
     adapter_unique_name,
@@ -100,10 +102,15 @@ class BluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
         bluetooth_adapters = get_adapters()
         await bluetooth_adapters.refresh()
         self._adapters = bluetooth_adapters.adapters
+        system = platform.system()
         unconfigured_adapters = [
             adapter
             for adapter, details in self._adapters.items()
             if details[ADAPTER_ADDRESS] not in configured_addresses
+            # DEFAULT_ADDRESS is perfectly valid on MacOS but on
+            # Linux it means the adapter is not yet configured
+            # or crashed
+            and not (system == "Linux" and details[ADAPTER_ADDRESS] == DEFAULT_ADDRESS)
         ]
         if not unconfigured_adapters:
             ignored_adapters = len(
