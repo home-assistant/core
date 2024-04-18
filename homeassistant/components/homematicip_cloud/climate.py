@@ -13,6 +13,7 @@ from homematicip.aio.group import AsyncHeatingGroup
 from homematicip.base.enums import AbsenceType
 from homematicip.device import Switch
 from homematicip.functionalHomes import IndoorClimateHome
+from homematicip.group import HeatingCoolingProfile
 
 from homeassistant.components.climate import (
     PRESET_AWAY,
@@ -262,7 +263,7 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
         return self._home.get_functionalHome(IndoorClimateHome)
 
     @property
-    def _device_profiles(self) -> list[Any]:
+    def _device_profiles(self) -> list[HeatingCoolingProfile]:
         """Return the relevant profiles."""
         return [
             profile
@@ -278,7 +279,8 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
             for profile in self._device_profiles
         ]
 
-    def _get_qualified_profile_name(self, profile) -> str:
+    def _get_qualified_profile_name(self, profile: HeatingCoolingProfile) -> str:
+        """Get a name for the given profile. If exists, this is the name of the profile."""
         if profile.name != "":
             return profile.name
         if profile.index in NICE_PROFILE_NAMES:
