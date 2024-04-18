@@ -106,8 +106,8 @@ async def test_get_icons(hass: HomeAssistant) -> None:
     # Ensure icons file for platform isn't loaded, as that isn't supported
     icons = await icon.async_get_icons(hass, "entity")
     assert icons == {}
-    icons = await icon.async_get_icons(hass, "entity", ["test.switch"])
-    assert icons == {}
+    with pytest.raises(ValueError, match="test.switch"):
+        await icon.async_get_icons(hass, "entity", ["test.switch"])
 
     # Load up an custom integration
     hass.config.components.add("test_package")

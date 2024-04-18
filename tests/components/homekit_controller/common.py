@@ -306,7 +306,7 @@ async def setup_test_component(
 
     config_entry, pairing = await setup_test_accessories(hass, [accessory], connection)
     entity = "testdevice" if suffix is None else f"testdevice_{suffix}"
-    return Helper(hass, ".".join((domain, entity)), pairing, accessory, config_entry)
+    return Helper(hass, f"{domain}.{entity}", pairing, accessory, config_entry)
 
 
 async def assert_devices_and_entities_created(
