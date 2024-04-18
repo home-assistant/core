@@ -28,7 +28,7 @@ from homeassistant.const import (
     UnitOfDataRate,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -91,17 +91,17 @@ async def async_setup_platform(
     try:
         await pyloadapi.login()
     except CannotConnect as conn_err:
-        raise ConfigEntryNotReady(
+        raise PlatformNotReady(
             translation_domain=DOMAIN,
             translation_key="connection_exception",
         ) from conn_err
     except ParserError as e:
-        raise ConfigEntryNotReady(
+        raise PlatformNotReady(
             translation_domain=DOMAIN,
             translation_key="parse_exception",
         ) from e
     except InvalidAuth as e:
-        raise ConfigEntryAuthFailed(
+        raise PlatformNotReady(
             translation_domain=DOMAIN,
             translation_key="authentication_exception",
             translation_placeholders={CONF_USERNAME: config[CONF_USERNAME]},
@@ -139,7 +139,7 @@ class PyLoadSensor(SensorEntity):
             try:
                 await self.api.login()
             except InvalidAuth as e:
-                raise ConfigEntryAuthFailed(
+                raise PlatformNotReady(
                     translation_domain=DOMAIN,
                     translation_key="authentication_exception",
                     translation_placeholders={CONF_USERNAME: self.api.username},
