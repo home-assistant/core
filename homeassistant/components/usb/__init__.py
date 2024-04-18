@@ -362,12 +362,10 @@ class USBDiscovery:
 
     async def _async_process_ports(self, ports: list[ListPortInfo]) -> None:
         """Process each discovered port."""
-        usb_devices = [
-            usb_device_from_port(port) for port in ports if port.vid is not None
-        ]
-
-        for usb_device in usb_devices:
-            await self._async_process_discovered_usb_device(usb_device)
+        for port in ports:
+            if port.vid is None and port.pid is None:
+                continue
+            await self._async_process_discovered_usb_device(usb_device_from_port(port))
 
     async def _async_scan_serial(self) -> None:
         """Scan serial ports."""
