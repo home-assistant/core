@@ -49,7 +49,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         if device_entry is None:
             raise ServiceValidationError(
-                translation_domain=DOMAIN, translation_key="invalid_device"
+                translation_domain=DOMAIN,
+                translation_key="invalid_device",
+                translation_placeholders={
+                    "device_id": service_call.data[ATTR_DEVICE_ID]
+                },
             )
 
         entry_id = None
@@ -62,6 +66,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="invalid_entry_id",
+                translation_placeholders={"device_id": entry_id or ""},
             )
 
         coordinator: QBittorrentDataCoordinator = hass.data[DOMAIN][entry_id]

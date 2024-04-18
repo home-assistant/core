@@ -28,7 +28,7 @@ def seconds_to_hhmmss(seconds) -> str:
 def format_unix_timestamp(timestamp) -> str:
     """Format a UNIX timestamp to a human-readable date."""
     dt_object = datetime.fromtimestamp(timestamp, tz=UTC)
-    return dt_object.strftime("%Y-%m-%dT%H:%M:%S%z")
+    return dt_object.isoformat()
 
 
 def format_progress(torrent) -> str:

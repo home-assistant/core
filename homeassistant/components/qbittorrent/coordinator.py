@@ -53,6 +53,8 @@ class QBittorrentDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 lambda: self.client.torrents(filter=torrent_filter)
             )
         except LoginRequired as exc:
-            raise HomeAssistantError(str(exc)) from exc
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="login_error"
+            ) from exc
 
         return torrents

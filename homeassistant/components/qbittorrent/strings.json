@@ -77,10 +77,13 @@
   },
   "exceptions": {
     "invalid_device": {
-      "message": "No device with that id was found"
+      "message": "No device with id {device_id} was found"
     },
     "invalid_entry_id": {
-      "message": "No entry with that id was found"
+      "message": "No entry with id {device_id} was found"
+    },
+    "login_error": {
+      "message": "A login error occured. Please check you username and password."
     }
   }
 }
