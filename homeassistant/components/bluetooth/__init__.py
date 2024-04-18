@@ -196,6 +196,17 @@ async def _async_start_adapter_discovery(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the bluetooth integration."""
+    if platform.system() == "Linux":
+        # Remove any config entries that are using the default address
+        # that were created from discovering adapters in a crashed state
+        #
+        # DEFAULT_ADDRESS is perfectly valid on MacOS but on
+        # Linux it means the adapter is not yet configured
+        # or crashed
+        for entry in list(hass.config_entries.async_entries(DOMAIN)):
+            if entry.unique_id == DEFAULT_ADDRESS:
+                await hass.config_entries.async_remove(entry.entry_id)
+
     bluetooth_adapters = get_adapters()
     bluetooth_storage = BluetoothStorage(hass)
     slot_manager = BleakSlotManager()
@@ -257,13 +268,19 @@ async def async_discover_adapters(
     adapters: dict[str, AdapterDetails],
 ) -> None:
     """Discover adapters and start flows."""
-    if platform.system() == "Windows":
+    system = platform.system()
+    if system == "Windows":
         # We currently do not have a good way to detect if a bluetooth device is
         # available on Windows. We will just assume that it is not unless they
         # actively add it.
         return
 
     for adapter, details in adapters.items():
+        if system == "Linux" and details[ADAPTER_ADDRESS] == DEFAULT_ADDRESS:
+            # DEFAULT_ADDRESS is perfectly valid on MacOS but on
+            # Linux it means the adapter is not yet configured
+            # or crashed so we should not try to start a flow for it.
+            continue
         discovery_flow.async_create_flow(
             hass,
             DOMAIN,
