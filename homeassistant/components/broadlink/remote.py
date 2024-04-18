@@ -27,6 +27,7 @@ from homeassistant.components.remote import (
     ATTR_DEVICE,
     ATTR_FREQUENCY,
     ATTR_NUM_REPEATS,
+    ATTR_TIMEOUT,
     DEFAULT_DELAY_SECS,
     DOMAIN as RM_DOMAIN,
     SERVICE_DELETE_COMMAND,
@@ -51,7 +52,7 @@ from .helpers import data_packet
 
 _LOGGER = logging.getLogger(__name__)
 
-LEARNING_TIMEOUT = timedelta(seconds=30)
+LEARNING_TIMEOUT = 30
 
 COMMAND_TYPE_IR = "ir"
 COMMAND_TYPE_RF = "rf"
@@ -92,8 +93,11 @@ SERVICE_DELETE_SCHEMA = COMMAND_SCHEMA.extend(
     {vol.Required(ATTR_DEVICE): vol.All(cv.string, vol.Length(min=1))}
 )
 
-SERVICE_SWEEP_FREQUENCY_SCHEMA = COMMAND_SCHEMA.extend(
-    {vol.Required(ATTR_DEVICE): vol.All(cv.string, vol.Length(min=1))}
+SERVICE_SWEEP_FREQUENCY_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_DEVICE): vol.All(cv.string, vol.Length(min=1)),
+        vol.Optional(ATTR_TIMEOUT, default=LEARNING_TIMEOUT): cv.positive_int,
+    },
 )
 
 
@@ -279,6 +283,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
         toggle = kwargs[ATTR_ALTERNATIVE]
         frequency = kwargs.get(ATTR_FREQUENCY)
         service = f"{RM_DOMAIN}.{SERVICE_LEARN_COMMAND}"
+        timeout = timedelta(seconds=LEARNING_TIMEOUT)
         device = self._device
 
         if not self._attr_is_on:
@@ -307,10 +312,16 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
             should_store = False
 
             for command in commands:
+                code: list[str] | str
+
                 try:
-                    code = await learn_command(command)
                     if toggle:
-                        code = [code, await learn_command(command)]
+                        code = [
+                            await learn_command(command=command, timeout=timeout),
+                            await learn_command(command=command, timeout=timeout),
+                        ]
+                    else:
+                        code = await learn_command(command=command, timeout=timeout)
 
                 except (AuthorizationError, NetworkTimeoutError, OSError) as err:
                     _LOGGER.error("Failed to learn '%s': %s", command, err)
@@ -326,7 +337,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
             if should_store:
                 await self._code_storage.async_save(self._codes)
 
-    async def _async_learn_ir_command(self, command):
+    async def _async_learn_ir_command(self, command: str, timeout: timedelta) -> str:
         """Learn an infrared command."""
         device = self._device
 
@@ -346,7 +357,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
 
         try:
             start_time = dt_util.utcnow()
-            while (dt_util.utcnow() - start_time) < LEARNING_TIMEOUT:
+            while (dt_util.utcnow() - start_time) < timeout:
                 await asyncio.sleep(1)
                 try:
                     code = await device.async_request(device.api.check_data)
@@ -355,8 +366,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
                 return b64encode(code).decode("utf8")
 
             raise TimeoutError(
-                "No infrared code received within "
-                f"{LEARNING_TIMEOUT.total_seconds()} seconds"
+                f"No code received within {timeout.total_seconds()} seconds"
             )
 
         finally:
@@ -364,12 +374,14 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
                 self.hass, notification_id="learn_command"
             )
 
-    async def _async_learn_rf_command(self, command, frequency=None):
+    async def _async_learn_rf_command(
+        self, command: str, timeout: timedelta, frequency: float | None = None
+    ) -> str:
         """Learn a radiofrequency command."""
         device = self._device
 
         if not frequency:
-            frequency = self._async_sweep_frequency()
+            frequency = await self._async_sweep_frequency(timeout=timeout)
             await asyncio.sleep(2)
 
         try:
@@ -388,7 +400,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
 
         try:
             start_time = dt_util.utcnow()
-            while (dt_util.utcnow() - start_time) < LEARNING_TIMEOUT:
+            while (dt_util.utcnow() - start_time) < timeout:
                 await asyncio.sleep(1)
                 try:
                     code = await device.async_request(device.api.check_data)
@@ -397,8 +409,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
                 return b64encode(code).decode("utf8")
 
             raise TimeoutError(
-                "No radiofrequency code received within "
-                f"{LEARNING_TIMEOUT.total_seconds()} seconds"
+                f"No code received within {timeout.total_seconds()} seconds"
             )
 
         finally:
@@ -460,8 +471,9 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
 
     async def async_sweep_frequency(self, **kwargs: Any) -> None:
         """Sweep remote control frequency."""
-        kwargs = SERVICE_LEARN_SCHEMA(kwargs)
+        kwargs = SERVICE_SWEEP_FREQUENCY_SCHEMA(kwargs)
         subdevice = kwargs[ATTR_DEVICE]
+        timeout = timedelta(seconds=kwargs[ATTR_TIMEOUT])
         service = f"{RM_DOMAIN}.{SERVICE_SWEEP_FREQUENCY}"
         device = self._device
 
@@ -477,7 +489,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
                 _LOGGER.error("Failed to call %s: %s", service, err_msg)
                 raise ValueError(err_msg)
 
-            frequency = await self._async_sweep_frequency()
+            frequency = await self._async_sweep_frequency(timeout=timeout)
 
             persistent_notification.async_create(
                 self.hass,
@@ -486,7 +498,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
                 notification_id="sweep_frequency_success",
             )
 
-    async def _async_sweep_frequency(self) -> float:
+    async def _async_sweep_frequency(self, timeout: timedelta) -> float:
         """Sweep remote control frequency."""
         device = self._device
         found = False
@@ -508,7 +520,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
 
         try:
             start_time = dt_util.utcnow()
-            while (dt_util.utcnow() - start_time) < LEARNING_TIMEOUT:
+            while (dt_util.utcnow() - start_time) < timeout:
                 await asyncio.sleep(1)
                 found, frequency = await device.async_request(
                     device.api.check_frequency
@@ -516,13 +528,12 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
                 if found:
                     return frequency
 
-            await device.async_request(device.api.cancel_sweep_frequency)
             raise TimeoutError(
-                "No radiofrequency found within "
-                f"{LEARNING_TIMEOUT.total_seconds()} seconds"
+                f"No radiofrequency found within {timeout.total_seconds()} seconds"
             )
 
         finally:
+            await device.async_request(device.api.cancel_sweep_frequency)
             persistent_notification.async_dismiss(
                 self.hass, notification_id="sweep_frequency"
             )
