@@ -111,7 +111,10 @@ def is_on(hass: HomeAssistant, entity_id: str) -> bool:
 
     if (state := hass.states.get(entity_id)) is not None:
         registry: GroupIntegrationRegistry = hass.data[REG_KEY]
-        return state.state in registry.on_off_mapping
+        state_domain = f"{state.domain}_{state}"
+        return any(
+            state in registry.on_off_mapping for state in (state.state, state_domain)
+        )
 
     return False
 
