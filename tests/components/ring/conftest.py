@@ -70,12 +70,19 @@ def mock_ring_devices():
         other = devices["other"]
         chimes = devices["chimes"]
 
-        get_device = lambda _, id: filter_devices(id)
-        get_video_device = lambda _, id: filter_devices(
-            id, {"stickup_cams", "doorbots", "authorized_doorbots"}
-        )
-        get_stickup_cam = lambda _, id: filter_devices(id, {"stickup_cams"})
-        get_other = lambda _, id: filter_devices(id, {"other"})
+        def get_device(self, id):
+            return filter_devices(id)
+
+        def get_video_device(self, id):
+            return filter_devices(
+                id, {"stickup_cams", "doorbots", "authorized_doorbots"}
+            )
+
+        def get_stickup_cam(self, id):
+            return filter_devices(id, {"stickup_cams"})
+
+        def get_other(self, id):
+            return filter_devices(id, {"other"})
 
     return FakeRingDevices()
 
