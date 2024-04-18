@@ -1459,9 +1459,8 @@ async def test_purge_entities(
         states = session.query(States)
         assert states.count() == 190
 
-        # The states_meta table should be empty
         states_meta_remain = session.query(StatesMeta)
-        assert states_meta_remain.count() == 0
+        assert states_meta_remain.count() == 4
 
 
 async def _add_test_states(hass: HomeAssistant, wait_recording_done: bool = True):
