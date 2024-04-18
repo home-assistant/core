@@ -169,6 +169,7 @@ aioairzone-cloud==0.5.1
 # homeassistant.components.airzone
 aioairzone==0.7.6
 
+# homeassistant.components.ambient_network
 # homeassistant.components.ambient_station
 aioambient==2024.01.0
 
@@ -221,7 +222,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==24.0.0
+aioesphomeapi==24.1.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -237,16 +238,6 @@ aioharmony==0.2.10
 
 # homeassistant.components.homekit_controller
 aiohomekit==3.1.5
-
-# homeassistant.components.http
-aiohttp-fast-url-dispatcher==0.3.0
-
-# homeassistant.components.http
-aiohttp-zlib-ng==0.3.1
-
-# homeassistant.components.emulated_hue
-# homeassistant.components.http
-aiohttp_cors==0.7.0
 
 # homeassistant.components.hue
 aiohue==4.7.1
@@ -503,7 +494,7 @@ bluemaestro-ble==0.2.3
 bluetooth-adapters==0.18.0
 
 # homeassistant.components.bluetooth
-bluetooth-auto-recovery==1.4.0
+bluetooth-auto-recovery==1.4.1
 
 # homeassistant.components.bluetooth
 # homeassistant.components.ld2410_ble
@@ -521,7 +512,7 @@ boschshcpy==0.2.91
 bring-api==0.5.7
 
 # homeassistant.components.broadlink
-broadlink==0.18.3
+broadlink==0.19.0
 
 # homeassistant.components.brother
 brother==4.1.0
@@ -652,7 +643,7 @@ elmax-api==0.0.4
 elvia==0.1.0
 
 # homeassistant.components.emulated_roku
-emulated-roku==0.2.1
+emulated-roku==0.3.0
 
 # homeassistant.components.huisbaasje
 energyflip-client==0.2.2
@@ -797,7 +788,7 @@ google-cloud-pubsub==2.13.11
 google-generativeai==0.3.1
 
 # homeassistant.components.nest
-google-nest-sdm==3.0.3
+google-nest-sdm==3.0.4
 
 # homeassistant.components.google_travel_time
 googlemaps==2.5.1
@@ -852,7 +843,7 @@ ha-philipsjs==3.1.1
 habitipy==0.2.0
 
 # homeassistant.components.bluetooth
-habluetooth==2.4.2
+habluetooth==2.8.0
 
 # homeassistant.components.cloud
 hass-nabucasa==0.78.0
@@ -936,7 +927,7 @@ influxdb==5.3.1
 inkbird-ble==0.5.6
 
 # homeassistant.components.insteon
-insteon-frontend-home-assistant==0.4.0
+insteon-frontend-home-assistant==0.5.0
 
 # homeassistant.components.intellifire
 intellifire4py==2.2.2
@@ -1182,6 +1173,9 @@ openerz-api==0.3.0
 # homeassistant.components.openhome
 openhomedevice==2.2.0
 
+# homeassistant.components.enigma2
+openwebifpy==4.2.4
+
 # homeassistant.components.opower
 opower==0.4.3
 
@@ -1237,7 +1231,7 @@ poolsense==0.0.8
 praw==7.5.0
 
 # homeassistant.components.islamic_prayer_times
-prayer-times-calculator==0.0.12
+prayer-times-calculator-offline==1.0.3
 
 # homeassistant.components.prometheus
 prometheus-client==0.17.1
@@ -1512,6 +1506,9 @@ pylast==5.1.0
 # homeassistant.components.launch_library
 pylaunches==1.4.0
 
+# homeassistant.components.lg_netcast
+pylgnetcast==0.3.9
+
 # homeassistant.components.forked_daapd
 pylibrespot-java==0.1.1
 
@@ -1732,6 +1729,9 @@ python-ecobee-api==0.2.17
 # homeassistant.components.fully_kiosk
 python-fullykiosk==0.0.12
 
+# homeassistant.components.sms
+# python-gammu==3.2.4
+
 # homeassistant.components.analytics_insights
 python-homeassistant-analytics==0.6.0
 
@@ -1888,7 +1888,7 @@ refoss-ha==1.2.0
 regenmaschine==2024.03.0
 
 # homeassistant.components.renault
-renault-api==0.2.1
+renault-api==0.2.2
 
 # homeassistant.components.renson
 renson-endura-delta==1.7.1
@@ -1934,6 +1934,9 @@ samsungctl[websocket]==0.7.1
 
 # homeassistant.components.samsungtv
 samsungtvws[async,encrypted]==2.6.0
+
+# homeassistant.components.sanix
+sanix==1.0.5
 
 # homeassistant.components.screenlogic
 screenlogicpy==0.10.0
@@ -1985,7 +1988,7 @@ smhi-pkg==1.0.16
 snapcast==2.3.6
 
 # homeassistant.components.sonos
-soco==0.30.2
+soco==0.30.3
 
 # homeassistant.components.solaredge
 solaredge==0.0.2
@@ -2012,7 +2015,7 @@ spiderpy==1.6.1
 spotipy==2.23.0
 
 # homeassistant.components.sql
-sqlparse==0.4.4
+sqlparse==0.5.0
 
 # homeassistant.components.srp_energy
 srpenergy==1.3.6
@@ -2057,7 +2060,7 @@ sunweg==2.1.1
 surepy==0.9.0
 
 # homeassistant.components.switchbot_cloud
-switchbot-api==2.0.0
+switchbot-api==2.1.0
 
 # homeassistant.components.system_bridge
 systembridgeconnector==4.0.3
@@ -2158,7 +2161,7 @@ url-normalize==1.4.3
 uvcclient==0.11.0
 
 # homeassistant.components.roborock
-vacuum-map-parser-roborock==0.1.1
+vacuum-map-parser-roborock==0.1.2
 
 # homeassistant.components.vallox
 vallox-websocket-api==5.1.1
