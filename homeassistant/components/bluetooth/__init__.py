@@ -196,8 +196,7 @@ async def _async_start_adapter_discovery(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the bluetooth integration."""
-    system = platform.system()
-    if system == "Linux":
+    if platform.system() == "Linux":
         # Remove any config entries that are using the default address
         # that were created from discovering adapters in a crashed state
         #
