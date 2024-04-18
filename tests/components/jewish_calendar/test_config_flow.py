@@ -15,8 +15,12 @@ from homeassistant.components.jewish_calendar import (
     DOMAIN,
     config_flow,
 )
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
+
+from tests.common import MockConfigEntry
 
 
 async def test_step_user(hass: HomeAssistant) -> None:
@@ -26,7 +30,6 @@ async def test_step_user(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == "form"
-    assert result["errors"] == {}
 
     with (
         patch(
@@ -44,7 +47,7 @@ async def test_step_user(hass: HomeAssistant) -> None:
         )
 
     assert result2["type"] == "create_entry"
-    assert result2["title"] == "JCalendar"
+    assert result2["title"] == config_flow.DEFAULT_NAME
     assert result2["data"] == {
         "name": "JCalendar",
         "diaspora": True,
@@ -75,7 +78,7 @@ async def test_step_import_no_options(hass: HomeAssistant, language, diaspora) -
 
     result = await flow.async_step_import(import_config=conf[DOMAIN])
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "test"
+    assert result["title"] == config_flow.DEFAULT_NAME
     assert result["data"] == {
         CONF_NAME: "test",
         CONF_LANGUAGE: language,
@@ -102,7 +105,7 @@ async def test_step_import_with_options(hass: HomeAssistant) -> None:
 
     result = await flow.async_step_import(import_config=conf[DOMAIN])
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "test"
+    assert result["title"] == config_flow.DEFAULT_NAME
     assert result["data"] == {
         CONF_NAME: "test",
         CONF_DIASPORA: DEFAULT_DIASPORA,
@@ -112,3 +115,18 @@ async def test_step_import_with_options(hass: HomeAssistant) -> None:
         CONF_LATITUDE: 31.76,
         CONF_LONGITUDE: 35.235,
     }
+
+
+async def test_single_instance_allowed(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test we abort if already setup."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result.get("type") is FlowResultType.ABORT
+    assert result.get("reason") == "single_instance_allowed"

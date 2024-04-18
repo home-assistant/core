@@ -89,28 +89,12 @@ class JewishCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-        errors = {}
-
         if user_input is not None:
-            for entry in self.hass.config_entries.async_entries(DOMAIN):
-                if all(
-                    _value == entry.as_dict().get(_key)
-                    for _key, _value in user_input.items()
-                    if _key != CONF_NAME
-                ):
-                    return self.async_abort(reason="already_configured")
-            try:
-                return self.async_create_entry(
-                    title=user_input[CONF_NAME], data=user_input
-                )
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
+            return self.async_create_entry(title=DEFAULT_NAME, data=user_input)
 
         return self.async_show_form(
             step_id="user",
             data_schema=_get_data_schema(self.hass),
-            errors=errors,
         )
 
     async def async_step_import(
