@@ -124,7 +124,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryAuthFailed
 
     if CONF_IP_ADDRESS not in entry.data:
-        LOGGER.debug("Old config entry format detected: %s", entry.unique_id)
+        LOGGER.debug("Config entry without IP-address detected: %s", entry.unique_id)
         entry = await _async_pseudo_migrate_entry(hass, entry)
 
     # Fireplace will throw an error if it can't connect
