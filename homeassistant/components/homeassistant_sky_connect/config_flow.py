@@ -206,11 +206,27 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
             await self.addon_install_task
         except AddonError as err:
             _LOGGER.error(err)
-            return self.async_show_progress_done(next_step_id="install_failed")
+            return self.async_show_progress_done(
+                next_step_id="zigbee_flasher_install_failed"
+            )
         finally:
             self.addon_install_task = None
 
         return self.async_show_progress_done(next_step_id="run_zigbee_flasher_addon")
+
+    async def async_step_zigbee_flasher_install_failed(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Zigbee flasher add-on installation failed."""
+        fw_flasher_manager = get_zigbee_flasher_addon_manager(self.hass)
+
+        return self.async_abort(
+            reason="addon_install_failed",
+            description_placeholders={
+                **self._get_translation_placeholders(),
+                "addon_name": fw_flasher_manager.addon_name,
+            },
+        )
 
     async def async_step_run_zigbee_flasher_addon(
         self, user_input: dict[str, Any] | None = None
@@ -402,11 +418,27 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
             await self.addon_install_task
         except AddonError as err:
             _LOGGER.error(err)
-            return self.async_show_progress_done(next_step_id="install_failed")
+            return self.async_show_progress_done(
+                next_step_id="otbr_addon_install_failed"
+            )
         finally:
             self.addon_install_task = None
 
         return self.async_show_progress_done(next_step_id="start_otbr_addon")
+
+    async def async_step_otbr_addon_install_failed(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """OTBR add-on installation failed."""
+        otbr_manager = get_otbr_addon_manager(self.hass)
+
+        return self.async_abort(
+            reason="addon_install_failed",
+            description_placeholders={
+                **self._get_translation_placeholders(),
+                "addon_name": otbr_manager.addon_name,
+            },
+        )
 
     async def async_step_start_otbr_addon(
         self, user_input: dict[str, Any] | None = None

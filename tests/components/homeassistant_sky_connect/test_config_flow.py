@@ -9,7 +9,11 @@ import pytest
 from universal_silabs_flasher.const import ApplicationType
 
 from homeassistant.components import usb
-from homeassistant.components.hassio.addon_manager import AddonInfo, AddonState
+from homeassistant.components.hassio.addon_manager import (
+    AddonError,
+    AddonInfo,
+    AddonState,
+)
 from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon import (
     get_multiprotocol_addon_manager,
 )
@@ -180,6 +184,14 @@ async def test_config_flow_zigbee(
         "serial_number": usb_data.serial_number,
         "vid": usb_data.vid,
     }
+
+    # Ensure a ZHA discovery flow has been created
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    zha_flow = flows[0]
+    assert zha_flow["handler"] == "zha"
+    assert zha_flow["context"]["source"] == "hardware"
+    assert zha_flow["step_id"] == "confirm"
 
 
 @pytest.mark.parametrize(
@@ -626,3 +638,261 @@ async def test_options_flow_multipan_uninstall(
         assert result["type"] is FlowResultType.MENU
         assert result["step_id"] == "addon_menu"
         assert "uninstall_addon" in result["menu_options"]
+
+
+@pytest.mark.parametrize(
+    ("usb_data", "model"),
+    [
+        (USB_DATA_ZBT1, "Home Assistant Connect ZBT-1"),
+    ],
+)
+async def test_config_flow_cannot_probe_firmware(
+    usb_data: usb.UsbServiceInfo, model: str, hass: HomeAssistant
+) -> None:
+    """Test failure case when firmware cannot be probed."""
+
+    with patch(
+        "homeassistant.components.homeassistant_sky_connect.config_flow.probe_silabs_firmware_type",
+        return_value=None,
+    ):
+        # Start the flow
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": "usb"}, data=usb_data
+        )
+
+        # Probing fails
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+
+        assert result["type"] == FlowResultType.ABORT
+        assert result["reason"] == "unsupported_firmware"
+
+
+@pytest.mark.parametrize(
+    ("usb_data", "model"),
+    [
+        (USB_DATA_ZBT1, "Home Assistant Connect ZBT-1"),
+    ],
+)
+async def test_config_flow_zigbee_flasher_addon_info_fails(
+    usb_data: usb.UsbServiceInfo, model: str, hass: HomeAssistant
+) -> None:
+    """Test failure case when flasher addon cannot be installed."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "usb"}, data=usb_data
+    )
+
+    with patch(
+        "homeassistant.components.homeassistant_sky_connect.config_flow.probe_silabs_firmware_type",
+        return_value=ApplicationType.EZSP,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+
+    mock_flasher_manager = Mock(spec_set=get_zigbee_flasher_addon_manager(hass))
+    mock_flasher_manager.addon_name = "Silicon Labs Flasher"
+    mock_flasher_manager.async_get_addon_info.side_effect = AddonError()
+
+    with (
+        patch(
+            "homeassistant.components.homeassistant_sky_connect.config_flow.get_zigbee_flasher_addon_manager",
+            return_value=mock_flasher_manager,
+        ),
+        patch(
+            "homeassistant.components.homeassistant_sky_connect.config_flow.is_hassio",
+            return_value=True,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={"next_step_id": STEP_PICK_FIRMWARE_ZIGBEE},
+        )
+
+        # Cannot get addon info
+        assert result["type"] == FlowResultType.ABORT
+        assert result["reason"] == "addon_info_failed"
+
+
+@pytest.mark.parametrize(
+    ("usb_data", "model"),
+    [
+        (USB_DATA_ZBT1, "Home Assistant Connect ZBT-1"),
+    ],
+)
+async def test_config_flow_zigbee_flasher_addon_install_fails(
+    usb_data: usb.UsbServiceInfo, model: str, hass: HomeAssistant
+) -> None:
+    """Test failure case when flasher addon cannot be installed."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "usb"}, data=usb_data
+    )
+
+    with patch(
+        "homeassistant.components.homeassistant_sky_connect.config_flow.probe_silabs_firmware_type",
+        return_value=ApplicationType.EZSP,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+
+    mock_flasher_manager = Mock(spec_set=get_zigbee_flasher_addon_manager(hass))
+    mock_flasher_manager.addon_name = "Silicon Labs Flasher"
+    mock_flasher_manager.async_get_addon_info.return_value = AddonInfo(
+        available=True,
+        hostname=None,
+        options={},
+        state=AddonState.NOT_INSTALLED,
+        update_available=False,
+        version=None,
+    )
+    mock_flasher_manager.async_install_addon_waiting = AsyncMock(
+        side_effect=AddonError()
+    )
+
+    with (
+        patch(
+            "homeassistant.components.homeassistant_sky_connect.config_flow.get_zigbee_flasher_addon_manager",
+            return_value=mock_flasher_manager,
+        ),
+        patch(
+            "homeassistant.components.homeassistant_sky_connect.config_flow.is_hassio",
+            return_value=True,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={"next_step_id": STEP_PICK_FIRMWARE_ZIGBEE},
+        )
+
+        # Cannot install addon
+        assert result["type"] == FlowResultType.ABORT
+        assert result["reason"] == "addon_install_failed"
+
+
+@pytest.mark.parametrize(
+    ("usb_data", "model"),
+    [
+        (USB_DATA_ZBT1, "Home Assistant Connect ZBT-1"),
+    ],
+)
+async def test_config_flow_zigbee_flasher_run_fails(
+    usb_data: usb.UsbServiceInfo, model: str, hass: HomeAssistant
+) -> None:
+    """Test failure case when flasher addon fails to run."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "usb"}, data=usb_data
+    )
+
+    with patch(
+        "homeassistant.components.homeassistant_sky_connect.config_flow.probe_silabs_firmware_type",
+        return_value=ApplicationType.EZSP,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+
+    mock_flasher_manager = Mock(spec_set=get_zigbee_flasher_addon_manager(hass))
+    mock_flasher_manager.addon_name = "Silicon Labs Flasher"
+    mock_flasher_manager.async_get_addon_info.return_value = AddonInfo(
+        available=True,
+        hostname=None,
+        options={},
+        state=AddonState.NOT_INSTALLED,
+        update_available=False,
+        version=None,
+    )
+    mock_flasher_manager.async_install_addon_waiting = AsyncMock(
+        side_effect=delayed_side_effect()
+    )
+    mock_flasher_manager.async_start_addon_waiting = AsyncMock(side_effect=AddonError())
+
+    with (
+        patch(
+            "homeassistant.components.homeassistant_sky_connect.config_flow.get_zigbee_flasher_addon_manager",
+            return_value=mock_flasher_manager,
+        ),
+        patch(
+            "homeassistant.components.homeassistant_sky_connect.config_flow.is_hassio",
+            return_value=True,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={"next_step_id": STEP_PICK_FIRMWARE_ZIGBEE},
+        )
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        assert result["type"] == FlowResultType.ABORT
+        assert result["reason"] == "addon_start_failed"
+
+
+@pytest.mark.parametrize(
+    ("usb_data", "model"),
+    [
+        (USB_DATA_ZBT1, "Home Assistant Connect ZBT-1"),
+    ],
+)
+async def test_config_flow_zigbee_flasher_uninstall_fails(
+    usb_data: usb.UsbServiceInfo, model: str, hass: HomeAssistant
+) -> None:
+    """Test failure case when flasher addon uninstall fails."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "usb"}, data=usb_data
+    )
+
+    with patch(
+        "homeassistant.components.homeassistant_sky_connect.config_flow.probe_silabs_firmware_type",
+        return_value=ApplicationType.EZSP,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+
+    mock_flasher_manager = Mock(spec_set=get_zigbee_flasher_addon_manager(hass))
+    mock_flasher_manager.addon_name = "Silicon Labs Flasher"
+    mock_flasher_manager.async_get_addon_info.return_value = AddonInfo(
+        available=True,
+        hostname=None,
+        options={},
+        state=AddonState.NOT_INSTALLED,
+        update_available=False,
+        version=None,
+    )
+    mock_flasher_manager.async_install_addon_waiting = AsyncMock(
+        side_effect=delayed_side_effect()
+    )
+    mock_flasher_manager.async_start_addon_waiting = AsyncMock(
+        side_effect=delayed_side_effect()
+    )
+    mock_flasher_manager.async_uninstall_addon_waiting = AsyncMock(
+        side_effect=AddonError()
+    )
+
+    with (
+        patch(
+            "homeassistant.components.homeassistant_sky_connect.config_flow.get_zigbee_flasher_addon_manager",
+            return_value=mock_flasher_manager,
+        ),
+        patch(
+            "homeassistant.components.homeassistant_sky_connect.config_flow.is_hassio",
+            return_value=True,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={"next_step_id": STEP_PICK_FIRMWARE_ZIGBEE},
+        )
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        # Uninstall failure isn't critical
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "confirm_zigbee"

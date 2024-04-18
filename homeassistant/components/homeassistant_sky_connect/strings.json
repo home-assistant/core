@@ -148,7 +148,7 @@
         "description": "Installing the Silicon Labs Flasher addon."
       },
       "run_zigbee_flasher_addon": {
-        "title": "Flashing Zigbee firmware",
+        "title": "Installing Zigbee firmware",
         "description": "Installing Zigbee firmware. This will take about a minute."
       },
       "uninstall_zigbee_flasher_addon": {
@@ -156,8 +156,8 @@
         "description": "Removing the Silicon Labs Flasher addon."
       },
       "zigbee_flasher_failed": {
-        "title": "Zigbee flashing failed",
-        "description": "The Zigbee firmware flashing process was unsuccessful. Ensure no other software is trying to communicate with the {model} and try again."
+        "title": "Zigbee installation failed",
+        "description": "The Zigbee firmware installation process was unsuccessful. Ensure no other software is trying to communicate with the {model} and try again."
       },
       "confirm_zigbee": {
         "title": "Zigbee setup complete",
