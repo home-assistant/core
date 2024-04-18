@@ -28,6 +28,7 @@ from homeassistant.core import (
     HassJobType,
     HomeAssistant,
     HomeAssistantError,
+    ReleaseChannel,
     callback,
 )
 from homeassistant.helpers import device_registry as dr, entity, entity_registry as er
@@ -1249,7 +1250,7 @@ async def test_entity_name_translation_placeholders(
                 },
             },
             {"placeholder": "special"},
-            "stable",
+            ReleaseChannel.STABLE,
             (
                 "has translation placeholders '{'placeholder': 'special'}' which do "
                 "not match the name '{placeholder} English ent {2ndplaceholder}'"
@@ -1263,7 +1264,7 @@ async def test_entity_name_translation_placeholders(
                 },
             },
             {"placeholder": "special"},
-            "beta",
+            ReleaseChannel.BETA,
             "HomeAssistantError: Missing placeholder '2ndplaceholder'",
         ),
         (
@@ -1274,7 +1275,7 @@ async def test_entity_name_translation_placeholders(
                 },
             },
             None,
-            "stable",
+            ReleaseChannel.STABLE,
             (
                 "has translation placeholders '{}' which do "
                 "not match the name '{placeholder} English ent'"
@@ -1287,7 +1288,7 @@ async def test_entity_name_translation_placeholder_errors(
     translation_key: str | None,
     translations: dict[str, str] | None,
     placeholders: dict[str, str] | None,
-    release_channel: str,
+    release_channel: ReleaseChannel,
     expected_error: str,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
