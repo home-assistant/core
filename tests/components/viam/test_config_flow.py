@@ -14,10 +14,12 @@ from homeassistant.components.viam.const import (
     CONF_CREDENTIAL_TYPE,
     CONF_ROBOT,
     CONF_ROBOT_ID,
+    CONF_SECRET,
     CRED_TYPE_API_KEY,
+    CRED_TYPE_LOCATION_SECRET,
     DOMAIN,
 )
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_ADDRESS, CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -112,11 +114,75 @@ async def test_user_form(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@patch("viam.app.viam_client.ViamClient")
+@patch.object(ViamClient, "create_from_dial_options")
+async def test_user_form_with_location_secret(
+    mock_create_client: AsyncMock,
+    MockClient: MagicMock,
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test that the form is served with no input."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {}
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_CREDENTIAL_TYPE: CRED_TYPE_LOCATION_SECRET,
+        },
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "auth"
+    assert result["errors"] == {}
+
+    instance = MockClient.return_value
+    mock_create_client.return_value = instance
+    instance.app_client.list_locations.return_value = async_return([MockLocation()])
+    instance.app_client.get_location.return_value = async_return(MockLocation())
+    instance.app_client.list_robots.return_value = async_return([MockRobot()])
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_ADDRESS: "my.robot.cloud",
+            CONF_SECRET: "randomSecreteForRobot",
+        },
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] is None
+    assert result["step_id"] == "robot"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_ROBOT: "test",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == "home"
+    assert result["data"] == {
+        CONF_ADDRESS: "my.robot.cloud",
+        CONF_SECRET: "randomSecreteForRobot",
+        CONF_ROBOT_ID: 1234,
+        CONF_CREDENTIAL_TYPE: CRED_TYPE_LOCATION_SECRET,
+    }
+
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
 @patch(
     "viam.app.viam_client.ViamClient.create_from_dial_options",
     side_effect=CannotConnect,
 )
-async def test_form_cannot_connect(
+async def test_form_missing_secret(
     _mock_create_client: AsyncMock, hass: HomeAssistant
 ) -> None:
     """Test we handle cannot connect error."""
@@ -132,6 +198,40 @@ async def test_form_cannot_connect(
     )
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "auth"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_API_ID: "someTestId",
+            CONF_API_KEY: "",
+        },
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "auth"
+    assert result["errors"] == {"base": "cannot_connect"}
+
+
+@patch.object(ViamClient, "create_from_dial_options")
+async def test_form_cannot_connect(
+    mock_create_client: AsyncMock,
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test we handle cannot connect error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_CREDENTIAL_TYPE: CRED_TYPE_API_KEY,
+        },
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "auth"
+
+    mock_create_client.return_value = None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],

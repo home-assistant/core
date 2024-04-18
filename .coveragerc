@@ -1581,6 +1581,9 @@ omit =
     homeassistant/components/vesync/switch.py
     homeassistant/components/viaggiatreno/sensor.py
     homeassistant/components/viam/__init__.py
+    homeassistant/components/viam/const.py
+    homeassistant/components/viam/manager.py
+    homeassistant/components/viam/services.py
     homeassistant/components/vicare/__init__.py
     homeassistant/components/vicare/button.py
     homeassistant/components/vicare/climate.py

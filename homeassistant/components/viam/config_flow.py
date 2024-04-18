@@ -69,11 +69,14 @@ async def validate_input(data: dict[str, Any]) -> tuple[str, ViamClient]:
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
     credential_type = data[CONF_CREDENTIAL_TYPE]
-    auth_entity = data[CONF_API_ID]
-    secret = data[CONF_API_KEY]
+    auth_entity = data.get(CONF_API_ID)
+    secret = data.get(CONF_API_KEY)
     if credential_type == CRED_TYPE_LOCATION_SECRET:
-        auth_entity = data[CONF_ADDRESS]
-        secret = data[CONF_SECRET]
+        auth_entity = data.get(CONF_ADDRESS)
+        secret = data.get(CONF_SECRET)
+
+    if not secret:
+        raise CannotConnect
 
     creds = Credentials(type=credential_type, payload=secret)
     opts = DialOptions(auth_entity=auth_entity, credentials=creds)
@@ -99,7 +102,7 @@ class ViamFlowHandler(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize."""
         self._title = ""
-        self._client: ViamClient | None = None
+        self._client: ViamClient
         self._data: dict[str, Any] = {}
 
     async def async_step_user(
@@ -177,9 +180,6 @@ class ViamFlowHandler(ConfigFlow, domain=DOMAIN):
         self._close_client()
 
     def _get_app_client(self) -> AppClient:
-        if self._client is None:
-            raise CannotConnect
-
         return self._client.app_client
 
     def _close_client(self):
