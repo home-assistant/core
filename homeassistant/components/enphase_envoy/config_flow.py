@@ -89,13 +89,14 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle a flow initialized by zeroconf discovery."""
-        current_hosts = self._async_current_hosts()
-        _LOGGER.debug(
-            "Zeroconf ip %s processing %s, current hosts: %s",
-            discovery_info.ip_address.version,
-            discovery_info.host,
-            current_hosts,
-        )
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            current_hosts = self._async_current_hosts()
+            _LOGGER.debug(
+                "Zeroconf ip %s processing %s, current hosts: %s",
+                discovery_info.ip_address.version,
+                discovery_info.host,
+                current_hosts,
+            )
         if discovery_info.ip_address.version != 4:
             return self.async_abort(reason="not_ipv4_address")
         serial = discovery_info.properties["serialnum"]
