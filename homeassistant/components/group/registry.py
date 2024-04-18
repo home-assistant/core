@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from contextvars import ContextVar
+import logging
 from typing import Protocol
 
 from homeassistant.const import STATE_OFF, STATE_ON
@@ -14,6 +15,8 @@ from homeassistant.helpers.integration_platform import (
 from .const import DOMAIN, REG_KEY
 
 current_domain: ContextVar[str] = ContextVar("current_domain")
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup(hass: HomeAssistant) -> None:
@@ -58,6 +61,7 @@ class GroupIntegrationRegistry:
 
     def on_off_states(self, on_states: set, off_state: str) -> None:
         """Register on and off states for the current domain."""
+        _LOGGER.info("Enter on_off_states for %s", current_domain.get())
         for on_state in on_states:
             if on_state not in self.on_off_mapping:
                 self.on_off_mapping[on_state] = off_state

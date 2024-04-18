@@ -1409,6 +1409,41 @@ async def test_cover_added_after_group(hass: HomeAssistant) -> None:
     assert hass.states.get("group.shades").state == "closed"
 
 
+async def test_cover_lock_issue(hass: HomeAssistant) -> None:
+    """Test cover added after group."""
+
+    entity_ids = [
+        "cover.upstairs",
+        "cover.downstairs",
+    ]
+
+    assert await async_setup_component(hass, "cover", {})
+    assert await async_setup_component(hass, "lock", {})
+    assert await async_setup_component(
+        hass,
+        "group",
+        {
+            "group": {
+                "shades": {"entities": entity_ids},
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    for entity_id in entity_ids:
+        hass.states.async_set(entity_id, "open")
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    assert hass.states.get("group.shades").state == "open"
+
+    for entity_id in entity_ids:
+        hass.states.async_set(entity_id, "closed")
+
+    await hass.async_block_till_done()
+    assert hass.states.get("group.shades").state == "closed"
+
+
 async def test_group_that_references_a_group_of_lights(hass: HomeAssistant) -> None:
     """Group that references a group of lights."""
 
