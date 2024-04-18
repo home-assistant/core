@@ -119,7 +119,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     LOGGER.debug("Setting up config entry: %s", entry.unique_id)
 
     if CONF_USERNAME not in entry.data:
-        LOGGER.debug("Super Old config entry format detected: %s", entry.unique_id)
+        LOGGER.debug("Config entry without username detected: %s", entry.unique_id)
         raise ConfigEntryAuthFailed
 
     if CONF_IP_ADDRESS not in entry.data:
