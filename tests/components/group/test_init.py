@@ -8,7 +8,7 @@ from unittest.mock import patch
 
 import pytest
 
-import homeassistant.components.group as group
+from homeassistant.components import group
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_FRIENDLY_NAME,
@@ -1626,7 +1626,7 @@ async def test_plant_group(hass: HomeAssistant) -> None:
 
 @pytest.mark.parametrize(
     ("group_type", "member_state", "extra_options"),
-    (
+    [
         ("binary_sensor", "on", {"all": False}),
         ("cover", "open", {}),
         ("fan", "on", {}),
@@ -1642,7 +1642,7 @@ async def test_plant_group(hass: HomeAssistant) -> None:
                 "state_class": "measurement",
             },
         ),
-    ),
+    ],
 )
 async def test_setup_and_remove_config_entry(
     hass: HomeAssistant,
@@ -1689,24 +1689,24 @@ async def test_setup_and_remove_config_entry(
 
 @pytest.mark.parametrize(
     ("hide_members", "hidden_by_initial", "hidden_by"),
-    (
+    [
         (False, er.RegistryEntryHider.INTEGRATION, er.RegistryEntryHider.INTEGRATION),
         (False, None, None),
         (False, er.RegistryEntryHider.USER, er.RegistryEntryHider.USER),
         (True, er.RegistryEntryHider.INTEGRATION, None),
         (True, None, None),
         (True, er.RegistryEntryHider.USER, er.RegistryEntryHider.USER),
-    ),
+    ],
 )
 @pytest.mark.parametrize(
     ("group_type", "extra_options"),
-    (
+    [
         ("binary_sensor", {"all": False}),
         ("cover", {}),
         ("fan", {}),
         ("light", {"all": False}),
         ("media_player", {}),
-    ),
+    ],
 )
 async def test_unhide_members_on_remove(
     hass: HomeAssistant,

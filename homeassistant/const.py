@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from enum import StrEnum
 from functools import partial
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
 from .helpers.deprecation import (
     DeprecatedConstant,
@@ -13,17 +13,23 @@ from .helpers.deprecation import (
     check_if_deprecated_constant,
     dir_with_deprecated_constants,
 )
+from .util.event_type import EventType
+from .util.signal_type import SignalType
+
+if TYPE_CHECKING:
+    from .core import EventStateChangedData
+    from .helpers.typing import NoEventData
 
 APPLICATION_NAME: Final = "HomeAssistant"
 MAJOR_VERSION: Final = 2024
-MINOR_VERSION: Final = 4
+MINOR_VERSION: Final = 5
 PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
-REQUIRED_PYTHON_VER: Final[tuple[int, int, int]] = (3, 11, 0)
+REQUIRED_PYTHON_VER: Final[tuple[int, int, int]] = (3, 12, 0)
 REQUIRED_NEXT_PYTHON_VER: Final[tuple[int, int, int]] = (3, 12, 0)
 # Truthy date string triggers showing related deprecation warning messages.
-REQUIRED_NEXT_PYTHON_HA_RELEASE: Final = "2024.4"
+REQUIRED_NEXT_PYTHON_HA_RELEASE: Final = ""
 
 # Format for platform files
 PLATFORM_FORMAT: Final = "{platform}.{domain}"
@@ -39,6 +45,7 @@ class Platform(StrEnum):
     CALENDAR = "calendar"
     CAMERA = "camera"
     CLIMATE = "climate"
+    CONVERSATION = "conversation"
     COVER = "cover"
     DATE = "date"
     DATETIME = "datetime"
@@ -296,16 +303,19 @@ CONF_ZONE: Final = "zone"
 EVENT_CALL_SERVICE: Final = "call_service"
 EVENT_COMPONENT_LOADED: Final = "component_loaded"
 EVENT_CORE_CONFIG_UPDATE: Final = "core_config_updated"
-EVENT_HOMEASSISTANT_CLOSE: Final = "homeassistant_close"
-EVENT_HOMEASSISTANT_START: Final = "homeassistant_start"
-EVENT_HOMEASSISTANT_STARTED: Final = "homeassistant_started"
-EVENT_HOMEASSISTANT_STOP: Final = "homeassistant_stop"
-EVENT_HOMEASSISTANT_FINAL_WRITE: Final = "homeassistant_final_write"
+EVENT_HOMEASSISTANT_CLOSE: EventType[NoEventData] = EventType("homeassistant_close")
+EVENT_HOMEASSISTANT_START: EventType[NoEventData] = EventType("homeassistant_start")
+EVENT_HOMEASSISTANT_STARTED: EventType[NoEventData] = EventType("homeassistant_started")
+EVENT_HOMEASSISTANT_STOP: EventType[NoEventData] = EventType("homeassistant_stop")
+EVENT_HOMEASSISTANT_FINAL_WRITE: EventType[NoEventData] = EventType(
+    "homeassistant_final_write"
+)
 EVENT_LOGBOOK_ENTRY: Final = "logbook_entry"
 EVENT_LOGGING_CHANGED: Final = "logging_changed"
 EVENT_SERVICE_REGISTERED: Final = "service_registered"
 EVENT_SERVICE_REMOVED: Final = "service_removed"
-EVENT_STATE_CHANGED: Final = "state_changed"
+EVENT_STATE_CHANGED: EventType[EventStateChangedData] = EventType("state_changed")
+EVENT_STATE_REPORTED: Final = "state_reported"
 EVENT_THEMES_UPDATED: Final = "themes_updated"
 EVENT_PANELS_UPDATED: Final = "panels_updated"
 EVENT_LOVELACE_UPDATED: Final = "lovelace_updated"
@@ -1608,7 +1618,9 @@ CAST_APP_ID_HOMEASSISTANT_LOVELACE: Final = "A078F6B0"
 # User used by Supervisor
 HASSIO_USER_NAME = "Supervisor"
 
-SIGNAL_BOOTSTRAP_INTEGRATIONS = "bootstrap_integrations"
+SIGNAL_BOOTSTRAP_INTEGRATIONS: SignalType[dict[str, float]] = SignalType(
+    "bootstrap_integrations"
+)
 
 
 # hass.data key for logging information.

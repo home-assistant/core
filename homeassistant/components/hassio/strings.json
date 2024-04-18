@@ -51,8 +51,15 @@
       "title": "Multiple data disks detected",
       "fix_flow": {
         "step": {
-          "system_rename_data_disk": {
-            "description": "`{reference}` is a filesystem with the name hassos-data and is not the active data disk. This can cause Home Assistant to choose the wrong data disk at system reboot.\n\nUse the fix option to rename the filesystem to prevent this. Alternatively you can move the data disk to the drive (overwriting its contents) or remove the drive from the system."
+          "fix_menu": {
+            "description": "At `{reference}`, we detected another active data disk (containing a file system `hassos-data` from another Home Assistant installation).\n\nYou need to decide what to do with it. Otherwise Home Assistant might choose the wrong data disk at system reboot.\n\nIf you don't want to use this data disk, unplug it from your system. If you leave it plugged in, choose one of the following options:",
+            "menu_options": {
+              "system_rename_data_disk": "Mark as inactive data disk (rename file system)",
+              "system_adopt_data_disk": "Use the detected data disk instead of the current system"
+            }
+          },
+          "system_adopt_data_disk": {
+            "description": "Select submit to make `{reference}` the active data disk. The one and only.\n\nYou won't have access anymore to the current Home Assistant data (will be marked as inactive data disk). After reboot, your system will be in the state of the Home Assistant data on `{reference}`."
           }
         },
         "abort": {
@@ -180,6 +187,10 @@
     "unsupported_systemd_resolved": {
       "title": "Unsupported system - Systemd-Resolved issues",
       "description": "System is unsupported because Systemd Resolved is missing, inactive or misconfigured. Use the link to learn more and how to fix this."
+    },
+    "unsupported_virtualization_image": {
+      "title": "Unsupported system - Incorrect OS image for virtualization",
+      "description": "System is unsupported because the Home Assistant OS image in use is not intended for use in a virtualized environment. Use the link to learn more and how to fix this."
     }
   },
   "entity": {

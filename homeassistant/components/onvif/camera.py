@@ -105,9 +105,9 @@ class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
         self.stream_options[CONF_RTSP_TRANSPORT] = device.config_entry.options.get(
             CONF_RTSP_TRANSPORT, next(iter(RTSP_TRANSPORTS))
         )
-        self.stream_options[
-            CONF_USE_WALLCLOCK_AS_TIMESTAMPS
-        ] = device.config_entry.options.get(CONF_USE_WALLCLOCK_AS_TIMESTAMPS, False)
+        self.stream_options[CONF_USE_WALLCLOCK_AS_TIMESTAMPS] = (
+            device.config_entry.options.get(CONF_USE_WALLCLOCK_AS_TIMESTAMPS, False)
+        )
         self._basic_auth = (
             device.config_entry.data.get(CONF_SNAPSHOT_AUTH)
             == HTTP_BASIC_AUTHENTICATION

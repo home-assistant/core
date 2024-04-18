@@ -87,7 +87,7 @@ async def test_history(
     assert front_door_last_activity_state.state == "2017-03-05T15:03:40+00:00"
 
     ingress_last_activity_state = hass.states.get("sensor.ingress_last_activity")
-    assert ingress_last_activity_state.state == "unknown"
+    assert ingress_last_activity_state.state == "2024-02-02T11:21:24+00:00"
 
 
 async def test_only_chime_devices(

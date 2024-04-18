@@ -220,6 +220,8 @@ DISCOVERY_KEY = "zha_discovery_info"
 
 DOMAIN = "zha"
 
+ENTITY_METADATA = "entity_metadata"
+
 GROUP_ID = "group_id"
 GROUP_IDS = "group_ids"
 GROUP_NAME = "group_name"
@@ -232,8 +234,6 @@ POWER_BATTERY_OR_UNKNOWN = "Battery or Unknown"
 PRESET_SCHEDULE = "Schedule"
 PRESET_COMPLEX = "Complex"
 PRESET_TEMP_MANUAL = "Temporary manual"
-
-QUIRK_METADATA = "quirk_metadata"
 
 ZCL_INIT_ATTRS = "ZCL_INIT_ATTRS"
 
