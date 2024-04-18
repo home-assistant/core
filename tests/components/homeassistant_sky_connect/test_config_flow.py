@@ -92,6 +92,9 @@ async def test_config_flow_zigbee(
     mock_flasher_manager.async_start_addon_waiting = AsyncMock(
         side_effect=delayed_side_effect()
     )
+    mock_flasher_manager.async_uninstall_addon_waiting = AsyncMock(
+        side_effect=delayed_side_effect()
+    )
 
     with (
         patch(
@@ -113,7 +116,7 @@ async def test_config_flow_zigbee(
             version=None,
         )
 
-        # Pick the menu option
+        # Pick the menu option: we are now installing the addon
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={"next_step_id": STEP_PICK_FIRMWARE_ZIGBEE},
@@ -125,21 +128,7 @@ async def test_config_flow_zigbee(
 
         await hass.async_block_till_done(wait_background_tasks=True)
 
-        mock_flasher_manager.async_get_addon_info.return_value = AddonInfo(
-            available=True,
-            hostname=None,
-            options={
-                "device": "",
-                "baudrate": 115200,
-                "bootloader_baudrate": 115200,
-                "flow_control": True,
-            },
-            state=AddonState.NOT_RUNNING,
-            update_available=False,
-            version="1.2.3",
-        )
-
-        # Progress the flow, it is now configuring the addon and running it
+        # Progress the flow, we are now configuring the addon and running it
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={},
@@ -148,7 +137,6 @@ async def test_config_flow_zigbee(
         assert result["type"] is FlowResultType.SHOW_PROGRESS
         assert result["step_id"] == "run_zigbee_flasher_addon"
         assert result["progress_action"] == "run_zigbee_flasher_addon"
-
         assert mock_flasher_manager.async_set_addon_options.mock_calls == [
             call(
                 {
@@ -159,6 +147,19 @@ async def test_config_flow_zigbee(
                 }
             )
         ]
+
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        # Progress the flow, we are now uninstalling the addon
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={},
+        )
+
+        assert result["type"] is FlowResultType.SHOW_PROGRESS
+        assert result["step_id"] == "uninstall_zigbee_flasher_addon"
+        assert result["progress_action"] == "uninstall_zigbee_flasher_addon"
+        assert mock_flasher_manager.async_uninstall_addon_waiting.mock_calls == [call()]
 
         await hass.async_block_till_done(wait_background_tasks=True)
 

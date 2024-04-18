@@ -58,9 +58,9 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
         self._usb_info: usb.UsbServiceInfo | None = None
         self._hw_variant: HardwareVariant | None = None
 
-        self.install_task: asyncio.Task | None = None
-        self.start_task: asyncio.Task | None = None
-        self.stop_task: asyncio.Task | None = None
+        self.addon_install_task: asyncio.Task | None = None
+        self.addon_start_task: asyncio.Task | None = None
+        self.addon_uninstall_task: asyncio.Task | None = None
 
     def _get_translation_placeholders(self) -> dict[str, str]:
         """Shared translation placeholders."""
@@ -185,13 +185,13 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
 
         _LOGGER.debug("Flasher addon state: %s", addon_info)
 
-        if not self.install_task:
-            self.install_task = self.hass.async_create_task(
+        if not self.addon_install_task:
+            self.addon_install_task = self.hass.async_create_task(
                 fw_flasher_manager.async_install_addon_waiting(),
                 "SiLabs Flasher addon install",
             )
 
-        if not self.install_task.done():
+        if not self.addon_install_task.done():
             return self.async_show_progress(
                 step_id="install_zigbee_flasher_addon",
                 progress_action="install_addon",
@@ -199,23 +199,23 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
                     **self._get_translation_placeholders(),
                     "addon_name": fw_flasher_manager.addon_name,
                 },
-                progress_task=self.install_task,
+                progress_task=self.addon_install_task,
             )
 
         try:
-            await self.install_task
+            await self.addon_install_task
         except AddonError as err:
             _LOGGER.error(err)
             return self.async_show_progress_done(next_step_id="install_failed")
         finally:
-            self.install_task = None
+            self.addon_install_task = None
 
         return self.async_show_progress_done(next_step_id="run_zigbee_flasher_addon")
 
     async def async_step_run_zigbee_flasher_addon(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Configure the flasher addon to point to the SkyConnect."""
+        """Configure the flasher addon to point to the SkyConnect and run it."""
         fw_flasher_manager = get_zigbee_flasher_addon_manager(self.hass)
         addon_info = await self._async_get_addon_info(fw_flasher_manager)
 
@@ -231,7 +231,7 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
         _LOGGER.debug("Reconfiguring flasher addon with %s", new_addon_config)
         await self._async_set_addon_config(new_addon_config, fw_flasher_manager)
 
-        if not self.start_task:
+        if not self.addon_start_task:
 
             async def start_and_wait_until_done() -> None:
                 await fw_flasher_manager.async_start_addon_waiting()
@@ -240,9 +240,11 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
                     AddonState.NOT_RUNNING
                 )
 
-            self.start_task = self.hass.async_create_task(start_and_wait_until_done())
+            self.addon_start_task = self.hass.async_create_task(
+                start_and_wait_until_done()
+            )
 
-        if not self.start_task.done():
+        if not self.addon_start_task.done():
             return self.async_show_progress(
                 step_id="run_zigbee_flasher_addon",
                 progress_action="run_zigbee_flasher_addon",
@@ -250,18 +252,20 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
                     **self._get_translation_placeholders(),
                     "addon_name": fw_flasher_manager.addon_name,
                 },
-                progress_task=self.start_task,
+                progress_task=self.addon_start_task,
             )
 
         try:
-            await self.start_task
+            await self.addon_start_task
         except (AddonError, AbortFlow) as err:
             _LOGGER.error(err)
             return self.async_show_progress_done(next_step_id="zigbee_flasher_failed")
         finally:
-            self.start_task = None
+            self.addon_start_task = None
 
-        return self.async_show_progress_done(next_step_id="zigbee_flashing_complete")
+        return self.async_show_progress_done(
+            next_step_id="uninstall_zigbee_flasher_addon"
+        )
 
     async def async_step_zigbee_flasher_failed(
         self, user_input: dict[str, Any] | None = None
@@ -276,12 +280,36 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
             },
         )
 
-    async def async_step_zigbee_flashing_complete(
+    async def async_step_uninstall_zigbee_flasher_addon(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Show completion dialog for flashing Zigbee firmware."""
+        """Uninstall the flasher addon."""
         fw_flasher_manager = get_zigbee_flasher_addon_manager(self.hass)
-        await fw_flasher_manager.async_uninstall_addon_waiting()
+
+        if not self.addon_uninstall_task:
+            _LOGGER.debug("Uninstalling flasher addon")
+            self.addon_uninstall_task = self.hass.async_create_task(
+                fw_flasher_manager.async_uninstall_addon_waiting()
+            )
+
+        if not self.addon_uninstall_task.done():
+            return self.async_show_progress(
+                step_id="uninstall_zigbee_flasher_addon",
+                progress_action="uninstall_zigbee_flasher_addon",
+                description_placeholders={
+                    **self._get_translation_placeholders(),
+                    "addon_name": fw_flasher_manager.addon_name,
+                },
+                progress_task=self.addon_uninstall_task,
+            )
+
+        try:
+            await self.addon_uninstall_task
+        except (AddonError, AbortFlow) as err:
+            _LOGGER.error(err)
+            # The uninstall failing isn't critical so we can just continue
+        finally:
+            self.addon_uninstall_task = None
 
         return self.async_show_progress_done(next_step_id="confirm_zigbee")
 
@@ -352,13 +380,13 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
 
         _LOGGER.debug("Flasher addon state: %s", addon_info)
 
-        if not self.install_task:
-            self.install_task = self.hass.async_create_task(
+        if not self.addon_install_task:
+            self.addon_install_task = self.hass.async_create_task(
                 otbr_manager.async_install_addon_waiting(),
                 "SiLabs Flasher addon install",
             )
 
-        if not self.install_task.done():
+        if not self.addon_install_task.done():
             return self.async_show_progress(
                 step_id="install_otbr_addon",
                 progress_action="install_addon",
@@ -366,16 +394,16 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
                     **self._get_translation_placeholders(),
                     "addon_name": otbr_manager.addon_name,
                 },
-                progress_task=self.install_task,
+                progress_task=self.addon_install_task,
             )
 
         try:
-            await self.install_task
+            await self.addon_install_task
         except AddonError as err:
             _LOGGER.error(err)
             return self.async_show_progress_done(next_step_id="install_failed")
         finally:
-            self.install_task = None
+            self.addon_install_task = None
 
         return self.async_show_progress_done(next_step_id="start_otbr_addon")
 
@@ -398,12 +426,12 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
         _LOGGER.debug("Reconfiguring OTBR addon with %s", new_addon_config)
         await self._async_set_addon_config(new_addon_config, otbr_manager)
 
-        if not self.start_task:
-            self.start_task = self.hass.async_create_task(
+        if not self.addon_start_task:
+            self.addon_start_task = self.hass.async_create_task(
                 otbr_manager.async_start_addon_waiting()
             )
 
-        if not self.start_task.done():
+        if not self.addon_start_task.done():
             return self.async_show_progress(
                 step_id="start_otbr_addon",
                 progress_action="start_otbr_addon",
@@ -411,18 +439,18 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
                     **self._get_translation_placeholders(),
                     "addon_name": otbr_manager.addon_name,
                 },
-                progress_task=self.start_task,
+                progress_task=self.addon_start_task,
             )
 
         try:
-            await self.start_task
+            await self.addon_start_task
         except (AddonError, AbortFlow) as err:
             _LOGGER.error(err)
             return self.async_show_progress_done(next_step_id="otbr_failed")
         finally:
-            self.start_task = None
+            self.addon_start_task = None
 
-        return self.async_show_progress_done(next_step_id="otbr_complete")
+        return self.async_show_progress_done(next_step_id="confirm_otbr")
 
     async def async_step_otbr_failed(
         self, user_input: dict[str, Any] | None = None
@@ -437,20 +465,14 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
             },
         )
 
-    async def async_step_otbr_complete(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Show completion dialog for OTBR."""
-        self._current_firmware_type = ApplicationType.SPINEL
-        return self.async_show_progress_done(next_step_id="confirm_otbr")
-
     async def async_step_confirm_otbr(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Confirm OTBR setup."""
         assert self._usb_info is not None
         assert self._hw_variant is not None
-        assert self._current_firmware_type is not None
+
+        self._current_firmware_type = ApplicationType.SPINEL
 
         if user_input is not None:
             # OTBR discovery is done automatically via hassio

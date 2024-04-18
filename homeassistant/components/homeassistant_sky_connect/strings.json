@@ -123,7 +123,9 @@
       "install_addon": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::progress::install_addon%]",
       "start_addon": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::progress::start_addon%]",
       "start_otbr_addon": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::progress::start_addon%]",
-      "run_zigbee_flasher_addon": "[%key:component::homeassistant_sky_connect::config::progress::run_zigbee_flasher_addon%]"
+      "install_zigbee_flasher_addon": "[%key:component::homeassistant_sky_connect::config::progress::install_zigbee_flasher_addon%]",
+      "run_zigbee_flasher_addon": "[%key:component::homeassistant_sky_connect::config::progress::run_zigbee_flasher_addon%]",
+      "uninstall_zigbee_flasher_addon": "[%key:component::homeassistant_sky_connect::config::progress::uninstall_zigbee_flasher_addon%]"
     }
   },
   "config": {
@@ -147,7 +149,11 @@
       },
       "run_zigbee_flasher_addon": {
         "title": "Flashing Zigbee firmware",
-        "description": "Installhing Zigbee firmware. This will take about a minute."
+        "description": "Installing Zigbee firmware. This will take about a minute."
+      },
+      "uninstall_zigbee_flasher_addon": {
+        "title": "Removing flasher",
+        "description": "Removing the Silicon Labs Flasher addon."
       },
       "zigbee_flasher_failed": {
         "title": "Zigbee flashing failed",
@@ -189,7 +195,9 @@
       "install_addon": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::progress::install_addon%]",
       "start_addon": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::progress::start_addon%]",
       "start_otbr_addon": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::progress::start_addon%]",
-      "run_zigbee_flasher_addon": "Please wait while Zigbee firmware is installed to your {model}, this will take a few minutes. Do not make any changes to your hardware or software until this finishes."
+      "install_zigbee_flasher_addon": "The Silicon Labs Flasher addon is installed, this may take a few minutes.",
+      "run_zigbee_flasher_addon": "Please wait while Zigbee firmware is installed to your {model}, this will take a few minutes. Do not make any changes to your hardware or software until this finishes.",
+      "uninstall_zigbee_flasher_addon": "The Silicon Labs Flasher addon is being removed."
     }
   }
 }
