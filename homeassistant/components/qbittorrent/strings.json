@@ -74,5 +74,13 @@
         }
       }
     }
+  },
+  "exceptions": {
+    "invalid_device": {
+      "message": "No device with that id was found"
+    },
+    "invalid_entry_id": {
+      "message": "No entry with that id was found"
+    }
   }
 }

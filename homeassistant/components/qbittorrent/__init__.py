@@ -1,6 +1,7 @@
 """The qbittorrent component."""
 
 import logging
+from typing import Any
 
 from qbittorrent.client import LoginRequired
 from requests.exceptions import RequestException
@@ -15,7 +16,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 
@@ -42,12 +43,14 @@ CONF_ENTRY = "entry"
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up qBittorrent services."""
 
-    async def handle_get_torrents(service_call: ServiceCall):
+    async def handle_get_torrents(service_call: ServiceCall) -> dict[str, Any] | None:
         device_registry = dr.async_get(hass)
         device_entry = device_registry.async_get(service_call.data[ATTR_DEVICE_ID])
 
         if device_entry is None:
-            return
+            raise ServiceValidationError(
+                translation_domain=DOMAIN, translation_key="invalid_device"
+            )
 
         entry_id = None
 
@@ -56,7 +59,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 entry_id = value
                 break
         else:
-            return
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_entry_id",
+            )
 
         coordinator: QBittorrentDataCoordinator = hass.data[DOMAIN][entry_id]
         items = await coordinator.get_torrents(service_call.data[TORRENT_FILTER])
@@ -72,7 +78,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         supports_response=SupportsResponse.ONLY,
     )
 
-    async def handle_get_all_torrents(service_call: ServiceCall):
+    async def handle_get_all_torrents(
+        service_call: ServiceCall,
+    ) -> dict[str, Any] | None:
         torrents = {}
 
         for key, value in hass.data[DOMAIN].items():

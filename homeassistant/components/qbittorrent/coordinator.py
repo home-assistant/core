@@ -10,7 +10,7 @@ from qbittorrent import Client
 from qbittorrent.client import LoginRequired
 
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
@@ -44,15 +44,15 @@ class QBittorrentDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         try:
             return await self.hass.async_add_executor_job(self.client.sync_main_data)
         except LoginRequired as exc:
-            raise ConfigEntryError("Invalid authentication") from exc
+            raise HomeAssistantError(str(exc)) from exc
 
     async def get_torrents(self, torrent_filter: str) -> list[dict[str, Any]]:
         """Async method to get QBittorrent torrents."""
         try:
-            total_torrents = await self.hass.async_add_executor_job(
+            torrents = await self.hass.async_add_executor_job(
                 lambda: self.client.torrents(filter=torrent_filter)
             )
         except LoginRequired as exc:
-            raise ConfigEntryError("Invalid authentication") from exc
+            raise HomeAssistantError(str(exc)) from exc
 
-        return total_torrents
+        return torrents
