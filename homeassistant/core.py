@@ -86,6 +86,7 @@ from .exceptions import (
     InvalidStateError,
     MaxLengthExceeded,
     ServiceNotFound,
+    ServiceValidationError,
     Unauthorized,
 )
 from .helpers.deprecation import (
@@ -2571,16 +2572,27 @@ class ServiceRegistry:
 
         if return_response:
             if not blocking:
-                raise ValueError(
-                    "Invalid argument return_response=True when blocking=False"
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="service_should_be_blocking",
+                    translation_placeholders={
+                        "return_response": "return_response=True",
+                        "non_blocking_argument": "blocking=False",
+                    },
                 )
             if handler.supports_response is SupportsResponse.NONE:
-                raise ValueError(
-                    "Invalid argument return_response=True when handler does not support responses"
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="service_does_not_supports_reponse",
+                    translation_placeholders={
+                        "return_response": "return_response=True"
+                    },
                 )
         elif handler.supports_response is SupportsResponse.ONLY:
-            raise ValueError(
-                "Service call requires responses but caller did not ask for responses"
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="service_lacks_response_request",
+                translation_placeholders={"return_response": "return_response=True"},
             )
 
         if target:
@@ -2628,7 +2640,11 @@ class ServiceRegistry:
             return None
         if not isinstance(response_data, dict):
             raise HomeAssistantError(
-                f"Service response data expected a dictionary, was {type(response_data)}"
+                translation_domain=DOMAIN,
+                translation_key="service_reponse_invalid",
+                translation_placeholders={
+                    "response_data_type": str(type(response_data))
+                },
             )
         return response_data
 
