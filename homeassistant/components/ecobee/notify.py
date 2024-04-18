@@ -43,8 +43,7 @@ class EcobeeNotificationService(BaseNotificationService):
 
     async def async_send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message and raise issue."""
-        data: EcobeeData = self.hass.data[DOMAIN]
-        migrate_notify_issue(self.hass, data.entry)
+        migrate_notify_issue(self.hass)
         await self.hass.async_add_executor_job(
             partial(self.send_message, message, **kwargs)
         )
