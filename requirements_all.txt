@@ -1032,7 +1032,7 @@ ha-philipsjs==3.1.1
 habitipy==0.2.0
 
 # homeassistant.components.bluetooth
-habluetooth==2.7.0
+habluetooth==2.8.0
 
 # homeassistant.components.cloud
 hass-nabucasa==0.78.0
