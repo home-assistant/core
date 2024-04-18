@@ -142,11 +142,9 @@ jobs:
         run: |
           requirement_files="requirements_all.txt requirements_diff.txt"
           for requirement_file in ${requirement_files}; do
-            sed -i "s|# fritzconnection|fritzconnection|g" ${requirement_file}
             sed -i "s|# pyuserinput|pyuserinput|g" ${requirement_file}
             sed -i "s|# evdev|evdev|g" ${requirement_file}
             sed -i "s|# pycups|pycups|g" ${requirement_file}
-            sed -i "s|# homekit|homekit|g" ${requirement_file}
             sed -i "s|# decora-wifi|decora-wifi|g" ${requirement_file}
             sed -i "s|# python-gammu|python-gammu|g" ${requirement_file}
 
@@ -161,11 +159,6 @@ jobs:
               sed -i "s|noaa-coops|# noaa-coops|g" ${requirement_file}
               sed -i "s|pyezviz|# pyezviz|g" ${requirement_file}
               sed -i "s|pykrakenapi|# pykrakenapi|g" ${requirement_file}
-            fi
-
-            # Some speedups are only for 64-bit
-            if [ "${{ matrix.arch }}" = "amd64" ] || [ "${{ matrix.arch }}" = "aarch64" ]; then
-              sed -i "s|aiohttp-zlib-ng|aiohttp-zlib-ng\[isal\]|g" ${requirement_file}
             fi
 
           done
