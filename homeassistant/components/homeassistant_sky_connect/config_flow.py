@@ -71,7 +71,7 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
                 else "unknown"
             ),
             "firmware_type": (
-                self._current_firmware_type
+                self._current_firmware_type.value
                 if self._current_firmware_type is not None
                 else "unknown"
             ),
