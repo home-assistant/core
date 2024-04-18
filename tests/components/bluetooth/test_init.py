@@ -2807,6 +2807,19 @@ async def test_can_unsetup_bluetooth_single_adapter_macos(
         await hass.async_block_till_done()
 
 
+async def test_default_address_config_entries_removed_linux(
+    hass: HomeAssistant,
+    mock_bleak_scanner_start: MagicMock,
+    one_adapter: None,
+) -> None:
+    """Test default address entries are removed on linux."""
+    entry = MockConfigEntry(domain=bluetooth.DOMAIN, data={}, unique_id=DEFAULT_ADDRESS)
+    entry.add_to_hass(hass)
+    await async_setup_component(hass, bluetooth.DOMAIN, {})
+    await hass.async_block_till_done()
+    assert not hass.config_entries.async_entries(bluetooth.DOMAIN)
+
+
 async def test_can_unsetup_bluetooth_single_adapter_linux(
     hass: HomeAssistant,
     mock_bleak_scanner_start: MagicMock,
@@ -2887,6 +2900,16 @@ async def test_auto_detect_bluetooth_adapters_linux_multiple(
     await hass.async_block_till_done()
     assert not hass.config_entries.async_entries(bluetooth.DOMAIN)
     assert len(hass.config_entries.flow.async_progress(bluetooth.DOMAIN)) == 2
+
+
+async def test_auto_detect_bluetooth_adapters_skips_crashed(
+    hass: HomeAssistant, crashed_adapter: None
+) -> None:
+    """Test we skip crashed adapters on linux."""
+    assert await async_setup_component(hass, bluetooth.DOMAIN, {})
+    await hass.async_block_till_done()
+    assert not hass.config_entries.async_entries(bluetooth.DOMAIN)
+    assert len(hass.config_entries.flow.async_progress(bluetooth.DOMAIN)) == 0
 
 
 async def test_auto_detect_bluetooth_adapters_linux_none_found(
