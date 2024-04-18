@@ -48,11 +48,10 @@ async def async_setup_entry(
     async_add_entities(cams)
 
 
-class RingCam(RingEntity, Camera):
+class RingCam(RingEntity[RingDoorBell], Camera):
     """An implementation of a Ring Door Bell camera."""
 
     _attr_name = None
-    _device: RingDoorBell
 
     def __init__(
         self,
@@ -168,7 +167,8 @@ class RingCam(RingEntity, Camera):
     def _get_video(self) -> str | None:
         if self._last_event is None:
             return None
-        assert (event_id := self._last_event.get("id")) and isinstance(event_id, int)
+        event_id = self._last_event.get("id")
+        assert event_id and isinstance(event_id, int)
         return self._device.recording_url(event_id)
 
     @exception_wrap

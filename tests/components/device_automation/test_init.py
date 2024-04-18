@@ -1446,8 +1446,10 @@ async def test_automation_with_sub_condition(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "and {{ trigger.%s }}"
-                            % "}} - {{ trigger.".join(("platform", "event.event_type"))
+                            "some": (
+                                "and {{ trigger.platform }}"
+                                " - {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
@@ -1477,8 +1479,10 @@ async def test_automation_with_sub_condition(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "or {{ trigger.%s }}"
-                            % "}} - {{ trigger.".join(("platform", "event.event_type"))
+                            "some": (
+                                "or {{ trigger.platform }}"
+                                " - {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
