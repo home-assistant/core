@@ -93,7 +93,7 @@ BUTTON_EDIT = {
 }
 
 
-validate_addr = cv.matches_regex(r"\[\d\d:\d\d:\d\d:\d\d\]")
+validate_addr = cv.matches_regex(r"\[(?:\d\d:)?\d\d:\d\d:\d\d\]")
 
 
 async def validate_add_controller(
@@ -565,15 +565,7 @@ class HomeworksConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             CONF_KEYPADS: [
                 {
                     CONF_ADDR: keypad[CONF_ADDR],
-                    CONF_BUTTONS: [
-                        {
-                            CONF_LED: button[CONF_LED],
-                            CONF_NAME: button[CONF_NAME],
-                            CONF_NUMBER: button[CONF_NUMBER],
-                            CONF_RELEASE_DELAY: button[CONF_RELEASE_DELAY],
-                        }
-                        for button in keypad[CONF_BUTTONS]
-                    ],
+                    CONF_BUTTONS: [],
                     CONF_NAME: keypad[CONF_NAME],
                 }
                 for keypad in config[CONF_KEYPADS]

@@ -335,6 +335,6 @@
     "roomId": 9,
     "shadeGroupIds": [],
     "type": 95,
-    "shade_api_class": "None"
+    "shade_api_class": "ShadeDualOverlappedIlluminated"
   }
 ]

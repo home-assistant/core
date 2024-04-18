@@ -42,10 +42,10 @@ def create_client_mock(
         """Wait until chargepoints are received."""
         await received_charge_points.wait()
 
-    async def connect(receiver):
+    async def connect(receiver, on_open):
         """Set the receiver and await future."""
         client_mock.receiver = receiver
-        await client_mock.get_charge_points()
+        await on_open()
 
         started_loop.set()
         started_loop.clear()
@@ -112,8 +112,9 @@ async def init_integration(
         hass, future_container, started_loop, charge_point, status, grid
     )
 
-    with patch("homeassistant.components.blue_current.PLATFORMS", [platform]), patch(
-        "homeassistant.components.blue_current.Client", return_value=client_mock
+    with (
+        patch("homeassistant.components.blue_current.PLATFORMS", [platform]),
+        patch("homeassistant.components.blue_current.Client", return_value=client_mock),
     ):
         config_entry.add_to_hass(hass)
 

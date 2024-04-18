@@ -30,11 +30,9 @@ async def async_import_module(hass: HomeAssistant, name: str) -> ModuleType:
     if module := cache.get(name):
         return module
 
-    failure_cache: dict[str, BaseException] = hass.data.setdefault(
-        DATA_IMPORT_FAILURES, {}
-    )
-    if exception := failure_cache.get(name):
-        raise exception
+    failure_cache: dict[str, bool] = hass.data.setdefault(DATA_IMPORT_FAILURES, {})
+    if name in failure_cache:
+        raise ModuleNotFoundError(f"{name} not found", name=name)
 
     import_futures: dict[str, asyncio.Future[ModuleType]]
     import_futures = hass.data.setdefault(DATA_IMPORT_FUTURES, {})
@@ -51,7 +49,8 @@ async def async_import_module(hass: HomeAssistant, name: str) -> ModuleType:
         module = await hass.async_add_import_executor_job(_get_module, cache, name)
         import_future.set_result(module)
     except BaseException as ex:
-        failure_cache[name] = ex
+        if isinstance(ex, ModuleNotFoundError):
+            failure_cache[name] = True
         import_future.set_exception(ex)
         with suppress(BaseException):
             # Set the exception retrieved flag on the future since

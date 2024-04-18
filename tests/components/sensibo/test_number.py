@@ -63,12 +63,15 @@ async def test_number_set_value(
     state1 = hass.states.get("number.hallway_temperature_calibration")
     assert state1.state == "0.1"
 
-    with patch(
-        "homeassistant.components.sensibo.util.SensiboClient.async_get_devices_data",
-        return_value=get_data,
-    ), patch(
-        "homeassistant.components.sensibo.util.SensiboClient.async_set_calibration",
-        return_value={"status": "failure"},
+    with (
+        patch(
+            "homeassistant.components.sensibo.util.SensiboClient.async_get_devices_data",
+            return_value=get_data,
+        ),
+        patch(
+            "homeassistant.components.sensibo.util.SensiboClient.async_set_calibration",
+            return_value={"status": "failure"},
+        ),
     ):
         with pytest.raises(HomeAssistantError):
             await hass.services.async_call(
@@ -82,12 +85,15 @@ async def test_number_set_value(
     state2 = hass.states.get("number.hallway_temperature_calibration")
     assert state2.state == "0.1"
 
-    with patch(
-        "homeassistant.components.sensibo.util.SensiboClient.async_get_devices_data",
-        return_value=get_data,
-    ), patch(
-        "homeassistant.components.sensibo.util.SensiboClient.async_set_calibration",
-        return_value={"status": "success"},
+    with (
+        patch(
+            "homeassistant.components.sensibo.util.SensiboClient.async_get_devices_data",
+            return_value=get_data,
+        ),
+        patch(
+            "homeassistant.components.sensibo.util.SensiboClient.async_set_calibration",
+            return_value={"status": "success"},
+        ),
     ):
         await hass.services.async_call(
             NUMBER_DOMAIN,

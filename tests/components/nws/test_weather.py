@@ -12,7 +12,6 @@ from homeassistant.components import nws
 from homeassistant.components.weather import (
     ATTR_CONDITION_CLEAR_NIGHT,
     ATTR_CONDITION_SUNNY,
-    ATTR_FORECAST,
     DOMAIN as WEATHER_DOMAIN,
     LEGACY_SERVICE_GET_FORECAST,
     SERVICE_GET_FORECASTS,
@@ -77,10 +76,6 @@ async def test_imperial_metric(
     for key, value in result_observation.items():
         assert data.get(key) == value
 
-    forecast = data.get(ATTR_FORECAST)
-    for key, value in result_forecast.items():
-        assert forecast[0].get(key) == value
-
 
 async def test_night_clear(hass: HomeAssistant, mock_simple_nws, no_sensor) -> None:
     """Test with clear-night in observation."""
@@ -119,10 +114,6 @@ async def test_none_values(hass: HomeAssistant, mock_simple_nws, no_sensor) -> N
     for key in WEATHER_EXPECTED_OBSERVATION_IMPERIAL:
         assert data.get(key) is None
 
-    forecast = data.get(ATTR_FORECAST)
-    for key in EXPECTED_FORECAST_IMPERIAL:
-        assert forecast[0].get(key) is None
-
 
 async def test_none(hass: HomeAssistant, mock_simple_nws, no_sensor) -> None:
     """Test with None as observation and forecast."""
@@ -145,9 +136,6 @@ async def test_none(hass: HomeAssistant, mock_simple_nws, no_sensor) -> None:
     data = state.attributes
     for key in WEATHER_EXPECTED_OBSERVATION_IMPERIAL:
         assert data.get(key) is None
-
-    forecast = data.get(ATTR_FORECAST)
-    assert forecast is None
 
 
 async def test_error_station(hass: HomeAssistant, mock_simple_nws, no_sensor) -> None:
@@ -201,9 +189,10 @@ async def test_error_observation(
 ) -> None:
     """Test error during update observation."""
     utc_time = dt_util.utcnow()
-    with patch("homeassistant.components.nws.utcnow") as mock_utc, patch(
-        "homeassistant.components.nws.weather.utcnow"
-    ) as mock_utc_weather:
+    with (
+        patch("homeassistant.components.nws.utcnow") as mock_utc,
+        patch("homeassistant.components.nws.weather.utcnow") as mock_utc_weather,
+    ):
 
         def increment_time(time):
             mock_utc.return_value += time
@@ -487,3 +476,49 @@ async def test_forecast_subscription(
 
     assert forecast2 != []
     assert forecast2 == snapshot
+
+
+@pytest.mark.parametrize(
+    ("forecast_type", "entity_id"),
+    [("hourly", "weather.abc")],
+)
+async def test_forecast_subscription_with_failing_coordinator(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    freezer: FrozenDateTimeFactory,
+    snapshot: SnapshotAssertion,
+    mock_simple_nws_times_out,
+    no_sensor,
+    forecast_type: str,
+    entity_id: str,
+) -> None:
+    """Test a forecast subscription when the coordinator is failing to update."""
+    client = await hass_ws_client(hass)
+
+    registry = er.async_get(hass)
+    # Pre-create the hourly entity
+    registry.async_get_or_create(
+        WEATHER_DOMAIN,
+        nws.DOMAIN,
+        "35_-75_hourly",
+        suggested_object_id="abc_hourly",
+    )
+
+    entry = MockConfigEntry(
+        domain=nws.DOMAIN,
+        data=NWS_CONFIG,
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    await client.send_json_auto_id(
+        {
+            "type": "weather/subscribe_forecast",
+            "forecast_type": forecast_type,
+            "entity_id": entity_id,
+        }
+    )
+    msg = await client.receive_json()
+    assert not msg["success"]

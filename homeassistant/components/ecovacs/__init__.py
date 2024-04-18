@@ -28,6 +28,7 @@ CONFIG_SCHEMA = vol.Schema(
 PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
+    Platform.EVENT,
     Platform.IMAGE,
     Platform.LAWN_MOWER,
     Platform.NUMBER,

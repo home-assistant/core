@@ -214,7 +214,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     # Only pass through PyAV log messages if stream logging is above DEBUG
     cancel_logging_listener = hass.bus.async_listen(
-        EVENT_LOGGING_CHANGED, update_pyav_logging, run_immediately=True
+        EVENT_LOGGING_CHANGED, update_pyav_logging
     )
     # libav.mp4 and libav.swscaler have a few unimportant messages that are logged
     # at logging.WARNING. Set those Logger levels to logging.ERROR
@@ -266,7 +266,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         _LOGGER.debug("Stopped stream workers")
         cancel_logging_listener()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown, run_immediately=True)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown)
 
     return True
 
@@ -409,6 +409,13 @@ class Stream:
         self._fast_restart_once = True
         self._thread_quit.set()
 
+    def _set_state(self, available: bool) -> None:
+        """Set the stream state by updating the callback."""
+        # Call with call_soon_threadsafe since we know _async_update_state is always
+        # all callback function instead of using add_job which would have to work
+        # it out each time
+        self.hass.loop.call_soon_threadsafe(self._async_update_state, available)
+
     def _run_worker(self) -> None:
         """Handle consuming streams and restart keepalive streams."""
         # Keep import here so that we can import stream integration without installing reqs
@@ -419,7 +426,7 @@ class Stream:
         wait_timeout = 0
         while not self._thread_quit.wait(timeout=wait_timeout):
             start_time = time.time()
-            self.hass.add_job(self._async_update_state, True)
+            self._set_state(True)
             self._diagnostics.set_value(
                 "keepalive", self.dynamic_stream_settings.preload_stream
             )
@@ -451,7 +458,7 @@ class Stream:
                     continue
                 break
 
-            self.hass.add_job(self._async_update_state, False)
+            self._set_state(False)
             # To avoid excessive restarts, wait before restarting
             # As the required recovery time may be different for different setups, start
             # with trying a short wait_timeout and increase it on each reconnection attempt.
