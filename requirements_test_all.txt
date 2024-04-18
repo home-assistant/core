@@ -222,7 +222,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==24.0.0
+aioesphomeapi==24.1.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -494,7 +494,7 @@ bluemaestro-ble==0.2.3
 bluetooth-adapters==0.18.0
 
 # homeassistant.components.bluetooth
-bluetooth-auto-recovery==1.4.0
+bluetooth-auto-recovery==1.4.1
 
 # homeassistant.components.bluetooth
 # homeassistant.components.ld2410_ble
@@ -512,7 +512,7 @@ boschshcpy==0.2.91
 bring-api==0.5.7
 
 # homeassistant.components.broadlink
-broadlink==0.18.3
+broadlink==0.19.0
 
 # homeassistant.components.brother
 brother==4.1.0
@@ -788,7 +788,7 @@ google-cloud-pubsub==2.13.11
 google-generativeai==0.3.1
 
 # homeassistant.components.nest
-google-nest-sdm==3.0.3
+google-nest-sdm==3.0.4
 
 # homeassistant.components.google_travel_time
 googlemaps==2.5.1
@@ -843,7 +843,7 @@ ha-philipsjs==3.1.1
 habitipy==0.2.0
 
 # homeassistant.components.bluetooth
-habluetooth==2.4.2
+habluetooth==2.8.0
 
 # homeassistant.components.cloud
 hass-nabucasa==0.78.0
@@ -1172,6 +1172,9 @@ openerz-api==0.3.0
 
 # homeassistant.components.openhome
 openhomedevice==2.2.0
+
+# homeassistant.components.enigma2
+openwebifpy==4.2.4
 
 # homeassistant.components.opower
 opower==0.4.3
@@ -1723,6 +1726,9 @@ python-ecobee-api==0.2.17
 # homeassistant.components.fully_kiosk
 python-fullykiosk==0.0.12
 
+# homeassistant.components.sms
+# python-gammu==3.2.4
+
 # homeassistant.components.analytics_insights
 python-homeassistant-analytics==0.6.0
 
@@ -1879,7 +1885,7 @@ refoss-ha==1.2.0
 regenmaschine==2024.03.0
 
 # homeassistant.components.renault
-renault-api==0.2.1
+renault-api==0.2.2
 
 # homeassistant.components.renson
 renson-endura-delta==1.7.1
@@ -1925,6 +1931,9 @@ samsungctl[websocket]==0.7.1
 
 # homeassistant.components.samsungtv
 samsungtvws[async,encrypted]==2.6.0
+
+# homeassistant.components.sanix
+sanix==1.0.5
 
 # homeassistant.components.screenlogic
 screenlogicpy==0.10.0
