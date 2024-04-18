@@ -16,7 +16,7 @@ from .const import DOMAIN
 from .coordinator import PyLoadCoordinator
 from .util import api_url
 
-PLATFORMS: list[Platform] = [Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.SWITCH]
 
 PyLoadConfigEntry = ConfigEntry[PyLoadCoordinator]
 
