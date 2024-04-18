@@ -24,8 +24,8 @@ from .const import (
     DOMAIN,
     SERVICE_GET_ALL_TORRENTS,
     SERVICE_GET_TORRENTS,
-    STATE_ATTR_ALL_TORRENT_INFO,
-    STATE_ATTR_TORRENT_INFO,
+    STATE_ATTR_ALL_TORRENTS,
+    STATE_ATTR_TORRENTS,
     TORRENT_FILTER,
 )
 from .coordinator import QBittorrentDataCoordinator
@@ -68,7 +68,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         items = await coordinator.get_torrents(service_call.data[TORRENT_FILTER])
         info = format_torrents(items)
         return {
-            STATE_ATTR_TORRENT_INFO: info,
+            STATE_ATTR_TORRENTS: info,
         }
 
     hass.services.async_register(
@@ -89,7 +89,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             torrents[key] = format_torrents(items)
 
         return {
-            STATE_ATTR_ALL_TORRENT_INFO: torrents,
+            STATE_ATTR_ALL_TORRENTS: torrents,
         }
 
     hass.services.async_register(

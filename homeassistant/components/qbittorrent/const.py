@@ -7,8 +7,8 @@ DOMAIN: Final = "qbittorrent"
 DEFAULT_NAME = "qBittorrent"
 DEFAULT_URL = "http://127.0.0.1:8080"
 
-STATE_ATTR_TORRENT_INFO = "torrent_info"
-STATE_ATTR_ALL_TORRENT_INFO = "all_torrent_info"
+STATE_ATTR_TORRENTS = "torrents"
+STATE_ATTR_ALL_TORRENTS = "all_torrents"
 
 STATE_UP_DOWN = "up_down"
 STATE_SEEDING = "seeding"
