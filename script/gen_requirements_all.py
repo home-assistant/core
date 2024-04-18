@@ -261,15 +261,13 @@ def normalize_package_name(requirement: str) -> str:
     if not match:
         return ""
 
-    # pipdeptree needs lowercase and dash instead of underscore as separator
-    return match.group(1).lower().replace("_", "-")
+    # pipdeptree needs lowercase and dash instead of underscore or period as separator
+    return match.group(1).lower().replace("_", "-").replace(".", "-")
 
 
 def comment_requirement(req: str) -> bool:
     """Comment out requirement. Some don't install on all systems."""
-    return any(
-        normalize_package_name(req) == ign for ign in COMMENT_REQUIREMENTS_NORMALIZED
-    )
+    return normalize_package_name(req) in COMMENT_REQUIREMENTS_NORMALIZED
 
 
 def gather_modules() -> dict[str, list[str]] | None:
