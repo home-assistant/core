@@ -197,6 +197,104 @@ async def test_config_flow_zigbee(
         (USB_DATA_ZBT1, "Home Assistant Connect ZBT-1"),
     ],
 )
+async def test_config_flow_zigbee_skip_step_if_installed(
+    usb_data: usb.UsbServiceInfo, model: str, hass: HomeAssistant
+) -> None:
+    """Test the config flow for SkyConnect, skip installing the addon if necessary."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "usb"}, data=usb_data
+    )
+
+    # First step is confirmation, we haven't probed the firmware yet
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "confirm"
+    assert result["description_placeholders"]["firmware_type"] == "unknown"
+    assert result["description_placeholders"]["model"] == model
+
+    # Next, we probe the firmware
+    with patch(
+        "homeassistant.components.homeassistant_sky_connect.config_flow.probe_silabs_firmware_type",
+        return_value=ApplicationType.SPINEL,  # Ensure we re-install it
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "pick_firmware"
+    assert result["description_placeholders"]["firmware_type"] == "spinel"
+
+    # Set up Zigbee firmware
+    mock_flasher_manager = Mock(spec_set=get_zigbee_flasher_addon_manager(hass))
+    mock_flasher_manager.async_start_addon_waiting = AsyncMock(
+        side_effect=delayed_side_effect()
+    )
+    mock_flasher_manager.async_uninstall_addon_waiting = AsyncMock(
+        side_effect=delayed_side_effect()
+    )
+
+    with (
+        patch(
+            "homeassistant.components.homeassistant_sky_connect.config_flow.get_zigbee_flasher_addon_manager",
+            return_value=mock_flasher_manager,
+        ),
+        patch(
+            "homeassistant.components.homeassistant_sky_connect.config_flow.is_hassio",
+            return_value=True,
+        ),
+    ):
+        mock_flasher_manager.addon_name = "Silicon Labs Flasher"
+        mock_flasher_manager.async_get_addon_info.return_value = AddonInfo(
+            available=True,
+            hostname=None,
+            options={
+                "device": "",
+                "baudrate": 115200,
+                "bootloader_baudrate": 115200,
+                "flow_control": True,
+            },
+            state=AddonState.NOT_RUNNING,
+            update_available=False,
+            version="1.2.3",
+        )
+
+        # Pick the menu option: we skip installation, instead we directly run it
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={"next_step_id": STEP_PICK_FIRMWARE_ZIGBEE},
+        )
+        assert result["type"] is FlowResultType.SHOW_PROGRESS
+        assert result["step_id"] == "run_zigbee_flasher_addon"
+        assert result["progress_action"] == "run_zigbee_flasher_addon"
+        assert mock_flasher_manager.async_set_addon_options.mock_calls == [
+            call(
+                {
+                    "device": usb_data.device,
+                    "baudrate": 115200,
+                    "bootloader_baudrate": 115200,
+                    "flow_control": True,
+                }
+            )
+        ]
+
+        # Uninstall the addon
+        await hass.async_block_till_done(wait_background_tasks=True)
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    # Done
+    await hass.async_block_till_done(wait_background_tasks=True)
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "confirm_zigbee"
+
+
+@pytest.mark.parametrize(
+    ("usb_data", "model"),
+    [
+        (USB_DATA_SKY, "Home Assistant SkyConnect"),
+        (USB_DATA_ZBT1, "Home Assistant Connect ZBT-1"),
+    ],
+)
 async def test_config_flow_thread(
     usb_data: usb.UsbServiceInfo, model: str, hass: HomeAssistant
 ) -> None:
@@ -319,6 +417,89 @@ async def test_config_flow_thread(
         "serial_number": usb_data.serial_number,
         "vid": usb_data.vid,
     }
+
+
+@pytest.mark.parametrize(
+    ("usb_data", "model"),
+    [
+        (USB_DATA_SKY, "Home Assistant SkyConnect"),
+        (USB_DATA_ZBT1, "Home Assistant Connect ZBT-1"),
+    ],
+)
+async def test_config_flow_thread_addon_already_installed(
+    usb_data: usb.UsbServiceInfo, model: str, hass: HomeAssistant
+) -> None:
+    """Test the Thread config flow for SkyConnect, addon is already installed."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "usb"}, data=usb_data
+    )
+
+    with patch(
+        "homeassistant.components.homeassistant_sky_connect.config_flow.probe_silabs_firmware_type",
+        return_value=ApplicationType.EZSP,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+
+    mock_otbr_manager = Mock(spec_set=get_otbr_addon_manager(hass))
+    mock_otbr_manager.addon_name = "OpenThread Border Router"
+    mock_otbr_manager.async_install_addon_waiting = AsyncMock(
+        side_effect=delayed_side_effect()
+    )
+    mock_otbr_manager.async_start_addon_waiting = AsyncMock(
+        side_effect=delayed_side_effect()
+    )
+    mock_otbr_manager.async_get_addon_info.return_value = AddonInfo(
+        available=True,
+        hostname=None,
+        options={},
+        state=AddonState.NOT_RUNNING,
+        update_available=False,
+        version=None,
+    )
+
+    with (
+        patch(
+            "homeassistant.components.homeassistant_sky_connect.config_flow.get_otbr_addon_manager",
+            return_value=mock_otbr_manager,
+        ),
+        patch(
+            "homeassistant.components.homeassistant_sky_connect.config_flow.is_hassio",
+            return_value=True,
+        ),
+    ):
+        # Pick the menu option
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={"next_step_id": STEP_PICK_FIRMWARE_THREAD},
+        )
+        assert result["type"] is FlowResultType.SHOW_PROGRESS
+        assert result["step_id"] == "start_otbr_addon"
+        assert result["progress_action"] == "start_otbr_addon"
+
+        assert mock_otbr_manager.async_set_addon_options.mock_calls == [
+            call(
+                {
+                    "device": usb_data.device,
+                    "baudrate": 460800,
+                    "flow_control": True,
+                    "autoflash_firmware": True,
+                }
+            )
+        ]
+
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        # The addon is now running
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "confirm_otbr"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize(
