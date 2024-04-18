@@ -92,7 +92,7 @@ class _IconsCache:
         return {
             component: result
             for component in components
-            if (result := self._cache.get(category, {}).get(component))
+            if (result := self._cache[category].get(component))
         }
 
     async def _async_load(self, components: set[str]) -> None:
