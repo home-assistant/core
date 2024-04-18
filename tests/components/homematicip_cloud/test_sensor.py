@@ -516,7 +516,7 @@ async def test_hmip_passage_detector_delta_counter(
 async def test_hmip_esi_iec_current_power_consumption(
     hass: HomeAssistant, default_mock_hap_factory
 ) -> None:
-    """Test ESI-IEC."""
+    """Test ESI-IEC currentPowerConsumption Sensor."""
     entity_id = "sensor.esi_iec_currentPowerConsumption"
     entity_name = "esi_iec CurrentPowerConsumption"
     device_model = "HmIP-ESI"
@@ -534,7 +534,7 @@ async def test_hmip_esi_iec_current_power_consumption(
 async def test_hmip_esi_iec_energy_counter_usage_high_tariff(
     hass: HomeAssistant, default_mock_hap_factory
 ) -> None:
-    """Test ESI-IEC."""
+    """Test ESI-IEC ENERGY_COUNTER_USAGE_HIGH_TARIFF."""
     entity_id = "sensor.esi_iec_energy_counter_usage_high_tariff"
     entity_name = "esi_iec ENERGY_COUNTER_USAGE_HIGH_TARIFF"
     device_model = "HmIP-ESI"
@@ -552,7 +552,7 @@ async def test_hmip_esi_iec_energy_counter_usage_high_tariff(
 async def test_hmip_esi_iec_energy_counter_usage_low_tariff(
     hass: HomeAssistant, default_mock_hap_factory
 ) -> None:
-    """Test ESI-IEC."""
+    """Test ESI-IEC ENERGY_COUNTER_USAGE_LOW_TARIFF."""
     entity_id = "sensor.esi_iec_energy_counter_usage_low_tariff"
     entity_name = "esi_iec ENERGY_COUNTER_USAGE_LOW_TARIFF"
     device_model = "HmIP-ESI"
@@ -570,7 +570,7 @@ async def test_hmip_esi_iec_energy_counter_usage_low_tariff(
 async def test_hmip_esi_iec_energy_counter_input_single_tariff(
     hass: HomeAssistant, default_mock_hap_factory
 ) -> None:
-    """Test ESI-IEC."""
+    """Test ESI-IEC ENERGY_COUNTER_INPUT_SINGLE_TARIFF."""
     entity_id = "sensor.esi_iec_energy_counter_input_single_tariff"
     entity_name = "esi_iec ENERGY_COUNTER_INPUT_SINGLE_TARIFF"
     device_model = "HmIP-ESI"
@@ -588,7 +588,7 @@ async def test_hmip_esi_iec_energy_counter_input_single_tariff(
 async def test_hmip_esi_iec_unknown_channel(
     hass: HomeAssistant, default_mock_hap_factory
 ) -> None:
-    """Test ESI-IEC."""
+    """Test devices are loaded partially."""
     not_existing_entity_id = "sensor.esi_iec2_energy_counter_input_single_tariff"
     existing_entity_id = "sensor.esi_iec2_energy_counter_usage_high_tariff"
     await default_mock_hap_factory.async_get_mock_hap(test_devices=["esi_iec2"])
@@ -603,7 +603,7 @@ async def test_hmip_esi_iec_unknown_channel(
 async def test_hmip_esi_gas_current_gas_flow(
     hass: HomeAssistant, default_mock_hap_factory
 ) -> None:
-    """Test ESI-IEC."""
+    """Test ESI-IEC CurrentGasFlow."""
     entity_id = "sensor.esi_gas_currentgasflow"
     entity_name = "esi_gas CurrentGasFlow"
     device_model = "HmIP-ESI"
@@ -621,7 +621,7 @@ async def test_hmip_esi_gas_current_gas_flow(
 async def test_hmip_esi_gas_gas_volume(
     hass: HomeAssistant, default_mock_hap_factory
 ) -> None:
-    """Test ESI-IEC."""
+    """Test ESI-IEC GasVolume."""
     entity_id = "sensor.esi_gas_gasvolume"
     entity_name = "esi_gas GasVolume"
     device_model = "HmIP-ESI"
@@ -639,7 +639,7 @@ async def test_hmip_esi_gas_gas_volume(
 async def test_hmip_esi_gas_gas_volume_per_impulse(
     hass: HomeAssistant, default_mock_hap_factory
 ) -> None:
-    """Test ESI-IEC."""
+    """Test ESI-IEC GasVolumePerImpulse."""
     entity_id = "sensor.esi_gas_gasvolumeperimpulse"
     entity_name = "esi_gas GasVolumePerImpulse"
     device_model = "HmIP-ESI"
