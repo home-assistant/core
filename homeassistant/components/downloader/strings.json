@@ -6,7 +6,7 @@
       }
     },
     "error": {
-      "cannot_connect": "The directory could not be reached. Please check your settings."
+      "directory_does_not_exist": "The directory could not be reached. Please check your settings."
     },
     "abort": {
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"

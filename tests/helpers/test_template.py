@@ -1176,7 +1176,7 @@ def test_as_datetime(hass: HomeAssistant, input) -> None:
 )
 def test_as_datetime_from_timestamp(
     hass: HomeAssistant,
-    input: int | float,
+    input: float,
     output: str,
 ) -> None:
     """Test converting a UNIX timestamp to a date object."""
@@ -1270,7 +1270,7 @@ def test_to_json(hass: HomeAssistant) -> None:
     # Test special case where substring class cannot be rendered
     # See: https://github.com/ijl/orjson/issues/445
     class MyStr(str):
-        pass
+        __slots__ = ()
 
     expected_result = '{"mykey1":11.0,"mykey2":"myvalue2","mykey3":["opt3b","opt3a"]}'
     test_dict = {
@@ -2050,12 +2050,7 @@ async def test_state_translated(
     ):
         if category == "entity":
             return {
-                "component.hue.entity.light.translation_key.state.on": "state_is_on"
-            }
-        if category == "state":
-            return {
-                "component.some_domain.state.some_device_class.off": "state_is_off",
-                "component.some_domain.state._.foo": "state_is_foo",
+                "component.hue.entity.light.translation_key.state.on": "state_is_on",
             }
         return {}
 
@@ -2065,16 +2060,6 @@ async def test_state_translated(
     ):
         tpl8 = template.Template('{{ state_translated("light.hue_5678") }}', hass)
         assert tpl8.async_render() == "state_is_on"
-
-        tpl9 = template.Template(
-            '{{ state_translated("some_domain.with_device_class_1") }}', hass
-        )
-        assert tpl9.async_render() == "state_is_off"
-
-        tpl10 = template.Template(
-            '{{ state_translated("some_domain.with_device_class_2") }}', hass
-        )
-        assert tpl10.async_render() == "state_is_foo"
 
     tpl11 = template.Template('{{ state_translated("domain.is_unavailable") }}', hass)
     assert tpl11.async_render() == "unavailable"

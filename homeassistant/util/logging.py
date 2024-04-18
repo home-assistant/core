@@ -23,15 +23,6 @@ class HomeAssistantQueueHandler(logging.handlers.QueueHandler):
 
     listener: logging.handlers.QueueListener | None = None
 
-    def prepare(self, record: logging.LogRecord) -> logging.LogRecord:
-        """Prepare a record for queuing.
-
-        This is added as a workaround for https://bugs.python.org/issue46755
-        """
-        record = super().prepare(record)
-        record.stack_info = None
-        return record
-
     def handle(self, record: logging.LogRecord) -> Any:
         """Conditionally emit the specified logging record.
 
