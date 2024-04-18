@@ -32,6 +32,9 @@ async def test_options_flow_disabled_not_setup(
         domain=DOMAIN, data={}, options={}, unique_id=DEFAULT_ADDRESS
     )
     entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
     ws_client = await hass_ws_client(hass)
 
     await ws_client.send_json(
@@ -101,6 +104,19 @@ async def test_async_step_user_linux_one_adapter(
     )
     assert result2["data"] == {}
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_async_step_user_linux_crashed_adapter(
+    hass: HomeAssistant, crashed_adapter: None
+) -> None:
+    """Test setting up manually with one crashed adapter on Linux."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+        data={},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_adapters"
 
 
 async def test_async_step_user_linux_two_adapters(
