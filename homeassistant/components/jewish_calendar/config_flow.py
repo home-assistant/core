@@ -48,6 +48,14 @@ LANGUAGE = [
     SelectOptionDict(value="english", label="English"),
 ]
 
+OPTIONS_SCHEMA = {
+    vol.Optional(CONF_CANDLE_LIGHT_MINUTES, default=DEFAULT_CANDLE_LIGHT): int,
+    vol.Optional(
+        CONF_HAVDALAH_OFFSET_MINUTES, default=DEFAULT_HAVDALAH_OFFSET_MINUTES
+    ): int,
+}
+
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -114,19 +122,9 @@ class JewishCalendarOptionsFlowHandler(OptionsFlowWithConfigEntry):
         if user_input is not None:
             return self.async_create_entry(data=user_input)
 
-        options = {
-            vol.Optional(
-                CONF_CANDLE_LIGHT_MINUTES,
-                default=self.config_entry.options.get(
-                    CONF_CANDLE_LIGHT_MINUTES, DEFAULT_CANDLE_LIGHT
-                ),
-            ): int,
-            vol.Optional(
-                CONF_HAVDALAH_OFFSET_MINUTES,
-                default=self.config_entry.options.get(
-                    CONF_HAVDALAH_OFFSET_MINUTES, DEFAULT_HAVDALAH_OFFSET_MINUTES
-                ),
-            ): int,
-        }
-
-        return self.async_show_form(step_id="init", data_schema=vol.Schema(options))
+        return self.async_show_form(
+            step_id="init",
+            data_schema=self.add_suggested_values_to_schema(
+                OPTIONS_SCHEMA, self.config_entry.options
+            ),
+        )
