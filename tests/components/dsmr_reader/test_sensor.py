@@ -1,6 +1,9 @@
 """Tests for DSMR Reader sensor."""
 
+from collections.abc import Callable
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 from homeassistant.components.dsmr_reader.const import DOMAIN
 from homeassistant.components.dsmr_reader.definitions import (
@@ -12,9 +15,24 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 
+@pytest.mark.parametrize(
+    ("payload", "state_function", "expected_native_value"),
+    [
+        # Test when message payload is empty
+        ("", None, None),
+        # Test when entity_description.state is not None
+        ("test_payload", lambda x: x, "test_payload"),
+        # Test when entity_description.state is None
+        ("test_payload", None, "test_payload"),
+    ],
+)
 @patch("homeassistant.components.dsmr_reader.sensor.mqtt.async_subscribe")
 async def test_dsmr_sensor_async_added_to_hass(
-    mock_mqtt_subscribe, hass: HomeAssistant
+    mock_mqtt_subscribe,
+    hass: HomeAssistant,
+    payload: str,
+    state_function: Callable,
+    expected_native_value: str,
 ) -> None:
     """Test the async_added_to_hass method of the DSMRSensor class."""
     config_entry = MockConfigEntry(
@@ -34,39 +52,14 @@ async def test_dsmr_sensor_async_added_to_hass(
 
     mock_mqtt_subscribe.side_effect = lambda hass, key, callback, qos: callback(message)
     message = MagicMock()
+    message.payload = payload
 
-    # All three sensor tests are done in one test function
-    # Test when message payload is empty
-    message.payload = ""
     description = DSMRReaderSensorEntityDescription(
         key="DSMR_TEST_KEY",
         name="DSMR_TEST_NAME",
-        state=None,
+        state=state_function,
     )
     sensor = DSMRSensor(description, config_entry)
     sensor.hass = hass
     await sensor.async_added_to_hass()
-    assert sensor.native_value is None
-
-    # Test if entity_description.state is not None
-    message.payload = "test_payload"
-    description = DSMRReaderSensorEntityDescription(
-        key="DSMR_TEST_KEY",
-        name="DSMR_TEST_NAME",
-        state=lambda x: x,
-    )
-    sensor = DSMRSensor(description, config_entry)
-    sensor.hass = hass
-    await sensor.async_added_to_hass()
-    assert sensor.native_value == message.payload
-
-    # Test when entity_description.state is None
-    description = DSMRReaderSensorEntityDescription(
-        key="DSMR_TEST_KEY",
-        name="DSMR_TEST_NAME",
-        state=None,
-    )
-    sensor = DSMRSensor(description, config_entry)
-    sensor.hass = hass
-    await sensor.async_added_to_hass()
-    assert sensor.native_value == message.payload
+    assert sensor.native_value == expected_native_value
