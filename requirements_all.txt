@@ -658,7 +658,7 @@ colorthief==0.2.1
 concord232==0.15
 
 # homeassistant.components.upc_connect
-connect-box==0.2.8
+connect-box==0.3.1
 
 # homeassistant.components.xiaomi_miio
 construct==2.10.68
