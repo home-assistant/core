@@ -44,7 +44,7 @@ PLATFORMS = [
 
 
 def _construct_common_data(entry: ConfigEntry) -> IntelliFireCommonFireplaceData:
-    """Convert a config entry into IntelliFireCommonFireplaceData."""
+    """Convert config entry data into IntelliFireCommonFireplaceData."""
 
     return IntelliFireCommonFireplaceData(
         auth_cookie=entry.data[CONF_AUTH_COOKIE],
