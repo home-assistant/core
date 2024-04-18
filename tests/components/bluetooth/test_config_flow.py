@@ -32,6 +32,9 @@ async def test_options_flow_disabled_not_setup(
         domain=DOMAIN, data={}, options={}, unique_id=DEFAULT_ADDRESS
     )
     entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
     ws_client = await hass_ws_client(hass)
 
     await ws_client.send_json(
