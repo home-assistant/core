@@ -13,8 +13,6 @@ from random import randint
 import time
 from typing import TYPE_CHECKING, Any, Concatenate, Generic, ParamSpec, TypeVar
 
-import attr
-
 from homeassistant.const import (
     EVENT_CORE_CONFIG_UPDATE,
     EVENT_STATE_CHANGED,
@@ -38,6 +36,7 @@ from homeassistant.exceptions import TemplateError
 from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import run_callback_threadsafe
+from homeassistant.util.event_type import EventType
 
 from .device_registry import (
     EVENT_DEVICE_REGISTRY_UPDATED,
@@ -90,7 +89,7 @@ class _KeyedEventTracker(Generic[_TypedDictT]):
 
     listeners_key: str
     callbacks_key: str
-    event_type: str
+    event_type: EventType[_TypedDictT] | str
     dispatcher_callable: Callable[
         [
             HomeAssistant,
@@ -275,7 +274,6 @@ def async_track_state_change(
         EVENT_STATE_CHANGED,
         state_change_dispatcher,
         event_filter=state_change_filter,
-        run_immediately=False,
     )
 
 
@@ -401,9 +399,6 @@ def _async_track_event(
     if not keys:
         return _remove_empty_listener
 
-    if isinstance(keys, str):
-        keys = [keys]
-
     hass_data = hass.data
     callbacks_key = tracker.callbacks_key
 
@@ -418,16 +413,27 @@ def _async_track_event(
             tracker.event_type,
             ft.partial(tracker.dispatcher_callable, hass, callbacks),
             event_filter=ft.partial(tracker.filter_callable, hass, callbacks),
-            run_immediately=True,
         )
 
     job = HassJob(action, f"track {tracker.event_type} event {keys}", job_type=job_type)
 
-    for key in keys:
-        if callback_list := callbacks.get(key):
+    if isinstance(keys, str):
+        # Almost all calls to this function use a single key
+        # so we optimize for that case. We don't use setdefault
+        # here because this function gets called ~20000 times
+        # during startup, and we want to avoid the overhead of
+        # creating empty lists and throwing them away.
+        if callback_list := callbacks.get(keys):
             callback_list.append(job)
         else:
-            callbacks[key] = [job]
+            callbacks[keys] = [job]
+        keys = [keys]
+    else:
+        for key in keys:
+            if callback_list := callbacks.get(key):
+                callback_list.append(job)
+            else:
+                callbacks[key] = [job]
 
     return ft.partial(_remove_listener, hass, listeners_key, keys, job, callbacks)
 
@@ -1618,16 +1624,16 @@ def async_track_time_interval(
 track_time_interval = threaded_listener_factory(async_track_time_interval)
 
 
-@attr.s
+@dataclass(slots=True)
 class SunListener:
     """Helper class to help listen to sun events."""
 
-    hass: HomeAssistant = attr.ib()
-    job: HassJob[[], Coroutine[Any, Any, None] | None] = attr.ib()
-    event: str = attr.ib()
-    offset: timedelta | None = attr.ib()
-    _unsub_sun: CALLBACK_TYPE | None = attr.ib(default=None)
-    _unsub_config: CALLBACK_TYPE | None = attr.ib(default=None)
+    hass: HomeAssistant
+    job: HassJob[[], Coroutine[Any, Any, None] | None]
+    event: str
+    offset: timedelta | None
+    _unsub_sun: CALLBACK_TYPE | None = None
+    _unsub_config: CALLBACK_TYPE | None = None
 
     @callback
     def async_attach(self) -> None:
