@@ -196,12 +196,9 @@ class _TranslationCache:
         components: set[str],
     ) -> dict[str, str]:
         """Read resources from the cache."""
-        if language not in self.cache:
+        if language not in self.cache or category not in self.cache[language]:
             return {}
-        language_cache = self.cache[language]
-        if category not in language_cache:
-            return {}
-        category_cache = language_cache[category]
+        category_cache = self.cache[language][category]
         # If only one component was requested, return it directly
         # to avoid merging the dictionaries and keeping additional
         # copies of the same data in memory.
