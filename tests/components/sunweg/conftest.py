@@ -1,6 +1,7 @@
 """Conftest for SunWEG tests."""
 
 from datetime import datetime
+from unittest.mock import DEFAULT, patch
 
 import pytest
 from sunweg.device import MPPT, Inverter, Phase, String
@@ -190,3 +191,19 @@ def plant_fixture_total_power_none() -> Plant:
         0.012296,
         None,
     )
+
+
+@pytest.fixture
+def api_fixture(plant_fixture):
+    """Mock APIHelper."""
+    with patch.multiple(
+        "sunweg.api.APIHelper",
+        authenticate=DEFAULT,
+        listPlants=DEFAULT,
+        plant=DEFAULT,
+        complete_inverter=DEFAULT,
+    ) as api:
+        api["authenticate"].return_value = True
+        api["listPlants"].return_value = [plant_fixture]
+        api["plant"].return_value = plant_fixture
+        yield api
