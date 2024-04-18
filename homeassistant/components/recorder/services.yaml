@@ -22,21 +22,19 @@ purge:
 purge_entities:
   fields:
     entity_id:
-      required: true
+      required: false
       selector:
         entity:
           multiple: true
     domains:
       example: "sun"
       required: false
-      default: []
       selector:
         object:
 
     entity_globs:
       example: "domain*.object_id*"
       required: false
-      default: []
       selector:
         object:
 

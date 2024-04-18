@@ -36,15 +36,27 @@ SERVICE_PURGE_SCHEMA = vol.Schema(
 ATTR_DOMAINS = "domains"
 ATTR_ENTITY_GLOBS = "entity_globs"
 
-SERVICE_PURGE_ENTITIES_SCHEMA = vol.Schema(
-    {
-        vol.Optional(ATTR_ENTITY_ID, default=[]): cv.entity_ids,
-        vol.Optional(ATTR_DOMAINS, default=[]): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(ATTR_ENTITY_GLOBS, default=[]): vol.All(
-            cv.ensure_list, [cv.string]
+SERVICE_PURGE_ENTITIES_SCHEMA = vol.All(
+    vol.Schema(
+        {
+            vol.Optional(ATTR_ENTITY_ID, default=[]): cv.entity_ids,
+            vol.Optional(ATTR_DOMAINS, default=[]): vol.All(
+                cv.ensure_list, [cv.string]
+            ),
+            vol.Optional(ATTR_ENTITY_GLOBS, default=[]): vol.All(
+                cv.ensure_list, [cv.string]
+            ),
+            vol.Optional(ATTR_KEEP_DAYS, default=0): cv.positive_int,
+        }
+    ),
+    vol.Any(
+        vol.Schema({vol.Required(ATTR_ENTITY_ID): vol.IsTrue()}, extra=vol.ALLOW_EXTRA),
+        vol.Schema({vol.Required(ATTR_DOMAINS): vol.IsTrue()}, extra=vol.ALLOW_EXTRA),
+        vol.Schema(
+            {vol.Required(ATTR_ENTITY_GLOBS): vol.IsTrue()}, extra=vol.ALLOW_EXTRA
         ),
-        vol.Optional(ATTR_KEEP_DAYS, default=0): cv.positive_int,
-    }
+        msg="At least one of entity_id, domains, or entity_globs must have a value",
+    ),
 )
 
 SERVICE_ENABLE_SCHEMA = vol.Schema({})
