@@ -976,6 +976,8 @@ class Integration:
                 comp = await self.hass.async_add_import_executor_job(
                     self._get_component, True
                 )
+            except ModuleNotFoundError:
+                raise
             except ImportError as ex:
                 load_executor = False
                 _LOGGER.debug(
@@ -1115,6 +1117,8 @@ class Integration:
                                 self._load_platforms, platform_names
                             )
                         )
+                    except ModuleNotFoundError:
+                        raise
                     except ImportError as ex:
                         _LOGGER.debug(
                             "Failed to import %s platforms %s in executor",

@@ -14,7 +14,6 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Generator
-from http import HTTPStatus
 import logging
 import threading
 from unittest.mock import Mock, patch
@@ -87,6 +86,17 @@ class HLSSync:
         self._num_recvs = 0
         self._num_finished = 0
 
+        def on_resp():
+            self._num_finished += 1
+            self.check_requests_ready()
+
+        class SyncResponse(web.Response):
+            def __init__(self, *args, **kwargs) -> None:
+                super().__init__(*args, **kwargs)
+                on_resp()
+
+        self.response = SyncResponse
+
     def reset_request_pool(self, num_requests: int, reset_finished=True):
         """Use to reset the request counter between segments."""
         self._num_recvs = 0
@@ -119,12 +129,6 @@ class HLSSync:
         self._num_finished += 1
         self.check_requests_ready()
         return self._original_not_found()
-
-    def response(self, body, headers=None, status=HTTPStatus.OK):
-        """Intercept the Response call so we know when the web handler is finished."""
-        self._num_finished += 1
-        self.check_requests_ready()
-        return self._original_response(body=body, headers=headers, status=status)
 
     async def recv(self, output: StreamOutput, **kw):
         """Intercept the recv call so we know when the response is blocking on recv."""
@@ -164,7 +168,7 @@ def hls_sync():
         ),
         patch(
             "homeassistant.components.stream.hls.web.Response",
-            side_effect=sync.response,
+            new=sync.response,
         ),
     ):
         yield sync
