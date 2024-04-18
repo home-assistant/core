@@ -46,6 +46,21 @@
       ]
     },
     {
+      // Debug by attaching to local Home Assistant server using Remote Python Debugger.
+      // See https://www.home-assistant.io/integrations/debugpy/
+      "name": "Home Assistant: vscodedebug",
+      "type": "python",
+      "request": "attach",
+      "port": 10001,
+      "host": "localhost",
+      "pathMappings": [
+        {
+          "localRoot": "${workspaceFolder}",
+          "remoteRoot": "."
+        }
+      ]
+    },
+    {
       // Debug by attaching to remote Home Assistant server using Remote Python Debugger.
       // See https://www.home-assistant.io/integrations/debugpy/
       "name": "Home Assistant: Attach Remote",
