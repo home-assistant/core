@@ -127,6 +127,10 @@ def setup_coordinator(
 
     if coordinator.data is not None:
         _async_sensor_listener()
+    # It is possible that we don't have any data, but the device exists,
+    # i.e. slow network, offline device, etc.
+    # We want to set up sensors after the fact as we don't know what sensors
+    # are valid until runtime.
     coordinator.async_add_listener(_async_sensor_listener)
 
 
