@@ -219,7 +219,7 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         if hvac_mode not in self.hvac_modes:
-            raise ValueError(f"Unsupported hvac mode: {hvac_mode}")
+            return
 
         if hvac_mode == HVACMode.AUTO:
             await self._device.set_control_mode(HMIP_AUTOMATIC_CM)

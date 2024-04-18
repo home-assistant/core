@@ -218,13 +218,12 @@ async def test_hmip_heating_group_heat(
     assert ha_state.state == HVACMode.AUTO
 
     # hvac mode "dry" is not available. expect a valueerror.
-    with pytest.raises(ValueError):
-        await hass.services.async_call(
-            "climate",
-            "set_hvac_mode",
-            {"entity_id": entity_id, "hvac_mode": "dry"},
-            blocking=True,
-        )
+    await hass.services.async_call(
+        "climate",
+        "set_hvac_mode",
+        {"entity_id": entity_id, "hvac_mode": "dry"},
+        blocking=True,
+    )
 
     assert len(hmip_device.mock_calls) == service_call_counter + 24
     # Only fire event from last async_manipulate_test_data available.
