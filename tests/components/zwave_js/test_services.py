@@ -2084,7 +2084,7 @@ async def test_invoke_cc_api(
     # Test successful invoke_cc_api call without an endpoint (include label)
     label_reg = async_get_label_reg(hass)
     label = label_reg.async_create("test")
-    dev_reg.async_update_device(device_danfoss.id, labels=label.label_id)
+    dev_reg.async_update_device(device_danfoss.id, labels={label.label_id})
 
     client.async_send_command.return_value = {"response": True}
     client.async_send_command_no_wait.return_value = {"response": True}
@@ -2093,7 +2093,7 @@ async def test_invoke_cc_api(
         DOMAIN,
         SERVICE_INVOKE_CC_API,
         {
-            ATTR_LABEL_ID: label.label_id,
+            ATTR_LABEL_ID: [label.label_id],
             ATTR_DEVICE_ID: [
                 device_radio_thermostat.id,
                 "fake_device_id",
