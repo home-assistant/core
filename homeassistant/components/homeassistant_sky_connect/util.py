@@ -85,6 +85,7 @@ class FirmwareGuess:
 
     is_running: bool
     firmware_type: ApplicationType
+    source: str
 
 
 async def guess_firmware_type(hass: HomeAssistant, device_path: str) -> FirmwareGuess:
@@ -97,6 +98,7 @@ async def guess_firmware_type(hass: HomeAssistant, device_path: str) -> Firmware
             FirmwareGuess(
                 is_running=(zha_config_entry.state == ConfigEntryState.LOADED),
                 firmware_type=ApplicationType.EZSP,
+                source="zha",
             )
         )
 
@@ -114,6 +116,7 @@ async def guess_firmware_type(hass: HomeAssistant, device_path: str) -> Firmware
                     FirmwareGuess(
                         is_running=(otbr_addon_info.state == AddonState.RUNNING),
                         firmware_type=ApplicationType.SPINEL,
+                        source="otbr",
                     )
                 )
 
@@ -130,12 +133,15 @@ async def guess_firmware_type(hass: HomeAssistant, device_path: str) -> Firmware
                     FirmwareGuess(
                         is_running=(multipan_addon_info.state == AddonState.RUNNING),
                         firmware_type=ApplicationType.CPC,
+                        source="multiprotocol",
                     )
                 )
 
     # Fall back to EZSP if we can't guess the firmware type
     if device_path not in device_guesses:
-        return FirmwareGuess(is_running=False, firmware_type=ApplicationType.EZSP)
+        return FirmwareGuess(
+            is_running=False, firmware_type=ApplicationType.EZSP, source="unknown"
+        )
 
     # Prioritizes guesses that were pulled from a running addon or integration but keep
     # the sort order we defined above

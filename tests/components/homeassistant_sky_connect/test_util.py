@@ -98,7 +98,7 @@ async def test_guess_firmware_type_unknown(hass: HomeAssistant) -> None:
     """Test guessing the firmware type."""
 
     assert (await guess_firmware_type(hass, "/dev/missing")) == FirmwareGuess(
-        is_running=False, firmware_type=ApplicationType.EZSP
+        is_running=False, firmware_type=ApplicationType.EZSP, source="unknown"
     )
 
 
@@ -141,7 +141,7 @@ async def test_guess_firmware_type(hass: HomeAssistant) -> None:
 
         # Hassio errors are ignored and we still go with ZHA
         assert (await guess_firmware_type(hass, path)) == FirmwareGuess(
-            is_running=True, firmware_type=ApplicationType.EZSP
+            is_running=True, firmware_type=ApplicationType.EZSP, source="zha"
         )
 
         mock_otbr_addon_manager.async_get_addon_info.side_effect = None
@@ -156,7 +156,7 @@ async def test_guess_firmware_type(hass: HomeAssistant) -> None:
 
         # We will prefer ZHA, as it is running (and actually pointing to the device)
         assert (await guess_firmware_type(hass, path)) == FirmwareGuess(
-            is_running=True, firmware_type=ApplicationType.EZSP
+            is_running=True, firmware_type=ApplicationType.EZSP, source="zha"
         )
 
         mock_otbr_addon_manager.async_get_addon_info.return_value = AddonInfo(
@@ -170,7 +170,7 @@ async def test_guess_firmware_type(hass: HomeAssistant) -> None:
 
         # We will still prefer ZHA, as it is the one actually running
         assert (await guess_firmware_type(hass, path)) == FirmwareGuess(
-            is_running=True, firmware_type=ApplicationType.EZSP
+            is_running=True, firmware_type=ApplicationType.EZSP, source="zha"
         )
 
         mock_otbr_addon_manager.async_get_addon_info.return_value = AddonInfo(
@@ -184,7 +184,7 @@ async def test_guess_firmware_type(hass: HomeAssistant) -> None:
 
         # Finally, ZHA loses out to OTBR
         assert (await guess_firmware_type(hass, path)) == FirmwareGuess(
-            is_running=True, firmware_type=ApplicationType.SPINEL
+            is_running=True, firmware_type=ApplicationType.SPINEL, source="otbr"
         )
 
         mock_multipan_addon_manager.async_get_addon_info.side_effect = None
@@ -199,5 +199,5 @@ async def test_guess_firmware_type(hass: HomeAssistant) -> None:
 
         # Which will lose out to multi-PAN
         assert (await guess_firmware_type(hass, path)) == FirmwareGuess(
-            is_running=True, firmware_type=ApplicationType.CPC
+            is_running=True, firmware_type=ApplicationType.CPC, source="multipan"
         )
