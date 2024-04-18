@@ -80,8 +80,6 @@ class EsphomeValve(EsphomeEntity[ValveInfo, ValveState], ValveEntity):
     @esphome_state_property
     def current_valve_position(self) -> int | None:
         """Return current position of valve. 0 is closed, 100 is open."""
-        if not self._static_info.supports_position:
-            return None
         return round(self._state.position * 100.0)
 
     @convert_api_error_ha_error

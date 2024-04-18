@@ -158,7 +158,7 @@ async def test_valve_entity_without_position(
         )
     ]
     user_service = []
-    await mock_esphome_device(
+    mock_device = await mock_esphome_device(
         mock_client=mock_client,
         entity_info=entity_info,
         user_service=user_service,
@@ -168,3 +168,29 @@ async def test_valve_entity_without_position(
     assert state is not None
     assert state.state == STATE_OPENING
     assert ATTR_CURRENT_POSITION not in state.attributes
+
+    await hass.services.async_call(
+        VALVE_DOMAIN,
+        SERVICE_CLOSE_VALVE,
+        {ATTR_ENTITY_ID: "valve.test_myvalve"},
+        blocking=True,
+    )
+    mock_client.valve_command.assert_has_calls([call(key=1, position=0.0)])
+    mock_client.valve_command.reset_mock()
+
+    await hass.services.async_call(
+        VALVE_DOMAIN,
+        SERVICE_OPEN_VALVE,
+        {ATTR_ENTITY_ID: "valve.test_myvalve"},
+        blocking=True,
+    )
+    mock_client.valve_command.assert_has_calls([call(key=1, position=1.0)])
+    mock_client.valve_command.reset_mock()
+
+    mock_device.set_state(
+        ValveState(key=1, position=0.0, current_operation=ValveOperation.IDLE)
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get("valve.test_myvalve")
+    assert state is not None
+    assert state.state == STATE_CLOSED
