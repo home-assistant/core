@@ -90,10 +90,9 @@ class HassAqualinkThermostat(AqualinkEntity, ClimateEntity):
         state = AqualinkState(self.dev._heater.state)
         if state == AqualinkState.ON:
             return HVACAction.HEATING
-        elif state == AqualinkState.ENABLED:
+        if state == AqualinkState.ENABLED:
             return HVACAction.IDLE
-        else:
-            return HVACAction.OFF
+        return HVACAction.OFF
 
     @property
     def target_temperature(self) -> float:
