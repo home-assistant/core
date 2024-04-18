@@ -494,7 +494,7 @@ bluemaestro-ble==0.2.3
 bluetooth-adapters==0.18.0
 
 # homeassistant.components.bluetooth
-bluetooth-auto-recovery==1.4.0
+bluetooth-auto-recovery==1.4.1
 
 # homeassistant.components.bluetooth
 # homeassistant.components.ld2410_ble
@@ -843,7 +843,7 @@ ha-philipsjs==3.1.1
 habitipy==0.2.0
 
 # homeassistant.components.bluetooth
-habluetooth==2.7.0
+habluetooth==2.8.0
 
 # homeassistant.components.cloud
 hass-nabucasa==0.78.0

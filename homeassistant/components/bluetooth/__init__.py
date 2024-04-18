@@ -53,7 +53,6 @@ from homeassistant.loader import async_get_bluetooth
 
 from . import models, passive_update_processor
 from .api import (
-    _get_manager,
     async_address_present,
     async_ble_device_from_address,
     async_discovered_service_info,
@@ -128,13 +127,6 @@ __all__ = [
 _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
-
-
-async def _async_get_adapter_from_address(
-    hass: HomeAssistant, address: str
-) -> str | None:
-    """Get an adapter by the address."""
-    return await _get_manager(hass).async_get_adapter_from_address(address)
 
 
 async def _async_start_adapter_discovery(
@@ -321,17 +313,16 @@ async def async_update_device(
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry for a bluetooth scanner."""
+    manager: HomeAssistantBluetoothManager = hass.data[DATA_MANAGER]
     address = entry.unique_id
     assert address is not None
-    adapter = await _async_get_adapter_from_address(hass, address)
+    adapter = await manager.async_get_adapter_from_address_or_recover(address)
     if adapter is None:
         raise ConfigEntryNotReady(
             f"Bluetooth adapter {adapter} with address {address} not found"
         )
-
     passive = entry.options.get(CONF_PASSIVE)
     mode = BluetoothScanningMode.PASSIVE if passive else BluetoothScanningMode.ACTIVE
-    manager: HomeAssistantBluetoothManager = hass.data[DATA_MANAGER]
     scanner = HaScanner(mode, adapter, address)
     scanner.async_setup()
     try:
