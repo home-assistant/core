@@ -265,13 +265,18 @@ async def async_discover_adapters(
     adapters: dict[str, AdapterDetails],
 ) -> None:
     """Discover adapters and start flows."""
-    if platform.system() == "Windows":
+    system = platform.system()
+    if system == "Windows":
         # We currently do not have a good way to detect if a bluetooth device is
         # available on Windows. We will just assume that it is not unless they
         # actively add it.
         return
 
     for adapter, details in adapters.items():
+        if system == "Linux" and details[ADAPTER_ADDRESS] == DEFAULT_ADDRESS:
+            # If an adapter is in a crashed state its address will be the default
+            # address so we should not try to start a flow for it.
+            continue
         discovery_flow.async_create_flow(
             hass,
             DOMAIN,
