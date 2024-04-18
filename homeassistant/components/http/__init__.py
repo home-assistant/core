@@ -69,6 +69,7 @@ from homeassistant.util.json import json_loads
 from .auth import async_setup_auth, async_sign_path
 from .ban import setup_bans
 from .const import (  # noqa: F401
+    DOMAIN,
     KEY_HASS_REFRESH_TOKEN_ID,
     KEY_HASS_USER,
     StrictConnectionMode,
@@ -81,8 +82,6 @@ from .request_context import setup_request_context
 from .security_filter import setup_security_filter
 from .static import CACHE_HEADERS, CachingStaticResource
 from .web_runner import HomeAssistantTCPSite
-
-DOMAIN: Final = "http"
 
 CONF_SERVER_HOST: Final = "server_host"
 CONF_SERVER_PORT: Final = "server_port"
@@ -149,7 +148,7 @@ HTTP_SCHEMA: Final = vol.All(
             vol.Optional(CONF_USE_X_FRAME_OPTIONS, default=True): cv.boolean,
             vol.Optional(
                 CONF_STRICT_CONNECTION, default=StrictConnectionMode.DISABLED
-            ): vol.In([e.value for e in StrictConnectionMode]),
+            ): vol.Coerce(StrictConnectionMode),
         }
     ),
 )

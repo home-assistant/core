@@ -25,6 +25,7 @@ from homeassistant.auth.const import GROUP_ID_READ_ONLY
 from homeassistant.auth.models import User
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import singleton
 from homeassistant.helpers.http import current_request
 from homeassistant.helpers.json import json_bytes
 from homeassistant.helpers.network import is_cloud_connection
@@ -32,6 +33,7 @@ from homeassistant.helpers.storage import Store
 from homeassistant.util.network import is_local
 
 from .const import (
+    DOMAIN,
     KEY_AUTHENTICATED,
     KEY_HASS_REFRESH_TOKEN_ID,
     KEY_HASS_USER,
@@ -50,9 +52,7 @@ STORAGE_VERSION = 1
 STORAGE_KEY = "http.auth"
 CONTENT_USER_NAME = "Home Assistant Content"
 STRICT_CONNECTION_EXCLUDED_PATH = "/api/webhook/"
-STRICT_CONNECTION_STATIC_PAGE = os.path.join(
-    os.path.dirname(__file__), "strict_connection_static_page.html"
-)
+STRICT_CONNECTION_STATIC_PAGE = "strict_connection_static_page"
 
 
 @callback
@@ -156,16 +156,10 @@ async def async_setup_auth(
         await store.async_save(data)
 
     hass.data[STORAGE_KEY] = refresh_token.id
-    strict_connection_static_file_content = None
+
     if strict_connection_mode_non_cloud is StrictConnectionMode.STATIC_PAGE:
-
-        def read_static_page() -> str:
-            with open(STRICT_CONNECTION_STATIC_PAGE, encoding="utf-8") as file:
-                return file.read()
-
-        strict_connection_static_file_content = await hass.async_add_executor_job(
-            read_static_page
-        )
+        # Load the static page content on setup
+        await _read_strict_connection_static_page(hass)
 
     @callback
     def async_validate_auth_header(request: Request) -> bool:
@@ -255,21 +249,36 @@ async def async_setup_auth(
             authenticated = True
             auth_type = "signed request"
 
-        if (
-            not authenticated
-            and strict_connection_mode_non_cloud is not StrictConnectionMode.DISABLED
-            and not request.path.startswith(STRICT_CONNECTION_EXCLUDED_PATH)
-            and not await hass.auth.session.async_validate_request_for_strict_connection_session(
-                request
-            )
-            and (
-                resp := _async_perform_action_on_non_local(
-                    request, strict_connection_static_file_content
-                )
-            )
-            is not None
+        if not authenticated and not request.path.startswith(
+            STRICT_CONNECTION_EXCLUDED_PATH
         ):
-            return resp
+            strict_connection_mode = strict_connection_mode_non_cloud
+            strict_connection_func = (
+                _async_perform_strict_connection_action_on_non_local
+            )
+            if is_cloud_connection(hass):
+                from homeassistant.components.cloud.util import (  # pylint: disable=import-outside-toplevel
+                    get_strict_connection_mode,
+                )
+
+                strict_connection_mode = get_strict_connection_mode(hass)
+                strict_connection_func = _async_perform_strict_connection_action
+
+            if (
+                strict_connection_mode is not StrictConnectionMode.DISABLED
+                and not await hass.auth.session.async_validate_request_for_strict_connection_session(
+                    request
+                )
+                and (
+                    resp := await strict_connection_func(
+                        hass,
+                        request,
+                        strict_connection_mode is StrictConnectionMode.STATIC_PAGE,
+                    )
+                )
+                is not None
+            ):
+                return resp
 
         if authenticated and _LOGGER.isEnabledFor(logging.DEBUG):
             _LOGGER.debug(
@@ -286,17 +295,17 @@ async def async_setup_auth(
     app.middlewares.append(auth_middleware)
 
 
-@callback
-def _async_perform_action_on_non_local(
+async def _async_perform_strict_connection_action_on_non_local(
+    hass: HomeAssistant,
     request: Request,
-    strict_connection_static_file_content: str | None,
+    static_page: bool,
 ) -> StreamResponse | None:
     """Perform strict connection mode action if the request is not local.
 
     The function does the following:
     - Try to get the IP address of the request. If it fails, assume it's not local
     - If the request is local, return None (allow the request to continue)
-    - If strict_connection_static_file_content is set, return a response with the content
+    - If static_page is True, return a response with the content
     - Otherwise close the connection and raise an exception
     """
     try:
@@ -308,10 +317,25 @@ def _async_perform_action_on_non_local(
     if ip_address_ and is_local(ip_address_):
         return None
 
-    _LOGGER.debug("Perform strict connection action for %s", ip_address_)
-    if strict_connection_static_file_content:
+    return await _async_perform_strict_connection_action(hass, request, static_page)
+
+
+async def _async_perform_strict_connection_action(
+    hass: HomeAssistant,
+    request: Request,
+    static_page: bool,
+) -> StreamResponse | None:
+    """Perform strict connection mode action.
+
+    The function does the following:
+    - If static_page is True, return a response with the content
+    - Otherwise close the connection and raise an exception
+    """
+
+    _LOGGER.debug("Perform strict connection action for %s", request.remote)
+    if static_page:
         return Response(
-            text=strict_connection_static_file_content,
+            text=await _read_strict_connection_static_page(hass),
             content_type="text/html",
             status=HTTPStatus.IM_A_TEAPOT,
         )
@@ -322,3 +346,17 @@ def _async_perform_action_on_non_local(
 
     # We need to raise an exception to stop processing the request
     raise HTTPBadRequest
+
+
+@singleton.singleton(f"{DOMAIN}_{STRICT_CONNECTION_STATIC_PAGE}")
+async def _read_strict_connection_static_page(hass: HomeAssistant) -> str:
+    """Read the strict connection static page from disk via executor."""
+    name = os.path.join(
+        os.path.dirname(__file__), f"{STRICT_CONNECTION_STATIC_PAGE}.html"
+    )
+
+    def read_static_page() -> str:
+        with open(name, encoding="utf-8") as file:
+            return file.read()
+
+    return await hass.async_add_executor_job(read_static_page)
