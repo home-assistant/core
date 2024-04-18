@@ -22,7 +22,7 @@ async def test_format_unix_timestamp(
     hass: HomeAssistant,
 ) -> None:
     """Test the format_unix_timestamp function."""
-    assert format_unix_timestamp(1640995200) == "2022-01-01T00:00:00+0000"
+    assert format_unix_timestamp(1640995200) == "2022-01-01T00:00:00+00:00"
 
 
 async def test_format_progress(
@@ -60,7 +60,7 @@ async def test_format_torrents(
     expected_result = {
         "torrent1": {
             "id": "hash1",
-            "added_date": "2022-01-01T00:00:00+0000",
+            "added_date": "2022-01-01T00:00:00+00:00",
             "percent_done": "50.00",
             "status": "paused",
             "eta": "24:00:00",
@@ -68,7 +68,7 @@ async def test_format_torrents(
         },
         "torrent2": {
             "id": "hash1",
-            "added_date": "2022-01-01T00:00:00+0000",
+            "added_date": "2022-01-01T00:00:00+00:00",
             "percent_done": "50.00",
             "status": "paused",
             "eta": "24:00:00",
@@ -96,7 +96,7 @@ async def test_format_torrent(
 
     expected_result = {
         "id": "hash1",
-        "added_date": "2022-01-01T00:00:00+0000",
+        "added_date": "2022-01-01T00:00:00+00:00",
         "percent_done": "50.00",
         "status": "paused",
         "eta": "24:00:00",
