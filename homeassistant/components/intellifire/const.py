@@ -19,3 +19,6 @@ CONF_CONTROL_MODE = "cloud_control"
 
 API_MODE_LOCAL = "local"
 API_MODE_CLOUD = "cloud"
+
+
+STARTUP_TIMEOUT = 600

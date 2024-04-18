@@ -29,6 +29,7 @@ from .const import (
     CONF_WEB_CLIENT_ID,
     DOMAIN,
     LOGGER,
+    STARTUP_TIMEOUT,
 )
 from .coordinator import IntellifireDataUpdateCoordinator
 
@@ -133,8 +134,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 _construct_common_data(entry)
             )
         )
-        LOGGER.info("Waiting for Fireplace to Initialized")
-        await asyncio.wait_for(_async_wait_for_initialization(fireplace), timeout=600)
+        LOGGER.info("Waiting for Fireplace to Initialize")
+        await asyncio.wait_for(
+            _async_wait_for_initialization(fireplace), timeout=STARTUP_TIMEOUT
+        )
     except TimeoutError as err:
         raise ConfigEntryNotReady(
             "Initialization of fireplace timed out after 10 minutes"
@@ -145,7 +148,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass=hass, fireplace=fireplace
     )
 
-    LOGGER.info("Await first refresh")
+    LOGGER.info("Fireplace to Initialized - Awaiting first refresh")
     await data_update_coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = data_update_coordinator
@@ -155,7 +158,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def _async_wait_for_initialization(fireplace, timeout=600):
+async def _async_wait_for_initialization(fireplace, timeout=STARTUP_TIMEOUT):
     """Wait for a fireplace to be initialized."""
     while (
         fireplace.data.ipv4_address == "127.0.0.1" and fireplace.data.serial == "unset"
