@@ -151,6 +151,10 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Pick Zigbee firmware."""
+        # Allow the stick to be used with ZHA without flashing
+        if self._probed_firmware_type == ApplicationType.EZSP:
+            return await self.async_step_confirm_zigbee()
+
         if not is_hassio(self.hass):
             return self.async_abort(
                 reason="not_hassio",
