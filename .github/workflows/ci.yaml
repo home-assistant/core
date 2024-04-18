@@ -33,7 +33,7 @@ on:
         type: boolean
 
 env:
-  CACHE_VERSION: 5
+  CACHE_VERSION: 7
   UV_CACHE_VERSION: 1
   MYPY_CACHE_VERSION: 8
   HA_SHORT_VERSION: "2024.5"
@@ -94,7 +94,8 @@ jobs:
         id: generate_python_cache_key
         run: >-
           echo "key=venv-${{ env.CACHE_VERSION }}-${{
-            hashFiles('requirements_test.txt') }}-${{
+            hashFiles('requirements_test.txt', 'requirements_test_pre_commit.txt') }}-${{
+            hashFiles('requirements.txt') }}-${{
             hashFiles('requirements_all.txt') }}-${{
             hashFiles('homeassistant/package_constraints.txt') }}" >> $GITHUB_OUTPUT
       - name: Generate partial pre-commit restore key
@@ -484,6 +485,7 @@ jobs:
             libavfilter-dev \
             libavformat-dev \
             libavutil-dev \
+            libgammu-dev \
             libswresample-dev \
             libswscale-dev \
             libudev-dev
@@ -496,6 +498,7 @@ jobs:
           pip install "$(grep '^uv' < requirements_test.txt)"
           uv pip install -U "pip>=21.3.1" setuptools wheel
           uv pip install -r requirements_all.txt
+          uv pip install "$(grep 'python-gammu' < requirements_all.txt | sed -e 's|# python-gammu|python-gammu|g')"
           uv pip install -r requirements_test.txt
           uv pip install -e . --config-settings editable_mode=compat
 
@@ -688,7 +691,8 @@ jobs:
           sudo apt-get update
           sudo apt-get -y install \
             bluez \
-            ffmpeg
+            ffmpeg \
+            libgammu-dev
       - name: Check out code from GitHub
         uses: actions/checkout@v4.1.2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
@@ -747,7 +751,8 @@ jobs:
           sudo apt-get update
           sudo apt-get -y install \
             bluez \
-            ffmpeg
+            ffmpeg \
+            libgammu-dev
       - name: Check out code from GitHub
         uses: actions/checkout@v4.1.2
       - name: Set up Python ${{ matrix.python-version }}
@@ -1086,27 +1091,13 @@ jobs:
         uses: actions/download-artifact@v4.1.4
         with:
           pattern: coverage-*
-      - name: Upload coverage to Codecov (full coverage)
+      - name: Upload coverage to Codecov
         if: needs.info.outputs.test_full_suite == 'true'
-        uses: Wandalen/wretry.action@v3.1.0
+        uses: codecov/codecov-action@v4.3.0
         with:
-          action: codecov/codecov-action@v4.3.0
-          with: |
-            fail_ci_if_error: true
-            flags: full-suite
-            token: ${{ env.CODECOV_TOKEN }}
-          attempt_limit: 5
-          attempt_delay: 30000
-      - name: Upload coverage to Codecov (partial coverage)
-        if: needs.info.outputs.test_full_suite == 'false'
-        uses: Wandalen/wretry.action@v3.1.0
-        with:
-          action: codecov/codecov-action@v4.3.0
-          with: |
-            fail_ci_if_error: true
-            token: ${{ env.CODECOV_TOKEN }}
-          attempt_limit: 5
-          attempt_delay: 30000
+          fail_ci_if_error: true
+          flags: full-suite
+          token: ${{ secrets.CODECOV_TOKEN }}
 
   pytest-partial:
     runs-on: ubuntu-22.04
@@ -1138,7 +1129,8 @@ jobs:
           sudo apt-get update
           sudo apt-get -y install \
             bluez \
-            ffmpeg
+            ffmpeg \
+            libgammu-dev
       - name: Check out code from GitHub
         uses: actions/checkout@v4.1.2
       - name: Set up Python ${{ matrix.python-version }}
@@ -1232,24 +1224,9 @@ jobs:
         uses: actions/download-artifact@v4.1.4
         with:
           pattern: coverage-*
-      - name: Upload coverage to Codecov (full coverage)
-        if: needs.info.outputs.test_full_suite == 'true'
-        uses: Wandalen/wretry.action@v3.1.0
-        with:
-          action: codecov/codecov-action@v4.3.0
-          with: |
-            fail_ci_if_error: true
-            flags: full-suite
-            token: ${{ env.CODECOV_TOKEN }}
-          attempt_limit: 5
-          attempt_delay: 30000
-      - name: Upload coverage to Codecov (partial coverage)
+      - name: Upload coverage to Codecov
         if: needs.info.outputs.test_full_suite == 'false'
-        uses: Wandalen/wretry.action@v3.1.0
+        uses: codecov/codecov-action@v4.3.0
         with:
-          action: codecov/codecov-action@v4.3.0
-          with: |
-            fail_ci_if_error: true
-            token: ${{ env.CODECOV_TOKEN }}
-          attempt_limit: 5
-          attempt_delay: 30000
+          fail_ci_if_error: true
+          token: ${{ secrets.CODECOV_TOKEN }}
