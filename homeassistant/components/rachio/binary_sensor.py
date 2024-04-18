@@ -164,8 +164,7 @@ class RachioHoseTimerBattery(RachioHoseTimerEntity, BinarySensorEntity):
         """Initialize a smart hose timer battery sensor."""
         super().__init__(data, coordinator)
         self._attr_unique_id = f"{self.id}-battery"
-        self._static_attrs = data[KEY_STATE][KEY_REPORTED_STATE]
-        self._attr_is_on = self._static_attrs[KEY_BATTERY_STATUS] == KEY_LOW
+        self._update_attr()
 
     @callback
     def _update_attr(self) -> None:
