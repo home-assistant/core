@@ -286,8 +286,9 @@ async def async_discover_adapters(
 
     for adapter, details in adapters.items():
         if system == "Linux" and details[ADAPTER_ADDRESS] == DEFAULT_ADDRESS:
-            # If an adapter is in a crashed state its address will be the default
-            # address so we should not try to start a flow for it.
+            # DEFAULT_ADDRESS is perfectly valid on MacOS but on
+            # Linux it means the adapter is not yet configured
+            # or crashed so we should not try to start a flow for it.
             continue
         discovery_flow.async_create_flow(
             hass,
