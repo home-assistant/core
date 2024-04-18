@@ -2902,6 +2902,16 @@ async def test_auto_detect_bluetooth_adapters_linux_multiple(
     assert len(hass.config_entries.flow.async_progress(bluetooth.DOMAIN)) == 2
 
 
+async def test_auto_detect_bluetooth_adapters_skips_crashed(
+    hass: HomeAssistant, crashed_adapter: None
+) -> None:
+    """Test we skip crashed adapters on linux."""
+    assert await async_setup_component(hass, bluetooth.DOMAIN, {})
+    await hass.async_block_till_done()
+    assert not hass.config_entries.async_entries(bluetooth.DOMAIN)
+    assert len(hass.config_entries.flow.async_progress(bluetooth.DOMAIN)) == 0
+
+
 async def test_auto_detect_bluetooth_adapters_linux_none_found(
     hass: HomeAssistant,
 ) -> None:
