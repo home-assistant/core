@@ -44,11 +44,8 @@ async def test_dsmr_sensor_async_added_to_hass(
     )
     config_entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.dsmr_reader.async_setup_entry", return_value=True
-    ):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
 
     mock_mqtt_subscribe.side_effect = lambda hass, key, callback, qos: callback(message)
     message = MagicMock()
