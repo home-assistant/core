@@ -164,7 +164,6 @@ class RachioHoseTimerBattery(RachioHoseTimerEntity, BinarySensorEntity):
         """Initialize a smart hose timer battery sensor."""
         super().__init__(data, coordinator)
         self._attr_unique_id = f"{self.id}-battery"
-        self._update_attr()
 
     @callback
     def _update_attr(self) -> None:
