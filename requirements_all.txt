@@ -464,7 +464,7 @@ aranet4==2.3.3
 arcam-fmj==1.4.0
 
 # homeassistant.components.arris_tg2492lg
-arris-tg2492lg==1.2.1
+arris-tg2492lg==2.2.0
 
 # homeassistant.components.ampio
 asmog==0.0.6
@@ -579,7 +579,7 @@ bluemaestro-ble==0.2.3
 bluetooth-adapters==0.18.0
 
 # homeassistant.components.bluetooth
-bluetooth-auto-recovery==1.4.0
+bluetooth-auto-recovery==1.4.1
 
 # homeassistant.components.bluetooth
 # homeassistant.components.ld2410_ble
@@ -658,7 +658,7 @@ colorthief==0.2.1
 concord232==0.15
 
 # homeassistant.components.upc_connect
-connect-box==0.2.8
+connect-box==0.3.1
 
 # homeassistant.components.xiaomi_miio
 construct==2.10.68
@@ -1029,7 +1029,7 @@ ha-philipsjs==3.1.1
 habitipy==0.2.0
 
 # homeassistant.components.bluetooth
-habluetooth==2.6.0
+habluetooth==2.7.0
 
 # homeassistant.components.cloud
 hass-nabucasa==0.78.0
