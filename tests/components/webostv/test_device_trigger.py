@@ -1,4 +1,5 @@
 """The tests for WebOS TV device triggers."""
+
 import pytest
 
 from homeassistant.components import automation

@@ -1,4 +1,5 @@
 """Support for the Google speech service."""
+
 from __future__ import annotations
 
 from io import BytesIO
@@ -161,8 +162,8 @@ class GoogleProvider(Provider):
 
         try:
             tts.write_to_fp(mp3_data)
-        except gTTSError as exc:
-            _LOGGER.exception("Error during processing of TTS request %s", exc)
+        except gTTSError:
+            _LOGGER.exception("Error during processing of TTS request")
             return None, None
 
         return "mp3", mp3_data.getvalue()

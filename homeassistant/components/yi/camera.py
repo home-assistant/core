@@ -1,4 +1,5 @@
 """Support for Xiaomi Cameras (HiSilicon Hi3518e V200)."""
+
 from __future__ import annotations
 
 import logging

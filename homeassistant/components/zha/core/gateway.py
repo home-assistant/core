@@ -1,4 +1,5 @@
 """Virtual gateway for Zigbee Home Automation."""
+
 from __future__ import annotations
 
 import asyncio
@@ -29,7 +30,7 @@ from zigpy.state import State
 from zigpy.types.named import EUI64
 
 from homeassistant import __path__ as HOMEASSISTANT_PATH
-from homeassistant.components.system_log import LogEntry, _figure_out_source
+from homeassistant.components.system_log import LogEntry
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -132,9 +133,9 @@ class ZHAGateway:
         self._groups: dict[int, ZHAGroup] = {}
         self.application_controller: ControllerApplication = None
         self.coordinator_zha_device: ZHADevice = None  # type: ignore[assignment]
-        self._device_registry: collections.defaultdict[
-            EUI64, list[EntityReference]
-        ] = collections.defaultdict(list)
+        self._device_registry: collections.defaultdict[EUI64, list[EntityReference]] = (
+            collections.defaultdict(list)
+        )
         self._log_levels: dict[str, dict[str, int]] = {
             DEBUG_LEVEL_ORIGINAL: async_capture_log_levels(),
             DEBUG_LEVEL_CURRENT: async_capture_log_levels(),
@@ -223,7 +224,7 @@ class ZHAGateway:
         zha_data.gateway = self
 
         self.coordinator_zha_device = self._async_get_or_create_device(
-            self._find_coordinator_device(), restored=True
+            self._find_coordinator_device()
         )
 
         self.async_load_devices()
@@ -264,11 +265,10 @@ class ZHAGateway:
         """Restore ZHA devices from zigpy application state."""
 
         for zigpy_device in self.application_controller.devices.values():
-            zha_device = self._async_get_or_create_device(zigpy_device, restored=True)
+            zha_device = self._async_get_or_create_device(zigpy_device)
             delta_msg = "not known"
             if zha_device.last_seen is not None:
                 delta = round(time.time() - zha_device.last_seen)
-                zha_device.available = delta < zha_device.consider_unavailable_time
                 delta_msg = f"{str(timedelta(seconds=delta))} ago"
             _LOGGER.debug(
                 (
@@ -452,9 +452,9 @@ class ZHAGateway:
         self, device: ZHADevice, entity_refs: list[EntityReference] | None
     ) -> None:
         if entity_refs is not None:
-            remove_tasks: list[asyncio.Future[Any]] = []
-            for entity_ref in entity_refs:
-                remove_tasks.append(entity_ref.remove_future)
+            remove_tasks: list[asyncio.Future[Any]] = [
+                entity_ref.remove_future for entity_ref in entity_refs
+            ]
             if remove_tasks:
                 await asyncio.wait(remove_tasks)
 
@@ -622,11 +622,11 @@ class ZHAGateway:
 
     @callback
     def _async_get_or_create_device(
-        self, zigpy_device: zigpy.device.Device, restored: bool = False
+        self, zigpy_device: zigpy.device.Device
     ) -> ZHADevice:
         """Get or create a ZHA device."""
         if (zha_device := self._devices.get(zigpy_device.ieee)) is None:
-            zha_device = ZHADevice.new(self.hass, zigpy_device, self, restored)
+            zha_device = ZHADevice.new(self.hass, zigpy_device, self)
             self._devices[zigpy_device.ieee] = zha_device
 
             device_registry = dr.async_get(self.hass)
@@ -783,9 +783,7 @@ class ZHAGateway:
             _LOGGER.debug("Group: 0x%04x could not be found", group_id)
             return
         if group.members:
-            tasks = []
-            for member in group.members:
-                tasks.append(member.async_remove_from_group())
+            tasks = [member.async_remove_from_group() for member in group.members]
             if tasks:
                 await asyncio.gather(*tasks)
         self.application_controller.groups.pop(group_id)
@@ -871,10 +869,12 @@ class LogRelayHandler(logging.Handler):
 
     def emit(self, record: LogRecord) -> None:
         """Relay log message via dispatcher."""
-        if record.levelno >= logging.WARN:
-            entry = LogEntry(record, _figure_out_source(record, self.paths_re))
-        else:
-            entry = LogEntry(record, (record.pathname, record.lineno))
+        entry = LogEntry(
+            record,
+            self.paths_re,
+            formatter=self.formatter,
+            figure_out_source=record.levelno >= logging.WARNING,
+        )
         async_dispatcher_send(
             self.hass,
             ZHA_GW_MSG,

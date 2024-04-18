@@ -1,5 +1,5 @@
 """Test the mütesync config flow."""
-import asyncio
+
 from unittest.mock import patch
 
 import aiohttp
@@ -8,6 +8,7 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.components.mutesync.const import DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 
 async def test_form(hass: HomeAssistant) -> None:
@@ -16,16 +17,19 @@ async def test_form(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
-    with patch(
-        "mutesync.authenticate",
-        return_value="bla",
-    ), patch(
-        "homeassistant.components.mutesync.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "mutesync.authenticate",
+            return_value="bla",
+        ),
+        patch(
+            "homeassistant.components.mutesync.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -34,7 +38,7 @@ async def test_form(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "create_entry"
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "1.1.1.1"
     assert result2["data"] == {
         "host": "1.1.1.1",
@@ -49,7 +53,7 @@ async def test_form(hass: HomeAssistant) -> None:
         (Exception, "unknown"),
         (aiohttp.ClientResponseError(None, None, status=403), "invalid_auth"),
         (aiohttp.ClientResponseError(None, None, status=500), "cannot_connect"),
-        (asyncio.TimeoutError, "cannot_connect"),
+        (TimeoutError, "cannot_connect"),
     ],
 )
 async def test_form_error(
@@ -71,5 +75,5 @@ async def test_form_error(
             },
         )
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": error}

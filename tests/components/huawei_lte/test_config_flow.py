@@ -1,4 +1,5 @@
 """Tests for the Huawei LTE config flow."""
+
 from typing import Any
 from unittest.mock import patch
 from urllib.parse import urlparse, urlunparse
@@ -11,7 +12,7 @@ from requests.exceptions import ConnectionError
 import requests_mock
 from requests_mock import ANY
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components import ssdp
 from homeassistant.components.huawei_lte.const import CONF_UNAUTHENTICATED_MODE, DOMAIN
 from homeassistant.const import (
@@ -23,6 +24,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
@@ -47,7 +49,7 @@ async def test_show_set_form(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=None
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
 
@@ -62,7 +64,7 @@ async def test_urlize_plain_host(
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=user_input
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert user_input[CONF_URL] == f"http://{host}/"
 
@@ -95,13 +97,13 @@ async def test_already_configured(
         data=FIXTURE_USER_INPUT,
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
 @pytest.mark.parametrize(
     ("exception", "errors", "data_patch"),
-    (
+    [
         (ConnectionError(), {CONF_URL: "unknown"}, {}),
         (requests.exceptions.SSLError(), {CONF_URL: "ssl_error_try_plain"}, {}),
         (
@@ -109,7 +111,7 @@ async def test_already_configured(
             {CONF_URL: "ssl_error_try_unverified"},
             {CONF_VERIFY_SSL: True},
         ),
-    ),
+    ],
 )
 async def test_connection_errors(
     hass: HomeAssistant,
@@ -126,7 +128,7 @@ async def test_connection_errors(
         data=FIXTURE_USER_INPUT | data_patch,
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == errors
 
@@ -157,7 +159,7 @@ def login_requests_mock(requests_mock):
 
 @pytest.mark.parametrize(
     ("request_outcome", "fixture_override", "errors"),
-    (
+    [
         (
             {
                 "text": f"<error><code>{LoginErrorEnum.USERNAME_WRONG}</code><message/></error>",
@@ -201,7 +203,7 @@ def login_requests_mock(requests_mock):
             {},
             {CONF_URL: "connection_timeout"},
         ),
-    ),
+    ],
 )
 async def test_login_error(
     hass: HomeAssistant, login_requests_mock, request_outcome, fixture_override, errors
@@ -218,12 +220,12 @@ async def test_login_error(
         data={**FIXTURE_USER_INPUT, **fixture_override},
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == errors
 
 
-@pytest.mark.parametrize("scheme", ("http", "https"))
+@pytest.mark.parametrize("scheme", ["http", "https"])
 async def test_success(hass: HomeAssistant, login_requests_mock, scheme: str) -> None:
     """Test successful flow provides entry creation data."""
     user_input = {
@@ -238,8 +240,9 @@ async def test_success(hass: HomeAssistant, login_requests_mock, scheme: str) ->
         f"{user_input[CONF_URL]}api/user/login",
         text="<response>OK</response>",
     )
-    with patch("homeassistant.components.huawei_lte.async_setup"), patch(
-        "homeassistant.components.huawei_lte.async_setup_entry"
+    with (
+        patch("homeassistant.components.huawei_lte.async_setup"),
+        patch("homeassistant.components.huawei_lte.async_setup_entry"),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -248,7 +251,7 @@ async def test_success(hass: HomeAssistant, login_requests_mock, scheme: str) ->
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_URL] == user_input[CONF_URL]
     assert result["data"][CONF_USERNAME] == user_input[CONF_USERNAME]
     assert result["data"][CONF_PASSWORD] == user_input[CONF_PASSWORD]
@@ -256,7 +259,7 @@ async def test_success(hass: HomeAssistant, login_requests_mock, scheme: str) ->
 
 @pytest.mark.parametrize(
     ("requests_mock_request_kwargs", "upnp_data", "expected_result"),
-    (
+    [
         (
             {
                 "method": ANY,
@@ -268,7 +271,7 @@ async def test_success(hass: HomeAssistant, login_requests_mock, scheme: str) ->
                 ssdp.ATTR_UPNP_SERIAL: "00000000",
             },
             {
-                "type": data_entry_flow.FlowResultType.FORM,
+                "type": FlowResultType.FORM,
                 "step_id": "user",
                 "errors": {},
             },
@@ -284,7 +287,7 @@ async def test_success(hass: HomeAssistant, login_requests_mock, scheme: str) ->
                 # No ssdp.ATTR_UPNP_SERIAL
             },
             {
-                "type": data_entry_flow.FlowResultType.FORM,
+                "type": FlowResultType.FORM,
                 "step_id": "user",
                 "errors": {},
             },
@@ -299,11 +302,11 @@ async def test_success(hass: HomeAssistant, login_requests_mock, scheme: str) ->
                 # Does not matter
             },
             {
-                "type": data_entry_flow.FlowResultType.ABORT,
+                "type": FlowResultType.ABORT,
                 "reason": "unsupported_device",
             },
         ),
-    ),
+    ],
 )
 async def test_ssdp(
     hass: HomeAssistant,
@@ -345,11 +348,11 @@ async def test_ssdp(
 
 @pytest.mark.parametrize(
     ("login_response_text", "expected_result", "expected_entry_data"),
-    (
+    [
         (
             "<response>OK</response>",
             {
-                "type": data_entry_flow.FlowResultType.ABORT,
+                "type": FlowResultType.ABORT,
                 "reason": "reauth_successful",
             },
             FIXTURE_USER_INPUT,
@@ -357,13 +360,13 @@ async def test_ssdp(
         (
             f"<error><code>{LoginErrorEnum.PASSWORD_WRONG}</code><message/></error>",
             {
-                "type": data_entry_flow.FlowResultType.FORM,
+                "type": FlowResultType.FORM,
                 "errors": {CONF_PASSWORD: "incorrect_password"},
                 "step_id": "reauth_confirm",
             },
             {**FIXTURE_USER_INPUT, CONF_PASSWORD: "invalid-password"},
         ),
-    ),
+    ],
 )
 async def test_reauth(
     hass: HomeAssistant,
@@ -391,7 +394,7 @@ async def test_reauth(
         DOMAIN, context=context, data=entry.data
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     assert result["data_schema"] is not None
     assert result["data_schema"]({}) == {
@@ -429,7 +432,7 @@ async def test_options(hass: HomeAssistant) -> None:
     config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
     recipient = "+15555550000"

@@ -2,6 +2,7 @@
 
 From http://doc.pytest.org/en/latest/example/simple.html#making-test-result-information-available-in-fixtures
 """
+
 from collections.abc import Generator
 
 import pytest

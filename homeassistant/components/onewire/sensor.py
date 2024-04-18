@@ -1,4 +1,5 @@
 """Support for 1-Wire environment sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
@@ -236,7 +237,8 @@ DEVICE_SENSORS: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
             native_unit_of_measurement="count",
             read_mode=READ_MODE_INT,
             state_class=SensorStateClass.TOTAL_INCREASING,
-            translation_key=f"counter_{id.lower()}",
+            translation_key="counter_id",
+            translation_placeholders={"id": str(id)},
         )
         for id in DEVICE_KEYS_A_B
     ),
@@ -276,7 +278,8 @@ HOBBYBOARD_EF: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
             native_unit_of_measurement=UnitOfPressure.CBAR,
             read_mode=READ_MODE_FLOAT,
             state_class=SensorStateClass.MEASUREMENT,
-            translation_key=f"moisture_{id}",
+            translation_key="moisture_id",
+            translation_placeholders={"id": str(id)},
         )
         for id in DEVICE_KEYS_0_3
     ),
@@ -380,6 +383,9 @@ def get_entities(
         elif "7E" in family:
             device_sub_type = "EDS"
             family = device_type
+        elif "A6" in family:
+            # A6 is a secondary family code for DS2438
+            family = "26"
 
         if family not in get_sensor_types(device_sub_type):
             continue
@@ -396,7 +402,8 @@ def get_entities(
                         description,
                         device_class=SensorDeviceClass.HUMIDITY,
                         native_unit_of_measurement=PERCENTAGE,
-                        translation_key=f"wetness_{s_id}",
+                        translation_key="wetness_id",
+                        translation_placeholders={"id": s_id},
                     )
             override_key = None
             if description.override_key:

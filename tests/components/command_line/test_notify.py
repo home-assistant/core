@@ -1,4 +1,5 @@
 """The tests for the command line notification platform."""
+
 from __future__ import annotations
 
 import os

@@ -1,4 +1,5 @@
 """Component to interface with cameras."""
+
 from __future__ import annotations
 
 import asyncio
@@ -8,12 +9,12 @@ from contextlib import suppress
 from dataclasses import asdict
 from datetime import datetime, timedelta
 from enum import IntFlag
-from functools import partial
+from functools import cached_property, partial
 import logging
 import os
 from random import SystemRandom
 import time
-from typing import TYPE_CHECKING, Any, Final, cast, final
+from typing import Any, Final, cast, final
 
 from aiohttp import hdrs, web
 import attr
@@ -83,11 +84,6 @@ from .const import (  # noqa: F401
 )
 from .img_util import scale_jpeg_camera_image
 from .prefs import CameraPreferences, DynamicStreamSettings  # noqa: F401
-
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -181,7 +177,7 @@ async def _async_get_image(
     that we can scale, however the majority of cases
     are handled.
     """
-    with suppress(asyncio.CancelledError, asyncio.TimeoutError):
+    with suppress(asyncio.CancelledError, TimeoutError):
         async with asyncio.timeout(timeout):
             image_bytes = (
                 await _async_get_stream_image(
@@ -300,8 +296,12 @@ async def async_get_still_stream(
         if img_bytes != last_image:
             await write_to_mjpeg_stream(img_bytes)
 
-            # Chrome seems to always ignore first picture,
-            # print it twice.
+            # Chrome always shows the n-1 frame:
+            # https://issues.chromium.org/issues/41199053
+            # https://issues.chromium.org/issues/40791855
+            # We send the first frame twice to ensure it shows
+            # Subsequent frames are not a concern at reasonable frame rates
+            # (even 1/10 FPS is about the latency of HLS)
             if last_image is None:
                 await write_to_mjpeg_stream(img_bytes)
             last_image = img_bytes
@@ -387,6 +387,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     prefs = CameraPreferences(hass)
+    await prefs.async_load()
     hass.data[DATA_CAMERA_PREFS] = prefs
 
     hass.http.register_view(CameraImageView(component))
@@ -510,14 +511,14 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         self._create_stream_lock: asyncio.Lock | None = None
         self._rtsp_to_webrtc = False
 
-    @property
+    @cached_property
     def entity_picture(self) -> str:
         """Return a link to the camera feed as entity picture."""
         if self._attr_entity_picture is not None:
             return self._attr_entity_picture
         return ENTITY_IMAGE_URL.format(self.entity_id, self.access_tokens[-1])
 
-    @property
+    @cached_property
     def use_stream_for_stills(self) -> bool:
         """Whether or not to use stream to generate stills."""
         return False
@@ -645,7 +646,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Return bytes of camera image."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
@@ -690,7 +691,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def turn_off(self) -> None:
         """Turn off camera."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_turn_off(self) -> None:
         """Turn off camera."""
@@ -698,7 +699,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def turn_on(self) -> None:
         """Turn off camera."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_turn_on(self) -> None:
         """Turn off camera."""
@@ -706,7 +707,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def enable_motion_detection(self) -> None:
         """Enable motion detection in the camera."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_enable_motion_detection(self) -> None:
         """Call the job and enable motion detection."""
@@ -714,7 +715,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def disable_motion_detection(self) -> None:
         """Disable motion detection in camera."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_disable_motion_detection(self) -> None:
         """Call the job and disable motion detection."""
@@ -744,6 +745,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     def async_update_token(self) -> None:
         """Update the used token."""
         self.access_tokens.append(hex(_RND.getrandbits(256))[2:])
+        self.__dict__.pop("entity_picture", None)
 
     async def async_internal_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
@@ -791,7 +793,7 @@ class CameraView(HomeAssistantView):
     async def get(self, request: web.Request, entity_id: str) -> web.StreamResponse:
         """Start a GET request."""
         if (camera := self.component.get_entity(entity_id)) is None:
-            raise web.HTTPNotFound()
+            raise web.HTTPNotFound
 
         authenticated = (
             request[KEY_AUTHENTICATED]
@@ -802,19 +804,19 @@ class CameraView(HomeAssistantView):
             # Attempt with invalid bearer token, raise unauthorized
             # so ban middleware can handle it.
             if hdrs.AUTHORIZATION in request.headers:
-                raise web.HTTPUnauthorized()
+                raise web.HTTPUnauthorized
             # Invalid sigAuth or camera access token
-            raise web.HTTPForbidden()
+            raise web.HTTPForbidden
 
         if not camera.is_on:
             _LOGGER.debug("Camera is off")
-            raise web.HTTPServiceUnavailable()
+            raise web.HTTPServiceUnavailable
 
         return await self.handle(request, camera)
 
     async def handle(self, request: web.Request, camera: Camera) -> web.StreamResponse:
         """Handle the camera request."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
 
 class CameraImageView(CameraView):
@@ -835,7 +837,7 @@ class CameraImageView(CameraView):
                 int(height) if height else None,
             )
         except (HomeAssistantError, ValueError) as ex:
-            raise web.HTTPInternalServerError() from ex
+            raise web.HTTPInternalServerError from ex
 
         return web.Response(body=image.content, content_type=image.content_type)
 
@@ -855,7 +857,7 @@ class CameraMjpegStream(CameraView):
                 stream = None
                 _LOGGER.debug("Error while writing MJPEG stream to transport")
             if stream is None:
-                raise web.HTTPBadGateway()
+                raise web.HTTPBadGateway
             return stream
 
         try:
@@ -865,7 +867,7 @@ class CameraMjpegStream(CameraView):
                 raise ValueError(f"Stream interval must be > {MIN_STREAM_INTERVAL}")
             return await camera.handle_async_still_stream(request, interval)
         except ValueError as err:
-            raise web.HTTPBadRequest() from err
+            raise web.HTTPBadRequest from err
 
 
 @websocket_api.websocket_command(
@@ -891,7 +893,7 @@ async def ws_camera_stream(
     except HomeAssistantError as ex:
         _LOGGER.error("Error requesting stream: %s", ex)
         connection.send_error(msg["id"], "start_stream_failed", str(ex))
-    except asyncio.TimeoutError:
+    except TimeoutError:
         _LOGGER.error("Timeout getting stream source")
         connection.send_error(
             msg["id"], "start_stream_failed", "Timeout getting stream source"
@@ -936,7 +938,7 @@ async def ws_camera_web_rtc_offer(
     except (HomeAssistantError, ValueError) as ex:
         _LOGGER.error("Error handling WebRTC offer: %s", ex)
         connection.send_error(msg["id"], "web_rtc_offer_failed", str(ex))
-    except asyncio.TimeoutError:
+    except TimeoutError:
         _LOGGER.error("Timeout handling WebRTC offer")
         connection.send_error(
             msg["id"], "web_rtc_offer_failed", "Timeout handling WebRTC offer"

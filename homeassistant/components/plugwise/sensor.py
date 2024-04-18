@@ -1,4 +1,5 @@
 """Plugwise Sensor component for Home Assistant."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -315,7 +316,6 @@ SENSORS: tuple[PlugwiseSensorEntityDescription, ...] = (
     PlugwiseSensorEntityDescription(
         key="gas_consumed_interval",
         translation_key="gas_consumed_interval",
-        icon="mdi:meter-gas",
         native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -357,7 +357,6 @@ SENSORS: tuple[PlugwiseSensorEntityDescription, ...] = (
     PlugwiseSensorEntityDescription(
         key="modulation_level",
         translation_key="modulation_level",
-        icon="mdi:percent",
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
@@ -365,7 +364,6 @@ SENSORS: tuple[PlugwiseSensorEntityDescription, ...] = (
     PlugwiseSensorEntityDescription(
         key="valve_position",
         translation_key="valve_position",
-        icon="mdi:valve",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,

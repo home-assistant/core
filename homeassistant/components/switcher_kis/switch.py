@@ -1,7 +1,7 @@
 """Switcher integration Switch platform."""
+
 from __future__ import annotations
 
-import asyncio
 from datetime import timedelta
 import logging
 from typing import Any
@@ -33,6 +33,9 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+API_CONTROL_DEVICE = "control_device"
+API_SET_AUTO_SHUTDOWN = "set_auto_shutdown"
 
 SERVICE_SET_AUTO_OFF_SCHEMA = {
     vol.Required(CONF_AUTO_OFF): cv.time_period_str,
@@ -118,7 +121,7 @@ class SwitcherBaseSwitchEntity(
                 self.coordinator.data.device_key,
             ) as swapi:
                 response = await getattr(swapi, api)(*args)
-        except (asyncio.TimeoutError, OSError, RuntimeError) as err:
+        except (TimeoutError, OSError, RuntimeError) as err:
             error = repr(err)
 
         if error or not response or not response.successful:
@@ -141,13 +144,13 @@ class SwitcherBaseSwitchEntity(
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
-        await self._async_call_api("control_device", Command.ON)
+        await self._async_call_api(API_CONTROL_DEVICE, Command.ON)
         self.control_result = True
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
-        await self._async_call_api("control_device", Command.OFF)
+        await self._async_call_api(API_CONTROL_DEVICE, Command.OFF)
         self.control_result = False
         self.async_write_ha_state()
 
@@ -181,11 +184,11 @@ class SwitcherWaterHeaterSwitchEntity(SwitcherBaseSwitchEntity):
 
     async def async_set_auto_off_service(self, auto_off: timedelta) -> None:
         """Use for handling setting device auto-off service calls."""
-        await self._async_call_api("set_auto_shutdown", auto_off)
+        await self._async_call_api(API_SET_AUTO_SHUTDOWN, auto_off)
         self.async_write_ha_state()
 
     async def async_turn_on_with_timer_service(self, timer_minutes: int) -> None:
         """Use for turning device on with a timer service calls."""
-        await self._async_call_api("control_device", Command.ON, timer_minutes)
+        await self._async_call_api(API_CONTROL_DEVICE, Command.ON, timer_minutes)
         self.control_result = True
         self.async_write_ha_state()

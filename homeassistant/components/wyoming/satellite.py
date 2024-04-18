@@ -1,4 +1,5 @@
 """Support for Wyoming satellite services."""
+
 import asyncio
 from collections.abc import AsyncGenerator
 import io
@@ -10,9 +11,10 @@ from wyoming.asr import Transcribe, Transcript
 from wyoming.audio import AudioChunk, AudioChunkConverter, AudioStart, AudioStop
 from wyoming.client import AsyncTcpClient
 from wyoming.error import Error
+from wyoming.info import Describe, Info
 from wyoming.ping import Ping, Pong
 from wyoming.pipeline import PipelineStage, RunPipeline
-from wyoming.satellite import RunSatellite
+from wyoming.satellite import PauseSatellite, RunSatellite
 from wyoming.tts import Synthesize, SynthesizeVoice
 from wyoming.vad import VoiceStarted, VoiceStopped
 from wyoming.wake import Detect, Detection
@@ -25,7 +27,7 @@ from .const import DOMAIN
 from .data import WyomingService
 from .devices import SatelliteDevice
 
-_LOGGER = logging.getLogger()
+_LOGGER = logging.getLogger(__name__)
 
 _SAMPLES_PER_CHUNK: Final = 1024
 _RECONNECT_SECONDS: Final = 10
@@ -76,6 +78,7 @@ class WyomingSatellite:
                 try:
                     # Check if satellite has been muted
                     while self.device.is_muted:
+                        _LOGGER.debug("Satellite is muted")
                         await self.on_muted()
                         if not self.is_running:
                             # Satellite was stopped while waiting to be unmuted
@@ -85,16 +88,26 @@ class WyomingSatellite:
                     await self._connect_and_loop()
                 except asyncio.CancelledError:
                     raise  # don't restart
-                except Exception:  # pylint: disable=broad-exception-caught
+                except Exception as err:  # pylint: disable=broad-exception-caught
+                    _LOGGER.debug("%s: %s", err.__class__.__name__, str(err))
+
+                    # Ensure sensor is off (before restart)
+                    self.device.set_is_active(False)
+
+                    # Wait to restart
                     await self.on_restart()
         finally:
-            # Ensure sensor is off
+            # Ensure sensor is off (before stop)
             self.device.set_is_active(False)
 
             await self.on_stopped()
 
     def stop(self) -> None:
         """Signal satellite task to stop running."""
+        # Tell satellite to stop running
+        self._send_pause()
+
+        # Stop task loop
         self.is_running = False
 
         # Unblock waiting for unmuted
@@ -103,7 +116,7 @@ class WyomingSatellite:
     async def on_restart(self) -> None:
         """Block until pipeline loop will be restarted."""
         _LOGGER.warning(
-            "Unexpected error running satellite. Restarting in %s second(s)",
+            "Satellite has been disconnected. Reconnecting in %s second(s)",
             _RECONNECT_SECONDS,
         )
         await asyncio.sleep(_RESTART_SECONDS)
@@ -126,11 +139,22 @@ class WyomingSatellite:
 
     # -------------------------------------------------------------------------
 
+    def _send_pause(self) -> None:
+        """Send a pause message to satellite."""
+        if self._client is not None:
+            self.hass.async_create_background_task(
+                self._client.write_event(PauseSatellite().event()),
+                "pause satellite",
+            )
+
     def _muted_changed(self) -> None:
         """Run when device muted status changes."""
         if self.device.is_muted:
             # Cancel any running pipeline
             self._audio_queue.put_nowait(None)
+
+            # Send pause event so satellite can react immediately
+            self._send_pause()
 
         self._muted_changed_event.set()
         self._muted_changed_event.clear()
@@ -149,16 +173,18 @@ class WyomingSatellite:
 
     async def _connect_and_loop(self) -> None:
         """Connect to satellite and run pipelines until an error occurs."""
-        self.device.set_is_active(False)
-
         while self.is_running and (not self.device.is_muted):
             try:
                 await self._connect()
                 break
             except ConnectionError:
+                self._client = None  # client is not valid
+
                 await self.on_reconnect()
 
-        assert self._client is not None
+        if self._client is None:
+            return
+
         _LOGGER.debug("Connected to satellite")
 
         if (not self.is_running) or self.device.is_muted:
@@ -175,6 +201,8 @@ class WyomingSatellite:
     async def _run_pipeline_loop(self) -> None:
         """Run a pipeline one or more times."""
         assert self._client is not None
+        client_info: Info | None = None
+        wake_word_phrase: str | None = None
         run_pipeline: RunPipeline | None = None
         send_ping = True
 
@@ -186,6 +214,9 @@ class WyomingSatellite:
             self._client.read_event(), "satellite event read"
         )
         pending = {pipeline_ended_task, client_event_task}
+
+        # Update info from satellite
+        await self._client.write_event(Describe().event())
 
         while self.is_running and (not self.device.is_muted):
             if send_ping:
@@ -207,6 +238,9 @@ class WyomingSatellite:
                         self._pipeline_ended_event.wait(), "satellite pipeline ended"
                     )
                     pending.add(pipeline_ended_task)
+
+                    # Clear last wake word detection
+                    wake_word_phrase = None
 
                     if (run_pipeline is not None) and run_pipeline.restart_on_end:
                         # Automatically restart pipeline.
@@ -231,7 +265,7 @@ class WyomingSatellite:
                 elif RunPipeline.is_type(client_event.type):
                     # Satellite requested pipeline run
                     run_pipeline = RunPipeline.from_event(client_event)
-                    self._run_pipeline_once(run_pipeline)
+                    self._run_pipeline_once(run_pipeline, wake_word_phrase)
                 elif (
                     AudioChunk.is_type(client_event.type) and self._is_pipeline_running
                 ):
@@ -243,6 +277,32 @@ class WyomingSatellite:
                     # Stop pipeline
                     _LOGGER.debug("Client requested pipeline to stop")
                     self._audio_queue.put_nowait(b"")
+                elif Info.is_type(client_event.type):
+                    client_info = Info.from_event(client_event)
+                    _LOGGER.debug("Updated client info: %s", client_info)
+                elif Detection.is_type(client_event.type):
+                    detection = Detection.from_event(client_event)
+                    wake_word_phrase = detection.name
+
+                    # Resolve wake word name/id to phrase if info is available.
+                    #
+                    # This allows us to deconflict multiple satellite wake-ups
+                    # with the same wake word.
+                    if (client_info is not None) and (client_info.wake is not None):
+                        found_phrase = False
+                        for wake_service in client_info.wake:
+                            for wake_model in wake_service.models:
+                                if wake_model.name == detection.name:
+                                    wake_word_phrase = (
+                                        wake_model.phrase or wake_model.name
+                                    )
+                                    found_phrase = True
+                                    break
+
+                            if found_phrase:
+                                break
+
+                    _LOGGER.debug("Client detected wake word: %s", wake_word_phrase)
                 else:
                     _LOGGER.debug("Unexpected event from satellite: %s", client_event)
 
@@ -252,7 +312,9 @@ class WyomingSatellite:
                 )
                 pending.add(client_event_task)
 
-    def _run_pipeline_once(self, run_pipeline: RunPipeline) -> None:
+    def _run_pipeline_once(
+        self, run_pipeline: RunPipeline, wake_word_phrase: str | None = None
+    ) -> None:
         """Run a pipeline once."""
         _LOGGER.debug("Received run information: %s", run_pipeline)
 
@@ -310,6 +372,7 @@ class WyomingSatellite:
                     volume_multiplier=self.device.volume_multiplier,
                 ),
                 device_id=self.device.device_id,
+                wake_word_phrase=wake_word_phrase,
             ),
             name="wyoming satellite pipeline",
         )

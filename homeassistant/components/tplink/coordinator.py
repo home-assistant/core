@@ -1,12 +1,15 @@
 """Component to embed TP-Link smart home devices."""
+
 from __future__ import annotations
 
 from datetime import timedelta
 import logging
 
-from kasa import SmartDevice, SmartDeviceException
+from kasa import AuthenticationException, SmartDevice, SmartDeviceException
 
+from homeassistant import config_entries
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -17,6 +20,8 @@ REQUEST_REFRESH_DELAY = 0.35
 
 class TPLinkDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """DataUpdateCoordinator to gather data for a specific TPLink device."""
+
+    config_entry: config_entries.ConfigEntry
 
     def __init__(
         self,
@@ -42,5 +47,7 @@ class TPLinkDataUpdateCoordinator(DataUpdateCoordinator[None]):
         """Fetch all device and sensor data from api."""
         try:
             await self.device.update(update_children=False)
+        except AuthenticationException as ex:
+            raise ConfigEntryAuthFailed from ex
         except SmartDeviceException as ex:
             raise UpdateFailed(ex) from ex

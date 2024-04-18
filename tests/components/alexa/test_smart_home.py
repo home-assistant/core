@@ -1,11 +1,13 @@
 """Test for smart home alexa support."""
+
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+from homeassistant.components import camera
 from homeassistant.components.alexa import smart_home, state_report
-import homeassistant.components.camera as camera
+from homeassistant.components.climate import ClimateEntityFeature
 from homeassistant.components.cover import CoverDeviceClass, CoverEntityFeature
 from homeassistant.components.media_player import MediaPlayerEntityFeature
 from homeassistant.components.vacuum import VacuumEntityFeature
@@ -20,7 +22,7 @@ from homeassistant.const import (
 from homeassistant.core import Context, Event, HomeAssistant
 from homeassistant.helpers import entityfilter
 from homeassistant.setup import async_setup_component
-from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
+from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
 from .test_common import (
     MockConfig,
@@ -3118,6 +3120,136 @@ async def test_thermostat(hass: HomeAssistant) -> None:
     assert call.data["preset_mode"] == "eco"
 
 
+async def test_onoff_thermostat(hass: HomeAssistant) -> None:
+    """Test onoff thermostat discovery."""
+    on_off_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TURN_ON
+        | ClimateEntityFeature.TURN_OFF
+    )
+    hass.config.units = METRIC_SYSTEM
+    device = (
+        "climate.test_thermostat",
+        "cool",
+        {
+            "temperature": 20.0,
+            "target_temp_high": None,
+            "target_temp_low": None,
+            "current_temperature": 19.0,
+            "friendly_name": "Test Thermostat",
+            "supported_features": on_off_features,
+            "hvac_modes": ["auto"],
+            "min_temp": 7,
+            "max_temp": 30,
+        },
+    )
+    appliance = await discovery_test(device, hass)
+
+    assert appliance["endpointId"] == "climate#test_thermostat"
+    assert appliance["displayCategories"][0] == "THERMOSTAT"
+    assert appliance["friendlyName"] == "Test Thermostat"
+
+    capabilities = assert_endpoint_capabilities(
+        appliance,
+        "Alexa.PowerController",
+        "Alexa.ThermostatController",
+        "Alexa.TemperatureSensor",
+        "Alexa.EndpointHealth",
+        "Alexa",
+    )
+
+    properties = await reported_properties(hass, "climate#test_thermostat")
+    properties.assert_equal("Alexa.ThermostatController", "thermostatMode", "COOL")
+    properties.assert_equal(
+        "Alexa.ThermostatController",
+        "targetSetpoint",
+        {"value": 20.0, "scale": "CELSIUS"},
+    )
+    properties.assert_equal(
+        "Alexa.TemperatureSensor", "temperature", {"value": 19.0, "scale": "CELSIUS"}
+    )
+
+    thermostat_capability = get_capability(capabilities, "Alexa.ThermostatController")
+    assert thermostat_capability is not None
+    configuration = thermostat_capability["configuration"]
+    assert configuration["supportsScheduling"] is False
+
+    supported_modes = ["AUTO"]
+    for mode in supported_modes:
+        assert mode in configuration["supportedModes"]
+
+    call, msg = await assert_request_calls_service(
+        "Alexa.ThermostatController",
+        "SetTargetTemperature",
+        "climate#test_thermostat",
+        "climate.set_temperature",
+        hass,
+        payload={"targetSetpoint": {"value": 21.0, "scale": "CELSIUS"}},
+    )
+    assert call.data["temperature"] == 21.0
+    properties = ReportedProperties(msg["context"]["properties"])
+    properties.assert_equal(
+        "Alexa.ThermostatController",
+        "targetSetpoint",
+        {"value": 21.0, "scale": "CELSIUS"},
+    )
+
+    msg = await assert_request_fails(
+        "Alexa.ThermostatController",
+        "SetTargetTemperature",
+        "climate#test_thermostat",
+        "climate.set_temperature",
+        hass,
+        payload={"targetSetpoint": {"value": 0.0, "scale": "CELSIUS"}},
+    )
+    assert msg["event"]["payload"]["type"] == "TEMPERATURE_VALUE_OUT_OF_RANGE"
+
+    await assert_request_calls_service(
+        "Alexa.PowerController",
+        "TurnOn",
+        "climate#test_thermostat",
+        "climate.turn_on",
+        hass,
+    )
+    await assert_request_calls_service(
+        "Alexa.PowerController",
+        "TurnOff",
+        "climate#test_thermostat",
+        "climate.turn_off",
+        hass,
+    )
+
+    # Test the power controller is not enabled when there is no `off` mode
+    device = (
+        "climate.test_thermostat",
+        "cool",
+        {
+            "temperature": 20.0,
+            "target_temp_high": None,
+            "target_temp_low": None,
+            "current_temperature": 19.0,
+            "friendly_name": "Test Thermostat",
+            "supported_features": ClimateEntityFeature.TARGET_TEMPERATURE,
+            "hvac_modes": ["auto"],
+            "min_temp": 7,
+            "max_temp": 30,
+        },
+    )
+    appliance = await discovery_test(device, hass)
+
+    assert appliance["endpointId"] == "climate#test_thermostat"
+    assert appliance["displayCategories"][0] == "THERMOSTAT"
+    assert appliance["friendlyName"] == "Test Thermostat"
+
+    capabilities = assert_endpoint_capabilities(
+        appliance,
+        "Alexa.ThermostatController",
+        "Alexa.TemperatureSensor",
+        "Alexa.EndpointHealth",
+        "Alexa",
+    )
+
+
 async def test_water_heater(hass: HomeAssistant) -> None:
     """Test water_heater discovery."""
     hass.config.units = US_CUSTOMARY_SYSTEM
@@ -5332,9 +5464,8 @@ async def test_camera_discovery(hass: HomeAssistant, mock_stream: None) -> None:
     )
 
     hass.config.components.add("cloud")
-    with patch.object(
-        hass.components.cloud,
-        "async_remote_ui_url",
+    with patch(
+        "homeassistant.components.cloud.async_remote_ui_url",
         return_value="https://example.nabu.casa",
     ):
         appliance = await discovery_test(device, hass)
@@ -5363,9 +5494,8 @@ async def test_camera_discovery_without_stream(hass: HomeAssistant) -> None:
     )
 
     hass.config.components.add("cloud")
-    with patch.object(
-        hass.components.cloud,
-        "async_remote_ui_url",
+    with patch(
+        "homeassistant.components.cloud.async_remote_ui_url",
         return_value="https://example.nabu.casa",
     ):
         appliance = await discovery_test(device, hass)

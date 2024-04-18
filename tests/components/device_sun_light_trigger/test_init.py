@@ -1,4 +1,6 @@
 """The tests device sun light trigger component."""
+
+from collections.abc import Callable
 from datetime import datetime
 from unittest.mock import patch
 
@@ -25,20 +27,24 @@ from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.common import async_fire_time_changed
+from tests.common import async_fire_time_changed, setup_test_component_platform
+from tests.components.device_tracker.common import MockScanner
+from tests.components.light.common import MockLight
 
 
 @pytest.fixture
-async def scanner(hass, enable_custom_integrations):
+async def scanner(
+    hass: HomeAssistant,
+    mock_light_entities: list[MockLight],
+    mock_legacy_device_scanner: MockScanner,
+    mock_legacy_device_tracker_setup: Callable[[HomeAssistant, MockScanner], None],
+) -> None:
     """Initialize components."""
-    scanner = await getattr(hass.components, "test.device_tracker").async_get_scanner(
-        None, None
-    )
+    mock_legacy_device_tracker_setup(hass, mock_legacy_device_scanner)
+    mock_legacy_device_scanner.reset()
+    mock_legacy_device_scanner.come_home("DEV1")
 
-    scanner.reset()
-    scanner.come_home("DEV1")
-
-    getattr(hass.components, "test.light").init()
+    setup_test_component_platform(hass, "light", mock_light_entities)
 
     with patch(
         "homeassistant.components.device_tracker.legacy.load_yaml_config_file",
@@ -238,7 +244,7 @@ async def test_lights_turn_on_when_coming_home_after_sun_set_person(
 
 async def test_initialize_start(hass: HomeAssistant) -> None:
     """Test we initialize when HA starts."""
-    hass.state = CoreState.not_running
+    hass.set_state(CoreState.not_running)
     assert await async_setup_component(
         hass,
         device_sun_light_trigger.DOMAIN,

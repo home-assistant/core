@@ -1,4 +1,5 @@
 """Fixtures for TechnoVE integration tests."""
+
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -32,6 +33,16 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
+def mock_onboarding() -> Generator[MagicMock, None, None]:
+    """Mock that Home Assistant is currently onboarding."""
+    with patch(
+        "homeassistant.components.onboarding.async_is_onboarded",
+        return_value=False,
+    ) as mock_onboarding:
+        yield mock_onboarding
+
+
+@pytest.fixture
 def device_fixture() -> TechnoVEStation:
     """Return the device fixture for a specific device."""
     return TechnoVEStation(load_json_object_fixture("station_charging.json", DOMAIN))
@@ -40,10 +51,13 @@ def device_fixture() -> TechnoVEStation:
 @pytest.fixture
 def mock_technove(device_fixture: TechnoVEStation) -> Generator[MagicMock, None, None]:
     """Return a mocked TechnoVE client."""
-    with patch(
-        "homeassistant.components.technove.coordinator.TechnoVE", autospec=True
-    ) as technove_mock, patch(
-        "homeassistant.components.technove.config_flow.TechnoVE", new=technove_mock
+    with (
+        patch(
+            "homeassistant.components.technove.coordinator.TechnoVE", autospec=True
+        ) as technove_mock,
+        patch(
+            "homeassistant.components.technove.config_flow.TechnoVE", new=technove_mock
+        ),
     ):
         technove = technove_mock.return_value
         technove.update.return_value = device_fixture

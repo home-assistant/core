@@ -1,4 +1,5 @@
 """Selectors for Home Assistant."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping, Sequence
@@ -565,6 +566,49 @@ class ConstantSelector(Selector[ConstantSelectorConfig]):
         return self.config["value"]
 
 
+class QrErrorCorrectionLevel(StrEnum):
+    """Possible error correction levels for QR code selector."""
+
+    LOW = "low"
+    MEDIUM = "medium"
+    QUARTILE = "quartile"
+    HIGH = "high"
+
+
+class QrCodeSelectorConfig(TypedDict, total=False):
+    """Class to represent a QR code selector config."""
+
+    data: str
+    scale: int
+    error_correction_level: QrErrorCorrectionLevel
+
+
+@SELECTORS.register("qr_code")
+class QrCodeSelector(Selector[QrCodeSelectorConfig]):
+    """QR code selector."""
+
+    selector_type = "qr_code"
+
+    CONFIG_SCHEMA = vol.Schema(
+        {
+            vol.Required("data"): str,
+            vol.Optional("scale"): int,
+            vol.Optional("error_correction_level"): vol.All(
+                vol.Coerce(QrErrorCorrectionLevel), lambda val: val.value
+            ),
+        }
+    )
+
+    def __init__(self, config: QrCodeSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
+    def __call__(self, data: Any) -> Any:
+        """Validate the passed selection."""
+        vol.Schema(vol.Any(str, None))(data)
+        return self.config["data"]
+
+
 class ConversationAgentSelectorConfig(TypedDict, total=False):
     """Class to represent a conversation agent selector config."""
 
@@ -800,6 +844,48 @@ class EntitySelector(Selector[EntitySelectorConfig]):
         return cast(list, vol.Schema([validate])(data))  # Output is a list
 
 
+class FloorSelectorConfig(TypedDict, total=False):
+    """Class to represent an floor selector config."""
+
+    entity: EntityFilterSelectorConfig | list[EntityFilterSelectorConfig]
+    device: DeviceFilterSelectorConfig | list[DeviceFilterSelectorConfig]
+    multiple: bool
+
+
+@SELECTORS.register("floor")
+class FloorSelector(Selector[AreaSelectorConfig]):
+    """Selector of a single or list of floors."""
+
+    selector_type = "floor"
+
+    CONFIG_SCHEMA = vol.Schema(
+        {
+            vol.Optional("entity"): vol.All(
+                cv.ensure_list,
+                [ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA],
+            ),
+            vol.Optional("device"): vol.All(
+                cv.ensure_list,
+                [DEVICE_FILTER_SELECTOR_CONFIG_SCHEMA],
+            ),
+            vol.Optional("multiple", default=False): cv.boolean,
+        }
+    )
+
+    def __init__(self, config: FloorSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
+    def __call__(self, data: Any) -> str | list[str]:
+        """Validate the passed selection."""
+        if not self.config["multiple"]:
+            floor_id: str = vol.Schema(str)(data)
+            return floor_id
+        if not isinstance(data, list):
+            raise vol.Invalid("Value should be a list")
+        return [vol.Schema(str)(val) for val in data]
+
+
 class IconSelectorConfig(TypedDict, total=False):
     """Class to represent an icon selector config."""
 
@@ -825,6 +911,38 @@ class IconSelector(Selector[IconSelectorConfig]):
         """Validate the passed selection."""
         icon: str = vol.Schema(str)(data)
         return icon
+
+
+class LabelSelectorConfig(TypedDict, total=False):
+    """Class to represent a label selector config."""
+
+    multiple: bool
+
+
+@SELECTORS.register("label")
+class LabelSelector(Selector[LabelSelectorConfig]):
+    """Selector of a single or list of labels."""
+
+    selector_type = "label"
+
+    CONFIG_SCHEMA = vol.Schema(
+        {
+            vol.Optional("multiple", default=False): cv.boolean,
+        }
+    )
+
+    def __init__(self, config: LabelSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
+    def __call__(self, data: Any) -> str | list[str]:
+        """Validate the passed selection."""
+        if not self.config["multiple"]:
+            label_id: str = vol.Schema(str)(data)
+            return label_id
+        if not isinstance(data, list):
+            raise vol.Invalid("Value should be a list")
+        return [vol.Schema(str)(val) for val in data]
 
 
 class LanguageSelectorConfig(TypedDict, total=False):
@@ -879,9 +997,9 @@ class LocationSelector(Selector[LocationSelectorConfig]):
     )
     DATA_SCHEMA = vol.Schema(
         {
-            vol.Required("latitude"): float,
-            vol.Required("longitude"): float,
-            vol.Optional("radius"): float,
+            vol.Required("latitude"): vol.Coerce(float),
+            vol.Required("longitude"): vol.Coerce(float),
+            vol.Optional("radius"): vol.Coerce(float),
         }
     )
 

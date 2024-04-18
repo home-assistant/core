@@ -1,4 +1,5 @@
 """The tests for the person component."""
+
 from typing import Any
 from unittest.mock import patch
 
@@ -99,7 +100,7 @@ async def test_valid_invalid_user_ids(
 
 async def test_setup_tracker(hass: HomeAssistant, hass_admin_user: MockUser) -> None:
     """Test set up person with one device tracker."""
-    hass.state = CoreState.not_running
+    hass.set_state(CoreState.not_running)
     user_id = hass_admin_user.id
     config = {
         DOMAIN: {
@@ -159,7 +160,7 @@ async def test_setup_two_trackers(
     hass: HomeAssistant, hass_admin_user: MockUser
 ) -> None:
     """Test set up person with two device trackers."""
-    hass.state = CoreState.not_running
+    hass.set_state(CoreState.not_running)
     user_id = hass_admin_user.id
     config = {
         DOMAIN: {
@@ -247,7 +248,7 @@ async def test_ignore_unavailable_states(
     hass: HomeAssistant, hass_admin_user: MockUser
 ) -> None:
     """Test set up person with two device trackers, one unavailable."""
-    hass.state = CoreState.not_running
+    hass.set_state(CoreState.not_running)
     user_id = hass_admin_user.id
     config = {
         DOMAIN: {
@@ -302,7 +303,7 @@ async def test_restore_home_state(
     }
     state = State("person.tracked_person", "home", attrs)
     mock_restore_cache(hass, (state,))
-    hass.state = CoreState.not_running
+    hass.set_state(CoreState.not_running)
     mock_component(hass, "recorder")
     config = {
         DOMAIN: {
@@ -348,8 +349,8 @@ async def test_create_person_during_run(hass: HomeAssistant) -> None:
     hass.states.async_set(DEVICE_TRACKER, "home")
     await hass.async_block_till_done()
 
-    await hass.components.person.async_create_person(
-        "tracked person", device_trackers=[DEVICE_TRACKER]
+    await person.async_create_person(
+        hass, "tracked person", device_trackers=[DEVICE_TRACKER]
     )
     await hass.async_block_till_done()
 

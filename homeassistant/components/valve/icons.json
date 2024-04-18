@@ -1,0 +1,20 @@
+{
+  "entity_component": {
+    "_": {
+      "default": "mdi:pipe-valve"
+    },
+    "gas": {
+      "default": "mdi:meter-gas"
+    },
+    "water": {
+      "default": "mdi:pipe-valve"
+    }
+  },
+  "services": {
+    "close_valve": "mdi:valve-closed",
+    "open_valve": "mdi:valve-open",
+    "set_valve_position": "mdi:valve",
+    "stop_valve": "mdi:stop",
+    "toggle": "mdi:valve-open"
+  }
+}

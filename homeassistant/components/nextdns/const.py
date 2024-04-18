@@ -1,4 +1,5 @@
 """Constants for NextDNS integration."""
+
 from datetime import timedelta
 
 ATTR_CONNECTION = "connection"

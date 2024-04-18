@@ -1,4 +1,5 @@
 """Support for Modern Forms Fan Fans."""
+
 from __future__ import annotations
 
 from typing import Any

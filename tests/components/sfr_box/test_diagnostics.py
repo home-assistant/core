@@ -1,4 +1,5 @@
 """Test the SFR Box diagnostics."""
+
 from collections.abc import Generator
 from unittest.mock import patch
 

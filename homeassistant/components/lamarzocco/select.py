@@ -34,10 +34,9 @@ ENTITIES: tuple[LaMarzoccoSelectEntityDescription, ...] = (
     LaMarzoccoSelectEntityDescription(
         key="steam_temp_select",
         translation_key="steam_temp_select",
-        icon="mdi:water-thermometer",
         options=["1", "2", "3"],
         select_option_fn=lambda coordinator, option: coordinator.lm.set_steam_level(
-            int(option)
+            int(option), coordinator.async_get_ble_device()
         ),
         current_option_fn=lambda lm: lm.current_status["steam_level_set"],
         supported_fn=lambda coordinator: coordinator.lm.model_name
@@ -46,7 +45,6 @@ ENTITIES: tuple[LaMarzoccoSelectEntityDescription, ...] = (
     LaMarzoccoSelectEntityDescription(
         key="prebrew_infusion_select",
         translation_key="prebrew_infusion_select",
-        icon="mdi:water-plus",
         options=["disabled", "prebrew", "preinfusion"],
         select_option_fn=lambda coordinator,
         option: coordinator.lm.select_pre_brew_infusion_mode(option.capitalize()),

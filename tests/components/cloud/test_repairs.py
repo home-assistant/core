@@ -1,4 +1,5 @@
 """Test cloud repairs."""
+
 from collections.abc import Generator
 from datetime import timedelta
 from http import HTTPStatus
@@ -147,13 +148,11 @@ async def test_legacy_subscription_repair_flow(
 
     flow_id = data["flow_id"]
     assert data == {
-        "version": 1,
         "type": "create_entry",
         "flow_id": flow_id,
         "handler": DOMAIN,
         "description": None,
         "description_placeholders": None,
-        "minor_version": 1,
     }
 
     assert not issue_registry.async_get_issue(

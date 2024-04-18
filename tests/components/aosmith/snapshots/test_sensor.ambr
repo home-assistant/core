@@ -10,6 +10,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.my_water_heater_energy_usage',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '132.825',
   })
@@ -19,7 +20,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
       'friendly_name': 'My water heater Hot water availability',
-      'icon': 'mdi:water-thermometer',
       'options': list([
         'low',
         'medium',
@@ -29,6 +29,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.my_water_heater_hot_water_availability',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'low',
   })

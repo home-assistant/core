@@ -1,0 +1,27 @@
+{
+  "entity": {
+    "sensor": {
+      "last_rain": {
+        "default": "mdi:water"
+      },
+      "lightning_strikes_per_day": {
+        "default": "mdi:lightning-bolt"
+      },
+      "lightning_strikes_per_hour": {
+        "default": "mdi:lightning-bolt"
+      },
+      "wind_direction": {
+        "default": "mdi:weather-windy"
+      },
+      "wind_direction_average_10m": {
+        "default": "mdi:weather-windy"
+      },
+      "wind_direction_average_2m": {
+        "default": "mdi:weather-windy"
+      },
+      "wind_gust_direction": {
+        "default": "mdi:weather-windy"
+      }
+    }
+  }
+}

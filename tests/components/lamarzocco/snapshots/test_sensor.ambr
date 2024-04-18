@@ -18,11 +18,16 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': 'mdi:thermometer',
+    'original_icon': None,
     'original_name': 'Current coffee temperature',
     'platform': 'lamarzocco',
     'previous_unique_id': None,
@@ -37,13 +42,13 @@
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
       'friendly_name': 'GS01234 Current coffee temperature',
-      'icon': 'mdi:thermometer',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.gs01234_current_coffee_temperature',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '93',
   })
@@ -67,11 +72,16 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': 'mdi:thermometer',
+    'original_icon': None,
     'original_name': 'Current steam temperature',
     'platform': 'lamarzocco',
     'previous_unique_id': None,
@@ -86,13 +96,13 @@
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
       'friendly_name': 'GS01234 Current steam temperature',
-      'icon': 'mdi:thermometer',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.gs01234_current_steam_temperature',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '113',
   })
@@ -116,11 +126,13 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
-    'original_icon': 'mdi:timer',
+    'original_icon': None,
     'original_name': 'Shot timer',
     'platform': 'lamarzocco',
     'previous_unique_id': None,
@@ -135,13 +147,13 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'GS01234 Shot timer',
-      'icon': 'mdi:timer',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.gs01234_shot_timer',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
@@ -165,11 +177,13 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:chart-line',
+    'original_icon': None,
     'original_name': 'Total coffees made',
     'platform': 'lamarzocco',
     'previous_unique_id': None,
@@ -183,13 +197,13 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'GS01234 Total coffees made',
-      'icon': 'mdi:chart-line',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': 'drinks',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.gs01234_total_coffees_made',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '13',
   })
@@ -213,11 +227,13 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:chart-line',
+    'original_icon': None,
     'original_name': 'Total flushes made',
     'platform': 'lamarzocco',
     'previous_unique_id': None,
@@ -231,13 +247,13 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'GS01234 Total flushes made',
-      'icon': 'mdi:chart-line',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': 'drinks',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.gs01234_total_flushes_made',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '69',
   })

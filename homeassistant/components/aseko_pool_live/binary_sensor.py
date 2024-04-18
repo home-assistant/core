@@ -1,4 +1,5 @@
 """Support for Aseko Pool Live binary sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -20,25 +21,17 @@ from .coordinator import AsekoDataUpdateCoordinator
 from .entity import AsekoEntity
 
 
-@dataclass(frozen=True)
-class AsekoBinarySensorDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class AsekoBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Describes an Aseko binary sensor entity."""
 
     value_fn: Callable[[Unit], bool]
-
-
-@dataclass(frozen=True)
-class AsekoBinarySensorEntityDescription(
-    BinarySensorEntityDescription, AsekoBinarySensorDescriptionMixin
-):
-    """Describes an Aseko binary sensor entity."""
 
 
 UNIT_BINARY_SENSORS: tuple[AsekoBinarySensorEntityDescription, ...] = (
     AsekoBinarySensorEntityDescription(
         key="water_flow",
         translation_key="water_flow",
-        icon="mdi:waves-arrow-right",
         value_fn=lambda unit: unit.water_flow,
     ),
     AsekoBinarySensorEntityDescription(
@@ -64,11 +57,11 @@ async def async_setup_entry(
     data: list[tuple[Unit, AsekoDataUpdateCoordinator]] = hass.data[DOMAIN][
         config_entry.entry_id
     ]
-    entities: list[BinarySensorEntity] = []
-    for unit, coordinator in data:
-        for description in UNIT_BINARY_SENSORS:
-            entities.append(AsekoUnitBinarySensorEntity(unit, coordinator, description))
-    async_add_entities(entities)
+    async_add_entities(
+        AsekoUnitBinarySensorEntity(unit, coordinator, description)
+        for unit, coordinator in data
+        for description in UNIT_BINARY_SENSORS
+    )
 
 
 class AsekoUnitBinarySensorEntity(AsekoEntity, BinarySensorEntity):

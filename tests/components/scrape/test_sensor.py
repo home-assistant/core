@@ -1,27 +1,40 @@
 """The tests for the Scrape sensor platform."""
+
 from __future__ import annotations
 
 from datetime import timedelta
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
+from homeassistant.components.rest.const import DEFAULT_METHOD
+from homeassistant.components.rest.data import DEFAULT_TIMEOUT
 from homeassistant.components.scrape.const import (
+    CONF_ENCODING,
     CONF_INDEX,
     CONF_SELECT,
+    DEFAULT_ENCODING,
     DEFAULT_SCAN_INTERVAL,
+    DEFAULT_VERIFY_SSL,
 )
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
+    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorStateClass,
 )
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_ICON,
+    CONF_METHOD,
     CONF_NAME,
+    CONF_RESOURCE,
+    CONF_TIMEOUT,
     CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
+    CONF_VALUE_TEMPLATE,
+    CONF_VERIFY_SSL,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     UnitOfTemperature,
@@ -248,7 +261,7 @@ async def test_scrape_sensor_no_data_refresh(hass: HomeAssistant) -> None:
 
         mocker.payload = "test_scrape_sensor_no_data"
         async_fire_time_changed(hass, dt_util.utcnow() + DEFAULT_SCAN_INTERVAL)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("sensor.ha_version")
     assert state is not None
@@ -528,7 +541,7 @@ async def test_templates_with_yaml(hass: HomeAssistant) -> None:
         hass,
         dt_util.utcnow() + timedelta(minutes=10),
     )
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("sensor.get_values_with_template")
     assert state.state == "Current Version: 2021.12.10"
@@ -542,7 +555,7 @@ async def test_templates_with_yaml(hass: HomeAssistant) -> None:
         hass,
         dt_util.utcnow() + timedelta(minutes=20),
     )
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("sensor.get_values_with_template")
     assert state.state == STATE_UNAVAILABLE
@@ -555,9 +568,57 @@ async def test_templates_with_yaml(hass: HomeAssistant) -> None:
         hass,
         dt_util.utcnow() + timedelta(minutes=30),
     )
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("sensor.get_values_with_template")
     assert state.state == "Current Version: 2021.12.10"
     assert state.attributes[CONF_ICON] == "mdi:on"
     assert state.attributes["entity_picture"] == "/local/picture1.jpg"
+
+
+@pytest.mark.parametrize(
+    "get_config",
+    [
+        {
+            CONF_RESOURCE: "https://www.home-assistant.io",
+            CONF_METHOD: DEFAULT_METHOD,
+            CONF_VERIFY_SSL: DEFAULT_VERIFY_SSL,
+            CONF_TIMEOUT: DEFAULT_TIMEOUT,
+            CONF_ENCODING: DEFAULT_ENCODING,
+            SENSOR_DOMAIN: [
+                {
+                    CONF_SELECT: ".current-version h1",
+                    CONF_NAME: "Current version",
+                    CONF_VALUE_TEMPLATE: "{{ value.split(':')[1] }}",
+                    CONF_INDEX: 0,
+                    CONF_UNIQUE_ID: "3699ef88-69e6-11ed-a1eb-0242ac120002",
+                    CONF_AVAILABILITY: '{{ states("sensor.input1")=="on" }}',
+                }
+            ],
+        }
+    ],
+)
+async def test_availability(
+    hass: HomeAssistant,
+    loaded_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test availability when setup from config entry."""
+
+    hass.states.async_set("sensor.input1", "on")
+    freezer.tick(timedelta(minutes=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get("sensor.current_version")
+    assert state.state == "2021.12.10"
+
+    hass.states.async_set("sensor.input1", "off")
+    await hass.async_block_till_done()
+
+    freezer.tick(timedelta(minutes=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get("sensor.current_version")
+    assert state.state == STATE_UNAVAILABLE

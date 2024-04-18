@@ -1,4 +1,5 @@
 """Test ZHA climate."""
+
 from typing import Literal
 from unittest.mock import call, patch
 
@@ -400,7 +401,9 @@ async def test_climate_hvac_action_running_state_zen(
 
     thrm_cluster = device_climate_zen.device.endpoints[1].thermostat
     entity_id = find_entity_id(Platform.CLIMATE, device_climate_zen, hass)
-    sensor_entity_id = find_entity_id(Platform.SENSOR, device_climate_zen, hass)
+    sensor_entity_id = find_entity_id(
+        Platform.SENSOR, device_climate_zen, hass, "hvac_action"
+    )
 
     state = hass.states.get(entity_id)
     assert ATTR_HVAC_ACTION not in state.attributes
@@ -520,14 +523,14 @@ async def test_climate_hvac_action_pi_demand(
 
 @pytest.mark.parametrize(
     ("sys_mode", "hvac_mode"),
-    (
+    [
         (Thermostat.SystemMode.Auto, HVACMode.HEAT_COOL),
         (Thermostat.SystemMode.Cool, HVACMode.COOL),
         (Thermostat.SystemMode.Heat, HVACMode.HEAT),
         (Thermostat.SystemMode.Pre_cooling, HVACMode.COOL),
         (Thermostat.SystemMode.Fan_only, HVACMode.FAN_ONLY),
         (Thermostat.SystemMode.Dry, HVACMode.DRY),
-    ),
+    ],
 )
 async def test_hvac_mode(
     hass: HomeAssistant, device_climate, sys_mode, hvac_mode
@@ -557,7 +560,7 @@ async def test_hvac_mode(
 
 @pytest.mark.parametrize(
     ("seq_of_op", "modes"),
-    (
+    [
         (0xFF, {HVACMode.OFF}),
         (0x00, {HVACMode.OFF, HVACMode.COOL}),
         (0x01, {HVACMode.OFF, HVACMode.COOL}),
@@ -565,7 +568,7 @@ async def test_hvac_mode(
         (0x03, {HVACMode.OFF, HVACMode.HEAT}),
         (0x04, {HVACMode.OFF, HVACMode.COOL, HVACMode.HEAT, HVACMode.HEAT_COOL}),
         (0x05, {HVACMode.OFF, HVACMode.COOL, HVACMode.HEAT, HVACMode.HEAT_COOL}),
-    ),
+    ],
 )
 async def test_hvac_modes(
     hass: HomeAssistant, device_climate_mock, seq_of_op, modes
@@ -582,12 +585,12 @@ async def test_hvac_modes(
 
 @pytest.mark.parametrize(
     ("sys_mode", "preset", "target_temp"),
-    (
+    [
         (Thermostat.SystemMode.Heat, None, 22),
         (Thermostat.SystemMode.Heat, PRESET_AWAY, 16),
         (Thermostat.SystemMode.Cool, None, 25),
         (Thermostat.SystemMode.Cool, PRESET_AWAY, 27),
-    ),
+    ],
 )
 async def test_target_temperature(
     hass: HomeAssistant,
@@ -625,11 +628,11 @@ async def test_target_temperature(
 
 @pytest.mark.parametrize(
     ("preset", "unoccupied", "target_temp"),
-    (
+    [
         (None, 1800, 17),
         (PRESET_AWAY, 1800, 18),
         (PRESET_AWAY, None, None),
-    ),
+    ],
 )
 async def test_target_temperature_high(
     hass: HomeAssistant, device_climate_mock, preset, unoccupied, target_temp
@@ -661,11 +664,11 @@ async def test_target_temperature_high(
 
 @pytest.mark.parametrize(
     ("preset", "unoccupied", "target_temp"),
-    (
+    [
         (None, 1600, 21),
         (PRESET_AWAY, 1600, 16),
         (PRESET_AWAY, None, None),
-    ),
+    ],
 )
 async def test_target_temperature_low(
     hass: HomeAssistant, device_climate_mock, preset, unoccupied, target_temp
@@ -697,14 +700,14 @@ async def test_target_temperature_low(
 
 @pytest.mark.parametrize(
     ("hvac_mode", "sys_mode"),
-    (
+    [
         (HVACMode.AUTO, None),
         (HVACMode.COOL, Thermostat.SystemMode.Cool),
         (HVACMode.DRY, None),
         (HVACMode.FAN_ONLY, None),
         (HVACMode.HEAT, Thermostat.SystemMode.Heat),
         (HVACMode.HEAT_COOL, Thermostat.SystemMode.Auto),
-    ),
+    ],
 )
 async def test_set_hvac_mode(
     hass: HomeAssistant, device_climate, hvac_mode, sys_mode

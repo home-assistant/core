@@ -4,11 +4,11 @@
     'attributes': ReadOnlyDict({
       'device_class': 'running',
       'friendly_name': 'GS01234 Brewing active',
-      'icon': 'mdi:cup-off',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.gs01234_brewing_active',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
@@ -30,11 +30,13 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
-    'original_icon': 'mdi:cup-off',
+    'original_icon': None,
     'original_name': 'Brewing active',
     'platform': 'lamarzocco',
     'previous_unique_id': None,
@@ -49,11 +51,11 @@
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'friendly_name': 'GS01234 Water tank empty',
-      'icon': 'mdi:water-check',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.gs01234_water_tank_empty',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
@@ -75,11 +77,13 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-    'original_icon': 'mdi:water-check',
+    'original_icon': None,
     'original_name': 'Water tank empty',
     'platform': 'lamarzocco',
     'previous_unique_id': None,
