@@ -10,6 +10,9 @@ from universal_silabs_flasher.const import ApplicationType
 
 from homeassistant.components import usb
 from homeassistant.components.hassio.addon_manager import AddonInfo, AddonState
+from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon import (
+    get_multiprotocol_addon_manager,
+)
 from homeassistant.components.homeassistant_sky_connect.config_flow import (
     STEP_PICK_FIRMWARE_THREAD,
     STEP_PICK_FIRMWARE_ZIGBEE,
@@ -84,7 +87,7 @@ async def test_config_flow_zigbee(
 
     assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "pick_firmware"
-    assert result["description_placeholders"]["firmware_type"] == ApplicationType.EZSP
+    assert result["description_placeholders"]["firmware_type"] == "ezsp"
 
     # Set up Zigbee firmware
     mock_flasher_manager = Mock(spec_set=get_zigbee_flasher_addon_manager(hass))
@@ -211,7 +214,7 @@ async def test_config_flow_thread(
 
     assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "pick_firmware"
-    assert result["description_placeholders"]["firmware_type"] == ApplicationType.EZSP
+    assert result["description_placeholders"]["firmware_type"] == "ezsp"
 
     # Set up Thread firmware
     mock_otbr_manager = Mock(spec_set=get_otbr_addon_manager(hass))
@@ -432,3 +435,194 @@ async def test_options_flow_zigbee_to_thread(
 
     # The firmware type has been updated
     assert config_entry.data["firmware"] == "spinel"
+
+
+@pytest.mark.parametrize(
+    ("usb_data", "model"),
+    [
+        (USB_DATA_SKY, "Home Assistant SkyConnect"),
+        (USB_DATA_ZBT1, "Home Assistant Connect ZBT-1"),
+    ],
+)
+async def test_options_flow_thread_to_zigbee(
+    usb_data: usb.UsbServiceInfo, model: str, hass: HomeAssistant
+) -> None:
+    """Test the options flow for SkyConnect, migrating Thread to Zigbee."""
+    config_entry = MockConfigEntry(
+        domain="homeassistant_sky_connect",
+        data={
+            "firmware": "spinel",
+            "device": usb_data.device,
+            "manufacturer": usb_data.manufacturer,
+            "pid": usb_data.pid,
+            "product": usb_data.description,
+            "serial_number": usb_data.serial_number,
+            "vid": usb_data.vid,
+        },
+        version=2,
+    )
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+    # First step is confirmation
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "pick_firmware"
+    assert result["description_placeholders"]["firmware_type"] == "spinel"
+    assert result["description_placeholders"]["model"] == model
+
+    # Set up Zigbee firmware
+    mock_flasher_manager = Mock(spec_set=get_zigbee_flasher_addon_manager(hass))
+    mock_flasher_manager.async_install_addon_waiting = AsyncMock(
+        side_effect=delayed_side_effect()
+    )
+    mock_flasher_manager.async_start_addon_waiting = AsyncMock(
+        side_effect=delayed_side_effect()
+    )
+    mock_flasher_manager.async_uninstall_addon_waiting = AsyncMock(
+        side_effect=delayed_side_effect()
+    )
+
+    # OTBR is not installed
+    mock_otbr_manager = Mock(spec_set=get_otbr_addon_manager(hass))
+    mock_otbr_manager.async_get_addon_info.return_value = AddonInfo(
+        available=True,
+        hostname=None,
+        options={},
+        state=AddonState.NOT_INSTALLED,
+        update_available=False,
+        version=None,
+    )
+
+    with (
+        patch(
+            "homeassistant.components.homeassistant_sky_connect.config_flow.get_zigbee_flasher_addon_manager",
+            return_value=mock_flasher_manager,
+        ),
+        patch(
+            "homeassistant.components.homeassistant_sky_connect.config_flow.get_otbr_addon_manager",
+            return_value=mock_otbr_manager,
+        ),
+        patch(
+            "homeassistant.components.homeassistant_sky_connect.config_flow.is_hassio",
+            return_value=True,
+        ),
+    ):
+        mock_flasher_manager.addon_name = "Silicon Labs Flasher"
+        mock_flasher_manager.async_get_addon_info.return_value = AddonInfo(
+            available=True,
+            hostname=None,
+            options={},
+            state=AddonState.NOT_INSTALLED,
+            update_available=False,
+            version=None,
+        )
+
+        # Pick the menu option: we are now installing the addon
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={"next_step_id": STEP_PICK_FIRMWARE_ZIGBEE},
+        )
+        assert result["type"] is FlowResultType.SHOW_PROGRESS
+        assert result["progress_action"] == "install_addon"
+        assert result["step_id"] == "install_zigbee_flasher_addon"
+
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        # Progress the flow, we are now configuring the addon and running it
+        result = await hass.config_entries.options.async_configure(result["flow_id"])
+        assert result["type"] is FlowResultType.SHOW_PROGRESS
+        assert result["step_id"] == "run_zigbee_flasher_addon"
+        assert result["progress_action"] == "run_zigbee_flasher_addon"
+        assert mock_flasher_manager.async_set_addon_options.mock_calls == [
+            call(
+                {
+                    "device": usb_data.device,
+                    "baudrate": 115200,
+                    "bootloader_baudrate": 115200,
+                    "flow_control": True,
+                }
+            )
+        ]
+
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        # Progress the flow, we are now uninstalling the addon
+        result = await hass.config_entries.options.async_configure(result["flow_id"])
+        assert result["type"] is FlowResultType.SHOW_PROGRESS
+        assert result["step_id"] == "uninstall_zigbee_flasher_addon"
+        assert result["progress_action"] == "uninstall_zigbee_flasher_addon"
+
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        # We are finally done with the addon
+        assert mock_flasher_manager.async_uninstall_addon_waiting.mock_calls == [call()]
+
+        result = await hass.config_entries.options.async_configure(result["flow_id"])
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "confirm_zigbee"
+
+    # We are now done
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+    # The firmware type has been updated
+    assert config_entry.data["firmware"] == "ezsp"
+
+
+@pytest.mark.parametrize(
+    ("usb_data", "model"),
+    [
+        (USB_DATA_SKY, "Home Assistant SkyConnect"),
+        (USB_DATA_ZBT1, "Home Assistant Connect ZBT-1"),
+    ],
+)
+async def test_options_flow_multipan_uninstall(
+    usb_data: usb.UsbServiceInfo, model: str, hass: HomeAssistant
+) -> None:
+    """Test options flow for when multi-PAN firmware is installed."""
+    config_entry = MockConfigEntry(
+        domain="homeassistant_sky_connect",
+        data={
+            "firmware": "cpc",
+            "device": usb_data.device,
+            "manufacturer": usb_data.manufacturer,
+            "pid": usb_data.pid,
+            "product": usb_data.description,
+            "serial_number": usb_data.serial_number,
+            "vid": usb_data.vid,
+        },
+        version=2,
+    )
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+    # Multi-PAN addon is running
+    mock_multipan_manager = Mock(spec_set=await get_multiprotocol_addon_manager(hass))
+    mock_multipan_manager.async_get_addon_info.return_value = AddonInfo(
+        available=True,
+        hostname=None,
+        options={"device": usb_data.device},
+        state=AddonState.RUNNING,
+        update_available=False,
+        version="1.0.0",
+    )
+
+    with (
+        patch(
+            "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.get_multiprotocol_addon_manager",
+            return_value=mock_multipan_manager,
+        ),
+        patch(
+            "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.is_hassio",
+            return_value=True,
+        ),
+    ):
+        result = await hass.config_entries.options.async_init(config_entry.entry_id)
+        assert result["type"] is FlowResultType.MENU
+        assert result["step_id"] == "addon_menu"
+        assert "uninstall_addon" in result["menu_options"]
