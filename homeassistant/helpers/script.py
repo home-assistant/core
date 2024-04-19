@@ -650,6 +650,7 @@ class _ScriptRun:
         # check if condition already okay
         if condition.async_template(self._hass, wait_template, self._variables, False):
             self._variables["wait"]["completed"] = True
+            self._changed()
             return
 
         if timeout == 0:
