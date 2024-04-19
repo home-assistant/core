@@ -156,4 +156,4 @@ class AirthingsHeaterEnergySensor(
     @property
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
-        return self.coordinator.data[self._id].sensors[self.entity_description.key]  # type: ignore[no-any-return]
+        return self.coordinator.data[self._id].sensors.get(self.entity_description.key)  # type: ignore[no-any-return]
