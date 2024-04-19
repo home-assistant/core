@@ -39,6 +39,7 @@ from homeassistant.util import dt as dt_util
 from .const import (
     ATTR_NEXT_EVENT,
     CONF_ALL_DAYS,
+    CONF_DATA,
     CONF_FROM,
     CONF_TO,
     DOMAIN,
@@ -109,9 +110,13 @@ BASE_SCHEMA = {
     vol.Optional(CONF_ICON): cv.icon,
 }
 
+# Extra data that the user can set on each time range
+CUSTOM_DATA_SCHEMA = vol.Or(vol.Schema({str: vol.Coerce(str)}), vol.Coerce(str))
+
 TIME_RANGE_SCHEMA = {
     vol.Required(CONF_FROM): cv.time,
     vol.Required(CONF_TO): deserialize_to_time,
+    vol.Optional(CONF_DATA): CUSTOM_DATA_SCHEMA,
 }
 
 # Serialize time in validated config
@@ -119,6 +124,7 @@ STORAGE_TIME_RANGE_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_FROM): vol.Coerce(str),
         vol.Required(CONF_TO): serialize_to_time,
+        vol.Optional(CONF_DATA): CUSTOM_DATA_SCHEMA,
     }
 )
 
@@ -152,7 +158,7 @@ ENTITY_SCHEMA = vol.Schema(
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up an input select."""
+    """Set up a schedule."""
     component = EntityComponent[Schedule](LOGGER, DOMAIN, hass)
 
     id_manager = IDManager()
@@ -300,9 +306,11 @@ class Schedule(CollectionEntity):
             # Note that any time in the day is treated as smaller than time.max.
             if now.time() < time_range[CONF_TO] or time_range[CONF_TO] == time.max:
                 self._attr_state = STATE_ON
+                current_data = time_range.get(CONF_DATA)
                 break
         else:
             self._attr_state = STATE_OFF
+            current_data = None
 
         # Find next event in the schedule, loop over each day (starting with
         # the current day) until the next event has been found.
@@ -344,6 +352,14 @@ class Schedule(CollectionEntity):
         self._attr_extra_state_attributes = {
             ATTR_NEXT_EVENT: next_event,
         }
+
+        if isinstance(current_data, dict):
+            # Add each key/value pair in the data to the entity's state attributes
+            self._attr_extra_state_attributes.update(current_data)
+        elif current_data is not None:
+            # Expose the data as a single state attribute
+            self._attr_extra_state_attributes[CONF_DATA] = current_data
+
         self.async_write_ha_state()
 
         if next_event:
