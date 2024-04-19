@@ -24,7 +24,7 @@ from .entity import MonzoBaseEntity
 class MonzoSensorEntityDescriptionMixin:
     """Adds fields for Monzo sensors."""
 
-    value: Callable[[dict[str, Any]], Any]
+    value_fn: Callable[[dict[str, Any]], Any]
 
 
 @dataclass
@@ -38,7 +38,7 @@ ACC_SENSORS = (
     MonzoSensorEntityDescription(
         key="balance",
         translation_key="balance",
-        value=lambda data: data["balance"]["balance"] / 100,
+        value_fn=lambda data: data["balance"]["balance"] / 100,
         device_class=SensorDeviceClass.MONETARY,
         native_unit_of_measurement="£",
         suggested_display_precision=2,
@@ -46,7 +46,7 @@ ACC_SENSORS = (
     MonzoSensorEntityDescription(
         key="total_balance",
         translation_key="total_balance",
-        value=lambda data: data["balance"]["total_balance"] / 100,
+        value_fn=lambda data: data["balance"]["total_balance"] / 100,
         device_class=SensorDeviceClass.MONETARY,
         native_unit_of_measurement="£",
         suggested_display_precision=2,
@@ -57,7 +57,7 @@ POT_SENSORS = (
     MonzoSensorEntityDescription(
         key="pot_balance",
         translation_key="pot_balance",
-        value=lambda data: data["balance"] / 100,
+        value_fn=lambda data: data["balance"] / 100,
         device_class=SensorDeviceClass.MONETARY,
         native_unit_of_measurement="£",
         suggested_display_precision=2,
@@ -122,7 +122,7 @@ class MonzoSensor(MonzoBaseEntity, SensorEntity):
         """Return the state."""
 
         try:
-            state = self.entity_description.value(self.data)
+            state = self.entity_description.value_fn(self.data)
         except (KeyError, ValueError):
             return None
 
