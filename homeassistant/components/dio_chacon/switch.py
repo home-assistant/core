@@ -1,10 +1,10 @@
-"""Light Platform for Dio Chacon REV-LIGHT devices."""
+"""Switch Platform for Dio Chacon REV-LIGHT and switch plug devices."""
 import logging
 from typing import Any
 
 from dio_chacon_wifi_api.const import DeviceTypeEnum
 
-from homeassistant.components.light import ColorMode, LightEntity
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -26,18 +26,19 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Discover and configure lights."""
+    """Discover and configure switches."""
 
     data = hass.data[DOMAIN][config_entry.entry_id]
     dio_chacon_client = data
 
     list_devices = await dio_chacon_client.search_all_devices(
-        device_type_to_search=DeviceTypeEnum.LIGHT, with_state=True
+        device_type_to_search=[DeviceTypeEnum.SWITCH_LIGHT, DeviceTypeEnum.SWITCH_PLUG],
+        with_state=True,
     )
 
     if not list_devices:
         _LOGGER.info(
-            "DIO Chacon did not setup lights because there are no devices of this type on this account %s",
+            "DIO Chacon did not setup switches because there are no devices of this type on this account %s",
             config_entry.title,
         )
         return
@@ -59,7 +60,7 @@ async def async_setup_entry(
         )
 
         _LOGGER.info(
-            "Adding DIO Chacon LIGHT with id %s, name %s, is_on %s, and connected %s",
+            "Adding DIO Chacon SWITCH with id %s, name %s, is_on %s, and connected %s",
             device["id"],
             device["name"],
             device["is_on"],
@@ -69,19 +70,17 @@ async def async_setup_entry(
     async_add_entities(device_list)
 
 
-class DioChaconShade(RestoreEntity, LightEntity):
-    """Object for controlling a Dio Chacon cover."""
+class DioChaconShade(RestoreEntity, SwitchEntity):
+    """Object for controlling a Dio Chacon switch."""
 
     _attr_should_poll = False
     _attr_assumed_state = True
     _attr_has_entity_name = False
-    _attr_supported_color_modes = {ColorMode.ONOFF}
-    _attr_color_mode = ColorMode.ONOFF
 
     def __init__(
         self, dio_chacon_client, target_id, name, is_on, connected, model
     ) -> None:
-        """Initialize the cover."""
+        """Initialize the switch."""
         self.dio_chacon_client = dio_chacon_client
         self._target_id = target_id
         self._attr_unique_id = target_id
@@ -96,20 +95,20 @@ class DioChaconShade(RestoreEntity, LightEntity):
         )
 
     async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn on the light."""
+        """Turn on the switch."""
 
-        _LOGGER.debug("Turn on the light %s , %s", self._target_id, self._attr_name)
+        _LOGGER.debug("Turn on the switch %s , %s", self._target_id, self._attr_name)
 
-        await self.dio_chacon_client.switch_light(self._target_id, True)
+        await self.dio_chacon_client.switch_switch(self._target_id, True)
 
         # Effective state received via callback _on_device_state_changed
 
     async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn off the light."""
+        """Turn off the switch."""
 
-        _LOGGER.debug("Turn off the light %s , %s", self._target_id, self._attr_name)
+        _LOGGER.debug("Turn off the switch %s , %s", self._target_id, self._attr_name)
 
-        await self.dio_chacon_client.switch_light(self._target_id, False)
+        await self.dio_chacon_client.switch_switch(self._target_id, False)
 
         # Effective state received via callback _on_device_state_changed
 
@@ -150,7 +149,7 @@ class DioChaconShade(RestoreEntity, LightEntity):
     async def async_update(self) -> None:
         """Get the latest data from the Dio Chacon API and update the states."""
         _LOGGER.debug(
-            "Launching reload of light device state for id %s, and name %s",
+            "Launching reload of switch device state for id %s, and name %s",
             self._target_id,
             self._attr_name,
         )

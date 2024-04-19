@@ -37,7 +37,7 @@ async def async_setup_entry(
     dio_chacon_client = data
 
     list_devices = await dio_chacon_client.search_all_devices(
-        device_type_to_search=DeviceTypeEnum.SHUTTER, with_state=True
+        device_type_to_search=[DeviceTypeEnum.SHUTTER], with_state=True
     )
 
     if not list_devices:
