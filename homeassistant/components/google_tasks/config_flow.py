@@ -1,4 +1,5 @@
 """Config flow for Google Tasks."""
+
 import logging
 from typing import Any
 
@@ -52,7 +53,7 @@ class OAuth2FlowHandler(
                 reason="access_not_configured",
                 description_placeholders={"message": error},
             )
-        except Exception as ex:  # pylint: disable=broad-except
-            self.logger.exception("Unknown error occurred: %s", ex)
+        except Exception:  # pylint: disable=broad-except
+            self.logger.exception("Unknown error occurred")
             return self.async_abort(reason="unknown")
         return self.async_create_entry(title=self.flow_impl.name, data=data)

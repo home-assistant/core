@@ -1,4 +1,5 @@
 """Config flow for Balboa Spa Client integration."""
+
 from __future__ import annotations
 
 import logging

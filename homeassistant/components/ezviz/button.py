@@ -1,4 +1,5 @@
 """Support for EZVIZ button controls."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -22,19 +23,12 @@ from .entity import EzvizEntity
 PARALLEL_UPDATES = 1
 
 
-@dataclass(frozen=True)
-class EzvizButtonEntityDescriptionMixin:
-    """Mixin values for EZVIZ button entities."""
+@dataclass(frozen=True, kw_only=True)
+class EzvizButtonEntityDescription(ButtonEntityDescription):
+    """Describe a EZVIZ Button."""
 
     method: Callable[[EzvizClient, str, str], Any]
     supported_ext: str
-
-
-@dataclass(frozen=True)
-class EzvizButtonEntityDescription(
-    ButtonEntityDescription, EzvizButtonEntityDescriptionMixin
-):
-    """Describe a EZVIZ Button."""
 
 
 BUTTON_ENTITIES = (
@@ -88,9 +82,9 @@ async def async_setup_entry(
     async_add_entities(
         EzvizButtonEntity(coordinator, camera, entity_description)
         for camera in coordinator.data
-        for capibility, value in coordinator.data[camera]["supportExt"].items()
+        for capability, value in coordinator.data[camera]["supportExt"].items()
         for entity_description in BUTTON_ENTITIES
-        if capibility == entity_description.supported_ext
+        if capability == entity_description.supported_ext
         if value == "1"
     )
 

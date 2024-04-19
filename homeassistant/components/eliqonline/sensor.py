@@ -1,4 +1,5 @@
 """Monitors home energy use for the ELIQ Online service."""
+
 from __future__ import annotations
 
 from datetime import timedelta

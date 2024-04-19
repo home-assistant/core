@@ -1,4 +1,5 @@
 """Constants for the Z-Wave JS integration."""
+
 from __future__ import annotations
 
 import logging

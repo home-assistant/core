@@ -1,4 +1,5 @@
 """System Bridge integration data."""
+
 from dataclasses import dataclass, field
 
 from systembridgemodels.modules import (

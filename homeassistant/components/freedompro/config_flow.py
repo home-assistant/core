@@ -1,4 +1,5 @@
 """Config flow to configure Freedompro."""
+
 from pyfreedompro import get_list
 import voluptuous as vol
 

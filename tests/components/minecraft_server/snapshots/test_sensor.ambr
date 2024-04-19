@@ -8,6 +8,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.minecraft_server_latency',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '5',
   })
@@ -21,6 +22,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.minecraft_server_players_online',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '3',
   })
@@ -34,6 +36,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.minecraft_server_players_max',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '10',
   })
@@ -46,6 +49,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.minecraft_server_world_message',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'Dummy MOTD',
   })
@@ -58,6 +62,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.minecraft_server_version',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'Dummy Version',
   })
@@ -70,6 +75,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.minecraft_server_protocol_version',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '123',
   })
@@ -82,6 +88,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.minecraft_server_map_name',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'Dummy Map Name',
   })
@@ -94,6 +101,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.minecraft_server_game_mode',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'Dummy Game Mode',
   })
@@ -106,6 +114,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.minecraft_server_edition',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'MCPE',
   })
@@ -119,6 +128,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.minecraft_server_latency',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '5',
   })
@@ -137,6 +147,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.minecraft_server_players_online',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '3',
   })
@@ -150,6 +161,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.minecraft_server_players_max',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '10',
   })
@@ -162,6 +174,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.minecraft_server_world_message',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'Dummy MOTD',
   })
@@ -174,6 +187,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.minecraft_server_version',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'Dummy Version',
   })
@@ -186,6 +200,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.minecraft_server_protocol_version',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '123',
   })
@@ -199,6 +214,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.minecraft_server_latency',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '5',
   })
@@ -212,6 +228,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.minecraft_server_players_online',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '3',
   })
@@ -225,6 +242,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.minecraft_server_players_max',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '10',
   })
@@ -237,6 +255,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.minecraft_server_world_message',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'Dummy MOTD',
   })
@@ -249,6 +268,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.minecraft_server_version',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'Dummy Version',
   })
@@ -261,6 +281,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.minecraft_server_protocol_version',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '123',
   })
@@ -273,6 +294,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.minecraft_server_map_name',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'Dummy Map Name',
   })
@@ -285,6 +307,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.minecraft_server_game_mode',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'Dummy Game Mode',
   })
@@ -297,6 +320,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.minecraft_server_edition',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'MCPE',
   })
@@ -310,6 +334,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.minecraft_server_latency',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '5',
   })
@@ -328,6 +353,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.minecraft_server_players_online',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '3',
   })
@@ -341,6 +367,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.minecraft_server_players_max',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '10',
   })
@@ -353,6 +380,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.minecraft_server_world_message',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'Dummy MOTD',
   })
@@ -365,6 +393,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.minecraft_server_version',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'Dummy Version',
   })
@@ -377,6 +406,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.minecraft_server_protocol_version',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '123',
   })

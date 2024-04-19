@@ -1,4 +1,5 @@
 """The Ecowitt Weather Station Component."""
+
 from __future__ import annotations
 
 from aioecowitt import EcoWittListener

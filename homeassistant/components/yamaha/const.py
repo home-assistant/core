@@ -1,4 +1,5 @@
 """Constants for the Yamaha component."""
+
 DOMAIN = "yamaha"
 CURSOR_TYPE_DOWN = "down"
 CURSOR_TYPE_LEFT = "left"

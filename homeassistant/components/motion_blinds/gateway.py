@@ -1,4 +1,5 @@
 """Code to handle a Motion Gateway."""
+
 import contextlib
 import logging
 import socket

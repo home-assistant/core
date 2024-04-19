@@ -1,4 +1,5 @@
 """Interfaces with TotalConnect sensors."""
+
 import logging
 
 from homeassistant.components.binary_sensor import (
@@ -9,6 +10,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -61,6 +63,16 @@ class TotalConnectZoneBinarySensor(BinarySensorEntity):
             "location_id": self._location_id,
             "partition": self._zone.partition,
         }
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device info."""
+        identifier = self._zone.sensor_serial_number or f"zone_{self._zone.zoneid}"
+        return DeviceInfo(
+            name=self._zone.description,
+            identifiers={(DOMAIN, identifier)},
+            serial_number=self._zone.sensor_serial_number,
+        )
 
 
 class TotalConnectZoneSecurityBinarySensor(TotalConnectZoneBinarySensor):

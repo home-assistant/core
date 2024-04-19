@@ -1,4 +1,5 @@
 """Config flow for Kodi integration."""
+
 from __future__ import annotations
 
 import logging
@@ -77,7 +78,7 @@ async def validate_ws(hass: HomeAssistant, data):
         await kwc.connect()
         if not kwc.connected:
             _LOGGER.warning("Cannot connect to %s:%s over WebSocket", host, ws_port)
-            raise WSCannotConnect()
+            raise WSCannotConnect
         kodi = Kodi(kwc)
         await kodi.ping()
     except CannotConnectError as error:
@@ -299,7 +300,7 @@ class KodiConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @callback
     def _get_data(self):
-        data = {
+        return {
             CONF_NAME: self._name,
             CONF_HOST: self._host,
             CONF_PORT: self._port,
@@ -309,8 +310,6 @@ class KodiConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_SSL: self._ssl,
             CONF_TIMEOUT: DEFAULT_TIMEOUT,
         }
-
-        return data
 
 
 class CannotConnect(HomeAssistantError):

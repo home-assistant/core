@@ -1,4 +1,5 @@
 """Support for interacting with Vultr subscriptions."""
+
 from __future__ import annotations
 
 import logging

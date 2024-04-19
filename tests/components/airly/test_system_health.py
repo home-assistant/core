@@ -1,4 +1,5 @@
 """Test Airly system health."""
+
 import asyncio
 from unittest.mock import Mock
 

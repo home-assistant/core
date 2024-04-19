@@ -1,4 +1,5 @@
 """Test different accessory types: Sensors."""
+
 from unittest.mock import patch
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass

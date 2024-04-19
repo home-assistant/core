@@ -1,4 +1,5 @@
 """The tests for the apprise notification platform."""
+
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -33,12 +34,15 @@ async def test_apprise_config_load_fail02(hass: HomeAssistant) -> None:
         BASE_COMPONENT: {"name": "test", "platform": "apprise", "config": "/path/"}
     }
 
-    with patch(
-        "homeassistant.components.apprise.notify.apprise.Apprise.add",
-        return_value=False,
-    ), patch(
-        "homeassistant.components.apprise.notify.apprise.AppriseConfig.add",
-        return_value=True,
+    with (
+        patch(
+            "homeassistant.components.apprise.notify.apprise.Apprise.add",
+            return_value=False,
+        ),
+        patch(
+            "homeassistant.components.apprise.notify.apprise.AppriseConfig.add",
+            return_value=True,
+        ),
     ):
         assert await async_setup_component(hass, BASE_COMPONENT, config)
         await hass.async_block_till_done()
@@ -120,7 +124,7 @@ async def test_apprise_notification(hass: HomeAssistant) -> None:
         # Validate calls were made under the hood correctly
         obj.add.assert_called_once_with(config[BASE_COMPONENT]["url"])
         obj.notify.assert_called_once_with(
-            **{"body": data["message"], "title": data["title"], "tag": None}
+            body=data["message"], title=data["title"], tag=None
         )
 
 
@@ -161,7 +165,7 @@ async def test_apprise_multiple_notification(hass: HomeAssistant) -> None:
         # Validate 2 calls were made under the hood
         assert obj.add.call_count == 2
         obj.notify.assert_called_once_with(
-            **{"body": data["message"], "title": data["title"], "tag": None}
+            body=data["message"], title=data["title"], tag=None
         )
 
 
@@ -203,5 +207,5 @@ async def test_apprise_notification_with_target(
 
         # Validate calls were made under the hood correctly
         apprise_obj.notify.assert_called_once_with(
-            **{"body": data["message"], "title": data["title"], "tag": data["target"]}
+            body=data["message"], title=data["title"], tag=data["target"]
         )

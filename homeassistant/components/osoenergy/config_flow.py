@@ -1,4 +1,5 @@
 """Config Flow for OSO Energy."""
+
 from collections.abc import Mapping
 import logging
 from typing import Any

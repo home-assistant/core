@@ -1,4 +1,5 @@
 """Test helpers for the Alexa integration."""
+
 from unittest.mock import Mock
 from uuid import uuid4
 

@@ -1,4 +1,5 @@
 """The tests for Philips Hue device triggers for V1 bridge."""
+
 from pytest_unordered import unordered
 
 from homeassistant.components import automation, hue

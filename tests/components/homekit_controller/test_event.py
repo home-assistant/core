@@ -1,4 +1,5 @@
 """Test homekit_controller stateless triggers."""
+
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
 

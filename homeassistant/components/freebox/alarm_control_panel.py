@@ -1,4 +1,5 @@
 """Support for Freebox alarms."""
+
 from typing import Any
 
 from homeassistant.components.alarm_control_panel import (
@@ -38,14 +39,14 @@ async def async_setup_entry(
     """Set up alarm panel."""
     router: FreeboxRouter = hass.data[DOMAIN][entry.unique_id]
 
-    alarm_entities: list[AlarmControlPanelEntity] = []
-
-    for node in router.home_devices.values():
-        if node["category"] == FreeboxHomeCategory.ALARM:
-            alarm_entities.append(FreeboxAlarm(hass, router, node))
-
-    if alarm_entities:
-        async_add_entities(alarm_entities, True)
+    async_add_entities(
+        (
+            FreeboxAlarm(hass, router, node)
+            for node in router.home_devices.values()
+            if node["category"] == FreeboxHomeCategory.ALARM
+        ),
+        True,
+    )
 
 
 class FreeboxAlarm(FreeboxHomeEntity, AlarmControlPanelEntity):

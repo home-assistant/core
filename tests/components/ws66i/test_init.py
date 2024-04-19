@@ -1,4 +1,5 @@
 """Test the WS66i 6-Zone Amplifier init file."""
+
 from unittest.mock import patch
 
 from homeassistant.components.ws66i.const import DOMAIN

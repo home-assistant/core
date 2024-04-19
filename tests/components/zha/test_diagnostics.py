@@ -1,9 +1,10 @@
 """Tests for the diagnostics data provided by the ESPHome integration."""
+
 from unittest.mock import patch
 
 import pytest
-import zigpy.profiles.zha as zha
-import zigpy.zcl.clusters.security as security
+from zigpy.profiles import zha
+from zigpy.zcl.clusters import security
 
 from homeassistant.components.diagnostics import REDACTED
 from homeassistant.components.zha.core.device import ZHADevice

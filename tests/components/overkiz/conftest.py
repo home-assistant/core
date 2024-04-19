@@ -1,4 +1,5 @@
 """Configuration for overkiz tests."""
+
 from collections.abc import Generator
 from unittest.mock import AsyncMock, Mock, patch
 

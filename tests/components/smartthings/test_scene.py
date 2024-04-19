@@ -3,6 +3,7 @@
 The only mocking required is of the underlying SmartThings API object so
 real HTTP calls are not initiated during testing.
 """
+
 from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON, STATE_UNAVAILABLE
@@ -37,7 +38,7 @@ async def test_scene_activate(hass: HomeAssistant, scene) -> None:
     assert state.attributes["icon"] == scene.icon
     assert state.attributes["color"] == scene.color
     assert state.attributes["location_id"] == scene.location_id
-    assert scene.execute.call_count == 1  # type: ignore
+    assert scene.execute.call_count == 1
 
 
 async def test_unload_config_entry(hass: HomeAssistant, scene) -> None:

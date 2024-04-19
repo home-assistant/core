@@ -1,4 +1,5 @@
 """Tests for the Abode sensor device."""
+
 from homeassistant.components.abode import ATTR_DEVICE_ID
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
 from homeassistant.const import (

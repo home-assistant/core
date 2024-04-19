@@ -1,4 +1,5 @@
 """Provides device automations for MQTT."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -352,24 +353,20 @@ async def async_get_triggers(
 ) -> list[dict[str, str]]:
     """List device triggers for MQTT devices."""
     mqtt_data = get_mqtt_data(hass)
-    triggers: list[dict[str, str]] = []
 
     if not mqtt_data.device_triggers:
-        return triggers
+        return []
 
-    for trig in mqtt_data.device_triggers.values():
-        if trig.device_id != device_id or trig.topic is None:
-            continue
-
-        trigger = {
+    return [
+        {
             **MQTT_TRIGGER_BASE,
             "device_id": device_id,
             "type": trig.type,
             "subtype": trig.subtype,
         }
-        triggers.append(trigger)
-
-    return triggers
+        for trig in mqtt_data.device_triggers.values()
+        if trig.device_id == device_id and trig.topic is not None
+    ]
 
 
 async def async_attach_trigger(

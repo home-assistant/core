@@ -1,4 +1,5 @@
 """Test ESPHome cameras."""
+
 from collections.abc import Awaitable, Callable
 
 from aioesphomeapi import (

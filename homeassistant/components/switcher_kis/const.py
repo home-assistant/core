@@ -1,4 +1,5 @@
 """Constants for the Switcher integration."""
+
 DOMAIN = "switcher_kis"
 
 CONF_DEVICE_PASSWORD = "device_password"

@@ -1,4 +1,5 @@
 """Python Control of Nobø Hub - Nobø Energy Control."""
+
 from __future__ import annotations
 
 from typing import Any

@@ -1,4 +1,5 @@
 """Support for Lutron Homeworks lights."""
+
 from __future__ import annotations
 
 import logging
@@ -27,17 +28,17 @@ async def async_setup_entry(
     data: HomeworksData = hass.data[DOMAIN][entry.entry_id]
     controller = data.controller
     controller_id = entry.options[CONF_CONTROLLER_ID]
-    devs = []
+    entities = []
     for dimmer in entry.options.get(CONF_DIMMERS, []):
-        dev = HomeworksLight(
+        entity = HomeworksLight(
             controller,
             controller_id,
             dimmer[CONF_ADDR],
             dimmer[CONF_NAME],
             dimmer[CONF_RATE],
         )
-        devs.append(dev)
-    async_add_entities(devs, True)
+        entities.append(entity)
+    async_add_entities(entities, True)
 
 
 class HomeworksLight(HomeworksEntity, LightEntity):

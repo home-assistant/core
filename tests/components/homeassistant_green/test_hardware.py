@@ -1,4 +1,5 @@
 """Test the Home Assistant Green hardware platform."""
+
 from unittest.mock import patch
 
 import pytest

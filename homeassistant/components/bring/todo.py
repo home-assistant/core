@@ -1,4 +1,5 @@
 """Todo platform for the Bring! integration."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -111,7 +112,11 @@ class BringTodoListEntity(
                 str(uuid.uuid4()),
             )
         except BringRequestException as e:
-            raise HomeAssistantError("Unable to save todo item for bring") from e
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="todo_save_item_failed",
+                translation_placeholders={"name": item.summary or ""},
+            ) from e
 
         await self.coordinator.async_refresh()
 
@@ -166,7 +171,11 @@ class BringTodoListEntity(
                     else BringItemOperation.COMPLETE,
                 )
             except BringRequestException as e:
-                raise HomeAssistantError("Unable to update todo item for bring") from e
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="todo_update_item_failed",
+                    translation_placeholders={"name": item.summary or ""},
+                ) from e
         else:
             try:
                 await self.coordinator.bring.batch_update_list(
@@ -190,7 +199,11 @@ class BringTodoListEntity(
                 )
 
             except BringRequestException as e:
-                raise HomeAssistantError("Unable to replace todo item for bring") from e
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="todo_rename_item_failed",
+                    translation_placeholders={"name": item.summary or ""},
+                ) from e
 
         await self.coordinator.async_refresh()
 
@@ -211,6 +224,10 @@ class BringTodoListEntity(
                 BringItemOperation.REMOVE,
             )
         except BringRequestException as e:
-            raise HomeAssistantError("Unable to delete todo item for bring") from e
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="todo_delete_item_failed",
+                translation_placeholders={"count": str(len(uids))},
+            ) from e
 
         await self.coordinator.async_refresh()

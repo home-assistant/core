@@ -1,4 +1,5 @@
 """Common fixtures for the Schlage tests."""
+
 from collections.abc import Generator
 from unittest.mock import AsyncMock, Mock, create_autospec, patch
 

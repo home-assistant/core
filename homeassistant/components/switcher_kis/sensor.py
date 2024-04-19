@@ -1,4 +1,5 @@
 """Switcher integration Sensor platform."""
+
 from __future__ import annotations
 
 from aioswitcher.device import DeviceCategory

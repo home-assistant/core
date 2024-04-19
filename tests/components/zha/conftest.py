@@ -1,4 +1,5 @@
 """Test configuration for the ZHA component."""
+
 from collections.abc import Callable, Generator
 import itertools
 import time
@@ -226,12 +227,15 @@ def mock_zigpy_connect(
     zigpy_app_controller: ControllerApplication,
 ) -> Generator[ControllerApplication, None, None]:
     """Patch the zigpy radio connection with our mock application."""
-    with patch(
-        "bellows.zigbee.application.ControllerApplication.new",
-        return_value=zigpy_app_controller,
-    ), patch(
-        "bellows.zigbee.application.ControllerApplication",
-        return_value=zigpy_app_controller,
+    with (
+        patch(
+            "bellows.zigbee.application.ControllerApplication.new",
+            return_value=zigpy_app_controller,
+        ),
+        patch(
+            "bellows.zigbee.application.ControllerApplication",
+            return_value=zigpy_app_controller,
+        ),
     ):
         yield zigpy_app_controller
 
@@ -418,12 +422,11 @@ def zha_device_mock(
         zigpy_device = zigpy_device_mock(
             endpoints, ieee, manufacturer, model, node_desc, patch_cluster=patch_cluster
         )
-        zha_device = zha_core_device.ZHADevice(
+        return zha_core_device.ZHADevice(
             hass,
             zigpy_device,
             ZHAGateway(hass, {}, config_entry),
         )
-        return zha_device
 
     return _zha_device
 
@@ -542,6 +545,5 @@ def core_rs(hass_storage):
                 }
             ],
         }
-        return
 
     return _storage

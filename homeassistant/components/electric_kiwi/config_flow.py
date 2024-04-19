@@ -1,4 +1,5 @@
 """Config flow for Electric Kiwi."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping

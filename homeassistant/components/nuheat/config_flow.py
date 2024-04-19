@@ -1,4 +1,5 @@
 """Config flow for NuHeat integration."""
+
 from http import HTTPStatus
 import logging
 

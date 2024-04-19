@@ -1,4 +1,5 @@
 """Config flow to configure the Synology DSM integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -424,7 +425,7 @@ async def _login_and_fetch_syno_info(api: SynologyDSM, otp_code: str | None) -> 
     ):
         raise InvalidData
 
-    return api.information.serial  # type: ignore[no-any-return]
+    return api.information.serial
 
 
 class InvalidData(HomeAssistantError):

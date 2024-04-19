@@ -1,4 +1,5 @@
 """Config flow for SONOS."""
+
 from collections.abc import Awaitable
 import dataclasses
 

@@ -3,6 +3,7 @@
 This module has quite some complex parts. I have tried to add as much
 documentation as possible to keep it understandable.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -10,6 +11,7 @@ from collections.abc import Callable, Iterable
 from contextlib import suppress
 from dataclasses import dataclass
 import functools as ft
+from functools import cached_property
 import importlib
 import logging
 import os
@@ -40,15 +42,11 @@ from .generated.zeroconf import HOMEKIT, ZEROCONF
 from .util.json import JSON_DECODE_EXCEPTIONS, json_loads
 
 if TYPE_CHECKING:
-    from functools import cached_property
-
     # The relative imports below are guarded by TYPE_CHECKING
     # because they would cause a circular import otherwise.
     from .config_entries import ConfigEntry
     from .helpers import device_registry as dr
     from .helpers.typing import ConfigType
-else:
-    from .backports.functools import cached_property
 
 _CallableT = TypeVar("_CallableT", bound=Callable[..., Any])
 
@@ -92,7 +90,7 @@ class BlockedIntegration:
 
 BLOCKED_CUSTOM_INTEGRATIONS: dict[str, BlockedIntegration] = {
     # Added in 2024.3.0 because of https://github.com/home-assistant/core/issues/112464
-    "start_time": BlockedIntegration(None, "breaks Home Assistant")
+    "start_time": BlockedIntegration(AwesomeVersion("1.1.7"), "breaks Home Assistant")
 }
 
 DATA_COMPONENTS = "components"
@@ -105,6 +103,12 @@ PACKAGE_BUILTIN = "homeassistant.components"
 CUSTOM_WARNING = (
     "We found a custom integration %s which has not "
     "been tested by Home Assistant. This component might "
+    "cause stability problems, be sure to disable it if you "
+    "experience issues with Home Assistant"
+)
+IMPORT_EVENT_LOOP_WARNING = (
+    "We found an integration %s which is configured to "
+    "to import its code in the event loop. This component might "
     "cause stability problems, be sure to disable it if you "
     "experience issues with Home Assistant"
 )
@@ -289,9 +293,9 @@ async def async_get_custom_components(
     hass: HomeAssistant,
 ) -> dict[str, Integration]:
     """Return cached list of custom integrations."""
-    comps_or_future: dict[str, Integration] | asyncio.Future[
-        dict[str, Integration]
-    ] | None = hass.data.get(DATA_CUSTOM_COMPONENTS)
+    comps_or_future: (
+        dict[str, Integration] | asyncio.Future[dict[str, Integration]] | None
+    ) = hass.data.get(DATA_CUSTOM_COMPONENTS)
 
     if comps_or_future is None:
         future = hass.data[DATA_CUSTOM_COMPONENTS] = hass.loop.create_future()
@@ -652,6 +656,9 @@ class Integration:
                 None if is_virtual else set(os.listdir(file_path)),
             )
 
+            if not integration.import_executor:
+                _LOGGER.warning(IMPORT_EVENT_LOOP_WARNING, integration.domain)
+
             if integration.is_built_in:
                 return integration
 
@@ -740,9 +747,7 @@ class Integration:
         self._import_futures: dict[str, asyncio.Future[ModuleType]] = {}
         cache: dict[str, ModuleType | ComponentProtocol] = hass.data[DATA_COMPONENTS]
         self._cache = cache
-        missing_platforms_cache: dict[str, ImportError] = hass.data[
-            DATA_MISSING_PLATFORMS
-        ]
+        missing_platforms_cache: dict[str, bool] = hass.data[DATA_MISSING_PLATFORMS]
         self._missing_platforms_cache = missing_platforms_cache
         self._top_level_files = top_level_files or set()
         _LOGGER.info("Loaded %s from %s", self.domain, pkg_path)
@@ -820,9 +825,18 @@ class Integration:
     def import_executor(self) -> bool:
         """Import integration in the executor."""
         # If the integration does not explicitly set import_executor, we default to
-        # True if it's a built-in integration and False if it's a custom integration.
-        # In the future, we want to default to True for all integrations.
-        return self.manifest.get("import_executor", self.is_built_in)
+        # True.
+        return self.manifest.get("import_executor", True)
+
+    @cached_property
+    def has_translations(self) -> bool:
+        """Return if the integration has translations."""
+        return "translations" in self._top_level_files
+
+    @cached_property
+    def has_services(self) -> bool:
+        """Return if the integration has services."""
+        return "services.yaml" in self._top_level_files
 
     @property
     def mqtt(self) -> list[str] | None:
@@ -962,6 +976,8 @@ class Integration:
                 comp = await self.hass.async_add_import_executor_job(
                     self._get_component, True
                 )
+            except ModuleNotFoundError:
+                raise
             except ImportError as ex:
                 load_executor = False
                 _LOGGER.debug(
@@ -1046,7 +1062,11 @@ class Integration:
 
     async def async_get_platform(self, platform_name: str) -> ModuleType:
         """Return a platform for an integration."""
-        platforms = await self.async_get_platforms([platform_name])
+        # Fast path for a single platform when it is already cached.
+        # This is the common case.
+        if platform := self._cache.get(f"{self.domain}.{platform_name}"):
+            return platform  # type: ignore[return-value]
+        platforms = await self.async_get_platforms((platform_name,))
         return platforms[platform_name]
 
     async def async_get_platforms(
@@ -1062,8 +1082,7 @@ class Integration:
         import_futures: list[tuple[str, asyncio.Future[ModuleType]]] = []
 
         for platform_name in platform_names:
-            full_name = f"{domain}.{platform_name}"
-            if platform := self._get_platform_cached_or_raise(full_name):
+            if platform := self._get_platform_cached_or_raise(platform_name):
                 platforms[platform_name] = platform
                 continue
 
@@ -1072,6 +1091,7 @@ class Integration:
                 in_progress_imports[platform_name] = future
                 continue
 
+            full_name = f"{domain}.{platform_name}"
             if (
                 self.import_executor
                 and full_name not in self.hass.config.components
@@ -1097,6 +1117,8 @@ class Integration:
                                 self._load_platforms, platform_names
                             )
                         )
+                    except ModuleNotFoundError:
+                        raise
                     except ImportError as ex:
                         _LOGGER.debug(
                             "Failed to import %s platforms %s in executor",
@@ -1143,15 +1165,26 @@ class Integration:
 
         return platforms
 
-    def _get_platform_cached_or_raise(self, full_name: str) -> ModuleType | None:
+    def _get_platform_cached_or_raise(self, platform_name: str) -> ModuleType | None:
         """Return a platform for an integration from cache."""
+        full_name = f"{self.domain}.{platform_name}"
         if full_name in self._cache:
             # the cache is either a ModuleType or a ComponentProtocol
             # but we only care about the ModuleType here
             return self._cache[full_name]  # type: ignore[return-value]
         if full_name in self._missing_platforms_cache:
-            raise self._missing_platforms_cache[full_name]
+            raise ModuleNotFoundError(
+                f"Platform {full_name} not found",
+                name=f"{self.pkg_path}.{platform_name}",
+            )
         return None
+
+    def platforms_are_loaded(self, platform_names: Iterable[str]) -> bool:
+        """Check if a platforms are loaded for an integration."""
+        return all(
+            f"{self.domain}.{platform_name}" in self._cache
+            for platform_name in platform_names
+        )
 
     def get_platform_cached(self, platform_name: str) -> ModuleType | None:
         """Return a platform for an integration from cache."""
@@ -1159,9 +1192,7 @@ class Integration:
 
     def get_platform(self, platform_name: str) -> ModuleType:
         """Return a platform for an integration."""
-        if platform := self._get_platform_cached_or_raise(
-            f"{self.domain}.{platform_name}"
-        ):
+        if platform := self._get_platform_cached_or_raise(platform_name):
             return platform
         return self._load_platform(platform_name)
 
@@ -1182,10 +1213,7 @@ class Integration:
             ):
                 existing_platforms.append(platform_name)
                 continue
-            missing_platforms[full_name] = ModuleNotFoundError(
-                f"Platform {full_name} not found",
-                name=f"{self.pkg_path}.{platform_name}",
-            )
+            missing_platforms[full_name] = True
 
         return existing_platforms
 
@@ -1203,11 +1231,13 @@ class Integration:
         cache: dict[str, ModuleType] = self.hass.data[DATA_COMPONENTS]
         try:
             cache[full_name] = self._import_platform(platform_name)
-        except ImportError as ex:
+        except ModuleNotFoundError:
             if self.domain in cache:
                 # If the domain is loaded, cache that the platform
                 # does not exist so we do not try to load it again
-                self._missing_platforms_cache[full_name] = ex
+                self._missing_platforms_cache[full_name] = True
+            raise
+        except ImportError:
             raise
         except RuntimeError as err:
             # _DeadlockError inherits from RuntimeError
@@ -1280,7 +1310,7 @@ def async_get_loaded_integration(hass: HomeAssistant, domain: str) -> Integratio
         cache = cast(dict[str, Integration | asyncio.Future[None]], cache)
     int_or_fut = cache.get(domain, _UNDEF)
     # Integration is never subclassed, so we can check for type
-    if type(int_or_fut) is Integration:  # noqa: E721
+    if type(int_or_fut) is Integration:
         return int_or_fut
     raise IntegrationNotLoaded(domain)
 
@@ -1307,7 +1337,7 @@ async def async_get_integrations(
     for domain in domains:
         int_or_fut = cache.get(domain, _UNDEF)
         # Integration is never subclassed, so we can check for type
-        if type(int_or_fut) is Integration:  # noqa: E721
+        if type(int_or_fut) is Integration:
             results[domain] = int_or_fut
         elif int_or_fut is not _UNDEF:
             in_progress[domain] = cast(asyncio.Future[None], int_or_fut)
@@ -1520,6 +1550,20 @@ class Helpers:
     def __getattr__(self, helper_name: str) -> ModuleWrapper:
         """Fetch a helper."""
         helper = importlib.import_module(f"homeassistant.helpers.{helper_name}")
+
+        # Local import to avoid circular dependencies
+        from .helpers.frame import report  # pylint: disable=import-outside-toplevel
+
+        report(
+            (
+                f"accesses hass.helpers.{helper_name}."
+                " This is deprecated and will stop working in Home Assistant 2024.11, it"
+                f" should be updated to import functions used from {helper_name} directly"
+            ),
+            error_if_core=False,
+            log_custom_component_only=True,
+        )
+
         wrapped = ModuleWrapper(self._hass, helper)
         setattr(self, helper_name, wrapped)
         return wrapped

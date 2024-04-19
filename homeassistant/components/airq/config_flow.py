@@ -1,4 +1,5 @@
 """Config flow for air-Q integration."""
+
 from __future__ import annotations
 
 import logging

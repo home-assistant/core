@@ -1,4 +1,5 @@
 """Support for Ridwell calendars."""
+
 from __future__ import annotations
 
 import datetime

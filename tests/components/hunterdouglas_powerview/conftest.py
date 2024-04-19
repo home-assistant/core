@@ -31,30 +31,39 @@ def mock_hunterdouglas_hub(
     shades_json: str,
 ) -> Generator[MagicMock, None, None]:
     """Return a mocked Powerview Hub with all data populated."""
-    with patch(
-        "homeassistant.components.hunterdouglas_powerview.Hub.request_raw_data",
-        return_value=load_json_object_fixture(device_json, DOMAIN),
-    ), patch(
-        "homeassistant.components.hunterdouglas_powerview.Hub.request_home_data",
-        return_value=load_json_object_fixture(home_json, DOMAIN),
-    ), patch(
-        "homeassistant.components.hunterdouglas_powerview.Hub.request_raw_firmware",
-        return_value=load_json_object_fixture(firmware_json, DOMAIN),
-    ), patch(
-        "homeassistant.components.hunterdouglas_powerview.Rooms.get_resources",
-        return_value=load_json_value_fixture(rooms_json, DOMAIN),
-    ), patch(
-        "homeassistant.components.hunterdouglas_powerview.Scenes.get_resources",
-        return_value=load_json_value_fixture(scenes_json, DOMAIN),
-    ), patch(
-        "homeassistant.components.hunterdouglas_powerview.Shades.get_resources",
-        return_value=load_json_value_fixture(shades_json, DOMAIN),
-    ), patch(
-        "homeassistant.components.hunterdouglas_powerview.cover.BaseShade.refresh",
-    ), patch(
-        "homeassistant.components.hunterdouglas_powerview.cover.BaseShade.current_position",
-        new_callable=PropertyMock,
-        return_value=ShadePosition(primary=0, secondary=0, tilt=0, velocity=0),
+    with (
+        patch(
+            "homeassistant.components.hunterdouglas_powerview.Hub.request_raw_data",
+            return_value=load_json_object_fixture(device_json, DOMAIN),
+        ),
+        patch(
+            "homeassistant.components.hunterdouglas_powerview.Hub.request_home_data",
+            return_value=load_json_object_fixture(home_json, DOMAIN),
+        ),
+        patch(
+            "homeassistant.components.hunterdouglas_powerview.Hub.request_raw_firmware",
+            return_value=load_json_object_fixture(firmware_json, DOMAIN),
+        ),
+        patch(
+            "homeassistant.components.hunterdouglas_powerview.Rooms.get_resources",
+            return_value=load_json_value_fixture(rooms_json, DOMAIN),
+        ),
+        patch(
+            "homeassistant.components.hunterdouglas_powerview.Scenes.get_resources",
+            return_value=load_json_value_fixture(scenes_json, DOMAIN),
+        ),
+        patch(
+            "homeassistant.components.hunterdouglas_powerview.Shades.get_resources",
+            return_value=load_json_value_fixture(shades_json, DOMAIN),
+        ),
+        patch(
+            "homeassistant.components.hunterdouglas_powerview.cover.BaseShade.refresh",
+        ),
+        patch(
+            "homeassistant.components.hunterdouglas_powerview.cover.BaseShade.current_position",
+            new_callable=PropertyMock,
+            return_value=ShadePosition(primary=0, secondary=0, tilt=0, velocity=0),
+        ),
     ):
         yield
 
