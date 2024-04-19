@@ -17,6 +17,7 @@ class MonzoBaseEntity(CoordinatorEntity):
     """Common base for Monzo entities."""
 
     _attr_attribution = "Data provided by Monzo"
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -31,7 +32,6 @@ class MonzoBaseEntity(CoordinatorEntity):
         super().__init__(coordinator)
         self.index = index
         self._data_accessor = data_accessor
-        self._attr_has_entity_name = True
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{self.data['id']}")},
