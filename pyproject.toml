@@ -24,10 +24,11 @@ classifiers = [
 requires-python = ">=3.12.0"
 dependencies    = [
     "aiodns==3.2.0",
-    "aiohttp==3.9.4",
+    "aiohttp==3.9.5",
     "aiohttp_cors==0.7.0",
+    "aiohttp_session==2.12.0",
     "aiohttp-fast-url-dispatcher==0.3.0",
-    "aiohttp-zlib-ng==0.3.1",
+    "aiohttp-isal==0.2.0",
     "astral==2.2",
     "async-interrupt==1.1.1",
     "attrs==23.2.0",
@@ -50,9 +51,9 @@ dependencies    = [
     "PyJWT==2.8.0",
     # PyJWT has loose dependency. We want the latest one.
     "cryptography==42.0.5",
-    "Pillow==10.2.0",
+    "Pillow==10.3.0",
     "pyOpenSSL==24.1.0",
-    "orjson==3.9.15",
+    "orjson==3.10.1",
     "packaging>=23.1",
     "pip>=21.3.1",
     "psutil-home-assistant==0.0.1",
@@ -658,7 +659,7 @@ filterwarnings = [
 ]
 
 [tool.ruff]
-required-version = ">=0.3.4"
+required-version = ">=0.3.7"
 
 [tool.ruff.lint]
 select = [
@@ -667,11 +668,13 @@ select = [
     "B007", # Loop control variable {name} not used within loop body
     "B014", # Exception handler with duplicate exception
     "B015", # Pointless comparison. Did you mean to assign a value? Otherwise, prepend assert or remove it.
+    "B017", # pytest.raises(BaseException) should be considered evil
     "B018", # Found useless attribute access. Either assign it to a variable or remove it.
     "B023", # Function definition does not bind loop variable {name}
     "B026", # Star-arg unpacking after a keyword argument is strongly discouraged
     "B032", # Possible unintentional type annotation (using :). Did you mean to assign (using =)?
     "B904", # Use raise from to specify exception cause
+    "B905", # zip() without an explicit strict= parameter
     "C", # complexity
     "COM818", # Trailing comma on bare tuple prohibited
     "D", # docstrings
@@ -700,6 +703,7 @@ select = [
     "RUF005", # Consider iterable unpacking instead of concatenation
     "RUF006", # Store a reference to the return value of asyncio.create_task
     "RUF013", # PEP 484 prohibits implicit Optional
+    "RUF018", # Avoid assignment expressions in assert statements
     # "RUF100", # Unused `noqa` directive; temporarily every now and then to clean them up
     "S102", # Use of exec detected
     "S103", # bad-file-permissions
@@ -736,7 +740,6 @@ ignore = [
     "D406", # Section name should end with a newline
     "D407", # Section name underlining
     "E501", # line too long
-    "E731", # do not assign a lambda expression, use a def
 
     "PLC1901", # {existing} can be simplified to {replacement} as an empty string is falsey; too many false positives
     "PLR0911", # Too many return statements ({returns} > {max_returns})
@@ -749,13 +752,15 @@ ignore = [
     "PT011", # pytest.raises({exception}) is too broad, set the `match` parameter or use a more specific exception
     "PT012", # `pytest.raises()` block should contain a single simple statement
     "PT018", # Assertion should be broken down into multiple parts
+    "RUF001", # String contains ambiguous unicode character.
+    "RUF002", # Docstring contains ambiguous unicode character.
+    "RUF003", # Comment contains ambiguous unicode character.
+    "RUF015", # Prefer next(...) over single element slice
     "SIM102", # Use a single if statement instead of nested if statements
     "SIM108", # Use ternary operator {contents} instead of if-else-block
     "SIM115", # Use context handler for opening files
     "TRY003", # Avoid specifying long messages outside the exception class
     "TRY400", # Use `logging.exception` instead of `logging.error`
-    "UP006", # keep type annotation style as is
-    "UP007", # keep type annotation style as is
     # Ignored due to performance: https://github.com/charliermarsh/ruff/issues/2923
     "UP038", # Use `X | Y` in `isinstance` call instead of `(X, Y)`
     # Ignored due to incompatible with mypy: https://github.com/python/mypy/issues/15238

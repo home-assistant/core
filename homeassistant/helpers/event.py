@@ -13,8 +13,6 @@ from random import randint
 import time
 from typing import TYPE_CHECKING, Any, Concatenate, Generic, ParamSpec, TypeVar
 
-import attr
-
 from homeassistant.const import (
     EVENT_CORE_CONFIG_UPDATE,
     EVENT_STATE_CHANGED,
@@ -40,6 +38,7 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.event_type import EventType
 
+from . import frame
 from .device_registry import (
     EVENT_DEVICE_REGISTRY_UPDATED,
     EventDeviceRegistryUpdatedData,
@@ -205,8 +204,16 @@ def async_track_state_change(
     being None, async_track_state_change_event should be used instead
     as it is slightly faster.
 
+    This function is deprecated and will be removed in Home Assistant 2025.5.
+
     Must be run within the event loop.
     """
+    frame.report(
+        "calls `async_track_state_change` instead of `async_track_state_change_event`"
+        " which is deprecated and will be removed in Home Assistant 2025.5",
+        error_if_core=False,
+    )
+
     if from_state is not None:
         match_from_state = process_state_match(from_state)
     if to_state is not None:
@@ -1626,16 +1633,16 @@ def async_track_time_interval(
 track_time_interval = threaded_listener_factory(async_track_time_interval)
 
 
-@attr.s
+@dataclass(slots=True)
 class SunListener:
     """Helper class to help listen to sun events."""
 
-    hass: HomeAssistant = attr.ib()
-    job: HassJob[[], Coroutine[Any, Any, None] | None] = attr.ib()
-    event: str = attr.ib()
-    offset: timedelta | None = attr.ib()
-    _unsub_sun: CALLBACK_TYPE | None = attr.ib(default=None)
-    _unsub_config: CALLBACK_TYPE | None = attr.ib(default=None)
+    hass: HomeAssistant
+    job: HassJob[[], Coroutine[Any, Any, None] | None]
+    event: str
+    offset: timedelta | None
+    _unsub_sun: CALLBACK_TYPE | None = None
+    _unsub_config: CALLBACK_TYPE | None = None
 
     @callback
     def async_attach(self) -> None:

@@ -6,11 +6,13 @@ import logging
 from typing import Any
 
 from iaqualink.device import AqualinkThermostat
+from iaqualink.systems.iaqua.device import AqualinkState
 
 from homeassistant.components.climate import (
     DOMAIN as CLIMATE_DOMAIN,
     ClimateEntity,
     ClimateEntityFeature,
+    HVACAction,
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -81,6 +83,16 @@ class HassAqualinkThermostat(AqualinkEntity, ClimateEntity):
             await await_or_reraise(self.dev.turn_off())
         else:
             _LOGGER.warning("Unknown operation mode: %s", hvac_mode)
+
+    @property
+    def hvac_action(self) -> HVACAction:
+        """Return the current HVAC action."""
+        state = AqualinkState(self.dev._heater.state)
+        if state == AqualinkState.ON:
+            return HVACAction.HEATING
+        if state == AqualinkState.ENABLED:
+            return HVACAction.IDLE
+        return HVACAction.OFF
 
     @property
     def target_temperature(self) -> float:
