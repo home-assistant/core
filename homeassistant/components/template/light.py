@@ -121,7 +121,7 @@ PLATFORM_SCHEMA = vol.All(
 )
 
 
-async def _async_create_entities(hass, config):
+async def _async_create_entities(hass: HomeAssistant, config):
     """Create the Template Lights."""
     lights = []
 
@@ -158,11 +158,11 @@ class LightTemplate(TemplateEntity, LightEntity):
 
     def __init__(
         self,
-        hass,
+        hass: HomeAssistant,
         object_id,
         config,
         unique_id,
-    ):
+    ) -> None:
         """Initialize the light."""
         super().__init__(
             hass, config=config, fallback_name=object_id, unique_id=unique_id
@@ -170,7 +170,7 @@ class LightTemplate(TemplateEntity, LightEntity):
         self.entity_id = async_generate_entity_id(
             ENTITY_ID_FORMAT, object_id, hass=hass
         )
-        friendly_name = self._attr_name
+        friendly_name = self._attr_name or self.entity_id
         self._template = config.get(CONF_VALUE_TEMPLATE)
         self._on_script = Script(hass, config[CONF_ON_ACTION], friendly_name, DOMAIN)
         self._off_script = Script(hass, config[CONF_OFF_ACTION], friendly_name, DOMAIN)
@@ -313,12 +313,12 @@ class LightTemplate(TemplateEntity, LightEntity):
         return self._effect_list
 
     @property
-    def color_mode(self):
+    def color_mode(self) -> ColorMode | None:
         """Return current color mode."""
         return self._color_mode
 
     @property
-    def supported_color_modes(self):
+    def supported_color_modes(self) -> set[ColorMode] | None:
         """Flag supported color modes."""
         return self._supported_color_modes
 
@@ -554,7 +554,7 @@ class LightTemplate(TemplateEntity, LightEntity):
             )
         elif ATTR_EFFECT in kwargs and self._effect_script:
             effect = kwargs[ATTR_EFFECT]
-            if effect not in self._effect_list:
+            if not self._effect_list or effect not in self._effect_list:
                 _LOGGER.error(
                     "Received invalid effect: %s for entity %s. Expected one of: %s",
                     effect,
@@ -709,7 +709,7 @@ class LightTemplate(TemplateEntity, LightEntity):
             self._effect = None
             return
 
-        if effect not in self._effect_list:
+        if not self._effect_list or effect not in self._effect_list:
             _LOGGER.error(
                 "Received invalid effect: %s for entity %s. Expected one of: %s",
                 effect,
@@ -776,7 +776,7 @@ class LightTemplate(TemplateEntity, LightEntity):
                 " this light, or 'None'"
             )
             self._temperature = None
-        self._color_mode = ColorMode.COLOR_TEMP
+        self._update_color_mode()
 
     @callback
     def _update_hs(self, render):
@@ -821,7 +821,7 @@ class LightTemplate(TemplateEntity, LightEntity):
                 "Received invalid hs_color : (%s) for entity %s", render, self.entity_id
             )
             self._hs_color = None
-        self._color_mode = ColorMode.HS
+        self._update_color_mode()
 
     @callback
     def _update_rgb(self, render):
@@ -866,7 +866,7 @@ class LightTemplate(TemplateEntity, LightEntity):
                 self.entity_id,
             )
             self._rgb_color = None
-        self._color_mode = ColorMode.RGB
+        self._update_color_mode()
 
     @callback
     def _update_rgbw(self, render):
@@ -912,7 +912,7 @@ class LightTemplate(TemplateEntity, LightEntity):
                 self.entity_id,
             )
             self._rgbw_color = None
-        self._color_mode = ColorMode.RGBW
+        self._update_color_mode()
 
     @callback
     def _update_rgbww(self, render):
@@ -959,7 +959,7 @@ class LightTemplate(TemplateEntity, LightEntity):
                 self.entity_id,
             )
             self._rgbww_color = None
-        self._color_mode = ColorMode.RGBWW
+        self._update_color_mode()
 
     @callback
     def _update_max_mireds(self, render):
@@ -1002,3 +1002,18 @@ class LightTemplate(TemplateEntity, LightEntity):
         self._supports_transition = bool(render)
         if self._supports_transition:
             self._attr_supported_features |= LightEntityFeature.TRANSITION
+
+    def _update_color_mode(self) -> None:
+        """Update the color mode based on the current values."""
+        if self._temperature is not None:
+            self._color_mode = ColorMode.COLOR_TEMP
+        elif self._hs_color is not None:
+            self._color_mode = ColorMode.HS
+        elif self._rgb_color is not None:
+            self._color_mode = ColorMode.RGB
+        elif self._rgbw_color is not None:
+            self._color_mode = ColorMode.RGBW
+        elif self._rgbww_color is not None:
+            self._color_mode = ColorMode.RGBWW
+        else:
+            self._color_mode = ColorMode.UNKNOWN
