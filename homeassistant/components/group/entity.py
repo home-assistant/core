@@ -8,7 +8,7 @@ from collections.abc import Callable, Collection, Mapping
 import logging
 from typing import Any
 
-from homeassistant.const import ATTR_ASSUMED_STATE, ATTR_ENTITY_ID, STATE_ON
+from homeassistant.const import ATTR_ASSUMED_STATE, ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.core import (
     CALLBACK_TYPE,
     Event,
@@ -425,6 +425,23 @@ class Group(Entity):
         elif tr_state.attributes.get(ATTR_ASSUMED_STATE):
             self._assumed_state = True
 
+        registry: GroupIntegrationRegistry = self.hass.data[REG_KEY]
+
+        def filter_on_states() -> set[str]:
+            on_states: set[str] = set()
+            for entity_id in self.tracking:
+                domain = entity_id.split(".")[0]
+                state = self.hass.states.get(entity_id)
+                if (
+                    state is not None
+                    and state.state in registry.on_states_by_domain.get(domain, set())
+                ):
+                    on_states.update({state.state})
+            return on_states
+
+        active_on_states = filter_on_states()
+        active_domains = {entity_id.split(".")[0] for entity_id in self.tracking}
+
         num_on_states = len(self._on_states)
         # If all the entity domains we are tracking
         # have the same on state we use this state
@@ -438,14 +455,31 @@ class Group(Entity):
             return
         # If the entity domains have more than one
         # on state, we use STATE_ON/STATE_OFF
+        # unless there is only one specific state in use for one specific domain
+        elif len(active_on_states) == 1 and len(active_domains) == 1:
+            on_state = list(active_on_states)[0]
         else:
             on_state = STATE_ON
         group_is_on = self.mode(self._on_off.values())
+        active_off_states: set[str] = {
+            state.state
+            for state in [
+                self.hass.states.get(entity_id) for entity_id in self.tracking
+            ]
+            if state is not None and state.state in registry.off_on_mapping
+        }
         if group_is_on:
             self._state = on_state
+        elif len(active_off_states) == 1:
+            # If there is one off state in use then return the specific one
+            self._state = list(active_off_states)[0]
+        elif len(active_domains) == 1:
+            # If there is only one domain used, then return the off state for that domain
+            domain = list(active_domains)[0]
+            self._state = registry.off_state_by_domain.get(domain, STATE_OFF)
         else:
-            registry: GroupIntegrationRegistry = self.hass.data[REG_KEY]
-            self._state = registry.on_off_mapping[on_state]
+            # Default to STATE_OFF
+            self._state = STATE_OFF
 
 
 def async_get_component(hass: HomeAssistant) -> EntityComponent[Group]:

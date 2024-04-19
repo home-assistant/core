@@ -1220,7 +1220,7 @@ async def test_group_climate_all_cool(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    assert hass.states.get("group.group_zero").state == STATE_ON
+    assert hass.states.get("group.group_zero").state == "cool"
 
 
 async def test_group_climate_all_off(hass: HomeAssistant) -> None:
@@ -1334,7 +1334,7 @@ async def test_group_vacuum_on(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    assert hass.states.get("group.group_zero").state == STATE_ON
+    assert hass.states.get("group.group_zero").state == "cleaning"
 
 
 async def test_device_tracker_not_home(hass: HomeAssistant) -> None:

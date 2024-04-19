@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from contextvars import ContextVar
+import logging
 from typing import Protocol
 
 from homeassistant.const import STATE_OFF, STATE_ON
@@ -12,6 +13,8 @@ from homeassistant.helpers.integration_platform import (
 )
 
 from .const import DOMAIN, REG_KEY
+
+_LOGGER = logging.getLogger(__name__)
 
 current_domain: ContextVar[str] = ContextVar("current_domain")
 
@@ -49,9 +52,12 @@ class GroupIntegrationRegistry:
 
     def __init__(self) -> None:
         """Imitialize registry."""
-        self.on_off_mapping: dict[str, str] = {STATE_ON: STATE_OFF}
+        self.on_off_mapping: dict[str, dict[str | None, str]] = {
+            STATE_ON: {None: STATE_OFF}
+        }
         self.off_on_mapping: dict[str, str] = {STATE_OFF: STATE_ON}
         self.on_states_by_domain: dict[str, set[str]] = {}
+        self.off_state_by_domain: dict[str, str] = {}
         self.exclude_domains: set[str] = set()
 
     def exclude_domain(self) -> None:
@@ -60,11 +66,15 @@ class GroupIntegrationRegistry:
 
     def on_off_states(self, on_states: set, off_state: str) -> None:
         """Register on and off states for the current domain."""
+        domain = current_domain.get()
+        _LOGGER.info("Enter on_off_states for %s", domain)
         for on_state in on_states:
             if on_state not in self.on_off_mapping:
-                self.on_off_mapping[on_state] = off_state
-
+                self.on_off_mapping[on_state] = {domain: off_state}
+            else:
+                self.on_off_mapping[on_state][domain] = off_state
         if len(on_states) == 1 and off_state not in self.off_on_mapping:
             self.off_on_mapping[off_state] = list(on_states)[0]
 
-        self.on_states_by_domain[current_domain.get()] = set(on_states)
+        self.on_states_by_domain[domain] = set(on_states)
+        self.off_state_by_domain[domain] = off_state
