@@ -222,7 +222,7 @@ aiocomelit==0.9.0
 aiodhcpwatcher==1.0.0
 
 # homeassistant.components.dhcp
-aiodiscover==2.0.0
+aiodiscover==2.1.0
 
 # homeassistant.components.dnsip
 aiodns==3.2.0
@@ -934,7 +934,7 @@ georss-qld-bushfire-alert-client==0.7
 getmac==0.9.4
 
 # homeassistant.components.gios
-gios==3.2.2
+gios==4.0.0
 
 # homeassistant.components.gitter
 gitterpy==0.1.7
