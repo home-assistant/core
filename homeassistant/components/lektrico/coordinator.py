@@ -10,7 +10,7 @@ from lektricowifi import DeviceConnectionError, lektricowifi
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, LOGGER
+from .const import LOGGER
 
 SCAN_INTERVAL = timedelta(seconds=10)
 
@@ -24,28 +24,24 @@ class LektricoDeviceDataUpdateCoordinator(DataUpdateCoordinator):
         friendly_name: str,
         host: str,
         session: ClientSession,
+        serial_number: str,
+        board_revision: str,
+        device_type: str,
     ) -> None:
         """Initialize a Lektrico Device."""
+        super().__init__(
+            hass,
+            LOGGER,
+            name=friendly_name,
+            update_interval=SCAN_INTERVAL,
+        )
         self.device = lektricowifi.Device(
             host,
             session=session,
         )
-        super().__init__(
-            hass,
-            LOGGER,
-            name=f"{DOMAIN}-{friendly_name}",
-            update_interval=SCAN_INTERVAL,
-        )
-        self.serial_number: int
-        self.board_revision: str
-        self.device_type: str
-
-    async def get_config(self) -> None:
-        """Get device's config. This is only asked once."""
-        settings = await self.device.device_config()
-        self.serial_number = settings.serial_number
-        self.board_revision = settings.board_revision
-        self.device_type = settings.type
+        self.serial_number: str = serial_number
+        self.board_revision: str = board_revision
+        self.device_type: str = device_type
 
     async def _async_update_data(self) -> lektricowifi.Info:
         """Async Update device state."""
