@@ -141,6 +141,8 @@ class NWSWeather(CoordinatorWeatherEntity):
         latitude = entry_data[CONF_LATITUDE]
         longitude = entry_data[CONF_LONGITUDE]
         self.coordinator_forecast_legacy = nws_data.coordinator_forecast
+        self.coordinator_forecast_twice_daily = nws_data.coordinator_forecast
+        self.coordinator_forecast_hourly = nws_data.coordinator_forecast_hourly
         self.station = self.nws.station
 
         self.observation: dict[str, Any] | None = None
@@ -158,6 +160,16 @@ class NWSWeather(CoordinatorWeatherEntity):
         self.async_on_remove(
             self.coordinator_forecast_legacy.async_add_listener(
                 self._handle_legacy_forecast_coordinator_update
+            )
+        )
+        self.async_on_remove(
+            self.coordinator_forecast_twice_daily.async_add_listener(
+                self._handle_twice_daily_forecast_coordinator_update
+            )
+        )
+        self.async_on_remove(
+            self.coordinator_forecast_hourly.async_add_listener(
+                self._handle_hourly_forecast_coordinator_update
             )
         )
         # Load initial data from coordinators
