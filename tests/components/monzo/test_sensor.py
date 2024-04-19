@@ -128,7 +128,7 @@ async def test_update_failed(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test all entities."""
-    await setup_integration(hass, polling_config_entry, False)
+    await setup_integration(hass, polling_config_entry)
 
     monzo.user_account.accounts.side_effect = Exception
     freezer.tick(timedelta(minutes=10))

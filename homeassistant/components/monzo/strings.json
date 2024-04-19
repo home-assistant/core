@@ -47,14 +47,6 @@
           "description": "The amount of money to transfer in GBP."
         }
       }
-    },
-    "register_webhook": {
-      "name": "Register webhook",
-      "description": "Registers webhooks for all Monzo accounts with Monzo."
-    },
-    "unregister_webhook": {
-      "name": "Unregister webhook",
-      "description": "Unregisters all Monzo webhooks with Monzo."
     }
   },
   "entity": {

@@ -6,16 +6,10 @@ OAUTH2_AUTHORIZE = "https://auth.monzo.com"
 OAUTH2_TOKEN = "https://api.monzo.com/oauth2/token"
 
 """Services"""
-SERVICE_REGISTER_WEBHOOK = "register_webhook"
-SERVICE_UNREGISTER_WEBHOOK = "unregister_webhook"
 SERVICE_POT_TRANSFER = "pot_transfer"
 
 ATTR_AMOUNT = "amount"
 DEFAULT_AMOUNT = 1
-CONF_CLOUDHOOK_URL = "cloudhook_url"
-WEBHOOK_ACTIVATION = "webhook_activation"
-WEBHOOK_DEACTIVATION = "webhook_deactivation"
-WEBHOOK_PUSH_TYPE = "push_type"
 
 MONZO_EVENT = "monzo_event"
 EVENT_TRANSACTION_CREATED = "transaction.created"

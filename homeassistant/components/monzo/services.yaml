@@ -56,6 +56,3 @@ pot_transfer:
           step: 0.01
           unit_of_measurement: £
           mode: box
-
-register_webhook:
-unregister_webhook:

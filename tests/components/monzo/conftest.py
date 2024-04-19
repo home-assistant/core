@@ -44,7 +44,6 @@ TEST_POTS = [
 ]
 TITLE = "jake"
 USER_ID = 12345
-WEBHOOK_ID = "55a7335ea8dee830eed4ef8f84c"
 
 
 @pytest.fixture(autouse=True)

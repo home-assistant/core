@@ -30,9 +30,7 @@ class MonzoFlowHandler(
     ) -> FlowResult:
         """Wait for the user to confirm in-app approval."""
         if user_input is not None:
-            return self.async_create_entry(
-                title=DOMAIN, data={**self.oauth_data, "webhook_ids": {}}
-            )
+            return self.async_create_entry(title=DOMAIN, data={**self.oauth_data})
 
         data_schema = vol.Schema({vol.Required("confirm"): bool})
 
