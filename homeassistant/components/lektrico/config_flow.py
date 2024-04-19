@@ -9,7 +9,13 @@ import voluptuous as vol
 
 from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_FRIENDLY_NAME, CONF_HOST
+from homeassistant.const import (
+    ATTR_HW_VERSION,
+    ATTR_SERIAL_NUMBER,
+    CONF_FRIENDLY_NAME,
+    CONF_HOST,
+    CONF_TYPE,
+)
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -23,9 +29,11 @@ class LektricoFlowHandler(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize flow."""
-        self._host: str | None = None
-        self._friendly_name: str | None = None
-        self._serial_number: str | None = None
+        self._host: str
+        self._friendly_name: str
+        self._serial_number: str
+        self._board_revision: str
+        self._device_type: str
 
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
@@ -39,7 +47,7 @@ class LektricoFlowHandler(ConfigFlow, domain=DOMAIN):
 
         # obtain serial number
         try:
-            await self._get_lektrico_serial_number_and_treat_unique_id(
+            await self._get_lektrico_device_settings_and_treat_unique_id(
                 raise_on_progress=True
             )
         except DeviceConnectionError:
@@ -76,8 +84,14 @@ class LektricoFlowHandler(ConfigFlow, domain=DOMAIN):
     @callback
     def _async_create_entry(self) -> ConfigFlowResult:
         return self.async_create_entry(
-            title=f"{self._friendly_name}_{str(self._serial_number)}",
-            data={CONF_HOST: self._host, CONF_FRIENDLY_NAME: self._friendly_name},
+            title=f"{self._friendly_name} ({self._serial_number})",
+            data={
+                CONF_HOST: self._host,
+                CONF_FRIENDLY_NAME: self._friendly_name,
+                ATTR_SERIAL_NUMBER: self._serial_number,
+                CONF_TYPE: self._device_type,
+                ATTR_HW_VERSION: self._board_revision,
+            },
         )
 
     async def async_step_zeroconf(
@@ -102,12 +116,15 @@ class LektricoFlowHandler(ConfigFlow, domain=DOMAIN):
         else:
             self._friendly_name = _id[:_index]  # it's the type
 
-        # Set unique id
-        await self.async_set_unique_id(self._serial_number, raise_on_progress=True)
-        # Abort if already configured, but update the last-known host
-        self._abort_if_unique_id_configured(
-            updates={CONF_HOST: self._host}, reload_on_update=True
-        )
+        # read from device its settings
+        try:
+            await self._get_lektrico_device_settings_and_treat_unique_id(
+                raise_on_progress=True
+            )
+        except DeviceConnectionError:
+            return self._async_show_setup_form(
+                {"base": "cannot_connect"}, {CONF_HOST: "cannot_connect"}
+            )
 
         self.context["title_placeholders"] = {
             "serial_number": self._serial_number,
@@ -116,7 +133,7 @@ class LektricoFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_confirm()
 
-    async def _get_lektrico_serial_number_and_treat_unique_id(
+    async def _get_lektrico_device_settings_and_treat_unique_id(
         self, raise_on_progress: bool = True
     ) -> None:
         """Get device's serial number from a Lektrico device."""
@@ -126,18 +143,20 @@ class LektricoFlowHandler(ConfigFlow, domain=DOMAIN):
             session=session,
         )
 
-        settings = await device.device_config()
+        _settings = await device.device_config()
+        self._serial_number = str(_settings.serial_number)
+        self._device_type = _settings.type
+        self._board_revision = _settings.board_revision
 
         # Check if already configured
+        # Set unique id
         await self.async_set_unique_id(
-            settings.serial_number, raise_on_progress=raise_on_progress
+            self._serial_number, raise_on_progress=raise_on_progress
         )
-
+        # Abort if already configured, but update the last-known host
         self._abort_if_unique_id_configured(
             updates={CONF_HOST: self._host}, reload_on_update=True
         )
-
-        self._serial_number = settings.serial_number
 
     async def async_step_confirm(
         self, user_input: dict[str, str] | None = None
@@ -145,10 +164,7 @@ class LektricoFlowHandler(ConfigFlow, domain=DOMAIN):
         """Allow the user to confirm adding the device."""
 
         if user_input is not None:
-            return self.async_create_entry(
-                title=f"{self._friendly_name}_{str(self._serial_number)}",
-                data={CONF_HOST: self._host, CONF_FRIENDLY_NAME: self._friendly_name},
-            )
+            return self._async_create_entry()
 
         self._set_confirm_only()
         return self.async_show_form(step_id="confirm")

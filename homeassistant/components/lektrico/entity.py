@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from lektricowifi import InfoForCharger
+
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -22,10 +24,12 @@ class LektricoEntity(CoordinatorEntity[LektricoDeviceDataUpdateCoordinator]):
         """Initialize."""
         super().__init__(coordinator)
 
+        _infoForCharger: InfoForCharger = coordinator.data
+
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, str(coordinator.serial_number))},
+            identifiers={(DOMAIN, coordinator.serial_number)},
             model=f"{coordinator.device_type.upper()} {coordinator.serial_number} rev.{coordinator.board_revision}",
             name=friendly_name,
             manufacturer="Lektrico",
-            sw_version=coordinator.data.get("fw_version"),
+            sw_version=_infoForCharger.fw_version,
         )

@@ -90,11 +90,57 @@ def _mocked_device_config() -> Settings:
     )
 
 
-def _patch_device_config(device=None, exception=None):
+def _mocked_device_config_for_em() -> Settings:
+    return Settings(
+        type=MOCKED_DEVICE_TYPE_FOR_EM,
+        serial_number=MOCKED_DEVICE_SERIAL_NUMBER_FOR_EM,
+        board_revision=MOCKED_DEVICE_BOARD_REV,
+    )
+
+
+def _mocked_device_config_for_3em() -> Settings:
+    return Settings(
+        type=MOCKED_DEVICE_TYPE_FOR_3EM,
+        serial_number=MOCKED_DEVICE_SERIAL_NUMBER_FOR_3EM,
+        board_revision=MOCKED_DEVICE_BOARD_REV,
+    )
+
+
+def patch_device_config(device=None, exception=None):
+    """Patch device_config() for 1P7K or 3P7K devices."""
+
     async def _device_config(*args, **kwargs):
         if exception:
             raise exception
         return _mocked_device_config()
+
+    return patch(
+        "homeassistant.components.lektrico.config_flow.Device.device_config",
+        new=_device_config,
+    )
+
+
+def patch_device_config_for_em(device=None, exception=None):
+    """Patch device_config() for EM device."""
+
+    async def _device_config(*args, **kwargs):
+        if exception:
+            raise exception
+        return _mocked_device_config_for_em()
+
+    return patch(
+        "homeassistant.components.lektrico.config_flow.Device.device_config",
+        new=_device_config,
+    )
+
+
+def patch_device_config_for_3em(device=None, exception=None):
+    """Patch device_config() for 3EM device."""
+
+    async def _device_config(*args, **kwargs):
+        if exception:
+            raise exception
+        return _mocked_device_config_for_3em()
 
     return patch(
         "homeassistant.components.lektrico.config_flow.Device.device_config",
