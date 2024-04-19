@@ -1,13 +1,11 @@
 """Tests for the Sun WEG sensor."""
 
-from datetime import timedelta
-
 from freezegun.api import FrozenDateTimeFactory
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.sunweg.const import DOMAIN
 from homeassistant.components.sunweg.coordinator import SCAN_INTERVAL
-from homeassistant.core import HomeAssistant, dt_util
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .common import SUNWEG_MOCK_ENTRY
@@ -28,7 +26,7 @@ async def test_sensor_total(
 
     assert await async_setup_component(hass, DOMAIN, mock_entry.data)
     freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass, dt_util.now() + timedelta(minutes=20))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("sensor.plant_123_total_money_lifetime")
@@ -58,7 +56,7 @@ async def test_sensor_total(
     api_fixture["plant"].return_value = plant_fixture_alternative
 
     freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass, dt_util.now() + timedelta(minutes=20))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("sensor.plant_123_total_last_update")
@@ -80,7 +78,7 @@ async def test_sensor_inverter(
 
     assert await async_setup_component(hass, DOMAIN, mock_entry.data)
     freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass, dt_util.now() + timedelta(minutes=10))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("sensor.inversor01_energy_today")
@@ -114,7 +112,7 @@ async def test_sensor_inverter(
     api_fixture["plant"].return_value = plant
 
     freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass, dt_util.now() + timedelta(minutes=20))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("sensor.inversor01_energy_today")
@@ -135,7 +133,7 @@ async def test_sensor_phase(
 
     assert await async_setup_component(hass, DOMAIN, mock_entry.data)
     freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass, dt_util.now() + timedelta(minutes=10))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("sensor.inversor01_phasea_voltage")
@@ -149,7 +147,7 @@ async def test_sensor_phase(
     api_fixture["plant"].return_value = plant_fixture_alternative
 
     freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass, dt_util.now() + timedelta(minutes=20))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.inversor01_phasea_voltage")
@@ -170,7 +168,7 @@ async def test_sensor_string(
 
     assert await async_setup_component(hass, DOMAIN, mock_entry.data)
     freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass, dt_util.now() + timedelta(minutes=10))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("sensor.inversor01_str1_voltage")
@@ -184,7 +182,7 @@ async def test_sensor_string(
     api_fixture["plant"].return_value = plant_fixture_alternative
 
     freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass, dt_util.now() + timedelta(minutes=20))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
     state = hass.states.get("sensor.inversor01_str1_voltage")
     assert state.state == snapshot
