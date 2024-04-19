@@ -934,7 +934,7 @@ georss-qld-bushfire-alert-client==0.7
 getmac==0.9.4
 
 # homeassistant.components.gios
-gios==3.2.2
+gios==4.0.0
 
 # homeassistant.components.gitter
 gitterpy==0.1.7
@@ -1362,7 +1362,7 @@ netdata==1.1.0
 netmap==0.7.0.2
 
 # homeassistant.components.nam
-nettigo-air-monitor==2.2.2
+nettigo-air-monitor==3.0.0
 
 # homeassistant.components.neurio_energy
 neurio==0.3.1
@@ -1377,7 +1377,7 @@ nextcloudmonitor==1.5.0
 nextcord==2.6.0
 
 # homeassistant.components.nextdns
-nextdns==2.1.0
+nextdns==3.0.0
 
 # homeassistant.components.nibe_heatpump
 nibe==2.8.0
