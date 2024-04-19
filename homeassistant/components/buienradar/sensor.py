@@ -748,17 +748,17 @@ class BrSensor(SensorEntity):
         self._measured = None
         self._attr_unique_id = f"{coordinates[CONF_LATITUDE]:2.6f}{coordinates[CONF_LONGITUDE]:2.6f}{description.key}"
         self._day = (
-            description.key[-3:]
+            description.key[-2:]
             if all(x in description.key[-3:] for x in ("_", "d"))
             else "now"
         )
         self._naming = {
             "now": "Today",
-            "_1d": "Tomorrow",
-            "_2d": "In 2 days",
-            "_3d": "In 3 days",
-            "_4d": "In 4 days",
-            "_5d": "In 5 days",
+            "1d": "Tomorrow",
+            "2d": "In 2 days",
+            "3d": "In 3 days",
+            "4d": "In 4 days",
+            "5d": "In 5 days",
         }
         # only enable at entity creation
         # self._attr_entity_registry_enabled_default = self._day in self._selected
@@ -787,7 +787,7 @@ class BrSensor(SensorEntity):
         if self._day not in self._selected:
             entity_registry.async_update_entity(
                 entity_id=self.entity_id,
-                disabled_by=er.RegistryEntryDisabler.INTEGRATION,
+                disabled_by=er.RegistryEntryDisabler.USER,
             )
 
     async def async_enable_entity(self):
@@ -797,8 +797,7 @@ class BrSensor(SensorEntity):
 
     async def async_added_to_hass(self):
         """Handle options update."""
-        if self._day not in self._selected:
-            await self.async_disable_entity()
+        await self.async_disable_entity()
 
     @callback
     def data_updated(self, data: BrData):

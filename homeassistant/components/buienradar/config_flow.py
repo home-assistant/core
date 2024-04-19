@@ -35,11 +35,11 @@ FORECAST_OPTIONS = vol.Schema(
             selector.SelectSelectorConfig(
                 options=[
                     "now",
-                    "_1d",
-                    "_2d",
-                    "_3d",
-                    "_4d",
-                    "_5d",
+                    "1d",
+                    "2d",
+                    "3d",
+                    "4d",
+                    "5d",
                 ],
                 multiple=True,
                 mode=selector.SelectSelectorMode("list"),

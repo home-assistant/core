@@ -27,11 +27,11 @@
     "forecast_days": {
       "options": {
         "now": "Today",
-        "d1": "Tomorrow",
-        "d2": "Over 2 days",
-        "d3": "Over 3 days",
-        "d4": "Over 4 days",
-        "d5": "Over 5 days"
+        "1d": "Tomorrow",
+        "2d": "Over 2 days",
+        "3d": "Over 3 days",
+        "4d": "Over 4 days",
+        "5d": "Over 5 days"
       }
     }
   },
@@ -41,7 +41,11 @@
         "data": {
           "country_code": "Country code of the country to display camera images.",
           "delta": "Time interval in seconds between camera image updates",
-          "timeframe": "Minutes to look ahead for precipitation forecast"
+          "timeframe": "Minutes to look ahead for precipitation forecast",
+          "forecast_days": "Forecast Days"
+        },
+        "data_description": {
+          "forecast_days": "Select the forecast days that should be enabled"
         }
       }
     }
