@@ -741,6 +741,11 @@ class CalendarImportEventsView(http.HomeAssistantView):
             )
 
         file: FileField = data["file"]
+        if file.content_type != "text/calendar":
+            return self.json_message(
+                "Only ics Calendar files are allowed", HTTPStatus.BAD_REQUEST
+            )
+
         try:
             file_bytes = file.file.read()
             file_str = file_bytes.decode("utf-8")
@@ -750,9 +755,7 @@ class CalendarImportEventsView(http.HomeAssistantView):
 
         await entity.async_add_events(calendar.events)
 
-        return self.json_message(
-            "Successfully imported event data", HTTPStatus.ACCEPTED
-        )
+        return self.json("Successfully imported event data")
 
 
 @websocket_api.websocket_command(
