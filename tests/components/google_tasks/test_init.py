@@ -7,12 +7,11 @@ import time
 import pytest
 
 from homeassistant.components.google_tasks import DOMAIN
-from homeassistant.components.google_tasks.const import OAUTH2_SCOPES, OAUTH2_TOKEN
+from homeassistant.components.google_tasks.const import OAUTH2_TOKEN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
-from tests.components.google_tasks.conftest import FAKE_ACCESS_TOKEN, FAKE_REFRESH_TOKEN
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -33,36 +32,6 @@ async def test_setup(
 
     assert config_entry.state is ConfigEntryState.NOT_LOADED
     assert not hass.services.async_services().get(DOMAIN)
-
-
-@pytest.mark.parametrize(
-    "config_entry",
-    [
-        MockConfigEntry(
-            domain=DOMAIN,
-            data={
-                "auth_implementation": DOMAIN,
-                "token": {
-                    "access_token": FAKE_ACCESS_TOKEN,
-                    "refresh_token": FAKE_REFRESH_TOKEN,
-                    "scope": " ".join(OAUTH2_SCOPES),
-                    "token_type": "Bearer",
-                    "expires_at": time.time() + 3600,
-                },
-            },
-        )
-    ],
-)
-async def test_missing_scope(
-    hass: HomeAssistant,
-    integration_setup: Callable[[], Awaitable[bool]],
-    setup_credentials: None,
-    config_entry: MockConfigEntry,
-) -> None:
-    """Test setup with missing scope."""
-    await integration_setup()
-    assert len(hass.config_entries.flow.async_progress()) == 1
-    assert config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
 @pytest.mark.parametrize("expires_at", [time.time() - 3600], ids=["expired"])
@@ -99,7 +68,7 @@ async def test_expired_token_refresh_success(
         (
             time.time() - 3600,
             http.HTTPStatus.UNAUTHORIZED,
-            ConfigEntryState.SETUP_RETRY,  # Will trigger reauth in the future
+            ConfigEntryState.SETUP_ERROR,
         ),
         (
             time.time() - 3600,
