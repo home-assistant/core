@@ -1,4 +1,5 @@
 """Support for the Philips Hue sensors as a platform."""
+
 from __future__ import annotations
 
 import asyncio

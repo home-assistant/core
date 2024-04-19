@@ -1,4 +1,5 @@
 """Test sensor of NextDNS integration."""
+
 from datetime import timedelta
 from unittest.mock import patch
 
@@ -10,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.dt import utcnow
 
-from . import DNSSEC, ENCRYPTION, IP_VERSIONS, PROTOCOLS, STATUS, init_integration
+from . import init_integration, mock_nextdns
 
 from tests.common import async_fire_time_changed
 
@@ -308,24 +309,30 @@ async def test_availability(
     assert state.state == "90"
 
     future = utcnow() + timedelta(minutes=10)
-    with patch(
-        "homeassistant.components.nextdns.NextDns.get_analytics_status",
-        side_effect=ApiError("API Error"),
-    ), patch(
-        "homeassistant.components.nextdns.NextDns.get_analytics_dnssec",
-        side_effect=ApiError("API Error"),
-    ), patch(
-        "homeassistant.components.nextdns.NextDns.get_analytics_encryption",
-        side_effect=ApiError("API Error"),
-    ), patch(
-        "homeassistant.components.nextdns.NextDns.get_analytics_ip_versions",
-        side_effect=ApiError("API Error"),
-    ), patch(
-        "homeassistant.components.nextdns.NextDns.get_analytics_protocols",
-        side_effect=ApiError("API Error"),
+    with (
+        patch(
+            "homeassistant.components.nextdns.NextDns.get_analytics_status",
+            side_effect=ApiError("API Error"),
+        ),
+        patch(
+            "homeassistant.components.nextdns.NextDns.get_analytics_dnssec",
+            side_effect=ApiError("API Error"),
+        ),
+        patch(
+            "homeassistant.components.nextdns.NextDns.get_analytics_encryption",
+            side_effect=ApiError("API Error"),
+        ),
+        patch(
+            "homeassistant.components.nextdns.NextDns.get_analytics_ip_versions",
+            side_effect=ApiError("API Error"),
+        ),
+        patch(
+            "homeassistant.components.nextdns.NextDns.get_analytics_protocols",
+            side_effect=ApiError("API Error"),
+        ),
     ):
         async_fire_time_changed(hass, future)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("sensor.fake_profile_dns_queries")
     assert state
@@ -348,24 +355,9 @@ async def test_availability(
     assert state.state == STATE_UNAVAILABLE
 
     future = utcnow() + timedelta(minutes=20)
-    with patch(
-        "homeassistant.components.nextdns.NextDns.get_analytics_status",
-        return_value=STATUS,
-    ), patch(
-        "homeassistant.components.nextdns.NextDns.get_analytics_encryption",
-        return_value=ENCRYPTION,
-    ), patch(
-        "homeassistant.components.nextdns.NextDns.get_analytics_dnssec",
-        return_value=DNSSEC,
-    ), patch(
-        "homeassistant.components.nextdns.NextDns.get_analytics_ip_versions",
-        return_value=IP_VERSIONS,
-    ), patch(
-        "homeassistant.components.nextdns.NextDns.get_analytics_protocols",
-        return_value=PROTOCOLS,
-    ):
+    with mock_nextdns():
         async_fire_time_changed(hass, future)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("sensor.fake_profile_dns_queries")
     assert state

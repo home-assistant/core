@@ -1,4 +1,5 @@
 """Tests for debounce."""
+
 import asyncio
 from datetime import timedelta
 import logging
@@ -496,3 +497,35 @@ async def test_shutdown(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -
 
     assert len(calls) == 1
     assert debouncer._timer_task is None
+
+
+async def test_background(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test background tasks are created when background is True."""
+    calls = []
+
+    async def _func() -> None:
+        await asyncio.sleep(0.1)
+        calls.append(None)
+
+    debouncer = debounce.Debouncer(
+        hass, _LOGGER, cooldown=0.05, immediate=True, function=_func, background=True
+    )
+
+    await debouncer.async_call()
+    assert len(calls) == 1
+
+    debouncer.async_schedule_call()
+    assert len(calls) == 1
+
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=1))
+    await hass.async_block_till_done(wait_background_tasks=False)
+    assert len(calls) == 1
+
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert len(calls) == 2
+
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=1))
+    await hass.async_block_till_done(wait_background_tasks=False)
+    assert len(calls) == 2

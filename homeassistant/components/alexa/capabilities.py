@@ -1,4 +1,5 @@
 """Alexa capabilities."""
+
 from __future__ import annotations
 
 from collections.abc import Generator
@@ -299,6 +300,10 @@ class Alexa(AlexaCapability):
     The API suggests you should explicitly include this interface.
 
     https://developer.amazon.com/docs/device-apis/alexa-interface.html
+
+    To compare current supported locales in Home Assistant
+    with Alexa supported locales, run the following script:
+    python -m script.alexa_locales
     """
 
     supported_locales = {
@@ -1195,11 +1200,12 @@ class AlexaThermostatController(AlexaCapability):
         if self.entity.domain == water_heater.DOMAIN:
             return None
 
-        supported_modes: list[str] = []
         hvac_modes = self.entity.attributes.get(climate.ATTR_HVAC_MODES) or []
-        for mode in hvac_modes:
-            if thermostat_mode := API_THERMOSTAT_MODES.get(mode):
-                supported_modes.append(thermostat_mode)
+        supported_modes: list[str] = [
+            API_THERMOSTAT_MODES[mode]
+            for mode in hvac_modes
+            if mode in API_THERMOSTAT_MODES
+        ]
 
         preset_modes = self.entity.attributes.get(climate.ATTR_PRESET_MODES)
         if preset_modes:
@@ -1582,7 +1588,7 @@ class AlexaModeController(AlexaCapability):
                 )
                 modes += 1
 
-            # Alexa requiers at least 2 modes
+            # Alexa requires at least 2 modes
             if modes == 1:
                 self._resource.add_mode(f"state.{PRESET_MODE_NA}", [PRESET_MODE_NA])
 
@@ -1762,10 +1768,7 @@ class AlexaRangeController(AlexaCapability):
             speed_list = self.entity.attributes.get(vacuum.ATTR_FAN_SPEED_LIST)
             speed = self.entity.attributes.get(vacuum.ATTR_FAN_SPEED)
             if speed_list is not None and speed is not None:
-                speed_index = next(
-                    (i for i, v in enumerate(speed_list) if v == speed), None
-                )
-                return speed_index
+                return next((i for i, v in enumerate(speed_list) if v == speed), None)
 
         # Valve Position
         if self.instance == f"{valve.DOMAIN}.{valve.ATTR_POSITION}":

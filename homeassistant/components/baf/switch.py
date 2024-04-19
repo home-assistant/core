@@ -1,4 +1,5 @@
 """Support for Big Ass Fans switch."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -18,19 +19,13 @@ from .entity import BAFEntity
 from .models import BAFData
 
 
-@dataclass(frozen=True)
-class BAFSwitchDescriptionMixin:
-    """Required values for BAF sensors."""
-
-    value_fn: Callable[[Device], bool | None]
-
-
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class BAFSwitchDescription(
     SwitchEntityDescription,
-    BAFSwitchDescriptionMixin,
 ):
     """Class describing BAF switch entities."""
+
+    value_fn: Callable[[Device], bool | None]
 
 
 BASE_SWITCHES = [

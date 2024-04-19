@@ -1,4 +1,5 @@
 """Provide an authentication layer for Home Assistant."""
+
 from __future__ import annotations
 
 import asyncio
@@ -19,14 +20,15 @@ from homeassistant.core import (
     HomeAssistant,
     callback,
 )
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util import dt as dt_util
 
 from . import auth_store, jwt_wrapper, models
 from .const import ACCESS_TOKEN_EXPIRATION, GROUP_ID_ADMIN, REFRESH_TOKEN_EXPIRATION
 from .mfa_modules import MultiFactorAuthModule, auth_mfa_module_from_config
+from .models import AuthFlowResult
 from .providers import AuthProvider, LoginFlow, auth_provider_from_config
+from .session import SessionManager
 
 EVENT_USER_ADDED = "user_added"
 EVENT_USER_UPDATED = "user_updated"
@@ -84,12 +86,16 @@ async def auth_manager_from_config(
         module_hash[module.id] = module
 
     manager = AuthManager(hass, store, provider_hash, module_hash)
-    manager.async_setup()
+    await manager.async_setup()
     return manager
 
 
-class AuthManagerFlowManager(data_entry_flow.FlowManager):
+class AuthManagerFlowManager(
+    data_entry_flow.FlowManager[AuthFlowResult, tuple[str, str]]
+):
     """Manage authentication flows."""
+
+    _flow_result = AuthFlowResult
 
     def __init__(self, hass: HomeAssistant, auth_manager: AuthManager) -> None:
         """Init auth manager flows."""
@@ -98,11 +104,11 @@ class AuthManagerFlowManager(data_entry_flow.FlowManager):
 
     async def async_create_flow(
         self,
-        handler_key: str,
+        handler_key: tuple[str, str],
         *,
         context: dict[str, Any] | None = None,
         data: dict[str, Any] | None = None,
-    ) -> data_entry_flow.FlowHandler:
+    ) -> LoginFlow:
         """Create a login flow."""
         auth_provider = self.auth_manager.get_auth_provider(*handler_key)
         if not auth_provider:
@@ -110,8 +116,10 @@ class AuthManagerFlowManager(data_entry_flow.FlowManager):
         return await auth_provider.async_login_flow(context)
 
     async def async_finish_flow(
-        self, flow: data_entry_flow.FlowHandler, result: FlowResult
-    ) -> FlowResult:
+        self,
+        flow: data_entry_flow.FlowHandler[AuthFlowResult, tuple[str, str]],
+        result: AuthFlowResult,
+    ) -> AuthFlowResult:
         """Return a user as result of login flow."""
         flow = cast(LoginFlow, flow)
 
@@ -173,9 +181,9 @@ class AuthManager:
         self._remove_expired_job = HassJob(
             self._async_remove_expired_refresh_tokens, job_type=HassJobType.Callback
         )
+        self.session = SessionManager(hass, self)
 
-    @callback
-    def async_setup(self) -> None:
+    async def async_setup(self) -> None:
         """Set up the auth manager."""
         hass = self.hass
         hass.async_add_shutdown_job(
@@ -184,6 +192,7 @@ class AuthManager:
             )
         )
         self._async_track_next_refresh_token_expiration()
+        await self.session.async_setup()
 
     @property
     def auth_providers(self) -> list[AuthProvider]:

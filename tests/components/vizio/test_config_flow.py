@@ -1,10 +1,10 @@
 """Tests for Vizio config flow."""
+
 import dataclasses
 
 import pytest
 import voluptuous as vol
 
-from homeassistant import data_entry_flow
 from homeassistant.components.media_player import MediaPlayerDeviceClass
 from homeassistant.components.vizio.config_flow import _get_config_schema
 from homeassistant.components.vizio.const import (
@@ -31,6 +31,7 @@ from homeassistant.const import (
     CONF_PIN,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from .const import (
     ACCESS_TOKEN,
@@ -66,14 +67,14 @@ async def test_user_flow_minimum_fields(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=MOCK_SPEAKER_CONFIG
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == NAME
     assert result["data"][CONF_NAME] == NAME
     assert result["data"][CONF_HOST] == HOST
@@ -91,14 +92,14 @@ async def test_user_flow_all_fields(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=MOCK_USER_VALID_TV_CONFIG
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == NAME
     assert result["data"][CONF_NAME] == NAME
     assert result["data"][CONF_HOST] == HOST
@@ -117,19 +118,19 @@ async def test_speaker_options_flow(
         DOMAIN, context={"source": SOURCE_USER}, data=MOCK_SPEAKER_CONFIG
     )
     await hass.async_block_till_done()
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     entry = result["result"]
 
     result = await hass.config_entries.options.async_init(entry.entry_id, data=None)
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input={CONF_VOLUME_STEP: VOLUME_STEP}
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == ""
     assert result["data"][CONF_VOLUME_STEP] == VOLUME_STEP
     assert CONF_APPS not in result["data"]
@@ -145,12 +146,12 @@ async def test_tv_options_flow_no_apps(
         DOMAIN, context={"source": SOURCE_USER}, data=MOCK_USER_VALID_TV_CONFIG
     )
     await hass.async_block_till_done()
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     entry = result["result"]
 
     result = await hass.config_entries.options.async_init(entry.entry_id, data=None)
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
     options = {CONF_VOLUME_STEP: VOLUME_STEP}
@@ -160,7 +161,7 @@ async def test_tv_options_flow_no_apps(
         result["flow_id"], user_input=options
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == ""
     assert result["data"][CONF_VOLUME_STEP] == VOLUME_STEP
     assert CONF_APPS not in result["data"]
@@ -176,12 +177,12 @@ async def test_tv_options_flow_with_apps(
         DOMAIN, context={"source": SOURCE_USER}, data=MOCK_USER_VALID_TV_CONFIG
     )
     await hass.async_block_till_done()
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     entry = result["result"]
 
     result = await hass.config_entries.options.async_init(entry.entry_id, data=None)
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
     options = {CONF_VOLUME_STEP: VOLUME_STEP}
@@ -191,7 +192,7 @@ async def test_tv_options_flow_with_apps(
         result["flow_id"], user_input=options
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == ""
     assert result["data"][CONF_VOLUME_STEP] == VOLUME_STEP
     assert CONF_APPS in result["data"]
@@ -208,13 +209,13 @@ async def test_tv_options_flow_start_with_volume(
         DOMAIN, context={"source": SOURCE_USER}, data=MOCK_USER_VALID_TV_CONFIG
     )
     await hass.async_block_till_done()
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     entry = result["result"]
 
     result = await hass.config_entries.options.async_init(
         entry.entry_id, data={CONF_VOLUME_STEP: VOLUME_STEP}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
     assert entry.options
     assert entry.options == {CONF_VOLUME_STEP: VOLUME_STEP}
@@ -223,7 +224,7 @@ async def test_tv_options_flow_start_with_volume(
 
     result = await hass.config_entries.options.async_init(entry.entry_id, data=None)
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
     options = {CONF_VOLUME_STEP: VOLUME_STEP}
@@ -233,7 +234,7 @@ async def test_tv_options_flow_start_with_volume(
         result["flow_id"], user_input=options
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == ""
     assert result["data"][CONF_VOLUME_STEP] == VOLUME_STEP
     assert CONF_APPS in result["data"]
@@ -260,7 +261,7 @@ async def test_user_host_already_configured(
         DOMAIN, context={"source": SOURCE_USER}, data=fail_entry
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {CONF_HOST: "existing_config_entry_found"}
 
 
@@ -284,7 +285,7 @@ async def test_user_serial_number_already_exists(
         DOMAIN, context={"source": SOURCE_USER}, data=fail_entry
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {CONF_HOST: "existing_config_entry_found"}
 
 
@@ -296,7 +297,7 @@ async def test_user_error_on_could_not_connect(
         DOMAIN, context={"source": SOURCE_USER}, data=MOCK_USER_VALID_TV_CONFIG
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {CONF_HOST: "cannot_connect"}
 
 
@@ -308,7 +309,7 @@ async def test_user_error_on_could_not_connect_invalid_token(
         DOMAIN, context={"source": SOURCE_USER}, data=MOCK_USER_VALID_TV_CONFIG
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -323,19 +324,19 @@ async def test_user_tv_pairing_no_apps(
         DOMAIN, context={"source": SOURCE_USER}, data=MOCK_TV_CONFIG_NO_TOKEN
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "pair_tv"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=MOCK_PIN_CONFIG
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "pairing_complete"
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == NAME
     assert result["data"][CONF_NAME] == NAME
     assert result["data"][CONF_HOST] == HOST
@@ -354,7 +355,7 @@ async def test_user_start_pairing_failure(
         DOMAIN, context={"source": SOURCE_USER}, data=MOCK_TV_CONFIG_NO_TOKEN
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
 
@@ -370,14 +371,14 @@ async def test_user_invalid_pin(
         DOMAIN, context={"source": SOURCE_USER}, data=MOCK_TV_CONFIG_NO_TOKEN
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "pair_tv"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=MOCK_PIN_CONFIG
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "pair_tv"
     assert result["errors"] == {CONF_PIN: "complete_pairing_failed"}
 
@@ -399,7 +400,7 @@ async def test_user_ignore(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}, data=MOCK_SPEAKER_CONFIG
     )
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_import_flow_minimum_fields(
@@ -416,7 +417,7 @@ async def test_import_flow_minimum_fields(
         ),
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == DEFAULT_NAME
     assert result["data"][CONF_NAME] == DEFAULT_NAME
     assert result["data"][CONF_HOST] == HOST
@@ -436,7 +437,7 @@ async def test_import_flow_all_fields(
         data=vol.Schema(VIZIO_SCHEMA)(MOCK_IMPORT_VALID_TV_CONFIG),
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == NAME
     assert result["data"][CONF_NAME] == NAME
     assert result["data"][CONF_HOST] == HOST
@@ -463,7 +464,7 @@ async def test_import_entity_already_configured(
         DOMAIN, context={"source": SOURCE_IMPORT}, data=fail_entry
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured_device"
 
 
@@ -481,7 +482,7 @@ async def test_import_flow_update_options(
     await hass.async_block_till_done()
 
     assert result["result"].options == {CONF_VOLUME_STEP: DEFAULT_VOLUME_STEP}
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     entry_id = result["result"].entry_id
 
     updated_config = MOCK_SPEAKER_CONFIG.copy()
@@ -492,7 +493,7 @@ async def test_import_flow_update_options(
         data=vol.Schema(VIZIO_SCHEMA)(updated_config),
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "updated_entry"
     config_entry = hass.config_entries.async_get_entry(entry_id)
     assert config_entry.options[CONF_VOLUME_STEP] == VOLUME_STEP + 1
@@ -512,7 +513,7 @@ async def test_import_flow_update_name_and_apps(
     await hass.async_block_till_done()
 
     assert result["result"].data[CONF_NAME] == NAME
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     entry_id = result["result"].entry_id
 
     updated_config = MOCK_IMPORT_VALID_TV_CONFIG.copy()
@@ -524,7 +525,7 @@ async def test_import_flow_update_name_and_apps(
         data=vol.Schema(VIZIO_SCHEMA)(updated_config),
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "updated_entry"
     config_entry = hass.config_entries.async_get_entry(entry_id)
     assert config_entry.data[CONF_NAME] == NAME2
@@ -546,7 +547,7 @@ async def test_import_flow_update_remove_apps(
     await hass.async_block_till_done()
 
     assert result["result"].data[CONF_NAME] == NAME
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     config_entry = hass.config_entries.async_get_entry(result["result"].entry_id)
     assert CONF_APPS in config_entry.data
     assert CONF_APPS in config_entry.options
@@ -559,7 +560,7 @@ async def test_import_flow_update_remove_apps(
         data=vol.Schema(VIZIO_SCHEMA)(updated_config),
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "updated_entry"
     assert CONF_APPS not in config_entry.data
     assert CONF_APPS not in config_entry.options
@@ -576,26 +577,26 @@ async def test_import_needs_pairing(
         DOMAIN, context={"source": SOURCE_IMPORT}, data=MOCK_TV_CONFIG_NO_TOKEN
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=MOCK_TV_CONFIG_NO_TOKEN
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "pair_tv"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=MOCK_PIN_CONFIG
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "pairing_complete_import"
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == NAME
     assert result["data"][CONF_NAME] == NAME
     assert result["data"][CONF_HOST] == HOST
@@ -616,7 +617,7 @@ async def test_import_with_apps_needs_pairing(
         DOMAIN, context={"source": SOURCE_IMPORT}, data=import_config
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     # Mock inputting info without apps to make sure apps get stored
@@ -625,19 +626,19 @@ async def test_import_with_apps_needs_pairing(
         user_input=_get_config_schema(MOCK_TV_CONFIG_NO_TOKEN)(MOCK_TV_CONFIG_NO_TOKEN),
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "pair_tv"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=MOCK_PIN_CONFIG
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "pairing_complete_import"
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == NAME
     assert result["data"][CONF_NAME] == NAME
     assert result["data"][CONF_HOST] == HOST
@@ -659,7 +660,7 @@ async def test_import_flow_additional_configs(
     await hass.async_block_till_done()
 
     assert result["result"].data[CONF_NAME] == NAME
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     config_entry = hass.config_entries.async_get_entry(result["result"].entry_id)
     assert CONF_APPS in config_entry.data
     assert CONF_APPS not in config_entry.options
@@ -688,7 +689,7 @@ async def test_import_error(
         data=vol.Schema(VIZIO_SCHEMA)(fail_entry),
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
 
     # Ensure error gets logged
     vizio_log_list = [
@@ -719,7 +720,7 @@ async def test_import_ignore(
         data=vol.Schema(VIZIO_SCHEMA)(MOCK_SPEAKER_CONFIG),
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_zeroconf_flow(
@@ -735,7 +736,7 @@ async def test_zeroconf_flow(
     )
 
     # Form should always show even if all required properties are discovered
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     # Apply discovery updates to entry to mimic when user hits submit without changing
@@ -752,7 +753,7 @@ async def test_zeroconf_flow(
         result["flow_id"], user_input=user_input
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == NAME
     assert result["data"][CONF_HOST] == HOST
     assert result["data"][CONF_NAME] == NAME
@@ -781,7 +782,7 @@ async def test_zeroconf_flow_already_configured(
     )
 
     # Flow should abort because device is already setup
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -809,7 +810,7 @@ async def test_zeroconf_flow_with_port_in_host(
     )
 
     # Flow should abort because device is already setup
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -826,7 +827,7 @@ async def test_zeroconf_dupe_fail(
     )
 
     # Form should always show even if all required properties are discovered
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     discovery_info = dataclasses.replace(MOCK_ZEROCONF_SERVICE_INFO)
@@ -835,7 +836,7 @@ async def test_zeroconf_dupe_fail(
     )
 
     # Flow should abort because device is already setup
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_in_progress"
 
 
@@ -859,7 +860,7 @@ async def test_zeroconf_ignore(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
 
 
 async def test_zeroconf_no_unique_id(
@@ -874,7 +875,7 @@ async def test_zeroconf_no_unique_id(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
 
 
@@ -899,7 +900,7 @@ async def test_zeroconf_abort_when_ignored(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -928,7 +929,7 @@ async def test_zeroconf_flow_already_configured_hostname(
     )
 
     # Flow should abort because device is already setup
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -953,7 +954,7 @@ async def test_import_flow_already_configured_hostname(
     )
 
     # Flow should abort because device was updated
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "updated_entry"
 
     assert entry.data[CONF_HOST] == HOST

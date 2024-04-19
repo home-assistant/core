@@ -1,0 +1,10 @@
+{
+  "services": {
+    "volume_up": "mdi:volume-high",
+    "volume_down": "mdi:volume-low",
+    "volume_mute": "mdi:volume-off",
+    "media_play_pause": "mdi:play-pause",
+    "media_next_track": "mdi:skip-next",
+    "media_prev_track": "mdi:skip-previous"
+  }
+}

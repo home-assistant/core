@@ -1,4 +1,5 @@
 """Constants for the Velux integration."""
+
 from logging import getLogger
 
 from homeassistant.const import Platform

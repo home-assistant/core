@@ -1,4 +1,5 @@
 """Test ZHA Core cluster handlers."""
+
 from collections.abc import Callable
 import logging
 import math
@@ -18,7 +19,7 @@ import zigpy.zcl.clusters
 from zigpy.zcl.clusters import CLUSTERS_BY_ID
 import zigpy.zdo.types as zdo_t
 
-import homeassistant.components.zha.core.cluster_handlers as cluster_handlers
+from homeassistant.components.zha.core import cluster_handlers, registries
 from homeassistant.components.zha.core.cluster_handlers.lighting import (
     ColorClusterHandler,
 )
@@ -26,7 +27,6 @@ import homeassistant.components.zha.core.const as zha_const
 from homeassistant.components.zha.core.device import ZHADevice
 from homeassistant.components.zha.core.endpoint import Endpoint
 from homeassistant.components.zha.core.helpers import get_zha_gateway
-import homeassistant.components.zha.core.registries as registries
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
@@ -119,8 +119,7 @@ async def poll_control_device(zha_device_restored, zigpy_device_mock):
         "test model",
     )
 
-    zha_device = await zha_device_restored(zigpy_dev)
-    return zha_device
+    return await zha_device_restored(zigpy_dev)
 
 
 @pytest.mark.parametrize(
@@ -147,7 +146,6 @@ async def poll_control_device(zha_device_restored, zigpy_device_mock):
         (zigpy.zcl.clusters.general.AnalogInput.cluster_id, 1, {"present_value"}),
         (zigpy.zcl.clusters.general.AnalogOutput.cluster_id, 1, {"present_value"}),
         (zigpy.zcl.clusters.general.AnalogValue.cluster_id, 1, {"present_value"}),
-        (zigpy.zcl.clusters.general.AnalogOutput.cluster_id, 1, {"present_value"}),
         (zigpy.zcl.clusters.general.BinaryOutput.cluster_id, 1, {"present_value"}),
         (zigpy.zcl.clusters.general.BinaryValue.cluster_id, 1, {"present_value"}),
         (zigpy.zcl.clusters.general.MultistateInput.cluster_id, 1, {"present_value"}),
@@ -379,7 +377,7 @@ def test_cluster_handler_registry() -> None:
         assert cluster_id in all_quirk_ids
         assert isinstance(cluster_handler_classes, dict)
         for quirk_id, cluster_handler in cluster_handler_classes.items():
-            assert isinstance(quirk_id, NoneType) or isinstance(quirk_id, str)
+            assert isinstance(quirk_id, (NoneType, str))
             assert issubclass(cluster_handler, cluster_handlers.ClusterHandler)
             assert quirk_id in all_quirk_ids[cluster_id]
 
@@ -578,9 +576,10 @@ async def test_ep_cluster_handlers_configure(cluster_handler) -> None:
     claimed = {ch_1.id: ch_1, ch_2.id: ch_2, ch_3.id: ch_3}
     client_handlers = {ch_4.id: ch_4, ch_5.id: ch_5}
 
-    with mock.patch.dict(
-        endpoint.claimed_cluster_handlers, claimed, clear=True
-    ), mock.patch.dict(endpoint.client_cluster_handlers, client_handlers, clear=True):
+    with (
+        mock.patch.dict(endpoint.claimed_cluster_handlers, claimed, clear=True),
+        mock.patch.dict(endpoint.client_cluster_handlers, client_handlers, clear=True),
+    ):
         await endpoint.async_configure()
         await endpoint.async_initialize(mock.sentinel.from_cache)
 
@@ -870,10 +869,13 @@ async def test_invalid_cluster_handler(hass: HomeAssistant, caplog) -> None:
         TestZigbeeClusterHandler(cluster, zha_endpoint)
 
     # And one is also logged at runtime
-    with patch.dict(
-        registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY[cluster.cluster_id],
-        {None: TestZigbeeClusterHandler},
-    ), caplog.at_level(logging.WARNING):
+    with (
+        patch.dict(
+            registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY[cluster.cluster_id],
+            {None: TestZigbeeClusterHandler},
+        ),
+        caplog.at_level(logging.WARNING),
+    ):
         zha_endpoint.add_all_cluster_handlers()
 
     assert "missing_attr" in caplog.text

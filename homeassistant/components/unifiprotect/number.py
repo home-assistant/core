@@ -1,4 +1,5 @@
 """Component providing number entities for UniFi Protect."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -117,6 +118,20 @@ CAMERA_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
         ufp_enabled="is_digital_chime",
         ufp_value_fn=_get_chime_duration,
         ufp_set_method="set_chime_duration",
+        ufp_perm=PermRequired.WRITE,
+    ),
+    ProtectNumberEntityDescription(
+        key="icr_lux",
+        name="Infrared Custom Lux Trigger",
+        icon="mdi:white-balance-sunny",
+        entity_category=EntityCategory.CONFIG,
+        ufp_min=1,
+        ufp_max=30,
+        ufp_step=1,
+        ufp_required_field="feature_flags.has_led_ir",
+        ufp_value="icr_lux_display",
+        ufp_set_method="set_icr_custom_lux",
+        ufp_enabled="is_ir_led_slider_enabled",
         ufp_perm=PermRequired.WRITE,
     ),
 )

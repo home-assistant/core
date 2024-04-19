@@ -40,7 +40,7 @@ ATTR_OPERATION_TAG = "tag"
 # Limit battery, online, and hardware updates to hourly
 # in order to reduce the number of api requests and
 # avoid hitting rate limits
-MIN_TIME_BETWEEN_DETAIL_UPDATES = timedelta(hours=1)
+MIN_TIME_BETWEEN_DETAIL_UPDATES = timedelta(hours=24)
 
 # Activity needs to be checked more frequently as the
 # doorbell motion and rings are included here

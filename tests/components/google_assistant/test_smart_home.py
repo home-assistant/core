@@ -1,4 +1,5 @@
 """Test Google Smart Home."""
+
 import asyncio
 from types import SimpleNamespace
 from unittest.mock import ANY, patch

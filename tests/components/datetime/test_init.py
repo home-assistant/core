@@ -1,39 +1,35 @@
 """The tests for the datetime component."""
+
 from datetime import UTC, datetime
 from zoneinfo import ZoneInfo
 
 import pytest
 
-from homeassistant.components.datetime import (
-    ATTR_DATETIME,
-    DOMAIN,
-    SERVICE_SET_VALUE,
-    DateTimeEntity,
-)
+from homeassistant.components.datetime import ATTR_DATETIME, DOMAIN, SERVICE_SET_VALUE
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME, CONF_PLATFORM
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
+from tests.common import setup_test_component_platform
+from tests.components.datetime.common import MockDateTimeEntity
+
 DEFAULT_VALUE = datetime(2020, 1, 1, 12, 0, 0, tzinfo=UTC)
 
 
-class MockDateTimeEntity(DateTimeEntity):
-    """Mock datetime device to use in tests."""
-
-    def __init__(self, native_value: datetime | None = DEFAULT_VALUE) -> None:
-        """Initialize mock datetime entity."""
-        self._attr_native_value = native_value
-
-    async def async_set_value(self, value: datetime) -> None:
-        """Change the date/time."""
-        self._attr_native_value = value
-
-
-async def test_datetime(hass: HomeAssistant, enable_custom_integrations: None) -> None:
+async def test_datetime(hass: HomeAssistant) -> None:
     """Test date/time entity."""
     hass.config.set_time_zone("UTC")
-    platform = getattr(hass.components, f"test.{DOMAIN}")
-    platform.init()
+    setup_test_component_platform(
+        hass,
+        DOMAIN,
+        [
+            MockDateTimeEntity(
+                name="test",
+                unique_id="unique_datetime",
+                native_value=datetime(2020, 1, 1, 1, 2, 3, tzinfo=UTC),
+            )
+        ],
+    )
 
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()

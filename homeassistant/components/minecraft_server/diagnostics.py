@@ -1,4 +1,5 @@
 """Diagnostics for the Minecraft Server integration."""
+
 from collections.abc import Iterable
 from dataclasses import asdict
 from typing import Any

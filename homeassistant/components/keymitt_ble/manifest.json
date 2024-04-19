@@ -16,5 +16,5 @@
   "integration_type": "hub",
   "iot_class": "assumed_state",
   "loggers": ["keymitt_ble"],
-  "requirements": ["PyMicroBot==0.0.16"]
+  "requirements": ["PyMicroBot==0.0.17"]
 }

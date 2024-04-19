@@ -1,4 +1,5 @@
 """Support for monitoring Dremel 3D Printer sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -31,19 +32,11 @@ from .const import ATTR_EXTRUDER, ATTR_PLATFORM, DOMAIN
 from .entity import Dremel3DPrinterEntity
 
 
-@dataclass(frozen=True)
-class Dremel3DPrinterSensorEntityMixin:
-    """Mixin for Dremel 3D Printer sensor."""
-
-    value_fn: Callable[[Dremel3DPrinter, str], StateType | datetime]
-
-
-@dataclass(frozen=True)
-class Dremel3DPrinterSensorEntityDescription(
-    SensorEntityDescription, Dremel3DPrinterSensorEntityMixin
-):
+@dataclass(frozen=True, kw_only=True)
+class Dremel3DPrinterSensorEntityDescription(SensorEntityDescription):
     """Describes a Dremel 3D Printer sensor."""
 
+    value_fn: Callable[[Dremel3DPrinter, str], StateType | datetime]
     available_fn: Callable[[Dremel3DPrinter, str], bool] = lambda api, _: True
 
 

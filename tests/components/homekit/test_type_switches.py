@@ -1,4 +1,5 @@
 """Test different accessory types: Switches."""
+
 from datetime import timedelta
 
 import pytest

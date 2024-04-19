@@ -122,6 +122,20 @@
           "description": "Offset you would like (depending on your device)."
         }
       }
+    },
+    "add_meter_reading": {
+      "name": "Add meter readings",
+      "description": "Add meter readings to Tado Energy IQ.",
+      "fields": {
+        "config_entry": {
+          "name": "Config Entry",
+          "description": "Config entry to add meter readings to."
+        },
+        "reading": {
+          "name": "Reading",
+          "description": "Reading in m³ or kWh without decimals."
+        }
+      }
     }
   },
   "issues": {
